@@ -1,0 +1,14 @@
+{
+    "description": "System and hardware information service",
+    "status": "disabled",
+    "contexts": [
+        {
+            "id": "hardware",
+            "class": "hardware:Hardware"
+        },
+        {
+            "id": "system",
+            "class": "system:System"
+        }
+    ]
+}

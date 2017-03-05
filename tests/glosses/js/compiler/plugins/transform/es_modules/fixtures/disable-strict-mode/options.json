@@ -1,0 +1,5 @@
+{
+    "plugins": ["externalHelpers",
+        ["transform.ESModules", { "strictMode": false }]
+    ]
+}

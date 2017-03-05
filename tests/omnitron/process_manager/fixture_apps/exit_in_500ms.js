@@ -1,0 +1,3 @@
+setTimeout(() => {
+    process.exit(0);  // ipc...
+}, 500);

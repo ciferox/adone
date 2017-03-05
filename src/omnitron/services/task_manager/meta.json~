@@ -1,0 +1,26 @@
+{
+    "tm": {
+        "id": "tm",
+        "enabled": false,
+        "class": "TaskManager",
+        "dependencies": [
+            "adone:database"
+        ],
+        "logMarker": "TM",
+        "options": {
+            "datastore": {
+                "filename": "taskmanager"
+            },
+            "transpiler": {
+                "plugins": [
+                    "transform.flowStripTypes",
+                    "transform.classProperties",
+                    "transform.asyncToGenerator",
+                    "transform.ESModules",
+                    "transform.functionBind"
+                ],
+                "compact": false
+            }
+        }
+    }
+}

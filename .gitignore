@@ -1,0 +1,17 @@
+/node_modules/
+/.idea/
+/npm-debug.log
+/lib/
+/libTests/
+/libExamples/
+/jsconfig.json
+/build/
+/bin/
+/shani/
+/.vscode/
+*.old
+*.orig
+*.db
+test-fixtures/
+_fixtures/
+test-resources/

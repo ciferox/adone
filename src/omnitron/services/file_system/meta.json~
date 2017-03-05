@@ -1,0 +1,8 @@
+{    
+    "fs": {
+        "id": "fs",
+        "enabled": false,
+        "class": "Filesystem",
+        "logMarker": "FS"
+    }
+}

@@ -1,0 +1,1103 @@
+/* global it describe */
+
+const {
+    std: { http, https, fs },
+    net: { ws: { WebSocket, WebSocketServer } }
+} = adone;
+
+let port = 8000;
+
+function getFixturesPath(name) {
+    return adone.std.path.join(__dirname, "..", "fixtures", name);
+}
+
+describe("WebSocketServer", function () {
+    describe("#ctor", function () {
+        it("throws an error if no option object is passed", function () {
+            assert.throws(() => new WebSocketServer());
+        });
+
+        it("throws an error if no port or server is specified", function () {
+            assert.throws(() => new WebSocketServer({}));
+        });
+
+        it("should return a new instance if called without new", function () {
+            const wss = new WebSocketServer({ noServer: true });
+
+            assert.isTrue(wss instanceof WebSocketServer);
+        });
+
+        it("emits an error if http server bind fails", function (done) {
+            const wss1 = new WebSocketServer({ port: 50003 });
+            const wss2 = new WebSocketServer({ port: 50003 });
+            wss2.on("error", () => {
+                wss1.close();
+                done();
+            });
+        });
+
+        it("starts a server on a given port", function (done) {
+            const wss = new WebSocketServer({ port: ++port }, () => {
+                new WebSocket(`ws://localhost:${port}`);
+            });
+            wss.on("connection", () => {
+                wss.close();
+                done();
+            });
+        });
+
+        it("uses a precreated http server", function (done) {
+            const server = http.createServer();
+
+            server.listen(++port, () => {
+                const wss = new WebSocketServer({ server });
+                new WebSocket(`ws://localhost:${port}`);
+
+                wss.on("connection", () => {
+                    wss.close();
+                    server.close(done);
+                });
+            });
+        });
+
+        it("426s for non-Upgrade requests", function (done) {
+            const wss = new WebSocketServer({ port: ++port }, () => {
+                http.get(`http://localhost:${port}`, (res) => {
+                    let body = "";
+
+                    assert.strictEqual(res.statusCode, 426);
+                    res.on("data", (chunk) => body += chunk);
+                    res.on("end", () => {
+                        assert.strictEqual(body, http.STATUS_CODES[426]);
+                        wss.close();
+                        done();
+                    });
+                });
+            });
+        });
+
+        // Don't test this on Windows. It throws errors for obvious reasons.
+        if (!/^win/i.test(process.platform)) {
+            it("uses a precreated http server listening on unix socket", function (done) {
+                const server = http.createServer();
+                const sockPath = `/tmp/ws_socket_${new Date().getTime()}.${Math.floor(Math.random() * 1000)}`;
+
+                server.listen(sockPath, () => {
+                    const wss = new WebSocketServer({ server });
+                    new WebSocket(`ws+unix://${sockPath}`);
+
+                    wss.on("connection", () => {
+                        wss.close();
+                        server.close(done);
+                    });
+                });
+            });
+        }
+
+        it("emits path specific connection event", function (done) {
+            const server = http.createServer();
+
+            server.listen(++port, () => {
+                const wss = new WebSocketServer({ server });
+                new WebSocket(`ws://localhost:${port}/endpointName`);
+
+                wss.on("connection/endpointName", () => {
+                    wss.close();
+                    server.close(done);
+                });
+            });
+        });
+
+        it("can have two different instances listening on the same http server with two different paths", function (done) {
+            const server = http.createServer();
+
+            server.listen(++port, () => {
+                const wss1 = new WebSocketServer({ server, path: "/wss1" });
+                const wss2 = new WebSocketServer({ server, path: "/wss2" });
+                let doneCount = 0;
+
+                wss1.on("connection", () => {
+                    wss1.close();
+                    if (++doneCount === 2) {
+                        server.close(done);
+                    }
+                });
+
+                wss2.on("connection", () => {
+                    wss2.close();
+                    if (++doneCount === 2) {
+                        server.close(done);
+                    }
+                });
+
+                /* eslint-disable no-unused-vars */
+                const ws1 = new WebSocket(`ws://localhost:${port}/wss1`);
+                const ws2 = new WebSocket(`ws://localhost:${port}/wss2?foo=1`);
+                /* eslint-enable no-unused-vars */
+            });
+        });
+
+        it("cannot have two different instances listening on the same http server with the same path", function (done) {
+            const server = http.createServer();
+            const wss1 = new WebSocketServer({ server, path: "/wss1" });
+
+            try {
+                // eslint-disable-next-line no-unused-vars
+                const wss2 = new WebSocketServer({ server, path: "/wss1" });
+            } catch (e) {
+                wss1.close();
+                done();
+            }
+        });
+
+        it("will not crash when it receives an unhandled opcode", function (done) {
+            const wss = new WebSocketServer({ port: 8088 });
+
+            wss.on("connection", (ws) => {
+                ws.onerror = () => {
+                    ws.close();
+                    wss.close();
+                    done();
+                };
+            });
+
+            const ws = new WebSocket("ws://localhost:8088/");
+
+            ws.onopen = () => {
+                ws._socket.write(new Buffer([5]));
+                ws.send("");
+            };
+        });
+    });
+
+    describe("#close", function () {
+        it("does not thrown when called twice", function (done) {
+            const wss = new WebSocketServer({ port: ++port }, () => {
+                wss.close();
+                wss.close();
+                wss.close();
+
+                done();
+            });
+        });
+
+        it("will close all clients", function (done) {
+            const wss = new WebSocketServer({ port: ++port }, () => {
+                const ws = new WebSocket(`ws://localhost:${port}`);
+                ws.on("close", () => {
+                    if (++closes === 2) done();
+                });
+            });
+            let closes = 0;
+            wss.on("connection", (client) => {
+                client.on("close", () => {
+                    if (++closes === 2) done();
+                });
+                wss.close();
+            });
+        });
+
+        it("does not close a precreated server", function (done) {
+            const server = http.createServer();
+            const realClose = server.close;
+
+            server.close = () => {
+                throw new Error("must not close pre-created server");
+            };
+
+            const wss = new WebSocketServer({ server });
+
+            wss.on("connection", () => {
+                wss.close();
+                server.close = realClose;
+                server.close(done);
+            });
+
+            server.listen(++port, () => {
+                new WebSocket(`ws://localhost:${port}`);
+            });
+        });
+
+        it("cleans event handlers on precreated server", function (done) {
+            const server = http.createServer();
+
+            server.listen(++port, () => {
+                const wss = new WebSocketServer({ server });
+                wss.close();
+
+                assert.strictEqual(server.listeners("listening").length, 0);
+                assert.strictEqual(server.listeners("upgrade").length, 0);
+                assert.strictEqual(server.listeners("error").length, 0);
+
+                server.close(done);
+            });
+        });
+
+        it("cleans up websocket data on a precreated server", function (done) {
+            const server = http.createServer();
+
+            server.listen(++port, () => {
+                const wss1 = new WebSocketServer({ server, path: "/wss1" });
+                const wss2 = new WebSocketServer({ server, path: "/wss2" });
+
+                assert.strictEqual(typeof server._webSocketPaths, "object");
+                assert.strictEqual(Object.keys(server._webSocketPaths).length, 2);
+
+                wss1.close();
+
+                assert.strictEqual(Object.keys(server._webSocketPaths).length, 1);
+
+                wss2.close();
+
+                assert.strictEqual(typeof server._webSocketPaths, "undefined");
+                server.close(done);
+            });
+        });
+    });
+
+    describe("#clients", function () {
+        it("returns a list of connected clients", function (done) {
+            const wss = new WebSocketServer({ port: ++port }, () => {
+                assert.strictEqual(wss.clients.size, 0);
+                new WebSocket(`ws://localhost:${port}`);
+            });
+
+            wss.on("connection", () => {
+                assert.strictEqual(wss.clients.size, 1);
+                wss.close();
+                done();
+            });
+        });
+
+        it("can be disabled", function (done) {
+            const wss = new WebSocketServer({ port: ++port, clientTracking: false }, () => {
+                assert.strictEqual(wss.clients, undefined);
+                new WebSocket(`ws://localhost:${port}`);
+            });
+
+            wss.on("connection", (client) => {
+                assert.strictEqual(wss.clients, undefined);
+                client.close();
+                wss.close();
+                done();
+            });
+        });
+
+        it("is updated when client terminates the connection", function (done) {
+            const wss = new WebSocketServer({ port: ++port }, () => {
+                const ws = new WebSocket(`ws://localhost:${port}`);
+
+                wss.on("connection", (client) => {
+                    client.on("close", () => {
+                        assert.strictEqual(wss.clients.size, 0);
+                        wss.close();
+                        done();
+                    });
+
+                    ws.close();
+                });
+            });
+        });
+
+        it("is updated when client closes the connection", function (done) {
+            const wss = new WebSocketServer({ port: ++port }, () => {
+                const ws = new WebSocket(`ws://localhost:${port}`);
+
+                wss.on("connection", (client) => {
+                    client.on("close", () => {
+                        assert.strictEqual(wss.clients.size, 0);
+                        wss.close();
+                        done();
+                    });
+
+                    ws.close();
+                });
+            });
+        });
+    });
+
+    describe("#options", function () {
+        it("exposes options passed to constructor", function (done) {
+            const wss = new WebSocketServer({ port: ++port }, () => {
+                assert.strictEqual(wss.options.port, port);
+                wss.close();
+                done();
+            });
+        });
+    });
+
+    describe("#maxpayload", function () {
+        it("maxpayload is passed on to clients,", function (done) {
+            const maxPayload = 20480;
+            const wss = new WebSocketServer({ port: ++port, maxPayload }, () => {
+                new WebSocket(`ws://localhost:${port}`);
+            });
+
+            wss.on("connection", (client) => {
+                assert.strictEqual(client.maxPayload, maxPayload);
+                wss.close();
+                done();
+            });
+        });
+
+        it("maxpayload is passed on to hybi receivers", function (done) {
+            const maxPayload = 20480;
+            const wss = new WebSocketServer({ port: ++port, maxPayload }, () => {
+                new WebSocket(`ws://localhost:${port}`);
+            });
+
+            wss.on("connection", (client) => {
+                assert.strictEqual(client._receiver.maxPayload, maxPayload);
+                wss.close();
+                done();
+            });
+        });
+
+        it("maxpayload is passed on to permessage-deflate", function (done) {
+            const maxPayload = 20480;
+            const wss = new WebSocketServer({ port: ++port, maxPayload }, () => {
+                new WebSocket(`ws://localhost:${port}`);
+            });
+
+            wss.on("connection", (client) => {
+                assert.strictEqual(
+                    client._receiver.extensions[adone.net.ws.PerMessageDeflate.extensionName]._maxPayload,
+                    maxPayload
+                );
+                wss.close();
+                done();
+            });
+        });
+    });
+
+    describe("#handleUpgrade", function () {
+        it("can be used for a pre-existing server", function (done) {
+            const server = http.createServer();
+
+            server.listen(++port, () => {
+                const wss = new WebSocketServer({ noServer: true });
+
+                server.on("upgrade", (req, socket, head) => {
+                    wss.handleUpgrade(req, socket, head, (client) => client.send("hello"));
+                });
+
+                const ws = new WebSocket(`ws://localhost:${port}`);
+
+                ws.on("message", (message) => {
+                    assert.strictEqual(message, "hello");
+                    wss.close();
+                    server.close(done);
+                });
+            });
+        });
+
+        it("closes the connection when path does not match", function (done) {
+            const wss = new WebSocketServer({ port: ++port, path: "/ws" }, () => {
+                const req = http.request({
+                    headers: {
+                        "Connection": "Upgrade",
+                        "Upgrade": "websocket"
+                    },
+                    host: "127.0.0.1",
+                    port
+                });
+
+                req.on("response", (res) => {
+                    assert.strictEqual(res.statusCode, 400);
+                    wss.close();
+                    done();
+                });
+
+                req.end();
+            });
+        });
+
+        it("closes the connection when protocol version is Hixie-76", function (done) {
+            const wss = new WebSocketServer({ port: ++port }, () => {
+                const req = http.request({
+                    headers: {
+                        "Connection": "Upgrade",
+                        "Upgrade": "WebSocket",
+                        "Sec-WebSocket-Key1": "4 @1  46546xW%0l 1 5",
+                        "Sec-WebSocket-Key2": "12998 5 Y3 1  .P00",
+                        "Sec-WebSocket-Protocol": "sample"
+                    },
+                    port
+                });
+
+                req.on("response", (res) => {
+                    assert.strictEqual(res.statusCode, 400);
+                    wss.close();
+                    done();
+                });
+
+                req.end();
+            });
+        });
+    });
+
+    describe("connection establishing", function () {
+        it("does not accept connections with no sec-websocket-key", function (done) {
+            const wss = new WebSocketServer({ port: ++port }, () => {
+                const req = http.request({
+                    headers: {
+                        "Connection": "Upgrade",
+                        "Upgrade": "websocket"
+                    },
+                    host: "127.0.0.1",
+                    port
+                });
+
+                req.on("response", (res) => {
+                    assert.strictEqual(res.statusCode, 400);
+                    wss.close();
+                    done();
+                });
+
+                req.end();
+            });
+
+            wss.on("connection", () => {
+                done(new Error("connection must not be established"));
+            });
+        });
+
+        it("does not accept connections with no sec-websocket-version", function (done) {
+            const wss = new WebSocketServer({ port: ++port }, () => {
+                const req = http.request({
+                    headers: {
+                        "Connection": "Upgrade",
+                        "Upgrade": "websocket",
+                        "Sec-WebSocket-Key": "dGhlIHNhbXBsZSBub25jZQ=="
+                    },
+                    host: "127.0.0.1",
+                    port
+                });
+
+                req.on("response", (res) => {
+                    assert.strictEqual(res.statusCode, 400);
+                    wss.close();
+                    done();
+                });
+
+                req.end();
+            });
+
+            wss.on("connection", () => {
+                done(new Error("connection must not be established"));
+            });
+        });
+
+        it("does not accept connections with invalid sec-websocket-version", function (done) {
+            const wss = new WebSocketServer({ port: ++port }, () => {
+                const req = http.request({
+                    headers: {
+                        "Connection": "Upgrade",
+                        "Upgrade": "websocket",
+                        "Sec-WebSocket-Key": "dGhlIHNhbXBsZSBub25jZQ==",
+                        "Sec-WebSocket-Version": 12
+                    },
+                    host: "127.0.0.1",
+                    port
+                });
+
+                req.on("response", (res) => {
+                    assert.strictEqual(res.statusCode, 400);
+                    wss.close();
+                    done();
+                });
+
+                req.end();
+            });
+
+            wss.on("connection", () => {
+                done(new Error("connection must not be established"));
+            });
+        });
+
+        it("client can be denied", function (done) {
+            const wss = new WebSocketServer({
+                verifyClient: () => false,
+                port: ++port
+            }, () => {
+                const req = http.request({
+                    headers: {
+                        "Connection": "Upgrade",
+                        "Upgrade": "websocket",
+                        "Sec-WebSocket-Key": "dGhlIHNhbXBsZSBub25jZQ==",
+                        "Sec-WebSocket-Version": 8,
+                        "Sec-WebSocket-Origin": "http://foobar.com"
+                    },
+                    host: "127.0.0.1",
+                    port
+                });
+
+                req.on("response", (res) => {
+                    assert.strictEqual(res.statusCode, 401);
+                    wss.close();
+                    done();
+                });
+
+                req.end();
+            });
+
+            wss.on("connection", () => {
+                done(new Error("connection must not be established"));
+            });
+        });
+
+        it("client can be accepted", function (done) {
+            const wss = new WebSocketServer({
+                port: ++port,
+                verifyClient: () => true
+            }, () => {
+                const req = http.request({
+                    headers: {
+                        "Connection": "Upgrade",
+                        "Upgrade": "websocket",
+                        "Sec-WebSocket-Key": "dGhlIHNhbXBsZSBub25jZQ==",
+                        "Sec-WebSocket-Version": 13,
+                        "Origin": "http://foobar.com"
+                    },
+                    host: "127.0.0.1",
+                    port
+                });
+
+                req.end();
+            });
+
+            wss.on("connection", () => {
+                wss.close();
+                done();
+            });
+        });
+
+        it("verifyClient gets client origin", function (done) {
+            let verifyClientCalled = false;
+            const wss = new WebSocketServer({
+                verifyClient: (info) => {
+                    assert.strictEqual(info.origin, "http://foobarbaz.com");
+                    verifyClientCalled = true;
+                    return false;
+                },
+                port: ++port
+            }, () => {
+                const req = http.request({
+                    headers: {
+                        "Connection": "Upgrade",
+                        "Upgrade": "websocket",
+                        "Sec-WebSocket-Key": "dGhlIHNhbXBsZSBub25jZQ==",
+                        "Sec-WebSocket-Version": 13,
+                        "Origin": "http://foobarbaz.com"
+                    },
+                    host: "127.0.0.1",
+                    port
+                });
+
+                req.on("response", () => {
+                    assert.isOk(verifyClientCalled);
+                    wss.close();
+                    done();
+                });
+
+                req.end();
+            });
+        });
+
+        it("verifyClient gets original request", function (done) {
+            let verifyClientCalled = false;
+            const wss = new WebSocketServer({
+                verifyClient: (info) => {
+                    assert.strictEqual(
+                        info.req.headers["sec-websocket-key"],
+                        "dGhlIHNhbXBsZSBub25jZQ=="
+                    );
+                    verifyClientCalled = true;
+                    return false;
+                },
+                port: ++port
+            }, () => {
+                const req = http.request({
+                    headers: {
+                        "Connection": "Upgrade",
+                        "Upgrade": "websocket",
+                        "Sec-WebSocket-Key": "dGhlIHNhbXBsZSBub25jZQ==",
+                        "Sec-WebSocket-Version": 13,
+                        "Origin": "http://foobarbaz.com"
+                    },
+                    host: "127.0.0.1",
+                    port
+                });
+
+                req.on("response", () => {
+                    assert.isOk(verifyClientCalled);
+                    wss.close();
+                    done();
+                });
+
+                req.end();
+            });
+        });
+
+        it("verifyClient has secure:true for ssl connections", function (done) {
+            const server = https.createServer({
+                cert: fs.readFileSync(getFixturesPath("certificate.pem")),
+                key: fs.readFileSync(getFixturesPath("key.pem"))
+            });
+
+            let success = false;
+            const wss = new WebSocketServer({
+                verifyClient: (info) => {
+                    success = info.secure === true;
+                    return true;
+                },
+                server
+            });
+
+            wss.on("connection", () => {
+                assert.isOk(success);
+                wss.close();
+                server.close(done);
+            });
+
+            server.listen(++port, () => new WebSocket(`wss://localhost:${port}`, {
+                rejectUnauthorized: false
+            }));
+        });
+
+        it("verifyClient has secure:false for non-ssl connections", function (done) {
+            const server = http.createServer();
+
+            let success = false;
+            const wss = new WebSocketServer({
+                server,
+                verifyClient: (info) => {
+                    success = info.secure === false;
+                    return true;
+                }
+            });
+
+            wss.on("connection", () => {
+                assert.isOk(success);
+                wss.close();
+                server.close(done);
+            });
+
+            server.listen(++port, () => {
+                new WebSocket(`ws://localhost:${port}`);
+            });
+        });
+
+        it("client can be denied asynchronously", function (done) {
+            const wss = new WebSocketServer({
+                verifyClient: (o, cb) => process.nextTick(cb, false),
+                port: ++port
+            }, () => {
+                const req = http.request({
+                    headers: {
+                        "Connection": "Upgrade",
+                        "Upgrade": "websocket",
+                        "Sec-WebSocket-Key": "dGhlIHNhbXBsZSBub25jZQ==",
+                        "Sec-WebSocket-Version": 8,
+                        "Sec-WebSocket-Origin": "http://foobar.com"
+                    },
+                    host: "127.0.0.1",
+                    port
+                });
+
+                req.on("response", (res) => {
+                    assert.strictEqual(res.statusCode, 401);
+                    wss.close();
+                    done();
+                });
+
+                req.end();
+            });
+
+            wss.on("connection", () => {
+                done(new Error("connection must not be established"));
+            });
+        });
+
+        it("client can be denied asynchronously with custom response code", function (done) {
+            const wss = new WebSocketServer({
+                verifyClient: (o, cb) => process.nextTick(cb, false, 404),
+                port: ++port
+            }, () => {
+                const req = http.request({
+                    headers: {
+                        "Connection": "Upgrade",
+                        "Upgrade": "websocket",
+                        "Sec-WebSocket-Key": "dGhlIHNhbXBsZSBub25jZQ==",
+                        "Sec-WebSocket-Version": 8,
+                        "Sec-WebSocket-Origin": "http://foobar.com"
+                    },
+                    host: "127.0.0.1",
+                    port
+                });
+
+                req.on("response", (res) => {
+                    assert.strictEqual(res.statusCode, 404);
+                    wss.close();
+                    done();
+                });
+
+                req.end();
+            });
+
+            wss.on("connection", () => {
+                done(new Error("connection must not be established"));
+            });
+        });
+
+        it("client can be accepted asynchronously", function (done) {
+            const wss = new WebSocketServer({
+                verifyClient: (o, cb) => process.nextTick(cb, true),
+                port: ++port
+            }, () => {
+                const req = http.request({
+                    headers: {
+                        "Connection": "Upgrade",
+                        "Upgrade": "websocket",
+                        "Sec-WebSocket-Key": "dGhlIHNhbXBsZSBub25jZQ==",
+                        "Sec-WebSocket-Version": 13,
+                        "Origin": "http://foobar.com"
+                    },
+                    host: "127.0.0.1",
+                    port
+                });
+
+                req.end();
+            });
+
+            wss.on("connection", () => {
+                wss.close();
+                done();
+            });
+        });
+
+        it("handles messages passed along with the upgrade request (upgrade head)", function (done) {
+            const wss = new WebSocketServer({ port: ++port }, () => {
+                const req = http.request({
+                    headers: {
+                        "Connection": "Upgrade",
+                        "Upgrade": "websocket",
+                        "Sec-WebSocket-Key": "dGhlIHNhbXBsZSBub25jZQ==",
+                        "Sec-WebSocket-Version": 13,
+                        "Origin": "http://foobar.com"
+                    },
+                    host: "127.0.0.1",
+                    port
+                });
+
+                req.write(Buffer.from([0x81, 0x05, 0x48, 0x65, 0x6c, 0x6c, 0x6f]));
+                req.end();
+            });
+
+            wss.on("connection", (ws) => {
+                ws.on("message", (data) => {
+                    assert.strictEqual(data, "Hello");
+                    wss.close();
+                    done();
+                });
+            });
+        });
+
+        it("selects the first protocol by default", function (done) {
+            const wss = new WebSocketServer({ port: ++port }, () => {
+                const ws = new WebSocket(`ws://localhost:${port}`, ["prot1", "prot2"]);
+
+                ws.on("open", () => {
+                    assert.strictEqual(ws.protocol, "prot1");
+                    wss.close();
+                    done();
+                });
+            });
+        });
+
+        it("selects the last protocol via protocol handler", function (done) {
+            const wss = new WebSocketServer({
+                handleProtocols: (ps, cb) => cb(true, ps[ps.length - 1]),
+                port: ++port
+            }, () => {
+                const ws = new WebSocket(`ws://localhost:${port}`, ["prot1", "prot2"]);
+
+                ws.on("open", () => {
+                    assert.strictEqual(ws.protocol, "prot2");
+                    wss.close();
+                    done();
+                });
+            });
+        });
+
+        it("client detects invalid server protocol", function (done) {
+            const wss = new WebSocketServer({
+                handleProtocols: (ps, cb) => cb(true, "prot3"),
+                port: ++port
+            }, () => {
+                const ws = new WebSocket(`ws://localhost:${port}`, ["prot1", "prot2"]);
+
+                ws.on("open", () => done(new Error("connection must not be established")));
+                ws.on("error", () => {
+                    wss.close();
+                    done();
+                });
+            });
+        });
+
+        it("client detects no server protocol", function (done) {
+            const wss = new WebSocketServer({
+                handleProtocols: (ps, cb) => cb(true),
+                port: ++port
+            }, () => {
+                const ws = new WebSocket(`ws://localhost:${port}`, ["prot1", "prot2"]);
+
+                ws.on("open", () => done(new Error("connection must not be established")));
+                ws.on("error", () => {
+                    wss.close();
+                    done();
+                });
+            });
+        });
+
+        it("client refuses server protocols", function (done) {
+            const wss = new WebSocketServer({
+                handleProtocols: (ps, cb) => cb(false),
+                port: ++port
+            }, () => {
+                const ws = new WebSocket(`ws://localhost:${port}`, ["prot1", "prot2"]);
+
+                ws.on("open", () => done(new Error("connection must not be established")));
+                ws.on("error", () => {
+                    wss.close();
+                    done();
+                });
+            });
+        });
+
+        it("server detects unauthorized protocol handler", function (done) {
+            const wss = new WebSocketServer({
+                handleProtocols: (ps, cb) => cb(false),
+                port: ++port
+            }, () => {
+                const req = http.request({
+                    headers: {
+                        "Connection": "Upgrade",
+                        "Upgrade": "websocket",
+                        "Sec-WebSocket-Key": "dGhlIHNhbXBsZSBub25jZQ==",
+                        "Sec-WebSocket-Version": 13,
+                        "Sec-WebSocket-Origin": "http://foobar.com"
+                    },
+                    host: "127.0.0.1",
+                    port
+                });
+
+                req.on("response", (res) => {
+                    assert.strictEqual(res.statusCode, 401);
+                    wss.close();
+                    done();
+                });
+
+                req.end();
+            });
+        });
+
+        it("server detects invalid protocol handler", function (done) {
+            const wss = new WebSocketServer({
+                handleProtocols: () => {
+                    // not calling callback is an error and shouldn't timeout
+                },
+                port: ++port
+            }, () => {
+                const req = http.request({
+                    headers: {
+                        "Connection": "Upgrade",
+                        "Upgrade": "websocket",
+                        "Sec-WebSocket-Key": "dGhlIHNhbXBsZSBub25jZQ==",
+                        "Sec-WebSocket-Version": 13,
+                        "Sec-WebSocket-Origin": "http://foobar.com"
+                    },
+                    host: "127.0.0.1",
+                    port
+                });
+
+                req.on("response", (res) => {
+                    assert.strictEqual(res.statusCode, 501);
+                    wss.close();
+                    done();
+                });
+
+                req.end();
+            });
+        });
+
+        it("accept connections with sec-websocket-extensions", function (done) {
+            const wss = new WebSocketServer({ port: ++port }, () => {
+                const req = http.request({
+                    headers: {
+                        "Connection": "Upgrade",
+                        "Upgrade": "websocket",
+                        "Sec-WebSocket-Key": "dGhlIHNhbXBsZSBub25jZQ==",
+                        "Sec-WebSocket-Version": 13,
+                        "Sec-WebSocket-Extensions": "permessage-foo; x=10"
+                    },
+                    host: "127.0.0.1",
+                    port
+                });
+
+                req.end();
+            });
+
+            wss.on("connection", () => {
+                wss.close();
+                done();
+            });
+        });
+    });
+
+    describe("messaging", function () {
+        it("can send and receive data", function (done) {
+            let data = new Array(65 * 1024);
+
+            for (let i = 0; i < data.length; ++i) {
+                data[i] = String.fromCharCode(65 + ~~(25 * Math.random()));
+            }
+            data = data.join("");
+
+            const wss = new WebSocketServer({ port: ++port }, () => {
+                const ws = new WebSocket(`ws://localhost:${port}`);
+
+                ws.on("message", (message) => ws.send(message));
+            });
+
+            wss.on("connection", (client) => {
+                client.on("message", (message) => {
+                    assert.strictEqual(message, data);
+                    wss.close();
+                    done();
+                });
+
+                client.send(data);
+            });
+        });
+    });
+
+    describe("client properties", function () {
+        it("protocol is exposed", function (done) {
+            const wss = new WebSocketServer({ port: ++port }, () => {
+                new WebSocket(`ws://localhost:${port}`, "hi");
+            });
+
+            wss.on("connection", (client) => {
+                assert.strictEqual(client.protocol, "hi");
+                wss.close();
+                done();
+            });
+        });
+
+        it("protocolVersion is exposed", function (done) {
+            const wss = new WebSocketServer({ port: ++port }, () => {
+                new WebSocket(`ws://localhost:${port}`, { protocolVersion: 8 });
+            });
+
+            wss.on("connection", (client) => {
+                assert.strictEqual(client.protocolVersion, 8);
+                wss.close();
+                done();
+            });
+        });
+
+        it("upgradeReq is the original request object", function (done) {
+            const wss = new WebSocketServer({ port: ++port }, () => {
+                new WebSocket(`ws://localhost:${port}`, { protocolVersion: 8 });
+            });
+
+            wss.on("connection", (client) => {
+                assert.strictEqual(client.upgradeReq.httpVersion, "1.1");
+                wss.close();
+                done();
+            });
+        });
+    });
+
+    describe("permessage-deflate", function () {
+        it("accept connections with permessage-deflate extension", function (done) {
+            const wss = new WebSocketServer({ port: ++port }, () => {
+                const req = http.request({
+                    headers: {
+                        "Connection": "Upgrade",
+                        "Upgrade": "websocket",
+                        "Sec-WebSocket-Key": "dGhlIHNhbXBsZSBub25jZQ==",
+                        "Sec-WebSocket-Version": 13,
+                        "Sec-WebSocket-Extensions": "permessage-deflate; client_max_window_bits=8; server_max_window_bits=8; client_no_context_takeover; server_no_context_takeover"
+                    },
+                    host: "127.0.0.1",
+                    port
+                });
+
+                req.end();
+            });
+
+            wss.on("connection", () => {
+                wss.close();
+                done();
+            });
+        });
+
+        it("does not accept connections with not defined extension parameter", function (done) {
+            const wss = new WebSocketServer({ port: ++port }, () => {
+                const req = http.request({
+                    headers: {
+                        "Connection": "Upgrade",
+                        "Upgrade": "websocket",
+                        "Sec-WebSocket-Key": "dGhlIHNhbXBsZSBub25jZQ==",
+                        "Sec-WebSocket-Version": 13,
+                        "Sec-WebSocket-Extensions": "permessage-deflate; foo=15"
+                    },
+                    host: "127.0.0.1",
+                    port
+                });
+
+                req.on("response", (res) => {
+                    assert.strictEqual(res.statusCode, 400);
+                    wss.close();
+                    done();
+                });
+
+                req.end();
+            });
+
+            wss.on("connection", () => {
+                done(new Error("connection must not be established"));
+            });
+        });
+
+        it("does not accept connections with invalid extension parameter", function (done) {
+            const wss = new WebSocketServer({ port: ++port }, () => {
+                const req = http.request({
+                    headers: {
+                        "Connection": "Upgrade",
+                        "Upgrade": "websocket",
+                        "Sec-WebSocket-Key": "dGhlIHNhbXBsZSBub25jZQ==",
+                        "Sec-WebSocket-Version": 13,
+                        "Sec-WebSocket-Extensions": "permessage-deflate; server_max_window_bits=foo"
+                    },
+                    host: "127.0.0.1",
+                    port
+                });
+
+                req.on("response", (res) => {
+                    assert.strictEqual(res.statusCode, 400);
+                    wss.close();
+                    done();
+                });
+
+                req.end();
+            });
+
+            wss.on("connection", () => {
+                done(new Error("connection must not be established"));
+            });
+        });
+    });
+});

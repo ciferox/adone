@@ -1,0 +1,25 @@
+{
+    "name": "$$",
+    "description": "Adone based application template",
+    "version": "0.0.0",
+    "author": "Great Creator",
+    "dependencies": {},
+    "devDependencies": {},
+    "engines": {
+        "node": ">=7.0.0"
+    },
+    "scripts": {
+        "prepublish": "npm run build && npm run test-shani && npm run test-shani-assert && npm test -- --first",
+        "test-shani": "node --require source-map-support libTests/shani/test.js",
+        "test-shani-assert": "node bin/shani test shani.assert",
+        "test": "node bin/shani.js test",
+        "build": "node-gyp rebuild && gulp build",
+        "watch": "gulp watch"
+    },
+    "files": [
+        "bin"
+    ],
+    "bin": {
+        "$$": "./bin/app.js"
+    }
+}

@@ -1,0 +1,4 @@
+{
+  "plugins": ["root"],
+  "extends": "./extended.acompiler_rc.json"
+}

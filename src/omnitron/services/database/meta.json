@@ -1,0 +1,10 @@
+{
+    "description": "Object-database service",
+    "status": "disabled",
+    "contexts": [
+        {
+            "id": "db",
+            "class": "Database"
+        }
+    ]
+}

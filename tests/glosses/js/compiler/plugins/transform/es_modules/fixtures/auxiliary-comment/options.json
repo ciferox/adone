@@ -1,0 +1,7 @@
+{
+    "plugins": ["externalHelpers",
+        "transform.ESModules"
+    ],
+    "auxiliaryCommentBefore": "before",
+    "auxiliaryCommentAfter": "after"
+}

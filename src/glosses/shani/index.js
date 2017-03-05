@@ -1,0 +1,1049 @@
+import adone from "adone";
+import assertion from "./assert";
+import * as mock from "./mock";
+
+export const utils = {
+    assertion,
+    assert: assertion.assert,
+    expect: assertion.expect,
+    ...mock
+};
+
+const { is, x } = adone;
+
+class Hook {
+    constructor(description, callback) {
+        this.description = description;
+        this.callback = callback;
+        this._timeout = 5000;  // global hook timeout
+        this._fired = false;
+        this._failed = null;
+    }
+
+    fired() {
+        return this._fired === true;
+    }
+
+    failed() {
+        return this._failed !== null;
+    }
+
+    cause() {
+        return this._failed;
+    }
+
+    timeout(value) {
+        if (!adone.is.undefined(value)) {
+            this._timeout = value;
+            return this;
+        }
+        return this._timeout;
+    }
+
+    async run() {
+        this._fired = true;
+        let err = null;
+        let s = process.hrtime();
+        let uncaught;
+        try {
+            let p = new Promise((resolve, reject) => {
+                uncaught = reject;
+                process.once("uncaughtException", uncaught);
+                if (this.callback.length) {
+                    this.callback((err) => {
+                        err ? reject(err) : resolve();
+                    });
+                } else {
+                    Promise.resolve(this.callback()).then(resolve, reject);
+                }
+            });
+
+            if (this.timeout()) {
+                p = adone.promise.timeout(p, this.timeout());
+            }
+            await p;
+        } catch (_err) {
+            if (!_err) {
+                _err = new Error("Promise rejected with no or falsy reason");
+            }
+            err = _err;
+        } finally {
+            process.removeListener("uncaughtException", uncaught);
+            s = process.hrtime(s);
+        }
+        this._failed = err;
+        return { err, elapsed: s[0] * 1e3 + s[1] / 1e6 };
+    }
+}
+
+class Block {
+    constructor(name, parent = null) {
+        this.name = name;
+        this.hooks = {
+            before: [],
+            beforeEach: [],
+            after: [],
+            afterEach: []
+        };
+        this._beforeHooksFired = false;
+        this._afterHooksFired = false;
+
+        this.children = [];
+        this.parent = parent;
+
+        this._timeout = null;
+        this._level = null;
+        this._skip = false;
+        this._only = false;
+        this._watch = false;
+        this._retries = null;
+    }
+
+    addChild(child) {
+        this.children.push(child);
+    }
+
+    *beforeHooks() {
+        yield* this.hooks.before;
+    }
+
+    *afterHooks() {
+        for (let i = this.hooks.after.length - 1; i >= 0; --i) {
+            yield this.hooks.after[i];
+        }
+    }
+
+    *beforeEachHooks() {
+        yield* this.hooks.beforeEach;
+    }
+
+    *afterEachHooks() {
+        for (let i = this.hooks.afterEach.length - 1; i >= 0; --i) {
+            yield this.hooks.afterEach[i];
+        }
+    }
+
+    isExclusive() {
+        return this._skip === true || ((this.parent || false) && this.parent.isExclusive());
+    }
+
+    isInclusive() {
+        return this._only === true;
+    }
+
+    hasInclusive(exclusiveMode = false) {
+        for (const child of this.children) {
+            if ((child.isInclusive() && !child.isExclusive()) || (child instanceof Block && child.hasInclusive(exclusiveMode || child.isExclusive()))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    skip() {
+        this._skip = true;
+        return this;
+    }
+
+    only() {
+        this._only = true;
+        return this;
+    }
+
+    timeout(ms) {
+        if (ms) {
+            this._timeout = ms;
+        }
+        if (this._timeout) {
+            return this._timeout;
+        }
+        if (this.parent) {
+            return this.parent.timeout();
+        }
+        return null;
+    }
+
+    retries(n) {
+        if (n) {
+            this._retries = n;
+        }
+        if (this._retries) {
+            return this._retries;
+        }
+        if (this.parent) {
+            return this.parent.retries();
+        }
+        return null;
+    }
+
+    level(level) {
+        if (level !== undefined) {
+            this._level = level;
+        } else if (this._level === null) {
+            this._level = this.parent ? this.parent.level() + 1 : 0;
+        }
+        return this._level;
+    }
+
+    chain() {
+        if (!this.parent) {
+            return this.name;
+        }
+        const p = this.parent.chain();
+        if (!p) {
+            return this.name;
+        }
+        return `${p} - ${this.name}`;
+    }
+
+    blockChain() {
+        if (!this.parent) {
+            return [this];
+        }
+        return [...this.parent.blockChain(), this];
+    }
+}
+
+class Test {
+    constructor(description, callback, block) {
+        this.description = description;
+        this.callback = callback;
+        this.block = block;
+        this._skip = false;
+        this._only = false;
+        this._timeout = null;
+        this._beforeHooks = [];
+        this._afterHooks = [];
+        this._beforeHooksFired = false;
+        this._afterHooksFired = false;
+    }
+
+    async run() {
+        let err = null;
+        let s = process.hrtime();
+        let uncaught;
+        try {
+            let p = new Promise((resolve, reject) => {
+                uncaught = reject;
+                process.once("uncaughtException", uncaught);
+                if (this.callback.length) {
+                    this.callback((err) => {
+                        err ? reject(err) : resolve();
+                    });
+                } else {
+                    Promise.resolve(this.callback()).then(resolve, reject);
+                }
+            });
+
+            if (this.timeout()) {
+                p = adone.promise.timeout(p, this.timeout());
+            }
+            await p;
+        } catch (_err) {
+            if (!_err) {
+                _err = new Error("Promise rejected with no or falsy reason");
+            }
+            err = _err;
+        } finally {
+            process.removeListener("uncaughtException", uncaught);
+            s = process.hrtime(s);
+        }
+        return { err, elapsed: s[0] * 1e3 + s[1] / 1e6 };
+    }
+
+    isExclusive() {
+        return this._skip === true || this.block.isExclusive();
+    }
+
+    isInclusive() {
+        return this._only === true;
+    }
+
+    skip() {
+        this._skip = true;
+        return this;
+    }
+
+    only() {
+        this._only = true;
+        return this;
+    }
+
+    timeout(ms) {
+        if (ms) {
+            this._timeout = ms;
+        }
+        return this._timeout || this.block.timeout();
+    }
+
+    retries(n) {
+        if (n) {
+            this._retries = n;
+        }
+        return this._retries || this.block.retries();
+    }
+
+    chain() {
+        return `${this.block.chain()} : ${this.description}`;
+    }
+
+    before(description, callback) {
+        if (adone.is.function(description)) {
+            [description, callback] = ["", description];
+        }
+        this._beforeHooks.push(new Hook(description, callback));
+        return this;
+    }
+
+    after(description, callback) {
+        if (adone.is.function(description)) {
+            [description, callback] = ["", description];
+        }
+        this._afterHooks.push(new Hook(description, callback));
+        return this;
+    }
+
+    test(callback) {
+        this.callback = callback;
+        return this;
+    }
+
+    *beforeHooks() {
+        yield* this._beforeHooks;
+    }
+
+    *afterHooks() {
+        yield* this._afterHooks;
+    }
+}
+
+export class Engine {
+    constructor({ defaultTimeout = 5000, firstFailExit = false, transpilerOptions = {}, watch = false } = {}) {
+        this._paths = [];  // path can be a glob or a path
+        this.defaultTimeout = defaultTimeout;
+        this.firstFailExit = firstFailExit;
+        this.transpilerOptions = transpilerOptions;
+        this.watch = watch;
+    }
+
+    include(...paths) {
+        this._paths.push(...paths);
+    }
+
+    exclude(...paths) {
+        this._paths.push(...paths.map((x) => `!${x}`));
+    }
+
+    context() {
+        const root = new Block(null);
+        root.level(-1);  // take care of the nested blocks
+        root.timeout(this.defaultTimeout);
+        root.retries(1);
+        const stack = new adone.collection.Stack([root]);
+
+        function describe(...args) {
+            const callback = args.pop();
+            if (!is.function(callback)) {
+                throw new x.InvalidArgument("The last argument must be a function");
+            }
+            if (args.length === 0) {
+                throw new x.InvalidArgument("A describe must have a name");
+            }
+            let block;
+            for (const name of args) {
+                block = new Block(name, stack.top);
+                stack.top.addChild(block);
+                stack.push(block);
+            }
+
+            if (adone.is.promise(callback.call(block))) {
+                throw new Error("It is not allowed to use asynchronous functions as a describe callback");
+            }
+            for (let i = 0; i < args.length; ++i) {
+                stack.pop();
+            }
+            return block;
+        }
+
+        describe.skip = (...args) => describe(...args).skip();
+        describe.only = (...args) => describe(...args).only();
+
+        function describes(...names) {
+            let block;
+            for (const name of names) {
+                block = new Block(name, stack.top);
+                stack.top.addChild(block);
+                stack.push(block);
+            }
+            return block;
+        }
+
+        function it(description, callback) {
+            const test = new Test(description, callback, stack.top);
+            stack.top.addChild(test);
+            return test;
+        }
+
+        it.skip = (...args) => it(...args).skip();
+        it.only = (...args) => it(...args).only();
+
+        function before(description, callback) {
+            if (adone.is.function(description)) {
+                [description, callback] = ["", description];
+            }
+            stack.top.hooks.before.push(new Hook(description, callback));
+        }
+
+        function after(description, callback) {
+            if (adone.is.function(description)) {
+                [description, callback] = ["", description];
+            }
+            stack.top.hooks.after.push(new Hook(description, callback));
+        }
+
+        function beforeEach(description, callback) {
+            if (adone.is.function(description)) {
+                [description, callback] = ["", description];
+            }
+            stack.top.hooks.beforeEach.push(new Hook(description, callback));
+        }
+
+        function afterEach(description, callback) {
+            if (adone.is.function(description)) {
+                [description, callback] = ["", description];
+            }
+            stack.top.hooks.afterEach.push(new Hook(description, callback));
+        }
+
+        function skip(callback) {
+            skip.promise = new Promise((resolve) => resolve(callback())).then((skipped) => {
+                if (skipped) {
+                    root.skip();
+                }
+            });
+        }
+        skip.promise = Promise.resolve();
+
+        function start() {
+            const emitter = new adone.EventEmitter();
+
+            // mark all the skipped nodes
+            (function markSkipped(block) {
+                const exclusive = block.isExclusive();
+                for (const node of block.children) {
+                    if (exclusive && !node.isExclusive()) {
+                        node.skip();
+                    }
+                    if (node instanceof Block) {
+                        markSkipped(node);
+                    }
+                }
+            })(root);
+
+            // mark all the paths to the inclusive nodes if there are
+            const hasInclusive = (function checkInclusive(block) {
+                if (block.isInclusive() && !block.hasInclusive()) {
+                    // there are no inclusive nested nodes, but the parent is inclusive, mark all the nodes
+                    (function mark(node) {
+                        for (const n of node.children) {
+                            if (n.isExclusive()) {
+                                continue;
+                            }
+                            n.only();
+                            if (n instanceof Block) {
+                                mark(n);
+                            }
+                        }
+                    })(block);
+                    return true;
+                }
+                let hasInclusive = false;
+                for (const node of block.children) {
+                    if (node.isExclusive()) {
+                        // exclusive nodes dont have to be marked
+                        continue;
+                    }
+                    const isBlock = node instanceof Block;
+
+                    if (node.isInclusive()) {
+                        hasInclusive = true;
+                        // the node is an inclusive node, mark the parent
+                        block.only();
+                        if (isBlock) {
+                            // is a block, should check the nested nodes,
+                            checkInclusive(node);
+                        }
+                    } else if (isBlock) {
+                        // is a block, but a non-inclusive, maybe it has some nested inclusive nodes
+                        if (checkInclusive(node)) {
+                            hasInclusive = true;
+                            // it has, mark the parent
+                            block.only();
+                        }
+                    }
+                }
+                return hasInclusive;
+            })(root);
+
+            if (hasInclusive) {
+                // remove all the non-inclusive nodes
+                (function deleteNonInclusive(block) {
+                    block.children = block.children.filter((node) => {
+                        return node.isInclusive();
+                    });
+                    // we have only inclusive nodes, go deeper
+                    for (const node of block.children) {
+                        if (node instanceof Block) {
+                            deleteNonInclusive(node);
+                        }
+                    }
+                })(root);
+            }
+
+            let stopped = false;
+
+            emitter.stop = () => {
+                stopped = true;
+            };
+
+            Promise.resolve().then(async () => {
+                const executor = async (block) => {
+                    if (block !== root) {
+                        emitter.emit("enter block", { block });
+                    }
+                    let failed = false;
+                    let hookFailed = false;
+                    let currentBeforeHookFailed = false;
+                    if (block.children.every((x) => x.isExclusive())) {
+                        for (const node of block.children) {
+                            if (node instanceof Block) {
+                                executor(node);  // should skip all nested the tests
+                            } else {
+                                emitter.emit("skip test", { block, test: node });
+                            }
+                        }
+                    } else {
+                        // at least 1 test will be executed (if no hook fails)
+                        for (const parentBlock of block.blockChain()) {
+                            if (stopped) {
+                                break;
+                            }
+                            for (const hook of parentBlock.beforeHooks()) {
+                                if (stopped) {
+                                    break;
+                                }
+                                if (hook.failed()) {
+                                    hookFailed = true;
+                                    break;
+                                }
+                                if (hook.fired()) {
+                                    continue;
+                                }
+                                emitter.emit("start before hook", { block, hook });
+                                const meta = await hook.run();
+                                emitter.emit("end before hook", { block, hook, meta });
+                                if (meta.err) {
+                                    hookFailed = true;
+                                    currentBeforeHookFailed = parentBlock === block;
+                                    break;
+                                }
+                            }
+                            if (hookFailed) {
+                                break;
+                            }
+                        }
+                        if (!hookFailed) {  // before hook failed?
+                            for (const node of block.children) {
+                                if (stopped || hookFailed) {
+                                    break;
+                                }
+                                if (node instanceof Test && node.isExclusive()) {
+                                    emitter.emit("skip test", { block, test: node, runtime: false });
+                                    continue;
+                                }
+                                if (node instanceof Block) {
+                                    const meta = await executor(node);
+                                    failed = failed || meta.failed;
+                                    // hookFailed should be always false here, so just assign
+                                    hookFailed = meta.hookFailed;
+                                } else {
+                                    const blocksFired = [];
+                                    for (const parentBlock of block.blockChain()) {
+                                        if (stopped) {
+                                            break;
+                                        }
+                                        for (const hook of parentBlock.beforeEachHooks()) {
+                                            if (stopped) {
+                                                break;
+                                            }
+                                            emitter.emit("start before each hook", { block, test: node, hook });
+                                            const meta = await hook.run();
+                                            emitter.emit("end before each hook", { block, test: node, hook, meta });
+                                            if (meta.err) {
+                                                hookFailed = true;
+                                                break;
+                                            }
+                                        }
+                                        if (hookFailed) {
+                                            break;
+                                        }
+                                        blocksFired.push(parentBlock);
+                                    }
+                                    if (!stopped) {
+                                        emitter.emit("start test", { block, test: node });
+                                        let meta;
+                                        if (!hookFailed) {
+                                            meta = await node.run();
+                                        } else {
+                                            meta = { elapsed: 0, err: new Error("Rejected due the hook fail") };
+                                        }
+
+                                        // it can be skipped in runtime
+                                        meta.skipped = node.isExclusive();
+                                        if (meta.skipped) {
+                                            emitter.emit("skip test", { block, test: node, runtime: true });
+                                        }
+
+                                        emitter.emit("end test", { block, test: node, meta });
+                                        if (meta.err) {
+                                            failed = true;
+                                        }
+                                    }
+                                    for (const parentBlock of blocksFired.reverse()) {
+                                        for (const hook of parentBlock.afterEachHooks()) {
+                                            emitter.emit("start after each hook", { block, test: node, hook });
+                                            const meta = await hook.run();
+                                            emitter.emit("end after each hook", { block, test: node, hook, meta });
+                                            if (meta.err) {
+                                                hookFailed = true;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            if (!currentBeforeHookFailed) {
+                                for (const hook of block.afterHooks()) {
+                                    if (hook.fired()) {
+                                        continue;
+                                    }
+                                    emitter.emit("start after hook", { block, hook });
+                                    const meta = await hook.run();
+                                    emitter.emit("end after hook", { block, hook, meta });
+                                    if (meta.err) {
+                                        hookFailed = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (block !== root) {
+                        emitter.emit("exit block", { block });
+                    }
+                    return { failed, hookFailed };
+                };
+
+                return executor(root);
+            }).catch((err) => {
+                emitter.emit("error", err);
+                return true;
+            }).then(() => emitter.emit("done"));
+
+            return emitter;
+        }
+
+        return { describe, describes, context: describe, it, specify: it, before, after, beforeEach, afterEach, start, root, skip };
+    }
+
+    start() {
+        const self = this;
+        let executing = null;
+        let stopped = false;
+        const emitter = new adone.EventEmitter();
+        emitter.stop = () => {
+            stopped = true;
+            executing && executing.stop();
+        };
+        async function main(paths) {
+            const { resolve } = adone.std.path;
+            const contentCache = new Map();
+            const transpiledCache = new Map();
+            const loader = (module, filename) => {
+                if (!contentCache.has(filename)) {
+                    contentCache.set(filename, adone.util.stripBom(adone.std.fs.readFileSync(filename, "utf-8")));
+                }
+                const content = contentCache.get(filename);
+                module._compile(content, filename);
+            };
+            const transpile = adone.js.Module.transforms.transpile(self.transpilerOptions);
+            const transform = (content, filename) => {
+                if (!transpiledCache.has(filename)) {
+                    transpiledCache.set(filename, transpile(content, filename));
+                }
+                return transpiledCache.get(filename);
+            };
+
+            for (const path of await adone.fs.glob(paths)) {
+                if (stopped) {
+                    break;
+                }
+                const context = self.context();
+                const topass = [
+                    "describe", "context",
+                    "it", "specify",
+                    "before", "after",
+                    "beforeEach", "afterEach",
+                    "skip"
+                ];
+
+
+                const m = new adone.js.Module(path, {
+                    transform,
+                    loaders: { ".js": loader }
+                });
+
+                global.$ = {};
+                adone.lazify({
+                    adone: resolve(__dirname, "..", ".."),
+                    expect: [resolve(__dirname, "assert"), ({ default: { expect } }) => expect],
+                    assert: [resolve(__dirname, "assert"), ({ default: { assert } }) => assert],
+                    spy: [resolve(__dirname, "mock"), ({ spy }) => spy],
+                    stub: [resolve(__dirname, "mock"), ({ stub }) => stub],
+                    mock: [resolve(__dirname, "mock"), ({ mock }) => mock],
+                    match: [resolve(__dirname, "mock"), ({ match }) => match],
+                    FS: resolve(__dirname, "fs"),
+                    request: resolve(__dirname, "request")
+                }, global.$, m.require.bind(m), { configurable: true });
+
+                adone.lazify({
+                    adone: () => global.$.adone,
+                    expect: () => global.$.expect,
+                    assert: () => global.$.assert,
+                    spy: () => global.$.spy,
+                    stub: () => global.$.stub,
+                    mock: () => global.$.mock,
+                    match: () => global.$.match,
+                    FS: () => global.$.FS,
+                    request: () => global.$.request
+                }, global, null, { configurable: true });
+
+                for (const name of topass) {
+                    global[name] = context[name];
+                    global.$[name] = context[name];
+                }
+
+                try {
+                    m.loadItself();
+                    await context.skip.promise;
+                    executing = context.start();
+                    const events = [
+                        "enter block", "exit block",
+                        "start test", "end test", "skip test",
+                        "start before hook", "end before hook",
+                        "start after hook", "end after hook",
+                        "start before each hook", "end before each hook",
+                        "start after each hook", "end after each hook"
+                    ];
+                    for (const e of events) {
+                        executing.on(e, (...data) => {
+                            emitter.emit(e, ...data);
+                        });
+                    }
+                    await new Promise((resolve) => executing.once("done", resolve));
+                } catch (err) {
+                    err.message = `Error while loading this file: ${path}\n${err.message}`;
+                    emitter.emit("error", err);
+                } finally {
+                    m.cache.delete(path);
+                }
+            }
+        }
+
+        Promise.resolve().then(() => main(this._paths)).catch((err) => {
+            emitter.emit("error", err);
+        }).then(() => {
+            emitter.emit("done");
+        });
+
+        return emitter;
+    }
+}
+
+export function consoleReporter({ allTimings = false, timers = false, showHooks = false, keepHooks = false, ticks = true } = {}) {
+    const term = adone.terminal;
+
+    const { isTTY } = process.stdout;
+    const ansiRegexp = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-PRZcf-nqry=><]/g;
+    const parse = (str) => {
+        str = term.parse(str);
+        if (!isTTY) {
+            str = str.replace(ansiRegexp, "");
+        }
+        return str;
+    };
+
+    const log = (message = "", { newline = true } = {}) => {
+        process.stdout.write(parse(message));
+        if (newline) {
+            process.stdout.write("\n");
+        }
+    };
+
+    if (!isTTY) {
+        ticks = false;
+    }
+
+    return (emitter) => {
+        let pending = 0;
+        let failed = 0;
+        let passed = 0;
+        let testsElapsed = 0;
+        let totalElapsed = process.hrtime();
+        const errors = [];
+        const globalErrors = [];
+        let timer = null;
+
+        function elapsedToString(elapsed, timeout, little = true) {
+            let elapsedString = adone.text.humanizeTime(elapsed);  // ms
+
+            const k = elapsed / timeout;
+            if (k < 0.25) {
+                if (little) {
+                    elapsedString = `{green-fg}${elapsedString}{/}`;
+                } else {
+                    elapsedString = "";
+                }
+            } else if (k < 0.75) {
+                elapsedString = `{yellow-fg}${elapsedString}{/}`;
+            } else {
+                elapsedString = `{red-fg}${elapsedString}{/}`;
+            }
+            return elapsedString;
+        }
+
+        if (showHooks) {
+            const colorizeHook = (type) => {
+                return type
+                    .replace("before", "{#d9534f-fg}before{/}")
+                    .replace("after", "{#0275d8-fg}after{/}")
+                    .replace("each", "{#5cb85c-fg}each{/}");
+            };
+
+            const startHookHandler = (type) => {
+                type = colorizeHook(type);
+                return ({ block, hook, test }) => {
+                    if (ticks) {
+                        const padding = "    ".repeat(Math.max(block.level() + (test ? 1 : 0), 0));
+                        log(`${padding} \u2026 executing ${type} hook{escape}${hook.description ? ` ${hook.description}` : ""}{/escape}`);
+                        const start = new Date();
+                        if (timers) {
+                            timer = setInterval(() => {
+                                if (ticks) {
+                                    log("\x1b[F\x1b[K", { newline: false });
+                                }
+                                log(`${padding} \u2026 executing ${type} hook{escape}${hook.description ? ` ${hook.description}` : ""}{/escape} (${elapsedToString(new Date() - start, hook.timeout(), true)})`);
+                            }, 50);
+                        }
+                    }
+                };
+            };
+
+            const endHookHandler = (type) => {
+                type = colorizeHook(type);
+                return ({ hook, block, test, meta }) => {
+                    if (ticks && timers) {
+                        clearInterval(timer);
+                    }
+                    if (keepHooks) {
+                        const padding = "    ".repeat(Math.max(block.level() + (test ? 1 : 0), 0));
+                        let msg = `${ticks ? "\x1b[F\x1b[K" : ""}${padding} ${meta.err ? "{red-fg}\u2717" : "{green-fg}\u2713"}{/} {escape}${type} hook${hook.description ? `: ${hook.description}` : ""}{/escape}`;
+                        const elapsedString = elapsedToString(meta.elapsed, hook.timeout(), allTimings);
+                        if (elapsedString) {
+                            msg = `{escape}${msg}{/escape} (${elapsedString})`;
+                        }
+                        log(msg);
+                    } else if (ticks) {
+                        log("\x1b[F\x1b[K\x1b[F");
+                    }
+                };
+            };
+            emitter
+                .on("start before hook", startHookHandler("before"))
+                .on("start before each hook", startHookHandler("before each"))
+                .on("start after hook", startHookHandler("after"))
+                .on("start after each hook", startHookHandler("after each"))
+                .on("end before hook", endHookHandler("before"))
+                .on("end before each hook", endHookHandler("before each"))
+                .on("end after hook", endHookHandler("after"))
+                .on("end after each hook", endHookHandler("after each"));
+        }
+
+        let enteredBlocks = [];
+        let blockLevel = 0;
+        emitter
+            .on("enter block", ({ block }) => {
+                if (enteredBlocks[blockLevel] !== block.name) {
+                    enteredBlocks = enteredBlocks.slice(0, blockLevel);
+                    enteredBlocks.push(block.name);
+                    log(`${"    ".repeat(blockLevel)} {escape}${block.name}{/escape}`);
+                }
+                ++blockLevel;
+            })
+            .on("exit block", () => {
+                --blockLevel;
+            })
+            .on("start test", ({ test }) => {
+                if (ticks) {
+                    log(`${"    ".repeat(test.block.level() + 1)} \u2026 {grey-fg}{escape}${test.description}{/escape}{/}`);
+                    if (timers) {
+                        const start = new Date();
+                        timer = setInterval(() => {
+                            log(`\x1b[F\x1b[K${"    ".repeat(test.block.level() + 1)} \u2026 {grey-fg}{escape}${test.description}{/escape}{/} (${elapsedToString(new Date() - start, test.timeout())})`);
+                        }, 50);
+                    }
+                }
+            })
+            .on("end test", ({ test, meta: { err, elapsed, skipped } }) => {
+                if (ticks && timers) {
+                    clearInterval(timer);
+                }
+                if (skipped) {
+                    // shouldn't be handled here
+                    return;
+                }
+                const timeout = test.timeout();
+
+                const elapsedString = elapsedToString(elapsed, timeout, allTimings);
+                let msg;
+                if (err) {
+                    msg = `{red-fg}\u2717 ${failed + 1}) {escape}${test.description}{/escape}{/}`;
+                } else {
+                    msg = `{green-fg}\u2713 {grey-fg}{escape}${test.description}{/escape}{/}`;
+                }
+                if (elapsedString) {
+                    msg = `${msg} (${elapsedString})`;
+                }
+                if (ticks) {
+                    log("\x1b[F\x1b[K", { newline: false });
+                }
+                log(`${"    ".repeat(test.block.level() + 1)} ${msg} ${" ".repeat(10)}`);
+                testsElapsed += elapsed;
+                if (err) {
+                    ++failed;
+                    errors.push([test, err]);
+                } else {
+                    ++passed;
+                }
+            })
+            .on("skip test", ({ test, runtime }) => {
+                const msg = `{cyan-fg}\u2212 {escape}${test.description}{/escape}{/}`;
+                log(`${(runtime && ticks) ? "\x1b[F\x1b[K" : ""}${"    ".repeat(test.block.level() + 1)} ${msg}`);
+                ++pending;
+            })
+            .on("done", () => {
+                const printColorDiff = (diff) => {
+                    log("{green-fg}+ actual{/green-fg} {red-fg}- expected{/red-fg}\n");
+                    for (const d of diff) {
+                        const value = adone.text.splitLines(`{escape}${d.value}{/escape}`);
+                        let last = value.pop();
+                        if (last !== "") {
+                            value.push(last);
+                        }
+                        last = value.pop();
+                        if (last[last.length - 1] !== "\n") {
+                            last += "\n";
+                        }
+                        value.push(last);
+
+                        let msg = "";
+
+                        if (d.added) {
+                            msg += `{green-fg}+${value.join("+")}{/green-fg}`;
+                        } else if (d.removed) {
+                            msg += `{red-fg}-${value.join("-")}{/red-fg}`;
+                        } else {
+                            msg += ` ${value.join(" ")}`;
+                        }
+
+                        log(msg);
+                    }
+                };
+
+                if (errors.length) {
+                    log();
+                    log("Errors:\n");
+                    for (const [idx, [failed, err]] of adone.util.enumerate(errors, 1)) {
+                        // print block chain
+                        const stack = new adone.collection.Stack();
+                        let block = failed.block;
+                        do {
+                            stack.push(block.name);
+                            block = block.parent;
+                        } while (block && block.level() >= 0);
+                        log(`${idx}) {escape}${[...stack].join(" \u279c ")} : ${failed.description}{/escape}`);
+                        log();
+
+                        if (err.name && err.message) {
+                            log(`{red-fg}{escape}${err.name}: ${err.message}{/escape}{/}`);
+                        } else {
+                            log(`{red-fg}{escape}${err}{/escape}{/}`);
+                        }
+
+                        if (err.expected && err.actual) {
+                            if (adone.is.string(err.expected) && adone.is.string(err.actual)
+                                && (adone.text.splitLines(err.expected).length > 1 || adone.text.splitLines(err.actual).length > 1)) {
+                                printColorDiff(adone.util.diff.lines(err.actual, err.expected));
+                            } else if (adone.is.sameType(err.expected, err.actual)) {
+                                printColorDiff(adone.util.diff.objects(err.actual, err.expected));
+                            }
+                        }
+                        if (adone.is.string(err.stack)) {
+                            const stackMsg = err.stack.split("\n").slice(1).map((x) => `    ${x.trim()}`).join("\n");
+                            log(`{grey-fg}{escape}${stackMsg}{/escape}{/}`);
+                        }
+                        log();
+                    }
+                }
+
+                if (globalErrors.length) {
+                    log();
+                    log("Global errors:\n");
+                    for (const [idx, err] of adone.util.enumerate(globalErrors, 1)) {
+                        if (err.name && err.message) {
+                            log(`{#ff9500-fg}${idx}) {escape}${err.name}: ${err.message}{/escape}{/}`);
+                        } else {
+                            log(`{#ff9500-fg}${idx}) {escape}${err}{/escape}{/}`);
+                        }
+
+                        if (adone.is.string(err.stack)) {
+                            const stackMsg = err.stack.split("\n").slice(1).map((x) => `    ${x.trim()}`).join("\n");
+                            log(`{grey-fg}{escape}${stackMsg}{/escape}{/}`);
+                        }
+                        log();
+                    }
+                }
+
+                log();
+                totalElapsed = process.hrtime(totalElapsed);
+                testsElapsed = adone.text.humanizeTime(testsElapsed);
+                totalElapsed = adone.text.humanizeTime(totalElapsed[0] * 1e3 + totalElapsed[1] / 1e6);
+
+                log(`    {green-fg}${passed} passing{/} {grey-fg}(${testsElapsed}){/}`);
+                if (pending) {
+                    log(`{cyan-fg}    ${pending} pending{/}`);
+                }
+                if (failed) {
+                    log(`{red-fg}    ${failed} failing{/}`);
+                }
+                if (globalErrors.length) {
+                    log(`{#ff9500-fg}    ${globalErrors.length} error${globalErrors.length > 1 ? "s" : ""}{/}`);
+                }
+                log();
+                log(`{grey-fg}    Total elapsed: ${totalElapsed}{/}`);
+                log();
+            })
+            .on("error", (err) => {
+                globalErrors.push(err);
+            });
+    };
+}

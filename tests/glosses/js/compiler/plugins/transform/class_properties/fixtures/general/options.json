@@ -1,0 +1,7 @@
+{
+    "plugins": [
+        "externalHelpers",
+        "transform.classProperties",
+        "syntax.classProperties"
+    ]
+}

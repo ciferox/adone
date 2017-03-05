@@ -1,0 +1,10 @@
+{
+    "plugins": [
+        "externalHelpers",
+        [
+            "transform.classProperties",
+            { "spec": true }
+        ],
+        "syntax.classProperties"
+    ]
+}

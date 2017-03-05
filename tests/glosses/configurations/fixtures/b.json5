@@ -1,0 +1,8 @@
+{
+	str1: "val1",
+	num1: 7,
+	nested: {
+		str2: "val2",
+		num2: 8
+	}
+}

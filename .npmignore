@@ -1,0 +1,4 @@
+.hgignore
+.npmignore
+.idea
+src

@@ -1,0 +1,9 @@
+src_css_files:
+  # bower:css
+  - ../bower_components/bootstrap/dist/css/bootstrap.css
+  # endbower
+
+src_js_files:
+  # bower:js
+  - ../bower_components/jquery/jquery.js
+  # endbower
