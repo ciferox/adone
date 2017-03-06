@@ -570,7 +570,8 @@ adone.lazify({
     userid: "./userid",
     StreamSearch: "./streamsearch",
     delegate: "./delegate",
-    GlobExp: "./globexp"
+    GlobExp: "./globexp",
+    iconv: "./iconv"
 }, util, require);
 
 export default util;

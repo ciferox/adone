@@ -1172,7 +1172,7 @@ THE SOFTWARE.
 
 The MIT License (MIT)
 
-Copyright (c) 2015 
+Copyright (c) 2015
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -1288,7 +1288,7 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
---- https://github.com/felixge/node-formidable, glosses/net/http/helpers/incoming_form
+- https://github.com/felixge/node-formidable, glosses/net/http/helpers/incoming_form
 
 Copyright (C) 2011 Felix Geisendörfer
 
@@ -1298,7 +1298,7 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
---- https://github.com/jshttp/mime-types, glosses/net/http/helpers/mime_types
+- https://github.com/jshttp/mime-types, glosses/net/http/helpers/mime_types
 
 (The MIT License)
 
@@ -1324,7 +1324,7 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
---- https://github.com/jshttp/negotiator, glosses/net/http/helpers/negotiator
+- https://github.com/jshttp/negotiator, glosses/net/http/helpers/negotiator
 
 (The MIT License)
 
@@ -1351,7 +1351,7 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
---- https://github.com/jshttp/statuses, glosses/net/http/helpers/statuses
+- https://github.com/jshttp/statuses, glosses/net/http/helpers/statuses
 
 The MIT License (MIT)
 
@@ -1376,7 +1376,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
---- https://github.com/jshttp/accepts, glosses/net/http/helpers/accepts
+- https://github.com/jshttp/accepts, glosses/net/http/helpers/accepts
 
 (The MIT License)
 
@@ -1402,7 +1402,7 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
---- https://github.com/jshttp/http-assert, glosses/net/http/helpers/assert
+- https://github.com/jshttp/http-assert, glosses/net/http/helpers/assert
 
 (The MIT License)
 
@@ -1427,7 +1427,7 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
---- https://github.com/jshttp/content-disposition, glosses/net/http/helpers/content_disposition
+- https://github.com/jshttp/content-disposition, glosses/net/http/helpers/content_disposition
 
 (The MIT License)
 
@@ -1452,7 +1452,7 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
---- https://github.com/jshttp/content-type, glosses/net/http/helpers/content_type
+- https://github.com/jshttp/content-type, glosses/net/http/helpers/content_type
 
 (The MIT License)
 
@@ -1477,7 +1477,7 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
---- https://github.com/component/escape-html, glosses/net/http/helpers/escape_html
+- https://github.com/component/escape-html, glosses/net/http/helpers/escape_html
 
 (The MIT License)
 
@@ -1504,7 +1504,7 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
---- https://github.com/jshttp/on-finished, glosses/net/http/helpers/(is|on)_finished
+- https://github.com/jshttp/on-finished, glosses/net/http/helpers/(is|on)_finished
 
 (The MIT License)
 
@@ -1530,7 +1530,7 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
---- https://github.com/jshttp/media-typer, glosses/net/http/helpers/media_typer
+- https://github.com/jshttp/media-typer, glosses/net/http/helpers/media_typer
 
 (The MIT License)
 
@@ -1555,7 +1555,7 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
---- https://github.com/pillarjs/parseurl, glosses/net/http/helpers/parse_url
+- https://github.com/pillarjs/parseurl, glosses/net/http/helpers/parse_url
 
 (The MIT License)
 
@@ -1581,7 +1581,7 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
---- https://github.com/pillarjs/resolve-path, glosses/net/http/helpers/resolve_path
+- https://github.com/pillarjs/resolve-path, glosses/net/http/helpers/resolve_path
 
 The MIT License (MIT)
 
@@ -1607,11 +1607,11 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
---- https://github.com/koajs/send, glosses/net/http/helpers/resolve_path
+- https://github.com/koajs/send, glosses/net/http/helpers/resolve_path
 
 MIT
 
---- https://github.com/jshttp/type-is, glosses/net/http/helpers/resolve_path
+- https://github.com/jshttp/type-is, glosses/net/http/helpers/resolve_path
 
 (The MIT License)
 
@@ -1637,7 +1637,7 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
---- https://github.com/jshttp/vary, glosses/net/http/helpers/vary
+- https://github.com/jshttp/vary, glosses/net/http/helpers/vary
 
 (The MIT License)
 
@@ -1662,7 +1662,7 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
---- https://github.com/koajs/koa, glosses/net/http/server
+- https://github.com/koajs/koa, glosses/net/http/server
 
 (The MIT License)
 
@@ -1687,11 +1687,11 @@ CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
---- https://github.com/koajs/static, glosses/net/http/middlewares/serve
+- https://github.com/koajs/static, glosses/net/http/middlewares/serve
 
 MIT
 
---- https://www.npmjs.com/package/http-errors, glosses/net/http/x
+- https://www.npmjs.com/package/http-errors, glosses/net/http/x
 
 The MIT License (MIT)
 
@@ -1741,3 +1741,26 @@ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
 CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
 TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+- https://github.com/ashtuchkin/iconv-lite
+
+Copyright (c) 2011 Alexander Shtuchkin
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+"Software"), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

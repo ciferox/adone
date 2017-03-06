@@ -258,7 +258,7 @@ lazify({
                 "transform.decoratorsLegacy",
                 "transform.classProperties",
                 "transform.ESModules",
-                "transform.asyncToGenerator",
+                // "transform.asyncToGenerator",
                 "transform.functionBind",
                 "transform.objectRestSpread"
             ]
@@ -400,7 +400,8 @@ adone.stream = lazify({
 
     ConcatStream: "./glosses/streams/concat_stream",
     concat: () => (opts) => new adone.stream.ConcatStream(opts),
-    MuteStream: "./glosses/streams/mute_stream"
+    MuteStream: "./glosses/streams/mute_stream",
+    iconv: "./glosses/streams/iconv"
 });
 
 adone.metrics = lazify({
