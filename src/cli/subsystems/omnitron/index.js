@@ -2,12 +2,10 @@ import adone from "adone";
 const { is } = adone;
 const { STATUSES } = adone.omnitron.const;
 
-const OK = "OK";
-
 export default class extends adone.application.Subsystem {
     initialize() {
         this._netron = null;
-        
+
         this.defineCommand({
             name: "omnitron",
             help: "cli interface of omnitron",
@@ -28,6 +26,19 @@ export default class extends adone.application.Subsystem {
                     name: "uptime",
                     help: "the omnitron's uptime",
                     handler: this.uptimeCommand
+                },
+                {
+                    name: "status",
+                    help: "show status of service(s)",
+                    arguments: [
+                        {
+                            name: "service",
+                            type: String,
+                            default: "",
+                            help: "Name of service"
+                        }
+                    ],
+                    handler: this.statusCommand
                 },
                 {
                     name: "enable",
@@ -56,21 +67,45 @@ export default class extends adone.application.Subsystem {
                 {
                     name: "start",
                     help: "start omnitron or service",
+                    arguments: [
+                        {
+                            name: "service",
+                            type: String,
+                            default: "",
+                            help: "Name of service"
+                        }
+                    ],
                     handler: this.startCommand
                 },
                 {
                     name: "stop",
                     help: "stop omnitron or service",
+                    arguments: [
+                        {
+                            name: "service",
+                            type: String,
+                            default: "",
+                            help: "Name of service"
+                        }
+                    ],
                     handler: this.stopCommand
                 },
                 {
                     name: "restart",
                     help: "restart omnitron or service",
+                    arguments: [
+                        {
+                            name: "service",
+                            type: String,
+                            default: "",
+                            help: "Name of service"
+                        }
+                    ],
                     handler: this.restartCommand
                 },
                 {
                     name: "list",
-                    help: "show omnitron's services",
+                    help: "show services",
                     options: [
                         {
                             name: "--status",
@@ -128,11 +163,21 @@ export default class extends adone.application.Subsystem {
         return 0;
     }
 
+    async statusCommand(args) {
+        const iOmnitron = await this.getService("omnitron");
+        try {
+            adone.log(adone.text.pretty.json(await iOmnitron.status(args.get("service"))));
+        } catch (err) {
+            adone.log(err.message);
+        }
+        return 0;
+    }
+
     async enableCommand(args) {
         const iOmnitron = await this.getService("omnitron");
         try {
             await iOmnitron.enable(args.get("service"), true);
-            adone.log(OK);
+            adone.log(adone.ok);
         } catch (err) {
             adone.log(err.message);
         }
@@ -143,69 +188,102 @@ export default class extends adone.application.Subsystem {
         const iOmnitron = await this.getService("omnitron");
         try {
             await iOmnitron.enable(args.get("service"), false);
-            adone.log(OK);
+            adone.log(adone.ok);
         } catch (err) {
             adone.log(err.message);
         }
         return 0;
     }
 
-    async startCommand() {
-        // const isOnline = await adone.omnitron.helper.isOmnitronAvailable();
-        // if (isOnline) {
-        //     try {
-        //         const omnitronConfig = await adone.omnitron.helper.loadOmnitronConfig();
-        //         const pid = parseInt(adone.std.fs.readFileSync(omnitronConfig.pidFilePath).toString());
-        //         process.kill(pid);
-        //         adone.log(`sent SIGTERM to omnitron's process (PID: ${pid})`);
-        //     } catch (err) {
-        //         adone.log("omnitron is offline");
-        //     }
-        // } else {
-        //     adone.log("omnitron is offline");
-        // }
+    async startCommand(args) {
+        const serviceName = args.get("service");
+        if (serviceName === "") {
+            // const isOnline = await adone.omnitron.helper.isOmnitronAvailable();
+            // if (isOnline) {
+            //     try {
+            //         const omnitronConfig = await adone.omnitron.helper.loadOmnitronConfig();
+            //         const pid = parseInt(adone.std.fs.readFileSync(omnitronConfig.pidFilePath).toString());
+            //         process.kill(pid);
+            //         adone.log(`sent SIGTERM to omnitron's process (PID: ${pid})`);
+            //     } catch (err) {
+            //         adone.log("omnitron is offline");
+            //     }
+            // } else {
+            //     adone.log("omnitron is offline");
+            // }
+        } else {
+            const iOmnitron = await this.getService("omnitron");
+            try {
+                await iOmnitron.start(serviceName);
+                adone.log(adone.ok);
+            } catch (err) {
+                adone.log(err.message);
+            }
+        }
         return 0;
     }
 
-    async stopCommand() {
-        const isOnline = await adone.omnitron.helper.isOmnitronAvailable();
-        if (isOnline) {
-            try {
-                const omnitronConfig = await adone.omnitron.helper.loadOmnitronConfig();
-                const pid = parseInt(adone.std.fs.readFileSync(omnitronConfig.pidFilePath).toString());
-                process.kill(pid);
-                adone.log(`Sent SIGTERM to omnitron's process (PID: ${pid})`);
-            } catch (err) {
+    async stopCommand(args) {
+        const serviceName = args.get("service");
+        if (serviceName === "") {
+            const isOnline = await adone.omnitron.helper.isOmnitronAvailable();
+            if (isOnline) {
+                try {
+                    const omnitronConfig = await adone.omnitron.helper.loadOmnitronConfig();
+                    const pid = parseInt(adone.std.fs.readFileSync(omnitronConfig.pidFilePath).toString());
+                    process.kill(pid);
+                    adone.log(`Sent SIGTERM to omnitron's process (PID: ${pid})`);
+                } catch (err) {
+                    adone.log("Omnitron is offline");
+                }
+            } else {
                 adone.log("Omnitron is offline");
             }
         } else {
-            adone.log("Omnitron is offline");
+            const iOmnitron = await this.getService("omnitron");
+            try {
+                await iOmnitron.stop(serviceName);
+                adone.log(adone.ok);
+            } catch (err) {
+                adone.log(err.message);
+            }
         }
         return 0;
     }
 
-    async restartCommand() {
-        const isOnline = await adone.omnitron.helper.isOmnitronAvailable();
-        if (isOnline) {
-            const omnitronConfig = await adone.omnitron.helper.loadOmnitronConfig();
-            const pid = parseInt(adone.std.fs.readFileSync(omnitronConfig.pidFilePath).toString());
-            let exists = true;
-            process.kill(pid);
-            adone.log(`Sent SIGTERM to omnitron's process (PID: ${pid})`);
-            for (let i = 0; i < 100 && exists; ++i) { // awaiting 10 sec...
-                await adone.promise.delay(100);
-                try {
-                    process.kill(pid, 0); // check the existence
-                } catch (err) {
-                    exists = false;
+    async restartCommand(args) {
+        const serviceName = args.get("service");
+        if (serviceName === "") {
+            const isOnline = await adone.omnitron.helper.isOmnitronAvailable();
+            if (isOnline) {
+                const omnitronConfig = await adone.omnitron.helper.loadOmnitronConfig();
+                const pid = parseInt(adone.std.fs.readFileSync(omnitronConfig.pidFilePath).toString());
+                let exists = true;
+                process.kill(pid);
+                adone.log(`Sent SIGTERM to omnitron's process (PID: ${pid})`);
+                for (let i = 0; i < 100 && exists; ++i) { // awaiting 10 sec...
+                    await adone.promise.delay(100);
+                    try {
+                        process.kill(pid, 0); // check the existence
+                    } catch (err) {
+                        exists = false;
+                    }
+                }
+                if (exists) {
+                    adone.log(`Sent SIGKILL to omnitron's process (PID: ${pid})`);
+                    process.kill(pid, "SIGKILL"); // SIGKILL
                 }
             }
-            if (exists) {
-                adone.log(`Sent SIGKILL to omnitron's process (PID: ${pid})`);
-                process.kill(pid, "SIGKILL"); // SIGKILL
+            await this.connect();
+        } else {
+            const iOmnitron = await this.getService("omnitron");
+            try {
+                await iOmnitron.restart(serviceName);
+                adone.log(adone.ok);
+            } catch (err) {
+                adone.log(err.message);
             }
         }
-        await this.connect();
         return 0;
     }
 
@@ -221,7 +299,7 @@ export default class extends adone.application.Subsystem {
         const result = await iOmnitron.list({
             status
         });
-        adone.log(adone.inspect(result, { style: "color", depth: 4, noDescriptor: true, noType: true }));
+        adone.log(adone.text.pretty.json(result));
         return 0;
     }
 }

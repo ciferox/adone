@@ -1,0 +1,29 @@
+{
+    "description": "Task manager service",
+    "status": "disabled",
+    "dependencies": [
+        "database"
+    ],
+    "contexts": [
+        {
+            "id": "tm",
+            "class": "TaskManager",
+            "default": true,
+            "options": {
+                "datastore": {
+                    "filename": "taskmanager"
+                },
+                "transpiler": {
+                    "plugins": [
+                        "transform.flowStripTypes",
+                        "transform.classProperties",
+                        "transform.asyncToGenerator",
+                        "transform.ESModules",
+                        "transform.functionBind"
+                    ],
+                    "compact": false
+                }
+            }
+        }
+    ]
+}

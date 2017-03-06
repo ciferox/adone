@@ -4,6 +4,7 @@ const adone = Object.create({
     identity: (x) => x,
     truly: () => true,
     falsely: () => false,
+    ok: "OK",
     log: (...args) => adone.defaultLogger.stdoutLogNoFmt(...args),
     fatal: (...args) => adone.defaultLogger.fatal(...args),
     error: (...args) => adone.defaultLogger.error(...args),
@@ -26,7 +27,7 @@ const adone = Object.create({
                         mod = value(key);
                     } else if (typeof value === "string") {
                         mod = _require(value);
-                    } else if (Array.isArray(value) && 1 <= value.length && typeof value[0] === "string") {
+                    } else if (Array.isArray(value) && value.length >= 1 && typeof value[0] === "string") {
                         mod = value.reduce((mod, entry, i) => {
                             if (typeof entry === "function") {
                                 return entry(mod);

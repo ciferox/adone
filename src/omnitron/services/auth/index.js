@@ -1,7 +1,86 @@
 import adone from "adone";
-const is = adone.is;
-const contextable = adone.netron.contextable;
-const { Contextable, Description, Public, Private, Type, Property, Method } = adone.netron.decorator;
+const { is, netron: { contextable, decorator: { Contextable, Description, Public, Private, Type, Property, Method } }, vendor: { lodash: _ } } = adone;
+
+// Defauls
+const defaultSchemas = {
+    group: {
+        name: {
+            type: "string",
+            unique: true,
+            required: true
+        },
+        description: {
+            type: "string",
+            default: ""
+        },
+        contexts: {
+            type: "array",
+            required: true
+        }
+    },
+    user: {
+        name: {
+            type: "string",
+            required: true,
+            register: true
+        },
+        group: {
+            type: "string",
+            required: true
+        },
+        description: {
+            type: "string",
+            default: ""
+        },
+        status: {
+            type: "enum",
+            default: "Disabled",
+            values: [
+                "Disabled",
+                "Enabled",
+                "Unconfirmed"
+            ]
+        },
+        email: {
+            type: "email",
+            unique: true,
+            required: true,
+            login: true,
+            register: true
+        },
+        password: {
+            type: "password",
+            required: true,
+            login: true,
+            register: true,
+            options: {
+                type: "hash",
+                minLength: 5,
+                maxLength: null,
+                required: {
+                    lcLetters: null,
+                    ucLetters: null,
+                    numbers: 0,
+                    specials: 0
+                }
+            }
+        }
+    }
+};
+
+const userGroup = {
+    name: "User",
+    description: "Default group for users",
+    contexts: [
+        "auth"
+    ]
+};
+
+const adminGroup = {
+    name: "Admin",
+    description: "Default group for admins",
+    contexts: []
+};
 
 @Contextable
 @Private
@@ -11,7 +90,7 @@ class Group {
         this.id = groupData._id;
         this.data = groupData;
         this.auth = auth;
-        this.schema = auth.options.schemas.group;
+        this.schema = auth.schemas.group;
         this.iDs = auth.iDs;
     }
 
@@ -100,7 +179,7 @@ class User {
         this.id = userData._id;
         this.data = userData;
         this.auth = auth;
-        this.schema = auth.options.schemas.user;
+        this.schema = auth.schemas.user;
         this.iDs = auth.iDs;
     }
 
@@ -255,24 +334,10 @@ class Session {
 
 @Contextable
 @Private
-@Description("User authentication service")
+@Description("User context")
 export class Auth {
     constructor(options) {
         this.options = options;
-        this.userSchema = options.schemas.user;
-        this.groupSchema = options.schemas.group;
-        this.loginSchema = adone.o();
-        for (const [field, meta] of adone.util.entries(this.userSchema)) {
-            if (meta.login) {
-                this.loginSchema[field] = meta;
-            }
-        }
-        this.registerSchema = adone.o();
-        for (const [field, meta] of adone.util.entries(this.userSchema)) {
-            if (meta.register) {
-                this.registerSchema[field] = meta;
-            }
-        }
         this.omnitron = options.omnitron;
         this.netron = options.netron;
 
@@ -285,30 +350,48 @@ export class Auth {
     }
 
     async initialize() {
-        this.iDs = await this.omnitron.iDatabase.getDatastore(this.options.datastore);
+        const iDatabase = this.omnitron.getInterface("database");
+        this.iDs = await iDatabase.getDatastore(this.options.datastore);
+
+        // Load schemas
+        this.schemas = _.merge({}, defaultSchemas);
+        this.userSchema = this.schemas.user;
+        this.groupSchema = this.schemas.group;
+        this.loginSchema = {};
+        for (const [field, meta] of adone.util.entries(this.userSchema)) {
+            if (meta.login) {
+                this.loginSchema[field] = meta;
+            }
+        }
+        this.registerSchema = {};
+        for (const [field, meta] of adone.util.entries(this.userSchema)) {
+            if (meta.register) {
+                this.registerSchema[field] = meta;
+            }
+        }
 
         // Create/load default groups.
         try {
-            this.userGroup = await this.getGroupByName(this.options.userGroup.name);
+            this.userGroup = await this.getGroupByName(userGroup.name);
         } catch (err) {
-            this.userGroup = await this.addGroup(this.options.userGroup);
+            this.userGroup = await this.addGroup(userGroup);
         }
 
         try {
-            this.adminGroup = await this.getGroupByName(this.options.adminGroup.name);
+            this.adminGroup = await this.getGroupByName(adminGroup.name);
         } catch (err) {
-            this.adminGroup = await this.addGroup(this.options.adminGroup);
+            this.adminGroup = await this.addGroup(adminGroup);
         }
     }
 
     uninitialize() {
-        
+
     }
 
     @Public
     @Description("Registers new user")
     async register(data) {
-        const query = adone.o({ _type: "user" });
+        const query = { _type: "user" };
         for (const [field, value] of adone.util.entries(this.registerSchema)) {
             const dataValue = data[field];
             if (is.nil(dataValue)) {
@@ -331,14 +414,14 @@ export class Auth {
             }
         }
 
-        await this.addUser(data, this.options.userGroup.name);
+        await this.addUser(data, userGroup.name);
     }
 
     @Public
     @Description("Attempts to authenticate user by specified user credentials and if user is valid creates user session object and returns public user key.")
     @Type(String)
     async login(data) {
-        const query = adone.o({ _type: "user" });
+        const query = { _type: "user" };
         for (const [field, value] of adone.util.entries(this.loginSchema)) {
             const dataValue = data[field];
             if (is.nil(dataValue)) {
@@ -391,11 +474,11 @@ export class Auth {
         if (is.undefined(session)) {
             session = this.createAndCacheSession(sessionData);
         }
-        return session; 
+        return session;
     }
 
     async addGroup(data) {
-        let groupData = await this._validateData("group", data, this.options.schemas.group);
+        let groupData = await this._validateData("group", data, this.schemas.group);
         groupData._type = "group";
         groupData = await this.iDs.insert(groupData);
         return this.createAndCacheGroup(groupData);
@@ -405,7 +488,7 @@ export class Auth {
         if (is.string(groupName)) {
             data.group = groupName;
         }
-        let userData = await this._validateData("user", data, this.options.schemas.user);
+        let userData = await this._validateData("user", data, this.schemas.user);
         const group = await this.getGroupByName(userData.group);
         userData.groupId = group.id;
         userData._type = "user";
@@ -522,7 +605,7 @@ export class Auth {
     }
 
     async _validateData(type, data, schema) {
-        const doc = adone.o();
+        const doc = {};
 
         for (const [field, meta] of adone.util.entries(schema)) {
             if (meta.required && !is.propertyDefined(data, field)) {
@@ -567,11 +650,11 @@ export class Auth {
                 if (!is.string(fieldValue) || fieldValue.length === 0) {
                     throw new adone.x.NotValid(`'${fieldValue}' is not valid password`);
                 }
-                if (is.number(meta.options.min_length) && fieldValue.length < meta.options.min_length) {
-                    throw new adone.x.NotValid(`Minimum allowed password length is ${meta.options.min_length} chars`);
+                if (is.number(meta.options.minLength) && fieldValue.length < meta.options.minLength) {
+                    throw new adone.x.NotValid(`Minimum allowed password length is ${meta.options.minLength} chars`);
                 }
-                if (is.number(meta.options.max_length) && fieldValue.length > meta.options.max_length) {
-                    throw new adone.x.NotValid(`Maximum allowed password length is ${meta.options.max_length} chars`);
+                if (is.number(meta.options.maxLength) && fieldValue.length > meta.options.maxLength) {
+                    throw new adone.x.NotValid(`Maximum allowed password length is ${meta.options.maxLength} chars`);
                 }
                 if (meta.options.type === "hash") {
                     fieldValue = await adone.crypto.password(fieldValue).hash();
@@ -598,7 +681,7 @@ export class Auth {
         if (meta.unique && checkUniqueness) {
             const doc = {};
             doc[field] = fieldValue;
-            doc._type = type; 
+            doc._type = type;
             const existingCount = await this.iDs.count(doc);
             if (existingCount !== 0) {
                 throw new adone.x.Exists(`Object with field '${fieldValue}' already exists`);
@@ -610,7 +693,7 @@ export class Auth {
 
 @Private
 @Contextable
-@Description("User authentication service (system)")
+@Description("System context")
 @Property("groups", { private: false, readonly: true, type: contextable.Map, description: "In-memory map of groups" })
 @Property("users", { private: false, readonly: true, type: contextable.Map, description: "In-memory map of users" })
 @Property("sessions", { private: false, readonly: true, type: contextable.Map, description: "In-memory map of sessions" })
@@ -624,7 +707,7 @@ export class SystemAuth extends Auth {
     @Public
     @Description("Returns group's schema")
     getGroupSchema() {
-        return this.options.schemas.group;
+        return this.schemas.group;
     }
 
     @Public
@@ -648,8 +731,8 @@ export class SystemAuth extends Auth {
     async getAllGroups() {
         const query = { _type: "group" };
         const groupDatas = await this.iDs.find(query);
-        const groups = new adone.netron.Definitions(); 
-        
+        const groups = new adone.netron.Definitions();
+
         for (const gd of groupDatas) {
             let group = this.getCachedGroup(gd._id);
             if (is.undefined(group)) {
@@ -675,7 +758,7 @@ export class SystemAuth extends Auth {
     @Type(Array)
     async listGroupNames(query) {
         const groupDatas = await this.listGroups(query);
-        return groupDatas.map(g => g.name);
+        return groupDatas.map((g) => g.name);
     }
 
     @Public
@@ -708,7 +791,7 @@ export class SystemAuth extends Auth {
     @Public
     @Description("Removes all groups except defaults")
     async removeAllGroups() {
-        const count = await this.iDs.remove({ _type: "group", name: { $nin: [this.options.userGroup.name, this.options.adminGroup.name] } }, { multi: true });
+        const count = await this.iDs.remove({ _type: "group", name: { $nin: [userGroup.name, adminGroup.name] } }, { multi: true });
 
         for (const groupId of this.groups.keys()) {
             this._releaseGroup(groupId);
@@ -722,7 +805,7 @@ export class SystemAuth extends Auth {
     @Public
     @Description("Returns user's schema")
     getUserSchema() {
-        return this.options.schemas.user;
+        return this.schemas.user;
     }
 
     @Public

@@ -683,13 +683,13 @@ export class ProcessManager {
         this.db = {};
     }
     
-    @Description("Initializes the process manager")
     async initialize() {
         this.state = STATES.STARTING;
         logger.log("Initialization");
         const { options: { datastore }, db } = this;
-        db.applications = await this.omnitron.iDatabase.getDatastore(datastore.applications);
-        db.runtime = await this.omnitron.iDatabase.getDatastore(datastore.runtime);
+        const iDatabase = this.omnitron.getInterface("database");
+        db.applications = await iDatabase.getDatastore(datastore.applications);
+        db.runtime = await iDatabase.getDatastore(datastore.runtime);
         const [last] = await db.applications.execFind({}, "sort", { id: - 1 }, "limit", 1);
         let nextid;
         if (is.nil(last)) {
@@ -703,6 +703,7 @@ export class ProcessManager {
         logger.log("Initialized");
         this.omnitron.once("omnitron online", () => this.resurrect());
         this.state = STATES.RUNNING;
+        this.basePath = await this.omnitron.config.omnitron.getServicePath(this.options.serviceName, "apps");
     }
 
     async uninitialize() {
@@ -850,7 +851,7 @@ export class ProcessManager {
         }
         delete config.id;
         config = _.defaultsDeep(config, this.options.defaultProcessConfig);
-        config.storage = std.path.join(this.options.basePath, config.name);
+        config.storage = std.path.join(this.basePath, config.name);
         config.stdout = config.stdout || std.path.join(config.storage, "logs", "stdout.log");
         config.stderr = config.stderr || std.path.join(config.storage, "logs", "stderr.log");
         config.port = config.port || (is.win32 ? "\\\\.\\pipe\\" : "") + std.path.join(config.storage, "port.sock");

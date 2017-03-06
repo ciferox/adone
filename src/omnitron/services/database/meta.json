@@ -4,7 +4,8 @@
     "contexts": [
         {
             "id": "db",
-            "class": "Database"
+            "class": "Database",
+            "default": true
         }
     ]
 }

@@ -1,0 +1,35 @@
+{
+    "description": "Process manager service",
+    "status": "disabled",
+    "dependencies": [
+        "database"
+    ],
+    "contexts": [
+        {
+            "id": "pm",
+            "class": "ProcessManager",
+            "default": true,
+            "options": {
+                "datastore": {
+                    "applications": {
+                        "filename": "pm-applications"
+                    },
+                    "runtime": {
+                        "filename": "pm-runtime"
+                    }
+                },
+                "defaultProcessConfig": {
+                    "args": [],
+                    "env": {},
+                    "mode": "single",
+                    "startup": false,
+                    "autorestart": false,
+                    "maxRestarts": 3,
+                    "restartDelay": 0,
+                    "killTimeout": 1600,
+                    "normalStart": 1000
+                }
+            }
+        }
+    ]
+}

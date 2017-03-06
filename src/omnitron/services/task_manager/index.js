@@ -29,7 +29,8 @@ export class TaskManager {
     }
 
     async initialize() {
-        this.iDs = await this.omnitron.iDatabase.getDatastore(this.options.datastore);
+        const iDatabase = this.omnitron.getInterface("database");
+        this.iDs = await iDatabase.getDatastore(this.options.datastore);
 
         // Load tasks and workers metadata.
         const taskMetas = await this.iDs.find({ _type: { $in: ["task", "worker"] } }, { code: 0, data: 0 });

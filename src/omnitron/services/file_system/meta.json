@@ -1,0 +1,11 @@
+{    
+    "description": "Filesystem service",
+    "status": "disabled",
+    "contexts": [
+        {
+            "id": "fs",
+            "class": "Filesystem",
+            "default": true
+        }
+    ]
+}

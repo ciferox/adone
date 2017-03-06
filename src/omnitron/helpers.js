@@ -2,24 +2,6 @@ import adone from "adone";
 const { is } = adone;
 
 export default class OmnitronHelpers {
-    // Should be same as Omnitron._loadServiceConfigs()
-    static get services() {
-        let configs;
-        try {
-            configs = require(adone.std.path.join(this.config.adone.configsPath, "services.js"));
-        } catch (err) {
-            configs = [];
-        } finally {
-            // Add omnitron service
-            configs.push({
-                id: "omnitron",
-                enabled: true,
-                loggerMarker: "OMNITRON"
-            }); 
-        }
-        return configs;
-    }
-
     static async loadOmnitronConfig() {
         const app = adone.appinstance;
         if (is.undefined(app.config.omnitron)) {

@@ -9,7 +9,7 @@ const escape = {
     regExpPattern: (str) => str.replace(/([.*+?^${}()|\[\]\/\\])/g, "\\$1"),
     regExpReplacement: (str) => str.replace(/\$/g, "$$$$"), // This replace any single $ by a double $$
     format: (str) => str.replace(/%/g, "%%"), // This replace any single % by a double %%
-    shellArg: (str) => ("'" + str.replace(/\'/g, "'\\''") + "'"),
+    shellArg: (str) => (`'${str.replace(/\'/g, "'\\''")}'`),
     // Escape \r \n \t so they become readable again, escape all ASCII control character as well, using \x syntaxe
     control: (str) => {
         return str.replace(/[\x00-\x1f\x7f]/g, (match) => {
@@ -18,9 +18,9 @@ const escape = {
             }
             let hex = match.charCodeAt(0).toString(16);
             if (hex.length % 2) {
-                hex = "0" + hex;
+                hex = `0${hex}`;
             }
-            return "\\x" + hex;
+            return `\\x${hex}`;
         });
     },
     // Only escape & < > so this is suited for content outside tags
@@ -111,33 +111,33 @@ const text = {
             // http://www.unicode.org/Public/UNIDATA/EastAsianWidth.txt
             if (code >= 0x1100 && (
                 code <= 0x115f || // Hangul Jamo
-                0x2329 === code || // LEFT-POINTING ANGLE BRACKET
-                0x232a === code || // RIGHT-POINTING ANGLE BRACKET
+                code === 0x2329 || // LEFT-POINTING ANGLE BRACKET
+                code === 0x232a || // RIGHT-POINTING ANGLE BRACKET
                 // CJK Radicals Supplement .. Enclosed CJK Letters and Months
-                (0x2e80 <= code && code <= 0x3247 && code !== 0x303f) ||
+                (code >= 0x2e80 && code <= 0x3247 && code !== 0x303f) ||
                 // Enclosed CJK Letters and Months .. CJK Unified Ideographs Extension A
-                0x3250 <= code && code <= 0x4dbf ||
+                code >= 0x3250 && code <= 0x4dbf ||
                 // CJK Unified Ideographs .. Yi Radicals
-                0x4e00 <= code && code <= 0xa4c6 ||
+                code >= 0x4e00 && code <= 0xa4c6 ||
                 // Hangul Jamo Extended-A
-                0xa960 <= code && code <= 0xa97c ||
+                code >= 0xa960 && code <= 0xa97c ||
                 // Hangul Syllables
-                0xac00 <= code && code <= 0xd7a3 ||
+                code >= 0xac00 && code <= 0xd7a3 ||
                 // CJK Compatibility Ideographs
-                0xf900 <= code && code <= 0xfaff ||
+                code >= 0xf900 && code <= 0xfaff ||
                 // Vertical Forms
-                0xfe10 <= code && code <= 0xfe19 ||
+                code >= 0xfe10 && code <= 0xfe19 ||
                 // CJK Compatibility Forms .. Small Form Variants
-                0xfe30 <= code && code <= 0xfe6b ||
+                code >= 0xfe30 && code <= 0xfe6b ||
                 // Halfwidth and Fullwidth Forms
-                0xff01 <= code && code <= 0xff60 ||
-                0xffe0 <= code && code <= 0xffe6 ||
+                code >= 0xff01 && code <= 0xff60 ||
+                code >= 0xffe0 && code <= 0xffe6 ||
                 // Kana Supplement
-                0x1b000 <= code && code <= 0x1b001 ||
+                code >= 0x1b000 && code <= 0x1b001 ||
                 // Enclosed Ideographic Supplement
-                0x1f200 <= code && code <= 0x1f251 ||
+                code >= 0x1f200 && code <= 0x1f251 ||
                 // CJK Unified Ideographs Extension B .. Tertiary Ideographic Plane
-                0x20000 <= code && code <= 0x3fffd)) {
+                code >= 0x20000 && code <= 0x3fffd)) {
                 return true;
             }
             return false;
@@ -184,19 +184,19 @@ const text = {
             if (firstLetter) {
                 return firstLetter.toLowerCase();
             }
-            return "-" + letter.toLowerCase();
+            return `-${letter.toLowerCase()}`;
         });
     },
     humanizeTime: (ms, opts) => {
         if (!is.finite(ms)) {
-            throw new TypeError(ms + " is not finite number");
+            throw new TypeError(`${ms} is not finite number`);
         }
 
         opts = opts || {};
 
         if (ms < 1000) {
             const msDecimalDigits = is.number(opts.msDecimalDigits) ? opts.msDecimalDigits : 0;
-            return (msDecimalDigits ? ms.toFixed(msDecimalDigits) : Math.ceil(ms)) + (opts.verbose ? " " + adone.util.pluralizeWord("millisecond", Math.ceil(ms)) : "ms");
+            return (msDecimalDigits ? ms.toFixed(msDecimalDigits) : Math.ceil(ms)) + (opts.verbose ? ` ${adone.util.pluralizeWord("millisecond", Math.ceil(ms))}` : "ms");
         }
 
         const ret = [];
@@ -206,7 +206,7 @@ const text = {
                 return;
             }
 
-            const postfix = opts.verbose ? " " + adone.util.pluralizeWord(long, val) : short;
+            const postfix = opts.verbose ? ` ${adone.util.pluralizeWord(long, val)}` : short;
 
             ret.push((valStr || val) + postfix);
         };
@@ -219,7 +219,7 @@ const text = {
 
         if (opts.compact) {
             add(parsed.seconds, "second", "s");
-            return "~" + ret[0];
+            return `~${ret[0]}`;
         }
 
         const sec = ms / 1000 % 60;
@@ -231,7 +231,7 @@ const text = {
     },
     humanizeSize: (num, space = " ") => {
         if (!is.number(num) || is.nan(num)) {
-            throw new TypeError(num + " is not a a number");
+            throw new TypeError(`${num} is not a a number`);
         }
 
         const neg = num < 0;
@@ -242,7 +242,7 @@ const text = {
         }
 
         if (num < 1) {
-            return (neg ? "-" : "") + num + space + "B";
+            return `${(neg ? "-" : "") + num + space}B`;
         }
 
         const exponent = Math.min(Math.floor(Math.log(num) / Math.log(1024)), units.length - 1);
@@ -431,7 +431,12 @@ const text = {
 adone.lazify({
     spinner: "./spinners",
     figure: "./figures",
-    table: "./table"
+    table: "./table",
+    pretty: () => {
+        return adone.lazify({
+            json: "./pretties/json"
+        }, null, require);
+    }
 }, text, require);
 
 export default text;

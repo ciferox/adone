@@ -66,16 +66,9 @@ module.exports = {
 
         return gates;
     },
-    getServicePath(serviceName, dirType) {
+    getServicePath(serviceName, dirName) {
         let fullPath;
-        if (typeof(dirType) === "string") {
-            let dirName;
-            switch (dirType) {
-                case "data": dirName = "data"; break;
-                case "logs": dirName = "logs"; break;
-                case "tmp": dirName = "tmp"; break;
-            }
-            
+        if (typeof(dirType) === "string") {            
             fullPath = join(this.servicesPath, serviceName, dirName);
         } else {
             fullPath = join(this.servicesPath, serviceName);
