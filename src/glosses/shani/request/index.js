@@ -42,6 +42,12 @@ class Request {
         return this;
     }
 
+    options(path) {
+        this.method = "OPTIONS";
+        this.path = path;
+        return this;
+    }
+
     setHeader(key, value) {
         this.header[key] = value;
         return this;

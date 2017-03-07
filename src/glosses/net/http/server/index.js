@@ -142,5 +142,6 @@ Server.Request = Request;
 Server.Response = Response;
 
 Server.middleware = adone.lazify({
-    serve: "./middlewares/serve"
+    serve: "./middlewares/serve",
+    favicon: "./middlewares/favicon"
 }, null, require);
