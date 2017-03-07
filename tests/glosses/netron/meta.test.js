@@ -1,7 +1,5 @@
-const is = adone.is;
-const format = adone.std.util.format;
-const { Public, Private, Readonly, Contextable, Type, Args, Description, Property, Method, Twin } = adone.netron.decorator;
-const Investigator = adone.netron.Investigator;
+const { is, netron: { Investigator, decorator: { Public, Private, Readonly, Contextable, Type, Args, Description, Property, Method, Twin } } } = adone;
+const { format } = adone.std.util;
 
 // Not consider order and keys repetition
 function shallow_equal(array1, array2) {
@@ -10,7 +8,7 @@ function shallow_equal(array1, array2) {
 }
 
 function randomString(N) {
-    return (Math.random().toString(36) + "00000000000000000").slice(2, N + 2);
+    return (`${Math.random().toString(36)}00000000000000000`).slice(2, N + 2);
 }
 
 function* generateArgs(types) {
@@ -21,11 +19,11 @@ function* generateArgs(types) {
                 const argName4 = randomString(8);
                 const argName5 = randomString(8);
                 yield [
-                    [typeName1,   type1,     "a",      type1], // 1 argument
+                    [typeName1, type1, "a", type1], // 1 argument
                     ["undefined", undefined, argName2, argName2], // 2 argument
-                    [typeName3,   type3,     "c",      [type3]], // 3 argument
+                    [typeName3, type3, "c", [type3]], // 3 argument
                     ["undefined", undefined, argName4, [argName4]], // 4 argument
-                    [typeName5,   type5,     argName5, [type5, argName5]] // 5 argument
+                    [typeName5, type5, argName5, [type5, argName5]] // 5 argument
                 ];
             }
         }
@@ -93,22 +91,22 @@ const a = new A();
 const ia = new Investigator(a);
 
 describe("Meta", () => {
-    describe("Single class", function () {
-        it("class name", function () {
+    describe("Single class", () => {
+        it("class name", () => {
             expect(ia.getName()).to.be.equal("A");
         });
 
-        it("class description", function () {
+        it("class description", () => {
             expect(ia.getDescription()).to.be.equal("about A class");
         });
 
-        it("public/private method", function () {
+        it("public/private method", () => {
             expect(ia.getMethodMetadata("methodWithRedefinedArgs").private).to.be.false;
             expect(ia.getMethodMetadata("privateMethodWithArgsReturnsPromise").private).to.be.true;
             expect(ia.getMethodMetadata("publicMethodWithArgs").private).to.be.false;
         });
 
-        it("public/private property", function () {
+        it("public/private property", () => {
             expect(ia.getPropertyMetadata("prop3").private).to.be.true;
             expect(ia.getPropertyMetadata("prop4").private).to.be.false;
             expect(ia.getPropertyMetadata("prop1").private).to.be.false;
@@ -116,7 +114,7 @@ describe("Meta", () => {
             expect(ia.getPropertyMetadata("prop6").private).to.be.true;
         });
 
-        it("readonly property", function () {
+        it("readonly property", () => {
             expect(ia.getPropertyMetadata("prop2").readonly).to.be.false;
             expect(ia.getPropertyMetadata("prop5").readonly).to.be.true;
             expect(ia.getPropertyMetadata("prop1").readonly).to.be.false;
@@ -124,65 +122,65 @@ describe("Meta", () => {
             expect(ia.getPropertyMetadata("prop4").readonly).to.be.false;
         });
 
-        it("public method without args and decorators", function () {
+        it("public method without args and decorators", () => {
             expect(ia.getMethodSignature("publicMethod")).to.be.equal("<undefined> publicMethod()");
         });
 
-        it("public method with args and without decorators", function () {
+        it("public method with args and without decorators", () => {
             expect(ia.getMethodSignature("publicMethodWithArgs")).to.be.equal("<undefined> publicMethodWithArgs(<undefined> arg1, <undefined> arg2)");
         });
 
-        it("public method without args and with return", function () {
+        it("public method without args and with return", () => {
             expect(ia.getMethodSignature("publicMethodReturnsString")).to.be.equal("<String> publicMethodReturnsString()");
         });
 
-        it("public method with args decorator and with return", function () {
+        it("public method with args decorator and with return", () => {
             expect(ia.getMethodSignature("publicMethodWithArgsReturnsNumber")).to.be.equal("<Number> publicMethodWithArgsReturnsNumber(<undefined> args, <RegExp> regArg1, <Date> dt)");
         });
 
-        it("private method with args decorator and with return", function () {
+        it("private method with args decorator and with return", () => {
             expect(ia.getMethodSignature("privateMethodWithArgsReturnsPromise")).to.be.equal("<Promise> privateMethodWithArgsReturnsPromise(<undefined> arg1, <Date> dt)");
         });
 
-        it("private method with args decorator and with return", function () {
+        it("private method with args decorator and with return", () => {
             expect(ia.getMethodSignature("method1")).to.be.equal("<undefined> method1(<Array> arg1, <Symbol> arg2)");
         });
 
-        it("public method with redefined args", function () {
+        it("public method with redefined args", () => {
             expect(ia.getMethodSignature("methodWithRedefinedArgs")).to.be.equal("<undefined> methodWithRedefinedArgs(<String> redefArg1, <Map> redefArg2, <Boolean> arg3, <Date> arg4, <undefined> someArg, <undefined> arg6)");
         });
 
-        it("public method with redefined args", function () {
+        it("public method with redefined args", () => {
             expect(ia.getMethodSignature("methodWithRedefinedArgs1")).to.be.equal("<undefined> methodWithRedefinedArgs1(<String> redefArg1, <Map> redefArg2, <String> strArg2, <String> strArg3, <undefined> someArg, <Map> mapArg5, <Map> mapArg6)");
         });
 
-        it("public property without decorators", function () {
+        it("public property without decorators", () => {
             expect(ia.getPropertySignature("prop1")).to.be.equal("<RegExp> prop1");
         });
 
-        it("public property with type specified", function () {
+        it("public property with type specified", () => {
             expect(ia.getPropertySignature("prop2")).to.be.equal("<String> prop2");
         });
 
-        it("private property with description", function () {
+        it("private property with description", () => {
             expect(ia.getPropertySignature("prop3")).to.be.equal("<Number> prop3");
         });
 
-        it("public property with initial undefined", function () {
+        it("public property with initial undefined", () => {
             expect(ia.getPropertySignature("prop4")).to.be.equal("<Error> prop4");
         });
 
-        it("public indirect property with description", function () {
+        it("public indirect property with description", () => {
             expect(ia.getPropertySignature("prop5")).to.be.equal("<Map> prop5");
         });
 
-        it("private indirect property", function () {
+        it("private indirect property", () => {
             expect(ia.getPropertySignature("prop6")).to.be.equal("<Set> prop6");
         });
 
-        it("property without descriptor", function () {
+        it("property without descriptor", () => {
             class SomeClass {
-                method() {}
+                method() { }
                 prop = 1;
             }
             SomeClass.prototype.prop2 = 1; // no descriptor
@@ -197,8 +195,8 @@ describe("Meta", () => {
         });
     });
 
-    describe("New tests", function () {
-        it("isContextable", function () {
+    describe("New tests", () => {
+        it("isContextable", () => {
 
             @Contextable
             class ContextableClass {
@@ -213,7 +211,7 @@ describe("Meta", () => {
             assert.equal(Investigator.isContextable(new NonContextableClass()), false);
         });
 
-        it("getName", function () {
+        it("getName", () => {
 
             class ComplexClassName {
             }
@@ -224,9 +222,9 @@ describe("Meta", () => {
             class ComplexClassNameChild2 extends ComplexClassNameChild {
             }
 
-            const inv1 = new Investigator(new ComplexClassName);
-            const inv2 = new Investigator(new ComplexClassNameChild);
-            const inv3 = new Investigator(new ComplexClassNameChild2);
+            const inv1 = new Investigator(new ComplexClassName());
+            const inv2 = new Investigator(new ComplexClassNameChild());
+            const inv3 = new Investigator(new ComplexClassNameChild2());
 
             assert.equal(inv1.getName(), "ComplexClassName");
             assert.equal(inv2.getName(), "ComplexClassNameChild");
@@ -241,8 +239,8 @@ describe("Meta", () => {
         let ParentMethodPropertyClass = Object;
 
         for (let ilevel = 1; ilevel <= 3; ++ilevel) {
-            describe("Inheritance level: " + ilevel, function () {
-                it("getDescription", function () {
+            describe(`Inheritance level: ${ilevel}`, () => {
+                it("getDescription", () => {
 
                     const classDesc = "class description";
                     const methodDesc = "method description";
@@ -252,26 +250,26 @@ describe("Meta", () => {
                     class DescribedClass extends ParentDescribedClass {
 
                         @Description(methodDesc)
-                        method() {}
+                        method() { }
 
                         @Description(propertyDesc)
                         property = 1;
                     }
                     ParentDescribedClass = DescribedClass;
 
-                    const inv = new Investigator(new DescribedClass);
+                    const inv = new Investigator(new DescribedClass());
 
                     assert.equal(inv.getDescription(), classDesc);
                     assert.equal(inv.getMethodMetadata("method").description, methodDesc);
                     assert.equal(inv.getPropertyMetadata("property").description, propertyDesc);
                 });
 
-                it("getMethods/Properties functions", function () {
+                it("getMethods/Properties functions", () => {
                     class MethodPropertyClass extends ParentMethodPropertyClass {
                         @Public
-                        method1() {}
+                        method1() { }
                         @Private
-                        method2() {}
+                        method2() { }
 
                         @Public
                         property1 = 1;
@@ -282,31 +280,31 @@ describe("Meta", () => {
                     }
                     ParentMethodPropertyClass = MethodPropertyClass;
 
-                    const inv = new Investigator(new MethodPropertyClass);
+                    const inv = new Investigator(new MethodPropertyClass());
 
                     // Methods
                     const privateMethods = Array.from(inv.getPrivateMethods().keys());
-                    const publicMethods  = Array.from(inv.getPublicMethods().keys());
-                    const allMethods     = Array.from(inv.getMethods().keys());
+                    const publicMethods = Array.from(inv.getPublicMethods().keys());
+                    const allMethods = Array.from(inv.getMethods().keys());
 
                     assert.includeMembers(allMethods, privateMethods);
                     assert.includeMembers(allMethods, publicMethods);
                     shallow_equal(allMethods, publicMethods.concat(privateMethods));
                     assert.equal(inv.hasMethod(allMethods[0]), true);
-                    assert.equal(inv.hasMethod(allMethods[0] + "no"), false);
+                    assert.equal(inv.hasMethod(`${allMethods[0]}no`), false);
 
                     // Properties
-                    const privateProperties  = Array.from(inv.getPrivateProperties().keys());
-                    const publicProperties   = Array.from(inv.getPublicProperties().keys());
+                    const privateProperties = Array.from(inv.getPrivateProperties().keys());
+                    const publicProperties = Array.from(inv.getPublicProperties().keys());
                     const readonlyProperties = Array.from(inv.getReadonlyProperties().keys());
-                    const allProperties      = Array.from(inv.getProperties().keys());
+                    const allProperties = Array.from(inv.getProperties().keys());
 
                     assert.includeMembers(allProperties, privateProperties);
                     assert.includeMembers(allProperties, publicProperties);
                     assert.includeMembers(allProperties, readonlyProperties);
                     shallow_equal(allProperties, publicProperties.concat(privateProperties).concat(readonlyProperties));
                     assert.equal(inv.hasProperty(allProperties[0]), true);
-                    assert.equal(inv.hasProperty(allProperties[0] + "no"), false);
+                    assert.equal(inv.hasProperty(`${allProperties[0]}no`), false);
                 });
 
                 for (const [privacyDeco, privacyName] of [[Public, "public"], [Private, "private"]]) {
@@ -332,7 +330,7 @@ describe("Meta", () => {
 
                         // Methods decorators
                         for (const withArgs of [false, true]) {
-                            const returnsDescr = type === null ? "without returns" : "returns " + typeName.toLowerCase();
+                            const returnsDescr = type === null ? "without returns" : `returns ${typeName.toLowerCase()}`;
                             const argsDescr = withArgs === true ? "with args" : "without args";
                             const classes = [];
 
@@ -363,8 +361,8 @@ describe("Meta", () => {
                                     for (const arg of args) {
                                         argsStr.push(format("<%s> %s", arg[0], arg[2]));
                                     }
-                                    signature += argsStr.join(", ") + ")";
-                                    methodDescr["args"] = argsToMeta;
+                                    signature += `${argsStr.join(", ")})`;
+                                    methodDescr.args = argsToMeta;
                                 } else {
                                     signature = format("<%s> %%s(<undefined> a, <undefined> b, <undefined> c, <undefined> d, <undefined> e)", typeName);
                                 }
@@ -375,14 +373,14 @@ describe("Meta", () => {
                                 class MyClass extends ParentForMethod {
                                     constructor() {
                                         super();
-                                        this.method2 = function (a, b, c, d, e) {};
+                                        this.method2 = function (a, b, c, d, e) { };
                                     }
 
                                     @privacyDeco
                                     @returnDeco
                                     @Description(randomDescription)
                                     @argsDeco
-                                    method(a, b, c, d, e) {}
+                                    method(a, b, c, d, e) { }
                                 }
                                 LastMethodClass = MyClass;
 
@@ -394,7 +392,7 @@ describe("Meta", () => {
                             }
 
                             testName = format("%s method %s %s", privacyName, returnsDescr, argsDescr);
-                            it(testName, function () {
+                            it(testName, () => {
                                 for (const cls of classes) {
                                     const imet = new Investigator(new cls.classType());
 
@@ -433,12 +431,12 @@ describe("Meta", () => {
                         }
                         LastPropertyClass = MyClass2;
 
-                        const iprop = new Investigator(new MyClass2);
+                        const iprop = new Investigator(new MyClass2());
 
-                        const typeDescrProperty = type === null ? "without type" : "of " + typeName.toLowerCase() + " type";
+                        const typeDescrProperty = type === null ? "without type" : `of ${typeName.toLowerCase()} type`;
                         testName = format("%s property %s", privacyName, typeDescrProperty);
 
-                        it(testName, function () {
+                        it(testName, () => {
                             let signature = format("<%s> %s", typeName, "property");
                             assert.equal(iprop.getPropertySignature("property"), signature, "implicit property");
                             let metadata = iprop.getPropertyMetadata("property");
@@ -460,8 +458,8 @@ describe("Meta", () => {
         }
     });
 
-    describe("Twin decorator", function () {
-        it("class validation", function () {
+    describe("Twin decorator", () => {
+        it("class validation", () => {
             const { netron } = adone;
             const { Interface } = netron;
 

@@ -1,5 +1,5 @@
 import adone from "adone";
-const { is, o, x, util, configuration: { Configuration }, AsyncEmitter } = adone;
+const { is, x, util, configuration: { Configuration }, AsyncEmitter } = adone;
 const { TimedoutMap } = adone.collection;
 const { STATUS, ACTION, RemoteStub, GenesisNetron, SequenceId, Stream } = adone.netron;
 
@@ -37,7 +37,7 @@ export default class GenesisPeer extends AsyncEmitter {
         this.uid = null;
 
         this._onRemoteContextAttach = (peer, ctxData) => {
-            const def = o();
+            const def = {};
             def[ctxData.id] = ctxData.def;
             this._updateStrongDefinitions(def);
         };
@@ -68,13 +68,13 @@ export default class GenesisPeer extends AsyncEmitter {
         return this._status;
     }
 
-    async createStream({ remoteStreamId = 0, highWaterMark = 16, allowHalfOpen = true } = { }) {
+    async createStream({ remoteStreamId = 0, highWaterMark = 16, allowHalfOpen = true } = {}) {
         let stream;
 
         if (remoteStreamId === 0) {
             // initiator side -> outgoing stream
             const id = this.streamId.next();
-            stream = new Stream( { peer: this, id, highWaterMark, allowHalfOpen });
+            stream = new Stream({ peer: this, id, highWaterMark, allowHalfOpen });
             try {
                 await this.netron.send(this, 1, this.streamId.next(), 1, ACTION.STREAM_REQUEST, id);
                 this._requestedStreams.set(stream.id, stream);
@@ -88,7 +88,7 @@ export default class GenesisPeer extends AsyncEmitter {
             }
 
             const id = this.streamId.next();
-            stream = new Stream( { peer: this, id, highWaterMark, allowHalfOpen });
+            stream = new Stream({ peer: this, id, highWaterMark, allowHalfOpen });
             try {
                 await this.netron.send(this, 1, this.streamId.next(), 1, ACTION.STREAM_ACCEPT, { origin: remoteStreamId, remote: id });
                 this._awaitingStreamIds.delete(remoteStreamId);
@@ -274,7 +274,7 @@ export default class GenesisPeer extends AsyncEmitter {
 
     _processResult(ctxDef, result) {
         if (is.netronDefinition(result)) {
-            this._updateDefinitions({ "weak": result });
+            this._updateDefinitions({ weak: result });
             if (ctxDef.$remote) {
                 const iCtx = this.netron._createInterface(result, this.uid);
                 const stub = new RemoteStub(this.netron, iCtx);

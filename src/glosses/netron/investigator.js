@@ -1,6 +1,5 @@
 import adone from "adone";
-const { o, is, util } = adone;
-const { reflect } = adone.meta;
+const { is, util, meta: { reflect } } = adone;
 
 export default class Investigator {
     constructor(instance) {
@@ -343,7 +342,7 @@ export default class Investigator {
 
         const instance = this.instance;
         for (const [key, val] of util.entries(instance, { all: true })) {
-            const descr = o({ private: privateClass, type: undefined });
+            const descr = { private: privateClass, type: undefined };
             let meta = reflect.getMetadata("meta:type", instance, key);
             if (is.nil(meta)) {
                 if (is.boolean(val)) {

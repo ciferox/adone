@@ -1,10 +1,9 @@
 import adone from "adone";
-const { is, x } = adone;
-const { Investigator } = adone.netron;
+const { is, x, netron: { Investigator } } = adone;
 
 export default class Definitions {
     constructor(...args) {
-        this._defs = new Array(...args);
+        this._defs = [...args];
     }
 
     get length() {

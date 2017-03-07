@@ -1,7 +1,5 @@
 import adone from "adone";
-const { is, x, o } = adone;
-const { Definition, Definitions, Investigator } = adone.netron;
-import Bluebird from "bluebird";
+const { is, x, netron: { Definition, Definitions, Investigator } } = adone;
 
 export default class Stub {
     constructor(netron, instance, ci) {
@@ -29,17 +27,17 @@ export default class Stub {
             }
 
             const pubMethods = ci.getPublicMethods();
-            const $ = def.$ = o();
+            const $ = def.$ = {};
             for (const [method, meta] of pubMethods) {
                 const args = [];
                 for (const arg of meta.args) {
                     args.push([Investigator.getNameOfType(arg[0]), arg[1]]);
                 }
-                $[method] = o({ method: true, type: Investigator.getNameOfType(meta.type), args, description: meta.description });
+                $[method] = { method: true, type: Investigator.getNameOfType(meta.type), args, description: meta.description };
             }
             const pubProps = ci.getPublicProperties();
             for (const [prop, meta] of pubProps) {
-                $[prop] = o({ type: Investigator.getNameOfType(meta.type), readonly: meta.readonly, description: meta.description });
+                $[prop] = { type: Investigator.getNameOfType(meta.type), readonly: meta.readonly, description: meta.description };
             }
         }
         return this._def;
@@ -83,7 +81,7 @@ export default class Stub {
                     defaultData = this._processArgs(peer, defaultData, false);
                     val = defaultData;
                 } else {
-                    val = this._processResult(peer, val); 
+                    val = this._processResult(peer, val);
                 }
                 return Promise.resolve(val);
             }
@@ -130,7 +128,7 @@ export default class Stub {
             let uid = null;
             if (!is.null(peer)) {
                 uid = peer.uid;
-                peer._updateDefinitions({ "weak": obj });
+                peer._updateDefinitions({ weak: obj });
             }
             return this.netron._createInterface(obj, uid);
         } else if (is.netronDefinitions(obj)) {

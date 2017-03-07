@@ -1,5 +1,5 @@
 import adone from "adone";
-const { is, x, o, util, data: { mpak: { serializer } }, configuration: { Configuration }, AsyncEmitter } = adone;
+const { is, x, util, data: { mpak: { serializer } }, configuration: { Configuration }, AsyncEmitter } = adone;
 const { DEFAULT_PORT, ACTION, STATUS, Reference, Interface, Stub, Investigator, Definition, Definitions, SequenceId, Identity } = adone.netron;
 
 const MAGIC_FLAG = 0x80000000 >>> 0;
@@ -67,7 +67,7 @@ serializer.register(124, Identity, (obj, buf) => {
 }).register(122, Reference, (obj, buf) => {
     buf.writeUInt32BE(obj.defId);
 }, (buf) => {
-    const ref = new Reference;
+    const ref = new Reference();
     ref.defId = buf.readUInt32BE();
     return ref;
 }).register(121, Definitions, (obj, buf) => {
@@ -116,13 +116,15 @@ export default class GenesisNetron extends AsyncEmitter {
         sn.set(STATUS.CONNECTING, "CONNECTING");
         sn.set(STATUS.HANDSHAKING, "HANDSHAKING");
         sn.set(STATUS.ONLINE, "ONLINE");
-        this.piStatuses = new Array(STATUS.HANDSHAKING, STATUS.ONLINE);
+        this.piStatuses = [STATUS.HANDSHAKING, STATUS.ONLINE];
 
         this._svrNetronAddrs = new Map();
         this.nuidPeerMap = new Map();
         this._peerEvents = new Map();
         this._remoteEvents = new Map();
         this._remoteListeners = new Map();
+        this._contextEvents = new Map();
+        this.contexts = new Map();
         this._stubs = new Map();
         this._nuidStubs = new Map();
         this._interfaces = new Map();
@@ -242,6 +244,62 @@ export default class GenesisNetron extends AsyncEmitter {
                 this._interfaces.delete(hash);
                 break;
             }
+        }
+    }
+
+    attachContext(instance, ctxId = null) {
+        const ci = this._checkContext(instance, ctxId);
+
+        if (is.null(ctxId)) {
+            ctxId = instance.__proto__.constructor.name;
+        }
+        if (this.contexts.has(ctxId)) {
+            throw new x.Exists(`context '${ctxId}' already attached`);
+        }
+
+        return this._attachContext(ctxId, new Stub(this, instance, ci));
+    }
+
+    detachContext(ctxId, releaseOriginted = true) {
+        const stub = this.contexts.get(ctxId); 
+        if (!is.undefined(stub)) {
+            this.contexts.delete(ctxId);
+            const defId = stub.definition.id;
+            releaseOriginted && this._releaseOriginatedContexts(defId);
+            this._stubs.delete(defId);
+            this._emitContextEvent("context detach", { id: ctxId, defId });
+            return defId;
+        } else {
+            throw new x.Unknown(`Unknown context '${ctxId}'`);
+        }
+    }
+
+    getContextNames() {
+        const names = [];
+        for (const k of this.contexts.keys()) {
+            names.push(k);
+        }
+        return names;
+    }
+
+    getDefinitionByName(ctxId, uid = null) {
+        if (is.nil(uid)) {
+            const stub = this.contexts.get(ctxId);
+            if (is.undefined(stub)) {
+                throw new x.Unknown(`Unknown context '${ctxId}'`);
+            }
+            return stub.definition;
+        } else {
+            return this.getPeer(uid).getDefinitionByName(ctxId);
+        }
+    }
+
+    getInterfaceByName(ctxId, uid = null) {
+        if (is.nil(uid)) {
+            const def = this.getDefinitionByName(ctxId);
+            return this.getInterfaceById(def.id);
+        } else {
+            return this.getPeer(uid).getInterfaceByName(ctxId);
         }
     }
 
@@ -421,7 +479,7 @@ export default class GenesisNetron extends AsyncEmitter {
             let events = this._remoteEvents.get(uid);
             if (is.undefined(events)) {
                 events = new Map();
-                events.set(eventName, new Array(listener));
+                events.set(eventName, [listener]);
                 this._remoteEvents.set(uid, events);
                 await (new Promise((resolve, reject) => {
                     this.send(peer, 1, peer.streamId.next(), 1, ACTION.EVENT_ON, eventName, resolve).catch(reject);
@@ -429,7 +487,7 @@ export default class GenesisNetron extends AsyncEmitter {
             } else {
                 const listeners = events.get(eventName);
                 if (is.undefined(listeners)) {
-                    events.set(eventName, new Array(listener));
+                    events.set(eventName, [listener]);
                     await (new Promise((resolve, reject) => {
                         this.send(peer, 1, peer.streamId.next(), 1, ACTION.EVENT_ON, eventName, resolve).catch(reject);
                     }));
@@ -480,7 +538,7 @@ export default class GenesisNetron extends AsyncEmitter {
     }
 
     _onReceiveInitial(peer, data) {
-        peer.isSuper = !!data.isSuper;
+        peer.isSuper = Boolean(data.isSuper);
         if (peer.isSuper) {
             peer._attachedContexts = new Map();
         }
@@ -843,7 +901,7 @@ export default class GenesisNetron extends AsyncEmitter {
                 };
                 proto[key] = method;
             } else {
-                const propMethods = o();
+                const propMethods = {};
                 propMethods.get = (defaultValue) => {
                     defaultValue = this._processArgs(uid, defaultValue, false);
                     return this.get(uid, defId, key, defaultValue);
@@ -964,6 +1022,37 @@ export default class GenesisNetron extends AsyncEmitter {
         return ci;
     }
 
+    _attachContext(ctxId, stub) {
+        const def = stub.definition;
+        const defId = def.id;
+        this.contexts.set(ctxId, stub);
+        this._stubs.set(defId, stub);
+        this._emitContextEvent("context attach", { id: ctxId, defId, def });
+        return defId;
+    }
+
+    async _emitContextEvent(event, ctxData) {
+        let events = this._contextEvents.get(ctxData.id);
+        if (is.undefined(events)) {
+            events = [event];
+            this._contextEvents.set(ctxData.id, events);
+        } else {
+            events.push(event);
+            if (events.length > 1) {
+                return;
+            }
+        }
+        while (events.length > 0) {
+            event = events[0];
+            try {
+                await this.emitParallel(event, ctxData);
+            } catch (err) {
+                adone.error(err);
+            }
+            events.splice(0, 1);
+        }
+    }
+
     _proxifyContext(ctxId, stub) {
         const def = stub.definition;
         const defId = def.id;
@@ -974,7 +1063,7 @@ export default class GenesisNetron extends AsyncEmitter {
     async _emitPeerEvent(event, peer) {
         let events = this._peerEvents.get(peer);
         if (is.undefined(events)) {
-            events = new Array(event);
+            events = [event];
             this._peerEvents.set(peer, events);
         } else {
             events.push(event);

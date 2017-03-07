@@ -1,6 +1,5 @@
 import adone from "adone";
-const { is, x, vendor: { lodash } } = adone;
-const { Definition } = adone.netron;
+const { is, x, vendor: { lodash }, netron: { Definition } } = adone;
 
 export default class RemoteStub {
     constructor(netron, iInstance) {

@@ -1,30 +1,7 @@
 import adone from "adone";
-const { is, x } = adone;
-const { DEFAULT_PORT, ACTION, STATUS, PEER_TYPE, GenesisNetron } = adone.netron;
-const { Peer } = adone.netron.ws;
+const { is, x, netron: { DEFAULT_PORT, ACTION, STATUS, PEER_TYPE, GenesisNetron, ws: { Peer } } } = adone;
 
-/**
- * Реализация нетрона на базе WebSocket-а.
- * 
- * Данный нетрон может использоваться только для подключения к другим нетронам, но сам не является 'серверным' (не поддерживает bind()/unbind()).
- * 
- * @export
- * @class WebNetron
- */
 export default class WebSocketNetron extends GenesisNetron {
-    constructor(options) {
-        super(options);
-    }
-
-    /**
-     * Возвращает определение для указанного контекста и NUId
-     *
-     * @param {String} идентификатор контекста, зарегистрированного в netron-е
-     * @param {String} идентификатор netron-а на стороне которого находится контекст
-     * @returns {Definition}
-     *
-     * @memberOf Netron
-     */
     getDefinitionByName(ctxId, uid = null) {
         if (is.nil(uid)) {
             throw new x.NotSupported("local contexts not supported");
@@ -33,15 +10,6 @@ export default class WebSocketNetron extends GenesisNetron {
         }
     }
 
-    /**
-     * Возвращает интерфейс для указанного контекста и NUId.
-     *
-     * @param {String} идентификатор контекста, зарегистрированного в netron-е
-     * @param {String} идентификатор netron-а на стороне которого находится контекст
-     * @returns {Interface}
-     *
-     * @memberOf Netron
-     */
     getInterfaceByName(ctxId, uid = null) {
         if (is.nil(uid)) {
             throw new x.NotSupported("local contexts not supported");

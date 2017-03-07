@@ -1,6 +1,6 @@
 import adone from "adone";
 const { is, x } = adone;
-const { DEFAULT_PORT, ACTION, STATUS, PEER_TYPE, GenesisNetron, Peer, Stub, RemoteStub } = adone.netron;
+const { DEFAULT_PORT, ACTION, STATUS, PEER_TYPE, GenesisNetron, Peer, RemoteStub } = adone.netron;
 
 const IP_POLICY_NONE = 0;
 const IP_POLICY_ALLOW = 0;
@@ -24,8 +24,6 @@ export default class Netron extends GenesisNetron {
         });
 
         this._nonauthPeers = [];
-        this._contextEvents = new Map();
-        this.contexts = new Map();
         this._gates = new Map();
         this._adapters = new Map();
 
@@ -110,62 +108,6 @@ export default class Netron extends GenesisNetron {
         }
 
         this._adapters.set(id, adapter);
-    }
-
-    attachContext(instance, ctxId = null) {
-        const ci = this._checkContext(instance, ctxId);
-
-        if (is.null(ctxId)) {
-            ctxId = instance.__proto__.constructor.name;
-        }
-        if (this.contexts.has(ctxId)) {
-            throw new x.Exists(`context '${ctxId}' already attached`);
-        }
-
-        return this._attachContext(ctxId, new Stub(this, instance, ci));
-    }
-
-    detachContext(ctxId, releaseOriginted = true) {
-        const stub = this.contexts.get(ctxId); 
-        if (!is.undefined(stub)) {
-            this.contexts.delete(ctxId);
-            const defId = stub.definition.id;
-            releaseOriginted && this._releaseOriginatedContexts(defId);
-            this._stubs.delete(defId);
-            this._emitContextEvent("context detach", { id: ctxId, defId });
-            return defId;
-        } else {
-            throw new x.Unknown(`Unknown context '${ctxId}'`);
-        }
-    }
-
-    getContextNames() {
-        const names = [];
-        for (const k of this.contexts.keys()) {
-            names.push(k);
-        }
-        return names;
-    }
-
-    getDefinitionByName(ctxId, uid = null) {
-        if (is.nil(uid)) {
-            const stub = this.contexts.get(ctxId);
-            if (is.undefined(stub)) {
-                throw new x.Unknown(`Unknown context '${ctxId}'`);
-            }
-            return stub.definition;
-        } else {
-            return this.getPeer(uid).getDefinitionByName(ctxId);
-        }
-    }
-
-    getInterfaceByName(ctxId, uid = null) {
-        if (is.nil(uid)) {
-            const def = this.getDefinitionByName(ctxId);
-            return this.getInterfaceById(def.id);
-        } else {
-            return this.getPeer(uid).getInterfaceByName(ctxId);
-        }
     }
 
     async onConfirmConnection(peer) {
@@ -387,37 +329,6 @@ export default class Netron extends GenesisNetron {
             }
         }
         return super._peerDisconnected(peer);
-    }
-
-    _attachContext(ctxId, stub) {
-        const def = stub.definition;
-        const defId = def.id;
-        this.contexts.set(ctxId, stub);
-        this._stubs.set(defId, stub);
-        this._emitContextEvent("context attach", { id: ctxId, defId, def });
-        return defId;
-    }
-
-    async _emitContextEvent(event, ctxData) {
-        let events = this._contextEvents.get(ctxData.id);
-        if (is.undefined(events)) {
-            events = new Array(event);
-            this._contextEvents.set(ctxData.id, events);
-        } else {
-            events.push(event);
-            if (events.length > 1) {
-                return;
-            }
-        }
-        while (events.length > 0) {
-            event = events[0];
-            try {
-                await this.emitParallel(event, ctxData);
-            } catch (err) {
-                adone.error(err);
-            }
-            events.splice(0, 1);
-        }
     }
 
     async _bindSocket(options) {

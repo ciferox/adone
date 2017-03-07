@@ -1,6 +1,5 @@
 import adone from "adone";
-const { EventEmitter, collection: { LinkedList } } = adone;
-const { ACTION, SequenceId } = adone.netron;
+const { EventEmitter, collection: { LinkedList }, netron: { ACTION, SequenceId } } = adone;
 
 export default class Stream extends EventEmitter {
     constructor({ peer, id, highWaterMark, allowHalfOpen }) {

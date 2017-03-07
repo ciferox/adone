@@ -1,16 +1,16 @@
 import adone from "adone";
-const { is, x  } = adone;
+const { is, x } = adone;
 
 export default class WebSocketAdapter extends adone.netron.Adapter {
     constructor(options) {
-        options.backlog = options.backlog || 511; 
+        options.backlog = options.backlog || 511;
         super(options);
         this._wss = null;
     }
 
     async bind(netron) {
         this.netron = netron;
-        
+
         const option = this.option;
         if (option.secure) {
             let cert;
@@ -18,7 +18,7 @@ export default class WebSocketAdapter extends adone.netron.Adapter {
             if (is.buffer(option.cert)) {
                 cert = option.cert;
             } else if (is.string(option.cert)) {
-                cert = adone.std.fs.readFileSync(option.cert); 
+                cert = adone.std.fs.readFileSync(option.cert);
             } else {
                 throw new x.NotValid("parameter 'option.cert' is not valid (should be buffer or string)");
             }
@@ -26,11 +26,11 @@ export default class WebSocketAdapter extends adone.netron.Adapter {
             if (is.buffer(option.key)) {
                 key = option.key;
             } else if (is.string(option.key)) {
-                key = adone.std.fs.readFileSync(option.key); 
+                key = adone.std.fs.readFileSync(option.key);
             } else {
                 throw new x.NotValid("parameter 'option.key' is not valid (should be buffer or string)");
             }
-             
+
             this.server = adone.std.https.createServer({ cert, key });
         } else {
             this.server = adone.std.http.createServer();
@@ -70,7 +70,7 @@ export default class WebSocketAdapter extends adone.netron.Adapter {
 
         const connHandler = netron.option.сonnectionHandler;
 
-        this._wss = new adone.net.ws.WebSocketServer( { server: this.server });
+        this._wss = new adone.net.ws.WebSocketServer({ server: this.server });
         this._wss.on("connection", (ws) => {
             const peer = new adone.netron.ws.Peer({
                 netron,
