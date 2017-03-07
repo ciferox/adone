@@ -1,18 +1,16 @@
-/* global describe it afterEach */
+import nock from "shani/helpers/nock";
 
-import nock from "../../../helpers/nock";
+const { client } = adone.net.http;
 
-const { request } = adone.net;
-
-describe("promise", function () {
-    it("should provide succinct object to then", function (done) {
+describe("promise", () => {
+    it("should provide succinct object to then", (done) => {
         nock("http://example.org")
             .get("/foo")
             .reply(200, "{\"hello\":\"world\"}", {
                 "Content-Type": "application/json"
             });
 
-        request("http://example.org/foo").then(function (response) {
+        client("http://example.org/foo").then((response) => {
             expect(typeof response).to.be.equal("object");
             expect(response.data.hello).to.be.equal("world");
             expect(response.status).to.be.equal(200);

@@ -1,15 +1,13 @@
-/* global describe it */
+import nock from "shani/helpers/nock";
 
-import nock from "../../../helpers/nock";
+const { client } = adone.net.http;
 
-const { request } = adone.net;
+describe("instance", () => {
 
-describe("instance", function () {
+    it("should have the same methods as default instance", () => {
+        const instance = client.create();
 
-    it("should have the same methods as default instance", function () {
-        var instance = request.create();
-
-        for (var prop in request) {
+        for (const prop in client) {
             if ([
                 "Axios",
                 "create",
@@ -21,36 +19,36 @@ describe("instance", function () {
                 "default"].indexOf(prop) > -1) {
                 continue;
             }
-            expect(typeof instance[prop]).to.be.equal(typeof request[prop]);
+            expect(typeof instance[prop]).to.be.equal(typeof client[prop]);
         }
     });
 
-    it("should make an http request without verb helper", function (done) {
+    it("should make an http request without verb helper", (done) => {
         nock("http://example.org")
             .get("/foo")
             .reply(200, () => {
                 done();
             });
 
-        var instance = request.create();
+        const instance = client.create();
 
         instance("http://example.org/foo");
     });
 
-    it("should make an http request", function (done) {
+    it("should make an http request", (done) => {
         nock("http://example.org")
             .get("/foo")
             .reply(200, () => {
                 done();
             });
 
-        var instance = request.create();
+        const instance = client.create();
 
         instance.get("http://example.org/foo");
     });
 
-    it("should have defaults.headers", function () {
-        var instance = request.create({
+    it("should have defaults.headers", () => {
+        const instance = client.create({
             baseURL: "https://api.example.com"
         });
 
@@ -58,24 +56,24 @@ describe("instance", function () {
         expect(typeof instance.defaults.headers.common, "object");
     });
 
-    it("should have interceptors on the instance", function (done) {
+    it("should have interceptors on the instance", (done) => {
         nock("http://example.org")
             .get("/foo")
             .reply(200);
 
-        request.interceptors.request.use(function (config) {
+        client.interceptors.request.use((config) => {
             config.foo = true;
             return config;
         });
 
-        var instance = request.create();
-        instance.interceptors.request.use(function (config) {
+        const instance = client.create();
+        instance.interceptors.request.use((config) => {
             config.bar = true;
             return config;
         });
 
-        var response;
-        instance.get("http://example.org/foo").then(function (res) {
+        let response;
+        instance.get("http://example.org/foo").then((res) => {
             response = res;
             expect(response.config.foo).to.be.undefined;
             expect(response.config.bar).to.be.true;

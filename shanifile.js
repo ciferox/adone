@@ -1,5 +1,3 @@
-"use strict";
-
 const path = require("path");
 const fs = require("fs");
 
@@ -33,11 +31,11 @@ module.exports = {
             }],
             ["transform.importReplace", {
                 old: "shani",
-                new: path.resolve(__dirname, "lib", "shani")
+                new: path.resolve(__dirname, "lib", "glosses", "shani")
             }],
             ["transform.importReplace", {
                 old: "fast",
-                new: path.resolve(__dirname, "lib", "fast")
+                new: path.resolve(__dirname, "lib", "glosses", "fast")
             }],
             ["transform.importReplace", {
                 old: "omnitron",
@@ -55,7 +53,7 @@ module.exports = {
                 let res;
                 if (err) {
                     res = [
-                        prefix + "*.test.js",
+                        `${prefix}*.test.js`,
                         path.join(prefix, "**", "*.test.js")
                     ];
                 } else {

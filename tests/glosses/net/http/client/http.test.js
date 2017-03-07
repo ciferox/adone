@@ -1,8 +1,5 @@
-/* global describe it afterEach context */
-
-
 const {
-    net: { request },
+    net: { http: { client } },
     std: { http, url, zlib, fs }
 } = adone;
 let server;
@@ -22,21 +19,21 @@ describe("unit", () => {
             }
         });
 
-        it("should use timeout", function (done) {
-            server = http.createServer(function (req, res) {
-                setTimeout(function () {
+        it("should use timeout", (done) => {
+            server = http.createServer((req, res) => {
+                setTimeout(() => {
                     res.end();
                 }, 1000);
-            }).listen(4444, function () {
+            }).listen(4444, () => {
                 let success = false;
                 let failure = false;
                 let error;
 
-                request.get("http://localhost:4444/", {
+                client.get("http://localhost:4444/", {
                     timeout: 250
-                }).then(function () {
+                }).then(() => {
                     success = true;
-                }).catch(function (err) {
+                }).catch((err) => {
                     error = err;
                     failure = true;
                 }).then(() => {
@@ -49,27 +46,27 @@ describe("unit", () => {
             });
         });
 
-        it("should unwrap json", function (done) {
+        it("should unwrap json", (done) => {
             const data = {
                 firstName: "Fred",
                 lastName: "Flintstone",
                 emailAddr: "fred@example.com"
             };
 
-            server = http.createServer(function (req, res) {
+            server = http.createServer((req, res) => {
                 res.setHeader("Content-Type", "application/json;charset=utf-8");
                 res.end(JSON.stringify(data));
-            }).listen(4444, function () {
-                request.get("http://localhost:4444/").then(function (res) {
+            }).listen(4444, () => {
+                client.get("http://localhost:4444/").then((res) => {
                     expect(res.data).to.be.deep.equal(data);
                 }).then(done, done);
             });
         });
 
-        it("should handle redirects", function (done) {
+        it("should handle redirects", (done) => {
             const str = "test response";
 
-            server = http.createServer(function (req, res) {
+            server = http.createServer((req, res) => {
                 const parsed = url.parse(req.url);
 
                 if (parsed.pathname === "/one") {
@@ -79,61 +76,61 @@ describe("unit", () => {
                 } else {
                     res.end(str);
                 }
-            }).listen(4444, function () {
-                request.get("http://localhost:4444/one").then(function (res) {
+            }).listen(4444, () => {
+                client.get("http://localhost:4444/one").then((res) => {
                     expect(res.data).to.be.equal(str);
                     done();
                 });
             });
         });
 
-        it("should prevent redirecting", function (done) {
-            server = http.createServer(function (req, res) {
+        it("should prevent redirecting", (done) => {
+            server = http.createServer((req, res) => {
                 res.setHeader("Location", "/foo");
                 res.statusCode = 302;
                 res.end();
-            }).listen(4444, function () {
-                request.get("http://localhost:4444/", {
+            }).listen(4444, () => {
+                client.get("http://localhost:4444/", {
                     maxRedirects: 0,
                     validateStatus: () => true
-                }).then(function (res) {
+                }).then((res) => {
                     expect(res.status).to.be.equal(302);
-                    expect(res.headers["location"]).to.be.equal("/foo");
+                    expect(res.headers.location).to.be.equal("/foo");
                     done();
                 });
             });
         });
 
-        it("should limit the number of redirects", function (done) {
+        it("should limit the number of redirects", (done) => {
             let i = 1;
-            server = http.createServer(function (req, res) {
-                res.setHeader("Location", "/" + i);
+            server = http.createServer((req, res) => {
+                res.setHeader("Location", `/${i}`);
                 res.statusCode = 302;
                 res.end();
                 i++;
-            }).listen(4444, function () {
-                request.get("http://localhost:4444/", {
+            }).listen(4444, () => {
+                client.get("http://localhost:4444/", {
                     maxRedirects: 3
-                }).catch(function () {
+                }).catch(() => {
                     done();
                 });
             });
         });
 
-        it("should use gunzip", function (done) {
+        it("should use gunzip", (done) => {
             const data = {
                 firstName: "Fred",
                 lastName: "Flintstone",
                 emailAddr: "fred@example.com"
             };
 
-            zlib.gzip(JSON.stringify(data), function (err, zipped) {
-                server = http.createServer(function (req, res) {
+            zlib.gzip(JSON.stringify(data), (err, zipped) => {
+                server = http.createServer((req, res) => {
                     res.setHeader("Content-Type", "application/json;charset=utf-8");
                     res.setHeader("Content-Encoding", "gzip");
                     res.end(zipped);
-                }).listen(4444, function () {
-                    request.get("http://localhost:4444/").then(function (res) {
+                }).listen(4444, () => {
+                    client.get("http://localhost:4444/").then((res) => {
                         expect(res.data).to.be.deep.equal(data);
                         done();
                     });
@@ -142,53 +139,53 @@ describe("unit", () => {
             });
         });
 
-        it("should handle unzip errors", function (done) {
-            server = http.createServer(function (req, res) {
+        it("should handle unzip errors", (done) => {
+            server = http.createServer((req, res) => {
                 res.setHeader("Content-Type", "application/json;charset=utf-8");
                 res.setHeader("Content-Encoding", "gzip");
                 res.end("invalid response");
-            }).listen(4444, function () {
-                request.get("http://localhost:4444/").catch(function () {
+            }).listen(4444, () => {
+                client.get("http://localhost:4444/").catch(() => {
                     done();
                 });
             });
         });
 
-        it("should support UTF8", function (done) {
+        it("should support UTF8", (done) => {
             const str = Array(100000).join("ж");
 
-            server = http.createServer(function (req, res) {
+            server = http.createServer((req, res) => {
                 res.setHeader("Content-Type", "text/html; charset=UTF-8");
                 res.end(str);
-            }).listen(4444, function () {
-                request.get("http://localhost:4444/").then(function (res) {
+            }).listen(4444, () => {
+                client.get("http://localhost:4444/").then((res) => {
                     expect(res.data).to.be.equal(str);
                     done();
                 });
             });
         });
 
-        it("should handle basic auth", function (done) {
-            server = http.createServer(function (req, res) {
+        it("should handle basic auth", (done) => {
+            server = http.createServer((req, res) => {
                 res.end(req.headers.authorization);
-            }).listen(4444, function () {
+            }).listen(4444, () => {
                 const user = "foo";
                 const headers = { Authorization: "Bearer 1234" };
-                request.get(`http://${user}@localhost:4444/`, { headers }).then(function (res) {
-                    const base64 = new Buffer(user + ":", "utf8").toString("base64");
+                client.get(`http://${user}@localhost:4444/`, { headers }).then((res) => {
+                    const base64 = new Buffer(`${user}:`, "utf8").toString("base64");
                     expect(res.data).to.be.equal(`Basic ${base64}`);
                     done();
                 });
             });
         });
 
-        it("should handle basic auth with the header", function (done) {
-            server = http.createServer(function (req, res) {
+        it("should handle basic auth with the header", (done) => {
+            server = http.createServer((req, res) => {
                 res.end(req.headers.authorization);
-            }).listen(4444, function () {
+            }).listen(4444, () => {
                 const auth = { username: "foo", password: "bar" };
                 const headers = { Authorization: "Bearer 1234" };
-                request.get("http://localhost:4444/", { auth, headers }).then(function (res) {
+                client.get("http://localhost:4444/", { auth, headers }).then((res) => {
                     const base64 = new Buffer("foo:bar", "utf8").toString("base64");
                     expect(res.data).to.be.equal(`Basic ${base64}`);
                     done();
@@ -196,22 +193,22 @@ describe("unit", () => {
             });
         });
 
-        it("should handle max content length", function (done) {
+        it("should handle max content length", (done) => {
             const str = Array(100000).join("ж");
 
-            server = http.createServer(function (req, res) {
+            server = http.createServer((req, res) => {
                 res.setHeader("Content-Type", "text/html; charset=UTF-8");
                 res.end(str);
-            }).listen(4444, function () {
+            }).listen(4444, () => {
                 let success = false;
                 let failure = false;
                 let error;
 
-                request.get("http://localhost:4444/", {
+                client.get("http://localhost:4444/", {
                     maxContentLength: 2000
-                }).then(function () {
+                }).then(() => {
                     success = true;
-                }).catch(function (err) {
+                }).catch((err) => {
                     error = err;
                     failure = true;
                 }).then(() => {
@@ -223,20 +220,20 @@ describe("unit", () => {
             });
         });
 
-        it("should support streaming", function (done) {
-            server = http.createServer(function (req, res) {
+        it("should support streaming", (done) => {
+            server = http.createServer((req, res) => {
                 req.pipe(res);
-            }).listen(4444, function () {
-                request.post("http://localhost:4444/",
+            }).listen(4444, () => {
+                client.post("http://localhost:4444/",
                     fs.createReadStream(__filename), {
                         responseType: "stream"
-                    }).then(function (res) {
+                    }).then((res) => {
                         const stream = res.data;
                         let string = "";
-                        stream.on("data", function (chunk) {
+                        stream.on("data", (chunk) => {
                             string += chunk.toString("utf8");
                         });
-                        stream.on("end", function () {
+                        stream.on("end", () => {
                             expect(string).to.be.equal(fs.readFileSync(__filename, "utf8"));
                             done();
                         });
@@ -244,12 +241,12 @@ describe("unit", () => {
             });
         });
 
-        it("should support http proxying", function (done) {
-            server = http.createServer(function (req, res) {
+        it("should support http proxying", (done) => {
+            server = http.createServer((req, res) => {
                 res.setHeader("Content-Type", "text/html; charset=UTF-8");
                 res.end("12345");
-            }).listen(4444, function () {
-                proxy = http.createServer(function (request, response) {
+            }).listen(4444, () => {
+                proxy = http.createServer((request, response) => {
                     const parsed = url.parse(request.url);
                     const opts = {
                         host: parsed.hostname,
@@ -257,24 +254,24 @@ describe("unit", () => {
                         path: parsed.path
                     };
 
-                    http.get(opts, function (res) {
+                    http.get(opts, (res) => {
                         let body = "";
-                        res.on("data", function (data) {
+                        res.on("data", (data) => {
                             body += data;
                         });
-                        res.on("end", function () {
+                        res.on("end", () => {
                             response.setHeader("Content-Type", "text/html; charset=UTF-8");
-                            response.end(body + "6789");
+                            response.end(`${body}6789`);
                         });
                     });
 
-                }).listen(4000, function () {
-                    request.get("http://localhost:4444/", {
+                }).listen(4000, () => {
+                    client.get("http://localhost:4444/", {
                         proxy: {
                             host: "localhost",
                             port: 4000
                         }
-                    }).then(function (res) {
+                    }).then((res) => {
                         expect(res.data).to.be.equal(123456789);
                         done();
                     });
@@ -282,12 +279,12 @@ describe("unit", () => {
             });
         });
 
-        it("should support http proxying using the env", function (done) {
-            server = http.createServer(function (req, res) {
+        it("should support http proxying using the env", (done) => {
+            server = http.createServer((req, res) => {
                 res.setHeader("Content-Type", "text/html; charset=UTF-8");
                 res.end("4567");
-            }).listen(4444, function () {
-                proxy = http.createServer(function (request, response) {
+            }).listen(4444, () => {
+                proxy = http.createServer((request, response) => {
                     const parsed = url.parse(request.url);
                     const opts = {
                         host: parsed.hostname,
@@ -295,22 +292,22 @@ describe("unit", () => {
                         path: parsed.path
                     };
 
-                    http.get(opts, function (res) {
+                    http.get(opts, (res) => {
                         let body = "";
-                        res.on("data", function (data) {
+                        res.on("data", (data) => {
                             body += data;
                         });
-                        res.on("end", function () {
+                        res.on("end", () => {
                             response.setHeader("Content-Type", "text/html; charset=UTF-8");
-                            response.end(body + "1234");
+                            response.end(`${body}1234`);
                         });
                     });
 
-                }).listen(4000, function () {
+                }).listen(4000, () => {
                     // set the env variable
                     process.env.http_proxy = "http://localhost:4000/";
 
-                    request.get("http://localhost:4444/").then(function (res) {
+                    client.get("http://localhost:4444/").then((res) => {
                         expect(res.data).to.be.equal(45671234);
                         done();
                     });
@@ -318,11 +315,11 @@ describe("unit", () => {
             });
         });
 
-        it("should support http proxying with auth", function (done) {
-            server = http.createServer(function (req, res) {
+        it("should support http proxying with auth", (done) => {
+            server = http.createServer((req, res) => {
                 res.end();
-            }).listen(4444, function () {
-                proxy = http.createServer(function (request, response) {
+            }).listen(4444, () => {
+                proxy = http.createServer((request, response) => {
                     const parsed = url.parse(request.url);
                     const opts = {
                         host: parsed.hostname,
@@ -330,16 +327,16 @@ describe("unit", () => {
                         path: "/hello"
                     };
                     const proxyAuth = request.headers["proxy-authorization"];
-                    http.get(opts, function (res) {
-                        res.on("data", () => {});
-                        res.on("end", function () {
+                    http.get(opts, (res) => {
+                        res.on("data", () => { });
+                        res.on("end", () => {
                             response.setHeader("Content-Type", "text/html; charset=UTF-8");
                             response.end(proxyAuth);
                         });
                     });
 
-                }).listen(4000, function () {
-                    request.get("http://localhost:4444/", {
+                }).listen(4000, () => {
+                    client.get("http://localhost:4444/", {
                         proxy: {
                             host: "localhost",
                             port: 4000,
@@ -348,7 +345,7 @@ describe("unit", () => {
                                 password: "pass"
                             }
                         }
-                    }).then(function (res) {
+                    }).then((res) => {
                         const base64 = new Buffer("user:pass", "utf8").toString("base64");
                         expect(res.data).to.be.equal(`Basic ${base64}`);
                         done();
@@ -357,11 +354,11 @@ describe("unit", () => {
             });
         });
 
-        it("should support http proxying with auth using the env", function (done) {
-            server = http.createServer(function (req, res) {
+        it("should support http proxying with auth using the env", (done) => {
+            server = http.createServer((req, res) => {
                 res.end();
-            }).listen(4444, function () {
-                proxy = http.createServer(function (request, response) {
+            }).listen(4444, () => {
+                proxy = http.createServer((request, response) => {
                     const parsed = url.parse(request.url);
                     const opts = {
                         host: parsed.hostname,
@@ -370,18 +367,18 @@ describe("unit", () => {
                     };
                     const proxyAuth = request.headers["proxy-authorization"];
 
-                    http.get(opts, function (res) {
-                        res.on("data", () => {});
-                        res.on("end", function () {
+                    http.get(opts, (res) => {
+                        res.on("data", () => { });
+                        res.on("end", () => {
                             response.setHeader("Content-Type", "text/html; charset=UTF-8");
                             response.end(proxyAuth);
                         });
                     });
 
-                }).listen(4000, function () {
+                }).listen(4000, () => {
                     process.env.http_proxy = "http://user:pass@localhost:4000/";
 
-                    request.get("http://localhost:4444/").then(function (res) {
+                    client.get("http://localhost:4444/").then((res) => {
                         const base64 = new Buffer("user:pass", "utf8").toString("base64");
                         expect(res.data).to.be.equal(`Basic ${base64}`);
                         done();
@@ -390,11 +387,11 @@ describe("unit", () => {
             });
         });
 
-        it("should support http proxying auth with header", function (done) {
-            server = http.createServer(function (req, res) {
+        it("should support http proxying auth with header", (done) => {
+            server = http.createServer((req, res) => {
                 res.end();
-            }).listen(4444, function () {
-                proxy = http.createServer(function (request, response) {
+            }).listen(4444, () => {
+                proxy = http.createServer((request, response) => {
                     const parsed = url.parse(request.url);
                     const opts = {
                         host: parsed.hostname,
@@ -403,16 +400,16 @@ describe("unit", () => {
                     };
                     const proxyAuth = request.headers["proxy-authorization"];
 
-                    http.get(opts, function (res) {
-                        res.on("data", () => {});
-                        res.on("end", function () {
+                    http.get(opts, (res) => {
+                        res.on("data", () => { });
+                        res.on("end", () => {
                             response.setHeader("Content-Type", "text/html; charset=UTF-8");
                             response.end(proxyAuth);
                         });
                     });
 
-                }).listen(4000, function () {
-                    request.get("http://localhost:4444/", {
+                }).listen(4000, () => {
+                    client.get("http://localhost:4444/", {
                         proxy: {
                             host: "localhost",
                             port: 4000,
@@ -424,7 +421,7 @@ describe("unit", () => {
                         headers: {
                             "Proxy-Authorization": "Basic abc123"
                         }
-                    }).then(function (res) {
+                    }).then((res) => {
                         const base64 = new Buffer("user:pass", "utf8").toString("base64");
                         expect(res.data).to.be.equal(`Basic ${base64}`);
                         done();
@@ -433,16 +430,16 @@ describe("unit", () => {
             });
         });
 
-        it("should support canceling", function (done) {
-            const source = request.CancelToken.source();
-            server = http.createServer(function () {
+        it("should support canceling", (done) => {
+            const source = client.CancelToken.source();
+            server = http.createServer(() => {
                 // call cancel() when the request has been sent, but a response has not been received
                 source.cancel("Operation has been canceled.");
-            }).listen(4444, function () {
-                request.get("http://localhost:4444/", {
+            }).listen(4444, () => {
+                client.get("http://localhost:4444/", {
                     cancelToken: source.token
-                }).catch(function (thrown) {
-                    expect(thrown).to.be.instanceOf(request.Cancel);
+                }).catch((thrown) => {
+                    expect(thrown).to.be.instanceOf(client.Cancel);
                     expect(thrown.message).to.be.equal("Operation has been canceled.");
                     done();
                 });

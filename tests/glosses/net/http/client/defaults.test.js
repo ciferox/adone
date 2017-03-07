@@ -1,52 +1,50 @@
-/* global describe it beforeEach afterEach */
+import nock from "shani/helpers/nock";
 
-import nock from "../../../helpers/nock";
+const { client } = adone.net.http;
+import defaults from "adone/glosses/net/http/client/defaults";
 
-const { request } = adone.net;
-import defaults from "adone/glosses/net/request/defaults";
-
-describe("defaults", function () {
-    beforeEach(function () {
+describe("defaults", () => {
+    beforeEach(() => {
     });
 
-    afterEach(function () {
-        delete request.defaults.baseURL;
-        delete request.defaults.headers.get["X-CUSTOM-HEADER"];
-        delete request.defaults.headers.post["X-CUSTOM-HEADER"];
+    afterEach(() => {
+        delete client.defaults.baseURL;
+        delete client.defaults.headers.get["X-CUSTOM-HEADER"];
+        delete client.defaults.headers.post["X-CUSTOM-HEADER"];
         // document.cookie = XSRF_COOKIE_NAME + "=;expires=" + new Date(Date.now() - 86400000).toGMTString();
     });
 
-    it("should transform request json", function () {
+    it("should transform request json", () => {
         expect(defaults.transformRequest[0]({ foo: "bar" })).to.be.equal("{\"foo\":\"bar\"}");
     });
 
-    it("should do nothing to request string", function () {
+    it("should do nothing to request string", () => {
         expect(defaults.transformRequest[0]("foo=bar")).to.be.equal("foo=bar");
     });
 
-    it("should transform response json", function () {
-        var data = defaults.transformResponse[0]("{\"foo\":\"bar\"}");
+    it("should transform response json", () => {
+        const data = defaults.transformResponse[0]("{\"foo\":\"bar\"}");
 
         expect(typeof data).to.be.equal("object");
         expect(data.foo).to.be.equal("bar");
     });
 
-    it("should do nothing to response string", function () {
+    it("should do nothing to response string", () => {
         expect(defaults.transformResponse[0]("foo=bar")).to.be.equal("foo=bar");
     });
 
-    it("should use global defaults config", function (done) {
+    it("should use global defaults config", (done) => {
         nock("http://e.com")
             .get("/foo")
             .reply(200, () => {
                 done();
             });
 
-        request("http://e.com/foo");
+        client("http://e.com/foo");
     });
 
-    it("should use modified defaults config", function (done) {
-        request.defaults.baseURL = "http://example.org/";
+    it("should use modified defaults config", (done) => {
+        client.defaults.baseURL = "http://example.org/";
 
         nock("http://example.org")
             .get("/foo")
@@ -54,23 +52,23 @@ describe("defaults", function () {
                 done();
             });
 
-        request("/foo");
+        client("/foo");
     });
 
-    it("should use request config", function (done) {
+    it("should use request config", (done) => {
         nock("http://example.org")
             .get("/foo")
             .reply(200, () => {
                 done();
             });
 
-        request("/foo", {
+        client("/foo", {
             baseURL: "http://example.org"
         });
     });
 
-    it("should use GET headers", function (done) {
-        request.defaults.headers.get["X-CUSTOM-HEADER"] = "foo";
+    it("should use GET headers", (done) => {
+        client.defaults.headers.get["X-CUSTOM-HEADER"] = "foo";
 
         nock("http://example.org", {
             reqheaders: {
@@ -82,10 +80,10 @@ describe("defaults", function () {
                 done();
             });
 
-        request.get("http://example.org/foo");
+        client.get("http://example.org/foo");
     });
 
-    it("should use POST headers", function (done) {
+    it("should use POST headers", (done) => {
         nock("http://example.org", {
             reqheaders: {
                 "X-CUSTOM-HEADER": "foo"
@@ -95,13 +93,13 @@ describe("defaults", function () {
             .reply(200, () => {
                 done();
             });
-            
-        request.defaults.headers.post["X-CUSTOM-HEADER"] = "foo";
-        request.post("http://example.org/foo", {});
+
+        client.defaults.headers.post["X-CUSTOM-HEADER"] = "foo";
+        client.post("http://example.org/foo", {});
 
     });
 
-    it("should use header config", function (done) {
+    it("should use header config", (done) => {
         nock("http://example.org", {
             reqheaders: {
                 "X-COMMON-HEADER": "commonHeaderValue",
@@ -115,7 +113,7 @@ describe("defaults", function () {
                 done();
             });
 
-        var instance = request.create({
+        const instance = client.create({
             headers: {
                 common: {
                     "X-COMMON-HEADER": "commonHeaderValue"
@@ -137,28 +135,28 @@ describe("defaults", function () {
         });
     });
 
-    it("should be used by custom instance if set before instance created", function (done) {
+    it("should be used by custom instance if set before instance created", (done) => {
         nock("http://example.org")
             .get("/foo")
             .reply(200, () => {
                 done();
             });
 
-        request.defaults.baseURL = "http://example.org/";
-        var instance = request.create();
+        client.defaults.baseURL = "http://example.org/";
+        const instance = client.create();
 
         instance.get("/foo");
     });
 
-    it("should be used by custom instance if set after instance created", function (done) {
+    it("should be used by custom instance if set after instance created", (done) => {
         nock("http://example.org")
             .get("/foo")
             .reply(200, () => {
                 done();
             });
 
-        var instance = request.create();
-        request.defaults.baseURL = "http://example.org/";
+        const instance = client.create();
+        client.defaults.baseURL = "http://example.org/";
 
         instance.get("/foo");
     });

@@ -1,5 +1,5 @@
 describe("Adone common", () => {
-    describe("tags", function () {
+    describe("tags", () => {
         const TAG1 = 1000;
         const TAG2 = 1001;
         const TAG3 = 1002;
@@ -12,43 +12,43 @@ describe("Adone common", () => {
         class TestB extends TestA {
         }
         adone.tag.set(TestB, TAG2);
-        
+
         class TestC extends TestB {
         }
         adone.tag.set(TestC, TAG3);
 
-        it("should be correct for single class", function () {
-            assert.isTrue(adone.tag.has(new TestA, TAG1));
+        it("should be correct for single class", () => {
+            assert.isTrue(adone.tag.has(new TestA(), TAG1));
         });
 
-        it("should be correct for single-inheritance class", function () {
+        it("should be correct for single-inheritance class", () => {
             const b = new TestB();
             assert.isTrue(adone.tag.has(b, TAG1));
             assert.isTrue(adone.tag.has(b, TAG2));
         });
 
-        it("should be correct for double-inheritance class", function () {
+        it("should be correct for double-inheritance class", () => {
             const c = new TestC();
             assert.isTrue(adone.tag.has(c, TAG1));
             assert.isTrue(adone.tag.has(c, TAG2));
             assert.isTrue(adone.tag.has(c, TAG3));
         });
 
-        it("unknown tag should be incorrect for all classes", function () {
+        it("unknown tag should be incorrect for all classes", () => {
             assert.isFalse(adone.tag.has(new TestA(), UNKNOWN_TAG));
             assert.isFalse(adone.tag.has(new TestB(), UNKNOWN_TAG));
             assert.isFalse(adone.tag.has(new TestC(), UNKNOWN_TAG));
         });
     });
 
-    describe("identity", function () {
-        it("should return the first argument", function () {
+    describe("identity", () => {
+        it("should return the first argument", () => {
             expect(adone.identity(1, 2, 3)).to.be.equal(1);
         });
     });
 
-    describe("noop", function () {
-        it("should return nothing", function () {
+    describe("noop", () => {
+        it("should return nothing", () => {
             expect(adone.noop(1, 2, 3)).to.be.undefined;
         });
     });

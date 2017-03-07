@@ -1,77 +1,75 @@
-/* global describe it */
+import nock from "shani/helpers/nock";
 
-import nock from "../../../helpers/nock";
+const { client } = adone.net.http;
 
-const { request } = adone.net;
-
-describe("transform", function () {
-    it("should transform JSON to string", function (done) {
+describe("transform", () => {
+    it("should transform JSON to string", (done) => {
         nock("http://example.org")
             .post("/foo", { foo: "bar" })
             .reply(200, () => done());
 
-        var data = {
+        const data = {
             foo: "bar"
         };
 
-        request.post("http://example.org/foo", data);
+        client.post("http://example.org/foo", data);
     });
 
-    it("should transform string to JSON", function (done) {
+    it("should transform string to JSON", (done) => {
         nock("http://example.org")
             .get("/foo")
             .reply(200, { foo: "bar" });
 
-        request("http://example.org/foo").then(function (response) {
+        client("http://example.org/foo").then((response) => {
             expect(typeof response.data).to.be.equal("object");
             expect(response.data.foo).to.be.equal("bar");
             done();
         });
     });
 
-    it("should override default transform", function (done) {
+    it("should override default transform", (done) => {
         nock("http://example.org")
             .post("/foo", { foo: "bar" })
             .reply(200, () => done());
 
-        var data = {
+        const data = {
             foo: "bar"
         };
 
-        request.post("http://example.org/foo", data, {
-            transformRequest: function (data) {
+        client.post("http://example.org/foo", data, {
+            transformRequest(data) {
                 return JSON.stringify(data);
             }
         });
     });
 
-    it("should allow an Array of transformers", function (done) {
+    it("should allow an Array of transformers", (done) => {
         nock("http://example.org")
             .post("/foo", { foo: "baz" })
             .reply(200, () => done());
 
-        var data = {
+        const data = {
             foo: "bar"
         };
 
-        request.post("http://example.org/foo", data, {
-            transformRequest: request.defaults.transformRequest.concat(
-                function (data) {
+        client.post("http://example.org/foo", data, {
+            transformRequest: client.defaults.transformRequest.concat(
+                (data) => {
                     return data.replace("bar", "baz");
                 }
             )
         });
     });
 
-    it("should allowing mutating headers", function (done) {
-        var token = Math.floor(Math.random() * Math.pow(2, 64)).toString(36);
+    it("should allowing mutating headers", (done) => {
+        const token = Math.floor(Math.random() * Math.pow(2, 64)).toString(36);
 
         nock("http://example.org", { reqheaders: { "X-Authorization": token } })
             .get("/foo")
             .reply(200, () => done());
 
-        request("http://example.org/foo", {
-            transformRequest: function (data, headers) {
+        client("http://example.org/foo", {
+            transformRequest(data, headers) {
                 headers["X-Authorization"] = token;
             }
         });

@@ -1,12 +1,9 @@
-/* global describe it beforeEach */
+import transformData from "adone/glosses/net/http/client/core/transform_data";
 
-
-import transformData from "adone/glosses/net/request/core/transform_data";
-
-describe("core::transformData", function () {
-    it("should support a single transformer", function () {
-        var data;
-        data = transformData(data, null, function (data) {
+describe("core::transformData", () => {
+    it("should support a single transformer", () => {
+        let data;
+        data = transformData(data, null, (data) => {
             data = "foo";
             return data;
         });
@@ -14,8 +11,8 @@ describe("core::transformData", function () {
         expect(data).to.be.equal("foo");
     });
 
-    it("should support an array of transformers", function () {
-        var data = "";
+    it("should support an array of transformers", () => {
+        let data = "";
         data = transformData(data, null, [function (data) {
             data += "f";
             return data;

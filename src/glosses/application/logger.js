@@ -5,7 +5,7 @@ const { is, std: { util: { format } } } = adone;
 const LOG_NOFORMAT = 255;
 
 export default class Logger {
-    constructor(options = { }) {
+    constructor(options = {}) {
         this.options = options;
         if (!is.propertyDefined(options, "bindArgs")) {
             this.options.bindArgs = [];
@@ -26,7 +26,7 @@ export default class Logger {
             }
         }
         bindArgs = bindArgs.concat(args);
-        for (const t of this._transforms) { 
+        for (const t of this._transforms) {
             t.write(bindArgs);
         }
         return this;
@@ -60,7 +60,7 @@ export default class Logger {
         for (const t of this._transforms) {
             t.end();
         }
-        
+
         if (is.function(fn)) {
             Promise.all(this._endPromisses).then(() => {
                 fn();
@@ -71,33 +71,41 @@ export default class Logger {
     }
 
     toSinks(sinks) {
-        if (is.object(sinks)) {
-            for (const [name, options] of adone.util.entries(sinks)) {
-                this._pipeTransform(name, options);
+        if (is.array(sinks)) {
+            for (const options of sinks) {
+                this._pipeTransform(options);
             }
         } else {
-            throw new adone.x.InvalidArgument(`unsupported type of argument: ${typeof(sinks)}`);
+            throw new adone.x.InvalidArgument(`Unsupported type of sinks: ${typeof (sinks)}`);
         }
         return this;
-    } 
+    }
 
     toStdout(options) {
-        this._pipeTransform("stdout", options);
+        this._pipeTransform(Object.assign({
+            type: "stdout"
+        }, options));
         return this;
     }
 
     toStderr(options) {
-        this._pipeTransform("stderr", options);
+        this._pipeTransform(Object.assign({
+            type: "stderr"
+        }, options));
         return this;
     }
 
     toFile(options) {
-        this._pipeTransform("file", options);
+        this._pipeTransform(Object.assign({
+            type: "file"
+        }), options);
         return this;
     }
 
     toStream(options) {
-        this._pipeTransform("stream", options);
+        this._pipeTransform(Object.assign({
+            type: "stream"
+        }), options);
         return this;
     }
 
@@ -107,19 +115,14 @@ export default class Logger {
                 bindArgs: [
                     () => {
                         const now = new Date();
-                        return (("0" + now.getDate()).slice(-2) +
-                            "-" + ("0" + (now.getMonth() + 1)).slice(-2) +
-                            "-" + now.getFullYear() +
-                            " " + ("0" + now.getHours()).slice(-2) +
-                            ":" + ("0" + now.getMinutes()).slice(-2) +
-                            ":" + ("0" + now.getSeconds()).slice(-2));
+                        return (`${(`0${now.getDate()}`).slice(-2)}-${(`0${now.getMonth() + 1}`).slice(-2)}-${now.getFullYear()} ${(`0${now.getHours()}`).slice(-2)}:${(`0${now.getMinutes()}`).slice(-2)}:${(`0${now.getSeconds()}`).slice(-2)}`);
                     }
                 ]
             });
 
             // setup default logger sinks
-            for (const [key, options] of adone.util.entries(Logger.defaultSinks)) {
-                const methodName = adone.text.toCamelCase(`to_${key}`);
+            for (const options of Logger.defaultSinks) {
+                const methodName = adone.text.toCamelCase(`to_${options.type}`);
                 const method = logger[methodName];
                 if (is.function(method)) {
                     method.call(logger, options);
@@ -132,16 +135,17 @@ export default class Logger {
         return Logger.defaultLogger;
     }
 
-    _pipeTransform(name, options) {
+    _pipeTransform(options) {
+        const type = options.type;
         class LogTransform extends adone.Transform { }
 
         LogTransform.prototype._format = adone.sprintf;
         LogTransform.prototype.LOG_NOFORMAT = LOG_NOFORMAT;
-        
+
         let suffixStyle;
         const formatDelimiter = options.delimiter || " ";
         let preprocessCode = "";
-        let formatString = "\""; 
+        let formatString = "\"";
         let definitions = "const args = x.slice();";
         if (is.array(options.argsSchema)) {
             const argsNum = options.argsSchema.length;
@@ -164,7 +168,7 @@ export default class Logger {
                     }
                 }
                 formatString += leftBracket;
-                const hasStyle = ((name === "stdout" && process.stdout && process.stdout.isTTY) || (name === "stderr" && process.stderr && process.stderr.isTTY)) && is.propertyDefined(argSchema, "style");
+                const hasStyle = ((type === "stdout" && process.stdout && process.stdout.isTTY) || (type === "stderr" && process.stderr && process.stderr.isTTY)) && is.propertyDefined(argSchema, "style");
                 if (hasStyle) {
                     if (!is.propertyDefined(LogTransform.prototype, "_parseStyle")) {
                         suffixStyle = adone.terminal.parse("{/}");
@@ -189,7 +193,7 @@ export default class Logger {
                         definitions += `const origArg${i} = ${styleArg};`;
                         formatString += `" + this._parseStyle(this._styleObj${i}[origArg${i}]) + "`;
                     } else {
-                        throw new adone.x.NotSupported(`Unsupported argument style for logger: ${typeof(argSchema.style)}`);
+                        throw new adone.x.NotSupported(`Unsupported argument style for logger: ${typeof (argSchema.style)}`);
                     }
                 }
                 if (is.propertyDefined(argSchema, "format")) {
@@ -235,7 +239,7 @@ export default class Logger {
         `;
         LogTransform.prototype._transform = new Function("x", fnCode);
         const t = new LogTransform();
-        switch (name) {
+        switch (type) {
             case "stdout": t.pipe(process.stdout); break;
             case "stderr": t.pipe(process.stderr); break;
             case "file": {
@@ -249,13 +253,13 @@ export default class Logger {
                 if (!is.propertyDefined(options, "stream")) {
                     throw new adone.x.Runtime("for 'stream' log channels you should specify 'stream' option");
                 }
-                t.pipe(adone.std.fs.createWriteStream(options.stream));
+                t.pipe(options.stream);
                 break;
             }
         }
 
         if (options.noFormatLogger === true) {
-            const logNoFormatName = `${name}LogNoFmt`; 
+            const logNoFormatName = `${type}LogNoFmt`;
             if (!is.propertyDefined(this, logNoFormatName)) {
                 const dummyArray = new Array(bindingsCount);
                 dummyArray.push(LOG_NOFORMAT);
@@ -264,9 +268,9 @@ export default class Logger {
                 };
             }
         }
-        
+
         this._transforms.push(t);
-        this._channels.push(name);
+        this._channels.push(type);
         this._endPromisses.push(new Promise((resolve) => {
             t.once("end", resolve);
         }));
@@ -288,8 +292,9 @@ Logger.LOG_LEVELS = {
     5: "TRACE"
 };
 Logger.defaultLogger = null;
-Logger.defaultSinks = {
-    stdout: {
+Logger.defaultSinks = [
+    {
+        type: "stdout",
         noFormatLogger: true,
         filter: (args) => {
             const level = args[1];
@@ -318,7 +323,8 @@ Logger.defaultSinks = {
             }
         ]
     },
-    stderr: {
+    {
+        type: "stderr",
         filter: (args) => {
             const level = args[1];
             return (level >= Logger.LOG_FATAL && level <= Logger.LOG_ERROR);
@@ -344,5 +350,5 @@ Logger.defaultSinks = {
             }
         ]
     }
-};
+];
 adone.tag.set(Logger, adone.tag.LOGGER);

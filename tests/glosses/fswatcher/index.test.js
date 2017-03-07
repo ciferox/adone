@@ -1,4 +1,4 @@
-import Dummy from "../../helpers/spy";
+import Dummy from "shani/helpers/spy";
 
 const { is } = adone;
 const fswatcher = adone.FSWatcher;

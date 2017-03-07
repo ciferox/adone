@@ -1,12 +1,10 @@
-/* global describe it */
+import nock from "shani/helpers/nock";
 
-import nock from "../../../helpers/nock";
+const { client } = adone.net.http;
 
-const { request } = adone.net;
-
-describe("headers", function () {
-    it("should default common headers", function (done) {
-        var headers = request.defaults.headers.common;
+describe("headers", () => {
+    it("should default common headers", (done) => {
+        const headers = client.defaults.headers.common;
 
         nock("http://example.org", {
             reqheaders: headers
@@ -16,11 +14,11 @@ describe("headers", function () {
                 done();
             });
         
-        request("http://example.org/foo");
+        client("http://example.org/foo");
     });
 
-    it("should add extra headers for post", function (done) {
-        var headers = request.defaults.headers.common;
+    it("should add extra headers for post", (done) => {
+        const headers = client.defaults.headers.common;
 
         nock("http://example.org", {
             reqheaders: headers
@@ -30,10 +28,10 @@ describe("headers", function () {
                 done();
             });
 
-        request.post("http://example.org/foo", "fizz=buzz");
+        client.post("http://example.org/foo", "fizz=buzz");
     });
 
-    it("should use application/json when posting an object", function (done) {
+    it("should use application/json when posting an object", (done) => {
         nock("http://example.org", {
             reqheaders: {
                 "Content-Type": "application/json;charset=utf-8"
@@ -44,13 +42,13 @@ describe("headers", function () {
                 done();
             });
 
-        request.post("http://example.org/foo/bar", {
+        client.post("http://example.org/foo/bar", {
             firstName: "foo",
             lastName: "bar"
         });
     });
 
-    it("should remove content-type if data is empty", function (done) {
+    it("should remove content-type if data is empty", (done) => {
 
         nock("http://example.org")
             .matchHeader("Content-Type", undefined)
@@ -59,10 +57,10 @@ describe("headers", function () {
                 done();
             });
 
-        request.post("http://example.org/foo");
+        client.post("http://example.org/foo");
     });
 
-    it("should preserve content-type if data is false", function (done) {
+    it("should preserve content-type if data is false", (done) => {
         nock("http://example.org", {
             reqheaders: {
                 "Content-Type": "application/x-www-form-urlencoded"
@@ -72,6 +70,6 @@ describe("headers", function () {
             .reply(200, () => {
                 done();
             });
-        request.post("http://example.org/foo", false);
+        client.post("http://example.org/foo", false);
     });
 });

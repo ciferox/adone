@@ -542,7 +542,6 @@ adone.net = lazify({
     util: "./glosses/net/util",
     Socket: "./glosses/net/socket",
     Server: "./glosses/net/server",
-    request: "./glosses/net/request",
     ssh: "./glosses/net/ssh"
 });
 
@@ -551,7 +550,8 @@ adone.net.http = adone.lazify({
     Middleware: "./glosses/net/http/middleware",
     helper: "./glosses/net/http/helpers",
     x: "./glosses/net/http/x",
-    Server: "./glosses/net/http/server"
+    Server: "./glosses/net/http/server",
+    client: "./glosses/net/http/client"
 });
 
 adone.net.http.middleware = lazify({

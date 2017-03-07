@@ -1,20 +1,18 @@
-/* global describe it */
+import nock from "shani/helpers/nock";
 
-import nock from "../../../helpers/nock";
-
-const { request } = adone.net;
+const { client } = adone.net.http;
 
 // var Cancel = request.Cancel;
-var CancelToken = request.CancelToken;
+const CancelToken = client.CancelToken;
 
-describe("cancel", function () {
-    describe("when called before sending request", function () {
-        it("rejects Promise with a Cancel object", function (done) {
-            var source = CancelToken.source();
+describe("cancel", () => {
+    describe("when called before sending request", () => {
+        it("rejects Promise with a Cancel object", (done) => {
+            const source = CancelToken.source();
             source.cancel("Operation has been canceled.");
-            request.get("/foo", {
+            client.get("/foo", {
                 cancelToken: source.token
-            }).catch(function (thrown) {
+            }).catch((thrown) => {
                 // expect(thrown).to.be(jasmine.any(Cancel));
                 expect(thrown.message).to.be.equal("Operation has been canceled.");
                 done();
@@ -22,8 +20,9 @@ describe("cancel", function () {
         });
     });
 
-    describe("when called after request has been sent", function () {
-        it("rejects Promise with a Cancel object", function (done) {
+    describe("when called after request has been sent", () => {
+        it("rejects Promise with a Cancel object", (done) => {
+            let source;
             nock("http://example.com")
                 .get("/foo/bar")
                 .reply(200, () => {
@@ -31,10 +30,10 @@ describe("cancel", function () {
                     return "OK";
                 });
 
-            var source = CancelToken.source();
-            request.get("http://example.com/foo/bar", {
+            source = CancelToken.source();
+            client.get("http://example.com/foo/bar", {
                 cancelToken: source.token
-            }).catch(function (thrown) {
+            }).catch((thrown) => {
                 // expect(thrown).toEqual(jasmine.any(Cancel));
                 expect(thrown.message).to.be.equal("Operation has been canceled.");
                 done();
@@ -42,17 +41,17 @@ describe("cancel", function () {
         });
     });
 
-    describe("when called after response has been received", function () {
+    describe("when called after response has been received", () => {
         // https://github.com/mzabriskie/request/issues/482
-        it("does not cause unhandled rejection", function (done) {
+        it("does not cause unhandled rejection", (done) => {
             nock("http://example.com")
                 .get("/foo")
                 .reply(200, "OK");
 
-            var source = CancelToken.source();
-            request.get("http://example.com/foo", {
+            const source = CancelToken.source();
+            client.get("http://example.com/foo", {
                 cancelToken: source.token
-            }).then(function () {
+            }).then(() => {
                 const f = function () {
                     done(new Error("Unhandled rejection."));
                 };
