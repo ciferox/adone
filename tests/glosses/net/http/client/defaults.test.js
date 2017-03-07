@@ -3,10 +3,7 @@ import nock from "shani/helpers/nock";
 const { client } = adone.net.http;
 import defaults from "adone/glosses/net/http/client/defaults";
 
-describe("defaults", () => {
-    beforeEach(() => {
-    });
-
+describe("glosses", "net", "http", "client", "defaults", () => {
     afterEach(() => {
         delete client.defaults.baseURL;
         delete client.defaults.headers.get["X-CUSTOM-HEADER"];

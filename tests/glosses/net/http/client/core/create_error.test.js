@@ -1,6 +1,6 @@
 import createError from "adone/glosses/net/http/client/core/create_error";
 
-describe("core::createError", () => {
+describe("glosses", "net", "http", "client", "core", "createError", () => {
     it("should create an Error with message, config, and code", () => {
         const error = createError("Boom!", { foo: "bar" }, "ESOMETHING");
         expect(error.message).to.be.equal("Boom!");

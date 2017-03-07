@@ -5,7 +5,7 @@ const {
 let server;
 let proxy;
 
-describe("unit", () => {
+describe("glosses", "net", "http", "client", "unit", () => {
     context("http", () => {
         afterEach(() => {
             server.close();

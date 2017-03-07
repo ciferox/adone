@@ -1,6 +1,6 @@
 import transformData from "adone/glosses/net/http/client/core/transform_data";
 
-describe("core::transformData", () => {
+describe("glosses", "net", "http", "client", "core", "transformData", () => {
     it("should support a single transformer", () => {
         let data;
         data = transformData(data, null, (data) => {

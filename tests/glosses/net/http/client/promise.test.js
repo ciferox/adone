@@ -2,7 +2,7 @@ import nock from "shani/helpers/nock";
 
 const { client } = adone.net.http;
 
-describe("promise", () => {
+describe("glosses", "net", "http", "client", "promise", () => {
     it("should provide succinct object to then", (done) => {
         nock("http://example.org")
             .get("/foo")

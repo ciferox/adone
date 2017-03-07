@@ -74,7 +74,7 @@ export default class Netron extends GenesisNetron {
     async unbind(options) {
         if (is.nil(options)) {
             for (const gate of this._gates.values()) {
-                await gate.server.unbind();      
+                await gate.server.unbind();
             }
             this._gates.clear();
         } else if (is.string(options.port) && !options.port.includes("/") && !options.port.endsWith(".sock")) {
@@ -87,8 +87,8 @@ export default class Netron extends GenesisNetron {
             this._gates.delete(options.port);
         } else {
             const [port, host] = adone.net.util.normalizeAddr(options.port, options.host, this.option.defaultPort);
-            const addr = adone.text.humanizeAddr(this.option.protocol, port, host);
-            const gate = this._gates.get(addr); 
+            const addr = adone.util.humanizeAddr(this.option.protocol, port, host);
+            const gate = this._gates.get(addr);
             if (is.undefined(gate)) {
                 throw new x.Unknown(`unknown gate '${options.port}'`);
             }
@@ -163,7 +163,7 @@ export default class Netron extends GenesisNetron {
                 allowedContexts = access.contexts;
             }
         }
-        
+
         // подготавливаем все определения для зарегистрированных контекстов
         const defs = adone.o();
         let hasContexts = false;
@@ -173,11 +173,11 @@ export default class Netron extends GenesisNetron {
                 hasContexts = true;
             }
         }
-        
+
         if (hasContexts) {
             data.defs = defs;
-        }    
-    
+        }
+
         return data;
     }
 
@@ -310,7 +310,7 @@ export default class Netron extends GenesisNetron {
     _peerDisconnected(peer) {
         this._removePeerFromNonauthList(peer);
         if (this.option.isSuper) {
-            // Check strong contextes attached remotely by disconnectered peer and remove them. 
+            // Check strong contextes attached remotely by disconnectered peer and remove them.
             for (const [ctxId, stub] of this.contexts.entries()) {
                 if (is.netronRemoteStub(stub) && stub.iInstance.$uid === peer.uid) {
                     this.detachContext(ctxId/*, peer*/);
@@ -335,7 +335,7 @@ export default class Netron extends GenesisNetron {
         let id = options.id;
         if (is.undefined(id)) {
             [options.port, options.host] = adone.net.util.normalizeAddr(options.port, options.host, this.option.defaultPort);
-            id = adone.text.humanizeAddr(this.option.protocol, options.port, options.host);
+            id = adone.util.humanizeAddr(this.option.protocol, options.port, options.host);
         }
         if (this._gates.has(id)) {
             throw new x.Exists(`already bound to '${id}'`);
@@ -358,7 +358,7 @@ export default class Netron extends GenesisNetron {
         if (is.undefined(server.option.id)) {
             server.option.id = id;
         }
-        
+
         gateData.ipPolicy = IP_POLICY_NONE;
         if (is.propertyDefined(options, "access")) {
             const ipList = options.access.ip_list;
@@ -383,7 +383,7 @@ export default class Netron extends GenesisNetron {
                 if (gateData.deny && gateData.deny.length === 0 || gateData.ipPolicy === IP_POLICY_NONE) {
                     delete gateData.ipList;
                 } else {
-                    if (gateData.ipPolicy === IP_POLICY_ALLOW) { 
+                    if (gateData.ipPolicy === IP_POLICY_ALLOW) {
                         gateData.applyPolicy = new Function("peerIp,ipList", `
                             return !ipList.findIndex((ipBn) => {
                                 return peerIpBn.eq(ipBn);
@@ -395,7 +395,7 @@ export default class Netron extends GenesisNetron {
                                 return peerIpBn.eq(ipBn);
                             });
                         `);
-                    } 
+                    }
                 }
             }
         }

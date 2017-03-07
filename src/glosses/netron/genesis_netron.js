@@ -140,7 +140,7 @@ export default class GenesisNetron extends AsyncEmitter {
 
     connect(options = { }) {
         const [port, host] = adone.net.util.normalizeAddr(options.port, options.host, this.option.defaultPort);
-        const addr = adone.text.humanizeAddr(this.option.protocol, options.port, options.host);
+        const addr = adone.util.humanizeAddr(this.option.protocol, options.port, options.host);
         const peer =  this._svrNetronAddrs.get(addr);
         if (!is.undefined(peer)) {
             return Promise.resolve(peer);

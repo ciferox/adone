@@ -804,7 +804,7 @@ export function consoleReporter({ allTimings = false, timers = false, showHooks 
         let timer = null;
 
         function elapsedToString(elapsed, timeout, little = true) {
-            let elapsedString = adone.text.humanizeTime(elapsed);  // ms
+            let elapsedString = adone.util.humanizeTime(elapsed);  // ms
 
             const k = elapsed / timeout;
             if (k < 0.25) {
@@ -1025,8 +1025,8 @@ export function consoleReporter({ allTimings = false, timers = false, showHooks 
 
                 log();
                 totalElapsed = process.hrtime(totalElapsed);
-                testsElapsed = adone.text.humanizeTime(testsElapsed);
-                totalElapsed = adone.text.humanizeTime(totalElapsed[0] * 1e3 + totalElapsed[1] / 1e6);
+                testsElapsed = adone.util.humanizeTime(testsElapsed);
+                totalElapsed = adone.util.humanizeTime(totalElapsed[0] * 1e3 + totalElapsed[1] / 1e6);
 
                 log(`    {green-fg}${passed} passing{/} {grey-fg}(${testsElapsed}){/}`);
                 if (pending) {

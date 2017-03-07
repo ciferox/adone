@@ -2,132 +2,132 @@ import adone from "adone";
 const { is } = adone;
 
 const irregularPlurals = adone.o({
-    "addendum": "addenda",
-    "aircraft": "aircraft",
-    "alga": "algae",
-    "alumna": "alumnae",
-    "alumnus": "alumni",
-    "amoeba": "amoebae",
-    "analysis": "analyses",
-    "antenna": "antennae",
-    "antithesis": "antitheses",
-    "apex": "apices",
-    "appendix": "appendices",
-    "axis": "axes",
-    "bacillus": "bacilli",
-    "bacterium": "bacteria",
-    "barracks": "barracks",
-    "basis": "bases",
-    "beau": "beaux",
-    "bison": "bison",
-    "bureau": "bureaus",
-    "cactus": "cacti",
-    "calf": "calves",
-    "child": "children",
-    "château": "châteaus",
-    "cherub": "cherubim",
-    "codex": "codices",
-    "concerto": "concerti",
-    "corpus": "corpora",
-    "crisis": "crises",
-    "criterion": "criteria",
-    "curriculum": "curricula",
-    "datum": "data",
-    "deer": "deer",
-    "diagnosis": "diagnoses",
-    "die": "dice",
-    "dwarf": "dwarfs",
-    "echo": "echoes",
-    "elf": "elves",
-    "elk": "elk",
-    "ellipsis": "ellipses",
-    "embargo": "embargoes",
-    "emphasis": "emphases",
-    "erratum": "errata",
+    addendum: "addenda",
+    aircraft: "aircraft",
+    alga: "algae",
+    alumna: "alumnae",
+    alumnus: "alumni",
+    amoeba: "amoebae",
+    analysis: "analyses",
+    antenna: "antennae",
+    antithesis: "antitheses",
+    apex: "apices",
+    appendix: "appendices",
+    axis: "axes",
+    bacillus: "bacilli",
+    bacterium: "bacteria",
+    barracks: "barracks",
+    basis: "bases",
+    beau: "beaux",
+    bison: "bison",
+    bureau: "bureaus",
+    cactus: "cacti",
+    calf: "calves",
+    child: "children",
+    château: "châteaus",
+    cherub: "cherubim",
+    codex: "codices",
+    concerto: "concerti",
+    corpus: "corpora",
+    crisis: "crises",
+    criterion: "criteria",
+    curriculum: "curricula",
+    datum: "data",
+    deer: "deer",
+    diagnosis: "diagnoses",
+    die: "dice",
+    dwarf: "dwarfs",
+    echo: "echoes",
+    elf: "elves",
+    elk: "elk",
+    ellipsis: "ellipses",
+    embargo: "embargoes",
+    emphasis: "emphases",
+    erratum: "errata",
     "faux pas": "faux pas",
-    "fez": "fezes",
-    "firmware": "firmware",
-    "fish": "fish",
-    "focus": "foci",
-    "foot": "feet",
-    "formula": "formulae",
-    "fungus": "fungi",
-    "gallows": "gallows",
-    "genus": "genera",
-    "goose": "geese",
-    "graffito": "graffiti",
-    "grouse": "grouse",
-    "half": "halves",
-    "hero": "heroes",
-    "hoof": "hooves",
-    "hypothesis": "hypotheses",
-    "index": "indices",
-    "knife": "knives",
-    "larva": "larvae",
-    "leaf": "leaves",
-    "libretto": "libretti",
-    "life": "lives",
-    "loaf": "loaves",
-    "locus": "loci",
-    "louse": "lice",
-    "man": "men",
-    "matrix": "matrices",
-    "means": "means",
-    "medium": "media",
-    "memorandum": "memoranda",
-    "minutia": "minutiae",
-    "moose": "moose",
-    "mouse": "mice",
-    "nebula": "nebulae",
-    "neurosis": "neuroses",
-    "news": "news",
-    "nucleus": "nuclei",
-    "oasis": "oases",
-    "offspring": "offspring",
-    "opus": "opera",
-    "ovum": "ova",
-    "ox": "oxen",
-    "paralysis": "paralyses",
-    "parenthesis": "parentheses",
-    "phenomenon": "phenomena",
-    "phylum": "phyla",
-    "potato": "potatoes",
-    "prognosis": "prognoses",
-    "quiz": "quizzes",
-    "radius": "radii",
-    "referendum": "referenda",
-    "salmon": "salmon",
-    "scarf": "scarves",
-    "self": "selves",
-    "series": "series",
-    "sheep": "sheep",
-    "shelf": "shelves",
-    "shrimp": "shrimp",
-    "species": "species",
-    "stimulus": "stimuli",
-    "stratum": "strata",
-    "swine": "swine",
-    "syllabus": "syllabi",
-    "symposium": "symposia",
-    "synopsis": "synopses",
-    "synthesis": "syntheses",
-    "tableau": "tableaus",
-    "that": "those",
-    "thesis": "theses",
-    "thief": "thieves",
-    "tomato": "tomatoes",
-    "tooth": "teeth",
-    "trout": "trout",
-    "tuna": "tuna",
-    "vertebra": "vertebrae",
-    "vertex": "vertices",
-    "veto": "vetoes",
-    "vita": "vitae",
-    "vortex": "vortices",
-    "wharf": "wharves",
-    "wife": "wives",
-    "wolf": "wolves",
-    "woman": "women"
+    fez: "fezes",
+    firmware: "firmware",
+    fish: "fish",
+    focus: "foci",
+    foot: "feet",
+    formula: "formulae",
+    fungus: "fungi",
+    gallows: "gallows",
+    genus: "genera",
+    goose: "geese",
+    graffito: "graffiti",
+    grouse: "grouse",
+    half: "halves",
+    hero: "heroes",
+    hoof: "hooves",
+    hypothesis: "hypotheses",
+    index: "indices",
+    knife: "knives",
+    larva: "larvae",
+    leaf: "leaves",
+    libretto: "libretti",
+    life: "lives",
+    loaf: "loaves",
+    locus: "loci",
+    louse: "lice",
+    man: "men",
+    matrix: "matrices",
+    means: "means",
+    medium: "media",
+    memorandum: "memoranda",
+    minutia: "minutiae",
+    moose: "moose",
+    mouse: "mice",
+    nebula: "nebulae",
+    neurosis: "neuroses",
+    news: "news",
+    nucleus: "nuclei",
+    oasis: "oases",
+    offspring: "offspring",
+    opus: "opera",
+    ovum: "ova",
+    ox: "oxen",
+    paralysis: "paralyses",
+    parenthesis: "parentheses",
+    phenomenon: "phenomena",
+    phylum: "phyla",
+    potato: "potatoes",
+    prognosis: "prognoses",
+    quiz: "quizzes",
+    radius: "radii",
+    referendum: "referenda",
+    salmon: "salmon",
+    scarf: "scarves",
+    self: "selves",
+    series: "series",
+    sheep: "sheep",
+    shelf: "shelves",
+    shrimp: "shrimp",
+    species: "species",
+    stimulus: "stimuli",
+    stratum: "strata",
+    swine: "swine",
+    syllabus: "syllabi",
+    symposium: "symposia",
+    synopsis: "synopses",
+    synthesis: "syntheses",
+    tableau: "tableaus",
+    that: "those",
+    thesis: "theses",
+    thief: "thieves",
+    tomato: "tomatoes",
+    tooth: "teeth",
+    trout: "trout",
+    tuna: "tuna",
+    vertebra: "vertebrae",
+    vertex: "vertices",
+    veto: "vetoes",
+    vita: "vitae",
+    vortex: "vortices",
+    wharf: "wharves",
+    wife: "wives",
+    wolf: "wolves",
+    woman: "women"
 });
 
 // Массив собственных имён для plain-объекта (см. util.keys()).
@@ -208,7 +208,7 @@ const util = adone.o({
     },
     parseMs: (ms) => {
         if (!is.number(ms)) {
-            throw new TypeError(ms + " is not a number");
+            throw new TypeError(`${ms} is not a number`);
         }
 
         const roundTowardZero = ms > 0 ? Math.floor : Math.ceil;
@@ -229,7 +229,7 @@ const util = adone.o({
         if (str in irregularPlurals) {
             plural = irregularPlurals[str];
         } else if (!is.string(plural)) {
-            plural = (str.replace(/(?:s|x|z|ch|sh)$/i, "$&e").replace(/([^aeiou])y$/i, "$1ie") + "s")
+            plural = (`${str.replace(/(?:s|x|z|ch|sh)$/i, "$&e").replace(/([^aeiou])y$/i, "$1ie")}s`)
                 .replace(/i?e?s$/i, (m) => {
                     const isTailLowerCase = str.slice(-1) === str.slice(-1).toLowerCase();
                     return isTailLowerCase ? m.toLowerCase() : m.toUpperCase();
@@ -551,6 +551,83 @@ const util = adone.o({
             dest[source[key]] = key;
         }
         return dest;
+    },
+    humanizeTime: (ms, opts) => {
+        if (!is.finite(ms)) {
+            throw new TypeError(`${ms} is not finite number`);
+        }
+
+        opts = opts || {};
+
+        if (ms < 1000) {
+            const msDecimalDigits = is.number(opts.msDecimalDigits) ? opts.msDecimalDigits : 0;
+            return (msDecimalDigits ? ms.toFixed(msDecimalDigits) : Math.ceil(ms)) + (opts.verbose ? ` ${adone.util.pluralizeWord("millisecond", Math.ceil(ms))}` : "ms");
+        }
+
+        const ret = [];
+
+        const add = function (val, long, short, valStr) {
+            if (val === 0) {
+                return;
+            }
+
+            const postfix = opts.verbose ? ` ${adone.util.pluralizeWord(long, val)}` : short;
+
+            ret.push((valStr || val) + postfix);
+        };
+
+        const parsed = adone.util.parseMs(ms);
+
+        add(parsed.days, "day", "d");
+        add(parsed.hours, "hour", "h");
+        add(parsed.minutes, "minute", "m");
+
+        if (opts.compact) {
+            add(parsed.seconds, "second", "s");
+            return `~${ret[0]}`;
+        }
+
+        const sec = ms / 1000 % 60;
+        const secDecimalDigits = is.number(opts.secDecimalDigits) ? opts.secDecimalDigits : 1;
+        const secStr = sec.toFixed(secDecimalDigits).replace(/\.0$/, "");
+        add(sec, "second", "s", secStr);
+
+        return ret.join(" ");
+    },
+    humanizeSize: (num, space = " ") => {
+        if (!is.number(num) || is.nan(num)) {
+            throw new TypeError(`${num} is not a a number`);
+        }
+
+        const neg = num < 0;
+        const units = ["B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+
+        if (neg) {
+            num = -num;
+        }
+
+        if (num < 1) {
+            return `${(neg ? "-" : "") + num + space}B`;
+        }
+
+        const exponent = Math.min(Math.floor(Math.log(num) / Math.log(1024)), units.length - 1);
+        num = Number((num / Math.pow(1024, exponent)).toFixed(2));
+        const unit = units[exponent];
+
+        return (neg ? "-" : "") + num + space + unit;
+    },
+    humanizeAddr: (protocol, port, host) => {
+        let addr;
+        protocol = protocol || "tcp:";
+        if (!protocol.endsWith(":")) {
+            protocol += ":";
+        }
+        if (is.number(port)) {
+            addr = adone.sprintf("%s//%s:%d", protocol, host, port);
+        } else {
+            addr = adone.sprintf("%s//%s", protocol, port);
+        }
+        return addr;
     }
 });
 

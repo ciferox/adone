@@ -1,6 +1,6 @@
 const { Cancel, CancelToken } = adone.net.http.client;
 
-describe("CancelToken", () => {
+describe("glosses", "net", "http", "client", "CancelToken", () => {
     describe("constructor", () => {
         it("throws when executor is not specified", () => {
             expect(() => {

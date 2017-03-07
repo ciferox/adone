@@ -2,9 +2,12 @@ import adone from "adone";
 import Context from "./context";
 import Request from "./request";
 import Response from "./response";
-const { is, x, net: { http }, std } = adone;
+const {
+    net: { http: { helper: { compose, onFinished, status: { isEmptyBody } } } },
+    is, x, std, EventEmitter
+} = adone;
 
-export default class Server extends adone.EventEmitter {
+export default class Server extends EventEmitter {
     constructor() {
         super();
 
@@ -26,7 +29,7 @@ export default class Server extends adone.EventEmitter {
     }
 
     callback() {
-        const fn = http.helper.compose(this.middlewares);
+        const fn = compose(this.middlewares);
 
         if (!this.listeners("error").length) {
             this.on("error", this.onerror);
@@ -37,7 +40,7 @@ export default class Server extends adone.EventEmitter {
             const ctx = this.createContext(req, res);
             const onerror = (err) => ctx.onerror(err);
             const handleResponse = () => Server.respond(ctx);
-            http.helper.onFinished(res, onerror);
+            onFinished(res, onerror);
             fn(ctx).then(handleResponse).catch(onerror);
         };
 
@@ -51,14 +54,6 @@ export default class Server extends adone.EventEmitter {
         response.request = request;
         const context = new Context(this, request, response);
         request.ctx = response.ctx = context;
-        // context.originalUrl = request.originalUrl = req.url;
-        // context.cookies = new Cookies(req, res, {
-        //     keys: this.keys,
-        //     secure: request.secure
-        // });
-        // request.ip = request.ips[0] || req.socket.remoteAddress || "";
-        // context.accept = request.accept = accepts(req);
-        // context.state = {};
         return context;
     }
 
@@ -94,7 +89,7 @@ export default class Server extends adone.EventEmitter {
         const code = ctx.status;
 
         // ignore body
-        if (http.helper.status.isEmptyBody(code)) {
+        if (isEmptyBody(code)) {
             // strip headers
             ctx.body = null;
             return res.end();
@@ -143,5 +138,6 @@ Server.Response = Response;
 
 Server.middleware = adone.lazify({
     serve: "./middlewares/serve",
-    favicon: "./middlewares/favicon"
+    favicon: "./middlewares/favicon",
+    logger: "./middlewares/logger"
 }, null, require);

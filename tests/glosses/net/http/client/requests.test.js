@@ -3,7 +3,7 @@ import Dummy from "shani/helpers/spy";
 
 const { client } = adone.net.http;
 
-describe("requests", () => {
+describe("glosses", "net", "http", "client", "requests", () => {
     it("should treat single string arg as url", (done) => {
         nock("http://example.org")
             .get("/foo")

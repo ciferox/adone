@@ -1,6 +1,6 @@
 const { client } = adone.net.http;
 
-describe("adapter", () => {
+describe("glosses", "net", "http", "client", "adapter", () => {
     it("should support custom adapter", (done) => {
         let called = false;
 

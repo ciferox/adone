@@ -143,7 +143,7 @@ export default class Logger {
         LogTransform.prototype.LOG_NOFORMAT = LOG_NOFORMAT;
 
         let suffixStyle;
-        const formatDelimiter = options.delimiter || " ";
+        const formatDelimiter = is.propertyDefined(options, "delimiter") ? options.delimiter : " ";
         let preprocessCode = "";
         let formatString = "\"";
         let definitions = "const args = x.slice();";

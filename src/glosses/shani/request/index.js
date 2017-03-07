@@ -1,8 +1,9 @@
 import adone from "adone";
-const { shani: { utils: { assert } }, net, std, is, x, util, compressor } = adone;
+const { shani: { utils: { assert } }, net, std, is, x, util, compressor, EventEmitter } = adone;
 
-class Request {
+class Request extends EventEmitter {
     constructor(server) {
+        super();
         this.server = server;
         if (server instanceof std.http.Server || server instanceof std.https.Server) {
             const address = server.address();
@@ -145,37 +146,48 @@ class Request {
 
         const protocol = server instanceof std.http.Server ? "http:" : "https:";
 
-        const response = await new Promise((resolve, reject) => {
-            const req = std.http.request({
-                protocol,  // https?
-                hostname: address.address,
-                port: address.port,
-                method: this.method,
-                path: this.path,
-                headers: this.header
-            }, (res) => {
-                res.on("error", reject);
-
-                const chunks = [];
-                res.on("data", (chunk) => {
-                    chunks.push(chunk);
-                });
-                res.once("end", () => {
-                    res.body = Buffer.concat(chunks);
-                    resolve(res);
-                });
-            });
-
-            req.once("error", reject);
-            req.once("aborted", () => {
-                reject(new x.Exception("The request was aborted by the server"));
-            });
-
-
-            req.end();
-        });
-
+        let response;
         try {
+            response = await new Promise((resolve, reject) => {
+                const req = std.http.request({
+                    protocol,  // https?
+                    hostname: address.address,
+                    port: address.port,
+                    method: this.method,
+                    path: this.path,
+                    headers: this.header
+                }, (res) => {
+                    this.emit("response start", res);
+
+                    res.on("error", (err) => {
+                        this.emit("response error", err);
+                        reject(err);
+                    });
+
+                    const chunks = [];
+                    res.on("data", (chunk) => {
+                        chunks.push(chunk);
+                    });
+                    res.once("end", () => {
+                        this.emit("response end");
+                        res.body = Buffer.concat(chunks);
+                        resolve(res);
+                    });
+                });
+
+                req.once("socket", (socket) => {
+                    this.emit("request socket", socket);
+                });
+
+                req.once("error", reject);
+                req.once("aborted", () => {
+                    reject(new x.Exception("The request was aborted by the server"));
+                });
+
+
+                req.end();
+            });
+
             for (const expect of this.expects) {
                 await expect(response);
             }

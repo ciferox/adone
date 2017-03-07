@@ -1,7 +1,7 @@
 import Dummy from "shani/helpers/spy";
 import settle from "adone/glosses/net/http/client/core/settle";
 
-describe("core::settle", () => {
+describe("glosses", "net", "http", "client", "core", "settle", () => {
     const resolve = new Dummy();
     const reject = new Dummy();
 

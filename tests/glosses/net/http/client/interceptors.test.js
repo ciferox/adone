@@ -2,7 +2,7 @@ import nock from "shani/helpers/nock";
 
 const { client } = adone.net.http;
 
-describe("interceptors", () => {
+describe("glosses", "net", "http", "client", "interceptors", () => {
     afterEach(() => {
         client.interceptors.request.handlers = [];
         client.interceptors.response.handlers = [];

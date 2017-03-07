@@ -2,7 +2,7 @@ import nock from "shani/helpers/nock";
 
 const { client } = adone.net.http;
 
-describe("transform", () => {
+describe("glosses", "net", "http", "client", "transform", () => {
     it("should transform JSON to string", (done) => {
         nock("http://example.org")
             .post("/foo", { foo: "bar" })

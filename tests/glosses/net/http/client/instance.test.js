@@ -2,8 +2,7 @@ import nock from "shani/helpers/nock";
 
 const { client } = adone.net.http;
 
-describe("instance", () => {
-
+describe("glosses", "net", "http", "client", "instance", () => {
     it("should have the same methods as default instance", () => {
         const instance = client.create();
 

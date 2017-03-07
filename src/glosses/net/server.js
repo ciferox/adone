@@ -31,10 +31,10 @@ export default class Server extends adone.EventEmitter {
             }
             if (is.string(addr)) {
                 this._address = adone.o( { port: addr, address: null, family: null });
-                this._address.full = adone.text.humanizeAddr(protocol, addr);
+                this._address.full = adone.util.humanizeAddr(protocol, addr);
             } else {
                 this._address = adone.o( { port: addr.port, address: addr.address, family: addr.family });
-                this._address.full = adone.text.humanizeAddr(protocol, addr.port, addr.address);
+                this._address.full = adone.util.humanizeAddr(protocol, addr.port, addr.address);
             }
             this._address.protocol = protocol;
         }
@@ -79,7 +79,7 @@ export default class Server extends adone.EventEmitter {
             } else {
                 this.server = adone.std.net.createServer(onConnect);
             }
-            
+
             this.server.on("listening", () => this.emit("bind"));
 
             const backlog = this.option.backlog;

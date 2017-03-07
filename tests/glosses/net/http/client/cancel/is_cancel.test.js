@@ -1,6 +1,6 @@
 const { Cancel, isCancel } = adone.net.http.client;
 
-describe("isCancel", () => {
+describe("glosses", "net", "http", "client", "isCancel", () => {
     it("returns true if value is a Cancel", () => {
         expect(isCancel(new Cancel())).to.be.true;
     });

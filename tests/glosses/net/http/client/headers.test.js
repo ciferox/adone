@@ -2,7 +2,7 @@ import nock from "shani/helpers/nock";
 
 const { client } = adone.net.http;
 
-describe("headers", () => {
+describe("glosses", "net", "http", "client", "headers", () => {
     it("should default common headers", (done) => {
         const headers = client.defaults.headers.common;
 
@@ -13,7 +13,7 @@ describe("headers", () => {
             .reply(200, () => {
                 done();
             });
-        
+
         client("http://example.org/foo");
     });
 

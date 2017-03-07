@@ -2,7 +2,7 @@ import nock from "shani/helpers/nock";
 
 const { client } = adone.net.http;
 
-describe("options", () => {
+describe("glosses", "net", "http", "client", "options", () => {
     it("should default method to get", (done) => {
         nock("http://example.org")
             .get("/foo")
