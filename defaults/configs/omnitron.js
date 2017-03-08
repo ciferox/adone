@@ -5,44 +5,17 @@ const { join } = require("path");
 const adoneConfig = adone.appinstance.config.adone;
 const home = adoneConfig.home;
 
-const gates = [
-    {
-        type: "socket",
-        enabled: true,
-        option: {
-            id: "local",
-            port: (process.platform === "win32" ? "\\\\.\\pipe\\omnitron.sock" : join(home, "omnitron.sock")),
-            access: {
-                contexts: ["omnitron", "database", "shi", "taskmanager", "pm", "auth", "$auth"]
-            }
-        }
-    },
-    {
-        type: "websocket",
-        enabled: false,
-        option: {
-            id: "ws",
-            port: 8080,
-            access: {
-                contexts: ["auth"],
-                ip_policy: "allow",
-                ip_list: ["127.0.0.1"]
-            }
-        }
-    }
-];
-
 module.exports = {
     logFilePath: join(home, "omnitron.log"),
     errorLogFilePath: join(home, "omnitron-err.log"),
     pidFilePath: join(home, "omnitron.pid"),
     servicesConfigFilePath: join(adoneConfig.configsPath, "services.json"),
+    gatesConfigFilePath: join(adoneConfig.configsPath, "gates.json"),
     servicesPath: join(home, "services"),
-    gates,
     getGate(opts) {
         if (opts.id !== undefined) {
             for (const gate of this.gates) {
-                if (opts.id === gate.option.id) {
+                if (opts.id === gate.id) {
                     return gate;
                 }
             }
@@ -51,10 +24,10 @@ module.exports = {
         const gates = [];
         for (const gate of this.gates) {
             if ((opts.type === undefined || opts.type === gate.type) && (opts.enabled === undefined || opts.enabled === gate.enabled)) {
-                if (!Array.isArray(opts.contexts) || gate.option.access === undefined || !Array.isArray(gate.option.access.contexts)) {
+                if (!Array.isArray(opts.contexts) || gate.access === undefined || !Array.isArray(gate.access.contexts)) {
                     gates.push(gate);
                 } else {
-                    const contexts = gate.option.access.contexts;
+                    const contexts = gate.access.contexts;
                     for (const svcName of opts.contexts) {
                         if (contexts.includes(svcName)) {
                             gates.push(gate);

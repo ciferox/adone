@@ -1,6 +1,6 @@
 import adone from "adone";
 import * as pkg from "adone/../package.json";
-const { is, std } = adone;
+const { is, std, vendor: { lodash: _ } } = adone;
 const { Contextable, Public, Private, Description, Type } = adone.netron.decorator;
 const { DISABLED, ENABLED, INITIALIZING, RUNNING, UNINITIALIZING, STATUSES } = adone.omnitron.const;
 
@@ -37,12 +37,12 @@ const startedAt = adone.util.microtime.now();
 //   options (optional) - context-specific options (changable in user-defined configuration).
 //
 
-
 @Contextable
 @Private
 export class Omnitron extends adone.Application {
     async initialize() {
-        await this.loadAdoneConfig("omnitron");
+        this._.configManager = new adone.omnitron.ConfigManager(this);
+        await this._.configManager.load();
 
         // Save PID.
         try {
@@ -68,32 +68,23 @@ export class Omnitron extends adone.Application {
         }).on("peer offline", (peer) => {
             adone.info(`peer '${peer.getRemoteAddress().full}' (uid: ${peer.uid}) disconnected`);
         });
-        await adone.netron.Netron.bindGates(this._.netron, this.config.omnitron.gates);
 
-        // Subconfiguration for services...
-        this.config.omnitron.services = {};
-
-        // Load configurations of core services.
-        const coreServicesPath = std.path.resolve(__dirname, "services");
-        if (adone.fs.exists(coreServicesPath)) {
-            await adone.fs.glob(`${coreServicesPath}/*/meta.json`).map(async (configPath) => {
-                const servicePath = std.path.dirname(configPath);
-                const serviceName = std.path.basename(servicePath);
-                await this.config.load(configPath, `omnitron.services.${serviceName}`);
-                const config = this.config.omnitron.services[serviceName];
-                delete config.name;
-                config.path = servicePath;
-            });
-        }
-
-        // Merge with user-defined configuration.
-        try {
-            await this.config.load(this.config.omnitron.servicesConfigFilePath, "omnitron.services");
-        } catch (err) {
-            if (err instanceof adone.x.NotFound) {
-                adone.info(`Configuration '${this.config.omnitron.servicesConfigFilePath}' is not found`);
-            } else {
-                adone.error(err);
+        // Bind gates.
+        for (const gate of this.config.omnitron.gates) {
+            if (gate.enabled) {
+                const bindOptions = _.omit(gate, ["id", "type", "enabled"]);
+                switch (gate.type) {
+                    case "socket": {
+                        await this._.netron.bind(bindOptions);
+                        break;
+                    }
+                    case "websocket": {
+                        const adapter = new adone.netron.ws.Adapter(bindOptions);
+                        await this._.netron.attachAdapter(adapter);
+                        await this._.netron.bind(gate.id);
+                        break;
+                    }
+                }
             }
         }
 
@@ -112,22 +103,11 @@ export class Omnitron extends adone.Application {
             }
         }
 
-        // Finally, redefine and attach omnitron service
-        this.config.omnitron.services.omnitron = {
-            description: "Omnitron service",
-            path: __dirname,
-            status: ENABLED,
-            contexts: [
-                {
-                    id: "omnitron",
-                    class: "Omnitron",
-                    default: true
-                }
-            ]
-        };
+        // Finally, attach omnitron service
         await this._attachService("omnitron", this.config.omnitron.services.omnitron, this);
 
-        await this._saveServicesConfig();
+        await this._.configManager.saveServicesConfig();
+        await this._.configManager.saveGatesConfig();
 
         if (is.function(process.send)) {
             process.send({ pid: process.pid });
@@ -157,7 +137,7 @@ export class Omnitron extends adone.Application {
             adone.error(err);
         }
 
-        await this._saveServicesConfig();
+        await this._.configManager.saveServicesConfig();
 
         // Let netron gracefully complete all disconnects
         await adone.promise.delay(500);
@@ -209,7 +189,7 @@ export class Omnitron extends adone.Application {
             if (service.config.status === DISABLED) {
                 await this._checkDependencies(service);
                 service.config.status = ENABLED;
-                return this._saveServicesConfig();
+                return this._.configManager.saveServicesConfig();
             } else {
                 throw new adone.x.IllegalState("Service is not disabled");
             }
@@ -221,7 +201,7 @@ export class Omnitron extends adone.Application {
                     throw new adone.x.IllegalState(`Cannot disable service with '${service.config.status}' status`);
                 }
                 service.config.status = DISABLED;
-                return this._saveServicesConfig();
+                return this._.configManager.saveServicesConfig();
             }
         }
     }
@@ -265,8 +245,8 @@ export class Omnitron extends adone.Application {
     }
 
     @Public
-    @Description("List services")
-    @Type(Object)
+    @Description("Return list of all services services")
+    @Type(Array)
     list({ status = "all" } = {}) {
         if (!STATUSES.includes(status)) {
             throw new adone.x.NotValid(`Not valid status: ${status}`);
@@ -300,6 +280,13 @@ export class Omnitron extends adone.Application {
         }
 
         return services;
+    }
+
+    @Public
+    @Description("Return list of all gates")
+    @Type(Array)
+    gates() {
+
     }
 
     @Public
@@ -470,16 +457,6 @@ export class Omnitron extends adone.Application {
                 }
                 await handler(depName, config);
             }
-        }
-    }
-
-    async _saveServicesConfig() {
-        // Save actual configuration of services
-        try {
-            await this.config.save(this.config.omnitron.servicesConfigFilePath, "omnitron.services", { space: 4 });
-            adone.info(`Configuration '${this.config.omnitron.servicesConfigFilePath}' saved`);
-        } catch (err) {
-            adone.error(err);
         }
     }
 

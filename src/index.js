@@ -1,5 +1,5 @@
 const adone = Object.create({
-    null: Object.create(null),
+    null: Symbol(),
     noop: () => { },
     identity: (x) => x,
     truly: () => true,
@@ -302,7 +302,8 @@ adone.archive = lazify({
 
 adone.omnitron = lazify({
     const: "./omnitron/consts",
-    helper: "./omnitron/helpers"
+    helper: "./omnitron/helpers",
+    ConfigManager: "./omnitron/config_manager"
 });
 
 adone.meta = lazify({

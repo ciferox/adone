@@ -116,6 +116,11 @@ export default class extends adone.application.Subsystem {
                         }
                     ],
                     handler: this.listCommand
+                },
+                {
+                    name: "gates",
+                    help: "Show gates",
+                    handler: this.gatesCommand
                 }
             ]
         });
@@ -165,6 +170,7 @@ export default class extends adone.application.Subsystem {
 
     async statusCommand(args) {
         const iOmnitron = await this.getService("omnitron");
+        
         try {
             adone.log(adone.text.pretty.json(await iOmnitron.status(args.get("service"))));
         } catch (err) {
@@ -301,5 +307,14 @@ export default class extends adone.application.Subsystem {
         });
         adone.log(adone.text.pretty.json(result));
         return 0;
+    }
+
+    async gatesCommand() {
+        const iOmnitron = await this.getService("omnitron");
+        try {
+            adone.log(adone.text.pretty.json(await iOmnitron.gates()));
+        } catch (err) {
+            adone.log(err.message);
+        }
     }
 }

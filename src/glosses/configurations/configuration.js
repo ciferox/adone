@@ -46,9 +46,9 @@ export default class Configuration {
         if (is.string(args[0]) || is.array(args[0])) {
             key = args.shift();
         }
-        const obj = this._getObject(key);
+        const obj = this.getObject(key);
         if (!is.object(obj)) {
-            return this.set(key, adone.vendor.lodash.assign({}, ...args));
+            return this.set(key, adone.vendor.lodash.assign(...args));
         }
         return adone.vendor.lodash.assign(obj, ...args);
     }
@@ -62,28 +62,28 @@ export default class Configuration {
         if (is.string(args[0]) || is.array(args[0])) {
             key = args.shift();
         }
-        const obj = this._getObject(key);
+        const obj = this.getObject(key);
         if (!is.object(obj)) {
-            return this.set(key, adone.vendor.lodash.assign({}, ...args));
+            return this.set(key, adone.vendor.lodash.assign(...args));
         }
         return adone.vendor.lodash.merge(obj, ...args);
     }
 
     keys(key) {
-        return adone.vendor.lodash.keys(this._getObject(key));
+        return adone.vendor.lodash.keys(this.getObject(key));
     }
 
     values(key) {
-        return adone.vendor.lodash.values(this._getObject(key));
+        return adone.vendor.lodash.values(this.getObject(key));
     }
 
     entries(key) {
-        return adone.vendor.lodash.toPairs(this._getObject(key));
+        return adone.vendor.lodash.toPairs(this.getObject(key));
     }
 
-    _getObject(key) {
+    getObject(key) {
         let obj;
-        if (is.string(key) || is.array(key)) {
+        if ((is.string(key) && key !== "") || is.array(key)) {
             obj = this.get(key);
         } else {
             obj = this;

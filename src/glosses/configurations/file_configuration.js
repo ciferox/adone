@@ -9,7 +9,7 @@ export default class FileConfiguration extends adone.configuration.Configuration
         super();
         this._.base = base;
         this._.serializer = {};
-        this.registerFormat(".js", (buf, filePath) => {
+        this.registerFormat(".js", (buf, filePath, key) => {
             let transform;
 
             const content = buf.toString();
@@ -29,21 +29,31 @@ export default class FileConfiguration extends adone.configuration.Configuration
             if (confObj.__esModule) {
                 confObj = confObj.default;
             }
+            
+            let hasFunctions = false;
 
-            const bindFunctions = (config, nestedConfig) => {
+            const bindFunctions = (nestedConfig) => {
                 const keys = Object.getOwnPropertyNames(nestedConfig);
                 for (let i = 0; i < keys.length; i++) {
                     const key = keys[i];
                     const value = nestedConfig[key];
                     if (is.function(value)) {
-                        nestedConfig[key] = value.bind(config);
+                        hasFunctions = true;
+                        nestedConfig[key] = (...args) => value.apply(this.getObject(this._.paths[confObj]), args);
                     } else if (is.object(value)) {
-                        bindFunctions(config, value);
+                        bindFunctions(value);
                     }
                 }
             };
 
-            bindFunctions(confObj, confObj);
+            bindFunctions(confObj);
+
+            if (hasFunctions) {
+                if (is.undefined(this._.paths)) {
+                    this._.paths = {};
+                }
+                this._.paths[confObj] = key;
+            }
 
             return confObj;
         });
@@ -75,14 +85,13 @@ export default class FileConfiguration extends adone.configuration.Configuration
 
             try {
                 const content = await adone.fs.readFile(conf.path);
-                confObj = await conf.serializer.decode(content, conf.path);
+                confObj = await conf.serializer.decode(content, conf.path, correctName);
             } catch (err) { }
 
             if (!is.object(confObj)) {
                 throw new adone.x.NotValid(`'${conf.path}' is not valid ${conf.ext}-configuration file`);
             }
 
-            confObj = Object.assign({}, confObj);
             if (correctName !== "") {
                 this.merge(correctName, confObj);
             } else {

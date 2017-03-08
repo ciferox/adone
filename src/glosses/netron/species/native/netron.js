@@ -1,6 +1,5 @@
 import adone from "adone";
-const { is, x } = adone;
-const { DEFAULT_PORT, ACTION, STATUS, PEER_TYPE, GenesisNetron, Peer, RemoteStub } = adone.netron;
+const { is, x, netron: { DEFAULT_PORT, ACTION, STATUS, PEER_TYPE, GenesisNetron, Peer, RemoteStub } } = adone;
 
 const IP_POLICY_NONE = 0;
 const IP_POLICY_ALLOW = 0;
@@ -400,25 +399,6 @@ export default class Netron extends GenesisNetron {
             }
         }
         this._gates.set(id, gateData);
-    }
-
-    static async bindGates(netron, gates) {
-        for (const gate of gates) {
-            if (gate.enabled) {
-                switch (gate.type) {
-                    case "socket": {
-                        await netron.bind(gate.option);
-                        break;
-                    }
-                    case "websocket": {
-                        const adapter = new adone.netron.ws.Adapter(gate.option);
-                        await netron.attachAdapter(adapter);
-                        await netron.bind(gate.option.id);
-                        break;
-                    }
-                }
-            }
-        }
     }
 
     refGates() {
