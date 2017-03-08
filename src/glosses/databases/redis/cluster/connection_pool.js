@@ -1,16 +1,23 @@
 import adone from "adone";
+const { EventEmitter, o, noop, util, is, x } = adone;
 
-const imports = adone.lazify({
+const lazy = adone.lazify({
     utils: "../utils",
     Redis: "../redis"
 }, null, require);
 
-export default class ConnectionPool extends adone.EventEmitter {
+const setKey = (node = {}) => {
+    node.port = node.port || 6379;
+    node.host = node.host || "127.0.0.1";
+    node.key = node.key || `${node.host}:${node.port}`;
+    return node;
+};
+
+export default class ConnectionPool extends EventEmitter {
     constructor(redisOptions) {
         super();
         this.redisOptions = redisOptions;
 
-        // master + slave = all
         this.nodes = {
             all: {},
             master: {},
@@ -20,20 +27,12 @@ export default class ConnectionPool extends adone.EventEmitter {
         this.specifiedOptions = {};
     }
 
-    /**
-     * Find or create a connection to the node
-     *
-     * @param {Object} node - the node to connect to
-     * @param {boolean} [readOnly=false] - whether the node is a slave
-     * @return {Redis}
-     * @public
-     */
     findOrCreate(node, readOnly) {
         setKey(node);
         readOnly = Boolean(readOnly);
 
         if (this.specifiedOptions[node.key]) {
-            Object.assign(node, this.specifiedOptions[node.key]);
+            o(node, this.specifiedOptions[node.key]);
         } else {
             this.specifiedOptions[node.key] = node;
         }
@@ -43,7 +42,7 @@ export default class ConnectionPool extends adone.EventEmitter {
             redis = this.nodes.all[node.key];
             if (redis.options.readOnly !== readOnly) {
                 redis.options.readOnly = readOnly;
-                redis[readOnly ? "readonly" : "readwrite"]().catch(adone.noop);
+                redis[readOnly ? "readonly" : "readwrite"]().catch(noop);
                 if (readOnly) {
                     delete this.nodes.master[node.key];
                     this.nodes.slave[node.key] = redis;
@@ -53,10 +52,11 @@ export default class ConnectionPool extends adone.EventEmitter {
                 }
             }
         } else {
-            redis = new imports.Redis(adone.vendor.lodash.defaults({
+            redis = new lazy.Redis(o({
                 retryStrategy: null,
-                readOnly
-            }, node, this.redisOptions, { lazyConnect: true }));
+                readOnly,
+                lazyConnect: true
+            }, this.redisOptions, node));
             this.nodes.all[node.key] = redis;
             this.nodes[readOnly ? "slave" : "master"][node.key] = redis;
 
@@ -65,7 +65,7 @@ export default class ConnectionPool extends adone.EventEmitter {
                 delete this.nodes.master[node.key];
                 delete this.nodes.slave[node.key];
                 this.emit("-node", redis);
-                if (!Object.keys(this.nodes.all).length) {
+                if (util.keys(this.nodes.all).length === 0) {
                     this.emit("drain");
                 }
             });
@@ -80,27 +80,20 @@ export default class ConnectionPool extends adone.EventEmitter {
         return redis;
     }
 
-    /**
-     * Reset the pool with a set of nodes.
-     * The old node will be removed.
-     *
-     * @param {Object[]} nodes
-     * @public
-     */
     reset(nodes) {
         const newNodes = {};
         for (const node of nodes) {
-            const options = {};
-            if (adone.is.object(node)) {
-                adone.vendor.lodash.defaults(options, node);
-            } else if (adone.is.string(node)) {
-                adone.vendor.lodash.defaults(options, imports.utils.parseURL(node));
-            } else if (adone.is.number(node)) {
+            let options = {};
+            if (is.object(node)) {
+                options = o(node, options);
+            } else if (is.string(node)) {
+                options = o(lazy.utils.parseURL(node), options);
+            } else if (is.number(node)) {
                 options.port = node;
             } else {
-                throw new adone.x.Exception(`Invalid argument ${node}`);
+                throw new x.InvalidArgument(`Invalid argument ${node}`);
             }
-            if (adone.is.string(options.port)) {
+            if (is.string(options.port)) {
                 options.port = parseInt(options.port, 10);
             }
             delete options.db;
@@ -109,29 +102,14 @@ export default class ConnectionPool extends adone.EventEmitter {
             newNodes[options.key] = options;
         }
 
-        for (const key of Object.keys(this.nodes.all)) {
+        for (const key of util.keys(this.nodes.all)) {
             if (!newNodes[key]) {
                 this.nodes.all[key].disconnect();
             }
         }
 
-        for (const key of Object.keys(newNodes)) {
-            this.findOrCreate(newNodes[key], newNodes[key].readOnly);
+        for (const node of util.values(newNodes)) {
+            this.findOrCreate(node, node.readOnly);
         }
     }
 }
-
-/**
- * Set key property
- *
- * @private
- */
-function setKey(node) {
-    node = node || {};
-    node.port = node.port || 6379;
-    node.host = node.host || "127.0.0.1";
-    node.key = node.key || node.host + ":" + node.port;
-    return node;
-}
-
-module.exports = ConnectionPool;

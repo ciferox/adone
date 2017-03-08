@@ -1,4 +1,5 @@
 import adone from "adone";
+const { collection } = adone;
 
 export default class DelayQueue {
     constructor() {
@@ -9,7 +10,7 @@ export default class DelayQueue {
     push(bucket, item, options) {
         const callback = options.callback || process.nextTick;
         if (!this.queues[bucket]) {
-            this.queues[bucket] = new adone.collection.LinkedList();
+            this.queues[bucket] = new collection.LinkedList();
         }
 
         const queue = this.queues[bucket];

@@ -133,7 +133,7 @@ const irregularPlurals = adone.o({
 // Массив собственных имён для plain-объекта (см. util.keys()).
 const objectOwnProps = Object.getOwnPropertyNames({}.__proto__);
 
-const util = adone.o({
+const util = {
     arrify: (val) => {
         if (is.undefined(val)) {
             return [];
@@ -260,6 +260,17 @@ const util = adone.o({
         const b = adone.std.crypto.randomBytes(4);
         const val = (b[0] | b[1] << 8 | b[2] << 16 | b[3] << 24) >>> 0;
         return min + (val % (max - min));
+    },
+    randomChoice: (arrayLike, from = 0, to = arrayLike.length) => arrayLike[util.random(from, to)],
+    shuffleArray: (array) => {
+        if (!array.length) {
+            return array;
+        }
+        for (let i = 0; i < array.length - 1; ++i) {
+            const j = util.random(i, array.length);
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
     },
     /**
      * Прикрепляет индекс к каждому элементу из итератора
@@ -501,27 +512,6 @@ const util = adone.o({
         }
         return obj;
     },
-    /**
-     * Pack an array to an Object
-     *
-     * @param {array} array
-     * @return {object}
-     * @example
-     * ```js
-     * > packObject(['a', 'b', 'c', 'd'])
-     * { a: 'b', c: 'd' }
-     * ```
-     */
-    packObject(array) {
-        const result = {};
-        const length = array.length;
-
-        for (let i = 1; i < length; i += 2) {
-            result[array[i - 1]] = array[i];
-        }
-
-        return result;
-    },
     globize: (path, ext, recursive) => {
         const stars = recursive ? `**${adone.std.path.sep}*.${ext}` : `*.${ext}`;
         if (path.endsWith("/") || path.endsWith("\\")) {
@@ -628,8 +618,43 @@ const util = adone.o({
             addr = adone.sprintf("%s//%s", protocol, port);
         }
         return addr;
+    },
+    toUTF8Array: (str) => {
+        let char;
+        let i = 0;
+        const utf8 = [];
+        const len = str.length;
+
+        while (i < len) {
+            char = str.charCodeAt(i++);
+            if (char < 0x80) {
+                utf8.push(char);
+            } else if (char < 0x800) {
+                utf8.push(
+                    0xc0 | (char >> 6),
+                    0x80 | (char & 0x3f)
+                );
+            } else if (char < 0xd800 || char >= 0xe000) {
+                utf8.push(
+                    0xe0 | (char >> 12),
+                    0x80 | ((char >> 6) & 0x3f),
+                    0x80 | (char & 0x3f)
+                );
+            } else { // surrogate pair
+                i++;
+                char = 0x10000 + (((char & 0x3ff) << 10) | (str.charCodeAt(i) & 0x3ff));
+                utf8.push(
+                    0xf0 | (char >> 18),
+                    0x80 | ((char >> 12) & 0x3f),
+                    0x80 | ((char >> 6) & 0x3f),
+                    0x80 | (char & 0x3f)
+                );
+            }
+        }
+
+        return utf8;
     }
-});
+};
 
 adone.lazify({
     match: "./match.js",

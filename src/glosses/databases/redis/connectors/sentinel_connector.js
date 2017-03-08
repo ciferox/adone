@@ -1,19 +1,22 @@
+import Connector from "./connector";
 import adone from "adone";
+const { x, is, std: { net }, util, noop } = adone;
 
-const imports = adone.lazify({
+const lazy = adone.lazify({
     utils: "../utils",
-    Connector: "./connector",
     Redis: "../redis"
 }, null, require);
 
-export default class SentinelConnector extends imports.Connector {
+const isSentinelEql = (a, b) => ((a.host || "127.0.0.1") === (b.host || "127.0.0.1")) && ((a.port || 6379) === (b.port || 6379));
+
+export default class SentinelConnector extends Connector {
     constructor(options) {
         super(options);
         if (this.options.sentinels.length === 0) {
-            throw new adone.x.InvalidArgument("Requires at least one sentinel to connect to.");
+            throw new x.InvalidArgument("Requires at least one sentinel to connect to.");
         }
         if (!this.options.name) {
-            throw new adone.x.InvalidArgument("Requires the name of master.");
+            throw new x.InvalidArgument("Requires the name of master.");
         }
     }
 
@@ -28,10 +31,10 @@ export default class SentinelConnector extends imports.Connector {
         this.connecting = true;
         this.retryAttempts = 0;
 
-        if (!adone.is.number(this.currentPoint)) {
+        if (!is.number(this.currentPoint)) {
             this.currentPoint = -1;
         }
-        if (!adone.is.array(this.sentinels)) {
+        if (!is.array(this.sentinels)) {
             this.sentinels = this.options.sentinels;
         }
 
@@ -43,15 +46,15 @@ export default class SentinelConnector extends imports.Connector {
                 this.currentPoint = -1;
 
                 let retryDelay;
-                if (adone.is.function(this.options.sentinelRetryStrategy)) {
+                if (is.function(this.options.sentinelRetryStrategy)) {
                     retryDelay = this.options.sentinelRetryStrategy(++this.retryAttempts);
                 }
-                if (!adone.is.number(retryDelay)) {
+                if (!is.number(retryDelay)) {
                     let error = "All sentinels are unreachable.";
                     if (lastError) {
                         error += ` Last error: ${lastError.message}`;
                     }
-                    return callback(new Error(error));
+                    return callback(new x.Exception(error));
                 }
                 setTimeout(connectToNext, retryDelay);
                 return;
@@ -60,11 +63,11 @@ export default class SentinelConnector extends imports.Connector {
             const endpoint = this.sentinels[this.currentPoint];
             this.resolve(endpoint, (err, resolved) => {
                 if (!this.connecting) {
-                    callback(new adone.x.Exception(imports.utils.CONNECTION_CLOSED_ERROR_MSG));
+                    callback(new x.Exception(lazy.utils.CONNECTION_CLOSED_ERROR_MSG));
                     return;
                 }
                 if (resolved) {
-                    this.stream = adone.std.net.createConnection(resolved);
+                    this.stream = net.createConnection(resolved);
                     callback(null, this.stream);
                 } else if (err) {
                     lastError = err;
@@ -84,11 +87,11 @@ export default class SentinelConnector extends imports.Connector {
                 client.disconnect();
                 return callback(err);
             }
-            if (adone.is.array(result)) {
+            if (is.array(result)) {
                 for (let i = 0; i < result.length; ++i) {
-                    const sentinel = adone.util.packObject(result[i]);
+                    const sentinel = lazy.utils.packObject(result[i]);
                     const flags = sentinel.flags ? sentinel.flags.split(",") : [];
-                    if (flags.indexOf("disconnected") === -1 && sentinel.ip && sentinel.port) {
+                    if (!flags.includes("disconnected") && sentinel.ip && sentinel.port) {
                         const endpoint = { host: sentinel.ip, port: parseInt(sentinel.port, 10) };
                         const isDuplicate = this.sentinels.some((a, b) => isSentinelEql(a, b));
                         if (!isDuplicate) {
@@ -112,7 +115,7 @@ export default class SentinelConnector extends imports.Connector {
                 if (err) {
                     return callback(err);
                 }
-                callback(null, adone.is.array(result) ? { host: result[0], port: result[1] } : null);
+                callback(null, is.array(result) ? { host: result[0], port: result[1] } : null);
             });
         });
     }
@@ -124,10 +127,10 @@ export default class SentinelConnector extends imports.Connector {
                 return callback(err);
             }
             let selectedSlave;
-            if (adone.is.array(result)) {
+            if (is.array(result)) {
                 const availableSlaves = [];
                 for (let i = 0; i < result.length; ++i) {
-                    const slave = adone.util.packObject(result[i]);
+                    const slave = lazy.utils.packObject(result[i]);
                     if (slave.flags && !slave.flags.match(/(disconnected|s_down|o_down)/)) {
                         availableSlaves.push(slave);
                     }
@@ -136,12 +139,13 @@ export default class SentinelConnector extends imports.Connector {
                 if (this.options.preferredSlaves) {
                     let preferredSlaves = this.options.preferredSlaves;
                     switch (typeof preferredSlaves) {
-                        case "function":
+                        case "function": {
                             // use function from options to filter preferred slave
                             selectedSlave = this.options.preferredSlaves(availableSlaves);
                             break;
-                        case "object":
-                            if (!adone.is.array(preferredSlaves)) {
+                        }
+                        case "object": {
+                            if (!is.array(preferredSlaves)) {
                                 preferredSlaves = [preferredSlaves];
                             } else {
                                 // sort by priority
@@ -177,11 +181,12 @@ export default class SentinelConnector extends imports.Connector {
                             }
                             // if none of the preferred slaves are available, a random available slave is returned
                             break;
+                        }
                     }
                 }
                 if (!selectedSlave) {
                     // get a random available slave
-                    selectedSlave = adone.vendor.lodash.sample(availableSlaves);
+                    selectedSlave = util.randomChoice(availableSlaves);
                 }
             }
             callback(null, selectedSlave ? { host: selectedSlave.ip, port: selectedSlave.port } : null);
@@ -189,7 +194,7 @@ export default class SentinelConnector extends imports.Connector {
     }
 
     resolve(endpoint, callback) {
-        const client = new imports.Redis({
+        const client = new lazy.Redis({
             port: endpoint.port,
             host: endpoint.host,
             retryStrategy: null,
@@ -199,7 +204,7 @@ export default class SentinelConnector extends imports.Connector {
         });
 
         // ignore the errors since resolve* methods will handle them
-        client.on("error", adone.noop);
+        client.on("error", noop);
 
         if (this.options.role === "slave") {
             this.resolveSlave(client, callback);
@@ -208,5 +213,3 @@ export default class SentinelConnector extends imports.Connector {
         }
     }
 }
-
-const isSentinelEql = (a, b) => ((a.host || "127.0.0.1") === (b.host || "127.0.0.1")) && ((a.port || 6379) === (b.port || 6379));

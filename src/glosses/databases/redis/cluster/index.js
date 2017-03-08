@@ -1,58 +1,34 @@
 import adone from "adone";
+import Commander from "../commander";
+const { o, is, x, noop, collection, promise, util, EventEmitter } = adone;
 
-const imports = adone.lazify({
+const lazy = adone.lazify({
     Redis: "../redis",
     utils: "../utils",
     ScanStream: "../scan_stream",
-    Commander: "../commander",
     Command: "../command",
     commands: "../commands",
     ConnectionPool: "./connection_pool",
     DelayQueue: "./delay_queue"
 }, null, require);
 
-/**
- * Creates a Redis Cluster instance
- *
- * @constructor
- * @param {Object[]} startupNodes - An array of nodes in the cluster, [{ port: number, host: string }]
- * @param {Object} options
- * @param {function} [options.clusterRetryStrategy] - See "Quick Start" section
- * @param {boolean} [options.enableOfflineQueue=true] - See Redis class
- * @param {boolean} [options.enableReadyCheck=true] - When enabled, ioredis only emits "ready" event when `CLUSTER INFO`
- * command reporting the cluster is ready for handling commands.
- * @param {string} [options.scaleReads=master] - Scale reads to the node with the specified role.
- * Available values are "master", "slave" and "all".
- * @param {number} [options.maxRedirections=16] - When a MOVED or ASK error is received, client will redirect the
- * command to another node. This option limits the max redirections allowed to send a command.
- * @param {number} [options.retryDelayOnFailover=100] - When an error is received when sending a command(e.g.
- * "Connection is closed." when the target Redis node is down),
- * @param {number} [options.retryDelayOnClusterDown=100] - When a CLUSTERDOWN error is received, client will retry
- * if `retryDelayOnClusterDown` is valid delay time.
- * @param {number} [options.retryDelayOnTryAgain=100] - When a TRYAGAIN error is received, client will retry
- * if `retryDelayOnTryAgain` is valid delay time.
- * @param {Object} [options.redisOptions] - Passed to the constructor of `Redis`.
- * @extends [EventEmitter](http://nodejs.org/api/events.html#events_class_events_eventemitter)
- * @extends Commander
- */
-export default class Cluster extends imports.Commander.mixin(adone.EventEmitter) {
+const isRejectOverwritten = Symbol("is reject overwritten");
+
+export default class Cluster extends Commander.mixin(EventEmitter) {
     constructor(startupNodes, options) {
         super();
-        this.options = adone.vendor.lodash.defaults(this.options, options, Cluster.defaultOptions);
+        this.options = o(Cluster.defaultOptions, options);
 
         // validate options
-        if (!adone.is.function(this.options.scaleReads) &&
+        if (!is.function(this.options.scaleReads) &&
             this.options.scaleReads !== "all" &&
             this.options.scaleReads !== "master" &&
             this.options.scaleReads !== "slave") {
 
-            throw new adone.x.Exception([
-                `Invalid option scaleReads ${this.options.scaleReads}.`,
-                "Expected \"all\", \"master\", \"slave\" or a custom function"
-            ].join(" "));
+            throw new x.Exception(`Invalid option scaleReads ${this.options.scaleReads}. Expected "all", "master", "slave" or a custom function`);
         }
 
-        this.connectionPool = new imports.ConnectionPool(this.options.redisOptions);
+        this.connectionPool = new lazy.ConnectionPool(this.options.redisOptions);
         this.startupNodes = startupNodes;
 
         this.connectionPool.on("-node", (redis) => {
@@ -75,27 +51,21 @@ export default class Cluster extends imports.Commander.mixin(adone.EventEmitter)
         this.retryAttempts = 0;
 
         this.resetOfflineQueue();
-        this.delayQueue = new imports.DelayQueue();
+        this.delayQueue = new lazy.DelayQueue();
 
         this.subscriber = null;
 
         if (this.options.lazyConnect) {
             this.setStatus("wait");
         } else {
-            this.connect().catch(adone.noop);
+            this.connect().catch(noop);
         }
     }
 
     resetOfflineQueue() {
-        this.offlineQueue = new adone.collection.LinkedList();
+        this.offlineQueue = new collection.LinkedList();
     }
 
-    /**
-     * Connect to a cluster
-     *
-     * @return {Promise}
-     * @public
-     */
     connect() {
         const readyHandler = () => {
             this.setStatus("ready");
@@ -105,16 +75,21 @@ export default class Cluster extends imports.Commander.mixin(adone.EventEmitter)
 
         return new Promise((resolve, reject) => {
             if (this.status === "connecting" || this.status === "connect" || this.status === "ready") {
-                reject(new Error("Redis is already connecting/connected"));
+                reject(new x.IllegalState("Redis is already connecting/connected"));
                 return;
             }
             this.setStatus("connecting");
 
-            if (!adone.is.array(this.startupNodes) || this.startupNodes.length === 0) {
-                throw new adone.x.InvalidArgument("`startupNodes` should contain at least one node.");
+            if (!is.array(this.startupNodes) || this.startupNodes.length === 0) {
+                throw new x.InvalidArgument("`startupNodes` should contain at least one node.");
             }
 
             this.connectionPool.reset(this.startupNodes);
+
+            const closeListener = () => {
+                this.removeListener("refresh", refreshListener);  // eslint-disable-line no-use-before-define
+                reject(new x.Exception("None of startup nodes is available"));
+            };
 
             const refreshListener = () => {
                 this.removeListener("close", closeListener);
@@ -134,18 +109,13 @@ export default class Cluster extends imports.Commander.mixin(adone.EventEmitter)
                 resolve();
             };
 
-            const closeListener = () => {
-                this.removeListener("refresh", refreshListener);
-                reject(new adone.x.Exception("None of startup nodes is available"));
-            };
-
             this.once("refresh", refreshListener);
             this.once("close", closeListener);
             this.once("close", this._handleCloseEvent.bind(this));
 
             this.refreshSlotsCache((err) => {
                 if (err && err.message === "Failed to refresh slots cache.") {
-                    imports.Redis.prototype.silentEmit.call(this, "error", err);
+                    lazy.Redis.prototype.silentEmit.call(this, "error", err);
                     this.connectionPool.reset([]);
                 }
             });
@@ -153,34 +123,25 @@ export default class Cluster extends imports.Commander.mixin(adone.EventEmitter)
         });
     }
 
-    /**
-     * Called when closed to check whether a reconnection should be made
-     * @private
-     */
     _handleCloseEvent() {
         let retryDelay;
-        if (!this.manuallyClosing && adone.is.function(this.options.clusterRetryStrategy)) {
+        if (!this.manuallyClosing && is.function(this.options.clusterRetryStrategy)) {
             retryDelay = this.options.clusterRetryStrategy.call(this, ++this.retryAttempts);
         }
-        if (adone.is.number(retryDelay)) {
+        if (is.number(retryDelay)) {
             this.setStatus("reconnecting");
             this.reconnectTimeout = setTimeout(() => {
                 this.reconnectTimeout = null;
-                this.connect().catch(adone.noop);
+                this.connect().catch(noop);
             }, retryDelay);
         } else {
             this.setStatus("end");
-            this.flushQueue(new Error("None of startup nodes is available"));
+            this.flushQueue(new x.IllegalState("None of startup nodes is available"));
         }
     }
 
-    /**
-     * Disconnect from every node in the cluster.
-     *
-     * @public
-     */
     disconnect(reconnect) {
-        const status = this.status;
+        const { status } = this;
         this.setStatus("disconnecting");
 
         if (!reconnect) {
@@ -199,15 +160,8 @@ export default class Cluster extends imports.Commander.mixin(adone.EventEmitter)
         }
     }
 
-    /**
-     * Quit the cluster gracefully.
-     *
-     * @param {function} callback
-     * @return {Promise} return 'OK' if successfully
-     * @public
-     */
     quit(callback) {
-        const status = this.status;
+        const { status } = this;
         this.setStatus("disconnecting");
 
         this.manuallyClosing = true;
@@ -217,7 +171,7 @@ export default class Cluster extends imports.Commander.mixin(adone.EventEmitter)
             this.reconnectTimeout = null;
         }
         if (status === "wait") {
-            const ret = adone.promise.nodeify(Promise.resolve("OK"), callback);
+            const ret = promise.nodeify(Promise.resolve("OK"), callback);
 
             // use setImmediate to make sure "close" event
             // being emitted after quit() is returned
@@ -228,33 +182,18 @@ export default class Cluster extends imports.Commander.mixin(adone.EventEmitter)
 
             return ret;
         }
-        return adone.promise.nodeify(Promise.all(this.nodes().map(function (node) {
-            return node.quit();
-        })).then(() => "OK"), callback);
+        return promise.nodeify(Promise.all(this.nodes().map((node) => node.quit())).then(() => "OK"), callback);
     }
 
-    /**
-     * Get nodes with the specified role
-     *
-     * @param {string} [role=all] - role, "master", "slave" or "all"
-     * @return {Redis[]} array of nodes
-     * @public
-     */
-    nodes(role) {
-        role = role || "all";
+    nodes(role = "all") {
         if (role !== "all" && role !== "master" && role !== "slave") {
-            throw new adone.x.InvalidArgument(`Invalid role "${role}. Expected "all", "master" or "slave"`);
+            throw new x.InvalidArgument(`Invalid role "${role}. Expected "all", "master" or "slave"`);
         }
-        return adone.vendor.lodash.values(this.connectionPool.nodes[role]);
+        return util.values(this.connectionPool.nodes[role]);
     }
 
-    /**
-     * Select a subscriber from the cluster
-     *
-     * @private
-     */
     selectSubscriber() {
-        this.subscriber = adone.vendor.lodash.sample(this.nodes());
+        this.subscriber = util.randomChoice(this.nodes());
         if (!this.subscriber) {
             return;
         }
@@ -269,20 +208,21 @@ export default class Cluster extends imports.Commander.mixin(adone.EventEmitter)
         }
         if (previousChannels.subscribe.length || previousChannels.psubscribe.length) {
             let pending = 0;
+            const cb = () => {
+                if (!--pending) {
+                    this.lastActiveSubscriber = this.subscriber;
+                }
+            };
             for (const type of ["subscribe", "psubscribe"]) {
                 const channels = previousChannels[type];
                 if (channels.length) {
                     pending += 1;
-                    this.subscriber[type](channels).then(() => {
-                        if (!--pending) {
-                            this.lastActiveSubscriber = this.subscriber;
-                        }
-                    }).catch(adone.noop);
+                    this.subscriber[type](channels).then(cb, noop);
                 }
             }
         } else {
             if (this.subscriber.status === "wait") {
-                this.subscriber.connect().catch(adone.noop);
+                this.subscriber.connect().catch(noop);
             }
             this.lastActiveSubscriber = this.subscriber;
         }
@@ -298,26 +238,14 @@ export default class Cluster extends imports.Commander.mixin(adone.EventEmitter)
         }
     }
 
-    /**
-     * Change cluster instance's status
-     *
-     * @param {string} status
-     * @private
-     */
     setStatus(status) {
         this.status = status;
         process.nextTick(() => this.emit(status));
     }
 
-    /**
-     * Refresh the slot cache
-     *
-     * @param {function} callback
-     * @private
-     */
     refreshSlotsCache(callback) {
         if (this.isRefreshing) {
-            if (adone.is.function(callback)) {
+            if (is.function(callback)) {
                 process.nextTick(callback);
             }
             return;
@@ -326,24 +254,24 @@ export default class Cluster extends imports.Commander.mixin(adone.EventEmitter)
 
         const wrapper = (...args) => {
             this.isRefreshing = false;
-            if (adone.is.function(callback)) {
+            if (is.function(callback)) {
                 callback(...args);
             }
         };
 
-        const keys = adone.vendor.lodash.shuffle(Object.keys(this.connectionPool.nodes.all));
+        const keys = util.shuffleArray(util.keys(this.connectionPool.nodes.all));
 
         let lastNodeError = null;
 
         const tryNode = (index) => {
             if (index === keys.length) {
-                const error = new adone.x.Exception("Failed to refresh slots cache.");
+                const error = new x.Exception("Failed to refresh slots cache.");
                 error.lastNodeError = lastNodeError;
                 return wrapper(error);
             }
             this.getInfoFromNode(this.connectionPool.nodes.all[keys[index]], (err) => {
                 if (this.status === "end") {
-                    return wrapper(new adone.x.Exception("Cluster is disconnected."));
+                    return wrapper(new x.Exception("Cluster is disconnected."));
                 }
                 if (err) {
                     this.emit("node error", err);
@@ -359,16 +287,9 @@ export default class Cluster extends imports.Commander.mixin(adone.EventEmitter)
         tryNode(0);
     }
 
-    /**
-     * Flush offline queue with error.
-     *
-     * @param {Error} error - The error object to send to the commands
-     * @private
-     */
     flushQueue(error) {
-        let item;
         while (this.offlineQueue.length > 0) {
-            item = this.offlineQueue.shift();
+            const item = this.offlineQueue.shift();
             item.command.reject(error);
         }
     }
@@ -386,15 +307,15 @@ export default class Cluster extends imports.Commander.mixin(adone.EventEmitter)
 
     sendCommand(command, stream, node) {
         if (this.status === "wait") {
-            this.connect().catch(adone.noop);
+            this.connect().catch(noop);
         }
         if (this.status === "end") {
-            command.reject(new adone.x.Exception(imports.util.CONNECTION_CLOSED_ERROR_MSG));
+            command.reject(new x.Exception(lazy.util.CONNECTION_CLOSED_ERROR_MSG));
             return command.promise;
         }
         let to = this.options.scaleReads;
         if (to !== "master") {
-            const isCommandReadOnly = imports.commands.exists(command.name) && imports.commands.hasFlag(command.name, "readonly");
+            const isCommandReadOnly = lazy.commands.exists(command.name) && lazy.commands.hasFlag(command.name, "readonly");
             if (!isCommandReadOnly) {
                 to = "master";
             }
@@ -402,11 +323,69 @@ export default class Cluster extends imports.Commander.mixin(adone.EventEmitter)
 
         const targetSlot = node ? node.slot : command.getSlot();
         const ttl = {};
-        if (!node && !command.__is_reject_overwritten) {
-            command.__is_reject_overwritten = true;
-            const reject = command.reject;
+        const tryConnection = (random, asking) => {
+            if (this.status === "end") {
+                command.reject(new x.Exception("Cluster is ended."));
+                return;
+            }
+            let redis;
+            if (this.status === "ready" || (command.name === "cluster")) {
+                if (node && node.redis) {
+                    redis = node.redis;
+                } else if (lazy.Command.checkFlag("ENTER_SUBSCRIBER_MODE", command.name) ||
+                    lazy.Command.checkFlag("EXIT_SUBSCRIBER_MODE", command.name)) {
+                    redis = this.subscriber;
+                } else {
+                    if (!random) {
+                        if (is.number(targetSlot) && this.slots[targetSlot]) {
+                            const nodeKeys = this.slots[targetSlot];
+                            if (is.function(to)) {
+                                const nodes = nodeKeys.map((key) => this.connectionPool.nodes.all[key]);
+                                redis = to(nodes, command);
+                                if (is.array(redis)) {
+                                    redis = util.randomChoice(redis);
+                                }
+                                if (!redis) {
+                                    redis = nodes[0];
+                                }
+                            } else {
+                                let key;
+                                if (to === "all") {
+                                    key = util.randomChoice(nodeKeys);
+                                } else if (to === "slave" && nodeKeys.length > 1) {
+                                    key = util.randomChoice(nodeKeys, 1);
+                                } else {
+                                    key = nodeKeys[0];
+                                }
+                                redis = this.connectionPool.nodes.all[key];
+                            }
+                        }
+                        if (asking) {
+                            redis = this.connectionPool.nodes.all[asking];
+                            redis.asking();
+                        }
+                    }
+                    if (!redis) {
+                        redis = util.randomChoice(util.values(this.connectionPool.nodes[to])) || util.randomChoice(util.values(this.connectionPool.nodes.all));
+                    }
+                }
+                if (node && !node.redis) {
+                    node.redis = redis;
+                }
+            }
+            if (redis) {
+                redis.sendCommand(command, stream);
+            } else if (this.options.enableOfflineQueue) {
+                this.offlineQueue.push({ command, stream, node });
+            } else {
+                command.reject(new x.Exception("Cluster isn't ready and enableOfflineQueue options is false"));
+            }
+        };
+        if (!node && !command[isRejectOverwritten]) {
+            command[isRejectOverwritten] = true;
+            const { reject } = command;
             command.reject = (err) => {
-                const partialTry = adone.vendor.lodash.partial(tryConnection, true);
+                const partialTry = (...args) => tryConnection(true, ...args);
                 this.handleError(err, ttl, {
                     moved: (slot, key) => {
                         if (this.slots[slot]) {
@@ -432,76 +411,18 @@ export default class Cluster extends imports.Commander.mixin(adone.EventEmitter)
                 });
             };
         }
-        const tryConnection = (random, asking) => {
-            if (this.status === "end") {
-                command.reject(new adone.x.Exception("Cluster is ended."));
-                return;
-            }
-            let redis;
-            if (this.status === "ready" || (command.name === "cluster")) {
-                if (node && node.redis) {
-                    redis = node.redis;
-                } else if (imports.Command.checkFlag("ENTER_SUBSCRIBER_MODE", command.name) ||
-                    imports.Command.checkFlag("EXIT_SUBSCRIBER_MODE", command.name)) {
-                    redis = this.subscriber;
-                } else {
-                    if (!random) {
-                        if (adone.is.number(targetSlot) && this.slots[targetSlot]) {
-                            const nodeKeys = this.slots[targetSlot];
-                            if (adone.is.function(to)) {
-                                const nodes = nodeKeys.map((key) => this.connectionPool.nodes.all[key]);
-                                redis = to(nodes, command);
-                                if (adone.is.array(redis)) {
-                                    redis = adone.vendor.lodash.sample(redis);
-                                }
-                                if (!redis) {
-                                    redis = nodes[0];
-                                }
-                            } else {
-                                let key;
-                                if (to === "all") {
-                                    key = adone.vendor.lodash.sample(nodeKeys);
-                                } else if (to === "slave" && nodeKeys.length > 1) {
-                                    key = adone.vendor.lodash.sample(nodeKeys, 1);
-                                } else {
-                                    key = nodeKeys[0];
-                                }
-                                redis = this.connectionPool.nodes.all[key];
-                            }
-                        }
-                        if (asking) {
-                            redis = this.connectionPool.nodes.all[asking];
-                            redis.asking();
-                        }
-                    }
-                    if (!redis) {
-                        redis = adone.vendor.lodash.sample(this.connectionPool.nodes[to]) || adone.vendor.lodash.sample(this.connectionPool.nodes.all);
-                    }
-                }
-                if (node && !node.redis) {
-                    node.redis = redis;
-                }
-            }
-            if (redis) {
-                redis.sendCommand(command, stream);
-            } else if (this.options.enableOfflineQueue) {
-                this.offlineQueue.push({ command, stream, node });
-            } else {
-                command.reject(new adone.x.Exception("Cluster isn't ready and enableOfflineQueue options is false"));
-            }
-        };
         tryConnection();
         return command.promise;
     }
 
     handleError(error, ttl, handlers) {
-        if (adone.is.undefined(ttl.value)) {
+        if (is.undefined(ttl.value)) {
             ttl.value = this.options.maxRedirections;
         } else {
             ttl.value -= 1;
         }
         if (ttl.value <= 0) {
-            handlers.maxRedirections(new adone.x.Exception(`Too many Cluster redirections. Last error: ${error}`));
+            handlers.maxRedirections(new x.Exception(`Too many Cluster redirections. Last error: ${error}`));
             return;
         }
         const errv = error.message.split(" ");
@@ -516,7 +437,7 @@ export default class Cluster extends imports.Commander.mixin(adone.EventEmitter)
                 timeout: this.options.retryDelayOnClusterDown,
                 callback: this.refreshSlotsCache.bind(this)
             });
-        } else if (error.message === imports.utils.CONNECTION_CLOSED_ERROR_MSG && this.options.retryDelayOnFailover > 0) {
+        } else if (error.message === lazy.utils.CONNECTION_CLOSED_ERROR_MSG && this.options.retryDelayOnFailover > 0) {
             this.delayQueue.push("failover", handlers.connectionClosed, {
                 timeout: this.options.retryDelayOnFailover,
                 callback: this.refreshSlotsCache.bind(this)
@@ -528,9 +449,9 @@ export default class Cluster extends imports.Commander.mixin(adone.EventEmitter)
 
     getInfoFromNode(redis, callback) {
         if (!redis) {
-            return callback(new adone.x.Exception("Node is disconnected"));
+            return callback(new x.Exception("Node is disconnected"));
         }
-        redis.cluster("slots", imports.utils.timeout((err, result) => {
+        redis.cluster("slots", lazy.utils.timeout((err, result) => {
             if (err) {
                 redis.disconnect();
                 return callback(err);
@@ -560,18 +481,12 @@ export default class Cluster extends imports.Commander.mixin(adone.EventEmitter)
         }, 1000));
     }
 
-    /**
-     * Check whether Cluster is able to process commands
-     *
-     * @param {Function} callback
-     * @private
-     */
     _readyCheck(callback) {
         this.cluster("info", (err, res) => {
             if (err) {
                 return callback(err);
             }
-            if (!adone.is.string(res)) {
+            if (!is.string(res)) {
                 return callback();
             }
 
@@ -595,12 +510,6 @@ export default class Cluster extends imports.Commander.mixin(adone.EventEmitter)
 }
 
 
-/**
- * Default options
- *
- * @var defaultOptions
- * @protected
- */
 Cluster.defaultOptions = {
     clusterRetryStrategy: (times) => Math.min(100 + times * 2, 2000),
     enableOfflineQueue: true,
@@ -613,8 +522,8 @@ Cluster.defaultOptions = {
 };
 
 for (const command of ["sscan", "hscan", "zscan", "sscanBuffer", "hscanBuffer", "zscanBuffer"]) {
-    Cluster.prototype[command + "Stream"] = function (key, options) {
-        return new imports.ScanStream(adone.vendor.lodash.defaults({
+    Cluster.prototype[`${command}Stream`] = function (key, options) {
+        return new lazy.ScanStream(o({
             objectMode: true,
             key,
             redis: this,
@@ -625,7 +534,7 @@ for (const command of ["sscan", "hscan", "zscan", "sscanBuffer", "hscanBuffer", 
 
 // transaction support
 adone.lazify({
-    pipeline: () => imports.Redis.prototype.pipeline,
-    multi: () => imports.Redis.prototype.multi,
-    exec: () => imports.Redis.prototype.exec
+    pipeline: () => lazy.Redis.prototype.pipeline,
+    multi: () => lazy.Redis.prototype.multi,
+    exec: () => lazy.Redis.prototype.exec
 }, Cluster.prototype);
