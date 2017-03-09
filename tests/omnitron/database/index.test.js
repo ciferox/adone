@@ -1,6 +1,6 @@
 import OmnitronRunner from "../runner";
 
-describe.skip("Database service", () => {
+describe("Database service", () => {
     let omnitronRunner;
     let iDatabase;
     let appConfig;
@@ -12,11 +12,10 @@ describe.skip("Database service", () => {
         await omnitronRunner.run();
         appConfig = adone.appinstance.config;
         await omnitronRunner.startOmnitron();
-        await omnitronRunner.connectOmnitron();
-        // await omnitronRunner.dispatcher.enable("database");
-        // await omnitronRunner.dispatcher.start("database");
-        // await adone.promise.delay(1000);
-        iDatabase = omnitronRunner.getInterface("database");
+        await omnitronRunner.dispatcher.enable("database");
+        await omnitronRunner.dispatcher.start("database");
+        await adone.promise.delay(100);
+        iDatabase = omnitronRunner.getInterface("db");
     });
 
     after(async () => {
@@ -40,7 +39,8 @@ describe.skip("Database service", () => {
     it("delete database", async () => {
         const iDatastore = await iDatabase.getDatastore({ filename: "test" });
         await iDatabase.deleteDatastore("test");
-        assert.isOk(!(await adone.fs.exists(adone.std.path.join(appConfig.adone.omnitron.services.database.options.base, "test.db"))));
+        const storesPath = await appConfig.omnitron.getServicePath("database", "stores");
+        assert.isOk(!(await adone.fs.exists(adone.std.path.join(storesPath, "test.db"))));
 
         try {
             await iDatastore.insert({ field1: "test" });

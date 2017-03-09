@@ -44,7 +44,7 @@ export class Database {
     }
 
     async initialize() {
-        this.dataPath = await this.options.omnitron.config.omnitron.getServicePath(this.options.serviceName, "data");
+        this.dataPath = await this.options.omnitron.config.omnitron.getServicePath(this.options.serviceName, "stores");
     }
 
     uninitialize() {

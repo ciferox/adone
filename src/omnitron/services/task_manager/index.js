@@ -522,7 +522,7 @@ export class TaskManager {
 
         const rndId = taskClassScript.runInContext(context, scriptOptions);
         return (args) => {
-            const hexedArgs = adone.data.mpak.encode(args).flip().toString("hex");
+            const hexedArgs = adone.data.mpak.encode(args).toString("hex");
             return adone.std.vm.runInContext(`
                 (function() {
                     const instance = $instances["${rndId}"];

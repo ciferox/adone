@@ -15,7 +15,7 @@ class Handle {
     }
 }
 
-describe.skip("Process manager", () => {
+describe("Process manager", () => {
     const toExecuteAfter = [];
     const executeAfter = (f) => {
         toExecuteAfter.push(f);

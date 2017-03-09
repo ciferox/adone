@@ -38,7 +38,6 @@ describe.skip("Process manager", function () {
             omnitronRunner = new OmnitronRunner();
             await omnitronRunner.run();
             appConfig = adone.appinstance.config;
-            pmConfig = appConfig.adone.omnitron.services.pm;
         });
 
         describe("Process management", function () {
@@ -49,11 +48,16 @@ describe.skip("Process manager", function () {
             beforeEach(async function () {
                 this.timeout(60000);
                 await omnitronRunner.startOmnitron();
-                await omnitronRunner.connectOmnitron();
+                await omnitronRunner.dispatcher.enable("database");
+                await omnitronRunner.dispatcher.enable("process_manager");
+                await omnitronRunner.dispatcher.start("process_manager");
+                await adone.promise.delay(100);
+                // await omnitronRunner.connectOmnitron();
                 pm = omnitronRunner.getInterface("pm");
-                idb = omnitronRunner.getInterface("database");
-                db.applications = await idb.getDatastore(pmConfig.options.datastore.applications);
-                db.runtime = await idb.getDatastore(pmConfig.options.datastore.runtime);
+                idb = omnitronRunner.getInterface("db");
+                pmConfig = appConfig.omnitron.services.process_manager;
+                db.applications = await idb.getDatastore(pmConfig.contexts[0].options.datastore.applications);
+                db.runtime = await idb.getDatastore(pmConfig.contexts[0].options.datastore.runtime);
             });
 
             afterEach(async function () {
@@ -64,9 +68,10 @@ describe.skip("Process manager", function () {
             async function restartOmnitron() {
                 await omnitronRunner.restartOmnitron({ clean: false, killChildren: false });
                 pm = omnitronRunner.getInterface("pm");
-                idb = omnitronRunner.getInterface("database");
-                db.applications = await idb.getDatastore(pmConfig.options.datastore.applications);
-                db.runtime = await idb.getDatastore(pmConfig.options.datastore.runtime);
+                idb = omnitronRunner.getInterface("db");
+                pmConfig = appConfig.omnitron.services.process_manager;
+                db.applications = await idb.getDatastore(pmConfig.contexts[0].options.datastore.applications);
+                db.runtime = await idb.getDatastore(pmConfig.contexts[0].options.datastore.runtime);
             }
 
             for (const mode of ["single", "cluster"]) {

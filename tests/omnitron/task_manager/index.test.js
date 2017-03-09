@@ -1,5 +1,5 @@
-import TaskManager from "../../../lib/omnitron/services/task_manager";
-import TwinTmInterface from "../../../lib/omnitron/services/task_manager/twin";
+import { TaskManager } from "omnitron/services/task_manager";
+import TwinTmInterface from "omnitron/services/task_manager/twin";
 import OmnitronRunner from "../runner";
 const { is, x  } = adone;
 const { traverse } = adone.js.compiler;
@@ -19,7 +19,7 @@ function getFixturePath(name) {
     return adone.std.path.join(__dirname, "fixtures", name);
 }
 
-describe.skip("Task Manager", () => {
+describe("Task Manager", () => {
     let omnitronRunner;
     let iTm;
     let iDs;
@@ -36,9 +36,9 @@ describe.skip("Task Manager", () => {
     }
 
     async function prepareInterfaces() {
-        omnitronRunner.netron.setInterfaceTwin("TaskManager", TwinTmInterface);
-        iTm = omnitronRunner.getInterface("taskmanager");
-        const iDatastore = omnitronRunner.getInterface("database");
+        omnitronRunner.dispatcher.netron.setInterfaceTwin("TaskManager", TwinTmInterface);
+        iTm = omnitronRunner.getInterface("tm");
+        const iDatastore = omnitronRunner.getInterface("db");
         iDs = await iDatastore.getDatastore({ filename: "taskmanager" });
     }
 
@@ -47,22 +47,25 @@ describe.skip("Task Manager", () => {
         return prepareInterfaces();
     }
 
-    before(async function() {
+    before(async function () {
         this.timeout(10000);
 
         taskManager = new TaskManager({});
         omnitronRunner = new OmnitronRunner();
         await omnitronRunner.run();
         await omnitronRunner.startOmnitron();
-        await omnitronRunner.connectOmnitron();
+        await omnitronRunner.dispatcher.enable("database");
+        await omnitronRunner.dispatcher.enable("task_manager");
+        await omnitronRunner.dispatcher.start("task_manager");
+        await adone.promise.delay(100);
         return prepareInterfaces();
     });
 
-    after(async function() {
+    after(async () => {
         await omnitronRunner.stopOmnitron({ clean: false });
     });
 
-    describe("Validating task and worker definitions", function() {
+    describe("Validating task and worker definitions", () => {
         const classes = [
             `class $$ extends Task {
                 run() {  }
@@ -107,7 +110,7 @@ describe.skip("Task Manager", () => {
         ];
 
         for (let i = 0; i < classes.length; i++) {
-            it(`Valid definition - case ${i + 1}`, async function() { 
+            it(`Valid definition - case ${i + 1}`, async () => { 
                 try {
                     await installSingle(classes[i]);
                 } catch (err) {
@@ -117,7 +120,7 @@ describe.skip("Task Manager", () => {
         }
 
         for (const type of ["Task", "Worker"]) {
-            it(`${type.toLowerCase()} without run() method`, async function() {
+            it(`${type.toLowerCase()} without run() method`, async () => {
                 try {
                     await installSingle(`class $$ extends ${type} {
                         runBad() {
@@ -132,7 +135,7 @@ describe.skip("Task Manager", () => {
             });
         }
 
-        it("incorrect worker definition", async function() {
+        it("incorrect worker definition", async () => {
             try {
                 await installSingle(`class $$ extends Worker {
                     run() {
@@ -151,9 +154,9 @@ describe.skip("Task Manager", () => {
     for (let modeId = 0; modeId < modes.length; modeId++) {
         const mode = modes[modeId];
 
-        describe(mode, function() {
-            describe("Install/uninstall tasks", function() {
-                it("should install task to datastore", async function() {
+        describe(mode, () => {
+            describe("Install/uninstall tasks", () => {
+                it("should install task to datastore", async () => {
                     const info = await installSingle(`class $$ extends Task {
                         run(a1, a2) {
                             return a1 + a2;
@@ -182,7 +185,7 @@ describe.skip("Task Manager", () => {
                     assert.equal(taskInfo.code, generatedCode);
                 });
 
-                it("should install worker to datastore", async function() {
+                it("should install worker to datastore", async () => {
                     const info = await installSingle(`class $$ extends Worker {
                         run(job) {
                             return job.a1 + job.a2;
@@ -212,7 +215,7 @@ describe.skip("Task Manager", () => {
                     assert.equal(taskInfo.code, generatedCode);
                 });
 
-                it("install task with name of another existing task", async function() {
+                it("install task with name of another existing task", async () => {
                     let info = await installSingle(`class $$ extends Task {
                         run() {
                         }
@@ -227,7 +230,7 @@ describe.skip("Task Manager", () => {
                     assert.equal(info.count, 0);
                 });
 
-                it("install worker with name of another existing worker", async function() {
+                it("install worker with name of another existing worker", async () => {
                     let info = await installSingle(`class $$ extends Worker {
                         run(job) {
                             return true;
@@ -243,7 +246,7 @@ describe.skip("Task Manager", () => {
                     assert.equal(info.count, 0);
                 });
 
-                it("install task with name of another existing worker", async function() {
+                it("install task with name of another existing worker", async () => {
                     let info = await installSingle(`class $$ extends Worker {
                         run(job) {
                         }
@@ -261,7 +264,7 @@ describe.skip("Task Manager", () => {
                     assert.equal(info.count, 0);
                 });
 
-                it("install worker with name of another existing task", async function() {
+                it("install worker with name of another existing task", async () => {
                     let info = await installSingle(`class $$ extends Task {
                         run() {
                         }
@@ -279,7 +282,7 @@ describe.skip("Task Manager", () => {
                     assert.equal(info.count, 0);
                 });
 
-                it("install singleton task", async function() {
+                it("install singleton task", async () => {
                     const info = await installSingle(`class $$ extends Task {
                         run(job) {
                         }
@@ -295,7 +298,7 @@ describe.skip("Task Manager", () => {
                     assert.equal(options.volatile, true);
                 });
 
-                it("install singleton and non-volatile task", async function() {
+                it("install singleton and non-volatile task", async () => {
                     const info = await installSingle(`class $$ extends Task {
                         run() {
                         }
@@ -311,7 +314,7 @@ describe.skip("Task Manager", () => {
                     assert.equal(options.volatile, false);
                 });
 
-                it("install singleton worker", async function() {
+                it("install singleton worker", async () => {
                     const info = await installSingle(`class $$ extends Worker {
                         run(job) {
                         }
@@ -327,7 +330,7 @@ describe.skip("Task Manager", () => {
                     assert.isUndefined(options.volatile);
                 });
 
-                it("install singleton and non-volatile worker", async function() {
+                it("install singleton and non-volatile worker", async () => {
                     const info = await installSingle(`class $$ extends Worker {
                         run(job) {
                         }
@@ -343,7 +346,7 @@ describe.skip("Task Manager", () => {
                     assert.isUndefined(options.volatile);
                 });
 
-                it("install non-singleton and non-volatile worker", async function() {
+                it("install non-singleton and non-volatile worker", async () => {
                     const info = await installSingle(`class $$ extends Worker {
                         run(job) {
                         }
@@ -359,16 +362,16 @@ describe.skip("Task Manager", () => {
                     assert.isUndefined(options.volatile);
                 });
 
-                it("install multiple tasks", async function() {
+                it("install multiple tasks", async () => {
                     const infos = [];
                     for (let i = 0; i < 7; i++) {
                         const name = getTaskName();
                         infos.push({ name, code: `class ${name} extends Task {
                             run(...args) {
                             }
-                        }`});
+                        }` });
                     }
-                    const count = await iTm.install(infos.map(x => x.code).join("\n"));
+                    const count = await iTm.install(infos.map((x) => x.code).join("\n"));
                     assert.equal(count, infos.length);
 
                     if (modeId === 1) {
@@ -381,16 +384,16 @@ describe.skip("Task Manager", () => {
                     }
                 });
 
-                it("install multiple workers", async function() {
+                it("install multiple workers", async () => {
                     const infos = [];
                     for (let i = 0; i < 7; i++) {
                         const name = getTaskName();
                         infos.push({ name, code: `class ${name} extends Worker {
                             run(job) {
                             }
-                        }`});
+                        }` });
                     }
-                    const count = await iTm.install(infos.map(x => x.code).join("\n"));
+                    const count = await iTm.install(infos.map((x) => x.code).join("\n"));
                     assert.equal(count, infos.length);
 
                     if (modeId === 1) {
@@ -404,7 +407,7 @@ describe.skip("Task Manager", () => {
                 });
 
                 for (let i = 0; i < 2; i++) {
-                    it(`reinstall task reversing sigleton flag (case ${i + 1})`, async function() {
+                    it(`reinstall task reversing sigleton flag (case ${i + 1})`, async () => {
                         const taskName = getTaskName();
                         const taskClass = `class ${taskName} extends Task {
                             run() {
@@ -428,7 +431,7 @@ describe.skip("Task Manager", () => {
                     });
                 }
 
-                it("uninstall task", async function() {
+                it("uninstall task", async () => {
                     const info = await installSingle(`class $$ extends Task {
                         run() {
                         }
@@ -441,11 +444,11 @@ describe.skip("Task Manager", () => {
 
                     const count = await iTm.uninstall(info.name);
                     assert.equal(count, 1);
-                    const taskData = await iDs.findOne({ _type: "task", name: info.name});
+                    const taskData = await iDs.findOne({ _type: "task", name: info.name });
                     assert.isNull(taskData);
                 });
 
-                it("uninstall worker", async function() {
+                it("uninstall worker", async () => {
                     const info = await installSingle(`class $$ extends Worker {
                         run(job) {
                         }
@@ -458,11 +461,11 @@ describe.skip("Task Manager", () => {
 
                     const count = await iTm.uninstall(info.name);
                     assert.equal(count, 1);
-                    const taskData = await iDs.findOne({ _type: "worker", name: info.name});
+                    const taskData = await iDs.findOne({ _type: "worker", name: info.name });
                     assert.isNull(taskData);
                 });
 
-                it("uninstall multiple tasks/workers", async function() {
+                it("uninstall multiple tasks/workers", async () => {
                     const infos = [];
                     const types = ["Task", "Worker"];
                     for (let i = 0; i < adone.util.random(10, 20); i++) {
@@ -479,11 +482,11 @@ describe.skip("Task Manager", () => {
                         await restartOmnitron();
                     }
 
-                    const count = await iTm.uninstall(...infos.map(x => x.name));
+                    const count = await iTm.uninstall(...infos.map((x) => x.name));
                     assert.equal(count, infos.length);
 
                     for (const info of infos) {
-                        const taskData = await iDs.findOne({ _type: info.type, name: info.name});
+                        const taskData = await iDs.findOne({ _type: info.type, name: info.name });
                         assert.isNull(taskData);
                     }
 
@@ -495,13 +498,13 @@ describe.skip("Task Manager", () => {
                 });
 
                 if (modeId === 0) {
-                    it("uninstall nonexisting task", async function() {
+                    it("uninstall nonexisting task", async () => {
                         const taskName = getTaskName();
                         assert.equal(await iTm.uninstall(taskName), 0);
                     });
                 }
 
-                it("reinstall task", async function() {
+                it("reinstall task", async () => {
                     let info = await installSingle(`class $$ extends Task {
                         run() {
                             return 777;
@@ -531,7 +534,7 @@ describe.skip("Task Manager", () => {
                     assert.equal(await iTm.run(taskName), 888);
                 });
 
-                it("reinstall worker", async function() {
+                it("reinstall worker", async () => {
                     let info = await installSingle(`class $$ extends Worker {
                         run(job) {
                             return 777;
@@ -562,7 +565,7 @@ describe.skip("Task Manager", () => {
                 });
 
                 if (modeId === 0) {
-                    it("reinstall running task", async function() {
+                    it("reinstall running task", async () => {
                         let info = await installSingle(`class $$ extends Task {
                             async run() {
                                 await adone.promise.delay(600);
@@ -583,7 +586,7 @@ describe.skip("Task Manager", () => {
                         assert.equal(result, 777);
                     });
 
-                    it("reinstall singleton task", async function(done) {
+                    it("reinstall singleton task", async (done) => {
                         let info = await installSingle(`class $$ extends Task {
                             async run() {
                                 await adone.promise.delay(600);
@@ -605,7 +608,7 @@ describe.skip("Task Manager", () => {
                         assert.equal(await iTm.run(info.name), 888);
                     });
 
-                    it("uninstall running task", async function(done) {
+                    it("uninstall running task", async (done) => {
                         const info = await installSingle(`class $$ extends Task {
                             run() {
                                 return adone.promise.delay(500);
@@ -613,7 +616,7 @@ describe.skip("Task Manager", () => {
                         }`);
                         assert.equal(info.count, 1);
                         iTm.run(info.name).then(async () => {
-                            const taskData = await iDs.findOne({ _type: "task", name: info.name});
+                            const taskData = await iDs.findOne({ _type: "task", name: info.name });
                             assert.isNull(taskData);
                             done();
                         });
@@ -624,8 +627,8 @@ describe.skip("Task Manager", () => {
                 }
             });
 
-            describe("Install/execute tasks", function() {
-                it("execute task with no arguments", async function() {
+            describe("Install/execute tasks", () => {
+                it("execute task with no arguments", async () => {
                     const info = await installSingle(`class $$ extends Task {
                         run(...args) {
                             return args.slice().concat(["ok!"]);
@@ -643,8 +646,8 @@ describe.skip("Task Manager", () => {
                 });
 
                 for (let i = 0; i < 21; i++) {
-                    if (i >= 3 && modeId === 1) continue;
-                    it(`execute task with ${i + 1} arguments`, async function() {
+                    if (i >= 3 && modeId === 1) {continue;}
+                    it(`execute task with ${i + 1} arguments`, async () => {
                         const args = [];
                         for (let n = 0; n < i; n++) {
                             args.push(adone.util.random(1000, 2000));
@@ -664,7 +667,7 @@ describe.skip("Task Manager", () => {
                     });
                 }
 
-                it("execute async task", async function() {
+                it("execute async task", async () => {
                     const info = await installSingle(`class $$ extends Task {
                         async run(arg) {
                             await adone.promise.delay(10);
@@ -679,7 +682,7 @@ describe.skip("Task Manager", () => {
                     assert.equal(await iTm.run(info.name, "sample"), "sample");
                 });
 
-                it("execute task using 'fast'", async function() {
+                it.skip("execute task using 'fast'", async () => {
                     const info = await installSingle(`class $$ extends Task {
                         run(globs, destPath) {
                             return fast
@@ -715,7 +718,7 @@ describe.skip("Task Manager", () => {
                     await adone.fs.rm(getFixturePath("fast/out/in"));
                 });
 
-                it("execute singleton task", async function() {
+                it("execute singleton task", async () => {
                     const info = await installSingle(`class $$ extends Task {
                         constructor() {
                             super();
@@ -736,7 +739,7 @@ describe.skip("Task Manager", () => {
                     }
                 });
 
-                it("concurrency execution limit", async function() {
+                it("concurrency execution limit", async () => {
                     const info = await installSingle(`class $$ extends Task {
                         async run() {
                             await adone.promise.delay(200);
@@ -764,7 +767,7 @@ describe.skip("Task Manager", () => {
                 });
 
                 if (modeId === 0) {
-                    it("execute nonexisting task", async function() {
+                    it("execute nonexisting task", async () => {
                         try {
                             await iTm.run("nonexisting_task");
                         } catch (err) {
@@ -776,7 +779,7 @@ describe.skip("Task Manager", () => {
                     });
                 }
 
-                it("execute uninstalled task", async function() {
+                it("execute uninstalled task", async () => {
                     const info = await installSingle(`class $$ extends Task {
                         async run() {
                             await adone.promise.delay(100);
@@ -802,7 +805,7 @@ describe.skip("Task Manager", () => {
                 });
 
                 if (modeId === 0) {
-                    it("execute task marked for uninstall", async function() {
+                    it("execute task marked for uninstall", async () => {
                         const info = await installSingle(`class $$ extends Task {
                             async run() {
                                 await adone.promise.delay(500);
@@ -828,8 +831,8 @@ describe.skip("Task Manager", () => {
             });
         });
 
-        describe("Workers and Jobs", function() {
-            it("failed job", async function() {
+        describe("Workers and Jobs", () => {
+            it("failed job", async () => {
                 const info = await installSingle(`class $$ extends Worker {
                     run(job) {
                         throw new adone.x.Runtime("custom task error");
@@ -859,7 +862,7 @@ describe.skip("Task Manager", () => {
                 assert.fail("should throw exception");
             });
 
-            it("enqueue job with defaults", async function() {
+            it("enqueue job with defaults", async () => {
                 const info = await installSingle(`class $$ extends Worker {
                     run(job) {
                         return job.data.a + job.data.b;
@@ -886,7 +889,7 @@ describe.skip("Task Manager", () => {
                 await job.remove();
             });
 
-            it("limit the concurrency execution of jobs", async function() {
+            it("limit the concurrency execution of jobs", async () => {
                 const info = await installSingle(`class $$ extends Worker {
                     async run(job) {
                         await adone.promise.delay(70);
@@ -920,7 +923,7 @@ describe.skip("Task Manager", () => {
                 }
 
                 await adone.promise.delay(50);
-                const jobs = await iTm.listJobs({ taskName: info.name, state: "active"});
+                const jobs = await iTm.listJobs({ taskName: info.name, state: "active" });
                 assert.equal(jobs.length, 3);
 
                 for (let i = 0; i < sums.length; i++) {
@@ -929,7 +932,7 @@ describe.skip("Task Manager", () => {
                 }
             });
 
-            it("list completed jobs", async function() {
+            it("list completed jobs", async () => {
                 const info = await installSingle(`class $$ extends Worker {
                     async run(job) {
                         return job.data.a + job.data.b;
@@ -973,8 +976,8 @@ describe.skip("Task Manager", () => {
                 }
             });
 
-            describe("Defer job result", function() {
-                it("get result of uncompleted job", async function() {
+            describe("Defer job result", () => {
+                it("get result of uncompleted job", async () => {
                     const info = await installSingle(`class $$ extends Worker {
                         run(job) {
                             return job.data.a + job.data.b;
@@ -998,7 +1001,7 @@ describe.skip("Task Manager", () => {
                     await job.remove();
                 });
 
-                it("get result of completed job", async function() {
+                it("get result of completed job", async () => {
                     const info = await installSingle(`class $$ extends Worker {
                         run(job) {
                             return job.data.a + job.data.b;
@@ -1030,7 +1033,7 @@ describe.skip("Task Manager", () => {
                     await job.remove();
                 });
 
-                it("get result of delayed job", async function() {
+                it("get result of delayed job", async () => {
                     const info = await installSingle(`class $$ extends Worker {
                         run(job) {
                             return job.data.a + job.data.b;
@@ -1054,7 +1057,7 @@ describe.skip("Task Manager", () => {
                     await job.remove();
                 });
 
-                it("get result of failed job", async function() {
+                it("get result of failed job", async () => {
                     const info = await installSingle(`class $$ extends Worker {
                         run(job) {
                             throw new Error("some error");
@@ -1085,8 +1088,8 @@ describe.skip("Task Manager", () => {
                 });
             });
 
-            describe("Job removing", function() {
-                it("remove uncompleted job", async function() {
+            describe("Job removing", () => {
+                it("remove uncompleted job", async () => {
                     const info = await installSingle(`class $$ extends Worker {
                         run(job) {
                             return job.data.a + job.data.b;
@@ -1113,7 +1116,7 @@ describe.skip("Task Manager", () => {
                     assert.isNotOk(jobs.map((j) => j.id).includes(job.id));
                 });
 
-                it("remove completed job", async function() {
+                it("remove completed job", async () => {
                     const info = await installSingle(`class $$ extends Worker {
                         run(job) {
                             return job.data.a + job.data.b;
@@ -1148,7 +1151,7 @@ describe.skip("Task Manager", () => {
                     assert.isNotOk(jobs.map((j) => j.id).includes(job.id));
                 });
 
-                it("remove delayed job should not run task", async function() {
+                it("remove delayed job should not run task", async () => {
                     const info = await installSingle(`class $$ extends Worker {
                         run(job) {
                             return job.data.a + job.data.b;
@@ -1185,7 +1188,7 @@ describe.skip("Task Manager", () => {
                     assert.isNull(sum);
                 });
 
-                it("remove failed job", async function() {
+                it("remove failed job", async () => {
                     const info = await installSingle(`class $$ extends Worker {
                         run(job) {
                             throw new Error("some error");
@@ -1219,8 +1222,8 @@ describe.skip("Task Manager", () => {
                 });
             });
 
-            describe.skip("Job state sequence", function() {
-                it("normal sequence of states", async function() {
+            describe.skip("Job state sequence", () => {
+                it("normal sequence of states", async () => {
                     const info = await installSingle(`class $$ extends Worker {
                         run(job) {
                             return 888;
@@ -1246,7 +1249,7 @@ describe.skip("Task Manager", () => {
                     await job.remove();
                 });
                 
-                it("delayed sequence of states", async function() {
+                it("delayed sequence of states", async () => {
                     const info = await installSingle(`class $$ extends Worker {
                         run(job) {
                             return 888;
@@ -1272,7 +1275,7 @@ describe.skip("Task Manager", () => {
                     await job.remove();
                 });
 
-                it("failed job sequence of states", async function() {
+                it("failed job sequence of states", async () => {
                     const info = await installSingle(`class $$ extends Worker {
                         run(job) {
                             throw new adone.x.Runtime("custom task error");
@@ -1302,9 +1305,9 @@ describe.skip("Task Manager", () => {
             });
         });
 
-        describe("Containers", function() {
+        describe("Containers", () => {
             if (modeId === 0) {
-                it("create container with defaults", async function() {
+                it("create container with defaults", async () => {
                     const iContainer = await iTm.createContainer();
                     assert.isOk(is.netronInterface(iContainer));
                     const meta = await iContainer.getMeta();
@@ -1315,9 +1318,9 @@ describe.skip("Task Manager", () => {
                 });
             }
 
-            it("should install container to datastore", async function() {
+            it("should install container to datastore", async () => {
                 const id = getContainerId();
-                const containerId = await iTm.createContainer({ id, type: "process", returnInterface: false});
+                const containerId = await iTm.createContainer({ id, type: "process", returnInterface: false });
                 assert.equal(containerId, id);
 
                 if (modeId === 1) {
@@ -1332,9 +1335,9 @@ describe.skip("Task Manager", () => {
                 assert.isAtMost(meta.createTime, adone.date().unix());
             });
 
-            it("create and get container by id", async function() {
+            it("create and get container by id", async () => {
                 const id = getContainerId();
-                const containerId = await iTm.createContainer({ id, type: "process", returnInterface: false});
+                const containerId = await iTm.createContainer({ id, type: "process", returnInterface: false });
                 assert.equal(containerId, id);
 
                 if (modeId === 1) {
@@ -1350,9 +1353,9 @@ describe.skip("Task Manager", () => {
                 assert.isAtMost(meta.createTime, adone.date().unix());
             });
 
-            it("create container second time with 'returnIfExists' flag", async function() {
+            it("create container second time with 'returnIfExists' flag", async () => {
                 const id = getContainerId();
-                const containerId = await iTm.createContainer({ id, type: "process", returnInterface: false});
+                const containerId = await iTm.createContainer({ id, type: "process", returnInterface: false });
                 assert.equal(containerId, id);
 
                 if (modeId === 1) {
@@ -1390,7 +1393,7 @@ describe.skip("Task Manager", () => {
                 return await iContainer.run(taskName);
             }
 
-            it("single task", async function() {
+            it("single task", async () => {
                 const result = await checkContainerCodeSinglTask(`class $$ extends Task {
                     run() {
                         return {
@@ -1402,7 +1405,7 @@ describe.skip("Task Manager", () => {
                 assert.deepEqual(result, { a: 1, b: 2 });
             });
 
-            it("single task with global data", async function() {
+            it("single task with global data", async () => {
                 const result = await checkContainerCodeSinglTask(`
                 const globalObj = {
                     a: 1,
@@ -1417,7 +1420,7 @@ describe.skip("Task Manager", () => {
                 assert.deepEqual(result, { a: 1, b: 2 });
             });
 
-            it("single task with global function", async function() {
+            it("single task with global function", async () => {
                 const result = await checkContainerCodeSinglTask(`
                 const globalObj = {
                     a: 1,
@@ -1436,7 +1439,7 @@ describe.skip("Task Manager", () => {
                 assert.deepEqual(result, { a: 1, b: 2 });
             });
 
-            it("single task with global async function", async function() {
+            it("single task with global async function", async () => {
                 const result = await checkContainerCodeSinglTask(`
                 const globalObj = {
                     a: 1,
@@ -1456,7 +1459,7 @@ describe.skip("Task Manager", () => {
                 assert.deepEqual(result, { a: 1, b: 2 });
             });
 
-            it("multiple tasks", async function() {
+            it("multiple tasks", async () => {
                 let iContainer = await iTm.createContainer();
                 assert.isOk(is.netronInterface(iContainer));
                 
@@ -1526,7 +1529,7 @@ describe.skip("Task Manager", () => {
                 }
             });
 
-            it("delete container", async function() {
+            it("delete container", async () => {
                 const id = getContainerId();
                 let iContainer = await iTm.createContainer({ id });
                 assert.isOk(is.netronInterface(iContainer));

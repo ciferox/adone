@@ -4,7 +4,7 @@ import { fixture } from "./util";
 
 const { std: { child_process: cp }, netron: { Netron }, is } = adone;
 
-describe.skip("Process manager", () => {
+describe("Process manager", () => {
     const toExecuteAfter = [];
     const executeAfter = (f) => {
         toExecuteAfter.push(f);

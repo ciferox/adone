@@ -2,8 +2,8 @@ import adone from "adone";
 const { is, x, netron: { DEFAULT_PORT, ACTION, STATUS, PEER_TYPE, GenesisNetron, Peer, RemoteStub } } = adone;
 
 const IP_POLICY_NONE = 0;
-const IP_POLICY_ALLOW = 0;
-const IP_POLICY_DENY = 0;
+const IP_POLICY_ALLOW = 1;
+const IP_POLICY_DENY = 2;
 
 export default class Netron extends GenesisNetron {
     constructor(uid = null, options = {}) {
@@ -119,7 +119,7 @@ export default class Netron extends GenesisNetron {
 
     async onNewConnection(peer) {
         let isConfirmed = true;
-        const gateData = this._gates.get(peer.option.gate_id);
+        const gateData = this._gates.get(peer.option.gateId);
         if (gateData.ipPolicy !== IP_POLICY_NONE) {
             const peerAddress = peer.getRemoteAddress().address;
             let peerIpBn;
@@ -154,17 +154,17 @@ export default class Netron extends GenesisNetron {
 
         let allowedContexts = null;
 
-        const gateId = peer.option.gate_id;
+        const gateId = peer.option.gateId;
         if (!is.undefined(gateId)) {
             const gate = this._gates.get(gateId);
             const access = gate.option.access;
-            if (!is.undefined(access) && is.array(access.contexts)) {
+            if (!is.undefined(access) && is.array(access.contexts) && access.contexts.length > 0) {
                 allowedContexts = access.contexts;
             }
         }
 
         // подготавливаем все определения для зарегистрированных контекстов
-        const defs = adone.o();
+        const defs = {};
         let hasContexts = false;
         for (const [name, stub] of this.contexts.entries()) {
             if (is.null(allowedContexts) || allowedContexts.includes(name)) {
@@ -299,7 +299,7 @@ export default class Netron extends GenesisNetron {
         if (!is.undefined(gate)) {
             const gateId = gate.option.get("id");
             if (!is.undefined(gateId)) {
-                peer.option.gate_id = gateId;
+                peer.option.gateId = gateId;
             }
         }
         peer._type = peerType;
@@ -330,14 +330,14 @@ export default class Netron extends GenesisNetron {
         return super._peerDisconnected(peer);
     }
 
-    async _bindSocket(options) {
+    _bindSocket(options) {
         let id = options.id;
         if (is.undefined(id)) {
             [options.port, options.host] = adone.net.util.normalizeAddr(options.port, options.host, this.option.defaultPort);
             id = adone.util.humanizeAddr(this.option.protocol, options.port, options.host);
         }
         if (this._gates.has(id)) {
-            throw new x.Exists(`already bound to '${id}'`);
+            throw new x.Exists(`Already bound to '${id}'`);
         }
 
         const server = new adone.net.Server(this.option);
@@ -345,22 +345,22 @@ export default class Netron extends GenesisNetron {
         if (!this.option.refGates) {
             server.unref();
         }
-        await server.bind(options);
+        return server.bind(options);
     }
 
-    _setGate(id, server, options) {
-        const gateData = adone.o({
+    _setGate(id, server, option) {
+        const gateData = {
             server,
-            option: options
-        });
+            option
+        };
 
         if (is.undefined(server.option.id)) {
             server.option.id = id;
         }
 
         gateData.ipPolicy = IP_POLICY_NONE;
-        if (is.propertyDefined(options, "access")) {
-            const ipList = options.access.ip_list;
+        if (is.propertyOwned(option, "access")) {
+            const ipList = option.access.ip_list;
             if (!is.undefined(ipList)) {
                 gateData.ipList = [];
                 for (const addr of ipList) {
@@ -376,7 +376,7 @@ export default class Netron extends GenesisNetron {
                     gateData.ipList.push(ipAddr);
                 }
                 if (gateData.deny && gateData.deny.length > 0) {
-                    const ipPolicy = is.string(options.access.ip_policy) ? options.access.ip_policy : "";
+                    const ipPolicy = is.string(option.access.ip_policy) ? option.access.ip_policy : "";
                     gateData.ipPolicy = (ipPolicy === "allow" ? IP_POLICY_ALLOW : (ipPolicy === "deny" ? IP_POLICY_DENY : IP_POLICY_NONE));
                 }
                 if (gateData.deny && gateData.deny.length === 0 || gateData.ipPolicy === IP_POLICY_NONE) {

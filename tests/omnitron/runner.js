@@ -16,7 +16,7 @@ export default class OmnitronRunner extends adone.Application {
     constructor() {
         super();
 
-        this.dispatcher = new adone.omnitron.Dispatcher(this);
+        this.dispatcher = new adone.omnitron.Dispatcher(this, { noisily: false });
     }
 
     run() {
@@ -31,6 +31,12 @@ export default class OmnitronRunner extends adone.Application {
 
     async stopOmnitron({ clean = true, killChildren = true } = {}) {
         return this.dispatcher.kill({ clean, killChildren });
+    }
+
+    async restartOmnitron({ options, forceStart = false, killChildren = false } = {}) {
+        await this.stopOmnitron({ clean: false, killChildren });
+        await this.startOmnitron();
+        await this.connectOmnitron({ options, forceStart });
     }
 
     connectOmnitron({ options, forceStart = false } = {}) {

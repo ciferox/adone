@@ -1,86 +1,6 @@
 import adone from "adone";
+import { schemas, userGroup, adminGroup } from "./defaults";
 const { is, netron: { contextable, decorator: { Contextable, Description, Public, Private, Type, Property, Method } }, vendor: { lodash: _ } } = adone;
-
-// Defauls
-const defaultSchemas = {
-    group: {
-        name: {
-            type: "string",
-            unique: true,
-            required: true
-        },
-        description: {
-            type: "string",
-            default: ""
-        },
-        contexts: {
-            type: "array",
-            required: true
-        }
-    },
-    user: {
-        name: {
-            type: "string",
-            required: true,
-            register: true
-        },
-        group: {
-            type: "string",
-            required: true
-        },
-        description: {
-            type: "string",
-            default: ""
-        },
-        status: {
-            type: "enum",
-            default: "Disabled",
-            values: [
-                "Disabled",
-                "Enabled",
-                "Unconfirmed"
-            ]
-        },
-        email: {
-            type: "email",
-            unique: true,
-            required: true,
-            login: true,
-            register: true
-        },
-        password: {
-            type: "password",
-            required: true,
-            login: true,
-            register: true,
-            options: {
-                type: "hash",
-                minLength: 5,
-                maxLength: null,
-                required: {
-                    lcLetters: null,
-                    ucLetters: null,
-                    numbers: 0,
-                    specials: 0
-                }
-            }
-        }
-    }
-};
-
-const userGroup = {
-    name: "User",
-    description: "Default group for users",
-    contexts: [
-        "auth"
-    ]
-};
-
-const adminGroup = {
-    name: "Admin",
-    description: "Default group for admins",
-    contexts: []
-};
 
 @Contextable
 @Private
@@ -354,7 +274,7 @@ export class Auth {
         this.iDs = await iDatabase.getDatastore(this.options.datastore);
 
         // Load schemas
-        this.schemas = _.merge({}, defaultSchemas);
+        this.schemas = _.merge({}, schemas);
         this.userSchema = this.schemas.user;
         this.groupSchema = this.schemas.group;
         this.loginSchema = {};

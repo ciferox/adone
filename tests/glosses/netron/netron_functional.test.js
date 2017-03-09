@@ -1358,5 +1358,105 @@ describe("Netron", () => {
                 });
             });
         });
+
+        describe.only("Gates", () => {
+            @Contextable
+            class A {
+                method1() {
+                    return "A1";
+                }
+
+                method2() {
+                    return "A2";
+                }
+            }
+
+            @Contextable
+            class B {
+                method1() {
+                    return "B1";
+                }
+
+                method2() {
+                    return "B2";
+                }
+            }
+
+            afterEach(async () => {
+                await superNetron.disconnect();
+            });
+
+            it("by default all contexts should be accessible", async () => {
+                superNetron.attachContext(new A(), "a");
+                superNetron.attachContext(new B(), "b");
+                await superNetron.bind({
+                    port: defaultPort,
+                    access: {
+
+                    }
+                });
+
+                const peer = await exNetron.connect({
+                    port: defaultPort
+                });
+
+                assert.sameMembers(peer.getContextNames(), ["a", "b"]);
+                const iA = peer.getInterfaceByName("a");
+                const iB = peer.getInterfaceByName("b");
+                assert.equal(await iA.method1(), "A1");
+                assert.equal(await iB.method1(), "B1");
+            });
+
+            for (const contexts of [undefined, null, []]) {
+                it(`all contextes should be accessible if context = ${contexts}`, async () => {
+                    superNetron.attachContext(new A(), "a");
+                    superNetron.attachContext(new B(), "b");
+                    await superNetron.bind({
+                        port: defaultPort,
+                        access: {
+                            contexts
+                        }
+                    });
+
+                    const peer = await exNetron.connect({
+                        port: defaultPort
+                    });
+
+                    assert.sameMembers(peer.getContextNames(), ["a", "b"]);
+                    const iA = peer.getInterfaceByName("a");
+                    const iB = peer.getInterfaceByName("b");
+                    assert.equal(await iA.method1(), "A1");
+                    assert.equal(await iB.method1(), "B1");
+                });
+            }
+
+            it("should be accessable only enumerated contexts", async () => {
+                superNetron.attachContext(new A(), "a");
+                superNetron.attachContext(new B(), "b");
+                await superNetron.bind({
+                    port: defaultPort,
+                    access: {
+                        contexts: ["a"]
+                    }
+                });
+
+                const peer = await exNetron.connect({
+                    port: defaultPort
+                });
+
+                assert.sameMembers(peer.getContextNames(), ["a"]);
+                const iA = peer.getInterfaceByName("a");
+                assert.equal(await iA.method1(), "A1");
+
+                try {
+                    const iB = peer.getInterfaceByName("b");
+                    assert.equal(await iB.method1(), "B1");
+                } catch (err) {
+                    assert.instanceOf(err, adone.x.Unknown);
+                    return;
+                }
+                assert.fail("Should throw 'Unknown' exception");
+            });
+        });
     });
 });

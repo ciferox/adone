@@ -84,7 +84,7 @@ export default class WebSocketAdapter extends adone.netron.Adapter {
             peer._type = adone.netron.PEER_TYPE.ACTIVE;
             const gateId = option.id;
             if (!is.undefined(gateId)) {
-                peer.option.gate_id = gateId;
+                peer.option.gateId = gateId;
             }
             netron._emitPeerEvent("peer create", peer);
             connHandler(peer).then(() => {

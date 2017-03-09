@@ -361,7 +361,7 @@ export class Omnitron extends adone.Application {
                     serviceConfig.status = INITIALIZING;
 
                     let contextPath;         
-                    let className = contextConfig.class;
+                    let className = contextConfig.class; 
                     if (className.indexOf(":") >= 0) {
                         const parts = className.split(":");
                         className = parts[1];
@@ -371,6 +371,7 @@ export class Omnitron extends adone.Application {
                     }
                     const serviceExports = require(contextPath);
                     const ServiceClass = serviceExports[className];
+                    
                     let options = { serviceName, id, omnitron: this, netron: this._.netron };
                     if (is.plainObject(contextConfig.options)) {
                         options = adone.vendor.lodash.defaults(options, contextConfig.options);
@@ -389,6 +390,7 @@ export class Omnitron extends adone.Application {
                     config: contextConfig,
                     service
                 });
+                instance = undefined;
 
                 if (defaulted) {
                     service.defaultContext = this._.context[id];

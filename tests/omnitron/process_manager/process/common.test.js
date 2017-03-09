@@ -1,6 +1,6 @@
 import * as stuff from "omnitron/services/process_manager";
 
-describe.skip("Process manager", () => {
+describe("Process manager", () => {
     describe("Process", () => {
         it("should be not alive", () => {
             const p = new stuff.Process({}, {});
