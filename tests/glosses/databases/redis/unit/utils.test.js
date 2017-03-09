@@ -119,4 +119,12 @@ describe("utils", function () {
             });
         });
     });
+
+    describe(".packObject", function () {
+        it("should return correctly", function () {
+            expect(utils.packObject([1, 2])).to.eql({ 1: 2 });
+            expect(utils.packObject([1, "2"])).to.eql({ 1: "2" });
+            expect(utils.packObject([1, "2", "abc", "def"])).to.eql({ 1: "2", abc: "def" });
+        });
+    });
 });

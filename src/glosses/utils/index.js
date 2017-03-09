@@ -1,5 +1,5 @@
 import adone from "adone";
-const { is } = adone;
+const { is, noop } = adone;
 
 const irregularPlurals = adone.o({
     addendum: "addenda",
@@ -301,31 +301,39 @@ const util = {
             [onlyEnumerable, followProto] = [false, true];
         }
 
-        const fetchKeys = onlyEnumerable ? Object.keys : Object.getOwnPropertyNames;
-
         if (!followProto) {
-            return fetchKeys(object);
+            if (onlyEnumerable) {
+                return Object.keys(object);
+            }
+            return Object.getOwnPropertyNames(object);
         }
 
         const props = new Set();
 
-        do {
-            const ownKeys = fetchKeys(object);
-            for (let i = 0; i < ownKeys.length; ++i) {
-                props.add(ownKeys[i]);
+        if (onlyEnumerable) {
+            for (const prop in object) {
+                props.add(prop);
             }
-            const prototype = Object.getPrototypeOf(object);
-            if (prototype) {
-                const prototypeKeys = fetchKeys(prototype);
-                for (let i = 0; i < prototypeKeys.length; ++i) {
-                    props.add(prototypeKeys[i]);
+        } else {
+            const { getOwnPropertyNames: fetchKeys } = Object;
+            do {
+                const ownKeys = fetchKeys(object);
+                for (let i = 0; i < ownKeys.length; ++i) {
+                    props.add(ownKeys[i]);
                 }
-            }
-            object = object.__proto__;
-        } while (object);
+                const prototype = Object.getPrototypeOf(object);
+                if (prototype) {
+                    const prototypeKeys = fetchKeys(prototype);
+                    for (let i = 0; i < prototypeKeys.length; ++i) {
+                        props.add(prototypeKeys[i]);
+                    }
+                }
+                object = object.__proto__;
+            } while (object);
 
-        for (let i = 0; i < objectOwnProps.length; ++i) {
-            props.delete(objectOwnProps[i]);  // what if the props are modified?
+            for (let i = 0; i < objectOwnProps.length; ++i) {
+                props.delete(objectOwnProps[i]);  // what if the props are modified?
+            }
         }
 
         return [...props];
@@ -619,6 +627,15 @@ const util = {
         }
         return addr;
     },
+    copyObject: (source, options) => {
+        const keys = util.keys(source, options);
+        const dest = {};
+        for (let i = 0; i < keys.length; ++i) {
+            const key = keys[i];
+            dest[key] = source[key];
+        }
+        return dest;
+    },
     toUTF8Array: (str) => {
         let char;
         let i = 0;
@@ -653,6 +670,82 @@ const util = {
         }
 
         return utf8;
+    },
+    asyncIter: (arr, iter, cb) => {
+        let i = -1;
+
+        const next = () => {
+            i++;
+
+            if (i < arr.length) {
+                iter(arr[i], i, next, cb);
+            } else {
+                cb();
+            }
+        };
+
+        next();
+    },
+    asyncFor: (obj, iter, cb) => {
+        const keys = util.keys(obj);
+        const { length } = keys;
+        let i = -1;
+
+        const next = () => {
+            i++;
+            const k = keys[i];
+
+            if (i < length) {
+                iter(k, obj[k], i, length, next);
+            } else {
+                cb();
+            }
+        };
+
+        next();
+    },
+    asyncWaterfall: (tasks, callback = noop) => {
+        if (!is.array(tasks)) {
+            return callback(new adone.x.InvalidArgument("First argument to waterfall must be an array of functions"));
+        }
+        if (!tasks.length) {
+            return callback();
+        }
+
+        let taskIndex = 0;
+
+        const nextTask = (args) => {
+            if (taskIndex === tasks.length) {
+                return callback(null, ...args);
+            }
+
+            const taskCallback = util.once((err, ...args) => {
+                if (err) {
+                    return callback(err, ...args);
+                }
+                nextTask(args);
+            }, { silent: false });
+
+            args.push(taskCallback);
+
+            const task = tasks[taskIndex++];
+            task(...args);
+        };
+
+        nextTask([]);
+    },
+    once: (fn, { silent = true } = {}) => {
+        let called = false;
+        return function onceWrapper(...args) {
+            if (called) {
+                if (!silent) {
+                    throw new adone.x.IllegalState("Callback has been already called");
+                }
+                return;
+            }
+            called = true;
+            return fn.apply(this, args);
+        };
     }
 };
 

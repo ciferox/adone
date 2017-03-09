@@ -584,6 +584,10 @@ adone.net.http.middleware = lazify({
     rewrite: "./glosses/net/http/middlewares/rewrite"
 });
 
+adone.templating = lazify({
+    nunjucks: "./glosses/templating/nunjucks"
+});
+
 // adone.net.http.helper = lazify({
 //     onFinished: "./glosses/net/http/helpers/on-finished",
 //     compose: "./glosses/net/http/helpers/compose",

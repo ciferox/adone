@@ -15,23 +15,29 @@ const escapeHtml = (string) => {
 
     for (index = match.index; index < str.length; index++) {
         switch (str[index]) {
-            case 34:  // "
+            case '"': {
                 escape = "&quot;";
                 break;
-            case 38:  // &
+            }
+            case "&": {
                 escape = "&amp;";
                 break;
-            case 39:  // '
+            }
+            case "'": {
                 escape = "&#39;";
                 break;
-            case 60:  // <
+            }
+            case "<": {
                 escape = "&lt;";
                 break;
-            case 62:  // >
+            }
+            case ">": {
                 escape = "&gt;";
                 break;
-            default:
+            }
+            default: {
                 continue;
+            }
         }
 
         if (lastIndex !== index) {

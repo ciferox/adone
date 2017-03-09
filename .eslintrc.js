@@ -112,7 +112,15 @@ module.exports = {
         "camelcase": "error",
         "new-parens": "error",
         "yoda": "error",
-        "no-throw-literal": "error"
+        "no-throw-literal": "error",
+        "max-len": ["error", {
+            "code": 100,
+            "ignoreStrings": true,
+            "ignoreRegExpLiterals": true,
+            "ignoreTemplateLiterals": true,
+            "ignoreUrls": true,
+            "ignoreComments": true
+        }]
     },
     "plugins": [
         "babel",
