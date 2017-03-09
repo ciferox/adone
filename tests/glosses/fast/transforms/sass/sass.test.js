@@ -278,7 +278,7 @@ describe("Fast", () => {
 
                 const filesContent = {};
                 files.forEach(function (file) {
-                    const globPath = new FS.File(file).relativePath(scssdir.getVirtualDirectory("globbed"));
+                    const globPath = new adone.fs.File(file).relativePath(scssdir.getVirtualDirectory("globbed"));
                     filesContent[globPath] = fs.readFileSync(file, "utf8");
                 });
 

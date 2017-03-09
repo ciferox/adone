@@ -1,7 +1,7 @@
 describe("glosses", "net", "http", "helpers", "send", () => {
     const { net: { http: { Server, helper: { send } } }, std: { path } } = adone;
 
-    const root = new FS.Directory(__dirname);
+    const root = new adone.fs.Directory(__dirname);
     const fixtures = root.getVirtualDirectory("fixtures");
     let _cwd = null;
 

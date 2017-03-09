@@ -245,7 +245,7 @@ export default class AdoneCLI extends adone.Application {
                         break;
                     }
                     case "table": {
-                        const table = new adone.text.Table;
+                        const table = new adone.text.Table();
                         const header = ["Extention"];
                         for (const key of adone.util.keys(titles)) {
                             header.push(titles[key]);

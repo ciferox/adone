@@ -302,8 +302,8 @@ adone.archive = lazify({
 
 adone.omnitron = lazify({
     const: "./omnitron/consts",
-    helper: "./omnitron/helpers",
-    ConfigManager: "./omnitron/config_manager"
+    ConfigManager: "./omnitron/config_manager",
+    Dispatcher: "./omnitron/dispatcher"
 });
 
 adone.meta = lazify({

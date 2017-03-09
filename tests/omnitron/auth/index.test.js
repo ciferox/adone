@@ -12,7 +12,7 @@ function getNextEmail() {
     return `email${++emailIndex}@ciferox.com`;
 }
 
-describe("Auth service", function() {
+describe.skip("Auth service", function() {
     let omnitronRunner;
     let iSystemAuth;
     let iAuth;

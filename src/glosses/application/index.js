@@ -916,7 +916,6 @@ export default class Application extends adone.application.Subsystem {
         name = adone.std.path.basename(process.argv[1], adone.std.path.extname(process.argv[1])),
         main,
         argv = process.argv.slice(2),
-        defaultConfigsPath,
         commandRequired = false } = {}) {
 
         super();
@@ -937,13 +936,7 @@ export default class Application extends adone.application.Subsystem {
         this._version = null;
 
         this._subsystems = [];
-
-        defaultConfigsPath = defaultConfigsPath || "./defaults/configs";
-        if (!adone.std.path.isAbsolute(defaultConfigsPath)) {
-            this.defaultConfigsPath = adone.std.path.resolve(this.adoneRootPath, defaultConfigsPath);
-        } else {
-            this.defaultConfigsPath = defaultConfigsPath;
-        }
+        this.defaultConfigsPath = adone.std.path.resolve(this.adoneRootPath, "defaults/configs");
 
         if (main) {
             this._setupMain();
@@ -987,7 +980,6 @@ export default class Application extends adone.application.Subsystem {
             // Load adone configuration.
             this.config = new adone.configuration.FileConfiguration({ base: this.adoneRootPath });
             await this.loadAdoneConfig("adone", this.defaultConfigsPath);
-            await adone.fs.copy(adone.std.path.resolve(this.adoneRootPath, "defaults", this.config.adone.templates_dir, "**", "*"), this.config.adone.templates_path, { ignoreExisting: true, recursively: true });
 
             this._errorScope = true;
             await this.initialize();

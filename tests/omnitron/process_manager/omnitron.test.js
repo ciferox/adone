@@ -6,7 +6,7 @@ import { fixture, waitFor } from "./util";
 const { vendor: { lodash: _ }, x, is } = adone;
 const { Contextable, Private, Public } = adone.netron.decorator;
 
-describe("Process manager", function () {
+describe.skip("Process manager", function () {
     this.timeout(180000);  // long enough?
     let OS;
 
@@ -1698,7 +1698,7 @@ describe("Process manager", function () {
                                 restartDelay: 1000,
                                 normalStart: 500
                             });
-                            const stdout = new FS.File(await pm.stdoutPath("test"));
+                            const stdout = new adone.fs.File(await pm.stdoutPath("test"));
                             for ( ; ; ) {
                                 const t = (await stdout.content()).split("\n").slice(1, -1).map(Number);
                                 // stop, start, stop, start
@@ -1897,7 +1897,7 @@ describe("Process manager", function () {
             after(() => omnitronRunner.stopOmnitron());
 
             beforeEach(async () => {
-                await new FS.Directory(basePath).clean();
+                await new adone.fs.Directory(basePath).clean();
                 await db.applications.remove({}, { multi: true });
                 await db.runtime.remove({}, { multi: true });
                 pm = new ProcessManager(options);
@@ -2187,5 +2187,4 @@ describe("Process manager", function () {
             });
         });
     });
-
 });

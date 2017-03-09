@@ -6,7 +6,7 @@ describe("glosses", "archives", "tar", () => {
         return Math.floor(st.mtime.getTime() / 1000);
     };
 
-    const fixtures = new FS.Directory(std.path.join(__dirname, "fixtures"));
+    const fixtures = new adone.fs.Directory(std.path.join(__dirname, "fixtures"));
 
     beforeEach(async () => {
         await fixtures.getVirtualDirectory("copy").unlink().catch(noop);

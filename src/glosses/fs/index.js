@@ -3,6 +3,10 @@ const { is, x, promise: { promisify } } = adone;
 
 const fs = adone.lazify({
     rm: "./rm",
+    // File: "./file",
+    // Directory: "./diractory",
+    // SymbolicLinkFile: "./symlink_file",
+    // SymbolicLinkDirectory: "./symlink_directory",
     RandomAccessFile: "./random_access_file",
     glob: "./glob"
 }, exports, require);

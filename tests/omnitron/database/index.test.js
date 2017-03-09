@@ -1,11 +1,11 @@
 import OmnitronRunner from "../runner";
 
-describe("Database service", function() {
+describe.skip("Database service", () => {
     let omnitronRunner;
     let iDatabase;
     let appConfig;
 
-    before(async function() {
+    before(async function () {
         this.timeout(25000);
 
         omnitronRunner = new OmnitronRunner();
@@ -13,20 +13,23 @@ describe("Database service", function() {
         appConfig = adone.appinstance.config;
         await omnitronRunner.startOmnitron();
         await omnitronRunner.connectOmnitron();
+        // await omnitronRunner.dispatcher.enable("database");
+        // await omnitronRunner.dispatcher.start("database");
+        // await adone.promise.delay(1000);
         iDatabase = omnitronRunner.getInterface("database");
     });
 
-    after(async function() {
+    after(async () => {
         await omnitronRunner.stopOmnitron();
     });
 
-    it("get new datastore", async function() {
+    it("get new datastore", async () => {
         const iDatastore = await iDatabase.getDatastore({ filename: "test" });
         assert.equal(await iDatastore.count(), 0);
         await iDatastore.insert({ name: "Document1", size: 12, type: "dat" });
     });
 
-    it("get existing datastore", async function() {
+    it("get existing datastore", async () => {
         const iDatastore = await iDatabase.getDatastore({ filename: "test" });
         assert.equal(await iDatastore.count(), 1);
         const doc = await iDatastore.findOne({ name: "Document1" });
@@ -34,13 +37,13 @@ describe("Database service", function() {
         assert.equal(doc.type, "dat");
     });
 
-    it("delete database", async function() {
+    it("delete database", async () => {
         const iDatastore = await iDatabase.getDatastore({ filename: "test" });
         await iDatabase.deleteDatastore("test");
         assert.isOk(!(await adone.fs.exists(adone.std.path.join(appConfig.adone.omnitron.services.database.options.base, "test.db"))));
-        
+
         try {
-            await iDatastore.insert({ field1: "test"});
+            await iDatastore.insert({ field1: "test" });
         } catch (err) {
             assert.isOk(err instanceof adone.x.NotExists);
             assert.equal(err.message, "Context not exists");

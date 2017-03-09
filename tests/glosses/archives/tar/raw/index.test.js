@@ -1,7 +1,7 @@
 const { archive: { tar }, stream: { concat }, std } = adone;
 
 describe("glosses", "archives", "tar", "raw", () => {
-    const fixtures = new FS.Directory(std.path.join(__dirname, "fixtures"));
+    const fixtures = new adone.fs.Directory(std.path.join(__dirname, "fixtures"));
 
     describe("pack", () => {
         specify("one file", async () => {

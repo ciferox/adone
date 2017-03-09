@@ -6,7 +6,7 @@ import { processFiles, fixture } from "../util";
 
 const { x, vendor: { lodash: _ } } = adone;
 
-describe("Process manager", () => {
+describe.skip("Process manager", () => {
     describe("Process", () => {
         let storage;
         let OS;

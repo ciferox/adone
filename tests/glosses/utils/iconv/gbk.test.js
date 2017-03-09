@@ -1,7 +1,7 @@
 describe("glosses", "utils", "iconv", "GBK tests", () => {
     const { util: { iconv }, std: { path } } = adone;
 
-    const fixtures = new FS.Directory(path.resolve(__dirname, "fixtures"));
+    const fixtures = new adone.fs.Directory(path.resolve(__dirname, "fixtures"));
     const testString = "中国abc"; //unicode contains GBK-code and ascii
     const testStringGBKBuffer = new Buffer([0xd6, 0xd0, 0xb9, 0xfa, 0x61, 0x62, 0x63]);
 

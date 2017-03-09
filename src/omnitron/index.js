@@ -1,10 +1,9 @@
 import adone from "adone";
+const startedAt = adone.util.microtime.now();
 import * as pkg from "adone/../package.json";
 const { is, std, vendor: { lodash: _ } } = adone;
 const { Contextable, Public, Private, Description, Type } = adone.netron.decorator;
 const { DISABLED, ENABLED, INITIALIZING, RUNNING, UNINITIALIZING, STATUSES } = adone.omnitron.const;
-
-const startedAt = adone.util.microtime.now();
 
 // Service requirements:
 // 1. Each service should be in its own directory.
@@ -71,7 +70,7 @@ export class Omnitron extends adone.Application {
 
         // Bind gates.
         for (const gate of this.config.omnitron.gates) {
-            if (gate.enabled) {
+            if (gate.status === ENABLED) {
                 const bindOptions = _.omit(gate, ["id", "type", "enabled"]);
                 switch (gate.type) {
                     case "socket": {
@@ -151,7 +150,7 @@ export class Omnitron extends adone.Application {
     uptime() {
         const curr = adone.util.microtime.now();
         const ms = ((curr - startedAt) / 1000) >>> 0;
-        return adone.text.humanizeTime(ms);
+        return adone.util.humanizeTime(ms);
     }
 
     @Public
@@ -286,7 +285,7 @@ export class Omnitron extends adone.Application {
     @Description("Return list of all gates")
     @Type(Array)
     gates() {
-
+        return this.config.omnitron.gates;
     }
 
     @Public
@@ -471,6 +470,6 @@ if (require.main === module) {
         console.log("omnitron cannot be launched directly (use adone cli)");
         process.exit(adone.Application.ERROR);
     }
-    const omnitron = new Omnitron({ defaultConfigsPath: process.env.ADONE_DEFAULT_CONFIG_PATH });
+    const omnitron = new Omnitron();
     omnitron.run();
 }

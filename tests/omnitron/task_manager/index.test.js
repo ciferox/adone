@@ -19,7 +19,7 @@ function getFixturePath(name) {
     return adone.std.path.join(__dirname, "fixtures", name);
 }
 
-describe("Task Manager", () => {
+describe.skip("Task Manager", () => {
     let omnitronRunner;
     let iTm;
     let iDs;

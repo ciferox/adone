@@ -57,7 +57,7 @@ describe("glosses", "net", "http", "helpers", "incoming form", () => {
 
 
     let tmpdir = null;
-    const fixtures = new FS.Directory(path.resolve(__dirname, "fixtures"));
+    const fixtures = new adone.fs.Directory(path.resolve(__dirname, "fixtures"));
 
     before(async () => {
         tmpdir = await FS.createTempDirectory();
@@ -219,7 +219,7 @@ describe("glosses", "net", "http", "helpers", "incoming form", () => {
                     const file = files.file;
                     expect(file.size).to.be.equal(162);
 
-                    const uploaded = new FS.File(file.path).contentSync();
+                    const uploaded = new adone.fs.File(file.path).contentSync();
                     const original = testFile.contentSync();
 
                     expect(uploaded).to.be.equal(original);

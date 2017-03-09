@@ -3,7 +3,7 @@ describe("glosses", "utils", "iconv", "Full DBCS encoding tests", function () {
 
     const { util: { iconv }, std: { path }, ExBuffer } = adone;
 
-    const fixtures = new FS.Directory(path.resolve(__dirname, "fixtures"));
+    const fixtures = new adone.fs.Directory(path.resolve(__dirname, "fixtures"));
 
     const iconvChanges = { // Characters that iconv changing (iconv char -> our char)
         // shiftjis/cp932 is changed in iconv (see comments in cp932.h)

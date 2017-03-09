@@ -1,5 +1,6 @@
 import adone from "adone";
 const { is, std } = adone;
+const { ENABLED } = adone.omnitron.const;
 
 export default class ConfigManager {
     constructor(app) {
@@ -37,7 +38,7 @@ export default class ConfigManager {
             this.config.omnitron.services.omnitron = {
                 description: "Omnitron service",
                 path: __dirname,
-                status: adone.omnitron.const.ENABLED,
+                status: ENABLED,
                 contexts: [
                     {
                         id: "omnitron",
@@ -55,7 +56,7 @@ export default class ConfigManager {
                         {
                             id: "local",
                             type: "socket",
-                            enabled: true,
+                            status: ENABLED,
                             port: (process.platform === "win32" ? "\\\\.\\pipe\\omnitron.sock" : adone.std.path.join(this.config.adone.home, "omnitron.sock")),
                             access: {
                             }

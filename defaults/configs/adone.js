@@ -15,16 +15,11 @@ if (process.env.ADONE_HOME) {
 }
 
 const configsPath = join(home, "configs");
-const templates_dir = "templates";
-
-
 
 const config = {
     home,
     configsPath,
-    configFilePath: join(configsPath, "adone.js"),
-    templates_dir,
-    templates_path: join(home, templates_dir)
+    configFilePath: join(configsPath, "adone.js")
 };
 
 module.exports = config;

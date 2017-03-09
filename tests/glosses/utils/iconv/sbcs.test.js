@@ -3,7 +3,7 @@ describe("glosses", "utils", "iconv", "Full SBCS encoding tests", function () {
 
     const { util: { iconv }, std: { path }, ExBuffer } = adone;
 
-    const fixtures = new FS.Directory(path.resolve(__dirname, "fixtures"));
+    const fixtures = new adone.fs.Directory(path.resolve(__dirname, "fixtures"));
 
     const aliases = {
         armscii8: "ARMSCII-8",
