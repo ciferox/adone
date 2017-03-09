@@ -69,11 +69,11 @@ describe("Glob", () => {
 
         await adone.fs.rm(fixtureDir);
 
-        for (let f of files) {
+        await Promise.all(files.sort().map(async (f) => {
             f = path.resolve(fixtureDir, f);
             await adone.fs.mkdir(path.dirname(f), 0o755);
             await fs.writeFileAsync(f, "i like tests");
-        }
+        }));
 
         if (!is.win32) {
             const d = path.dirname(symlinkTo);
@@ -81,10 +81,10 @@ describe("Glob", () => {
             await fs.symlinkAsync(symlinkFrom, symlinkTo, "dir");
         }
 
-        for (let w of ["foo", "bar", "baz", "asdf", "quux", "qwer", "rewq"]) {
+        await Promise.all(["foo", "bar", "baz", "asdf", "quux", "qwer", "rewq"].map((w) => {
             w = `/tmp/glob-test/${w}`;
-            await adone.fs.mkdir(w);
-        }
+            return adone.fs.mkdir(w);
+        }));
 
         // generate the bash pattern test-fixtures if possible
         if (is.win32 || !process.env.TEST_REGEN) {
@@ -130,8 +130,8 @@ describe("Glob", () => {
             return out.toString().trim();
         };
 
-        for (const pattern of globs) {
-            await new Promise((resolve, reject) => {
+        await Promise.all(globs.map((pattern) => {
+            return new Promise((resolve, reject) => {
                 const opts = [
                     "-O", "globstar",
                     "-O", "extglob",
@@ -160,7 +160,7 @@ describe("Glob", () => {
                     resolve();
                 });
             });
-        }
+        }));
 
         const fname = path.resolve(__dirname, "bash-results.json");
         const data = `${JSON.stringify(bashOutput, null, 2)}\n`;
@@ -322,7 +322,7 @@ describe("Glob", () => {
                 }
             };
 
-            before(async function () {
+            before(async () => {
                 cleanup();
                 await adone.fs.mkdir("a/broken-link");
                 fs.symlinkSync("this-does-not-exist", "a/broken-link/link");
@@ -332,6 +332,7 @@ describe("Glob", () => {
                 it(pattern, async () => {
                     for (const opt of opts) {
                         const msg = `${pattern} ${JSON.stringify(opt)}`;
+                        // eslint-disable-next-line no-await-in-loop
                         let res = await adone.fs.glob(pattern, opt);
 
                         if (opt && opt.stat) {
@@ -936,7 +937,7 @@ describe("Glob", () => {
             fs.readdirSync = oldReaddirSync;
         });
 
-        it("nocase, nomagic", async function () {
+        it("nocase, nomagic", async () => {
             let want = [
                 "/TMP/A",
                 "/TMP/a",
@@ -969,7 +970,7 @@ describe("Glob", () => {
             await Promise.all(p);
         });
 
-        it("nocase, with some magic", async function () {
+        it("nocase, with some magic", async () => {
             let want = [
                 "/TMP/A",
                 "/TMP/a",
@@ -1094,7 +1095,7 @@ describe("Glob", () => {
             const options = c[1] || {};
             options.nonull = true;
             const expect = c[2].sort();
-            it(`${pattern} ${JSON.stringify(options)}`, async function () {
+            it(`${pattern} ${JSON.stringify(options)}`, async () => {
                 let res = await adone.fs.glob(pattern, options);
                 res = res.sort();
                 assert.deepEqual(res, expect, "async results");
@@ -1151,7 +1152,7 @@ describe("Glob", () => {
 
         const dir = `${__dirname}/package`;
 
-        before("setup", async function () {
+        before("setup", async () => {
             await adone.fs.mkdir(dir);
             fs.writeFileSync(`${dir}/package.json`, "{}", "ascii");
             fs.writeFileSync(`${dir}/README`, "x", "ascii");
@@ -1366,14 +1367,10 @@ describe("Glob", () => {
                 assert.deepEqual(stats, matches);
                 assert.deepEqual(endMatches, matches);
 
-                const statCache = Object.keys(g.statCache);
+                const statCache = [...g.statCache.keys()];
                 assert.deepEqual(statCache.map((f) => {
                     return path.relative(fixtureDir, f).replace(/\\/g, "/");
                 }).sort(), matches);
-
-                for (const c of statCache) {
-                    assert.equal(typeof g.statCache[c], "object");
-                }
 
                 done();
             });
@@ -1392,7 +1389,9 @@ describe("Glob", () => {
                 if (level === 0) {
                     fs.writeFileSync(q, "hello");
                 } else {
+                    // eslint-disable-next-line no-await-in-loop
                     await fs.mkdirAsync(q);
+                    // eslint-disable-next-line no-await-in-loop
                     await createDirectories(n, level - 1, q);
                 }
             }

@@ -1,9 +1,37 @@
 import adone from "adone";
 const {
     std: { fs, path },
-    util: { realpath, GlobExp },
+    util: { GlobExp },
     is
 } = adone;
+
+class CallbackCache {
+    constructor() {
+        this._cache = new Map();
+    }
+
+    inflight(key, callback) {
+        if (!is.function(callback)) {
+            throw new TypeError("Callback must be a function");
+        }
+
+        if (this._cache.has(key)) {
+            this._cache.get(key).push(callback);
+            return null;
+        } else {
+            this._cache.set(key, [callback]);
+            return (...args) => {
+                const callbacks = this._cache.get(key);
+
+                for (let i = 0; i < callbacks.length; i++) {
+                    callbacks[i](...args);
+                }
+
+                this._cache.delete(key);
+            };
+        }
+    }
+}
 
 
 class Glob extends adone.EventEmitter {
@@ -34,18 +62,17 @@ class Glob extends adone.EventEmitter {
         if (this.nodir) {
             this.mark = true;
         }
-        this.sync = Boolean(options.sync);
         this.nounique = Boolean(options.nounique);
         this.nonull = Boolean(options.nonull);
         this.nosort = Boolean(options.nosort);
         this.nocase = Boolean(options.nocase);
         this.stat = Boolean(options.stat);
-        this.noprocess = Boolean(options.noprocess);
-
         this.maxLength = options.maxLength || Infinity;
-        this.cache = options.cache || Object.create(null);
-        this.statCache = options.statCache || Object.create(null);
-        this.realpathCache = options.realpathCache || Object.create(null);
+
+        this.cache = options.cache || new Map();
+        this.statCache = options.statCache || new Map();
+        this.realpathCache = options.realpathCache || new Map();
+        this.callbackCache = new CallbackCache();
         this.cacheEmitter = new adone.EventEmitter();
         this.symlinks = options.symlinks || Object.create(null);
 
@@ -72,8 +99,6 @@ class Glob extends adone.EventEmitter {
         this.globexp = new GlobExp(pattern, options);
         this.options = this.globexp.options;
 
-        this._didRealPath = false;
-
         // process each pattern in the globexp set
         let n = this.globexp.set.length;
 
@@ -81,7 +106,12 @@ class Glob extends adone.EventEmitter {
         // duplicates are automagically pruned.
         // Later, we do an Object.keys() on these.
         // Keep them as a list so we can fill in when nonull is set.
-        this.matches = new Array(n);
+        this.matches = [];
+        for (let i = 0; i < n; i++) {
+            this.matches.push(new Set());
+        }
+
+        this.found = [];
 
         if (is.function(cb)) {
             this.on("error", cb);
@@ -90,33 +120,18 @@ class Glob extends adone.EventEmitter {
             });
         }
 
-        this.haveMatch = false;
-        this.once("match", () => this.haveMatch = true);
-
         n = this.globexp.set.length;
-        this._processing = 0;
+        this._processCounter = 0;
+        this._processQueue = [];
 
         this._emitQueue = [];
-        this._processQueue = [];
         this.paused = false;
 
-        if (this.noprocess) {
-            return this;
-        }
-
         process.nextTick(() => {
-            let sync = true;
-
             const done = () => {
-                --this._processing;
-                if (this._processing <= 0 && !this._emitQueue.length) {
-                    if (sync) {
-                        process.nextTick(() => {
-                            this._finish();
-                        });
-                    } else {
-                        this._finish();
-                    }
+                --this._processCounter;
+                if (this._processCounter <= 0 && this._emitQueue.length === 0) {
+                    this._finish();
                 }
             };
 
@@ -127,7 +142,6 @@ class Glob extends adone.EventEmitter {
             for (let i = 0; i < n; i++) {
                 this._process(this.globexp.set[i], i, false, done);
             }
-            sync = false;
         });
     }
 
@@ -163,23 +177,28 @@ class Glob extends adone.EventEmitter {
         });
     }
 
-    async _finish() {
+    _finish() {
         if (this.aborted) {
             return;
         }
 
-        if (this.realpath && !this._didRealpath) {
-            this._didRealpath = true;
-            await this._realpath();
+        if (!this.nosort) {
+            if (this.nocase) {
+                this.found = this.found.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+            } else {
+                this.found = this.found.sort((a, b) => a.localeCompare(b));
+            }
         }
 
-        this._finish2(this);
-
-        if (this.nonull && !this.haveMatch) {
+        if (this.nonull) {
             for (let i = 0, l = this.matches.length; i < l; i++) {
-                const literal = this.globexp.globSet[i];
-                if (!this.isIgnored(literal)) {
-                    this.emit("match", literal, this.statCache[this._makeAbs(literal)]);
+                if (this.matches[i].size === 0) {
+                    const literal = this.globexp.globSet[i];
+                    if (!this.isIgnored(literal)) {
+                        if (!this.nounique || !this.found.includes(literal)) {
+                            this.emit("match", literal, this.statCache.get(this._makeAbs(literal)));
+                        }
+                    }
                 }
             }
         }
@@ -187,124 +206,9 @@ class Glob extends adone.EventEmitter {
         this.emit("end", this.found);
     }
 
-    _finish2() {
-        let all = this.nounique ? [] : Object.create(null);
-
-        for (let i = 0, l = this.matches.length; i < l; i++) {
-            const matches = this.matches[i];
-            if (!matches || Object.keys(matches).length === 0) {
-                if (this.nonull) {
-                    // do like the shell, and spit out the literal glob
-                    const literal = this.globexp.globSet[i];
-                    if (this.nounique) {
-                        all.push(literal);
-                    } else {
-                        all[literal] = true;
-                    }
-                }
-            } else {
-                // had matches
-                const m = Object.keys(matches);
-                if (this.nounique) {
-                    all.push.apply(all, m);
-                } else {
-                    for (let j = 0; j < m.length; j++) {
-                        all[m[j]] = true;
-                    }
-                }
-            }
-        }
-
-        if (!this.nounique) {
-            all = Object.keys(all);
-        }
-
-        if (!this.nosort) {
-            if (this.nocase) {
-                all = all.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-            } else {
-                all = all.sort((a, b) => a.localeCompare(b));
-            }
-        }
-
-        // at *some* point we statted all of these
-        if (this.mark) {
-            for (let i = 0; i < all.length; i++) {
-                all[i] = this._mark(all[i]);
-            }
-            if (this.nodir) {
-                all = all.filter((e) => {
-                    let notDir = !(/\/$/.test(e));
-                    const c = this.cache[e] || this.cache[this._makeAbs(e)];
-                    if (notDir && c) {
-                        notDir = c !== "DIR" && !Array.isArray(c);
-                    }
-                    return notDir;
-                });
-            }
-        }
-
-        if (this.ignore.length) {
-            all = all.filter((m) => {
-                return !this.isIgnored(m);
-            });
-        }
-
-        this.found = all;
-    }
-
-    _realpath() {
-        const processings = [];
-
-        for (let i = 0; i < this.matches.length; i++) {
-            processings.push(this._realpathSet(i));
-        }
-
-        return Promise.all(processings);
-    }
-
-    async _realpathSet(index) {
-        if (!this.matches[index]) {
-            return;
-        }
-
-        const found = Object.keys(this.matches[index]);
-
-        if (found.length === 0) {
-            return;
-        }
-
-        const processings = [];
-        const newMatches = Object.create(null);
-
-        for (let i = 0; i < found.length; i++) {
-            // If there's a problem with the stat, then it means that
-            // one or more of the links in the realpath couldn't be
-            // resolved. Just return the abs value in that case.
-            const p = this._makeAbs(found[i]);
-
-            processings.push(new Promise((resolve) => {
-                realpath.realpath(p, this.realpathCache, (er, real) => {
-                    if (!er) {
-                        newMatches[real] = true;
-                    } else if (er.syscall === "stat") {
-                        newMatches[p] = true;
-                    } else {
-                        this.emit("error", er);
-                    }
-
-                    resolve();
-                });
-            }));
-        }
-
-        await Promise.all(processings);
-        this.matches[index] = newMatches;
-    }
-
     _mark(p) {
         const abs = this._makeAbs(p);
-        const c = this.cache[abs];
+        const c = this.cache.get(abs);
         let m = p;
         if (c) {
             const isDir = c === "DIR" || is.array(c);
@@ -318,8 +222,8 @@ class Glob extends adone.EventEmitter {
 
             if (m !== p) {
                 const mabs = this._makeAbs(m);
-                this.statCache[mabs] = this.statCache[abs];
-                this.cache[mabs] = this.cache[abs];
+                this.statCache.set(mabs, this.statCache.get(abs));
+                this.cache.set(mabs, c);
             }
         }
 
@@ -369,7 +273,7 @@ class Glob extends adone.EventEmitter {
                     this._emitMatch(...eq[i]);
                 }
 
-                if (!this._processQueue.length) {
+                if (this._processQueue.length === 0) {
                     this._finish();
                 }
             }
@@ -377,7 +281,7 @@ class Glob extends adone.EventEmitter {
                 const pq = this._processQueue;
                 this._processQueue = [];
                 for (let i = 0; i < pq.length; i++) {
-                    this._processing--;
+                    this._processCounter--;
                     this._process(...pq[i]);
                 }
             }
@@ -399,7 +303,7 @@ class Glob extends adone.EventEmitter {
             return;
         }
 
-        this._processing++;
+        this._processCounter++;
         if (this.paused) {
             this._processQueue.push([pattern, index, inGlobStar, cb]);
             return;
@@ -512,10 +416,6 @@ class Glob extends adone.EventEmitter {
         // them.
 
         if (remain.length === 1 && !this.mark && !this.stat) {
-            if (!this.matches[index]) {
-                this.matches[index] = Object.create(null);
-            }
-
             for (let i = 0; i < len; i++) {
                 let e = matchedEntries[i];
                 if (prefix) {
@@ -557,7 +457,7 @@ class Glob extends adone.EventEmitter {
             return;
         }
 
-        if (this.matches[index][e]) {
+        if (this.matches[index].has(e)) {
             return;
         }
 
@@ -565,29 +465,35 @@ class Glob extends adone.EventEmitter {
             return;
         }
 
-        if (this.paused) {
-            this._emitQueue.push([index, e]);
-            return;
-        }
-
         const abs = this._makeAbs(e);
 
         if (this.nodir) {
-            const c = this.cache[e] || this.cache[abs];
+            const c = this.cache.get(e) || this.cache.get(abs);
             if (c === "DIR" || Array.isArray(c)) {
                 return;
             }
         }
 
+        if (this.paused) {
+            this._emitQueue.push([index, e]);
+            return;
+        }
+
+        this.matches[index].add(e);
+
         if (this.realpath) {
-            try {
-                const p = this._makeAbs(e);
-                e = realpath.realpathSync(p, this.realpathCache);
-            } catch (error) {
-                if (error.syscall === "stat") {
-                    e = abs;
-                } else {
-                    this.emit("error", error);
+            if (this.realpathCache.has(abs)) {
+                e = this.realpathCache.get(abs);
+            } else {
+                try {
+                    // benchmarks show that glob with sync realpath is fastest
+                    e = adone.util.realpath.realpathSync(abs);
+                } catch (error) {
+                    if (error.syscall === "stat") {
+                        e = abs;
+                    } else {
+                        this.emit("error", error);
+                    }
                 }
             }
         }
@@ -596,9 +502,9 @@ class Glob extends adone.EventEmitter {
             e = this._mark(e);
         }
 
-        this.matches[index][e] = true;
-
-        this.emit("match", e, this.statCache[abs]);
+        this.found.push(e);
+        this.emit("match", e, this.statCache.get(abs));
+        return;
     }
 
     _readdirInGlobStar(abs, cb) {
@@ -623,7 +529,7 @@ class Glob extends adone.EventEmitter {
             // If it's not a symlink or a dir, then it's definitely a regular file.
             // don't bother doing a readdir in that case.
             if (!isSym && !lstat.isDirectory()) {
-                this.cache[abs] = "FILE";
+                this.cache.set(abs, "FILE");
                 cb();
             } else {
                 this._readdir(abs, false, cb);
@@ -631,12 +537,10 @@ class Glob extends adone.EventEmitter {
         };
 
         const lstatkey = `lstat\0${abs}`;
-        this.cacheEmitter.once(lstatkey, _lstatcb);
+        const lstatcb = this.callbackCache.inflight(lstatkey, _lstatcb);
 
-        if (this.cacheEmitter.listenerCount(lstatkey)) {
-            fs.lstat(abs, (...args) => {
-                this.cacheEmitter.emit(lstatkey, ...args);
-            });
+        if (lstatcb) {
+            fs.lstat(abs, lstatcb);
         }
     }
 
@@ -645,22 +549,17 @@ class Glob extends adone.EventEmitter {
             return;
         }
 
-        const readdirEventName = `readdir\0${abs}\0${inGlobStar}`;
-        this.cacheEmitter.once(readdirEventName, cb);
-        if (!this.cacheEmitter.listenerCount(readdirEventName) > 1) {
+        cb = this.callbackCache.inflight(`readdir\0${abs}\0${inGlobStar}`, cb);
+        if (!cb) {
             return;
-        } else {
-            cb = (...args) => {
-                this.cacheEmitter.emit(readdirEventName, ...args);
-            };
         }
 
         if (inGlobStar && !is.propertyOwned(this.symlinks, abs)) {
             return this._readdirInGlobStar(abs, cb);
         }
 
-        if (is.propertyOwned(this.cache, abs)) {
-            const c = this.cache[abs];
+        if (this.cache.has(abs)) {
+            const c = this.cache.get(abs);
             if (!c || c === "FILE") {
                 return cb();
             }
@@ -679,7 +578,7 @@ class Glob extends adone.EventEmitter {
         });
     }
 
-    _readdirEntries = function (abs, entries, cb) {
+    _readdirEntries(abs, entries, cb) {
         if (this.aborted) {
             return;
         }
@@ -695,11 +594,11 @@ class Glob extends adone.EventEmitter {
                 } else {
                     e = `${abs}/${e}`;
                 }
-                this.cache[e] = true;
+                this.cache.set(e, true);
             }
         }
 
-        this.cache[abs] = entries;
+        this.cache.set(abs, entries);
         return cb(null, entries);
     }
 
@@ -713,7 +612,7 @@ class Glob extends adone.EventEmitter {
             case "ENOTSUP": // can happen when working off some Windows Network Mapped Drives using DFS
             case "ENOTDIR": { // totally normal. means it *does* exist.
                 const abs = this._makeAbs(f);
-                this.cache[abs] = "FILE";
+                this.cache.set(abs, "FILE");
                 if (abs === this.cwdAbs) {
                     const error = new Error(`${er.code} invalid cwd ${this.cwd}`);
                     error.path = this.cwd;
@@ -727,11 +626,11 @@ class Glob extends adone.EventEmitter {
             case "ELOOP":
             case "ENAMETOOLONG":
             case "UNKNOWN":
-                this.cache[this._makeAbs(f)] = false;
+                this.cache.set(this._makeAbs(f), false);
                 break;
 
             default: // some unusual error. Treat as failure.
-                this.cache[this._makeAbs(f)] = false;
+                this.cache.set(this._makeAbs(f), false);
                 if (this.strict) {
                     this.emit("error", er);
                     this.abort();
@@ -801,10 +700,6 @@ class Glob extends adone.EventEmitter {
     }
 
     _processSimple2(prefix, index, er, exists, cb) {
-        if (!this.matches[index]) {
-            this.matches[index] = Object.create(null);
-        }
-
         // If it doesn't exist, then just mark the lack of results
         if (!exists) {
             return cb();
@@ -832,15 +727,15 @@ class Glob extends adone.EventEmitter {
     }
 
     _stat(f, cb) {
-        const abs = this._makeAbs(f);
-        const needDir = f.slice(-1) === "/";
-
         if (f.length > this.maxLength) {
             return cb();
         }
 
-        if (!this.stat && is.propertyOwned(this.cache, abs)) {
-            let c = this.cache[abs];
+        const abs = this._makeAbs(f);
+        const needDir = f.slice(-1) === "/";
+
+        if (!this.stat && this.cache.has(abs)) {
+            let c = this.cache.get(abs);
 
             if (Array.isArray(c)) {
                 c = "DIR";
@@ -859,7 +754,7 @@ class Glob extends adone.EventEmitter {
             // if we know it exists, but not what it is.
         }
 
-        const stat = this.statCache[abs];
+        const stat = this.statCache.get(abs);
         if (stat !== undefined) {
             if (stat === false) {
                 return cb(null, stat);
@@ -889,30 +784,27 @@ class Glob extends adone.EventEmitter {
             }
         };
 
-        const statEventName = `stat\0${abs}`;
-        this.cacheEmitter.once(statEventName, _lstatcb);
-        if (this.cacheEmitter.listenerCount(statEventName) === 1) {
-            fs.lstat(abs, (...args) => {
-                this.cacheEmitter.emit(statEventName, ...args);
-            });
+        const statcb = this.callbackCache.inflight(`stat\0${abs}`, _lstatcb);
+        if (statcb) {
+            fs.lstat(abs, statcb);
         }
     }
 
     _stat2 = function (f, abs, er, stat, cb) {
         if (er) {
-            this.statCache[abs] = false;
+            this.statCache.set(abs, false);
             return cb();
         }
 
-        const needDir = f.slice(-1) === "/";
-        this.statCache[abs] = stat;
+        this.statCache.set(abs, stat);
 
         if (abs.slice(-1) === "/" && !stat.isDirectory()) {
             return cb(null, false, stat);
         }
 
+        const needDir = f.slice(-1) === "/";
         const c = stat.isDirectory() ? "DIR" : "FILE";
-        this.cache[abs] = this.cache[abs] || c;
+        this.cache.set(abs, this.cache.get(abs) || c);
 
         if (needDir && c !== "DIR") {
             return cb();
