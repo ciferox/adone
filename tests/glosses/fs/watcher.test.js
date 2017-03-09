@@ -1,7 +1,7 @@
 import Dummy from "shani/helpers/spy";
 
 const { is } = adone;
-const fswatcher = adone.FSWatcher;
+const { Watcher, watch } = adone.fs;
 const os = process.platform;
 
 let watcher;
@@ -15,6 +15,8 @@ let slowerDelay;
 const originalcwd = process.cwd();
 let rootFixtures = null;
 let fixtures = null;
+
+const sleep = (to) => adone.promise.delay(to || slowerDelay || 100);
 
 before(async () => {
     rootFixtures = await FS.createTempDirectory();
@@ -49,7 +51,9 @@ function closeWatchers() {
     }
 }
 function disposeWatcher(watcher) {
-    if (!watcher || watcher.closed) return;
+    if (!watcher || watcher.closed) {
+        return;
+    }
     if (osXFsWatch) {
         usedWatchers.push(watcher);
     } else {
@@ -62,12 +66,12 @@ afterEach("dispatching all watchers", async () => {
     await sleep();
 });
 
-describe("fswatcher", function () {
+describe("Watcher", function () {
     this.timeout(6000);
 
     it("should expose public API methods", async () => {
-        expect(fswatcher).to.be.a("function");
-        expect(fswatcher.watch).to.be.a("function");
+        expect(Watcher).to.be.a("function");
+        expect(watch).to.be.a("function");
         await sleep();
     });
 
@@ -80,12 +84,10 @@ describe("fswatcher", function () {
     describe("fs.watchFile (polling)", runTests.bind(this, { usePolling: true, interval: 10 }));
 });
 
-const sleep = (to) => adone.promise.delay(to || slowerDelay || 100);
-
 function runTests(baseopts) {
     baseopts.persistent = true;
 
-    before(function () {
+    before(() => {
         // flags for bypassing special-case test failures on CI
         osXFsWatch = os === "darwin" && !baseopts.usePolling && !baseopts.useFsEvents;
         win32Polling = os === "win32" && baseopts.usePolling;
@@ -101,16 +103,16 @@ function runTests(baseopts) {
 
     beforeEach("setiing up the options", function clean() {
         options = {};
-        Object.keys(baseopts).forEach(function (key) {
+        Object.keys(baseopts).forEach((key) => {
             options[key] = baseopts[key];
         });
     });
 
     function stdWatcher() {
-        return watcher = fswatcher.watch(fixtures.path(), options);
+        return watcher = watch(fixtures.path(), options);
     }
 
-    describe("watch a directory", function () {
+    describe("watch a directory", () => {
         let readySpy;
         let rawSpy;
         beforeEach(() => {
@@ -126,8 +128,8 @@ function runTests(baseopts) {
             }
             rawSpy = undefined;
         });
-        it("should produce an instance of fswatcher.FSWatcher", async () => {
-            expect(watcher).to.be.instanceof(fswatcher);
+        it("should produce an instance of fs.Watcher", async () => {
+            expect(watcher).to.be.instanceof(Watcher);
             await sleep();
         });
         it("should expose public API methods", async () => {
@@ -355,13 +357,13 @@ function runTests(baseopts) {
             expect(addDir.get(2).args[0]).to.be.equal(subDir.path());
         });
     });
-    describe("watch individual files", function () {
+    describe("watch individual files", () => {
         before(closeWatchers);
         it("should detect changes", async () => {
             const testFile = fixtures.getVirtualFile("change.txt");
             const change = new Dummy();
             const ready = new Dummy();
-            watcher = fswatcher.watch(testFile.path(), options)
+            watcher = watch(testFile.path(), options)
                 .on("change", change.callback)
                 .on("ready", ready.callback);
             await ready.waitForCall();
@@ -378,7 +380,7 @@ function runTests(baseopts) {
             const testFile = fixtures.getVirtualFile("unlink.txt");
             const unlink = new Dummy();
             const ready = new Dummy();
-            watcher = fswatcher.watch(testFile.path(), options)
+            watcher = watch(testFile.path(), options)
                 .on("unlink", unlink.callback)
                 .on("ready", ready.callback);
             await ready.waitForCall();
@@ -396,7 +398,7 @@ function runTests(baseopts) {
             const add = new Dummy();
             const ready = new Dummy();
             const file = fixtures.getVirtualFile("unlink.txt");
-            watcher = fswatcher.watch(file.path(), options)
+            watcher = watch(file.path(), options)
                 .on("unlink", unlink.callback)
                 .on("add", add.callback)
                 .on("ready", ready.callback);
@@ -423,7 +425,7 @@ function runTests(baseopts) {
             const ready = new Dummy();
             const file = fixtures.getVirtualFile("add.txt");
             const sibling = fixtures.getVirtualFile("change.txt");
-            watcher = fswatcher.watch(file.path(), options)
+            watcher = watch(file.path(), options)
                 .on("all", all.callback)
                 .on("ready", ready.callback);
             await ready.waitForCall();
@@ -438,7 +440,7 @@ function runTests(baseopts) {
             expect(all.get(0).args[1]).to.be.equal(file.path());
         });
     });
-    describe("renamed directory", function () {
+    describe("renamed directory", () => {
         it("should emit `add` for a file in a renamed directory", async () => {
             options.ignoreInitial = true;
             const dir = await fixtures.addDirectory("subdir");
@@ -446,7 +448,7 @@ function runTests(baseopts) {
             const add = new Dummy();
             const ready = new Dummy();
 
-            watcher = fswatcher.watch(fixtures.path(), options)
+            watcher = watch(fixtures.path(), options)
                 .on("add", add.callback)
                 .on("ready", ready.callback);
 
@@ -462,12 +464,12 @@ function runTests(baseopts) {
             expect(add.get(0).args[0]).to.be.equal(dir.getVirtualFile("add.txt").path());
         });
     });
-    describe("watch non-existent paths", function () {
+    describe("watch non-existent paths", () => {
         it("should watch non-existent file and detect add", async () => {
             const add = new Dummy();
             const ready = new Dummy();
             const file = fixtures.getVirtualFile("add.txt");
-            watcher = fswatcher.watch(file.path(), options)
+            watcher = watch(file.path(), options)
                 .on("add", add.callback)
                 .on("ready", ready.callback);
             await ready.waitForCall();
@@ -484,7 +486,7 @@ function runTests(baseopts) {
             const ready = new Dummy();
             const dir = fixtures.getVirtualDirectory("subdir");
             const file = dir.getVirtualFile("add.txt");
-            watcher = fswatcher.watch(dir.path(), options)
+            watcher = watch(dir.path(), options)
                 .on("all", all.callback)
                 .on("ready", ready.callback);
             await ready.waitForCall();
@@ -496,14 +498,14 @@ function runTests(baseopts) {
                     .then(() => sleep())
                     .then(() => file.write("hello"))
                     .then(() => sleep()),
-                all.waitForArg(0, "add"),
+                all.waitForArg(0, "add")
             ]);
             expect(all.calls).to.be.equal(2);
             expect(all.get(0).args.slice(0, 2)).to.be.deep.equal(["addDir", dir.path()]);
             expect(all.get(1).args.slice(0, 2)).to.be.deep.equal(["add", file.path()]);
         });
     });
-    describe("watch glob patterns", function () {
+    describe("watch glob patterns", () => {
         before(closeWatchers);
         it("should correctly watch and emit based on glob input", async () => {
             const all = new Dummy();
@@ -511,7 +513,7 @@ function runTests(baseopts) {
             const file = fixtures.getVirtualFile("*a*.txt");
             const addFile = fixtures.getVirtualFile("add.txt");
             const changeFile = fixtures.getVirtualFile("change.txt");
-            watcher = fswatcher.watch(file.path(), options)
+            watcher = watch(file.path(), options)
                 .on("all", all.callback)
                 .on("ready", ready.callback);
             await ready.waitForCall();
@@ -536,7 +538,7 @@ function runTests(baseopts) {
             const test = fixtures.getVirtualFile("*");
             const negated = `!${fixtures.getVirtualFile("*a*.txt").path()}`;
             const unlink = fixtures.getVirtualFile("unlink.txt");
-            watcher = fswatcher.watch([test.path(), negated], options)
+            watcher = watch([test.path(), negated], options)
                 .on("all", all.callback)
                 .on("ready", ready.callback);
             await ready.waitForCall();
@@ -545,7 +547,7 @@ function runTests(baseopts) {
             expect(all.get(0).args.slice(0, 2)).to.be.deep.equal(["add", unlink.path()]);
             await Promise.all([
                 sleep().then(() => unlink.unlink()).then(() => sleep()),
-                all.waitForArg(0, "unlink"),
+                all.waitForArg(0, "unlink")
             ]);
             expect(all.calls).to.be.equal(2);
             expect(all.get(1).args.slice(0, 2)).to.be.deep.equal(["unlink", unlink.path()]);
@@ -574,7 +576,7 @@ function runTests(baseopts) {
             const all = new Dummy();
             const ready = new Dummy();
 
-            watcher = fswatcher.watch(watchPath, options)
+            watcher = watch(watchPath, options)
                 .on("all", all.callback)
                 .on("ready", ready.callback);
             await ready.waitForCall();
@@ -625,7 +627,7 @@ function runTests(baseopts) {
             const watchPath = fix.getVirtualFile("*a*.txt").relativePath(fixtures);
             const add = fix.getVirtualFile("add.txt");
             const change = fix.getVirtualFile("change.txt");
-            watcher = fswatcher.watch(watchPath, options)
+            watcher = watch(watchPath, options)
                 .on("all", all.callback)
                 .on("ready", ready.callback);
             await ready.waitForCall();
@@ -658,7 +660,7 @@ function runTests(baseopts) {
                 fixtures.getVirtualFile("change*").path(),
                 fixtures.getVirtualFile("unlink*").path()
             ];
-            watcher = fswatcher.watch(watchPaths, options)
+            watcher = watch(watchPaths, options)
                 .on("all", all.callback)
                 .on("ready", ready.callback);
             await ready.waitForCall();
@@ -692,7 +694,7 @@ function runTests(baseopts) {
                 fixtures.getVirtualFile("cha*").path(),
                 fixtures.getVirtualFile("*nge.*").path()
             ];
-            watcher = fswatcher.watch(watchPaths, options)
+            watcher = watch(watchPaths, options)
                 .on("all", all.callback)
                 .on("ready", ready.callback);
             await ready.waitForCall();
@@ -738,7 +740,7 @@ function runTests(baseopts) {
             const watchPath = adone.std.path.join(fix.path(), "..", "..", "in*er", "one*more", "**", "subsubsub", "*.txt");
             const all = new Dummy();
             const ready = new Dummy();
-            watcher = fswatcher.watch(watchPath, options)
+            watcher = watch(watchPath, options)
                 .on("all", all.callback)
                 .on("ready", ready.callback);
 
@@ -760,7 +762,7 @@ function runTests(baseopts) {
             const deepFile = deepDir.getVirtualFile("a.txt");
             const all = new Dummy();
             const ready = new Dummy();
-            watcher = fswatcher.watch(watchPaths, options)
+            watcher = watch(watchPaths, options)
                 .on("all", all.callback)
                 .on("ready", ready.callback);
             await ready.waitForCall();
@@ -780,7 +782,7 @@ function runTests(baseopts) {
             ]);
         });
     });
-    describe("watch symlinks", function () {
+    describe("watch symlinks", () => {
         if (os === "win32") {
             return;  // have to have root permissions
         }
@@ -801,7 +803,7 @@ function runTests(baseopts) {
             const addDir = new Dummy();
             const add = new Dummy();
             const ready = new Dummy();
-            watcher = fswatcher.watch(linkedDir.path(), options)
+            watcher = watch(linkedDir.path(), options)
                 .on("addDir", addDir.callback)
                 .on("add", add.callback)
                 .on("ready", ready.callback);
@@ -815,7 +817,7 @@ function runTests(baseopts) {
             const ready = new Dummy();
             const change = fixtures.getVirtualFile("change.txt");
             const link = await change.symbolicLink(fixtures.getVirtualFile("link.txt"));
-            watcher = fswatcher.watch(link.path(), options)
+            watcher = watch(link.path(), options)
                 .on("all", all.callback)
                 .on("ready", ready.callback);
             await ready.waitForCall();
@@ -831,7 +833,7 @@ function runTests(baseopts) {
             const ready = new Dummy();
             const change = fixtures.getVirtualFile("change.txt");
             const link = await change.symbolicLink(subdir.getVirtualFile("link.txt"));
-            watcher = fswatcher.watch(subdir.path(), options)
+            watcher = watch(subdir.path(), options)
                 .on("all", all.callback)
                 .on("ready", ready.callback);
             await ready.waitForCall();
@@ -847,7 +849,7 @@ function runTests(baseopts) {
             const ready = new Dummy();
             const dir = linkedDir.getVirtualDirectory("subdir");
             const file = dir.getVirtualFile("add.txt");
-            watcher = fswatcher.watch(dir.path(), options)
+            watcher = watch(dir.path(), options)
                 .on("all", all.callback)
                 .on("ready", ready.callback);
             await ready.waitForCall();
@@ -868,7 +870,7 @@ function runTests(baseopts) {
         it("should recognize changes following symlinked dirs", async () => {
             const change = new Dummy();
             const ready = new Dummy();
-            watcher = fswatcher.watch(linkedDir.path(), options)
+            watcher = watch(linkedDir.path(), options)
                 .on("change", change.callback)
                 .on("ready", ready.callback);
             await ready.waitForCall();
@@ -892,14 +894,14 @@ function runTests(baseopts) {
             await Promise.all([
                 sleep().then(() => subdir.symbolicLink(sublink)),
                 all.waitForArgs("add", sublink.getVirtualFile("add.txt").path()),
-                all.waitForArgs("addDir", sublink.path()),
+                all.waitForArgs("addDir", sublink.path())
             ]);
         });
         it("should watch symlinks as files when followSymlinks:false", async () => {
             options.followSymlinks = false;
             const all = new Dummy();
             const ready = new Dummy();
-            watcher = fswatcher.watch(linkedDir.path(), options)
+            watcher = watch(linkedDir.path(), options)
                 .on("all", all.callback)
                 .on("ready", ready.callback);
             await ready.waitForCall();
@@ -933,14 +935,14 @@ function runTests(baseopts) {
             const link = await linked.symbolicLink(subdir.getVirtualDirectory("subsub"));
 
             const ready2 = new Dummy();
-            watcher2 = fswatcher.watch(subdir.path(), options)
+            watcher2 = watch(subdir.path(), options)
                 .on("ready", ready2.callback);
             await ready2.waitForCall();
             await sleep(options.usePolling ? 900 : undefined);
             const watched = link.getVirtualFile("text.txt");
             const all = new Dummy();
             const ready = new Dummy();
-            watcher = fswatcher.watch(watched.path(), options)
+            watcher = watch(watched.path(), options)
                 .on("all", all.callback)
                 .on("ready", ready.callback);
             await ready.waitForCall();
@@ -956,7 +958,7 @@ function runTests(baseopts) {
             const ready = new Dummy();
             // test with relative path to ensure proper resolution
             const watchDir = adone.std.path.relative(process.cwd(), linkedDir.path());
-            watcher = fswatcher.watch(adone.std.path.join(watchDir, "**/*"), options)
+            watcher = watch(adone.std.path.join(watchDir, "**/*"), options)
                 .on("addDir", addDir.callback)
                 .on("add", add.callback)
                 .on("ready", ready.callback);
@@ -973,14 +975,14 @@ function runTests(baseopts) {
             ]);
         });
     });
-    describe("watch arrays of paths/globs", function () {
+    describe("watch arrays of paths/globs", () => {
         before(closeWatchers);
         it("should watch all paths in an array", async () => {
             const all = new Dummy();
             const ready = new Dummy();
             const file = fixtures.getVirtualFile("change.txt");
             const dir = await fixtures.addDirectory("subdir");
-            watcher = fswatcher.watch([dir.path(), file.path()], options)
+            watcher = watch([dir.path(), file.path()], options)
                 .on("all", all.callback)
                 .on("ready", ready.callback);
             await ready.waitForCall();
@@ -1000,7 +1002,7 @@ function runTests(baseopts) {
             const file = fixtures.getVirtualFile("change.txt");
             const dir = await fixtures.addDirectory("subdir");
 
-            watcher = fswatcher.watch([[dir.path()], [file.path()]], options)
+            watcher = watch([[dir.path()], [file.path()]], options)
                 .on("all", all.callback)
                 .on("ready", ready.callback);
             await ready.waitForCall();
@@ -1015,21 +1017,21 @@ function runTests(baseopts) {
             ]);
         });
         it("should throw if provided any non-string paths", async () => {
-            expect(fswatcher.watch.bind(null, [[fixtures.path()], /notastring/])).to.throw(TypeError, /non-string/i);
+            expect(watch.bind(null, [[fixtures.path()], /notastring/])).to.throw(TypeError, /non-string/i);
             await sleep();
         });
     });
-    describe("watch options", function () {
+    describe("watch options", () => {
         before(closeWatchers);
-        describe("ignoreInitial", function () {
-            describe("false", function () {
-                beforeEach(function () {
+        describe("ignoreInitial", () => {
+            describe("false", () => {
+                beforeEach(() => {
                     options.ignoreInitial = false;
                 });
                 it("should emit `add` events for preexisting files", async () => {
                     const add = new Dummy();
                     const ready = new Dummy();
-                    watcher = fswatcher.watch(fixtures.path(), options)
+                    watcher = watch(fixtures.path(), options)
                         .on("add", add.callback)
                         .on("ready", ready.callback);
                     await ready.waitForCall();
@@ -1038,7 +1040,7 @@ function runTests(baseopts) {
                 it("should emit `addDir` event for watched dir", async () => {
                     const addDir = new Dummy();
                     const ready = new Dummy();
-                    watcher = fswatcher.watch(fixtures.path(), options)
+                    watcher = watch(fixtures.path(), options)
                         .on("addDir", addDir.callback)
                         .on("ready", ready.callback);
                     await ready.waitForCall();
@@ -1050,7 +1052,7 @@ function runTests(baseopts) {
                     const ready = new Dummy();
                     const subdir = await fixtures.addDirectory("subdir");
                     const subsub = await subdir.addDirectory("subsub");
-                    watcher = fswatcher.watch(fixtures.path(), options)
+                    watcher = watch(fixtures.path(), options)
                         .on("addDir", addDir.callback)
                         .on("ready", ready.callback);
                     await ready.waitForCall();
@@ -1060,8 +1062,8 @@ function runTests(baseopts) {
                     expect(addDir.findByArgs(subsub.path())).to.be.ok;
                 });
             });
-            describe("true", function () {
-                beforeEach(function () {
+            describe("true", () => {
+                beforeEach(() => {
                     options.ignoreInitial = true;
                 });
                 it("should ignore inital add events", async () => {
@@ -1077,7 +1079,7 @@ function runTests(baseopts) {
                     const add = new Dummy();
                     const ready = new Dummy();
 
-                    watcher = fswatcher.watch(fixtures.getVirtualDirectory("subdir").path(), options)
+                    watcher = watch(fixtures.getVirtualDirectory("subdir").path(), options)
                         .on("add", add.callback)
                         .on("ready", ready.callback);
                     watcher.add(fixtures.path());
@@ -1132,28 +1134,29 @@ function runTests(baseopts) {
                 });
             });
         });
-        describe("ignored", function () {
+        describe("ignored", () => {
             it("should check ignore after stating", async () => {
+                let subdir;
                 options.ignored = (path, stats) => {
                     if (subdir.normalizedPath() === path || subdir.path() === path || !stats) {
                         return false;
                     }
                     return stats.isDirectory();
                 };
-                const subdir = await fixtures.addDirectory("subdir");
+                subdir = await fixtures.addDirectory("subdir");
                 const file = await subdir.addFile("add.txt");
                 const subsub = await subdir.addDirectory("subsub");
                 await subsub.addFile("ab.txt");
                 const add = new Dummy();
                 const ready = new Dummy();
-                watcher = fswatcher.watch(subdir.path(), options)
+                watcher = watch(subdir.path(), options)
                     .on("add", add.callback)
                     .on("ready", ready.callback);
                 await ready.waitForCall();
                 expect(add.calls).to.be.equal(1);
                 expect(add.get(0).args[0]).to.be.equal(file.path());
             });
-            it("should not choke on an ignored watch path", function (done) {
+            it("should not choke on an ignored watch path", (done) => {
                 options.ignored = function () {
                     return true;
                 };
@@ -1165,7 +1168,7 @@ function runTests(baseopts) {
                 const dir = await fixtures.addDirectory("subdir");
                 const file = await dir.addFile("add.txt");
                 options.ignored = dir.path();
-                watcher = fswatcher.watch(fixtures.path(), options)
+                watcher = watch(fixtures.path(), options)
                     .on("all", all.callback)
                     .on("ready", ready.callback);
                 await ready.waitForCall();
@@ -1182,7 +1185,7 @@ function runTests(baseopts) {
                 const all = new Dummy();
                 const ready = new Dummy();
                 await fixtures.addFile("add.txt");
-                watcher = fswatcher.watch(fixtures.path(), options)
+                watcher = watch(fixtures.path(), options)
                     .on("all", all.callback)
                     .on("ready", ready.callback);
                 await ready.waitForCall();
@@ -1198,7 +1201,7 @@ function runTests(baseopts) {
                 expect(all.findByArgs("change", "change.txt")).to.be.ok;
             });
         });
-        describe("depth", function () {
+        describe("depth", () => {
             let subdir;
             let addFile;
             let subsub;
@@ -1313,8 +1316,8 @@ function runTests(baseopts) {
                 ]);
             });
         });
-        describe("atomic", function () {
-            beforeEach(function () {
+        describe("atomic", () => {
+            beforeEach(() => {
                 options.atomic = true;
                 options.ignoreInitial = true;
             });
@@ -1359,14 +1362,14 @@ function runTests(baseopts) {
                 expect(all.find(({ args }) => args[1] === file.path().slice(0, -1))).not.to.be.ok;
             });
         });
-        describe("cwd", function () {
+        describe("cwd", () => {
             it("should emit relative paths based on cwd", async () => {
                 options.cwd = fixtures.path();
                 const all = new Dummy();
                 const ready = new Dummy();
                 const change = fixtures.getVirtualFile("change.txt");
                 const unlink = fixtures.getVirtualFile("unlink.txt");
-                watcher = fswatcher.watch("**", options).on("all", all.callback).on("ready", ready.callback);
+                watcher = watch("**", options).on("all", all.callback).on("ready", ready.callback);
                 await ready.waitForCall();
                 expect(all.findByArgs("add", "change.txt")).to.be.ok;
                 expect(all.findByArgs("add", "unlink.txt")).to.be.ok;
@@ -1383,7 +1386,7 @@ function runTests(baseopts) {
                 options.ignoreInitial = true;
                 const subdir = await fixtures.addDirectory("subdir");
                 const ready = new Dummy();
-                watcher = fswatcher.watch(".", options).on("ready", ready.callback);
+                watcher = watch(".", options).on("ready", ready.callback);
                 await ready.waitForCall();
                 await sleep(1000);
                 const addDir = new Dummy();
@@ -1398,20 +1401,20 @@ function runTests(baseopts) {
             it("should allow separate watchers to have different cwds", async () => {
                 options.cwd = fixtures.path();
                 const options2 = {};
-                Object.keys(options).forEach(function (key) {
+                Object.keys(options).forEach((key) => {
                     options2[key] = options[key];
                 });
                 options2.cwd = fixtures.getVirtualDirectory("subdir").path();
                 const all1 = new Dummy();
                 const ready1 = new Dummy();
-                watcher = fswatcher.watch(fixtures.getVirtualDirectory("**").path(), options)
+                watcher = watch(fixtures.getVirtualDirectory("**").path(), options)
                     .on("all", all1.callback)
                     .on("ready", ready1.callback);
                 await ready1.waitForCall();
                 await sleep();
                 const all2 = new Dummy();
                 const ready2 = new Dummy();
-                watcher2 = fswatcher.watch(fixtures.path(), options2)
+                watcher2 = watch(fixtures.path(), options2)
                     .on("all", all2.callback)
                     .on("ready", ready2.callback);
                 await ready2.waitForCall();
@@ -1439,7 +1442,7 @@ function runTests(baseopts) {
                 const ignoredOption = await fixtures.addFile("ignored-option.txt");
                 const all = new Dummy();
                 const ready = new Dummy();
-                watcher = fswatcher.watch(files, options).on("all", all.callback).on("ready", ready.callback);
+                watcher = watch(files, options).on("all", all.callback).on("ready", ready.callback);
                 await ready.waitForCall();
                 await sleep();
 
@@ -1458,14 +1461,14 @@ function runTests(baseopts) {
                 expect(all.findByArgs("unlink", "ignored-output.txt")).not.to.be.ok;
             });
         });
-        describe("ignorePermissionErrors", function () {
+        describe("ignorePermissionErrors", () => {
             let file;
             beforeEach(async () => {
                 file = await fixtures.addFile("add.txt", { mode: 0o200 });  // owner writing
                 await sleep();
             });
-            describe("false", function () {
-                beforeEach(function () {
+            describe("false", () => {
+                beforeEach(() => {
                     options.ignorePermissionErrors = false;
                 });
                 it("should not watch files without read permissions", async () => {
@@ -1482,8 +1485,8 @@ function runTests(baseopts) {
                     expect(all.findByArgs("change", file.path())).not.to.be.ok;
                 });
             });
-            describe("true", function () {
-                beforeEach(function () {
+            describe("true", () => {
+                beforeEach(() => {
                     options.ignorePermissionErrors = true;
                 });
                 it("should watch unreadable files if possible", async () => {
@@ -1503,7 +1506,7 @@ function runTests(baseopts) {
                 });
                 it("should not choke on non-existent files", async () => {
                     const ready = new Dummy();
-                    const watcher = fswatcher.watch(fixtures.getVirtualFile("nope.txt").path(), options)
+                    const watcher = watch(fixtures.getVirtualFile("nope.txt").path(), options)
                         .on("ready", ready.callback);
                     await ready.waitForCall();
                     await sleep();
@@ -1511,8 +1514,8 @@ function runTests(baseopts) {
                 });
             });
         });
-        describe("awaitWriteFinish", function () {
-            beforeEach(function () {
+        describe("awaitWriteFinish", () => {
+            beforeEach(() => {
                 options.awaitWriteFinish = { stabilityThreshold: 500 };
                 options.ignoreInitial = true;
             });
@@ -1676,7 +1679,7 @@ function runTests(baseopts) {
             });
         });
     });
-    describe("getWatched", function () {
+    describe("getWatched", () => {
         before(closeWatchers);
         it("should return the watched paths", async () => {
             const expected = {};
@@ -1692,7 +1695,7 @@ function runTests(baseopts) {
             const expected = {
                 ".": ["change.txt", "subdir", "unlink.txt"],
                 "..": [fixtures.filename()],
-                "subdir": []
+                subdir: []
             };
             await fixtures.addDirectory("subdir");
             const ready = new Dummy();
@@ -1701,7 +1704,7 @@ function runTests(baseopts) {
             expect(watcher.getWatched()).to.deep.equal(expected);
         });
     });
-    describe("unwatch", function () {
+    describe("unwatch", () => {
         before(closeWatchers);
         let subdir;
         beforeEach(async () => {
@@ -1715,7 +1718,7 @@ function runTests(baseopts) {
             const change = fixtures.getVirtualFile("change.txt");
             const watchPaths = [subdir.path(), change.path()];
 
-            watcher = fswatcher.watch(watchPaths, options).on("all", all.callback).on("ready", ready.callback);
+            watcher = watch(watchPaths, options).on("all", all.callback).on("ready", ready.callback);
             await ready.waitForCall();
             await sleep();
             watcher.unwatch(subdir.path());
@@ -1734,7 +1737,7 @@ function runTests(baseopts) {
         it("should ignore unwatched paths that are a subset of watched paths", async () => {
             const all = new Dummy();
             const ready = new Dummy();
-            watcher = fswatcher.watch(fixtures.path(), options).on("all", all.callback).on("ready", ready.callback);
+            watcher = watch(fixtures.path(), options).on("all", all.callback).on("ready", ready.callback);
             await ready.waitForCall();
             await sleep();
             // test with both relative and absolute paths
@@ -1764,7 +1767,7 @@ function runTests(baseopts) {
             const change = fixtures.getVirtualFile("change.txt");
             const changePath = change.relativePath(process.cwd());
             const watchPaths = [subdirPath, changePath];
-            watcher = fswatcher.watch(watchPaths, options).on("all", all.callback).on("ready", ready.callback);
+            watcher = watch(watchPaths, options).on("all", all.callback).on("ready", ready.callback);
             await ready.waitForCall();
             await sleep(300);
             watcher.unwatch(subdirPath);
@@ -1785,7 +1788,7 @@ function runTests(baseopts) {
             const change = fixtures.getVirtualFile("change.txt");
             const watchPaths = [change.path()];
             const ready = new Dummy();
-            watcher = fswatcher.watch(watchPaths, options).on("ready", ready.callback);
+            watcher = watch(watchPaths, options).on("ready", ready.callback);
             await ready.waitForCall();
             await sleep();
             watcher.unwatch(change.path());
@@ -1805,7 +1808,7 @@ function runTests(baseopts) {
             options.cwd = fixtures.path();
             const all = new Dummy();
             const ready = new Dummy();
-            watcher = fswatcher.watch(".", options).on("all", all.callback).on("ready", ready.callback);
+            watcher = watch(".", options).on("all", all.callback).on("ready", ready.callback);
             await ready.waitForCall();
             await sleep();
             const unlink = fixtures.getVirtualFile("unlink.txt");
@@ -1829,12 +1832,12 @@ function runTests(baseopts) {
             }
         });
     });
-    describe("close", function () {
+    describe("close", () => {
         it("should ignore further events on close", async () => {
             const add = new Dummy();
             const ready = new Dummy();
             const addFile = fixtures.getVirtualFile("add.txt");
-            watcher = fswatcher.watch(fixtures.path(), options).on("add", add.callback).on("ready", ready.callback);
+            watcher = watch(fixtures.path(), options).on("add", add.callback).on("ready", ready.callback);
             await ready.waitForCall();
             await sleep();
             add.reset();
@@ -1846,13 +1849,13 @@ function runTests(baseopts) {
     });
 
     describe("runtime", () => {
-        it("should correcly process removing a directory", async function () {
+        it("should correcly process removing a directory", async () => {
             let watcher;
             try {
                 const ready = new Dummy();
                 const addDir = new Dummy();
                 const unlinkDir = new Dummy();
-                watcher = fswatcher.watch(fixtures.path())
+                watcher = watch(fixtures.path())
                     .on("ready", ready.callback)
                     .on("addDir", addDir.callback)
                     .on("unlinkDir", unlinkDir.callback);

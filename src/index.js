@@ -246,7 +246,6 @@ lazify({
 
         return term;
     },
-    FSWatcher: "./glosses/fswatcher",
     fsevents: "fsevents",
     require: () => {
         const options = {

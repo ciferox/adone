@@ -6,8 +6,8 @@ const dotRe = /\..*\.(sw[px])$|\~$|\.subl.*\.tmp/;
 const replacerRe = /^\.[\/\\]/;
 
 export default class FSWatcher extends adone.EventEmitter {
-    constructor({ 
-        persistent = true, 
+    constructor({
+        persistent = true,
         ignoreInitial = false,
         ignorePermissionErrors = false,
         interval = 100,
@@ -20,14 +20,14 @@ export default class FSWatcher extends adone.EventEmitter {
         ignored = [],
         alwaysStat = false,
         depth,
-        cwd,
+        cwd
     } = {}) {
         super();
-        this._watched = new Map;
-        this._closers = new Map;
-        this._ignoredPaths = new Set;
-        this._throttled = new Map;
-        this._symlinkPaths = new Map;
+        this._watched = new Map();
+        this._closers = new Map();
+        this._ignoredPaths = new Set();
+        this._throttled = new Map();
+        this._symlinkPaths = new Map();
 
         this.closed = false;
 
@@ -57,7 +57,7 @@ export default class FSWatcher extends adone.EventEmitter {
         }
 
         if (awaitWriteFinish) {
-            const { stabilityThreshold = 2000, pollInterval = 100} = awaitWriteFinish;
+            const { stabilityThreshold = 2000, pollInterval = 100 } = awaitWriteFinish;
             awaitWriteFinish = { stabilityThreshold, pollInterval };
             this._pendingWrites = Object.create(null);
         }
@@ -76,7 +76,7 @@ export default class FSWatcher extends adone.EventEmitter {
             }
         };
 
-        this.options = {  
+        this.options = {
             persistent, ignoreInitial, ignorePermissionErrors,
             interval, binaryInterval, useFsEvents,
             usePolling, atomic, followSymlinks,
@@ -114,7 +114,7 @@ export default class FSWatcher extends adone.EventEmitter {
                 if (adone.std.path.isAbsolute(path)) {
                     return path;
                 } else if (path[0] === "!") {
-                    return "!" + adone.std.path.join(cwd, path.substring(1));
+                    return `!${adone.std.path.join(cwd, path.substring(1))}`;
                 } else {
                     return adone.std.path.join(cwd, path);
                 }
@@ -128,7 +128,7 @@ export default class FSWatcher extends adone.EventEmitter {
             } else {
                 // if a path is being added that was previously ignored, stop ignoring it
                 this._ignoredPaths.delete(path);
-                delete this._ignoredPaths.delete(path + "/**");
+                delete this._ignoredPaths.delete(`${path}/**`);
 
                 // reset the cached userIgnored anymatch fn
                 // to make ignoredPaths changes effective
@@ -136,6 +136,7 @@ export default class FSWatcher extends adone.EventEmitter {
 
                 return true;
             }
+            return false;
         });
 
         if (this.options.useFsEvents && canUseFSEvents()) {
@@ -203,7 +204,7 @@ export default class FSWatcher extends adone.EventEmitter {
 
             this._ignoredPaths.add(path);
             if (this._watched.has(path)) {
-                this._ignoredPaths.add(path + "/**");
+                this._ignoredPaths.add(`${path}/**`);
             }
 
             // reset the cached userIgnored anymatch fn
@@ -276,7 +277,7 @@ export default class FSWatcher extends adone.EventEmitter {
 
         const awf = this.options.awaitWriteFinish;
         if (awf && this._pendingWrites[path]) {
-            this._pendingWrites[path].lastChange = new Date;
+            this._pendingWrites[path].lastChange = new Date();
             return this;
         }
 
@@ -380,9 +381,10 @@ export default class FSWatcher extends adone.EventEmitter {
      */
     _throttle(action, path, timeout) {
         if (!this._throttled.has(action)) {
-            this._throttled.set(action, new Map);
+            this._throttled.set(action, new Map());
         }
         const throttled = this._throttled.get(action);
+        let timeoutObject;
         if (throttled.has(path)) {
             return false;
         }
@@ -390,8 +392,8 @@ export default class FSWatcher extends adone.EventEmitter {
             throttled.delete(path);
             clearTimeout(timeoutObject);
         };
-        
-        const timeoutObject = setTimeout(clear, timeout);
+
+        timeoutObject = setTimeout(clear, timeout);
         const value = { timeoutObject, clear };
         throttled.set(path, value);
         return value;
@@ -418,7 +420,7 @@ export default class FSWatcher extends adone.EventEmitter {
             fullPath = adone.std.path.join(this.options.cwd, path);
         }
 
-        const now = new Date;
+        const now = new Date();
 
         const awaitWriteFinish = (prevStat) => {
             adone.std.fs.stat(fullPath, (err, curStat) => {
@@ -429,7 +431,7 @@ export default class FSWatcher extends adone.EventEmitter {
                     return;
                 }
 
-                const now = new Date;
+                const now = new Date();
 
                 if (prevStat && curStat.size !== prevStat.size) {
                     this._pendingWrites[path].lastChange = now;
@@ -485,7 +487,7 @@ export default class FSWatcher extends adone.EventEmitter {
             }
             const paths = adone.util.arrify(ignored)
                 .filter((path) => adone.is.string(path) && !adone.is.glob(path))
-                .map((path) => path + "/**");
+                .map((path) => `${path}/**`);
 
             this._userIgnored = adone.util.match([...this._globIgnored, ...ignored, ...paths]);
         }
@@ -531,7 +533,7 @@ export default class FSWatcher extends adone.EventEmitter {
         };
 
         const entryPath = (entry) => adone.std.path.join(watchPath, adone.std.path.relative(watchPath, checkGlobSymlink(entry)));
-
+        let filterDir;
         const filterPath = (entry) => {
             if (entry.stat && entry.stat.isSymbolicLink()) {
                 return filterDir(entry);
@@ -548,7 +550,7 @@ export default class FSWatcher extends adone.EventEmitter {
         }
         let unmatchedGlob;
 
-        const filterDir = (entry) => {
+        filterDir = (entry) => {
             if (hasGlob) {
                 const entryParts = getDirParts(checkGlobSymlink(entry));
                 let globstar = false;
@@ -566,7 +568,7 @@ export default class FSWatcher extends adone.EventEmitter {
             followSymlinks: follow,
             statMethod: follow ? "stat" : "lstat",
             path, watchPath, entryPath,
-            hasGlob, 
+            hasGlob,
             globFilter, filterPath, filterDir
         };
     }
@@ -582,11 +584,11 @@ export default class FSWatcher extends adone.EventEmitter {
     _getWatchedDir(directory) {
         const dir = adone.std.path.resolve(directory);
         const watcherRemove = (...args) => this._remove(...args);
-        if (!this._watched.has(dir)) { 
+        if (!this._watched.has(dir)) {
             this._watched.set(dir, {
                 _items: Object.create(null),
                 add(item) {
-                    if (item !== ".") { 
+                    if (item !== ".") {
                         this._items[item] = true;
                     }
                 },
@@ -600,11 +602,11 @@ export default class FSWatcher extends adone.EventEmitter {
                         });
                     }
                 },
-                has(item) { 
-                    return item in this._items; 
+                has(item) {
+                    return item in this._items;
                 },
-                children() { 
-                    return Object.keys(this._items); 
+                children() {
+                    return Object.keys(this._items);
                 }
             });
         }
@@ -642,7 +644,7 @@ export default class FSWatcher extends adone.EventEmitter {
         // if it is not a directory, nestedDirectoryChildren will be empty array
         const path = adone.std.path.join(directory, item);
         const fullPath = adone.std.path.resolve(path);
-        const isDirectory =  this._watched.get(this._watched.has(path) ? path : fullPath);
+        const isDirectory = this._watched.get(this._watched.has(path) ? path : fullPath);
 
         // prevent duplicate handling in case of arriving here nearly simultaneously
         // via multiple paths (such as _handleFile and _handleDir)
@@ -703,32 +705,18 @@ export default class FSWatcher extends adone.EventEmitter {
         this._closers.delete(path);
         this._getWatchedDir(adone.std.path.dirname(path)).remove(adone.std.path.basename(path));
     }
-
-    /**
-     * Instantiates watcher with paths to be tracked.
-     *  
-     * @public
-     * @static
-     * @param {string|string[]} paths - file/directory paths and/or globs
-     * @param {Object} options
-     * @returns {FSWatcher}
-     * 
-     * @memberOf FSWatcher
-     */
-    static watch(paths, options) {
-        return new FSWatcher(options || {}).add(paths);
-    }
 }
 
 // Attach watch handler
 
-function importHandler(handler) {
+const importHandler = (handler) => {
     for (const method of adone.util.keys(handler)) {
         FSWatcher.prototype[method] = handler[method];
     }
-}
+};
 
 importHandler(NodeFsHandler);
 if (canUseFSEvents()) {
     importHandler(FSEventsHandler);
 }
+ 

@@ -8,7 +8,9 @@ const fs = adone.lazify({
     SymbolicLinkFile: "./symlink_file",
     SymbolicLinkDirectory: "./symlink_directory",
     RandomAccessFile: "./random_access_file",
-    glob: "./glob"
+    glob: "./glob",
+    Watcher: "./watcher",
+    watch: () => (paths, options) => (new adone.fs.Watcher(options || {}).add(paths))
 }, exports, require);
 
 const lazy = adone.lazify({

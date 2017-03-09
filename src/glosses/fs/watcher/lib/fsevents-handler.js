@@ -1,14 +1,14 @@
 import adone from "adone";
 
 let FSEvents;
-try { 
-    FSEvents = adone.fsevents; 
+try {
+    FSEvents = adone.fsevents;
 } catch (error) {
     //
 }
 
 // object to hold per-process fsevents instances (may be shared across chokidar FSWatcher instances)
-const FSEventsWatchers = new Map;
+const FSEventsWatchers = new Map();
 
 // Threshold of duplicate path prefixes at which to start consolidating going forward
 const consolidateThreshhold = 10;
@@ -21,9 +21,7 @@ const consolidateThreshhold = 10;
  * @param {function} callback - called when fsevents is bound and ready
  * @returns {object} new fsevents instance
  */
-function createFSEventsInstance(path, callback) {
-    return new FSEvents(path).on("fsevent", callback).start();
-}
+const createFSEventsInstance = (path, callback) => new FSEvents(path).on("fsevent", callback).start();
 
 /**
  * Instantiates the fsevents interface or binds listeners to an existing one covering the same file tree
@@ -35,7 +33,7 @@ function createFSEventsInstance(path, callback) {
  * @param {function} rawEmitter - passes data to listeners of the "raw" event
  * @returns {function} close function
  */
-function setFSEventsListener(path, realPath, listener, rawEmitter) {
+const setFSEventsListener = (path, realPath, listener, rawEmitter) => {
     let watchPath = adone.std.path.extname(path) ? adone.std.path.dirname(path) : path;
     let watchContainer;
     const parentPath = adone.std.path.dirname(watchPath);
@@ -51,7 +49,9 @@ function setFSEventsListener(path, realPath, listener, rawEmitter) {
     const resolvedPath = adone.std.path.resolve(path);
     const hasSymlink = resolvedPath !== realPath;
     const filteredListener = (fullPath, flags, info) => {
-        if (hasSymlink) fullPath = fullPath.replace(realPath, resolvedPath);
+        if (hasSymlink) {
+            fullPath = fullPath.replace(realPath, resolvedPath);
+        }
         if (fullPath === resolvedPath || !fullPath.indexOf(resolvedPath + adone.std.path.sep)) {
             listener(fullPath, flags, info);
         }
@@ -65,6 +65,7 @@ function setFSEventsListener(path, realPath, listener, rawEmitter) {
             watchPath = watchedPath;
             return true;
         }
+        return false;
     });
 
     if (FSEventsWatchers.has(watchPath) || watchedParent()) {
@@ -102,7 +103,7 @@ function setFSEventsListener(path, realPath, listener, rawEmitter) {
  * @param {string} path
  * @returns {Boolean}
  */
-function couldConsolidate(path) {
+const couldConsolidate = (path) => {
     let count = 0;
 
     for (const watchPath of FSEventsWatchers.keys()) {
@@ -114,7 +115,7 @@ function couldConsolidate(path) {
         }
     }
     return false;
-}
+};
 
 /**
  * determines subdirectory traversal levels from root to path
@@ -123,13 +124,13 @@ function couldConsolidate(path) {
  * @param {string} root
  * @returns {number}
  */
-function depth(path, root) {
+const depth = (path, root) => {
     let i = 0;
     while (!path.indexOf(root) && (path = adone.std.path.dirname(path)) !== root) {
         i++;
     }
     return i;
-}
+};
 
 /**
  * indicating whether fsevents can be used
@@ -169,12 +170,12 @@ export default {
                 if (this._isIgnored(path, stats)) {
                     this._ignoredPaths.add(path);
                     if (stats && stats.isDirectory()) {
-                        this._ignoredPaths.add(path + "/**/*");
+                        this._ignoredPaths.add(`${path}/**/*`);
                     }
                     return true;
                 } else {
                     this._ignoredPaths.delete(path);
-                    this._ignoredPaths.delete(path + "/**/*");
+                    this._ignoredPaths.delete(`${path}/**/*`);
                 }
             };
 
@@ -205,7 +206,7 @@ export default {
                             this._getWatchedDir(parent).add(item);
                         }
                     }
-                    const eventName = info.type === "directory" ? event + "Dir" : event;
+                    const eventName = info.type === "directory" ? `${event}Dir` : event;
                     this._emit(eventName, path);
                     if (eventName === "addDir") {
                         this._addToFsEvents(path, false, true);
@@ -216,7 +217,9 @@ export default {
             const addOrChange = () => handleEvent(watchedDir.has(item) ? "change" : "add");
             const checkFd = () => {
                 adone.std.fs.open(path, "r", (error, fd) => {
-                    if (fd) adone.std.fs.close(fd);
+                    if (fd) {
+                        adone.std.fs.close(fd);
+                    }
                     error && error.code !== "EACCES" ? handleEvent("unlink") : addOrChange();
                 });
             };
@@ -390,7 +393,7 @@ export default {
             // add the linkTarget for watching with a wrapper for transform
             // that causes emitted paths to incorporate the link's path
             this._addToFsEvents(linkTarget || linkPath, (path) => {
-                const dotSlash = "." + adone.std.path.sep;
+                const dotSlash = `.${adone.std.path.sep}`;
                 let aliasedPath = linkPath;
                 if (linkTarget && linkTarget !== dotSlash) {
                     aliasedPath = path.replace(linkTarget, linkPath);

@@ -4,7 +4,25 @@ import adone from "adone";
 
 // object to hold per-process fs.watch instances
 // (may be shared across chokidar FSWatcher instances)
-const FsWatchInstances = new Map;
+const FsWatchInstances = new Map();
+
+/**
+ * Helper for passing fs.watch event data to a collection of listeners
+ * 
+ * @private
+ * @param {string} fullPath - absolute path bound to the fs.watch instance
+ * @param {string} type - listener type
+ * @param {any[]} args - arguments to be passed to listeners
+ * @returns
+ */
+const fsWatchBroadcast = (fullPath, type, ...args) => {
+    if (!FsWatchInstances.has(fullPath)) {
+        return;
+    }
+    for (const listener of FsWatchInstances.get(fullPath)[type]) {
+        listener(...args);
+    }
+};
 
 /**
  * Instantiates the fs.watch interface
@@ -18,7 +36,7 @@ const FsWatchInstances = new Map;
  * @param {function} emitRaw - handler which emits raw event data
  * @returns {Object} new fsevents instance
  */
-function createFsWatchInstance(path, options, listener, errHandler, emitRaw) {
+const createFsWatchInstance = (path, options, listener, errHandler, emitRaw) => {
     const handleEvent = (rawEvent, evPath) => {
         listener(path);
         emitRaw(rawEvent, evPath, { watchedPath: path });
@@ -34,25 +52,7 @@ function createFsWatchInstance(path, options, listener, errHandler, emitRaw) {
     } catch (error) {
         errHandler(error);
     }
-}
-
-/**
- * Helper for passing fs.watch event data to a collection of listeners
- * 
- * @private
- * @param {string} fullPath - absolute path bound to the fs.watch instance
- * @param {string} type - listener type
- * @param {any[]} args - arguments to be passed to listeners
- * @returns
- */
-function fsWatchBroadcast(fullPath, type, ...args) {
-    if (!FsWatchInstances.has(fullPath)) {
-        return;
-    }
-    for (const listener of FsWatchInstances.get(fullPath)[type]) {
-        listener(...args);
-    }
-}
+};
 
 /**
  * Instantiates the fs.watch interface or binds listeners to an existing one covering the same file system entry
@@ -64,7 +64,7 @@ function fsWatchBroadcast(fullPath, type, ...args) {
  * @param {object} handlers - container for event listener functions
  * @returns {function} close function
  */
-function setFsWatchListener(path, fullPath, options, handlers) {
+const setFsWatchListener = (path, fullPath, options, handlers) => {
     const { listener, errHandler, rawEmitter } = handlers;
     let container = FsWatchInstances.get(fullPath);
     let watcher;
@@ -104,7 +104,7 @@ function setFsWatchListener(path, fullPath, options, handlers) {
             errHandlers: [errHandler],
             rawEmitters: [rawEmitter],
             watcher
-        }; 
+        };
         FsWatchInstances.set(fullPath, container);
     } else {
         container.listeners.push(listener);
@@ -124,13 +124,13 @@ function setFsWatchListener(path, fullPath, options, handlers) {
             FsWatchInstances.delete(fullPath);
         }
     };
-}
+};
 
 // fs.watchFile helpers
 
 // object to hold per-process fs.watchFile instances
 // (may be shared across chokidar FSWatcher instances)
-const FsWatchFileInstances = new Map;
+const FsWatchFileInstances = new Map();
 
 /**
  * Instantiates the fs.watchFile interface or binds listeners to an existing one covering the same file system entry
@@ -142,7 +142,7 @@ const FsWatchFileInstances = new Map;
  * @param {object} handlers - container for event listener functions
  * @returns {function} close function
  */
-function setFsWatchFileListener(path, fullPath, options, handlers) {
+const setFsWatchFileListener = (path, fullPath, options, handlers) => {
     const { listener, rawEmitter } = handlers;
     let container = FsWatchFileInstances.get(fullPath);
     let listeners = [];
@@ -191,7 +191,7 @@ function setFsWatchFileListener(path, fullPath, options, handlers) {
             FsWatchFileInstances.delete(fullPath);
         }
     };
-}
+};
 
 export default {
     /**
@@ -223,7 +223,7 @@ export default {
         }
 
         // evaluate what is at the path we're being asked to watch
-        adone.std.fs[wh.statMethod](wh.watchPath, (error, stats) =>{
+        adone.std.fs[wh.statMethod](wh.watchPath, (error, stats) => {
             if (this._handleError(error)) {
                 return callback(null, path);
             }
