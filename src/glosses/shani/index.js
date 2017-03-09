@@ -513,7 +513,6 @@ export class Engine {
                     }
                     let failed = false;
                     let hookFailed = false;
-                    let currentBeforeHookFailed = false;
                     if (block.children.every((x) => x.isExclusive())) {
                         for (const node of block.children) {
                             if (node instanceof Block) {
@@ -544,7 +543,6 @@ export class Engine {
                                 emitter.emit("end before hook", { block, hook, meta });
                                 if (meta.err) {
                                     hookFailed = true;
-                                    currentBeforeHookFailed = parentBlock === block;
                                     break;
                                 }
                             }
@@ -584,10 +582,10 @@ export class Engine {
                                                 break;
                                             }
                                         }
+                                        blocksFired.push(parentBlock);
                                         if (hookFailed) {
                                             break;
                                         }
-                                        blocksFired.push(parentBlock);
                                     }
                                     if (!stopped) {
                                         emitter.emit("start test", { block, test: node });
@@ -621,18 +619,16 @@ export class Engine {
                                     }
                                 }
                             }
-                            if (!currentBeforeHookFailed) {
-                                for (const hook of block.afterHooks()) {
-                                    if (hook.fired()) {
-                                        continue;
-                                    }
-                                    emitter.emit("start after hook", { block, hook });
-                                    const meta = await hook.run();
-                                    emitter.emit("end after hook", { block, hook, meta });
-                                    if (meta.err) {
-                                        hookFailed = true;
-                                    }
-                                }
+                        }
+                        for (const hook of block.afterHooks()) {
+                            if (hook.fired()) {
+                                continue;
+                            }
+                            emitter.emit("start after hook", { block, hook });
+                            const meta = await hook.run();
+                            emitter.emit("end after hook", { block, hook, meta });
+                            if (meta.err) {
+                                hookFailed = true;
                             }
                         }
                     }

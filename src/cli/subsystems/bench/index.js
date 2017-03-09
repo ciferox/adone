@@ -2,11 +2,10 @@ import adone from "adone";
 
 const { is, std } = adone;
 
-function formatNumber(number) {
+const formatNumber = (number) => {
     number = String(number).split(".");
-    return number[0].replace(/(?=(?:\d{3})+$)(?!\b)/g, ",") +
-        (number[1] ? "." + number[1] : "");
-}
+    return number[0].replace(/(?=(?:\d{3})+$)(?!\b)/g, ",") + (number[1] ? `.${number[1]}` : "");
+};
 
 export default class extends adone.application.Subsystem {
     initialize() {
@@ -19,20 +18,20 @@ export default class extends adone.application.Subsystem {
             options: [
                 { name: "--async", help: "run suites asynchronously" },
                 {
-                    name: "--version", 
-                    help: "show version of vendor's benchmarking code", 
+                    name: "--version",
+                    help: "show version of vendor's benchmarking code",
                     handler: () => {
                         adone.log(adone.vendor.Benchmark.version);
                         return 0;
                     }
                 },
-                { 
-                    name: "--db", 
-                    holder: "PATH", 
+                {
+                    name: "--db",
+                    holder: "PATH",
                     nargs: 1,
-                    help: "use database to compare results",
+                    help: "use database to compare results"
                 },
-                { 
+                {
                     name: "--init-count",
                     holder: "N",
                     help: "The default number of times to execute a test on a benchmark’s first cycle",
@@ -79,7 +78,7 @@ export default class extends adone.application.Subsystem {
         const benchModule = adone.require(scriptPath);
 
         this._.filename = std.path.basename(scriptPath, ".js");
-        this._.async = !!opts.get("async");
+        this._.async = Boolean(opts.get("async"));
 
         adone.log(`File: '${scriptPath}'`);
         adone.log(`System: '${adone.metrics.system.toString()}'`);
@@ -129,11 +128,11 @@ export default class extends adone.application.Subsystem {
         for (const suite of suites) {
             console.log(`Suite: ${suite.name}`);
             const result = {};
-            let oldResult = db ? await db.findOne({ name: suite.name }) : null;
+            let oldResult = db ? await db.findOne({ name: suite.name }) : null;  // eslint-disable-line
             if (oldResult) {
                 oldResult = oldResult.result;
             }
-            await new Promise((resolve, reject) => {
+            await new Promise((resolve, reject) => {  // eslint-disable-line
                 suite
                     .on("error", reject)
                     .on("cycle", (event) => {
@@ -147,7 +146,7 @@ export default class extends adone.application.Subsystem {
                             sampleLength: target.stats.sample.length
                         };
                         const size = target.stats.sample.length;
-                        const message = [target.name, "x", formatNumber(target.hz.toFixed(target.hz < 100 ? 2 : 0))];
+                        const message = [formatNumber(target.hz.toFixed(target.hz < 100 ? 2 : 0))];
                         if (oldResult) {
                             const diff = result[target.name].hz - oldResult[target.name].hz;
                             const percent = (diff / oldResult[target.name].hz * 100).toFixed(2);
@@ -166,9 +165,10 @@ export default class extends adone.application.Subsystem {
                                 message.push(adone.terminal.parse(`({#F44336-fg}${diff}{/})`));
                             }
                         }
+                        message.push(":", target.name);
                         console.log(message.join(" "));
                     })
-                    .on("complete", function () {
+                    .on("complete", function onComplete() {
                         adone.log(`Fastest is ${this.filter("fastest").map("name")}`);
                         adone.log();
                         resolve();
@@ -176,7 +176,7 @@ export default class extends adone.application.Subsystem {
                     .run({ async: this._.async });
             });
             if (db && !oldResult) {
-                await db.insert({ name: suite.name, result });
+                await db.insert({ name: suite.name, result });  // eslint-disable-line
             }
         }
         return 0;

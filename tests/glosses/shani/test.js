@@ -981,7 +981,7 @@ describe("Engine", () => {
                 });
 
                 await waitFor(e, "done");
-                assert.deepEqual(["timeout of 240ms exceeded."], results);
+                assert.deepEqual(["Timeout of 240ms exceeded"], results);
             });
         });
 
@@ -1318,7 +1318,7 @@ describe("Engine", () => {
                 });
 
                 await waitFor(e, "done");
-                assert.deepEqual(["1", "2", "timeout of 240ms exceeded."], results);
+                assert.deepEqual(["1", "2", "Timeout of 240ms exceeded"], results);
             });
         });
 
@@ -1604,7 +1604,7 @@ describe("Engine", () => {
                 });
 
                 await waitFor(e, "done");
-                assert.deepEqual(["timeout of 240ms exceeded."], results);
+                assert.deepEqual(["Timeout of 240ms exceeded"], results);
             });
         });
 
@@ -1890,11 +1890,11 @@ describe("Engine", () => {
                 });
 
                 await waitFor(e, "done");
-                assert.deepEqual(["1", "timeout of 240ms exceeded."], results);
+                assert.deepEqual(["1", "Timeout of 240ms exceeded"], results);
             });
         });
 
-        it("should not invoke an after hook on the same level if a before hook fails", async () => {
+        it("should invoke an after hook on the same level if a before hook fails", async () => {
             const engine = new Engine();
             const { describe, it, start, before, after } = engine.context();
 
@@ -1916,7 +1916,32 @@ describe("Engine", () => {
 
             await waitFor(start(), "done");
 
-            assert.deepEqual(calls, ["before"]);
+            assert.deepEqual(calls, ["before", "after"]);
+        });
+
+        it("should invoke an after each hook on the same level if a before hook fails", async () => {
+            const engine = new Engine();
+            const { describe, it, start, beforeEach, afterEach } = engine.context();
+
+            const calls = [];
+            describe("/", () => {
+                beforeEach(() => {
+                    calls.push("before");
+                    throw new Error("fail");
+                });
+
+                it("test1", async function () {
+                    calls.push("shouldn't be called");
+                });
+
+                afterEach(() => {
+                    calls.push("after");
+                });
+            });
+
+            await waitFor(start(), "done");
+
+            assert.deepEqual(calls, ["before", "after"]);
         });
 
         it("should invoke the after hook if a before hook fails", async () => {
@@ -2074,7 +2099,7 @@ describe("Engine", () => {
             await waitFor(e, "done");
 
             assert.equal(results.length, 1);
-            assert.equal(results[0].message, "timeout of 240ms exceeded.");
+            assert.equal(results[0].message, "Timeout of 240ms exceeded");
         });
 
         it("should set timeout in runtime", async function () {
@@ -2098,7 +2123,7 @@ describe("Engine", () => {
             await waitFor(e, "done");
 
             assert.equal(results.length, 1);
-            assert.equal(results[0].message, "timeout of 240ms exceeded.");
+            assert.equal(results[0].message, "Timeout of 240ms exceeded");
         });
 
         it("should inherit the timeout value", async function () {
@@ -2125,7 +2150,7 @@ describe("Engine", () => {
             await waitFor(e, "done");
 
             assert.equal(results.length, 1);
-            assert.equal(results[0].message, "timeout of 240ms exceeded.");
+            assert.equal(results[0].message, "Timeout of 240ms exceeded");
         });
 
         it("should rewrite the timeout value", async function () {
@@ -2153,7 +2178,7 @@ describe("Engine", () => {
             await waitFor(e, "done");
 
             assert.equal(results.length, 1);
-            assert.equal(results[0].message, "timeout of 245ms exceeded.");
+            assert.equal(results[0].message, "Timeout of 245ms exceeded");
         });
 
         it("should set the default value if no one set the timeout value", async function () {
@@ -2178,7 +2203,7 @@ describe("Engine", () => {
             await waitFor(e, "done");
 
             assert.equal(results.length, 1);
-            assert.equal(results[0].message, "timeout of 245ms exceeded.");
+            assert.equal(results[0].message, "Timeout of 245ms exceeded");
         });
     });
 
@@ -2922,7 +2947,7 @@ describe("Engine", () => {
             });
             assert.equal(root.children.length, 1);
             assert.equal(root.children[0].name, "a");
-            
+
             const a = root.children[0];
             assert.equal(a.children.length, 1);
             assert.equal(a.children[0].name, "b");
