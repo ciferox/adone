@@ -1,6 +1,12 @@
 #!/bin/sh
-set -e
 
+set -e
 cd "$1/liblzma"
-make
-make install
+
+MAKE=make
+uname="$(uname)"
+if [ "$uname" == 'FreeBSD' ]; then
+    MAKE=gmake
+fi
+$MAKE
+$MAKE install
