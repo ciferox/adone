@@ -139,5 +139,6 @@ Server.Response = Response;
 Server.middleware = adone.lazify({
     serve: "./middlewares/serve",
     favicon: "./middlewares/favicon",
-    logger: "./middlewares/logger"
+    logger: "./middlewares/logger",
+    session: "./middlewares/session"
 }, null, require);
