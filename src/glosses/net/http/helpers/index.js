@@ -19,5 +19,6 @@ adone.lazify({
     assert: "./assert",
     resolvePath: "./resolve_path",
     send: "./send",
-    IncomingForm: "./incoming_form"
+    IncomingForm: "./incoming_form",
+    Cookies: "./cookies"
 }, exports, require);
