@@ -1,4 +1,4 @@
-import adone from "adone";
+
 var cp = adone.std.child_process;
 var Terminal = require("./terminal");
 

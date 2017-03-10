@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const BuildMail = adone.net.mail.buildmail;
 const mime = adone.net.mail.mime;
 

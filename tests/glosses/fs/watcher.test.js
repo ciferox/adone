@@ -71,6 +71,7 @@ describe("glosses", "fs", "watcher", function watcherTests() {
         await sleep();
     });
 
+    this.timeout(60000);
     it("should expose public API methods", async () => {
         expect(Watcher).to.be.a("function");
         expect(watch).to.be.a("function");

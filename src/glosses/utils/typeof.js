@@ -1,13 +1,13 @@
 // @flow
 
-import adone from "adone";
+
 
 const setIteratorPrototype = Object.getPrototypeOf(new Set().entries());
 const mapIteratorPrototype = Object.getPrototypeOf(new Map().entries());
 const arrayIteratorPrototype = Object.getPrototypeOf([][Symbol.iterator]());
 const stringIteratorPrototype = Object.getPrototypeOf(""[Symbol.iterator]());
 
-export default function typeDetect(obj) {
+export default function typeOf(obj) {
     /* ! Speed optimisation
      * Pre:
      *   string literal     x 3,039,035 ops/sec ±1.62% (78 runs sampled)

@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { is, x, identity, fs } = adone;
 
 export default class Storage {

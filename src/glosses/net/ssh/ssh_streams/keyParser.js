@@ -3,7 +3,7 @@
 //    * more thorough validation?
 let utils;
 
-import adone from "adone";
+
 const Ber = adone.crypto.asn1.Ber;
 
 const RE_PPK = /^PuTTY-User-Key-File-2: ssh-(rsa|dss)\r?\nEncryption: (aes256-cbc|none)\r?\nComment: ([^\r\n]*)\r?\nPublic-Lines: \d+\r?\n([\s\S]+?)\r?\nPrivate-Lines: \d+\r?\n([\s\S]+?)\r?\nPrivate-MAC: ([^\r\n]+)/;

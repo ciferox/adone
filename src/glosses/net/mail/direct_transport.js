@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const packageData = require("../../../../package.json");
 const createQueue = adone.net.mail.messageQueue;
 const SMTPConnection = adone.net.mail.smtpConnection;

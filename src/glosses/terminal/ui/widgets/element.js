@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const is = adone.is;
 const colors = require("../colors");
 const unicode = require("../unicode");

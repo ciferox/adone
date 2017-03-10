@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { std: { fs, path: { resolve } }, is } = adone;
 
 export default function favicon(path, options = {}) {

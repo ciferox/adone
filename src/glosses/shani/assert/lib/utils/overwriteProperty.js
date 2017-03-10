@@ -4,7 +4,7 @@
  * MIT Licensed
  */
 
-import adone from "adone";
+
 import $assert from "../..";
 import flag from "./flag";
 import transferFlags from "./transferFlags";

@@ -3,7 +3,7 @@ import groupArray from "group-array";
 import transform from "./transform";
 import tags from "./tags";
 
-import adone from "adone";
+
 const escapeStringRegexp = adone.text.escape.regExpPattern;
 const { std: { path }, fast: { Fast } } = adone;
 

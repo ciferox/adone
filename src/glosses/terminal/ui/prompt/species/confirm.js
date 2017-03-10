@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import BasePrompt from "./base";
 const { vendor: { lodash: _ }, terminal } = adone;
 const observe = require("../events");

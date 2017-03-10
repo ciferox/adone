@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const pictureTube = require("picture-tube");
 const fs = adone.std.fs;
 const streams = require("memory-streams");

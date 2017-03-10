@@ -1,4 +1,4 @@
-import adone from "adone";
+
 
 const empty = Symbol.for("linkedlist:empty");
 

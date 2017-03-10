@@ -1,4 +1,3 @@
-import adone from "adone";
 import sandbox from "./sandbox";
 const { is, x, vendor: { lodash: _ } } = adone;
 const { traverse, generate, core } = adone.js.compiler;

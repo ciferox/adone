@@ -1,4 +1,4 @@
-import adone from "adone";
+
 
 export default class Prompt extends adone.terminal.widget.Element {
     constructor(options = { }) {

@@ -1,4 +1,3 @@
-import adone from "adone";
 const { is, x, util, configuration: { Configuration }, AsyncEmitter } = adone;
 const { TimedoutMap } = adone.collection;
 const { STATUS, ACTION, RemoteStub, GenesisNetron, SequenceId, Stream } = adone.netron;

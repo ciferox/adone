@@ -1,5 +1,5 @@
 // @flow
-import adone from "adone";
+
 const { types } = adone.js.compiler;
 
 export function ImportSpecifier(node: Object) {

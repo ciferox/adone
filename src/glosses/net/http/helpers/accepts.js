@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { is, net: { http: { helper: { mimeType, Negotiator } } } } = adone;
 
 const extToMime = (type) => type.includes("/") ? type : mimeType.lookup(type);

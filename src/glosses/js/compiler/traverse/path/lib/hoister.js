@@ -1,5 +1,5 @@
 //@flow
-import adone from "adone";
+
 
 const { types: t } = adone.js.compiler;
 const { react } = t;

@@ -1,6 +1,6 @@
 // @flow
 
-import adone from "adone";
+
 
 const { is, core, collection: { LinkedList } } = adone;
 

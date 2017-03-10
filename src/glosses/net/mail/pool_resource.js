@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const SMTPConnection = adone.net.mail.smtpConnection;
 const assign = adone.net.mail.assign;
 

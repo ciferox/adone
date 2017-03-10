@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { x } = adone;
 
 export class TemplateError extends x.Exception {

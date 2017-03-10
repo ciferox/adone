@@ -18,7 +18,7 @@
  * @api public
  */
 import AssertionError from "../../assertion_error";
-import adone from "adone";
+
 import flag from "./flag";
 
 const vowels = new Set(["a", "e", "i", "o", "u"]);
@@ -35,7 +35,7 @@ export default function (obj, types) {
         return or + art + " " + t;
     }).join(", ");
 
-    const objType = adone.util.typeDetect(obj).toLowerCase();
+    const objType = adone.util.typeOf(obj).toLowerCase();
 
     if (!types.some((expected) => objType === expected)) {
         throw new AssertionError(

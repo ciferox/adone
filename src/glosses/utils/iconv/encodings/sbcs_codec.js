@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { x } = adone;
 
 // Single-byte codec. Needs a 'chars' string parameter that contains 256 or 128 chars that

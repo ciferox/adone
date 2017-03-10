@@ -1,4 +1,4 @@
-import adone from "adone";
+
 module.exports = List;
 require("./shim");
 const GenericCollection = require("./generic_collection");

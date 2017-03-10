@@ -1,5 +1,5 @@
 require("./shim");
-import adone from "adone";
+
 const { LruSet } = adone.collection;
 const GenericCollection = require("./generic_collection");
 const GenericMap = require("./generic_map");

@@ -1,6 +1,6 @@
 // @flow
 
-import adone from "adone";
+
 
 export default function ({ types: t }) {
     function getTempId(scope) {

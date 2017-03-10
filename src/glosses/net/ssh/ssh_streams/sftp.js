@@ -1,5 +1,5 @@
 // TODO: support EXTENDED request packets
-import adone from "adone";
+
 import { readString, readInt } from "./utils";
 const TransformStream = adone.std.stream.Transform;
 const ReadableStream = adone.std.stream.Readable;

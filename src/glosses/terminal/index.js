@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import Terminfo from "./terminfo";
 const { is, std: { fs, util, string_decoder } } = adone;
 

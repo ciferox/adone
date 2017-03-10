@@ -1,5 +1,5 @@
 // @flow
-import adone from "adone";
+
 const { mergeWith } = adone.vendor.lodash;
 
 export default function (dest?: Object, src?: Object): ?Object {

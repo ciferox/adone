@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { is } = adone;
 
 const INT_CACHE = {}; // A cache of the Long representations of small integer values

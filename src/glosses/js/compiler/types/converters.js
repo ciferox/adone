@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import type { Scope } from "../traverse";
 import * as t from "./index";
 

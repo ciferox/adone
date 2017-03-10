@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const fetch = adone.net.mail.fetch;
 
 /**

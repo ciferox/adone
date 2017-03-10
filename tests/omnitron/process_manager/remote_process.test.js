@@ -1,4 +1,3 @@
-import adone from "adone";
 import * as stuff from "omnitron/services/process_manager";
 import { fixture } from "./util";
 

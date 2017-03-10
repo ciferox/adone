@@ -1,4 +1,3 @@
-import adone from "adone";
 const { is, x } = adone;
 
 export default class WebSocketAdapter extends adone.netron.Adapter {

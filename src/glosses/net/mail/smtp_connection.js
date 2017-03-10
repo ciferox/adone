@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const packageInfo = require("../../../../package.json");
 const crypto = adone.std.crypto;
 const DataStream = adone.net.mail.dataStream;

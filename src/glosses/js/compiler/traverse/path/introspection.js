@@ -1,7 +1,7 @@
 // This file contains methods responsible for introspecting the current path for certain values.
 //@flow
 import type NodePath from "./index";
-import adone from "adone";
+
 
 const { types: t } = adone.js.compiler;
 

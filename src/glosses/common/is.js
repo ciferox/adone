@@ -1,4 +1,4 @@
-import adone from "adone";
+
 
 const toString = Object.prototype.toString;
 const hasOwnProperty = Object.prototype.hasOwnProperty;

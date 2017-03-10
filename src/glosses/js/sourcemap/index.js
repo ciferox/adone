@@ -6,7 +6,7 @@
 
 // @flow
 
-import adone from "adone";
+
 
 export default adone.lazify({
     SourceMapGenerator: ["./source-map-generator", (mod) => mod.SourceMapGenerator],

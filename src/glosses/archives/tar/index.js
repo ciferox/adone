@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { is, std: { path, fs }, x } = adone;
 
 const normalize = !is.win32 ? adone.identity : (name) => name.replace(/\\/g, "/").replace(/:/g, "_");

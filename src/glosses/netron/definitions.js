@@ -1,4 +1,3 @@
-import adone from "adone";
 const { is, x, netron: { Investigator } } = adone;
 
 export default class Definitions {

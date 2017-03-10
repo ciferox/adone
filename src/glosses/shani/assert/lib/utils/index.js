@@ -7,7 +7,7 @@
  * Dependencies that are used for multiple exports are required here only once
  */
 
-import adone from "adone";
+
 import * as pathval from "./pathval";
 import test from "./test";
 import expectTypes from "./expectTypes";
@@ -50,7 +50,7 @@ export {
     checkError,
     proxify
 };
-export const type = adone.util.typeDetect;
+export const type = adone.util.typeOf;
 export const eql = adone.util.deepEqual;
 export const getPathInfo = pathval.getPathInfo;
 export const hasProperty = pathval.hasProperty;

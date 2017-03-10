@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { is, fs, std, noop } = adone;
 
 let emfileTimeout = 0;  // EMFILE handling

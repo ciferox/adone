@@ -1,4 +1,4 @@
-import adone from "adone";
+
 
 const InnerCanvas = require("../graphics/canvas").Canvas;
 

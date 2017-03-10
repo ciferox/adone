@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { std: { crypto, fs }, EventEmitter, is } = adone;
 
 export default class File extends EventEmitter {

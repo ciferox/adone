@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import { createUTC } from "./create/utc";
 import { compareArrays, toInt } from "./utils";
 const { is } = adone;

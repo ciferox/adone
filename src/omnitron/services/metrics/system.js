@@ -1,4 +1,3 @@
-import adone from "adone";
 const { system } = adone.metrics;
 const { Type, Contextable, Description } = adone.netron.decorator;
 

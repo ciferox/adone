@@ -1,6 +1,6 @@
 
 
-import adone from "adone";
+
 
 const safeMethods = { GET: true, HEAD: true, OPTIONS: true, TRACE: true };
 const schemes = {};

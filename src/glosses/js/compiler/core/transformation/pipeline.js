@@ -1,6 +1,6 @@
 /* global BabelFileResult, BabelFileMetadata */
 // @flow
-import adone from "adone";
+
 import File from "./file";
 
 import normalizeAst from "../helpers/normalize-ast";

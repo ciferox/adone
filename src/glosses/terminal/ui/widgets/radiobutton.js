@@ -1,4 +1,4 @@
-import adone from "adone";
+
 
 export default class RadioButton extends adone.terminal.widget.CheckBox {
     constructor(options = { }) {

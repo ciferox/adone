@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const is = adone.is;
 const randomBytes = adone.std.crypto.randomBytes;
 const rnd16 = () => randomBytes(16);

@@ -1,4 +1,3 @@
-import adone from "adone";
 const { is, util, meta: { reflect } } = adone;
 
 export default class Investigator {

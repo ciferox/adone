@@ -1,7 +1,7 @@
 /* eslint max-len: 0 */
 // @flow
 
-import adone from "adone";
+
 import type Hub from "../hub";
 import type TraversalContext from "../context";
 import * as virtualTypes from "./lib/virtual-types";

@@ -3,7 +3,7 @@ import * as parser from "./parser";
 import * as transformer from "./transformer";
 import * as nodes from "./nodes";
 import { Frame } from "./runtime";
-import adone from "adone";
+
 const { is, x } = adone;
 
 const compareOps = new Map([

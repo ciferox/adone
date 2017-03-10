@@ -1,6 +1,6 @@
 // @flow
 
-import adone from "adone";
+
 import notifier from "node-notifier";
 import report from "./report";
 

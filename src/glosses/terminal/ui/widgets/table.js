@@ -1,4 +1,4 @@
-import adone from "adone";
+
 
 export default class Table extends adone.terminal.widget.Element {
     constructor(options) {

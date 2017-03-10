@@ -1,5 +1,3 @@
-import adone from "adone";
-
 const { is, std } = adone;
 
 const formatNumber = (number) => {

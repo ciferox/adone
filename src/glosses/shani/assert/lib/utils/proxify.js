@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import config from "../config";
 import getProperties from "./getProperties";
 

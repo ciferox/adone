@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { std: { fs: sfs, path: spath }, is, fs } = adone;
 
 export default class File {

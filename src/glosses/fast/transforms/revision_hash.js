@@ -1,6 +1,6 @@
 // @flow
 
-import adone from "adone";
+
 
 const { x, std: { crypto, path, fs }, is, fast: { Fast, File } } = adone;
 

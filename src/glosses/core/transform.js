@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { is, EventEmitter } = adone;
 
 export default class Transform extends EventEmitter {

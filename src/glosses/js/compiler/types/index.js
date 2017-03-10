@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { clone: loClone, uniq } = adone.vendor.lodash;
 
 const t = exports;

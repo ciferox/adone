@@ -1,4 +1,4 @@
-import adone from "adone";
+
 
 /**
  * Detect dependencies of the components from `bower.json`.

@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import EventEmitter from "./events";
 
 export default class Node extends EventEmitter {

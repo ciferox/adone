@@ -1,7 +1,7 @@
 /**
  * Minimal HTTP/S proxy client
  */
-import adone from "adone";
+
 const net = adone.std.net;
 const tls = adone.std.tls;
 

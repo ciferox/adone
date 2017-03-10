@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import * as util from "../util";
 
 const { is } = adone;

@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { net: { http: { helper: { isFinished } } } } =  adone;
 
 const attachFinishedListener = (msg, callback) => {

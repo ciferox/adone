@@ -1,4 +1,4 @@
-import adone from "adone";
+
 
 var RE_PARAM = /(?:\?)|(?::(\d+|(?:[a-zA-Z][a-zA-Z0-9_]*)))/g,
     DQUOTE = 34,

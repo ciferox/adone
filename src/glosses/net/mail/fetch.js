@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const Cookies = adone.net.mail.cookies;
 
 const MAX_REDIRECTS = 5;

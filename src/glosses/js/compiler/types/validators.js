@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import { getBindingIdentifiers } from "./retrievers";
 import * as t from "./index";
 import { BLOCK_SCOPED_SYMBOL } from "./constants";

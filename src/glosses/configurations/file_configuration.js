@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { is } = adone;
 
 const DONT_TRANSPILE_COMMENT = Buffer.from("//adone-dont-transpile");

@@ -1,4 +1,3 @@
-import adone from "adone";
 const { is, std } = adone;
 const { ENABLED } = adone.omnitron.const;
 

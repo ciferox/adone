@@ -4,7 +4,7 @@
  * https://github.com/chjj/blessed
  */
 
-import adone from "adone";
+
 
 const { std: { net, fs }, EventEmitter } = adone;
 

@@ -1,6 +1,6 @@
 import { TemplateError } from "./x";
 import * as runtime from "./runtime";
-import adone from "adone";
+
 const { is, util, net: { http: { helper } } } = adone;
 
 const normalize = (value, defaultValue) => {

@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import Sender from "./sender";
 import Receiver from "./receiver";
 import PerMessageDeflate from "./perMessageDeflate";

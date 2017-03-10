@@ -2,7 +2,7 @@
 
 import traverse from "../index";
 import NodePath from "./index";
-import adone from "adone";
+
 
 const { parse, codeFrame, types: t } = adone.js.compiler;
 

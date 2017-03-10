@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import { diffLines } from "../diff/line";
 const { is } = adone;
 

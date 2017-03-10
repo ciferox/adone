@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { is, x } = adone;
 
 const ZEROS = "0".repeat(19);

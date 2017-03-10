@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { is, fs, std: { path, constants: c }, x } = adone;
 
 export default class RandomAccessFile extends adone.EventEmitter {

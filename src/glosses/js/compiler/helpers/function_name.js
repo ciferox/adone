@@ -1,7 +1,7 @@
 /* eslint max-len: 0 */
 // @flow
 
-import adone from "adone";
+
 
 const { types: t, template, helpers: { getFunctionArity } } = adone.js.compiler;
 

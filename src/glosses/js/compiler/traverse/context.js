@@ -1,6 +1,6 @@
 //@flow
 import NodePath from "./path";
-import adone from "adone";
+
 
 const { types: t } = adone.js.compiler;
 

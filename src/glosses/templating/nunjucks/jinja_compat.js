@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { is, x, util } = adone;
 
 export default function installCompat() {

@@ -1,6 +1,3 @@
-"use stirct";
-
-import adone from "adone";
 import * as stuff from "omnitron/services/process_manager";
 import { processFiles, fixture } from "../util";
 

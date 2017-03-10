@@ -1,4 +1,3 @@
-import adone from "adone";
 const { is, x, netron: { DEFAULT_PORT, ACTION, STATUS, PEER_TYPE, GenesisNetron, ws: { Peer } } } = adone;
 
 export default class WebSocketNetron extends GenesisNetron {

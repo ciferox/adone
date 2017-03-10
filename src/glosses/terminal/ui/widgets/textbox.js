@@ -1,4 +1,4 @@
-import adone from "adone";
+
 
 export default class Textbox extends adone.terminal.widget.TextArea {
     constructor(options = { }) {

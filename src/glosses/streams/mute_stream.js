@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { Stream } = adone.std.stream;
 
 const proxy = (fn) => {

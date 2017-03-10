@@ -1,5 +1,3 @@
-import adone from "adone";
-
 export default class Reference {
     constructor(defId) {
         this.defId = defId;

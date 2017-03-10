@@ -1,6 +1,6 @@
 // @flow
 
-import adone from "adone";
+
 
 const { js: { compiler: { types } }, is } = adone;
 

@@ -1,5 +1,3 @@
-import adone from "adone";
-
 export default class Interface {
     constructor(def, uid) {
         this.$def = def;

@@ -3,7 +3,7 @@
 
 import type TraversalContext from "../index";
 import NodePath from "./index";
-import adone from "adone";
+
 
 const { types: t } = adone.js.compiler;
 

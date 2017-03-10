@@ -1,6 +1,6 @@
 // @flow
 
-import adone from "adone";
+
 const { js: { compiler: { types, transformation: { Plugin } } } } = adone;
 
 const SUPER_THIS_BOUND = Symbol("super this bound");

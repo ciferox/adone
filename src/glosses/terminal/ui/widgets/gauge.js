@@ -1,4 +1,4 @@
-import adone from "adone";
+
 
 export default class Gauge extends adone.terminal.widget.Canvas {
     constructor(options = {}) {

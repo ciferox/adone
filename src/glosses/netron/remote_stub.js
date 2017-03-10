@@ -1,4 +1,3 @@
-import adone from "adone";
 const { is, x, vendor: { lodash }, netron: { Definition } } = adone;
 
 export default class RemoteStub {

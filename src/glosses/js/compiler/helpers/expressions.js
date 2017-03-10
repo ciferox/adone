@@ -1,6 +1,6 @@
 /* eslint max-len: 0 */
 // @flow
-import adone from "adone";
+
 const { template } = adone.js.compiler;
 
 let helpers = {};

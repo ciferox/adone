@@ -865,69 +865,69 @@ describe("glosses", "utils", () => {
         });
     });
 
-    describe("typeDetect", () => {
+    describe("typeOf", () => {
 
         it("array", () => {
-            assert(util.typeDetect([]) === "Array");
-            assert(util.typeDetect([]) === "Array");
+            assert(util.typeOf([]) === "Array");
+            assert(util.typeOf([]) === "Array");
         });
 
         it("regexp", () => {
-            assert(util.typeDetect(/a-z/gi) === "RegExp");
-            assert(util.typeDetect(new RegExp("a-z")) === "RegExp");
+            assert(util.typeOf(/a-z/gi) === "RegExp");
+            assert(util.typeOf(new RegExp("a-z")) === "RegExp");
         });
 
         it("function", () => {
-            assert(util.typeDetect(() => { }) === "function");
+            assert(util.typeOf(() => { }) === "function");
         });
 
         it("arguments", function () {
-            assert(util.typeDetect(arguments) === "Arguments");
+            assert(util.typeOf(arguments) === "Arguments");
         });
 
         it("date", () => {
-            assert(util.typeDetect(new Date()) === "Date");
+            assert(util.typeOf(new Date()) === "Date");
         });
 
         it("number", () => {
-            assert(util.typeDetect(1) === "number");
-            assert(util.typeDetect(1.234) === "number");
-            assert(util.typeDetect(-1) === "number");
-            assert(util.typeDetect(-1.234) === "number");
-            assert(util.typeDetect(Infinity) === "number");
-            assert(util.typeDetect(NaN) === "number");
+            assert(util.typeOf(1) === "number");
+            assert(util.typeOf(1.234) === "number");
+            assert(util.typeOf(-1) === "number");
+            assert(util.typeOf(-1.234) === "number");
+            assert(util.typeOf(Infinity) === "number");
+            assert(util.typeOf(NaN) === "number");
         });
 
         it("number objects", () => {
-            assert(util.typeDetect(new Number(2)) === "Number");
+            assert(util.typeOf(new Number(2)) === "Number");
         });
 
         it("string", () => {
-            assert(util.typeDetect("hello world") === "string");
+            assert(util.typeOf("hello world") === "string");
         });
 
         it("string objects", () => {
-            assert(util.typeDetect(new String("hello")) === "String");
+            assert(util.typeOf(new String("hello")) === "String");
         });
 
         it("null", () => {
-            assert(util.typeDetect(null) === "null");
-            assert(util.typeDetect(undefined) !== "null");
+            assert(util.typeOf(null) === "null");
+            assert(util.typeOf(undefined) !== "null");
         });
 
         it("undefined", () => {
-            assert(util.typeDetect(undefined) === "undefined");
-            assert(util.typeDetect(null) !== "undefined");
+            assert(util.typeOf(undefined) === "undefined");
+            assert(util.typeOf(null) !== "undefined");
         });
 
         it("object", () => {
             function Noop() { }
-            assert(util.typeDetect({}) === "Object");
-            assert(util.typeDetect(Noop) !== "Object");
-            assert(util.typeDetect(new Noop()) === "Object");
-            assert(util.typeDetect(new Object()) === "Object");
-            assert(util.typeDetect(Object.create(null)) === "Object");
-            assert(util.typeDetect(Object.create(Object.prototype)) === "Object");
+            assert(util.typeOf({}) === "Object");
+            assert(util.typeOf(Noop) !== "Object");
+            assert(util.typeOf(new Noop()) === "Object");
+            assert(util.typeOf(new Object()) === "Object");
+            assert(util.typeOf(Object.create(null)) === "Object");
+            assert(util.typeOf(Object.create(Object.prototype)) === "Object");
         });
 
         // See: https://github.com/chaijs/type-detect/pull/25
@@ -938,34 +938,34 @@ describe("glosses", "utils", () => {
                     throw Error("Should never happen");
                 }
             });
-            assert(util.typeDetect(foo) === "Object");
+            assert(util.typeOf(foo) === "Object");
         });
 
         it("boolean", () => {
-            assert(util.typeDetect(true) === "boolean");
-            assert(util.typeDetect(false) === "boolean");
-            assert(util.typeDetect(!0) === "boolean");
+            assert(util.typeOf(true) === "boolean");
+            assert(util.typeOf(false) === "boolean");
+            assert(util.typeOf(!0) === "boolean");
         });
 
         it("boolean object", () => {
-            assert(util.typeDetect(new Boolean()) === "Boolean");
+            assert(util.typeOf(new Boolean()) === "Boolean");
         });
 
         it("error", () => {
-            assert(util.typeDetect(new Error()) === "Error");
-            assert(util.typeDetect(new EvalError()) === "Error");
-            assert(util.typeDetect(new RangeError()) === "Error");
-            assert(util.typeDetect(new ReferenceError()) === "Error");
-            assert(util.typeDetect(new SyntaxError()) === "Error");
-            assert(util.typeDetect(new URIError()) === "Error");
+            assert(util.typeOf(new Error()) === "Error");
+            assert(util.typeOf(new EvalError()) === "Error");
+            assert(util.typeOf(new RangeError()) === "Error");
+            assert(util.typeOf(new ReferenceError()) === "Error");
+            assert(util.typeOf(new SyntaxError()) === "Error");
+            assert(util.typeOf(new URIError()) === "Error");
         });
 
         it("Math", () => {
-            assert(util.typeDetect(Math) === "Math");
+            assert(util.typeOf(Math) === "Math");
         });
 
         it("JSON", () => {
-            assert(util.typeDetect(JSON) === "JSON");
+            assert(util.typeOf(JSON) === "JSON");
         });
 
         describe("Stubbed ES2015 Types", () => {
@@ -980,117 +980,117 @@ describe("glosses", "utils", () => {
 
             it("map", () => {
                 stubObjectToStringOnce("[object Map]");
-                assert(util.typeDetect(new Thing()) === "Map");
+                assert(util.typeOf(new Thing()) === "Map");
             });
 
             it("weakmap", () => {
                 stubObjectToStringOnce("[object WeakMap]");
-                assert(util.typeDetect(new Thing()) === "WeakMap");
+                assert(util.typeOf(new Thing()) === "WeakMap");
             });
 
             it("set", () => {
                 stubObjectToStringOnce("[object Set]");
-                assert(util.typeDetect(new Thing()) === "Set");
+                assert(util.typeOf(new Thing()) === "Set");
             });
 
             it("weakset", () => {
                 stubObjectToStringOnce("[object WeakSet]");
-                assert(util.typeDetect(new Thing()) === "WeakSet");
+                assert(util.typeOf(new Thing()) === "WeakSet");
             });
 
             it("symbol", () => {
                 stubObjectToStringOnce("[object Symbol]");
-                assert(util.typeDetect(new Thing()) === "Symbol");
+                assert(util.typeOf(new Thing()) === "Symbol");
             });
 
             it("promise", () => {
                 stubObjectToStringOnce("[object Promise]");
-                assert(util.typeDetect(new Thing()) === "Promise");
+                assert(util.typeOf(new Thing()) === "Promise");
             });
 
             it("int8array", () => {
                 stubObjectToStringOnce("[object Int8Array]");
-                assert(util.typeDetect(new Thing()) === "Int8Array");
+                assert(util.typeOf(new Thing()) === "Int8Array");
             });
 
             it("uint8array", () => {
                 stubObjectToStringOnce("[object Uint8Array]");
-                assert(util.typeDetect(new Thing()) === "Uint8Array");
+                assert(util.typeOf(new Thing()) === "Uint8Array");
             });
 
             it("uint8clampedarray", () => {
                 stubObjectToStringOnce("[object Uint8ClampedArray]");
-                assert(util.typeDetect(new Thing()) === "Uint8ClampedArray");
+                assert(util.typeOf(new Thing()) === "Uint8ClampedArray");
             });
 
             it("int16array", () => {
                 stubObjectToStringOnce("[object Int16Array]");
-                assert(util.typeDetect(new Thing()) === "Int16Array");
+                assert(util.typeOf(new Thing()) === "Int16Array");
             });
 
             it("uint16array", () => {
                 stubObjectToStringOnce("[object Uint16Array]");
-                assert(util.typeDetect(new Thing()) === "Uint16Array");
+                assert(util.typeOf(new Thing()) === "Uint16Array");
             });
 
             it("int32array", () => {
                 stubObjectToStringOnce("[object Int32Array]");
-                assert(util.typeDetect(new Thing()) === "Int32Array");
+                assert(util.typeOf(new Thing()) === "Int32Array");
             });
 
             it("uint32array", () => {
                 stubObjectToStringOnce("[object Uint32Array]");
-                assert(util.typeDetect(new Thing()) === "Uint32Array");
+                assert(util.typeOf(new Thing()) === "Uint32Array");
             });
 
             it("float32array", () => {
                 stubObjectToStringOnce("[object Float32Array]");
-                assert(util.typeDetect(new Thing()) === "Float32Array");
+                assert(util.typeOf(new Thing()) === "Float32Array");
             });
 
             it("float64array", () => {
                 stubObjectToStringOnce("[object Float64Array]");
-                assert(util.typeDetect(new Thing()) === "Float64Array");
+                assert(util.typeOf(new Thing()) === "Float64Array");
             });
 
             it("dataview", () => {
                 stubObjectToStringOnce("[object DataView]");
-                assert(util.typeDetect(new Thing()) === "DataView");
+                assert(util.typeOf(new Thing()) === "DataView");
             });
 
             it("arraybuffer", () => {
                 stubObjectToStringOnce("[object ArrayBuffer]");
-                assert(util.typeDetect(new Thing()) === "ArrayBuffer");
+                assert(util.typeOf(new Thing()) === "ArrayBuffer");
             });
 
             it("generatorfunction", () => {
                 stubObjectToStringOnce("[object GeneratorFunction]");
-                assert(util.typeDetect(new Thing()) === "GeneratorFunction");
+                assert(util.typeOf(new Thing()) === "GeneratorFunction");
             });
 
             it("generator", () => {
                 stubObjectToStringOnce("[object Generator]");
-                assert(util.typeDetect(new Thing()) === "Generator");
+                assert(util.typeOf(new Thing()) === "Generator");
             });
 
             it("string iterator", () => {
                 stubObjectToStringOnce("[object String Iterator]");
-                assert(util.typeDetect(new Thing()) === "String Iterator");
+                assert(util.typeOf(new Thing()) === "String Iterator");
             });
 
             it("array iterator", () => {
                 stubObjectToStringOnce("[object Array Iterator]");
-                assert(util.typeDetect(new Thing()) === "Array Iterator");
+                assert(util.typeOf(new Thing()) === "Array Iterator");
             });
 
             it("map iterator", () => {
                 stubObjectToStringOnce("[object Map Iterator]");
-                assert(util.typeDetect(new Thing()) === "Map Iterator");
+                assert(util.typeOf(new Thing()) === "Map Iterator");
             });
 
             it("set iterator", () => {
                 stubObjectToStringOnce("[object Set Iterator]");
-                assert(util.typeDetect(new Thing()) === "Set Iterator");
+                assert(util.typeOf(new Thing()) === "Set Iterator");
             });
 
         });
@@ -1127,120 +1127,120 @@ describe("glosses", "utils", () => {
                     return "Foo";
                 };
 
-                assert(util.typeDetect(obj) === "Foo");
+                assert(util.typeOf(obj) === "Foo");
             });
 
         });
 
         describe("ES2015 Specific", () => {
             it("string iterator", () => {
-                assert(util.typeDetect(""[Symbol.iterator]()) === "String Iterator");
+                assert(util.typeOf(""[Symbol.iterator]()) === "String Iterator");
             });
 
             it("array iterator", () => {
-                assert(util.typeDetect([][Symbol.iterator]()) === "Array Iterator");
+                assert(util.typeOf([][Symbol.iterator]()) === "Array Iterator");
             });
 
             it("array iterator (entries)", () => {
-                assert(util.typeDetect([].entries()) === "Array Iterator");
+                assert(util.typeOf([].entries()) === "Array Iterator");
             });
 
             it("map", () => {
-                assert(util.typeDetect(new Map()) === "Map");
+                assert(util.typeOf(new Map()) === "Map");
             });
 
             it("map iterator", () => {
-                assert(util.typeDetect(new Map()[Symbol.iterator]()) === "Map Iterator");
+                assert(util.typeOf(new Map()[Symbol.iterator]()) === "Map Iterator");
             });
 
             it("map iterator (entries)", () => {
-                assert(util.typeDetect(new Map().entries()) === "Map Iterator");
+                assert(util.typeOf(new Map().entries()) === "Map Iterator");
             });
 
             it("weakmap", () => {
-                assert(util.typeDetect(new WeakMap()) === "WeakMap");
+                assert(util.typeOf(new WeakMap()) === "WeakMap");
             });
 
             it("set", () => {
-                assert(util.typeDetect(new Set()) === "Set");
+                assert(util.typeOf(new Set()) === "Set");
             });
 
             it("set iterator", () => {
-                assert(util.typeDetect(new Set()[Symbol.iterator]()) === "Set Iterator");
+                assert(util.typeOf(new Set()[Symbol.iterator]()) === "Set Iterator");
             });
 
             it("set iterator", () => {
-                assert(util.typeDetect(new Set().entries()) === "Set Iterator");
+                assert(util.typeOf(new Set().entries()) === "Set Iterator");
             });
 
             it("weakset", () => {
-                assert(util.typeDetect(new WeakSet()) === "WeakSet");
+                assert(util.typeOf(new WeakSet()) === "WeakSet");
             });
 
             it("symbol", () => {
-                assert(util.typeDetect(Symbol()) === "symbol");
+                assert(util.typeOf(Symbol()) === "symbol");
             });
 
             it("promise", () => {
                 function noop() { }
-                assert(util.typeDetect(new Promise(noop)) === "Promise");
+                assert(util.typeOf(new Promise(noop)) === "Promise");
             });
 
             it("int8array", () => {
-                assert(util.typeDetect(new Int8Array()) === "Int8Array");
+                assert(util.typeOf(new Int8Array()) === "Int8Array");
             });
 
             it("uint8array", () => {
-                assert(util.typeDetect(new Uint8Array()) === "Uint8Array");
+                assert(util.typeOf(new Uint8Array()) === "Uint8Array");
             });
 
             it("uint8clampedarray", () => {
-                assert(util.typeDetect(new Uint8ClampedArray()) === "Uint8ClampedArray");
+                assert(util.typeOf(new Uint8ClampedArray()) === "Uint8ClampedArray");
             });
 
             it("int16array", () => {
-                assert(util.typeDetect(new Int16Array()) === "Int16Array");
+                assert(util.typeOf(new Int16Array()) === "Int16Array");
             });
 
             it("uint16array", () => {
-                assert(util.typeDetect(new Uint16Array()) === "Uint16Array");
+                assert(util.typeOf(new Uint16Array()) === "Uint16Array");
             });
 
             it("int32array", () => {
-                assert(util.typeDetect(new Int32Array()) === "Int32Array");
+                assert(util.typeOf(new Int32Array()) === "Int32Array");
             });
 
             it("uint32array", () => {
-                assert(util.typeDetect(new Uint32Array()) === "Uint32Array");
+                assert(util.typeOf(new Uint32Array()) === "Uint32Array");
             });
 
             it("float32array", () => {
-                assert(util.typeDetect(new Float32Array()) === "Float32Array");
+                assert(util.typeOf(new Float32Array()) === "Float32Array");
             });
 
             it("float64array", () => {
-                assert(util.typeDetect(new Float64Array()) === "Float64Array");
+                assert(util.typeOf(new Float64Array()) === "Float64Array");
             });
 
             it("dataview", () => {
                 const arrayBuffer = new ArrayBuffer(1);
-                assert(util.typeDetect(new DataView(arrayBuffer)) === "DataView");
+                assert(util.typeOf(new DataView(arrayBuffer)) === "DataView");
             });
 
             it("arraybuffer", () => {
-                assert(util.typeDetect(new ArrayBuffer(1)) === "ArrayBuffer");
+                assert(util.typeOf(new ArrayBuffer(1)) === "ArrayBuffer");
             });
 
             it("arrow function", () => {
-                assert(util.typeDetect(eval("() => {}")) === "function"); // eslint-disable-line no-eval
+                assert(util.typeOf(eval("() => {}")) === "function"); // eslint-disable-line no-eval
             });
 
             it("generator function", () => {
-                assert(util.typeDetect(eval("function * foo () {}; foo")) === "function"); // eslint-disable-line no-eval
+                assert(util.typeOf(eval("function * foo () {}; foo")) === "function"); // eslint-disable-line no-eval
             });
 
             it("generator", () => {
-                assert(util.typeDetect(eval("(function * foo () {}())")) === "Generator"); // eslint-disable-line no-eval
+                assert(util.typeOf(eval("(function * foo () {}())")) === "Generator"); // eslint-disable-line no-eval
             });
 
         });

@@ -1,7 +1,7 @@
 // This file is based directly off of Douglas Crockford's json_parse.js:
 // https://github.com/douglascrockford/JSON-js/blob/master/json_parse.js
 
-import adone from "adone";
+
 const { is } = adone;
 
 let at;           // The index of the current character

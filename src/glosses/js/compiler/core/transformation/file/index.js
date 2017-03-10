@@ -1,7 +1,7 @@
 /* global BabelFileResult, BabelParserOptions, BabelFileMetadata */
 // @flow
 
-import adone from "adone";
+
 const {
     js: {
         compiler: { types, parse, helpers, codeFrame, traverse, generate },

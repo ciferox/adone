@@ -1,4 +1,4 @@
-import adone from "adone";
+
 module.exports = GenericCollection;
 function GenericCollection() {
     throw new Error("Can't construct. GenericCollection is a mixin.");

@@ -1,6 +1,6 @@
 // @flow
 
-import adone from "adone";
+
 
 const { x, vendor: { lodash: _ }, std: { path }, is } = adone;
 const defaults = {

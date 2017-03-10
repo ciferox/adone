@@ -1,4 +1,4 @@
-import adone from "adone";
+
 
 adone.lazify({
     compose: "./compose",

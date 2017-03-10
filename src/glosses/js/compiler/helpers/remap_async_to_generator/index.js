@@ -2,7 +2,7 @@
 
 import type { NodePath } from "../../traverse";
 import rewriteForAwait from "./for_await";
-import adone from "adone";
+
 
 const { types: t, template, helpers: { functionName } } = adone.js.compiler;
 

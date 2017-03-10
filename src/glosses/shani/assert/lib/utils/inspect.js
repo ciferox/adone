@@ -1,7 +1,7 @@
 // This is (almost) directly from Node.js utils
 // https://github.com/joyent/node/blob/f8c335d0caf47f16d31413f89aa28eda3878e3aa/lib/util.js
 
-import adone from "adone";
+
 import getProperties from "./getProperties";
 import getEnumerableProperties from "./getEnumerableProperties";
 import config from "../config";

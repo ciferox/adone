@@ -1,4 +1,3 @@
-import adone from "adone";
 const { is, x, ExBuffer, netron: { GenesisPeer }, util, net } = adone;
 
 export default class WebSocketPeer extends GenesisPeer {

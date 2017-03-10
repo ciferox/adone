@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { Iterator } = adone.collection;
 
 module.exports = GenericMap;

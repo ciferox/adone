@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import defaults from "../defaults";
 
 const imports = adone.lazify({

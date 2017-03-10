@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import BasePrompt from "./base";
 import Paginator from "../paginator";
 const { vendor: { lodash: _ }, terminal } = adone;

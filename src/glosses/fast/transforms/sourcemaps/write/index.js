@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import initInternals from "./internals";
 
 const { is, x, Transform } = adone;

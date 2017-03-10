@@ -1,5 +1,5 @@
 import Connector from "./connector";
-import adone from "adone";
+
 const { x, is, std: { net }, util, noop } = adone;
 
 const lazy = adone.lazify({

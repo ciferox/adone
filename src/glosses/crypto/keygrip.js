@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { is, x, crypto: { stringCompare }, std: { crypto } } = adone;
 
 const cryptoHashes = new Set(crypto.getHashes());

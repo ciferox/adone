@@ -6,7 +6,7 @@
   *
   * Copyright (c) 2010-2013 Christian Johansen
   */
-import adone from "adone";
+
 import getPropertyDescriptor from "./util/get-property-descriptor";
 import extend from "./util/extend";
 import functionName from "./util/function-name";

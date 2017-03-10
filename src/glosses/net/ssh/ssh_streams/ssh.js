@@ -3,7 +3,7 @@
 //           comes sooner
 //       * Filter control codes from strings
 //         (as per http://tools.ietf.org/html/rfc4251#section-9.2)
-import adone from "adone";
+
 
 import {
     isStreamCipher,

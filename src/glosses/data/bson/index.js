@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import Binary from "./lib/binary";
 import Code from "./lib/code";
 import DBRef from "./lib/db_ref";

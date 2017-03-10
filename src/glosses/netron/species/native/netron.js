@@ -1,4 +1,3 @@
-import adone from "adone";
 const { is, x, netron: { DEFAULT_PORT, ACTION, STATUS, PEER_TYPE, GenesisNetron, Peer, RemoteStub } } = adone;
 
 const IP_POLICY_NONE = 0;

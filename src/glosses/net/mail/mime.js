@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const libcharset = adone.net.mail.charset;
 const libbase64 = adone.net.mail.base64;
 const libqp = adone.net.mail.qp;

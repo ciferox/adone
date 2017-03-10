@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const packageData = require("../../../../package.json");
 const mailcomposer = adone.net.mail.composer;
 const directTransport = adone.net.mail.directTransport;

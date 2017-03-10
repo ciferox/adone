@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { is } = adone;
 
 export default class Loading extends adone.terminal.widget.Element {

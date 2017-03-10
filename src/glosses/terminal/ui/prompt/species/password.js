@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import BasePrompt from "./base";
 const { terminal } = adone;
 const observe = require("../events");

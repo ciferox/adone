@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const is = adone.is;
 import PerMessageDeflate from "./perMessageDeflate";
 const WebSocket = adone.net.ws.WebSocket;

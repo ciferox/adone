@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { is, net: { Socket } } = adone;
 
 export default class Server extends adone.EventEmitter {

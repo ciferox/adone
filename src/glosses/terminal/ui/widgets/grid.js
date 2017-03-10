@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const is = adone.is;
 
 class DefaultWidget extends adone.terminal.widget.Element {

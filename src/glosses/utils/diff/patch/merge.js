@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import { structuredPatch } from "./create";
 import { parsePatch } from "./parse";
 

@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { is, data } = adone;
 
 const singleEscapes = {

@@ -6,6 +6,7 @@ const { is, std } = adone;
 
 export default class AdoneCLI extends adone.Application {
     async initialize() {
+        this.addSubsystem(adone.std.path.resolve(__dirname, "./subsystems/meta"));
         this.addSubsystem(adone.std.path.resolve(__dirname, "./subsystems/omnitron"));
         this.addSubsystem(adone.std.path.resolve(__dirname, "./subsystems/bench"));
 
@@ -77,34 +78,11 @@ export default class AdoneCLI extends adone.Application {
 
     main(args) {
         let expr = args.get("expr");
-        if (expr.startsWith("?")) {
-            let parts = expr.substring(1).split(".");
-            if (parts.length > 0 && (parts[0] === "adone" || parts[0] === "")) {
-                parts = parts.slice(1);
-            }
-            let obj = adone;
-            for (const part of parts) {
-                if (!is.propertyOwned(obj, part)) {
-                    adone.log(`Unknown namespace: adone.${part}`);
-                    return 1;
-                }
-                obj = obj[part];
-            }
-            expr = parts.join(".");
-            if (expr === "") {
-                obj = adone;
-            } else {
-                obj = adone.vendor.lodash.get(adone, expr, undefined);
-            }
-            adone.log(adone.inspect(obj, { style: "color", depth: 1 }));
-            return 0;
-        } else {
-            if (!std.path.isAbsolute(expr)) {
-                expr = std.path.resolve(process.cwd(), expr);
-            }
-
-            return adone.require(expr);
+        if (!std.path.isAbsolute(expr)) {
+            expr = std.path.resolve(process.cwd(), expr);
         }
+
+        return adone.require(expr);
     }
 
     async configCommand(args, opts) {

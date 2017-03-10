@@ -1,7 +1,7 @@
 import * as lexer from "./lexer";
 import * as nodes from "./nodes";
 import { TemplateError } from "./x";
-import adone from "adone";
+
 const { is, x } = adone;
 
 export class Parser {

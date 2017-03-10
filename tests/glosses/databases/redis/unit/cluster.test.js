@@ -1,5 +1,3 @@
-/* global describe it beforeEach afterEach */
-
 import { stub } from "sinon";
 import Cluster from "adone/glosses/databases/redis/cluster";
 

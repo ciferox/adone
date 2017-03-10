@@ -1,6 +1,6 @@
 // @flow
 
-import adone from "adone";
+
 
 class ETransform extends adone.Transform {
     _end() {

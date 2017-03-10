@@ -1,5 +1,3 @@
-// @flow
-import adone from "adone";
 const { path, fs, module: Module } = adone.std;
 const { lodash: _ } = adone.vendor;
 

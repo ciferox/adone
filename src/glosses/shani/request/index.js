@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { shani: { utils: { assert } }, net, std, is, x, util, compressor, EventEmitter } = adone;
 
 class Request extends EventEmitter {

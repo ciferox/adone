@@ -1,6 +1,3 @@
-/* global describe it beforeEach afterEach */
-
-import adone from "adone";
 const { BSON } = adone.data.bson;
 const Code = BSON.Code;
 const Binary = BSON.Binary;

@@ -1,5 +1,5 @@
 // @flow
-import adone from "adone";
+
 import * as whitespace from "./whitespace";
 import * as parens from "./parentheses";
 const { types } = adone.js.compiler;

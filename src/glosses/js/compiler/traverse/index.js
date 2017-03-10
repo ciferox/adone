@@ -3,7 +3,7 @@
 import TraversalContext from "./context";
 import * as visitors from "./visitors";
 import * as cache from "./cache";
-import adone from "adone";
+
 
 const { types: t, messages } = adone.js.compiler;
 const { includes } = adone.vendor.lodash;

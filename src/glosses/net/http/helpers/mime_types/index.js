@@ -1,5 +1,5 @@
 import rawDB from "./db";
-import adone from "adone";
+
 const { is, std: { path: { extname } }, util } = adone;
 
 const db = new Map(util.entries(rawDB));

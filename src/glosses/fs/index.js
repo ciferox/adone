@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { is, x, promise: { promisify } } = adone;
 
 const fs = adone.lazify({

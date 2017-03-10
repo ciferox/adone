@@ -1,5 +1,5 @@
 // @flow
-import adone from "adone";
+
 import detectIndent from "./detect-indent";
 import SourceMap from "./source-map";
 const { messages } = adone.js.compiler;

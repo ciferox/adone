@@ -1,7 +1,7 @@
 //@flow
 
 import * as virtualTypes from "./path/lib/virtual-types";
-import adone from "adone";
+
 
 const { messages, types: t } = adone.js.compiler;
 const { clone } = adone.vendor.lodash;

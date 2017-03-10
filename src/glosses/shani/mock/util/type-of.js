@@ -6,8 +6,8 @@
  *
  * Copyright (c) 2010-2014 Christian Johansen
  */
-import adone from "adone";
+
 
 export default function typeOf(value) {
-    return adone.util.typeDetect(value).toLowerCase();
+    return adone.util.typeOf(value).toLowerCase();
 }

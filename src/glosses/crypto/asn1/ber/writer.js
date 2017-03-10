@@ -1,5 +1,5 @@
 // Copyright 2011 Mark Cavage <mcavage@gmail.com> All rights reserved.
-import adone from "adone";
+
 const assert = adone.std.assert;
 import ASN1 from "./types";
 import { InvalidAsn1Error } from "./errors";

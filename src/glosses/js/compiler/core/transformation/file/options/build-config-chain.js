@@ -1,6 +1,6 @@
 // @flow
 
-import adone from "adone";
+
 import type Logger from "../logger";
 import resolve from "../../../helpers/resolve";
 const { std: { path, fs } } = adone;

@@ -1,6 +1,6 @@
 // @flow
 
-import adone from "adone";
+
 
 /**
  * Constants (defined in `stat.h`).

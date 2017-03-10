@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const crypto = adone.std.crypto;
 const Socket = adone.std.net.Socket;
 const dnsLookup = adone.std.dns.lookup;

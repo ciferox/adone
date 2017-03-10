@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { EventEmitter, std: { path, fs }, is } = adone;
 
 export class Loader extends EventEmitter {

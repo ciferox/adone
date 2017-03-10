@@ -1,4 +1,3 @@
-import adone from "adone";
 const { is, x, util, data: { mpak: { serializer } }, configuration: { Configuration }, AsyncEmitter } = adone;
 const { DEFAULT_PORT, ACTION, STATUS, Reference, Interface, Stub, Investigator, Definition, Definitions, SequenceId, Identity } = adone.netron;
 

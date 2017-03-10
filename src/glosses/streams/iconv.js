@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { util: { iconv }, std: { stream: { Transform } }, x, is } = adone;
 
 export class EncodeStream extends Transform {

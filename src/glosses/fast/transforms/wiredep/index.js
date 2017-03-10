@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import bowerConfig from "bower-config";
 import fileTypesDefault from "./default-file-types";
 import HelperStore from "./helper-store";

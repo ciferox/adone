@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const packageData = require("../../../../package.json");
 
 module.exports = function (options) {

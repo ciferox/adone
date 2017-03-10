@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { database: { local: { Model } }, x, is, util } = adone;
 
 export default class Cursor {

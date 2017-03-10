@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { std: { path: { basename } }, is, x, util } = adone;
 
 // RegExp to match non attr-char, *after* encodeURIComponent (i.e. not including "%")

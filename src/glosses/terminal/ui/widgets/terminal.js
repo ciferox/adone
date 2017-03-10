@@ -1,4 +1,4 @@
-import adone from "adone";
+
 
 function Terminal(options) {
     if (!(this instanceof adone.terminal.widget.Node)) {

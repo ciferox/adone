@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import Diff from "./base";
 import { lineDiff } from "./line";
 

@@ -1,4 +1,4 @@
-import adone from "adone";
+
 
 export default class extends adone.Transform {
     _transform(x) {

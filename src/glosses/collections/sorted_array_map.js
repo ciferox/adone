@@ -1,4 +1,4 @@
-import adone from "adone";
+
 require("./shim");
 const { SortedArraySet } = adone.collection;
 const GenericCollection = require("./generic_collection");

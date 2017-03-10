@@ -1,5 +1,5 @@
 import * as commands from "./commands";
-import adone from "adone";
+
 const { util, x, is } = adone;
 
 export const list = util.keys(commands);

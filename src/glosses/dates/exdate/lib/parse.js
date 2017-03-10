@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import { toInt } from "./utils";
 
 export const match1         = /\d/;            //       0 - 9

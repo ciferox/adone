@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { is } = adone;
 
 const codeRegex = (capture) => capture ? /\u001b\[((?:\d*;){0,5}\d*)m/g : /\u001b\[(?:\d*;){0,5}\d*m/g;

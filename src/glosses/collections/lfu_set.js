@@ -1,5 +1,5 @@
 // Based on http://dhruvbird.com/lfu.pdf
-import adone from "adone";
+
 const { Set } = adone.collection;
 
 require("./shim");

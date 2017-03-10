@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import File from "./file";
 import * as helpers from "./helpers";
 const { std, util, is } = adone;

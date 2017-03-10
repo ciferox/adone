@@ -1,4 +1,3 @@
-import adone from "adone";
 const { EventEmitter, collection: { LinkedList }, netron: { ACTION, SequenceId } } = adone;
 
 export default class Stream extends EventEmitter {

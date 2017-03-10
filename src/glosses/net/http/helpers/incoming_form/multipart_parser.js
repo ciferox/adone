@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { x } = adone;
 
 let s = 0;

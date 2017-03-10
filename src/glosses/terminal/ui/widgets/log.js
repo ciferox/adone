@@ -1,4 +1,4 @@
-import adone from "adone";
+
 
 export default class Log extends adone.terminal.widget.ScrollableText {
     constructor(options = { }) {

@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const is = adone.is; 
 
 export default class Multi extends adone.terminal.widget.Element {

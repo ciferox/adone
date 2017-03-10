@@ -1,6 +1,6 @@
 // @flow
 
-import adone from "adone";
+
 import SASS from "node-sass";
 
 const { std: { path }, x, is, fast: { Fast, File, helpers: { applySourceMap } } } = adone;

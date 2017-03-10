@@ -1,6 +1,6 @@
 // Node.js internal encodings.
 
-import adone from "adone";
+
 const { std: { string_decoder: { StringDecoder } } } = adone;
 
 export const utf8 = { type: "_internal", bomAware: true };

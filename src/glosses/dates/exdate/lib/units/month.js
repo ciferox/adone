@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import { addFormatToken } from "../format";
 import { addUnitAlias } from "./aliases";
 import { addUnitPriority } from "./priorities";

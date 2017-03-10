@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { Set } = adone.collection;
 require("./shim");
 const GenericCollection = require("./generic_collection");

@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import { configFromISO } from "./from-string";
 import { configFromArray } from "./from-array";
 import { getParseRegexForToken, addTimeToArrayFromToken }   from "../parse";

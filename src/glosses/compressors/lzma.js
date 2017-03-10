@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import { createStream, singleStringCoding, native } from "./xz";
 
 const lzma = {

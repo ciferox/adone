@@ -1,5 +1,3 @@
-import adone from "adone";
-
 class HTTPServe extends adone.web.Application {
     initialize() {
         this.address = "0.0.0.0";

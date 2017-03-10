@@ -1,4 +1,3 @@
-import adone from "adone";
 import { schemas, userGroup, adminGroup } from "./defaults";
 const { is, netron: { contextable, decorator: { Contextable, Description, Public, Private, Type, Property, Method } }, vendor: { lodash: _ } } = adone;
 

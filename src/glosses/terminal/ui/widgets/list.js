@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const is = adone.is;
 var helpers = require("../helpers");
 

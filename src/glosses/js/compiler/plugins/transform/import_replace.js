@@ -1,6 +1,6 @@
 // @flow
 
-import adone from "adone";
+
 
 export default function () {
     const { path } = adone.std;

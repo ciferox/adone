@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { fs } = adone.std;
 
 export default class BigText extends adone.terminal.widget.Element {

@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { is, net: { http: { helper: { mediaTyper, mimeType } } } } = adone;
 
 const normalizeType = (value) => {

@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { template } = adone.js.compiler;
 
 const buildClassDecorator = template(`

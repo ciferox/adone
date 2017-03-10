@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const Transform = adone.std.stream.Transform;
 
 // expose to the world

@@ -1,5 +1,5 @@
 // TODO: streaming parser
-import adone from "adone";
+
 const { std: { querystring } } = adone;
 
 export default class QuerystringParser {

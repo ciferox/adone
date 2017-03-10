@@ -1,4 +1,4 @@
-import adone from "adone";
+
 
 export default class ProgressBar extends adone.terminal.widget.Input {
     constructor(options) {

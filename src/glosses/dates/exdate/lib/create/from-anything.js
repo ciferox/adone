@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import ExDate from "../exdate";
 import { createInvalid } from "./valid";
 import { getLocale } from "../locale";

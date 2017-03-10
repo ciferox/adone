@@ -1,5 +1,3 @@
-import adone from "adone";
-
 export default class Definition {
     constructor() {
         this.id = undefined;

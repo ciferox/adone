@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { is, noop } = adone;
 
 const irregularPlurals = adone.o({
@@ -756,7 +756,7 @@ adone.lazify({
     toposort: "./toposort",
     jsesc: "./jsesc",
     Mode: "./mode",
-    typeDetect: "./type_detect",
+    typeOf: "./typeof",
     deepEqual: "./deep_equal",
     diff: "./diff",
     memcpy: "./memcpy",

@@ -1,5 +1,3 @@
-import adone from "adone";
-
 const { Contextable, Description, Public, Private, Type } = adone.netron.decorator;
 const { is, vendor: { lodash: _ }, std, netron: { Netron }, AsyncEmitter } = adone;
 const { DefaultMap } = adone.collection;

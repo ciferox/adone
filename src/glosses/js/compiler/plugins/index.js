@@ -1,6 +1,6 @@
 // @flow
 
-import adone from "adone";
+
 
 const plugins = {
     syntax: adone.lazify({

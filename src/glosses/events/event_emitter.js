@@ -1,4 +1,4 @@
-import adone from "adone";
+
 
 // This constructor is used to store event handlers. Instantiating this is
 // faster than explicitly calling `Object.create(null)` to get a "clean" empty

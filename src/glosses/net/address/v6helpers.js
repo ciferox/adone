@@ -1,4 +1,4 @@
-import adone from "adone";
+
 
 /**
  * @returns {String} the string with all zeroes contained in a <span>

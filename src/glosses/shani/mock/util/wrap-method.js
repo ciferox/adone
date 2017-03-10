@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import getPropertyDescriptor from "./get-property-descriptor";
 import valueToString from "./value-to-string";
 

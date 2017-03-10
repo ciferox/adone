@@ -1,5 +1,5 @@
 // @flow
-import adone from "adone";
+
 const { types, messages, helpers, template, generate } = adone.js.compiler;
 
 const buildUmdWrapper = template(`

@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import { createLocal } from "./create/local";
 import { getLocale } from "./locale";
 import { DATE, HOUR, MINUTE, SECOND, MILLISECOND } from "./units/constants";

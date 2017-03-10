@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import NodeFsHandler from "./lib/nodefs-handler";
 import FSEventsHandler, { canUse as canUseFSEvents } from "./lib/fsevents-handler";
 

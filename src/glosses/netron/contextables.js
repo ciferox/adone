@@ -1,4 +1,3 @@
-import adone from "adone";
 const { Contextable, Description, Private, Public, Property } = adone.netron.decorator;
 
 @Private

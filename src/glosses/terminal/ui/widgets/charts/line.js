@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { is } = adone;
 const utils = require("../../utils.js");
 const { lodash: _ } = adone.vendor;

@@ -64,7 +64,8 @@ export default adone;
 
 Object.defineProperty(global, "adone", {
     configurable: true,
-    get: () => adone
+    enumerable: true,
+    value: adone
 });
 
 const lazify = adone.lazify;

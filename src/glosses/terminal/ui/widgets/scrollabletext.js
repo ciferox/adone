@@ -1,4 +1,4 @@
-import adone from "adone";
+
 
 export default class ScrollableText extends adone.terminal.widget.Element {
     constructor(options = { }) {

@@ -1,5 +1,5 @@
 require("./shim");
-import adone from "adone";
+
 const { Dict } = adone.collection;
 const List = require("./_list");
 const GenericCollection = require("./generic_collection");

@@ -1,5 +1,3 @@
-import adone from "adone";
-
 if (adone.is.nil(process.env.ADONE_HOME)) {
     let home = "";
     if (process.env.HOME && !process.env.HOMEPATH) {

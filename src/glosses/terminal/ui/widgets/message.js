@@ -1,4 +1,4 @@
-import adone from "adone";
+
 
 export default class Message extends adone.terminal.widget.Element {
     constructor(options = { }) {

@@ -1,5 +1,5 @@
 import rawCodes from "./codes";
-import adone from "adone";
+
 const { is, x, util } = adone;
 
 export const codes = new Map(util.entries(rawCodes).map(([code, message]) => {

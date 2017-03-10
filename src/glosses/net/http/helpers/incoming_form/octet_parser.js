@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { EventEmitter } = adone;
 
 export default class OctetParser extends EventEmitter {

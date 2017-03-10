@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { is } = adone;
 
 const jsmemcmp = (buf1, _pos1, buf2, _pos2, num) => {

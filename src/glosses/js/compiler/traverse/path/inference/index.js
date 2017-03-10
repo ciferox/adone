@@ -1,7 +1,7 @@
 //@flow
 import type NodePath from "./index";
 import * as inferers from "./inferers";
-import adone from "adone";
+
 
 const { types: t } = adone.js.compiler;
 

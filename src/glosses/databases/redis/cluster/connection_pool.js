@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { EventEmitter, o, noop, util, is, x } = adone;
 
 const lazy = adone.lazify({

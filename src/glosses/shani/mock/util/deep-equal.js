@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import match from "../match";
 
 const deepEqual = function deepEqual(a, b, matcher) {

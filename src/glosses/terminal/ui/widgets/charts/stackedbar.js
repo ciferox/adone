@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const utils = require("../../utils.js");
 
 export default class StackedBar extends adone.terminal.widget.Canvas {

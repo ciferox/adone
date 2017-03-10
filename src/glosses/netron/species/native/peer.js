@@ -1,4 +1,3 @@
-import adone from "adone";
 const { GenesisPeer } = adone.netron;
 
 export default class Peer extends GenesisPeer {

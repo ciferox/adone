@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const CollectionsMap = adone.collection.Map.CollectionsMap;
 
 export default class MultiMap extends CollectionsMap {

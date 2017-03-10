@@ -1,5 +1,3 @@
-import adone from "adone";
-
 export function executeCommand(configuration, db, cmd, options) {
     // Set the default options object if none passed in
     options = options || {};

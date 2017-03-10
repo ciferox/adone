@@ -1,5 +1,3 @@
-import adone from "adone";  // wtf
-
 const {
     netron: { Netron, decorator: { Contextable } } 
 } = adone;

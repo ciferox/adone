@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { is } = adone;
 
 const simpleLanguageRegExp = /^\s*([^\s\-;]+)(?:-([^\s;]+))?\s*(?:;(.*))?$/;

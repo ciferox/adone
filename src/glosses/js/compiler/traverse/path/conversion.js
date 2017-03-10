@@ -1,7 +1,7 @@
 // This file contains methods that convert the path node into another node or some other type of data.
 // @flow 
 
-import adone from "adone";
+
 const { types: t } = adone.js.compiler;
 
 export function toComputedKey(): Object {

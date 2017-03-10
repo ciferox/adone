@@ -6,7 +6,7 @@ import traverse from "../index";
 import Binding from "./binding";
 import { scope as scopeCache } from "../cache";
 
-import adone from "adone";
+
 
 const {
     vendor: { lodash: { defaults, includes, repeat } },

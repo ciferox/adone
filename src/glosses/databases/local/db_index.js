@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { database: { local: { Model } }, is, collection } = adone;
 
 const projectForUnique = (elt) => {

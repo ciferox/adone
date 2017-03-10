@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { is, util } = adone;
 
 const simpleMediaTypeRegExp = /^\s*([^\s\/;]+)\/([^;\s]+)\s*(?:;(.*))?$/;

@@ -1,4 +1,4 @@
-import adone from "adone";
+
 
 // See: http://code.google.com/p/google-diff-match-patch/wiki/API
 export function convertChangesToDMP(changes) {

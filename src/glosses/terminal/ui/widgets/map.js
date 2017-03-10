@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const InnerMap = require("./_map");
 
 export default class Map extends adone.terminal.widget.Canvas {

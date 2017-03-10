@@ -1,4 +1,4 @@
-import adone from "adone";
+
 
 export default class CheckBox extends adone.terminal.widget.Input {
     constructor(options = { }) {

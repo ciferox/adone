@@ -1,5 +1,5 @@
 import { PrependBOM, StripBOM } from "./bom_handling";
-import adone from "adone";
+
 const { is, x } = adone;
 
 const iconv = adone.lazify({

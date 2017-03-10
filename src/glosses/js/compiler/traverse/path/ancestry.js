@@ -1,6 +1,6 @@
 // This file contains that retrieve or validate anything related to the current paths ancestry.
 //@flow
-import adone from "adone";
+
 import NodePath from "./index";
 
 const { types: t } = adone.js.compiler;

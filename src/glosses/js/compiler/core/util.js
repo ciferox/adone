@@ -1,6 +1,6 @@
 // @flow
 
-import adone from "adone";
+
 
 const { vendor: { lodash: _ }, is, std: { path } } = adone;
 const { escapeRegExp } = _;

@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import FreebsdProcess from "./process";
 
 export default class FreebsdOS extends adone.metrics.OS {

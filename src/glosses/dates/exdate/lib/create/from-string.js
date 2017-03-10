@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import { configFromStringAndFormat } from "./from-string-and-format";
 import { hooks } from "../utils";
 import getParsingFlags from "./parsing-flags";

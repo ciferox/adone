@@ -1,6 +1,6 @@
 // @flow
 
-import adone from "adone";
+
 import scanCodes from "./scan_codes";
 
 const { std, noop } = adone;

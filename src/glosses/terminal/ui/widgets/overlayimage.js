@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const helpers = require("../helpers");
 
 export default class OverlayImage extends adone.terminal.widget.Element {

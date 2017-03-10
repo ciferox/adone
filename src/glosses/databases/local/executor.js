@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { collection, is } = adone;
 
 export default class Executor {

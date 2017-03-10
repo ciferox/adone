@@ -1,4 +1,3 @@
-import adone from "adone";
 import { multiple as getFixtures } from "../helper_fixture";
 
 const { is, std: { fs, path } } = adone;

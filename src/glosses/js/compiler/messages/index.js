@@ -1,5 +1,5 @@
 // @flow
-import adone from "adone";
+
 const { util } = adone.std;
 
 /**

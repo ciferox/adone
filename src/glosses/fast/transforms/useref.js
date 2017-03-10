@@ -1,6 +1,6 @@
 // @flow
 
-import adone from "adone";
+
 import useref from "useref";
 
 const { x, fast: { Fast } } = adone;

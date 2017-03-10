@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const shared = adone.net.mail.shared;
 
 module.exports = templateSender;

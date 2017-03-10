@@ -1,4 +1,3 @@
-import adone from "adone";
 import { Task, Worker } from "./basetasks";
 
 export default function (taskManager) {

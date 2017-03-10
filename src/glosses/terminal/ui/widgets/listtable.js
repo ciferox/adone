@@ -1,4 +1,4 @@
-import adone from "adone";
+
 
 export default class ListTable extends adone.terminal.widget.List {
     constructor(options = { }) {

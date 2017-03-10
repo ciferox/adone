@@ -1,4 +1,4 @@
-import adone from "adone";
+
 
 export default class Diff {
     diff(oldString, newString, options = {}) {

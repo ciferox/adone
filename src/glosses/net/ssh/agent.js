@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const Socket = adone.std.net.Socket;
 const EventEmitter = adone.std.events.EventEmitter;
 const inherits = adone.std.util.inherits;

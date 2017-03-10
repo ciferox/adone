@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const inherits = adone.std.util.inherits;
 const DuplexStream = adone.std.stream.Duplex;
 const ReadableStream = adone.std.stream.Readable;

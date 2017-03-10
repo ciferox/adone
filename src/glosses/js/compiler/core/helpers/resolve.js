@@ -1,6 +1,6 @@
 // @flow
 
-import adone from "adone";
+
 const { module: Module, path } = adone.std;
 
 const relativeModules = {};

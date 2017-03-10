@@ -4,7 +4,7 @@
 import { path as pathCache } from "../cache";
 import PathHoister from "./lib/hoister";
 import NodePath from "./index";
-import adone from "adone";
+
 
 const { types: t } = adone.js.compiler;
 

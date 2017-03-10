@@ -1,4 +1,4 @@
-import adone from "adone";
+
 
 export default class Button extends adone.terminal.widget.Input {
     constructor(options = { }) {

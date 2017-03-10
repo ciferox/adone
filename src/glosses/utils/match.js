@@ -1,4 +1,4 @@
-import adone from "adone";
+
 
 export default function match(criteria, value = null, { index = false, start = 0, end = null, dot = false } = {}) {
     criteria = adone.util.arrify(criteria);

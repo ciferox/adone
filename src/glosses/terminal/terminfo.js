@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { is, vendor: { lodash: _ } } = adone;
 
 // Resources:

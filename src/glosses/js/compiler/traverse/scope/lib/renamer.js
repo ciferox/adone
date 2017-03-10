@@ -1,7 +1,7 @@
 //@flow
 
 import Binding from "../binding";
-import adone from "adone";
+
 
 const { types: t } = adone.js.compiler;
 

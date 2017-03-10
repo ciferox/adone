@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const is = adone.is;
 const ansi = adone.text.ansi;
 

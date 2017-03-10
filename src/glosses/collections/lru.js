@@ -1,4 +1,4 @@
-import adone from "adone";
+
 
 export default class LRU {
     constructor(size, { dispose = null } = {}) {

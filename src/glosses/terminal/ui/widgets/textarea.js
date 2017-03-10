@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const unicode = require("../unicode");
 
 export default class TextArea extends adone.terminal.widget.Input {

@@ -11,9 +11,9 @@
  * Module dependencies
  */
 
-import adone from "adone";
 
-const type = adone.util.typeDetect;
+
+const type = adone.util.typeOf;
 const MemoizeMap = WeakMap;
 
 /*!

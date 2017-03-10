@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { Process } = adone.metrics;
 
 export default class FreebsdProcess extends Process {

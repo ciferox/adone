@@ -1,5 +1,3 @@
-import adone from "adone";
-
 let bson = adone.data.bson.BSON;
 let Binary = bson.Binary
     , Long = bson.Long

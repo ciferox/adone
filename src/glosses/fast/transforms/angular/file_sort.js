@@ -1,6 +1,6 @@
 // @flow
 
-import adone from "adone";
+
 import { findDependencies } from "./utils";
 
 const { x, util: { toposort }, fast: { Fast } } = adone;

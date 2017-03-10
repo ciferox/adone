@@ -1,4 +1,4 @@
-import adone from "adone";
+
 import assertion from "./assert";
 import * as mock from "./mock";
 
@@ -712,7 +712,7 @@ export class Engine {
                 }, global.$, m.require.bind(m), { configurable: true });
 
                 adone.lazify({
-                    adone: () => global.$.adone,
+//                    adone: () => global.$.adone,
                     expect: () => global.$.expect,
                     assert: () => global.$.assert,
                     spy: () => global.$.spy,

@@ -1,7 +1,7 @@
 /* eslint max-len: 0 */
 // @flow
 
-import adone from "adone";
+
 const {
     js: { compiler: { types: t, template } },
     std: { path: { basename, extname } }

@@ -1,6 +1,6 @@
 // @flow
 
-import adone from "adone";
+
 const { is, js: { compiler: { messages, traverse } }, vendor: { lodash: _ } } = adone;
 import Store from "../store";
 

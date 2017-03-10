@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { std: { url: { parse, Url } }, is } = adone;
 
 const simplePathRegExp = /^(\/\/?(?!\/)[^?#\s]*)(\?[^#\s]*)?$/;

@@ -1,4 +1,4 @@
-import adone from "adone";
+
 const { is } = adone;
 
 export default class WindowsFS extends adone.metrics.FileSystem {

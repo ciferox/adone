@@ -1,5 +1,5 @@
 // @flow
-import adone from "adone";
+
 const {
     vendor: { lodash: { cloneDeep } },
     js: { compiler: { types, traverse, parse } }

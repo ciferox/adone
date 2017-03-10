@@ -1,6 +1,6 @@
 /* global Node */
 // @flow
-import adone from "adone";
+
 const {
     vendor: { lodash: { find, findLast } },
     js: { compiler: { types } },
