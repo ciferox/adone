@@ -1,6 +1,6 @@
 import adone from "adone";
 const { is, net: { http }, x, util } = adone;
-const { helper: { assert, status } } = http;
+const { helper: { assert, status, Cookies } } = http;
 
 export default class Context {
     constructor(server, request, response) {
@@ -12,6 +12,10 @@ export default class Context {
         this.originalUrl = this.request.originalUrl;
         this.state = {};
         this.accept = request.accept;
+        this.cookies = new Cookies(this.req, this.res, {
+            keys: this.server.keys,
+            secure: request.secure
+        });
     }
 
     throw(statusCode, message, properties) {
@@ -45,8 +49,15 @@ export default class Context {
             return;
         }
 
-        // unset all headers, and set those specified
-        this.res._headers = {};
+        const { res } = this;
+
+        // first unset all headers
+        const names = res.getHeaderNames();
+        for (let i = 0; i < names.length; ++i) {
+            res.removeHeader(names[i]);
+        }
+
+        // then set those specified
         this.set(err.headers);
 
         // force text/plain

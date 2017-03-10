@@ -6,6 +6,7 @@ export const context = (req, res, server) => {
     res = adone.o({ _headers: {}, socket }, Stream.Writable.prototype, res);
     req.socket.remoteAddress = req.socket.remoteAddress || "127.0.0.1";
     server = server || new Server();
+    res.getHeaders = () => res._headers || {};
     res.getHeader = (k) => res._headers[k.toLowerCase()];
     res.setHeader = (k, v) => res._headers[k.toLowerCase()] = v;
     res.removeHeader = (k) => delete res._headers[k.toLowerCase()];

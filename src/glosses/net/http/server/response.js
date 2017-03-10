@@ -27,7 +27,7 @@ export default class Response {
     }
 
     get header() {
-        return this.res._headers || {};
+        return this.res.getHeaders();
     }
 
     get headers() {

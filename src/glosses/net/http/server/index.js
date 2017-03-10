@@ -41,7 +41,7 @@ export default class Server extends EventEmitter {
             const onerror = (err) => ctx.onerror(err);
             const handleResponse = () => Server.respond(ctx);
             onFinished(res, onerror);
-            fn(ctx).then(handleResponse).catch(onerror);
+            return fn(ctx).then(handleResponse).catch(onerror);
         };
 
         return handleRequest;

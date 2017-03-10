@@ -1,5 +1,8 @@
+import * as helpers from "../helpers";
+
 describe("glosses", "net", "http", "server", "context", "onerror(err)", () => {
     const { net: { http: { Server } } } = adone;
+    const { context } = helpers;
 
     it("should respond", async () => {
         const server = new Server();
@@ -146,6 +149,23 @@ describe("glosses", "net", "http", "server", "context", "onerror(err)", () => {
                 .expectStatus(500)
                 .expectHeader("Content-Type", "text/plain; charset=utf-8")
                 .expectBody("Internal Server Error");
+        });
+
+        it("should use res.getHeaderNames() accessor", () => {
+            let removed = 0;
+            const ctx = context();
+
+            ctx.server.emit = () => { };
+            ctx.res = {
+                getHeaderNames: () => ["content-type", "content-length"],
+                removeHeader: () => removed++,
+                end: () => { },
+                emit: () => { }
+            };
+
+            ctx.onerror(new Error("error"));
+
+            assert.equal(removed, 2);
         });
     });
 });
