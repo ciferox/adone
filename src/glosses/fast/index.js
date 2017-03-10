@@ -395,7 +395,7 @@ function watchSource(globs, { cwd = process.cwd(), base = null, dot = true, ...w
     if (!base) {
         globsParents = globs.map((x) => adone.util.globParent(x));
     }
-    const watcher = adone.FSWatcher.watch(globs, { alwaysStat: true, ignoreInitial: true, ...watcherOptions })
+    const watcher = adone.fs.watch(globs, { alwaysStat: true, ignoreInitial: true, ...watcherOptions })
         .on("all", (event, path, stat) => {
             if (event !== "add" && event !== "change") {
                 return;

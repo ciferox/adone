@@ -274,7 +274,7 @@ describe("Fast", () => {
             });
 
             it("should work with sourcemaps and a globbed source", async () => {
-                const files = await adone.glob(scssdir.getVirtualFile("globbed", "**", "*.scss").path());
+                const files = await adone.fs.glob(scssdir.getVirtualFile("globbed", "**", "*.scss").path());
 
                 const filesContent = {};
                 files.forEach(function (file) {
