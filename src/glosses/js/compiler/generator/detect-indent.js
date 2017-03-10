@@ -2,18 +2,14 @@
 // for indentation and spaces for alignment
 const INDENT_RE = /^(?:( )+|\t+)/;
 
-function getMostUsed(indents) {
+const getMostUsed = (indents) => {
     let result = 0;
     let maxUsed = 0;
     let maxWeight = 0;
 
     for (const entry of indents) {
-		// TODO: use destructuring when targeting Node.js 6
-        const key = entry[0];
-        const val = entry[1];
-
-        const u = val[0];
-        const w = val[1];
+        const [key, val] = entry;
+        const [u, w] = val;
 
         if (u > maxUsed || (u === maxUsed && w > maxWeight)) {
             maxUsed = u;
@@ -23,9 +19,9 @@ function getMostUsed(indents) {
     }
 
     return result;
-}
+};
 
-module.exports = (str) => {
+export default (str) => {
     if (typeof str !== "string") {
         throw new TypeError("Expected a string");
     }

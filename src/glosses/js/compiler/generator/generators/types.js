@@ -91,9 +91,13 @@ export function ArrayExpression(node: Object) {
     for (let i = 0; i < elems.length; i++) {
         const elem = elems[i];
         if (elem) {
-            if (i > 0) this.space();
+            if (i > 0) {
+                this.space();
+            }
             this.print(elem, node);
-            if (i < len - 1) this.token(",");
+            if (i < len - 1) {
+                this.token(","); 
+            }
         } else {
             // If the array expression ends with a hole, that hole
             // will be ignored by the interpreter, but if it ends with
@@ -123,7 +127,7 @@ export function NullLiteral() {
 
 export function NumericLiteral(node: Object) {
     const raw = this.getPossibleRaw(node);
-    const value = node.value + "";
+    const value = `${node.value}`;
     if (adone.is.nil(raw)) {
         this.number(value);  // normalize
     } else if (this.format.minified) {

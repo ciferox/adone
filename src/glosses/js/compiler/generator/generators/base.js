@@ -7,7 +7,9 @@ export function Program(node: Object) {
     this.printInnerComments(node, false);
 
     this.printSequence(node.directives, node);
-    if (node.directives && node.directives.length) this.newline();
+    if (node.directives && node.directives.length) {
+        this.newline();
+    }
 
     this.printSequence(node.body, node);
 }
@@ -22,14 +24,18 @@ export function BlockStatement(node: Object) {
         this.newline();
 
         this.printSequence(node.directives, node, { indent: true });
-        if (hasDirectives) this.newline();
+        if (hasDirectives) {
+            this.newline();
+        }
 
         this.printSequence(node.body, node, { indent: true });
         this.removeTrailingNewline();
 
         this.source("end", node.loc);
 
-        if (!this.endsWith("\n")) this.newline();
+        if (!this.endsWith("\n")) {
+            this.newline();
+        }
 
         this.rightBrace();
     } else {

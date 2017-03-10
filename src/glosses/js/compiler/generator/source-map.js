@@ -58,7 +58,9 @@ export default class SourceMap {
         filename : ? string
     ) {
         // Adding an empty mapping at the start of a generated line just clutters the map.
-        if (this._lastGenLine !== generatedLine && line === null) return;
+        if (this._lastGenLine !== generatedLine && line === null) {
+            return;
+        }
 
         // If this mapping points to the same source location as the last one, we can ignore it since
         // the previous one covers it.
@@ -81,8 +83,8 @@ export default class SourceMap {
                 line: generatedLine,
                 column: generatedColumn
             },
-            source: line == null ? undefined : filename || this._opts.sourceFileName,
-            original: line == null ? undefined : {
+            source: adone.is.nil(line) ? undefined : filename || this._opts.sourceFileName,
+            original: adone.is.nil(line) ? undefined : {
                 line,
                 column
             }

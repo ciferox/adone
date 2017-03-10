@@ -3,12 +3,6 @@
 import adone from "adone";
 const { types } = adone.js.compiler;
 
-/**
- * Normalize an AST.
- *
- * - Wrap `Program` node with a `File` node.
- */
-
 export default function (
     ast: Object,
     comments?: Object[],

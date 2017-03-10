@@ -1,15 +1,15 @@
 // @flow
 
-import * as util from "../../../util";
+import { booleanify, list } from "../../../util";
 
-export function boolean(val: any): boolean {
-    return !!val;
-}
-
-export function booleanString(val: any): boolean | any {
-    return util.booleanify(val);
-}
-
-export function list(val: any): string[] {
-    return util.list(val);
-}
+export default {
+    boolean(val: any): boolean {
+        return Boolean(val);
+    },
+    booleanString(val: any): boolean | any {
+        return booleanify(val);
+    },
+    list(val: any): string[] {
+        return list(val);
+    }
+};

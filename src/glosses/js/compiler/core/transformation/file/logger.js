@@ -15,7 +15,9 @@ export default class Logger {
 
     _buildMessage(msg: string): string {
         let parts = `[BABEL] ${this.filename}`;
-        if (msg) parts += `: ${msg}`;
+        if (msg) {
+            parts += `: ${msg}`;
+        }
         return parts;
     }
 
@@ -28,12 +30,16 @@ export default class Logger {
     }
 
     deprecate(msg: string) {
-        if (this.file.opts && this.file.opts.suppressDeprecationMessages) return;
+        if (this.file.opts && this.file.opts.suppressDeprecationMessages) {
+            return;
+        }
 
         msg = this._buildMessage(msg);
 
         // already seen this message
-        if (seenDeprecatedMessages.indexOf(msg) >= 0) return;
+        if (seenDeprecatedMessages.indexOf(msg) >= 0) {
+            return; 
+        }
 
         // make sure we don't see it again
         seenDeprecatedMessages.push(msg);

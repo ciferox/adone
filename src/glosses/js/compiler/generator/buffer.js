@@ -1,3 +1,4 @@
+/* global Location */
 // @flow
 
 import type SourceMap from "./source-map";
@@ -80,7 +81,11 @@ export default class Buffer {
 
     queue(str: string): void {
         // Drop trailing spaces when a newline is inserted.
-        if (str === "\n") while (this._queue.length > 0 && SPACES_RE.test(this._queue[0][0])) this._queue.shift();
+        if (str === "\n") {
+            while (this._queue.length > 0 && SPACES_RE.test(this._queue[0][0])) {
+                this._queue.shift();
+            }
+        }
 
         const { line, column, filename, identifierName } = this._sourcePosition;
         this._queue.unshift([str, line, column, identifierName, filename]);
@@ -89,13 +94,26 @@ export default class Buffer {
     _flush(): void {
         let item;
         // eslint-disable-next-line no-cond-assign
-        while (item = this._queue.pop()) this._append(...item);
+        while (item = this._queue.pop()) {
+            this._append(...item);
+        }
     }
 
-    _append(str: string, line: number, column: number, identifierName: ?string, filename: ?string): void {
+    _append(str: string,
+        line: number,
+        column: number,
+        identifierName: ?string,
+        filename: ?string
+    ): void {
         // If there the line is ending, adding a new mapping marker is redundant
         if (this._map && str[0] !== "\n") {
-            this._map.mark(this._position.line, this._position.column, line, column, identifierName, filename);
+            this._map.mark(this._position.line,
+                this._position.column,
+                line,
+                column,
+                identifierName,
+                filename
+            );
         }
 
         this._buf.push(str);
@@ -112,11 +130,15 @@ export default class Buffer {
     }
 
     removeTrailingNewline(): void {
-        if (this._queue.length > 0 && this._queue[0][0] === "\n") this._queue.shift();
+        if (this._queue.length > 0 && this._queue[0][0] === "\n") {
+            this._queue.shift();
+        }
     }
 
     removeLastSemicolon(): void {
-        if (this._queue.length > 0 && this._queue[0][0] === ";") this._queue.shift();
+        if (this._queue.length > 0 && this._queue[0][0] === ";") {
+            this._queue.shift();
+        }
     }
 
     endsWith(suffix: string): boolean {
@@ -144,7 +166,7 @@ export default class Buffer {
     }
 
     hasContent(): boolean {
-        return this._queue.length > 0 || !!this._last;
+        return this._queue.length > 0 || Boolean(this._last);
     }
 
     /**
@@ -153,7 +175,9 @@ export default class Buffer {
      */
 
     source(prop: string, loc: Location): void {
-        if (prop && !loc) return;
+        if (prop && !loc) {
+            return;
+        }
 
         const pos = loc ? loc[prop] : null;
 
@@ -168,7 +192,9 @@ export default class Buffer {
      */
 
     withSource(prop: string, loc: Location, cb: () => void): void {
-        if (!this._map) return cb();
+        if (!this._map) {
+            return cb();
+        }
 
         // Use the call stack to manage a stack of "source location" data.
         const originalLine = this._sourcePosition.line;
@@ -198,7 +224,9 @@ export default class Buffer {
 
         let count = 0;
         for (let i = 0; i < extra.length; i++) {
-            if (extra[i] === "\n") count++;
+            if (extra[i] === "\n") {
+                count++;
+            }
         }
 
         return this._position.line + count;

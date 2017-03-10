@@ -319,19 +319,27 @@ export default class GlobExp {
         this._build();
     }
 
-    static hasMagic(pattern, options = {}) {
-        const set = new GlobExp(pattern, options).set;
-        if (set.length > 1) {
+    hasMagic() {
+        if (!this.pattern) {
+            return false;
+        }
+
+        if (this.set.length > 1) {
             return true;
         }
 
-        for (let i = 0; i < set[0].length; i++) {
-            if (!is.string(set[0][i])) {
+        for (let i = 0; i < this.set[0].length; i++) {
+            if (!is.string(this.set[0][i])) {
                 return true;
             }
         }
 
         return false;
+    }
+
+    static hasMagic(pattern, options = {}) {
+        const gexp = new GlobExp(pattern, options);
+        return gexp.hasMagic();
     }
 
     _build() {

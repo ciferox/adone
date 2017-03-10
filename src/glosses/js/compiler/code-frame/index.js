@@ -7,10 +7,6 @@
 const NEWLINE = /\r\n|[\n\r\u2028\u2029]/;
 
 /**
- * RegExp to test for what seems to be a JSX tag name.
- */
-
-/**
  * Create a code frame, adding line numbers, code highlighting, and pointing to a given position.
  */
 

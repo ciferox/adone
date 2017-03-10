@@ -50,7 +50,9 @@ export function JSXText(node: Object) {
 export function JSXElement(node: Object) {
     const open = node.openingElement;
     this.print(open, node);
-    if (open.selfClosing) return;
+    if (open.selfClosing) {
+        return;
+    }
 
     this.indent();
     for (const child of (node.children: Object[])) {

@@ -664,13 +664,25 @@ describe("glosses", "utils", "GlobExp", () => {
         }
     });
 
-    it("hasMagic", () => {
-        assert.notOk(GlobExp.hasMagic("a/b/c/"), "no magic a/b/c/");
-        assert.ok(GlobExp.hasMagic("a/b/**/"), "magic in a/b/**/");
-        assert.ok(GlobExp.hasMagic("a/b/?/"), "magic in a/b/?/");
-        assert.ok(GlobExp.hasMagic("a/b/+(x|y)"), "magic in a/b/+(x|y)");
-        assert.notOk(GlobExp.hasMagic("a/b/+(x|y)", { noext: true }), "no magic in a/b/+(x|y) noext");
-        assert.ok(GlobExp.hasMagic("{a,b}"), "magic in {a,b}");
-        assert.notOk(GlobExp.hasMagic("{a,b}", { nobrace: true }), "magic in {a,b} nobrace:true");
+    describe("hasMagic", () => {
+        it("non-string pattern should throw error", () => {
+            const patterns = [0, null, 12, { x: 1 }, undefined, /x/, NaN];
+            for (const p of patterns) {
+                assert.throw(() => {
+                    GlobExp.hasMagic(p);
+                });
+            }
+        });
+
+        it("detect magic in glob patterns", () => {
+            assert.notOk(GlobExp.hasMagic(""), "no magic in ''");
+            assert.notOk(GlobExp.hasMagic("a/b/c/"), "no magic a/b/c/");
+            assert.ok(GlobExp.hasMagic("a/b/**/"), "magic in a/b/**/");
+            assert.ok(GlobExp.hasMagic("a/b/?/"), "magic in a/b/?/");
+            assert.ok(GlobExp.hasMagic("a/b/+(x|y)"), "magic in a/b/+(x|y)");
+            assert.notOk(GlobExp.hasMagic("a/b/+(x|y)", { noext: true }), "no magic in a/b/+(x|y) noext");
+            assert.ok(GlobExp.hasMagic("{a,b}"), "magic in {a,b}");
+            assert.notOk(GlobExp.hasMagic("{a,b}", { nobrace: true }), "magic in {a,b} nobrace:true");
+        });
     });
 });

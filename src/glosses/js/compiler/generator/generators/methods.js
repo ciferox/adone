@@ -7,7 +7,9 @@ export function _params(node: Object) {
     this.token("(");
     this.printList(node.params, node, {
         iterator: (node) => {
-            if (node.optional) this.token("?");
+            if (node.optional) {
+                this.token("?");
+            }
             this.print(node.typeAnnotation, node);
         }
     });
@@ -57,7 +59,9 @@ export function FunctionExpression(node: Object) {
         this.space();
     }
     this.word("function");
-    if (node.generator) this.token("*");
+    if (node.generator) {
+        this.token("*");
+    }
 
     if (node.id) {
         this.space();

@@ -1,8 +1,7 @@
-/* eslint max-len: 0 */
 // @flow
 
 import adone from "adone";
-const { js: { compiler: { messages, traverse } }, vendor: { lodash: _ } } = adone;
+const { is, js: { compiler: { messages, traverse } }, vendor: { lodash: _ } } = adone;
 import Store from "../store";
 
 const GLOBAL_VISITOR_PROPS = ["enter", "exit"];
@@ -35,8 +34,12 @@ export default class Plugin extends Store {
     }
 
     chain(target, key) {
-        if (!target[key]) return this[key];
-        if (!this[key]) return target[key];
+        if (!target[key]) {
+            return this[key];
+        }
+        if (!this[key]) {
+            return target[key];
+        }
 
         const fns: ?Function[] = [target[key], this[key]];
 
@@ -45,7 +48,9 @@ export default class Plugin extends Store {
             for (const fn of fns) {
                 if (fn) {
                     const ret = fn.apply(this, args);
-                    if (ret != null) val = ret;
+                    if (is.exist(ret)) {
+                        val = ret;
+                    }
                 }
             }
             return val;
@@ -54,7 +59,9 @@ export default class Plugin extends Store {
 
     maybeInherit(loc: string) {
         let inherits = this.take("inherits");
-        if (!inherits) return;
+        if (!inherits) {
+            return;
+        }
 
         inherits = adone.js.compiler.transformation.file.OptionManager.normalisePlugin(inherits, loc, "inherits");
 
@@ -70,7 +77,9 @@ export default class Plugin extends Store {
      */
 
     init(loc: string, i: number) {
-        if (this.initialized) return;
+        if (this.initialized) {
+            return;
+        }
         this.initialized = true;
 
         this.maybeInherit(loc);

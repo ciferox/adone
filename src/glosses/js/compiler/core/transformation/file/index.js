@@ -2,13 +2,14 @@
 // @flow
 
 import adone from "adone";
-const { 
-    js: { 
+const {
+    js: {
         compiler: { types, parse, helpers, codeFrame, traverse, generate },
         sourceMap
     },
     vendor: { lodash: { defaults } },
-    std: { path }
+    std: { path },
+    is
 } = adone;
 const { NodePath, Hub, Scope } = traverse;
 
@@ -41,12 +42,12 @@ const errorVisitor = {
 };
 
 const commentRx = /^\s*\/(?:\/|\*)[@#]\s+sourceMappingURL=data:(?:application|text)\/json;(?:charset[:=]\S+;)?base64,(.*)$/mg;
-function removeSourceMapComments(src) {
+const removeSourceMapComments = (src) => {
     commentRx.lastIndex = 0;
     return src.replace(commentRx, "");
-}
+};
 
-function sourceMapFromSource(content) {
+const sourceMapFromSource = (content) => {
     let m = content.match(commentRx);
     commentRx.lastIndex = 0;
     if (!m) {
@@ -57,13 +58,13 @@ function sourceMapFromSource(content) {
     m = m.split(",").pop();  // strip comment
     m = new Buffer(m, "base64").toString();
     return JSON.parse(m);
-}
+};
 
-function sourceMapToComment(sourceMap) {
+const sourceMapToComment = (sourceMap) => {
     sourceMap = JSON.stringify(sourceMap);
     sourceMap = new Buffer(sourceMap).toString("base64");
     return `//# sourceMappingURL=data:application/json;base64,${sourceMap}`;
-}
+};
 
 export default class File extends Store {
     constructor(opts: Object = {}, pipeline: Pipeline) {
@@ -174,7 +175,9 @@ export default class File extends Store {
 
         opts.ignore = util.arrayify(opts.ignore, util.regexify);
 
-        if (opts.only) opts.only = util.arrayify(opts.only, util.regexify);
+        if (opts.only) {
+            opts.only = util.arrayify(opts.only, util.regexify);
+        }
 
         defaults(opts, {
             moduleRoot: opts.sourceRoot
@@ -209,7 +212,7 @@ export default class File extends Store {
 
         // init plugins!
         for (const ref of plugins) {
-            let [plugin, pluginOpts] = ref; // todo: fix - can't embed in loop head because of flow bug
+            const [plugin, pluginOpts] = ref; // todo: fix - can't embed in loop head because of flow bug
 
             currentPluginVisitors.push(plugin.visitor);
             currentPluginPasses.push(new PluginPass(this, plugin, pluginOpts));
@@ -230,24 +233,24 @@ export default class File extends Store {
         }
 
     // moduleId is n/a if a `getModuleId()` is provided
-        if (opts.moduleId != null && !opts.getModuleId) {
+        if (is.exist(opts.moduleId) && !opts.getModuleId) {
             return opts.moduleId;
         }
 
         let filenameRelative = opts.filenameRelative;
         let moduleName = "";
 
-        if (opts.moduleRoot != null) {
-            moduleName = opts.moduleRoot + "/";
+        if (is.exist(opts.moduleRoot)) {
+            moduleName = `${opts.moduleRoot}/`;
         }
 
         if (!opts.filenameRelative) {
             return moduleName + opts.filename.replace(/^\//, "");
         }
 
-        if (opts.sourceRoot != null) {
+        if (is.exist(opts.sourceRoot)) {
         // remove sourceRoot from filename
-            const sourceRootRegEx = new RegExp("^" + opts.sourceRoot + "\/?");
+            const sourceRootRegEx = new RegExp(`^${opts.sourceRoot}\/?`);
             filenameRelative = filenameRelative.replace(sourceRootRegEx, "");
         }
 
@@ -269,7 +272,9 @@ export default class File extends Store {
 
     resolveModuleSource(source: string): string {
         const resolveModuleSource = this.opts.resolveModuleSource;
-        if (resolveModuleSource) source = resolveModuleSource(source, this.opts.filename);
+        if (resolveModuleSource) {
+            source = resolveModuleSource(source, this.opts.filename);
+        }
         return source;
     }
 
@@ -302,7 +307,9 @@ export default class File extends Store {
 
     addHelper(name: string): Object {
         const declar = this.declarations[name];
-        if (declar) return declar;
+        if (declar) {
+            return declar;
+        }
 
         if (!this.usedHelpers[name]) {
             this.metadata.usedHelpers.push(name);
@@ -313,7 +320,9 @@ export default class File extends Store {
         const runtime = this.get("helpersNamespace");
         if (generator) {
             const res = generator(name);
-            if (res) return res;
+            if (res) {
+                return res;
+            }
         } else if (runtime) {
             return types.memberExpression(runtime, types.identifier(name));
         }
@@ -346,13 +355,15 @@ export default class File extends Store {
 ): Object {
     // Generate a unique name based on the string literals so we dedupe
     // identical strings used in the program.
-        const stringIds = raw.elements.map(function (string) {
+        const stringIds = raw.elements.map((string) => {
             return string.value;
         });
         const name = `${helperName}_${raw.elements.length}_${stringIds.join(",")}`;
 
         const declar = this.declarations[name];
-        if (declar) return declar;
+        if (declar) {
+            return declar;
+        }
 
         const uid = this.declarations[name] = this.scope.generateUidIdentifier("templateObject");
 
@@ -401,21 +412,21 @@ export default class File extends Store {
                 sourceRoot: inputMapConsumer.sourceRoot
             });
 
-            // This assumes the output map always has a single source, since Babel always compiles 
+            // This assumes the output map always has a single source, since Babel always compiles
             // a single source file to a single output file.
             const source = outputMapConsumer.sources[0];
 
-            inputMapConsumer.eachMapping(function (mapping) {
+            inputMapConsumer.eachMapping((mapping) => {
                 const generatedPosition = outputMapConsumer.generatedPositionFor({
                     line: mapping.generatedLine,
                     column: mapping.generatedColumn,
                     source
                 });
-                if (generatedPosition.column != null) {
+                if (is.exist(generatedPosition.column)) {
                     mergedGenerator.addMapping({
                         source: mapping.source,
 
-                        original: mapping.source == null ? null : {
+                        original: is.nil(mapping.source) ? null : {
                             line: mapping.originalLine,
                             column: mapping.originalColumn
                         },
@@ -495,7 +506,11 @@ export default class File extends Store {
             this.log.debug("Start transform traverse");
 
         // merge all plugin visitors into a single visitor
-            const visitor = traverse.visitors.merge(this.pluginVisitors[i], pluginPasses, this.opts.wrapPluginVisitorMethod);
+            const visitor = traverse.visitors.merge(
+                this.pluginVisitors[i],
+                pluginPasses,
+                this.opts.wrapPluginVisitorMethod
+            );
             traverse(this.ast, visitor, this.scope);
 
             this.log.debug("End transform traverse");
@@ -506,7 +521,7 @@ export default class File extends Store {
     }
 
     wrap(code: string, callback: Function): BabelFileResult {
-        code = code + "";
+        code = String(code);
 
         try {
             if (this.shouldIgnore()) {
@@ -526,7 +541,7 @@ export default class File extends Store {
             const loc = err.loc;
             if (loc) {
                 err.codeFrame = codeFrame(code, loc.line, loc.column + 1, this.opts);
-                message += "\n" + err.codeFrame;
+                message += `\n${err.codeFrame}`;
             }
 
             if (process.browser) {
@@ -545,7 +560,7 @@ export default class File extends Store {
     }
 
     addCode(code: string) {
-        code = (code || "") + "";
+        code = `${code || ""}`;
         code = this.parseInputSourceMap(code);
         this.code = code;
     }
@@ -565,7 +580,9 @@ export default class File extends Store {
         for (const pass of pluginPasses) {
             const plugin = pass.plugin;
             const fn = plugin[key];
-            if (fn) fn.call(pass, this);
+            if (fn) {
+                fn.call(pass, this);
+            }
         }
     }
 
@@ -595,7 +612,7 @@ export default class File extends Store {
         const result = {
             metadata: null,
             options: this.opts,
-            ignored: !!ignored,
+            ignored: Boolean(ignored),
             code: null,
             ast: null,
             map: map || null
@@ -621,7 +638,9 @@ export default class File extends Store {
         const ast  = this.ast;
 
         const result: BabelFileResult = { ast };
-        if (!opts.code) return this.makeResult(result);
+        if (!opts.code) {
+            return this.makeResult(result);
+        }
 
         let gen = generate;
         if (opts.generatorOpts.generator) {
@@ -640,7 +659,9 @@ export default class File extends Store {
 
         this.log.debug("Generation start");
 
-        const _result = gen(ast, opts.generatorOpts ? Object.assign(opts, opts.generatorOpts) : opts, this.code);
+        const _result = gen(
+            ast, opts.generatorOpts ? Object.assign(opts, opts.generatorOpts) : opts, this.code
+        );
         result.code = _result.code;
         result.map = _result.map;
 
@@ -656,7 +677,7 @@ export default class File extends Store {
         }
 
         if (opts.sourceMaps === "inline" || opts.sourceMaps === "both") {
-            result.code += "\n" + sourceMapToComment(result.map);
+            result.code += `\n${sourceMapToComment(result.map)}`;
         }
 
         if (opts.sourceMaps === "inline") {

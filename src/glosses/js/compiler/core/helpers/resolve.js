@@ -9,7 +9,7 @@ export default function (loc: string, relative: string = process.cwd()): ?string
     let relativeMod = relativeModules[relative];
 
     if (!relativeMod) {
-        relativeMod = new Module;
+        relativeMod = new Module();
 
         // We need to define an id and filename on our "fake" relative` module so that
         // Node knows what "." means in the case of us trying to resolve a plugin

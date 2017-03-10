@@ -4,17 +4,17 @@ import * as whitespace from "./whitespace";
 import * as parens from "./parentheses";
 const { types } = adone.js.compiler;
 
-function expandAliases(obj) {
+const expandAliases = (obj) => {
     const newObj = {};
 
-    function add(type, func) {
+    const add = (type, func) => {
         const fn = newObj[type];
         newObj[type] = fn ? function (node, parent, stack) {
             const result = fn(node, parent, stack);
 
             return adone.is.nil(result) ? func(node, parent, stack) : result;
         } : func;
-    }
+    };
 
     for (const type of Object.keys(obj)) {
 
@@ -29,7 +29,7 @@ function expandAliases(obj) {
     }
 
     return newObj;
-}
+};
 
 // Rather than using `types.is` on each object property, we pre-expand any type aliases
 // into concrete types so that the 'find' call below can be as fast as possible.
@@ -37,12 +37,12 @@ const expandedParens = expandAliases(parens);
 const expandedWhitespaceNodes = expandAliases(whitespace.nodes);
 const expandedWhitespaceList = expandAliases(whitespace.list);
 
-function find(obj, node, parent, printStack) {
+const find = (obj, node, parent, printStack) => {
     const fn = obj[node.type];
     return fn ? fn(node, parent, printStack) : null;
-}
+};
 
-function isOrHasCallExpression(node) {
+const isOrHasCallExpression = (node) => {
     if (types.isCallExpression(node)) {
         return true;
     }
@@ -53,10 +53,12 @@ function isOrHasCallExpression(node) {
     } else {
         return false;
     }
-}
+};
 
-export function needsWhitespace(node, parent, type) {
-    if (!node) return 0;
+export const needsWhitespace = (node, parent, type) => {
+    if (!node) {
+        return 0;
+    }
 
     if (types.isExpressionStatement(node)) {
         node = node.expression;
@@ -69,28 +71,34 @@ export function needsWhitespace(node, parent, type) {
         if (items) {
             for (let i = 0; i < items.length; i++) {
                 linesInfo = needsWhitespace(items[i], node, type);
-                if (linesInfo) break;
+                if (linesInfo) {
+                    break;
+                }
             }
         }
     }
 
     return (linesInfo && linesInfo[type]) || 0;
-}
+};
 
-export function needsWhitespaceBefore(node, parent) {
+export const needsWhitespaceBefore = (node, parent) => {
     return needsWhitespace(node, parent, "before");
-}
+};
 
-export function needsWhitespaceAfter(node, parent) {
+export const needsWhitespaceAfter = (node, parent) => {
     return needsWhitespace(node, parent, "after");
-}
+};
 
-export function needsParens(node, parent, printStack) {
-    if (!parent) return false;
+export const needsParens = (node, parent, printStack) => {
+    if (!parent) {
+        return false;
+    }
 
     if (types.isNewExpression(parent) && parent.callee === node) {
-        if (isOrHasCallExpression(node)) return true;
+        if (isOrHasCallExpression(node)) {
+            return true;
+        }
     }
 
     return find(expandedParens, node, parent, printStack);
-}
+};

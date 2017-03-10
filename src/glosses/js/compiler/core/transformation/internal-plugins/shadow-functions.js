@@ -7,55 +7,47 @@ const SUPER_THIS_BOUND = Symbol("super this bound");
 
 const superVisitor = {
     CallExpression(path) {
-        if (!path.get("callee").isSuper()) return;
+        if (!path.get("callee").isSuper()) {
+            return;
+        }
 
-        const {node} = path;
-        if (node[SUPER_THIS_BOUND]) return;
+        const { node } = path;
+        if (node[SUPER_THIS_BOUND]) {
+            return;
+        }
         node[SUPER_THIS_BOUND] = true;
 
         path.replaceWith(types.assignmentExpression("=", this.id, node));
     }
 };
 
-export default new Plugin({
-    name: "internal.shadowFunctions",
-
-    visitor: {
-        ThisExpression(path) {
-            remap(path, "this");
-        },
-
-        ReferencedIdentifier(path) {
-            if (path.node.name === "arguments") {
-                remap(path, "arguments");
-            }
-        }
-    }
-});
-
-function shouldShadow(path, shadowPath) {
+const shouldShadow = (path, shadowPath) => {
     if (path.is("_forceShadow")) {
         return true;
     } else {
         return shadowPath;
     }
-}
+};
 
-function remap(path, key) {
+const remap = (path, key) => {
     // ensure that we're shadowed
-    let shadowPath = path.inShadow(key);
-    if (!shouldShadow(path, shadowPath)) return;
+    const shadowPath = path.inShadow(key);
+    if (!shouldShadow(path, shadowPath)) {
+        return;
+    }
 
-    let shadowFunction = path.node._shadowedFunctionLiteral;
+    const shadowFunction = path.node._shadowedFunctionLiteral;
 
     let currentFunction;
     let passedShadowFunction = false;
 
-    let fnPath = path.find(function (innerPath) {
+    let fnPath = path.find((innerPath) => {
         if (innerPath.parentPath && innerPath.parentPath.isClassProperty() && innerPath.key === "value") {
             return true;
         }
-        if (path === innerPath) return false;
+        if (path === innerPath) {
+            return false;
+        }
         if (innerPath.isProgram() || innerPath.isFunction()) {
             // catch current function in case this is the shadowed one and we can ignore it
             currentFunction = currentFunction || innerPath;
@@ -67,9 +59,13 @@ function remap(path, key) {
             return true;
         } else if (innerPath.isFunction() && !innerPath.isArrowFunctionExpression()) {
             if (shadowFunction) {
-                if (innerPath === shadowFunction || innerPath.node === shadowFunction.node) return true;
+                if (innerPath === shadowFunction || innerPath.node === shadowFunction.node) {
+                    return true;
+                }
             } else {
-                if (!innerPath.is("shadow")) return true;
+                if (!innerPath.is("shadow")) {
+                    return true;
+                }
             }
 
             passedShadowFunction = true;
@@ -87,21 +83,27 @@ function remap(path, key) {
     }
 
     // no point in realiasing if we're in this function
-    if (fnPath === currentFunction) return;
+    if (fnPath === currentFunction) {
+        return;
+    }
 
     // If the only functions that were encountered are arrow functions, skip remapping the
     // binding since arrow function syntax already does that.
-    if (!passedShadowFunction) return;
+    if (!passedShadowFunction) {
+        return;
+    }
 
-    let cached = fnPath.getData(key);
-    if (cached) return path.replaceWith(cached);
+    const cached = fnPath.getData(key);
+    if (cached) {
+        return path.replaceWith(cached);
+    }
 
-    let id = path.scope.generateUidIdentifier(key);
+    const id = path.scope.generateUidIdentifier(key);
 
     fnPath.setData(key, id);
 
-    let classPath = fnPath.findParent((p) => p.isClass());
-    let hasSuperClass = !!(classPath && classPath.node && classPath.node.superClass);
+    const classPath = fnPath.findParent((p) => p.isClass());
+    const hasSuperClass = Boolean(classPath && classPath.node && classPath.node.superClass);
 
     if (key === "this" && fnPath.isMethod({ kind: "constructor" }) && hasSuperClass) {
         fnPath.scope.push({ id });
@@ -112,10 +114,28 @@ function remap(path, key) {
 
         // Forward the shadowed function, so that the identifiers do not get hoisted
         // up to the first non shadow function but rather up to the bound shadow function
-        if (shadowFunction) init._shadowedFunctionLiteral = shadowFunction;
+        if (shadowFunction) {
+            init._shadowedFunctionLiteral = shadowFunction;
+        }
 
         fnPath.scope.push({ id, init });
     }
 
     return path.replaceWith(id);
-}
+};
+
+export default new Plugin({
+    name: "internal.shadowFunctions",
+
+    visitor: {
+        ThisExpression(path) {
+            remap(path, "this");
+        },
+
+        ReferencedIdentifier(path) {
+            if (path.node.name === "arguments") {
+                remap(path, "arguments");
+            }
+        }
+    }
+});

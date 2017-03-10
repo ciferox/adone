@@ -1,3 +1,4 @@
+/* global Node */
 // @flow
 import adone from "adone";
 const {
@@ -65,7 +66,9 @@ export default class Printer {
      */
 
     indent(): void {
-        if (this.format.compact || this.format.concise) return;
+        if (this.format.compact || this.format.concise) {
+            return;
+        }
 
         this._indent++;
     }
@@ -75,7 +78,9 @@ export default class Printer {
      */
 
     dedent(): void {
-        if (this.format.compact || this.format.concise) return;
+        if (this.format.compact || this.format.concise) {
+            return;
+        }
 
         this._indent--;
     }
@@ -105,7 +110,9 @@ export default class Printer {
      */
 
     space(force: boolean = false): void {
-        if (this.format.compact) return;
+        if (this.format.compact) {
+            return;
+        }
 
         if ((this._buf.hasContent() && !this.endsWith(" ") && !this.endsWith("\n")) || force) {
             this._space();
@@ -117,7 +124,9 @@ export default class Printer {
      */
 
     word(str: string): void {
-        if (this._endsWithWord) this._space();
+        if (this._endsWithWord) {
+            this._space();
+        }
 
         this._maybeAddAuxComment();
         this._append(str);
@@ -135,7 +144,7 @@ export default class Printer {
         // Integer tokens need special handling because they cannot have '.'s inserted
         // immediately after them.
         this._endsWithInteger =
-            is.integer(+str) &&
+            is.integer(Number(str)) &&
             !NON_DECIMAL_LITERAL.test(str) &&
             !SCIENTIFIC_NOTATION.test(str) &&
             !ZERO_DECIMAL_INTEGER.test(str) &&
@@ -169,7 +178,9 @@ export default class Printer {
      */
 
     newline(i?: number): void {
-        if (this.format.retainLines || this.format.compact) return;
+        if (this.format.retainLines || this.format.compact) {
+            return;
+        }
 
         if (this.format.concise) {
             this.space();
@@ -177,13 +188,21 @@ export default class Printer {
         }
 
         // never allow more than two lines
-        if (this.endsWith("\n\n")) return;
+        if (this.endsWith("\n\n")) {
+            return;
+        }
 
-        if (typeof i !== "number") i = 1;
+        if (typeof i !== "number") {
+            i = 1;
+        }
 
         i = Math.min(2, i);
-        if (this.endsWith("{\n") || this.endsWith(":\n")) i--;
-        if (i <= 0) return;
+        if (this.endsWith("{\n") || this.endsWith(":\n")) {
+            i--;
+        }
+        if (i <= 0) {
+            return;
+        }
 
         for (let j = 0; j < i; j++) {
             this._newline();
@@ -222,8 +241,11 @@ export default class Printer {
         this._maybeAddParen(str);
         this._maybeIndent(str);
 
-        if (queue) this._buf.queue(str);
-        else this._buf.append(str);
+        if (queue) {
+            this._buf.queue(str);
+        }        else {
+            this._buf.append(str);
+        }
 
         this._endsWithWord = false;
         this._endsWithInteger = false;
@@ -239,12 +261,18 @@ export default class Printer {
     _maybeAddParen(str: string): void {
         // see startTerminatorless() instance method
         const parenPushNewlineState = this._parenPushNewlineState;
-        if (!parenPushNewlineState) return;
+        if (!parenPushNewlineState) {
+            return;
+        }
         this._parenPushNewlineState = null;
 
         let i;
-        for (i = 0; i < str.length && str[i] === " "; i++) continue;
-        if (i === str.length) return;
+        for (i = 0; i < str.length && str[i] === " "; i++) {
+            continue;
+        }
+        if (i === str.length) {
+            return;
+        }
 
         const cha = str[i];
         if (cha === "\n" || cha === "/") {
@@ -256,7 +284,9 @@ export default class Printer {
     }
 
     _catchUp(prop: string, loc: Object) {
-        if (!this.format.retainLines) return;
+        if (!this.format.retainLines) {
+            return;
+        }
 
         // catch up to this nodes newline if we're behind
         const pos = loc ? loc[prop] : null;
@@ -312,7 +342,9 @@ export default class Printer {
     }
 
     print(node, parent) {
-        if (!node) return;
+        if (!node) {
+            return;
+        }
 
         const oldConcise = this.format.concise;
         if (node._compact) {
@@ -336,7 +368,9 @@ export default class Printer {
             node.extra && node.extra.parenthesized) {
             needsParens = true;
         }
-        if (needsParens) this.token("(");
+        if (needsParens) {
+            this.token("(");
+        }
 
         this._printLeadingComments(node, parent);
 
@@ -347,7 +381,9 @@ export default class Printer {
 
         this._printTrailingComments(node, parent);
 
-        if (needsParens) this.token(")");
+        if (needsParens) {
+            this.token(")");
+        }
 
         // end
         this._printStack.pop();
@@ -357,12 +393,18 @@ export default class Printer {
     }
 
     _maybeAddAuxComment(enteredPositionlessNode) {
-        if (enteredPositionlessNode) this._printAuxBeforeComment();
-        if (!this._insideAux) this._printAuxAfterComment();
+        if (enteredPositionlessNode) {
+            this._printAuxBeforeComment();
+        }
+        if (!this._insideAux) {
+            this._printAuxAfterComment();
+        }
     }
 
     _printAuxBeforeComment() {
-        if (this._printAuxAfterOnNextUserNode) return;
+        if (this._printAuxAfterOnNextUserNode) {
+            return;
+        }
         this._printAuxAfterOnNextUserNode = true;
 
         const comment = this.format.auxiliaryCommentBefore;
@@ -375,7 +417,9 @@ export default class Printer {
     }
 
     _printAuxAfterComment() {
-        if (!this._printAuxAfterOnNextUserNode) return;
+        if (!this._printAuxAfterOnNextUserNode) {
+            return;
+        }
         this._printAuxAfterOnNextUserNode = false;
 
         const comment = this.format.auxiliaryCommentAfter;
@@ -389,15 +433,20 @@ export default class Printer {
 
     getPossibleRaw(node) {
         const extra = node.extra;
-        if (extra && adone.is.exist(extra.raw) && adone.is.exist(extra.rawValue) && node.value === extra.rawValue) {
+        if (extra && adone.is.exist(extra.raw)
+        && adone.is.exist(extra.rawValue) && node.value === extra.rawValue) {
             return extra.raw;
         }
     }
 
     printJoin(nodes: ?Array, parent: Object, opts = {}) {
-        if (!nodes || !nodes.length) return;
+        if (!nodes || !nodes.length) {
+            return;
+        }
 
-        if (opts.indent) this.indent();
+        if (opts.indent) {
+            this.indent();
+        }
 
         const newlineOpts = {
             addNewlines: opts.addNewlines
@@ -405,9 +454,13 @@ export default class Printer {
 
         for (let i = 0; i < nodes.length; i++) {
             const node = nodes[i];
-            if (!node) continue;
+            if (!node) {
+                continue;
+            }
 
-            if (opts.statement) this._printNewline(true, node, parent, newlineOpts);
+            if (opts.statement) {
+                this._printNewline(true, node, parent, newlineOpts);
+            }
 
             this.print(node, parent);
 
@@ -419,17 +472,25 @@ export default class Printer {
                 opts.separator.call(this);
             }
 
-            if (opts.statement) this._printNewline(false, node, parent, newlineOpts);
+            if (opts.statement) {
+                this._printNewline(false, node, parent, newlineOpts);
+            }
         }
 
-        if (opts.indent) this.dedent();
+        if (opts.indent) {
+            this.dedent();
+        }
     }
 
     printAndIndentOnComments(node, parent) {
-        const indent = !!node.leadingComments;
-        if (indent) this.indent();
+        const indent = Boolean(node.leadingComments);
+        if (indent) {
+            this.indent();
+        }
         this.print(node, parent);
-        if (indent) this.dedent();
+        if (indent) {
+            this.dedent();
+        }
     }
 
     printBlock(parent) {
@@ -451,10 +512,16 @@ export default class Printer {
     }
 
     printInnerComments(node, indent = true) {
-        if (!node.innerComments) return;
-        if (indent) this.indent();
+        if (!node.innerComments) {
+            return;
+        }
+        if (indent) {
+            this.indent();
+        }
         this._printComments(node.innerComments);
-        if (indent) this.dedent();
+        if (indent) {
+            this.dedent();
+        }
     }
 
     printSequence(nodes, parent, opts = {}) {
@@ -464,7 +531,7 @@ export default class Printer {
 
     printList(items, parent, opts = {}) {
         if (adone.is.nil(opts.separator)) {
-            opts.separator = commaSeparator;
+            opts.separator = this._commaSeparator;
         }
 
         return this.printJoin(items, parent, opts);
@@ -472,7 +539,9 @@ export default class Printer {
 
     _printNewline(leading, node, parent, opts) {
         // Fast path since 'this.newline' does nothing when not tracking lines.
-        if (this.format.retainLines || this.format.compact) return;
+        if (this.format.retainLines || this.format.compact) {
+            return;
+        }
 
         // Fast path for concise since 'this.newline' just inserts a space when
         // concise formatting is in use.
@@ -488,27 +557,37 @@ export default class Printer {
             if (leading) {
                 const comments = node.leadingComments;
                 const comment = comments && find(comments, (comment) =>
-                    !!comment.loc && this.format.shouldPrintComment(comment.value));
+                    Boolean(comment.loc) && this.format.shouldPrintComment(comment.value));
 
                 lines = this._whitespace.getNewlinesBefore(comment || node);
             } else {
                 const comments = node.trailingComments;
                 const comment = comments && findLast(comments, (comment) =>
-                    !!comment.loc && this.format.shouldPrintComment(comment.value));
+                    Boolean(comment.loc) && this.format.shouldPrintComment(comment.value));
 
                 lines = this._whitespace.getNewlinesAfter(comment || node);
             }
         } else {
             // generated node
-            if (!leading) lines++; // always include at least a single line after
-            if (opts.addNewlines) lines += opts.addNewlines(leading, node) || 0;
+            if (!leading) {
+                lines++;
+            } // always include at least a single line after
+            if (opts.addNewlines) {
+                lines += opts.addNewlines(leading, node) || 0;
+            }
 
             let needs = n.needsWhitespaceAfter;
-            if (leading) needs = n.needsWhitespaceBefore;
-            if (needs(node, parent)) lines++;
+            if (leading) {
+                needs = n.needsWhitespaceBefore;
+            }
+            if (needs(node, parent)) {
+                lines++;
+            }
 
             // generated nodes can't add starting file whitespace
-            if (!this._buf.hasContent()) lines = 0;
+            if (!this._buf.hasContent()) {
+                lines = 0;
+            }
         }
 
         this.newline(lines);
@@ -521,24 +600,34 @@ export default class Printer {
     }
 
     _printComment(comment) {
-        if (!this.format.shouldPrintComment(comment.value)) return;
+        if (!this.format.shouldPrintComment(comment.value)) {
+            return;
+        }
 
         // Some plugins use this to mark comments as removed using the AST-root 'comments' property,
         // where they can't manually mutate the AST node comment lists.
-        if (comment.ignore) return;
+        if (comment.ignore) {
+            return;
+        }
 
-        if (this._printedComments.has(comment)) return;
+        if (this._printedComments.has(comment)) {
+            return;
+        }
         this._printedComments.add(comment);
 
         if (adone.is.exist(comment.start)) {
-            if (this._printedCommentStarts[comment.start]) return;
+            if (this._printedCommentStarts[comment.start]) {
+                return;
+            }
             this._printedCommentStarts[comment.start] = true;
         }
 
         // whitespace before
         this.newline(this._whitespace ? this._whitespace.getNewlinesBefore(comment) : 0);
 
-        if (!this.endsWith("[") && !this.endsWith("{")) this.space();
+        if (!this.endsWith("[") && !this.endsWith("{")) {
+            this.space();
+        }
 
         let val = comment.type === "CommentLine" ? `//${comment.value}\n` : `/*${comment.value}*/`;
 
@@ -546,7 +635,7 @@ export default class Printer {
         if (comment.type === "CommentBlock" && this.format.indent.adjustMultilineComment) {
             const offset = comment.loc && comment.loc.start.column;
             if (offset) {
-                const newlineRegex = new RegExp("\\n\\s{1," + offset + "}", "g");
+                const newlineRegex = new RegExp(`\\n\\s{1,${offset}}`, "g");
                 val = val.replace(newlineRegex, "\n");
             }
 
@@ -565,17 +654,19 @@ export default class Printer {
     }
 
     _printComments(comments?: Object[]) {
-        if (!comments || !comments.length) return;
+        if (!comments || !comments.length) {
+            return;
+        }
 
         for (const comment of comments) {
             this._printComment(comment);
         }
     }
-}
 
-function commaSeparator() {
-    this.token(",");
-    this.space();
+    _commaSeparator() {
+        this.token(",");
+        this.space();
+    }
 }
 
 for (const generator of [

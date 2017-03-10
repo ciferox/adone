@@ -56,7 +56,9 @@ export function NewExpression(node: Object, parent: Object) {
     if (node.arguments.length === 0 && this.format.minified &&
         !types.isCallExpression(parent, { callee: node }) &&
         !types.isMemberExpression(parent) &&
-        !types.isNewExpression(parent)) return;
+        !types.isNewExpression(parent)) {
+        return; 
+    }
 
     this.token("(");
     this.printList(node.arguments, node);
@@ -85,7 +87,9 @@ function commaSeparatorNewline() {
     this.token(",");
     this.newline();
 
-    if (!this.endsWith("\n")) this.space();
+    if (!this.endsWith("\n")) {
+        this.space(); 
+    }
 }
 
 export function CallExpression(node: Object) {
@@ -147,7 +151,9 @@ export function ExpressionStatement(node: Object) {
 
 export function AssignmentPattern(node: Object) {
     this.print(node.left, node);
-    if (node.left.optional) this.token("?");
+    if (node.left.optional) {
+        this.token("?"); 
+    }
     this.print(node.left.typeAnnotation, node);
     this.space();
     this.token("=");

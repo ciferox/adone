@@ -7,7 +7,7 @@ export default function (dest?: Object, src?: Object): ?Object {
         return;
     }
 
-    return mergeWith(dest, src, function (a, b) {
+    return mergeWith(dest, src, (a, b) => {
         if (b && Array.isArray(a)) {
             const newArray = b.slice(0);
 

@@ -1,23 +1,13 @@
 // @flow
 
 import adone from "adone";
-const { 
-    js: { compiler: { transformation: { Plugin } } }, 
-    vendor: { lodash: { sortBy } } 
+const {
+    js: { compiler: { transformation: { Plugin } } },
+    vendor: { lodash: { sortBy } },
+    is
 } = adone;
 
 export default new Plugin({
-    /**
-     * [Please add a description.]
-     *
-     * Priority:
-     *
-     *  - 0 We want this to be at the **very** bottom
-     *  - 1 Default node position
-     *  - 2 Priority over normal nodes
-     *  - 3 We want this to be at the **very** top
-     */
-
     name: "internal.blockHoist",
 
     visitor: {
@@ -26,17 +16,23 @@ export default new Plugin({
                 let hasChange = false;
                 for (let i = 0; i < node.body.length; i++) {
                     const bodyNode = node.body[i];
-                    if (bodyNode && bodyNode._blockHoist != null) {
+                    if (bodyNode && is.exist(bodyNode._blockHoist)) {
                         hasChange = true;
                         break;
                     }
                 }
-                if (!hasChange) return;
+                if (!hasChange) {
+                    return;
+                }
 
-                node.body = sortBy(node.body, function (bodyNode) {
+                node.body = sortBy(node.body, (bodyNode) => {
                     let priority = bodyNode && bodyNode._blockHoist;
-                    if (priority == null) priority = 1;
-                    if (priority === true) priority = 2;
+                    if (is.nil(priority)) {
+                        priority = 1;
+                    }
+                    if (priority === true) {
+                        priority = 2;
+                    }
 
                     // Higher priorities should move toward the top.
                     return -1 * priority;

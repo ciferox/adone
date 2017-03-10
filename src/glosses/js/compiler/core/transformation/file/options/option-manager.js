@@ -1,4 +1,3 @@
-/* eslint max-len: 0 */
 // @flow
 import adone from "adone";
 import * as context from "../../..";
@@ -108,7 +107,7 @@ export default class OptionManager {
     }
 
     static normalisePlugins(loc, dirname, plugins) {
-        return plugins.map(function (val, i) {
+        return plugins.map((val, i) => {
             let plugin;
             let options;
 

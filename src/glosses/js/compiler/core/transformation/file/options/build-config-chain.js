@@ -12,32 +12,14 @@ const IGNORE_FILENAME = ".acompiler_ignore";
 const RC_FILENAME = ".acompiler_rc";
 const PACKAGE_FILENAME = "package.json";
 
-function exists(filename) {
+const exists = (filename) => {
     const cached = existsCache[filename];
-    if (cached == null) {
+    if (adone.is.nil(cached)) {
         return existsCache[filename] = fs.existsSync(filename);
     } else {
         return cached;
     }
-}
-
-export default function buildConfigChain(opts: Object = {}, log?: Logger) {
-    const filename = opts.filename;
-    const builder = new ConfigChainBuilder(log);
-
-    // resolve all .compiler_rc files
-    if (opts.rc !== false) {
-        builder.findConfigs(filename);
-    }
-
-    builder.mergeConfig({
-        options: opts,
-        alias: "base",
-        dirname: filename && path.dirname(filename)
-    });
-
-    return builder.configs;
-}
+};
 
 class ConfigChainBuilder {
     constructor(log?: Logger) {
@@ -47,7 +29,9 @@ class ConfigChainBuilder {
     }
 
     findConfigs(loc) {
-        if (!loc) return;
+        if (!loc) {
+            return;
+        }
 
         if (!path.isAbsolute(loc)) {
             loc = path.join(process.cwd(), loc);
@@ -78,7 +62,9 @@ class ConfigChainBuilder {
                 }
             }
 
-            if (foundIgnore && foundConfig) return;
+            if (foundIgnore && foundConfig) {
+                return;
+            }
         }
     }
 
@@ -88,7 +74,7 @@ class ConfigChainBuilder {
 
         lines = lines
             .map((line) => line.replace(/#(.*?)$/, "").trim())
-            .filter((line) => !!line);
+            .filter((line) => Boolean(line));
 
         if (lines.length) {
             this.mergeConfig({
@@ -111,7 +97,9 @@ class ConfigChainBuilder {
 
         try {
             options = jsonCache[content] = jsonCache[content] || json.decode(content);
-            if (key) options = options[key];
+            if (key) {
+                options = options[key];
+            }
         } catch (err) {
             err.message = `${loc}: Error while parsing JSON - ${err.message}`;
             throw err;
@@ -123,7 +111,7 @@ class ConfigChainBuilder {
             dirname: path.dirname(loc)
         });
 
-        return !!options;
+        return Boolean(options);
     }
 
     mergeConfig({
@@ -147,7 +135,9 @@ class ConfigChainBuilder {
             if (extendsLoc) {
                 this.addConfig(extendsLoc);
             } else {
-                if (this.log) this.log.error(`Couldn't resolve extends clause of ${options.extends} in ${alias}`);
+                if (this.log) {
+                    this.log.error(`Couldn't resolve extends clause of ${options.extends} in ${alias}`);
+                }
             }
             delete options.extends;
         }
@@ -173,4 +163,22 @@ class ConfigChainBuilder {
             dirname
         });
     }
+}
+
+export default function buildConfigChain(opts: Object = {}, log?: Logger) {
+    const filename = opts.filename;
+    const builder = new ConfigChainBuilder(log);
+
+    // resolve all .compiler_rc files
+    if (opts.rc !== false) {
+        builder.findConfigs(filename);
+    }
+
+    builder.mergeConfig({
+        options: opts,
+        alias: "base",
+        dirname: filename && path.dirname(filename)
+    });
+
+    return builder.configs;
 }

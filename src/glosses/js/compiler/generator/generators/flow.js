@@ -114,7 +114,9 @@ export function FunctionTypeAnnotation(node: Object, parent: Object) {
 
 export function FunctionTypeParam(node: Object) {
     this.print(node.name, node);
-    if (node.optional) this.token("?");
+    if (node.optional) {
+        this.token("?");
+    }
     this.token(":");
     this.space();
     this.print(node.typeAnnotation, node);
@@ -227,7 +229,9 @@ export function TypeAlias(node: Object) {
 export function TypeAnnotation(node: Object) {
     this.token(":");
     this.space();
-    if (node.optional) this.token("?");
+    if (node.optional) {
+        this.token("?");
+    }
     this.print(node.typeAnnotation, node);
 }
 
@@ -270,7 +274,9 @@ export function ObjectTypeAnnotation(node: Object) {
 
         this.printJoin(props, node, {
             addNewlines(leading) {
-                if (leading && !props[0]) return 1;
+                if (leading && !props[0]) {
+                    return 1;
+                }
             },
             indent: true,
             statement: true,
@@ -328,7 +334,9 @@ export function ObjectTypeProperty(node: Object) {
     }
     this._variance(node);
     this.print(node.key, node);
-    if (node.optional) this.token("?");
+    if (node.optional) {
+        this.token("?");
+    }
     this.token(":");
     this.space();
     this.print(node.value, node);

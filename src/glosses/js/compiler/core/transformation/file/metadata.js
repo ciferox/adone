@@ -3,29 +3,29 @@
 import adone from "adone";
 const { types } = adone.js.compiler;
 
-export let ModuleDeclaration = {
+export const ModuleDeclaration = {
     enter(path, file) {
-        let { node } = path;
+        const { node } = path;
         if (node.source) {
             node.source.value = file.resolveModuleSource(node.source.value);
         }
     }
 };
 
-export let ImportDeclaration = {
+export const ImportDeclaration = {
     exit(path, file) {
-        let { node } = path;
+        const { node } = path;
 
-        let specifiers = [];
-        let imported = [];
+        const specifiers = [];
+        const imported = [];
         file.metadata.modules.imports.push({
             source: node.source.value,
             imported,
             specifiers
         });
 
-        for (let specifier of (path.get("specifiers"): Object[])) {
-            let local = specifier.node.local.name;
+        for (const specifier of (path.get("specifiers"): Object[])) {
+            const local = specifier.node.local.name;
 
             if (specifier.isImportDefaultSpecifier()) {
                 imported.push("default");
@@ -37,7 +37,7 @@ export let ImportDeclaration = {
             }
 
             if (specifier.isImportSpecifier()) {
-                let importedName = specifier.node.imported.name;
+                const importedName = specifier.node.imported.name;
                 imported.push(importedName);
                 specifiers.push({
                     kind: "named",
@@ -57,19 +57,19 @@ export let ImportDeclaration = {
     }
 };
 
-export function ExportDeclaration(path, file) {
-    let { node } = path;
+export const ExportDeclaration = (path, file) => {
+    const { node } = path;
 
-    let source = node.source ? node.source.value : null;
-    let exports = file.metadata.modules.exports;
+    const source = node.source ? node.source.value : null;
+    const exports = file.metadata.modules.exports;
 
     // export function foo() {}
     // export let foo = "bar";
-    let declar = path.get("declaration");
+    const declar = path.get("declaration");
     if (declar.isStatement()) {
-        let bindings = declar.getBindingIdentifiers();
+        const bindings = declar.getBindingIdentifiers();
 
-        for (let name in bindings) {
+        for (const name in bindings) {
             exports.exported.push(name);
             exports.specifiers.push({
                 kind: "local",
@@ -80,8 +80,8 @@ export function ExportDeclaration(path, file) {
     }
 
     if (path.isExportNamedDeclaration() && node.specifiers) {
-        for (let specifier of (node.specifiers: Object[])) {
-            let exported = specifier.exported.name;
+        for (const specifier of (node.specifiers: Object[])) {
+            const exported = specifier.exported.name;
             exports.exported.push(exported);
 
             // export foo from "bar";
@@ -103,8 +103,10 @@ export function ExportDeclaration(path, file) {
                 });
             }
 
-            let local = specifier.local;
-            if (!local) continue;
+            const local = specifier.local;
+            if (!local) {
+                continue;
+            }
 
             // export { foo } from "bar";
             // export { foo as bar } from "bar";
@@ -136,8 +138,8 @@ export function ExportDeclaration(path, file) {
             source
         });
     }
-}
+};
 
-export function Scope(path) {
+export const Scope = (path) => {
     path.skip();
-}
+};

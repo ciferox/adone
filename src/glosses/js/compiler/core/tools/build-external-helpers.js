@@ -16,7 +16,7 @@ const buildUmdWrapper = template(`
   });
 `);
 
-function buildGlobal(namespace, builder) {
+const buildGlobal = (namespace, builder) => {
     const body = [];
     const container = types.functionExpression(null, [types.identifier("global")], types.blockStatement(body));
     const tree = types.program([types.expressionStatement(types.callExpression(container, [helpers.get("selfGlobal")]))]);
@@ -31,9 +31,9 @@ function buildGlobal(namespace, builder) {
     builder(body);
 
     return tree;
-}
+};
 
-function buildUmd(namespace, builder) {
+const buildUmd = (namespace, builder) => {
     const body = [];
     body.push(types.variableDeclaration("var", [
         types.variableDeclarator(namespace, types.identifier("global"))
@@ -55,9 +55,9 @@ function buildUmd(namespace, builder) {
             UMD_ROOT: types.identifier("this")
         })
     ]);
-}
+};
 
-function buildVar(namespace, builder) {
+const buildVar = (namespace, builder) => {
     const body = [];
     body.push(types.variableDeclaration("var", [
         types.variableDeclarator(namespace, types.objectExpression([]))
@@ -65,9 +65,9 @@ function buildVar(namespace, builder) {
     builder(body);
     body.push(types.expressionStatement(namespace));
     return types.program(body);
-}
+};
 
-function buildHelpers(body, namespace, whitelist) {
+const buildHelpers = (body, namespace, whitelist) => {
     for (let i = 0, n = helpers.list.length; i < n; ++i) {
         const name = helpers.list[i];
         if (whitelist && whitelist.indexOf(name) < 0) {
@@ -79,7 +79,7 @@ function buildHelpers(body, namespace, whitelist) {
             types.assignmentExpression("=", types.memberExpression(namespace, key), helpers.get(name))
         ));
     }
-}
+};
 
 export default function (
     whitelist?: string[],
