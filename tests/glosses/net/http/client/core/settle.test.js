@@ -1,9 +1,8 @@
-import Dummy from "shani/helpers/spy";
 import settle from "adone/glosses/net/http/client/core/settle";
 
 describe("glosses", "net", "http", "client", "core", "settle", () => {
-    const resolve = new Dummy();
-    const reject = new Dummy();
+    const resolve = spy();
+    const reject = spy();
 
     beforeEach(() => {
         resolve.reset();
@@ -18,9 +17,10 @@ describe("glosses", "net", "http", "client", "core", "settle", () => {
                 }
             }
         };
-        settle(resolve.callback, reject.callback, response);
-        expect(resolve.get(0).args[0]).to.be.equal(response);
-        expect(reject.calls).to.be.equal(0);
+        settle(resolve, reject, response);
+        expect(resolve).to.have.been.calledOnce;
+        expect(resolve).to.have.been.calledWith(response);
+        expect(reject).not.to.have.been.called;
     });
 
     it("should resolve promise if validateStatus is not set", () => {
@@ -29,9 +29,10 @@ describe("glosses", "net", "http", "client", "core", "settle", () => {
             config: {
             }
         };
-        settle(resolve.callback, reject.callback, response);
-        expect(resolve.get(0).args[0]).to.be.equal(response);
-        expect(reject.calls).to.be.equal(0);
+        settle(resolve, reject, response);
+        expect(resolve.getCall(0).args[0]).to.be.equal(response);
+        expect(reject.callCount).to.be.equal(0);
+        expect(reject).not.to.have.been.called;
     });
 
     it("should resolve promise if validateStatus returns true", () => {
@@ -43,9 +44,10 @@ describe("glosses", "net", "http", "client", "core", "settle", () => {
                 }
             }
         };
-        settle(resolve.callback, reject.callback, response);
-        expect(resolve.get(0).args[0]).to.be.equal(response);
-        expect(reject.calls).to.be.equal(0);
+        settle(resolve, reject, response);
+        expect(resolve).to.have.been.calledOnce;
+        expect(resolve).to.have.been.calledWith(response);
+        expect(reject).not.to.have.been.called;
     });
 
     it("should reject promise if validateStatus returns false", () => {
@@ -57,24 +59,24 @@ describe("glosses", "net", "http", "client", "core", "settle", () => {
                 }
             }
         };
-        settle(resolve.callback, reject.callback, response);
-        expect(resolve.calls).to.be.equal(0);
-        expect(reject.calls).to.be.equal(1);
-        const reason = reject.get(0).args[0];
+        settle(resolve, reject, response);
+        expect(resolve).not.to.have.been.called;
+        expect(reject).to.have.been.calledOnce;
+        const reason = reject.getCall(0).args[0];
         expect(reason.message).to.be.equal("Request failed with status code 500");
         expect(reason.config).to.be.deep.equal(response.config);
         expect(reason.response).to.be.deep.equal(response);
     });
 
     it("should pass status to validateStatus", () => {
-        const validateStatus = new Dummy();
+        const validateStatus = spy();
         const response = {
             status: 500,
             config: {
-                validateStatus: validateStatus.callback
+                validateStatus
             }
         };
-        settle(resolve.callback, reject.callback, response);
-        expect(validateStatus.get(0).args[0]).to.be.equal(500);
+        settle(resolve, reject, response);
+        expect(validateStatus.getCall(0).args[0]).to.be.equal(500);
     });
 });

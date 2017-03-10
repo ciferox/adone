@@ -1,5 +1,4 @@
 import nock from "shani/helpers/nock";
-import Dummy from "shani/helpers/spy";
 
 const { client } = adone.net.http;
 
@@ -26,13 +25,13 @@ describe("glosses", "net", "http", "client", "requests", () => {
 
     it("should reject on network errors", function (done) {
         this.timeout(30000);
-        const resolveSpy = new Dummy();
-        const rejectSpy = new Dummy();
+        const resolveSpy = spy();
+        const rejectSpy = spy();
 
         const finish = function () {
-            expect(resolveSpy.calls).to.be.at.least(0);
-            expect(rejectSpy.calls).to.be.at.least(1);
-            const reason = rejectSpy.get(0).args[0];
+            expect(resolveSpy).not.to.have.been.called;
+            expect(rejectSpy).to.have.been.calledOnce;
+            const reason = rejectSpy.getCall(0).args[0];
             expect(reason.code).to.be.equal("ENOTFOUND");
             expect(reason.config.method).to.be.equal("get");
             expect(reason.config.url).to.be.equal("http://thisisnotaserver");
@@ -40,56 +39,48 @@ describe("glosses", "net", "http", "client", "requests", () => {
         };
 
         client("http://thisisnotaserver")
-            .then(resolveSpy.callback, rejectSpy.callback)
+            .then(resolveSpy, rejectSpy)
             .then(finish, finish);
     });
 
-    it("should reject when validateStatus returns false", (done) => {
+    it("should reject when validateStatus returns false", async () => {
         nock("http://example.org")
             .get("/foo")
             .reply(500);
 
-        const resolveSpy = new Dummy();
-        const rejectSpy = new Dummy();
+        const resolveSpy = spy();
+        const rejectSpy = spy();
 
-        client("http://example.org/foo", {
+        await client("http://example.org/foo", {
             validateStatus(status) {
                 return status !== 500;
             }
-        }).then(resolveSpy.callback, rejectSpy.callback)
-            .then(() => {
-                expect(resolveSpy.calls).to.be.equal(0);
-                expect(rejectSpy.calls).to.be.equal(1);
-                const reason = rejectSpy.get(0).args[0];
-                expect(reason instanceof Error).to.be.true;
-                expect(reason.message).to.be.equal("Request failed with status code 500");
-                expect(reason.config.method).to.be.equal("get");
-                expect(reason.config.url).to.be.equal("http://example.org/foo");
-                expect(reason.response.status).to.be.equal(500);
-
-                done();
-            });
+        }).then(resolveSpy, rejectSpy);
+        expect(resolveSpy).not.to.have.been.called;
+        expect(rejectSpy).to.have.been.calledOnce;
+        const reason = rejectSpy.getCall(0).args[0];
+        expect(reason instanceof Error).to.be.true;
+        expect(reason.message).to.be.equal("Request failed with status code 500");
+        expect(reason.config.method).to.be.equal("get");
+        expect(reason.config.url).to.be.equal("http://example.org/foo");
+        expect(reason.response.status).to.be.equal(500);
     });
 
-    it("should resolve when validateStatus returns true", (done) => {
+    it("should resolve when validateStatus returns true", async () => {
         nock("http://example.org")
             .get("/foo")
             .reply(500);
 
-        const resolveSpy = new Dummy();
-        const rejectSpy = new Dummy();
+        const resolveSpy = spy();
+        const rejectSpy = spy();
 
-        client("http://example.org/foo", {
+        await client("http://example.org/foo", {
             validateStatus(status) {
                 return status === 500;
             }
-        }).then(resolveSpy.callback)
-            .catch(rejectSpy.callback)
-            .then(() => {
-                expect(resolveSpy.calls).to.be.equal(1);
-                expect(rejectSpy.calls).to.be.equal(0);
-                done();
-            });
+        }).then(resolveSpy, rejectSpy);
+        expect(resolveSpy).to.have.been.calledOnce;
+        expect(rejectSpy).not.to.have.been.called;
     });
 
     // https://github.com/mzabriskie/axios/issues/378
@@ -102,10 +93,10 @@ describe("glosses", "net", "http", "client", "requests", () => {
             username: null,
             password: null
         }, {
-                headers: {
-                    Accept: "application/json"
-                }
-            })
+            headers: {
+                Accept: "application/json"
+            }
+        })
             .catch(({ response }) => {
                 expect(typeof response.data).to.be.equal("object");
                 expect(response.data.error).to.be.equal("BAD USERNAME");

@@ -160,6 +160,7 @@ const spyApi = {
         this.exceptions = [];
         this.callIds = [];
         this.stacks = [];
+        this.callAwaiters = [];
         if (this.fakes) {
             for (let i = 0; i < this.fakes.length; i++) {
                 this.fakes[i].reset();
@@ -246,11 +247,56 @@ const spyApi = {
         // Make return value and exception available in the calls:
         createCallProperties.call(this);
 
+        const call = this.getCall(this.callCount - 1);
+        for (let i = 0; i < this.callAwaiters.length; ++i) {
+            const awaiter = this.callAwaiters[i];
+            if (awaiter.match(call)) {
+                awaiter.resolve(call);
+                this.callAwaiters.splice(i--, 1);
+            }
+        }
+
         if (exception !== undefined) {
             throw exception;
         }
 
         return returnValue;
+    },
+
+    waitFor(match, ret = adone.identity) {
+        return new Promise((resolve) => {
+            this.callAwaiters.push({
+                match,
+                resolve: (call) => resolve(ret(call))
+            });
+        });
+    },
+
+    waitForCall() {
+        return this.waitFor(adone.truly);
+    },
+
+    waitForNCalls(n) {
+        const calls = [];
+        return this.waitFor((call) => {
+            calls.push(call);
+            return calls.length === n;
+        }, () => calls);
+    },
+
+    waitForArg(index, value) {
+        return this.waitFor((call) => deepEqual(call.args[index], value));
+    },
+
+    waitForArgs(...args) {
+        return this.waitFor((call) => {
+            for (let i = 0; i < args.length; ++i) {
+                if (!deepEqual(args[i], call.args[i])) {
+                    return false;
+                }
+            }
+            return true;
+        });
     },
 
     named: function named(name) {
