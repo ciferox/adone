@@ -11,6 +11,7 @@ describe("Database service", () => {
         omnitronRunner = new OmnitronRunner();
         await omnitronRunner.run();
         appConfig = omnitronRunner.config;
+        omnitronRunner.createDispatcher();
         await omnitronRunner.startOmnitron();
         await omnitronRunner.dispatcher.enable("database");
         await omnitronRunner.dispatcher.start("database");

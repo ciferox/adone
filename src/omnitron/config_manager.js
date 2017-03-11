@@ -4,7 +4,6 @@ const { ENABLED } = adone.omnitron.const;
 export default class ConfigManager {
     constructor(app, { inMemory = false } = {}) {
         this.app = app;
-        // this.config = this.app.config;
         this.inMemory = inMemory;
     }
 

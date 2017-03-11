@@ -121,13 +121,15 @@ export default class OmnitronRunner extends adone.Application {
     }
 
     createDispatcher({ omnitron = null } = {}) {
+        const options = {
+            noisily: false
+        };
         if (!adone.is.null(omnitron)) {
             this.omnitron = omnitron;
-            this.configManager = this.omnitron._.configManager;
-        } else {
-            this.configManager = null;
+            options.omnitron = omnitron;
+            options.configManager = this.omnitron._.configManager;
         }
-        return this.dispatcher = new adone.omnitron.Dispatcher(this, { noisily: false, omnitron: this.omnitron, configManager: this.configManager });
+        return this.dispatcher = new adone.omnitron.Dispatcher(this, options);
     }
 
     startOmnitron() {

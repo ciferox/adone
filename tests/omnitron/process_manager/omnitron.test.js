@@ -1887,7 +1887,6 @@ describe("Process manager", function () {
 
             beforeEach(async () => {
                 logger.mute();
-                // await omnitronRunner.startOmnitron();
 
                 omnitron = new WeakOmnitron();
 
@@ -1898,7 +1897,6 @@ describe("Process manager", function () {
                 await omnitronRunner.createDispatcher({ omnitron });
 
                 await omnitronRunner.dispatcher.spawn(false);
-                // await omnitron.run({ ignoreArgs: true });
 
                 const pmconfig = {
                     description: "Process manager service",

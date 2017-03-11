@@ -123,6 +123,7 @@ describe("Auth service", () => {
 
         omnitronRunner = new OmnitronRunner();
         await omnitronRunner.run();
+        omnitronRunner.createDispatcher();
         await omnitronRunner.startOmnitron();
         await omnitronRunner.dispatcher.enable("database");
         await omnitronRunner.dispatcher.enable("auth");
