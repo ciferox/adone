@@ -1,7 +1,7 @@
+import adone from "adone";
 const {
     netron: { Netron, decorator: { Contextable, Private, Public } },
-    std: { cluster },
-    Promise
+    std: { cluster }
 } = adone;
 
 const port = process.argv[2];
@@ -150,7 +150,7 @@ class Container {
         // really ?
         started = true;
         this.env.pm_exec_path = path;
-        cluster.setupMaster({ 
+        cluster.setupMaster({
             exec: adone.std.path.join(__dirname, "cluster_fork_container.js"),
             args
         });

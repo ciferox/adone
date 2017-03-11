@@ -10,12 +10,15 @@ if (adone.is.nil(process.env.ADONE_HOME)) {
     process.env.ADONE_HOME = home;
 }
 
-export class WeakOmnitron extends adone.omnitron.Omnitron {
+export class WeakOmnitron extends adone.omnitron.Omnitron.Omnitron {
     constructor(options) {
         super(options);
-        this._.configManager = new adone.omnitron.ConfigManager(this);
-        // create
+        this._.configManager = new adone.omnitron.ConfigManager(this, { inMemory: true });
+    }
+
+    async initialize() {
         this.config.omnitron = {
+            servicesPath: adone.std.path.join(process.env.ADONE_HOME, "services"),
             gates: [
                 {
                     id: "local",
@@ -37,11 +40,45 @@ export class WeakOmnitron extends adone.omnitron.Omnitron {
                         }
                     ]
                 }
+            },
+            getGate(opts) {
+                if (opts.id !== undefined) {
+                    for (const gate of this.gates) {
+                        if (opts.id === gate.id) {
+                            return gate;
+                        }
+                    }
+                    return;
+                }
+                const gates = [];
+                for (const gate of this.gates) {
+                    if ((opts.type === undefined || opts.type === gate.type) && (opts.enabled === undefined || opts.enabled === gate.enabled)) {
+                        if (!Array.isArray(opts.contexts) || gate.access === undefined || !Array.isArray(gate.access.contexts)) {
+                            gates.push(gate);
+                        } else {
+                            const contexts = gate.access.contexts;
+                            for (const svcName of opts.contexts) {
+                                if (contexts.includes(svcName)) {
+                                    gates.push(gate);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return gates;
+            },
+            getServicePath(serviceName, dirName) {
+                let fullPath;
+                if (typeof dirName === "string") {
+                    fullPath = adone.std.path.join(this.servicesPath, serviceName, dirName);
+                } else {
+                    fullPath = adone.std.path.join(this.servicesPath, serviceName);
+                }
+
+                return adone.fs.mkdir(fullPath).then(() => fullPath);
             }
         };
-    }
-
-    async initialize() {
         // await this.createPidFile();
 
         // await adone.fs.mkdir(this.config.omnitron.servicesPath);
@@ -77,24 +114,20 @@ export class WeakOmnitron extends adone.omnitron.Omnitron {
 }
 
 export default class OmnitronRunner extends adone.Application {
-    constructor({ omnitron = null }) {
-        super();
-        if (!adone.is.null(omnitron)) {
-            this.omnitron = omnitron;
-            this.configManager = omnitron._.configManager;
-        } else {
-            this.configManager = null;
-        }
-    }
-
     run() {
         return adone.fs.rm(process.env.ADONE_HOME).then(() => {
             return super.run({ ignoreArgs: true });
         });
     }
 
-    initialize() {
-        this.dispatcher = new adone.omnitron.Dispatcher(this, { noisily: false, omnitron: this.omnitron, configManager: this.configManager });
+    createDispatcher({ omnitron = null } = {}) {
+        if (!adone.is.null(omnitron)) {
+            this.omnitron = omnitron;
+            this.configManager = this.omnitron._.configManager;
+        } else {
+            this.configManager = null;
+        }
+        return this.dispatcher = new adone.omnitron.Dispatcher(this, { noisily: false, omnitron: this.omnitron, configManager: this.configManager });
     }
 
     startOmnitron() {

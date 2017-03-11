@@ -39,6 +39,7 @@ describe("Process manager", () => {
             it("IProcess.pid() should be equal to Process.pid", async () => {
                 const storage = await FS.createTempDirectory();
                 const { stdout, port, stderr } = processFiles(storage);
+
                 const p = new stuff.Process({}, {
                     path: fixture("run_forever.js"),
                     mode,

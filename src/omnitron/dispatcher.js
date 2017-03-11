@@ -38,7 +38,7 @@ export default class Dispatcher {
                 if (is.netron(options)) {
                     netron = options;
                 } else {
-                    netron = new adone.netron.Netron(null, options);    
+                    netron = new adone.netron.Netron(null, options);
                 }
                 peer = await netron.connect(localGate);
             } catch (err) {
@@ -97,7 +97,7 @@ export default class Dispatcher {
             } else {
                 omnitron = this.omnitron;
             }
-            return omnitron.run(true);
+            return omnitron.run({ ignoreArgs: true });
         }
     }
 
@@ -122,7 +122,7 @@ export default class Dispatcher {
         } else {
             this.noisily && adone.log("Omnitron is offline");
         }
-        
+
         if (!is.nil(this.descriptors.stdout)) {
             await adone.std.fs.closeAsync(this.descriptors.stdout);
             this.descriptors.stdout = null;
@@ -162,8 +162,8 @@ export default class Dispatcher {
         } catch (err) {
             // adone.log(err);
         }
-        
-        return isOK;    
+
+        return isOK;
     }
 
     getInterface(name) {
@@ -274,7 +274,7 @@ export default class Dispatcher {
         }
         return exists;
     }
-                
+
     async _killProcessChildren(pid) {
         const children = (await adone.metrics.system.getProcesses()).filter((x) => x.getParentPID() === pid);
         return Promise.all(children.map(async (child) => {

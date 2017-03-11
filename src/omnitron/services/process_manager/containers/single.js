@@ -1,5 +1,6 @@
+import adone from "adone";
 const {
-    netron: { Netron, decorator: { Contextable } } 
+    netron: { Netron, decorator: { Contextable } }
 } = adone;
 
 const port = process.argv[2];

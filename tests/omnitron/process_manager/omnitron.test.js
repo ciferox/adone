@@ -1,17 +1,25 @@
 const { path } = adone.std;
-import OmnitronRunner from "../runner";
-import ProcessManager, * as stuff from "omnitron/services/process_manager";
+import OmnitronRunner, { WeakOmnitron } from "../runner";
+import {
+    ProcessManager,
+    netronOptions,
+    RemoteProcess,
+    logger,
+    IProcess,
+    IMainProcess
+} from "omnitron/services/process_manager";
+import { Database } from "omnitron/services/database";
 import { fixture, waitFor } from "./util";
 
 const { vendor: { lodash: _ }, x, is } = adone;
 const { Contextable, Private, Public } = adone.netron.decorator;
 
-describe.skip("Process manager", function () {
+describe("Process manager", function () {
     this.timeout(180000);  // long enough?
     let OS;
 
     before(async () => {
-        stuff.netronOptions.responseTimeout = 100000;
+        netronOptions.responseTimeout = 100000;
         OS = adone.metrics.system;
     });
 
@@ -34,16 +42,17 @@ describe.skip("Process manager", function () {
         let appConfig;
         let pmConfig;
 
-        before(async function () {
-            omnitronRunner = new OmnitronRunner();
-            await omnitronRunner.run();
-            appConfig = adone.appinstance.config;
-        });
-
-        describe("Process management", function () {
+        describe("Process management", () => {
             const db = { applications: null, runtime: null };
             let pm = null;
             let idb = null;
+
+            before(async () => {
+                omnitronRunner = new OmnitronRunner();
+                omnitronRunner.createDispatcher();
+                await omnitronRunner.run();
+                appConfig = omnitronRunner.config;
+            });
 
             beforeEach(async function () {
                 this.timeout(60000);
@@ -98,14 +107,9 @@ describe.skip("Process manager", function () {
                             expect(await db.runtime.findOne({
                                 pid: await p.pid()
                             })).to.be.ok;
-                            let h;
-                            const pr = new Promise((resolve) => {
-                                h = new Handle(resolve);
-                            });
-                            const t = p.waitForExit(h);
+                            const t = p.waitForExit();
                             await p.kill("SIGKILL");
                             await t;
-                            await pr;
                         });
 
                         it("should stop the app", async () => {
@@ -192,7 +196,7 @@ describe.skip("Process manager", function () {
                                     args: ["1"]
                                 });
                             } catch (err) {
-                                // 
+                                //
                             }
                             const config = await db.applications.findOne({ name: "test" });
                             try {
@@ -330,7 +334,7 @@ describe.skip("Process manager", function () {
                             expect(doc).to.be.not.ok;
                         });
 
-                        it("should start right apps", async function () {
+                        it("should start right apps", async () => {
                             const f1 = await FS.createTempFile();
                             await pm.start({
                                 name: "test",
@@ -1201,13 +1205,12 @@ describe.skip("Process manager", function () {
                 afterEach("stopping applications", async () => {
                     const apps = await pm.list();
                     for (const { name } of apps) {
-                        await pm.stop(name).catch(() => {});
+                        await pm.stop(name).catch(() => { });
                     }
                 });
 
                 describe("restoring", () => {
                     it("should restore a single process", async () => {
-
                         const _p = await pm.start({
                             name: "test",
                             path: fixture("run_forever.js")
@@ -1222,7 +1225,7 @@ describe.skip("Process manager", function () {
                             expect(await p.pid()).to.be.equal(pid);
                             expect(await p.ping()).to.be.equal("pong");
                         } finally {
-                            const rp = new stuff.RemoteProcess(pid);
+                            const rp = new RemoteProcess(pid);
                             rp.kill("SIGKILL");
                             await new Promise((resolve) => rp.on("exit", resolve));
                         }
@@ -1249,7 +1252,7 @@ describe.skip("Process manager", function () {
                             const workers = await p.workers();
                             expect(_.keys(workers)).to.have.lengthOf(4);
                         } finally {
-                            const rp = new stuff.RemoteProcess(pid);
+                            const rp = new RemoteProcess(pid);
                             rp.kill("SIGKILL");
                             await new Promise((resolve) => rp.on("exit", resolve));
                         }
@@ -1295,10 +1298,10 @@ describe.skip("Process manager", function () {
                             const workers = await pc.workers();
                             expect(_.keys(workers)).to.have.lengthOf(4);
                         } finally {
-                            const rp = new stuff.RemoteProcess(pid1);
+                            const rp = new RemoteProcess(pid1);
                             rp.kill("SIGKILL");
                             await new Promise((resolve) => rp.on("exit", resolve));
-                            const rpc = new stuff.RemoteProcess(pid2);
+                            const rpc = new RemoteProcess(pid2);
                             rpc.kill("SIGKILL");
                             await new Promise((resolve) => rpc.on("exit", resolve));
                         }
@@ -1316,7 +1319,7 @@ describe.skip("Process manager", function () {
                             await restartOmnitron();
                             expect(await pm.hasApplication("test")).to.be.false;
                         } finally {
-                            const rp = new stuff.RemoteProcess(pid);
+                            const rp = new RemoteProcess(pid);
                             rp.kill("SIGKILL");
                             await new Promise((resolve) => rp.on("exit", resolve));
                         }
@@ -1332,12 +1335,12 @@ describe.skip("Process manager", function () {
                         try {
                             // just change the port to fail the attaching
                             await db.applications.update({ name: "test" }, { $set: { port: is.win32 ? "\\\\.\\pipe\\such_a_file_shouldnt_exist_12345$.sock" : "such_a_file_shouldnt_exist_12345$.sock" } });
-                            expect(stuff.RemoteProcess.alive(pid)).to.be.true;
+                            expect(RemoteProcess.alive(pid)).to.be.true;
                             await restartOmnitron();
                             expect(await pm.hasApplication("test")).to.be.true;
-                            await waitFor(() => !stuff.RemoteProcess.alive(pid));
+                            await waitFor(() => !RemoteProcess.alive(pid));
                         } catch (err) {
-                            const rp = new stuff.RemoteProcess(pid);
+                            const rp = new RemoteProcess(pid);
                             if (rp.alive) {
                                 rp.kill("SIGKILL");
                                 await new Promise((resolve) => rp.on("exit", resolve));
@@ -1356,7 +1359,7 @@ describe.skip("Process manager", function () {
                         });
                         const pid = await _p.pid();
                         await omnitronRunner.stopOmnitron({ clean: false, killChildren: false });
-                        const rp = new stuff.RemoteProcess(pid);
+                        const rp = new RemoteProcess(pid);
                         rp.kill("SIGKILL");
                         await new Promise((resolve) => rp.on("exit", resolve));
                         await restartOmnitron();
@@ -1380,7 +1383,7 @@ describe.skip("Process manager", function () {
                             mode: "single"
                         });
                         const pid = await _p.pid();
-                        const rp = new stuff.RemoteProcess(pid);
+                        const rp = new RemoteProcess(pid);
                         rp.kill("SIGKILL");
                         await new Promise((resolve) => rp.on("exit", resolve));
                         await restartOmnitron();
@@ -1398,7 +1401,7 @@ describe.skip("Process manager", function () {
                             mode: "single"
                         });
                         const pid = await _p.pid();
-                        const rp = new stuff.RemoteProcess(pid);
+                        const rp = new RemoteProcess(pid);
                         try {
                             // just change the timestamp to make it wrong
                             await db.runtime.update({ pid }, {
@@ -1428,7 +1431,7 @@ describe.skip("Process manager", function () {
                             maxRestarts: 1
                         });
                         const pid = await _p.pid();
-                        const rp = new stuff.RemoteProcess(pid);
+                        const rp = new RemoteProcess(pid);
 
                         try {
                             // just change the timestamp to make it wrong
@@ -1486,7 +1489,7 @@ describe.skip("Process manager", function () {
                     });
 
                     describe("single", () => {
-                        it("should try to start app with delays", async function () {
+                        it("should try to start app with delays", async () => {
                             const t = new Date().getTime();
                             let err = null;
                             try {
@@ -1505,7 +1508,7 @@ describe.skip("Process manager", function () {
                             expect(new Date().getTime() - t).to.be.at.least(4000);
                         });
 
-                        it("should stop restarting if it doesnt start normally", async function () {
+                        it("should stop restarting if it doesnt start normally", async () => {
                             const tmp = await FS.createTempFile();
                             await pm.start({
                                 name: "test",
@@ -1616,7 +1619,7 @@ describe.skip("Process manager", function () {
                             await waitFor(async () => !await pm.started("test"));
                         });
 
-                        it("should interrupt the restarting process if the app stops when the restarting process is active", async function () {
+                        it("should interrupt the restarting process if the app stops when the restarting process is active", async () => {
                             await pm.start({
                                 name: "test",
                                 path: fixture("print_timestamp_and_exit_in_500ms.js"),
@@ -1634,7 +1637,7 @@ describe.skip("Process manager", function () {
                             expect(app.state).to.be.oneOf(["stopped", "stopping"]);
                         });
 
-                        it("should interrupt the restarting process if the app failed to start, starts the restarting process and is stopped while waiting", async function () {
+                        it("should interrupt the restarting process if the app failed to start, starts the restarting process and is stopped while waiting", async () => {
                             let e = pm.start({
                                 name: "test",
                                 path: fixture("invalid_script.js"),
@@ -1674,7 +1677,7 @@ describe.skip("Process manager", function () {
                             expect(await pm.started("test")).to.be.false;
                         });
 
-                        it("ensure it restarts the programm if it starts normally", async function () {
+                        it("ensure it restarts the programm if it starts normally", async () => {
                             await pm.start({
                                 name: "test",
                                 path: fixture("print_timestamp_and_exit_in_500ms.js"),
@@ -1683,8 +1686,8 @@ describe.skip("Process manager", function () {
                                 restartDelay: 500,
                                 normalStart: 200
                             });
-                            
-                            for ( ; ; ) {
+
+                            for (; ;) {
                                 const [app] = await pm.list();
                                 if (app.restarts > 2) {
                                     break;
@@ -1704,7 +1707,7 @@ describe.skip("Process manager", function () {
                                 normalStart: 500
                             });
                             const stdout = new adone.fs.File(await pm.stdoutPath("test"));
-                            for ( ; ; ) {
+                            for (; ;) {
                                 const t = (await stdout.content()).split("\n").slice(1, -1).map(Number);
                                 // stop, start, stop, start
                                 for (let i = 1; i < t.length; i += 2) {
@@ -1718,7 +1721,7 @@ describe.skip("Process manager", function () {
                         });
                     });
 
-                    describe("workers", function () {
+                    describe("workers", () => {
                         it("should restart the workers if they fall", async () => {
                             const p = await pm.start({
                                 name: "test",
@@ -1735,7 +1738,7 @@ describe.skip("Process manager", function () {
                             });
                         });
 
-                        it("should use the restarting delay when restarts the workers", async function () {
+                        it("should use the restarting delay when restarts the workers", async () => {
                             const f = fixture("dynamic.js");
                             await adone.std.fs.writeFileAsync(f, `
                                 setInterval(() => {}, 1000);
@@ -1770,7 +1773,7 @@ describe.skip("Process manager", function () {
                             }
                         });
 
-                        it("should stop restarting if it doesnt start normally", async function () {
+                        it("should stop restarting if it doesnt start normally", async () => {
                             const tmp = await FS.createTempFile();
                             const p = await pm.start({
                                 name: "test",
@@ -1789,16 +1792,16 @@ describe.skip("Process manager", function () {
 
                                 expect(w[0].alive).to.be.true;
                                 process.kill(pid, "SIGKILL");  // #1 restarting
-                                await waitFor(() => !stuff.RemoteProcess.alive(pid));
+                                await waitFor(() => !RemoteProcess.alive(pid));
                                 await waitFor(async () => {
                                     w = await p.workers();
                                     return w[0].pid !== pid && w[0].alive;
                                 });
 
                                 process.kill(w[0].pid, "SIGKILL");  // #2 restarting
-                                
+
                                 pid = w[0].pid;
-                                await waitFor(() => !stuff.RemoteProcess.alive(pid));
+                                await waitFor(() => !RemoteProcess.alive(pid));
                                 await waitFor(async () => {
                                     w = await p.workers();
                                     return w[0].pid !== pid && w[0].alive;
@@ -1807,16 +1810,16 @@ describe.skip("Process manager", function () {
                                 process.kill(w[0].pid, "SIGKILL");  // #3 restarting
 
                                 pid = w[0].pid;
-                                await waitFor(() => !stuff.RemoteProcess.alive(pid));
+                                await waitFor(() => !RemoteProcess.alive(pid));
                                 await waitFor(async () => {
                                     w = await p.workers();
                                     return w[0].pid !== pid && w[0].alive;
                                 });
 
                                 process.kill(w[0].pid, "SIGKILL");  // #4 restarting
-                                
+
                                 pid = w[0].pid;
-                                await waitFor(() => !stuff.RemoteProcess.alive(pid));
+                                await waitFor(() => !RemoteProcess.alive(pid));
                                 await waitFor(async () => {
                                     w = await p.workers();
                                     return !w[0].alive;
@@ -1876,37 +1879,128 @@ describe.skip("Process manager", function () {
 
         describe("configs", () => {
             let pm = null;
+            let odb = null;
             let defaultProcessConfig = null;
-            let basePath = null;
             const db = { applications: null, runtime: null };
-            let options = null;
-
-            before(async () => {
-                stuff.logger.mute();
-                ({ defaultProcessConfig, basePath } = pmConfig.options);
-                await omnitronRunner.startOmnitron();
-                await omnitronRunner.connectOmnitron();
-                pm = await omnitronRunner.getInterface("pm");
-                const idb = await omnitronRunner.getInterface("database");
-                db.applications = await idb.getDatastore(pmConfig.options.datastore.applications);
-                db.runtime = await idb.getDatastore(pmConfig.options.datastore.runtime);
-                options = _.defaults(pmConfig.options, {
-                    omnitron: {
-                        iDatabase: omnitronRunner.getInterface("database"),
-                        on: () => { },
-                        once: () => { }
-                    }
-                });
-            });
-
-            after(() => omnitronRunner.stopOmnitron());
+            let basePath;
+            let omnitron;
 
             beforeEach(async () => {
-                await new adone.fs.Directory(basePath).clean();
-                await db.applications.remove({}, { multi: true });
-                await db.runtime.remove({}, { multi: true });
-                pm = new ProcessManager(options);
+                logger.mute();
+                // await omnitronRunner.startOmnitron();
+
+                omnitron = new WeakOmnitron();
+
+                const omnitronRunner = new OmnitronRunner();
+
+                await omnitronRunner.run();
+
+                await omnitronRunner.createDispatcher({ omnitron });
+
+                await omnitronRunner.dispatcher.spawn(false);
+                // await omnitron.run({ ignoreArgs: true });
+
+                const pmconfig = {
+                    description: "Process manager service",
+                    status: "enabled",
+                    dependencies: [
+                        "database"
+                    ],
+                    contexts: [
+                        {
+                            id: "pm",
+                            class: "ProcessManager",
+                            default: true,
+                            options: {
+                                datastore: {
+                                    applications: {
+                                        filename: "pm-applications"
+                                    },
+                                    runtime: {
+                                        filename: "pm-runtime"
+                                    }
+                                },
+                                defaultProcessConfig: {
+                                    args: [],
+                                    env: {},
+                                    mode: "single",
+                                    startup: false,
+                                    autorestart: false,
+                                    maxRestarts: 3,
+                                    restartDelay: 0,
+                                    killTimeout: 1600,
+                                    normalStart: 1000
+                                }
+                            }
+                        }
+                    ]
+                };
+
+                const dbconfig = {
+                    description: "Object-database service",
+                    status: "enabled",
+                    contexts: [
+                        {
+                            id: "db",
+                            class: "Database",
+                            default: true
+                        }
+                    ]
+                };
+
+                omnitron.addServiceConfig("database", dbconfig);
+
+                odb = new Database({
+                    serviceName: "database",
+                    netron: omnitron._.netron,
+                    omnitron
+                });
+
+                await omnitron.attachService("database", dbconfig, odb);
+
+                await odb.initialize();
+
+                omnitron.addServiceConfig("process_manager", pmconfig);
+
+                pm = new ProcessManager({
+                    serviceName: "process_manager",
+                    netron: omnitron._.netron,
+                    omnitron,
+                    datastore: {
+                        applications: {
+                            filename: "pm-applications"
+                        },
+                        runtime: {
+                            filename: "pm-runtime"
+                        }
+                    },
+                    defaultProcessConfig: {
+                        args: [],
+                        env: {},
+                        mode: "single",
+                        startup: false,
+                        autorestart: false,
+                        maxRestarts: 3,
+                        restartDelay: 0,
+                        killTimeout: 1600,
+                        normalStart: 1000
+                    }
+                });
+
+                await omnitron.attachService("process_manager", pmconfig, pm);
+
                 await pm.initialize();
+
+                basePath = pm.basePath;
+
+                defaultProcessConfig = pm.options.defaultProcessConfig;
+
+                db.applications = await odb.getDatastore(pm.options.datastore.applications);
+                db.runtime = await odb.getDatastore(pm.options.datastore.runtime);
+            });
+
+            afterEach(() => {
+                return omnitron.exit();
             });
 
             describe("prepareConfig", () => {
@@ -1982,7 +2076,7 @@ describe.skip("Process manager", function () {
                         path: "test.js"
                     });
                     if (is.win32) {
-                        expect(c.port).to.be.equal("\\\\.\\pipe\\" + path.join(basePath, "test", "port.sock"));
+                        expect(c.port).to.be.equal(`\\\\.\\pipe\\${path.join(basePath, "test", "port.sock")}`);
                     } else {
                         expect(c.port).to.be.equal(path.join(basePath, "test", "port.sock"));
                     }
@@ -2155,14 +2249,14 @@ describe.skip("Process manager", function () {
                 });
 
                 it("should return a config by IProcess", async () => {
-                    const ip = new stuff.IProcess({}, { config: { name: "test", id: 1 } });
+                    const ip = new IProcess({}, { config: { name: "test", id: 1 } });
                     const c = await pm.deriveConfig({ path: "test.js" }, true);
                     const c2 = await pm.deriveConfig(ip);
                     expect(equal(c, c2)).to.be.true;
                 });
 
                 it("should return a config by IMainProcess", async () => {
-                    const ip = new stuff.IMainProcess({}, { config: { name: "test", id: 1 } });
+                    const ip = new IMainProcess({}, { config: { name: "test", id: 1 } });
                     const c = await pm.deriveConfig({ path: "test.js" }, true);
                     const c2 = await pm.deriveConfig(ip);
                     expect(equal(c, c2)).to.be.true;

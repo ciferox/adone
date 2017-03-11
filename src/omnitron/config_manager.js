@@ -2,20 +2,23 @@ const { is, std } = adone;
 const { ENABLED } = adone.omnitron.const;
 
 export default class ConfigManager {
-    constructor(app) {
+    constructor(app, { inMemory = false } = {}) {
         this.app = app;
-        this.config = app.config;
+        // this.config = this.app.config;
+        this.inMemory = inMemory;
     }
+
     async load() {
+        this.config = this.app.config;
+
         if (is.undefined(this.config.omnitron)) {
             await this.app.loadAdoneConfig("omnitron");
-
             // Subconfiguration for services...
             this.config.omnitron.services = {};
 
             // Load configurations of core services.
             const coreServicesPath = std.path.resolve(__dirname, "services");
-            if (adone.fs.exists(coreServicesPath)) {
+            if (await adone.fs.exists(coreServicesPath)) {
                 await adone.fs.glob(`${coreServicesPath}/*/meta.json`).map(async (configPath) => {
                     const servicePath = std.path.dirname(configPath);
                     const serviceName = std.path.basename(servicePath);
@@ -70,6 +73,9 @@ export default class ConfigManager {
     }
 
     async saveServicesConfig() {
+        if (this.inMemory) {
+            return;
+        }
         try {
             await this.config.save(this.config.omnitron.servicesConfigFilePath, "omnitron.services", { space: 4 });
             adone.info(`Configuration '${this.config.omnitron.servicesConfigFilePath}' saved`);
@@ -79,6 +85,9 @@ export default class ConfigManager {
     }
 
     async saveGatesConfig() {
+        if (this.inMemory) {
+            return;
+        }
         try {
             await this.config.save(this.config.omnitron.gatesConfigFilePath, "omnitron.gates", { space: 4 });
             adone.info(`Configuration '${this.config.omnitron.gatesConfigFilePath}' saved`);

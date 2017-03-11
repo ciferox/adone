@@ -78,7 +78,7 @@ export class RemoteProcess extends AsyncEmitter {
         process.nextTick(() => this._waitForExit());  // end the sync part, unhandled rejection
         this.exited = false;
         this.exitCode = null;
-        this.exitSignal = null; 
+        this.exitSignal = null;
     }
 
     static alive(pid) {
@@ -99,8 +99,8 @@ export class RemoteProcess extends AsyncEmitter {
 
     /**
      * should not be used directly
-     * 
-     * 
+     *
+     *
      * @memberOf RemoteProcess
      */
     async _waitForExit() {
@@ -227,9 +227,9 @@ export class Process extends AsyncEmitter {
 
     async start() {
         const { config } = this;
-        
+
         await this.openStdStreams();
-        
+
         const container = this.constructor.containerPath;
         const { port } = config;
 
@@ -263,7 +263,7 @@ export class Process extends AsyncEmitter {
                 throw new adone.x.Exception(`Failed to start the application: ${err.stack || err.message || err}`);
             }
         }
-        
+
         if (this.meta.exited) {  // synchronous tasks or an immediate error
             // will it appear?
             setImmediate(() => this._onExit(this.meta.exitCode, this.meta.exitSignal));  // schedule after promises resolves
@@ -294,11 +294,11 @@ export class Process extends AsyncEmitter {
     }
 
     /**
-     * 
-     * 
+     *
+     *
      * @param {any} pid
      * @param {string} [_name="master"] for testing
-     * 
+     *
      * @memberOf Process
      */
     async attach(pid) {
@@ -329,17 +329,17 @@ export class Process extends AsyncEmitter {
 
     async ping() {
         if (!this.peer) {
-            throw new adone.x.IllegalState("No connection with the peer"); 
+            throw new adone.x.IllegalState("No connection with the peer");
         }
         return this.container.ping();
     }
 
     /**
-     * 
-     * 
+     *
+     *
      * @param {any} [{ graceful = true, timeout = 2000 }={}]
      * @returns {Promise}
-     * 
+     *
      * @memberOf Process
      */
     exit({ graceful = true, timeout = 2000 } = {}) {
@@ -546,16 +546,14 @@ export class IProcess {
 
     @Public
     @Description("Wait for the process exit")
-    waitForExit(handle) {
-        this.process.waitForExit().then(() => {
-            return handle.call.void();
-        }).catch(() => {});
+    waitForExit() {
+        return this.process.waitForExit();
     }
 }
 
 @Contextable
 @Private
-@Description("The main process of a cluster") 
+@Description("The main process of a cluster")
 export class IMainProcess extends IProcess {
     @Public
     @Description("Get info about the workers")
@@ -596,7 +594,7 @@ export class UsageProvider {
         this.os = os;
         this.history = new Map();
     }
-    
+
     async lookup(pid) {
         const proc = await this.os.getProcess(pid);
         if (proc === null) {
@@ -604,15 +602,15 @@ export class UsageProvider {
         }
         const history = this.history.get(pid) || {};
         const rss = proc.getResidentSetSize();
-        
+
         const kernelTime = proc.getKernelTime();
         const userTime = proc.getUserTime();
         const upTime = proc.getUpTime();
-        
+
         const total = kernelTime - (history.kernelTime | 0) + userTime - (history.userTime | 0);
         const time = upTime - (history.upTime | 0);
         const usage = total / time * 100;
-        
+
         this.history.set(pid, {
             kernelTime,
             userTime,
@@ -623,7 +621,7 @@ export class UsageProvider {
             memory: rss
         };
     }
-    
+
     clear(pid) {
         this.history.delete(pid);
     }
@@ -680,7 +678,7 @@ export class ProcessManager {
         this.state = STATES.STOPPED;
         this.db = {};
     }
-    
+
     async initialize() {
         this.state = STATES.STARTING;
         logger.log("Initialization");
@@ -693,15 +691,15 @@ export class ProcessManager {
         if (is.nil(last)) {
             nextid = 1;
         } else {
-            nextid = last.id + 1; 
+            nextid = last.id + 1;
         }
         this.ids = new IDGenerator(nextid);
-        this.os = adone.metrics.software;
+        this.os = adone.metrics.system;
         this.usageProvider = new UsageProvider(this.os);
         logger.log("Initialized");
-        this.omnitron.once("omnitron online", () => this.resurrect());
         this.state = STATES.RUNNING;
         this.basePath = await this.omnitron.config.omnitron.getServicePath(this.options.serviceName, "apps");
+        await this.resurrect();
     }
 
     async uninitialize() {
@@ -732,7 +730,7 @@ export class ProcessManager {
             if (remote.alive) {
                 const p = await this.os.getProcess(meta.pid);
                 const started = meta.timestamps.started;
-                // the real start time must always be lower(or equal) than that 
+                // the real start time must always be lower(or equal) than that
                 // if the real is not than we have another process having the same pid
                 if (p.getStartTime() <= started) {
                     const appmeta = this.appmeta.get(config.id);
@@ -873,11 +871,11 @@ export class ProcessManager {
 
     /**
      * преобразует то что отдаётся в config в реальный конфиг приложения
-     * 
+     *
      * @param {any} config
      * @param {boolean} [update=true]
      * @returns
-     * 
+     *
      * @memberOf ProcessManager
      */
     async deriveConfig(config, store = false) {
@@ -949,7 +947,7 @@ export class ProcessManager {
         const isCluster = config.mode === "cluster";
         const constructor = isCluster ? MainProcess : Process;
         let proc;
-        
+
         let started = false;
         if (!restarting) {
             appmeta.set("state", STATES.STARTING);
@@ -964,7 +962,7 @@ export class ProcessManager {
                 }
             }
         }
-        
+
         if (!started) {  // autorestart === true
             let err = null;
             let restarts = appmeta.get("restarts");
@@ -1088,12 +1086,12 @@ export class ProcessManager {
             clearTimeout(workermeta.get("startingTimer"));
         }
         workermeta.set("state", STATES.STOPPED);
-        
-        
+
+
         const l = logger.contextify(config.name).contextify(id);
         l.log("worker exited");
         const { process } = await this.processes.get(config.id);
-        
+
         const { pid } = process.workers[id].pid;
         this.usageProvider.clear(pid);
         let immediateRestarts = workermeta.get("immediateRestarts");
@@ -1144,7 +1142,6 @@ export class ProcessManager {
             return;
         }
         const appmeta = this.appmeta.get(config.id);
-        console.log(this.appmeta);
         const state = appmeta.get("state");
         const stopping = state === STATES.STOPPING;
         const stopped = state === STATES.STOPPED;
@@ -1159,7 +1156,7 @@ export class ProcessManager {
         const { meta: { exitCode, exitSignal } } = process;
 
         this.usageProvider.clear(process.pid);
-        
+
         const l = logger.contextify(config.name);
 
         if (exitCode !== null) {
@@ -1174,7 +1171,6 @@ export class ProcessManager {
         }
         if (!stopping && !stopped && config.autorestart && appmeta.get("immediateRestarts") < config.maxRestarts) {
             l.log("Try to restart the app");
-            console.log("the state was", humanizeState(state));
             l.log("wait", config.restartDelay);
             appmeta.set("state", STATES.WAITING_FOR_RESTART);
             await adone.promise.delay(config.restartDelay);
@@ -1487,7 +1483,7 @@ export class ProcessManager {
             }
             res.push(app);
         }
-        return res;     
+        return res;
     }
 
     @Public

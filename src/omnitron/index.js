@@ -137,7 +137,7 @@ export class Omnitron extends adone.Application {
         this._.service = {};
         this._.uninitOrder = [];
         this._.context = {};
-        
+
         // Attach enabled contexts
         for (const [name, svcConfig] of Object.entries(this.config.omnitron.services)) {
             try {
@@ -163,7 +163,7 @@ export class Omnitron extends adone.Application {
             for (const serviceName of this._.uninitOrder) {
                 const service = this._.service[serviceName];
                 try {
-                    if (serviceName !== "omnitron") {    
+                    if (serviceName !== "omnitron") {
                         await this.detachService(service);
                     }
                 } catch (err) {
@@ -198,7 +198,7 @@ export class Omnitron extends adone.Application {
                 throw new adone.x.NotFound(`Context '${name}' not found`);
             }
         }
-        
+
         return this._.netron.getInterfaceById(defId);
     }
 
@@ -222,7 +222,7 @@ export class Omnitron extends adone.Application {
                 contexts: []
             };
         }
-            
+
         if (serviceConfig.status === ENABLED) {
             await this._checkDependencies(service, (depName, depConfig) => this.attachService(depName, depConfig));
 
@@ -240,8 +240,8 @@ export class Omnitron extends adone.Application {
                 if (is.undefined(instance)) {
                     serviceConfig.status = INITIALIZING;
 
-                    let contextPath;         
-                    let className = contextConfig.class; 
+                    let contextPath;
+                    let className = contextConfig.class;
                     if (className.indexOf(":") >= 0) {
                         const parts = className.split(":");
                         className = parts[1];
@@ -251,7 +251,7 @@ export class Omnitron extends adone.Application {
                     }
                     const serviceExports = require(contextPath);
                     const ServiceClass = serviceExports[className];
-                    
+
                     let options = { serviceName, id, omnitron: this, netron: this._.netron };
                     if (is.plainObject(contextConfig.options)) {
                         options = adone.vendor.lodash.defaults(options, contextConfig.options);
@@ -261,7 +261,7 @@ export class Omnitron extends adone.Application {
                         await instance.initialize();
                     }
                 }
-                
+
                 const defId = this._.netron.attachContext(instance, id);
                 service.contexts.push(this._.context[id] = {
                     id,
@@ -331,7 +331,7 @@ export class Omnitron extends adone.Application {
                     }
                     config = depConfig;
                 } else {
-                    config = depService.config;                        
+                    config = depService.config;
                 }
                 if (config.status === DISABLED) {
                     throw new adone.x.IllegalState(`Dependent service '${depName}' is disabled`);
