@@ -296,6 +296,11 @@ describe("Database", () => {
             expect(doc._id).to.be.equal(0);
             expect(doc.hello).to.be.equal("world");
         });
+
+        it("can insert a document with null values", async () => {
+            await d.insert({ key: null });
+            expect(await d.find({ key: null })).to.have.lengthOf(1);
+        });
     }); // ==== End of 'Insert' ==== //
 
 

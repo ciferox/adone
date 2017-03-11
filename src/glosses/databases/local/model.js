@@ -467,7 +467,7 @@ export default class Model {
     }
 
     static deepCopy(obj, strictKeys) {
-        if (is.boolean(obj) || is.number(obj) || is.string(obj) || is.null(obj) === null || is.date(obj)) {
+        if (is.boolean(obj) || is.number(obj) || is.string(obj) || is.null(obj) || is.date(obj)) {
             return obj;
         }
 
