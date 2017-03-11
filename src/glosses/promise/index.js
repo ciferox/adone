@@ -1,6 +1,9 @@
+const { is } = adone;
 
+const PROMISIFIED = Symbol.for("adone:promise:promisified");
+const PROMISIFY_SOURCE = Symbol.for("adone:promise:promisify_source");
 
-export function defer() {
+export const defer = () => {
     const defer = {
         resolve: null,
         reject: null,
@@ -11,16 +14,16 @@ export function defer() {
         defer.reject = reject;
     });
     return defer;
-}
+};
 
 
-export function delay(ms, value) {
+export const delay = (ms, value) => {
     return new Promise((resolve) => {
         setTimeout(resolve, ms, value);
     });
-}
+};
 
-export function timeout(promise, ms) {
+export const timeout = (promise, ms) => {
     if (!adone.is.promise(promise)) {
         throw new adone.x.InvalidArgument("The first argument must be a promise");
     }
@@ -36,9 +39,9 @@ export function timeout(promise, ms) {
             reject(y);
         });
     });
-}
+};
 
-export function nodeify(promise, cb) {
+export const nodeify = (promise, cb) => {
     if (!adone.is.promise(promise)) {
         throw new adone.x.InvalidArgument("The first argument must be a promise");
     }
@@ -51,38 +54,58 @@ export function nodeify(promise, cb) {
         cb(y);
     });
     return promise;
-}
+};
 
-const PROMISIFIED = Symbol.for("adone:promise:promisified");
-const PROMISIFY_SOURCE = Symbol.for("adone:promise:promisify_source");
-
-export function promisify(fn) {
-    if (!adone.is.function(fn)) {
+export const promisify = (fn, { context = null } = {}) => {
+    if (!is.function(fn)) {
         throw new adone.x.InvalidArgument("The first argument must be a function");
     }
-    const f = function (...args) {
-        return new Promise((resolve, reject) => {
-            fn.apply(this, [...args, (err, result) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(result);
-                }
-            }]);
-        });
-    };
-    f[PROMISIFIED] = true;
-    f[PROMISIFY_SOURCE] = fn;
-    return f;
-}
+
+    const { name } = fn;
+    let res;
+
+    if (context) {
+        res = {
+            [name]: (...args) => new Promise((resolve, reject) => {
+                args.push((err, result) => {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        resolve(result);
+                    }
+                });
+                fn.apply(context, args);
+            })
+        };
+    } else {
+        res = {
+            [name](...args) {
+                return new Promise((resolve, reject) => {
+                    args.push((err, result) => {
+                        if (err) {
+                            reject(err);
+                        } else {
+                            resolve(result);
+                        }
+                    });
+                    fn.apply(this, args);
+                });
+            }
+        };
+    }
+
+    res[name][PROMISIFIED] = true;
+    res[name][PROMISIFY_SOURCE] = fn;
+    return res[name];
+};
 
 
-export function promisifyAll(source, { suffix = "Async", filter = () => true } = {}) {
+export const promisifyAll = (source, { suffix = "Async", filter = () => true, context } = {}) => {
     const target = adone.o(source);
     for (const [key, value] of adone.util.entries(source)) {
-        if (adone.is.function(value) && filter(key)) {
-            target[`${key}${suffix}`] = promisify(value);
+        if (is.function(value) && filter(key)) {
+            target[`${key}${suffix}`] = promisify(value, { context });
         }
     }
     return target;
-}
+};
