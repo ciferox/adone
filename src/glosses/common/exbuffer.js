@@ -1,4 +1,3 @@
-
 const { is, math: { Long }, util: { memcpy: { utoa, atou } }, x } = adone;
 
 const EMPTY_BUFFER = Buffer.alloc(0);

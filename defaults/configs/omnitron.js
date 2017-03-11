@@ -2,15 +2,14 @@
 
 const { join } = require("path");
 
-const adoneConfig = adone.appinstance.config.adone;
-const home = adoneConfig.home;
+const home = process.env.ADONE_HOME;
 
 module.exports = {
     logFilePath: join(home, "omnitron.log"),
     errorLogFilePath: join(home, "omnitron-err.log"),
     pidFilePath: join(home, "omnitron.pid"),
-    servicesConfigFilePath: join(adoneConfig.configsPath, "services.json"),
-    gatesConfigFilePath: join(adoneConfig.configsPath, "gates.json"),
+    servicesConfigFilePath: join(home, "configs", "services.json"),
+    gatesConfigFilePath: join(home, "configs", "gates.json"),
     servicesPath: join(home, "services"),
     getGate(opts) {
         if (opts.id !== undefined) {

@@ -85,7 +85,7 @@ export default class extends adone.application.Subsystem {
 
             const files = await fs.readdir(fullPath);
 
-            // const result = fs.glob(util)
+            // const result = await fs.glob(util.globize()).map();
 
             adone.log(files);
             

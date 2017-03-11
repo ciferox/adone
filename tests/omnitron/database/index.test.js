@@ -10,7 +10,7 @@ describe("Database service", () => {
 
         omnitronRunner = new OmnitronRunner();
         await omnitronRunner.run();
-        appConfig = adone.appinstance.config;
+        appConfig = omnitronRunner.config;
         await omnitronRunner.startOmnitron();
         await omnitronRunner.dispatcher.enable("database");
         await omnitronRunner.dispatcher.start("database");

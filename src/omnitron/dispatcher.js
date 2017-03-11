@@ -2,9 +2,11 @@ const { is } = adone;
 const { STATUSES } = adone.omnitron.const;
 
 export default class Dispatcher {
-    constructor(app, { noisily = true } = {}) {
+    constructor(app, { noisily = true, configManager = null, omnitron = null } = {}) {
         this.app = app;
         this.noisily = noisily;
+        this.configManager = configManager;
+        this.omnitron = omnitron;
         this.netron = null;
         this.peer = null;
         this.descriptors = {
@@ -14,7 +16,7 @@ export default class Dispatcher {
     }
 
     config() {
-        if (is.undefined(this.configManager)) {
+        if (is.null(this.configManager)) {
             this.configManager = new adone.omnitron.ConfigManager(this.app);
         }
         return this.configManager.load();
@@ -75,7 +77,7 @@ export default class Dispatcher {
                         detached: true,
                         cwd: process.cwd(),
                         env: Object.assign({
-                            HOME: process.env.ADONE_HOME || process.env.HOME || process.env.HOMEPATH
+                            HOME: process.env.HOME || process.env.HOMEPATH
                         }, process.env),
                         stdio: ["ipc", this.descriptors.stdout, this.descriptors.stderr]
                     });
@@ -89,8 +91,12 @@ export default class Dispatcher {
                 });
             });
         } else {
-            const Omnitron = require(omnitronPath).Omnitron;
-            const omnitron = new Omnitron();
+            let omnitron;
+            if (is.null(this.omnitron)) {
+                omnitron = new adone.omnitron.Omnitron();
+            } else {
+                omnitron = this.omnitron;
+            }
             return omnitron.run(true);
         }
     }
@@ -101,14 +107,17 @@ export default class Dispatcher {
             this.netron && await this.netron.disconnect();
             this.netron = null;
             this.peer = null;
-            try {
-                const pid = parseInt(adone.std.fs.readFileSync(this.app.config.omnitron.pidFilePath).toString());
-                if (killChildren) {
-                    await this._killProcessChildren(pid);
+            // Can be used in test environment.
+            if (is.string(this.app.config.omnitron.pidFilePath)) {
+                try {
+                    const pid = parseInt(adone.std.fs.readFileSync(this.app.config.omnitron.pidFilePath).toString());
+                    if (killChildren) {
+                        await this._killProcessChildren(pid);
+                    }
+                    await this._killProcess(pid, 10000); // awaiting 10 sec...
+                } catch (err) {
+                    this.noisily && adone.log("Omnitron is offline");
                 }
-                await this._killProcess(pid, 10000); // awaiting 10 sec...
-            } catch (err) {
-                this.noisily && adone.log("Omnitron is offline");
             }
         } else {
             this.noisily && adone.log("Omnitron is offline");
@@ -127,9 +136,9 @@ export default class Dispatcher {
         }
     }
 
-    async respawn({ options, forceStart = false, killChildren = false } = {}) {
+    async respawn({ options, spiritualWay = true, forceStart = false, killChildren = false } = {}) {
         await this.kill({ clean: false, killChildren });
-        await this.spawn();
+        await this.spawn(spiritualWay);
         await this.connectLocal(options, forceStart);
     }
 
@@ -254,21 +263,23 @@ export default class Dispatcher {
     async _killProcess(pid, timeout = 0) {
         process.kill(pid);
         this.noisily && adone.log(`Sent SIGTERM to omnitron's process (PID: ${pid})`);
-        const exists = await this._isAlive(pid, timeout);
+        let exists = await this._isAlive(pid, timeout);
         if (exists) {
             process.kill(pid, "SIGKILL");
             this.noisily && adone.log(`Sent SIGKILL to omnitron's process (PID: ${pid})`);
-            do {
-                await adone.promise.delay(50);
-            } while (this._isAlive(pid, 0));
+            exists = this._isAlive(pid, 3000); // wait 3 sec
+            if (exists) {
+                this.noisily && adone.error(`Process ${pid} is still running`);
+            }
         }
+        return exists;
     }
                 
     async _killProcessChildren(pid) {
         const children = (await adone.metrics.system.getProcesses()).filter((x) => x.getParentPID() === pid);
-        await Promise.all(children.map(async (child) => {
+        return Promise.all(children.map(async (child) => {
             await this._killProcessChildren(child.getPID());
-            await this._killProcess(child.getPID());
+            return this._killProcess(child.getPID());
         }));
     }
 }

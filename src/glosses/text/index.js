@@ -359,7 +359,8 @@ adone.lazify({
         return adone.lazify({
             json: "./pretties/json"
         }, null, require);
-    }
+    },
+    Fuzzy: "./fuzzy"
 }, text, require);
 
 export default text;

@@ -123,7 +123,6 @@ describe("Auth service", () => {
 
         omnitronRunner = new OmnitronRunner();
         await omnitronRunner.run();
-        appConfig = adone.appinstance.config;
         await omnitronRunner.startOmnitron();
         await omnitronRunner.dispatcher.enable("database");
         await omnitronRunner.dispatcher.enable("auth");

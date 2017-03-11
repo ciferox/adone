@@ -63,7 +63,6 @@ const adone = Object.create({
 export default adone;
 
 Object.defineProperty(global, "adone", {
-    configurable: true,
     enumerable: true,
     value: adone
 });
@@ -303,6 +302,7 @@ adone.archive = lazify({
 adone.omnitron = lazify({
     const: "./omnitron/consts",
     ConfigManager: "./omnitron/config_manager",
+    Omnitron: "./omnitron",
     Dispatcher: "./omnitron/dispatcher"
 });
 
