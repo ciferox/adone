@@ -5,6 +5,7 @@ const {
     is
 } = adone;
 
+
 class CallbackCache {
     constructor() {
         this._cache = new Map();
@@ -32,7 +33,6 @@ class CallbackCache {
         }
     }
 }
-
 
 class Glob extends adone.EventEmitter {
     constructor(pattern, options = {}, cb) {
@@ -67,6 +67,7 @@ class Glob extends adone.EventEmitter {
         this.nosort = Boolean(options.nosort);
         this.nocase = Boolean(options.nocase);
         this.stat = Boolean(options.stat);
+        this.absolute = Boolean(options.absolute);
         this.maxLength = options.maxLength || Infinity;
 
         this.cache = options.cache || new Map();
@@ -93,7 +94,10 @@ class Glob extends adone.EventEmitter {
             this.root = this.root.replace(/\\/g, "/");
         }
 
-        this.cwdAbs = this._makeAbs(this.cwd);
+        this.cwdAbs = is.pathAbsolute(this.cwd) ? this.cwd : this._makeAbs(this.cwd);
+        if (is.win32) {
+            this.cwdAbs = this.cwdAbs.replace(/\\/g, "/");
+        }
         this.nomount = Boolean(options.nomount);
 
         this.globexp = new GlobExp(pattern, options);
@@ -184,7 +188,9 @@ class Glob extends adone.EventEmitter {
 
         if (!this.nosort) {
             if (this.nocase) {
-                this.found = this.found.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+                this.found = this.found.sort(
+                    (a, b) => a.toLowerCase().localeCompare(b.toLowerCase())
+                );
             } else {
                 this.found = this.found.sort((a, b) => a.localeCompare(b));
             }
@@ -207,7 +213,7 @@ class Glob extends adone.EventEmitter {
     }
 
     _mark(p) {
-        const abs = this._makeAbs(p);
+        const abs = is.pathAbsolute(p) ? p : this._makeAbs(p);
         const c = this.cache.get(abs);
         let m = p;
         if (c) {
@@ -465,7 +471,7 @@ class Glob extends adone.EventEmitter {
             return;
         }
 
-        const abs = this._makeAbs(e);
+        const abs = is.pathAbsolute(e) ? e : this._makeAbs(e);
 
         if (this.nodir) {
             const c = this.cache.get(e) || this.cache.get(abs);
@@ -502,6 +508,10 @@ class Glob extends adone.EventEmitter {
             e = this._mark(e);
         }
 
+        if (this.absolute) {
+            e = is.pathAbsolute(e) ? e : this._makeAbs(e);
+        }
+
         this.found.push(e);
         this.emit("match", e, this.statCache.get(abs));
         return;
@@ -519,16 +529,16 @@ class Glob extends adone.EventEmitter {
         }
 
         const _lstatcb = (er, lstat) => {
-            if (er) {
+            if (er && er.code === "ENOENT") {
                 return cb();
             }
 
-            const isSym = lstat.isSymbolicLink();
+            const isSym = lstat && lstat.isSymbolicLink();
             this.symlinks[abs] = isSym;
 
             // If it's not a symlink or a dir, then it's definitely a regular file.
             // don't bother doing a readdir in that case.
-            if (!isSym && !lstat.isDirectory()) {
+            if (!isSym && lstat && !lstat.isDirectory()) {
                 this.cache.set(abs, "FILE");
                 cb();
             } else {
@@ -791,22 +801,27 @@ class Glob extends adone.EventEmitter {
     }
 
     _stat2 = function (f, abs, er, stat, cb) {
-        if (er) {
+        if (er && (er.code === "ENOENT" || er.code === "ENOTDIR")) {
             this.statCache.set(abs, false);
             return cb();
         }
 
         this.statCache.set(abs, stat);
 
-        if (abs.slice(-1) === "/" && !stat.isDirectory()) {
+        if (abs.slice(-1) === "/" && stat && !stat.isDirectory()) {
             return cb(null, false, stat);
         }
 
-        const needDir = f.slice(-1) === "/";
-        const c = stat.isDirectory() ? "DIR" : "FILE";
+
+        let c = true;
+        if (stat) {
+            c = stat.isDirectory() ? "DIR" : "FILE";
+        }
         this.cache.set(abs, this.cache.get(abs) || c);
 
-        if (needDir && c !== "DIR") {
+        const needDir = f.slice(-1) === "/";
+
+        if (needDir && c === "FILE") {
             return cb();
         }
 
@@ -875,8 +890,9 @@ class GlobCore extends adone.core.Core {
             });
             if (negativeMatchers.length) {
                 this.filter((match) => {
-                    for (const matcher of negativeMatchers) {
-                        if (matcher.test((options.stat || options.patternIndex) ? match.path : match)) {
+                    const path = (options.stat || options.patternIndex) ? match.path : match;
+                    for (let i = 0; i < negativeMatchers.length; i++) {
+                        if (negativeMatchers[i].test(path)) {
                             return false;
                         }
                     }

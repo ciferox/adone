@@ -331,7 +331,7 @@ describe("Glob", () => {
             for (const pattern of patterns) {
                 it(pattern, async () => {
                     for (const opt of opts) {
-                        const msg = `${pattern} ${JSON.stringify(opt)}`;
+                        const msg = `${pattern} with opt=${JSON.stringify(opt)}`;
                         // eslint-disable-next-line no-await-in-loop
                         let res = await adone.fs.glob(pattern, opt);
 
@@ -648,7 +648,6 @@ describe("Glob", () => {
             assert.deepEqual(res.sort(), expect);
         });
 
-        // TODO: fix dublicates
         it("mark, with **", async () => {
             const pattern = "a/*b*/**";
             const opt = { mark: true };
@@ -817,6 +816,41 @@ describe("Glob", () => {
                 });
             }
         }
+    });
+
+    describe("absolute", () => {
+        const pattern = "a/b/**";
+        const bashResults = JSON.parse(fs.readFileSync(path.join(__dirname, "./bash-results.json")));
+
+        const origCwd = process.cwd();
+        before(() => {
+            process.chdir(fixtureDir);
+        });
+
+        after(() => {
+            process.chdir(origCwd);
+        });
+
+        it("emits absolute matches if option set", (done) => {
+            const g = new adone.fs.glob.Glob(pattern, { absolute: true });
+
+            let matchCount = 0;
+            g.on("match", (m) => {
+                assert.isOk(is.pathAbsolute(m), "path must be absolute");
+                matchCount++;
+            });
+
+            g.on("end", (results) => {
+                assert.equal(matchCount, bashResults[pattern].length, "must match all files");
+                assert.equal(results.length, bashResults[pattern].length, "must match all files");
+
+                for (const m of results) {
+                    assert.isOk(is.pathAbsolute(m), "path must be absolute");
+                }
+
+                done();
+            });
+        });
     });
 
     describe("match-base", () => {
@@ -1319,6 +1353,33 @@ describe("Glob", () => {
             assert.deepEqual(matches, expected);
             verifyGlobCacheIsAbsolute(stream.globs[0]);
         });
+
+        it("combined with absolute option", async () => {
+            const stream = adone.fs.glob("/b*/**", { root: path.resolve("a"), absolute: true });
+            const matches = await stream;
+            matches.sort();
+
+            const expect = ["/b", "/b/c", "/b/c/d", "/bc", "/bc/e", "/bc/e/f"].map((m) => {
+                return path.join(path.resolve("a"), m).replace(/\\/g, "/");
+            });
+
+            assert.deepEqual(matches, expect);
+            verifyGlobCacheIsAbsolute(stream.globs[0]);
+        });
+
+        it("cwdAbs when root=a, absolute=true", async () => {
+            const stream = adone.fs.glob("/b*/**", { root: path.resolve("a"), absolute: true });
+            await stream;
+
+            assert.equal(stream.globs[0].cwdAbs, process.cwd().replace(/\\/g, "/"));
+        });
+
+        it("cwdAbs when root=a, absolute=true, cwd=__dirname", async () => {
+            const stream = adone.fs.glob("/b*/**", { root: path.resolve("a"), absolute: true, cwd: __dirname });
+            await stream;
+
+            assert.equal(stream.globs[0].cwdAbs,  __dirname.replace(/\\/g, "/"));
+        });
     });
 
     describe("slash-cwd", () => {
@@ -1379,6 +1440,92 @@ describe("Glob", () => {
         it("stream stat", async () => {
             const result = await adone.fs.glob("*", { stat: true, cwd: fixtureDir });
             assert.deepEqual(result.map((x) => x.path).sort(), ["a", "b", "c"]);
+        });
+
+        describe("EPERM errors", () => {
+            const expect = [
+                "a/abcdef",
+                "a/abcdef/g",
+                "a/abcdef/g/h",
+                "a/abcfed",
+                "a/abcfed/g",
+                "a/abcfed/g/h"
+            ];
+
+            const oldLstat = fs.lstat;
+            const oldLstatSync = fs.lstatSync;
+            const badPaths = /\ba[\\\/]?$|\babcdef\b/;
+
+            before(() => {
+                fs.lstat = function (path, cb) {
+                    // synthetically generate a non-ENOENT error
+                    if (badPaths.test(path)) {
+                        const er = new Error("synthetic");
+                        er.code = "EPERM";
+                        return process.nextTick(cb.bind(null, er));
+                    }
+
+                    return oldLstat.call(fs, path, cb);
+                };
+
+                fs.lstatSync = function (path) {
+                    // synthetically generate a non-ENOENT error
+                    if (badPaths.test(path)) {
+                        const er = new Error("synthetic");
+                        er.code = "EPERM";
+                        throw er;
+                    }
+
+                    return oldLstatSync.call(fs, path);
+                };
+            });
+
+            after(() => {
+                fs.lstat = oldLstat;
+                fs.lstatSync = oldLstatSync;
+            });
+
+            it("stat errors other than ENOENT are ok", async () => {
+                let matches = await adone.fs.glob("a/*abc*/**", { stat: true, cwd: fixtureDir });
+                matches = matches.map((x) => x.path).sort();
+                assert.deepEqual(matches, expect);
+            });
+
+            it("globstar with error in root", async () => {
+                const expect = [
+                    "a",
+                    "a/abcdef",
+                    "a/abcdef/g",
+                    "a/abcdef/g/h",
+                    "a/abcfed",
+                    "a/abcfed/g",
+                    "a/abcfed/g/h",
+                    "a/b",
+                    "a/b/c",
+                    "a/b/c/d",
+                    "a/bc",
+                    "a/bc/e",
+                    "a/bc/e/f",
+                    "a/c",
+                    "a/c/d",
+                    "a/c/d/c",
+                    "a/c/d/c/b",
+                    "a/cb",
+                    "a/cb/e",
+                    "a/cb/e/f",
+                    "a/symlink",
+                    "a/symlink/a",
+                    "a/symlink/a/b",
+                    "a/symlink/a/b/c",
+                    "a/x",
+                    "a/z"
+                ];
+
+                const pattern = "a/**";
+                const matches = await adone.fs.glob(pattern, { cwd: fixtureDir });
+                matches.sort();
+                assert.deepEqual(matches, expect);
+            });
         });
     });
 
