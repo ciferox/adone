@@ -1,7 +1,7 @@
 import * as stuff from "omnitron/services/process_manager";
 import { processFiles, fixture } from "../util";
 
-const { x, } = adone;
+const { x } = adone;
 
 describe("Process manager", () => {
     describe("Process", () => {

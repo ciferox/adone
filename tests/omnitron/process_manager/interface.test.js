@@ -1,20 +1,6 @@
 import * as stuff from "omnitron/services/process_manager";
 import { fixture, processFiles } from "./util";
 
-@adone.netron.decorator.Contextable
-@adone.netron.decorator.Private
-class Handle {
-    constructor(callback) {
-        this.callback = callback;
-        this.call.void = this.call.bind(this);  // dummy..
-    }
-
-    @adone.netron.decorator.Public
-    call() {
-        this.callback();
-    }
-}
-
 describe("Process manager", () => {
     const toExecuteAfter = [];
     const executeAfter = (f) => {
@@ -102,11 +88,7 @@ describe("Process manager", () => {
                 ensureDies(p);
                 try {
                     const ip = new stuff.IProcess({}, p);
-                    let h;
-                    const pr = new Promise((resolve) => {
-                        h = new Handle(resolve);
-                    });
-                    await ip.waitForExit(h);
+                    const pr = ip.waitForExit();
                     setTimeout(() => p.kill("SIGKILL"), 200);
                     await pr;
                 } finally {

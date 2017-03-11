@@ -12,7 +12,6 @@ import { Database } from "omnitron/services/database";
 import { fixture, waitFor } from "./util";
 
 const { vendor: { lodash: _ }, x, is } = adone;
-const { Contextable, Private, Public } = adone.netron.decorator;
 
 describe("Process manager", function () {
     this.timeout(180000);  // long enough?
@@ -22,20 +21,6 @@ describe("Process manager", function () {
         netronOptions.responseTimeout = 100000;
         OS = adone.metrics.system;
     });
-
-    @Contextable
-    @Private
-    class Handle {
-        constructor(callback) {
-            this.callback = callback;
-            this.call.void = this.call.bind(this);  // dummy..
-        }
-
-        @Public
-        call() {
-            this.callback();
-        }
-    }
 
     describe("omnitron", () => {
         let omnitronRunner;
