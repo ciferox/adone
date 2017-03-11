@@ -30,7 +30,7 @@ export const configure = (templatesPath, opts) => {
         noCache: opts.noCache
     });
 
-    environment = new nunjucks.env.Environment(TemplateLoader, opts);
+    environment = new nunjucks.Environment(TemplateLoader, opts);
 
     if (opts && opts.express) {
         environment.express(opts.express);
@@ -43,7 +43,7 @@ export const compile = (src, env, path, eagerCompile) => {
     if (is.null(environment)) {
         configure();
     }
-    return new module.exports.Template(src, env, path, eagerCompile);
+    return new nunjucks.Template(src, env, path, eagerCompile);
 };
 
 export const render = (name, ctx, cb) => {
