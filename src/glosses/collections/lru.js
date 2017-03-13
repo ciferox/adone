@@ -1,10 +1,12 @@
-
-
 export default class LRU {
     constructor(size, { dispose = null } = {}) {
         this.queue = new adone.collection.LinkedList(size);
-        this.cache = new Map;
+        this.cache = new Map();
         this.dispose = dispose;
+    }
+
+    get size() {
+        return this.queue.length;
     }
 
     get(key) {
@@ -34,11 +36,30 @@ export default class LRU {
         }
     }
 
+    delete(key) {
+        if (this.cache.has(key)) {
+            const node = this.cache.get(key);
+            this.cache.delete(key);
+            const { value } = node;
+            this.queue.removeNode(node);
+            if (this.dispose) {
+                this.dispose(value[0], value[1]);
+            }
+            return true;
+        }
+        return false;
+    }
+
     has(key) {
         return this.cache.has(key);
     }
 
     keys() {
         return [...this.cache.keys()];
+    }
+
+    clear() {
+        this.queue.clear({ strong: true });
+        this.cache.clear();
     }
 }
