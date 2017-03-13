@@ -1,24 +1,25 @@
 import MockServer from "../helpers/mock_server";
 import check from "../helpers/check_redis";
-import calculateSlot from "adone/glosses/databases/redis/cluster_key_slot";
-const { database: { Redis }, util } = adone;
 
 skip(check);
 
-afterEach((done) => {
-    const redis = new Redis();
-    redis.flushall(() => {
-        redis.script("flush", () => {
-            redis.disconnect();
-            done();
+
+describe("glosses", "databases", "redis", "cluster", () => {
+    const { database: { redis: { Redis, Cluster, calculateSlot } }, util } = adone;
+
+    afterEach((done) => {
+        const redis = new Redis();
+        redis.flushall(() => {
+            redis.script("flush", () => {
+                redis.disconnect();
+                done();
+            });
         });
     });
-});
 
-describe("cluster", () => {
     describe("connect", () => {
         it("should flush the queue when all startup nodes are unreachable", (done) => {
-            const cluster = new Redis.Cluster([
+            const cluster = new Cluster([
                 { host: "127.0.0.1", port: "30001" }
             ], { clusterRetryStrategy: null });
 
@@ -31,17 +32,17 @@ describe("cluster", () => {
 
         it("should invoke clusterRetryStrategy when all startup nodes are unreachable", (done) => {
             let t = 0;
-            const cluster = new Redis.Cluster([
+            const cluster = new Cluster([
                 { host: "127.0.0.1", port: "30001" },
                 { host: "127.0.0.1", port: "30002" }
             ], {
                 clusterRetryStrategy(times) {
-                        expect(times).to.eql(++t);
-                        if (times === 3) {
-                            return;
-                        }
-                        return 0;
+                    expect(times).to.eql(++t);
+                    if (times === 3) {
+                        return;
                     }
+                    return 0;
+                }
             });
 
             cluster.get("foo", (err) => {
@@ -62,26 +63,26 @@ describe("cluster", () => {
             const node2 = new MockServer(30002, argvHandler);
 
             let t = 0;
-            const cluster = new Redis.Cluster([
+            const cluster = new Cluster([
                 { host: "127.0.0.1", port: "30001" },
                 { host: "127.0.0.1", port: "30002" }
             ], {
                 clusterRetryStrategy(times) {
-                        expect(times).to.eql(++t);
-                        if (times === 3) {
-                            cluster.disconnect();
-                            disconnect([node1, node2], done);
-                            return;
-                        }
-                        return 0;
+                    expect(times).to.eql(++t);
+                    if (times === 3) {
+                        cluster.disconnect();
+                        disconnect([node1, node2], done);
+                        return;
                     }
+                    return 0;
+                }
             });
         });
 
         it("should connect to cluster successfully", (done) => {
             const node = new MockServer(30001);
 
-            const cluster = new Redis.Cluster([
+            const cluster = new Cluster([
                 { host: "127.0.0.1", port: "30001" }
             ]);
 
@@ -94,7 +95,7 @@ describe("cluster", () => {
         it("should support url schema", (done) => {
             const node = new MockServer(30001);
 
-            const cluster = new Redis.Cluster([
+            const cluster = new Cluster([
                 "redis://127.0.0.1:30001"
             ]);
 
@@ -107,7 +108,7 @@ describe("cluster", () => {
         it("should support a single port", (done) => {
             const node = new MockServer(30001);
 
-            const cluster = new Redis.Cluster([30001]);
+            const cluster = new Cluster([30001]);
 
             node.once("connect", () => {
                 cluster.disconnect();
@@ -130,13 +131,13 @@ describe("cluster", () => {
             const node2 = new MockServer(30002, argvHandler);
             const node3 = new MockServer(30003, argvHandler);
 
-            stub(Redis.Cluster.prototype, "connect").callsFake(() => {
+            stub(Cluster.prototype, "connect").callsFake(() => {
                 return Promise.resolve();
             });
-            const cluster = new Redis.Cluster([
+            const cluster = new Cluster([
                 { host: "127.0.0.1", port: "30001" }
             ], { lazyConnect: false });
-            Redis.Cluster.prototype.connect.restore();
+            Cluster.prototype.connect.restore();
 
             cluster.connect().then(() => {
                 cluster.disconnect();
@@ -145,13 +146,13 @@ describe("cluster", () => {
         });
 
         it("should return a promise to be rejected when closed", (done) => {
-            stub(Redis.Cluster.prototype, "connect").callsFake(() => {
+            stub(Cluster.prototype, "connect").callsFake(() => {
                 return Promise.resolve();
             });
-            const cluster = new Redis.Cluster([
+            const cluster = new Cluster([
                 { host: "127.0.0.1", port: "30001" }
             ], { lazyConnect: false });
-            Redis.Cluster.prototype.connect.restore();
+            Cluster.prototype.connect.restore();
 
             cluster.connect().catch(() => {
                 cluster.disconnect();
@@ -160,19 +161,19 @@ describe("cluster", () => {
         });
 
         it("should stop reconnecting when disconnected", (done) => {
-            const cluster = new Redis.Cluster([
+            const cluster = new Cluster([
                 { host: "127.0.0.1", port: "30001" }
             ], {
                 clusterRetryStrategy() {
-                        return 0;
-                    }
+                    return 0;
+                }
             });
 
             cluster.on("close", () => {
                 cluster.disconnect();
-                stub(Redis.Cluster.prototype, "connect").throws(new Error("`connect` should not be called"));
+                stub(Cluster.prototype, "connect").throws(new Error("`connect` should not be called"));
                 setTimeout(() => {
-                    Redis.Cluster.prototype.connect.restore();
+                    Cluster.prototype.connect.restore();
                     done();
                 }, 1);
             });
@@ -193,21 +194,22 @@ describe("cluster", () => {
             const node2 = new MockServer(30002, argvHandler);
             const node3 = new MockServer(30003, argvHandler);
 
-            let pending = 3;
-            node1.once("connect", check);
-            node2.once("connect", check);
-            node3.once("connect", check);
-
-            const cluster = new Redis.Cluster([
+            const cluster = new Cluster([
                 { host: "127.0.0.1", port: "30001" }
             ], { redisOptions: { lazyConnect: false } });
 
-            function check() {
+            let pending = 3;
+
+            const check = () => {
                 if (!--pending) {
                     cluster.disconnect();
                     disconnect([node1, node2, node3], done);
                 }
-            }
+            };
+
+            node1.once("connect", check);
+            node2.once("connect", check);
+            node3.once("connect", check);
         });
 
         it("should send command to the correct node", (done) => {
@@ -219,6 +221,12 @@ describe("cluster", () => {
                     ];
                 }
             });
+
+            const cluster = new Cluster([
+                { host: "127.0.0.1", port: "30001" }
+            ], { lazyConnect: false });
+            cluster.get("foo");
+
             const node2 = new MockServer(30002, (argv) => {
                 if (argv[0] === "get" && argv[1] === "foo") {
                     process.nextTick(() => {
@@ -227,11 +235,6 @@ describe("cluster", () => {
                     });
                 }
             });
-
-            const cluster = new Redis.Cluster([
-                { host: "127.0.0.1", port: "30001" }
-            ], { lazyConnect: false });
-            cluster.get("foo");
         });
 
         it("should emit errors when cluster cannot be connected", (done) => {
@@ -246,42 +249,48 @@ describe("cluster", () => {
 
             let pending = 2;
             let retry = 0;
-            const cluster = new Redis.Cluster([
+
+            const checkDone = () => {
+                if (!--pending) {
+                    // eslint-disable-next-line
+                    cluster.disconnect();
+                    disconnect([node1, node2], done);
+                }
+            };
+
+            const cluster = new Cluster([
                 { host: "127.0.0.1", port: "30001" },
                 { host: "127.0.0.1", port: "30002" }
             ], {
                 clusterRetryStrategy() {
-                        cluster.once("error", (err) => {
-                            retry = false;
-                            expect(err.message).to.eql("Failed to refresh slots cache.");
-                            expect(err.lastNodeError.message).to.eql(errorMessage);
-                            checkDone();
-                        });
-                        return retry;
-                    }
+                    cluster.once("error", (err) => {
+                        retry = false;
+                        expect(err.message).to.eql("Failed to refresh slots cache.");
+                        expect(err.lastNodeError.message).to.eql(errorMessage);
+                        checkDone();
+                    });
+                    return retry;
+                }
             });
 
             cluster.once("node error", (err) => {
                 expect(err.message).to.eql(errorMessage);
                 checkDone();
             });
-            function checkDone() {
-                if (!--pending) {
-                    cluster.disconnect();
-                    disconnect([node1, node2], done);
-                }
-            }
         });
 
         it("should using the specified password", (done) => {
-            let node1;
-            let node2;
-            let node3;
             const slotTable = [
                 [0, 5460, ["127.0.0.1", 30001]],
                 [5461, 10922, ["127.0.0.1", 30002]],
                 [10923, 16383, ["127.0.0.1", 30003]]
             ];
+
+            const cluster = new Cluster([
+                { host: "127.0.0.1", port: "30001", password: "other password" },
+                { host: "127.0.0.1", port: "30002", password: null }
+            ], { redisOptions: { lazyConnect: false, password: "default password" } });
+
             const argvHandler = function (port, argv) {
                 if (argv[0] === "cluster" && argv[1] === "slots") {
                     return slotTable;
@@ -295,18 +304,14 @@ describe("cluster", () => {
                     } else if (port === 30003) {
                         expect(password).to.eql("default password");
                         cluster.disconnect();
-                        disconnect([node1, node2, node3], done);
+                        disconnect([node1, node2, node3], done);  // eslint-disable-line
                     }
                 }
             };
-            node1 = new MockServer(30001, argvHandler.bind(null, 30001));
-            node2 = new MockServer(30002, argvHandler.bind(null, 30002));
-            node3 = new MockServer(30003, argvHandler.bind(null, 30003));
 
-            const cluster = new Redis.Cluster([
-                { host: "127.0.0.1", port: "30001", password: "other password" },
-                { host: "127.0.0.1", port: "30002", password: null }
-            ], { redisOptions: { lazyConnect: false, password: "default password" } });
+            const node1 = new MockServer(30001, argvHandler.bind(null, 30001));
+            const node2 = new MockServer(30002, argvHandler.bind(null, 30002));
+            const node3 = new MockServer(30003, argvHandler.bind(null, 30003));
         });
     });
 
@@ -318,6 +323,14 @@ describe("cluster", () => {
                 [0, 1, ["127.0.0.1", 30001]],
                 [2, 16383, ["127.0.0.1", 30002]]
             ];
+
+            const cluster = new Cluster([
+                { host: "127.0.0.1", port: "30001" }
+            ]);
+            cluster.get("foo", () => {
+                cluster.get("foo");
+            });
+
             const node1 = new MockServer(30001, (argv) => {
                 if (argv[0] === "cluster" && argv[1] === "slots") {
                     return slotTable;
@@ -327,7 +340,7 @@ describe("cluster", () => {
                         expect(moved).to.eql(true);
                         process.nextTick(() => {
                             cluster.disconnect();
-                            disconnect([node1, node2], done);
+                            disconnect([node1, node2], done);  // eslint-disable-line
                         });
                     }
                 }
@@ -341,13 +354,6 @@ describe("cluster", () => {
                     moved = true;
                     return new Error(`MOVED ${calculateSlot("foo")} 127.0.0.1:30001`);
                 }
-            });
-
-            const cluster = new Redis.Cluster([
-                { host: "127.0.0.1", port: "30001" }
-            ]);
-            cluster.get("foo", () => {
-                cluster.get("foo");
             });
         });
 
@@ -373,7 +379,7 @@ describe("cluster", () => {
                     return "bar";
                 }
             });
-            const cluster = new Redis.Cluster([
+            const cluster = new Cluster([
                 { host: "127.0.0.1", port: "30001" }
             ], { retryDelayOnFailover: 1 });
             cluster.get("foo", (err, res) => {
@@ -415,7 +421,7 @@ describe("cluster", () => {
                 }
             });
 
-            const cluster = new Redis.Cluster([
+            const cluster = new Cluster([
                 { host: "127.0.0.1", port: "30001" }
             ], { lazyConnect: false });
             cluster.get("foo", () => {
@@ -458,7 +464,7 @@ describe("cluster", () => {
                 }
             });
 
-            const cluster = new Redis.Cluster([
+            const cluster = new Cluster([
                 { host: "127.0.0.1", port: "30001" }
             ], { lazyConnect: false });
             cluster.get("foo", () => {
@@ -488,7 +494,7 @@ describe("cluster", () => {
                 }
             });
 
-            const cluster = new Redis.Cluster([
+            const cluster = new Cluster([
                 { host: "127.0.0.1", port: "30002" }
             ]);
             cluster.get("foo", (err, res) => {
@@ -521,7 +527,7 @@ describe("cluster", () => {
                 }
             });
 
-            const cluster = new Redis.Cluster([
+            const cluster = new Cluster([
                 { host: "127.0.0.1", port: "30001" }
             ], { retryDelayOnTryAgain: 1 });
             cluster.get("foo");
@@ -551,7 +557,7 @@ describe("cluster", () => {
                 }
             });
 
-            const cluster = new Redis.Cluster([
+            const cluster = new Cluster([
                 { host: "127.0.0.1", port: "30001" }
             ], {
                 lazyConnect: false,
@@ -582,7 +588,7 @@ describe("cluster", () => {
             const node1 = new MockServer(30001, argvHandler);
             const node2 = new MockServer(30002, argvHandler);
 
-            const cluster = new Redis.Cluster([
+            const cluster = new Cluster([
                 { host: "127.0.0.1", port: "30001" }
             ], { maxRedirections: 5 });
             cluster.get("foo", (err) => {
@@ -608,7 +614,7 @@ describe("cluster", () => {
             }
         });
 
-        const cluster = new Redis.Cluster([
+        const cluster = new Cluster([
             { host: "127.0.0.1", port: "30001" }
         ]);
         cluster.get("foo", "bar", (err) => {
@@ -634,7 +640,7 @@ describe("cluster", () => {
             }
         });
 
-        const cluster = new Redis.Cluster([
+        const cluster = new Cluster([
             { host: "127.0.0.1", port: "30001" }
         ]);
         cluster.get("foo", (err, result) => {
@@ -662,7 +668,7 @@ describe("cluster", () => {
                 }
             });
 
-            const cluster = new Redis.Cluster([
+            const cluster = new Cluster([
                 { host: "127.0.0.1", port: "30001" }
             ]);
             cluster.pipeline().set("foo", "bar").get("foo2").exec().catch((err) => {
@@ -700,7 +706,7 @@ describe("cluster", () => {
                 }
             });
 
-            const cluster = new Redis.Cluster([
+            const cluster = new Cluster([
                 { host: "127.0.0.1", port: "30001" }
             ]);
             cluster.pipeline().get("foo").set("foo", "bar").exec((err, result) => {
@@ -743,7 +749,7 @@ describe("cluster", () => {
                 }
             });
 
-            const cluster = new Redis.Cluster([
+            const cluster = new Cluster([
                 { host: "127.0.0.1", port: "30001" }
             ]);
             cluster.pipeline().get("foo").set("foo", "bar").exec((err, result) => {
@@ -771,7 +777,7 @@ describe("cluster", () => {
                 }
             });
 
-            const cluster = new Redis.Cluster([
+            const cluster = new Cluster([
                 { host: "127.0.0.1", port: "30001" }
             ], { retryDelayOnTryAgain: 1 });
             cluster.pipeline().get("foo").set("foo", "bar").exec((err, result) => {
@@ -805,7 +811,7 @@ describe("cluster", () => {
                 }
             });
 
-            const cluster = new Redis.Cluster([
+            const cluster = new Cluster([
                 { host: "127.0.0.1", port: "30001" }
             ]);
             cluster.pipeline().get("foo").set("foo", "bar").exec((err, result) => {
@@ -837,7 +843,7 @@ describe("cluster", () => {
                 }
             });
 
-            const cluster = new Redis.Cluster([
+            const cluster = new Cluster([
                 { host: "127.0.0.1", port: "30001" }
             ], { retryDelayOnFailover: 1 });
             stub(cluster, "refreshSlotsCache").callsFake((...args) => {
@@ -889,7 +895,7 @@ describe("cluster", () => {
                 }
             });
 
-            const cluster = new Redis.Cluster([
+            const cluster = new Cluster([
                 { host: "127.0.0.1", port: "30001" }
             ]);
             cluster.multi().get("foo").set("foo", "bar").exec((err, result) => {
@@ -942,7 +948,7 @@ describe("cluster", () => {
                 }
             });
 
-            const cluster = new Redis.Cluster([
+            const cluster = new Cluster([
                 { host: "127.0.0.1", port: "30001" }
             ]);
             cluster.multi().get("foo").set("foo", "bar").exec((err, result) => {
@@ -969,7 +975,7 @@ describe("cluster", () => {
             const node2 = new MockServer(30002, handler);
 
             const options = [{ host: "127.0.0.1", port: "30001" }];
-            const sub = new Redis.Cluster(options);
+            const sub = new Cluster(options);
 
             sub.subscribe("test cluster", () => {
                 node1.write(node1.clients[0], ["message", "test channel", "hi"]);
@@ -992,7 +998,7 @@ describe("cluster", () => {
                     return [argv[0], argv[1]];
                 }
             });
-            const client = new Redis.Cluster([{ host: "127.0.0.1", port: "30001" }]);
+            const client = new Cluster([{ host: "127.0.0.1", port: "30001" }]);
 
             client.subscribe("test cluster", () => {
                 stub(Redis.prototype, "subscribe").callsFake((...args) => {
@@ -1020,7 +1026,7 @@ describe("cluster", () => {
                     return [argv[0], argv[1]];
                 }
             });
-            const client = new Redis.Cluster([{ host: "127.0.0.1", port: "30001" }]);
+            const client = new Cluster([{ host: "127.0.0.1", port: "30001" }]);
 
             client.psubscribe("test?", () => {
                 stub(Redis.prototype, "psubscribe").callsFake((...args) => {
@@ -1052,16 +1058,16 @@ describe("cluster", () => {
                 }
             });
             let count = 0;
-            const client = new Redis.Cluster([{
+            const client = new Cluster([{
                 host: "127.0.0.1", port: "30001"
             }], {
                 clusterRetryStrategy(times) {
-                        expect(++count).to.eql(times);
-                        if (count === 3) {
-                            state = "ok";
-                        }
-                        return 0;
+                    expect(++count).to.eql(times);
+                    if (count === 3) {
+                        state = "ok";
                     }
+                    return 0;
+                }
             });
             client.on("ready", () => {
                 client.disconnect();
@@ -1082,13 +1088,13 @@ describe("cluster", () => {
                     return "cluster_state:fail";
                 }
             });
-            const client = new Redis.Cluster([{
+            const client = new Cluster([{
                 host: "127.0.0.1", port: "30001"
             }], {
                 clusterRetryStrategy() {
-                        this.startupNodes = [{ port: 30002 }];
-                        return 0;
-                    }
+                    this.startupNodes = [{ port: 30002 }];
+                    return 0;
+                }
             });
             const node2 = new MockServer(30002, () => {
                 client.disconnect();
@@ -1125,7 +1131,7 @@ describe("cluster", () => {
 
         context("master", () => {
             it("should only send reads to master", (done) => {
-                const cluster = new Redis.Cluster([{ host: "127.0.0.1", port: "30001" }]);
+                const cluster = new Cluster([{ host: "127.0.0.1", port: "30001" }]);
                 cluster.on("ready", () => {
                     stub(util, "randomChoice").throws("sample is called");
                     cluster.get("foo", (err, res) => {
@@ -1140,7 +1146,7 @@ describe("cluster", () => {
 
         context("slave", () => {
             it("should only send reads to slave", (done) => {
-                const cluster = new Redis.Cluster([{ host: "127.0.0.1", port: "30001" }], {
+                const cluster = new Cluster([{ host: "127.0.0.1", port: "30001" }], {
                     scaleReads: "slave"
                 });
                 cluster.on("ready", () => {
@@ -1159,7 +1165,7 @@ describe("cluster", () => {
             });
 
             it("should send writes to masters", (done) => {
-                const cluster = new Redis.Cluster([{ host: "127.0.0.1", port: "30001" }], {
+                const cluster = new Cluster([{ host: "127.0.0.1", port: "30001" }], {
                     scaleReads: "slave"
                 });
                 cluster.on("ready", () => {
@@ -1176,7 +1182,7 @@ describe("cluster", () => {
 
         context("custom", () => {
             it("should send to selected slave", (done) => {
-                const cluster = new Redis.Cluster([{ host: "127.0.0.1", port: "30001" }], {
+                const cluster = new Cluster([{ host: "127.0.0.1", port: "30001" }], {
                     scaleReads(node, command) {
                         if (command.name === "get") {
                             return node[1];
@@ -1200,7 +1206,7 @@ describe("cluster", () => {
             });
 
             it("should send writes to masters", (done) => {
-                const cluster = new Redis.Cluster([{ host: "127.0.0.1", port: "30001" }], {
+                const cluster = new Cluster([{ host: "127.0.0.1", port: "30001" }], {
                     scaleReads(node, command) {
                         if (command.name === "get") {
                             return node[1];
@@ -1222,7 +1228,7 @@ describe("cluster", () => {
 
         context("all", () => {
             it("should send reads to all nodes randomly", (done) => {
-                const cluster = new Redis.Cluster([{ host: "127.0.0.1", port: "30001" }], {
+                const cluster = new Cluster([{ host: "127.0.0.1", port: "30001" }], {
                     scaleReads: "all"
                 });
                 cluster.on("ready", () => {
@@ -1265,7 +1271,7 @@ describe("cluster", () => {
                 }
             });
 
-            const cluster = new Redis.Cluster([{ host: "127.0.0.1", port: "30001" }]);
+            const cluster = new Cluster([{ host: "127.0.0.1", port: "30001" }]);
             cluster.on("ready", () => {
                 expect(cluster.nodes()).to.have.lengthOf(3);
                 expect(cluster.nodes("all")).to.have.lengthOf(3);
@@ -1309,7 +1315,7 @@ describe("cluster", () => {
                 }
             });
 
-            const cluster = new Redis.Cluster([{ host: "127.0.0.1", port: "30001" }], {
+            const cluster = new Cluster([{ host: "127.0.0.1", port: "30001" }], {
                 redisOptions: { showFriendlyErrorStack: true }
             });
             cluster.on("ready", () => {
@@ -1352,7 +1358,7 @@ describe("cluster", () => {
             const node2 = new MockServer(30002, argvHandler);
             const node3 = new MockServer(30003, argvHandler);
 
-            const cluster = new Redis.Cluster([
+            const cluster = new Cluster([
                 { host: "127.0.0.1", port: "30001" }
             ]);
 

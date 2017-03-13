@@ -1,20 +1,8 @@
-
-import Commander from "../commander";
-const { o, is, x, noop, collection, promise, util, EventEmitter } = adone;
-
-const lazy = adone.lazify({
-    Redis: "../redis",
-    utils: "../utils",
-    ScanStream: "../scan_stream",
-    Command: "../command",
-    commands: "../commands",
-    ConnectionPool: "./connection_pool",
-    DelayQueue: "./delay_queue"
-}, null, require);
+const { database: { redis }, o, is, x, noop, collection, promise, util, EventEmitter } = adone;
 
 const isRejectOverwritten = Symbol("is reject overwritten");
 
-export default class Cluster extends Commander.mixin(EventEmitter) {
+export default class Cluster extends redis.Commander.mixin(EventEmitter) {
     constructor(startupNodes, options) {
         super();
         this.options = o(Cluster.defaultOptions, options);
@@ -28,17 +16,17 @@ export default class Cluster extends Commander.mixin(EventEmitter) {
             throw new x.Exception(`Invalid option scaleReads ${this.options.scaleReads}. Expected "all", "master", "slave" or a custom function`);
         }
 
-        this.connectionPool = new lazy.ConnectionPool(this.options.redisOptions);
+        this.connectionPool = new redis.cluster.ConnectionPool(this.options.redisOptions);
         this.startupNodes = startupNodes;
 
-        this.connectionPool.on("-node", (redis) => {
-            if (this.status !== "disconnecting" && this.subscriber === redis) {
+        this.connectionPool.on("-node", (instance) => {
+            if (this.status !== "disconnecting" && this.subscriber === instance) {
                 this.selectSubscriber();
             }
-            this.emit("-node", redis);
+            this.emit("-node", instance);
         });
-        this.connectionPool.on("+node", (redis) => {
-            this.emit("+node", redis);
+        this.connectionPool.on("+node", (instance) => {
+            this.emit("+node", instance);
         });
         this.connectionPool.on("drain", () => {
             this.setStatus("close");
@@ -51,7 +39,7 @@ export default class Cluster extends Commander.mixin(EventEmitter) {
         this.retryAttempts = 0;
 
         this.resetOfflineQueue();
-        this.delayQueue = new lazy.DelayQueue();
+        this.delayQueue = new redis.cluster.DelayQueue();
 
         this.subscriber = null;
 
@@ -115,7 +103,7 @@ export default class Cluster extends Commander.mixin(EventEmitter) {
 
             this.refreshSlotsCache((err) => {
                 if (err && err.message === "Failed to refresh slots cache.") {
-                    lazy.Redis.prototype.silentEmit.call(this, "error", err);
+                    redis.Redis.prototype.silentEmit.call(this, "error", err);
                     this.connectionPool.reset([]);
                 }
             });
@@ -310,12 +298,12 @@ export default class Cluster extends Commander.mixin(EventEmitter) {
             this.connect().catch(noop);
         }
         if (this.status === "end") {
-            command.reject(new x.Exception(lazy.util.CONNECTION_CLOSED_ERROR_MSG));
+            command.reject(new x.Exception(redis.util.CONNECTION_CLOSED_ERROR_MSG));
             return command.promise;
         }
         let to = this.options.scaleReads;
         if (to !== "master") {
-            const isCommandReadOnly = lazy.commands.exists(command.name) && lazy.commands.hasFlag(command.name, "readonly");
+            const isCommandReadOnly = redis.commands.exists(command.name) && redis.commands.hasFlag(command.name, "readonly");
             if (!isCommandReadOnly) {
                 to = "master";
             }
@@ -328,25 +316,27 @@ export default class Cluster extends Commander.mixin(EventEmitter) {
                 command.reject(new x.Exception("Cluster is ended."));
                 return;
             }
-            let redis;
+            let instance;
             if (this.status === "ready" || (command.name === "cluster")) {
                 if (node && node.redis) {
-                    redis = node.redis;
-                } else if (lazy.Command.checkFlag("ENTER_SUBSCRIBER_MODE", command.name) ||
-                    lazy.Command.checkFlag("EXIT_SUBSCRIBER_MODE", command.name)) {
-                    redis = this.subscriber;
+                    instance = node.redis;
+                } else if (redis.Command.checkFlag("ENTER_SUBSCRIBER_MODE", command.name) ||
+                    redis.Command.checkFlag("EXIT_SUBSCRIBER_MODE", command.name)) {
+                    instance = this.subscriber;
                 } else {
                     if (!random) {
                         if (is.number(targetSlot) && this.slots[targetSlot]) {
                             const nodeKeys = this.slots[targetSlot];
                             if (is.function(to)) {
-                                const nodes = nodeKeys.map((key) => this.connectionPool.nodes.all[key]);
-                                redis = to(nodes, command);
-                                if (is.array(redis)) {
-                                    redis = util.randomChoice(redis);
+                                const nodes = nodeKeys.map((key) => {
+                                    return this.connectionPool.nodes.all[key];
+                                });
+                                instance = to(nodes, command);
+                                if (is.array(instance)) {
+                                    instance = util.randomChoice(instance);
                                 }
-                                if (!redis) {
-                                    redis = nodes[0];
+                                if (!instance) {
+                                    instance = nodes[0];
                                 }
                             } else {
                                 let key;
@@ -357,24 +347,29 @@ export default class Cluster extends Commander.mixin(EventEmitter) {
                                 } else {
                                     key = nodeKeys[0];
                                 }
-                                redis = this.connectionPool.nodes.all[key];
+                                instance = this.connectionPool.nodes.all[key];
                             }
                         }
                         if (asking) {
-                            redis = this.connectionPool.nodes.all[asking];
-                            redis.asking();
+                            instance = this.connectionPool.nodes.all[asking];
+                            instance.asking();
                         }
                     }
-                    if (!redis) {
-                        redis = util.randomChoice(util.values(this.connectionPool.nodes[to])) || util.randomChoice(util.values(this.connectionPool.nodes.all));
+                    if (!instance) {
+                        instance = util.randomChoice(util.values(this.connectionPool.nodes[to]));
+                        if (!instance) {
+                            instance = util.randomChoice(
+                                util.values(this.connectionPool.nodes.all)
+                            );
+                        }
                     }
                 }
                 if (node && !node.redis) {
-                    node.redis = redis;
+                    node.redis = instance;
                 }
             }
-            if (redis) {
-                redis.sendCommand(command, stream);
+            if (instance) {
+                instance.sendCommand(command, stream);
             } else if (this.options.enableOfflineQueue) {
                 this.offlineQueue.push({ command, stream, node });
             } else {
@@ -394,19 +389,27 @@ export default class Cluster extends Commander.mixin(EventEmitter) {
                             this.slots[slot] = [key];
                         }
                         const splitKey = key.split(":");
-                        this.connectionPool.findOrCreate({ host: splitKey[0], port: Number(splitKey[1]) });
+                        this.connectionPool.findOrCreate({
+                            host: splitKey[0],
+                            port: Number(splitKey[1])
+                        });
                         tryConnection();
                         this.refreshSlotsCache();
                     },
                     ask: (slot, key) => {
                         const splitKey = key.split(":");
-                        this.connectionPool.findOrCreate({ host: splitKey[0], port: Number(splitKey[1]) });
+                        this.connectionPool.findOrCreate({
+                            host: splitKey[0],
+                            port: Number(splitKey[1])
+                        });
                         tryConnection(false, key);
                     },
                     tryagain: partialTry,
                     clusterDown: partialTry,
                     connectionClosed: partialTry,
-                    maxRedirections: (redirectionError) => void reject.call(command, redirectionError),
+                    maxRedirections: (redirectionError) => {
+                        reject.call(command, redirectionError);
+                    },
                     defaults: () => void reject.call(command, err)
                 });
             };
@@ -437,7 +440,8 @@ export default class Cluster extends Commander.mixin(EventEmitter) {
                 timeout: this.options.retryDelayOnClusterDown,
                 callback: this.refreshSlotsCache.bind(this)
             });
-        } else if (error.message === lazy.utils.CONNECTION_CLOSED_ERROR_MSG && this.options.retryDelayOnFailover > 0) {
+        } else if (error.message === redis.util.CONNECTION_CLOSED_ERROR_MSG &&
+                   this.options.retryDelayOnFailover > 0) {
             this.delayQueue.push("failover", handlers.connectionClosed, {
                 timeout: this.options.retryDelayOnFailover,
                 callback: this.refreshSlotsCache.bind(this)
@@ -447,13 +451,13 @@ export default class Cluster extends Commander.mixin(EventEmitter) {
         }
     }
 
-    getInfoFromNode(redis, callback) {
-        if (!redis) {
+    getInfoFromNode(instance, callback) {
+        if (!instance) {
             return callback(new x.Exception("Node is disconnected"));
         }
-        redis.cluster("slots", lazy.utils.timeout((err, result) => {
+        instance.cluster("slots", redis.util.timeout((err, result) => {
             if (err) {
-                redis.disconnect();
+                instance.disconnect();
                 return callback(err);
             }
             const nodes = [];
@@ -523,7 +527,7 @@ Cluster.defaultOptions = {
 
 for (const command of ["sscan", "hscan", "zscan", "sscanBuffer", "hscanBuffer", "zscanBuffer"]) {
     Cluster.prototype[`${command}Stream`] = function (key, options) {
-        return new lazy.ScanStream(o({
+        return new redis.ScanStream(o({
             objectMode: true,
             key,
             redis: this,
@@ -534,7 +538,7 @@ for (const command of ["sscan", "hscan", "zscan", "sscanBuffer", "hscanBuffer", 
 
 // transaction support
 adone.lazify({
-    pipeline: () => lazy.Redis.prototype.pipeline,
-    multi: () => lazy.Redis.prototype.multi,
-    exec: () => lazy.Redis.prototype.exec
+    pipeline: () => redis.Redis.prototype.pipeline,
+    multi: () => redis.Redis.prototype.multi,
+    exec: () => redis.Redis.prototype.exec
 }, Cluster.prototype);

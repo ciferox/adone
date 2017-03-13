@@ -1,15 +1,16 @@
-/**
- * Tiny class to simplify dealing with subscription set
- *
- * @constructor
- * @private
- */
+const mapSet = (set) => {
+    if (set === "unsubscribe") {
+        return "subscribe";
+    }
+    if (set === "punsubscribe") {
+        return "psubscribe";
+    }
+    return set;
+};
+
 export default class SubscriptionSet {
     constructor() {
-        this.set = {
-            subscribe: new Map(),
-            psubscribe: new Map()
-        };
+        this.set = { subscribe: new Map(), psubscribe: new Map() };
     }
 
     add(set, channel) {
@@ -27,14 +28,4 @@ export default class SubscriptionSet {
     isEmpty() {
         return this.set.subscribe.size === 0 && this.set.psubscribe.size === 0;
     }
-}
-
-function mapSet(set) {
-    if (set === "unsubscribe") {
-        return "subscribe";
-    }
-    if (set === "punsubscribe") {
-        return "psubscribe";
-    }
-    return set;
 }

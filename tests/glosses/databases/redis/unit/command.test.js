@@ -1,32 +1,30 @@
-/* global describe it */
+describe("glosses", "databases", "redis", "unit", "Command", () => {
+    const { database: { redis: { Command } } } = adone;
 
-import Command from "adone/glosses/databases/redis/command";
-
-describe("Command", function () {
-    describe("constructor()", function () {
-        it("should flatten the args", function () {
-            var command = new Command("get", ["foo", ["bar", ["zoo", "zoo"]]]);
+    describe("constructor()", () => {
+        it("should flatten the args", () => {
+            const command = new Command("get", ["foo", ["bar", ["zoo", "zoo"]]]);
             expect(command.args).to.eql(["foo", "bar", "zoo,zoo"]);
         });
     });
 
-    describe("#toWritable()", function () {
-        it("should return correct string", function () {
-            var command = new Command("get", ["foo", "bar", "zooo"]);
+    describe("#toWritable()", () => {
+        it("should return correct string", () => {
+            const command = new Command("get", ["foo", "bar", "zooo"]);
             expect(command.toWritable()).to.eql("*4\r\n$3\r\nget\r\n$3\r\nfoo\r\n$3\r\nbar\r\n$4\r\nzooo\r\n");
         });
 
-        it("should return buffer when there's at least one arg is a buffer", function () {
-            var command = new Command("get", ["foo", new Buffer("bar"), "zooo"]);
-            var result = command.toWritable();
+        it("should return buffer when there's at least one arg is a buffer", () => {
+            const command = new Command("get", ["foo", new Buffer("bar"), "zooo"]);
+            const result = command.toWritable();
             expect(result).to.be.instanceof(Buffer);
             expect(result.toString()).to.eql("*4\r\n$3\r\nget\r\n$3\r\nfoo\r\n$3\r\nbar\r\n$4\r\nzooo\r\n");
         });
     });
 
-    describe("#resolve()", function () {
-        it("should return buffer when replyEncoding is not set", function (done) {
-            var command = new Command("get", ["foo"], { replyEncoding: null }, function (err, result) {
+    describe("#resolve()", () => {
+        it("should return buffer when replyEncoding is not set", (done) => {
+            const command = new Command("get", ["foo"], { replyEncoding: null }, (err, result) => {
                 expect(result).to.be.instanceof(Buffer);
                 expect(result.toString()).to.eql("foo");
                 done();
@@ -34,17 +32,17 @@ describe("Command", function () {
             command.resolve(new Buffer("foo"));
         });
 
-        it("should covert result to string if replyEncoding is specified", function (done) {
-            var command = new Command("get", ["foo"], { replyEncoding: "utf8" }, function (err, result) {
+        it("should covert result to string if replyEncoding is specified", (done) => {
+            const command = new Command("get", ["foo"], { replyEncoding: "utf8" }, (err, result) => {
                 expect(result).to.eql("foo");
                 done();
             });
             command.resolve(new Buffer("foo"));
         });
 
-        it("should regard replyEncoding", function (done) {
-            var base64 = new Buffer("foo").toString("base64");
-            var command = new Command("get", ["foo"], { replyEncoding: "base64" }, function (err, result) {
+        it("should regard replyEncoding", (done) => {
+            const base64 = new Buffer("foo").toString("base64");
+            const command = new Command("get", ["foo"], { replyEncoding: "base64" }, (err, result) => {
                 expect(result).to.eql(base64);
                 done();
             });
@@ -52,8 +50,8 @@ describe("Command", function () {
         });
     });
 
-    describe("#getKeys()", function () {
-        it("should return keys", function () {
+    describe("#getKeys()", () => {
+        it("should return keys", () => {
             expect(getKeys("get", ["foo"])).to.eql(["foo"]);
             expect(getKeys("mget", ["foo", "bar"])).to.eql(["foo", "bar"]);
             expect(getKeys("mset", ["foo", "v1", "bar", "v2"])).to.eql(["foo", "bar"]);
@@ -68,14 +66,14 @@ describe("Command", function () {
             expect(getKeys("zinterstore", ["out", 2, "zset1", "zset2", "WEIGHTS", 2, 3])).to.eql(["out", "zset1", "zset2"]);
 
             function getKeys(commandName, args) {
-                var command = new Command(commandName, args);
+                const command = new Command(commandName, args);
                 return command.getKeys();
             }
         });
     });
 
-    describe("#getSlot()", function () {
-        it("should return correctly", function () {
+    describe("#getSlot()", () => {
+        it("should return correctly", () => {
             expectSlot("123", 5970);
             expectSlot("ab{c", 4619);
             expectSlot("ab{c}2", 7365);
@@ -90,8 +88,8 @@ describe("Command", function () {
         });
     });
 
-    describe(".checkFlag()", function () {
-        it("should return correct result", function () {
+    describe(".checkFlag()", () => {
+        it("should return correct result", () => {
             expect(Command.checkFlag("VALID_IN_SUBSCRIBER_MODE", "ping")).to.eql(true);
             expect(Command.checkFlag("VALID_IN_SUBSCRIBER_MODE", "get")).to.eql(false);
             expect(Command.checkFlag("WILL_DISCONNECT", "quit")).to.eql(true);

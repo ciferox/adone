@@ -1,27 +1,24 @@
-/* global describe it */
+describe("glosses", "databases", "redis", "unit", "parsers", () => {
+    const { database: { redis: { parser: { createParser } } } } = adone;
 
-import createParser from "adone/glosses/databases/redis/redis/libparser";
+    const assert = adone.std.assert;
+    const parsers = ["javascript", "hiredis"];
 
-const assert = adone.std.assert;
-const parsers = ["javascript", "hiredis"];
+    // Mock the not needed return functions
+    function returnReply() {
+        throw new adone.x.Exception("failed");
+    }
+    function returnError() {
+        throw new adone.x.Exception("failed");
+    }
+    function returnFatalError() {
+        throw new adone.x.Exception("failed");
+    }
 
-// Mock the not needed return functions
-function returnReply() { 
-    throw new adone.x.Exception("failed"); 
-}
-function returnError() { 
-    throw new adone.x.Exception("failed"); 
-}
-function returnFatalError() { 
-    throw new adone.x.Exception("failed"); 
-}
+    describe("general parser functionality", () => {
 
-describe("parsers", function () {
-
-    describe("general parser functionality", function () {
-
-        it("use default values", function () {
-            var parser = createParser({
+        it("use default values", () => {
+            const parser = createParser({
                 returnReply,
                 returnError
             });
@@ -29,8 +26,8 @@ describe("parsers", function () {
             assert.strictEqual(parser.name, "hiredis");
         });
 
-        it("auto parser", function () {
-            var parser = createParser({
+        it("auto parser", () => {
+            const parser = createParser({
                 returnReply,
                 returnError,
                 name: "auto"
@@ -38,8 +35,8 @@ describe("parsers", function () {
             assert.strictEqual(parser.name, "hiredis");
         });
 
-        it("auto parser v2", function () {
-            var parser = createParser({
+        it("auto parser v2", () => {
+            const parser = createParser({
                 returnReply,
                 returnError,
                 name: null
@@ -47,13 +44,13 @@ describe("parsers", function () {
             assert.strictEqual(parser.name, "hiredis");
         });
 
-        it("fail for missing options", function () {
-            assert.throws(function () {
+        it("fail for missing options", () => {
+            assert.throws(() => {
                 createParser({
                     returnReply,
                     returnBuffers: true
                 });
-            }, function (err) {
+            }, (err) => {
                 assert.strictEqual(err.message, "Please provide all return functions while initiating the parser");
                 return true;
             });
@@ -62,12 +59,12 @@ describe("parsers", function () {
 
     });
 
-    parsers.forEach(function (parserName) {
+    parsers.forEach((parserName) => {
 
-        describe(parserName, function () {
+        describe(parserName, () => {
 
-            it("handles multi-bulk reply and check context binding", function () {
-                var replyCount = 0;
+            it("handles multi-bulk reply and check context binding", () => {
+                let replyCount = 0;
                 function Abc() { }
                 Abc.prototype.checkReply = function (reply) {
                     assert.strictEqual(typeof this.log, "function");
@@ -75,8 +72,8 @@ describe("parsers", function () {
                     replyCount++;
                 };
                 Abc.prototype.log = console.log;
-                var test = new Abc();
-                var parser = createParser({
+                const test = new Abc();
+                const parser = createParser({
                     returnReply(reply) {
                         test.checkReply(reply);
                     },
@@ -98,8 +95,8 @@ describe("parsers", function () {
                 assert.equal(replyCount, 3, "check reply should have been called three times");
             });
 
-            it("parser error", function () {
-                var replyCount = 0;
+            it("parser error", () => {
+                let replyCount = 0;
                 function Abc() { }
                 Abc.prototype.checkReply = function (reply) {
                     assert.strictEqual(typeof this.log, "function");
@@ -107,8 +104,8 @@ describe("parsers", function () {
                     replyCount++;
                 };
                 Abc.prototype.log = console.log;
-                var test = new Abc();
-                var parser = createParser({
+                const test = new Abc();
+                const parser = createParser({
                     returnReply,
                     returnError,
                     returnFatalError(err) {
@@ -121,9 +118,9 @@ describe("parsers", function () {
                 assert.equal(replyCount, 1);
             });
 
-            it("parser error resets the buffer", function () {
-                var replyCount = 0;
-                var errCount = 0;
+            it("parser error resets the buffer", () => {
+                let replyCount = 0;
+                let errCount = 0;
                 function checkReply(reply) {
                     assert.strictEqual(reply.length, 1);
                     assert(Buffer.isBuffer(reply[0]));
@@ -134,7 +131,7 @@ describe("parsers", function () {
                     assert.strictEqual(err.message, "Protocol error, got \"b\" as reply type byte");
                     errCount++;
                 }
-                var parser = createParser({
+                const parser = createParser({
                     returnReply: checkReply,
                     returnError,
                     returnFatalError: checkError,
@@ -150,9 +147,9 @@ describe("parsers", function () {
                 assert.strictEqual(replyCount, 2);
             });
 
-            it("parser error v3 without returnFatalError specified", function () {
-                var replyCount = 0;
-                var errCount = 0;
+            it("parser error v3 without returnFatalError specified", () => {
+                let replyCount = 0;
+                let errCount = 0;
                 function checkReply(reply) {
                     assert.strictEqual(reply[0], "OK");
                     replyCount++;
@@ -161,7 +158,7 @@ describe("parsers", function () {
                     assert.strictEqual(err.message, "Protocol error, got \"\\n\" as reply type byte");
                     errCount++;
                 }
-                var parser = createParser({
+                const parser = createParser({
                     returnReply: checkReply,
                     returnError: checkError,
                     name: parserName
@@ -172,15 +169,15 @@ describe("parsers", function () {
                 assert.strictEqual(errCount, 1);
             });
 
-            it("should handle \\r and \\n characters properly", function () {
+            it("should handle \\r and \\n characters properly", () => {
                 // If a string contains \r or \n characters it will always be send as a bulk string
-                var replyCount = 0;
-                var entries = ["foo\r", "foo\r\nbar", "\r\nfoo", "foo\r\n"];
+                let replyCount = 0;
+                const entries = ["foo\r", "foo\r\nbar", "\r\nfoo", "foo\r\n"];
                 function checkReply(reply) {
                     assert.strictEqual(reply, entries[replyCount]);
                     replyCount++;
                 }
-                var parser = createParser({
+                const parser = createParser({
                     returnReply: checkReply,
                     returnError,
                     returnFatalError,
@@ -193,13 +190,13 @@ describe("parsers", function () {
                 assert.strictEqual(replyCount, 4);
             });
 
-            it("line breaks in the beginning of the last chunk", function () {
-                var replyCount = 0;
+            it("line breaks in the beginning of the last chunk", () => {
+                let replyCount = 0;
                 function checkReply(reply) {
                     assert.deepEqual(reply, [["a"]], "Expecting multi-bulk reply of [[\"a\"]]");
                     replyCount++;
                 }
-                var parser = createParser({
+                const parser = createParser({
                     returnReply: checkReply,
                     returnError,
                     returnFatalError,
@@ -216,13 +213,13 @@ describe("parsers", function () {
                 assert.equal(replyCount, 3, "check reply should have been called three times");
             });
 
-            it("multiple chunks in a bulk string", function () {
-                var replyCount = 0;
+            it("multiple chunks in a bulk string", () => {
+                let replyCount = 0;
                 function checkReply(reply) {
                     assert.strictEqual(reply, "abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij");
                     replyCount++;
                 }
-                var parser = createParser({
+                const parser = createParser({
                     returnReply: checkReply,
                     returnError,
                     returnFatalError,
@@ -256,9 +253,9 @@ describe("parsers", function () {
                 assert.equal(replyCount, 4, "check reply should have been called three times");
             });
 
-            it("multiple chunks with arrays different types", function () {
-                var replyCount = 0;
-                var predefined_data = [
+            it("multiple chunks with arrays different types", () => {
+                let replyCount = 0;
+                const predefined_data = [
                     "abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij",
                     "test",
                     100,
@@ -266,7 +263,7 @@ describe("parsers", function () {
                     ["The force awakens"]
                 ];
                 function checkReply(reply) {
-                    for (var i = 0; i < reply.length; i++) {
+                    for (let i = 0; i < reply.length; i++) {
                         if (i < 3) {
                             assert.strictEqual(reply[i], predefined_data[i]);
                         } else {
@@ -275,7 +272,7 @@ describe("parsers", function () {
                     }
                     replyCount++;
                 }
-                var parser = createParser({
+                const parser = createParser({
                     returnReply: checkReply,
                     returnError,
                     returnFatalError,
@@ -296,13 +293,13 @@ describe("parsers", function () {
                 assert.strictEqual(replyCount, 1);
             });
 
-            it("return normal errors", function () {
-                var replyCount = 0;
+            it("return normal errors", () => {
+                let replyCount = 0;
                 function checkReply(reply) {
                     assert.equal(reply.message, "Error message");
                     replyCount++;
                 }
-                var parser = createParser({
+                const parser = createParser({
                     returnReply: returnError,
                     returnError: checkReply,
                     returnFatalError,
@@ -316,13 +313,13 @@ describe("parsers", function () {
                 assert.strictEqual(replyCount, 1);
             });
 
-            it("return null for empty arrays and empty bulk strings", function () {
-                var replyCount = 0;
+            it("return null for empty arrays and empty bulk strings", () => {
+                let replyCount = 0;
                 function checkReply(reply) {
                     assert.equal(reply, null);
                     replyCount++;
                 }
-                var parser = createParser({
+                const parser = createParser({
                     returnReply: checkReply,
                     returnError,
                     returnFatalError,
@@ -337,13 +334,13 @@ describe("parsers", function () {
                 assert.strictEqual(replyCount, 2);
             });
 
-            it("return value even if all chunks are only 1 character long", function () {
-                var replyCount = 0;
+            it("return value even if all chunks are only 1 character long", () => {
+                let replyCount = 0;
                 function checkReply(reply) {
                     assert.equal(reply, 1);
                     replyCount++;
                 }
-                var parser = createParser({
+                const parser = createParser({
                     returnReply: checkReply,
                     returnError,
                     returnFatalError,
@@ -360,13 +357,13 @@ describe("parsers", function () {
                 assert.strictEqual(replyCount, 1);
             });
 
-            it("do not return before \\r\\n", function () {
-                var replyCount = 0;
+            it("do not return before \\r\\n", () => {
+                let replyCount = 0;
                 function checkReply(reply) {
                     assert.equal(reply, 1);
                     replyCount++;
                 }
-                var parser = createParser({
+                const parser = createParser({
                     returnReply: checkReply,
                     returnError,
                     returnFatalError,
@@ -383,8 +380,8 @@ describe("parsers", function () {
                 assert.strictEqual(replyCount, 2);
             });
 
-            it("return data as buffer if requested", function () {
-                var replyCount = 0;
+            it("return data as buffer if requested", () => {
+                let replyCount = 0;
                 function checkReply(reply) {
                     if (Array.isArray(reply)) {
                         reply = reply[0];
@@ -393,7 +390,7 @@ describe("parsers", function () {
                     assert.strictEqual(reply.inspect(), new Buffer("test").inspect());
                     replyCount++;
                 }
-                var parser = createParser({
+                const parser = createParser({
                     returnReply: checkReply,
                     returnError,
                     returnFatalError,
@@ -409,14 +406,14 @@ describe("parsers", function () {
                 assert.strictEqual(replyCount, 3);
             });
 
-            it("handle special case buffer sizes properly", function () {
-                var replyCount = 0;
-                var entries = ["test test ", "test test test test ", 1234];
+            it("handle special case buffer sizes properly", () => {
+                let replyCount = 0;
+                const entries = ["test test ", "test test test test ", 1234];
                 function checkReply(reply) {
                     assert.strictEqual(reply, entries[replyCount]);
                     replyCount++;
                 }
-                var parser = createParser({
+                const parser = createParser({
                     returnReply: checkReply,
                     returnError,
                     returnFatalError,
@@ -430,15 +427,15 @@ describe("parsers", function () {
                 assert.strictEqual(replyCount, 3);
             });
 
-            it("return numbers as strings", function () {
-                var replyCount = 0;
-                var entries = ["123", "590295810358705700002", "-99999999999999999"];
+            it("return numbers as strings", () => {
+                let replyCount = 0;
+                const entries = ["123", "590295810358705700002", "-99999999999999999"];
                 function checkReply(reply) {
                     assert.strictEqual(typeof reply, "string");
                     assert.strictEqual(reply, entries[replyCount]);
                     replyCount++;
                 }
-                var parser = createParser({
+                const parser = createParser({
                     returnReply: checkReply,
                     returnError,
                     returnFatalError,

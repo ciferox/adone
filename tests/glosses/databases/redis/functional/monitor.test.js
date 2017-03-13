@@ -1,29 +1,24 @@
-/* global skip describe afterEach it */
-
-import { stub } from "sinon";
 import check from "../helpers/check_redis";
-
-const Redis = adone.database.Redis;
 
 skip(check);
 
+describe("glosses", "databases", "redis", "monitor", () => {
+    const { database: { redis: { Redis } } } = adone;
 
-afterEach(function (done) {
-    let redis = new Redis();
-    redis.flushall(function () {
-        redis.script("flush", function () {
-            redis.disconnect();
-            done();
+    afterEach((done) => {
+        const redis = new Redis();
+        redis.flushall(() => {
+            redis.script("flush", () => {
+                redis.disconnect();
+                done();
+            });
         });
     });
-});
 
-
-describe("monitor", function () {
-    it("should receive commands", function (done) {
-        let redis = new Redis();
-        redis.monitor(function (err, monitor) {
-            monitor.on("monitor", function (time, args) {
+    it("should receive commands", (done) => {
+        const redis = new Redis();
+        redis.monitor((err, monitor) => {
+            monitor.on("monitor", (time, args) => {
                 expect(args[0]).to.eql("get");
                 expect(args[1]).to.eql("foo");
                 redis.disconnect();
@@ -34,10 +29,10 @@ describe("monitor", function () {
         });
     });
 
-    it("should reject processing commands", function (done) {
-        let redis = new Redis();
-        redis.monitor(function (err, monitor) {
-            monitor.get("foo", function (err) {
+    it("should reject processing commands", (done) => {
+        const redis = new Redis();
+        redis.monitor((err, monitor) => {
+            monitor.get("foo", (err) => {
                 expect(err.message).to.match(/Connection is in monitoring mode/);
                 redis.disconnect();
                 monitor.disconnect();
@@ -46,10 +41,10 @@ describe("monitor", function () {
         });
     });
 
-    it("should continue monitoring after reconnection", function (done) {
-        let redis = new Redis();
-        redis.monitor(function (err, monitor) {
-            monitor.on("monitor", function (time, args) {
+    it("should continue monitoring after reconnection", (done) => {
+        const redis = new Redis();
+        redis.monitor((err, monitor) => {
+            monitor.on("monitor", (time, args) => {
                 if (args[0] === "set") {
                     redis.disconnect();
                     monitor.disconnect();
@@ -57,22 +52,22 @@ describe("monitor", function () {
                 }
             });
             monitor.disconnect(true);
-            monitor.on("ready", function () {
+            monitor.on("ready", () => {
                 redis.set("foo", "bar");
             });
         });
     });
 
-    it("should wait for the ready event before monitoring", function (done) {
-        let redis = new Redis();
-        redis.on("ready", function () {
+    it("should wait for the ready event before monitoring", (done) => {
+        const redis = new Redis();
+        redis.on("ready", () => {
             let ready;
-            stub(Redis.prototype, "_readyCheck", function () {
+            stub(Redis.prototype, "_readyCheck").callsFake(function check(...args) {
                 ready = true;
                 Redis.prototype._readyCheck.restore();
-                Redis.prototype._readyCheck.apply(this, arguments);
+                Redis.prototype._readyCheck.apply(this, args);
             });
-            redis.monitor(function (err, monitor) {
+            redis.monitor((err, monitor) => {
                 expect(ready).to.eql(true);
                 redis.disconnect();
                 monitor.disconnect();

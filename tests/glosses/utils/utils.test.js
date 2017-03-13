@@ -188,8 +188,18 @@ describe("glosses", "utils", () => {
                 [[[[[[[[[1], 2], 3], 4], 5], 6], 7], 8], 9],
                 [[1], [2], [3], [4], [5], [6], [7], [8], [9]]
             ]) {
-                expect(util.flatten(i)).to.be.deep.equal(result);
+                expect(adone.util.flatten(i, { depth: Infinity })).to.be.deep.equal(result);
             }
+        });
+
+        it("should stop flattening if the depth is 0", () => {
+            const array = [1, [2, [3, [4, 5]]]];
+            expect(adone.util.flatten(array, { depth: 2 })).to.be.deep.equal([1, 2, 3, [4, 5]]);
+        });
+
+        it("should set the depth = 1 by default", () => {
+            const array = [1, [2, [3, [4, 5]]]];
+            expect(adone.util.flatten(array)).to.be.deep.equal([1, 2, [3, [4, 5]]]);
         });
     });
 

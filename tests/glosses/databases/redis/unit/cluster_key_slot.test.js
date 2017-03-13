@@ -1,58 +1,56 @@
-/* global describe it */
+describe("glosses", "databases", "redis", "unit", "cluster key slot", () => {
+    const { database: { redis: { calculateSlot } } } = adone;
+    const { generateMulti } = calculateSlot;
 
-import generate from "adone/glosses/databases/redis/cluster_key_slot";
+    const tests = {
+        123465: 1492,
+        foobar: 12325,
+        abcdefghijklmnopqrstuvwxyz: 9132,
+        "gsdfhan$%^&*(sdgsdnhshcs": 15532,
+        "abc{foobar}": 12325,
+        "{foobar}": 12325,
+        "h8a9sd{foobar}}{asd}}": 12325,
+        "{foobar": 16235,
+        "foobar{}": 4435,
+        "{{foobar}": 16235,
+        éêe: 13690,
+        àâa: 3872,
+        漢字: 14191,
+        汉字: 16196,
+        호텔: 4350,
+        "\uD800\uDC00": 11620 // surrogate pair
+    };
 
+    const testsMulti = [
+        "abcdefghijklmnopqrstuvwxyz",
+        "abcdefghijklmnopqrstuvwxyz",
+        "abcdefghijklmnopqrstuvwxyz",
+        "abcdefghijklmnopqrstuvwxyz",
+        "abcdefghijklmnopqrstuvwxyz",
+        "abcdefghijklmnopqrstuvwxyz",
+        "abcdefghijklmnopqrstuvwxyz",
+        "abcdefghijklmnopqrstuvwxyz"
+    ];
 
-var generateMulti = generate.generateMulti;
+    const testsMultiResult = 9132;
 
-var tests = {
-    123465: 1492,
-    foobar: 12325,
-    abcdefghijklmnopqrstuvwxyz: 9132,
-    "gsdfhan$%^&*(sdgsdnhshcs": 15532,
-    "abc{foobar}": 12325,
-    "{foobar}": 12325,
-    "h8a9sd{foobar}}{asd}}": 12325,
-    "{foobar": 16235,
-    "foobar{}": 4435,
-    "{{foobar}": 16235,
-    "éêe": 13690,
-    "àâa": 3872,
-    "漢字": 14191,
-    "汉字": 16196,
-    "호텔": 4350,
-    "\uD800\uDC00": 11620 // surrogate pair
-};
+    function assertHash(string) {
+        assert.strictEqual(calculateSlot(string), tests[string], `${string} - generated invalid hash: ${calculateSlot(string)}`);
+    }
 
-var testsMulti = [
-    "abcdefghijklmnopqrstuvwxyz",
-    "abcdefghijklmnopqrstuvwxyz",
-    "abcdefghijklmnopqrstuvwxyz",
-    "abcdefghijklmnopqrstuvwxyz",
-    "abcdefghijklmnopqrstuvwxyz",
-    "abcdefghijklmnopqrstuvwxyz",
-    "abcdefghijklmnopqrstuvwxyz",
-    "abcdefghijklmnopqrstuvwxyz"
-];
-
-var testsMultiResult = 9132;
-
-function assertHash(string) {
-    assert.strictEqual(generate(string), tests[string], string + " - generated invalid hash: " + generate(string));
-}
-
-describe("single hash: generate()", function () {
-    it("generate a correct hash from string", function () {
-        Object.keys(tests).forEach(assertHash);
-    });
-});
-
-describe("multiple hashes: generateMulti()", function () {
-    it("generate a correct hash from multiple strings", function () {
-        assert.strictEqual(generateMulti(testsMulti), testsMultiResult);
+    describe("single hash: calculateSlot()", () => {
+        it("generate a correct hash from string", () => {
+            Object.keys(tests).forEach(assertHash);
+        });
     });
 
-    it("returns -1 if any of the keys generates a different hash slot than the rest", function () {
-        assert.strictEqual(generateMulti(Object.keys(tests)), -1);
+    describe("multiple hashes: generateMulti()", () => {
+        it("generate a correct hash from multiple strings", () => {
+            assert.strictEqual(generateMulti(testsMulti), testsMultiResult);
+        });
+
+        it("returns -1 if any of the keys generates a different hash slot than the rest", () => {
+            assert.strictEqual(generateMulti(Object.keys(tests)), -1);
+        });
     });
 });

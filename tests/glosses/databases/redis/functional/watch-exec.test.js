@@ -1,48 +1,44 @@
-/* global describe it afterEach skip */
-
 import check from "../helpers/check_redis";
-
-const Redis = adone.database.Redis;
 
 skip(check);
 
-afterEach(function (done) {
-    let redis = new Redis();
-    redis.flushall(function () {
-        redis.script("flush", function () {
-            redis.disconnect();
-            done();
+describe("glosses", "databases", "redis", "watch-exec", () => {
+    const { database: { redis: { Redis } } } = adone;
+
+    afterEach((done) => {
+        const redis = new Redis();
+        redis.flushall(() => {
+            redis.script("flush", () => {
+                redis.disconnect();
+                done();
+            });
         });
     });
-});
 
-
-describe("watch-exec", function () {
-
-    it("should support watch/exec transactions", function (done) {
-        let redis1 = new Redis();
+    it("should support watch/exec transactions", (done) => {
+        const redis1 = new Redis();
         adone.promise.nodeify(redis1.watch("watchkey")
-            .then(function () {
+            .then(() => {
                 return redis1.multi().set("watchkey", "1").exec();
             })
-            .then(function (result) {
+            .then((result) => {
                 expect(result.length).to.eql(1);
                 expect(result[0]).to.eql([null, "OK"]);
                 redis1.disconnect();
             }), done);
     });
 
-    it("should support watch/exec transaction rollback", function (done) {
-        let redis1 = new Redis();
-        let redis2 = new Redis();
+    it("should support watch/exec transaction rollback", (done) => {
+        const redis1 = new Redis();
+        const redis2 = new Redis();
         adone.promise.nodeify(redis1.watch("watchkey")
-            .then(function () {
+            .then(() => {
                 return redis2.set("watchkey", "2");
             })
-            .then(function () {
+            .then(() => {
                 return redis1.multi().set("watchkey", "1").exec();
             })
-            .then(function (result) {
+            .then((result) => {
                 expect(result).to.be.null;
                 redis1.disconnect();
                 redis2.disconnect();

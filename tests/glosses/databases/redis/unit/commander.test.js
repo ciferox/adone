@@ -1,12 +1,8 @@
-/* global describe it */
+describe("glosses", "databases", "redis", "unit", "Commander", () => {
+    const { database: { redis: { Commander } } } = adone;
 
-import { stub } from "sinon";
-
-import Commander from "adone/glosses/databases/redis/commander";
-
-describe("Commander", function () {
-    it("should pass the correct arguments", function () {
-        stub(Commander.prototype, "sendCommand", function (command) {
+    it("should pass the correct arguments", () => {
+        stub(Commander.prototype, "sendCommand").callsFake((command) => {
             return command;
         });
 
@@ -23,11 +19,11 @@ describe("Commander", function () {
         expect(command.args[0]).to.eql("foo");
         expect(command.args[1]).to.eql("bar");
 
-        command = c.call("set", "foo", "bar", function () { });
+        command = c.call("set", "foo", "bar", () => { });
         expect(command.name).to.eql("set");
         expect(command.args.length).to.eql(2);
 
-        command = c.callBuffer("set", "foo", "bar", function () { });
+        command = c.callBuffer("set", "foo", "bar", () => { });
         expect(command.name).to.eql("set");
         expect(command.args.length).to.eql(2);
 

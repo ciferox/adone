@@ -1,23 +1,21 @@
+const { is, x, lazify } = adone;
 
-
-const parsers = adone.lazify({
+const parsers = lazify({
     JavaScript: "./javascript",
     Hiredis: "./hiredis"
 }, null, require);
 
 export default function createParser(options) {
-
-    if (!options || !adone.is.function(options.returnError) || !adone.is.function(options.returnReply)) {
-        throw new adone.x.Exception("Please provide all return functions while initiating the parser");
+    if (!options || !is.function(options.returnError) || !is.function(options.returnReply)) {
+        throw new x.Exception("Please provide all return functions while initiating the parser");
     }
 
-    options.name = options.name || "hiredis";
-    options.name = options.name.toLowerCase();
+    options.name = (options.name || "hiredis").toLowerCase();
 
     const innerOptions = {
         // The hiredis parser expects underscores
-        return_buffers: options.returnBuffers || false,
-        string_numbers: options.stringNumbers || false
+        return_buffers: options.returnBuffers || false,  // eslint-disable-line camelcase
+        string_numbers: options.stringNumbers || false  // eslint-disable-line camelcase
     };
     let parser;
     if (options.name === "javascript" || options.stringNumbers) {

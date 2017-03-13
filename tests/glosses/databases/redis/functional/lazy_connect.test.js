@@ -1,105 +1,100 @@
-/* global skip afterEach describe it */
-
-import { stub } from "sinon";
 import check from "../helpers/check_redis";
-
-const Redis = adone.database.Redis;
 
 skip(check);
 
+describe("glosses", "databases", "redis", "lazy connect", () => {
+    const { database: { redis: { Redis, Cluster } } } = adone;
 
-afterEach(function (done) {
-    let redis = new Redis();
-    redis.flushall(function () {
-        redis.script("flush", function () {
-            redis.disconnect();
-            done();
+    afterEach((done) => {
+        const redis = new Redis();
+        redis.flushall(() => {
+            redis.script("flush", () => {
+                redis.disconnect();
+                done();
+            });
         });
     });
-});
 
-
-describe("lazy connect", function () {
-    it("should not call `connect` when init", function () {
+    it("should not call `connect` when init", () => {
         stub(Redis.prototype, "connect").throws(new Error("`connect` should not be called"));
         new Redis({ lazyConnect: true });
         Redis.prototype.connect.restore();
     });
 
-    it("should connect when calling a command", function (done) {
-        let redis = new Redis({ lazyConnect: true });
+    it("should connect when calling a command", (done) => {
+        const redis = new Redis({ lazyConnect: true });
         redis.set("foo", "bar");
-        redis.get("foo", function (err, result) {
+        redis.get("foo", (err, result) => {
             expect(result).to.eql("bar");
             redis.disconnect();
             done();
         });
     });
 
-    it("should not try to reconnect when disconnected manually", function (done) {
-        let redis = new Redis({ lazyConnect: true });
-        redis.get("foo", function () {
+    it("should not try to reconnect when disconnected manually", (done) => {
+        const redis = new Redis({ lazyConnect: true });
+        redis.get("foo", () => {
             redis.disconnect();
-            redis.get("foo", function (err) {
+            redis.get("foo", (err) => {
                 expect(err.message).to.match(/Connection is closed/);
                 done();
             });
         });
     });
 
-    it("should be able to disconnect", function (done) {
-        let redis = new Redis({ lazyConnect: true });
-        redis.on("end", function () {
+    it("should be able to disconnect", (done) => {
+        const redis = new Redis({ lazyConnect: true });
+        redis.on("end", () => {
             done();
         });
         redis.disconnect();
     });
 
-    describe("Cluster", function () {
-        it("should not call `connect` when init", function () {
-            stub(Redis.Cluster.prototype, "connect").throws(new Error("`connect` should not be called"));
-            new Redis.Cluster([], { lazyConnect: true });
-            Redis.Cluster.prototype.connect.restore();
+    describe("Cluster", () => {
+        it("should not call `connect` when init", () => {
+            stub(Cluster.prototype, "connect").throws(new Error("`connect` should not be called"));
+            new Cluster([], { lazyConnect: true });
+            Cluster.prototype.connect.restore();
         });
 
-        it("should quit before \"close\" being emited", function (done) {
-            stub(Redis.Cluster.prototype, "connect").throws(new Error("`connect` should not be called"));
-            let cluster = new Redis.Cluster([], { lazyConnect: true });
-            cluster.quit(function () {
-                cluster.once("close", function () {
-                    cluster.once("end", function () {
-                        Redis.Cluster.prototype.connect.restore();
+        it("should quit before \"close\" being emited", (done) => {
+            stub(Cluster.prototype, "connect").throws(new Error("`connect` should not be called"));
+            const cluster = new Cluster([], { lazyConnect: true });
+            cluster.quit(() => {
+                cluster.once("close", () => {
+                    cluster.once("end", () => {
+                        Cluster.prototype.connect.restore();
                         done();
                     });
                 });
             });
         });
 
-        it("should disconnect before \"close\" being emited", function (done) {
-            stub(Redis.Cluster.prototype, "connect").throws(new Error("`connect` should not be called"));
-            let cluster = new Redis.Cluster([], { lazyConnect: true });
+        it("should disconnect before \"close\" being emited", (done) => {
+            stub(Cluster.prototype, "connect").throws(new Error("`connect` should not be called"));
+            const cluster = new Cluster([], { lazyConnect: true });
             cluster.disconnect();
-            cluster.once("close", function () {
-                cluster.once("end", function () {
-                    Redis.Cluster.prototype.connect.restore();
+            cluster.once("close", () => {
+                cluster.once("end", () => {
+                    Cluster.prototype.connect.restore();
                     done();
                 });
             });
         });
 
-        it("should support disconnecting with reconnect", function (done) {
-            stub(Redis.Cluster.prototype, "connect").throws(new Error("`connect` should not be called"));
-            let cluster = new Redis.Cluster([], {
+        it("should support disconnecting with reconnect", (done) => {
+            stub(Cluster.prototype, "connect").throws(new Error("`connect` should not be called"));
+            const cluster = new Cluster([], {
                 lazyConnect: true,
-                clusterRetryStrategy: function () {
+                clusterRetryStrategy() {
                     return 1;
                 }
             });
             cluster.disconnect(true);
-            cluster.once("close", function () {
-                Redis.Cluster.prototype.connect.restore();
-                stub(Redis.Cluster.prototype, "connect", function () {
-                    Redis.Cluster.prototype.connect.restore();
+            cluster.once("close", () => {
+                Cluster.prototype.connect.restore();
+                stub(Cluster.prototype, "connect").callsFake(() => {
+                    Cluster.prototype.connect.restore();
                     done();
                 });
             });

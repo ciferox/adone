@@ -1,12 +1,9 @@
-/* global describe it */
+describe("glosses", "databases", "redis", "unit", "Redis", () => {
+    const { database: { redis } } = adone;
+    const { Redis } = redis;
 
-import { stub, mock } from "sinon";
-
-const Redis = adone.database.Redis;
-
-describe("Redis", function () {
-    describe("constructor", function () {
-        it("should parse options correctly", function () {
+    describe("constructor", () => {
+        it("should parse options correctly", () => {
             stub(Redis.prototype, "connect").returns(Promise.resolve());
 
             let option;
@@ -87,46 +84,35 @@ describe("Redis", function () {
             Redis.prototype.connect.restore();
 
             function getOption(...args) {
-                let redis = new Redis(...args);
+                const redis = new Redis(...args);
                 return redis.options;
             }
         });
 
-        it("should throw when arguments is invalid", function () {
-            expect(function () {
+        it("should throw when arguments is invalid", () => {
+            expect(() => {
                 new Redis(false);
             }).to.throw(adone.x.InvalidArgument);
         });
     });
 
-    describe(".createClient", function () {
-        it("should redirect to constructor", function () {
-            let redis = Redis.createClient({ name: "pass", lazyConnect: true });
-            expect(redis.options).to.have.property("name", "pass");
-            expect(redis.options).to.have.property("lazyConnect", true);
+    describe(".createClient", () => {
+        it("should redirect to constructor", () => {
+            const _redis = redis.createClient({ name: "pass", lazyConnect: true });
+            expect(_redis.options).to.have.property("name", "pass");
+            expect(_redis.options).to.have.property("lazyConnect", true);
         });
     });
 
-    describe("#end", function () {
-        it("should redirect to #disconnect", function (done) {
-            let redis = new Redis({ lazyConnect: true });
-            stub(redis, "disconnect", function () {
-                redis.disconnect.restore();
-                done();
-            });
-            redis.end();
-        });
-    });
-
-    describe("#flushQueue", function () {
-        it("should flush all queues by default", function () {
-            let flushQueue = Redis.prototype.flushQueue;
-            let redis = {
-                offlineQueue: [{ command: { reject: function () { } } }],
-                commandQueue: [{ command: { reject: function () { } } }]
+    describe("#flushQueue", () => {
+        it("should flush all queues by default", () => {
+            const flushQueue = Redis.prototype.flushQueue;
+            const redis = {
+                offlineQueue: [{ command: { reject() { } } }],
+                commandQueue: [{ command: { reject() { } } }]
             };
-            let offline = mock(redis.offlineQueue[0].command);
-            let command = mock(redis.commandQueue[0].command);
+            const offline = mock(redis.offlineQueue[0].command);
+            const command = mock(redis.commandQueue[0].command);
             offline.expects("reject").once();
             command.expects("reject").once();
             flushQueue.call(redis);
@@ -134,14 +120,14 @@ describe("Redis", function () {
             command.verify();
         });
 
-        it("should be able to ignore a queue", function () {
-            let flushQueue = Redis.prototype.flushQueue;
-            let redis = {
-                offlineQueue: [{ command: { reject: function () { } } }],
-                commandQueue: [{ command: { reject: function () { } } }]
+        it("should be able to ignore a queue", () => {
+            const flushQueue = Redis.prototype.flushQueue;
+            const redis = {
+                offlineQueue: [{ command: { reject() { } } }],
+                commandQueue: [{ command: { reject() { } } }]
             };
-            let offline = mock(redis.offlineQueue[0].command);
-            let command = mock(redis.commandQueue[0].command);
+            const offline = mock(redis.offlineQueue[0].command);
+            const command = mock(redis.commandQueue[0].command);
             offline.expects("reject").once();
             command.expects("reject").never();
             flushQueue.call(redis, new Error(), { commandQueue: false });

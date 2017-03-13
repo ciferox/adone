@@ -1,9 +1,4 @@
-
-const { o, x, std: { tls, net } } = adone;
-
-const lazy = adone.lazify({
-    utils: "../utils"
-}, null, require);
+const { database: { redis }, o, x, std } = adone;
 
 export default class Connector {
     constructor(options) {
@@ -39,16 +34,16 @@ export default class Connector {
 
         process.nextTick(() => {
             if (!this.connecting) {
-                callback(new x.Exception(lazy.utils.CONNECTION_CLOSED_ERROR_MSG));
+                callback(new x.Exception(redis.util.CONNECTION_CLOSED_ERROR_MSG));
                 return;
             }
             let stream;
 
             try {
                 if (this.options.tls) {
-                    stream = tls.connect(connectionOptions);
+                    stream = std.tls.connect(connectionOptions);
                 } else {
-                    stream = net.createConnection(connectionOptions);
+                    stream = std.net.createConnection(connectionOptions);
                 }
             } catch (err) {
                 callback(err);

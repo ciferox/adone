@@ -1,13 +1,6 @@
+const { database: { redis }, util, promise, is, ExBuffer } = adone;
 
-
-const imports = adone.lazify({
-    Commander: "./commander",
-    Command: "./command",
-    commands: "./commands",
-    calculateSlot: "./cluster_key_slot"
-}, null, require);
-
-export default class Pipeline extends imports.Commander {
+export default class Pipeline extends redis.Commander {
     constructor(redis) {
         super();
         this.redis = redis;
@@ -19,29 +12,27 @@ export default class Pipeline extends imports.Commander {
         this._shaToScript = {};
 
         if (redis.scriptsSet) {
-            for (const name of Object.keys(redis.scriptsSet)) {
-                const script = redis.scriptsSet[name];
+            for (const [name, script] of util.entries(redis.scriptsSet)) {
                 this._shaToScript[script.sha] = script;
                 this[name] = redis[name];
                 this[`${name}Buffer`] = redis[`${name}Buffer`];
             }
         }
 
-        this.promise = new Promise((resolve, reject) => {
-            this.resolve = resolve;
-            this.reject = reject;
-        });
+        const defer = promise.defer();
+        this.promise = defer.promise;
+        this.resolve = defer.resolve;
+        this.reject = defer.reject;
     }
 
     fillResult(value, position) {
-        let i;
-        if (this._queue[position].name === "exec" && adone.is.array(value[1])) {
-            let execLength = value[1].length;
-            for (i = 0; i < execLength; i++) {
+        if (this._queue[position].name === "exec" && is.array(value[1])) {
+            const { length: execLength } = value[1];
+            for (let i = 0; i < execLength; i++) {
                 if (value[1][i] instanceof Error) {
                     continue;
                 }
-                let cmd = this._queue[position - (execLength - i)];
+                const cmd = this._queue[position - (execLength - i)];
                 try {
                     value[1][i] = cmd.transformReply(value[1][i]);
                 } catch (err) {
@@ -59,7 +50,7 @@ export default class Pipeline extends imports.Commander {
             let retriable = true;
             let commonError;
             let inTransaction;
-            for (i = 0; i < this._result.length; ++i) {
+            for (let i = 0; i < this._result.length; ++i) {
                 const error = this._result[i][0];
                 const command = this._queue[i];
                 if (command.name === "multi") {
@@ -68,7 +59,8 @@ export default class Pipeline extends imports.Commander {
                     inTransaction = false;
                 }
                 if (error) {
-                    if (command.name === "exec" && error.message === "EXECABORT Transaction discarded because of previous errors.") {
+                    if (command.name === "exec" &&
+                        error.message === "EXECABORT Transaction discarded because of previous errors.") {
                         continue;
                     }
                     if (!commonError) {
@@ -76,12 +68,14 @@ export default class Pipeline extends imports.Commander {
                             name: error.name,
                             message: error.message
                         };
-                    } else if (commonError.name !== error.name || commonError.message !== error.message) {
+                    } else if (commonError.name !== error.name ||
+                               commonError.message !== error.message) {
                         retriable = false;
                         break;
                     }
                 } else if (!inTransaction) {
-                    const isReadOnly = imports.commands.exists(command.name) && imports.commands.hasFlag(command.name, "readonly");
+                    const isReadOnly = redis.commands.exists(command.name) &&
+                                       redis.commands.hasFlag(command.name, "readonly");
                     if (!isReadOnly) {
                         retriable = false;
                         break;
@@ -93,11 +87,11 @@ export default class Pipeline extends imports.Commander {
                 const queue = this._queue;
                 inTransaction = false;
                 this._queue = [];
-                for (i = 0; i < queue.length; ++i) {
+                for (let i = 0; i < queue.length; ++i) {
                     if (errv[0] === "ASK" && !inTransaction &&
                         queue[i].name !== "asking" &&
                         (!queue[i - 1] || queue[i - 1].name !== "asking")) {
-                        const asking = new imports.Command("asking");
+                        const asking = new redis.Command("asking");
                         asking.ignore = true;
                         this.sendCommand(asking);
                     }
@@ -111,7 +105,7 @@ export default class Pipeline extends imports.Commander {
                 }
 
                 let matched = true;
-                if (adone.is.undefined(this.leftRedirections)) {
+                if (is.undefined(this.leftRedirections)) {
                     this.leftRedirections = {};
                 }
                 const exec = () => this.exec();
@@ -143,7 +137,7 @@ export default class Pipeline extends imports.Commander {
         }
 
         let ignoredCount = 0;
-        for (i = 0; i < this._queue.length - ignoredCount; ++i) {
+        for (let i = 0; i < this._queue.length - ignoredCount; ++i) {
             if (this._queue[i + ignoredCount].ignore) {
                 ignoredCount += 1;
             }
@@ -153,15 +147,16 @@ export default class Pipeline extends imports.Commander {
     }
 
     sendCommand(command) {
-        const position = this._queue.length;
+        const { _queue } = this;
+        const { length: position } = _queue;
 
         command.promise.then((result) => {
             this.fillResult([null, result], position);
-        }).catch((error) => {
+        }, (error) => {
             this.fillResult([error], position);
         });
 
-        this._queue.push(command);
+        _queue.push(command);
 
         return this;
     }
@@ -181,27 +176,27 @@ export default class Pipeline extends imports.Commander {
         return super.multi(...args);
     }
 
-    exec(callback) {
+    exec(...args) {
+        const [callback] = args;
         if (this._transactions > 0) {
             this._transactions -= 1;
             if (this.options.dropBufferSupport) {
-                return super.exec(...arguments);
+                return super.exec(...args);
             }
-            return super.execBuffer(...arguments);
+            return super.execBuffer(...args);
         }
         if (!this.nodeifiedPromise) {
             this.nodeifiedPromise = true;
-            adone.promise.nodeify(this.promise, callback);
+            promise.nodeify(this.promise, callback);
         }
         if (this._queue.length === 0) {
             this.resolve([]);
         }
         let pipelineSlot;
-        let i;
         if (this.isCluster) {
             // List of the first key for each command
             const sampleKeys = [];
-            for (i = 0; i < this._queue.length; i++) {
+            for (let i = 0; i < this._queue.length; i++) {
                 const keys = this._queue[i].getKeys();
                 if (keys.length) {
                     sampleKeys.push(keys[0]);
@@ -209,7 +204,7 @@ export default class Pipeline extends imports.Commander {
             }
 
             if (sampleKeys.length) {
-                pipelineSlot = imports.calculateSlot.generateMulti(sampleKeys);
+                pipelineSlot = redis.calculateSlot.generateMulti(sampleKeys);
                 if (pipelineSlot < 0) {
                     this.reject(new Error("All keys in the pipeline should belong to the same slot"));
                     return this.promise;
@@ -222,7 +217,8 @@ export default class Pipeline extends imports.Commander {
 
         // Check whether scripts exists
         const scripts = [];
-        for (const item of this._queue) {
+        for (let i = 0; i < this._queue.length; ++i) {
+            const item = this._queue[i];
             if (this.isCluster && item.isCustomCommand) {
                 this.reject(new Error("Sending custom commands in pipeline is not supported in Cluster mode."));
                 return this.promise;
@@ -243,17 +239,20 @@ export default class Pipeline extends imports.Commander {
 
             let node;
             if (this.isCluster) {
-                node = { slot: pipelineSlot, redis: this.redis.connectionPool.nodes.all[this.preferKey] };
+                node = {
+                    slot: pipelineSlot,
+                    redis: this.redis.connectionPool.nodes.all[this.preferKey]
+                };
             }
             let bufferMode = false;
             const stream = {
                 write: (writable) => {
-                    if (adone.is.buffer(writable)) {
+                    if (is.buffer(writable)) {
                         bufferMode = true;
                     }
                     if (bufferMode) {
-                        if (adone.is.string(data)) {
-                            const flexBuffer = new adone.ExBuffer(0);
+                        if (is.string(data)) {
+                            const flexBuffer = new ExBuffer(0);
                             flexBuffer.write(data);
                             data = flexBuffer;
                         }
@@ -279,8 +278,8 @@ export default class Pipeline extends imports.Commander {
                 }
             };
 
-            for (const item of this._queue) {
-                this.redis.sendCommand(item, stream, node);
+            for (let i = 0; i < this._queue.length; ++i) {
+                this.redis.sendCommand(this._queue[i], stream, node);
             }
             return this.promise;
         };
@@ -304,10 +303,10 @@ export default class Pipeline extends imports.Commander {
         }).then(execPipeline);
     }
 
-    execBuffer() {
+    execBuffer(...args) {
         if (this._transactions > 0) {
             this._transactions -= 1;
         }
-        return super.execBuffer(...arguments);
+        return super.execBuffer(...args);
     }
 }

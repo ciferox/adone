@@ -1,5 +1,4 @@
-
-const { is, x } = adone;
+const { is, x, util, std, o } = adone;
 
 export const convertBufferToString = (value, encoding) => {
     if (is.buffer(value)) {
@@ -26,10 +25,7 @@ export const wrapMultiResult = (arr) => {
     return result;
 };
 
-export const isInt = (value) => {
-    const x = parseFloat(value);
-    return !isNaN(value) && (x | 0) === x;
-};
+export const isInt = (value) => !isNaN(value) && is.integer(parseFloat(value));
 
 export const timeout = (callback, timeout) => {
     let timer;
@@ -46,30 +42,22 @@ export const timeout = (callback, timeout) => {
 
 export const convertObjectToArray = (obj) => {
     const result = [];
-    let pos = 0;
-    for (const key in obj) {
-        if (obj.hasOwnProperty(key)) {
-            result[pos] = key;
-            result[pos + 1] = obj[key];
-        }
-        pos += 2;
+    for (const [key, value] of util.entries(obj)) {
+        result.push(key, value);
     }
     return result;
 };
 
 export const convertMapToArray = (map) => {
     const result = [];
-    let pos = 0;
     map.forEach((value, key) => {
-        result[pos] = key;
-        result[pos + 1] = value;
-        pos += 2;
+        result.push(key, value);
     });
     return result;
 };
 
 export const toArg = (arg) => {
-    if (arg === null || is.undefined(arg)) {
+    if (is.nil(arg)) {
         return "";
     }
     return String(arg);
@@ -96,11 +84,11 @@ export const parseURL = (url) => {
     if (isInt(url)) {
         return { port: url };
     }
-    let parsed = adone.std.url.parse(url, true, true);
+    let parsed = std.url.parse(url, true, true);
 
     if (!parsed.slashes && url[0] !== "/") {
         url = `//${url}`;
-        parsed = adone.std.url.parse(url, true, true);
+        parsed = std.url.parse(url, true, true);
     }
 
     const result = {};
@@ -122,14 +110,13 @@ export const parseURL = (url) => {
     if (parsed.port) {
         result.port = parsed.port;
     }
-    adone.vendor.lodash.defaults(result, parsed.query);
 
-    return result;
+    return o(parsed.query, result);
 };
 
 export const packObject = (array) => {
     const result = {};
-    const length = array.length;
+    const { length } = array;
 
     for (let i = 1; i < length; i += 2) {
         result[array[i - 1]] = array[i];

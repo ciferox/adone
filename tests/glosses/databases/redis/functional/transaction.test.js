@@ -1,25 +1,23 @@
-/* global describe it afterEach skip */
-
 import check from "../helpers/check_redis";
-
-const Redis = adone.database.Redis;
 
 skip(check);
 
-afterEach(function (done) {
-    let redis = new Redis();
-    redis.flushall(function () {
-        redis.script("flush", function () {
-            redis.disconnect();
-            done();
+describe("glosses", "databases", "redis", "transaction", () => {
+    const { database: { redis: { Redis, Command } } } = adone;
+
+    afterEach((done) => {
+        const redis = new Redis();
+        redis.flushall(() => {
+            redis.script("flush", () => {
+                redis.disconnect();
+                done();
+            });
         });
     });
-});
 
-describe("transaction", function () {
-    it("should works like pipeline by default", function (done) {
-        let redis = new Redis();
-        redis.multi().set("foo", "transaction").get("foo").exec(function (err, result) {
+    it("should works like pipeline by default", (done) => {
+        const redis = new Redis();
+        redis.multi().set("foo", "transaction").get("foo").exec((err, result) => {
             expect(err).to.eql(null);
             expect(result).to.eql([[null, "OK"], [null, "transaction"]]);
             redis.disconnect();
@@ -27,9 +25,9 @@ describe("transaction", function () {
         });
     });
 
-    it("should handle runtime errors correctly", function (done) {
-        let redis = new Redis();
-        redis.multi().set("foo", "bar").lpush("foo", "abc").exec(function (err, result) {
+    it("should handle runtime errors correctly", (done) => {
+        const redis = new Redis();
+        redis.multi().set("foo", "bar").lpush("foo", "abc").exec((err, result) => {
             expect(err).to.eql(null);
             expect(result.length).to.eql(2);
             expect(result[0]).to.eql([null, "OK"]);
@@ -40,9 +38,9 @@ describe("transaction", function () {
         });
     });
 
-    it("should handle compile-time errors correctly", function (done) {
-        let redis = new Redis();
-        redis.multi().set("foo").get("foo").exec(function (err) {
+    it("should handle compile-time errors correctly", (done) => {
+        const redis = new Redis();
+        redis.multi().set("foo").get("foo").exec((err) => {
             expect(err).to.be.instanceof(Error);
             expect(err.toString()).to.match(/Transaction discarded because of previous errors/);
             redis.disconnect();
@@ -50,13 +48,13 @@ describe("transaction", function () {
         });
     });
 
-    it("should also support command callbacks", function (done) {
-        let redis = new Redis();
+    it("should also support command callbacks", (done) => {
+        const redis = new Redis();
         let pending = 1;
-        redis.multi().set("foo", "bar").get("foo", function (err, value) {
+        redis.multi().set("foo", "bar").get("foo", (err, value) => {
             pending -= 1;
             expect(value).to.eql("QUEUED");
-        }).exec(function (err, result) {
+        }).exec((err, result) => {
             expect(pending).to.eql(0);
             expect(result).to.eql([[null, "OK"], [null, "bar"]]);
             redis.disconnect();
@@ -64,13 +62,13 @@ describe("transaction", function () {
         });
     });
 
-    it("should also handle errors in command callbacks", function (done) {
-        let redis = new Redis();
+    it("should also handle errors in command callbacks", (done) => {
+        const redis = new Redis();
         let pending = 1;
-        redis.multi().set("foo", function (err) {
+        redis.multi().set("foo", (err) => {
             expect(err.toString()).to.match(/wrong number of arguments/);
             pending -= 1;
-        }).exec(function (err) {
+        }).exec((err) => {
             expect(err.toString()).to.match(/Transaction discarded because of previous errors/);
             if (!pending) {
                 redis.disconnect();
@@ -79,30 +77,30 @@ describe("transaction", function () {
         });
     });
 
-    it("should work without pipeline", function (done) {
-        let redis = new Redis();
+    it("should work without pipeline", (done) => {
+        const redis = new Redis();
         redis.multi({ pipeline: false });
         redis.set("foo", "bar");
         redis.get("foo");
-        redis.exec(function (err, results) {
+        redis.exec((err, results) => {
             expect(results).to.eql([[null, "OK"], [null, "bar"]]);
             redis.disconnect();
             done();
         });
     });
 
-    describe("transformer", function () {
-        it("should trigger transformer", function (done) {
-            let redis = new Redis({ dropBufferSupport: false });
+    describe("transformer", () => {
+        it("should trigger transformer", (done) => {
+            const redis = new Redis({ dropBufferSupport: false });
             let pending = 2;
-            let data = { name: "Bob", age: "17" };
-            redis.multi().hmset("foo", data).hgetall("foo", function (err, res) {
+            const data = { name: "Bob", age: "17" };
+            redis.multi().hmset("foo", data).hgetall("foo", (err, res) => {
                 expect(res).to.eql("QUEUED");
                 if (!--pending) {
                     redis.disconnect();
                     done();
                 }
-            }).hgetallBuffer("foo").get("foo").getBuffer("foo").exec(function (err, res) {
+            }).hgetallBuffer("foo").get("foo").getBuffer("foo").exec((err, res) => {
                 expect(res[0][1]).to.eql("OK");
                 expect(res[1][1]).to.eql(data);
                 expect(res[2][1]).to.eql({
@@ -121,11 +119,11 @@ describe("transaction", function () {
             });
         });
 
-        it("should trigger transformer inside pipeline", function (done) {
-            let redis = new Redis({ dropBufferSupport: false });
-            let data = { name: "Bob", age: "17" };
+        it("should trigger transformer inside pipeline", (done) => {
+            const redis = new Redis({ dropBufferSupport: false });
+            const data = { name: "Bob", age: "17" };
             redis.pipeline().hmset("foo", data).multi().typeBuffer("foo")
-                .hgetall("foo").exec().hgetall("foo").exec(function (err, res) {
+                .hgetall("foo").exec().hgetall("foo").exec((err, res) => {
                     expect(res[0][1]).to.eql("OK");
                     expect(res[1][1]).to.eql("OK");
                     expect(res[2][1]).to.eql(new Buffer("QUEUED"));
@@ -137,25 +135,25 @@ describe("transaction", function () {
                 });
         });
 
-        it("should handle custom transformer exception", function (done) {
-            let transformError = "transformer error";
-            Redis.Command._transformer.reply.get = function () {
+        it("should handle custom transformer exception", (done) => {
+            const transformError = "transformer error";
+            Command._transformer.reply.get = function () {
                 throw new Error(transformError);
             };
 
-            let redis = new Redis();
-            redis.multi().get("foo").exec(function (err, res) {
+            const redis = new Redis();
+            redis.multi().get("foo").exec((err, res) => {
                 expect(res[0][0]).to.have.property("message", transformError);
-                delete Redis.Command._transformer.reply.get;
+                delete Command._transformer.reply.get;
                 redis.disconnect();
                 done();
             });
         });
     });
 
-    describe("#addBatch", function () {
-        it("should accept commands in constructor", function (done) {
-            let redis = new Redis();
+    describe("#addBatch", () => {
+        it("should accept commands in constructor", (done) => {
+            const redis = new Redis();
             let pending = 1;
             redis.multi([
                 ["set", "foo", "bar"],
@@ -163,7 +161,7 @@ describe("transaction", function () {
                     expect(result).to.eql("QUEUED");
                     pending -= 1;
                 }]
-            ]).exec(function (err, results) {
+            ]).exec((err, results) => {
                 expect(pending).to.eql(0);
                 expect(results[1][1]).to.eql("bar");
                 redis.disconnect();
@@ -172,11 +170,11 @@ describe("transaction", function () {
         });
     });
 
-    describe("#exec", function () {
-        it("should batch all commands before ready event", function (done) {
-            let redis = new Redis();
-            redis.on("connect", function () {
-                redis.multi().info().config("get", "maxmemory").exec(function (err, res) {
+    describe("#exec", () => {
+        it("should batch all commands before ready event", (done) => {
+            const redis = new Redis();
+            redis.on("connect", () => {
+                redis.multi().info().config("get", "maxmemory").exec((err, res) => {
                     expect(err).to.eql(null);
                     expect(res).to.have.lengthOf(2);
                     expect(res[0][0]).to.eql(null);

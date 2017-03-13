@@ -373,13 +373,17 @@ const util = {
     /**
      * Flattens an array
      */
-    flatten: (array) => {
+    flatten: (array, { depth = 1 } = {}) => {
         const result = [];
-        for (const i of array) {
-            if (is.array(i)) {
-                result.push(...util.flatten(i));
+        for (let i = 0; i < array.length; ++i) {
+            let item = array[i];
+            if (is.array(item)) {
+                if (depth > 1) {
+                    item = util.flatten(item, { depth: depth - 1 });
+                }
+                result.push(...item);
             } else {
-                result.push(i);
+                result.push(item);
             }
         }
         return result;
@@ -636,6 +640,9 @@ const util = {
                 return obj.map((x) => util.clone(x, { deep }));
             }
             return obj.slice(0);
+        }
+        if (is.function(obj)) {
+            return obj;
         }
         const res = {};
         for (const key of util.keys(obj)) {

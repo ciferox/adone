@@ -1,10 +1,4 @@
-
-const { EventEmitter, o, noop, util, is, x } = adone;
-
-const lazy = adone.lazify({
-    utils: "../utils",
-    Redis: "../redis"
-}, null, require);
+const { database: { redis }, EventEmitter, o, noop, util, is, x } = adone;
 
 const setKey = (node = {}) => {
     node.port = node.port || 6379;
@@ -37,47 +31,47 @@ export default class ConnectionPool extends EventEmitter {
             this.specifiedOptions[node.key] = node;
         }
 
-        let redis;
+        let instance;
         if (this.nodes.all[node.key]) {
-            redis = this.nodes.all[node.key];
-            if (redis.options.readOnly !== readOnly) {
-                redis.options.readOnly = readOnly;
-                redis[readOnly ? "readonly" : "readwrite"]().catch(noop);
+            instance = this.nodes.all[node.key];
+            if (instance.options.readOnly !== readOnly) {
+                instance.options.readOnly = readOnly;
+                instance[readOnly ? "readonly" : "readwrite"]().catch(noop);
                 if (readOnly) {
                     delete this.nodes.master[node.key];
-                    this.nodes.slave[node.key] = redis;
+                    this.nodes.slave[node.key] = instance;
                 } else {
                     delete this.nodes.slave[node.key];
-                    this.nodes.master[node.key] = redis;
+                    this.nodes.master[node.key] = instance;
                 }
             }
         } else {
-            redis = new lazy.Redis(o({
+            instance = new redis.Redis(o({
                 retryStrategy: null,
                 readOnly,
                 lazyConnect: true
             }, this.redisOptions, node));
-            this.nodes.all[node.key] = redis;
-            this.nodes[readOnly ? "slave" : "master"][node.key] = redis;
+            this.nodes.all[node.key] = instance;
+            this.nodes[readOnly ? "slave" : "master"][node.key] = instance;
 
-            redis.once("end", () => {
+            instance.once("end", () => {
                 delete this.nodes.all[node.key];
                 delete this.nodes.master[node.key];
                 delete this.nodes.slave[node.key];
-                this.emit("-node", redis);
+                this.emit("-node", instance);
                 if (util.keys(this.nodes.all).length === 0) {
                     this.emit("drain");
                 }
             });
 
-            this.emit("+node", redis);
+            this.emit("+node", instance);
 
-            redis.on("error", (error) => {
+            instance.on("error", (error) => {
                 this.emit("nodeError", error);
             });
         }
 
-        return redis;
+        return instance;
     }
 
     reset(nodes) {
@@ -87,7 +81,7 @@ export default class ConnectionPool extends EventEmitter {
             if (is.object(node)) {
                 options = o(node, options);
             } else if (is.string(node)) {
-                options = o(lazy.utils.parseURL(node), options);
+                options = o(redis.util.parseURL(node), options);
             } else if (is.number(node)) {
                 options.port = node;
             } else {

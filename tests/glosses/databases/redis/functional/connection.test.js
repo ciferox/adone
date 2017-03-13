@@ -1,45 +1,42 @@
-/* global describe it afterEach skip */
-
-import { stub } from "sinon";
 import check from "../helpers/check_redis";
 import MockServer from "../helpers/mock_server";
 
-const Redis = adone.database.Redis;
-
 skip(check);
 
-afterEach(function (done) {
-    let redis = new Redis();
-    redis.flushall(function () {
-        redis.script("flush", function () {
+describe("glosses", "databases", "redis", "connection", () => {
+    const { database: { redis: { Redis } } } = adone;
+
+    afterEach((done) => {
+        const redis = new Redis();
+        redis.flushall(() => {
+            redis.script("flush", () => {
+                redis.disconnect();
+                done();
+            });
+        });
+    });
+
+    it("should emit \"connect\" when connected", (done) => {
+        const redis = new Redis();
+        redis.on("connect", () => {
             redis.disconnect();
             done();
         });
     });
-});
 
-describe("connection", function () {
-    it("should emit \"connect\" when connected", function (done) {
-        let redis = new Redis();
-        redis.on("connect", function () {
-            redis.disconnect();
-            done();
-        });
-    });
-
-    it("should emit \"close\" when disconnected", function (done) {
-        let redis = new Redis();
+    it("should emit \"close\" when disconnected", (done) => {
+        const redis = new Redis();
         redis.once("end", done);
-        redis.once("connect", function () {
+        redis.once("connect", () => {
             redis.disconnect();
         });
     });
 
-    it("should send AUTH command before any other commands", function (done) {
-        let redis = new Redis({ password: "123" });
+    it("should send AUTH command before any other commands", (done) => {
+        const redis = new Redis({ password: "123" });
         redis.get("foo");
         let times = 0;
-        stub(redis, "sendCommand", function (command) {
+        stub(redis, "sendCommand").callsFake((command) => {
             times += 1;
             if (times === 1) {
                 expect(command.name).to.eql("auth");
@@ -51,31 +48,31 @@ describe("connection", function () {
         });
     });
 
-    it("should receive replies after connection is disconnected", function (done) {
-        let redis = new Redis();
-        redis.set("foo", "bar", function () {
+    it("should receive replies after connection is disconnected", (done) => {
+        const redis = new Redis();
+        redis.set("foo", "bar", () => {
             redis.stream.end();
         });
-        redis.get("foo", function (err, res) {
+        redis.get("foo", (err, res) => {
             expect(res).to.eql("bar");
             redis.disconnect();
             done();
         });
     });
 
-    it("should close the connection when timeout", function (done) {
-        let redis = new Redis(6379, "192.0.0.0", {
+    it("should close the connection when timeout", (done) => {
+        const redis = new Redis(6379, "192.0.0.0", {
             connectTimeout: 1,
             retryStrategy: null
         });
         let pending = 2;
-        redis.on("error", function (err) {
+        redis.on("error", (err) => {
             expect(err.message).to.eql("connect ETIMEDOUT");
             if (!--pending) {
                 done();
             }
         });
-        redis.get("foo", function (err) {
+        redis.get("foo", (err) => {
             expect(err.message).to.match(/Connection is closed/);
             if (!--pending) {
                 done();
@@ -83,10 +80,10 @@ describe("connection", function () {
         });
     });
 
-    it("should clear the timeout when connected", function (done) {
-        let redis = new Redis({ connectTimeout: 10000 });
-        setImmediate(function () {
-            stub(redis.stream, "setTimeout", function (timeout) {
+    it("should clear the timeout when connected", (done) => {
+        const redis = new Redis({ connectTimeout: 10000 });
+        setImmediate(() => {
+            stub(redis.stream, "setTimeout").callsFake((timeout) => {
                 expect(timeout).to.eql(0);
                 redis.stream.setTimeout.restore();
                 redis.disconnect();
@@ -95,19 +92,19 @@ describe("connection", function () {
         });
     });
 
-    describe("#connect", function () {
-        it("should return a promise", function (done) {
+    describe("#connect", () => {
+        it("should return a promise", (done) => {
             let pending = 2;
-            let redis = new Redis({ lazyConnect: true });
-            redis.connect().then(function () {
+            const redis = new Redis({ lazyConnect: true });
+            redis.connect().then(() => {
                 redis.disconnect();
                 if (!--pending) {
                     done();
                 }
             });
 
-            let redis2 = new Redis(6390, { lazyConnect: true, retryStrategy: null });
-            redis2.connect().catch(function () {
+            const redis2 = new Redis(6390, { lazyConnect: true, retryStrategy: null });
+            redis2.connect().catch(() => {
                 if (!--pending) {
                     redis2.disconnect();
                     done();
@@ -115,24 +112,26 @@ describe("connection", function () {
             });
         });
 
-        it("should stop reconnecting when disconnected", function (done) {
-            let redis = new Redis(8999, {
-                retryStrategy: function () { return 0; }
+        it("should stop reconnecting when disconnected", (done) => {
+            const redis = new Redis(8999, {
+                retryStrategy() {
+                    return 0;
+                }
             });
 
-            redis.on("close", function () {
+            redis.on("close", () => {
                 redis.disconnect();
                 stub(Redis.prototype, "connect").throws(new Error("`connect` should not be called"));
-                setTimeout(function () {
+                setTimeout(() => {
                     Redis.prototype.connect.restore();
                     done();
                 }, 1);
             });
         });
 
-        it("should reject when connected", function (done) {
-            let redis = new Redis();
-            redis.connect().catch(function (err) {
+        it("should reject when connected", (done) => {
+            const redis = new Redis();
+            redis.connect().catch((err) => {
                 expect(err.message).to.match(/Redis is already connecting/);
                 redis.disconnect();
                 done();
@@ -140,12 +139,12 @@ describe("connection", function () {
         });
     });
 
-    describe("retryStrategy", function () {
-        it("should pass the correct retry times", function (done) {
+    describe("retryStrategy", () => {
+        it("should pass the correct retry times", (done) => {
             let t = 0;
             new Redis({
                 port: 1,
-                retryStrategy: function (times) {
+                retryStrategy(times) {
                     expect(times).to.eql(++t);
                     if (times === 3) {
                         done();
@@ -156,11 +155,11 @@ describe("connection", function () {
             });
         });
 
-        it("should skip reconnecting when retryStrategy doesn't return a number", function (done) {
-            let redis = new Redis({
+        it("should skip reconnecting when retryStrategy doesn't return a number", (done) => {
+            const redis = new Redis({
                 port: 1,
-                retryStrategy: function () {
-                    process.nextTick(function () {
+                retryStrategy() {
+                    process.nextTick(() => {
                         expect(redis.status).to.eql("end");
                         done();
                     });
@@ -170,11 +169,11 @@ describe("connection", function () {
         });
     });
 
-    describe("connectionName", function () {
-        it("should name the connection if options.connectionName is not null", function (done) {
-            let redis = new Redis({ connectionName: "niceName" });
-            redis.once("ready", function () {
-                redis.client("getname", function (err, res) {
+    describe("connectionName", () => {
+        it("should name the connection if options.connectionName is not null", (done) => {
+            const redis = new Redis({ connectionName: "niceName" });
+            redis.once("ready", () => {
+                redis.client("getname", (err, res) => {
                     expect(res).to.eql("niceName");
                     redis.disconnect();
                     done();
@@ -183,13 +182,13 @@ describe("connection", function () {
             redis.set("foo", 1);
         });
 
-        it("should set the name before any subscribe command if reconnected", function (done) {
-            let redis = new Redis({ connectionName: "niceName" });
-            redis.once("ready", function () {
-                redis.subscribe("l", function () {
+        it("should set the name before any subscribe command if reconnected", (done) => {
+            const redis = new Redis({ connectionName: "niceName" });
+            redis.once("ready", () => {
+                redis.subscribe("l", () => {
                     redis.disconnect(true);
-                    redis.unsubscribe("l", function () {
-                        redis.client("getname", function (err, res) {
+                    redis.unsubscribe("l", () => {
+                        redis.client("getname", (err, res) => {
                             expect(res).to.eql("niceName");
                             redis.disconnect();
                             done();
@@ -200,32 +199,32 @@ describe("connection", function () {
         });
     });
 
-    describe("readOnly", function () {
-        it("should send readonly command before other commands", function (done) {
+    describe("readOnly", () => {
+        it("should send readonly command before other commands", (done) => {
             let called = false;
-            let redis = new Redis({ port: 30001, readOnly: true, showFriendlyErrorStack: true });
-            let node = new MockServer(30001, function (argv) {
+            const redis = new Redis({ port: 30001, readOnly: true, showFriendlyErrorStack: true });
+            const node = new MockServer(30001, (argv) => {
                 if (argv[0] === "readonly") {
                     called = true;
                 } else if (argv[0] === "get" && argv[1] === "foo") {
                     expect(called).to.eql(true);
                     redis.disconnect();
-                    node.disconnect(function () {
+                    node.disconnect(() => {
                         done();
                     });
                 }
             });
-            redis.get("foo").catch(function () { });
+            redis.get("foo").catch(() => { });
         });
     });
 
-    describe("autoResendUnfulfilledCommands", function () {
-        it("should resend unfulfilled commands to the correct db when reconnected", function (done) {
-            let redis = new Redis({ db: 3 });
-            let pub = new Redis({ db: 3 });
-            redis.once("ready", function () {
+    describe("autoResendUnfulfilledCommands", () => {
+        it("should resend unfulfilled commands to the correct db when reconnected", (done) => {
+            const redis = new Redis({ db: 3 });
+            const pub = new Redis({ db: 3 });
+            redis.once("ready", () => {
                 let pending = 2;
-                redis.blpop("l", 0, function (err, res) {
+                redis.blpop("l", 0, (err, res) => {
                     expect(res[0]).to.eql("l");
                     expect(res[1]).to.eql("1");
                     if (!--pending) {
@@ -235,7 +234,7 @@ describe("connection", function () {
                     }
                 });
                 redis.set("foo", "1");
-                redis.pipeline().incr("foo").exec(function (err, res) {
+                redis.pipeline().incr("foo").exec((err, res) => {
                     expect(res[0][1]).to.eql(2);
                     if (!--pending) {
                         redis.disconnect();
@@ -243,24 +242,24 @@ describe("connection", function () {
                         done();
                     }
                 });
-                setTimeout(function () {
+                setTimeout(() => {
                     redis.stream.end();
                 }, 0);
             });
-            redis.once("close", function () {
+            redis.once("close", () => {
                 pub.lpush("l", 1);
             });
         });
 
-        it("should resend previous subscribes before sending unfulfilled commands", function (done) {
-            let redis = new Redis({ db: 4 });
-            let pub = new Redis({ db: 4 });
-            redis.once("ready", function () {
-                pub.pubsub("channels", function (err, channelsBefore) {
-                    redis.subscribe("l", function () {
+        it("should resend previous subscribes before sending unfulfilled commands", (done) => {
+            const redis = new Redis({ db: 4 });
+            const pub = new Redis({ db: 4 });
+            redis.once("ready", () => {
+                pub.pubsub("channels", (err, channelsBefore) => {
+                    redis.subscribe("l", () => {
                         redis.disconnect(true);
-                        redis.unsubscribe("l", function () {
-                            pub.pubsub("channels", function (err, channels) {
+                        redis.unsubscribe("l", () => {
+                            pub.pubsub("channels", (err, channels) => {
                                 expect(channels.length).to.eql(channelsBefore.length);
                                 redis.disconnect();
                                 pub.disconnect();

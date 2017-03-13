@@ -1,4 +1,3 @@
-
 const { collection } = adone;
 
 export default class DelayQueue {

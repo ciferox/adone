@@ -1,14 +1,14 @@
+const { is, lazify, bind } = adone;
 
-
-const imports = adone.lazify({
-    hiredis: () => adone.bind("hiredis.node")
+const lazy = lazify({
+    hiredis: () => bind("hiredis.node")
 });
 
 export default class HiredisReplyParser {
     constructor(options) {
         this.name = "hiredis";
         this.options = options;
-        this.reader = new imports.hiredis.Reader(options);
+        this.reader = new lazy.hiredis.Reader(options);
     }
 
     parseData() {
@@ -17,7 +17,7 @@ export default class HiredisReplyParser {
         } catch (err) {
             // Protocol errors land here
             // Reset the parser. Otherwise new commands can't be processed properly
-            this.reader = new imports.hiredis.Reader(this.options);
+            this.reader = new lazy.hiredis.Reader(this.options);
             this.returnFatalError(err);
         }
     }
@@ -26,7 +26,7 @@ export default class HiredisReplyParser {
         this.reader.feed(data);
         let reply = this.parseData();
 
-        while (reply !== undefined) {
+        while (!is.undefined(reply)) {
             if (reply && reply.name === "Error") {
                 this.returnError(reply);
             } else {

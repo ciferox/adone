@@ -1,15 +1,8 @@
-import Connector from "./connector";
-
-const { x, is, std: { net }, util, noop } = adone;
-
-const lazy = adone.lazify({
-    utils: "../utils",
-    Redis: "../redis"
-}, null, require);
+const { database: { redis }, x, is, std, util, noop } = adone;
 
 const isSentinelEql = (a, b) => ((a.host || "127.0.0.1") === (b.host || "127.0.0.1")) && ((a.port || 6379) === (b.port || 6379));
 
-export default class SentinelConnector extends Connector {
+export default class SentinelConnector extends redis.Connector {
     constructor(options) {
         super(options);
         if (this.options.sentinels.length === 0) {
@@ -63,11 +56,11 @@ export default class SentinelConnector extends Connector {
             const endpoint = this.sentinels[this.currentPoint];
             this.resolve(endpoint, (err, resolved) => {
                 if (!this.connecting) {
-                    callback(new x.Exception(lazy.utils.CONNECTION_CLOSED_ERROR_MSG));
+                    callback(new x.Exception(redis.util.CONNECTION_CLOSED_ERROR_MSG));
                     return;
                 }
                 if (resolved) {
-                    this.stream = net.createConnection(resolved);
+                    this.stream = std.net.createConnection(resolved);
                     callback(null, this.stream);
                 } else if (err) {
                     lastError = err;
@@ -89,7 +82,7 @@ export default class SentinelConnector extends Connector {
             }
             if (is.array(result)) {
                 for (let i = 0; i < result.length; ++i) {
-                    const sentinel = lazy.utils.packObject(result[i]);
+                    const sentinel = redis.util.packObject(result[i]);
                     const flags = sentinel.flags ? sentinel.flags.split(",") : [];
                     if (!flags.includes("disconnected") && sentinel.ip && sentinel.port) {
                         const endpoint = { host: sentinel.ip, port: parseInt(sentinel.port, 10) };
@@ -130,7 +123,7 @@ export default class SentinelConnector extends Connector {
             if (is.array(result)) {
                 const availableSlaves = [];
                 for (let i = 0; i < result.length; ++i) {
-                    const slave = lazy.utils.packObject(result[i]);
+                    const slave = redis.util.packObject(result[i]);
                     if (slave.flags && !slave.flags.match(/(disconnected|s_down|o_down)/)) {
                         availableSlaves.push(slave);
                     }
@@ -171,7 +164,8 @@ export default class SentinelConnector extends Connector {
                             // loop over preferred slaves and return the first match
                             for (const preferred of preferredSlaves) {
                                 for (const available of availableSlaves) {
-                                    if (available.ip === preferred.ip && available.port === preferred.port) {
+                                    if (available.ip === preferred.ip &&
+                                        available.port === preferred.port) {
                                         selectedSlave = available;
                                     }
                                 }
@@ -189,12 +183,16 @@ export default class SentinelConnector extends Connector {
                     selectedSlave = util.randomChoice(availableSlaves);
                 }
             }
-            callback(null, selectedSlave ? { host: selectedSlave.ip, port: selectedSlave.port } : null);
+            if (selectedSlave) {
+                callback(null, { host: selectedSlave.ip, port: selectedSlave.port });
+            } else {
+                callback(null, null);
+            }
         });
     }
 
     resolve(endpoint, callback) {
-        const client = new lazy.Redis({
+        const client = new redis.Redis({
             port: endpoint.port,
             host: endpoint.host,
             retryStrategy: null,

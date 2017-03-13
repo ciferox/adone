@@ -1,27 +1,23 @@
-/* global skip it afterEach describe */
-
 import check from "../helpers/check_redis";
-
-const Redis = adone.database.Redis;
 
 skip(check);
 
+describe("glosses", "databases", "redis", "pipeline", () => {
+    const { database: { redis: { Redis } } } = adone;
 
-afterEach(function (done) {
-    let redis = new Redis();
-    redis.flushall(function () {
-        redis.script("flush", function () {
-            redis.disconnect();
-            done();
+    afterEach((done) => {
+        const redis = new Redis();
+        redis.flushall(() => {
+            redis.script("flush", () => {
+                redis.disconnect();
+                done();
+            });
         });
     });
-});
 
-
-describe("pipeline", function () {
-    it("should return correct result", function (done) {
-        let redis = new Redis();
-        redis.pipeline().set("foo", "1").get("foo").set("foo", "2").incr("foo").get("foo").exec(function (err, results) {
+    it("should return correct result", (done) => {
+        const redis = new Redis();
+        redis.pipeline().set("foo", "1").get("foo").set("foo", "2").incr("foo").get("foo").exec((err, results) => {
             expect(err).to.eql(null);
             expect(results).to.eql([
                 [null, "OK"],
@@ -35,9 +31,9 @@ describe("pipeline", function () {
         });
     });
 
-    it("should return an empty array on empty pipeline", function (done) {
-        let redis = new Redis();
-        redis.pipeline().exec(function (err, results) {
+    it("should return an empty array on empty pipeline", (done) => {
+        const redis = new Redis();
+        redis.pipeline().exec((err, results) => {
             expect(err).to.eql(null);
             expect(results).to.eql([]);
             redis.disconnect();
@@ -45,12 +41,12 @@ describe("pipeline", function () {
         });
     });
 
-    it("should support mix string command and buffer command", function (done) {
-        let redis = new Redis({ dropBufferSupport: false });
+    it("should support mix string command and buffer command", (done) => {
+        const redis = new Redis({ dropBufferSupport: false });
         redis.pipeline().set("foo", "bar")
             .set("foo", new Buffer("bar")).getBuffer("foo")
             .get(new Buffer("foo"))
-            .exec(function (err, results) {
+            .exec((err, results) => {
                 expect(err).to.eql(null);
                 expect(results).to.eql([
                     [null, "OK"],
@@ -63,9 +59,9 @@ describe("pipeline", function () {
             });
     });
 
-    it("should handle error correctly", function (done) {
-        let redis = new Redis();
-        redis.pipeline().set("foo").exec(function (err, results) {
+    it("should handle error correctly", (done) => {
+        const redis = new Redis();
+        redis.pipeline().set("foo").exec((err, results) => {
             expect(err).to.eql(null);
             expect(results.length).to.eql(1);
             expect(results[0].length).to.eql(1);
@@ -75,13 +71,13 @@ describe("pipeline", function () {
         });
     });
 
-    it("should also invoke the command's callback", function (done) {
-        let redis = new Redis();
+    it("should also invoke the command's callback", (done) => {
+        const redis = new Redis();
         let pending = 1;
-        redis.pipeline().set("foo", "bar").get("foo", function (err, result) {
+        redis.pipeline().set("foo", "bar").get("foo", (err, result) => {
             expect(result).to.eql("bar");
             pending -= 1;
-        }).exec(function (err, results) {
+        }).exec((err, results) => {
             expect(pending).to.eql(0);
             expect(results[1][1]).to.eql("bar");
             redis.disconnect();
@@ -89,10 +85,10 @@ describe("pipeline", function () {
         });
     });
 
-    it("should support inline transaction", function (done) {
-        let redis = new Redis();
+    it("should support inline transaction", (done) => {
+        const redis = new Redis();
 
-        redis.pipeline().multi().set("foo", "bar").get("foo").exec().exec(function (err, result) {
+        redis.pipeline().multi().set("foo", "bar").get("foo").exec().exec((err, result) => {
             expect(result[0][1]).to.eql("OK");
             expect(result[1][1]).to.eql("QUEUED");
             expect(result[2][1]).to.eql("QUEUED");
@@ -102,17 +98,17 @@ describe("pipeline", function () {
         });
     });
 
-    it("should have the same options as its container", function () {
-        let redis = new Redis({ showFriendlyErrorStack: true });
-        let pipeline = redis.pipeline();
+    it("should have the same options as its container", () => {
+        const redis = new Redis({ showFriendlyErrorStack: true });
+        const pipeline = redis.pipeline();
         expect(pipeline.options).to.have.property("showFriendlyErrorStack", true);
         redis.disconnect();
     });
 
-    it("should support key prefixing", function (done) {
-        let redis = new Redis({ keyPrefix: "foo:" });
+    it("should support key prefixing", (done) => {
+        const redis = new Redis({ keyPrefix: "foo:" });
         redis.pipeline().set("bar", "baz").get("bar").lpush("app1", "test1")
-            .lpop("app1").keys("*").exec(function (err, results) {
+            .lpop("app1").keys("*").exec((err, results) => {
                 expect(err).to.eql(null);
                 expect(results).to.eql([
                     [null, "OK"],
@@ -126,10 +122,10 @@ describe("pipeline", function () {
             });
     });
 
-    describe("custom commands", function () {
+    describe("custom commands", () => {
         let redis;
 
-        before(function () {
+        before(() => {
             redis = new Redis();
             redis.defineCommand("echo", {
                 numberOfKeys: 2,
@@ -141,8 +137,8 @@ describe("pipeline", function () {
             redis.disconnect();
         });
 
-        it("should work", function (done) {
-            redis.pipeline().echo("foo", "bar", "123", "abc").exec(function (err, results) {
+        it("should work", (done) => {
+            redis.pipeline().echo("foo", "bar", "123", "abc").exec((err, results) => {
                 expect(err).to.eql(null);
                 expect(results).to.eql([
                     [null, ["foo", "bar", "123", "abc"]]
@@ -151,15 +147,15 @@ describe("pipeline", function () {
             });
         });
 
-        it("should support callbacks", function (done) {
+        it("should support callbacks", (done) => {
             let pending = 1;
             redis.pipeline()
-                .echo("foo", "bar", "123", "abc", function (err, result) {
+                .echo("foo", "bar", "123", "abc", (err, result) => {
                     pending -= 1;
                     expect(err).to.eql(null);
                     expect(result).to.eql(["foo", "bar", "123", "abc"]);
                 })
-                .exec(function (err, results) {
+                .exec((err, results) => {
                     expect(err).to.eql(null);
                     expect(results).to.eql([
                         [null, ["foo", "bar", "123", "abc"]]
@@ -169,14 +165,14 @@ describe("pipeline", function () {
                 });
         });
 
-        it("should be supported in transaction blocks", function (done) {
+        it("should be supported in transaction blocks", (done) => {
             redis.pipeline()
                 .multi()
                 .set("foo", "asdf")
                 .echo("bar", "baz", "123", "abc")
                 .get("foo")
                 .exec()
-                .exec(function (err, results) {
+                .exec((err, results) => {
                     expect(err).to.eql(null);
                     expect(results[4][1][1]).to.eql(["bar", "baz", "123", "abc"]);
                     expect(results[4][1][2]).to.eql("asdf");
@@ -185,9 +181,9 @@ describe("pipeline", function () {
         });
     });
 
-    describe("#addBatch", function () {
-        it("should accept commands in constructor", function (done) {
-            let redis = new Redis();
+    describe("#addBatch", () => {
+        it("should accept commands in constructor", (done) => {
+            const redis = new Redis();
             let pending = 1;
             redis.pipeline([
                 ["set", "foo", "bar"],
@@ -195,7 +191,7 @@ describe("pipeline", function () {
                     expect(result).to.eql("bar");
                     pending -= 1;
                 }]
-            ]).exec(function (err, results) {
+            ]).exec((err, results) => {
                 expect(pending).to.eql(0);
                 expect(results[1][1]).to.eql("bar");
                 redis.disconnect();
@@ -204,31 +200,31 @@ describe("pipeline", function () {
         });
     });
 
-    describe("exec", function () {
-        it("should group results", function (done) {
-            let redis = new Redis();
+    describe("exec", () => {
+        it("should group results", (done) => {
+            const redis = new Redis();
             redis.multi({ pipeline: false });
             redis.set("foo", "bar");
             redis.get("foo");
-            redis.exec().then(function () {
+            redis.exec().then(() => {
                 redis.disconnect();
                 done();
             });
         });
 
-        it("should allow omitting callback", function (done) {
-            let redis = new Redis();
-            redis.exec().catch(function (err) {
+        it("should allow omitting callback", (done) => {
+            const redis = new Redis();
+            redis.exec().catch((err) => {
                 expect(err.message).to.eql("ERR EXEC without MULTI");
                 redis.disconnect();
                 done();
             });
         });
 
-        it("should batch all commands before ready event", function (done) {
-            let redis = new Redis();
-            redis.on("connect", function () {
-                redis.pipeline().info().config("get", "maxmemory").exec(function (err, res) {
+        it("should batch all commands before ready event", (done) => {
+            const redis = new Redis();
+            redis.on("connect", () => {
+                redis.pipeline().info().config("get", "maxmemory").exec((err, res) => {
                     expect(err).to.eql(null);
                     expect(res).to.have.lengthOf(2);
                     expect(res[0][0]).to.eql(null);

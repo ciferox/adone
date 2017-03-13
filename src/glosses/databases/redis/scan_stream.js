@@ -1,12 +1,6 @@
+const { std: { stream: { Readable } }, is } = adone;
 
-
-/**
- * Convenient class to convert the process of scaning keys to a readable stream.
- *
- * @constructor
- * @private
- */
-export default class ScanStream extends adone.std.stream.Readable {
+export default class ScanStream extends Readable {
     constructor(opt) {
         super(opt);
         this._redisCursor = "0";
@@ -33,7 +27,7 @@ export default class ScanStream extends adone.std.stream.Readable {
                 this.emit("error", err);
                 return;
             }
-            this._redisCursor = adone.is.buffer(res[0]) ? res[0].toString() : res[0];
+            this._redisCursor = is.buffer(res[0]) ? res[0].toString() : res[0];
             if (this._redisCursor === "0") {
                 this._redisDrained = true;
             }
@@ -45,4 +39,3 @@ export default class ScanStream extends adone.std.stream.Readable {
         this._redisDrained = true;
     }
 }
-

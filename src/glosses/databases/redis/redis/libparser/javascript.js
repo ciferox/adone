@@ -1,3 +1,5 @@
+const { is } = adone;
+
 export default class JavaScriptReplyParser {
     constructor(options) {
         this.name = "javascript";
@@ -11,43 +13,35 @@ export default class JavaScriptReplyParser {
         this.offsetCache = 0;
         // If returnBuffers is active, all return values are returned as buffers besides numbers and errors
         if (options.return_buffers) {
-            this.handleReply = function (start, end) {
-                return this.buffer.slice(start, end);
-            };
+            this.handleReply = (start, end) => this.buffer.slice(start, end);
         } else {
-            this.handleReply = function (start, end) {
-                return this.buffer.toString("utf-8", start, end);
-            };
+            this.handleReply = (start, end) => this.buffer.toString("utf-8", start, end);
         }
         // If stringNumbers is activated the parser always returns numbers as string
-        // This is important for big numbers (number > Math.pow(2, 53)) as js numbers are 64bit floating point numbers with reduced precision
+        // This is important for big numbers (number > Math.pow(2, 53)) as js numbers
+        // are 64bit floating point numbers with reduced precision
         if (options.string_numbers) {
-            this.handleNumbers = function (start, end) {
-                return this.buffer.toString("ascii", start, end);
-            };
+            this.handleNumbers = (start, end) => this.buffer.toString("ascii", start, end);
         } else {
-            this.handleNumbers = function (start, end) {
-                return +this.buffer.toString("ascii", start, end);
-            };
+            this.handleNumbers = (start, end) => Number(this.buffer.toString("ascii", start, end));
         }
     }
 
     parseResult(type) {
-        let start = 0;
-        let end = 0;
-        let packetHeader = 0;
-        let reply;
-
         if (type === 36) { // $
-            packetHeader = this.parseHeader();
+            const packetHeader = this.parseHeader();
             // Packets with a size of -1 are considered null
             if (packetHeader === -1) {
                 return null;
             }
-            end = this.offset + packetHeader;
-            start = this.offset;
+            const start = this.offset;
+            const end = this.offset + packetHeader;
             if (end + 2 > this.buffer.length) {
-                this.buffers.push(this.offsetCache === 0 ? this.buffer : this.buffer.slice(this.offsetCache));
+                if (this.offsetCache === 0) {
+                    this.buffers.push(this.buffer);
+                } else {
+                    this.buffers.push(this.buffer.slice(this.offsetCache));
+                }
                 this.chunksSize = this.buffers[0].length;
                 // Include the packetHeader delimiter
                 this.bigStrSize = packetHeader + 2;
@@ -56,25 +50,28 @@ export default class JavaScriptReplyParser {
             // Set the offset to after the delimiter
             this.offset = end + 2;
             return this.handleReply(start, end);
-        } else if (type === 58) { // :
+        }
+        if (type === 58) { // :
             // Up to the delimiter
-            end = this.packetEndOffset();
-            start = this.offset;
+            const start = this.offset;
+            const end = this.packetEndOffset();
             // Include the delimiter
             this.offset = end + 2;
             // Return the coerced numeric value
             return this.handleNumbers(start, end);
-        } else if (type === 43) { // +
-            end = this.packetEndOffset();
-            start = this.offset;
+        }
+        if (type === 43) { // +
+            const start = this.offset;
+            const end = this.packetEndOffset();
             this.offset = end + 2;
             return this.handleReply(start, end);
-        } else if (type === 42) { // *
-            packetHeader = this.parseHeader();
+        }
+        if (type === 42) { // *
+            const packetHeader = this.parseHeader();
             if (packetHeader === -1) {
                 return null;
             }
-            reply = [];
+            const reply = [];
             for (let i = 0; i < packetHeader; i++) {
                 if (this.offset >= this.buffer.length) {
                     throw new Error("Wait for more data.");
@@ -82,9 +79,10 @@ export default class JavaScriptReplyParser {
                 reply.push(this.parseResult(this.buffer[this.offset++]));
             }
             return reply;
-        } else if (type === 45) { // -
-            end = this.packetEndOffset();
-            start = this.offset;
+        }
+        if (type === 45) { // -
+            const start = this.offset;
+            const end = this.packetEndOffset();
             this.offset = end + 2;
             return new Error(this.buffer.toString("utf-8", start, end));
         }
@@ -129,7 +127,7 @@ export default class JavaScriptReplyParser {
         this.type = this.buffer[this.offset++];
         let reply = this.tryParsing();
 
-        while (reply !== undefined) {
+        while (!is.undefined(reply)) {
             if (this.type === 45) { // Errors -
                 this.returnError(reply);
             } else {
@@ -139,7 +137,7 @@ export default class JavaScriptReplyParser {
             this.type = this.buffer[this.offset++];
             reply = this.tryParsing();
         }
-        if (this.type !== undefined) {
+        if (!is.undefined(this.type)) {
             // Reset the buffer so the parser can handle following commands properly
             this.buffer = Buffer.alloc(0);
             this.returnFatalError(new Error(`Protocol error, got ${JSON.stringify(String.fromCharCode(this.type))} as reply type byte`));
@@ -147,8 +145,8 @@ export default class JavaScriptReplyParser {
     }
 
     parseHeader() {
-        let end = this.packetEndOffset();
-        let value = this.buffer.toString("ascii", this.offset, end) | 0;
+        const end = this.packetEndOffset();
+        const value = this.buffer.toString("ascii", this.offset, end) | 0;
         this.offset = end + 2;
         return value;
     }

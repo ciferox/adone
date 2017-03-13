@@ -1,39 +1,29 @@
+const { database: { redis }, is, x, lazify } = adone;
 
+const parser = lazify({
+    createParser: "./libparser"
+}, exports, require);
 
-const imports = adone.lazify({
-    Command: "../command",
-    SubscriptionSet: "../subscription_set",
-    createParser: "./libparser",
-    ReplyError: "../reply_error"
-}, null, require);
-
-/**
- * Init the parser
- *
- * @method _initParser
- * @memberOf Redis#
- * @private
- */
-export function initParser() {
-    this.replyParser = imports.createParser({
+export const initParser = function () {
+    this.replyParser = parser.createParser({
         name: this.options.parser,
         stringNumbers: this.options.stringNumbers,
         returnBuffers: !this.options.dropBufferSupport,
         returnError: (err) => {
-            this.returnError(new imports.ReplyError(err.message));
+            this.returnError(new redis.ReplyError(err.message));
         },
         returnReply: (reply) => {
             this.returnReply(reply);
         },
         returnFatalError: (err) => {
             this.flushQueue(err, { offlineQueue: false });
-            this.silentEmit("error", new adone.x.Exception(`Redis parser fatal error: ${err.stack}`));
+            this.silentEmit("error", new x.Exception(`Redis parser fatal error: ${err.stack}`));
             this.disconnect(true);
         }
     });
-}
+};
 
-export function returnError(err) {
+export const returnError = function (err) {
     const item = this.commandQueue.shift();
 
     err.command = {
@@ -48,13 +38,14 @@ export function returnError(err) {
 
     switch (needReconnect) {
         case 1:
-        case true:
+        case true: {
             if (this.status !== "reconnecting") {
                 this.disconnect(true);
             }
             item.command.reject(err);
             break;
-        case 2:
+        }
+        case 2: {
             if (this.status !== "reconnecting") {
                 this.disconnect(true);
             }
@@ -63,12 +54,14 @@ export function returnError(err) {
             }
             this.sendCommand(item.command);
             break;
-        default:
+        }
+        default: {
             item.command.reject(err);
+        }
     }
-}
+};
 
-export function returnReply(reply) {
+export const returnReply = function (reply) {
     if (this.status === "monitoring") {
         // Valid commands in the monitoring mode are AUTH and MONITOR,
         // both of which always reply with 'OK'.
@@ -91,11 +84,40 @@ export function returnReply(reply) {
         }
     }
 
+    const fillSubCommand = (command, count) => {
+        if (is.undefined(command.remainReplies)) {
+            command.remainReplies = command.args.length;
+        }
+        if (--command.remainReplies === 0) {
+            command.resolve(count);
+            return true;
+        }
+        return false;
+    };
+
+    const fillUnsubCommand = (command, count) => {
+        if (is.undefined(command.remainReplies)) {
+            command.remainReplies = command.args.length;
+        }
+        if (command.remainReplies === 0) {
+            if (count === 0) {
+                command.resolve(reply[2]);
+                return true;
+            }
+            return false;
+        }
+        if (--command.remainReplies === 0) {
+            command.resolve(reply[2]);
+            return true;
+        }
+        return false;
+    };
+
     let item;
     let channel;
     let count;
     if (this.condition.subscriber) {
-        const replyType = adone.is.array(reply) ? reply[0].toString() : null;
+        const replyType = is.array(reply) ? reply[0].toString() : null;
         switch (replyType) {
             case "message":
                 if (this.listeners("message").length > 0) {
@@ -116,7 +138,7 @@ export function returnReply(reply) {
                 break;
             }
             case "subscribe":
-            case "psubscribe":
+            case "psubscribe": {
                 channel = reply[1].toString();
                 this.condition.subscriber.add(replyType, channel);
                 item = this.commandQueue.shift();
@@ -124,8 +146,9 @@ export function returnReply(reply) {
                     this.commandQueue.unshift(item);
                 }
                 break;
+            }
             case "unsubscribe":
-            case "punsubscribe":
+            case "punsubscribe": {
                 channel = reply[1] ? reply[1].toString() : null;
                 if (channel) {
                     this.condition.subscriber.del(replyType, channel);
@@ -139,24 +162,26 @@ export function returnReply(reply) {
                     this.commandQueue.unshift(item);
                 }
                 break;
-            default:
+            }
+            default: {
                 item = this.commandQueue.shift();
                 item.command.resolve(reply);
+            }
         }
     } else {
         item = this.commandQueue.shift();
         if (!item) {
-            const err = new adone.x.Exception("Command queue state error. Last reply: " + reply.toString());
+            const err = new x.Exception(`Command queue state error. Last reply: ${reply.toString()}`);
             return this.emit("error", err);
         }
-        if (imports.Command.checkFlag("ENTER_SUBSCRIBER_MODE", item.command.name)) {
-            this.condition.subscriber = new imports.SubscriptionSet();
+        if (redis.Command.checkFlag("ENTER_SUBSCRIBER_MODE", item.command.name)) {
+            this.condition.subscriber = new redis.SubscriptionSet();
             this.condition.subscriber.add(item.command.name, reply[1].toString());
 
             if (!fillSubCommand(item.command, reply[2])) {
                 this.commandQueue.unshift(item);
             }
-        } else if (imports.Command.checkFlag("EXIT_SUBSCRIBER_MODE", item.command.name)) {
+        } else if (redis.Command.checkFlag("EXIT_SUBSCRIBER_MODE", item.command.name)) {
             if (!fillUnsubCommand(item.command, reply[2])) {
                 this.commandQueue.unshift(item);
             }
@@ -164,33 +189,4 @@ export function returnReply(reply) {
             item.command.resolve(reply);
         }
     }
-
-    function fillSubCommand(command, count) {
-        if (typeof command.remainReplies === "undefined") {
-            command.remainReplies = command.args.length;
-        }
-        if (--command.remainReplies === 0) {
-            command.resolve(count);
-            return true;
-        }
-        return false;
-    }
-
-    function fillUnsubCommand(command, count) {
-        if (typeof command.remainReplies === "undefined") {
-            command.remainReplies = command.args.length;
-        }
-        if (command.remainReplies === 0) {
-            if (count === 0) {
-                command.resolve(reply[2]);
-                return true;
-            }
-            return false;
-        }
-        if (--command.remainReplies === 0) {
-            command.resolve(reply[2]);
-            return true;
-        }
-        return false;
-    }
-}
+};

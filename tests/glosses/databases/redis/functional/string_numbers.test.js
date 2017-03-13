@@ -1,26 +1,24 @@
-/* global describe it afterEach skip context */
-
 import check from "../helpers/check_redis";
-
-const Redis = adone.database.Redis;
 
 skip(check);
 
-afterEach(function (done) {
-    let redis = new Redis();
-    redis.flushall(function () {
-        redis.script("flush", function () {
-            redis.disconnect();
-            done();
+describe("glosses", "databases", "redis", "stringNumbers", () => {
+    const { database: { redis: { Redis } } } = adone;
+    const MAX_NUMBER = 9007199254740991; // Number.MAX_SAFE_INTEGER
+
+    afterEach((done) => {
+        const redis = new Redis();
+        redis.flushall(() => {
+            redis.script("flush", () => {
+                redis.disconnect();
+                done();
+            });
         });
     });
-});
-let MAX_NUMBER = 9007199254740991; // Number.MAX_SAFE_INTEGER
 
-describe("stringNumbers", function () {
-    context("enabled", function () {
-        it("returns numbers as strings", function (done) {
-            let redis = new Redis({
+    context("enabled", () => {
+        it("returns numbers as strings", (done) => {
+            const redis = new Redis({
                 stringNumbers: true
             });
 
@@ -52,12 +50,12 @@ describe("stringNumbers", function () {
         });
     });
 
-    context("disabled", function () {
-        it("returns numbers", function (done) {
-            let redis = new Redis();
+    context("disabled", () => {
+        it("returns numbers", (done) => {
+            const redis = new Redis();
 
             redis.set("foo", "123");
-            redis.incr("foo", function (err, res) {
+            redis.incr("foo", (err, res) => {
                 expect(res).to.eql(124);
                 redis.disconnect();
                 done();

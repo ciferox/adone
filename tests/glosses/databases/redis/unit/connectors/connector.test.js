@@ -1,27 +1,21 @@
-/* global describe it */
+describe("glosses", "databases", "redis", "unit", "Connector", () => {
+    const { std: { net, tls }, database: { redis: { Connector } } } = adone;
 
-import { stub } from "sinon";
-import Connector from "adone/glosses/databases/redis/connectors/connector";
-
-let net = adone.std.net;
-let tls = adone.std.tls;
-
-describe("Connector", function () {
-    describe("connect()", function () {
-        it("first tries path", function (done) {
+    describe("connect()", () => {
+        it("first tries path", (done) => {
             stub(net, "createConnection");
-            let connector = new Connector({ port: 6379, path: "/tmp" });
-            connector.connect(function () {
+            const connector = new Connector({ port: 6379, path: "/tmp" });
+            connector.connect(() => {
                 net.createConnection.calledWith({ path: "/tmp" });
                 net.createConnection.restore();
                 done();
             });
         });
 
-        it("supports tls", function (done) {
+        it("supports tls", (done) => {
             stub(tls, "connect");
-            let connector = new Connector({ port: 6379, tls: "on" });
-            connector.connect(function () {
+            const connector = new Connector({ port: 6379, tls: "on" });
+            connector.connect(() => {
                 tls.connect.calledWith({ port: 6379, tls: "on" });
                 tls.connect.restore();
                 done();

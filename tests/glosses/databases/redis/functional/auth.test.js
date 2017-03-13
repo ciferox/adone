@@ -1,27 +1,26 @@
-/* global describe it afterEach skip */
-
-import { stub } from "sinon";
-
-const Redis = adone.database.Redis;
 import MockServer from "../helpers/mock_server";
 import check from "../helpers/check_redis";
 
 skip(check);
 
-afterEach(function (done) {
-    let redis = new Redis();
-    redis.flushall(function () {
-        redis.script("flush", function () {
-            redis.disconnect();
-            done();
+describe("glosses", "databases", "redis", "auth", () => {
+    const { database: { redis: { Redis } } } = adone;
+
+    afterEach((done) => {
+        const redis = new Redis();
+        redis.flushall(() => {
+            redis.script("flush", () => {
+                redis.disconnect();
+                done();
+            });
         });
     });
-});
 
-describe("auth", function () {
-    it("should send auth before other commands", function (done) {
+    it("should send auth before other commands", (done) => {
         let authed = false;
-        let server = new MockServer(17379, function (argv) {
+        const redis = new Redis({ port: 17379, password: "pass" });
+        redis.get("foo").catch(() => { });
+        const server = new MockServer(17379, (argv) => {
             if (argv[0] === "auth" && argv[1] === "pass") {
                 authed = true;
             } else if (argv[0] === "get" && argv[1] === "foo") {
@@ -31,14 +30,18 @@ describe("auth", function () {
                 done();
             }
         });
-        let redis = new Redis({ port: 17379, password: "pass" });
-        redis.get("foo").catch(function () { });
     });
 
-    it("should resend auth after reconnect", function (done) {
+    it("should resend auth after reconnect", (done) => {
         let begin = false;
         let authed = false;
-        let server = new MockServer(17379, function (argv) {
+        const redis = new Redis({ port: 17379, password: "pass" });
+        redis.once("ready", () => {
+            begin = true;
+            redis.disconnect({ reconnect: true });
+            redis.get("foo").catch(() => { });
+        });
+        const server = new MockServer(17379, (argv) => {
             if (!begin) {
                 return;
             }
@@ -51,29 +54,23 @@ describe("auth", function () {
                 done();
             }
         });
-        let redis = new Redis({ port: 17379, password: "pass" });
-        redis.once("ready", function () {
-            begin = true;
-            redis.disconnect({ reconnect: true });
-            redis.get("foo").catch(function () { });
-        });
     });
 
-    it("should not emit \"error\" when the server doesn't need auth", function (done) {
-        let server = new MockServer(17379, function (argv) {
+    it("should not emit \"error\" when the server doesn't need auth", (done) => {
+        const server = new MockServer(17379, (argv) => {
             if (argv[0] === "auth" && argv[1] === "pass") {
                 return new Error("ERR Client sent AUTH, but no password is set");
             }
         });
         let errorEmited = false;
-        let redis = new Redis({ port: 17379, password: "pass" });
-        redis.on("error", function () {
+        const redis = new Redis({ port: 17379, password: "pass" });
+        redis.on("error", () => {
             errorEmited = true;
         });
-        stub(adone, "warn", function (warn) {
+        stub(adone, "warn").callsFake((warn) => {
             if (warn.indexOf("but a password was supplied") !== -1) {
                 adone.warn.restore();
-                setTimeout(function () {
+                setTimeout(() => {
                     expect(errorEmited).to.eql(false);
                     redis.disconnect();
                     server.disconnect();
@@ -83,39 +80,39 @@ describe("auth", function () {
         });
     });
 
-    it("should emit \"error\" when the password is wrong", function (done) {
-        let server = new MockServer(17379, function (argv) {
+    it("should emit \"error\" when the password is wrong", (done) => {
+        const server = new MockServer(17379, (argv) => {
             if (argv[0] === "auth" && argv[1] === "pass") {
                 return new Error("ERR invalid password");
             }
         });
-        let redis = new Redis({ port: 17379, password: "pass" });
+        const redis = new Redis({ port: 17379, password: "pass" });
         let pending = 2;
-        function check() {
+        const check = () => {
             if (!--pending) {
                 redis.disconnect();
                 server.disconnect();
                 done();
             }
-        }
-        redis.on("error", function (error) {
+        };
+        redis.on("error", (error) => {
             expect(error).to.have.property("message", "ERR invalid password");
             check();
         });
-        redis.get("foo", function (err, res) {
+        redis.get("foo", (err) => {
             expect(err.message).to.eql("ERR invalid password");
             check();
         });
     });
 
-    it("should emit \"error\" when password is not provided", function (done) {
-        let server = new MockServer(17379, function (argv) {
+    it("should emit \"error\" when password is not provided", (done) => {
+        const server = new MockServer(17379, (argv) => {
             if (argv[0] === "info") {
                 return new Error("NOAUTH Authentication required.");
             }
         });
-        let redis = new Redis({ port: 17379 });
-        redis.on("error", function (error) {
+        const redis = new Redis({ port: 17379 });
+        redis.on("error", (error) => {
             expect(error).to.have.property("message", "NOAUTH Authentication required.");
             redis.disconnect();
             server.disconnect();
