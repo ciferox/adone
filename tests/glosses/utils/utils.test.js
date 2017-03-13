@@ -1940,4 +1940,75 @@ describe("glosses", "utils", () => {
             expect(fn.thisValues[0]).to.be.equal(ctx);
         });
     });
+
+    describe("clone", () => {
+        const { clone } = util;
+
+        context("objects", () => {
+            specify("not deep", () => {
+                const s = { a: 1, b: { a: 1 } };
+                const t = clone(s, { deep: false });
+                expect(t).to.be.deep.equal(s);
+                expect(t).not.to.be.equal(s);
+                t.b.b = 2;
+                expect(t.b).to.be.deep.equal(s.b);
+            });
+
+            specify("deep", () => {
+                const s = { a: 1, b: { a: 1 } };
+                const t = clone(s, { deep: true });
+                expect(t).to.be.deep.equal(s);
+                expect(t).not.to.be.equal(s);
+                t.b.b = 2;
+                expect(t.b).not.to.be.deep.equal(s.b);
+            });
+        });
+
+        context("arrays", () => {
+            context("inside objects", () => {
+                specify("not deep", () => {
+                    const s = { a: [1, 2, 3] };
+                    const t = clone(s, { deep: false });
+                    expect(t).to.be.deep.equal(s);
+                    expect(t).not.to.be.equal(s);
+                    expect(t.a).to.be.equal(s.a);
+                });
+
+                specify("deep", () => {
+                    const s = { a: [1, 2, 3] };
+                    const t = clone(s, { deep: true });
+                    expect(t).to.be.deep.equal(s);
+                    expect(t).not.to.be.equal(s);
+                    expect(t.a).not.to.be.equal(s.a);
+                    expect(t.a).to.be.deep.equal(s.a);
+                });
+            });
+
+            specify("not deep", () => {
+                const s = [1, 2, [1, 2, 3]];
+                const t = clone(s, { deep: false });
+                expect(t).not.to.be.equal(s);
+                expect(t).to.be.deep.equal(s);
+                s[2].push(3);
+                expect(t).to.be.deep.equal(s);
+            });
+
+            specify("deep", () => {
+                const s = [1, 2, [1, 2, 3]];
+                const t = clone(s, { deep: true });
+                expect(t).not.to.be.equal(s);
+                expect(t).to.be.deep.equal(s);
+                s[2].push(3);
+                expect(t).not.to.be.deep.equal(s);
+            });
+        });
+
+        it("should set deep = true by default", () => {
+            const s = { a: { b: { c: 1 } } };
+            const t = clone(s);
+            expect(t).to.be.deep.equal(s);
+            t.a.b.d = 2;
+            expect(t).not.to.be.deep.equal(s);
+        });
+    });
 });

@@ -627,14 +627,21 @@ const util = {
         }
         return addr;
     },
-    copyObject: (source, options) => {
-        const keys = util.keys(source, options);
-        const dest = {};
-        for (let i = 0; i < keys.length; ++i) {
-            const key = keys[i];
-            dest[key] = source[key];
+    clone: (obj, { deep = true } = {}) => {
+        if (!is.object(obj)) {
+            return obj;
         }
-        return dest;
+        if (is.array(obj)) {
+            if (deep) {
+                return obj.map((x) => util.clone(x, { deep }));
+            }
+            return obj.slice(0);
+        }
+        const res = {};
+        for (const key of util.keys(obj)) {
+            res[key] = deep ? util.clone(obj[key], { deep }) : obj[key];
+        }
+        return res;
     },
     toUTF8Array: (str) => {
         let char;
