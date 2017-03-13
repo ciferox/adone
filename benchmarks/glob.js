@@ -45,7 +45,10 @@ export default (() => {
                 "node-glob": [(defer) => {
                     const g = nodeGlob(globs[globName], optionsSets[optionsSetName]);
                     g.on("end", () => defer.resolve());
-                }, { defer: true }]
+                }, { defer: true }],
+                "node-glob sync": () => {
+                    nodeGlob.sync(globs[globName], optionsSets[optionsSetName]);
+                }
             };
         }
     }

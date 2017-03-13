@@ -66,7 +66,7 @@ export class ShaniCLI extends adone.Application {
             transpilerOptions: config.transpiler
         };
         const engine = new Engine(shaniOptions);
-        const inclusive = (args.get("tests") || []);
+        const inclusive = args.get("tests");
         const exclusive = config.options.skip ? config.options.skip.split(",") : [];
         if (inclusive.length || exclusive.length) {
             let mapping;

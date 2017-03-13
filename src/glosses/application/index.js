@@ -54,6 +54,9 @@ class Argument {
             if (this.action === "store_false") {
                 return true;
             }
+            if (this.nargs === "*") {
+                return []; 
+            }
             return this.default;
         }
         return this._value;

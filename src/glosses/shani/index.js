@@ -938,31 +938,22 @@ export function consoleReporter({ allTimings = false, timers = false, showHooks 
             })
             .on("done", () => {
                 const printColorDiff = (diff) => {
-                    log("{green-fg}+ actual{/green-fg} {red-fg}- expected{/red-fg}\n");
+                    log("{red-fg}- actual{/red-fg} {green-fg}+ expected{/green-fg}\n");
+                    let msg = "";
                     for (const d of diff) {
-                        const value = adone.text.splitLines(`{escape}${d.value}{/escape}`);
-                        let last = value.pop();
-                        if (last !== "") {
-                            value.push(last);
-                        }
-                        last = value.pop();
-                        if (last[last.length - 1] !== "\n") {
-                            last += "\n";
-                        }
-                        value.push(last);
-
-                        let msg = "";
+                        let value = adone.text.splitLines(d.value);
+                        value = value.slice(-1)[0] ? value : value.slice(0, -1);
 
                         if (d.added) {
-                            msg += `{green-fg}+${value.join("+")}{/green-fg}`;
+                            msg += `{green-fg}{escape}+${value.join("+")}{/escape}{/green-fg}`;
                         } else if (d.removed) {
-                            msg += `{red-fg}-${value.join("-")}{/red-fg}`;
+                            msg += `{red-fg}{escape}-${value.join("-")}{/escape}{/red-fg}`;
                         } else {
-                            msg += ` ${value.join(" ")}`;
+                            msg += `{escape} ${value.join(" ")}{/escape}`;
                         }
-
-                        log(msg);
                     }
+
+                    log(msg);
                 };
 
                 if (errors.length) {

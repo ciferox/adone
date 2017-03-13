@@ -41,6 +41,7 @@ describe("diff/line", function () {
             const diffResult = trimmedLines("line\nold value\nline", "line\nnew value\nline");
             expect(convertChangesToXML(diffResult)).to.equal("line\n<del>old value\n</del><ins>new value\n</ins>line");
         });
+        
         it("should the same lines in diff", function () {
             const diffResult = trimmedLines("line\nvalue\nline", "line\nvalue\nline");
             expect(convertChangesToXML(diffResult)).to.equal("line\nvalue\nline");
