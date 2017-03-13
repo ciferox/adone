@@ -780,7 +780,8 @@ adone.lazify({
     StreamSearch: "./streamsearch",
     delegate: "./delegate",
     GlobExp: "./globexp",
-    iconv: "./iconv"
+    iconv: "./iconv",
+    sqlstring: "./sqlstring"
 }, util, require);
 
 export default util;
