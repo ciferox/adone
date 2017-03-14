@@ -1,25 +1,25 @@
 const { parse, generate, traverse } = adone.js.compiler;
 
-function getPath(code) {
+const getPath = (code) => {
     const ast = parse(code);
     let path;
     traverse(ast, {
-        Program: function (_path) {
+        Program(_path) {
             path = _path;
             _path.stop();
         }
     });
 
     return path;
-}
+};
 
-function generateCode(path) {
+const generateCode = (path) => {
     return generate(path.node).code;
-}
+};
 
-describe("removal", function () {
-    describe("ArrowFunction", function () {
-        it("remove body", function () {
+describe("removal", () => {
+    describe("ArrowFunction", () => {
+        it("remove body", () => {
             const rootPath = getPath("x = () => b;");
             const path = rootPath.get("body")[0].get("expression").get("right");
             const body = path.get("body");

@@ -1,8 +1,8 @@
 const { codeFrame } = adone.js.compiler;
 
 
-describe("babel-code-frame", function () {
-    it("basic usage", function () {
+describe("babel-code-frame", () => {
+    it("basic usage", () => {
         const rawLines = [
             "class Foo {",
             "  constructor()",
@@ -16,7 +16,7 @@ describe("babel-code-frame", function () {
         ].join("\n"));
     });
 
-    it("optional column number", function () {
+    it("optional column number", () => {
         const rawLines = [
             "class Foo {",
             "  constructor()",
@@ -29,7 +29,7 @@ describe("babel-code-frame", function () {
         ].join("\n"));
     });
 
-    it("optional column number", function () {
+    it("optional column number", () => {
         const rawLines = [
             "class Foo {",
             "  constructor()",
@@ -42,7 +42,7 @@ describe("babel-code-frame", function () {
         ].join("\n"));
     });
 
-    it("maximum context lines and padding", function () {
+    it("maximum context lines and padding", () => {
         const rawLines = [
             "/**",
             " * Sums two numbers.",
@@ -67,7 +67,7 @@ describe("babel-code-frame", function () {
         ].join("\n"));
     });
 
-    it("no unnecessary padding due to one-off errors", function () {
+    it("no unnecessary padding due to one-off errors", () => {
         const rawLines = [
             "/**",
             " * Sums two numbers.",
@@ -92,7 +92,7 @@ describe("babel-code-frame", function () {
         ].join("\n"));
     });
 
-    it("tabs", function () {
+    it("tabs", () => {
         const rawLines = [
             "\tclass Foo {",
             "\t  \t\t    constructor\t(\t)",
@@ -106,7 +106,7 @@ describe("babel-code-frame", function () {
         ].join("\n"));
     });
 
-    it("opts.linesAbove", function () {
+    it("opts.linesAbove", () => {
         const rawLines = [
             "/**",
             " * Sums two numbers.",
@@ -130,7 +130,7 @@ describe("babel-code-frame", function () {
         ].join("\n"));
     });
 
-    it("opts.linesBelow", function () {
+    it("opts.linesBelow", () => {
         const rawLines = [
             "/**",
             " * Sums two numbers.",
@@ -153,7 +153,7 @@ describe("babel-code-frame", function () {
         ].join("\n"));
     });
 
-    it("opts.linesAbove and opts.linesBelow", function () {
+    it("opts.linesAbove and opts.linesBelow", () => {
         const rawLines = [
             "/**",
             " * Sums two numbers.",

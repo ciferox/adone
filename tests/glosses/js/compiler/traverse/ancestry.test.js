@@ -1,62 +1,61 @@
 const { parse, traverse } = adone.js.compiler;
-let assert = require("assert");
 
-describe("path/ancestry", function () {
-    describe("isAncestor", function () {
-        let ast = parse("var a = 1; 'a';");
+describe("path/ancestry", () => {
+    describe("isAncestor", () => {
+        const ast = parse("var a = 1; 'a';");
 
-        it("returns true if ancestor", function () {
-            let paths = [];
+        it("returns true if ancestor", () => {
+            const paths = [];
             traverse(ast, {
                 "Program|NumericLiteral"(path) {
                     paths.push(path);
-                },
+                }
             });
 
-            let [programPath, numberPath] = paths;
+            const [programPath, numberPath] = paths;
 
             assert(programPath.isAncestor(numberPath));
         });
 
-        it("returns false if not ancestor", function () {
-            let paths = [];
+        it("returns false if not ancestor", () => {
+            const paths = [];
             traverse(ast, {
                 "Program|NumericLiteral|StringLiteral"(path) {
                     paths.push(path);
                 }
             });
 
-            let [, numberPath, stringPath] = paths;
+            const [, numberPath, stringPath] = paths;
 
             assert(!stringPath.isAncestor(numberPath));
         });
     });
 
-    describe("isDescendant", function () {
-        let ast = parse("var a = 1; 'a';");
+    describe("isDescendant", () => {
+        const ast = parse("var a = 1; 'a';");
 
-        it("returns true if descendant", function () {
-            let paths = [];
+        it("returns true if descendant", () => {
+            const paths = [];
             traverse(ast, {
                 "Program|NumericLiteral"(path) {
                     paths.push(path);
-                },
+                }
             });
 
-            let [programPath, numberPath] = paths;
+            const [programPath, numberPath] = paths;
 
             assert(numberPath.isDescendant(programPath));
         });
 
-        it("returns false if not descendant", function () {
-            let paths = [];
+        it("returns false if not descendant", () => {
+            const paths = [];
             traverse(ast, {
                 "Program|NumericLiteral|StringLiteral"(path) {
                     paths.push(path);
                 }
             });
 
-            let [, numberPath, stringPath] = paths;
+            const [, numberPath, stringPath] = paths;
 
             assert(!numberPath.isDescendant(stringPath));
         });

@@ -1,43 +1,44 @@
 const { traverse, parse } = adone.js.compiler;
 
-function getPath(code) {
-    let ast = parse(code);
+const getPath = (code) => {
+    const ast = parse(code);
     let path;
     traverse(ast, {
-        Program: function (_path) {
+        Program(_path) {
             path = _path;
             _path.stop();
         }
     });
+    
     return path;
-}
+};
 
-describe("scope", function () {
-    describe("binding paths", function () {
-        it("function declaration id", function () {
+describe("scope", () => {
+    describe("binding paths", () => {
+        it("function declaration id", () => {
             assert.ok(getPath("function foo() {}").scope.getBinding("foo").path.type === "FunctionDeclaration");
         });
 
-        it("function expression id", function () {
+        it("function expression id", () => {
             assert.ok(getPath("(function foo() {})").get("body")[0].get("expression").scope.getBinding("foo").path.type === "FunctionExpression");
         });
 
-        it("function param", function () {
+        it("function param", () => {
             assert.ok(getPath("(function (foo) {})").get("body")[0].get("expression").scope.getBinding("foo").path.type === "Identifier");
         });
 
-        it("variable declaration", function () {
+        it("variable declaration", () => {
             assert.ok(getPath("var foo = null;").scope.getBinding("foo").path.type === "VariableDeclarator");
             assert.ok(getPath("var { foo } = null;").scope.getBinding("foo").path.type === "VariableDeclarator");
             assert.ok(getPath("var [ foo ] = null;").scope.getBinding("foo").path.type === "VariableDeclarator");
             assert.ok(getPath("var { bar: [ foo ] } = null;").scope.getBinding("foo").path.type === "VariableDeclarator");
         });
 
-        it("purity", function () {
+        it("purity", () => {
             assert.ok(getPath("({ x: 1 })").get("body")[0].get("expression").isPure());
         });
 
-        it("label", function () {
+        it("label", () => {
             assert.strictEqual(getPath("foo: { }").scope.getBinding("foo"), undefined);
             assert.strictEqual(getPath("foo: { }").scope.getLabel("foo").type, "LabeledStatement");
             assert.strictEqual(getPath("foo: { }").scope.getLabel("toString"), undefined);
@@ -47,7 +48,7 @@ describe("scope", function () {
       `).scope.generateUid("foo"), "_foo");
         });
 
-        it("generateUid collision check with labels", function () {
+        it("generateUid collision check with labels", () => {
             assert.strictEqual(getPath(`
         _foo: { }
       `).scope.generateUid("foo"), "_foo2");

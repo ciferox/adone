@@ -1,2 +1,5 @@
 import fixtureTestRunner from "../../../fixture_test_runner";
-fixtureTestRunner(__dirname + "/fixtures", "class_properties");
+fixtureTestRunner(
+    adone.std.path.join(__dirname, "/fixtures"),
+    ["glosses", "js", "compiler", "plugins", "classProperties"]
+);

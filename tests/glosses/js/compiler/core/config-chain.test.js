@@ -2,19 +2,16 @@
 const { path } = adone.std;
 const buildConfigChain = adone.js.compiler.transformation.file.buildConfigChain;
 
-function fixture() {
-    let args = [__dirname, "fixtures", "config"];
-    for (let i = 0; i < arguments.length; i++) {
-        args.push(arguments[i]);
-    }
+const fixture = (...args) => {
+    args = [__dirname, "fixtures", "config"].concat(args);
     return path.join.apply(path, args);
-}
+};
 
-describe("buildConfigChain", function () {
+describe("buildConfigChain", () => {
     let oldAcompilerEnv;
     let oldNodeEnv;
 
-    beforeEach(function () {
+    beforeEach(() => {
         oldAcompilerEnv = process.env.ACOMPILER_ENV;
         oldNodeEnv = process.env.NODE_ENV;
 
@@ -22,17 +19,17 @@ describe("buildConfigChain", function () {
         delete process.env.NODE_ENV;
     });
 
-    afterEach(function () {
+    afterEach(() => {
         process.env.ACOMPILER_ENV = oldAcompilerEnv;
         process.env.NODE_ENV = oldNodeEnv;
     });
 
-    it("dir1", function () {
-        let chain = buildConfigChain({
+    it("dir1", () => {
+        const chain = buildConfigChain({
             filename: fixture("dir1", "src.js")
         });
 
-        let expected = [
+        const expected = [
             {
                 options: {
                     plugins: [
@@ -75,12 +72,12 @@ describe("buildConfigChain", function () {
         assert.deepEqual(chain, expected);
     });
 
-    it("dir2", function () {
-        let chain = buildConfigChain({
+    it("dir2", () => {
+        const chain = buildConfigChain({
             filename: fixture("dir2", "src.js")
         });
 
-        let expected = [
+        const expected = [
             {
                 options: {
                     plugins: [
@@ -114,12 +111,12 @@ describe("buildConfigChain", function () {
         assert.deepEqual(chain, expected);
     });
 
-    it("env - base", function () {
-        let chain = buildConfigChain({
+    it("env - base", () => {
+        const chain = buildConfigChain({
             filename: fixture("env", "src.js")
         });
 
-        let expected = [
+        const expected = [
             {
                 options: {
                     plugins: [
@@ -153,14 +150,14 @@ describe("buildConfigChain", function () {
         assert.deepEqual(chain, expected);
     });
 
-    it("env - foo", function () {
+    it("env - foo", () => {
         process.env.NODE_ENV = "foo";
 
-        let chain = buildConfigChain({
+        const chain = buildConfigChain({
             filename: fixture("env", "src.js")
         });
 
-        let expected = [
+        const expected = [
             {
                 options: {
                     plugins: [
@@ -204,15 +201,15 @@ describe("buildConfigChain", function () {
         assert.deepEqual(chain, expected);
     });
 
-    it("env - bar", function () {
+    it("env - bar", () => {
         process.env.NODE_ENV = "foo"; // overridden
         process.env.NODE_ENV = "bar";
 
-        let chain = buildConfigChain({
+        const chain = buildConfigChain({
             filename: fixture("env", "src.js")
         });
 
-        let expected = [
+        const expected = [
             {
                 options: {
                     plugins: [
@@ -257,14 +254,14 @@ describe("buildConfigChain", function () {
     });
 
 
-    it("env - foo", function () {
+    it("env - foo", () => {
         process.env.NODE_ENV = "foo";
 
-        let chain = buildConfigChain({
+        const chain = buildConfigChain({
             filename: fixture("pkg", "src.js")
         });
 
-        let expected = [
+        const expected = [
             {
                 options: {
                     plugins: ["pkg-plugin"]

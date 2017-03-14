@@ -940,13 +940,20 @@ export function consoleReporter({ allTimings = false, timers = false, showHooks 
                 const printColorDiff = (diff) => {
                     log("{red-fg}- actual{/red-fg} {green-fg}+ expected{/green-fg}\n");
                     let msg = "";
-                    for (const d of diff) {
-                        let value = adone.text.splitLines(d.value);
-                        value = value.slice(-1)[0] ? value : value.slice(0, -1);
+                    for (let i = 0; i < diff.length; i++) {
+                        let value = adone.text.splitLines(diff[i].value);
 
-                        if (d.added) {
+                        if (value[value.length - 1]) {
+                            if (i < diff.length - 1) {
+                                value[value.length - 1] += "\n";
+                            }
+                        } else {
+                            value = value.slice(0, -1);
+                        }
+
+                        if (diff[i].added) {
                             msg += `{green-fg}{escape}+${value.join("+")}{/escape}{/green-fg}`;
-                        } else if (d.removed) {
+                        } else if (diff[i].removed) {
                             msg += `{red-fg}{escape}-${value.join("-")}{/escape}{/red-fg}`;
                         } else {
                             msg += `{escape} ${value.join(" ")}{/escape}`;

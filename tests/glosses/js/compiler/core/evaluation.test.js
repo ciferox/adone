@@ -1,13 +1,13 @@
 
 const { parse, traverse } = adone.js.compiler;
 
-describe("evaluation", function () {
-    function addTest(code, type, value, notConfident) {
-        it(type + ": " + code, function () {
-            let visitor = {};
+describe("evaluation", () => {
+    const addTest = (code, type, value, notConfident) => {
+        it(`${type}: ${code}`, () => {
+            const visitor = {};
 
             visitor[type] = function (path) {
-                let evaluate = path.evaluate();
+                const evaluate = path.evaluate();
                 assert.equal(evaluate.confident, !notConfident);
                 assert.deepEqual(evaluate.value, value);
             };
@@ -16,7 +16,7 @@ describe("evaluation", function () {
                 plugins: ["*"]
             }), visitor);
         });
-    }
+    };
 
     addTest("void 0", "UnaryExpression", undefined);
     addTest("!true", "UnaryExpression", false);

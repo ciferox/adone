@@ -1,11 +1,12 @@
-describe("decorators", function() {
-    describe("class", function() {
-        describe("ordering", function() {
-            it("should evaluate descriptor expressions in order", function() {
+describe("glosses", "js", "compiler", "plugins", "decorators", () => {
+    describe("class", () => {
+        describe("ordering", () => {
+            it("should evaluate descriptor expressions in order", () => {
+                /* eslint-disable */
                 const calls = [];
                 function dec(id) {
                     calls.push(id);
-                    return function() {};
+                    return function () {};
                 }
 
                 @dec(1)
@@ -27,14 +28,16 @@ describe("decorators", function() {
                     @dec(10)
                     prop2 = 2;
                 }
+                /* eslint-enable */
 
                 expect(calls).to.eql([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
             });
 
-            it("should call decorators in reverse order per-method", function() {
+            it("should call decorators in reverse order per-method", () => {
+                /* eslint-disable */
                 const calls = [];
                 function dec(id) {
-                    return function() {
+                    return function () {
                         calls.push(id);
                     };
                 }
@@ -58,13 +61,15 @@ describe("decorators", function() {
                     @dec(7)
                     prop2 = 2;
                 }
+                /* eslint-enable */
 
                 expect(calls).to.eql([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
             });
         });
 
-        describe("constructors", function() {
-            it("should allow returning a new constructor", function() {
+        describe("constructors", () => {
+            it("should allow returning a new constructor", () => {
+                /* eslint-disable */
                 function dec(cls) {
                     return class Child extends cls {
                         child() {}
@@ -75,12 +80,14 @@ describe("decorators", function() {
                 class Parent {
                     parent() {}
                 }
+                /* eslint-enable */
 
                 expect(Parent.prototype.parent).to.be.a("function");
                 expect(Parent.prototype.child).to.be.a("function");
             });
 
-            it("should allow mutating the existing constructor", function() {
+            it("should allow mutating the existing constructor", () => {
+                /* eslint-disable */
                 function dec(cls) {
                     cls.staticProp = "prop";
                 }
@@ -89,13 +96,15 @@ describe("decorators", function() {
                 class Parent {
                     parent() {}
                 }
+                /* eslint-enable */
 
                 expect(Parent.staticProp).to.eql("prop");
             });
         });
 
-        describe("prototype methods", function() {
-            it("should support numeric props", function() {
+        describe("prototype methods", () => {
+            it("should support numeric props", () => {
+                /* eslint-disable */
                 function dec(target, name, descriptor) {
                     expect(target).to.be.ok;
                     expect(name).to.eql(4);
@@ -108,9 +117,11 @@ describe("decorators", function() {
 
                     }
                 }
+                /* eslint-enable */
             });
 
-            it("should support string props", function() {
+            it("should support string props", () => {
+                /* eslint-disable */
                 function dec(target, name, descriptor) {
                     expect(target).to.be.ok;
                     expect(name).to.eql("str");
@@ -123,9 +134,11 @@ describe("decorators", function() {
 
                     }
                 }
+                /* eslint-enable */
             });
 
-            it("should allow returning a descriptor", function() {
+            it("should allow returning a descriptor", () => {
+                /* eslint-disable */
                 function dec(target, name, descriptor) {
                     expect(target).to.be.ok;
                     expect(name).to.be.a("string");
@@ -139,7 +152,7 @@ describe("decorators", function() {
                         configurable: name.indexOf("conf") !== -1,
                         writable: name.indexOf("write") !== -1,
                         value(...args) {
-                            return "__" + value.apply(this, args) + "__";
+                            return `__${value.apply(this, args)}__`;
                         }
                     };
                 }
@@ -185,6 +198,7 @@ describe("decorators", function() {
                         return 8;
                     }
                 }
+                /* eslint-enable */
 
                 expect(Example.prototype).to.have.ownProperty("decoratedProps");
                 expect(Example.prototype.decoratedProps).to.eql([
@@ -242,7 +256,8 @@ describe("decorators", function() {
                 expect(inst._()).to.eql("__8__");
             });
 
-            it("should allow mutating the original descriptor", function() {
+            it("should allow mutating the original descriptor", () => {
+                /* eslint-disable */
                 function dec(target, name, descriptor) {
                     expect(target).to.be.ok;
                     expect(name).to.be.a("string");
@@ -256,7 +271,7 @@ describe("decorators", function() {
                         configurable: name.indexOf("conf") !== -1,
                         writable: name.indexOf("write") !== -1,
                         value(...args) {
-                            return "__" + value.apply(this, args) + "__";
+                            return `__${value.apply(this, args)}__`;
                         }
                     });
                 }
@@ -302,6 +317,7 @@ describe("decorators", function() {
                         return 8;
                     }
                 }
+                /* eslint-enable */
 
                 expect(Example.prototype).to.have.ownProperty("decoratedProps");
                 expect(Example.prototype.decoratedProps).to.eql([
@@ -360,8 +376,9 @@ describe("decorators", function() {
             });
         });
 
-        describe("static methods", function() {
-            it("should support numeric props", function() {
+        describe("static methods", () => {
+            it("should support numeric props", () => {
+                /* eslint-disable */
                 function dec(target, name, descriptor) {
                     expect(target).to.be.ok;
                     expect(name).to.eql(4);
@@ -374,9 +391,11 @@ describe("decorators", function() {
 
                     }
                 }
+                /* eslint-enable */
             });
 
-            it("should support string props", function() {
+            it("should support string props", () => {
+                /* eslint-disable */
                 function dec(target, name, descriptor) {
                     expect(target).to.be.ok;
                     expect(name).to.eql("str");
@@ -389,9 +408,11 @@ describe("decorators", function() {
 
                     }
                 }
+                /* eslint-enable */
             });
 
-            it("should allow returning a descriptor", function() {
+            it("should allow returning a descriptor", () => {
+                /* eslint-disable */
                 function dec(target, name, descriptor) {
                     expect(target).to.be.ok;
                     expect(name).to.be.a("string");
@@ -405,7 +426,7 @@ describe("decorators", function() {
                         configurable: name.indexOf("conf") !== -1,
                         writable: name.indexOf("write") !== -1,
                         value(...args) {
-                            return "__" + value.apply(this, args) + "__";
+                            return `__${value.apply(this, args)}__`;
                         }
                     };
                 }
@@ -451,6 +472,7 @@ describe("decorators", function() {
                         return 8;
                     }
                 }
+                /* eslint-enable */
 
                 expect(Example).to.have.ownProperty("decoratedProps");
                 expect(Example.decoratedProps).to.eql([
@@ -506,7 +528,8 @@ describe("decorators", function() {
                 expect(Example._()).to.eql("__8__");
             });
 
-            it("should allow mutating the original descriptor", function() {
+            it("should allow mutating the original descriptor", () => {
+                /* eslint-disable */
                 function dec(target, name, descriptor) {
                     expect(target).to.be.ok;
                     expect(name).to.be.a("string");
@@ -520,7 +543,7 @@ describe("decorators", function() {
                         configurable: name.indexOf("conf") !== -1,
                         writable: name.indexOf("write") !== -1,
                         value(...args) {
-                            return "__" + value.apply(this, args) + "__";
+                            return `__${value.apply(this, args)}__`;
                         }
                     });
                 }
@@ -566,6 +589,7 @@ describe("decorators", function() {
                         return 8;
                     }
                 }
+                /* eslint-enable */
 
                 expect(Example).to.have.ownProperty("decoratedProps");
                 expect(Example.decoratedProps).to.eql([
@@ -622,8 +646,8 @@ describe("decorators", function() {
             });
         });
 
-        describe("prototype properties", function() {
-            it("should support decorating properties that have no initializer", function() {
+        describe("prototype properties", () => {
+            it("should support decorating properties that have no initializer", () => {
                 const code = `function dec(target, name, descriptor) {
 
                 }
@@ -646,7 +670,8 @@ describe("decorators", function() {
                 adone.std.vm.runInNewContext(transpiledCode, { expect });
             });
 
-            it("should support mutating an initialzer into an accessor", function() {
+            it("should support mutating an initialzer into an accessor", () => {
+                /* eslint-disable */
                 function dec(target, name, descriptor) {
                     expect(target).to.be.ok;
                     expect(name).to.eql("prop");
@@ -657,9 +682,9 @@ describe("decorators", function() {
                     delete descriptor.writable;
 
                     let value;
-                    descriptor.get = function() {
+                    descriptor.get = function () {
                         if (initializer) {
-                            value = "__" + initializer.call(this) + "__";
+                            value = `__${initializer.call(this)}__`;
                             initializer = null;
                         }
                         return value;
@@ -672,11 +697,13 @@ describe("decorators", function() {
                 }
 
                 const inst = new Example();
+                /* eslint-enable */
 
                 expect(inst.prop).to.eql("__3__");
             });
 
-            it("should support properties on child classes", function() {
+            it("should support properties on child classes", () => {
+                /* eslint-disable */
                 function dec(target, name, descriptor) {
                     expect(target).to.be.ok;
                     expect(name).to.be.a("string");
@@ -685,8 +712,8 @@ describe("decorators", function() {
                     target.decoratedProps = (target.decoratedProps || []).concat([name]);
 
                     const initializer = descriptor.initializer;
-                    descriptor.initializer = function(...args) {
-                        return "__" + initializer.apply(this, args) + "__";
+                    descriptor.initializer = function (...args) {
+                        return `__${initializer.apply(this, args)}__`;
                     };
                 }
 
@@ -701,12 +728,14 @@ describe("decorators", function() {
                 }
 
                 const inst = new Example();
+                /* eslint-enable */
 
                 expect(inst.prop).to.eql("__3__");
                 expect(inst.prop2).to.eql("__4__");
             });
 
-            it("should allow returning a descriptor", function() {
+            it("should allow returning a descriptor", () => {
+                /* eslint-disable */
                 function dec(target, name, descriptor) {
                     expect(target).to.be.ok;
                     expect(name).to.be.a("string");
@@ -720,7 +749,7 @@ describe("decorators", function() {
                         configurable: name.indexOf("conf") !== -1,
                         writable: name.indexOf("write") !== -1,
                         initializer(...args) {
-                            return "__" + initializer.apply(this, args) + "__";
+                            return `__${initializer.apply(this, args)}__`;
                         }
                     };
                 }
@@ -751,6 +780,7 @@ describe("decorators", function() {
                     _ = 8;
                 }
                 const inst = new Example();
+                /* eslint-enable */
 
                 expect(Example.prototype).to.have.ownProperty("decoratedProps");
                 expect(inst.decoratedProps).to.eql([
@@ -806,7 +836,8 @@ describe("decorators", function() {
                 expect(inst._).to.eql("__8__");
             });
 
-            it("should allow mutating the original descriptor", function() {
+            it("should allow mutating the original descriptor", () => {
+                /* eslint-disable */
                 function dec(target, name, descriptor) {
                     expect(target).to.be.ok;
                     expect(name).to.be.a("string");
@@ -820,7 +851,7 @@ describe("decorators", function() {
                         configurable: name.indexOf("conf") !== -1,
                         writable: name.indexOf("write") !== -1,
                         initializer(...args) {
-                            return "__" + initializer.apply(this, args) + "__";
+                            return `__${initializer.apply(this, args)}__`;
                         }
                     });
                 }
@@ -851,6 +882,7 @@ describe("decorators", function() {
                     _ = 8;
                 }
                 const inst = new Example();
+                /* eslint-enable */
 
                 expect(Example.prototype).to.have.ownProperty("decoratedProps");
                 expect(inst.decoratedProps).to.eql([
@@ -907,8 +939,8 @@ describe("decorators", function() {
             });
         });
 
-        describe("static properties", function() {
-            it("should support decorating properties that have no initializer", function() {
+        describe("static properties", () => {
+            it("should support decorating properties that have no initializer", () => {
                 const code = `function dec(target, name, descriptor) {
 
                 }
@@ -930,7 +962,8 @@ describe("decorators", function() {
                 adone.std.vm.runInNewContext(transpiledCode, { expect });
             });
 
-            it("should support mutating an initialzer into an accessor", function() {
+            it("should support mutating an initialzer into an accessor", () => {
+                /* eslint-disable */
                 function dec(target, name, descriptor) {
                     expect(target).to.be.ok;
                     expect(name).to.eql("prop");
@@ -941,9 +974,9 @@ describe("decorators", function() {
                     delete descriptor.writable;
 
                     let value;
-                    descriptor.get = function() {
+                    descriptor.get = function () {
                         if (initializer) {
-                            value = "__" + initializer.call(this) + "__";
+                            value = `__${initializer.call(this)}__`;
                             initializer = null;
                         }
                         return value;
@@ -954,11 +987,13 @@ describe("decorators", function() {
                     @dec
                     static prop = 3;
                 }
+                /* eslint-enable */
 
                 expect(Example.prop).to.eql("__3__");
             });
 
-            it("should allow returning a descriptor", function() {
+            it("should allow returning a descriptor", () => {
+                /* eslint-disable */
                 function dec(target, name, descriptor) {
                     expect(target).to.be.ok;
                     expect(name).to.be.a("string");
@@ -972,7 +1007,7 @@ describe("decorators", function() {
                         configurable: name.indexOf("conf") !== -1,
                         writable: name.indexOf("write") !== -1,
                         initializer(...args) {
-                            return "__" + initializer.apply(this, args) + "__";
+                            return `__${initializer.apply(this, args)}__`;
                         }
                     };
                 }
@@ -1015,6 +1050,7 @@ describe("decorators", function() {
                     "write",
                     "_"
                 ]);
+                /* eslint-enable */
 
                 const descs = Object.getOwnPropertyDescriptors(Example);
                 expect(descs.enumconfwrite.enumerable).to.be.true;
@@ -1058,7 +1094,8 @@ describe("decorators", function() {
                 expect(Example._).to.eql("__8__");
             });
 
-            it("should allow mutating the original descriptor", function() {
+            it("should allow mutating the original descriptor", () => {
+                /* eslint-disable */
                 function dec(target, name, descriptor) {
                     expect(target).to.be.ok;
                     expect(name).to.be.a("string");
@@ -1072,7 +1109,7 @@ describe("decorators", function() {
                         configurable: name.indexOf("conf") !== -1,
                         writable: name.indexOf("write") !== -1,
                         initializer(...args) {
-                            return "__" + initializer.apply(this, args) + "__";
+                            return `__${initializer.apply(this, args)}__`;
                         }
                     });
                 }
@@ -1103,6 +1140,7 @@ describe("decorators", function() {
                     static _ = 8;
                 }
                 const inst = new Example();
+                /* eslint-enable */
 
                 expect(Example).to.have.ownProperty("decoratedProps");
                 expect(Example.decoratedProps).to.eql([
@@ -1160,13 +1198,14 @@ describe("decorators", function() {
         });
     });
 
-    describe("object", function() {
-        describe("ordering", function() {
-            it("should evaluate descriptor expressions in order", function() {
+    describe("object", () => {
+        describe("ordering", () => {
+            it("should evaluate descriptor expressions in order", () => {
+                /* eslint-disable */
                 const calls = [];
                 function dec(id) {
                     calls.push(id);
-                    return function() {};
+                    return function () {};
                 }
 
                 const obj = {
@@ -1186,14 +1225,16 @@ describe("decorators", function() {
                     @dec(8)
                     prop2: 2
                 };
+                /* eslint-enable */
 
                 expect(calls).to.eql([1, 2, 3, 4, 5, 6, 7, 8]);
             });
 
-            it("should call descriptors in reverse order per-method", function() {
+            it("should call descriptors in reverse order per-method", () => {
+                /* eslint-disable */
                 const calls = [];
                 function dec(id) {
-                    return function() {
+                    return function () {
                         calls.push(id);
                     };
                 }
@@ -1215,13 +1256,15 @@ describe("decorators", function() {
                     @dec(7)
                     prop2: 2
                 };
+                /* eslint-enable */
 
                 expect(calls).to.eql([1, 2, 3, 4, 5, 6, 7, 8]);
             });
         });
 
-        describe("methods", function() {
-            it("should support numeric props", function() {
+        describe("methods", () => {
+            it("should support numeric props", () => {
+                /* eslint-disable */
                 function dec(target, name, descriptor) {
                     expect(target).to.be.ok;
                     expect(name).to.eql(4);
@@ -1234,9 +1277,11 @@ describe("decorators", function() {
 
                     }
                 };
+                /* eslint-enable */
             });
 
-            it("should support string props", function() {
+            it("should support string props", () => {
+                /* eslint-disable */
                 function dec(target, name, descriptor) {
                     expect(target).to.be.ok;
                     expect(name).to.eql("str");
@@ -1249,9 +1294,11 @@ describe("decorators", function() {
 
                     }
                 };
+                /* eslint-enable */
             });
 
-            it("should allow returning a descriptor", function() {
+            it("should allow returning a descriptor", () => {
+                /* eslint-disable */
                 function dec(target, name, descriptor) {
                     expect(target).to.be.ok;
                     expect(name).to.be.a("string");
@@ -1265,7 +1312,7 @@ describe("decorators", function() {
                         configurable: name.indexOf("conf") !== -1,
                         writable: name.indexOf("write") !== -1,
                         value(...args) {
-                            return "__" + value.apply(this, args) + "__";
+                            return `__${value.apply(this, args)}__`;
                         }
                     };
                 }
@@ -1311,6 +1358,7 @@ describe("decorators", function() {
                         return 8;
                     }
                 };
+                /* eslint-enable */
 
                 expect(inst).to.have.ownProperty("decoratedProps");
                 expect(inst.decoratedProps).to.eql([
@@ -1366,7 +1414,8 @@ describe("decorators", function() {
                 expect(inst._()).to.eql("__8__");
             });
 
-            it("should allow mutating the original descriptor", function() {
+            it("should allow mutating the original descriptor", () => {
+                /* eslint-disable */
                 function dec(target, name, descriptor) {
                     expect(target).to.be.ok;
                     expect(name).to.be.a("string");
@@ -1380,7 +1429,7 @@ describe("decorators", function() {
                         configurable: name.indexOf("conf") !== -1,
                         writable: name.indexOf("write") !== -1,
                         value(...args) {
-                            return "__" + value.apply(this, args) + "__";
+                            return `__${value.apply(this, args)}__`;
                         }
                     });
                 }
@@ -1426,6 +1475,7 @@ describe("decorators", function() {
                         return 8;
                     }
                 };
+                /* eslint-enable */
 
                 expect(inst).to.have.ownProperty("decoratedProps");
                 expect(inst.decoratedProps).to.eql([
@@ -1482,8 +1532,9 @@ describe("decorators", function() {
             });
         });
 
-        describe("properties", function() {
-            it("should support numeric props", function() {
+        describe("properties", () => {
+            it("should support numeric props", () => {
+                /* eslint-disable */
                 function dec(target, name, descriptor) {
                     expect(target).to.be.ok;
                     expect(name).to.eql(4);
@@ -1494,9 +1545,11 @@ describe("decorators", function() {
                     @dec
                     4: 1
                 };
+                /* eslint-enable */
             });
 
-            it("should support string props", function() {
+            it("should support string props", () => {
+                /* eslint-disable */
                 function dec(target, name, descriptor) {
                     expect(target).to.be.ok;
                     expect(name).to.eql("str");
@@ -1505,11 +1558,13 @@ describe("decorators", function() {
 
                 const inst = {
                     @dec
-                    "str": 1
+                    str: 1
                 };
+                /* eslint-enable */
             });
 
-            it("should support mutating an initialzer into an accessor", function() {
+            it("should support mutating an initialzer into an accessor", () => {
+                /* eslint-disable */
                 function dec(target, name, descriptor) {
                     expect(target).to.be.ok;
                     expect(name).to.eql("prop");
@@ -1520,9 +1575,9 @@ describe("decorators", function() {
                     delete descriptor.writable;
 
                     let value;
-                    descriptor.get = function() {
+                    descriptor.get = function () {
                         if (initializer) {
-                            value = "__" + initializer.call(this) + "__";
+                            value = `__${initializer.call(this)}__`;
                             initializer = null;
                         }
                         return value;
@@ -1533,11 +1588,13 @@ describe("decorators", function() {
                     @dec
                     prop: 3
                 };
+                /* eslint-enable */
 
                 expect(inst.prop).to.eql("__3__");
             });
 
-            it("should allow returning a descriptor", function() {
+            it("should allow returning a descriptor", () => {
+                /* eslint-disable */
                 function dec(target, name, descriptor) {
                     expect(target).to.be.ok;
                     expect(name).to.be.a("string");
@@ -1551,7 +1608,7 @@ describe("decorators", function() {
                         configurable: name.indexOf("conf") !== -1,
                         writable: name.indexOf("write") !== -1,
                         initializer(...args) {
-                            return "__" + initializer.apply(this, args) + "__";
+                            return `__${initializer.apply(this, args)}__`;
                         }
                     };
                 }
@@ -1581,6 +1638,7 @@ describe("decorators", function() {
                     @dec
                     _: 8
                 };
+                /* eslint-enable */
 
                 expect(inst).to.have.ownProperty("decoratedProps");
                 expect(inst.decoratedProps).to.eql([
@@ -1636,7 +1694,8 @@ describe("decorators", function() {
                 expect(inst._).to.eql("__8__");
             });
 
-            it("should allow mutating the original descriptor", function() {
+            it("should allow mutating the original descriptor", () => {
+                /* eslint-disable */
                 function dec(target, name, descriptor) {
                     expect(target).to.be.ok;
                     expect(name).to.be.a("string");
@@ -1650,7 +1709,7 @@ describe("decorators", function() {
                         configurable: name.indexOf("conf") !== -1,
                         writable: name.indexOf("write") !== -1,
                         initializer(...args) {
-                            return "__" + initializer.apply(this, args) + "__";
+                            return `__${initializer.apply(this, args)}__`;
                         }
                     });
                 }
@@ -1680,6 +1739,7 @@ describe("decorators", function() {
                     @dec
                     _: 8
                 };
+                /* eslint-enable */
 
                 expect(inst).to.have.ownProperty("decoratedProps");
                 expect(inst.decoratedProps).to.eql([

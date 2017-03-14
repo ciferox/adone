@@ -14,7 +14,7 @@ export default function () {
 
                 const { node } = path;
 
-                for (const directive of (node.directives: Object[])) {
+                for (const directive of (node.directives: Array<Object>)) {
                     if (directive.value.value === "use strict") {
                         return;
                     }

@@ -1,14 +1,24 @@
 const { esutils } = adone.js.compiler;
 
-describe("code", function () {
-    describe("isDecimalDigit", function () {
+const __range__ = (left, right, inclusive) => {
+    const range = [];
+    const ascending = left < right;
+    const end = !inclusive ? right : ascending ? right + 1 : right - 1;
+    for (let i = left; ascending ? i < end : i > end; ascending ? i++ : i--) {
+        range.push(i);
+    }
+    return range;
+};
+
+describe("code", () => {
+    describe("isDecimalDigit", () => {
         it("returns true if provided code is decimal digit", () =>
             [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((ch) =>
-                expect(esutils.code.isDecimalDigit((ch + "").charCodeAt(0))).to.be.true)
+                expect(esutils.code.isDecimalDigit((String(ch)).charCodeAt(0))).to.be.true)
         );
 
-        return it("returns false if provided code is not decimal digit", function () {
-            for (let code of __range__("a".charCodeAt(0), "z".charCodeAt(0), true)) {
+        return it("returns false if provided code is not decimal digit", () => {
+            for (const code of __range__("a".charCodeAt(0), "z".charCodeAt(0), true)) {
                 expect(esutils.code.isDecimalDigit(code)).to.be.false;
             }
 
@@ -17,13 +27,13 @@ describe("code", function () {
         });
     });
 
-    describe("isHexDigit", function () {
-        it("returns true if provided code is hexadecimal digit", function () {
+    describe("isHexDigit", () => {
+        it("returns true if provided code is hexadecimal digit", () => {
             for (let ch = 0; ch <= 9; ch++) {
-                expect(esutils.code.isHexDigit((ch + "").charCodeAt(0))).to.be.true;
+                expect(esutils.code.isHexDigit((`${ch}`).charCodeAt(0))).to.be.true;
             }
 
-            for (let code of __range__("a".charCodeAt(0), "f".charCodeAt(0), true)) {
+            for (const code of __range__("a".charCodeAt(0), "f".charCodeAt(0), true)) {
                 expect(esutils.code.isHexDigit(code)).to.be.true;
             }
 
@@ -31,8 +41,8 @@ describe("code", function () {
                 expect(esutils.code.isHexDigit(code)).to.be.true);
         });
 
-        return it("returns false if provided code is not hexadecimal digit", function () {
-            for (let code of __range__("g".charCodeAt(0), "z".charCodeAt(0), true)) {
+        return it("returns false if provided code is not hexadecimal digit", () => {
+            for (const code of __range__("g".charCodeAt(0), "z".charCodeAt(0), true)) {
                 expect(esutils.code.isHexDigit(code)).to.be.false;
             }
 
@@ -41,18 +51,18 @@ describe("code", function () {
         });
     });
 
-    describe("isOctalDigit", function () {
+    describe("isOctalDigit", () => {
         it("returns true if provided code is octal digit", () =>
             [0, 1, 2, 3, 4, 5, 6, 7].map((ch) =>
-                expect(esutils.code.isOctalDigit((ch + "").charCodeAt(0))).to.be.true)
+                expect(esutils.code.isOctalDigit((`${ch}`).charCodeAt(0))).to.be.true)
         );
 
-        return it("returns false if provided code is not octal digit", function () {
+        return it("returns false if provided code is not octal digit", () => {
             for (let ch = 8; ch <= 9; ch++) {
-                expect(esutils.code.isOctalDigit((ch + "").charCodeAt(0))).to.be.false;
+                expect(esutils.code.isOctalDigit((String(ch)).charCodeAt(0))).to.be.false;
             }
 
-            for (let code of __range__("a".charCodeAt(0), "z".charCodeAt(0), true)) {
+            for (const code of __range__("a".charCodeAt(0), "z".charCodeAt(0), true)) {
                 expect(esutils.code.isOctalDigit(code)).to.be.false;
             }
 
@@ -61,9 +71,9 @@ describe("code", function () {
         });
     });
 
-    describe("isWhiteSpace", function () {
-        it("returns true if provided code is white space", function () {
-            let codes = [
+    describe("isWhiteSpace", () => {
+        it("returns true if provided code is white space", () => {
+            const codes = [
                 0x0009,  // TAB
                 0x000B,  // VT
                 0x000C,  // FF
@@ -88,19 +98,19 @@ describe("code", function () {
                 0x205F,
                 0x3000
             ];
-            for (let code of codes) {
+            for (const code of codes) {
                 expect(esutils.code.isWhiteSpace(code)).to.be.true;
             }
 
             return expect(esutils.code.isWhiteSpace(0x180E)).to.be.false;
         });
 
-        return it("returns false if provided code is not white space", function () {
+        return it("returns false if provided code is not white space", () => {
             for (let ch = 0; ch <= 9; ch++) {
-                expect(esutils.code.isWhiteSpace((ch + "").charCodeAt(0))).to.be.false;
+                expect(esutils.code.isWhiteSpace((`${ch}`).charCodeAt(0))).to.be.false;
             }
 
-            for (let code of __range__("a".charCodeAt(0), "z".charCodeAt(0), true)) {
+            for (const code of __range__("a".charCodeAt(0), "z".charCodeAt(0), true)) {
                 expect(esutils.code.isWhiteSpace(code)).to.be.false;
             }
 
@@ -109,9 +119,9 @@ describe("code", function () {
         });
     });
 
-    describe("isLineTerminator", function () {
-        it("returns true if provided code is line terminator", function () {
-            let codes = [
+    describe("isLineTerminator", () => {
+        it("returns true if provided code is line terminator", () => {
+            const codes = [
                 0x000A,
                 0x000D,
                 0x2028,
@@ -121,12 +131,12 @@ describe("code", function () {
                 expect(esutils.code.isLineTerminator(code)).to.be.true);
         });
 
-        return it("returns false if provided code is not line terminator", function () {
+        return it("returns false if provided code is not line terminator", () => {
             for (let ch = 0; ch <= 9; ch++) {
-                expect(esutils.code.isLineTerminator((ch + "").charCodeAt(0))).to.be.false;
+                expect(esutils.code.isLineTerminator((String(ch)).charCodeAt(0))).to.be.false;
             }
 
-            for (let code of __range__("a".charCodeAt(0), "z".charCodeAt(0), true)) {
+            for (const code of __range__("a".charCodeAt(0), "z".charCodeAt(0), true)) {
                 expect(esutils.code.isLineTerminator(code)).to.be.false;
             }
 
@@ -135,75 +145,65 @@ describe("code", function () {
         });
     });
 
-    describe("isIdentifierStartES5", function () {
-        it("returns true if provided code can be a start of Identifier in ES5", function () {
-            let characters = ["a", "_", "$", "ゆ"];
-            return characters.map(ch => ch.charCodeAt(0)).map((code) =>
+    describe("isIdentifierStartES5", () => {
+        it("returns true if provided code can be a start of Identifier in ES5", () => {
+            const characters = ["a", "_", "$", "ゆ"];
+            return characters.map((ch) => ch.charCodeAt(0)).map((code) =>
                 expect(esutils.code.isIdentifierStartES5(code)).to.be.true);
         });
 
         return it("returns false if provided code cannot be a start of Identifier in ES5", () =>
             [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((ch) =>
-                expect(esutils.code.isIdentifierStartES5((ch + "").charCodeAt(0))).to.be.false)
+                expect(esutils.code.isIdentifierStartES5((String(ch)).charCodeAt(0))).to.be.false)
         );
     });
 
-    describe("isIdentifierPartES5", function () {
-        it("returns true if provided code can be a part of Identifier in ES5", function () {
-            let characters = ["a", "_", "$", "ゆ"];
-            for (let code of characters.map(ch => ch.charCodeAt(0))) {
+    describe("isIdentifierPartES5", () => {
+        it("returns true if provided code can be a part of Identifier in ES5", () => {
+            const characters = ["a", "_", "$", "ゆ"];
+            for (const code of characters.map((ch) => ch.charCodeAt(0))) {
                 expect(esutils.code.isIdentifierPartES5(code)).to.be.true;
             }
 
             return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((ch) =>
-                expect(esutils.code.isIdentifierPartES5((ch + "").charCodeAt(0))).to.be.true);
+                expect(esutils.code.isIdentifierPartES5((`${ch}`).charCodeAt(0))).to.be.true);
         });
 
-        return it("returns false if provided code cannot be a part of Identifier in ES5", function () {
+        return it("returns false if provided code cannot be a part of Identifier in ES5", () => {
             expect(esutils.code.isIdentifierPartES5("+".charCodeAt(0))).to.be.false;
             return expect(esutils.code.isIdentifierPartES5("-".charCodeAt(0))).to.be.false;
         });
     });
 
-    describe("isIdentifierStartES6", function () {
-        it("returns true if provided code can be a start of Identifier in ES6", function () {
-            let characters = ["a", "_", "$", "ゆ", "\u0AF9"];
-            return characters.map(ch => ch.charCodeAt(0)).map((code) =>
+    describe("isIdentifierStartES6", () => {
+        it("returns true if provided code can be a start of Identifier in ES6", () => {
+            const characters = ["a", "_", "$", "ゆ", "\u0AF9"];
+            return characters.map((ch) => ch.charCodeAt(0)).map((code) =>
                 expect(esutils.code.isIdentifierStartES6(code)).to.be.true);
         });
 
         return it("returns false if provided code cannot be a start of Identifier in ES6", () =>
             [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((ch) =>
-                expect(esutils.code.isIdentifierStartES6((ch + "").charCodeAt(0))).to.be.false)
+                expect(esutils.code.isIdentifierStartES6((`${ch}`).charCodeAt(0))).to.be.false)
         );
     });
 
-    return describe("isIdentifierPartES6", function () {
-        it("returns true if provided code can be a part of Identifier in ES6", function () {
-            let characters = ["a", "_", "$", "ゆ"];
-            for (let code of characters.map(ch => ch.charCodeAt(0))) {
+    return describe("isIdentifierPartES6", () => {
+        it("returns true if provided code can be a part of Identifier in ES6", () => {
+            const characters = ["a", "_", "$", "ゆ"];
+            for (const code of characters.map((ch) => ch.charCodeAt(0))) {
                 expect(esutils.code.isIdentifierPartES6(code)).to.be.true;
             }
 
             return [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((ch) =>
-                expect(esutils.code.isIdentifierPartES6((ch + "").charCodeAt(0))).to.be.true);
+                expect(esutils.code.isIdentifierPartES6((String(ch)).charCodeAt(0))).to.be.true);
         });
 
         it("supports astral symbols", () => expect(esutils.code.isIdentifierPartES6(0xE01D5)).to.be.true);
 
-        return it("returns false if provided code cannot be a part of Identifier in ES6", function () {
+        return it("returns false if provided code cannot be a part of Identifier in ES6", () => {
             expect(esutils.code.isIdentifierPartES6("+".charCodeAt(0))).to.be.false;
             return expect(esutils.code.isIdentifierPartES6("-".charCodeAt(0))).to.be.false;
         });
     });
 });
-
-function __range__(left, right, inclusive) {
-    let range = [];
-    let ascending = left < right;
-    let end = !inclusive ? right : ascending ? right + 1 : right - 1;
-    for (let i = left; ascending ? i < end : i > end; ascending ? i++ : i--) {
-        range.push(i);
-    }
-    return range;
-}

@@ -16,9 +16,9 @@ describe("option-manager", () => {
         it("throws for removed babel 5 options", () => {
             return assert.throws(
                 () => {
-                    let opt = new OptionManager(new Logger(null, "unknown"));
+                    const opt = new OptionManager(new Logger(null, "unknown"));
                     opt.init({
-                        "randomOption": true
+                        randomOption: true
                     });
                 },
                 /Unknown option: base.randomOption/
@@ -28,10 +28,10 @@ describe("option-manager", () => {
         it("throws for removed babel 5 options", () => {
             return assert.throws(
                 () => {
-                    let opt = new OptionManager(new Logger(null, "unknown"));
+                    const opt = new OptionManager(new Logger(null, "unknown"));
                     opt.init({
-                        "auxiliaryComment": true,
-                        "blacklist": true
+                        auxiliaryComment: true,
+                        blacklist: true
                     });
                 },
                 /Using removed Babel 5 option: base.auxiliaryComment - Use `auxiliaryCommentBefore` or `auxiliaryCommentAfter`/
@@ -41,21 +41,21 @@ describe("option-manager", () => {
         it.skip("throws for resolved but erroring preset", () => {
             return assert.throws(
                 () => {
-                    let opt = new OptionManager(new Logger(null, "unknown"));
+                    const opt = new OptionManager(new Logger(null, "unknown"));
                     opt.init({
-                        "presets": [path.join(__dirname, "fixtures/option-manager/not-a-preset")]
+                        presets: [path.join(__dirname, "fixtures/option-manager/not-a-preset")]
                     });
                 },
                 /While processing preset: .*option-manager(?:\/|\\\\)not-a-preset\.js/
             );
         });
 
-        it.skip("throws for invalid preset configuration", function () {
+        it.skip("throws for invalid preset configuration", () => {
             return assert.throws(
-                function () {
-                    let opt = new OptionManager(new Logger(null, "unknown"));
+                () => {
+                    const opt = new OptionManager(new Logger(null, "unknown"));
                     opt.init({
-                        "presets": [{ option: "value" }]
+                        presets: [{ option: "value" }]
                     });
                 },
                 /Unknown option: foreign.option\.(?:.|\n)+A common cause of this error is the presence of a configuration options object without the corresponding preset name/
@@ -63,18 +63,18 @@ describe("option-manager", () => {
         });
     });
 
-    describe.skip("presets", function () {
-        function presetTest(name) {
-            it(name, function () {
-                let opt = new OptionManager(new Logger(null, "unknown"));
-                let options = opt.init({
-                    "presets": [path.join(__dirname, "fixtures/option-manager/presets", name)]
+    describe.skip("presets", () => {
+        const presetTest = (name) => {
+            it(name, () => {
+                const opt = new OptionManager(new Logger(null, "unknown"));
+                const options = opt.init({
+                    presets: [path.join(__dirname, "fixtures/option-manager/presets", name)]
                 });
 
                 assert.equal(true, Array.isArray(options.plugins));
                 assert.equal(1, options.plugins.length);
             });
-        }
+        };
 
         presetTest("es5");
         presetTest("es5_function");
@@ -84,6 +84,5 @@ describe("option-manager", () => {
         presetTest("es2015_function");
         presetTest("es2015_function_fallback");
         presetTest("es2015_named");
-
     });
 });

@@ -8,8 +8,8 @@ import helperFixture from "./helper_fixture";
 
 const babelHelpers = eval(buildExternalHelpers(null, "var"));
 
-function wrapPackagesArray(type, names, optionsDir) {
-    return (names || []).map(function (val) {
+const wrapPackagesArray = (type, names, optionsDir) => {
+    return (names || []).map((val) => {
         if (adone.is.string(val)) {
             val = [val];
         }
@@ -28,16 +28,29 @@ function wrapPackagesArray(type, names, optionsDir) {
 
         return val;
     });
-}
+};
 
-function run(task) {
+const runExec = (opts, execCode) => {
+    const sandbox = {
+        ...helpers,
+        babelHelpers,
+        assert,
+        transform: core.transform,
+        opts,
+        exports: {}
+    };
+
+    return adone.std.vm.runInNewContext(execCode, sandbox);
+};
+
+const run = (task) => {
     const actual = task.actual;
     const expect = task.expect;
     const exec = task.exec;
     const opts = task.options;
     const optionsDir = task.optionsDir;
 
-    function getOpts(self) {
+    const getOpts = (self) => {
         const newOpts = lodash.merge({
             filename: self.loc
         }, opts);
@@ -45,7 +58,7 @@ function run(task) {
         newOpts.plugins = wrapPackagesArray("plugin", newOpts.plugins, optionsDir);
 
         return newOpts;
-    }
+    };
 
     let execCode = exec.code;
     let result;
@@ -59,7 +72,7 @@ function run(task) {
         try {
             resultExec = runExec(execOpts, execCode);
         } catch (err) {
-            err.message = exec.loc + ": " + err.message;
+            err.message = `${exec.log}: ${err.message}`;
             err.message += codeFrame(execCode);
             throw err;
         }
@@ -69,11 +82,13 @@ function run(task) {
     const expectCode = expect.code;
     if (!execCode || actualCode) {
         result = core.transform(actualCode, getOpts(actual));
-        if (!expect.code && result.code && !opts.throws && fs.statSync(path.dirname(expect.loc)).isDirectory() && !process.env.CI) {
+        if (!expect.code && result.code && !opts.throws &&
+            fs.statSync(path.dirname(expect.loc)).isDirectory() &&
+            !process.env.CI) {
             fs.writeFileSync(expect.loc, result.code);
         } else {
             actualCode = result.code.trim();
-            assert.equal(actualCode, expectCode, actual.loc + " !== " + expect.loc);
+            assert.equal(actualCode, expectCode, `${actual.loc} !== ${expect.loc}`);
         }
     }
 
@@ -84,7 +99,7 @@ function run(task) {
     if (task.sourceMappings) {
         const consumer = new sourceMap.SourceMapConsumer(result.map);
 
-        lodash.each(task.sourceMappings, function (mapping) {
+        lodash.each(task.sourceMappings, (mapping) => {
             const actual = mapping.original;
 
             const expect = consumer.originalPositionFor(mapping.generated);
@@ -95,46 +110,38 @@ function run(task) {
     if (execCode && resultExec) {
         return resultExec;
     }
-}
-
-function runExec(opts, execCode) {
-    const sandbox = {
-        ...helpers,
-        babelHelpers,
-        assert,
-        transform: core.transform,
-        opts,
-        exports: {}
-    };
-
-    return adone.std.vm.runInNewContext(execCode, sandbox);
-}
+};
 
 export default function (
     fixturesLoc: string,
-    name: string,
+    name: string | Array<string>,
     suiteOpts = {},
     taskOpts = {},
     dynamicOpts?: Function,
 ) {
+    if (!adone.is.array(name)) {
+        name = adone.util.arrify(name);
+    }
+
     const suites = helperFixture(fixturesLoc);
 
     for (const testSuite of suites) {
-        if (lodash.includes(suiteOpts.ignoreSuites, testSuite.title)) {
+        const blockName = name.concat(testSuite.title);
+
+        if (suiteOpts.ignoreSuites && suiteOpts.ignoreSuites.includes(testSuite.title)) {
             continue;
         }
 
-        describe(name + "/" + testSuite.title, function () {
+        describe(...blockName, () => {
             for (const task of testSuite.tests) {
-                if (lodash.includes(suiteOpts.ignoreTasks, task.title) ||
-                    lodash.includes(suiteOpts.ignoreTasks, testSuite.title + "/" + task.title)) {
+                if (suiteOpts.ignoreTasks && suiteOpts.ignoreTasks.includes(task.title)) {
                     continue;
                 }
 
-                it(task.title, !task.disabled && function () {
-                    function runTask() {
+                const k = it(task.title, () => {
+                    const runTask = () => {
                         run(task);
-                    }
+                    };
 
                     lodash.defaults(task.options, {
                         filenameRelative: task.expect.filename,
@@ -142,7 +149,7 @@ export default function (
                         sourceMapTarget: task.expect.filename,
                         suppressDeprecationMessages: true,
                         rc: false,
-                        sourceMap: !!(task.sourceMappings || task.sourceMap)
+                        sourceMap: Boolean(task.sourceMappings || task.sourceMap)
                     });
 
                     lodash.extend(task.options, taskOpts);
@@ -169,6 +176,10 @@ export default function (
                         }
                     }
                 });
+
+                if (task.disabled) {
+                    k.skip();
+                }
             }
         });
     }

@@ -1,7 +1,7 @@
 const { types, core: { util } } = adone.js.compiler;
 
-describe("util", function () {
-    it("canCompile", function () {
+describe("util", () => {
+    it("canCompile", () => {
         assert.ok(util.canCompile("test.js"));
         assert.ok(util.canCompile("/test.js"));
         assert.ok(util.canCompile("/scripts/test.js"));
@@ -24,7 +24,7 @@ describe("util", function () {
         assert.ok(!util.canCompile("/scripts/test.css"));
     });
 
-    it("list", function () {
+    it("list", () => {
         assert.deepEqual(util.list(undefined), []);
         assert.deepEqual(util.list(false), []);
         assert.deepEqual(util.list(null), []);
@@ -34,11 +34,11 @@ describe("util", function () {
         assert.deepEqual(util.list(["foo", "bar"]), ["foo", "bar"]);
         assert.deepEqual(util.list(/foo/), [/foo/]);
 
-        let date = new Date;
+        const date = new Date();
         assert.deepEqual(util.list(date), [date]);
     });
 
-    it("arrayify", function () {
+    it("arrayify", () => {
         assert.deepEqual(util.arrayify(undefined), []);
         assert.deepEqual(util.arrayify(false), []);
         assert.deepEqual(util.arrayify(null), []);
@@ -47,10 +47,12 @@ describe("util", function () {
         assert.deepEqual(util.arrayify("foo,bar"), ["foo", "bar"]);
         assert.deepEqual(util.arrayify(["foo", "bar"]), ["foo", "bar"]);
         assert.deepEqual(util.arrayify({ foo: "bar" }), [{ foo: "bar" }]);
-        assert.deepEqual(util.arrayify(function () { return "foo"; })[0](), "foo");
+        assert.deepEqual(util.arrayify(() => {
+            return "foo";
+        })[0](), "foo");
     });
 
-    it("regexify", function () {
+    it("regexify", () => {
         assert.deepEqual(util.regexify(undefined), /.^/);
         assert.deepEqual(util.regexify(false), /.^/);
         assert.deepEqual(util.regexify(null), /.^/);
@@ -66,24 +68,24 @@ describe("util", function () {
         assert.ok(util.regexify("./foo/bar.js").test("foo/bar.js"));
         assert.ok(util.regexify("foobar").test("foobar"));
 
-        assert.throws(function () {
+        assert.throws(() => {
             util.regexify({});
         }, /illegal type for regexify/);
     });
 
-    it("booleanify", function () {
+    it("booleanify", () => {
         assert.strictEqual(util.booleanify("true"), true);
         assert.strictEqual(util.booleanify("false"), false);
         assert.strictEqual(util.booleanify("inline"), "inline");
     });
 
-    it("toIdentifier", function () {
+    it("toIdentifier", () => {
         assert.equal(types.toIdentifier("swag-lord"), "swagLord");
     });
 
-    it("shouldIgnore", function () {
-        let reIgnore = /\-reIgnore\.js/;
-        let fnIgnore = function (src) {
+    it("shouldIgnore", () => {
+        const reIgnore = /\-reIgnore\.js/;
+        const fnIgnore = function (src) {
             if (src.indexOf("fnIgnore") > 0) {
                 return true;
             }

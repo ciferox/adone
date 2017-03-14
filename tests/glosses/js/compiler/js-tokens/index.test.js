@@ -5,27 +5,22 @@ const { fs, path, util } = adone.std;
 const { jsTokens, matchToToken } = adone.js.compiler;
 
 
-describe("jsTokens", function () {
-    it("is a regex", function () {
+describe("jsTokens", () => {
+    it("is a regex", () => {
         assert.isOk(util.isRegExp(jsTokens));
     });
 });
 
 
-describe("matchToToken", function () {
-    it("is a function", function () {
+describe("matchToToken", () => {
+    it("is a function", () => {
         assert.equal(typeof matchToToken, "function");
     });
 });
 
 
-describe("tokens", function () {
-
-    function token(name, fn) {
-        describe(name, fn.bind(null, matchHelper.bind(null, name)));
-    }
-
-    function matchHelper(type, string, expected, extra) {
+describe("tokens", () => {
+    const matchHelper = (type, string, expected, extra) => {
         extra = extra || {};
         if (typeof expected === "object") {
             extra = expected;
@@ -34,7 +29,7 @@ describe("tokens", function () {
         jsTokens.lastIndex = 0;
         const token = matchToToken(jsTokens.exec(string));
 
-        it(string, function () {
+        it(string, () => {
             if (expected === false) {
                 assert.notEqual(token.type, type);
             } else {
@@ -50,10 +45,13 @@ describe("tokens", function () {
                 }
             }
         });
-    }
+    };
 
+    const token = (name, fn) => {
+        describe(name, fn.bind(null, matchHelper.bind(null, name)));
+    };
 
-    token("whitespace", function (match) {
+    token("whitespace", (match) => {
 
         match(" ");
         match("    ");
@@ -95,7 +93,7 @@ describe("tokens", function () {
     });
 
 
-    token("comment", function (match) {
+    token("comment", (match) => {
 
         match("//");
         match("//comment");
@@ -126,7 +124,7 @@ describe("tokens", function () {
     });
 
 
-    token("string", function (match) {
+    token("string", (match) => {
 
         match("''");
         match("\"\"");
@@ -236,7 +234,7 @@ describe("tokens", function () {
     });
 
 
-    token("regex", function (match) {
+    token("regex", (match) => {
 
         match("//", false);
         match("/a/");
@@ -416,7 +414,7 @@ describe("tokens", function () {
     });
 
 
-    token("number", function (match) {
+    token("number", (match) => {
 
         match("1");
         match("1.");
@@ -555,7 +553,7 @@ describe("tokens", function () {
     });
 
 
-    token("name", function (match) {
+    token("name", (match) => {
 
         match("$");
         match("_");
@@ -622,7 +620,7 @@ describe("tokens", function () {
     });
 
 
-    token("punctuator", function (match) {
+    token("punctuator", (match) => {
 
         match("+");
         match("++");
@@ -828,7 +826,7 @@ describe("tokens", function () {
     });
 
 
-    token("invalid", function (match) {
+    token("invalid", (match) => {
         match("");
         match("@");
         match("#");
@@ -840,21 +838,19 @@ describe("tokens", function () {
 });
 
 
-describe("tokenization", function () {
-
-    function testFile(file) {
-        const contents = fs.readFileSync(path.resolve(__dirname, "fixtures/" + file + ".js")).toString();
-        const expected = require(path.resolve(__dirname, "./fixtures/" + file + ".json"));
+describe("tokenization", () => {
+    const testFile = (file) => {
+        const contents = fs.readFileSync(path.resolve(__dirname, `fixtures/${file}.js`)).toString();
+        const expected = require(path.resolve(__dirname, `./fixtures/${file}.json`));
         const actual = contents.match(jsTokens);
-        it(file + ".js", function () {
+        it(`${file}.js`, () => {
             assert.deepEqual(actual, expected);
             assert.equal(actual.join(""), contents);
         });
-    }
+    };
 
     testFile("base64");
     testFile("errors");
     testFile("regex");
     testFile("division");
-
 });

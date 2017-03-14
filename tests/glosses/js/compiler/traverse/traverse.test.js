@@ -1,41 +1,51 @@
 const { parse, traverse } = adone.js.compiler;
-let _ = require("lodash");
+const { lodash } = adone.vendor;
 
-describe("traverse", function () {
-    let code = `
+describe("traverse", () => {
+    const code = `
     var foo = "bar";
     this.test = "wow";
   `;
-    let ast = parse(code);
-    let program = ast.program;
-    let body = program.body;
+    const ast = parse(code);
+    const program = ast.program;
+    const body = program.body;
 
-    it("traverse replace", function () {
-        let replacement = {
+    it("traverse replace", () => {
+        const replacement = {
             type: "StringLiteral",
             value: "foo"
         };
-        let ast2 = _.cloneDeep(program);
+        const ast2 = lodash.cloneDeep(program);
 
         traverse(ast2, {
-            enter: function (path) {
-                if (path.node.type === "ThisExpression") path.replaceWith(replacement);
+            enter(path) {
+                if (path.node.type === "ThisExpression") {
+                    path.replaceWith(replacement);
+                }
             }
         });
 
         assert.equal(ast2.body[1].expression.left.object, replacement);
     });
 
-    it("traverse", function () {
-        let expect = [
-            body[0], body[0].declarations[0], body[0].declarations[0].id, body[0].declarations[0].init,
-            body[1], body[1].expression, body[1].expression.left, body[1].expression.left.object, body[1].expression.left.property, body[1].expression.right
+    it("traverse", () => {
+        const expect = [
+            body[0],
+            body[0].declarations[0],
+            body[0].declarations[0].id,
+            body[0].declarations[0].init,
+
+            body[1],
+            body[1].expression,
+            body[1].expression.left,
+            body[1].expression.left.object,
+            body[1].expression.left.property, body[1].expression.right
         ];
 
-        let actual = [];
+        const actual = [];
 
         traverse(program, {
-            enter: function (path) {
+            enter(path) {
                 actual.push(path.node);
             }
         });
@@ -43,25 +53,31 @@ describe("traverse", function () {
         assert.deepEqual(actual, expect);
     });
 
-    it("traverse falsy parent", function () {
+    it("traverse falsy parent", () => {
         traverse(null, {
-            enter: function () {
+            enter() {
                 throw new Error("should not be ran");
             }
         });
     });
 
-    it("traverse blacklistTypes", function () {
-        let expect = [
-            body[0], body[0].declarations[0], body[0].declarations[0].id, body[0].declarations[0].init,
-            body[1], body[1].expression, body[1].expression.right
+    it("traverse blacklistTypes", () => {
+        const expect = [
+            body[0],
+            body[0].declarations[0],
+            body[0].declarations[0].id,
+            body[0].declarations[0].init,
+
+            body[1],
+            body[1].expression,
+            body[1].expression.right
         ];
 
-        let actual = [];
+        const actual = [];
 
         traverse(program, {
             blacklist: ["MemberExpression"],
-            enter: function (path) {
+            enter(path) {
                 actual.push(path.node);
             }
         });
@@ -69,7 +85,7 @@ describe("traverse", function () {
         assert.deepEqual(actual, expect);
     });
 
-    it("hasType", function () {
+    it("hasType", () => {
         assert.ok(traverse.hasType(ast, null, "ThisExpression"));
         assert.ok(!traverse.hasType(ast, null, "ThisExpression", ["AssignmentExpression"]));
 
@@ -82,9 +98,9 @@ describe("traverse", function () {
         assert.ok(!traverse.hasType(ast, null, "ArrowFunctionExpression"));
     });
 
-    it("clearCache", function () {
-        let paths = [];
-        let scopes = [];
+    it("clearCache", () => {
+        const paths = [];
+        const scopes = [];
         traverse(ast, {
             enter(path) {
                 scopes.push(path.scope);
@@ -95,8 +111,8 @@ describe("traverse", function () {
 
         traverse.clearCache();
 
-        let paths2 = [];
-        let scopes2 = [];
+        const paths2 = [];
+        const scopes2 = [];
         traverse(ast, {
             enter(path) {
                 scopes2.push(path.scope);
@@ -105,14 +121,14 @@ describe("traverse", function () {
             }
         });
 
-        scopes2.forEach(function (_, i) {
+        scopes2.forEach((lodash, i) => {
             assert.notStrictEqual(scopes[i], scopes2[i]);
             assert.notStrictEqual(paths[i], paths2[i]);
         });
     });
 
-    it("clearPath", function () {
-        let paths = [];
+    it("clearPath", () => {
+        const paths = [];
         traverse(ast, {
             enter(path) {
                 paths.push(path);
@@ -121,20 +137,20 @@ describe("traverse", function () {
 
         traverse.clearCache.clearPath();
 
-        let paths2 = [];
+        const paths2 = [];
         traverse(ast, {
             enter(path) {
                 paths2.push(path);
             }
         });
 
-        paths2.forEach(function (p, i) {
+        paths2.forEach((p, i) => {
             assert.notStrictEqual(p, paths[i]);
         });
     });
 
-    it("clearScope", function () {
-        let scopes = [];
+    it("clearScope", () => {
+        const scopes = [];
         traverse(ast, {
             enter(path) {
                 scopes.push(path.scope);
@@ -144,7 +160,7 @@ describe("traverse", function () {
 
         traverse.clearCache.clearScope();
 
-        let scopes2 = [];
+        const scopes2 = [];
         traverse(ast, {
             enter(path) {
                 scopes2.push(path.scope);
@@ -152,7 +168,7 @@ describe("traverse", function () {
             }
         });
 
-        scopes2.forEach(function (p, i) {
+        scopes2.forEach((p, i) => {
             assert.notStrictEqual(p, scopes[i]);
         });
     });
