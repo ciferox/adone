@@ -12,7 +12,7 @@ class Context {
     constructor(ctx, blocks, env) {
         this.env = env || new Environment();  // eslint-disable-line no-use-before-define
 
-        this.ctx = util.copyObject(ctx);
+        this.ctx = util.clone(ctx, { deep: false });
 
         this.blocks = {};
         this.exported = [];
