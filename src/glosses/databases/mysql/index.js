@@ -1,59 +1,123 @@
-var SqlString = require("./sqlstring");
+const { lazify } = adone;
 
-import Connection from "./lib/connection";
-var ConnectionConfig = require("./lib/connection_config.js");
+const mysql = lazify({
+    c: "./constants",
+    command: "./commands",
+    packet: "./packets",
+    Connection: "./connection",
+    ConnectionConfig: "./connection_config",
+    PacketParser: "./packet_parser",
+    auth: "./auth",
+    PoolConnection: "./pool_connection",
+    PoolConfig: "./pool_config",
+    Pool: "./pool",
+    PoolCluster: "./pool_cluster",
+    PromiseConnection: "./promise_connection",
+    compileBinaryParser: "./compile_binary_parser",
+    compileTextParser: "./compile_text_parser",
+    stringParser: "./string_parser",
+    helper: "./helpers",
+    namedPlaceholders: "./named_placeholders",
+    enableCompression: "./compressed_protocol",
+    Server: "./server"
+}, exports, require);
 
-module.exports.createConnection = function (opts) {
-    return new Connection({ config: new ConnectionConfig(opts) });
+export const createConnection = (config = {}) => {
+    const connection = new mysql.Connection({
+        config: new mysql.ConnectionConfig(config)
+    });
+    const { promise = true } = config;
+    if (!promise) {
+        return connection;
+    }
+    return new Promise((resolve, reject) => {
+        connection.once("connect", (connectParams) => {
+            resolve(new mysql.PromiseConnection(connection, connectParams));
+        });
+        connection.once("error", reject);
+    });
 };
 
-module.exports.connect = module.exports.createConnection;
-module.exports.Connection = Connection;
+const getPromisePool = (pool) => ({
+    pool,
+    getConnection() {
+        return new Promise((resolve, reject) => {
+            this.pool.getConnection((err, coreConnection) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(new mysql.PromiseConnection(coreConnection));
+                }
+            });
+        });
+    },
 
-module.exports.createPool = function (config) {
-    var PoolConfig = require("./lib/pool_config.js");
-    var Pool = require("./lib/pool.js").default;
-    return new Pool({ config: new PoolConfig(config) });
+    query(sql, args) {
+        return new Promise((resolve, reject) => {
+            const done = (err, rows, columns) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve([rows, columns]);
+                }
+            };
+            if (args) {
+                this.pool.query(sql, args, done);
+            } else {
+                this.pool.query(sql, done);
+            }
+        });
+    },
+
+    execute(sql, values) {
+        return new Promise((resolve, reject) => {
+            const done = (err, rows, columns) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve([rows, columns]);
+                }
+            };
+            this.pool.execute(sql, values, done);
+        });
+    },
+
+    end() {
+        return new Promise((resolve, reject) => {
+            this.pool.end((err) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve();
+                }
+            });
+        });
+    },
+    get config() {
+        return this.pool.config;
+    }
+});
+
+export const createPool = (config) => {
+    const pool = new mysql.Pool({
+        config: new mysql.PoolConfig(config)
+    });
+    const { promise = true } = config;
+    if (!promise) {
+        return pool;
+    }
+    return getPromisePool(pool);
 };
 
-exports.createPoolCluster = function (config) {
-    var PoolCluster = require("./lib/pool_cluster.js").default;
-    return new PoolCluster(config);
+export const createPoolCluster = (config) => {
+    // todo: promise
+    return new mysql.PoolCluster(config);
 };
 
-module.exports.createServer = function (handler) {
-    var Server = require("./lib/server.js").default;
-    var s = new Server();
+export const createServer = (handler) => {
+    const s = new mysql.Server();
     if (handler) {
         s.on("connection", handler);
     }
     return s;
 };
-
-exports.escape = SqlString.escape;
-exports.escapeId = SqlString.escapeId;
-exports.format = SqlString.format;
-
-exports.__defineGetter__("createConnectionPromise", function () {
-    return require("./promise.js").createConnection;
-});
-
-exports.__defineGetter__("createPoolPromise", function () {
-    return require("./promise.js").createPool;
-});
-
-exports.__defineGetter__("createPoolClusterPromise", function () {
-    return require("./promise.js").createPoolCluster;
-});
-
-exports.__defineGetter__("Types", function () {
-    return require("./lib/constants/types.js");
-});
-
-exports.__defineGetter__("Charsets", function () {
-    return require("./lib/constants/charsets.js");
-});
-
-exports.__defineGetter__("CharsetToEncoding", function () {
-    return require("./lib/constants/charset_encodings.js");
-});

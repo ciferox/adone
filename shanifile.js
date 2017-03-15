@@ -11,7 +11,7 @@ module.exports = {
         dontUseMap: false,
         itself: false,
         allTimings: false,
-        skip: "glosses.databases.mongo",
+        skip: "glosses.databases.mongo,glosses.databases.mysql",
         timers: false,
         showHooks: false,
         keepHooks: false

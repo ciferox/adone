@@ -534,7 +534,7 @@ adone.data = lazify({
 
 adone.database = lazify({
     local: "./glosses/databases/local",
-    mysql: "./glosses/databases/mysql/promise",
+    mysql: "./glosses/databases/mysql",
     redis: "./glosses/databases/redis",
     mongo: "./glosses/databases/mongo"
 });
