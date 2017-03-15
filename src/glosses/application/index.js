@@ -1,5 +1,3 @@
-
-
 const { is, x } = adone;
 
 const INTERNAL = Symbol.for("adone:application:internal");
@@ -11,11 +9,21 @@ class BorderlessTable extends adone.text.table.Table {
         super({
             colWidths,
             chars: {
-                "top": "", "top-mid": "", "top-left": "", "top-right": "",
-                "bottom": "", "bottom-mid": "", "bottom-left": "",
-                "bottom-right": "", "left": "", "left-mid": "",
-                "mid": "", "mid-mid": "", "right": "",
-                "right-mid": "", "middle": ""
+                top: "",
+                "top-mid": "",
+                "top-left": "",
+                "top-right": "",
+                bottom: "",
+                "bottom-mid": "",
+                "bottom-left": "",
+                "bottom-right": "",
+                left: "",
+                "left-mid": "",
+                mid: "",
+                "mid-mid": "",
+                right: "",
+                "right-mid": "",
+                middle: ""
             },
             style: {
                 "padding-left": 0,
@@ -24,6 +32,8 @@ class BorderlessTable extends adone.text.table.Table {
         });
     }
 }
+
+const escape = (x) => x.replace(/%/g, "%%");
 
 class Argument {
     constructor(options = {}) {
@@ -55,7 +65,7 @@ class Argument {
                 return true;
             }
             if (this.nargs === "*") {
-                return []; 
+                return [];
             }
             return this.default;
         }
@@ -236,7 +246,6 @@ class Argument {
             }
             msg = `${msg}default: ${value}`;
         }
-
         return msg;
     }
 }
@@ -396,7 +405,7 @@ class OptionalArgument extends Argument {
     }
 }
 
-function argumentsWrap(args, maxLength) {
+const argumentsWrap = (args, maxLength) => {
     const lines = [];
     let length = 0;
     let line = [];
@@ -417,9 +426,9 @@ function argumentsWrap(args, maxLength) {
     // lines[lines.length - 1] = new Array(maxLength - last.length).join(" ") + last;
     // }
     return lines.join("\n");
-}
+};
 
-function commandsWrap(cmds, maxLength) {
+const commandsWrap = (cmds, maxLength) => {
     const lines = [];
     let length = 0;
     let line = [];
@@ -446,7 +455,7 @@ function commandsWrap(cmds, maxLength) {
     }
     lines[lines.length - 1] = `${lines[lines.length - 1]} }`;
     return lines.join("\n");
-}
+};
 
 class Group {
     constructor(params) {
@@ -587,11 +596,11 @@ class Command {
         if (this.hasOptionsGroup(newGroup)) {
             throw new x.IllegalState(`${this.names[0]}: Cannot add the options group ${newGroup.name} due to name collision`);
         }
-        const optionsGroups = this.optionsGroups;
-        optionsGroups.push(newGroup);
-        const len = optionsGroups.length;
+        const groups = this.optionsGroups;
+        groups.push(newGroup);
+        const len = groups.length;
         // keep the unnamed group at the end
-        [optionsGroups[len - 1], optionsGroups[len - 2]] = [optionsGroups[len - 2], optionsGroups[len - 1]];
+        [groups[len - 1], groups[len - 2]] = [groups[len - 2], groups[len - 1]];
     }
 
     hasCommand(command) {
@@ -636,11 +645,11 @@ class Command {
         if (this.hasOptionsGroup(newGroup)) {
             throw new x.IllegalState(`${this.names[0]}: Cannot add the options group ${newGroup.name} due to name collision`);
         }
-        const commandsGroups = this.commandsGroups;
-        commandsGroups.push(newGroup);
-        const len = commandsGroups.length;
+        const groups = this.commandsGroups;
+        groups.push(newGroup);
+        const len = groups.length;
         // keep the unnamed group at the end
-        [commandsGroups[len - 1], commandsGroups[len - 2]] = [commandsGroups[len - 2], commandsGroups[len - 1]];
+        [groups[len - 1], groups[len - 2]] = [groups[len - 2], groups[len - 1]];
     }
 
     get subsystem() {
@@ -724,7 +733,9 @@ class Command {
             }
         }
         if (!options.handler) {
-            options.handler = (args, opts, { command }) => adone.log(command.getHelpMessage());
+            options.handler = (args, opts, { command }) => {
+                adone.log(escape(command.getHelpMessage()));
+            };
             options.handler[INTERNAL] = true;
         }
 
@@ -785,6 +796,9 @@ class Command {
         if (commands.length !== 0) {
             // By groups
             for (const group of this.commandsGroups) {
+                if (group.empty) {
+                    continue;
+                }
                 const names = [...group].map((x) => x.names[0]);
                 table.push([null, chain, `${commandsWrap(names, argumentsLength)} ...`]);
             }
@@ -818,14 +832,19 @@ class Command {
                 const table = new BorderlessTable({
                     colWidths: [4, null, 2, null]
                 });
-                const namesMessages = this.arguments.map((arg) => adone.text.wordwrap(arg.getNamesMessage(), 40));
+                const namesMessages = this.arguments.map((arg) => {
+                    return adone.text.wordwrap(arg.getNamesMessage(), 40);
+                });
                 const maxNamesLength = namesMessages.reduce((x, y) => Math.max(x, y.length), 0);
                 for (const arg of this.arguments) {
                     table.push([
                         null,
                         namesMessages.shift(),
                         null,
-                        adone.text.wordwrap(arg.getShortHelpMessage(), totalWidth - 4 - maxNamesLength - 2)
+                        adone.text.wordwrap(
+                            arg.getShortHelpMessage(),
+                            totalWidth - 4 - maxNamesLength - 2
+                        )
                     ]);
                 }
                 helpMessage.push(table.toString());
@@ -856,7 +875,10 @@ class Command {
                         colWidths: [4, null, 2, null]
                     });
                     const namesMessages = [...group].map((opt) => {
-                        return adone.text.wordwrap(opt.getUsageMessage({ required: false, allNames: true }), 40)
+                        return adone.text.wordwrap(
+                            opt.getUsageMessage({ required: false, allNames: true }),
+                            40
+                        );
                     });
                     const maxNamesLength = namesMessages.reduce((x, y) => Math.max(x, y.length), 0);
                     for (const opt of group) {
@@ -864,7 +886,10 @@ class Command {
                             null,
                             namesMessages.shift(),
                             null,
-                            adone.text.wordwrap(opt.getShortHelpMessage(), totalWidth - 4 - maxNamesLength - 2)
+                            adone.text.wordwrap(
+                                opt.getShortHelpMessage(),
+                                totalWidth - 4 - maxNamesLength - 2
+                            )
                         ]);
                     }
                     helpMessage.push(table.toString());
@@ -895,14 +920,19 @@ class Command {
                     const table = new BorderlessTable({
                         colWidths: [4, null, 2, null]
                     });
-                    const namesMessages = [...group].map((cmd) => adone.text.wordwrap(cmd.getNamesMessage(), 40));
+                    const namesMessages = [...group].map((cmd) => {
+                        return adone.text.wordwrap(cmd.getNamesMessage(), 40);
+                    });
                     const maxNamesLength = namesMessages.reduce((x, y) => Math.max(x, y.length), 0);
                     for (const cmd of group) {
                         table.push([
                             null,
                             namesMessages.shift(),
                             null,
-                            adone.text.wordwrap(cmd.getShortHelpMessage(), totalWidth - 4 - maxNamesLength - 2)
+                            adone.text.wordwrap(
+                                cmd.getShortHelpMessage(),
+                                totalWidth - 4 - maxNamesLength - 2
+                            )
                         ]);
                     }
                     helpMessage.push(table.toString());
@@ -913,6 +943,33 @@ class Command {
         return helpMessage.join("\n");
     }
 }
+
+const mergeGroupsLists = (a, b) => {
+    const mapping = (x) => {
+        if (!(x instanceof Group)) {
+            x = new Group(x);
+        } else {
+            x = new Group({
+                name: x.name,
+                description: x.description
+            });
+        }
+        return [x.name, x];
+    };
+    const aMap = new Map(a.map(mapping));
+    const bMap = new Map(b.map(mapping));
+    // add all the groups from b, it has preference
+    const result = [...bMap.values()];
+    for (const [name, group] of aMap.entries()) {
+        // if b has such a group => skip it
+        if (bMap.has(name)) {
+            continue;
+        }
+        // no such group => add it
+        result.push(group);
+    }
+    return result;
+};
 
 export default class Application extends adone.application.Subsystem {
     constructor({
@@ -963,7 +1020,13 @@ export default class Application extends adone.application.Subsystem {
         const rejectionHandled = (...args) => this._rejectionHandled(...args);
         const beforeExit = () => this.exit();
         const signalExit = (sigName) => this._signalExit(sigName);
-        this._handlers = { uncaughtException, unhandledRejection, rejectionHandled, beforeExit, signalExit };
+        this._handlers = {
+            uncaughtException,
+            unhandledRejection,
+            rejectionHandled,
+            beforeExit,
+            signalExit
+        };
         process.on("uncaughtExectption", uncaughtException);
         process.on("unhandledRejection", unhandledRejection);
         process.on("rejectionHandled", rejectionHandled);
@@ -990,7 +1053,7 @@ export default class Application extends adone.application.Subsystem {
             // Initialize subsystems
             for (let i = 0; i < this._subsystems.length; i++) {
                 const ss = this._subsystems[i];
-                await ss.initialize();
+                await ss.initialize();  // eslint-disable-line no-await-in-loop
             }
             this._errorScope = false;
             let command = this._mainCommand;
@@ -1002,10 +1065,10 @@ export default class Application extends adone.application.Subsystem {
             }
 
             if (errors.length) {
-                adone.log(command.getUsageMessage());
+                adone.log(escape(command.getUsageMessage()));
                 adone.log();
                 for (const error of errors) {
-                    adone.log(error.message);
+                    adone.log(escape(error.message));
                 }
                 return this.exit(Application.ERROR_EXIT);
             }
@@ -1029,7 +1092,9 @@ export default class Application extends adone.application.Subsystem {
         const basename = `${name}.js`;
         const defaultConfigPath = adone.std.path.join(this.defaultConfigsPath, basename);
         await this.config.load(defaultConfigPath, name);
-        await adone.fs.copy(defaultConfigPath, this.config.adone.configsPath, { ignoreExisting: true });
+        await adone.fs.copy(defaultConfigPath, this.config.adone.configsPath, {
+            ignoreExisting: true
+        });
         const userConfigPath = adone.std.path.join(this.config.adone.configsPath, basename);
         await this.config.load(userConfigPath, name);
     }
@@ -1070,6 +1135,7 @@ export default class Application extends adone.application.Subsystem {
         // Uninitialize subsystems
         for (let i = 0; i < this._subsystems.length; i++) {
             const ss = this._subsystems[i];
+            // eslint-disable-next-line no-await-in-loop
             await ss.uninitialize();
         }
 
@@ -1161,8 +1227,8 @@ export default class Application extends adone.application.Subsystem {
             const group = new Group(x);
             return { name: group.name, description: group.description };
         }) : [];
-        options.commandsGroups = adone.vendor.lodash.merge([], commandsGroups, mainCommandsGroups);
-        options.optionsGroups = adone.vendor.lodash.merge([], optionsGroups, mainOptionsGroups);
+        options.commandsGroups = mergeGroupsLists(mainCommandsGroups, commandsGroups);
+        options.optionsGroups = mergeGroupsLists(mainOptionsGroups, optionsGroups);
         this.defineMainCommand(options);
     }
 
@@ -1181,7 +1247,7 @@ export default class Application extends adone.application.Subsystem {
                 name: "--version",
                 help: "show the version",
                 handler: async () => {
-                    adone.log(await this.getVersion());
+                    adone.log(escape(await this.getVersion()));
                     return 0;
                 },
                 [INTERNAL]: true
@@ -1227,7 +1293,7 @@ export default class Application extends adone.application.Subsystem {
                 name: ["--help", "-h"],
                 help: "show this message",
                 handler: (_, cmd) => {
-                    adone.log(cmd.getHelpMessage());
+                    adone.log(escape(cmd.getHelpMessage()));
                     return this.exit();
                 },
                 [INTERNAL]: true
@@ -1608,7 +1674,10 @@ export default class Application extends adone.application.Subsystem {
                                 } else {
                                     thisAtLeast += nargs;
                                 }
-                            } else if ((nargs === "+" || argument.optional) && (!hasValue || argument.value.length === 0)) {
+                            } else if (
+                                (nargs === "+" || argument.optional) &&
+                                (!hasValue || argument.value.length === 0)
+                            ) {
                                 ++thisAtLeast;
                             }
                         }
@@ -1620,6 +1689,7 @@ export default class Application extends adone.application.Subsystem {
 
                         let value;
                         try {
+                            // eslint-disable-next-line no-await-in-loop
                             value = await argument.coerce(part);
                         } catch (err) {
                             err.message = `${argument.names[0]}: ${err.message}`;
@@ -1637,7 +1707,13 @@ export default class Application extends adone.application.Subsystem {
                         argument.value.push(value);
                         nextPart();
 
-                        if ((atLeast >= possible && thisAtLeast === 0) || (is.integer(argument.nargs) && argument.value.length === argument.nargs)) {
+                        if (
+                            (atLeast >= possible && thisAtLeast === 0) ||
+                            (
+                                is.integer(argument.nargs) &&
+                                argument.value.length === argument.nargs
+                            )
+                        ) {
                             // it can be enough for this argument or we have only required elements left
                             state.push("finish argument");
                         } else {
@@ -1674,7 +1750,12 @@ export default class Application extends adone.application.Subsystem {
                             argument._values.push(argument.value);
                         }
                         if (argument.optional) {
-                            const res = await argument.handler.call(command.subsystem/*this*/, argument.value, command);
+                            // eslint-disable-next-line no-await-in-loop
+                            const res = await argument.handler.call(
+                                command.subsystem/*this*/,
+                                argument.value,
+                                command
+                            );
                             if (is.integer(res)) {
                                 return this.exit(res);
                             }
@@ -1705,7 +1786,13 @@ export default class Application extends adone.application.Subsystem {
                                 const { nargs } = arg;
                                 if (arg.required) {
                                     errors.push(new x.IllegalState(`${arg.names[0]}: must be provided`));
-                                } else if (arg.action === "append" || nargs === "+" || nargs === "*" || nargs === "?" || nargs > 1) {
+                                } else if (
+                                    arg.action === "append" ||
+                                    nargs === "+" ||
+                                    nargs === "*" ||
+                                    nargs === "?" ||
+                                    nargs > 1
+                                ) {
                                     arg.value = arg.default;
                                 }
                             } else if (arg.action === "append") {
