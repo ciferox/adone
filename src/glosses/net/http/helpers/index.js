@@ -20,5 +20,6 @@ adone.lazify({
     resolvePath: "./resolve_path",
     send: "./send",
     IncomingForm: "./incoming_form",
-    Cookies: "./cookies"
+    Cookies: "./cookies",
+    pathToRegexp: "./path_to_regexp"
 }, exports, require);

@@ -49,6 +49,18 @@ class Request extends EventEmitter {
         return this;
     }
 
+    put(path) {
+        this.method = "PUT";
+        this.path = path;
+        return this;
+    }
+
+    search(path) {
+        this.method = "SEARCH";
+        this.path = path;
+        return this;
+    }
+
     setHeader(key, value) {
         this.header[key] = value;
         return this;

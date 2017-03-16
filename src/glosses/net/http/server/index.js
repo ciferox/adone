@@ -141,5 +141,6 @@ Server.middleware = adone.lazify({
     favicon: "./middlewares/favicon",
     logger: "./middlewares/logger",
     session: "./middlewares/session",
-    views: "./middlewares/views"
+    views: "./middlewares/views",
+    router: "./middlewares/router"
 }, null, require);
