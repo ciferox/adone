@@ -8,8 +8,8 @@
 
 // @flow
 
-import { IndexedSourceMapConsumer, BasicSourceMapConsumer } from "adone/glosses/js/sourcemap/source-map-consumer";
 const { SourceMapConsumer, SourceMapGenerator } = adone.js.sourceMap;
+const { IndexedSourceMapConsumer, BasicSourceMapConsumer } = SourceMapConsumer;
 import * as util from "./util";
 
 describe("Compiler", () => {

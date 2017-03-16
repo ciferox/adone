@@ -28,6 +28,9 @@ SourceMapConsumer.fromSourceMap = function (aSourceMap) {
     return BasicSourceMapConsumer.fromSourceMap(aSourceMap);
 };
 
+SourceMapConsumer.BasicSourceMapConsumer = BasicSourceMapConsumer;
+SourceMapConsumer.IndexedSourceMapConsumer = IndexedSourceMapConsumer;
+
 /**
  * The version of the source mapping spec that we are consuming.
  */
