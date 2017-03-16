@@ -317,4 +317,45 @@ describe("glosses", "net", "http", "middlewares", "serve", () => {
             });
         });
     });
+
+    describe("option - strip", () => {
+        it("should stip paths", async () => {
+            const server = new Server();
+            server.use(serve("fixtures", {
+                index: "index.html",
+                format: true,
+                strip: 1
+            }));
+
+            await request(server)
+                .get("/123/world")
+                .expectStatus(200);
+        });
+
+        it("should not strip if = 0", async () => {
+            const server = new Server();
+            server.use(serve("fixtures", {
+                index: "index.html",
+                format: true,
+                strip: 0
+            }));
+
+            await request(server)
+                .get("/world")
+                .expectStatus(200);
+        });
+
+        it("should stop stripping if there is no more parts", async () => {
+            const server = new Server();
+            server.use(serve("fixtures", {
+                index: "index.html",
+                format: true,
+                strip: 10
+            }));
+
+            await request(server)
+                .get("/world")
+                .expectStatus(200);
+        });
+    });
 });

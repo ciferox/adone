@@ -113,7 +113,7 @@ describe("glosses", "net", "http", "server", "middlewares", "router", "Router", 
         expect(middleware).to.be.a("function");
     });
 
-    it("matches middleware only if route was matched", async () => {
+    it("matches middleware if there is no matched route", async () => {
         const server = new Server();
         const router = new Router();
         const otherRouter = new Router();
@@ -132,7 +132,36 @@ describe("glosses", "net", "http", "server", "middlewares", "router", "Router", 
         await request(server)
             .get("/bar")
             .expectStatus(200)
-            .expectBody({ foo: "bar" });
+            .expectBody({ bar: "baz" });
+    });
+
+    it("should mount middleware", async () => {
+        const server = new Server();
+        const router = new Router();
+        const otherRouter = new Router();
+
+        router.use("/public", (ctx, next) => {
+            ctx.body = "public";
+            return next();
+        });
+
+        otherRouter.use("/nested", (ctx) => {
+            ctx.body = "nested";
+        });
+
+        router.use("/other", otherRouter.routes());
+
+        server.use(router.routes());
+
+        await request(server)
+            .get("/public")
+            .expectStatus(200)
+            .expectBody("public");
+
+        await request(server)
+            .get("/other/nested")
+            .expectStatus(200)
+            .expectBody("nested");
     });
 
     it("matches first to last", async () => {

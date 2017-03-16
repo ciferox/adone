@@ -54,12 +54,12 @@ class Router {
                 });
 
                 if (this.params) {
-                    Object.keys(this.params).forEach((key) => {
-                        middleware.router.param(key, this.params[key]);
-                    });
+                    for (const [key, value] of util.entries(this.params)) {
+                        middleware.router.param(key, value);
+                    }
                 }
             } else {
-                this.register(path, [], middleware, { end: false, ignoreCaptures: !hasPath });
+                this.register(path, methods, middleware, { end: false, ignoreCaptures: !hasPath });
             }
         }
         return this;

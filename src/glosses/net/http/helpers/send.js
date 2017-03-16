@@ -26,7 +26,6 @@ const decode = (path) => {
     }
 };
 
-
 export default async function send(ctx, path, opts = {}) {
     if (!ctx) {
         throw new x.InvalidArgument("context is required");
@@ -35,18 +34,18 @@ export default async function send(ctx, path, opts = {}) {
         throw new x.InvalidArgument("pathname is required");
     }
 
+    const { index, maxage = 0, hidden = false, setHeaders } = opts;
     const root = opts.root ? normalize(resolve(opts.root)) : "";
     const trailingSlash = path[path.length - 1] === "/";
     path = path.substr(parse(path).root.length);
 
-    const { index, maxage = 0, hidden = false, setHeaders } = opts;
 
     const format = opts.format === false ? false : true;
     const extensions = is.array(opts.extensions) ? opts.extensions : false;
     const gzip = opts.gzip === false ? false : true;
 
     if (setHeaders && !is.function(setHeaders)) {
-        throw new TypeError("option setHeaders must be function");
+        throw new x.InvalidArgument("option setHeaders must be function");
     }
 
     const encoding = ctx.acceptsEncodings("gzip", "deflate", "identity");
