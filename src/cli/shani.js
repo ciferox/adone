@@ -15,7 +15,7 @@ export class ShaniCLI extends adone.Application {
             ],
             optionsGroups: [
                 { name: "output", description: "Output" },
-                { name: "flow", description: "Executing flow controls" },
+                { name: "flow", description: "Execution flow controls" },
                 { name: "config", description: "Configuring" }
             ],
             options: [
@@ -42,7 +42,7 @@ export class ShaniCLI extends adone.Application {
         this.success = false;
     }
 
-    async main(args, opts, { command }) {
+    async main(args, opts) {
         const configPath = path.resolve(opts.get("config"));
         this.showHandles = opts.get("showHandles");
         const useConfig = !opts.get("dontUseConfig");
@@ -53,12 +53,9 @@ export class ShaniCLI extends adone.Application {
 
         config.options = config.options || {};
 
-        const rawOpts = command.getOptionsMap({ value: false });
-
         for (const name of ["tests", "first", "timeout", "showHandles", "dontUseMap", "allTimings", "skip", "timers", "showHooks", "dontKeepHooks", "noTicks"]) {
-            const opt = rawOpts.get(name);
-            if (opt.present) {
-                config.options[name] = opt.value;
+            if (opts.has(name)) {
+                config.options[name] = opts.get(name);
             }
         }
         const shaniOptions = {

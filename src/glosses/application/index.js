@@ -1,10 +1,10 @@
-const { is, x } = adone;
+const { is, x, text } = adone;
 
 const INTERNAL = Symbol.for("adone:application:internal");
 const UNNAMED = Symbol.for("adone:application:unnamed");
 const EMPTY_VALUE = Symbol.for("adone:application:emptyValue");
 
-class BorderlessTable extends adone.text.table.Table {
+class BorderlessTable extends text.table.Table {
     constructor({ colWidths }) {
         super({
             colWidths,
@@ -91,7 +91,12 @@ class Argument {
     }
 
     hasDefaultValue() {
-        if (this.action === "store_true" || this.action === "store_false" || this.action === "store_const") {
+        if (
+            this.action === "store_true" ||
+            this.action === "store_false" ||
+            this.action === "store_const" ||
+            this.nargs === "*"
+        ) {
             return true;
         }
         return this.default !== EMPTY_VALUE;
@@ -354,7 +359,7 @@ class OptionalArgument extends Argument {
                     }
                     return x.slice(i);
                 }),
-                ...this.names.map((x) => adone.text.toCamelCase(x))
+                ...this.names.map((x) => text.toCamelCase(x))
             ];
         }
         return this.mappedNames.includes(name);
@@ -462,7 +467,7 @@ class Group {
         if (!is.object(params)) {
             params = String(params);
             this.name = params;
-            this.description = adone.text.capitalize(params);
+            this.description = text.capitalize(params);
         } else {
             this.name = params.name;
             this.description = params.description;
@@ -493,6 +498,66 @@ class Group {
 
     [Symbol.iterator]() {
         return this.elements[Symbol.iterator]();
+    }
+}
+
+class ArgumentsMap {
+    constructor(args) {
+        this.args = new Map();
+        for (const arg of args) {
+            for (let name of arg.names) {
+                let i = 0;
+                while (name[i] === "-") {
+                    ++i;
+                }
+                name = name.slice(i);
+                this.args.set(name, arg);
+                this.args.set(text.toCamelCase(name), arg);
+            }
+        }
+    }
+
+    get(key, defaultValue = EMPTY_VALUE) {
+        if (!this.args.has(key)) {
+            throw new x.Unknown(`No such argument: ${key}`);
+        }
+        const arg = this.args.get(key);
+        if (arg.present || arg.hasDefaultValue()) {
+            return arg.value;
+        }
+        if (defaultValue !== EMPTY_VALUE) {
+            return defaultValue;
+        }
+        switch (arg.type) {
+            case String: {
+                return "";
+            }
+            case Number: {
+                return 0;
+            }
+        }
+        if (arg.type === String) {
+            return "";
+        }
+        if (arg.type === Number) {
+            return 0;
+        }
+        if (is.class(arg.type)) {
+            // eslint-disable-next-line
+            return new arg.type(null);
+        }
+        if (is.function(arg.type)) {
+            return arg.type(null);
+        }
+        // array type?
+    }
+
+    has(key) {
+        if (!this.args.has(key)) {
+            throw new x.Unknown(`No such argument: ${key}`);
+        }
+        const arg = this.args.get(key);
+        return arg.present;
     }
 }
 
@@ -682,35 +747,12 @@ class Command {
         throw new x.InvalidArgument();
     }
 
-    getArgumentsMap({ value = true } = {}) {
-        const args = new Map();
-        for (const arg of this.arguments) {
-            for (const name of arg.names) {
-                args.set(name, arg.value);
-                args.set(adone.text.toCamelCase(name), value ? arg.value : arg);
-            }
-        }
-        return args;
+    getArgumentsMap() {
+        return new ArgumentsMap(this.arguments);
     }
 
-    getOptionsMap({ value = true } = {}) {
-        const opts = new Map();
-        for (const opt of this.options) {
-            if (!opt.present && !opt.hasDefaultValue()) {
-                continue;
-            }
-            for (let name of opt.names) {
-                let i = 1;
-                while (name[i] === "-") {
-                    ++i;
-                }
-                name = name.slice(i);
-
-                opts.set(name, opt.value);
-                opts.set(adone.text.toCamelCase(name), value ? opt.value : opt);
-            }
-        }
-        return opts;
+    getOptionsMap() {
+        return new ArgumentsMap(this.options);
     }
 
     execute(rest, match) {
@@ -820,7 +862,7 @@ class Command {
         const totalWidth = adone.terminal.cols;
 
         if (this.description) {
-            helpMessage.push("", adone.text.wordwrap(this.description, totalWidth));
+            helpMessage.push("", text.wordwrap(this.description, totalWidth));
         }
 
         const options = this.options;
@@ -833,7 +875,7 @@ class Command {
                     colWidths: [4, null, 2, null]
                 });
                 const namesMessages = this.arguments.map((arg) => {
-                    return adone.text.wordwrap(arg.getNamesMessage(), 40);
+                    return text.wordwrap(arg.getNamesMessage(), 40);
                 });
                 const maxNamesLength = namesMessages.reduce((x, y) => Math.max(x, y.length), 0);
                 for (const arg of this.arguments) {
@@ -841,7 +883,7 @@ class Command {
                         null,
                         namesMessages.shift(),
                         null,
-                        adone.text.wordwrap(
+                        text.wordwrap(
                             arg.getShortHelpMessage(),
                             totalWidth - 4 - maxNamesLength - 2
                         )
@@ -875,7 +917,7 @@ class Command {
                         colWidths: [4, null, 2, null]
                     });
                     const namesMessages = [...group].map((opt) => {
-                        return adone.text.wordwrap(
+                        return text.wordwrap(
                             opt.getUsageMessage({ required: false, allNames: true }),
                             40
                         );
@@ -886,7 +928,7 @@ class Command {
                             null,
                             namesMessages.shift(),
                             null,
-                            adone.text.wordwrap(
+                            text.wordwrap(
                                 opt.getShortHelpMessage(),
                                 totalWidth - 4 - maxNamesLength - 2
                             )
@@ -921,7 +963,7 @@ class Command {
                         colWidths: [4, null, 2, null]
                     });
                     const namesMessages = [...group].map((cmd) => {
-                        return adone.text.wordwrap(cmd.getNamesMessage(), 40);
+                        return text.wordwrap(cmd.getNamesMessage(), 40);
                     });
                     const maxNamesLength = namesMessages.reduce((x, y) => Math.max(x, y.length), 0);
                     for (const cmd of group) {
@@ -929,7 +971,7 @@ class Command {
                             null,
                             namesMessages.shift(),
                             null,
-                            adone.text.wordwrap(
+                            text.wordwrap(
                                 cmd.getShortHelpMessage(),
                                 totalWidth - 4 - maxNamesLength - 2
                             )
@@ -1441,7 +1483,7 @@ export default class Application extends adone.application.Subsystem {
                 }
                 return x.slice(i);
             });
-            names.push(...names.map((x) => adone.text.toCamelCase(x)));
+            names.push(...names.map((x) => text.toCamelCase(x)));
             if (names.includes(optionName)) {
                 return value ? option.value : option;
             }
