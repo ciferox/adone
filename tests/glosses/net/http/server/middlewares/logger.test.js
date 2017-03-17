@@ -1,11 +1,17 @@
 describe("glosses", "net", "http", "server", "middlewares", "logger", () => {
-    const { net: { http: { Server } }, collection: { BufferList }, fs, util: { humanizeSize }, noop } = adone;
+    const {
+        net: { http: { Server } },
+        collection: { BufferList },
+        util: { humanizeSize },
+        fs, noop
+    } = adone;
     const { middleware: { logger } } = Server;
 
     const getLogger = () => {
         const buffer = new BufferList();
         return {
             middleware: logger({
+                timestamp: false,
                 sinks: [{
                     type: "stream",
                     stream: buffer,

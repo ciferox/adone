@@ -17,13 +17,22 @@ class Counter extends adone.std.stream.Transform {
     }
 }
 
+const defaultTimestampFormat = "DD.MM.YYYY HH:mm:ss";
+
 export default function (options = {}) {
-    const logger = new Logger();
+    const loggerOpts = {};
+    if (options.timestamp) {
+        const format = is.string(options.timestamp) ? options.timestamp : defaultTimestampFormat;
+        loggerOpts.bindArgs = [
+            () => adone.date().format(format)
+        ];
+    }
+    const logger = new Logger(loggerOpts);
 
     if (adone.is.propertyDefined(options, "sinks")) {
         logger.toSinks(options.sinks);
     } else {
-        logger.toStdout({
+        const opts = {
             argsSchema: [
                 {
                     style: {
@@ -42,7 +51,15 @@ export default function (options = {}) {
                 { style: "{gray-fg}" },  // time
                 { style: "{gray-fg}" }  // response size
             ]
-        });
+        };
+        if (options.timestamp) {
+            opts.argsSchema.unshift({
+                format: "%s",
+                style: "{grey-fg}",
+                brackets: true
+            });
+        }
+        logger.toStdout(opts);
     }
 
     const middleware = (ctx, next) => {

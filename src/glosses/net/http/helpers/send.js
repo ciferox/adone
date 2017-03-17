@@ -64,7 +64,7 @@ export default async function send(ctx, path, opts = {}) {
     path = resolvePath(root, path);
 
     if (!hidden && isHidden(root, path)) {
-        return;
+        return { sent: false };
     }
 
     // serve gzipped file when possible
@@ -92,7 +92,6 @@ export default async function send(ctx, path, opts = {}) {
     let stats;
     try {
         stats = await fs.stat(path);
-
         // Format the path to serve static file servers and not require a trailing slash for directories,
         // so that you can do both `/directory` and `/directory/`
         if (stats.isDirectory()) {
@@ -100,12 +99,12 @@ export default async function send(ctx, path, opts = {}) {
                 path += `/${index}`;
                 stats = await fs.stat(path);
             } else {
-                return;
+                return { path, directory: true, sent: false };
             }
         }
     } catch (err) {
         if (["ENOENT", "ENAMETOOLONG", "ENOTDIR"].includes(err.code)) {
-            return;
+            return { sent: false };
         }
         err.status = 500;
         throw err;
@@ -125,5 +124,5 @@ export default async function send(ctx, path, opts = {}) {
     ctx.type = type(path);
     ctx.body = fs.createReadStream(path);
 
-    return path;
+    return { path, sent: true };
 }

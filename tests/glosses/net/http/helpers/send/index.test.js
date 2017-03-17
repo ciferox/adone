@@ -182,12 +182,12 @@ describe("glosses", "net", "http", "helpers", "send", () => {
                 .expectStatus(404);
         });
 
-        it("should return undefined if format is set to false", async () => {
+        it("should return an object with sent = false if format is set to false", async () => {
             const server = new Server();
 
             server.use(async (ctx) => {
-                const sent = await send(ctx, "/fixtures", { format: false });
-                assert.equal(sent, undefined);
+                const res = await send(ctx, "/fixtures", { format: false });
+                assert.equal(res.sent, false);
             });
 
             await request(server)
@@ -201,7 +201,20 @@ describe("glosses", "net", "http", "helpers", "send", () => {
             const server = new Server();
 
             server.use(async (ctx) => {
-                await send(ctx, "/test/fixtures");
+                await send(ctx, "/fixtures");
+            });
+
+            await request(server)
+                .get("/")
+                .expectStatus(404);
+        });
+
+        it("should return an object with directory = true", async () => {
+            const server = new Server();
+
+            server.use(async (ctx) => {
+                const res = await send(ctx, "/fixtures");
+                assert.equal(res.directory, true);
             });
 
             await request(server)
@@ -270,13 +283,14 @@ describe("glosses", "net", "http", "helpers", "send", () => {
     });
 
     describe("when path is a file", () => {
-        it("should return the path", async () => {
+        it("should return object with path and sent path", async () => {
             const server = new Server();
 
             server.use(async (ctx) => {
                 const p = "/fixtures/user.json";
-                const sent = await send(ctx, p);
-                assert.equal(sent, path.resolve(`${__dirname}/fixtures/user.json`));
+                const res = await send(ctx, p);
+                assert.equal(res.path, path.resolve(`${__dirname}/fixtures/user.json`));
+                assert.equal(res.sent, true);
             });
 
             await request(server)
@@ -352,8 +366,8 @@ describe("glosses", "net", "http", "helpers", "send", () => {
 
                 server.use(async (ctx) => {
                     const p = "/fixtures/user.json";
-                    const sent = await send(ctx, p, { maxage: 5000 });
-                    assert.equal(sent, path.resolve(`${__dirname}/fixtures/user.json`));
+                    const res = await send(ctx, p, { maxage: 5000 });
+                    assert.equal(res.path, path.resolve(`${__dirname}/fixtures/user.json`));
                 });
 
                 await request(server)
@@ -367,8 +381,8 @@ describe("glosses", "net", "http", "helpers", "send", () => {
 
                 server.use(async (ctx) => {
                     const p = "/fixtures/user.json";
-                    const sent = await send(ctx, p, { maxage: 1234 });
-                    assert.equal(sent, path.resolve(`${__dirname}/fixtures/user.json`));
+                    const res = await send(ctx, p, { maxage: 1234 });
+                    assert.equal(res.path, path.resolve(`${__dirname}/fixtures/user.json`));
                 });
 
                 await request(server)

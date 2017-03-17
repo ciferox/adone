@@ -86,16 +86,14 @@ describe("glosses", "net", "http", "middlewares", "serve", () => {
             });
 
             describe("when omitted", () => {
-                it("should use index.html", async () => {
+                it("should not use index.html", async () => {
                     const server = new Server();
 
                     server.use(serve("fixtures"));
 
                     await request(server)
                         .get("/world/")
-                        .expectStatus(200)
-                        .expectHeader("Content-Type", "text/html; charset=utf-8")
-                        .expectBody("html index");
+                        .expectStatus(404);
                 });
             });
 
@@ -181,7 +179,7 @@ describe("glosses", "net", "http", "middlewares", "serve", () => {
             });
 
             describe("when omitted", () => {
-                it("should use index.html", async () => {
+                it("should not use index.html", async () => {
                     const server = new Server();
 
                     server.use(serve("fixtures", {
@@ -190,9 +188,7 @@ describe("glosses", "net", "http", "middlewares", "serve", () => {
 
                     await request(server)
                         .get("/world/")
-                        .expectStatus(200)
-                        .expectHeader("Content-Type", "text/html; charset=utf-8")
-                        .expectBody("html index");
+                        .expectStatus(404);
                 });
             });
         });
@@ -338,19 +334,6 @@ describe("glosses", "net", "http", "middlewares", "serve", () => {
                 index: "index.html",
                 format: true,
                 strip: 0
-            }));
-
-            await request(server)
-                .get("/world")
-                .expectStatus(200);
-        });
-
-        it("should stop stripping if there is no more parts", async () => {
-            const server = new Server();
-            server.use(serve("fixtures", {
-                index: "index.html",
-                format: true,
-                strip: 10
             }));
 
             await request(server)
