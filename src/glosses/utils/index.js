@@ -284,6 +284,41 @@ const util = {
             yield [i++, a];
         }
     },
+    *zip(...iterables) {
+        if (iterables.length === 0) {
+            return;
+        }
+        const iterators = iterables.map((obj) => {
+            if (!is.iterable(obj)) {
+                throw new adone.x.InvalidArgument("Only iterables are supported");
+            }
+            return obj[Symbol.iterator]();
+        });
+        const tmp = [];
+        while (true) {  // eslint-disable-line
+            let finish = false;
+            for (let i = 0; i < iterators.length; ++i) {
+                const it = iterators[i];
+                if (finish) {
+                    if (it.return) {
+                        it.return();
+                    }
+                    continue;
+                }
+                const { value, done } = it.next();
+                if (done) {
+                    finish = true;
+                    continue;
+                }
+                tmp.push(value);
+            }
+            if (finish) {
+                return;
+            }
+            yield tmp.slice();
+            tmp.length = 0;
+        }
+    },
     /**
      * Возвращает свойства объекта
      *

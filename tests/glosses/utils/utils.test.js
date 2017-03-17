@@ -1,5 +1,5 @@
 describe("glosses", "utils", () => {
-    const { util } = adone;
+    const { util, is, x } = adone;
 
     describe("Function", () => {
         describe("identity", () => {
@@ -2019,6 +2019,114 @@ describe("glosses", "utils", () => {
             expect(t).to.be.deep.equal(s);
             t.a.b.d = 2;
             expect(t).not.to.be.deep.equal(s);
+        });
+    });
+
+    describe("zip", () => {
+        const { zip } = util;
+        const { collection } = adone;
+
+        it("should be a generator", () => {
+            expect(is.generator(zip)).to.be.true;
+        });
+
+        it("should zip 2 arrays", () => {
+            const res = [...zip([1, 2, 3], [4, 5, 6])];
+            expect(res).to.be.deep.equal([
+                [1, 4],
+                [2, 5],
+                [3, 6]
+            ]);
+        });
+
+        it("should zip many arrays", () => {
+            const res = [...zip([1], [2], [3], [4], [5], [6])];
+            expect(res).to.be.deep.equal([[1, 2, 3, 4, 5, 6]]);
+        });
+
+        it("should end when one of them ends", () => {
+            const res = [...zip(
+                [1, 2, 3, 4],
+                [1, 2, 3],
+                [1, 2]
+            )];
+            expect(res).to.be.deep.equal([[1, 1, 1], [2, 2, 2]]);
+        });
+
+        it("should support any iterable object", () => {
+            const list = new collection.LinkedList(3);
+            list.push(1);
+            list.push(2);
+            list.push(3);
+            const fib = function* () {
+                let [a, b] = [0, 1];
+                for (;;) {
+                    yield a;
+                    [a, b] = [b, a + b];
+                }
+            };
+            const res = [...zip(list, [4, 5, 6, 7, 8, 9], fib())];
+            expect(res).to.be.deep.equal([[1, 4, 0], [2, 5, 1], [3, 6, 1]]);
+        });
+
+        it("should throw if non-iterable", () => {
+            expect(() => {
+                for (const i of zip({})) {  // eslint-disable-line
+
+                }
+            }).to.throw(x.InvalidArgument, "Only iterables are supported");
+        });
+
+        it("should correctly handle an empty array", () => {
+            const res = [...zip([], [1, 2, 3])];
+            expect(res).to.be.deep.equal([]);
+        });
+
+        it("should correctly handle empty arguments", () => {
+            const res = [...zip()];
+            expect(res).to.be.deep.equal([]);
+        });
+
+        it("should finish iterators", () => {
+            class ISomething {
+                constructor(val) {
+                    this.cursor = 0;
+                    this.val = val;
+                    this.ret = false;
+                }
+
+                next() {
+                    if (this.cursor === this.val.length) {
+                        return { done: true };
+                    }
+                    return { done: false, value: this.val[this.cursor++] };
+                }
+
+                return() {
+                    this.ret = true;
+                }
+            }
+
+            class Something extends Array {
+                constructor(val) {
+                    super(...val);
+                    this.iterators = [];
+                }
+
+                [Symbol.iterator]() {
+                    const it = new ISomething(this);
+                    this.iterators.push();
+                    return it;
+                }
+            }
+
+            const smth = new Something([1, 2, 3, 4, 5]);
+
+            const res = [...zip([1, 2, 3], smth, smth)];
+            expect(res).to.be.deep.equal([[1, 1, 1], [2, 2, 2], [3, 3, 3]]);
+            for (const it of smth.iterators) {
+                expect(it.ret).to.be.true;
+            }
         });
     });
 });
