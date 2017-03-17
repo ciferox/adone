@@ -1,9 +1,8 @@
 
 const {
-    std: { path: { resolve, normalize, relative } },
+    std: { path: { resolve, normalize } },
     net: { http: { helper: { send } } },
-    templating: { nunjucks },
-    is, x, fs, util, lazify, o
+    is, x, lazify, o
 } = adone;
 
 const lazy = lazify({
@@ -35,6 +34,7 @@ export default function serve(root, opts = {}) {
 
     if (opts.listing) {
         const listingOpts = is.object(opts.listing) ? o(opts.listing) : {};
+        listingOpts.hidden = opts.hidden;
         listing = new lazy.ListingTool(opts.root, listingOpts);
     }
 

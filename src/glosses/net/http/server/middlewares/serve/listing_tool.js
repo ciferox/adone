@@ -174,6 +174,9 @@ const getIconClass = (file) => {
     const mime = helper.mimeType.lookup(ext);
 
     if (mime !== false) {
+        if (iconsMap.has(mime)) {
+            return iconsMap.get(mime);
+        }
         const suffix = mime.split("+")[1];
         if (suffix && iconsMap.has(suffix)) {
             return iconsMap.get(suffix);
@@ -202,6 +205,7 @@ const sortFiles = (a, b) => {
 export default class ListingTool {
     constructor(root, options = {}) {
         this.root = root;
+        this.hidden = options.hidden;
         this.env = getEnvironment(options);
         this.loadIcon = options.loadIcon || loadIcon;
         this.getIconClass = options.getIconClass || getIconClass;
@@ -214,7 +218,10 @@ export default class ListingTool {
         if (this.listingCache.has(path)) {
             return this.listingCache.get(path);
         }
-        const files = await fs.readdir(path);
+        let files = await fs.readdir(path);
+        if (!this.hidden) {
+            files = files.filter((x) => x[0] !== ".");
+        }
         this.listingCache.set(path, files);
         return files;
     }
