@@ -38,7 +38,7 @@ const { DISABLED, ENABLED, INITIALIZING, RUNNING, UNINITIALIZING, STATUSES } = a
 
 @Contextable
 @Private
-export class Omnitron extends adone.Application {
+export class Omnitron extends adone.application.Application {
     async initialize() {
         this._.configManager = new adone.omnitron.ConfigManager(this);
         await this._.configManager.load();

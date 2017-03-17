@@ -6,7 +6,7 @@ const { shani: { Engine, consoleReporter } } = adone;
 
 const { is, std: { path } } = adone;
 
-export class ShaniCLI extends adone.Application {
+export class ShaniCLI extends adone.application.Application {
 
     initialize() {
         this.defineArguments({

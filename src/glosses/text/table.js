@@ -1,11 +1,10 @@
-
 const { is } = adone;
 
 const codeRegex = (capture) => capture ? /\u001b\[((?:\d*;){0,5}\d*)m/g : /\u001b\[(?:\d*;){0,5}\d*m/g;
 
 const strlen = (str) => {
     const code = codeRegex();
-    const stripped = ("" + str).replace(code, "");
+    const stripped = (`${str}`).replace(code, "");
     const split = stripped.split("\n");
     return split.reduce((memo, s) => {
         return (adone.text.width(s) > memo) ? adone.text.width(s) : memo;
@@ -40,8 +39,8 @@ const pad = (str, len, pad, dir) => {
 const codeCache = {};
 
 const addToCodeCache = (name, on, off) => {
-    on = "\u001b[" + on + "m";
-    off = "\u001b[" + off + "m";
+    on = `\u001b[${on}m`;
+    off = `\u001b[${off}m`;
     codeCache[on] = { set: name, to: true };
     codeCache[off] = { set: name, to: false };
     codeCache[name] = { on, off };
@@ -302,6 +301,58 @@ const CHAR_NAMES = [
 ];
 
 /**
+ * A Cell that doesn't do anything. It just draws empty lines.
+ * Used as a placeholder in column spanning.
+ * @constructor
+ */
+export class ColSpanCell {
+    draw() {
+        return "";
+    }
+
+    init(tableOptions) {
+
+    }
+
+    mergeTableOptions() {
+
+    }
+}
+
+/**
+ * A placeholder Cell for a Cell that spans multiple rows.
+ * It delegates rendering to the original cell, but adds the appropriate offset.
+ * @param originalCell
+ * @constructor
+ */
+export class RowSpanCell {
+    constructor(originalCell) {
+        this.originalCell = originalCell;
+    }
+
+    init(tableOptions) {
+        const y = this.y;
+        const originalY = this.originalCell.y;
+        this.cellOffset = y - originalY;
+        this.offset = findDimension(tableOptions.rowHeights, originalY, this.cellOffset);
+    }
+
+    draw(lineNum) {
+        if (lineNum === "top") {
+            return this.originalCell.draw(this.offset, this.cellOffset);
+        }
+        if (lineNum === "bottom") {
+            return this.originalCell.draw("bottom");
+        }
+        return this.originalCell.draw(this.offset + 1 + lineNum);
+    }
+
+    mergeTableOptions() {
+
+    }
+}
+
+/**
  * A representation of a cell within the table.
  * Implementations must have `init` and `draw` methods,
  * as well as `colSpan`, `rowSpan`, `desiredHeight` and `desiredWidth` properties.
@@ -322,7 +373,7 @@ export class Cell {
 
     setOptions(options) {
         if (is.string(options) || is.number(options) || is.boolean(options)) {
-            options = { content: "" + options };
+            options = { content: `${options}` };
         }
         options = options || {};
         this.options = options;
@@ -332,7 +383,7 @@ export class Cell {
         } else if (!content) {
             this.content = "";
         } else {
-            throw new Error("Content needs to be a primitive, got: " + (typeof content));
+            throw new Error(`Content needs to be a primitive, got: ${typeof content}`);
         }
         this.colSpan = options.colSpan || 1;
         this.rowSpan = options.rowSpan || 1;
@@ -513,11 +564,11 @@ export class Cell {
                 cellLeft = this.cells[cellLeft.y][cellLeft.x - 1];
             }
             if (!(cellLeft instanceof RowSpanCell)) {
-                left = this.chars["rightMid"];
+                left = this.chars.rightMid;
             }
         }
         const leftPadding = util.repeat(" ", this.paddingLeft);
-        const right = (drawRight ? this.chars["right"] : "");
+        const right = (drawRight ? this.chars.right : "");
         const rightPadding = util.repeat(" ", this.paddingRight);
         let line = this.lines[lineNum];
         const len = this.width - (this.paddingLeft + this.paddingRight);
@@ -547,7 +598,7 @@ export class Cell {
     drawBottom(drawRight) {
         const left = this.chars[this.x === 0 ? "bottomLeft" : "bottomMid"];
         const content = util.repeat(this.chars.bottom, this.width);
-        const right = drawRight ? this.chars["bottomRight"] : "";
+        const right = drawRight ? this.chars.bottomRight : "";
         return this.wrapWithStyleColors("border", left + content + right);
     }
 
@@ -565,70 +616,14 @@ export class Cell {
                 cellLeft = this.cells[cellLeft.y][cellLeft.x - 1];
             }
             if (!(cellLeft instanceof RowSpanCell)) {
-                left = this.chars["rightMid"];
+                left = this.chars.rightMid;
             }
         }
-        const right = (drawRight ? this.chars["right"] : "");
+        const right = (drawRight ? this.chars.right : "");
         const content = util.repeat(" ", this.width);
         return this.stylizeLine(left, content, right);
     }
 
-}
-
-/**
- * A Cell that doesn't do anything. It just draws empty lines.
- * Used as a placeholder in column spanning.
- * @constructor
- */
-export class ColSpanCell {
-    constructor() {
-
-    }
-
-    draw() {
-        return "";
-    }
-
-    init(tableOptions) {
-
-    }
-
-    mergeTableOptions() {
-
-    }
-}
-
-/**
- * A placeholder Cell for a Cell that spans multiple rows.
- * It delegates rendering to the original cell, but adds the appropriate offset.
- * @param originalCell
- * @constructor
- */
-export class RowSpanCell {
-    constructor(originalCell) {
-        this.originalCell = originalCell;
-    }
-
-    init(tableOptions) {
-        const y = this.y;
-        const originalY = this.originalCell.y;
-        this.cellOffset = y - originalY;
-        this.offset = findDimension(tableOptions.rowHeights, originalY, this.cellOffset);
-    }
-
-    draw(lineNum) {
-        if (lineNum === "top") {
-            return this.originalCell.draw(this.offset, this.cellOffset);
-        }
-        if (lineNum === "bottom") {
-            return this.originalCell.draw("bottom");
-        }
-        return this.originalCell.draw(this.offset + 1 + lineNum);
-    }
-
-    mergeTableOptions() {
-
-    }
 }
 
 const cellsConflict = (cell1, cell2) => {
@@ -648,9 +643,9 @@ const cellsConflict = (cell1, cell2) => {
 };
 
 const conflictExists = (rows, x, y) => {
-    const i_max = Math.min(rows.length - 1, y);
+    const iMax = Math.min(rows.length - 1, y);
     const cell = { x, y };
-    for (let i = 0; i <= i_max; i++) {
+    for (let i = 0; i <= iMax; i++) {
         const row = rows[i];
         for (let j = 0; j < row.length; j++) {
             if (cellsConflict(cell, row[j])) {
@@ -758,21 +753,21 @@ export class Table extends Array {
             rowAligns: [],
             head: [],
             chars: {
-                "top": "─",
+                top: "─",
                 "top-mid": "┬",
                 "top-left": "┌",
                 "top-right": "┐",
-                "bottom": "─",
+                bottom: "─",
                 "bottom-mid": "┴",
                 "bottom-left": "└",
                 "bottom-right": "┘",
-                "left": "│",
+                left: "│",
                 "left-mid": "├",
-                "mid": "─",
+                mid: "─",
                 "mid-mid": "┼",
-                "right": "│",
+                right: "│",
                 "right-mid": "┤",
-                "middle": "│"
+                middle: "│"
             },
             style: {
                 "padding-left": 1,
@@ -919,19 +914,19 @@ export class Table extends Array {
     }
 
     static fillIn(table) {
-        const h_max = Table.maxHeight(table);
-        const w_max = Table.maxWidth(table);
-        for (let y = 0; y < h_max; y++) {
-            for (let x = 0; x < w_max; x++) {
+        const hMax = Table.maxHeight(table);
+        const wMax = Table.maxWidth(table);
+        for (let y = 0; y < hMax; y++) {
+            for (let x = 0; x < wMax; x++) {
                 if (!conflictExists(table, x, y)) {
                     const opts = { x, y, colSpan: 1, rowSpan: 1 };
                     x++;
-                    while (x < w_max && !conflictExists(table, x, y)) {
+                    while (x < wMax && !conflictExists(table, x, y)) {
                         opts.colSpan++;
                         x++;
                     }
                     let y2 = y + 1;
-                    while (y2 < h_max && allBlank(table, y2, opts.x, opts.x + opts.colSpan)) {
+                    while (y2 < hMax && allBlank(table, y2, opts.x, opts.x + opts.colSpan)) {
                         opts.rowSpan++;
                         y2++;
                     }
@@ -961,3 +956,32 @@ export class Table extends Array {
 }
 Table.computeWidths = makeComputeWidths("colSpan", "desiredWidth", "x", 1);
 Table.computeHeights = makeComputeWidths("rowSpan", "desiredHeight", "y", 1);
+
+export class BorderlessTable extends Table {
+    constructor({ colWidths }) {
+        super({
+            colWidths,
+            chars: {
+                top: "",
+                "top-mid": "",
+                "top-left": "",
+                "top-right": "",
+                bottom: "",
+                "bottom-mid": "",
+                "bottom-left": "",
+                "bottom-right": "",
+                left: "",
+                "left-mid": "",
+                mid: "",
+                "mid-mid": "",
+                right: "",
+                "right-mid": "",
+                middle: ""
+            },
+            style: {
+                "padding-left": 0,
+                "padding-right": 0
+            }
+        });
+    }
+}

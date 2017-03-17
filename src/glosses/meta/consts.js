@@ -9,7 +9,13 @@ export const namespaces = [
         description: "Adone root namespace",
         paths: [
             "index",
-            "glosses/common",
+            "glosses/common"
+        ]
+    },
+    {
+        name: "adone.application",
+        description: "Complete application framework",
+        paths: [
             "glosses/application"
         ]
     },

@@ -4,7 +4,7 @@ import adone from "adone";
 
 const { is, std } = adone;
 
-export default class AdoneCLI extends adone.Application {
+export default class AdoneCLI extends adone.application.Application {
     async initialize() {
         this.addSubsystem(adone.std.path.resolve(__dirname, "./subsystems/meta"));
         this.addSubsystem(adone.std.path.resolve(__dirname, "./subsystems/omnitron"));

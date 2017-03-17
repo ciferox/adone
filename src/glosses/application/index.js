@@ -4,35 +4,6 @@ const INTERNAL = Symbol.for("adone:application:internal");
 const UNNAMED = Symbol.for("adone:application:unnamed");
 const EMPTY_VALUE = Symbol.for("adone:application:emptyValue");
 
-class BorderlessTable extends text.table.Table {
-    constructor({ colWidths }) {
-        super({
-            colWidths,
-            chars: {
-                top: "",
-                "top-mid": "",
-                "top-left": "",
-                "top-right": "",
-                bottom: "",
-                "bottom-mid": "",
-                "bottom-left": "",
-                "bottom-right": "",
-                left: "",
-                "left-mid": "",
-                mid: "",
-                "mid-mid": "",
-                right: "",
-                "right-mid": "",
-                middle: ""
-            },
-            style: {
-                "padding-left": 0,
-                "padding-right": 0
-            }
-        });
-    }
-}
-
 const escape = (x) => x.replace(/%/g, "%%");
 
 class Argument {
@@ -813,7 +784,7 @@ class Command {
     getUsageMessage() {
         const chain = this.getCommandChain();
         const argumentsLength = adone.terminal.cols - chain.length - 1 - 4;
-        const table = new BorderlessTable({
+        const table = new text.table.BorderlessTable({
             colWidths: [4, chain.length + 1, argumentsLength]
         });
         const options = this.options;
@@ -871,7 +842,7 @@ class Command {
             helpMessage.push("");
             if (this.arguments.length) {
                 helpMessage.push("Arguments:");
-                const table = new BorderlessTable({
+                const table = new text.table.BorderlessTable({
                     colWidths: [4, null, 2, null]
                 });
                 const namesMessages = this.arguments.map((arg) => {
@@ -913,7 +884,7 @@ class Command {
                     } else {
                         helpMessage.push(`${group.description}:`);
                     }
-                    const table = new BorderlessTable({
+                    const table = new text.table.BorderlessTable({
                         colWidths: [4, null, 2, null]
                     });
                     const namesMessages = [...group].map((opt) => {
@@ -959,7 +930,7 @@ class Command {
                     } else {
                         helpMessage.push(`${group.description}:`);
                     }
-                    const table = new BorderlessTable({
+                    const table = new text.table.BorderlessTable({
                         colWidths: [4, null, 2, null]
                     });
                     const namesMessages = [...group].map((cmd) => {

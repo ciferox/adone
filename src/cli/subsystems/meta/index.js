@@ -1,24 +1,4 @@
-const { is, std, fs, util, vendor: { lodash: _ } } = adone;
-
-class BorderlessTable extends adone.text.table.Table {
-    constructor({ colWidths }) {
-        super({
-            colWidths,
-            chars: {
-                "top": "", "top-mid": "", "top-left": "", "top-right": "",
-                "bottom": "", "bottom-mid": "", "bottom-left": "",
-                "bottom-right": "", "left": "", "left-mid": "",
-                "mid": "", "mid-mid": "", "right": "",
-                "right-mid": "", "middle": ""
-            },
-            style: {
-                "padding-left": 0,
-                "padding-right": 0
-            }
-        });
-    }
-}
-
+const { is, std, fs, util } = adone;
 
 export default class extends adone.application.Subsystem {
     initialize() {
@@ -118,7 +98,6 @@ export default class extends adone.application.Subsystem {
             let descrWidth = 0;
             let pathsWidth = 0;
             const options = {
-                wordWrap: true,
                 colWidths: [nameWidth]
             };
 
@@ -136,7 +115,7 @@ export default class extends adone.application.Subsystem {
                 options.colWidths.push(2, pathsWidth);
             }
 
-            const table = new BorderlessTable(options);
+            const table = new adone.text.table.BorderlessTable(options);
             for (const { name, description, paths } of namespaces) {
                 const ns = [name];
                 if (showDescr) {

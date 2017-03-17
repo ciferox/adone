@@ -1,11 +1,11 @@
-const { is, Application } = adone;
+const { is, application: { Application } } = adone;
 
 const SYM_TAG = Symbol();
 
 function hasSymbolTag(obj, tag) {
     if (obj != null && typeof obj === "object") {
         for ( ; (obj = obj.__proto__) != null; ) {
-            if (obj[tag] === true) {
+            if (obj[tag] === 1) {
                 return true;
             }
         }
@@ -13,7 +13,7 @@ function hasSymbolTag(obj, tag) {
     return false;
 }
 
-Application.prototype[SYM_TAG] = true;
+Application.prototype[SYM_TAG] = 1;
 class TestApp extends Application {
 }
 

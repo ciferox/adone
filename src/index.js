@@ -154,13 +154,11 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
         inspectStack: ["./glosses/text/inspect", (mod) => mod.inspectStack],
         core: "./glosses/core",
         Transform: "./glosses/core/transform",
-        Application: "./glosses/application",
-        Logger: "./glosses/application/logger",
         WebApplication: "./glosses/webapplication",
         WebMiddleware: "./glosses/webapplication/middleware",
         LoggerWebMiddleware: "./glosses/webapplication/middlewares/logger",
         ProcessManager: "./glosses/process_manager",
-        defaultLogger: () => adone.Logger.default(),
+        defaultLogger: () => adone.application.Logger.default(),
         text: "./glosses/text",
         Terminal: "./glosses/terminal",
         terminal: () => {
@@ -766,50 +764,48 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
         Benchmark: "./glosses/vendor/benchmark"
     });
 
-    let tagIndex = 1;
-
     adone.tag = {
         set(Class, tag) {
-            Class.prototype.adone_tag = tag;
+            Class.prototype[tag] = 1;
         },
         has(obj, tag) {
-            if (obj != null && typeof obj === "object"/* && tag != null*/) {
-                for (; (obj = obj.__proto__) != null;) {
-                    if (obj.adone_tag === tag) {
+            if (obj != null && typeof obj === "object") {
+                for ( ; (obj = obj.__proto__) != null; ) {
+                    if (obj[tag] === 1) {
                         return true;
                     }
                 }
             }
             return false;
         },
-        SUBSYSTEM: tagIndex++,
-        APPLICATION: tagIndex++,
-        WEBAPPLICATION: tagIndex++,
-        WEBMIDDLEWARE: tagIndex++,
-        TRANSFORM: tagIndex++,
-        CORE_STREAM: tagIndex++,
-        LOGGER: tagIndex++,
-        LONG: tagIndex++,
-        EXBUFFER: tagIndex++,
-        EXDATE: tagIndex++,
-        CONFIGURATION: tagIndex++,
+        SUBSYSTEM: Symbol(),
+        APPLICATION: Symbol(),
+        WEBAPPLICATION: Symbol(),
+        WEBMIDDLEWARE: Symbol(),
+        TRANSFORM: Symbol(),
+        CORE_STREAM: Symbol(),
+        LOGGER: Symbol(),
+        LONG: Symbol(),
+        EXBUFFER: Symbol(),
+        EXDATE: Symbol(),
+        CONFIGURATION: Symbol(),
 
-        GENESIS_NETRON: tagIndex++,
-        GENESIS_PEER: tagIndex++,
-        NETRON: tagIndex++,
-        NETRON_PEER: tagIndex++,
-        NETRON_ADAPTER: tagIndex++,
-        NETRON_DEFINITION: tagIndex++,
-        NETRON_DEFINITIONS: tagIndex++,
-        NETRON_REFERENCE: tagIndex++,
-        NETRON_INTERFACE: tagIndex++,
-        NETRON_STUB: tagIndex++,
-        NETRON_REMOTESTUB: tagIndex++,
-        NETRON_STREAM: tagIndex++,
+        GENESIS_NETRON: Symbol(),
+        GENESIS_PEER: Symbol(),
+        NETRON: Symbol(),
+        NETRON_PEER: Symbol(),
+        NETRON_ADAPTER: Symbol(),
+        NETRON_DEFINITION: Symbol(),
+        NETRON_DEFINITIONS: Symbol(),
+        NETRON_REFERENCE: Symbol(),
+        NETRON_INTERFACE: Symbol(),
+        NETRON_STUB: Symbol(),
+        NETRON_REMOTESTUB: Symbol(),
+        NETRON_STREAM: Symbol(),
 
-        FAST_STREAM: tagIndex++,
-        FAST_FS_STREAM: tagIndex++,
-        FAST_FS_MAP_STREAM: tagIndex++
+        FAST_STREAM: Symbol(),
+        FAST_FS_STREAM: Symbol(),
+        FAST_FS_MAP_STREAM: Symbol()
     };
 
     // Shim object
