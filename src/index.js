@@ -703,8 +703,6 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
         Definitions: "./glosses/netron/definitions",
         Reference: "./glosses/netron/reference",
         Interface: "./glosses/netron/interface",
-        Auth: "./glosses/netron/auth",
-        Factory: "./glosses/netron/factory",
         Adapter: "./glosses/netron/adapter",
         Stream: "./glosses/netron/stream",
         contextable: () => {

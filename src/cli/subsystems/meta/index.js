@@ -44,6 +44,32 @@ export default class extends adone.application.Subsystem {
                     handler: this.inspectCommand
                 },
                 {
+                    name: "search",
+                    help: "Deep search something in the namespace",
+                    arguments: [
+                        {
+                            name: "keyword",
+                            type: String,
+                            help: "Keyword for searching"
+                        }
+                    ],
+                    options: [
+                        {
+                            name: "--namespace",
+                            type: String,
+                            default: "",
+                            help: "Name of namespace from which the keyword will be searched"
+                        },
+                        {
+                            name: "--threshold",
+                            type: Number,
+                            default: 0.1,
+                            help: "The accuracy of the search algorithm"
+                        }
+                    ],
+                    handler: this.searchCommand
+                },
+                {
                     name: "extract",
                     help: "Extract object/function/class with all dependencies",
                     arguments: [
@@ -240,33 +266,56 @@ export default class extends adone.application.Subsystem {
         return 0;
     }
 
+    async searchCommand(args, opts) {
+        try {
+            const namespace = opts.get("namespace");
+            const name = args.get("keyword");
+            const result = await adone.meta.search(name, namespace, { threshold: opts.get("threshold") });
+
+            for (const objName of result) {
+                let obj;
+                if (objName.startsWith("global.")) {
+                    obj = adone.vendor.lodash.get(global, adone.meta.skipGlobalNs(objName));
+                } else {
+                    obj = adone.vendor.lodash.get(adone, adone.meta.skipAdoneNs(objName));
+                }
+                adone.log(objName, adone.inspect(obj, { depth: 1, style: "color", noDescriptor: true, noNotices: true }));
+            }
+        } catch (err) {
+            adone.error(err.message);
+            return 1;
+        }
+        return 0;
+    }
+
     async extractCommand(args, opts) {
         try {
             const name = args.get("name");
             const { namespace, objectName } = adone.meta.parseName(name);
-            if (namespace === "") {
-                throw new adone.x.NotValid(`Not valid namespace: '${name}'`);
+            if (!namespace.startsWith("adone")) {
+                throw new adone.x.NotSupported("Extraction from namespace other than 'adone' not supported");
             }
             if (objectName === "") {
                 throw new adone.x.NotValid(`'${name}' is a namespace`);
             }
 
             const dir = opts.get("dir");
-            const sources = await adone.meta.sourceOf(name, dir);
+            const pathPrefix =  std.path.join(adone.appinstance.adoneRootPath, dir);
+            const sources = (await adone.meta.getNamespacePaths(name)).map((p) => adone.std.path.join(pathPrefix, p));
 
             for (const srcPath of sources) {
                 adone.log(srcPath);
-                adone.log();
-                const inspector = new adone.meta.Inspector(srcPath);
-                await inspector.load();
-                inspector.analyze();
-                adone.log(adone.text.pretty.json(inspector.namespaces));
-                adone.log();
-                adone.log(adone.text.pretty.json(inspector.globals));
-                adone.log();
+                // adone.log();
+                // const inspector = new adone.meta.Inspector(srcPath);
+                // await inspector.load();
+                // inspector.analyze();
+                // adone.log(adone.text.pretty.json(inspector.namespaces));
+                // adone.log();
+                // adone.log(adone.text.pretty.json(inspector.globals));
+                // adone.log();
             }
 
-            const outPath = opts.get("out");
+            // const outPath = opts.get("out");
         } catch (err) {
             adone.error(err.message);
             return 1;

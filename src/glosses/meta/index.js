@@ -1,5 +1,10 @@
 const { is, std, fs, util } = adone;
-const { parse, traverse } = adone.js.compiler;
+// const { parse, traverse } = adone.js.compiler;
+
+const GLOBAL_PREFIX_LEN = "global".length + 1;
+const ADONE_PREFIX_LEN = "adone".length + 1;
+export const skipAdoneNs = (namespace) => namespace.substring(ADONE_PREFIX_LEN);
+export const skipGlobalNs = (namespace) => namespace.substring(GLOBAL_PREFIX_LEN);
 
 adone.lazify({
     reflect: "./reflect",
@@ -93,15 +98,65 @@ export const listNamespaces = (keyword = "") => {
     return adone.vendor.lodash.cloneDeep(result.sort((a, b) => a.name.localeCompare(b.name)));
 };
 
-export class Inspector {
-    constructor() {
+export const isNamespace = (name) => {
+    if (name === "global.adone") {
+        return true;
+    }
+    return adone.meta.names.includes(name);
+};
 
+export const search = (keyword, nsName = "adone", { threshold = 0.1 } = {}) => {
+    let { namespace } = adone.meta.parseName(nsName);
+
+    if (namespace !== nsName) {
+        throw new adone.x.NotValid(`Invalid namespace: ${nsName}`);
     }
 
-    static namespaces(prefix) {
-
+    let ns;
+    if (namespace === "" || namespace === "global") {
+        namespace = "global";
+        ns = global;
+    } else if (namespace === "adone") {
+        ns = adone;
+    } else {
+        ns = adone.vendor.lodash.get(adone, skipAdoneNs(namespace));
     }
-}
+
+    const keys = Object.getOwnPropertyNames(ns);
+    const nestedNamespaces = [];
+    for (let i = 0; i < keys.length; i++) {
+        const name = `${namespace}.${keys[i]}`;
+        if (isNamespace(name)) {
+            nestedNamespaces.push(name === "global.adone" ? "adone" : name);
+            keys.splice(i, 1);
+        }
+    }
+
+    const fuzzy = new adone.text.Fuzzy(keys, {
+        threshold
+    });
+    let result = fuzzy.search(keyword).map((x) => `${namespace}.${keys[x]}`);
+
+    for (const nsName of nestedNamespaces) {
+        result = result.concat(search(keyword, nsName, { threshold }));
+    }
+
+    return result;
+};
+
+// export class Inspector {
+//     constructor() {
+//         this.code = null;
+//     }
+
+
+
+//     // async load(filePath) {
+//     //     this.filePath = filePath;
+//     //     this.code = await fs.readFile(this.filePath, { check: true, encoding: "utf8" });
+//     //     return this;
+//     // }
+// }
 
 // export class Inspector {
 //     constructor(filePath, { transpiled = false } = {}) {
@@ -113,11 +168,6 @@ export class Inspector {
 //         this.globals = ["global", "adone"];
 //         this.namespaces = ["global", "adone"];
 //         this.namespaceAliases = {};
-//     }
-
-//     async load() {
-//         this.code = await fs.readFile(this.filePath, { check: true, encoding: "utf8" });
-//         return this;
 //     }
 
 //     analyze() {
