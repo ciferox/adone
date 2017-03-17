@@ -1,6 +1,6 @@
 const { is, x, netron: { DEFAULT_PORT, ACTION, STATUS, PEER_TYPE, GenesisNetron, ws: { Peer } } } = adone;
 
-export default class WebSocketNetron extends GenesisNetron {
+export default class Netron extends GenesisNetron {
     getDefinitionByName(ctxId, uid = null) {
         if (is.nil(uid)) {
             throw new x.NotSupported("local contexts not supported");

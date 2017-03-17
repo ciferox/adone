@@ -5,9 +5,6 @@ const asyncFunctions = {
         native: async () => {
 
         },
-        coroutine: adone.Promise.coroutine(function* () {
-
-        })
     },
     "await Promise.resolve": {
         native: {
@@ -17,14 +14,6 @@ const asyncFunctions = {
             adone: async () => {
                 await adone.Promise.resolve();
             }
-        },
-        coroutine: {
-            native: adone.Promise.coroutine(function* () {
-                yield Promise.resolve();
-            }),
-            adone: adone.Promise.coroutine(function* () {
-                yield adone.Promise.resolve();
-            })
         }
     },
     "try { await Promise.reject } catch": {
@@ -43,22 +32,6 @@ const asyncFunctions = {
                     //
                 }
             }
-        },
-        coroutine: {
-            native: adone.Promise.coroutine(function* () {
-                try {
-                    yield Promise.reject();
-                } catch (err) {
-                    //
-                }
-            }),
-            adone: adone.Promise.coroutine(function* () {
-                try {
-                    yield adone.Promise.reject();
-                } catch (err) {
-                    //
-                }
-            })
         }
     }
 };

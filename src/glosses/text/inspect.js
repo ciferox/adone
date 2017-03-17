@@ -1,5 +1,70 @@
+const { is, identity, terminal: { style: { styles } } } = adone;
 
-const { is, text: { ansi } } = adone;
+/*    
+    * style:
+        * 'none': (default) normal output suitable for console.log() or writing in a file
+        * 'color': colorful output suitable for terminal
+    * depth: depth limit, default: 3
+    * noFunc: do not display functions
+    * noNotices: do not display '[depth limit]'/'[circular]'
+    * noDescriptor: do not display descriptor information
+    * noType: do not display type and constructor
+    * enumOnly: only display enumerable properties
+    * funcDetails: display function's details
+    * proto: display object's prototype
+    * sort: sort the keys
+    * minimal: imply noFunc: true, noDescriptor: true, noType: true, enumOnly: true, proto: false and funcDetails: false.
+*/
+
+// Styles
+const defaultInspectStyle = {
+    tab: "    ",
+    nl: "\n",
+    limit: identity,
+    type: (str) => (`<${str}>`),
+    constant: identity,
+    funcName: identity,
+    constructorName: (str) => (`<${str}>`),
+    length: identity,
+    key: identity,
+    index: identity,
+    number: identity,
+    inspect: identity,
+    string: identity,
+    errorType: identity,
+    errorMessage: identity,
+    errorStack: identity,
+    errorStackMethod: identity,
+    errorStackMethodAs: identity,
+    errorStackFile: identity,
+    errorStackLine: identity,
+    errorStackColumn: identity
+};
+
+const inspectStyle = {
+    none: defaultInspectStyle,
+    color: adone.o(defaultInspectStyle, {
+        limit: (str) => (styles.bold.open + styles.brightRed.open + str + styles.reset.open),
+        type: (str) => (styles.italic.open + styles.gray.open + str + styles.reset.open),
+        constant: (str) => (styles.cyan.open + str + styles.reset.open),
+        funcName: (str) => (styles.italic.open + styles.magenta.open + str + styles.reset.open),
+        constructorName: (str) => (styles.magenta.open + str + styles.reset.open),
+        length: (str) => (styles.italic.open + styles.gray.open + str + styles.reset.open),
+        key: (str) => (styles.green.open + str + styles.reset.open),
+        index: (str) => (styles.blue.open + str + styles.reset.open),
+        number: (str) => (styles.cyan.open + str + styles.reset.open),
+        inspect: (str) => (styles.cyan.open + str + styles.reset.open),
+        string: (str) => (styles.blue.open + str + styles.reset.open),
+        errorType: (str) => (styles.red.open + styles.bold.open + str + styles.reset.open),
+        errorMessage: (str) => (styles.red.open + styles.italic.open + str + styles.reset.open),
+        errorStack: (str) => (styles.gray.open + str + styles.reset.open),
+        errorStackMethod: (str) => (styles.brightYellow.open + str + styles.reset.open),
+        errorStackMethodAs: (str) => (styles.yellow.open + str + styles.reset.open),
+        errorStackFile: (str) => (styles.brightCyan.open + str + styles.reset.open),
+        errorStackLine: (str) => (styles.blue.open + str + styles.reset.open),
+        errorStackColumn: (str) => (styles.magenta.open + str + styles.reset.open)
+    })
+};
 
 const keyNeedingQuotes = (key) => {
     if (!key.length) {
@@ -58,9 +123,7 @@ const inspect_ = (runtime, options, variable) => {
     let descriptor;
     let nextAncestors;
 
-    // Prepare things (indentation, key, descriptor, ... )
-
-    const type = typeof (variable);
+    const type = adone.util.typeOf(variable);
     const indent = options.style.tab.repeat(runtime.depth);
 
     if (type === "function" && options.noFunc) {
@@ -109,7 +172,6 @@ const inspect_ = (runtime, options, variable) => {
 
     const pre = runtime.noPre ? "" : indent + key;
 
-
     // Describe the current variable
 
     if (variable === undefined) {
@@ -129,7 +191,7 @@ const inspect_ = (runtime, options, variable) => {
         str += `${pre + options.style.inspect(variable.inspect())} ${
             options.noType ? "" : options.style.type("Buffer") + options.style.length(`(${variable.length})`)
             }${descriptorStr}${options.style.nl}`;
-    } else if (type === "object" || type === "function") {
+    } else if (type === "global" || type === "Object" || type === "class" || type === "function") {
         funcName = length = "";
         isFunc = false;
         if (type === "function") {
@@ -144,7 +206,9 @@ const inspect_ = (runtime, options, variable) => {
             length = options.style.length(`(${variable.length})`);
         }
 
-        if (!variable.constructor) {
+        if (type === "class") {
+            constructor = "Class";
+        } else if (!variable.constructor) {
             constructor = "(no constructor)";
         } else if (!variable.constructor.name) {
             constructor = "(anonymous)";
@@ -191,9 +255,15 @@ const inspect_ = (runtime, options, variable) => {
         } else if (!propertyList.length && !options.proto) {
             str += `{}${options.style.nl}`;
         } else if (runtime.depth >= options.depth) {
-            str += options.style.limit("[depth limit]") + options.style.nl;
+            if (!options.noNotices) {
+                str += options.style.limit("[depth limit]");
+            }
+            str += options.style.nl;
         } else if (runtime.ancestors.indexOf(variable) !== -1) {
-            str += options.style.limit("[circular]") + options.style.nl;
+            if (!options.noNotices) {
+                str += options.style.limit("[circular]");
+            }
+            str += options.style.nl;
         } else {
             str += (isArray && options.noType ? "[" : "{") + options.style.nl;
 
@@ -265,126 +335,20 @@ const inspect_ = (runtime, options, variable) => {
         }
     }
 
-    // Finalizing	
-    if (runtime.depth === 0) {
-        if (options.style === "html") {
-            str = adone.text.escape.html(str);
-        }
-    }
-
     return str;
 };
 
-// Inspect's styles
-const inspectStyleNoop = (str) => str;
-const defaultInspectStyle = {
-    tab: "    ",
-    nl: "\n",
-    limit: inspectStyleNoop,
-    type: (str) => (`<${str}>`),
-    constant: inspectStyleNoop,
-    funcName: inspectStyleNoop,
-    constructorName: (str) => (`<${str}>`),
-    length: inspectStyleNoop,
-    key: inspectStyleNoop,
-    index: inspectStyleNoop,
-    number: inspectStyleNoop,
-    inspect: inspectStyleNoop,
-    string: inspectStyleNoop,
-    errorType: inspectStyleNoop,
-    errorMessage: inspectStyleNoop,
-    errorStack: inspectStyleNoop,
-    errorStackMethod: inspectStyleNoop,
-    errorStackMethodAs: inspectStyleNoop,
-    errorStackFile: inspectStyleNoop,
-    errorStackLine: inspectStyleNoop,
-    errorStackColumn: inspectStyleNoop
-};
-
-const inspectStyle = {
-    none: defaultInspectStyle,
-    color: adone.o(defaultInspectStyle, {
-        limit: (str) => (ansi.color.bold + ansi.color.brightRed + str + ansi.color.reset),
-        type: (str) => (ansi.color.italic + ansi.color.brightBlack + str + ansi.color.reset),
-        constant: (str) => (ansi.color.cyan + str + ansi.color.reset),
-        funcName: (str) => (ansi.color.italic + ansi.color.magenta + str + ansi.color.reset),
-        constructorName: (str) => (ansi.color.magenta + str + ansi.color.reset),
-        length: (str) => (ansi.color.italic + ansi.color.brightBlack + str + ansi.color.reset),
-        key: (str) => (ansi.color.green + str + ansi.color.reset),
-        index: (str) => (ansi.color.blue + str + ansi.color.reset),
-        number: (str) => (ansi.color.cyan + str + ansi.color.reset),
-        inspect: (str) => (ansi.color.cyan + str + ansi.color.reset),
-        string: (str) => (ansi.color.blue + str + ansi.color.reset),
-        errorType: (str) => (ansi.color.red + ansi.color.bold + str + ansi.color.reset),
-        errorMessage: (str) => (ansi.color.red + ansi.color.italic + str + ansi.color.reset),
-        errorStack: (str) => (ansi.color.brightBlack + str + ansi.color.reset),
-        errorStackMethod: (str) => (ansi.color.brightYellow + str + ansi.color.reset),
-        errorStackMethodAs: (str) => (ansi.color.yellow + str + ansi.color.reset),
-        errorStackFile: (str) => (ansi.color.brightCyan + str + ansi.color.reset),
-        errorStackLine: (str) => (ansi.color.blue + str + ansi.color.reset),
-        errorStackColumn: (str) => (ansi.color.magenta + str + ansi.color.reset)
-    }),
-    html: adone.o(defaultInspectStyle, {
-        tab: "&nbsp;&nbsp;&nbsp;&nbsp;",
-        nl: "<br />",
-        limit: (str) => (`<span style="color:red">${str}</span>`),
-        type: (str) => (`<i style="color:gray">${str}</i>`),
-        constant: (str) => (`<span style="color:cyan">${str}</span>`),
-        funcName: (str) => (`<i style="color:magenta">${str}</i>`),
-        constructorName: (str) => (`<span style="color:magenta">${str}</span>`),
-        length: (str) => (`<i style="color:gray">${str}</i>`),
-        key: (str) => (`<span style="color:green">${str}</span>`),
-        index: (str) => (`<span style="color:blue">${str}</span>`),
-        number: (str) => (`<span style="color:cyan">${str}</span>`),
-        inspect: (str) => (`<span style="color:cyan">${str}</span>`),
-        string: (str) => (`<span style="color:blue">${str}</span>`),
-        errorType: (str) => (`<span style="color:red">${str}</span>`),
-        errorMessage: (str) => (`<span style="color:red">${str}</span>`),
-        errorStack: (str) => (`<span style="color:gray">${str}</span>`),
-        errorStackMethod: (str) => (`<span style="color:yellow">${str}</span>`),
-        errorStackMethodAs: (str) => (`<span style="color:yellow">${str}</span>`),
-        errorStackFile: (str) => (`<span style="color:cyan">${str}</span>`),
-        errorStackLine: (str) => (`<span style="color:blue">${str}</span>`),
-        errorStackColumn: (str) => (`<span style="color:gray">${str}</span>`)
-    })
-};
-
-/*
-    Inspect a variable, return a string ready to be displayed with console.log(), or even as an HTML output.
-    
-    Options:
-        * style:
-            * 'none': (default) normal output suitable for console.log() or writing in a file
-            * 'color': colorful output suitable for terminal
-            * 'html': html output
-        * depth: depth limit, default: 3
-        * noFunc: do not display functions
-        * noDescriptor: do not display descriptor information
-        * noType: do not display type and constructor
-        * enumOnly: only display enumerable properties
-        * funcDetails: display function's details
-        * proto: display object's prototype
-        * sort: sort the keys
-        * minimal: imply noFunc: true, noDescriptor: true, noType: true, enumOnly: true, proto: false and funcDetails: false.
-        Display a minimal JSON-like output
-        * useInspect? use .inspect() method when available on an object
-*/
 export const inspect = (obj, options = {}) => {
     const runtime = { depth: 0, ancestors: [] };
 
-    if (!options.style) {
-        options.style = inspectStyle.none;
-    } else if (is.string(options.style)) {
+    if (is.string(options.style) && is.propertyOwned(inspectStyle, options.style)) {
         options.style = inspectStyle[options.style];
+    } else {
+        options.style = inspectStyle.none;
     }
 
     if (is.undefined(options.depth)) {
         options.depth = 3;
-    }
-
-    // /!\ nofunc is deprecated
-    if (options.nofunc) {
-        options.noFunc = true;
     }
 
     if (options.minimal) {

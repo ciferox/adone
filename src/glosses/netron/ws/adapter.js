@@ -1,6 +1,6 @@
 const { is, x } = adone;
 
-export default class WebSocketAdapter extends adone.netron.Adapter {
+export default class Adapter extends adone.netron.Adapter {
     constructor(options) {
         options.backlog = options.backlog || 511;
         super(options);

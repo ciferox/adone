@@ -1,9 +1,6 @@
-//@flow
-
 import TraversalContext from "./context";
 import * as visitors from "./visitors";
 import * as cache from "./cache";
-
 
 const { types: t, messages } = adone.js.compiler;
 const { includes } = adone.vendor.lodash;
@@ -15,8 +12,12 @@ export default function traverse(
     state: Object,
     parentPath: Object,
 ) {
-    if (!parent) return;
-    if (!opts) opts = {};
+    if (!parent) {
+        return;
+    }
+    if (!opts) {
+        opts = {};
+    }
 
     if (!opts.noScope && !scope) {
         if (parent.type !== "Program" && parent.type !== "File") {
@@ -50,12 +51,18 @@ traverse.node = function (
     skipKeys?
 ) {
     const keys: Array = t.VISITOR_KEYS[node.type];
-    if (!keys) return;
+    if (!keys) {
+        return;
+    }
 
     const context = new TraversalContext(scope, opts, state, parentPath);
     for (const key of keys) {
-        if (skipKeys && skipKeys[key]) continue;
-        if (context.visit(node, key)) return;
+        if (skipKeys && skipKeys[key]) {
+            continue;
+        }
+        if (context.visit(node, key)) {
+            return;
+        }
     }
 };
 
@@ -84,14 +91,18 @@ traverse.hasType = function (
     blacklistTypes: string[]
 ): boolean {
     // the node we're searching in is blacklisted
-    if (includes(blacklistTypes, tree.type)) return false;
+    if (includes(blacklistTypes, tree.type)) {
+        return false;
+    }
 
     // the type we're looking for is the same as the passed node
-    if (tree.type === type) return true;
+    if (tree.type === type) {
+        return true;
+    }
 
     const state = {
         has: false,
-        type: type
+        type
     };
 
     traverse(tree, {

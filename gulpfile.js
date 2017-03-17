@@ -76,7 +76,6 @@ function transform() {
             "transform-decorators-legacy",
             "transform-class-properties",
             "transform-es2015-modules-commonjs",
-            "transform-async-to-generator",
             "transform-function-bind",
             "transform-object-rest-spread",
             [importReplace, {

@@ -1,0 +1,9 @@
+{
+    "description": "Shell service",
+    "status": "disabled",
+    "contexts": [
+        {
+            "class": "Shell"
+        }
+    ]
+}

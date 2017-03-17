@@ -31,6 +31,7 @@ export default class extends adone.application.Subsystem {
                         {
                             name: "service",
                             type: String,
+                            nargs: "*",
                             default: "",
                             help: "Name of service"
                         }
@@ -44,6 +45,7 @@ export default class extends adone.application.Subsystem {
                         {
                             name: "service",
                             type: String,
+                            nargs: "*",
                             help: "Name of service"
                         }
                     ],
@@ -149,7 +151,7 @@ export default class extends adone.application.Subsystem {
         return 0;
     }
 
-    async statusCommand(args) {        
+    async statusCommand(args) {
         try {
             adone.log(adone.text.pretty.json(await this.dispatcher.status(args.get("service"))));
         } catch (err) {

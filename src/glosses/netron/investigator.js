@@ -11,48 +11,20 @@ export default class Investigator {
         this._investigate();
     }
 
-    /**
-     * Возвращает имя класса.
-     *
-     * @returns имя класса
-     *
-     * @memberOf Investigator
-     */
     getName() {
         return this.aClass.name;
     }
 
-    /**
-     * Возвращает описание класса, определённое с помощью декоратора @Description
-     *
-     * @returns описание класса
-     *
-     * @memberOf Investigator
-     */
     getDescription() {
         return this.description;
     }
 
     // Methods
 
-    /**
-     * Возвращает все метода класса.
-     *
-     * @returns Map из элементов [method, meta]
-     *
-     * @memberOf Investigator
-     */
     getMethods() {
         return this._methodMap;
     }
 
-    /**
-     * Возвращает публичные методы класса
-     *
-     * @returns Map из элементов [method, meta]
-     *
-     * @memberOf Investigator
-     */
     getPublicMethods() {
         if (is.undefined(this._publicMethodMap)) {
             this._publicMethodMap = this._getEntriesWherePropIs(this._methodMap, "private", false);
@@ -60,13 +32,6 @@ export default class Investigator {
         return this._publicMethodMap;
     }
 
-    /**
-     * Возвращает приватные методы класса
-     *
-     * @returns Map из элементов [method, meta]
-     *
-     * @memberOf Investigator
-     */
     getPrivateMethods() {
         if (is.undefined(this._privateMethodMap)) {
             this._privateMethodMap = this._getEntriesWherePropIs(this._methodMap, "private", true);
@@ -82,38 +47,14 @@ export default class Investigator {
         return this._twin;
     }
 
-    /**
-     * Проверяет существование метода с указанным именем.
-     *
-     * @param {String} name - имя метода
-     * @returns true, если метод определён в классе
-     *
-     * @memberOf Investigator
-     */
     hasMethod(name) {
         return this._methodMap.has(name);
     }
 
-    /**
-     * Возвращает метаданные для метода с указанным именем.
-     *
-     * @param {String} name - имя метода
-     * @returns {Object} с метаданными.
-     *
-     * @memberOf Investigator
-     */
     getMethodMetadata(name) {
         return this._methodMap.get(name);
     }
 
-    /**
-     * Возвращает сигнатуру метода.
-     *
-     * @param {String} name - имя метода
-     * @returns сигнатура
-     *
-     * @memberOf Investigator
-     */
     getMethodSignature(name) {
         const meta = this.getMethodMetadata(name);
         if (is.undefined(meta)) {
@@ -130,24 +71,10 @@ export default class Investigator {
 
     // Properties
 
-    /**
-     * Возвращает все свойства класса
-     *
-     * @returns {Map} из элементов [property, meta]
-     *
-     * @memberOf Investigator
-     */
     getProperties() {
         return this._propMap;
     }
 
-    /**
-     * Возвращает публичные свойства класса
-     *
-     * @returns {Map} из элементов [property, meta]
-     *
-     * @memberOf Investigator
-     */
     getPublicProperties() {
         if (is.undefined(this._publicPropMap)) {
             this._publicPropMap = this._getEntriesWherePropIs(this._propMap, "private", false);
@@ -155,13 +82,6 @@ export default class Investigator {
         return this._publicPropMap;
     }
 
-    /**
-     * Возвращает приватные свойства класса
-     *
-     * @returns {Map} из элементов [property, meta]
-     *
-     * @memberOf Investigator
-     */
     getPrivateProperties() {
         if (is.undefined(this._privatePropMap)) {
             this._privatePropMap = this._getEntriesWherePropIs(this._propMap, "private", true);
@@ -169,13 +89,6 @@ export default class Investigator {
         return this._privatePropMap;
     }
 
-    /**
-     * Возвращает свойства доступные только для чтения.
-     *
-     * @returns {Map} из элементов [property, meta]
-     *
-     * @memberOf Investigator
-     */
     getReadonlyProperties() {
         if (is.undefined(this._readonlyPropMap)) {
             this._readonlyPropMap = this._getEntriesWherePropIs(this._propMap, "readonly", true);
@@ -183,38 +96,14 @@ export default class Investigator {
         return this._readonlyPropMap;
     }
 
-    /**
-     * Проверяет существование свойства с указанным именем.
-     *
-     * @param {String} name - имя свойства
-     * @returns true, если свойство существует
-     *
-     * @memberOf Investigator
-     */
     hasProperty(name) {
         return this._propMap.has(name);
     }
 
-    /**
-     * Возвращает метаданные свойства.
-     *
-     * @param {String} name - имя свойства
-     * @returns {Object} с метаданными
-     *
-     * @memberOf Investigator
-     */
     getPropertyMetadata(name) {
         return this._propMap.get(name);
     }
 
-    /**
-     * Возвращает сигнатуру свойства.
-     *
-     * @param {String} name - имя свойства
-     * @returns сигнатура
-     *
-     * @memberOf Investigator
-     */
     getPropertySignature(name) {
         const meta = this.getPropertyMetadata(name);
         if (is.undefined(meta)) {
@@ -223,13 +112,6 @@ export default class Investigator {
         return `<${Investigator.getNameOfType(meta.type)}> ${name}`;
     }
 
-    /**
-     * Возвращает строку из подробного описания класса.
-     *
-     * @returns {String}
-     *
-     * @memberOf Investigator
-     */
     toString() {
         let classDef =  `// ${this.getDescription()}\nclass ${this.getName()} {\n`;
         if (this.getMethods().size > 0) {

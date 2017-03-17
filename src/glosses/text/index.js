@@ -23,10 +23,6 @@ const escape = {
             return `\\x${hex}`;
         });
     },
-    // Only escape & < > so this is suited for content outside tags
-    html: (str) => str.replace(/[&<>]/g, (match) => escapeHtmlMap[match]),
-    // Escape & < > " so this is suited for content inside a double-quoted attribute
-    htmlAttr: (str) => str.replace(/[&<>"]/g, (match) => escapeHtmlMap[match]),
     // Escape all html special characters & < > " '
     htmlSpecialChars: (str) => str.replace(/[&<>"']/g, (match) => escapeHtmlMap[match])
 };
@@ -49,31 +45,6 @@ const regexp = {
 
 const text = {
     ansi: {
-        color: {
-            reset: "\x1b[0m",
-            bold: "\x1b[1m",
-            dim: "\x1b[2m",
-            italic: "\x1b[3m",
-            underline: "\x1b[4m",
-            inverse: "\x1b[7m",
-            defaultColor: "\x1b[39m",
-            black: "\x1b[30m",
-            red: "\x1b[31m",
-            green: "\x1b[32m",
-            yellow: "\x1b[33m",
-            blue: "\x1b[34m",
-            magenta: "\x1b[35m",
-            cyan: "\x1b[36m",
-            white: "\x1b[37m",
-            brightBlack: "\x1b[90m",
-            brightRed: "\x1b[91m",
-            brightGreen: "\x1b[92m",
-            brightYellow: "\x1b[93m",
-            brightBlue: "\x1b[94m",
-            brightMagenta: "\x1b[95m",
-            brightCyan: "\x1b[96m",
-            brightWhite: "\x1b[97m"
-        },
         escapeCodesRegexp: () => /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-PRZcf-nqry=><]/g,
         stripEscapeCodes: (str) => (is.string(str) ? str.replace(text.ansi.escapeCodesRegexp(), "") : str)
     },

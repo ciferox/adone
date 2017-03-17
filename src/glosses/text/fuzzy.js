@@ -82,8 +82,8 @@ class BitapSearcher {
      * @private
      */
     _calculatePatternAlphabet() {
-        let mask = {},
-            i = 0;
+        const mask = {};
+        let i = 0;
 
         for (i = 0; i < this.patternLen; i++) {
             mask[this.pattern.charAt(i)] = 0;
@@ -104,8 +104,8 @@ class BitapSearcher {
      * @private
      */
     _bitapScore(errors, location) {
-        let accuracy = errors / this.patternLen,
-            proximity = Math.abs(this.options.location - location);
+        const accuracy = errors / this.patternLen;
+        const proximity = Math.abs(this.options.location - location);
 
         if (!this.options.distance) {
             // Dodge divide by zero error.
@@ -126,23 +126,19 @@ class BitapSearcher {
         const options = this.options;
         let i;
         let j;
-        let textLen;
-        let findAllMatches;
-        let location;
         let threshold;
         let bestLoc;
         let binMin;
         let binMid;
         let binMax;
-        let start, finish;
+        let start;
+        let finish;
         let bitArr;
         let lastBitArr;
         let charMatch;
         let score;
-        let locations;
         let matches;
         let isMatched;
-        let matchMask;
         let matchedIndices;
         let matchesLen;
         let match;
@@ -179,35 +175,35 @@ class BitapSearcher {
             };
         }
 
-        findAllMatches = options.findAllMatches;
+        const findAllMatches = options.findAllMatches;
 
-        location = options.location;
+        const location = options.location;
         // Set starting location at beginning text and initialize the alphabet.
-        textLen = text.length;
+        const textLen = text.length;
         // Highest score beyond which we give up.
         threshold = options.threshold;
         // Is there a nearby exact match? (speedup)
         bestLoc = text.indexOf(this.pattern, location);
 
         // a mask of the matches
-        matchMask = [];
+        const matchMask = [];
         for (i = 0; i < textLen; i++) {
             matchMask[i] = 0;
         }
 
-        if (bestLoc != -1) {
+        if (bestLoc !== -1) {
             threshold = Math.min(this._bitapScore(0, bestLoc), threshold);
             // What about in the other direction? (speed up)
             bestLoc = text.lastIndexOf(this.pattern, location + this.patternLen);
 
-            if (bestLoc != -1) {
+            if (bestLoc !== -1) {
                 threshold = Math.min(this._bitapScore(0, bestLoc), threshold);
             }
         }
 
         bestLoc = -1;
         score = 1;
-        locations = [];
+        const locations = [];
         binMax = this.patternLen + textLen;
 
         for (i = 0; i < this.patternLen; i++) {

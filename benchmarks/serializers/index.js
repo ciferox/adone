@@ -74,7 +74,7 @@ export default {
             return bson.encode(object);
         },
         "mpak"() {
-            return mpak.encode(object).flip().toBuffer();
+            return mpak.encode(object);
         },
         "json5"() {
             return json5.encode(object);
@@ -88,7 +88,7 @@ export default {
             return bson.decode(bsonData);
         },
         "mpak"() {
-            return mpak.decode(mpakData, false);
+            return mpak.decode(mpakData);
         },
         "json5"() {
             return json5.decode(json5Data);

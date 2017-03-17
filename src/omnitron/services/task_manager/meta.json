@@ -17,7 +17,6 @@
                     "plugins": [
                         "transform.flowStripTypes",
                         "transform.classProperties",
-                        "transform.asyncToGenerator",
                         "transform.ESModules",
                         "transform.functionBind"
                     ],

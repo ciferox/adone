@@ -1,6 +1,6 @@
 const { is, x, ExBuffer, netron: { GenesisPeer }, util, net } = adone;
 
-export default class WebSocketPeer extends GenesisPeer {
+export default class Peer extends GenesisPeer {
     constructor(options) {
         super(options);
         this.option.protocol = "ws+netron:";

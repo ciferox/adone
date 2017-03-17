@@ -51,7 +51,6 @@ export default class Dispatcher {
 
                 const pid = await this.spawn();
                 if (is.number(pid)) {
-                    this.noisily && adone.log(`Omnitron successfully started (pid: ${pid})`);
                     return this.connectLocal(options, forceStart, true);
                 }
             }
@@ -86,6 +85,7 @@ export default class Dispatcher {
                     child.once("message", (msg) => {
                         child.removeListener("error", reject);
                         child.disconnect();
+                        this.noisily && adone.log(`Omnitron successfully started (pid: ${msg.pid})`);
                         resolve(msg.pid);
                     });
                 });
@@ -136,10 +136,10 @@ export default class Dispatcher {
         }
     }
 
-    async respawn({ options, spiritualWay = true, forceStart = false, killChildren = false } = {}) {
-        await this.kill({ clean: false, killChildren });
+    async respawn({ options, clean = false, spiritualWay = true, killChildren = true } = {}) {
+        await this.kill({ clean, killChildren });
         await this.spawn(spiritualWay);
-        await this.connectLocal(options, forceStart);
+        await this.connectLocal(options, false);
     }
 
     async isOnline(options, checkAttempts = 1) {

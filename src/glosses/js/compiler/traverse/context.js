@@ -1,6 +1,4 @@
-//@flow
 import NodePath from "./path";
-
 
 const { types: t } = adone.js.compiler;
 
@@ -27,136 +25,136 @@ export default class TraversalContext {
 
     shouldVisit(node): boolean {
         const opts = this.opts;
-        if (opts.enter || opts.exit) return true;
+        if (opts.enter || opts.exit) {return true;}
 
         // check if we have a visitor for this node
-        if (opts[node.type]) return true;
+        if (opts[node.type]) {return true;}
 
         // check if we're going to traverse into this node
         const keys: ?string[] = t.VISITOR_KEYS[node.type];
-    if (!keys || !keys.length) return false;
+        if (!keys || !keys.length) {return false;}
 
-    // we need to traverse into this node so ensure that it has children to traverse into!
-    for (const key of keys) {
-      if (node[key]) return true;
+        // we need to traverse into this node so ensure that it has children to traverse into!
+        for (const key of keys) {
+            if (node[key]) {return true;}
+        }
+
+        return false;
     }
 
-    return false;
-  }
-
-  create(node, obj, key, listKey): NodePath {
-    return NodePath.get({
-                parentPath: this.parentPath,
-      parent: node,
-      container: obj,
-      key: key,
-      listKey
-    });
-  }
-
-  maybeQueue(path, notPriority?: boolean) {
-    if (this.trap) {
-      throw new Error("Infinite cycle detected");
+    create(node, obj, key, listKey): NodePath {
+        return NodePath.get({
+            parentPath: this.parentPath,
+            parent: node,
+            container: obj,
+            key,
+            listKey
+        });
     }
 
-    if (this.queue) {
-      if (notPriority) {
+    maybeQueue(path, notPriority?: boolean) {
+        if (this.trap) {
+            throw new Error("Infinite cycle detected");
+        }
+
+        if (this.queue) {
+            if (notPriority) {
                 this.queue.push(path);
             } else {
                 this.priorityQueue.push(path);
             }
+        }
     }
-  }
 
-  visitMultiple(container, parent, listKey) {
-    // nothing to traverse!
-    if (container.length === 0) return false;
+    visitMultiple(container, parent, listKey) {
+        // nothing to traverse!
+        if (container.length === 0) {return false;}
 
-    const queue = [];
+        const queue = [];
 
-    // build up initial queue
-    for (let key = 0; key < container.length; key++) {
-      const node = container[key];
-      if (node && this.shouldVisit(node)) {
+        // build up initial queue
+        for (let key = 0; key < container.length; key++) {
+            const node = container[key];
+            if (node && this.shouldVisit(node)) {
                 queue.push(this.create(parent, container, key, listKey));
             }
+        }
+
+        return this.visitQueue(queue);
     }
 
-    return this.visitQueue(queue);
-  }
-
-  visitSingle(node, key): boolean {
-    if (this.shouldVisit(node[key])) {
-      return this.visitQueue([
-        this.create(node, node, key)
-      ]);
-    } else {
-      return false;
+    visitSingle(node, key): boolean {
+        if (this.shouldVisit(node[key])) {
+            return this.visitQueue([
+                this.create(node, node, key)
+            ]);
+        } else {
+            return false;
+        }
     }
-  }
 
-  visitQueue(queue: NodePath[]) {
-                // set queue
-                this.queue = queue;
-                this.priorityQueue = [];
-
-    const visited = [];
-    let stop = false;
-
-    // visit the queue
-    for (const path of queue) {
-                    path.resync();
-
-                if (path.contexts.length === 0 || path.contexts[path.contexts.length - 1] !== this) {
-                    // The context might already have been pushed when this path was inserted and queued.
-                    // If we always re-pushed here, we could get duplicates and risk leaving contexts
-                    // on the stack after the traversal has completed, which could break things.
-                    path.pushContext(this);
-                }
-
-      // this path no longer belongs to the tree
-      if (path.key === null) continue;
-
-      if (testing && queue.length >= 10000) {
-                    this.trap = true;
-                }
-
-      // ensure we don't visit the same node twice
-      if (visited.indexOf(path.node) >= 0) continue;
-      visited.push(path.node);
-
-      if (path.visit()) {
-                    stop = true;
-                break;
-      }
-
-      if (this.priorityQueue.length) {
-                    stop = this.visitQueue(this.priorityQueue);
-                this.priorityQueue = [];
+    visitQueue(queue: NodePath[]) {
+        // set queue
         this.queue = queue;
-        if (stop) break;
-      }
+        this.priorityQueue = [];
+
+        const visited = [];
+        let stop = false;
+
+        // visit the queue
+        for (const path of queue) {
+            path.resync();
+
+            if (path.contexts.length === 0 || path.contexts[path.contexts.length - 1] !== this) {
+                // The context might already have been pushed when this path was inserted and queued.
+                // If we always re-pushed here, we could get duplicates and risk leaving contexts
+                // on the stack after the traversal has completed, which could break things.
+                path.pushContext(this);
+            }
+
+            // this path no longer belongs to the tree
+            if (path.key === null) {continue;}
+
+            if (testing && queue.length >= 10000) {
+                this.trap = true;
+            }
+
+            // ensure we don't visit the same node twice
+            if (visited.indexOf(path.node) >= 0) {continue;}
+            visited.push(path.node);
+
+            if (path.visit()) {
+                stop = true;
+                break;
+            }
+
+            if (this.priorityQueue.length) {
+                stop = this.visitQueue(this.priorityQueue);
+                this.priorityQueue = [];
+                this.queue = queue;
+                if (stop) {break;}
+            }
+        }
+
+        // clear queue
+        for (const path of queue) {
+            path.popContext();
+        }
+
+        // clear queue
+        this.queue = null;
+
+        return stop;
     }
 
-    // clear queue
-    for (const path of queue) {
-                    path.popContext();
-                }
+    visit(node, key) {
+        const nodes = node[key];
+        if (!nodes) {return false;}
 
-    // clear queue
-    this.queue = null;
-
-    return stop;
-  }
-
-  visit(node, key) {
-    const nodes = node[key];
-    if (!nodes) return false;
-
-    if (Array.isArray(nodes)) {
-      return this.visitMultiple(nodes, node, key);
-    } else {
-      return this.visitSingle(node, key);
+        if (Array.isArray(nodes)) {
+            return this.visitMultiple(nodes, node, key);
+        } else {
+            return this.visitSingle(node, key);
+        }
     }
-  }
 }

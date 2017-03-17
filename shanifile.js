@@ -22,7 +22,6 @@ module.exports = {
             "transform.decoratorsLegacy",
             "transform.classProperties",
             "transform.ESModules",
-            "transform.asyncToGenerator",
             "transform.functionBind",
             "transform.objectRestSpread",
             ["transform.importReplace", {

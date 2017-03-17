@@ -3,10 +3,7 @@
  * Licensed under the New BSD license. See LICENSE.txt or:
  * http://opensource.org/licenses/BSD-3-Clause
  */
-
-// @flow
-
-
+import adone from "adone";
 
 export default adone.lazify({
     SourceMapGenerator: ["./source-map-generator", (mod) => mod.SourceMapGenerator],

@@ -1,5 +1,3 @@
-
-
 const conversions = require("./conversions");
 const route = require("./route");
 
@@ -190,7 +188,14 @@ const ansiStyles = {
         magenta: [35, 39],
         cyan: [36, 39],
         white: [37, 39],
-        gray: [90, 39]
+        gray: [90, 39],
+        brightRed: [91, 39],
+        brightGreen: [92, 39],
+        brightYellow: [93, 39],
+        brightBlue: [94, 39],
+        brightMagenta: [95, 39],
+        brightCyan: [96, 39],
+        brightWhite: [97, 39]
     },
     bgColor: {
         bgBlack: [40, 49],

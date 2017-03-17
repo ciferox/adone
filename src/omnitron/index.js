@@ -368,19 +368,33 @@ export class Omnitron extends adone.Application {
     @Description("Service status")
     @Type(String)
     async status(serviceName) {
-        if (serviceName === "") {
-            const result = [];
-            for (const [name, service] of Object.entries(this._.service)) {
+        let names;
+        if (is.string(serviceName)) {
+            if (serviceName === "") {
+                names = Object.keys(this._.service);
+            } else {
+                names = [serviceName];
+            }
+        } else if (is.array(serviceName)) {
+            if (serviceName.length === 0) {
+                names = Object.keys(this._.service);
+            } else {
+                names = serviceName;
+            }
+        } else {
+            throw new adone.x.InvalidArgument(`Invalid type of argument: ${typeof(serviceName)}`);
+        }
+
+        const result = [];
+        for (const name of names) {
+            if (is.propertyOwned(this._.service, name)) {
                 result.push({
                     name,
-                    status: service.config.status
+                    status: this._.service[name].config.status
                 });
             }
-
-            return result;
-        } else {
-            return this.getServiceByName(serviceName).config.status;
         }
+        return result;
     }
 
     @Public

@@ -1,5 +1,5 @@
 describe("glosses", "net", "http", "helpers", "on finished", () => {
-    const { net: { http: { helper: { onFinished } } }, std: { net, http } } = adone;
+    const { net: { http: { helper: { onFinished } } }, std: { net, http }, noop } = adone;
 
 
     describe("onFinished(res, listener)", () => {
@@ -600,8 +600,6 @@ describe("glosses", "net", "http", "helpers", "on finished", () => {
 
         return Buffer.concat(chunks).toString("utf8");
     }
-
-    function noop() { }
 
     function sendget(server) {
         server.listen(function onListening() {

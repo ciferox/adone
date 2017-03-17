@@ -559,8 +559,8 @@ const util = {
         }
         return obj;
     },
-    globize: (path, ext, recursive) => {
-        const stars = recursive ? `**${adone.std.path.sep}*.${ext}` : `*.${ext}`;
+    globize: (path, { exts = ".js", recursive = false } = {}) => {
+        const stars = recursive ? `**${adone.std.path.sep}*${exts}` : `*${exts}`;
         if (path.endsWith("/") || path.endsWith("\\")) {
             path += stars;
         } else {

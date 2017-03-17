@@ -1,7 +1,4 @@
-// @flow
-
-
-
+const { is } = adone;
 const setIteratorPrototype = Object.getPrototypeOf(new Set().entries());
 const mapIteratorPrototype = Object.getPrototypeOf(new Map().entries());
 const arrayIteratorPrototype = Object.getPrototypeOf([][Symbol.iterator]());
@@ -24,6 +21,9 @@ export default function typeOf(obj) {
      */
     const typeofObj = typeof obj;
     if (typeofObj !== "object") {
+        if (is.class(obj)) {
+            return "class";
+        }
         return typeofObj;
     }
 
@@ -47,12 +47,12 @@ export default function typeOf(obj) {
      * Post:
      *   array literal      x 22,479,650 ops/sec ±0.96% (81 runs sampled)
      */
-    if (adone.is.array(obj)) {
+    if (is.array(obj)) {
         return "Array";
     }
 
     const stringTag = obj[Symbol.toStringTag];
-    if (adone.is.string(stringTag)) {
+    if (is.string(stringTag)) {
         return stringTag;
     }
 
