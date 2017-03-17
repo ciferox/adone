@@ -91,7 +91,7 @@ const support = (level) => {
     };
 };
 
-let supportLevel = (() => {
+const supportLevel = (() => {
     if (process.stdout && !process.stdout.isTTY) {
         return 0;
     }
@@ -126,6 +126,10 @@ let supportLevel = (() => {
         }
     }
 
+    if (env.COLORTERM === "truecolor") {
+        return 3;
+    }
+
     if (/^(screen|xterm)-256(?:color)?/.test(env.TERM)) {
         return 2;
     }
@@ -145,31 +149,27 @@ let supportLevel = (() => {
     return 0;
 })();
 
-if ("FORCE_COLOR" in env) {
-    supportLevel = parseInt(env.FORCE_COLOR, 10) === 0 ? 0 : (supportLevel || 1);
-}
-
 const supportsColor = process && support(supportLevel);
-
 
 const wrapAnsi16 = (fn, offset) => function (...args) {
     const code = fn.apply(colorConvert, args);
-    return `\u001B[${code + offset}m`;
+    return `\x1b[${code + offset}m`;
 };
 
 const wrapAnsi256 = (fn, offset) => function (...args) {
     const code = fn.apply(colorConvert, args);
-    return `\u001B[${38 + offset};5;${code}m`;
+    return `\x1b[${38 + offset};5;${code}m`;
 };
 
 const wrapAnsi16m = (fn, offset) => function (...args) {
     const rgb = fn.apply(colorConvert, args);
-    return `\u001B[${38 + offset};2;${rgb[0]};${rgb[1]};${rgb[2]}m`;
+    return `\x1b[${38 + offset};2;${rgb[0]};${rgb[1]};${rgb[2]}m`;
 };
 
 const ansiStyles = {
     modifier: {
         reset: [0, 0],
+        normal: ["", ""],
         // 21 isn't widely supported and 22 does the same thing
         bold: [1, 22],
         dim: [2, 22],
@@ -205,7 +205,15 @@ const ansiStyles = {
         bgBlue: [44, 49],
         bgMagenta: [45, 49],
         bgCyan: [46, 49],
-        bgWhite: [47, 49]
+        bgWhite: [47, 49],
+        bgGray: [100, 49],
+        bgBrightRed: [101, 49],
+        bgBrightGreen: [102, 49],
+        bgBrightYellow: [103, 49],
+        bgBrightBlue: [104, 49],
+        bgBrightMagenta: [105, 49],
+        bgBrightCyan: [106, 49],
+        bgBrightWhite: [107, 49]
     }
 };
 
@@ -219,8 +227,8 @@ Object.keys(ansiStyles).forEach((groupName) => {
         const style = group[styleName];
 
         ansiStyles[styleName] = group[styleName] = {
-            open: `\u001B[${style[0]}m`,
-            close: `\u001B[${style[1]}m`
+            open: `\x1b[${style[0]}m`,
+            close: `\x1b[${style[1]}m`
         };
     });
 
@@ -232,8 +240,8 @@ Object.keys(ansiStyles).forEach((groupName) => {
 
 const rgb2rgb = (r, g, b) => [r, g, b];
 
-ansiStyles.color.close = "\u001B[39m";
-ansiStyles.bgColor.close = "\u001B[49m";
+ansiStyles.color.close = "\x1b[39m";
+ansiStyles.bgColor.close = "\x1b[49m";
 
 ansiStyles.color.ansi = {};
 ansiStyles.color.ansi256 = {};
@@ -282,7 +290,7 @@ function Chalk(options) {
 
 // use bright blue on Windows as the normal blue color is illegible
 if (isSimpleWindowsTerm) {
-    ansiStyles.blue.open = "\u001b[94m";
+    ansiStyles.blue.open = "\x1b[94m";
 }
 
 const styles = {};

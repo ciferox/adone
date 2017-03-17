@@ -153,19 +153,27 @@ export default class extends adone.application.Subsystem {
 
     async inspectCommand(args, opts) {
         try {
-            // const dir = opts.get("dir");
             const name = args.get("name");
             const { namespace, objectName } = adone.meta.parseName(name);
             const inspectOptions = { style: "color", depth: 1, noDescriptor: true, noNotices: true, sort: true };
 
-            if (objectName === "") {
-                let obj;
-                if (namespace === "global" || namespace === "") {
-                    obj = global;
+            let ns;
+            if (namespace === "global" || namespace === "") {
+                ns = global;
+            } else {
+                if (namespace === "adone") {
+                    ns = adone;
                 } else {
-                    obj = adone.vendor.lodash.get(adone, namespace.substring("adone".length + 1));
+                    ns = adone.vendor.lodash.get(adone, namespace.substring("adone".length + 1));
                 }
-                adone.log(adone.inspect(obj, inspectOptions));
+            }
+
+            if (objectName === "") {
+                adone.log(adone.inspect(ns, inspectOptions));
+            } else if (adone.vendor.lodash.has(ns, objectName)) {
+                adone.log(adone.inspect(adone.vendor.lodash.get(ns, objectName), inspectOptions));
+            } else {
+                throw new adone.x.Unknown(`Unknown object: ${name}`);
             }
             // // const parts = this._parsePath(args.get("ns"));
             // // const subNs = parts.join(".");
@@ -226,7 +234,7 @@ export default class extends adone.application.Subsystem {
 
             // // adone.log(adone.text.pretty.json(result));
         } catch (err) {
-            adone.error(err);
+            adone.error(err.message);
             return 1;
         }
         return 0;

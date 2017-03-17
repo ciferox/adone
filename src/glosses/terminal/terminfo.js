@@ -1,4 +1,3 @@
-
 const { is, vendor: { lodash: _ } } = adone;
 
 // Resources:
@@ -52,141 +51,6 @@ function tryRead(file) {
     }
 }
 
-// Color schemes
-
-const defaultScheme = [
-    { r: 0, g: 0, b: 0, names: ["black"] },
-    { r: 180, g: 0, b: 0, names: ["red"] },
-    { r: 0, g: 180, b: 0, names: ["green"] },
-    { r: 180, g: 180, b: 0, names: ["yellow"] },
-    { r: 0, g: 0, b: 180, names: ["blue"] },
-    { r: 180, g: 0, b: 180, names: ["magenta"] },
-    { r: 0, g: 180, b: 180, names: ["cyan"] },
-    { r: 220, g: 220, b: 220, names: ["white"] },
-    { r: 55, g: 55, b: 55, names: ["brightBlack", "gray"] },
-    { r: 250, g: 0, b: 0, names: ["brightRed"] },
-    { r: 0, g: 250, b: 0, names: ["brightGreen"] },
-    { r: 250, g: 250, b: 0, names: ["brightYellow"] },
-    { r: 0, g: 0, b: 250, names: ["brightBlue"] },
-    { r: 250, g: 0, b: 250, names: ["brightMagenta"] },
-    { r: 0, g: 250, b: 250, names: ["brightCyan"] },
-    { r: 250, g: 250, b: 250, names: ["brightWhite"] }
-];
-
-const gnomeScheme = [
-    { r: 0, g: 0, b: 0, names: ["black"] },
-    { r: 204, g: 0, b: 0, names: ["red"] },
-    { r: 78, g: 154, b: 6, names: ["green"] },
-    { r: 196, g: 160, b: 0, names: ["yellow"] },
-    { r: 52, g: 101, b: 164, names: ["blue"] },
-    { r: 117, g: 80, b: 123, names: ["magenta"] },
-    { r: 6, g: 152, b: 154, names: ["cyan"] },
-    { r: 211, g: 215, b: 207, names: ["white"] },
-    { r: 85, g: 87, b: 83, names: ["brightBlack", "gray"] },
-    { r: 239, g: 41, b: 41, names: ["brightRed"] },
-    { r: 138, g: 226, b: 52, names: ["brightGreen"] },
-    { r: 252, g: 233, b: 79, names: ["brightYellow"] },
-    { r: 114, g: 159, b: 207, names: ["brightBlue"] },
-    { r: 173, g: 127, b: 168, names: ["brightMagenta"] },
-    { r: 52, g: 226, b: 226, names: ["brightCyan"] },
-    { r: 238, g: 238, b: 236, names: ["brightWhite"] }
-];
-
-const konsoleScheme = [
-    { r: 0, g: 0, b: 0, names: ["black"] },
-    { r: 178, g: 24, b: 24, names: ["red"] },
-    { r: 24, g: 178, b: 24, names: ["green"] },
-    { r: 178, g: 104, b: 24, names: ["yellow", "brown"] },
-    { r: 24, g: 24, b: 178, names: ["blue"] },
-    { r: 178, g: 24, b: 178, names: ["magenta"] },
-    { r: 24, g: 178, b: 178, names: ["cyan"] },
-    { r: 178, g: 178, b: 178, names: ["white"] },
-    { r: 104, g: 104, b: 104, names: ["brightBlack", "gray"] },
-    { r: 255, g: 84, b: 84, names: ["brightRed"] },
-    { r: 84, g: 255, b: 84, names: ["brightGreen"] },
-    { r: 255, g: 255, b: 84, names: ["brightYellow"] },
-    { r: 84, g: 84, b: 255, names: ["brightBlue"] },
-    { r: 255, g: 84, b: 255, names: ["brightMagenta"] },
-    { r: 84, g: 255, b: 255, names: ["brightCyan"] },
-    { r: 255, g: 255, b: 255, names: ["brightWhite"] }
-];
-
-const linuxScheme = [
-    { r: 0, g: 0, b: 0, names: ["black"] },
-    { r: 170, g: 0, b: 0, names: ["red"] },
-    { r: 0, g: 170, b: 0, names: ["green"] },
-    { r: 170, g: 85, b: 0, names: ["yellow", "brown"] },
-    { r: 0, g: 0, b: 170, names: ["blue"] },
-    { r: 170, g: 0, b: 170, names: ["magenta"] },
-    { r: 0, g: 170, b: 170, names: ["cyan"] },
-    { r: 170, g: 170, b: 170, names: ["white"] },
-    { r: 85, g: 85, b: 85, names: ["brightBlack", "gray"] },
-    { r: 255, g: 85, b: 85, names: ["brightRed"] },
-    { r: 85, g: 255, b: 85, names: ["brightGreen"] },
-    { r: 255, g: 255, b: 85, names: ["brightYellow"] },
-    { r: 85, g: 85, b: 255, names: ["brightBlue"] },
-    { r: 255, g: 85, b: 255, names: ["brightMagenta"] },
-    { r: 85, g: 255, b: 255, names: ["brightCyan"] },
-    { r: 255, g: 255, b: 255, names: ["brightWhite"] }
-];
-
-const vgaScheme = [
-    { r: 0, g: 0, b: 0, names: ["black"] },
-    { r: 170, g: 0, b: 0, names: ["red"] },
-    { r: 0, g: 170, b: 0, names: ["green"] },
-    { r: 170, g: 85, b: 0, names: ["yellow", "brown"] },
-    { r: 0, g: 0, b: 170, names: ["blue"] },
-    { r: 170, g: 0, b: 170, names: ["magenta"] },
-    { r: 0, g: 170, b: 170, names: ["cyan"] },
-    { r: 170, g: 170, b: 170, names: ["white"] },
-    { r: 85, g: 85, b: 85, names: ["brightBlack", "gray"] },
-    { r: 255, g: 85, b: 85, names: ["brightRed"] },
-    { r: 85, g: 255, b: 85, names: ["brightGreen"] },
-    { r: 255, g: 255, b: 85, names: ["brightYellow"] },
-    { r: 85, g: 85, b: 255, names: ["brightBlue"] },
-    { r: 255, g: 85, b: 255, names: ["brightMagenta"] },
-    { r: 85, g: 255, b: 255, names: ["brightCyan"] },
-    { r: 255, g: 255, b: 255, names: ["brightWhite"] }
-];
-
-const xfceScheme = [
-    { r: 0, g: 0, b: 0, names: ["black"] },
-    { r: 170, g: 0, b: 0, names: ["red"] },
-    { r: 0, g: 170, b: 0, names: ["green"] },
-    { r: 170, g: 85, b: 0, names: ["yellow", "brown"] },
-    { r: 0, g: 0, b: 170, names: ["blue"] },
-    { r: 170, g: 0, b: 170, names: ["magenta"] },
-    { r: 0, g: 170, b: 170, names: ["cyan"] },
-    { r: 170, g: 170, b: 170, names: ["white"] },
-    { r: 85, g: 85, b: 85, names: ["brightBlack", "gray"] },
-    { r: 255, g: 85, b: 85, names: ["brightRed"] },
-    { r: 85, g: 255, b: 85, names: ["brightGreen"] },
-    { r: 255, g: 255, b: 85, names: ["brightYellow"] },
-    { r: 85, g: 85, b: 255, names: ["brightBlue"] },
-    { r: 255, g: 85, b: 255, names: ["brightMagenta"] },
-    { r: 85, g: 255, b: 255, names: ["brightCyan"] },
-    { r: 255, g: 255, b: 255, names: ["brightWhite"] }
-];
-
-const xtermScheme = [
-    { r: 0, g: 0, b: 0, names: ["black"] },
-    { r: 205, g: 0, b: 0, names: ["red"] },
-    { r: 0, g: 205, b: 0, names: ["green"] },
-    { r: 205, g: 205, b: 0, names: ["yellow"] },
-    { r: 0, g: 0, b: 238, names: ["blue"] },
-    { r: 205, g: 0, b: 205, names: ["magenta"] },
-    { r: 0, g: 205, b: 205, names: ["cyan"] },
-    { r: 229, g: 229, b: 229, names: ["white"] },
-    { r: 127, g: 127, b: 127, names: ["brightBlack", "gray"] },
-    { r: 255, g: 0, b: 0, names: ["brightRed"] },
-    { r: 0, g: 255, b: 0, names: ["brightGreen"] },
-    { r: 255, g: 255, b: 0, names: ["brightYellow"] },
-    { r: 92, g: 92, b: 255, names: ["brightBlue"] },
-    { r: 255, g: 0, b: 255, names: ["brightMagenta"] },
-    { r: 0, g: 255, b: 255, names: ["brightCyan"] },
-    { r: 255, g: 255, b: 255, names: ["brightWhite"] }
-];
-
 /* Escape sequences */
 
 // Mini-doc:
@@ -207,10 +71,6 @@ const xtermScheme = [
 // man 5 terminfo
 // For tput tcap name, see: http://pubs.opengroup.org/onlinepubs/7990989799/xcurses/terminfo.html
 // useful command: infocmp -l $TERM
-
-// Remove colors
-const defaultColor = "\x1b[39m";	// back to the default color, most of time it is the same than .white
-const bgDefaultColor = "\x1b[49m";	// back to the default color, most of time it is the same than .bgBlack
 
 const esc = {
     /* Common sequences */
@@ -278,71 +138,7 @@ const esc = {
 
     bell: { on: "\x07" },	// Emit an audible bell
 
-    /* Style sequences */
-
-    styleReset: { on: "\x1b[0m" },
-    normal: { on: "\x1b[m" },
-    bold: { on: "\x1b[1m", off: "\x1b[22m" },		// here we use the dim.off code (22) that have a better support than (21), for God-only known reason...
-    dim: { on: "\x1b[2m", off: "\x1b[22m" },		// dim: darker, 'off' remove removes also bold/bright
-    italic: { on: "\x1b[3m", off: "\x1b[23m" },
-    underline: { on: "\x1b[4m", off: "\x1b[24m" },
-    blink: { on: "\x1b[5m", off: "\x1b[25m" },
-    inverse: { on: "\x1b[7m", off: "\x1b[27m" },
-    hidden: { on: "\x1b[8m", off: "\x1b[28m" },	// invisible, but can be copy/paste'd
-    strike: { on: "\x1b[9m", off: "\x1b[29m" },
-
-    // Foreground color
-    defaultColor: { on: defaultColor },
-    black: { on: "\x1b[30m", off: defaultColor },
-    red: { on: "\x1b[31m", off: defaultColor },
-    green: { on: "\x1b[32m", off: defaultColor },
-    yellow: { on: "\x1b[33m", off: defaultColor },
-    blue: { on: "\x1b[34m", off: defaultColor },
-    magenta: { on: "\x1b[35m", off: defaultColor },
-    cyan: { on: "\x1b[36m", off: defaultColor },
-    white: { on: "\x1b[37m", off: defaultColor },
-    darkColor: { on: "\x1b[3%um", off: defaultColor },	// should be called with a 0..7 integer
-    brightBlack: { on: "\x1b[90m", off: defaultColor },
-    brightRed: { on: "\x1b[91m", off: defaultColor },
-    brightGreen: { on: "\x1b[92m", off: defaultColor },
-    brightYellow: { on: "\x1b[93m", off: defaultColor },
-    brightBlue: { on: "\x1b[94m", off: defaultColor },
-    brightMagenta: { on: "\x1b[95m", off: defaultColor },
-    brightCyan: { on: "\x1b[96m", off: defaultColor },
-    brightWhite: { on: "\x1b[97m", off: defaultColor },
-    brightColor: { on: "\x1b[9%um", off: defaultColor },	// should be called with a 0..7 integer
-
-    // Background color
-    bgDefaultColor: { on: bgDefaultColor },
-    bgBlack: { on: "\x1b[40m", off: bgDefaultColor },
-    bgRed: { on: "\x1b[41m", off: bgDefaultColor },
-    bgGreen: { on: "\x1b[42m", off: bgDefaultColor },
-    bgYellow: { on: "\x1b[43m", off: bgDefaultColor },
-    bgBlue: { on: "\x1b[44m", off: bgDefaultColor },
-    bgMagenta: { on: "\x1b[45m", off: bgDefaultColor },
-    bgCyan: { on: "\x1b[46m", off: bgDefaultColor },
-    bgWhite: { on: "\x1b[47m", off: bgDefaultColor },
-    bgDarkColor: { on: "\x1b[4%um", off: bgDefaultColor },	// should be called with a 0..7 integer
-    bgBrightBlack: { on: "\x1b[100m", off: bgDefaultColor },
-    bgBrightRed: { on: "\x1b[101m", off: bgDefaultColor },
-    bgBrightGreen: { on: "\x1b[102m", off: bgDefaultColor },
-    bgBrightYellow: { on: "\x1b[103m", off: bgDefaultColor },
-    bgBrightBlue: { on: "\x1b[104m", off: bgDefaultColor },
-    bgBrightMagenta: { on: "\x1b[105m", off: bgDefaultColor },
-    bgBrightCyan: { on: "\x1b[106m", off: bgDefaultColor },
-    bgBrightWhite: { on: "\x1b[107m", off: bgDefaultColor },
-    bgBrightColor: { on: "\x1b[10%um", off: bgDefaultColor },	// should be called with a 0..7 integer
-
     /* Input / Output sequences */
-
-    // Request terminal ID
-    // requestTerminalId: { on: '\x1b[>c' } ,
-
-    // Terminal will send the cursor coordinate only one time
-    requestScreenSize: { on: "\x1b[18t" },
-
-    // Terminal will send the rgb color for a register
-    requestColor: { on: "\x1b]4;%u;?\x07" },
 
     // Terminal will send event on button pressed with mouse position
     mouseButton: { on: "\x1b[?1000h", off: "\x1b[?1000l" },
@@ -375,99 +171,17 @@ const esc = {
     /* OSC - OS Control sequences: may be unavailable on some context */
 
     // Set the title of an xterm-compatible window
-    windowTitle: { on: "\x1b]0;%s\x07" },
-
-    // Those sequences accept either #%x%x%x or rgb:%d/%d/%d
-    // Sometime rgb:%d/%d/%d should be encoded into the 0..65535 range, so #%x%x%x is more reliable
-    setCursorColorRgb: { on: "\x1b]12;#%x%x%x\x07" },	// it want rgb as parameter, like rgb:127/0/32
-    setDefaultColorRgb: { on: "\x1b]10;#%x%x%x\x07" },	// ->|TODOC|<- not widely supported
-    setDefaultBgColorRgb: { on: "\x1b]11;#%x%x%x\x07" },	// ->|TODOC|<- not widely supported
-    setColorLL: { on: "\x1b]4;%u;#%x%x%x\x07" },
-    setFont: { on: "\x1b]50;%s\x07" },	// ->|TODOC|<- rarely supported
-    color24bits: { on: "%D%D%D", na: true },	// not capable
-    bgColor24bits: { on: "%D%D%D", na: true },	// not capable
-    color256: {
-        on: "%[color256:%a]F",
-        off: defaultColor,
-        fb: true,
-        handler: function color256(register) {
-            if (!is.number(register)) { return ""; }
-            if (register < 0 || register > 255) { return ""; }
-
-            // If the register is greater than 15, find the 0..15 register that is close to it
-            if (register > 15) {
-                register = this.root.registerForRgb(this.root.rgbForRegister(register), 0, 15);
-            }
-
-            //return string.format.call( this.root.escHandler , this.root.esc.color.on , register ) ;
-            return this.root.escHandler.color(register);
-        }
-    },
-    bgColor256: {
-        on: "%[bgColor256:%a]F",
-        off: bgDefaultColor,
-        fb: true,
-        handler: function bgColor256(register) {
-            if (!is.number(register)) { return ""; }
-            if (register < 0 || register > 255) { return ""; }
-
-            // If the register is greater than 15, find the 0..15 register that is close to it
-            if (register > 15) {
-                register = this.root.registerForRgb(this.root.rgbForRegister(register), 0, 15);
-            }
-
-            //return string.format.call( this.root.escHandler , this.root.esc.bgColor.on , register ) ;
-            return this.root.escHandler.bgColor(register);
-        }
-    },
-    // Cannot find a way to set the cursor to a register, so try to guess
-    setCursorColor: {
-        on: "%[setCursorColor:%a%a]F",
-        handler: function setCursorColor(bg, fg) {
-            if (!is.number(fg) || !is.number(bg)) { return ""; }
-
-            fg = Math.floor(fg);
-            bg = Math.floor(bg);
-
-            if (fg < 0 || fg > 255 || bg < 0 || bg > 255) { return ""; }
-
-            const rgb = this.root.rgbForRegister(bg);
-
-            return adone.text.format(this.root.esc.setCursorColorRgb.on, rgb.r, rgb.g, rgb.b);
-        }
-    }
-};
-
-/* Inputs management */
-
-const handler = {
-    colorRegister(basename, paramString) {
-        const matches = paramString.match(/^([0-9]*);rgb:([0-9a-f]{2})[0-9a-f]*\/([0-9a-f]{2})[0-9a-f]*\/([0-9a-f]{2})[0-9a-f]*/);
-
-        return {
-            name: "COLOR_REGISTER",
-            data: {
-                register: parseInt(matches[1], 10),
-                r: parseInt(matches[2], 16),
-                g: parseInt(matches[3], 16),
-                b: parseInt(matches[4], 16)
-            }
-        };
-    }
+    windowTitle: { on: "\x1b]0;%s\x07" }
 };
 
 const defaultConfig = {
     esc,
-    handler,
     support: {
-        deltaEscapeSequence: true,
-        "256colors": false,
-        "24bitsColors": false
+        deltaEscapeSequence: true
     },
     bools: {
         back_color_erase: true
-    },
-    colorRegister: xtermScheme
+    }
 };
 
 function configuration(terminal) {
@@ -475,51 +189,15 @@ function configuration(terminal) {
     if (terminal === "xterm") {
         config = _.extend(adone.o(), defaultConfig);
     } else if (terminal === "xterm-256color") {
-        config = _.merge(configuration("xterm"), {
-            support: {
-                "256colors": true
-            },
-            esc: {
-                color256: { on: "\x1b[38;5;%um", off: defaultColor },
-                bgColor256: { on: "\x1b[48;5;%um", off: bgDefaultColor },
-
-                setCursorColorRgb: { on: "\x1b]12;#%x%x%x\x07" },	// it want rgb as parameter, like rgb:127/0/32
-                setDefaultColorRgb: { on: "\x1b]10;#%x%x%x\x07" },	// ->|TODOC|<- not widely supported
-                setDefaultBgColorRgb: { on: "\x1b]11;#%x%x%x\x07" },	// ->|TODOC|<- not widely supported
-                color24bits: { on: "\x1b[38;2;%u;%u;%um", off: defaultColor, fb: true },
-                bgColor24bits: { on: "\x1b[48;2;%u;%u;%um", off: bgDefaultColor, fb: true },
-
-                // Cannot find a way to set the cursor to a register, so try to guess
-                setCursorColor: {
-                    on: "%[setCursorColor:%a%a]F",
-                    handler: function setCursorColor(bg, fg) {
-                        if (!is.number(fg) || !is.number(bg)) { return ""; }
-
-                        fg = Math.floor(fg);
-                        bg = Math.floor(bg);
-
-                        if (fg < 0 || fg > 255 || bg < 0 || bg > 255) { return ""; }
-
-                        const rgb = this.root.rgbForRegister(bg);
-
-                        return adone.text.format(this.root.esc.setCursorColorRgb.on, rgb.r, rgb.g, rgb.b);
-                    }
-                }
-            }
-        });
+        config = _.merge(configuration("xterm"), {});
     } else if (terminal === "xterm-256color.generic") {
         const xtermGeneric = configuration("xterm.generic");
         config = _.merge(configuration("xterm-256color"), {
             esc: xtermGeneric.esc,
-            handler: xtermGeneric.handler,
-            support: {
-                "24bitsColors": undefined // maybe, maybe not
-            },
-            colorRegister: vgaScheme
+            handler: xtermGeneric.handler
         });
     } else if (terminal === "xterm.generic") { // generic xterm configuration
         config = _.merge(configuration("xterm"), {
-            colorRegister: vgaScheme,
             esc: {
                 // KDE Konsole does not support that. This workaround use up()/down() & column(1)
                 nextLine: { on: "\x1b[%UB\x1b[1G" },
@@ -544,11 +222,7 @@ function configuration(terminal) {
                 blinkingUnderlineCursor: { on: "", na: true },
                 beamCursor: { on: "", na: true },
                 blinkingBeamCursor: { on: "", na: true }
-            },
-            support: {
-                "256colors": false
-            },
-            colorRegister: xfceScheme
+            }
         });
     } else if (terminal === "gnome") {
         config = _.merge(configuration("xterm"), {
@@ -569,21 +243,13 @@ function configuration(terminal) {
                 beamCursor: { on: '\x1b]50;CursorShape=1\x07' } ,
                 blinkingBeamCursor: { on: '\x1b]50;CursorShape=1\x07' }
                 */
-            },
-            colorRegister: gnomeScheme
+            }
         });
     } else if (terminal === "gnome-256color") {
         const gnome = configuration("gnome");
         config = _.merge(configuration("xterm-256color"), {
-            esc: _.extend(gnome.esc, {
-                color24bits: { on: "\x1b[38;2;%u;%u;%um", off: defaultColor },
-                bgColor24bits: { on: "\x1b[48;2;%u;%u;%um", off: bgDefaultColor }
-            }),
-            handler: gnome.handler,
-            support: {
-                "24bitsColors": true
-            },
-            colorRegister: gnome.colorRegister
+            esc: _.extend(gnome.esc, {}),
+            handler: gnome.handler
         });
     } else if (terminal === "konsole") {
         config = _.merge(configuration("xterm"), {
@@ -600,60 +266,20 @@ function configuration(terminal) {
                 underlineCursor: { on: "\x1b]50;CursorShape=2\x07" },
                 blinkingUnderlineCursor: { on: "\x1b]50;CursorShape=2\x07" },
                 beamCursor: { on: "\x1b]50;CursorShape=1\x07" },
-                blinkingBeamCursor: { on: "\x1b]50;CursorShape=1\x07" },
-
-                requestColor: { on: "%D", na: true }	// not capable
+                blinkingBeamCursor: { on: "\x1b]50;CursorShape=1\x07" }
             },
-            colorRegister: konsoleScheme
         });
     } else if (terminal === "konsole-256color") {
         const xterm256 = configuration("xterm-256color");
         const konsole = configuration("konsole");
 
         config = _.merge(xterm256, {
-            esc: _.extend(konsole.esc, {
-                color24bits: { on: "\x1b[38;2;%u;%u;%um", off: defaultColor },
-                bgColor24bits: { on: "\x1b[48;2;%u;%u;%um", off: bgDefaultColor }
-            }),
-            handler: konsole.handler,
-            support: {
-                "24bitsColors": true
-            }
+            esc: _.extend(konsole.esc, {}),
+            handler: konsole.handler
         });
     } else if (terminal === "eterm") {
-        const bold = "\x1b[1m";
-        const noBold = "\x1b[22m";
-        const blink = "\x1b[5m";
-        const noBlink = "\x1b[25m";
-        const defaultColor = `\x1b[39m${noBold}`;		// back to the default color, most of time it is the same than .white
-        const bgDefaultColor = `\x1b[49m${noBlink}`;	// back to the default color, most of time it is the same than .bgBlack
-
         config = _.merge(configuration("xterm"), {
             esc: {
-                // Eterm doesn't have bright color code, they are produced using 'bold' (which is not bold, by the way...)
-                defaultColor: { on: defaultColor },
-                brightBlack: { on: `${bold}\x1b[30m`, off: defaultColor },
-                brightRed: { on: `${bold}\x1b[31m`, off: defaultColor },
-                brightGreen: { on: `${bold}\x1b[32m`, off: defaultColor },
-                brightYellow: { on: `${bold}\x1b[33m`, off: defaultColor },
-                brightBlue: { on: `${bold}\x1b[34m`, off: defaultColor },
-                brightMagenta: { on: `${bold}\x1b[35m`, off: defaultColor },
-                brightCyan: { on: `${bold}\x1b[36m`, off: defaultColor },
-                brightWhite: { on: `${bold}\x1b[37m`, off: defaultColor },
-                brightColor: { on: `${bold}\x1b[3%um`, off: defaultColor },	// should be called with a 0..7 integer
-
-                // Eterm console doesn't have bright bg color code, they are produced using 'blink' (which does not blink, by the way...)
-                bgDefaultColor: { on: bgDefaultColor },
-                bgBrightBlack: { on: `${blink}\x1b[40m`, off: bgDefaultColor },
-                bgBrightRed: { on: `${blink}\x1b[41m`, off: bgDefaultColor },
-                bgBrightGreen: { on: `${blink}\x1b[42m`, off: bgDefaultColor },
-                bgBrightYellow: { on: `${blink}\x1b[43m`, off: bgDefaultColor },
-                bgBrightBlue: { on: `${blink}\x1b[44m`, off: bgDefaultColor },
-                bgBrightMagenta: { on: `${blink}\x1b[45m`, off: bgDefaultColor },
-                bgBrightCyan: { on: `${blink}\x1b[46m`, off: bgDefaultColor },
-                bgBrightWhite: { on: `${blink}\x1b[47m`, off: bgDefaultColor },
-                bgBrightColor: { on: `${blink}\x1b[4%um`, off: bgDefaultColor },	// should be called with a 0..7 integer
-
                 // Cursor styles not supported
                 blockCursor: { on: "", na: true },
                 blinkingBlockCursor: { on: "", na: true },
@@ -664,21 +290,15 @@ function configuration(terminal) {
 
                 // Not capable, fallback to mouseButton
                 mouseDrag: { on: "\x1b[?1000h", off: "\x1b[?1000l", fb: true },
-                mouseMotion: { on: "\x1b[?1000h", off: "\x1b[?1000l", fb: true },
-
-                requestColor: { on: "%D", na: true }	// not capable
+                mouseMotion: { on: "\x1b[?1000h", off: "\x1b[?1000l", fb: true }
             },
         });
     } else if (terminal === "eterm-256color") {
         const eterm = configuration("eterm");
 
         config = _.merge(configuration("xterm-256color"), {
-            esc: _.extend(eterm.esc, {
-                color24bits: { on: "%D%D%D", na: true },	// not capable
-                bgColor24bits: { on: "%D%D%D", na: true }	// not capable
-            }),
+            esc: _.extend(eterm.esc, {}),
             handler: eterm.handler,
-            colorRegister: eterm.colorRegister
         });
     } else if (terminal === "rxvt") {
         config = _.merge(configuration("xterm"), {
@@ -693,106 +313,23 @@ function configuration(terminal) {
 
                 // Not capable, fallback to mouseButton
                 mouseDrag: { on: "\x1b[?1000h", off: "\x1b[?1000l", fb: true },
-                mouseMotion: { on: "\x1b[?1000h", off: "\x1b[?1000l", fb: true },
-
-                requestColor: { on: "%D", na: true }	// not capable
+                mouseMotion: { on: "\x1b[?1000h", off: "\x1b[?1000l", fb: true }
             },
         });
     } else if (terminal === "rxvt-256color") {
         const rxvt = configuration("rxvt");
 
         config = _.merge(configuration("xterm-256color"), {
-            esc: _.extend(rxvt.esc, {
-                color24bits: { on: "%D%D%D", na: true },	// not capable
-                bgColor24bits: { on: "%D%D%D", na: true }	// not capable
-            }),
+            esc: _.extend(rxvt.esc, {}),
             handler: rxvt.handler,
-            colorRegister: rxvt.colorRegister
         });
     } else if (terminal === "linux") {
         const xterm = configuration("xterm");
-        const gpm = require("../gpm.js");
-
-        // shortcuts
-        const bold = "\x1b[1m";
-        const noBold = "\x1b[22m";
-        const blink = "\x1b[5m";
-        const noBlink = "\x1b[25m";
-        const defaultColor = `\x1b[39m${noBold}`;		// back to the default color, most of time it is the same than .white
-        const bgDefaultColor = `\x1b[49m${noBlink}`;	// back to the default color, most of time it is the same than .bgBlack
-
-        const fgCursorTable = [
-            0, 3, 5, 1, 6, 2, 4, 7,
-            8, 11, 13, 9, 14, 10, 12, 15
-        ];
-
-        const bgCursorTable = [
-            0, 4, 2, 6, 1, 5, 3, 7,
-            8, 12, 10, 14, 9, 13, 11, 15
-        ];
-
-        // This is the code that handle GPM
-        const gpmMouse = function (mode) {
-            let self = this;
-
-            if (this.root.gpmHandler) {
-                this.root.gpmHandler.close();
-                this.root.gpmHandler = undefined;
-            }
-
-            if (!mode) {
-                //console.log( '>>>>> off <<<<<' ) ;
-                return;
-            }
-
-            this.root.gpmHandler = gpm.createHandler({ stdin: this.root.stdin, raw: false, mode });
-
-            //console.log( '>>>>>' , mode , '<<<<<' ) ;
-
-            // Simply re-emit event
-            this.root.gpmHandler.on("mouse", (name, data) => {
-                self.root.emit("mouse", name, data);
-            });
-            this.root.gpmHandler.on("error", ( /* error */) => {
-                //console.log( 'mouseDrag error:' , error ) ;
-            });
-        };
 
         config = _.merge(xterm, {
             esc: {
                 // Clear screen
                 clear: { on: "\x1b[H\x1b[J" },
-
-                // Linux console doesn't have bright color code, they are produced using 'bold' (which is not bold, by the way...)
-                defaultColor: { on: defaultColor },
-                brightBlack: { on: `${bold}\x1b[30m`, off: defaultColor },
-                brightRed: { on: `${bold}\x1b[31m`, off: defaultColor },
-                brightGreen: { on: `${bold}\x1b[32m`, off: defaultColor },
-                brightYellow: { on: `${bold}\x1b[33m`, off: defaultColor },
-                brightBlue: { on: `${bold}\x1b[34m`, off: defaultColor },
-                brightMagenta: { on: `${bold}\x1b[35m`, off: defaultColor },
-                brightCyan: { on: `${bold}\x1b[36m`, off: defaultColor },
-                brightWhite: { on: `${bold}\x1b[37m`, off: defaultColor },
-                brightColor: { on: `${bold}\x1b[3%um`, off: defaultColor },	// should be called with a 0..7 integer
-
-                // Linux console doesn't have bright bg color code, they are produced using 'blink' (which does not blink, by the way...)
-                bgDefaultColor: { on: bgDefaultColor },
-                bgBrightBlack: { on: `${blink}\x1b[40m`, off: bgDefaultColor },
-                bgBrightRed: { on: `${blink}\x1b[41m`, off: bgDefaultColor },
-                bgBrightGreen: { on: `${blink}\x1b[42m`, off: bgDefaultColor },
-                bgBrightYellow: { on: `${blink}\x1b[43m`, off: bgDefaultColor },
-                bgBrightBlue: { on: `${blink}\x1b[44m`, off: bgDefaultColor },
-                bgBrightMagenta: { on: `${blink}\x1b[45m`, off: bgDefaultColor },
-                bgBrightCyan: { on: `${blink}\x1b[46m`, off: bgDefaultColor },
-                bgBrightWhite: { on: `${blink}\x1b[47m`, off: bgDefaultColor },
-                bgBrightColor: { on: `${blink}\x1b[4%um`, off: bgDefaultColor },	// should be called with a 0..7 integer
-
-                // Those either does not produce anything or switch to some arbitrary color, so we will use our own settings instead
-                dim: { on: `${bold}\x1b[30m`, off: defaultColor },	// dim does not produce dim, so we use brightBlack instead
-                underline: { on: `${blink}\x1b[40m`, off: bgDefaultColor },	// underline does not produce underline, so we use bgBrightBlack instead
-                italic: { on: "\x1b[1m", off: "\x1b[22m" },	// italic does not produce italic, so we use bold instead (which is no bold but bright BTW)
-                hidden: { on: "\x1b[40m\x1b[30m", off: "\x1b[49m\x1b[39m" },	// hidden does not produce hidden, so we use black + bgBlack instead
-                strike: { on: `${bold}\x1b[30m`, off: defaultColor },	// strike does not produce strike, so we use brightBlack instead
 
                 // Cursor styles
                 hideCursor: { on: "\x1b[?1c", off: "\x1b[?0c" },
@@ -808,137 +345,6 @@ function configuration(terminal) {
                 // Does not exist, silently drop it...
                 windowTitle: { on: "%D" },
 
-                setDefaultColorRgb: { on: "\x1b]P7%x%x%x" },
-                setDefaultBgColorRgb: { on: "\x1b]P0%x%x%x" },
-                setColorLL: { on: "\x1b]P%h%x%x%x" },
-                setFont: { on: "%D" },	// not possible?
-                requestColor: { on: "%D", na: true },	// not capable
-
-                /* Functions */
-                color256: {
-                    on: "%[color256:%a]F",
-                    off: defaultColor,
-                    fb: true,
-                    handler: function color256(register) {
-                        if (!is.number(register)) { return ""; }
-                        if (register < 0 || register > 255) { return ""; }
-
-                        // If the register is greater than 15, find the 0..15 register that is close to it
-                        if (register > 15) {
-                            register = this.root.registerForRgb(this.root.rgbForRegister(register), 0, 15);
-                        }
-
-                        //return string.format.call( this.root.escHandler , this.root.esc.color.on , register ) ;
-                        return this.root.escHandler.color(register);
-                    }
-                },
-                bgColor256: {
-                    on: "%[bgColor256:%a]F",
-                    off: bgDefaultColor,
-                    fb: true,
-                    handler: function bgColor256(register) {
-                        if (!is.number(register)) { return ""; }
-                        if (register < 0 || register > 255) { return ""; }
-
-                        // If the register is greater than 15, find the 0..15 register that is close to it
-                        if (register > 15) {
-                            register = this.root.registerForRgb(this.root.rgbForRegister(register), 0, 15);
-                        }
-
-                        //return string.format.call( this.root.escHandler , this.root.esc.bgColor.on , register ) ;
-                        return this.root.escHandler.bgColor(register);
-                    }
-                },
-                setCursorColor: {
-                    on: "%[setCursorColor:%a%a]F",
-                    handler: function setCursorColor(bg, fg) {
-                        if (!is.number(fg) || !is.number(bg)) { return ""; }
-
-                        fg = Math.floor(fg);
-                        bg = Math.floor(bg);
-
-                        if (fg < 0 || fg > 255 || bg < 0 || bg > 255) { return ""; }
-
-                        // If the register is greater than 15, find the 0..15 register that is close to it
-                        if (fg > 15) { fg = this.root.registerForRgb(this.root.rgbForRegister(fg), 0, 15); }
-                        if (bg > 15) { bg = this.root.registerForRgb(this.root.rgbForRegister(bg), 0, 15); }
-
-                        //console.log( 'fg bg: ' , fg , bg ) ;
-
-                        fg = fgCursorTable[fg];
-                        bg = bgCursorTable[bg];
-
-                        return adone.text.format("\x1b[?16;%u;%uc", fg, bg * 16);
-                    }
-                },
-                // It doesn't support RGB, but we can choose an ANSI color close to it
-                setCursorColorRgb: {
-                    on: "%[setCursorColorRgb:%a%a%a]F",
-                    handler: function setCursorColorRgb(r, g, b) {
-                        if (!is.number(r) || !is.number(g) || !is.number(b)) { return ""; }
-
-                        r = Math.floor(r);
-                        g = Math.floor(g);
-                        b = Math.floor(b);
-
-                        if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) { return ""; }
-
-                        const register = this.root.registerForRgb(r, g, b, 0, 15);
-
-                        //console.log( 'Register:' , register ) ;
-
-                        return this.root.str.setCursorColor(register, 0);
-                    }
-                },
-
-                /*
-                    This part is a bit of a nasty hack: originally, escape sequence should produce... well... an escape sequence...
-                    Here an empty string is returned, but some underlying actions are performed.
-                    This is because the "Linux Console" terminal does not support the mouse, so nothing should be sent to it,
-                    however we will try to connect to the GPM daemon if it exists.
-                    It is not very clean, ideally this should be an advanced (not chainable) feature, but doing so would break
-                    compatibility with other terminal driver.
-                */
-
-                // Mouse 'button' mode
-                mouseButton: {
-                    on: "%[mouseButton]F",
-                    off: "%[mouseButton_off]F",
-                    handler: function mouseButton() {
-                        gpmMouse.call(this, "button");
-                        return "";
-                    },
-                    offHandler: function mouseButton() {
-                        gpmMouse.call(this, false);
-                        return "";
-                    }
-                },
-                // Mouse 'drag' mode
-                mouseDrag: {
-                    on: "%[mouseDrag]F",
-                    off: "%[mouseDrag_off]F",
-                    handler: function mouseDrag() {
-                        gpmMouse.call(this, "drag");
-                        return "";
-                    },
-                    offHandler: function mouseDrag() {
-                        gpmMouse.call(this, false);
-                        return "";
-                    }
-                },
-                // Mouse 'motion' mode
-                mouseMotion: {
-                    on: "%[mouseMotion]F",
-                    off: "%[mouseMotion_off]F",
-                    handler: function mouseMotion() {
-                        gpmMouse.call(this, "motion");
-                        return "";
-                    },
-                    offHandler: function mouseMotion() {
-                        gpmMouse.call(this, false);
-                        return "";
-                    }
-                },
                 mouseHilight: { on: "", off: "" },
                 mouseSGR: { on: "", off: "" },
                 focusEvent: { on: "", off: "" }
@@ -946,7 +352,6 @@ function configuration(terminal) {
             support: {
                 deltaEscapeSequence: false
             },
-            colorRegister: linuxScheme
         });
     } else if (terminal === "windows-ansi.generic") {
         config = _.merge(configuration("xterm.generic"), {
@@ -960,8 +365,6 @@ function configuration(terminal) {
     return config;
 }
 
-// This is used for adjustement of floating point value, before applying Math.floor()
-const adjustFloor = 0.0000001;
 const pseudoEsc = {
     // It just set attr:true so it will not write anything, but return an attribute object
     attr: { attr: true },
@@ -993,286 +396,7 @@ const pseudoEsc = {
 
             return sequence;
         }
-    },
-    color: {
-        on: "%[color:%a]F",
-        off() {
-            return this.esc.defaultColor.on;
-        },
-        handler: function color(c) {
-            if (!is.number(c)) { return ""; }
-
-            c = Math.floor(c);
-
-            if (c < 0 || c > 15) { return ""; }
-
-            if (c <= 7) {
-                return this.root.format(this.root.esc.darkColor.on, c);
-            } else {
-                return this.root.format(this.root.esc.brightColor.on, c - 8);
-            }
-        }
-    },
-    bgColor: {
-        on: "%[bgColor:%a]F",
-        off() {
-            return this.esc.bgDefaultColor.on;
-        },
-        handler: function bgColor(c) {
-            if (!is.number(c)) { return ""; }
-
-            c = Math.floor(c);
-
-            if (c < 0 || c > 15) { return ""; }
-
-            if (c <= 7) {
-                return this.root.format(this.root.esc.bgDarkColor.on, c);
-            } else {
-                return this.root.format(this.root.esc.bgBrightColor.on, c - 8);
-            }
-        }
-    },
-    colorRgb: {
-        on: "%[colorRgb:%a%a%a]F",
-        off() {
-            return this.esc.defaultColor.on;
-        },
-        handler: function colorRgb(r, g, b) {
-            let c;
-
-            if (!is.number(r) || !is.number(g) || !is.number(b)) { return ""; }
-            if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) { return ""; }
-
-            if (!this.root.esc.color24bits.na && !this.root.esc.color24bits.fb) {
-                // The terminal supports 24bits! Yeah!
-                return this.root.format(this.root.esc.color24bits.on, r, g, b);
-            }
-
-            if (!this.root.esc.color256.na && !this.root.esc.color256.fb) {
-                // The terminal supports 256 colors
-                // Convert to 0..5 range
-                r = Math.floor(r * 6 / 256 + adjustFloor);
-                g = Math.floor(g * 6 / 256 + adjustFloor);
-                b = Math.floor(b * 6 / 256 + adjustFloor);
-
-                c = Math.floor(16 + r * 36 + g * 6 + b);
-
-                // min:16 max:231
-                //if ( c < 16 || c > 231 ) { return '' ; }
-
-                return this.root.format(this.root.esc.color256.on, c);
-            }
-
-            // The terminal does not support 256 colors, fallback
-            c = this.root.registerForRgb(r, g, b, 0, 15);
-            return this.root.format(this.root.esc.color.on, c);
-        }
-    },
-    bgColorRgb: {
-        on: "%[bgColorRgb:%a%a%a]F",
-        off() {
-            return this.esc.bgDefaultColor.on;
-        },
-        handler: function bgColorRgb(r, g, b) {
-            let c;
-
-            if (!is.number(r) || !is.number(g) || !is.number(b)) { return ""; }
-            if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) { return ""; }
-
-            if (!this.root.esc.bgColor24bits.na && !this.root.esc.bgColor24bits.fb) {
-                // The terminal supports 24bits! Yeah!
-                return this.root.format(this.root.esc.bgColor24bits.on, r, g, b);
-            }
-
-            if (!this.root.esc.bgColor256.na && !this.root.esc.bgColor256.fb) {
-                // The terminal supports 256 colors
-
-                // Convert to 0..5 range
-                r = Math.floor(r * 6 / 256 + adjustFloor);
-                g = Math.floor(g * 6 / 256 + adjustFloor);
-                b = Math.floor(b * 6 / 256 + adjustFloor);
-
-                c = Math.floor(16 + r * 36 + g * 6 + b);
-
-                // min:16 max:231
-                //if ( c < 16 || c > 231 ) { return '' ; }
-
-                return this.root.format(this.root.esc.bgColor256.on, c);
-            }
-
-            // The terminal does not support 256 colors, fallback
-            c = this.root.registerForRgb(r, g, b, 0, 15);
-            return this.root.format(this.root.esc.bgColor.on, c);
-        }
-    },
-    colorGrayscale: {
-        on: "%[colorGrayscale:%a]F",
-        off() {
-            return this.esc.defaultColor.on;
-        },
-        handler: function colorGrayscale(g) {
-            let c;
-
-            if (!is.number(g)) { return ""; }
-            if (g < 0 || g > 255) { return ""; }
-
-            if (!this.root.esc.color24bits.na && !this.root.esc.color24bits.fb) {
-                // The terminal supports 24bits! Yeah!
-                return this.root.format(this.root.esc.color24bits.on, g, g, g);
-            }
-
-            if (!this.root.esc.color256.na && !this.root.esc.color256.fb) {
-                // The terminal supports 256 colors
-
-                // Convert to 0..25 range
-                g = Math.floor(g * 26 / 256 + adjustFloor);
-
-                if (g < 0 || g > 25) { return ""; }
-
-                if (g === 0) { c = 16; }
-                else if (g === 25) { c = 231; }
-                else { c = g + 231; }
-
-                return this.root.format(this.root.esc.color256.on, c);
-            }
-
-            // The terminal does not support 256 colors, fallback
-            c = this.root.registerForRgb(g, g, g, 0, 15);
-            return this.root.format(this.root.esc.color.on, c);
-        }
-    },
-    bgColorGrayscale: {
-        on: "%[bgColorGrayscale:%a]F",
-        off() {
-            return this.esc.bgDefaultColor.on;
-        },
-        handler: function bgColorGrayscale(g) {
-            let c;
-
-            if (!is.number(g)) { return ""; }
-            if (g < 0 || g > 255) { return ""; }
-
-            if (!this.root.esc.bgColor24bits.na && !this.root.esc.bgColor24bits.fb) {
-                // The terminal supports 24bits! Yeah!
-                return this.root.format(this.root.esc.bgColor24bits.on, g, g, g);
-            }
-
-            if (!this.root.esc.bgColor256.na && !this.root.esc.bgColor256.fb) {
-                // Convert to 0..25 range
-                //console.log( '-- ' , g , g * 26 / 256 , Math.floor( g * 26 / 256 ) , Math.floor( g * 26 / 256 + adjustFloor ) ) ;
-                g = Math.floor(g * 26 / 256 + adjustFloor);
-
-                if (g < 0 || g > 25) { return ""; }
-
-                if (g === 0) { c = 16; }
-                else if (g === 25) { c = 231; }
-                else { c = g + 231; }
-
-                return this.root.format(this.root.esc.bgColor256.on, c);
-            }
-
-            // The terminal does not support 256 colors, fallback
-            c = this.root.registerForRgb(g, g, g, 0, 15);
-            return this.root.format(this.root.esc.bgColor.on, c);
-        }
     }
-};
-
-
-/*
-	RGB <-> HSL convertor, adaptated from Garry Tan code, found here:
-	http://axonflux.com/handy-rgb-to-hsl-and-rgb-to-hsv-color-model-c
-*/
-function hue2rgb(p, q, t) {
-    if (t < 0) { t += 1; }
-    if (t > 1) { t -= 1; }
-    if (t < 1 / 6) { return p + (q - p) * 6 * t; }
-    if (t < 1 / 2) { return q; }
-    if (t < 2 / 3) { return p + (q - p) * (2 / 3 - t) * 6; }
-    return p;
-}
-
-/*
-	Converts an RGB color value to HSL.
-	Conversion formula adapted from http://en.wikipedia.org/wiki/HSL_color_space.
-	Assumes r, g, and b are contained in the set [0, 255] and returns h, s, and l in the set [0, 1].
-	
-	rgb2hsl( r , g , b )
-	rgb2hsl( rgb )
-*/
-const hslConverter = {};
-hslConverter.rgb2hsl = function rgb2hsl(r, g, b) {
-    if (typeof r === "object") {
-        b = r.b;
-        g = r.g;
-        r = r.r;
-    }
-
-    r /= 255;
-    g /= 255;
-    b /= 255;
-
-    let max = Math.max(r, g, b);
-    let min = Math.min(r, g, b);
-    let hsl = {};
-
-    hsl.l = (max + min) / 2;
-
-    if (max === min) {
-        hsl.h = hsl.s = 0; // achromatic
-    } else {
-        let diff = max - min;
-        hsl.s = hsl.l > 0.5 ? diff / (2 - max - min) : diff / (max + min);
-
-        switch (max) {
-            case r:
-                hsl.h = (g - b) / diff + (g < b ? 6 : 0);
-                break;
-            case g:
-                hsl.h = (b - r) / diff + 2;
-                break;
-            case b:
-                hsl.h = (r - g) / diff + 4;
-                break;
-        }
-        hsl.h /= 6;
-    }
-
-    return hsl;
-};
-
-/*
-	Converts an RGB color value to HSL.
-	Conversion formula adapted from http://en.wikipedia.org/wiki/HSL_color_space.
-	Assumes r, g, and b are contained in the set [0, 255] and returns h, s, and l in the set [0, 1].
-	
-	hsl2rgb( h , s , l)
-	hsl2rgb( hsl )
-*/
-hslConverter.hsl2rgb = function hsl2rgb(h, s, l) {
-    if (typeof h === "object") {
-        l = h.l;
-        s = h.s;
-        h = h.h;
-    }
-
-    let r, g, b;
-
-    if (s === 0) {
-        r = g = b = l; // achromatic
-    } else {
-        let q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-        let p = 2 * l - q;
-        r = hue2rgb(p, q, h + 1 / 3);
-        g = hue2rgb(p, q, h);
-        b = hue2rgb(p, q, h - 1 / 3);
-    }
-
-    return {
-        r: r * 255,
-        g: g * 255,
-        b: b * 255
-    };
 };
 
 function applyEscape(options) {
@@ -1296,8 +420,11 @@ function applyEscape(options) {
     }
 
     if (typeof action !== "string") {
-        if (is.function(action.toString)) { action = action.toString(); }
-        else { action = ""; }
+        if (is.function(action.toString)) {
+            action = action.toString();
+        } else {
+            action = "";
+        }
     }
 
     on = options.onHasFormatting ? options.root.format.apply(undefined, onFormat) : options.on;
@@ -1429,31 +556,6 @@ export default class Terminfo {
         }
 
         _.extend(termConfig.esc, pseudoEsc);
-
-        // Default colors, used for guessing
-        const defaultColorRegister = defaultScheme;
-
-        for (let register = 16; register < 232; register++) {
-            // RGB 6x6x6
-            const offset = register - 16;
-            const factor = 255 / 5;
-            defaultColorRegister[register] = {
-                r: Math.floor((Math.floor(offset / 36 + adjustFloor) % 6) * factor + adjustFloor),
-                g: Math.floor((Math.floor(offset / 6 + adjustFloor) % 6) * factor + adjustFloor),
-                b: Math.floor((offset % 6) * factor + adjustFloor),
-                names: []
-            };
-        }
-
-        for (let register = 232; register <= 255; register++) {
-            // Grayscale 0..23
-            const offset = register - 231;	// not 232, because the first of them is not a #000000 black
-            const factor = 255 / 25;	// not 23, because the last is not a #ffffff white
-            const l = Math.floor(offset * factor + adjustFloor);
-            defaultColorRegister[register] = { r: l, g: l, b: l, names: [] };
-        }
-        termConfig.colorRegister = _.extend([], defaultColorRegister, termConfig.colorRegister);
-
         _.extend(this, termConfig);
 
         const fnOptions = {
@@ -1632,102 +734,6 @@ export default class Terminfo {
             this._output = output;
         }
         return this._output;
-    }
-
-    // If register hasn't changed, this is used to get the RGB value for them
-    rgbForRegister(register) {
-        if (register < 0) {
-            register = 0;
-        } else if (register > 255) {
-            register = 255;
-        }
-
-        // Simply clone it
-        return {
-            r: this.colorRegister[register].r,
-            g: this.colorRegister[register].g,
-            b: this.colorRegister[register].b
-        };
-    }
-
-    // If register hasn't changed, this is used to get it for an RGB
-    // .registerForRgb( r , g , b , [minRegister] , [maxRegister] )
-    // .registerForRgb( rgbObject , [minRegister] , [maxRegister] )
-
-    // HSL cylender coordinate distance
-    registerForRgb(r, g, b, minRegister, maxRegister, lFactor) {
-        if (r && typeof r === "object") {
-            // Manage the .registerForRgb( rgbObject , [minRegister] , [maxRegister] ) variante
-            maxRegister = b;
-            minRegister = g;
-            b = r.b;
-            g = r.g;
-            r = r.r;
-        }
-
-        if (!is.number(r) || r < 0) {
-            r = 0;
-        } else if (r > 255) {
-            r = 255;
-        }
-
-        if (!is.number(g) || g < 0) {
-            g = 0;
-        } else if (g > 255) {
-            g = 255;
-        }
-
-        if (!is.number(b) || b < 0) {
-            b = 0;
-        } else if (b > 255) {
-            b = 255;
-        }
-
-        if (!is.number(maxRegister) || maxRegister < 0 || maxRegister > 255) {
-            maxRegister = 15;
-        }
-        if (!is.number(minRegister) || minRegister < 0 || minRegister > 255) {
-            minRegister = 0;
-        }
-        if (!is.number(lFactor)) {
-            lFactor = 1;
-        }
-
-        if (minRegister > maxRegister) {
-            let tmp;
-            tmp = maxRegister;
-            maxRegister = minRegister;
-            minRegister = tmp;
-        }
-
-        // Search for the best match
-        // Transform HSL to cylender
-        let minDiff = Infinity;
-        const hsl = hslConverter.rgb2hsl(r, g, b);
-        const x = hsl.s * Math.cos(hsl.h * 2 * Math.PI);
-        const y = hsl.s * Math.sin(hsl.h * 2 * Math.PI);
-        const z = hsl.l * lFactor;
-
-        //console.log( 'HSL:' , hsl ) ;
-
-        for (let register = minRegister; register <= maxRegister; register++) {
-            const registerHsl = hslConverter.rgb2hsl(this.colorRegister[register]);
-
-            const xR = registerHsl.s * Math.cos(registerHsl.h * 2 * Math.PI);
-            const yR = registerHsl.s * Math.sin(registerHsl.h * 2 * Math.PI);
-            const zR = registerHsl.l;
-            const dx = Math.abs(x - xR);
-            const dy = Math.abs(y - yR);
-            const dz = Math.abs(z - zR);
-            const diff = dx * dx + dy * dy + dz * dz;
-
-            if (diff < minDiff) {
-                minDiff = diff;
-                minRegister = register;
-            }
-        }
-
-        return minRegister;
     }
 
     setup() {

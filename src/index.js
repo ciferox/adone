@@ -238,7 +238,6 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
                 }
             });
 
-            // adone.tui.colors = require("./glosses/terminal/colors");
             term.unicode = require("./glosses/terminal/ui/unicode");
             term.helpers = require("./glosses/terminal/ui/helpers");
             term.helpers.merge(term, term.helpers);
