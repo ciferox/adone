@@ -81,9 +81,18 @@ export const namespaces = [
         paths: []
     },
     {
-        name: "adone.meta",
+        name: "adone.math",
         description: "",
-        paths: []
+        paths: [
+            "glosses.math"
+        ]
+    },
+    {
+        name: "adone.meta",
+        description: "Meta utilites and implementation of adone-specific inspection",
+        paths: [
+            "glosses/meta"
+        ]
     },
     {
         name: "adone.net",
@@ -156,6 +165,55 @@ export const namespaces = [
         description: "Terminal implementation and common cli utilites",
         paths: [
             "glosses/terminal"
+        ]
+    },
+    {
+        name: "adone.text",
+        description: "Text utilites",
+        paths: [
+            "glosses/text"
+        ]
+    },
+    {
+        name: "adone.text.ansi",
+        description: "Common ansi utilites",
+        paths: [
+            "glosses/text/index"
+        ]
+    },
+    {
+        name: "adone.text.pretty",
+        description: "Implementation of pretty-printers",
+        paths: [
+            "glosses/text/pretties"
+        ]
+    },
+    {
+        name: "adone.text.unicode",
+        description: "Common unicode utilites",
+        paths: [
+            "glosses/text/unicode"
+        ]
+    },
+    {
+        name: "adone.text.unicode.symbol",
+        description: "Set of useful unicode symbols",
+        paths: [
+            "glosses/text/unicode"
+        ]
+    },
+    {
+        name: "adone.text.spinner",
+        description: "Text spinners",
+        paths: [
+            "glosses/text/spinners"
+        ]
+    },
+    {
+        name: "adone.text.table",
+        description: "Implementation of cli table",
+        paths: [
+            "glosses/text/table"
         ]
     },
     {

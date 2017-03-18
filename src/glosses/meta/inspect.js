@@ -191,7 +191,7 @@ const inspect_ = (runtime, options, variable) => {
         str += `${pre + options.style.inspect(variable.inspect())} ${
             options.noType ? "" : options.style.type("Buffer") + options.style.length(`(${variable.length})`)
             }${descriptorStr}${options.style.nl}`;
-    } else if (type === "global" || type === "Object" || type === "class" || type === "function") {
+    } else if (type === "global" || type === "Array" || type === "Object" || type === "class" || type === "function") {
         funcName = length = "";
         isFunc = false;
         if (type === "function") {

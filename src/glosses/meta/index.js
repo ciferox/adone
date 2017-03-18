@@ -9,8 +9,8 @@ export const skipGlobalNs = (namespace) => namespace.substring(GLOBAL_PREFIX_LEN
 adone.lazify({
     reflect: "./reflect",
     namespaces: ["./consts", (mod) => mod.namespaces],
-    names: () => adone.meta.namespaces.map((ns) => ns.name).sort((a, b) => a.localeCompare(b)),
-    paths: () => {
+    nsNames: () => adone.meta.namespaces.map((ns) => ns.name).sort((a, b) => a.localeCompare(b)),
+    nsPaths: () => {
         const result = {};
         const len = adone.meta.namespaces.length;
         for (let i = 0; i < len; i++) {
@@ -18,12 +18,15 @@ adone.lazify({
             result[ns.name] = ns.paths;
         }
         return result;
-    }
+    },
+    inspect: ["./inspect", (mod) => mod.inspect],
+    inspectError: ["./inspect", (mod) => mod.inspectError],
+    inspectStack: ["./inspect", (mod) => mod.inspectStack]
 }, exports, require);
 
 export const parseName = (name) => {
     let namespace = name;
-    while (namespace.length > 0 && !adone.meta.names.includes(namespace)) {
+    while (namespace.length > 0 && !adone.meta.nsNames.includes(namespace)) {
         namespace = namespace.split(".").slice(0, -1).join(".");
     }
     const objectName = name.substring(namespace.length + 1);
@@ -40,7 +43,7 @@ export const getNamespacePaths = async (name) => {
         return [];
     }
     const pathPrefix =  std.path.join(adone.appinstance.adoneRootPath, "lib");
-    const paths = adone.meta.paths[namespace].map((p) => std.path.join(pathPrefix, p));
+    const paths = adone.meta.nsPaths[namespace].map((p) => std.path.join(pathPrefix, p));
     let targetPaths = [];
     for (let i = 0; i < paths.length; i++) {
         let path = paths[i];
@@ -142,6 +145,16 @@ export const search = (keyword, nsName = "adone", { threshold = 0.1 } = {}) => {
     }
 
     return result;
+};
+
+export const getValue = (name) => {
+    let obj;
+    if (name.startsWith("global.")) {
+        obj = adone.vendor.lodash.get(global, adone.meta.skipGlobalNs(name));
+    } else {
+        obj = adone.vendor.lodash.get(adone, adone.meta.skipAdoneNs(name));
+    }
+    return obj;
 };
 
 // export class Inspector {

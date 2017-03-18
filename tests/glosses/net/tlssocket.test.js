@@ -161,7 +161,7 @@ describe("TLS Socket", function () {
                     await server.bind(Object.assign({ port: UNIX_SOCKET }, serverOptions));
                     await client.connect(Object.assign({ port: UNIX_SOCKET }, clientOptions));
 
-                    // console.log(adone.inspect({}, client.getLocalAddress()));
+                    // console.log(adone.meta.inspect({}, client.getLocalAddress()));
                     // assert.isOk(is.object(client.getLocalAddress()));
                     // assert.isOk(is.string(client.getLocalAddress().port));
                 });

@@ -12,5 +12,5 @@ export default function format(entity) {
     if (adone.is.string(entity)){
         return entity;
     }
-    return adone.inspect(entity, { minimal: true }).trim();
+    return adone.meta.inspect(entity, { minimal: true }).trim();
 }

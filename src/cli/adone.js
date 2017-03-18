@@ -88,7 +88,7 @@ export default class AdoneCLI extends adone.application.Application {
     async configCommand(args, opts) {
         const config = new adone.configuration.FileConfiguration();
         await config.load(args.get("path"), "__");
-        adone.log(adone.inspect(config.__, { style: opts.get("style"), depth: opts.get("depth"), noType: !opts.get("types"), noDescriptor: true, enumOnly: true, proto: false, funcDetails: false }));
+        adone.log(adone.meta.inspect(config.__, { style: opts.get("style"), depth: opts.get("depth"), noType: !opts.get("types"), noDescriptor: true, enumOnly: true, proto: false, funcDetails: false }));
 
         const outPath = opts.get("out");
         if (is.string(outPath)) {
@@ -214,8 +214,8 @@ export default class AdoneCLI extends adone.application.Application {
                             }
                         }
                         adone.log(`\nNumber of files read : ${filesCount}`);
-                        // adone.log(adone.inspect({minimal: true}, stats));
-                        // adone.log(adone.inspect({minimal: true}, total));
+                        // adone.log(adone.meta.inspect({minimal: true}, stats));
+                        // adone.log(adone.meta.inspect({minimal: true}, total));
                         break;
                     }
                     case "json": {

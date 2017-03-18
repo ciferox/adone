@@ -81,11 +81,8 @@ export default class extends adone.application.Subsystem {
                     ],
                     options: [
                         {
-                            name: "--dir",
-                            type: String,
-                            choices: ["lib", "src"],
-                            default: "lib",
-                            help: "Source directory of the code"
+                            name: "--src",
+                            help: "Use 'src' directory"
                         },
                         {
                             name: "--out",
@@ -116,7 +113,11 @@ export default class extends adone.application.Subsystem {
 
     async metaCommand(args, opts) {
         try {
-            const namespaces = adone.meta.listNamespaces(args.get("ns"));
+            const nsName = args.get("ns");
+            const namespaces = adone.meta.listNamespaces(nsName);
+            if (namespaces.length === 0) {
+                throw new adone.x.Unknown(`Unknown namespace: ${nsName}`);
+            }
             const showDescr = opts.get("descr");
             const showPaths = opts.get("paths");
             const showFullPaths = opts.get("fullPaths");
@@ -167,7 +168,7 @@ export default class extends adone.application.Subsystem {
             // const type = util.typeOf(obj);
             // switch (type) {
             //     case "function": adone.log(obj.toString()); break;
-            //     default: adone.log(adone.inspect(obj, { style: "color", depth: 1, funcDetails: true }));
+            //     default: adone.log(adone.meta.inspect(obj, { style: "color", depth: 1, funcDetails: true }));
             // }
         } catch (err) {
             adone.log(err.message);
@@ -195,22 +196,85 @@ export default class extends adone.application.Subsystem {
             }
 
             if (objectName === "") {
-                adone.log(adone.inspect(ns, inspectOptions));
+                adone.log(adone.meta.inspect(ns, inspectOptions));
             } else if (adone.vendor.lodash.has(ns, objectName)) {
-                adone.log(adone.inspect(adone.vendor.lodash.get(ns, objectName), inspectOptions));
+                adone.log(adone.meta.inspect(adone.vendor.lodash.get(ns, objectName), inspectOptions));
             } else {
                 throw new adone.x.Unknown(`Unknown object: ${name}`);
             }
-            // // const parts = this._parsePath(args.get("ns"));
-            // // const subNs = parts.join(".");
-            // // const pathPrefix = std.path.resolve(this.app.adoneRootPath, dir, "glosses");
-            // // const pathSuffix = parts.join(adone.std.path.sep);
-            // // const fullPath = "/________/ciferox/adone/src/glosses/netron/ws/netron.js";//std.path.join(pathPrefix, pathSuffix);
-            // // if (!(await fs.exists(fullPath))) {
-            // //     throw new adone.x.NotExists(`Path '${fullPath}' is not exists`);
-            // // }
+        } catch (err) {
+            adone.error(err.message);
+            return 1;
+        }
+        return 0;
+    }
 
-            // //const paths = await fs.glob(util.globize(fullPath, { recursive: true }));
+    async searchCommand(args, opts) {
+        try {
+            const namespace = opts.get("namespace");
+            const name = args.get("keyword");
+            const result = await adone.meta.search(name, namespace, { threshold: opts.get("threshold") });
+
+            for (const objName of result) {
+                adone.log(objName, adone.meta.inspect(adone.meta.getValue(objName), { depth: 1, style: "color", noDescriptor: true, noNotices: true }));
+            }
+        } catch (err) {
+            adone.error(err.message);
+            return 1;
+        }
+        return 0;
+    }
+
+    async extractCommand(args, opts) {
+        try {
+            const name = args.get("name");
+            const { namespace, objectName } = adone.meta.parseName(name);
+            if (!namespace.startsWith("adone")) {
+                throw new adone.x.NotSupported("Extraction from namespace other than 'adone' not supported");
+            }
+            if (objectName === "") {
+                throw new adone.x.NotValid("Extraction of namespace is not supported");
+            }
+
+            const dir = opts.get("src") ? "src" : "lib";
+            const pathPrefix =  std.path.join(adone.appinstance.adoneRootPath, dir);
+            const sources = (await adone.meta.getNamespacePaths(name)).map((p) => adone.std.path.join(pathPrefix, p));
+
+            for (const srcPath of sources) {
+                adone.log(srcPath);
+                // const srcFile = await adone.meta.loadSourceFile(srcPath);
+                // const mod = adone.vendor.lodash.omit(adone.require(srcPath), ["__esModule"]);
+                // for (const [key, val] of Object.entries(mod)) {
+                //     let name;
+                //     let isDefault;
+                //     if (key === "default") {
+                //         name = val.name;
+                //         isDefault = true;
+                //     } else {
+                //         name = key;
+                //         isDefault = false;
+                //     }
+                //     const type = util.typeOf(val);
+                //     const exportEntry = {
+                //         name,
+                //         namespace,
+                //         type
+                //     };
+                //     if (isDefault === true) {
+                //         exportEntry.default = isDefault;
+                //     }
+                //     moduleInfo.exports.push(exportEntry);
+                // }
+
+                // adone.log();
+                // const inspector = new adone.meta.Inspector(srcPath);
+                // await inspector.load();
+                // inspector.analyze();
+                // adone.log(adone.text.pretty.json(inspector.namespaces));
+                // adone.log();
+                // adone.log(adone.text.pretty.json(inspector.globals));
+                // adone.log();
+            }
             // const paths = [fullPath];
             // const result = [];
             // for (const path of paths) {
@@ -234,86 +298,10 @@ export default class extends adone.application.Subsystem {
             //     adone.log();
             //     adone.log(adone.text.pretty.json(inspector.globals));
             //     adone.log();
-            //     // for (const [key, val] of Object.entries(mod)) {
-            //     //     let name;
-            //     //     let isDefault;
-            //     //     if (key === "default") {
-            //     //         name = val.name;
-            //     //         isDefault = true;
-            //     //     } else {
-            //     //         name = key;
-            //     //         isDefault = false;
-            //     //     }
-            //     //     const type = util.typeOf(val);
-            //     //     const exportEntry = {
-            //     //         name,
-            //     //         namespace,
-            //     //         type
-            //     //     };
-            //     //     if (isDefault === true) {
-            //     //         exportEntry.default = isDefault;
-            //     //     }
-            //     //     moduleInfo.exports.push(exportEntry);
-            //     // }
             //     // result.push(moduleInfo);
             // }
 
             // // adone.log(adone.text.pretty.json(result));
-        } catch (err) {
-            adone.error(err.message);
-            return 1;
-        }
-        return 0;
-    }
-
-    async searchCommand(args, opts) {
-        try {
-            const namespace = opts.get("namespace");
-            const name = args.get("keyword");
-            const result = await adone.meta.search(name, namespace, { threshold: opts.get("threshold") });
-
-            for (const objName of result) {
-                let obj;
-                if (objName.startsWith("global.")) {
-                    obj = adone.vendor.lodash.get(global, adone.meta.skipGlobalNs(objName));
-                } else {
-                    obj = adone.vendor.lodash.get(adone, adone.meta.skipAdoneNs(objName));
-                }
-                adone.log(objName, adone.inspect(obj, { depth: 1, style: "color", noDescriptor: true, noNotices: true }));
-            }
-        } catch (err) {
-            adone.error(err.message);
-            return 1;
-        }
-        return 0;
-    }
-
-    async extractCommand(args, opts) {
-        try {
-            const name = args.get("name");
-            const { namespace, objectName } = adone.meta.parseName(name);
-            if (!namespace.startsWith("adone")) {
-                throw new adone.x.NotSupported("Extraction from namespace other than 'adone' not supported");
-            }
-            if (objectName === "") {
-                throw new adone.x.NotValid(`'${name}' is a namespace`);
-            }
-
-            const dir = opts.get("dir");
-            const pathPrefix =  std.path.join(adone.appinstance.adoneRootPath, dir);
-            const sources = (await adone.meta.getNamespacePaths(name)).map((p) => adone.std.path.join(pathPrefix, p));
-
-            for (const srcPath of sources) {
-                adone.log(srcPath);
-                // adone.log();
-                // const inspector = new adone.meta.Inspector(srcPath);
-                // await inspector.load();
-                // inspector.analyze();
-                // adone.log(adone.text.pretty.json(inspector.namespaces));
-                // adone.log();
-                // adone.log(adone.text.pretty.json(inspector.globals));
-                // adone.log();
-            }
 
             // const outPath = opts.get("out");
         } catch (err) {

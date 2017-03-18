@@ -178,13 +178,13 @@ function formatMethod(str) {
                     if (modeArg !== undefined) {
                         depth = parseInt(modeArg, 10);
                     }
-                    return adone.inspect(arg, { depth, style: (self && self.color ? "color" : "none") });
+                    return adone.meta.inspect(arg, { depth, style: (self && self.color ? "color" : "none") });
                 case "Y":
                     depth = 3;
                     if (modeArg !== undefined) {
                         depth = parseInt(modeArg, 10);
                     }
-                    return adone.inspect(arg, { depth, style: (self && self.color ? "color" : "none"), noFunc: true, enumOnly: true, noDescriptor: true });
+                    return adone.meta.inspect(arg, { depth, style: (self && self.color ? "color" : "none"), noFunc: true, enumOnly: true, noDescriptor: true });
                 case "E":
                     return adone.inspectError(arg, { style: (self && self.color ? "color" : "none") });
                 case "J":
