@@ -297,9 +297,6 @@ class OptionalArgument extends Argument {
         super(adone.o({
             action: (options.choices || options.nargs || (options.type && options.type !== Boolean)) ? "store" : "store_true"
         }, options));
-        if (options.nargs === "?") {
-            throw new x.IllegalState(`${this.names[0]}: Cannot use nargs = ? with an optional argument`);
-        }
         for (const name of this.names) {
             if (name[0] !== "-") {
                 throw new x.IllegalState(`${this.names[0]}: The name of an optional argument must start with \"-\": ${name}`);
@@ -494,7 +491,10 @@ class ArgumentsMap {
         }
         const arg = this.args.get(key);
         if (arg.present || arg.hasDefaultValue()) {
-            return arg.value;
+            const { value } = arg;
+            if (value !== EMPTY_VALUE) {
+                return value;
+            }
         }
         if (defaultValue !== EMPTY_VALUE) {
             return defaultValue;
@@ -1650,7 +1650,7 @@ export default class Application extends adone.application.Subsystem {
                         possible: for (let j = partIndex + 1; j < argv.length; ++j) {
                             for (const arg of optional) {
                                 if (arg.match(argv[j])) {
-                                    break possible;
+                                    continue possible;   // calc n of required args
                                 }
                             }
                             for (const cmd of commands) {
@@ -1671,7 +1671,7 @@ export default class Application extends adone.application.Subsystem {
                                 const { nargs } = arg;
                                 if (is.integer(nargs)) {
                                     atLeast += nargs;
-                                } else if (nargs === "+" || (arg.optional && arg.required)) {
+                                } else if (nargs === "+") {
                                     ++atLeast;
                                 }
                             }
@@ -1687,10 +1687,7 @@ export default class Application extends adone.application.Subsystem {
                                 } else {
                                     thisAtLeast += nargs;
                                 }
-                            } else if (
-                                (nargs === "+" || argument.optional) &&
-                                (!hasValue || argument.value.length === 0)
-                            ) {
+                            } else if (nargs === "+" && argument.value.length === 0) {
                                 ++thisAtLeast;
                             }
                         }
@@ -1721,11 +1718,9 @@ export default class Application extends adone.application.Subsystem {
                         nextPart();
 
                         if (
+                            argument.nargs === "?" || // it requires 1 value and it has got it
                             (atLeast >= possible && thisAtLeast === 0) ||
-                            (
-                                is.integer(argument.nargs) &&
-                                argument.value.length === argument.nargs
-                            )
+                            (is.integer(argument.nargs) && argument.value.length === argument.nargs)
                         ) {
                             // it can be enough for this argument or we have only required elements left
                             state.push("finish argument");
