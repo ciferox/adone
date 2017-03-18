@@ -5,7 +5,7 @@
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-import * as util from "adone/glosses/js/sourcemap/util";
+import * as util from "adone/glosses/sourcemap/util";
 
 // This is a test mapping which maps functions from two different files
 // (one.js and two.js) to a minified generated source.

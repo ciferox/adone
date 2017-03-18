@@ -2,7 +2,7 @@
 
 
 
-const { is, core, x, js: { sourceMap: { SourceMapGenerator, SourceMapConsumer } }, std: { path, fs }, util } = adone;
+const { is, core, x, sourcemap: { Generator: SourceMapGenerator, Consumer: SourceMapConsumer }, std: { path, fs }, util } = adone;
 
 export function applySourceMap(file, sourceMap) {
     if (is.string(sourceMap)) {

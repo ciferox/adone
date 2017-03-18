@@ -58,7 +58,7 @@
     "node": ">=7.0.0"
   },
   "scripts": {
-    "test": "node --require ./lib/glosses/js/sourcemap/support/register bin/shani.js",
+    "test": "node --require ./lib/glosses/sourcemap/support/register bin/shani.js",
     "build": "node-gyp rebuild && gulp build",
     "watch": "gulp watch"
   },

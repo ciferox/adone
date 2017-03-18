@@ -8,15 +8,15 @@
 // @flow
 
 const {
-    SourceMapConsumer,
-    SourceMapGenerator,
-    SourceNode
-} = adone.js.sourceMap;
+    Consumer: SourceMapConsumer,
+    Generator: SourceMapGenerator,
+    Node: SourceNode
+} = adone.sourcemap;
 import * as util from "./util";
 
 describe("Compiler", () => {
     describe("Source Map", () => {
-        
+
         describe("Generator", () => {
             it("test some simple stuff", () => {
                 var map = new SourceMapGenerator({
@@ -741,7 +741,7 @@ describe("Compiler", () => {
 
                 var n = 0;
                 consumer.eachMapping(function () {
-                    n++; 
+                    n++;
                 });
 
                 assert.equal(n, 2,

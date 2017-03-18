@@ -7,7 +7,7 @@
 // @flow
 /* global describe it */
 
-import ArraySet from "adone/glosses/js/sourcemap/array-set";
+import ArraySet from "adone/glosses/sourcemap/array-set";
 
 function makeTestSet() {
     var set = new ArraySet();

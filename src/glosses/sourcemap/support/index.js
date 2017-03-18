@@ -1,6 +1,6 @@
 import adone from "adone";
 
-const { SourceMapConsumer } = adone.js.sourceMap;
+const { sourcemap: { Consumer: SourceMapConsumer } } = adone;
 const { fs, path } = adone.std;
 
 export default function createInstance(ErrorConstructor = Error) {
@@ -273,7 +273,7 @@ export default function createInstance(ErrorConstructor = Error) {
         if (frame.isNative()) {
             return frame;
         }
-        
+
         // Most call sites will return the source file from getFileName(), but code
         // passed to eval() ending in "//# sourceURL=..." will return the source file
         // from getScriptNameOrSourceURL() instead
@@ -434,7 +434,7 @@ export default function createInstance(ErrorConstructor = Error) {
         const oldCache = sourceMapCache;
 
         sourceMapCache = map;
-        
+
         ErrorConstructor.prepareStackTrace = function(error, stack) {
             return error + stack.map(function (frame) {
                 return "\n    at " + wrapCallSite(frame);
@@ -449,15 +449,15 @@ export default function createInstance(ErrorConstructor = Error) {
         return err;
     }
 
-    const object = { 
-        reflect, 
-        retrieveSourceMap, 
-        supportRelativeURL, 
-        retrieveSourceMapURL, 
-        mapSourcePosition, 
-        wrapCallSite, 
-        getErrorSource, 
-        install, 
+    const object = {
+        reflect,
+        retrieveSourceMap,
+        supportRelativeURL,
+        retrieveSourceMapURL,
+        mapSourcePosition,
+        wrapCallSite,
+        getErrorSource,
+        install,
         retrieveFileHandlers,
         retrieveMapHandlers
     };

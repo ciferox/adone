@@ -13,7 +13,7 @@ import ArraySet from "./array-set";
 
 var base64VLQ = require("./base64-vlq");
 
-function SourceMapConsumer(aSourceMap) {
+export default function SourceMapConsumer(aSourceMap) {
     var sourceMap = aSourceMap;
     if (typeof aSourceMap === "string") {
         sourceMap = JSON.parse(aSourceMap.replace(/^\)\]\}'/, ""));
@@ -251,8 +251,6 @@ SourceMapConsumer.prototype.allGeneratedPositionsFor =
 
         return mappings;
     };
-
-exports.SourceMapConsumer = SourceMapConsumer;
 
 /**
  * A BasicSourceMapConsumer instance represents a parsed source map which we can
@@ -777,8 +775,6 @@ BasicSourceMapConsumer.prototype.generatedPositionFor =
         };
     };
 
-exports.BasicSourceMapConsumer = BasicSourceMapConsumer;
-
 /**
  * An IndexedSourceMapConsumer instance represents a parsed source map which
  * we can query for information. It differs from BasicSourceMapConsumer in
@@ -1082,4 +1078,3 @@ IndexedSourceMapConsumer.prototype._parseMappings =
         this.__originalMappings.sort(util.compareByOriginalPositions);
     };
 
-exports.IndexedSourceMapConsumer = IndexedSourceMapConsumer;

@@ -4,7 +4,7 @@
  * Licensed under the New BSD license. See LICENSE or:
  * http://opensource.org/licenses/BSD-3-Clause
  */
-import * as libUtil from "adone/glosses/js/sourcemap/util";
+import * as libUtil from "adone/glosses/sourcemap/util";
 
 describe("Compiler", () => {
     describe("Source Map", () => {

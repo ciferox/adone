@@ -99,7 +99,7 @@ Module.transforms = {
             if (filename.includes("node_modules")) {
                 return content;
             }
-            if (adone.js.sourceMap.convert.getMapFileCommentRegex().test(content)) {
+            if (adone.sourcemap.convert.getMapFileCommentRegex().test(content)) {
                 // a source map exists, assume it has been transpiled
                 return content;
             }

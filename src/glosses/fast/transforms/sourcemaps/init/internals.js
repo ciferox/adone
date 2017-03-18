@@ -51,7 +51,7 @@ export default function (options, file, fileContent) {
                         try {
                             sourceContent = adone.util.stripBom(adone.std.fs.readFileSync(absPath, "utf8"));
                         } catch (e) {
-                            // 
+                            //
                         }
                     }
                     sources.map.sourcesContent[i] = sourceContent;
@@ -67,7 +67,7 @@ export default function (options, file, fileContent) {
     function getInlineSources(sources) {
         sources.preExistingComment = util.getInlinePreExisting(sources.content);
         // Try to read inline source map
-        sources.map = adone.js.sourceMap.convert.fromSource(sources.content, options.largeFile);
+        sources.map = adone.sourcemap.convert.fromSource(sources.content, options.largeFile);
 
         if (!sources.map)
             return sources;
@@ -76,19 +76,19 @@ export default function (options, file, fileContent) {
         // sources in map are relative to the source file
         sources.path = adone.std.path.dirname(file.path);
         if (!options.largeFile) {
-            sources.content = adone.js.sourceMap.convert.removeComments(sources.content);
+            sources.content = adone.sourcemap.convert.removeComments(sources.content);
         }
     }
 
     function getFileSources(sources) {
         // look for source map comment referencing a source map file
-        const mapComment = adone.js.sourceMap.convert.getMapFileCommentRegex().exec(sources.content);
+        const mapComment = adone.sourcemap.convert.getMapFileCommentRegex().exec(sources.content);
 
         let mapFile;
         if (mapComment) {
             sources.preExistingComment = mapComment[1] || mapComment[2];
             mapFile = adone.std.path.resolve(adone.std.path.dirname(file.path), sources.preExistingComment);
-            sources.content = adone.js.sourceMap.convert.removeMapFileComments(sources.content);
+            sources.content = adone.sourcemap.convert.removeMapFileComments(sources.content);
             // if no comment try map file with same name as source file
         } else {
             mapFile = `${file.path}.map`;

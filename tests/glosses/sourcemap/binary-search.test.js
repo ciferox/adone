@@ -5,7 +5,7 @@
  * http://opensource.org/licenses/BSD-3-Clause
  */
 
-import * as binarySearch from "adone/glosses/js/sourcemap/binary-search";
+import * as binarySearch from "adone/glosses/sourcemap/binary-search";
 
 function numberCompare(a, b) {
     return a - b;

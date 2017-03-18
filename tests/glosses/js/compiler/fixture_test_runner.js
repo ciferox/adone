@@ -1,6 +1,6 @@
 // @flow
 const { codeFrame, core, helpers } = adone.js.compiler;
-const { sourceMap } = adone.js;
+const { sourcemap } = adone;
 const { buildExternalHelpers } = core;
 const { lodash } = adone.vendor;
 const { fs, path } = adone.std;
@@ -97,7 +97,7 @@ const run = (task) => {
     }
 
     if (task.sourceMappings) {
-        const consumer = new sourceMap.SourceMapConsumer(result.map);
+        const consumer = new sourcemap.Consumer(result.map);
 
         lodash.each(task.sourceMappings, (mapping) => {
             const actual = mapping.original;

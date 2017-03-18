@@ -357,14 +357,17 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
         BufferList: "./glosses/collections/buffer_list"
     });
 
-    adone.js = lazify({
-        Module: "./glosses/js/module",
-        sourceMap: "./glosses/js/sourcemap"
-    });
+    adone.sourcemap = lazify({
+        convert: "./glosses/sourcemap/convert",
+        support: "./glosses/sourcemap/support",
+        Consumer: "./glosses/sourcemap/source-map-consumer",
+        Generator: "./glosses/sourcemap/source-map-generator",
+        Node: "./glosses/sourcemap/source-node"
+    }, null);
 
-    lazify({
-        support: "./glosses/js/sourcemap/support"
-    }, adone.js.sourceMap);
+    adone.js = lazify({
+        Module: "./glosses/js/module"
+    });
 
     adone.js.compiler = lazify({
         parse: ["./glosses/js/compiler/parser", (mod) => mod.parse],
@@ -545,7 +548,7 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
     adone.database = lazify({
         local: "./glosses/databases/local",
         mysql: "./glosses/databases/mysql/promise",
-        Redis: "./glosses/databases/redis",
+        redis: "./glosses/databases/redis",
         mongo: "./glosses/databases/mongo"
     });
 
@@ -597,41 +600,6 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
     adone.templating = lazify({
         nunjucks: "./glosses/templating/nunjucks"
     });
-
-    // adone.net.http.helper = lazify({
-    //     onFinished: "./glosses/net/http/helpers/on-finished",
-    //     compose: "./glosses/net/http/helpers/compose",
-    //     send: "./glosses/net/http/helpers/send",
-    //     pathToRegexp: "./glosses/net/http/helpers/path_to_regexp",
-    //     typeis: ["./glosses/net/http/helpers/typeis", (mod) => {
-    //         const f = mod.default;
-    //         for (const i of adone.util.keys(mod)) {
-    //             if (i !== "default") {
-    //                 f[i] = mod[i];
-    //             }
-    //         }
-    //         return f;
-    //     }],
-    //     typer: "./glosses/net/http/helpers/media-typer",
-    //     mimeTypes: "./glosses/net/http/helpers/mime-types",
-    //     UAParser: ["./glosses/net/http/helpers/ua", (mod) => {
-    //         mod.default.Device = require("./glosses/net/http/helpers/ua/lib/device").default;
-    //         mod.default.UA = require("./glosses/net/http/helpers/ua/lib/ua").default;
-    //         mod.default.Parser = require("./glosses/net/http/helpers/ua/lib/parser").default;
-    //         mod.default.defaultRegexes = mod.defaultRegexes;
-    //         mod.default.defaultLoader = mod.defaultLoader;
-    //         return mod.default;
-    //     }],
-    //     geoip: ["./glosses/net/http/helpers/geoip", (mod) => {
-    //         mod.Reader = require("./glosses/net/http/helpers/geoip/lib/reader").default;
-    //         mod.ip = require("./glosses/net/http/helpers/geoip/lib/ip");
-    //         mod.Decoder = require("./glosses/net/http/helpers/geoip/lib/decoder").default;
-    //         return mod;
-    //     }],
-    //     requestIP: "./glosses/net/http/helpers/request-ip",
-    //     parseurl: "./glosses/net/http/helpers/parseurl"
-    // });
-
 
     adone.net.ws = lazify({
         WebSocket: "./glosses/net/ws/webSocket",

@@ -166,7 +166,7 @@ describe("Fast", () => {
 
                 it("preExisting", (done) => {
                     const file = makeMappedFile();
-                    file.contents = Buffer.from(adone.js.sourceMap.convert.removeComments(file.contents.toString()).trim());
+                    file.contents = Buffer.from(adone.sourcemap.convert.removeComments(file.contents.toString()).trim());
 
                     sourcemapsWrite({ preExisting: true })
                         .on("data", function (data) {

@@ -20,7 +20,7 @@ import MappingList from "./mapping-list";
  *   - file: The filename of the generated source.
  *   - sourceRoot: A root for all relative URLs in this source map.
  */
-function SourceMapGenerator(aArgs) {
+export default function SourceMapGenerator(aArgs) {
     if (!aArgs) {
         aArgs = {};
     }
@@ -399,5 +399,3 @@ SourceMapGenerator.prototype.toString =
     function SourceMapGenerator_toString() {
         return JSON.stringify(this.toJSON());
     };
-
-exports.SourceMapGenerator = SourceMapGenerator;

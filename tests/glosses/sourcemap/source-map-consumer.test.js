@@ -8,7 +8,7 @@
 
 // @flow
 
-const { SourceMapConsumer, SourceMapGenerator } = adone.js.sourceMap;
+const { Consumer: SourceMapConsumer, Generator: SourceMapGenerator } = adone.sourcemap;
 const { IndexedSourceMapConsumer, BasicSourceMapConsumer } = SourceMapConsumer;
 import * as util from "./util";
 

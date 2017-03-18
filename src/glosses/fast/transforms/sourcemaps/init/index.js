@@ -31,7 +31,7 @@ export default function init(options = {}) {
             if (!sourceMap && options.identityMap) {
                 const fileType = file.extname;
                 const source = adone.util.unixifyPath(file.relative);
-                const generator = new adone.js.sourceMap.SourceMapGenerator({ file: source });
+                const generator = new adone.sourcemap.Generator({ file: source });
 
                 if (fileType === ".js") {
                     const tokens = adone.js.compiler.parse(fileContent).tokens;

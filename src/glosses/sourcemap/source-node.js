@@ -6,7 +6,7 @@
  */
 
 // @flow
-import { SourceMapGenerator } from "./source-map-generator";
+import SourceMapGenerator from "./source-map-generator";
 import * as util from "./util";
 
 // Matches a Windows-style `\r\n` newline or a `\n` newline used by all other
@@ -33,7 +33,7 @@ var isSourceNode = "$$$isSourceNode$$$";
  *        generated JS, or other SourceNodes.
  * @param aName The original identifier.
  */
-function SourceNode(aLine, aColumn, aSource, aChunks, aName) {
+export default function SourceNode(aLine, aColumn, aSource, aChunks, aName) {
     this.children = [];
     this.sourceContents = {};
     this.line = aLine == null ? null : aLine;
@@ -399,5 +399,3 @@ SourceNode.prototype.toStringWithSourceMap = function SourceNode_toStringWithSou
 
     return { code: generated.code, map: map };
 };
-
-exports.SourceNode = SourceNode;

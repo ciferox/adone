@@ -9,10 +9,10 @@
 
 import * as util from "./util";
 const {
-    SourceMapConsumer,
-    SourceMapGenerator,
-    SourceNode
-} = adone.js.sourceMap;
+    Consumer: SourceMapConsumer,
+    Generator: SourceMapGenerator,
+    Node: SourceNode
+} = adone.sourcemap;
 
 function forEachNewLine(fn) {
     return function () {

@@ -5,8 +5,8 @@
 const {
     js: {
         compiler: { types, parse, helpers, codeFrame, traverse, generate },
-        sourceMap
     },
+    sourcemap,
     vendor: { lodash: { defaults } },
     std: { path },
     is
@@ -404,10 +404,10 @@ export default class File extends Store {
         const inputMap = this.opts.inputSourceMap;
 
         if (inputMap) {
-            const inputMapConsumer = new sourceMap.SourceMapConsumer(inputMap);
-            const outputMapConsumer = new sourceMap.SourceMapConsumer(map);
+            const inputMapConsumer = new sourcemap.Consumer(inputMap);
+            const outputMapConsumer = new sourcemap.Consumer(map);
 
-            const mergedGenerator = new sourceMap.SourceMapGenerator({
+            const mergedGenerator = new sourcemap.Generator({
                 file: inputMapConsumer.file,
                 sourceRoot: inputMapConsumer.sourceRoot
             });

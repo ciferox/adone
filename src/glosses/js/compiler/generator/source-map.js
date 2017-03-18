@@ -1,6 +1,6 @@
 // @flow
 
-const { sourceMap } = adone.js;
+const { sourcemap } = adone;
 
 /**
  * Build a sourcemap.
@@ -20,7 +20,7 @@ export default class SourceMap {
 
     get() {
         if (!this._cachedMap) {
-            const map = this._cachedMap = new sourceMap.SourceMapGenerator({
+            const map = this._cachedMap = new sourcemap.Generator({
                 file: this._opts.sourceMapTarget,
                 sourceRoot: this._opts.sourceRoot
             });

@@ -1,7 +1,7 @@
 
 
 const { generate, core } = adone.js.compiler;
-const { sourceMap } = adone.js;
+const { sourcemap } = adone;
 const Plugin = adone.js.compiler.transformation.Plugin;
 const buildExternalHelpers = adone.js.compiler.tools.buildExternalHelpers;
 
@@ -292,7 +292,7 @@ describe("api", () => {
             "};"
         ].join("\n"), result.code);
 
-        const consumer = new sourceMap.SourceMapConsumer(result.map);
+        const consumer = new sourcemap.Consumer(result.map);
 
         assert.deepEqual(consumer.originalPositionFor({
             line: 7,
