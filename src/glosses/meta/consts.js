@@ -84,7 +84,7 @@ export const namespaces = [
         name: "adone.math",
         description: "",
         paths: [
-            "glosses.math"
+            "glosses/math"
         ]
     },
     {
@@ -92,6 +92,13 @@ export const namespaces = [
         description: "Meta utilites and implementation of adone-specific inspection",
         paths: [
             "glosses/meta"
+        ]
+    },
+    {
+        name: "adone.meta.codemod",
+        description: "Implementation of code analysis and modification toolkit",
+        paths: [
+            "glosses/meta/codemod"
         ]
     },
     {
@@ -120,6 +127,20 @@ export const namespaces = [
         description: "",
         paths: [
             "glosses/netron/ws"
+        ]
+    },
+    {
+        name: "adone.promise",
+        description: "Promise utilites",
+        paths: [
+            "glosses/promise"
+        ]
+    },
+    {
+        name: "adone.semver",
+        description: "Implementation of semantic version parser",
+        paths: [
+            "glosses/semver"
         ]
     },
     {
@@ -171,7 +192,8 @@ export const namespaces = [
         name: "adone.text",
         description: "Text utilites",
         paths: [
-            "glosses/text"
+            "glosses/text/index",
+            "glosses/text/fuzzy"
         ]
     },
     {

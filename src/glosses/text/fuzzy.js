@@ -400,7 +400,7 @@ const defaultOptions = {
     findAllMatches: false
 };
 
-export default class {
+export default class Fuzzy {
     constructor(list, options = {}) {
         let key;
 

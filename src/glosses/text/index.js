@@ -127,9 +127,7 @@ export const regExpLastIndexOf = (str, regex, index) => {
  * The probability of a collision is extremely small (need 3*10^12 documents to have one chance in a million of a collision)
  * See http://en.wikipedia.org/wiki/Birthday_problem
  */
-export const random = (len) => {
-    return adone.std.crypto.randomBytes(Math.ceil(Math.max(8, len * 2))).toString("base64").replace(/[+\/]/g, "").slice(0, len);
-};
+export const random = (len) => adone.std.crypto.randomBytes(Math.ceil(Math.max(8, len * 2))).toString("base64").replace(/[+\/]/g, "").slice(0, len);
 
 export const detectNewline = (str) => {
     const newlines = (str.match(/(?:\r?\n)/g) || []);

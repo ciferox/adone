@@ -1,5 +1,4 @@
 const { is, std, fs, util } = adone;
-// const { parse, traverse } = adone.js.compiler;
 
 const GLOBAL_PREFIX_LEN = "global".length + 1;
 const ADONE_PREFIX_LEN = "adone".length + 1;
@@ -81,7 +80,7 @@ export const getNamespacePaths = async (name) => {
     return targetPaths.map((x) => x.substring(pathPrefix.length + 1));
 };
 
-export const listNamespaces = (keyword = "") => {
+export const listNamespaces = (keyword = "", { threshold = 0.3 } = { }) => {
     let result;
     if (keyword === "" || keyword === "global") {
         result = [
@@ -93,7 +92,7 @@ export const listNamespaces = (keyword = "") => {
     } else {
         const fuzzy = new adone.text.Fuzzy(adone.meta.namespaces, {
             keys: ["name"],
-            threshold: 0.1
+            threshold
         });
         result = fuzzy.search(keyword);
     }
@@ -108,7 +107,7 @@ export const isNamespace = (name) => {
     return adone.meta.names.includes(name);
 };
 
-export const search = (keyword, nsName = "adone", { threshold = 0.1 } = {}) => {
+export const search = (keyword, nsName = "adone", { threshold = 0.3 } = {}) => {
     let { namespace } = adone.meta.parseName(nsName);
 
     if (namespace !== nsName) {
@@ -157,19 +156,19 @@ export const getValue = (name) => {
     return obj;
 };
 
-// export class Inspector {
-//     constructor() {
-//         this.code = null;
-//     }
+export const codemod = adone.lazify({
+    Base: "./codemod/base",
+    Module: "./codemod/module",
+    Class: "./codemod/class",
+    Function: "./codemod/function",
+    ArrowFunction: "./codemod/arrow_function",
+    Object: "./codemod/object"
+}, null, require);
 
-
-
-//     // async load(filePath) {
-//     //     this.filePath = filePath;
-//     //     this.code = await fs.readFile(this.filePath, { check: true, encoding: "utf8" });
-//     //     return this;
-//     // }
-// }
+export const analyzeFile = async (filePath) => {
+    const code = await fs.readFile(filePath, { check: true, encoding: "utf8" });
+    return new codemod.Module({ code, filePath });
+};
 
 // export class Inspector {
 //     constructor(filePath, { transpiled = false } = {}) {
@@ -186,13 +185,13 @@ export const getValue = (name) => {
 //     analyze() {
 //         this.compile();
 
-//         this.ast = parse(this.code, {
-//             sourceType: "module",
-//             plugins: [
-//                 "decorators",
-//                 "functionBind"
-//             ]
-//         });
+        // this.ast = parse(this.code, {
+        //     sourceType: "module",
+        //     plugins: [
+        //         "decorators",
+        //         "functionBind"
+        //     ]
+        // });
 
 //         traverse(this.ast, {
 //             VariableDeclaration: (path) => {

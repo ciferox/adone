@@ -27,6 +27,12 @@ export default class extends adone.application.Subsystem {
                 {
                     name: "--full-paths",
                     help: "Show expanded paths"
+                },
+                {
+                    name: "--threshold",
+                    type: Number,
+                    default: 0.3,
+                    help: "The accuracy of the search algorithm"
                 }
             ],
             commands: [
@@ -63,7 +69,7 @@ export default class extends adone.application.Subsystem {
                         {
                             name: "--threshold",
                             type: Number,
-                            default: 0.1,
+                            default: 0.3,
                             help: "The accuracy of the search algorithm"
                         }
                     ],
@@ -114,7 +120,7 @@ export default class extends adone.application.Subsystem {
     async metaCommand(args, opts) {
         try {
             const nsName = args.get("ns");
-            const namespaces = adone.meta.listNamespaces(nsName);
+            const namespaces = adone.meta.listNamespaces(nsName, { threshold: opts.get("threshold") });
             if (namespaces.length === 0) {
                 throw new adone.x.Unknown(`Unknown namespace: ${nsName}`);
             }
@@ -155,21 +161,6 @@ export default class extends adone.application.Subsystem {
                 table.push(ns);
             }
             adone.log(table.toString());
-            // table = new BorderlessTable();
-            // const parts = this._parsePath(args.get("ns"));
-            // const key = parts.join(".");
-            // let obj;
-            // if (key === "") {
-            //     obj = adone;
-            // } else {
-            //     obj = adone.vendor.lodash.get(adone, key, undefined);
-            // }
-
-            // const type = util.typeOf(obj);
-            // switch (type) {
-            //     case "function": adone.log(obj.toString()); break;
-            //     default: adone.log(adone.meta.inspect(obj, { style: "color", depth: 1, funcDetails: true }));
-            // }
         } catch (err) {
             adone.log(err.message);
             return 1;
@@ -240,91 +231,25 @@ export default class extends adone.application.Subsystem {
             const pathPrefix =  std.path.join(adone.appinstance.adoneRootPath, dir);
             const sources = (await adone.meta.getNamespacePaths(name)).map((p) => adone.std.path.join(pathPrefix, p));
 
+            let targetModule = undefined;
+            let targetObject = undefined;
             for (const srcPath of sources) {
-                adone.log(srcPath);
-                // const srcFile = await adone.meta.loadSourceFile(srcPath);
-                // const mod = adone.vendor.lodash.omit(adone.require(srcPath), ["__esModule"]);
-                // for (const [key, val] of Object.entries(mod)) {
-                //     let name;
-                //     let isDefault;
-                //     if (key === "default") {
-                //         name = val.name;
-                //         isDefault = true;
-                //     } else {
-                //         name = key;
-                //         isDefault = false;
-                //     }
-                //     const type = util.typeOf(val);
-                //     const exportEntry = {
-                //         name,
-                //         namespace,
-                //         type
-                //     };
-                //     if (isDefault === true) {
-                //         exportEntry.default = isDefault;
-                //     }
-                //     moduleInfo.exports.push(exportEntry);
-                // }
-
-                // adone.log();
-                // const inspector = new adone.meta.Inspector(srcPath);
-                // await inspector.load();
-                // inspector.analyze();
-                // adone.log(adone.text.pretty.json(inspector.namespaces));
-                // adone.log();
-                // adone.log(adone.text.pretty.json(inspector.globals));
-                // adone.log();
+                // adone.log(srcPath);
+                const srcModule = await adone.meta.analyzeFile(srcPath);
+                const modExports = srcModule.exports();
+                targetObject = modExports[objectName];
+                if (!is.undefined(targetObject)) {
+                    targetModule = srcModule;
+                    break;
+                }
             }
-            // const paths = [fullPath];
-            // const result = [];
-            // for (const path of paths) {
-            //     const moduleInfo = {
-            //         exports: []
-            //     };
-            //     moduleInfo.path = path;
-            //     const mod = _.omit(adone.require(path), ["__esModule"]);
-            //     const subPath = path.substring(pathPrefix.length + pathSuffix.length + 2);
-            //     let nsSuffix = adone.std.path.dirname(subPath).replace(".", "");
-            //     if (is.string(nsSuffix) && nsSuffix.length > 0) {
-            //         nsSuffix = `.${nsSuffix.split("/\\").join(".")}`;
-            //     } else {
-            //         nsSuffix = "";
-            //     }
-            //     const namespace = `adone.${subNs}${nsSuffix}`;
-            //     const inspector = new adone.meta.Inspector(path);
-            //     await inspector.load();
-            //     inspector.analyze();
-            //     adone.log(adone.text.pretty.json(inspector.namespaces));
-            //     adone.log();
-            //     adone.log(adone.text.pretty.json(inspector.globals));
-            //     adone.log();
-            //     // result.push(moduleInfo);
-            // }
 
-            // // adone.log(adone.text.pretty.json(result));
-
-            // const outPath = opts.get("out");
+            console.log(targetObject.code);
         } catch (err) {
             adone.error(err.message);
             return 1;
         }
 
         return 0;
-    }
-
-    _parsePath(ns) {
-        const parts = ns.split(".");
-        if (parts.length > 0 && (parts[0] === "adone" || parts[0] === "")) {
-            parts.shift();
-        }
-        let obj = adone;
-        for (let i = 0; i < parts.length; i++) {
-            const part = parts[i];
-            if (!is.propertyOwned(obj, part)) {
-                throw new adone.x.NotValid(`Not valid path: adone.${parts.slice(0, i + 1).join(".")}`);
-            }
-            obj = obj[part];
-        }
-        return parts;
     }
 }
