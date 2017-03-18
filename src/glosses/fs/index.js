@@ -1,7 +1,15 @@
-
 const { is, x, promise: { promisify } } = adone;
 
 const fs = adone.lazify({
+    unlink: () => promisify(adone.std.fs.unlink),  // we have rm, should we have this one?
+    chmod: () => promisify(adone.std.fs.chmod),
+    rmdir: () => promisify(adone.std.fs.rmdir),
+    readdir: () => promisify(adone.std.fs.readdir),
+    lstat: () => promisify(adone.std.fs.lstat),
+    stat: () => promisify(adone.std.fs.stat),
+    writeFile: () => promisify(adone.std.fs.writeFile),
+    append: () => promisify(adone.std.fs.appendFile),
+    access: () => promisify(adone.std.fs.access),
     rm: "./rm",
     File: "./file",
     Directory: "./directory",
@@ -88,24 +96,12 @@ export const fd = {
     }
 };
 
-export const lstat = promisify(adone.std.fs.lstat);
-
 export const lstatSync = adone.std.fs.lstatSync;
-
-export const stat = promisify(adone.std.fs.stat);
-
 export const statSync = adone.std.fs.statSync;
-
-export const isFile = (path) => stat(path).then((st) => st.isFile());
-
+export const isFile = (path) => adone.fs.stat(path).then((st) => st.isFile());
 export const isFileSync = (path) => statSync(path).isFile();
-
-export const isDirectory = (path) => stat(path).then((st) => st.isDirectory());
-
+export const isDirectory = (path) => adone.fs.stat(path).then((st) => st.isDirectory());
 export const isDirectorySync = (path) => statSync(path).isDirectory();
-
-export const writeFile = promisify(adone.std.fs.writeFile);
-
 export const writeFileSync = adone.std.fs.writeFileSync;
 
 export const readFile = async (filepath, { check = false, encoding = null } = {}) => {
@@ -163,15 +159,10 @@ export const readWordsSync = (filepath, { check = false } = {}) => {
     return content.toString().split(new RegExp("\\s+", "g"));
 };
 
-export const append = promisify(adone.std.fs.appendFile);
-
 export const constants = adone.std.fs.constants;
-
-export const access = promisify(adone.std.fs.access);
-
 export const accessSync = adone.std.fs.accessSync;
 
-export const exists = (path) => access(path, constants.F_OK).then(() => true, (err) => {
+export const exists = (path) => adone.fs.access(path, constants.F_OK).then(() => true, (err) => {
     if (err.code === "ENOENT") {
         return false;
     }
@@ -351,16 +342,44 @@ export const statVFS = (path) => {
     });
 };
 
-export const unlink = promisify(adone.std.fs.unlink);  // we have rm, should we have this one?
-
 export const unlinkSync = adone.std.fs.unlinkSync;
-
-export const chmod = promisify(adone.std.fs.chmod);
-
-export const rmdir = promisify(adone.std.fs.rmdir);
-
-export const readdir = promisify(adone.std.fs.readdir);
-
 export const createReadStream = adone.std.fs.createReadStream;
-
 export const createWriteStream = adone.std.fs.createWriteStream;
+
+const TEMPLATE_PATTERN = /XXXXXX/;
+const osTmpDir = adone.std.os.tmpdir();
+export const tmpName = async ({ name = null, tries = 3, template = null, dir = osTmpDir, prefix = "tmp-", postfix = "" } = {}) => {
+    if (is.nan(tries) || tries < 0) {
+        throw new Error("Invalid tries");
+    }
+
+    if (!is.null(template) && !template.match(TEMPLATE_PATTERN)) {
+        throw new Error("Invalid template provided");
+    }
+
+    for (let i = 0; i < tries; i++) {
+        if (!is.null(name)) {
+            return adone.std.path.join(dir, name);
+        }
+
+        if (!is.null(template)) {
+            return template.replace(TEMPLATE_PATTERN, adone.text.random(6));
+        }
+
+        const path = adone.std.path.join(dir, [
+            prefix,
+            process.pid,
+            adone.text.random(12),
+            postfix
+        ].join(""));
+        adone.log(path);
+
+        try {
+            await stat(path);
+            continue;
+        } catch (err) {
+            return path;
+        }
+    }
+    throw new Error("Could not get a unique tmp filename, max tries reached");
+};

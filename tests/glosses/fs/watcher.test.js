@@ -73,7 +73,7 @@ describe("glosses", "fs", "watcher", function watcherTests() {
 
     this.timeout(60000);
     it("should expose public API methods", async () => {
-        expect(Watcher).to.be.a("function");
+        expect(Watcher).to.be.a("class");
         expect(watch).to.be.a("function");
         await sleep();
     });

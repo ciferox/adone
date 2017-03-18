@@ -55,6 +55,13 @@ export const namespaces = [
         ]
     },
     {
+        name: "adone.fs",
+        description: "",
+        paths: [
+            "glosses/fs"
+        ]
+    },
+    {
         name: "adone.is",
         description: "",
         paths: [
