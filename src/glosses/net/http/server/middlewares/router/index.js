@@ -59,7 +59,7 @@ class Router {
                     }
                 }
             } else {
-                this.register(path, methods, middleware, { end: false, ignoreCaptures: !hasPath });
+                this.register(path, [], middleware, { end: false, ignoreCaptures: !hasPath });
             }
         }
         return this;

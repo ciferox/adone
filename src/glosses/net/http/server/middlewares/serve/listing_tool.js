@@ -278,7 +278,7 @@ export default class ListingTool {
             };
         });
         crumb.shift();  // empty value
-        if (crumb[0].path !== "/") {
+        if (crumb.length === 0 || crumb[0].path !== "/") {
             crumb.unshift({ value: "~", path: "/" });
         }
         return crumb;
@@ -289,6 +289,6 @@ export default class ListingTool {
         const icons = await this.getIcons(files);
         const crumb = this.getCrumb(originalUrl);
 
-        return this.env.render("index.njk", { files, icons, crumb });
+        return this.env.render("index.njk", { files, icons, crumb, directory: originalUrl });
     }
 }

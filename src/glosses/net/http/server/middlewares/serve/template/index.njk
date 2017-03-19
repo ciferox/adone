@@ -4,7 +4,7 @@
 <head>
     <meta charset='utf-8'>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>listing directory /ftp</title>
+    <title>listing directory {{ directory }}</title>
     <style>
         * {
             margin: 0;
@@ -268,7 +268,7 @@
             <li class="header"><span class="name">Name</span><span class="size">Size</span><span class="date">Modified</span></li>
             {% for file in files %}
             <li>
-                <a href="{{ file.link | link(file) }}" class="icon icon-{{ file.icon | e }}" title="icons">
+                <a href="{{ file.link | link(file) | e }}" class="icon icon-{{ file.icon | e }}">
                     <span class="name">{{ file.filename | filename(file) | e }}</span><span class="size">{{ file.size | size(file) | e }}</span><span class="date">{{ file.modificationDate | midificationDate(file) | e }}</span>
                 </a>
             </li>
