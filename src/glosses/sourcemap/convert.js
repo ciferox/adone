@@ -1,16 +1,20 @@
-
-
 const { std: { fs, path }, x } = adone;
+
+export const getCommentRegex = () => {
+    return /^\s*\/(?:\/|\*)[@#]\s+sourceMappingURL=data:(?:application|text)\/json;(?:charset[:=]\S+;)?base64,(.*)$/mg;
+};
+
+export const getMapFileCommentRegex = () => {
+    return /(?:\/\/[@#][ \t]+sourceMappingURL=([^\s'"]+?)[ \t]*$)|(?:\/\*[@#][ \t]+sourceMappingURL=([^\*]+?)[ \t]*(?:\*\/){1}[ \t]*$)/mg;
+};
 
 const commentRx = getCommentRegex();
 const mapFileCommentRx = getMapFileCommentRegex();
 
-const decodeBase64 = (base64) => new Buffer(base64, "base64").toString();
+const decodeBase64 = (base64) => Buffer.from(base64, "base64").toString();
 const stripComment = (sm) => sm.split(",").pop();
 
-function readFromFileMap(sm, dir) {
-    // NOTE: this will only work on the server since it attempts to read the map file
-
+const readFromFileMap = (sm, dir) => {
     const r = mapFileCommentRx.exec(sm);
     mapFileCommentRx.lastIndex = 0;
 
@@ -21,22 +25,9 @@ function readFromFileMap(sm, dir) {
     try {
         return fs.readFileSync(filepath, "utf8");
     } catch (e) {
-        throw new Error("An error occurred while trying to read the map file at " + filepath + "\n" + e);
+        throw new x.Exception(`An error occurred while trying to read the map file at ${filepath}\n${e}`);
     }
-}
-
-
-function convertFromLargeSource(content) {
-    const lines = content.split("\n");
-    let line;
-    // find first line which contains a source map starting at end of content
-    for (let i = lines.length - 1; i > 0; i--) {
-        line = lines[i];
-        if (~line.indexOf("sourceMappingURL=data:")) {
-            return fromComment(line);
-        }
-    }
-}
+};
 
 class Converter {
     constructor(sm, options = {}) {
@@ -60,8 +51,7 @@ class Converter {
     }
 
     toBase64() {
-        const json = this.toJSON();
-        return new Buffer(json).toString("base64");
+        return Buffer.from(this.toJSON()).toString("base64");
     }
 
     toComment(options) {
@@ -71,8 +61,7 @@ class Converter {
 
     }
 
-    // returns copy instead of original
-    toObject = function () {
+    toObject() {
         return JSON.parse(this.toJSON());
     }
 
@@ -93,32 +82,59 @@ class Converter {
     }
 }
 
-export function fromObject(obj) {
-    return new Converter(obj);
-}
+export const fromObject = (obj) => new Converter(obj);
 
-export function fromJSON(json) {
-    return new Converter(json, { isJSON: true });
-}
+export const fromJSON = (json) => new Converter(json, { isJSON: true });
 
-export function fromBase64(base64) {
-    return new Converter(base64, { isEncoded: true });
-}
+export const fromBase64 = (base64) => new Converter(base64, { isEncoded: true });
 
-export function fromComment(comment) {
+export const fromComment = (comment) => {
     comment = comment
         .replace(/^\/\*/g, "//")
         .replace(/\*\/$/g, "");
 
     return new Converter(comment, { isEncoded: true, hasComment: true });
-}
+};
 
-export function fromMapFileComment(comment, dir) {
-    return new Converter(comment, { commentFileDir: dir, isFileComment: true, isJSON: true });
-}
+export const fromMapFileComment = (comment, dir) => new Converter(comment, {
+    commentFileDir: dir, isFileComment: true, isJSON: true
+});
 
-// Finds last sourcemap comment in file or returns null if none was found
-export function fromSource(content, largeSource) {
+export const fromMapFileSource = (content, dir) => {
+    const m = content.match(mapFileCommentRx);
+    mapFileCommentRx.lastIndex = 0;
+    return m ? fromMapFileComment(m.pop(), dir) : null;
+};
+
+export const removeComments = (src) => {
+    commentRx.lastIndex = 0;
+    return src.replace(commentRx, "");
+};
+
+export const removeMapFileComments = (src) => {
+    mapFileCommentRx.lastIndex = 0;
+    return src.replace(mapFileCommentRx, "");
+};
+
+export const generateMapFileComment = (file, options) => {
+    const data = `sourceMappingURL=${file}`;
+    return options && options.multiline ? `/*# ${data} */` : `//# ${data}`;
+};
+
+const convertFromLargeSource = (content) => {
+    const lines = content.split("\n");
+    let line;
+    // find first line which contains a source map starting at end of content
+    for (let i = lines.length - 1; i > 0; i--) {
+        line = lines[i];
+        if (!line.includes("sourceMappingURL=data:")) {
+            return fromComment(line);
+        }
+    }
+};
+
+
+export const fromSource = (content, largeSource) => {
     if (largeSource) {
         const res = convertFromLargeSource(content);
         return res ? res : null;
@@ -126,36 +142,5 @@ export function fromSource(content, largeSource) {
 
     const m = content.match(commentRx);
     commentRx.lastIndex = 0;
-    return m ? exports.fromComment(m.pop()) : null;
-}
-
-// Finds last sourcemap comment in file or returns null if none was found
-export function fromMapFileSource(content, dir) {
-    const m = content.match(mapFileCommentRx);
-    mapFileCommentRx.lastIndex = 0;
-    return m ? exports.fromMapFileComment(m.pop(), dir) : null;
-}
-
-export function removeComments(src) {
-    commentRx.lastIndex = 0;
-    return src.replace(commentRx, "");
-}
-
-export function removeMapFileComments(src) {
-    mapFileCommentRx.lastIndex = 0;
-    return src.replace(mapFileCommentRx, "");
-}
-
-export function generateMapFileComment(file, options) {
-    const data = `sourceMappingURL=${file}`;
-    return options && options.multiline ? `/*# ${data} */` : `//# ${data}`;
-}
-
-
-export function getCommentRegex() {
-    return /^\s*\/(?:\/|\*)[@#]\s+sourceMappingURL=data:(?:application|text)\/json;(?:charset[:=]\S+;)?base64,(.*)$/mg;
-}
-
-export function getMapFileCommentRegex() {
-    return /(?:\/\/[@#][ \t]+sourceMappingURL=([^\s'"]+?)[ \t]*$)|(?:\/\*[@#][ \t]+sourceMappingURL=([^\*]+?)[ \t]*(?:\*\/){1}[ \t]*$)/mg;
-}
+    return m ? fromComment(m.pop()) : null;
+};

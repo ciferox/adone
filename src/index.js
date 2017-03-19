@@ -347,15 +347,22 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
         BinarySearchTree: "./glosses/collections/bst",
         AVLTree: "./glosses/collections/avl_tree",
         Stack: "./glosses/collections/stack",
-        BufferList: "./glosses/collections/buffer_list"
+        BufferList: "./glosses/collections/buffer_list",
+        ArraySet: "./glosses/collections/array_set"
     });
 
     adone.sourcemap = lazify({
         convert: "./glosses/sourcemap/convert",
         support: "./glosses/sourcemap/support",
-        Consumer: "./glosses/sourcemap/source-map-consumer",
-        Generator: "./glosses/sourcemap/source-map-generator",
-        Node: "./glosses/sourcemap/source-node"
+        createConsumer: ["./glosses/sourcemap/consumer", (x) => x.createConsumer],
+        Consumer: ["./glosses/sourcemap/consumer", (x) => x.SourceMapConsumer],
+        IndexedConsumer: ["./glosses/sourcemap/consumer", (x) => x.IndexedSourceMapConsumer],
+        BasicConsumer: ["./glosses/sourcemap/consumer", (x) => x.BasicSourceMapConsumer],
+        createGenerator: ["./glosses/sourcemap/generator", (x) => x.createGenerator],
+        Generator: ["./glosses/sourcemap/generator", (x) => x.SourceMapGenerator],
+        Node: "./glosses/sourcemap/node",
+        MappingList: "./glosses/sourcemap/mapping_list",
+        util: "./glosses/sourcemap/util"
     }, null);
 
     adone.js = lazify({
@@ -535,7 +542,8 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
             },
             encode: () => (obj) => adone.data.bson.serializer.serialize(obj),
             decode: () => (buf) => adone.data.bson.serializer.deserialize(buf)
-        }))
+        })),
+        base64: "./glosses/data/base64"
     });
 
     adone.database = lazify({

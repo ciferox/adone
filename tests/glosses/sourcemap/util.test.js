@@ -1,219 +1,299 @@
-/* -*- Mode: js; js-indent-level: 2; -*- */
-/*
- * Copyright 2014 Mozilla Foundation and contributors
- * Licensed under the New BSD license. See LICENSE or:
- * http://opensource.org/licenses/BSD-3-Clause
- */
-import * as libUtil from "adone/glosses/sourcemap/util";
+describe("glosses", "sourcemap", "util", () => {
+    const { sourcemap: { util } } = adone;
 
-describe("Compiler", () => {
-    describe("Source Map", () => {
-        describe("util", () => {
-            it('test urls', () => {
-                var assertUrl = function (url) {
-                    assert.equal(url, libUtil.urlGenerate(libUtil.urlParse(url)));
-                };
-                assertUrl('http://');
-                assertUrl('http://www.example.com');
-                assertUrl('http://user:pass@www.example.com');
-                assertUrl('http://www.example.com:80');
-                assertUrl('http://www.example.com/');
-                assertUrl('http://www.example.com/foo/bar');
-                assertUrl('http://www.example.com/foo/bar/');
-                assertUrl('http://user:pass@www.example.com:80/foo/bar/');
+    specify("urls", () => {
+        const assertUrl = function (url) {
+            assert.equal(url, util.urlGenerate(util.urlParse(url)));
+        };
+        assertUrl("http://");
+        assertUrl("http://www.example.com");
+        assertUrl("http://user:pass@www.example.com");
+        assertUrl("http://www.example.com:80");
+        assertUrl("http://www.example.com/");
+        assertUrl("http://www.example.com/foo/bar");
+        assertUrl("http://www.example.com/foo/bar/");
+        assertUrl("http://user:pass@www.example.com:80/foo/bar/");
 
-                assertUrl('//');
-                assertUrl('//www.example.com');
-                assertUrl('file:///www.example.com');
+        assertUrl("//");
+        assertUrl("//www.example.com");
+        assertUrl("file:///www.example.com");
 
-                assert.equal(libUtil.urlParse(''), null);
-                assert.equal(libUtil.urlParse('.'), null);
-                assert.equal(libUtil.urlParse('..'), null);
-                assert.equal(libUtil.urlParse('a'), null);
-                assert.equal(libUtil.urlParse('a/b'), null);
-                assert.equal(libUtil.urlParse('a//b'), null);
-                assert.equal(libUtil.urlParse('/a'), null);
-                assert.equal(libUtil.urlParse('data:foo,bar'), null);
+        assert.equal(util.urlParse(""), null);
+        assert.equal(util.urlParse("."), null);
+        assert.equal(util.urlParse(".."), null);
+        assert.equal(util.urlParse("a"), null);
+        assert.equal(util.urlParse("a/b"), null);
+        assert.equal(util.urlParse("a//b"), null);
+        assert.equal(util.urlParse("/a"), null);
+        assert.equal(util.urlParse("data:foo,bar"), null);
+    });
+
+    specify("normalize()", () => {
+        assert.equal(util.normalize("/.."), "/");
+        assert.equal(util.normalize("/../"), "/");
+        assert.equal(util.normalize("/../../../.."), "/");
+        assert.equal(util.normalize("/../../../../a/b/c"), "/a/b/c");
+        assert.equal(util.normalize("/a/b/c/../../../d/../../e"), "/e");
+
+        assert.equal(util.normalize(".."), "..");
+        assert.equal(util.normalize("../"), "../");
+        assert.equal(util.normalize("../../a/"), "../../a/");
+        assert.equal(util.normalize("a/.."), ".");
+        assert.equal(util.normalize("a/../../.."), "../..");
+
+        assert.equal(util.normalize("/."), "/");
+        assert.equal(util.normalize("/./"), "/");
+        assert.equal(util.normalize("/./././."), "/");
+        assert.equal(util.normalize("/././././a/b/c"), "/a/b/c");
+        assert.equal(util.normalize("/a/b/c/./././d/././e"), "/a/b/c/d/e");
+
+        assert.equal(util.normalize(""), ".");
+        assert.equal(util.normalize("."), ".");
+        assert.equal(util.normalize("./"), ".");
+        assert.equal(util.normalize("././a"), "a");
+        assert.equal(util.normalize("a/./"), "a/");
+        assert.equal(util.normalize("a/././."), "a");
+
+        assert.equal(util.normalize("/a/b//c////d/////"), "/a/b/c/d/");
+        assert.equal(util.normalize("///a/b//c////d/////"), "///a/b/c/d/");
+        assert.equal(util.normalize("a/b//c////d"), "a/b/c/d");
+
+        assert.equal(util.normalize(".///.././../a/b//./.."), "../../a");
+
+        assert.equal(util.normalize("http://www.example.com"), "http://www.example.com");
+        assert.equal(util.normalize("http://www.example.com/"), "http://www.example.com/");
+        assert.equal(util.normalize("http://www.example.com/./..//a/b/c/.././d//"), "http://www.example.com/a/b/d/");
+    });
+
+    specify("join()", () => {
+        assert.equal(util.join("a", "b"), "a/b");
+        assert.equal(util.join("a/", "b"), "a/b");
+        assert.equal(util.join("a//", "b"), "a/b");
+        assert.equal(util.join("a", "b/"), "a/b/");
+        assert.equal(util.join("a", "b//"), "a/b/");
+        assert.equal(util.join("a/", "/b"), "/b");
+        assert.equal(util.join("a//", "//b"), "//b");
+
+        assert.equal(util.join("a", ".."), ".");
+        assert.equal(util.join("a", "../b"), "b");
+        assert.equal(util.join("a/b", "../c"), "a/c");
+
+        assert.equal(util.join("a", "."), "a");
+        assert.equal(util.join("a", "./b"), "a/b");
+        assert.equal(util.join("a/b", "./c"), "a/b/c");
+
+        assert.equal(util.join("a", "http://www.example.com"), "http://www.example.com");
+        assert.equal(util.join("a", "data:foo,bar"), "data:foo,bar");
+
+
+        assert.equal(util.join("", "b"), "b");
+        assert.equal(util.join(".", "b"), "b");
+        assert.equal(util.join("", "b/"), "b/");
+        assert.equal(util.join(".", "b/"), "b/");
+        assert.equal(util.join("", "b//"), "b/");
+        assert.equal(util.join(".", "b//"), "b/");
+
+        assert.equal(util.join("", ".."), "..");
+        assert.equal(util.join(".", ".."), "..");
+        assert.equal(util.join("", "../b"), "../b");
+        assert.equal(util.join(".", "../b"), "../b");
+
+        assert.equal(util.join("", "."), ".");
+        assert.equal(util.join(".", "."), ".");
+        assert.equal(util.join("", "./b"), "b");
+        assert.equal(util.join(".", "./b"), "b");
+
+        assert.equal(util.join("", "http://www.example.com"), "http://www.example.com");
+        assert.equal(util.join(".", "http://www.example.com"), "http://www.example.com");
+        assert.equal(util.join("", "data:foo,bar"), "data:foo,bar");
+        assert.equal(util.join(".", "data:foo,bar"), "data:foo,bar");
+
+
+        assert.equal(util.join("..", "b"), "../b");
+        assert.equal(util.join("..", "b/"), "../b/");
+        assert.equal(util.join("..", "b//"), "../b/");
+
+        assert.equal(util.join("..", ".."), "../..");
+        assert.equal(util.join("..", "../b"), "../../b");
+
+        assert.equal(util.join("..", "."), "..");
+        assert.equal(util.join("..", "./b"), "../b");
+
+        assert.equal(util.join("..", "http://www.example.com"), "http://www.example.com");
+        assert.equal(util.join("..", "data:foo,bar"), "data:foo,bar");
+
+
+        assert.equal(util.join("a", ""), "a");
+        assert.equal(util.join("a", "."), "a");
+        assert.equal(util.join("a/", ""), "a");
+        assert.equal(util.join("a/", "."), "a");
+        assert.equal(util.join("a//", ""), "a");
+        assert.equal(util.join("a//", "."), "a");
+        assert.equal(util.join("/a", ""), "/a");
+        assert.equal(util.join("/a", "."), "/a");
+        assert.equal(util.join("", ""), ".");
+        assert.equal(util.join(".", ""), ".");
+        assert.equal(util.join(".", ""), ".");
+        assert.equal(util.join(".", "."), ".");
+        assert.equal(util.join("..", ""), "..");
+        assert.equal(util.join("..", "."), "..");
+        assert.equal(util.join("http://foo.org/a", ""), "http://foo.org/a");
+        assert.equal(util.join("http://foo.org/a", "."), "http://foo.org/a");
+        assert.equal(util.join("http://foo.org/a/", ""), "http://foo.org/a");
+        assert.equal(util.join("http://foo.org/a/", "."), "http://foo.org/a");
+        assert.equal(util.join("http://foo.org/a//", ""), "http://foo.org/a");
+        assert.equal(util.join("http://foo.org/a//", "."), "http://foo.org/a");
+        assert.equal(util.join("http://foo.org", ""), "http://foo.org/");
+        assert.equal(util.join("http://foo.org", "."), "http://foo.org/");
+        assert.equal(util.join("http://foo.org/", ""), "http://foo.org/");
+        assert.equal(util.join("http://foo.org/", "."), "http://foo.org/");
+        assert.equal(util.join("http://foo.org//", ""), "http://foo.org/");
+        assert.equal(util.join("http://foo.org//", "."), "http://foo.org/");
+        assert.equal(util.join("//www.example.com", ""), "//www.example.com/");
+        assert.equal(util.join("//www.example.com", "."), "//www.example.com/");
+
+
+        assert.equal(util.join("http://foo.org/a", "b"), "http://foo.org/a/b");
+        assert.equal(util.join("http://foo.org/a/", "b"), "http://foo.org/a/b");
+        assert.equal(util.join("http://foo.org/a//", "b"), "http://foo.org/a/b");
+        assert.equal(util.join("http://foo.org/a", "b/"), "http://foo.org/a/b/");
+        assert.equal(util.join("http://foo.org/a", "b//"), "http://foo.org/a/b/");
+        assert.equal(util.join("http://foo.org/a/", "/b"), "http://foo.org/b");
+        assert.equal(util.join("http://foo.org/a//", "//b"), "http://b");
+
+        assert.equal(util.join("http://foo.org/a", ".."), "http://foo.org/");
+        assert.equal(util.join("http://foo.org/a", "../b"), "http://foo.org/b");
+        assert.equal(util.join("http://foo.org/a/b", "../c"), "http://foo.org/a/c");
+
+        assert.equal(util.join("http://foo.org/a", "."), "http://foo.org/a");
+        assert.equal(util.join("http://foo.org/a", "./b"), "http://foo.org/a/b");
+        assert.equal(util.join("http://foo.org/a/b", "./c"), "http://foo.org/a/b/c");
+
+        assert.equal(util.join("http://foo.org/a", "http://www.example.com"), "http://www.example.com");
+        assert.equal(util.join("http://foo.org/a", "data:foo,bar"), "data:foo,bar");
+
+
+        assert.equal(util.join("http://foo.org", "a"), "http://foo.org/a");
+        assert.equal(util.join("http://foo.org/", "a"), "http://foo.org/a");
+        assert.equal(util.join("http://foo.org//", "a"), "http://foo.org/a");
+        assert.equal(util.join("http://foo.org", "/a"), "http://foo.org/a");
+        assert.equal(util.join("http://foo.org/", "/a"), "http://foo.org/a");
+        assert.equal(util.join("http://foo.org//", "/a"), "http://foo.org/a");
+
+
+        assert.equal(util.join("http://", "www.example.com"), "http://www.example.com");
+        assert.equal(util.join("file:///", "www.example.com"), "file:///www.example.com");
+        assert.equal(util.join("http://", "ftp://example.com"), "ftp://example.com");
+
+        assert.equal(util.join("http://www.example.com", "//foo.org/bar"), "http://foo.org/bar");
+        assert.equal(util.join("//www.example.com", "//foo.org/bar"), "//foo.org/bar");
+    });
+
+    // TODO Issue #128: Define and test this function properly.
+    specify("relative()", () => {
+        assert.equal(util.relative("/the/root", "/the/root/one.js"), "one.js");
+        assert.equal(util.relative("http://the/root", "http://the/root/one.js"), "one.js");
+        assert.equal(util.relative("/the/root", "/the/rootone.js"), "../rootone.js");
+        assert.equal(util.relative("http://the/root", "http://the/rootone.js"), "../rootone.js");
+        assert.equal(util.relative("/the/root", "/therootone.js"), "/therootone.js");
+        assert.equal(util.relative("http://the/root", "/therootone.js"), "/therootone.js");
+
+        assert.equal(util.relative("", "/the/root/one.js"), "/the/root/one.js");
+        assert.equal(util.relative(".", "/the/root/one.js"), "/the/root/one.js");
+        assert.equal(util.relative("", "the/root/one.js"), "the/root/one.js");
+        assert.equal(util.relative(".", "the/root/one.js"), "the/root/one.js");
+
+        assert.equal(util.relative("/", "/the/root/one.js"), "the/root/one.js");
+        assert.equal(util.relative("/", "the/root/one.js"), "the/root/one.js");
+    });
+
+    context("search", () => {
+        const { util: { binarySearch } } = adone;
+        const { search } = util;
+        const numberCompare = (a, b) => a - b;
+
+        specify("too high with default (glb) bias", () => {
+            const needle = 30;
+            const haystack = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20];
+
+            assert.doesNotThrow(() => {
+                search(haystack, needle, numberCompare);
             });
 
-            it('test normalize()', () => {
-                assert.equal(libUtil.normalize('/..'), '/');
-                assert.equal(libUtil.normalize('/../'), '/');
-                assert.equal(libUtil.normalize('/../../../..'), '/');
-                assert.equal(libUtil.normalize('/../../../../a/b/c'), '/a/b/c');
-                assert.equal(libUtil.normalize('/a/b/c/../../../d/../../e'), '/e');
+            assert.equal(haystack[search(haystack, needle, numberCompare)], 20);
+        });
 
-                assert.equal(libUtil.normalize('..'), '..');
-                assert.equal(libUtil.normalize('../'), '../');
-                assert.equal(libUtil.normalize('../../a/'), '../../a/');
-                assert.equal(libUtil.normalize('a/..'), '.');
-                assert.equal(libUtil.normalize('a/../../..'), '../..');
+        specify("too low with default (glb) bias", () => {
+            const needle = 1;
+            const haystack = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20];
 
-                assert.equal(libUtil.normalize('/.'), '/');
-                assert.equal(libUtil.normalize('/./'), '/');
-                assert.equal(libUtil.normalize('/./././.'), '/');
-                assert.equal(libUtil.normalize('/././././a/b/c'), '/a/b/c');
-                assert.equal(libUtil.normalize('/a/b/c/./././d/././e'), '/a/b/c/d/e');
-
-                assert.equal(libUtil.normalize(''), '.');
-                assert.equal(libUtil.normalize('.'), '.');
-                assert.equal(libUtil.normalize('./'), '.');
-                assert.equal(libUtil.normalize('././a'), 'a');
-                assert.equal(libUtil.normalize('a/./'), 'a/');
-                assert.equal(libUtil.normalize('a/././.'), 'a');
-
-                assert.equal(libUtil.normalize('/a/b//c////d/////'), '/a/b/c/d/');
-                assert.equal(libUtil.normalize('///a/b//c////d/////'), '///a/b/c/d/');
-                assert.equal(libUtil.normalize('a/b//c////d'), 'a/b/c/d');
-
-                assert.equal(libUtil.normalize('.///.././../a/b//./..'), '../../a')
-
-                assert.equal(libUtil.normalize('http://www.example.com'), 'http://www.example.com');
-                assert.equal(libUtil.normalize('http://www.example.com/'), 'http://www.example.com/');
-                assert.equal(libUtil.normalize('http://www.example.com/./..//a/b/c/.././d//'), 'http://www.example.com/a/b/d/');
+            assert.doesNotThrow(() => {
+                search(haystack, needle, numberCompare);
             });
 
-            it('test join()', () => {
-                assert.equal(libUtil.join('a', 'b'), 'a/b');
-                assert.equal(libUtil.join('a/', 'b'), 'a/b');
-                assert.equal(libUtil.join('a//', 'b'), 'a/b');
-                assert.equal(libUtil.join('a', 'b/'), 'a/b/');
-                assert.equal(libUtil.join('a', 'b//'), 'a/b/');
-                assert.equal(libUtil.join('a/', '/b'), '/b');
-                assert.equal(libUtil.join('a//', '//b'), '//b');
+            assert.equal(search(haystack, needle, numberCompare), -1);
+        });
 
-                assert.equal(libUtil.join('a', '..'), '.');
-                assert.equal(libUtil.join('a', '../b'), 'b');
-                assert.equal(libUtil.join('a/b', '../c'), 'a/c');
+        specify("too high with lub bias", () => {
+            const needle = 30;
+            const haystack = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20];
 
-                assert.equal(libUtil.join('a', '.'), 'a');
-                assert.equal(libUtil.join('a', './b'), 'a/b');
-                assert.equal(libUtil.join('a/b', './c'), 'a/b/c');
-
-                assert.equal(libUtil.join('a', 'http://www.example.com'), 'http://www.example.com');
-                assert.equal(libUtil.join('a', 'data:foo,bar'), 'data:foo,bar');
-
-
-                assert.equal(libUtil.join('', 'b'), 'b');
-                assert.equal(libUtil.join('.', 'b'), 'b');
-                assert.equal(libUtil.join('', 'b/'), 'b/');
-                assert.equal(libUtil.join('.', 'b/'), 'b/');
-                assert.equal(libUtil.join('', 'b//'), 'b/');
-                assert.equal(libUtil.join('.', 'b//'), 'b/');
-
-                assert.equal(libUtil.join('', '..'), '..');
-                assert.equal(libUtil.join('.', '..'), '..');
-                assert.equal(libUtil.join('', '../b'), '../b');
-                assert.equal(libUtil.join('.', '../b'), '../b');
-
-                assert.equal(libUtil.join('', '.'), '.');
-                assert.equal(libUtil.join('.', '.'), '.');
-                assert.equal(libUtil.join('', './b'), 'b');
-                assert.equal(libUtil.join('.', './b'), 'b');
-
-                assert.equal(libUtil.join('', 'http://www.example.com'), 'http://www.example.com');
-                assert.equal(libUtil.join('.', 'http://www.example.com'), 'http://www.example.com');
-                assert.equal(libUtil.join('', 'data:foo,bar'), 'data:foo,bar');
-                assert.equal(libUtil.join('.', 'data:foo,bar'), 'data:foo,bar');
-
-
-                assert.equal(libUtil.join('..', 'b'), '../b');
-                assert.equal(libUtil.join('..', 'b/'), '../b/');
-                assert.equal(libUtil.join('..', 'b//'), '../b/');
-
-                assert.equal(libUtil.join('..', '..'), '../..');
-                assert.equal(libUtil.join('..', '../b'), '../../b');
-
-                assert.equal(libUtil.join('..', '.'), '..');
-                assert.equal(libUtil.join('..', './b'), '../b');
-
-                assert.equal(libUtil.join('..', 'http://www.example.com'), 'http://www.example.com');
-                assert.equal(libUtil.join('..', 'data:foo,bar'), 'data:foo,bar');
-
-
-                assert.equal(libUtil.join('a', ''), 'a');
-                assert.equal(libUtil.join('a', '.'), 'a');
-                assert.equal(libUtil.join('a/', ''), 'a');
-                assert.equal(libUtil.join('a/', '.'), 'a');
-                assert.equal(libUtil.join('a//', ''), 'a');
-                assert.equal(libUtil.join('a//', '.'), 'a');
-                assert.equal(libUtil.join('/a', ''), '/a');
-                assert.equal(libUtil.join('/a', '.'), '/a');
-                assert.equal(libUtil.join('', ''), '.');
-                assert.equal(libUtil.join('.', ''), '.');
-                assert.equal(libUtil.join('.', ''), '.');
-                assert.equal(libUtil.join('.', '.'), '.');
-                assert.equal(libUtil.join('..', ''), '..');
-                assert.equal(libUtil.join('..', '.'), '..');
-                assert.equal(libUtil.join('http://foo.org/a', ''), 'http://foo.org/a');
-                assert.equal(libUtil.join('http://foo.org/a', '.'), 'http://foo.org/a');
-                assert.equal(libUtil.join('http://foo.org/a/', ''), 'http://foo.org/a');
-                assert.equal(libUtil.join('http://foo.org/a/', '.'), 'http://foo.org/a');
-                assert.equal(libUtil.join('http://foo.org/a//', ''), 'http://foo.org/a');
-                assert.equal(libUtil.join('http://foo.org/a//', '.'), 'http://foo.org/a');
-                assert.equal(libUtil.join('http://foo.org', ''), 'http://foo.org/');
-                assert.equal(libUtil.join('http://foo.org', '.'), 'http://foo.org/');
-                assert.equal(libUtil.join('http://foo.org/', ''), 'http://foo.org/');
-                assert.equal(libUtil.join('http://foo.org/', '.'), 'http://foo.org/');
-                assert.equal(libUtil.join('http://foo.org//', ''), 'http://foo.org/');
-                assert.equal(libUtil.join('http://foo.org//', '.'), 'http://foo.org/');
-                assert.equal(libUtil.join('//www.example.com', ''), '//www.example.com/');
-                assert.equal(libUtil.join('//www.example.com', '.'), '//www.example.com/');
-
-
-                assert.equal(libUtil.join('http://foo.org/a', 'b'), 'http://foo.org/a/b');
-                assert.equal(libUtil.join('http://foo.org/a/', 'b'), 'http://foo.org/a/b');
-                assert.equal(libUtil.join('http://foo.org/a//', 'b'), 'http://foo.org/a/b');
-                assert.equal(libUtil.join('http://foo.org/a', 'b/'), 'http://foo.org/a/b/');
-                assert.equal(libUtil.join('http://foo.org/a', 'b//'), 'http://foo.org/a/b/');
-                assert.equal(libUtil.join('http://foo.org/a/', '/b'), 'http://foo.org/b');
-                assert.equal(libUtil.join('http://foo.org/a//', '//b'), 'http://b');
-
-                assert.equal(libUtil.join('http://foo.org/a', '..'), 'http://foo.org/');
-                assert.equal(libUtil.join('http://foo.org/a', '../b'), 'http://foo.org/b');
-                assert.equal(libUtil.join('http://foo.org/a/b', '../c'), 'http://foo.org/a/c');
-
-                assert.equal(libUtil.join('http://foo.org/a', '.'), 'http://foo.org/a');
-                assert.equal(libUtil.join('http://foo.org/a', './b'), 'http://foo.org/a/b');
-                assert.equal(libUtil.join('http://foo.org/a/b', './c'), 'http://foo.org/a/b/c');
-
-                assert.equal(libUtil.join('http://foo.org/a', 'http://www.example.com'), 'http://www.example.com');
-                assert.equal(libUtil.join('http://foo.org/a', 'data:foo,bar'), 'data:foo,bar');
-
-
-                assert.equal(libUtil.join('http://foo.org', 'a'), 'http://foo.org/a');
-                assert.equal(libUtil.join('http://foo.org/', 'a'), 'http://foo.org/a');
-                assert.equal(libUtil.join('http://foo.org//', 'a'), 'http://foo.org/a');
-                assert.equal(libUtil.join('http://foo.org', '/a'), 'http://foo.org/a');
-                assert.equal(libUtil.join('http://foo.org/', '/a'), 'http://foo.org/a');
-                assert.equal(libUtil.join('http://foo.org//', '/a'), 'http://foo.org/a');
-
-
-                assert.equal(libUtil.join('http://', 'www.example.com'), 'http://www.example.com');
-                assert.equal(libUtil.join('file:///', 'www.example.com'), 'file:///www.example.com');
-                assert.equal(libUtil.join('http://', 'ftp://example.com'), 'ftp://example.com');
-
-                assert.equal(libUtil.join('http://www.example.com', '//foo.org/bar'), 'http://foo.org/bar');
-                assert.equal(libUtil.join('//www.example.com', '//foo.org/bar'), '//foo.org/bar');
+            assert.doesNotThrow(() => {
+                search(haystack, needle, numberCompare);
             });
 
-            // TODO Issue #128: Define and test this function properly.
-            it('test relative()', () => {
-                assert.equal(libUtil.relative('/the/root', '/the/root/one.js'), 'one.js');
-                assert.equal(libUtil.relative('http://the/root', 'http://the/root/one.js'), 'one.js');
-                assert.equal(libUtil.relative('/the/root', '/the/rootone.js'), '../rootone.js');
-                assert.equal(libUtil.relative('http://the/root', 'http://the/rootone.js'), '../rootone.js');
-                assert.equal(libUtil.relative('/the/root', '/therootone.js'), '/therootone.js');
-                assert.equal(libUtil.relative('http://the/root', '/therootone.js'), '/therootone.js');
+            assert.equal(search(haystack, needle, numberCompare,
+                binarySearch.LEAST_UPPER_BOUND), -1);
+        });
 
-                assert.equal(libUtil.relative('', '/the/root/one.js'), '/the/root/one.js');
-                assert.equal(libUtil.relative('.', '/the/root/one.js'), '/the/root/one.js');
-                assert.equal(libUtil.relative('', 'the/root/one.js'), 'the/root/one.js');
-                assert.equal(libUtil.relative('.', 'the/root/one.js'), 'the/root/one.js');
+        specify("too low with lub bias", () => {
+            const needle = 1;
+            const haystack = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20];
 
-                assert.equal(libUtil.relative('/', '/the/root/one.js'), 'the/root/one.js');
-                assert.equal(libUtil.relative('/', 'the/root/one.js'), 'the/root/one.js');
+            assert.doesNotThrow(() => {
+                search(haystack, needle, numberCompare);
             });
+
+            assert.equal(haystack[search(haystack, needle, numberCompare,
+                binarySearch.LEAST_UPPER_BOUND)], 2);
+        });
+
+        specify("exact search", () => {
+            const needle = 4;
+            const haystack = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20];
+
+            assert.equal(haystack[search(haystack, needle, numberCompare)], 4);
+        });
+
+        specify("fuzzy search with default (glb) bias", () => {
+            const needle = 19;
+            const haystack = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20];
+
+            assert.equal(haystack[search(haystack, needle, numberCompare)], 18);
+        });
+
+        specify("fuzzy search with lub bias", () => {
+            const needle = 19;
+            const haystack = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20];
+
+            assert.equal(haystack[search(haystack, needle, numberCompare,
+                binarySearch.LEAST_UPPER_BOUND)], 20);
+        });
+
+        specify("multiple matches", () => {
+            const needle = 5;
+            const haystack = [1, 1, 2, 5, 5, 5, 13, 21];
+
+            assert.equal(search(haystack, needle, numberCompare,
+                binarySearch.LEAST_UPPER_BOUND), 3);
+        });
+
+        specify("multiple matches at the beginning", () => {
+            const needle = 1;
+            const haystack = [1, 1, 2, 5, 5, 5, 13, 21];
+
+            assert.equal(search(haystack, needle, numberCompare,
+                binarySearch.LEAST_UPPER_BOUND), 0);
         });
     });
 });

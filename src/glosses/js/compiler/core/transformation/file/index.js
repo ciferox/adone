@@ -404,10 +404,10 @@ export default class File extends Store {
         const inputMap = this.opts.inputSourceMap;
 
         if (inputMap) {
-            const inputMapConsumer = new sourcemap.Consumer(inputMap);
-            const outputMapConsumer = new sourcemap.Consumer(map);
+            const inputMapConsumer = sourcemap.createConsumer(inputMap);
+            const outputMapConsumer = sourcemap.createConsumer(map);
 
-            const mergedGenerator = new sourcemap.Generator({
+            const mergedGenerator = sourcemap.createGenerator({
                 file: inputMapConsumer.file,
                 sourceRoot: inputMapConsumer.sourceRoot
             });

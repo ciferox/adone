@@ -97,7 +97,7 @@ const run = (task) => {
     }
 
     if (task.sourceMappings) {
-        const consumer = new sourcemap.Consumer(result.map);
+        const consumer = sourcemap.createConsumer(result.map);
 
         lodash.each(task.sourceMappings, (mapping) => {
             const actual = mapping.original;

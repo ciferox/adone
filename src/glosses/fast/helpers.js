@@ -2,7 +2,7 @@
 
 
 
-const { is, core, x, sourcemap: { Generator: SourceMapGenerator, Consumer: SourceMapConsumer }, std: { path, fs }, util } = adone;
+const { is, core, x, sourcemap, std: { path, fs }, util } = adone;
 
 export function applySourceMap(file, sourceMap) {
     if (is.string(sourceMap)) {
@@ -14,8 +14,8 @@ export function applySourceMap(file, sourceMap) {
     }
 
     if (file.sourceMap && file.sourceMap.mappings !== "") {
-        var generator = SourceMapGenerator.fromSourceMap(new SourceMapConsumer(sourceMap));
-        generator.applySourceMap(new SourceMapConsumer(file.sourceMap));
+        var generator = sourcemap.Generator.fromSourceMap(adone.sourcemap.createConsumer(sourceMap));
+        generator.applySourceMap(adone.sourcemap.createConsumer(file.sourceMap));
         file.sourceMap = JSON.parse(generator.toString());
     } else {
         file.sourceMap = sourceMap;
@@ -33,7 +33,7 @@ export class Concat {
         }
         this.separator = separator;
         if (this.sourceMapping) {
-            this._sourceMap = new SourceMapGenerator({ file: util.unixifyPath(fileName) });
+            this._sourceMap = sourcemap.createGenerator({ file: util.unixifyPath(fileName) });
             this.separatorLineOffset = 0;
             this.separatorColumnOffset = 0;
             const separatorString = this.separator.toString();
@@ -66,7 +66,7 @@ export class Concat {
             }
 
             if (sourceMap && sourceMap.mappings && sourceMap.mappings.length > 0) {
-                const upstreamSM = new SourceMapConsumer(sourceMap);
+                const upstreamSM = adone.sourcemap.createConsumer(sourceMap);
                 upstreamSM.eachMapping((mapping) => {
                     if (mapping.source) {
                         this._sourceMap.addMapping({

@@ -803,9 +803,9 @@ export const asyncWaterfall = (tasks, callback = noop) => {
 };
 
 adone.lazify({
-    match: "./match.js",
-    realpath: "./realpath.js",
-    throat: "./throat.js",
+    match: "./match",
+    realpath: "./realpath",
+    throat: "./throat",
     toposort: "./toposort",
     jsesc: "./jsesc",
     Mode: "./mode",
@@ -821,5 +821,6 @@ adone.lazify({
     GlobExp: "./globexp",
     iconv: "./iconv",
     sqlstring: "./sqlstring",
-    Editor: "./editor"
+    Editor: "./editor",
+    binarySearch: "./binary_search"
 }, exports, require);

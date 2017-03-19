@@ -292,7 +292,7 @@ describe("api", () => {
             "};"
         ].join("\n"), result.code);
 
-        const consumer = new sourcemap.Consumer(result.map);
+        const consumer = sourcemap.createConsumer(result.map);
 
         assert.deepEqual(consumer.originalPositionFor({
             line: 7,
