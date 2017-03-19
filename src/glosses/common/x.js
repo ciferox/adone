@@ -125,13 +125,7 @@ for (let i = 0; i < keys.length; i++) {
     }
 }
 
-export default function create(id, { args, stack }) {
-    const err = new idExceptionMap[id](...args);
-    err.stack = stack;
-    return err;
-}
-
-export const createException = (id, message, stack) => {
+export const create = (id, message, stack) => {
     const err = new idExceptionMap[id](message);
     err.stack = stack;
     return err;

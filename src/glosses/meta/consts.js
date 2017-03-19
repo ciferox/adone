@@ -131,7 +131,7 @@ export const namespaces = [
     },
     {
         name: "adone.netron.ws",
-        description: "",
+        description: "WebSocket implementation of netron/peer/adapter",
         paths: [
             "glosses/netron/ws"
         ]

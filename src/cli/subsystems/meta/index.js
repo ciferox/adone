@@ -233,7 +233,7 @@ export default class extends adone.application.Subsystem {
                 throw new adone.x.NotValid("Extraction of namespace not supported");
             }
 
-            const adoneMod = new adone.meta.code.Adone({ dir: (opts.get("src") ? "src" : "lib") });
+            const adoneMod = new adone.meta.code.Inspector({ dir: (opts.get("src") ? "src" : "lib") });
             await adoneMod.attachNamespace(namespace);
 
             const code = adoneMod.getCode(name);

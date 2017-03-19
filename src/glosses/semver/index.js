@@ -1,4 +1,3 @@
-
 const { is, x } = adone;
 
 const MAX_LENGTH = 256;

@@ -1,14 +1,10 @@
 const { is, fs, std } = adone;
 
-/*
-    Чтобы использовать меньше статической информации для работы со структурой протсранств имён,
-    следует рассмотреть все случаи и определить правила экспортирования объектов из модулей:
-    1. Пространство имён формируется только default-экпортом из одного файла: adone.is, adone.x.
-       Условие: один исходный файл с одним default-экспортом.
+const indexRe = /^index\.(js|ajs|tjs)$/;
 
-*/
+const isFunctionLike = (xObj) => (adone.meta.code.is.function(xObj) || adone.meta.code.is.arrowFunction(xObj) || adone.meta.code.is.class(xObj));
 
-export class Adone {
+export class Inspector {
     constructor({ dir = "lib" }) {
         this.dir = dir;
         this.path = std.path.join(adone.appinstance.adoneRootPath, this.dir);
@@ -16,6 +12,7 @@ export class Adone {
     }
 
     async attachNamespace(nsName) {
+        const metaCode = adone.meta.code;
         const info = adone.meta.getNamespaceInfo(nsName);        
         const ns = {
             info, 
@@ -26,23 +23,60 @@ export class Adone {
         const sources = await adone.meta.getNamespacePaths({ name: nsName, pathPrefix: this.path, relative: false });
         for (const filePath of sources) {
             const code = await fs.readFile(filePath, { check: true, encoding: "utf8" });
-            const sourceModule = new adone.meta.code.Module({ code, filePath });
+            const sourceModule = new metaCode.Module({ code, filePath });
             ns.modules.push({
                 path: filePath,
                 module: sourceModule
             });
         }
 
-        if (sources.length === 1) {
-            const commonModule = ns.modules[0].module;
-            const moduleExports = commonModule.exports;
-            if (commonModule.numberOfExports() === 1 && adone.meta.code.is.object(moduleExports.default)) {
-                for (const [key, val] of moduleExports.default.entries()) {
-                    ns.$[key] = val;
-                }
+        this.namespaces[nsName] = ns;
+
+        if (ns.modules.length === 1) {
+            const nsModule = ns.modules[0].module;
+            const moduleExports = nsModule.exports;
+            if (nsModule.numberOfExports() === 1 && metaCode.is.object(moduleExports.default)) { // #1
+                this._mapModuleToNamespace(ns, nsModule);
+                return;
+            } else if (nsModule.numberOfExports() >= 1 && !metaCode.is.object(moduleExports.default)) { // #2
+                this._mapModuleToNamespace(ns, nsModule);
+                return;
             }
         }
-        this.namespaces[nsName] = ns;
+
+        // #3
+        if (ns.modules.length >= 1) {
+            const isOk = ns.modules.every((x) => {
+                const nsModule = x.module;
+                const moduleExports = nsModule.exports;
+                const numberOfExports = nsModule.numberOfExports();
+                return !indexRe.test(std.path.basename(x.path)) &&
+                    ((numberOfExports === 1 && isFunctionLike(moduleExports.default) && is.string(moduleExports.default.name)) ||
+                    (is.undefined(moduleExports.default) && numberOfExports >= 1));
+            });
+            if (isOk) {
+                for (const nsModInfo of ns.modules) {
+                    const nsModule = nsModInfo.module;
+                    this._mapModuleToNamespace(ns, nsModule);
+                }
+                return;
+            }
+        }
+    }
+
+    _mapModuleToNamespace(ns, nsModule) {
+        const moduleExports = nsModule.exports;
+        if (adone.meta.code.is.object(moduleExports.default)) {
+            for (const [key, val] of moduleExports.default.entries()) {
+                ns.$[key] = val;
+            }
+        } else if (isFunctionLike(moduleExports.default)) {
+            ns.$[moduleExports.default.name] = moduleExports.default;
+        } else if (is.undefined(moduleExports.default)) {
+            for (const [key, val] of Object.entries(moduleExports)) {
+                ns.$[key] = val;
+            }
+        }
     }
 
     get(name) {
@@ -76,6 +110,8 @@ adone.lazify({
     Constant: "./constant",
     Statement: "./statement",
     Export: "./export",
+    JsNative: "./js_native",
+    Adone: "./adone",
     is: () => ({
         module: (x) => adone.tag.has(x, adone.tag.CODEMOD_MODULE),
         class: (x) => adone.tag.has(x, adone.tag.CODEMOD_CLASS),

@@ -37,7 +37,11 @@ export default class XModule extends adone.meta.code.Base {
                 }
                 case "VariableDeclaration": {
                     for (const d of node.declarations) {
-                        this.exports[d.id.name] = this.createXObject(d.init);
+                        const xObj = this.createXObject(d.init);
+                        if (adone.meta.code.is.arrowFunction(xObj)) {
+                            xObj.name = d.id.name;
+                        }
+                        this.exports[d.id.name] = xObj;
                     }
                     break;
                 }
@@ -51,6 +55,15 @@ export default class XModule extends adone.meta.code.Base {
 
     numberOfExports() {
         return Object.keys(this.exports).length;
+    }
+
+    lookupInExportsByDeclaration(name) {
+        for (const [key, value] of Object.entries(this.exports)) {
+            if (key === name) {
+                return value;
+            }
+        }
+        return null;
     }
 }
 adone.tag.define("CODEMOD_MODULE");

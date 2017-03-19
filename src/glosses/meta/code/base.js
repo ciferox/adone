@@ -1,5 +1,7 @@
 const { is, js: { compiler: { parse, traverse, generate } } } = adone;
 
+const jsNatives = ["Error", "EvalError", "RangeError", "ReferenceError", "SyntaxError", "TypeError", "URIError"];
+
 export default class XBase {
     constructor({ parent = null, code = null, ast = null, type = "script" } = {} ) {
         this.parent = parent;
@@ -25,7 +27,8 @@ export default class XBase {
             sourceType: this.type,
             plugins: [
                 "decorators",
-                "functionBind"
+                "functionBind",
+                "classProperties"
             ]
         });
     }
@@ -58,10 +61,15 @@ export default class XBase {
             case "ArrayExpression":
             case "BinaryExpression":
             case "ConditionalExpression":
+            case "CallExpression":
+            case "LogicalExpression":
+            case "UpdateExpression":
                 xObj = new adone.meta.code.Expression({ parent, ast });
                 break;
             case "StringLiteral":
+            case "NumericLiteral":
             case "RegExpLiteral":
+            case "TemplateLiteral":
                 xObj = new adone.meta.code.Constant({ parent, ast });
                 break;
             case "ExpressionStatement":
@@ -92,11 +100,18 @@ export default class XBase {
             case "ArrowFunctionExpression": xObj = new adone.meta.code.ArrowFunction({ parent, ast }); break;
             case "ObjectExpression": xObj = new adone.meta.code.Object({ parent, ast }); break;
             case "Identifier": {
-                xObj = this.lookupInGlobalScope(ast.name, "VariableDeclaration");
-                if (is.null(xObj)) {
-                    throw new adone.x.NotFound(`Variable '${ast.name}' not found in global scope`);
+                if (ast.name === "adone") {
+                    xObj = new adone.meta.code.Adone({ ast });
                 } else {
-                    xObj = xObj.value;
+                    xObj = this.lookupInGlobalScope(ast.name);
+                    if (is.null(xObj)) {
+                        xObj = this._tryJsNative(ast);
+                        if (is.null(xObj)) {
+                            throw new adone.x.NotFound(`Variable '${ast.name}' not found in global scope`);
+                        }
+                    } else {
+                        xObj = xObj.value;
+                    }
                 }
                 break;
             }
@@ -114,18 +129,31 @@ export default class XBase {
         this.code = generated.code;
     }
 
-    lookupInGlobalScope(name, type) {
+    getName(node) {
+        switch (node.type) {
+            case "ClassDeclaration": return node.id.name;
+        }
+    }
+
+    lookupInGlobalScope(name) {
         if (this.isGlobalScope) {
             for (const xObj of this.scope) {
-                switch (type) {
+                const node = xObj.ast;
+                switch (node.type) {
+                    case "ExportNamedDeclaration": {
+                        return this.lookupInExportsByDeclaration(name);
+                    }
                     case "VariableDeclaration": {
-                        const node = xObj.ast;
-                        if (node.type === type) {
-                            for (const d of node.declarations) {
-                                if (d.id.name === name) {
-                                    return xObj;
-                                }
+                        for (const d of node.declarations) {
+                            if (d.id.name === name) {
+                                return xObj;
                             }
+                        }
+                        break;
+                    }
+                    case "ClassDeclaration": {
+                        if (node.id.name === name) {
+                            return xObj;
                         }
                         break;
                     }
@@ -133,8 +161,19 @@ export default class XBase {
             }
         } else {
             if (!is.null(this.parent)) {
-                return this.parent.lookupInGlobalScope(name, type);
+                return this.parent.lookupInGlobalScope(name);
             }
+        }
+        return null;
+    }
+
+    lookupInExportsByDeclaration(node) {
+        return null;
+    }
+
+    _tryJsNative(ast) {
+        if (jsNatives.includes(ast.name)) {
+            return new adone.meta.code.JsNative({ ast });
         }
         return null;
     }

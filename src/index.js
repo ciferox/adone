@@ -131,15 +131,7 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
         fs: "./glosses/fs",
         Benchmark: "./glosses/common/benchmark",
         ExBuffer: "./glosses/common/exbuffer",
-        x: ["./glosses/common/x", (mod) => {
-            const f = mod.default;
-            for (const i of adone.util.keys(mod)) {
-                if (i !== "default") {
-                    f[i] = mod[i];
-                }
-            }
-            return f;
-        }],
+        x: "./glosses/common/x",
         URI: "./glosses/uri",
         Hooker: "./glosses/common/hooker",
         File: "./glosses/common/file",
@@ -288,6 +280,7 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
         shani: "./glosses/shani",
         promise: "./glosses/promise",
         meta: "./glosses/meta",
+        netron: "./glosses/netron",
         shell: "./glosses/shell"
     }, adone);
 
@@ -492,7 +485,7 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
                     const id = buf.readUInt16BE();
                     const message = s.decode(buf);
                     const stack = s.decode(buf);
-                    return adone.x.createException(id, message, stack);
+                    return adone.x.create(id, message, stack);
                 };
 
                 // Adone exceptions encoders/decoders
@@ -647,39 +640,6 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
         smtpConnection: "./glosses/net/mail/smtp_connection",
         smtpPool: "./glosses/net/mail/smtp_pool",
         mailer: "./glosses/net/mail/mailer"
-    });
-
-    adone.netron = lazify({
-        DEFAULT_PORT: () => 8888,
-        ACTION: ["./glosses/netron/consts", (mod) => mod.ACTION],
-        STATUS: ["./glosses/netron/consts", (mod) => mod.STATUS],
-        PEER_TYPE: ["./glosses/netron/consts", (mod) => mod.PEER_TYPE],
-        decorator: "./glosses/netron/decorators",
-        Investigator: "./glosses/netron/investigator",
-        SequenceId: "./glosses/netron/sequence_id",
-        GenesisNetron: "./glosses/netron/genesis_netron",
-        GenesisPeer: "./glosses/netron/genesis_peer",
-        Netron: "./glosses/netron/netron",
-        Peer: "./glosses/netron/peer",
-        Stub: "./glosses/netron/stub",
-        Identity: "./glosses/netron/identity",
-        RemoteStub: "./glosses/netron/remote_stub",
-        Definition: "./glosses/netron/definition",
-        Definitions: "./glosses/netron/definitions",
-        Reference: "./glosses/netron/reference",
-        Interface: "./glosses/netron/interface",
-        Adapter: "./glosses/netron/adapter",
-        Stream: "./glosses/netron/stream",
-        contextable: () => {
-            const contextables = {};
-            const mod = require("./glosses/netron/contextables");
-
-            for (const [className, Cls] of Object.entries(mod)) {
-                contextables[className.replace("Contextable", "")] = Cls;
-            }
-
-            return contextables;
-        }
     });
 
     adone.netron.ws = lazify({
