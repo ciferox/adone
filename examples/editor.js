@@ -9,7 +9,7 @@ const message = "\n\n# Please Write a message\n# Any line starting with # is ign
 
 process.stdout.write("Please write a message. (press enter to launch your preferred editor)");
 
-const editor = new Editor(message);
+const editor = new Editor({ text: message });
 
 rl.on("line", async () => {
     try {

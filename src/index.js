@@ -740,6 +740,9 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
             }
             return false;
         },
+        define(tag) {
+            adone.tag[tag] = Symbol();
+        },
         SUBSYSTEM: Symbol(),
         APPLICATION: Symbol(),
         WEBAPPLICATION: Symbol(),

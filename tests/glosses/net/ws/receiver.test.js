@@ -4,12 +4,6 @@ const Receiver = adone.net.ws.Receiver;
 const util = require("./hybi-util");
 
 describe("Receiver", () => {
-    describe("#ctor", () => {
-        it("throws TypeError when called without new", () => {
-            assert.throws(Receiver, TypeError);
-        });
-    });
-
     it("can parse unmasked text message", (done) => {
         const p = new Receiver();
 
@@ -49,7 +43,7 @@ describe("Receiver", () => {
         const msg = "A".repeat(200);
 
         const mask = "3483a868";
-        const frame = `81FE${  util.pack(4, msg.length)  }${mask 
+        const frame = `81FE${util.pack(4, msg.length)}${mask
             }${util.mask(msg, mask).toString("hex")}`;
 
         p.ontext = function (data) {
@@ -65,7 +59,7 @@ describe("Receiver", () => {
         const msg = "A".repeat(64 * 1024);
 
         const mask = "3483a868";
-        const frame = `81FF${  util.pack(16, msg.length)  }${mask 
+        const frame = `81FF${util.pack(16, msg.length)}${mask
             }${util.mask(msg, mask).toString("hex")}`;
 
         p.ontext = function (data) {
@@ -84,9 +78,9 @@ describe("Receiver", () => {
         const fragment2 = msg.substr(150);
 
         const mask = "3483a868";
-        const frame1 = `01FE${  util.pack(4, fragment1.length)  }${mask 
+        const frame1 = `01FE${util.pack(4, fragment1.length)}${mask
             }${util.mask(fragment1, mask).toString("hex")}`;
-        const frame2 = `80FE${  util.pack(4, fragment2.length)  }${mask 
+        const frame2 = `80FE${util.pack(4, fragment2.length)}${mask
             }${util.mask(fragment2, mask).toString("hex")}`;
 
         p.ontext = function (data) {
@@ -103,7 +97,7 @@ describe("Receiver", () => {
         const msg = "Hello";
 
         const mask = "3483a868";
-        const frame = `89${  util.getHybiLengthAsHexString(msg.length, true)  }${mask 
+        const frame = `89${util.getHybiLengthAsHexString(msg.length, true)}${mask
             }${util.mask(msg, mask).toString("hex")}`;
 
         p.onping = function (data) {
@@ -134,11 +128,11 @@ describe("Receiver", () => {
         const fragment2 = msg.substr(150);
 
         const mask = "3483a868";
-        const frame1 = `01FE${  util.pack(4, fragment1.length)  }${mask 
+        const frame1 = `01FE${util.pack(4, fragment1.length)}${mask
             }${util.mask(fragment1, mask).toString("hex")}`;
-        const frame2 = `89${  util.getHybiLengthAsHexString(pingMessage.length, true)  }${mask 
+        const frame2 = `89${util.getHybiLengthAsHexString(pingMessage.length, true)}${mask
             }${util.mask(pingMessage, mask).toString("hex")}`;
-        const frame3 = `80FE${  util.pack(4, fragment2.length)  }${mask 
+        const frame3 = `80FE${util.pack(4, fragment2.length)}${mask
             }${util.mask(fragment2, mask).toString("hex")}`;
 
         let gotPing = false;
@@ -167,11 +161,11 @@ describe("Receiver", () => {
         const fragment2 = msg.substr(150);
 
         const mask = "3483a868";
-        const frame1 = `01FE${  util.pack(4, fragment1.length)  }${mask 
+        const frame1 = `01FE${util.pack(4, fragment1.length)}${mask
             }${util.mask(fragment1, mask).toString("hex")}`;
-        const frame2 = `89${  util.getHybiLengthAsHexString(pingMessage.length, true)  }${mask 
+        const frame2 = `89${util.getHybiLengthAsHexString(pingMessage.length, true)}${mask
             }${util.mask(pingMessage, mask).toString("hex")}`;
-        const frame3 = `80FE${  util.pack(4, fragment2.length)  }${mask 
+        const frame3 = `80FE${util.pack(4, fragment2.length)}${mask
             }${util.mask(fragment2, mask).toString("hex")}`;
 
         let buffers = [];
@@ -202,7 +196,7 @@ describe("Receiver", () => {
         const msg = crypto.randomBytes(100);
 
         const mask = "3483a868";
-        const frame = `82${  util.getHybiLengthAsHexString(msg.length, true)  }${mask 
+        const frame = `82${util.getHybiLengthAsHexString(msg.length, true)}${mask
             }${util.mask(msg, mask).toString("hex")}`;
 
         p.onbinary = function (data) {
@@ -218,7 +212,7 @@ describe("Receiver", () => {
         const msg = crypto.randomBytes(256);
 
         const mask = "3483a868";
-        const frame = `82${  util.getHybiLengthAsHexString(msg.length, true)  }${mask 
+        const frame = `82${util.getHybiLengthAsHexString(msg.length, true)}${mask
             }${util.mask(msg, mask).toString("hex")}`;
 
         p.onbinary = function (data) {
@@ -234,7 +228,7 @@ describe("Receiver", () => {
         const msg = crypto.randomBytes(200 * 1024);
 
         const mask = "3483a868";
-        const frame = `82${  util.getHybiLengthAsHexString(msg.length, true)  }${mask 
+        const frame = `82${util.getHybiLengthAsHexString(msg.length, true)}${mask
             }${util.mask(msg, mask).toString("hex")}`;
 
         p.onbinary = function (data) {
@@ -249,7 +243,7 @@ describe("Receiver", () => {
         const p = new Receiver();
         const msg = crypto.randomBytes(200 * 1024);
 
-        const frame = `82${  util.getHybiLengthAsHexString(msg.length, false) 
+        const frame = `82${util.getHybiLengthAsHexString(msg.length, false)
             }${msg.toString("hex")}`;
 
         p.onbinary = function (data) {
@@ -273,7 +267,9 @@ describe("Receiver", () => {
         };
 
         perMessageDeflate.compress(buf, true, (err, compressed) => {
-            if (err) {return done(err);}
+            if (err) {
+                return done(err);
+            }
 
             p.add(Buffer.from([0xc1, compressed.length]));
             p.add(compressed);
@@ -294,13 +290,17 @@ describe("Receiver", () => {
         };
 
         perMessageDeflate.compress(buf1, false, (err, compressed1) => {
-            if (err) {return done(err);}
+            if (err) {
+                return done(err);
+            }
 
             p.add(Buffer.from([0x41, compressed1.length]));
             p.add(compressed1);
 
             perMessageDeflate.compress(buf2, true, (err, compressed2) => {
-                if (err) {return done(err);}
+                if (err) {
+                    return done(err);
+                }
 
                 p.add(Buffer.from([0x80, compressed2.length]));
                 p.add(compressed2);
@@ -350,7 +350,7 @@ describe("Receiver", () => {
         const msg = crypto.randomBytes(200 * 1024);
 
         const mask = "3483a868";
-        const frame = `82${  util.getHybiLengthAsHexString(msg.length, true)  }${mask 
+        const frame = `82${util.getHybiLengthAsHexString(msg.length, true)}${mask
             }${util.mask(msg, mask).toString("hex")}`;
 
         p.error = function (reason, code) {
@@ -365,7 +365,7 @@ describe("Receiver", () => {
         const p = new Receiver({}, 20 * 1024);
         const msg = crypto.randomBytes(200 * 1024);
 
-        const frame = `82${  util.getHybiLengthAsHexString(msg.length, false) 
+        const frame = `82${util.getHybiLengthAsHexString(msg.length, false)
             }${msg.toString("hex")}`;
 
         p.error = function (reason, code) {
@@ -389,7 +389,9 @@ describe("Receiver", () => {
         };
 
         perMessageDeflate.compress(buf, true, (err, compressed) => {
-            if (err) {return done(err);}
+            if (err) {
+                return done(err);
+            }
 
             p.add(Buffer.from([0xc1, compressed.length]));
             p.add(compressed);
@@ -410,13 +412,17 @@ describe("Receiver", () => {
         };
 
         perMessageDeflate.compress(buf1, false, (err, compressed1) => {
-            if (err) {return done(err);}
+            if (err) {
+                return done(err);
+            }
 
             p.add(Buffer.from([0x41, compressed1.length]));
             p.add(compressed1);
 
             perMessageDeflate.compress(buf2, true, (err, compressed2) => {
-                if (err) {return done(err);}
+                if (err) {
+                    return done(err);
+                }
 
                 p.add(Buffer.from([0x80, compressed2.length]));
                 p.add(compressed2);
@@ -440,7 +446,9 @@ describe("Receiver", () => {
         };
 
         perMessageDeflate.compress(buf1, false, (err, compressed1) => {
-            if (err) {return done(err);}
+            if (err) {
+                return done(err);
+            }
 
             p.add(Buffer.from([0x41, compressed1.length]));
             p.add(compressed1);
@@ -449,7 +457,9 @@ describe("Receiver", () => {
             assert.strictEqual(p.onerror, null);
 
             perMessageDeflate.compress(buf2, true, (err, compressed2) => {
-                if (err) {return done(err);}
+                if (err) {
+                    return done(err);
+                }
 
                 p.add(Buffer.from([0x80, compressed2.length]));
                 p.add(compressed2);
@@ -466,7 +476,9 @@ describe("Receiver", () => {
         const buf = Buffer.from("Hello");
 
         perMessageDeflate.compress(buf, true, (err, compressed) => {
-            if (err) {return done(err);}
+            if (err) {
+                return done(err);
+            }
 
             const data = Buffer.concat([Buffer.from([0xc1, compressed.length]), compressed]);
             p.add(data);

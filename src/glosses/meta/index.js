@@ -36,12 +36,19 @@ export const parseName = (name) => {
     };
 };
 
-export const getNamespacePaths = async (name) => {
+export const getNamespaceInfo = (nsName) => {
+    const namespace = adone.meta.namespaces.find((ns) => ns.name === nsName);
+    if (is.undefined(namespace)) {
+        throw new adone.x.Unknown(`Unknown namespace: ${nsName}`);
+    }
+    return namespace;
+};
+
+export const getNamespacePaths = async ({ name, relative = true, pathPrefix = std.path.join(adone.appinstance.adoneRootPath, "lib") }) => {
     const { namespace } = parseName(name);
     if (namespace === "") {
         return [];
     }
-    const pathPrefix =  std.path.join(adone.appinstance.adoneRootPath, "lib");
     const paths = adone.meta.nsPaths[namespace].map((p) => std.path.join(pathPrefix, p));
     let targetPaths = [];
     for (let i = 0; i < paths.length; i++) {
@@ -77,7 +84,7 @@ export const getNamespacePaths = async (name) => {
         return [];
     }
     targetPaths = await fs.glob(targetPaths);
-    return targetPaths.map((x) => x.substring(pathPrefix.length + 1));
+    return (relative ? targetPaths.map((x) => x.substring(pathPrefix.length + 1)) : targetPaths);
 };
 
 export const listNamespaces = (keyword = "", { threshold = 0.3 } = { }) => {
@@ -156,19 +163,9 @@ export const getValue = (name) => {
     return obj;
 };
 
-export const codemod = adone.lazify({
-    Base: "./codemod/base",
-    Module: "./codemod/module",
-    Class: "./codemod/class",
-    Function: "./codemod/function",
-    ArrowFunction: "./codemod/arrow_function",
-    Object: "./codemod/object"
-}, null, require);
-
-export const analyzeFile = async (filePath) => {
-    const code = await fs.readFile(filePath, { check: true, encoding: "utf8" });
-    return new codemod.Module({ code, filePath });
-};
+adone.lazify({
+    code: "./code"
+}, exports, require);
 
 // export class Inspector {
 //     constructor(filePath, { transpiled = false } = {}) {

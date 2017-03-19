@@ -31,7 +31,7 @@ export class FileSystemLoader extends Loader {
             // Watch all the templates in the paths and fire an event when
             // they change
             const paths = this.searchPaths.filter(fs.existsSync);
-            const watcher = adone.FSWatcher.watch(paths);
+            const watcher = adone.fs.watch(paths);
             const _this = this;
             watcher.on("all", (event, fullname) => {
                 fullname = path.resolve(fullname);

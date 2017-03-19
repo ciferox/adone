@@ -3,7 +3,7 @@
 // fs.watch helpers
 
 // object to hold per-process fs.watch instances
-// (may be shared across chokidar FSWatcher instances)
+// (may be shared across chokidar Watcher instances)
 const FsWatchInstances = new Map();
 
 /**
@@ -129,7 +129,7 @@ const setFsWatchListener = (path, fullPath, options, handlers) => {
 // fs.watchFile helpers
 
 // object to hold per-process fs.watchFile instances
-// (may be shared across chokidar FSWatcher instances)
+// (may be shared across chokidar Watcher instances)
 const FsWatchFileInstances = new Map();
 
 /**

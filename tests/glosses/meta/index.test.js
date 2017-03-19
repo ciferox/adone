@@ -1,6 +1,6 @@
 const { Inspector } = adone.meta;
 describe("Meta", () => {
-    describe("Variable expressions", () => {
+    describe.skip("Variable expressions", () => {
         const cases = [
             {
                 code: "const { is } = adone",

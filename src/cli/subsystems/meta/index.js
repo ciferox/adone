@@ -93,8 +93,14 @@ export default class extends adone.application.Subsystem {
                         {
                             name: "--out",
                             type: String,
-                            default: "",
                             help: "Path where resulting code will be placed"
+                        },
+                        {
+                            name: "--editor",
+                            type: String,
+                            nargs: "?",
+                            default: "",
+                            help: "Open result code in text editor"
                         }
                     ],
                     handler: this.extractCommand
@@ -141,7 +147,7 @@ export default class extends adone.application.Subsystem {
             if (showPaths || showFullPaths) {
                 if (showFullPaths) {
                     for (let i = 0; i < namespaces.length; i++) {
-                        namespaces[i].paths = await adone.meta.getNamespacePaths(namespaces[i].name);
+                        namespaces[i].paths = await adone.meta.getNamespacePaths({ name: namespaces[i].name });
                     }
                 }
                 pathsWidth = adone.terminal.cols - (nameWidth + descrWidth + 2 + (descrWidth > 0 ? 2 : 0));
@@ -224,27 +230,39 @@ export default class extends adone.application.Subsystem {
                 throw new adone.x.NotSupported("Extraction from namespace other than 'adone' not supported");
             }
             if (objectName === "") {
-                throw new adone.x.NotValid("Extraction of namespace is not supported");
+                throw new adone.x.NotValid("Extraction of namespace not supported");
             }
 
-            const dir = opts.get("src") ? "src" : "lib";
-            const pathPrefix =  std.path.join(adone.appinstance.adoneRootPath, dir);
-            const sources = (await adone.meta.getNamespacePaths(name)).map((p) => adone.std.path.join(pathPrefix, p));
+            const adoneMod = new adone.meta.code.Adone({ dir: (opts.get("src") ? "src" : "lib") });
+            await adoneMod.attachNamespace(namespace);
 
-            let targetModule = undefined;
-            let targetObject = undefined;
-            for (const srcPath of sources) {
-                // adone.log(srcPath);
-                const srcModule = await adone.meta.analyzeFile(srcPath);
-                const modExports = srcModule.exports();
-                targetObject = modExports[objectName];
-                if (!is.undefined(targetObject)) {
-                    targetModule = srcModule;
-                    break;
+            const code = adoneMod.getCode(name);
+
+            let out;
+            if (opts.has("out")) {
+                out = opts.get("out");
+                if (!adone.std.path.isAbsolute(out)) {
+                    out = adone.std.path.resolve(process.cwd(), out);
                 }
             }
+            if (opts.has("editor")) {
+                const options = {
+                    editor: opts.get("editor"),
+                    text: code,
+                    ext: ".js"
+                };
+                if (is.string(out)) {
+                    options.path = out;
+                }
 
-            console.log(targetObject.code);
+                const editor = new util.Editor(options);
+                await editor.run();
+            } else if (is.string(out)) {
+                await fs.writeFile(out, code);
+                adone.log(`Saved to ${out}.`);
+            } else {
+                console.log(code);
+            }
         } catch (err) {
             adone.error(err.message);
             return 1;

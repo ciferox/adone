@@ -1,4 +1,3 @@
-
 const { clone: loClone, uniq } = adone.vendor.lodash;
 
 const t = exports;
@@ -121,15 +120,15 @@ export function isType(nodeType: string, targetType: string): boolean {
     if (t.ALIAS_KEYS[targetType]) return false;
 
     const aliases: ?string[] = t.FLIPPED_ALIAS_KEYS[targetType];
-  if (aliases) {
-    if (aliases[0] === nodeType) return true;
+    if (aliases) {
+        if (aliases[0] === nodeType) return true;
 
-    for (const alias of aliases) {
-      if (nodeType === alias) return true;
+        for (const alias of aliases) {
+            if (nodeType === alias) return true;
+        }
     }
-  }
 
-  return false;
+    return false;
 }
 
 /**
@@ -137,39 +136,39 @@ export function isType(nodeType: string, targetType: string): boolean {
  */
 
 Object.keys(t.BUILDER_KEYS).forEach(function (type) {
-  const keys = t.BUILDER_KEYS[type];
+    const keys = t.BUILDER_KEYS[type];
 
-  function builder() {
-    if (arguments.length > keys.length) {
-      throw new Error(
-        `t.${type}: Too many arguments passed. Received ${arguments.length} but can receive ` +
-        `no more than ${keys.length}`
-      );
+    function builder() {
+        if (arguments.length > keys.length) {
+            throw new Error(
+                `t.${type}: Too many arguments passed. Received ${arguments.length} but can receive ` +
+                `no more than ${keys.length}`
+            );
+        }
+
+        const node = {};
+        node.type = type;
+
+        let i = 0;
+
+        for (const key of (keys: string[])) {
+            const field = t.NODE_FIELDS[type][key];
+
+            let arg = arguments[i++];
+            if (arg === undefined) arg = loClone(field.default);
+
+            node[key] = arg;
+        }
+
+        for (const key in node) {
+            validate(node, key, node[key]);
+        }
+
+        return node;
     }
 
-    const node = {};
-    node.type = type;
-
-    let i = 0;
-
-    for (const key of (keys: string[])) {
-      const field = t.NODE_FIELDS[type][key];
-
-      let arg = arguments[i++];
-      if (arg === undefined) arg = loClone(field.default);
-
-      node[key] = arg;
-    }
-
-    for (const key in node) {
-                validate(node, key, node[key]);
-            }
-
-    return node;
-  }
-
-  t[type] = builder;
-  t[type[0].toLowerCase() + type.slice(1)] = builder;
+    t[type] = builder;
+    t[type[0].toLowerCase() + type.slice(1)] = builder;
 });
 
 /**
@@ -177,18 +176,18 @@ Object.keys(t.BUILDER_KEYS).forEach(function (type) {
  */
 
 for (const type in t.DEPRECATED_KEYS) {
-  const newType = t.DEPRECATED_KEYS[type];
+    const newType = t.DEPRECATED_KEYS[type];
 
-  function proxy(fn) {
-    return function () {
-                console.trace(`The node type ${type} has been renamed to ${newType}`);
+    function proxy(fn) {
+        return function () {
+            console.trace(`The node type ${type} has been renamed to ${newType}`);
             return fn.apply(this, arguments);
-    };
-  }
+        };
+    }
 
-  t[type] = t[type[0].toLowerCase() + type.slice(1)] = proxy(t[newType]);
-  t[`is${type}`] = proxy(t[`is${newType}`]);
-  t[`assert${type}`] = proxy(t[`assert${newType}`]);
+    t[type] = t[type[0].toLowerCase() + type.slice(1)] = proxy(t[newType]);
+    t[`is${type}`] = proxy(t[`is${newType}`]);
+    t[`assert${type}`] = proxy(t[`assert${newType}`]);
 }
 
 /**
@@ -196,16 +195,16 @@ for (const type in t.DEPRECATED_KEYS) {
  */
 
 export function validate(node?: Object, key: string, val: any) {
-  if (!node) return;
+    if (!node) return;
 
-  const fields = t.NODE_FIELDS[node.type];
-  if (!fields) return;
+    const fields = t.NODE_FIELDS[node.type];
+    if (!fields) return;
 
-  const field = fields[key];
-  if (!field || !field.validate) return;
-  if (field.optional && val == null) return;
+    const field = fields[key];
+    if (!field || !field.validate) return;
+    if (field.optional && val == null) return;
 
-  field.validate(node, key, val);
+    field.validate(node, key, val);
 }
 
 /**
@@ -213,15 +212,15 @@ export function validate(node?: Object, key: string, val: any) {
  */
 
 export function shallowEqual(actual: Object, expected: Object): boolean {
-  const keys = Object.keys(expected);
+    const keys = Object.keys(expected);
 
-  for (const key of (keys: string[])) {
-    if (actual[key] !== expected[key]) {
-      return false;
+    for (const key of (keys: string[])) {
+        if (actual[key] !== expected[key]) {
+            return false;
+        }
     }
-  }
 
-  return true;
+    return true;
 }
 
 /**
@@ -229,10 +228,10 @@ export function shallowEqual(actual: Object, expected: Object): boolean {
  */
 
 export function appendToMemberExpression(member: Object, append: Object, computed?: boolean): Object {
-                    member.object = t.memberExpression(member.object, member.property, member.computed);
-                member.property = append;
-  member.computed = !!computed;
-  return member;
+    member.object = t.memberExpression(member.object, member.property, member.computed);
+    member.property = append;
+    member.computed = !!computed;
+    return member;
 }
 
 /**
@@ -240,8 +239,8 @@ export function appendToMemberExpression(member: Object, append: Object, compute
  */
 
 export function prependToMemberExpression(member: Object, prepend: Object): Object {
-                    member.object = t.memberExpression(prepend, member.object);
-                return member;
+    member.object = t.memberExpression(prepend, member.object);
+    return member;
 }
 
 /**
@@ -250,7 +249,7 @@ export function prependToMemberExpression(member: Object, prepend: Object): Obje
  */
 
 export function ensureBlock(node: Object, key: string = "body"): Object {
-  return node[key] = t.toBlock(node[key], node);
+    return node[key] = t.toBlock(node[key], node);
 }
 
 /**
@@ -258,13 +257,13 @@ export function ensureBlock(node: Object, key: string = "body"): Object {
  */
 
 export function clone(node: Object): Object {
-  if (!node) return node;
-  const newNode = {};
-  for (const key in node) {
-    if (key[0] === "_") continue;
-    newNode[key] = node[key];
-  }
-  return newNode;
+    if (!node) return node;
+    const newNode = {};
+    for (const key in node) {
+        if (key[0] === "_") continue;
+        newNode[key] = node[key];
+    }
+    return newNode;
 }
 
 /**
@@ -272,9 +271,9 @@ export function clone(node: Object): Object {
  */
 
 export function cloneWithoutLoc(node: Object): Object {
-  const newNode = clone(node);
-  delete newNode.loc;
-  return newNode;
+    const newNode = clone(node);
+    delete newNode.loc;
+    return newNode;
 }
 
 /**
@@ -283,26 +282,26 @@ export function cloneWithoutLoc(node: Object): Object {
  */
 
 export function cloneDeep(node: Object): Object {
-  if (!node) return node;
-  const newNode = {};
+    if (!node) return node;
+    const newNode = {};
 
-  for (const key in node) {
-    if (key[0] === "_") continue;
+    for (const key in node) {
+        if (key[0] === "_") continue;
 
-    let val = node[key];
+        let val = node[key];
 
-    if (val) {
-      if (val.type) {
-                    val = t.cloneDeep(val);
-                } else if (Array.isArray(val)) {
-                    val = val.map(t.cloneDeep);
-                }
+        if (val) {
+            if (val.type) {
+                val = t.cloneDeep(val);
+            } else if (Array.isArray(val)) {
+                val = val.map(t.cloneDeep);
+            }
+        }
+
+        newNode[key] = val;
     }
 
-    newNode[key] = val;
-  }
-
-  return newNode;
+    return newNode;
 }
 
 /**
@@ -313,51 +312,51 @@ export function cloneDeep(node: Object): Object {
  * parsed nodes of `React.createClass` and `React["createClass"]`.
  */
 
-export function buildMatchMemberExpression(match:string, allowPartial?: boolean): Function {
-  const parts = match.split(".");
+export function buildMatchMemberExpression(match: string, allowPartial?: boolean): Function {
+    const parts = match.split(".");
 
-  return function (member) {
-    // not a member expression
-    if (!t.isMemberExpression(member)) return false;
+    return function (member) {
+        // not a member expression
+        if (!t.isMemberExpression(member)) return false;
 
-    const search = [member];
-    let i = 0;
+        const search = [member];
+        let i = 0;
 
-    while (search.length) {
-      const node = search.shift();
+        while (search.length) {
+            const node = search.shift();
 
-      if (allowPartial && i === parts.length) {
-        return true;
-      }
+            if (allowPartial && i === parts.length) {
+                return true;
+            }
 
-      if (t.isIdentifier(node)) {
-        // this part doesn't match
-        if (parts[i] !== node.name) return false;
-      } else if (t.isStringLiteral(node)) {
-        // this part doesn't match
-        if (parts[i] !== node.value) return false;
-      } else if (t.isMemberExpression(node)) {
-        if (node.computed && !t.isStringLiteral(node.property)) {
-          // we can't deal with this
-          return false;
-        } else {
+            if (t.isIdentifier(node)) {
+                // this part doesn't match
+                if (parts[i] !== node.name) return false;
+            } else if (t.isStringLiteral(node)) {
+                // this part doesn't match
+                if (parts[i] !== node.value) return false;
+            } else if (t.isMemberExpression(node)) {
+                if (node.computed && !t.isStringLiteral(node.property)) {
+                    // we can't deal with this
+                    return false;
+                } else {
                     search.push(node.object);
-                search.push(node.property);
-          continue;
+                    search.push(node.property);
+                    continue;
+                }
+            } else {
+                // we can't deal with this
+                return false;
+            }
+
+            // too many parts
+            if (++i > parts.length) {
+                return false;
+            }
         }
-      } else {
-        // we can't deal with this
-        return false;
-      }
 
-      // too many parts
-      if (++i > parts.length) {
-        return false;
-      }
-    }
-
-    return true;
-  };
+        return true;
+    };
 }
 
 /**
@@ -365,10 +364,10 @@ export function buildMatchMemberExpression(match:string, allowPartial?: boolean)
  */
 
 export function removeComments(node: Object): Object {
-  for (const key of t.COMMENT_KEYS) {
-                    delete node[key];
-                }
-  return node;
+    for (const key of t.COMMENT_KEYS) {
+        delete node[key];
+    }
+    return node;
 }
 
 /**
@@ -376,31 +375,31 @@ export function removeComments(node: Object): Object {
  */
 
 export function inheritsComments(child: Object, parent: Object): Object {
-                    inheritTrailingComments(child, parent);
-                inheritLeadingComments(child, parent);
-  inheritInnerComments(child, parent);
-  return child;
+    inheritTrailingComments(child, parent);
+    inheritLeadingComments(child, parent);
+    inheritInnerComments(child, parent);
+    return child;
 }
 
 export function inheritTrailingComments(child: Object, parent: Object) {
-                    _inheritComments("trailingComments", child, parent);
-                }
+    _inheritComments("trailingComments", child, parent);
+}
 
 export function inheritLeadingComments(child: Object, parent: Object) {
-                    _inheritComments("leadingComments", child, parent);
-                }
+    _inheritComments("leadingComments", child, parent);
+}
 
 export function inheritInnerComments(child: Object, parent: Object) {
-                    _inheritComments("innerComments", child, parent);
-                }
+    _inheritComments("innerComments", child, parent);
+}
 
 function _inheritComments(key, child, parent) {
-  if (child && parent) {
-                    child[key] = uniq(
-                        [].concat(child[key], parent[key])
-                            .filter(Boolean)
-                    );
-                }
+    if (child && parent) {
+        child[key] = uniq(
+            [].concat(child[key], parent[key])
+                .filter(Boolean)
+        );
+    }
 }
 
 /**
@@ -408,28 +407,28 @@ function _inheritComments(key, child, parent) {
  */
 
 export function inherits(child: Object, parent: Object): Object {
-  if (!child || !parent) return child;
+    if (!child || !parent) return child;
 
-  // optionally inherit specific properties if not null
-  for (const key of (t.INHERIT_KEYS.optional: string[])) {
-    if (child[key] == null) {
-                        child[key] = parent[key];
-                    }
-  }
+    // optionally inherit specific properties if not null
+    for (const key of (t.INHERIT_KEYS.optional: string[])) {
+        if (child[key] == null) {
+            child[key] = parent[key];
+        }
+    }
 
-  // force inherit "private" properties
-  for (const key in parent) {
-    if (key[0] === "_") child[key] = parent[key];
-  }
+    // force inherit "private" properties
+    for (const key in parent) {
+        if (key[0] === "_") child[key] = parent[key];
+    }
 
-  // force inherit select properties
-  for (const key of (t.INHERIT_KEYS.force: string[])) {
-                        child[key] = parent[key];
-                        }
+    // force inherit select properties
+    for (const key of (t.INHERIT_KEYS.force: string[])) {
+        child[key] = parent[key];
+    }
 
-  t.inheritsComments(child, parent);
+    t.inheritsComments(child, parent);
 
-  return child;
+    return child;
 }
 
 /**
@@ -437,10 +436,10 @@ export function inherits(child: Object, parent: Object): Object {
  */
 
 export function assertNode(node?) {
-  if (!isNode(node)) {
-    // $FlowFixMe
-    throw new TypeError("Not a valid node " + (node && node.type));
-  }
+    if (!isNode(node)) {
+        // $FlowFixMe
+        throw new TypeError("Not a valid node " + (node && node.type));
+    }
 }
 
 /**
@@ -448,7 +447,7 @@ export function assertNode(node?) {
  */
 
 export function isNode(node?): boolean {
-  return !!(node && VISITOR_KEYS[node.type]);
+    return !!(node && VISITOR_KEYS[node.type]);
 }
 
 // Optimize property access.
@@ -460,35 +459,35 @@ adone.util.toFastProperties(t.VISITOR_KEYS);
  */
 
 export function traverseFast(node: Node, enter: (node: Node) => void, opts?: Object) {
-  if (!node) return;
+    if (!node) return;
 
-  const keys = t.VISITOR_KEYS[node.type];
-  if (!keys) return;
+    const keys = t.VISITOR_KEYS[node.type];
+    if (!keys) return;
 
-  opts = opts || {};
-  enter(node, opts);
+    opts = opts || {};
+    enter(node, opts);
 
-  for (const key of keys) {
-    const subNode = node[key];
+    for (const key of keys) {
+        const subNode = node[key];
 
-    if (Array.isArray(subNode)) {
-      for (const node of subNode) {
-                            traverseFast(node, enter, opts);
-                        }
-    } else {
-                            traverseFast(subNode, enter, opts);
-                        }
-  }
+        if (Array.isArray(subNode)) {
+            for (const node of subNode) {
+                traverseFast(node, enter, opts);
+            }
+        } else {
+            traverseFast(subNode, enter, opts);
+        }
+    }
 }
 
 const CLEAR_KEYS: Array = [
-  "tokens",
-  "start", "end", "loc",
-  "raw", "rawValue"
+    "tokens",
+    "start", "end", "loc",
+    "raw", "rawValue"
 ];
 
 const CLEAR_KEYS_PLUS_COMMENTS: Array = t.COMMENT_KEYS.concat([
-  "comments"
+    "comments"
 ]).concat(CLEAR_KEYS);
 
 /**
@@ -497,60 +496,60 @@ const CLEAR_KEYS_PLUS_COMMENTS: Array = t.COMMENT_KEYS.concat([
  */
 
 export function removeProperties(node: Node, opts?: Object): void {
-                            opts = opts || {};
-                        const map = opts.preserveComments ? CLEAR_KEYS : CLEAR_KEYS_PLUS_COMMENTS;
-  for (const key of map) {
-    if (node[key] != null) node[key] = undefined;
-  }
+    opts = opts || {};
+    const map = opts.preserveComments ? CLEAR_KEYS : CLEAR_KEYS_PLUS_COMMENTS;
+    for (const key of map) {
+        if (node[key] != null) node[key] = undefined;
+    }
 
-  for (const key in node) {
-    if (key[0] === "_" && node[key] != null) node[key] = undefined;
-  }
+    for (const key in node) {
+        if (key[0] === "_" && node[key] != null) node[key] = undefined;
+    }
 
-  const syms: Symbol[] = Object.getOwnPropertySymbols(node);
-  for (const sym of syms) {
-                                node[sym] = null;
-                            }
+    const syms: Symbol[] = Object.getOwnPropertySymbols(node);
+    for (const sym of syms) {
+        node[sym] = null;
+    }
 }
 
 export function removePropertiesDeep(tree: Node, opts?: Object): Node {
-                                traverseFast(tree, removeProperties, opts);
-                            return tree;
+    traverseFast(tree, removeProperties, opts);
+    return tree;
 }
 
 //
 export {
-                                getBindingIdentifiers,
-                            getOuterBindingIdentifiers
+    getBindingIdentifiers,
+    getOuterBindingIdentifiers
 } from "./retrievers";
 
 export {
-                                isBinding,
-                            isReferenced,
-  isValidIdentifier,
-  isLet,
-  isBlockScoped,
-  isVar,
-  isSpecifierDefault,
-  isScope,
-  isImmutable,
-  isNodesEquivalent
+    isBinding,
+    isReferenced,
+    isValidIdentifier,
+    isLet,
+    isBlockScoped,
+    isVar,
+    isSpecifierDefault,
+    isScope,
+    isImmutable,
+    isNodesEquivalent
 } from "./validators";
 
 export {
-                                toComputedKey,
-                            toSequenceExpression,
-  toKeyAlias,
-  toIdentifier,
-  toBindingIdentifierName,
-  toStatement,
-  toExpression,
-  toBlock,
-  valueToNode
+    toComputedKey,
+    toSequenceExpression,
+    toKeyAlias,
+    toIdentifier,
+    toBindingIdentifierName,
+    toStatement,
+    toExpression,
+    toBlock,
+    valueToNode
 } from "./converters";
 
 export {
-                                createUnionTypeAnnotation,
-                            removeTypeDuplicates,
-  createTypeAnnotationBasedOnTypeof
+    createUnionTypeAnnotation,
+    removeTypeDuplicates,
+    createTypeAnnotationBasedOnTypeof
 } from "./flow";

@@ -1,6 +1,6 @@
 const { is } = adone;
 
-export default class XClass extends adone.meta.codemod.Base {
+export default class XClass extends adone.meta.code.Base {
     constructor(options) {
         super(options);
         this.superClass = null;
@@ -11,3 +11,5 @@ export default class XClass extends adone.meta.codemod.Base {
         }
     }
 }
+adone.tag.define("CODEMOD_CLASS");
+adone.tag.set(XClass, adone.tag.CODEMOD_CLASS);

@@ -1,5 +1,3 @@
-
-
 const toString = Object.prototype.toString;
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 
@@ -100,7 +98,18 @@ const callbackNames = ["callback", "callback_", "cb", "cb_", "done", "next"];
 const ip4Regex = /^(\d{1,3}\.){3,3}\d{1,3}$/;
 const ip6Regex = /^(::)?(((\d{1,3}\.){3}(\d{1,3}){1})?([0-9a-f]){0,4}:{0,2}){1,8}(::)?$/i;
 
-const is = adone.o({
+const posixPathAbsolute = (path) => path.charAt(0) === "/";
+const win32PathAbsolute = (path) => {
+    const result = /^([a-zA-Z]:|[\\/]{2}[^\\/]+[\\/]+[^\\/]+)?([\\/])?([\s\S]*?)$/.exec(path);
+    const device = result[1] || "";
+    const isUnc = Boolean(device) && device.charAt(1) !== ":";
+    // UNC paths are always absolute
+    return Boolean(result[2]) || isUnc;
+};
+
+const platform = process.platform;
+
+const is = {
     _getTag: getTag,
     // Checks whether given value is `null`.
     null: (value) => value === null,
@@ -420,14 +429,9 @@ const is = adone.o({
         }
         return true;
     },
-    posixPathAbsolute: (path) => path.charAt(0) === "/",
-    win32PathAbsolute: (path) => {
-        const result = /^([a-zA-Z]:|[\\/]{2}[^\\/]+[\\/]+[^\\/]+)?([\\/])?([\s\S]*?)$/.exec(path);
-        const device = result[1] || "";
-        const isUnc = Boolean(device) && device.charAt(1) !== ":";
-        // UNC paths are always absolute
-        return Boolean(result[2]) || isUnc;
-    },
+    win32PathAbsolute,
+    posixPathAbsolute,
+    pathAbsolute: (platform === "win32" ? win32PathAbsolute : posixPathAbsolute),
     // Checks whether given `str` is glob or extglob (can use for test extglobs with the same performance)
     glob: (str) => (typeof str === "string" && (/[@?!+*]\(/.test(str) || /[*!?{}(|)[\]]/.test(str))),
     dotfile: (str) => {
@@ -498,11 +502,11 @@ const is = adone.o({
     netronRemoteStub: (obj) => adone.tag.has(obj, adone.tag.NETRON_REMOTESTUB),
     netronStream: (obj) => adone.tag.has(obj, adone.tag.NETRON_STREAM),
     iterable: (obj) => obj && is.function(obj[Symbol.iterator]),
-    win32: (process.platform === "win32"),
-    linux: (process.platform === "linux"),
-    freebsd: (process.platform === "freebsd"),
-    darwin: (process.platform === "darwin"),
-    sunos: (process.platform === "sunos"),
+    win32: (platform === "win32"),
+    linux: (platform === "linux"),
+    freebsd: (platform === "freebsd"),
+    darwin: (platform === "darwin"),
+    sunos: (platform === "sunos"),
     uppercase: (str) => {
         for (const i of str) {
             if (i < "A" || i > "Z") {
@@ -551,8 +555,13 @@ const is = adone.o({
     },
     arrayBuffer: (x) => Object.prototype.toString.call(x) === "[object ArrayBuffer]",
     arrayBufferView: (x) => ArrayBuffer.isView(x),
-    namespace: (o) => (is.object(o) && is.exist(o.__adone_namespace__))
-});
+    date: (value) => (getTag(value) === "date"),
+    error: (value) => (getTag(value) === "error"),
+    map: (value) => (getTag(value) === "map"),
+    regexp: (value) => (getTag(value) === "regexp"),
+    set: (value) => (getTag(value) === "set"),
+    symbol: (value) => (getTag(value) === "symbol")
+};
 
 Object.defineProperty(is, "validUTF8", {
     configurable: true,
@@ -565,14 +574,5 @@ Object.defineProperty(is, "validUTF8", {
         return Validation.isValidUTF8;
     }
 });
-
-is.pathAbsolute = (is.win32 ? is.win32PathAbsolute : is.posixPathAbsolute);
-
-// Generate type check predicates for standard builtin classes and some other stuff.
-const tags = ["date", "error", "map", "regexp", "set", "symbol"];
-for (let index = 0; index < tags.length; index += 1) {
-    const tag = tags[index];
-    is[tag] = (value) => (getTag(value) === tag);
-}
 
 export default is;

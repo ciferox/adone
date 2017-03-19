@@ -1,11 +1,10 @@
-
 import NodeFsHandler from "./lib/nodefs-handler";
 import FSEventsHandler, { canUse as canUseFSEvents } from "./lib/fsevents-handler";
 
 const dotRe = /\..*\.(sw[px])$|\~$|\.subl.*\.tmp/;
 const replacerRe = /^\.[\/\\]/;
 
-export default class FSWatcher extends adone.EventEmitter {
+export default class Watcher extends adone.EventEmitter {
     constructor({
         persistent = true,
         ignoreInitial = false,
@@ -90,7 +89,7 @@ export default class FSWatcher extends adone.EventEmitter {
     }
 
     /**
-     * Adds paths to be watched on an existing FSWatcher instance
+     * Adds paths to be watched on an existing Watcher instance
      * 
      * @public
      * @param {string|string[]} paths - file/directory paths and/or globs
@@ -98,7 +97,7 @@ export default class FSWatcher extends adone.EventEmitter {
      * @param {Boolean} _internal - interv param indicates a non-user add
      * @returns {this}
      * 
-     * @memberOf FSWatcher
+     * @memberOf Watcher
      */
     add(paths, _origAdd, _internal) {
         const { cwd } = this.options;
@@ -183,7 +182,7 @@ export default class FSWatcher extends adone.EventEmitter {
      * @param {string|string[]} paths file/directory paths and/or globs
      * @returns {this}
      * 
-     * @memberOf FSWatcher
+     * @memberOf Watcher
      */
     unwatch(paths) {
         if (this.closed) {
@@ -221,7 +220,7 @@ export default class FSWatcher extends adone.EventEmitter {
      * @public
      * @returns {this} 
      * 
-     * @memberOf FSWatcher
+     * @memberOf Watcher
      */
     close() {
         if (this.closed) {
@@ -247,7 +246,7 @@ export default class FSWatcher extends adone.EventEmitter {
      * @public
      * @returns {Object.<string, ...string[]>} object with dir paths as keys and arrays of contained paths as values
      * 
-     * @memberOf FSWatcher
+     * @memberOf Watcher
      */
     getWatched() {
         const watchList = {};
@@ -267,7 +266,7 @@ export default class FSWatcher extends adone.EventEmitter {
      * @param {...any} vals - an event arguments
      * @returns {this}
      * 
-     * @memberOf FSWatcher
+     * @memberOf Watcher
      */
     _emit(event, path, ...vals) {
         if (this.options.cwd) {
@@ -355,9 +354,9 @@ export default class FSWatcher extends adone.EventEmitter {
      * 
      * @private 
      * @param {Error}
-     * @returns {Error|Boolean} the error if defined, otherwise the value of the FSWatcher instance's `closed` flag 
+     * @returns {Error|Boolean} the error if defined, otherwise the value of the Watcher instance's `closed` flag 
      * 
-     * @memberOf FSWatcher 
+     * @memberOf Watcher 
      */
     _handleError(error) {
         const code = error && error.code;
@@ -377,7 +376,7 @@ export default class FSWatcher extends adone.EventEmitter {
      * @param {number} timeout - the duration of time to suppress duplicate actions (ms)
      * @returns {Object|Boolean} throttle tracking object or false if action should be suppressed
      * 
-     * @memberOf FSWatcher
+     * @memberOf Watcher
      */
     _throttle(action, path, timeout) {
         if (!this._throttled.has(action)) {
@@ -410,7 +409,7 @@ export default class FSWatcher extends adone.EventEmitter {
      * @param {string} event
      * @param {function} awfEmit - function, to be called when ready for event to be emitted
      * 
-     * @memberOf FSWatcher
+     * @memberOf Watcher
      */
     _awaitWriteFinish(path, threshold, event, awfEmit) {
         let timeoutHandler;
@@ -467,7 +466,7 @@ export default class FSWatcher extends adone.EventEmitter {
      * @param {Object} stats - result of fs.stat
      * @returns {Boolean}
      * 
-     * @memberOf FSWatcher
+     * @memberOf Watcher
      */
     _isIgnored(path, stats) {
         if (this.options.atomic && dotRe.test(path)) {
@@ -504,7 +503,7 @@ export default class FSWatcher extends adone.EventEmitter {
      * @param {number} depth - at any depth > 0, this isn't a glob
      * @returns {Object}
      * 
-     * @memberOf FSWatcher
+     * @memberOf Watcher
      */
     _getWatchHelpers(path, depth) {
         path = path.replace(replacerRe, "");
@@ -579,7 +578,7 @@ export default class FSWatcher extends adone.EventEmitter {
      * @private
      * @param {string} directory - path of the directory
      * @returns {Object} the directory's tracking object
-     * @memberOf FSWatcher
+     * @memberOf Watcher
      */
     _getWatchedDir(directory) {
         const dir = adone.std.path.resolve(directory);
@@ -621,7 +620,7 @@ export default class FSWatcher extends adone.EventEmitter {
      * @param {Object} stats - result of fs.stat
      * @returns {Boolean}
      * 
-     * @memberOf FSWatcher
+     * @memberOf Watcher
      */
     _hasReadPermissions(stats) {
         return Boolean(4 & parseInt(((stats && stats.mode) & 0x1ff).toString(8)[0], 10));
@@ -636,7 +635,7 @@ export default class FSWatcher extends adone.EventEmitter {
      * @param {string} directory - directory within which the following item is located
      * @param {any} item - base path of item/directory
      * 
-     * @memberOf FSWatcher
+     * @memberOf Watcher
      */
     _remove(directory, item) {
         // if what is being deleted is a directory, get that directory's paths
@@ -711,7 +710,7 @@ export default class FSWatcher extends adone.EventEmitter {
 
 const importHandler = (handler) => {
     for (const method of adone.util.keys(handler)) {
-        FSWatcher.prototype[method] = handler[method];
+        Watcher.prototype[method] = handler[method];
     }
 };
 

@@ -1,5 +1,3 @@
-/* global describe it */
-
 const Extensions = adone.net.ws.exts;
 
 describe("Extensions", () => {

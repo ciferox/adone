@@ -1,4 +1,3 @@
-
 import BasePrompt from "./base";
 const { terminal } = adone;
 const ExternalEditor = require("external-editor");
@@ -16,20 +15,20 @@ export default class EditorPrompt extends BasePrompt {
 
         this.editorResult = new rx.Subject();
 
-    // Open Editor on "line" (Enter Key)
+        // Open Editor on "line" (Enter Key)
         const events = observe();
         this.lineSubscription = events.line.forEach(this.startExternalEditor.bind(this));
 
-    // Trigger Validation when editor closes
+        // Trigger Validation when editor closes
         const validation = this.handleSubmitEvents(this.editorResult);
         validation.success.forEach(this.onEnd.bind(this));
         validation.error.forEach(this.onError.bind(this));
 
-    // Prevents default from being printed on screen (can look weird with multiple lines)
+        // Prevents default from being printed on screen (can look weird with multiple lines)
         this.currentText = this.opt.default;
         this.opt.default = null;
 
-    // Init
+        // Init
         this.render();
 
         return this;
@@ -56,11 +55,8 @@ export default class EditorPrompt extends BasePrompt {
         this.screen.render(message, bottomContent);
     }
 
-    /**
-     * Launch $EDITOR on user press enter
-     */
     startExternalEditor() {
-    // Pause Readline to prevent stdin and stdout from being modified while the editor is showing
+        // Pause Readline to prevent stdin and stdout from being modified while the editor is showing
         terminal.readline.pause();
         ExternalEditor.editAsync(this.currentText, this.endExternalEditor.bind(this));
     }
@@ -79,7 +75,7 @@ export default class EditorPrompt extends BasePrompt {
         this.lineSubscription.dispose();
         this.answer = state.value;
         this.status = "answered";
-    // Re-render prompt
+        // Re-render prompt
         this.render();
         this.screen.done();
         this.done(this.answer);

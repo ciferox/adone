@@ -7,7 +7,7 @@ try {
     //
 }
 
-// object to hold per-process fsevents instances (may be shared across chokidar FSWatcher instances)
+// object to hold per-process fsevents instances (may be shared across chokidar Watcher instances)
 const FSEventsWatchers = new Map();
 
 // Threshold of duplicate path prefixes at which to start consolidating going forward

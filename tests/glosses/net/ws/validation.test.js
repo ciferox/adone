@@ -1,10 +1,8 @@
-/* global describe it */
-
 const { is } = adone;
 
-describe("Validation", function () {
-    describe("isValidUTF8", function () {
-        it("should return true for a valid utf8 string", function () {
+describe("Validation", () => {
+    describe("isValidUTF8", () => {
+        it("should return true for a valid utf8 string", () => {
             const validBuffer = Buffer.from(
                 "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
                 "Quisque gravida mattis rhoncus. Donec iaculis, metus " +
@@ -26,7 +24,7 @@ describe("Validation", function () {
             assert.ok(is.validUTF8(validBuffer));
         });
 
-        it("should return false for an erroneous string", function () {
+        it("should return false for an erroneous string", () => {
             const invalidBuffer = Buffer.from([
                 0xce, 0xba, 0xe1, 0xbd, 0xb9, 0xcf, 0x83,
                 0xce, 0xbc, 0xce, 0xb5, 0xed, 0xa0, 0x80,
@@ -36,12 +34,12 @@ describe("Validation", function () {
             assert.ok(!is.validUTF8(invalidBuffer));
         });
 
-        it("should return true for valid cases from the autobahn test suite", function () {
+        it("should return true for valid cases from the autobahn test suite", () => {
             assert.ok(is.validUTF8(Buffer.from([0xf0, 0x90, 0x80, 0x80])));
             assert.ok(is.validUTF8(Buffer.from("\xf0\x90\x80\x80")));
         });
 
-        it("should return false for erroneous autobahn strings", function () {
+        it("should return false for erroneous autobahn strings", () => {
             assert.ok(!is.validUTF8(Buffer.from([0xce, 0xba, 0xe1, 0xbd])));
         });
     });

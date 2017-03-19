@@ -63,7 +63,7 @@ export const namespaces = [
     },
     {
         name: "adone.is",
-        description: "",
+        description: "Implementation of common predicates",
         paths: [
             "glosses/common/is"
         ]
@@ -102,10 +102,10 @@ export const namespaces = [
         ]
     },
     {
-        name: "adone.meta.codemod",
+        name: "adone.meta.code",
         description: "Implementation of code analysis and modification toolkit",
         paths: [
-            "glosses/meta/codemod"
+            "glosses/meta/code"
         ]
     },
     {
@@ -145,7 +145,7 @@ export const namespaces = [
     },
     {
         name: "adone.semver",
-        description: "Implementation of semantic version parser",
+        description: "Semantic version parser",
         paths: [
             "glosses/semver"
         ]
@@ -178,7 +178,7 @@ export const namespaces = [
     },
     {
         name: "adone.x",
-        description: "",
+        description: "Exceptions and helpers",
         paths: [
             "glosses/common/x"
         ]

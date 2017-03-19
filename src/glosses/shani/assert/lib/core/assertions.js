@@ -1398,8 +1398,8 @@ export default function (lib, _) {
             actual = [];
 
             // Map and Set '.keys' aren't supported in IE 11. Therefore, use .forEach.
-            obj.forEach(function (val, key) { 
-                actual.push(key); 
+            obj.forEach(function (val, key) {
+                actual.push(key);
             });
 
             if (keysType !== "Array") {
@@ -1781,8 +1781,8 @@ export default function (lib, _) {
         const obj = flag(this, "object");
         const itself = flag(this, "itself");
         const context = ("function" === typeof obj && !itself)
-                ? obj.prototype[method]
-                : obj[method];
+            ? obj.prototype[method]
+            : obj[method];
 
         this.assert(
             "function" === typeof context

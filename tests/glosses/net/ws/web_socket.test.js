@@ -1,9 +1,24 @@
-/* global describe it */
-
 const {
     std: { crypto, http, https, fs, os },
     net: { ws: { WebSocket, WebSocketServer, Sender, Receiver } }
 } = adone;
+
+/**
+ * Server object, which will do the actual emitting
+ */
+class Server extends adone.std.events {
+    constructor(webServer) {
+        super();
+        this.webServer = webServer;
+    }
+
+    close(cb) {
+        this.webServer.close(cb);
+        if (this._socket) {
+            this._socket.end();
+        }
+    }
+}
 
 const server = {
     handlers: {
@@ -147,55 +162,40 @@ function return401(server, req, socket) {
     socket.end();
 }
 
-/**
- * Server object, which will do the actual emitting
- */
-class Server extends adone.std.events {
-    constructor(webServer) {
-        super();
-        this.webServer = webServer;
-    }
-
-    close(cb) {
-        this.webServer.close(cb);
-        if (this._socket) this._socket.end();
-    }
-}
-
 function getFixturesPath(name) {
     return adone.std.path.join(__dirname, "..", "fixtures", name);
 }
 let port = 20000;
 
-process.on("uncaughtException", () => {});
+process.on("uncaughtException", () => { });
 
-describe("WebSocket", function () {
-    describe("#ctor", function () {
-        it("should return a new instance if called without new", function (done) {
+describe("WebSocket", () => {
+    describe("#ctor", () => {
+        it("should return a new instance if called without new", (done) => {
             const ws = new WebSocket("ws://localhost");
 
             assert.ok(ws instanceof WebSocket);
             ws.on("error", () => done());
         });
 
-        it("throws exception for invalid url", function () {
+        it("throws exception for invalid url", () => {
             assert.throws(() => new WebSocket("echo.websocket.org"));
         });
     });
 
-    describe("options", function () {
-        it("should accept an `agent` option", function (done) {
+    describe("options", () => {
+        it("should accept an `agent` option", (done) => {
             const agent = { addRequest: () => done() };
             new WebSocket("ws://localhost", { agent });
         });
 
         // GH-227
-        it("should accept the `options` object as the 3rd argument", function (done) {
+        it("should accept the `options` object as the 3rd argument", (done) => {
             const agent = { addRequest: () => done() };
             new WebSocket("ws://localhost", [], { agent });
         });
 
-        it.only("should accept the localAddress option", function (done) {
+        it.only("should accept the localAddress option", (done) => {
             // explore existing interfaces
             const devs = os.networkInterfaces();
             const localAddresses = [];
@@ -217,7 +217,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("should accept the localAddress option whether it was wrong interface", function () {
+        it("should accept the localAddress option whether it was wrong interface", () => {
             assert.throws(
                 () => new WebSocket(`ws://localhost:${port}`, { localAddress: "123.456.789.428" }),
                 /must be a valid IP: 123.456.789.428/
@@ -225,8 +225,8 @@ describe("WebSocket", function () {
         });
     });
 
-    describe("properties", function () {
-        it("#bytesReceived exposes number of bytes received", function (done) {
+    describe("properties", () => {
+        it("#bytesReceived exposes number of bytes received", (done) => {
             const wss = new WebSocketServer({ port: ++port }, () => {
                 const ws = new WebSocket(`ws://localhost:${port}`, { perMessageDeflate: false });
                 ws.on("message", () => {
@@ -238,7 +238,7 @@ describe("WebSocket", function () {
             wss.on("connection", (ws) => ws.send("foobar"));
         });
 
-        it("#url exposes the server url", function (done) {
+        it("#url exposes the server url", (done) => {
             server.createServer(++port, (srv) => {
                 const url = `ws://localhost:${port}`;
                 const ws = new WebSocket(url);
@@ -250,7 +250,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("#protocolVersion exposes the protocol version", function (done) {
+        it("#protocolVersion exposes the protocol version", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -261,8 +261,8 @@ describe("WebSocket", function () {
             });
         });
 
-        describe("#bufferedAmount", function () {
-            it("defaults to zero", function (done) {
+        describe("#bufferedAmount", () => {
+            it("defaults to zero", (done) => {
                 server.createServer(++port, (srv) => {
                     const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -273,7 +273,7 @@ describe("WebSocket", function () {
                 });
             });
 
-            it("defaults to zero upon 'open'", function (done) {
+            it("defaults to zero upon 'open'", (done) => {
                 server.createServer(++port, (srv) => {
                     const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -286,7 +286,7 @@ describe("WebSocket", function () {
                 });
             });
 
-            it("stress kernel write buffer", function (done) {
+            it("stress kernel write buffer", (done) => {
                 const wss = new WebSocketServer({ port: ++port }, () => {
                     new WebSocket(`ws://localhost:${port}`, {
                         perMessageDeflate: false
@@ -294,8 +294,10 @@ describe("WebSocket", function () {
                 });
 
                 wss.on("connection", (ws) => {
-                    for ( ; ; ) {
-                        if (ws.bufferedAmount > 0) break;
+                    for (; ;) {
+                        if (ws.bufferedAmount > 0) {
+                            break;
+                        }
                         ws.send("hello".repeat(1e4));
                     }
                     wss.close(done);
@@ -303,8 +305,8 @@ describe("WebSocket", function () {
             });
         });
 
-        describe("Custom headers", function () {
-            it("request has an authorization header", function (done) {
+        describe("Custom headers", () => {
+            it("request has an authorization header", (done) => {
                 const server = http.createServer();
                 const wss = new WebSocketServer({ server });
                 const auth = "test:testpass";
@@ -325,7 +327,7 @@ describe("WebSocket", function () {
                 });
             });
 
-            it("accepts custom headers", function (done) {
+            it("accepts custom headers", (done) => {
                 const server = http.createServer();
                 const wss = new WebSocketServer({ server });
 
@@ -339,14 +341,14 @@ describe("WebSocket", function () {
 
                 server.listen(++port, () => {
                     new WebSocket(`ws://localhost:${port}`, {
-                        headers: { "Cookie": "foo=bar" }
+                        headers: { Cookie: "foo=bar" }
                     });
                 });
             });
         });
 
-        describe("#readyState", function () {
-            it("defaults to connecting", function (done) {
+        describe("#readyState", () => {
+            it("defaults to connecting", (done) => {
                 server.createServer(++port, (srv) => {
                     const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -357,7 +359,7 @@ describe("WebSocket", function () {
                 });
             });
 
-            it("set to open once connection is established", function (done) {
+            it("set to open once connection is established", (done) => {
                 server.createServer(++port, (srv) => {
                     const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -370,7 +372,7 @@ describe("WebSocket", function () {
                 });
             });
 
-            it("set to closed once connection is closed", function (done) {
+            it("set to closed once connection is closed", (done) => {
                 server.createServer(++port, (srv) => {
                     const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -383,7 +385,7 @@ describe("WebSocket", function () {
                 });
             });
 
-            it("set to closed once connection is terminated", function (done) {
+            it("set to closed once connection is terminated", (done) => {
                 server.createServer(++port, (srv) => {
                     const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -413,15 +415,15 @@ describe("WebSocket", function () {
          */
 
         Object.keys(readyStates).forEach((state) => {
-            describe(`.${state}`, function () {
-                it("is enumerable property of class", function () {
+            describe(`.${state}`, () => {
+                it("is enumerable property of class", () => {
                     const propertyDescripter = Object.getOwnPropertyDescriptor(WebSocket, state);
 
                     assert.strictEqual(propertyDescripter.value, readyStates[state]);
                     assert.strictEqual(propertyDescripter.enumerable, true);
                 });
 
-                it("is property of instance", function () {
+                it("is property of instance", () => {
                     const ws = new WebSocket("ws://localhost");
                     ws.on("error", () => { });
 
@@ -431,11 +433,11 @@ describe("WebSocket", function () {
         });
     });
 
-    describe("events", function () {
-        it("emits a ping event", function (done) {
+    describe("events", () => {
+        it("emits a ping event", (done) => {
             const wss = new WebSocketServer({ port: ++port }, () => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
-                ws.on("ping", function () {
+                ws.on("ping", () => {
                     wss.close();
                     done();
                 });
@@ -444,7 +446,7 @@ describe("WebSocket", function () {
             wss.on("connection", (client) => client.ping());
         });
 
-        it("emits a pong event", function (done) {
+        it("emits a pong event", (done) => {
             const wss = new WebSocketServer({ port: ++port }, () => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
                 ws.on("pong", () => {
@@ -457,8 +459,8 @@ describe("WebSocket", function () {
         });
     });
 
-    describe("connection establishing", function () {
-        it("can disconnect before connection is established", function (done) {
+    describe("connection establishing", () => {
+        it("can disconnect before connection is established", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -468,7 +470,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("can close before connection is established", function (done) {
+        it("can close before connection is established", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -478,7 +480,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("can handle error before request is upgraded", function (done) {
+        it("can handle error before request is upgraded", (done) => {
             // Here, we don"t create a server, to guarantee that the connection will
             // fail before the request is upgraded
             const ws = new WebSocket(`ws://localhost:${++port}`);
@@ -487,7 +489,7 @@ describe("WebSocket", function () {
             ws.on("error", () => done());
         });
 
-        it("invalid server key is denied", function (done) {
+        it("invalid server key is denied", (done) => {
             server.createServer(++port, server.handlers.invalidKey, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -495,7 +497,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("close event is raised when server closes connection", function (done) {
+        it("close event is raised when server closes connection", (done) => {
             server.createServer(++port, server.handlers.closeAfterConnect, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -503,7 +505,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("error is emitted if server aborts connection", function (done) {
+        it("error is emitted if server aborts connection", (done) => {
             server.createServer(++port, server.handlers.return401, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -512,7 +514,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("unexpected response can be read when sent by server", function (done) {
+        it("unexpected response can be read when sent by server", (done) => {
             server.createServer(++port, server.handlers.return401, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -535,7 +537,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("request can be aborted when unexpected response is sent by server", function (done) {
+        it("request can be aborted when unexpected response is sent by server", (done) => {
             server.createServer(++port, server.handlers.return401, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -551,8 +553,8 @@ describe("WebSocket", function () {
         });
     });
 
-    describe("connection with query string", function () {
-        it("connects when pathname is not null", function (done) {
+    describe("connection with query string", () => {
+        it("connects when pathname is not null", (done) => {
             const wss = new WebSocketServer({ port: ++port }, () => {
                 const ws = new WebSocket(`ws://localhost:${port}/?token=qwerty`);
 
@@ -560,7 +562,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("connects when pathname is null", function (done) {
+        it("connects when pathname is null", (done) => {
             const wss = new WebSocketServer({ port: ++port }, () => {
                 const ws = new WebSocket(`ws://localhost:${port}?token=qwerty`);
 
@@ -569,8 +571,8 @@ describe("WebSocket", function () {
         });
     });
 
-    describe("#pause and #resume", function () {
-        it("pauses the underlying stream", function (done) {
+    describe("#pause and #resume", () => {
+        it("pauses the underlying stream", (done) => {
             // this test is sort-of racecondition"y, since an unlikely slow connection
             // to localhost can cause the test to succeed even when the stream pausing
             // isn"t working as intended. that is an extremely unlikely scenario, though
@@ -578,9 +580,12 @@ describe("WebSocket", function () {
             let openCount = 0;
             let serverClient;
             let client;
+            let wss = null;
 
             const onOpen = () => {
-                if (++openCount !== 2) return;
+                if (++openCount !== 2) {
+                    return;
+                }
 
                 let paused = true;
                 serverClient.on("message", () => {
@@ -598,7 +603,7 @@ describe("WebSocket", function () {
                 client.send("foo");
             };
 
-            const wss = new WebSocketServer({ port: ++port }, () => {
+            wss = new WebSocketServer({ port: ++port }, () => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
                 serverClient = ws;
@@ -612,8 +617,8 @@ describe("WebSocket", function () {
         });
     });
 
-    describe("#ping", function () {
-        it("before connect should fail", function (done) {
+    describe("#ping", () => {
+        it("before connect should fail", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -628,7 +633,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("before connect can silently fail", function (done) {
+        it("before connect can silently fail", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -640,49 +645,53 @@ describe("WebSocket", function () {
             });
         });
 
-        it("without message is successfully transmitted to the server", function (done) {
-            server.createServer(++port, function (srv) {
+        it("without message is successfully transmitted to the server", (done) => {
+            server.createServer(++port, (srv) => {
+                let ws = null;
                 srv.on("ping", () => {
                     srv.close(done);
                     ws.terminate();
                 });
 
-                const ws = new WebSocket(`ws://localhost:${port}`);
+                ws = new WebSocket(`ws://localhost:${port}`);
 
                 ws.on("open", () => ws.ping());
             });
         });
 
-        it("with message is successfully transmitted to the server", function (done) {
+        it("with message is successfully transmitted to the server", (done) => {
             server.createServer(++port, (srv) => {
+                let ws = null;
                 srv.on("ping", (message) => {
                     assert.strictEqual(message.toString(), "hi");
                     srv.close(done);
                     ws.terminate();
                 });
 
-                const ws = new WebSocket(`ws://localhost:${port}`);
+                ws = new WebSocket(`ws://localhost:${port}`);
 
                 ws.on("open", () => ws.ping("hi"));
             });
         });
 
-        it("can send safely receive numbers as ping payload", function (done) {
+        it("can send safely receive numbers as ping payload", (done) => {
             server.createServer(++port, (srv) => {
+                let ws = null;
                 srv.on("ping", (message) => {
                     assert.strictEqual(message.toString(), "200");
                     srv.close(done);
                     ws.terminate();
                 });
 
-                const ws = new WebSocket(`ws://localhost:${port}`);
+                ws = new WebSocket(`ws://localhost:${port}`);
 
                 ws.on("open", () => ws.ping(200));
             });
         });
 
-        it("with encoded message is successfully transmitted to the server", function (done) {
+        it("with encoded message is successfully transmitted to the server", (done) => {
             server.createServer(++port, (srv) => {
+                let ws = null;
                 srv.on("ping", (message, flags) => {
                     assert.ok(flags.masked);
                     assert.strictEqual(message.toString(), "hi");
@@ -690,14 +699,14 @@ describe("WebSocket", function () {
                     ws.terminate();
                 });
 
-                const ws = new WebSocket(`ws://localhost:${port}`);
+                ws = new WebSocket(`ws://localhost:${port}`);
 
                 ws.on("open", () => ws.ping("hi", { mask: true }));
             });
         });
     });
 
-    describe("#pong", function () {
+    describe("#pong", () => {
         it("before connect should fail", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
@@ -713,7 +722,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("before connect can silently fail", function (done) {
+        it("before connect can silently fail", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -725,35 +734,38 @@ describe("WebSocket", function () {
             });
         });
 
-        it("without message is successfully transmitted to the server", function (done) {
+        it("without message is successfully transmitted to the server", (done) => {
             server.createServer(++port, (srv) => {
+                let ws = null;
                 srv.on("pong", () => {
                     srv.close(done);
                     ws.terminate();
                 });
 
-                const ws = new WebSocket(`ws://localhost:${port}`);
+                ws = new WebSocket(`ws://localhost:${port}`);
 
                 ws.on("open", () => ws.pong());
             });
         });
 
-        it("with message is successfully transmitted to the server", function (done) {
+        it("with message is successfully transmitted to the server", (done) => {
             server.createServer(++port, (srv) => {
+                let ws = null;
                 srv.on("pong", (message) => {
                     assert.strictEqual(message.toString(), "hi");
                     srv.close(done);
                     ws.terminate();
                 });
 
-                const ws = new WebSocket(`ws://localhost:${port}`);
+                ws = new WebSocket(`ws://localhost:${port}`);
 
                 ws.on("open", () => ws.pong("hi"));
             });
         });
 
-        it("with encoded message is successfully transmitted to the server", function (done) {
+        it("with encoded message is successfully transmitted to the server", (done) => {
             server.createServer(++port, (srv) => {
+                let ws = null;
                 srv.on("pong", (message, flags) => {
                     assert.ok(flags.masked);
                     assert.strictEqual(message.toString(), "hi");
@@ -761,14 +773,14 @@ describe("WebSocket", function () {
                     ws.terminate();
                 });
 
-                const ws = new WebSocket(`ws://localhost:${port}`);
+                ws = new WebSocket(`ws://localhost:${port}`);
 
                 ws.on("open", () => ws.pong("hi", { mask: true }));
             });
         });
     });
 
-    describe("#send", function () {
+    describe("#send", () => {
         it("very long binary data can be sent and received (with echoing server)", (done) => {
             server.createServer(++port, (srv) => {
                 const array = new Float32Array(5 * 1024 * 1024);
@@ -789,7 +801,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("can send and receive text data", function (done) {
+        it("can send and receive text data", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -802,7 +814,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("does not override the `fin` option", function (done) {
+        it("does not override the `fin` option", (done) => {
             const wss = new WebSocketServer({ port: ++port }, () => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -820,7 +832,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("send and receive binary data as an array", function (done) {
+        it("send and receive binary data as an array", (done) => {
             server.createServer(++port, (srv) => {
                 const array = new Float32Array(6);
 
@@ -845,7 +857,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("binary data can be sent and received as buffer", function (done) {
+        it("binary data can be sent and received as buffer", (done) => {
             server.createServer(++port, (srv) => {
                 const buf = Buffer.from("foobar");
                 const ws = new WebSocket(`ws://localhost:${port}`);
@@ -860,7 +872,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("ArrayBuffer is auto-detected without binary flag", function (done) {
+        it("ArrayBuffer is auto-detected without binary flag", (done) => {
             server.createServer(++port, (srv) => {
                 const array = new Float32Array(5);
 
@@ -880,7 +892,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("Buffer is auto-detected without binary flag", function (done) {
+        it("Buffer is auto-detected without binary flag", (done) => {
             server.createServer(++port, (srv) => {
                 const buf = Buffer.from("foobar");
                 const ws = new WebSocket(`ws://localhost:${port}`);
@@ -896,7 +908,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("before connect should fail", function (done) {
+        it("before connect should fail", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -911,7 +923,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("before connect should pass error through callback, if present", function (done) {
+        it("before connect should pass error through callback, if present", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -923,7 +935,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("without data should be successful", function (done) {
+        it("without data should be successful", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -937,7 +949,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("calls optional callback when flushed", function (done) {
+        it("calls optional callback when flushed", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -950,7 +962,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("with unencoded message is successfully transmitted to the server", function (done) {
+        it("with unencoded message is successfully transmitted to the server", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -964,7 +976,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("with encoded message is successfully transmitted to the server", function (done) {
+        it("with encoded message is successfully transmitted to the server", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -979,7 +991,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("with unencoded binary message is successfully transmitted to the server", function (done) {
+        it("with unencoded binary message is successfully transmitted to the server", (done) => {
             server.createServer(++port, (srv) => {
                 const array = new Float32Array(5);
 
@@ -1000,7 +1012,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("with encoded binary message is successfully transmitted to the server", function (done) {
+        it("with encoded binary message is successfully transmitted to the server", (done) => {
             server.createServer(++port, (srv) => {
                 const array = new Float32Array(5);
 
@@ -1022,7 +1034,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("with binary stream will send fragmented data", function (done) {
+        it("with binary stream will send fragmented data", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
                 let callbackFired = false;
@@ -1052,7 +1064,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("with text stream will send fragmented data", function (done) {
+        it("with text stream will send fragmented data", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
                 let callbackFired = false;
@@ -1086,7 +1098,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("will cause intermittent send to be delayed in order", function (done) {
+        it("will cause intermittent send to be delayed in order", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -1123,7 +1135,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("will cause intermittent stream to be delayed in order", function (done) {
+        it("will cause intermittent stream to be delayed in order", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -1139,8 +1151,11 @@ describe("WebSocket", function () {
                     ws.stream((error, send) => {
                         assert.ifError(error);
 
-                        if (++i === 1) send("foo");
-                        else send("bar", true);
+                        if (++i === 1) {
+                            send("foo");
+                        } else {
+                            send("bar", true);
+                        }
                     });
                 });
 
@@ -1163,7 +1178,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("will cause intermittent ping to be delivered", function (done) {
+        it("will cause intermittent ping to be delivered", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -1201,7 +1216,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("will cause intermittent pong to be delivered", function (done) {
+        it("will cause intermittent pong to be delivered", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -1239,7 +1254,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("will cause intermittent close to be delivered", function (done) {
+        it("will cause intermittent close to be delivered", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -1273,8 +1288,8 @@ describe("WebSocket", function () {
         });
     });
 
-    describe("#stream", function () {
-        it("very long binary data can be streamed", function (done) {
+    describe("#stream", () => {
+        it("very long binary data can be streamed", (done) => {
             server.createServer(++port, (srv) => {
                 const buffer = new Buffer(10 * 1024);
 
@@ -1311,7 +1326,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("before connect should pass error through callback", function (done) {
+        it("before connect should pass error through callback", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -1323,7 +1338,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("without callback should fail", function (done) {
+        it("without callback should fail", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -1338,7 +1353,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("will cause intermittent send to be delayed in order", function (done) {
+        it("will cause intermittent send to be delayed in order", (done) => {
             server.createServer(++port, (srv) => {
                 const payload = "HelloWorld";
                 const ws = new WebSocket(`ws://localhost:${port}`);
@@ -1377,7 +1392,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("will cause intermittent stream to be delayed in order", function (done) {
+        it("will cause intermittent stream to be delayed in order", (done) => {
             server.createServer(++port, (srv) => {
                 const payload = "HelloWorld";
                 const ws = new WebSocket(`ws://localhost:${port}`);
@@ -1394,8 +1409,11 @@ describe("WebSocket", function () {
 
                             ws.stream((error, send) => {
                                 assert.ifError(error);
-                                if (++i2 === 1) send("foo");
-                                else send("bar", true);
+                                if (++i2 === 1) {
+                                    send("foo");
+                                } else {
+                                    send("bar", true);
+                                }
                             });
 
                             ws.send("baz");
@@ -1428,7 +1446,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("will cause intermittent ping to be delivered", function (done) {
+        it("will cause intermittent ping to be delivered", (done) => {
             server.createServer(++port, (srv) => {
                 const payload = "HelloWorld";
                 const ws = new WebSocket(`ws://localhost:${port}`);
@@ -1468,7 +1486,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("will cause intermittent pong to be delivered", function (done) {
+        it("will cause intermittent pong to be delivered", (done) => {
             server.createServer(++port, (srv) => {
                 const payload = "HelloWorld";
                 const ws = new WebSocket(`ws://localhost:${port}`);
@@ -1508,7 +1526,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("will cause intermittent close to be delivered", function (done) {
+        it("will cause intermittent close to be delivered", (done) => {
             server.createServer(++port, (srv) => {
                 const payload = "HelloWorld";
                 const ws = new WebSocket(`ws://localhost:${port}`);
@@ -1549,8 +1567,8 @@ describe("WebSocket", function () {
         });
     });
 
-    describe("#close", function () {
-        it("will raise error callback, if any, if called during send stream", function (done) {
+    describe("#close", () => {
+        it("will raise error callback, if any, if called during send stream", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
                 let errorGiven = false;
@@ -1562,7 +1580,7 @@ describe("WebSocket", function () {
                     });
 
                     ws.send(fileStream, (error) => {
-                        errorGiven = !!error;
+                        errorGiven = Boolean(error);
                     });
                     ws.close(1000, "foobar");
                 });
@@ -1576,7 +1594,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("without invalid first argument throws exception", function (done) {
+        it("without invalid first argument throws exception", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -1591,7 +1609,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("without reserved error code 1004 throws exception", function (done) {
+        it("without reserved error code 1004 throws exception", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -1606,7 +1624,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("without message is successfully transmitted to the server", function (done) {
+        it("without message is successfully transmitted to the server", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -1620,7 +1638,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("with message is successfully transmitted to the server", function (done) {
+        it("with message is successfully transmitted to the server", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -1635,7 +1653,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("with encoded message is successfully transmitted to the server", function (done) {
+        it("with encoded message is successfully transmitted to the server", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -1650,7 +1668,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("ends connection to the server", function (done) {
+        it("ends connection to the server", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
                 let connectedOnce = false;
@@ -1668,7 +1686,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("consumes all data when the server socket closed", function (done) {
+        it("consumes all data when the server socket closed", (done) => {
             const wss = new WebSocketServer({ port: ++port }, () => {
                 wss.on("connection", (conn) => {
                     conn.send("foo");
@@ -1692,7 +1710,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("allows close code 1013", function (done) {
+        it("allows close code 1013", (done) => {
             const wss = new WebSocketServer({ port: ++port }, () => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -1706,8 +1724,8 @@ describe("WebSocket", function () {
         });
     });
 
-    describe("W3C API emulation", function () {
-        it("should not throw errors when getting and setting", function (done) {
+    describe("W3C API emulation", () => {
+        it("should not throw errors when getting and setting", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
                 const listener = () => { };
@@ -1731,7 +1749,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("should work the same as the EventEmitter api", function (done) {
+        it("should work the same as the EventEmitter api", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
                 let message = 0;
@@ -1759,7 +1777,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("should receive text data wrapped in a MessageEvent when using addEventListener", function (done) {
+        it("should receive text data wrapped in a MessageEvent when using addEventListener", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -1772,7 +1790,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("should receive valid CloseEvent when server closes with code 1000", function (done) {
+        it("should receive valid CloseEvent when server closes with code 1000", (done) => {
             const wss = new WebSocketServer({ port: ++port }, () => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -1788,7 +1806,7 @@ describe("WebSocket", function () {
             wss.on("connection", (client) => client.close(1000));
         });
 
-        it("should receive valid CloseEvent when server closes with code 1001", function (done) {
+        it("should receive valid CloseEvent when server closes with code 1001", (done) => {
             const wss = new WebSocketServer({ port: ++port }, () => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -1805,7 +1823,7 @@ describe("WebSocket", function () {
             wss.on("connection", (client) => client.close(1001, "some daft reason"));
         });
 
-        it("should have target set on Events", function (done) {
+        it("should have target set on Events", (done) => {
             const wss = new WebSocketServer({ port: ++port }, () => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -1831,7 +1849,7 @@ describe("WebSocket", function () {
             wss.on("connection", (client) => client.send("hi"));
         });
 
-        it("should have type set on Events", function (done) {
+        it("should have type set on Events", (done) => {
             const wss = new WebSocketServer({ port: ++port }, () => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
@@ -1857,7 +1875,7 @@ describe("WebSocket", function () {
             wss.on("connection", (client) => client.send("hi"));
         });
 
-        it("should pass binary data as a node.js Buffer by default", function (done) {
+        it("should pass binary data as a node.js Buffer by default", (done) => {
             server.createServer(++port, (srv) => {
                 const array = new Uint8Array(4096);
                 const ws = new WebSocket(`ws://localhost:${port}`);
@@ -1873,7 +1891,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("should pass an ArrayBuffer for event.data if binaryType = arraybuffer", function (done) {
+        it("should pass an ArrayBuffer for event.data if binaryType = arraybuffer", (done) => {
             server.createServer(++port, (srv) => {
                 const array = new Uint8Array(4096);
                 const ws = new WebSocket(`ws://localhost:${port}`);
@@ -1890,7 +1908,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("should ignore binaryType for text messages", function (done) {
+        it("should ignore binaryType for text messages", (done) => {
             server.createServer(++port, (srv) => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
                 ws.binaryType = "arraybuffer";
@@ -1906,8 +1924,8 @@ describe("WebSocket", function () {
         });
     });
 
-    describe("ssl", function () {
-        it("can connect to secure websocket server", function (done) {
+    describe("ssl", () => {
+        it("can connect to secure websocket server", (done) => {
             const server = https.createServer({
                 cert: fs.readFileSync(getFixturesPath("certificate.pem")),
                 key: fs.readFileSync(getFixturesPath("key.pem"))
@@ -1924,7 +1942,7 @@ describe("WebSocket", function () {
             }));
         });
 
-        it("can connect to secure websocket server with client side certificate", function (done) {
+        it("can connect to secure websocket server with client side certificate", (done) => {
             const server = https.createServer({
                 cert: fs.readFileSync(getFixturesPath("certificate.pem")),
                 ca: [fs.readFileSync(getFixturesPath("ca1-cert.pem"))],
@@ -1935,7 +1953,7 @@ describe("WebSocket", function () {
             let success = false;
             const wss = new WebSocketServer({
                 verifyClient: (info) => {
-                    success = !!info.req.client.authorized;
+                    success = Boolean(info.req.client.authorized);
                     return true;
                 },
                 server
@@ -1956,7 +1974,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("cannot connect to secure websocket server via ws://", function (done) {
+        it("cannot connect to secure websocket server via ws://", (done) => {
             const server = https.createServer({
                 cert: fs.readFileSync(getFixturesPath("certificate.pem")),
                 key: fs.readFileSync(getFixturesPath("key.pem"))
@@ -1975,7 +1993,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("can send and receive text data", function (done) {
+        it("can send and receive text data", (done) => {
             const server = https.createServer({
                 cert: fs.readFileSync(getFixturesPath("certificate.pem")),
                 key: fs.readFileSync(getFixturesPath("key.pem"))
@@ -1999,7 +2017,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("can send and receive very long binary data", function (done) {
+        it("can send and receive very long binary data", (done) => {
             const buf = crypto.randomBytes(5 * 1024 * 1024);
             const server = https.createServer({
                 cert: fs.readFileSync(getFixturesPath("certificate.pem")),
@@ -2028,10 +2046,10 @@ describe("WebSocket", function () {
         });
     });
 
-    describe("protocol support discovery", function () {
-        describe("#supports", function () {
-            describe("#binary", function () {
-                it("returns true", function (done) {
+    describe("protocol support discovery", () => {
+        describe("#supports", () => {
+            describe("#binary", () => {
+                it("returns true", (done) => {
                     const wss = new WebSocketServer({ port: ++port }, () => {
                         new WebSocket(`ws://localhost:${port}`);
                     });
@@ -2046,55 +2064,57 @@ describe("WebSocket", function () {
         });
     });
 
-    describe("host and origin headers", function () {
-        it("includes the host header with port number", function (done) {
+    describe("host and origin headers", () => {
+        it("includes the host header with port number", (done) => {
             const server = http.createServer();
 
             server.listen(++port, () => {
+                let ws = null;
                 server.on("upgrade", (req, socket) => {
-                    assert.strictEqual(req.headers["host"], `localhost:${port}`);
+                    assert.strictEqual(req.headers.host, `localhost:${port}`);
                     ws.terminate();
                     socket.destroy();
                     server.close(done);
                 });
 
-                const ws = new WebSocket(`ws://localhost:${port}`);
+                ws = new WebSocket(`ws://localhost:${port}`);
             });
         });
 
-        it("lacks default origin header", function (done) {
+        it("lacks default origin header", (done) => {
             const server = http.createServer();
 
             server.listen(++port, () => {
+                let ws = null;
                 server.on("upgrade", (req, socket) => {
-                    assert.strictEqual(req.headers["origin"], undefined);
+                    assert.strictEqual(req.headers.origin, undefined);
                     ws.terminate();
                     server.close(done);
                     socket.destroy();
                 });
 
-                const ws = new WebSocket(`ws://localhost:${port}`);
+                ws = new WebSocket(`ws://localhost:${port}`);
             });
         });
 
-        it("honors origin set in options", function (done) {
+        it("honors origin set in options", (done) => {
             const server = http.createServer();
 
             server.listen(++port, () => {
                 const options = { origin: "https://example.com:8000" };
-
+                let ws = null;
                 server.on("upgrade", (req, socket) => {
-                    assert.strictEqual(req.headers["origin"], options.origin);
+                    assert.strictEqual(req.headers.origin, options.origin);
                     ws.terminate();
                     server.close(done);
                     socket.destroy();
                 });
 
-                const ws = new WebSocket(`ws://localhost:${port}`, options);
+                ws = new WebSocket(`ws://localhost:${port}`, options);
             });
         });
 
-        it("excludes default ports from host header", function () {
+        it("excludes default ports from host header", () => {
             // can"t create a server listening on ports 80 or 443
             // so we need to expose the method that does this
             const buildHostHeader = adone.net.ws.buildHostHeader;
@@ -2109,7 +2129,7 @@ describe("WebSocket", function () {
         });
     });
 
-    describe("permessage-deflate", function () {
+    describe("permessage-deflate", () => {
         it("is enabled by default", (done) => {
             const server = http.createServer();
             const wss = new WebSocketServer({ server, perMessageDeflate: true });
@@ -2129,7 +2149,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("can be disabled", function (done) {
+        it("can be disabled", (done) => {
             const server = http.createServer();
             const wss = new WebSocketServer({ server, perMessageDeflate: true });
 
@@ -2149,7 +2169,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("can send extension parameters", function (done) {
+        it("can send extension parameters", (done) => {
             const server = http.createServer();
             const wss = new WebSocketServer({ server, perMessageDeflate: true });
 
@@ -2180,7 +2200,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("can send and receive text data", function (done) {
+        it("can send and receive text data", (done) => {
             const wss = new WebSocketServer({
                 perMessageDeflate: true,
                 port: ++port
@@ -2204,7 +2224,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("can send and receive a typed array", function (done) {
+        it("can send and receive a typed array", (done) => {
             const array = new Float32Array(5);
 
             for (let i = 0; i < array.length; i++) {
@@ -2234,7 +2254,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("can send and receive ArrayBuffer", function (done) {
+        it("can send and receive ArrayBuffer", (done) => {
             const array = new Float32Array(5);
 
             for (let i = 0; i < array.length; i++) {
@@ -2264,7 +2284,7 @@ describe("WebSocket", function () {
             });
         });
 
-        it("with binary stream will send fragmented data", function (done) {
+        it("with binary stream will send fragmented data", (done) => {
             const wss = new WebSocketServer({
                 perMessageDeflate: true,
                 port: ++port
@@ -2302,8 +2322,8 @@ describe("WebSocket", function () {
             });
         });
 
-        describe("#send", function () {
-            it("can set the compress option true when perMessageDeflate is disabled", function (done) {
+        describe("#send", () => {
+            it("can set the compress option true when perMessageDeflate is disabled", (done) => {
                 const wss = new WebSocketServer({ port: ++port }, () => {
                     const ws = new WebSocket(`ws://localhost:${port}`, {
                         perMessageDeflate: false
@@ -2325,8 +2345,8 @@ describe("WebSocket", function () {
             });
         });
 
-        describe("#close", function () {
-            it("should not raise error callback, if any, if called during send data", function (done) {
+        describe("#close", () => {
+            it("should not raise error callback, if any, if called during send data", (done) => {
                 const wss = new WebSocketServer({
                     perMessageDeflate: true,
                     port: ++port
@@ -2338,7 +2358,7 @@ describe("WebSocket", function () {
 
                     ws.on("open", () => {
                         ws.send("hi", (error) => {
-                            errorGiven = !!error;
+                            errorGiven = Boolean(error);
                         });
                         ws.close();
                     });
@@ -2354,8 +2374,8 @@ describe("WebSocket", function () {
             });
         });
 
-        describe("#terminate", function () {
-            it("will raise error callback, if any, if called during send data", function (done) {
+        describe("#terminate", () => {
+            it("will raise error callback, if any, if called during send data", (done) => {
                 const wss = new WebSocketServer({
                     perMessageDeflate: true,
                     port: ++port
@@ -2367,7 +2387,7 @@ describe("WebSocket", function () {
 
                     ws.on("open", () => {
                         ws.send("hi", (error) => {
-                            errorGiven = !!error;
+                            errorGiven = Boolean(error);
                         });
                         ws.terminate();
                     });
@@ -2382,7 +2402,7 @@ describe("WebSocket", function () {
                 });
             });
 
-            it("can call during receiving data", function (done) {
+            it("can call during receiving data", (done) => {
                 const wss = new WebSocketServer({
                     perMessageDeflate: true,
                     port: ++port

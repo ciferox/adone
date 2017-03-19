@@ -10,17 +10,21 @@ const noop = () => { };
 //
 const opcodes = {
     // text
-    "1": {
+    1: {
         start: (receiver, data) => {
             // decode length
             const firstLength = data[1] & 0x7f;
             if (firstLength < 126) {
-                if (receiver.maxPayloadExceeded(firstLength)) return;
+                if (receiver.maxPayloadExceeded(firstLength)) {
+                    return;
+                }
                 opcodes["1"].getData(receiver, firstLength);
             } else if (firstLength === 126) {
                 receiver.expectData(2, (data) => {
                     const length = data.readUInt16BE(0, true);
-                    if (receiver.maxPayloadExceeded(length)) return;
+                    if (receiver.maxPayloadExceeded(length)) {
+                        return;
+                    }
                     opcodes["1"].getData(receiver, length);
                 });
             } else if (firstLength === 127) {
@@ -30,7 +34,9 @@ const opcodes = {
                         return;
                     }
                     const length = data.readUInt32BE(4, true);
-                    if (receiver.maxPayloadExceeded(length)) return;
+                    if (receiver.maxPayloadExceeded(length)) {
+                        return;
+                    }
                     opcodes["1"].getData(receiver, length);
                 });
             }
@@ -55,17 +61,21 @@ const opcodes = {
         }
     },
     // binary
-    "2": {
+    2: {
         start: (receiver, data) => {
             // decode length
             const firstLength = data[1] & 0x7f;
             if (firstLength < 126) {
-                if (receiver.maxPayloadExceeded(firstLength)) return;
+                if (receiver.maxPayloadExceeded(firstLength)) {
+                    return;
+                }
                 opcodes["2"].getData(receiver, firstLength);
             } else if (firstLength === 126) {
                 receiver.expectData(2, (data) => {
                     const length = data.readUInt16BE(0, true);
-                    if (receiver.maxPayloadExceeded(length)) return;
+                    if (receiver.maxPayloadExceeded(length)) {
+                        return;
+                    }
                     opcodes["2"].getData(receiver, length);
                 });
             } else if (firstLength === 127) {
@@ -75,7 +85,9 @@ const opcodes = {
                         return;
                     }
                     const length = data.readUInt32BE(4, true);
-                    if (receiver.maxPayloadExceeded(length)) return;
+                    if (receiver.maxPayloadExceeded(length)) {
+                        return;
+                    }
                     opcodes["2"].getData(receiver, length);
                 });
             }
@@ -100,7 +112,7 @@ const opcodes = {
         }
     },
     // close
-    "8": {
+    8: {
         start: (receiver, data) => {
             if (receiver.state.lastFragment === false) {
                 receiver.error("fragmented close is not supported", 1002);
@@ -149,7 +161,7 @@ const opcodes = {
         }
     },
     // ping
-    "9": {
+    9: {
         start: (receiver, data) => {
             if (receiver.state.lastFragment === false) {
                 receiver.error("fragmented ping is not supported", 1002);
@@ -181,7 +193,7 @@ const opcodes = {
         }
     },
     // pong
-    "10": {
+    10: {
         start: (receiver, data) => {
             if (receiver.state.lastFragment === false) {
                 receiver.error("fragmented pong is not supported", 1002);
@@ -252,7 +264,9 @@ export default class Receiver {
      * @api public
      */
     add(data) {
-        if (this.dead) return;
+        if (this.dead) {
+            return;
+        }
 
         this.buffers.push(data);
         this.bufferedBytes += data.length;
@@ -415,7 +429,9 @@ export default class Receiver {
      * @api private
      */
     endPacket() {
-        if (this.dead) return;
+        if (this.dead) {
+            return;
+        }
         if (this.state.lastFragment && this.state.opcode === this.state.activeFragmentedOperation) {
             // end current fragmented operation
             this.state.activeFragmentedOperation = null;
@@ -436,7 +452,7 @@ export default class Receiver {
      * @api private
      */
     reset() {
-        if (this.dead) return;
+        if (this.dead) { return; }
         this.state = {
             activeFragmentedOperation: null,
             lastFragment: false,
@@ -458,7 +474,9 @@ export default class Receiver {
      * @api private
      */
     unmask(mask, buf) {
-        if (mask != null && buf != null) bufferUtil.unmask(buf, mask);
+        if (mask != null && buf != null) {
+            bufferUtil.unmask(buf, mask);
+        }
         return buf;
     }
 
@@ -479,7 +497,9 @@ export default class Receiver {
      * @api private
      */
     maxPayloadExceeded(length) {
-        if (this.maxPayload < 1) return false;
+        if (this.maxPayload < 1) {
+            return false;
+        }
 
         const fullLength = this.currentPayloadLength + length;
         if (fullLength <= this.maxPayload) {
@@ -500,7 +520,9 @@ export default class Receiver {
     handleDataCompressed(packet) {
         const extension = this.extensions[PerMessageDeflate.extensionName];
         extension.decompress(packet, this.state.lastFragment, (err, buffer) => {
-            if (this.dead) return;
+            if (this.dead) {
+                return;
+            }
             if (err) {
                 this.error(err, err.closeCode === 1009 ? 1009 : 1007);
                 return;

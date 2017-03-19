@@ -348,7 +348,7 @@ export const createWriteStream = adone.std.fs.createWriteStream;
 
 const TEMPLATE_PATTERN = /XXXXXX/;
 const osTmpDir = adone.std.os.tmpdir();
-export const tmpName = async ({ name = null, tries = 3, template = null, dir = osTmpDir, prefix = "tmp-", postfix = "" } = {}) => {
+export const tmpName = async ({ name = null, tries = 3, template = null, dir = osTmpDir, prefix = "tmp-", ext = "" } = {}) => {
     if (is.nan(tries) || tries < 0) {
         throw new Error("Invalid tries");
     }
@@ -370,12 +370,11 @@ export const tmpName = async ({ name = null, tries = 3, template = null, dir = o
             prefix,
             process.pid,
             adone.text.random(12),
-            postfix
+            ext
         ].join(""));
-        adone.log(path);
 
         try {
-            await stat(path);
+            await adone.fs.stat(path);
             continue;
         } catch (err) {
             return path;

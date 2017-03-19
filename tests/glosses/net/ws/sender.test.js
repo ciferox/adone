@@ -1,17 +1,9 @@
-/* global describe it */
-
 const Sender = adone.net.ws.Sender;
 const PerMessageDeflate = adone.net.ws.PerMessageDeflate;
 
-describe("Sender", function () {
-    describe("#ctor", function () {
-        it("throws TypeError when called without new", function () {
-            assert.throws(Sender, TypeError);
-        });
-    });
-
-    describe("#frameAndSend", function () {
-        it("does not modify a masked binary buffer", function () {
+describe("Sender", () => {
+    describe("#frameAndSend", () => {
+        it("does not modify a masked binary buffer", () => {
             const sender = new Sender({ write: () => { } });
             const buf = Buffer.from([1, 2, 3, 4, 5]);
 
@@ -20,7 +12,7 @@ describe("Sender", function () {
             assert.ok(buf.equals(Buffer.from([1, 2, 3, 4, 5])));
         });
 
-        it("does not modify a masked text buffer", function () {
+        it("does not modify a masked text buffer", () => {
             const sender = new Sender({ write: () => { } });
             const text = Buffer.from("hi there");
 
@@ -29,7 +21,7 @@ describe("Sender", function () {
             assert.ok(text.equals(Buffer.from("hi there")));
         });
 
-        it("sets rsv1 flag if compressed", function (done) {
+        it("sets rsv1 flag if compressed", (done) => {
             const sender = new Sender({
                 write: (data) => {
                     assert.strictEqual(data[0] & 0x40, 0x40);
@@ -41,8 +33,8 @@ describe("Sender", function () {
         });
     });
 
-    describe("#send", function () {
-        it("compresses data if compress option is enabled", function (done) {
+    describe("#send", () => {
+        it("compresses data if compress option is enabled", (done) => {
             const perMessageDeflate = new PerMessageDeflate({ threshold: 0 });
             const sender = new Sender({
                 write: (data) => {
@@ -58,7 +50,7 @@ describe("Sender", function () {
             sender.send("hi", { compress: true });
         });
 
-        it("does not compress data for small payloads", function (done) {
+        it("does not compress data for small payloads", (done) => {
             const perMessageDeflate = new PerMessageDeflate();
             const sender = new Sender({
                 write: (data) => {
@@ -74,14 +66,16 @@ describe("Sender", function () {
             sender.send("hi", { compress: true });
         });
 
-        it("Should be able to handle many send calls while processing without crashing on flush", function (done) {
+        it("Should be able to handle many send calls while processing without crashing on flush", (done) => {
             const maxMessages = 5000;
             let messageCount = 0;
 
             const sender = new Sender({
                 write: () => {
                     messageCount++;
-                    if (messageCount > maxMessages) return done();
+                    if (messageCount > maxMessages) {
+                        return done();
+                    }
                 }
             });
 
@@ -95,16 +89,17 @@ describe("Sender", function () {
         });
     });
 
-    describe("#close", function () {
-        it("should consume all data before closing", function (done) {
+    describe("#close", () => {
+        it("should consume all data before closing", (done) => {
             const perMessageDeflate = new PerMessageDeflate({ threshold: 0 });
 
             let count = 0;
             const sender = new Sender({
                 write: () => count++
-            }, {
-                "permessage-deflate": perMessageDeflate
-            });
+            },
+                {
+                    "permessage-deflate": perMessageDeflate
+                });
 
             perMessageDeflate.accept([{}]);
 
