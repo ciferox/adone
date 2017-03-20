@@ -71,7 +71,7 @@ const searchStates = (answers, input) => {
             resolve(fuzzyResult.map((el) => {
                 return el.original;
             }));
-        }, adone.util.random(30, 500));
+        }, adone.math.random(30, 500));
     });
 };
 

@@ -282,6 +282,7 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
         fast: "./glosses/fast",
         shani: "./glosses/shani",
         promise: "./glosses/promise",
+        math: "./glosses/math",
         meta: "./glosses/meta",
         netron: "./glosses/netron",
         shell: "./glosses/shell"
@@ -314,12 +315,6 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
         ConfigManager: "./omnitron/config_manager",
         Omnitron: "./omnitron",
         Dispatcher: "./omnitron/dispatcher"
-    });
-
-    adone.math = lazify({
-        Long: "./glosses/math/long",
-        BitSet: "./glosses/math/bitset",
-        BigNumber: "./glosses/math/bignumber"
     });
 
     adone.collection = lazify({

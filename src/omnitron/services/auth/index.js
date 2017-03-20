@@ -203,7 +203,7 @@ class User {
                 throw new adone.x.NotValid("Incorrect old password");
             }
         } else if (formatType === "hash") {
-            const verified = await adone.crypto.password(oldPassword).verifyAgainst(this.data.password);
+            const verified = await adone.crypto.password.verify(oldPassword, this.data.password);
             if (!verified) {
                 throw new adone.x.NotValid("Incorrect old password");
             }
@@ -360,7 +360,7 @@ export class Auth {
             throw new adone.x.NotAllowed("Account is disabled");
         }
         if (is.propertyDefined(data, "password")) {
-            const verified = await adone.crypto.password(data.password).verifyAgainst(userData.password);
+            const verified = await adone.crypto.password.verify(data.password, userData.password);
             if (!verified) {
                 throw new adone.x.NotAllowed("Incorrect login data");
             }
@@ -576,7 +576,7 @@ export class Auth {
                     throw new adone.x.NotValid(`Maximum allowed password length is ${meta.options.maxLength} chars`);
                 }
                 if (meta.options.type === "hash") {
-                    fieldValue = await adone.crypto.password(fieldValue).hash();
+                    fieldValue = await adone.crypto.password.hash(fieldValue);
                 }
                 break;
             }

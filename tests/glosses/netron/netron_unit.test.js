@@ -1933,7 +1933,7 @@ describe("Netron", () => {
                 });
                     
                 for (let i = 0; i < 1000; i++) {
-                    const msg = adone.text.random(adone.util.random(10, 10000));
+                    const msg = adone.text.random(adone.math.random(10, 10000));
                     rMessages.push(msg);
                     wStream.write(msg);
                 }
@@ -1971,11 +1971,11 @@ describe("Netron", () => {
                     });
                         
                     for (let i = 0; i < 3000; i++) {
-                        let msg = adone.text.random(adone.util.random(10, 10000));
+                        let msg = adone.text.random(adone.math.random(10, 10000));
                         wMessages.push(msg);
                         wStream.write(msg);
 
-                        msg = adone.text.random(adone.util.random(10, 10000));
+                        msg = adone.text.random(adone.math.random(10, 10000));
                         rMessages.push(msg);
                         rStream.write(msg);
                     }
@@ -2073,7 +2073,7 @@ describe("Netron", () => {
                     let remaining = dataSize;
 
                     while (remaining > 0) {
-                        let chunkSize = adone.util.random(256, 65536);
+                        let chunkSize = adone.math.random(256, 65536);
                         if (chunkSize > remaining) {
                             chunkSize = remaining;
                         }

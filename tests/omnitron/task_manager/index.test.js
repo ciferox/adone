@@ -469,8 +469,8 @@ describe("Task Manager", () => {
                 it("uninstall multiple tasks/workers", async () => {
                     const infos = [];
                     const types = ["Task", "Worker"];
-                    for (let i = 0; i < adone.util.random(10, 20); i++) {
-                        const type = types[adone.util.random(0, 2)];
+                    for (let i = 0; i < adone.math.random(10, 20); i++) {
+                        const type = types[adone.math.random(0, 2)];
                         const info = await installSingle(`class $$ extends ${type} {
                             run(${type === "Task" ? "" : "job"}) {
                             }
@@ -651,7 +651,7 @@ describe("Task Manager", () => {
                     it(`execute task with ${i + 1} arguments`, async () => {
                         const args = [];
                         for (let n = 0; n < i; n++) {
-                            args.push(adone.util.random(1000, 2000));
+                            args.push(adone.math.random(1000, 2000));
                         }
                         const totalSum = args.reduce((sum, x) => sum + x, 0);
 

@@ -261,22 +261,14 @@ export const functionParams = (func) => {
     return str.length ? str.split(/,/g).map((p) => p.trim()) : [];
 };
 
-export const random = (min = 0, max = 0xFFFFFFFF) => {
-    min >>>= 0;
-    max >>>= 0;
-    const b = adone.std.crypto.randomBytes(4);
-    const val = (b[0] | b[1] << 8 | b[2] << 16 | b[3] << 24) >>> 0;
-    return min + (val % (max - min));
-};
-
-export const randomChoice = (arrayLike, from = 0, to = arrayLike.length) => arrayLike[random(from, to)];
+export const randomChoice = (arrayLike, from = 0, to = arrayLike.length) => arrayLike[adone.math.random(from, to)];
 
 export const shuffleArray = (array) => {
     if (!array.length) {
         return array;
     }
     for (let i = 0; i < array.length - 1; ++i) {
-        const j = random(i, array.length);
+        const j = adone.math.random(i, array.length);
         [array[i], array[j]] = [array[j], array[i]];
     }
     return array;

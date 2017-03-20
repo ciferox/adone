@@ -1,10 +1,10 @@
-'use strict';
+"use strict";
 
 import adone from "../../../glosses";
 
 adone.app({
-    initialize: app => {
-	    app.option("--every <ms>", "timeout between packet-funnels (default: 100ms)", 100)
+    initialize: (app) => {
+        app.option("--every <ms>", "timeout between packet-funnels (default: 100ms)", 100)
             .option("--count <cnt>", "number of random sized packets during funnel (default: 1)", 1)
             .option("--minsz <sz>", "minimum data size (default: 1)", 1)
             .option("--maxsz <sz>", "maximum data size (default: 1024)", 1024);
@@ -21,7 +21,7 @@ adone.app({
                     countA = 1;
                 }
                 --balance;
-            } 
+            }
         };
 
         const ctxB = {
@@ -37,21 +37,21 @@ adone.app({
         netronB.expose("_", ctxB);
 
         return netronA.bind().then(() => netronB.connect()).then(() => {
-            const everytm = parseInt(app.opt('every'));
-            const cnt   = parseInt(app.opt('count'));
-            const minsz = parseInt(app.opt('minsz'));
-            const maxsz = parseInt(app.opt('maxsz'));
+            const everytm = parseInt(app.opt("every"));
+            const cnt = parseInt(app.opt("count"));
+            const minsz = parseInt(app.opt("minsz"));
+            const maxsz = parseInt(app.opt("maxsz"));
 
             const bufPool = [];
             let dataSize = 0;
             for (let i = 0; i < cnt; ++i) {
-                const buf = adone.std.crypto.randomBytes(adone.util.random(minsz, maxsz));
+                const buf = adone.std.crypto.randomBytes(adone.math.random(minsz, maxsz));
                 dataSize += buf.length;
                 bufPool.push(buf);
             }
 
             dataSize = adone.text.humanizeSize(dataSize);
-            
+
             const funnel = () => {
                 const startedTs = adone.microtime.now();
                 const ps = [];
@@ -69,6 +69,6 @@ adone.app({
                 });
             };
             funnel();
-    	});
-	} 
+        });
+    }
 });

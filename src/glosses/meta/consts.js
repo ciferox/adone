@@ -42,9 +42,16 @@ export const namespaces = [
     },
     {
         name: "adone.crypto",
-        description: "",
+        description: "Common cryptographic utilites",
         paths: [
             "glosses/crypto"
+        ]
+    },
+    {
+        name: "adone.crypto.password",
+        description: "Password-specific utilites",
+        paths: [
+            "glosses/crypto/password"
         ]
     },
     {
