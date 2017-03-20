@@ -129,9 +129,12 @@ export default class AdoneCLI extends adone.application.Application {
             const targetPath = std.path.join(this.adoneRootPath, "bin", "adone.js");
             const data = adone.templating.nunjucks.render(std.path.join(this.adoneDefaultsPath, "scripts", name), { targetPath });        
             await adone.fs.writeFile(globalPath, data);
+            if (!is.win32) {
+                await adone.fs.chmod(globalPath, 0o755);
+            }
             adone.log(`Script saved to ${globalPath}`);
         } else {
-            await adone.fs.rm(globalPath);
+            await adone.fs.unlink(globalPath);
             adone.log(`Script deleted from ${globalPath}`);
         }
         return 0;
