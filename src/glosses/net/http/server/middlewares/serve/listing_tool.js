@@ -235,10 +235,10 @@ export default class ListingTool {
         return stat;
     }
 
-    async getFiles(path) {
+    async getFiles(path, includeParent = false) {
         const relativePath = relative(this.root, path);
         let files = await this.readdir(path);
-        if (relativePath !== "") {
+        if (includeParent && relativePath !== "") {
             files = ["..", ...files];
         }
 
@@ -285,7 +285,7 @@ export default class ListingTool {
     }
 
     async renderHTML(path, originalUrl) {
-        const files = await this.getFiles(path);
+        const files = await this.getFiles(path, true);
         const icons = await this.getIcons(files);
         const crumb = this.getCrumb(originalUrl);
 
