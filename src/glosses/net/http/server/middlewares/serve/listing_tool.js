@@ -245,7 +245,7 @@ export default class ListingTool {
         files = await Promise.all(files.map(async (name) => {
             const stat = await this.stat(resolve(path, name));
             const res = {
-                filename: name,
+                filename: encodeURIComponent(name),
                 modificationDate: adone.date(stat.mtime),
                 size: stat.size,
                 isDirectory: stat.isDirectory()
@@ -284,11 +284,34 @@ export default class ListingTool {
         return crumb;
     }
 
-    async render(path, originalUrl) {
+    async renderHTML(path, originalUrl) {
         const files = await this.getFiles(path);
         const icons = await this.getIcons(files);
         const crumb = this.getCrumb(originalUrl);
 
         return this.env.render("index.njk", { files, icons, crumb, directory: originalUrl });
+    }
+
+    async renderPlain(dirPath, path) {
+        const files = await this.getFiles(dirPath);
+        let result = "";
+        for (const file of files) {
+            const filePath = `${path}${file.filename}${file.isDirectory ? "/" : ""}`;
+            result += `${filePath} ${file.size} ${file.modificationDate.unix()}\n`;
+        }
+        return result;
+    }
+
+    async renderJSON(dirPath, path) {
+        const files = await this.getFiles(dirPath);
+        return JSON.stringify(files.map((file) => {
+            return {
+                filename: file.filename,
+                path: `${path}${file.filename}${file.isDirectory ? "/" : ""}`,
+                size: file.size,
+                modificationDate: file.modificationDate.unix(),
+                isDirectory: file.isDirectory
+            };
+        }));
     }
 }

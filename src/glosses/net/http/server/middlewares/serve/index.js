@@ -55,7 +55,20 @@ export default function serve(root, opts = {}) {
                     if (!orig.endsWith("/")) {
                         return ctx.redirect(`${orig}/`);
                     }
-                    ctx.body = await listing.render(path, orig);
+                    const format = ctx.accepts("text/html", "application/json", "text/plain");
+                    switch (format) {
+                        case "application/json": {
+                            ctx.body = await listing.renderJSON(path, `${ctx.origin}${orig}`);
+                            break;
+                        }
+                        case "text/plain": {
+                            ctx.body = await listing.renderPlain(path, `${ctx.origin}${orig}`);
+                            break;
+                        }
+                        default: {
+                            ctx.body = await listing.renderHTML(path, orig);
+                        }
+                    }
                     return;
                 }
             }
