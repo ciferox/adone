@@ -274,10 +274,10 @@
         }, {
           "include_dirs" : [ "<(module_root_dir)\\src\\native\\compressors\\lzma\\deps\\win\\include" ],
           "link_settings": {
-            "libraries" : [ "-llzma" ],
+            "libraries" : [ "-lliblzma" ],
             "conditions": [
               [ 'target_arch=="x64"', {
-                "library_dirs" : [ "<(module_root_dir)\\src\\native\\compressors\\lzma\\deps\\win\\bin_x86-64" ]
+                "library_dirs" : [ "<(module_root_dir)\\build\\Release" ]
               }, {
                 "library_dirs" : [ "<(module_root_dir)\\src\\native\\compressors\\lzma\\deps\\win\\bin_i686" ]
               } ]
@@ -313,11 +313,11 @@
 		            "srcpath%": "<(module_root_dir)\\src\\native\\compressors\\lzma\\deps\\win\\bin_x86-64"
                   },
                   'action': [
-                    'lib -def:"<(module_root_dir)\\src\\native\\compressors\\lzma\\deps\\win\\liblzma.def" -out:"<(module_root_dir)\\src\\native\\compressors\\lzma\\deps\\win\\bin_x86-64\\lzma.lib" -machine:x64 && if not exist <(module_root_dir)\\build\\Release mkdir <(module_root_dir)\\build\\Release && copy "<(module_root_dir)\\src\\native\\compressors\\lzma\\deps\\win\\bin_x86-64\\liblzma.dll" "<(module_root_dir)\\build\\Release\\liblzma.dll"'
-                  ]
+                    '"lib -def:"<(module_root_dir)\\src\\native\\compressors\\lzma\\deps\\win\\liblzma.def" -out:"<(module_root_dir)\\build\\Release\\liblzma.lib" -machine:x64 && copy "<(module_root_dir)\\src\\native\\compressors\\lzma\\deps\\win\\bin_x86-64\\liblzma.dll" "<(module_root_dir)\\build\\Release\\liblzma.dll""'
+                    ]
                 }, {
                   'action': [
-                    'lib -def:"<(module_root_dir)\\src\\native\\compressors\\lzma\\deps\\win\\liblzma.def" -out:"<(module_root_dir)\\src\\native\\compressors\\lzma\\deps\\win\\bin_i686\\lzma.lib" -machine:ix86 && if not exist <(module_root_dir)\\build\\Release mkdir <(module_root_dir)\\build\\Release && copy "<(module_root_dir)\\src\\native\\compressors\\lzma\\deps\\win\\bin_i686\\liblzma.dll" "<(module_root_dir)\\build\\Release\\liblzma.dll"'
+                    '"lib -def:"<(module_root_dir)\\src\\native\\compressors\\lzma\\deps\\win\\liblzma.def" -out:"<(module_root_dir)\\build\\Release\\liblzma.lib" -machine:ix86 && copy "<(module_root_dir)\\src\\native\\compressors\\lzma\\deps\\win\\bin_i686\\liblzma.dll" "<(module_root_dir)\\build\\Release\\liblzma.dll""'
                   ]
                 }]
               ]

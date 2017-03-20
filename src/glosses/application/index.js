@@ -995,7 +995,6 @@ export default class Application extends adone.application.Subsystem {
 
         this.argv = argv;
         this.env = process.env;
-        this.adoneRootPath = adone.std.path.resolve(__dirname, "../../..");
         this._commands = [];
         this._options = [];
         this._name = name;
@@ -1009,7 +1008,9 @@ export default class Application extends adone.application.Subsystem {
         this._version = null;
 
         this._subsystems = [];
-        this.defaultConfigsPath = adone.std.path.resolve(this.adoneRootPath, "defaults/configs");
+        this.adoneRootPath = adone.std.path.resolve(__dirname, "../../..");
+        this.adoneDefaultsPath = adone.std.path.resolve(this.adoneRootPath, "defaults");
+        this.defaultConfigsPath = adone.std.path.resolve(this.adoneDefaultsPath, "configs");
 
         if (main) {
             this._setupMain();

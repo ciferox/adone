@@ -139,7 +139,7 @@ export default class Logger {
         const type = options.type;
         class LogTransform extends adone.Transform { }
 
-        LogTransform.prototype._format = adone.sprintf;
+        LogTransform.prototype._format = format;
         LogTransform.prototype.LOG_NOFORMAT = LOG_NOFORMAT;
 
         let suffixStyle;

@@ -59,7 +59,7 @@
   },
   "scripts": {
     "test": "node --require ./lib/glosses/sourcemap/support/register bin/shani.js",
-    "build": "node-gyp rebuild && gulp build",
+    "build": "gulp build",
     "watch": "gulp watch"
   },
   "files": [

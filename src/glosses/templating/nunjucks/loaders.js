@@ -52,10 +52,10 @@ export class FileSystemLoader extends Loader {
         for (let i = 0; i < paths.length; i++) {
             const basePath = path.resolve(paths[i]);
             const p = path.resolve(paths[i], name);
+            const relativePath = adone.std.path.relative(basePath, p);
 
-            // Only allow the current directory and anything
-            // underneath it to be searched
-            if (p.indexOf(basePath) === 0 && fs.existsSync(p)) {
+            // Only allow the current directory and anything underneath it to be searched
+            if (!relativePath.startsWith("..") && fs.existsSync(p)) {
                 fullpath = p;
                 break;
             }
