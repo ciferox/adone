@@ -17,10 +17,10 @@ let generatorSum = (() => {
     })();
 
 export default {
-    "async"() {
-        return asyncSum(1, 2);
-    },
-    "generator"() {
-        return generatorSum(1, 2);
-    }
+    async: [(defer) => {
+        asyncSum(1, 2).then(() => defer.resolve());
+    }, { defer: true }],
+    generator: [(defer) => {
+        generatorSum(1, 2).then(() => defer.resolve());
+    }, { defer: true }]
 };
