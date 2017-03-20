@@ -1,5 +1,8 @@
 import { err } from "./utils";
-const { assert, expect, AssertionError, getAssertion } = adone.shani.utils.assertion;
+const { assertion } = adone;
+assertion.loadAssertInterface();
+assertion.loadExpectInterface();
+const { assert, expect, AssertionError, getAssertion } = assertion;
 
 describe("assert", function () {
     it("assert", function () {

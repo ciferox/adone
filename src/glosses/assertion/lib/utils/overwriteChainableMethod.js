@@ -4,7 +4,7 @@
  * MIT Licensed
  */
 
-import $assert from "../..";
+import * as $assert from "../..";
 import transferFlags from "./transferFlags";
 
 /**

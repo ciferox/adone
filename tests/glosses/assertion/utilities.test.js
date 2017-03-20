@@ -1,16 +1,16 @@
-import * as pathval from "adone/glosses/shani/assert/lib/utils/pathval";
-
-const { assertion: shaniAssertion } = adone.shani.utils;
+const { assertion } = adone;
+assertion.loadExpectInterface();
+const { util: { pathval } } = assertion;
 
 describe("utilities", function () {
     const flags = Symbol.for("shani:assert:flags");
-    const expect = shaniAssertion.expect;
+    const expect = assertion.expect;
 
     after(function () {
         // Some clean-up so we can run tests in a --watch
-        delete shaniAssertion.Assertion.prototype.eqqqual;
-        delete shaniAssertion.Assertion.prototype.result;
-        delete shaniAssertion.Assertion.prototype.doesnotexist;
+        delete assertion.Assertion.prototype.eqqqual;
+        delete assertion.Assertion.prototype.result;
+        delete assertion.Assertion.prototype.doesnotexist;
     });
 
     it("_obj", function () {
@@ -30,7 +30,7 @@ describe("utilities", function () {
         const foo = "bar";
         const test = expect(foo).not;
 
-        shaniAssertion.use(function (_shaniAssertion, utils) {
+        assertion.use(function (_assertion, utils) {
             const obj = {};
             utils.transferFlags(test, obj);
             expect(utils.flag(obj, "object")).to.equal(foo);
@@ -39,7 +39,7 @@ describe("utilities", function () {
     });
 
     it("transferFlags, includeAll = false", function () {
-        shaniAssertion.use(function (_shaniAssertion, utils) {
+        assertion.use(function (_assertion, utils) {
             const obj = {};
             const test = function () { };
 
@@ -60,25 +60,25 @@ describe("utilities", function () {
         let assertionConstructor;
 
         before(function () {
-            shaniAssertion.use(function (_shaniAssertion, utils) {
-                assertionConstructor = _shaniAssertion.Assertion;
+            assertion.use(function (_assertion, utils) {
+                assertionConstructor = _assertion.Assertion;
 
-                expect(_shaniAssertion.Assertion).to.not.respondTo("eqqqual");
-                _shaniAssertion.Assertion.addMethod("eqqqual", function (str) {
+                expect(_assertion.Assertion).to.not.respondTo("eqqqual");
+                _assertion.Assertion.addMethod("eqqqual", function (str) {
                     const object = utils.flag(this, "object");
-                    new _shaniAssertion.Assertion(object).to.be.eql(str);
+                    new _assertion.Assertion(object).to.be.eql(str);
                 });
 
-                _shaniAssertion.Assertion.addMethod("result", function () {
+                _assertion.Assertion.addMethod("result", function () {
                     return "result";
                 });
 
-                _shaniAssertion.Assertion.addMethod("returnNewAssertion", function () {
+                _assertion.Assertion.addMethod("returnNewAssertion", function () {
                     utils.flag(this, "mySpecificFlag", "value1");
                     utils.flag(this, "ultraSpecificFlag", "value2");
                 });
 
-                _shaniAssertion.Assertion.addMethod("checkFlags", function () {
+                _assertion.Assertion.addMethod("checkFlags", function () {
                     this.assert(
                         utils.flag(this, "mySpecificFlag") === "value1" &&
                         utils.flag(this, "ultraSpecificFlag") === "value2"
@@ -90,16 +90,16 @@ describe("utilities", function () {
         });
 
         after(function () {
-            delete shaniAssertion.Assertion.prototype.eqqqual;
+            delete assertion.Assertion.prototype.eqqqual;
 
-            delete shaniAssertion.Assertion.prototype.result;
+            delete assertion.Assertion.prototype.result;
 
-            delete shaniAssertion.Assertion.prototype.returnNewAssertion;
-            delete shaniAssertion.Assertion.prototype.checkFlags;
+            delete assertion.Assertion.prototype.returnNewAssertion;
+            delete assertion.Assertion.prototype.checkFlags;
         });
 
         it("addMethod", function () {
-            expect(shaniAssertion.Assertion).to.respondTo("eqqqual");
+            expect(assertion.Assertion).to.respondTo("eqqqual");
             expect("spec").to.eqqqual("spec");
         });
 
@@ -120,7 +120,7 @@ describe("utilities", function () {
             // Checking if it's really an instance of an Assertion
             expect(assertion2).to.be.instanceOf(assertionConstructor);
 
-            // Test shaniAssertionning `.length` after a method to guarantee it's not a function's
+            // Test assertionning `.length` after a method to guarantee it's not a function's
             // `length`. Note: 'instanceof' cannot be used here because the test will
             // fail in IE 10 due to how addAssertionnableMethod works without __proto__
             // support. Therefore, test the constructor property of length instead.
@@ -136,16 +136,16 @@ describe("utilities", function () {
         let assertionConstructor;
 
         before(function () {
-            shaniAssertion.config.includeStack = false;
+            assertion.config.includeStack = false;
 
-            shaniAssertion.use(function (_shaniAssertion, utils) {
-                assertionConstructor = _shaniAssertion.Assertion;
+            assertion.use(function (_assertion, utils) {
+                assertionConstructor = _assertion.Assertion;
 
-                _shaniAssertion.Assertion.addMethod("four", function () {
+                _assertion.Assertion.addMethod("four", function () {
                     this.assert(this._obj === 4, "expected #{this} to be 4", "expected #{this} to not be 4", 4);
                 });
 
-                _shaniAssertion.Assertion.overwriteMethod("four", function (_super) {
+                _assertion.Assertion.overwriteMethod("four", function (_super) {
                     return function () {
                         utils.flag(this, "mySpecificFlag", "value1");
                         utils.flag(this, "ultraSpecificFlag", "value2");
@@ -158,7 +158,7 @@ describe("utilities", function () {
                     };
                 });
 
-                _shaniAssertion.Assertion.addMethod("checkFlags", function () {
+                _assertion.Assertion.addMethod("checkFlags", function () {
                     this.assert(
                         utils.flag(this, "mySpecificFlag") === "value1" &&
                         utils.flag(this, "ultraSpecificFlag") === "value2"
@@ -170,21 +170,21 @@ describe("utilities", function () {
         });
 
         after(function () {
-            delete shaniAssertion.Assertion.prototype.four;
-            delete shaniAssertion.Assertion.prototype.checkFlags;
-            delete shaniAssertion.Assertion.prototype.eqqqual;
-            delete shaniAssertion.Assertion.prototype.doesnotexist;
-            delete shaniAssertion.Assertion.prototype.doesnotexistfail;
+            delete assertion.Assertion.prototype.four;
+            delete assertion.Assertion.prototype.checkFlags;
+            delete assertion.Assertion.prototype.eqqqual;
+            delete assertion.Assertion.prototype.doesnotexist;
+            delete assertion.Assertion.prototype.doesnotexistfail;
         });
 
         it("overwriteMethod", function () {
-            shaniAssertion.use(function (_shaniAssertion, utils) {
-                _shaniAssertion.Assertion.addMethod("eqqqual", function (str) {
+            assertion.use(function (_assertion, utils) {
+                _assertion.Assertion.addMethod("eqqqual", function (str) {
                     const object = utils.flag(this, "object");
-                    new _shaniAssertion.Assertion(object).to.be.eql(str);
+                    new _assertion.Assertion(object).to.be.eql(str);
                 });
 
-                _shaniAssertion.Assertion.overwriteMethod("eqqqual", function (_super) {
+                _assertion.Assertion.overwriteMethod("eqqqual", function (_super) {
                     return function (str) {
                         const object = utils.flag(this, "object");
                         if (object === "cucumber" && str === "cuke") {
@@ -201,9 +201,9 @@ describe("utilities", function () {
             const cuke = expect("cucumber").to.eqqqual("cuke");
             expect(cuke[flags]).to.have.property("cucumber");
 
-            shaniAssertion.use(function (_shaniAssertion, _) {
-                expect(_shaniAssertion.Assertion).to.not.respondTo("doesnotexist");
-                _shaniAssertion.Assertion.overwriteMethod("doesnotexist", function (_super) {
+            assertion.use(function (_assertion, _) {
+                expect(_assertion.Assertion).to.not.respondTo("doesnotexist");
+                _assertion.Assertion.overwriteMethod("doesnotexist", function (_super) {
                     expect(_super).to.be.a("function");
                     return function () {
                         _.flag(this, "doesnt", true);
@@ -214,9 +214,9 @@ describe("utilities", function () {
             const dne = expect("something").to.doesnotexist();
             expect(dne[flags]).to.have.property("doesnt");
 
-            shaniAssertion.use(function (_shaniAssertion, _) {
-                expect(_shaniAssertion.Assertion).to.not.respondTo("doesnotexistfail");
-                _shaniAssertion.Assertion.overwriteMethod("doesnotexistfail", function (_super) {
+            assertion.use(function (_assertion, _) {
+                expect(_assertion.Assertion).to.not.respondTo("doesnotexistfail");
+                _assertion.Assertion.overwriteMethod("doesnotexistfail", function (_super) {
                     expect(_super).to.be.a("function");
                     return function () {
                         _.flag(this, "doesnt", true);
@@ -227,18 +227,18 @@ describe("utilities", function () {
 
             const dneFail = expect("something");
             let dneError;
-            try { 
-                dneFail.doesnotexistfail(); 
-            } catch (e) { 
-                dneError = e; 
+            try {
+                dneFail.doesnotexistfail();
+            } catch (e) {
+                dneError = e;
             }
             expect(dneFail[flags]).to.have.property("doesnt");
             expect(dneError.message).to.eql("doesnotexistfail is not a function");
         });
 
         it("overwriteMethod returning result", function () {
-            shaniAssertion.use(function (_shaniAssertion) {
-                _shaniAssertion.Assertion.overwriteMethod("result", function () {
+            assertion.use(function (_assertion) {
+                _assertion.Assertion.overwriteMethod("result", function () {
                     return function () {
                         return "result";
                     };
@@ -289,7 +289,7 @@ describe("utilities", function () {
             // Checking if it's really an instance of an Assertion
             expect(assertion2).to.be.instanceOf(assertionConstructor);
 
-            // Test shaniAssertionning `.length` after a method to guarantee it is not a function's `length`
+            // Test assertionning `.length` after a method to guarantee it is not a function's `length`
             expect("four").to.be.a.four().length.above(2);
 
             // Ensure that foo returns an Assertion (not a function)
@@ -298,26 +298,26 @@ describe("utilities", function () {
     });
 
     describe("addProperty", function () {
-        let assertionConstructor = shaniAssertion.Assertion;
+        let assertionConstructor = assertion.Assertion;
 
         before(function () {
-            shaniAssertion.use(function (_shaniAssertion, utils) {
-                assertionConstructor = _shaniAssertion.Assertion;
+            assertion.use(function (_assertion, utils) {
+                assertionConstructor = _assertion.Assertion;
 
-                _shaniAssertion.Assertion.addProperty("tea", function () {
-                    utils.flag(this, "tea", "shaniAssertion");
+                _assertion.Assertion.addProperty("tea", function () {
+                    utils.flag(this, "tea", "assertion");
                 });
 
-                _shaniAssertion.Assertion.addProperty("result", function () {
+                _assertion.Assertion.addProperty("result", function () {
                     return "result";
                 });
 
-                _shaniAssertion.Assertion.addProperty("thing", function () {
+                _assertion.Assertion.addProperty("thing", function () {
                     utils.flag(this, "mySpecificFlag", "value1");
                     utils.flag(this, "ultraSpecificFlag", "value2");
                 });
 
-                _shaniAssertion.Assertion.addMethod("checkFlags", function () {
+                _assertion.Assertion.addMethod("checkFlags", function () {
                     this.assert(
                         utils.flag(this, "mySpecificFlag") === "value1" &&
                         utils.flag(this, "ultraSpecificFlag") === "value2"
@@ -329,15 +329,15 @@ describe("utilities", function () {
         });
 
         after(function () {
-            delete shaniAssertion.Assertion.prototype.tea;
-            delete shaniAssertion.Assertion.prototype.thing;
-            delete shaniAssertion.Assertion.prototype.checkFlags;
-            delete shaniAssertion.Assertion.prototype.result;
+            delete assertion.Assertion.prototype.tea;
+            delete assertion.Assertion.prototype.thing;
+            delete assertion.Assertion.prototype.checkFlags;
+            delete assertion.Assertion.prototype.result;
         });
 
         it("addProperty", function () {
-            const assert = expect("shaniAssertion").to.be.tea;
-            expect(assert[flags].tea).to.equal("shaniAssertion");
+            const assert = expect("assertion").to.be.tea;
+            expect(assert[flags].tea).to.equal("assertion");
         });
 
         it("addProperty returning result", function () {
@@ -360,7 +360,7 @@ describe("utilities", function () {
             // Checking if it's really an instance of an Assertion
             expect(assertion2).to.be.instanceOf(assertionConstructor);
 
-            // Test shaniAssertionning `.length` after a property to guarantee it is not a function's `length`
+            // Test assertionning `.length` after a property to guarantee it is not a function's `length`
             expect([1, 2, 3]).to.be.a.thing.with.length.above(2);
             expect([1, 2, 3]).to.be.an.instanceOf(Array).and.have.length.below(4);
 
@@ -373,16 +373,16 @@ describe("utilities", function () {
         let assertionConstructor;
 
         before(function () {
-            shaniAssertion.config.includeStack = false;
+            assertion.config.includeStack = false;
 
-            shaniAssertion.use(function (_shaniAssertion, utils) {
-                assertionConstructor = _shaniAssertion.Assertion;
+            assertion.use(function (_assertion, utils) {
+                assertionConstructor = _assertion.Assertion;
 
-                _shaniAssertion.Assertion.addProperty("tea", function () {
-                    utils.flag(this, "tea", "shaniAssertion");
+                _assertion.Assertion.addProperty("tea", function () {
+                    utils.flag(this, "tea", "assertion");
                 });
 
-                _shaniAssertion.Assertion.overwriteProperty("tea", function (_super) {
+                _assertion.Assertion.overwriteProperty("tea", function (_super) {
                     return function () {
                         const act = utils.flag(this, "object");
                         if (act === "matcha") {
@@ -393,17 +393,17 @@ describe("utilities", function () {
                     };
                 });
 
-                _shaniAssertion.Assertion.overwriteProperty("result", function () {
+                _assertion.Assertion.overwriteProperty("result", function () {
                     return function () {
                         return "result";
                     };
                 });
 
-                _shaniAssertion.Assertion.addProperty("four", function () {
+                _assertion.Assertion.addProperty("four", function () {
                     this.assert(this._obj === 4, "expected #{this} to be 4", "expected #{this} to not be 4", 4);
                 });
 
-                _shaniAssertion.Assertion.overwriteProperty("four", function (_super) {
+                _assertion.Assertion.overwriteProperty("four", function (_super) {
                     return function () {
                         if (typeof this._obj === "string") {
                             this.assert(this._obj === "four", "expected #{this} to be 'four'", "expected #{this} to not be 'four'", "four");
@@ -413,9 +413,9 @@ describe("utilities", function () {
                     };
                 });
 
-                _shaniAssertion.Assertion.addProperty("foo");
+                _assertion.Assertion.addProperty("foo");
 
-                _shaniAssertion.Assertion.overwriteProperty("foo", function (_super) {
+                _assertion.Assertion.overwriteProperty("foo", function (_super) {
                     return function blah() {
                         utils.flag(this, "mySpecificFlag", "value1");
                         utils.flag(this, "ultraSpecificFlag", "value2");
@@ -423,7 +423,7 @@ describe("utilities", function () {
                     };
                 });
 
-                _shaniAssertion.Assertion.addMethod("checkFlags", function () {
+                _assertion.Assertion.addMethod("checkFlags", function () {
                     this.assert(
                         utils.flag(this, "mySpecificFlag") === "value1" &&
                         utils.flag(this, "ultraSpecificFlag") === "value2"
@@ -435,18 +435,18 @@ describe("utilities", function () {
         });
 
         after(function () {
-            delete shaniAssertion.Assertion.prototype.tea;
-            delete shaniAssertion.Assertion.prototype.four;
-            delete shaniAssertion.Assertion.prototype.result;
-            delete shaniAssertion.Assertion.prototype.foo;
-            delete shaniAssertion.Assertion.prototype.checkFlags;
+            delete assertion.Assertion.prototype.tea;
+            delete assertion.Assertion.prototype.four;
+            delete assertion.Assertion.prototype.result;
+            delete assertion.Assertion.prototype.foo;
+            delete assertion.Assertion.prototype.checkFlags;
         });
 
         it("overwriteProperty", function () {
             const matcha = expect("matcha").to.be.tea;
             expect(matcha[flags].tea).to.equal("matcha");
             const assert = expect("something").to.be.tea;
-            expect(assert[flags].tea).to.equal("shaniAssertion");
+            expect(assert[flags].tea).to.equal("assertion");
         });
 
         it("overwriteProperty returning result", function () {
@@ -497,7 +497,7 @@ describe("utilities", function () {
             // Checking if it's really an instance of an Assertion
             expect(assertion2).to.be.instanceOf(assertionConstructor);
 
-            // Test shaniAssertionning `.length` after a property to guarantee it is not a function's `length`
+            // Test assertionning `.length` after a property to guarantee it is not a function's `length`
             expect([1, 2, 3]).to.be.a.foo.with.length.above(2);
             expect([1, 2, 3]).to.be.an.instanceOf(Array).and.have.length.below(4);
 
@@ -507,7 +507,7 @@ describe("utilities", function () {
     });
 
     it("getMessage", function () {
-        shaniAssertion.use(function (_shaniAssertion, _) {
+        assertion.use(function (_assertion, _) {
             expect(_.getMessage({}, [])).to.equal("");
             expect(_.getMessage({}, [null, null, null])).to.equal("");
 
@@ -518,13 +518,13 @@ describe("utilities", function () {
     });
 
     it("getMessage passed message as function", function () {
-        shaniAssertion.use(function (_shaniAssertion, _) {
+        assertion.use(function (_assertion, _) {
             const obj = {};
-            const msg = function () { 
-                return "expected a to eql b"; 
+            const msg = function () {
+                return "expected a to eql b";
             };
-            const negateMsg = function () { 
-                return "expected a not to eql b"; 
+            const negateMsg = function () {
+                return "expected a not to eql b";
             };
             expect(_.getMessage(obj, [null, msg, negateMsg])).to.equal("expected a to eql b");
             _.flag(obj, "negate", true);
@@ -533,7 +533,7 @@ describe("utilities", function () {
     });
 
     it("getMessage template tag substitution", function () {
-        shaniAssertion.use(function (_shaniAssertion, _) {
+        assertion.use(function (_assertion, _) {
             const objName = "trojan horse";
             const actualValue = "an actual value";
             const expectedValue = "an expected value";
@@ -594,7 +594,7 @@ describe("utilities", function () {
     });
 
     it("inspect with custom stylize-calling inspect()s", function () {
-        shaniAssertion.use(function (_shaniAssertion, _) {
+        assertion.use(function (_assertion, _) {
             const obj = {
                 outer: {
                     inspect (depth, options) {
@@ -607,7 +607,7 @@ describe("utilities", function () {
     });
 
     it("inspect with custom object-returning inspect()s", function () {
-        shaniAssertion.use(function (_shaniAssertion, _) {
+        assertion.use(function (_assertion, _) {
             const obj = {
                 outer: {
                     inspect () {
@@ -621,7 +621,7 @@ describe("utilities", function () {
     });
 
     it("inspect negative zero", function () {
-        shaniAssertion.use(function (_shaniAssertion, _) {
+        assertion.use(function (_assertion, _) {
             expect(_.inspect(-0)).to.equal("-0");
             expect(_.inspect([-0])).to.equal("[ -0 ]");
             expect(_.inspect({ hp: -0 })).to.equal("{ hp: -0 }");
@@ -631,14 +631,14 @@ describe("utilities", function () {
     it("inspect Symbol", function () {
         if (typeof Symbol !== "function") return;
 
-        shaniAssertion.use(function (_shaniAssertion, _) {
+        assertion.use(function (_assertion, _) {
             expect(_.inspect(Symbol())).to.equal("Symbol()");
             expect(_.inspect(Symbol("cat"))).to.equal("Symbol(cat)");
         });
     });
 
     it.skip("inspect an assertion", function () {
-        shaniAssertion.use(function (_shaniAssertion, _) {
+        assertion.use(function (_assertion, _) {
             const assertion = expect(1);
             const anInspectFn = function () {
                 return _.inspect(assertion);
@@ -652,11 +652,11 @@ describe("utilities", function () {
         let assertionConstructor;
 
         before(function () {
-            shaniAssertion.use(function (_shaniAssertion, utils) {
-                assertionConstructor = _shaniAssertion.Assertion;
-                _shaniAssertion.Assertion.addChainableMethod("x",
+            assertion.use(function (_assertion, utils) {
+                assertionConstructor = _assertion.Assertion;
+                _assertion.Assertion.addChainableMethod("x",
                     function () {
-                        _shaniAssertion.getAssertion(this._obj).to.be.deep.equal({ a: "x", __x: "X!" });
+                        _assertion.getAssertion(this._obj).to.be.deep.equal({ a: "x", __x: "X!" });
                     }
                     , function () {
                         this._obj = this._obj || {};
@@ -664,15 +664,15 @@ describe("utilities", function () {
                     }
                 );
 
-                _shaniAssertion.Assertion.addChainableMethod("foo", function (str) {
+                _assertion.Assertion.addChainableMethod("foo", function (str) {
                     utils.flag(this, "mySpecificFlag", "value1");
                     utils.flag(this, "ultraSpecificFlag", "value2");
 
                     const obj = utils.flag(this, "object");
-                    _shaniAssertion.getAssertion(obj).to.be.equal(str);
+                    _assertion.getAssertion(obj).to.be.equal(str);
                 });
 
-                _shaniAssertion.Assertion.addMethod("checkFlags", function () {
+                _assertion.Assertion.addMethod("checkFlags", function () {
                     this.assert(
                         utils.flag(this, "mySpecificFlag") === "value1" &&
                         utils.flag(this, "ultraSpecificFlag") === "value2"
@@ -684,9 +684,9 @@ describe("utilities", function () {
         });
 
         after(function () {
-            delete shaniAssertion.Assertion.prototype.x;
-            delete shaniAssertion.Assertion.prototype.foo;
-            delete shaniAssertion.Assertion.prototype.checkFlags;
+            delete assertion.Assertion.prototype.x;
+            delete assertion.Assertion.prototype.foo;
+            delete assertion.Assertion.prototype.checkFlags;
         });
 
         it("addChainableMethod", function () {
@@ -695,11 +695,11 @@ describe("utilities", function () {
 
             expect(function () {
                 expect({ a: "foo" }).x();
-            }).to.throw(shaniAssertion.AssertionError);
+            }).to.throw(assertion.AssertionError);
 
             // Verify whether the original Function properties are present.
-            // see https://github.com/shaniAssertionjs/shaniAssertion/commit/514dd6ce4#commitcomment-2593383
-            const propertyDescriptor = Object.getOwnPropertyDescriptor(shaniAssertion.Assertion.prototype, "x");
+            // see https://github.com/assertionjs/assertion/commit/514dd6ce4#commitcomment-2593383
+            const propertyDescriptor = Object.getOwnPropertyDescriptor(assertion.Assertion.prototype, "x");
             expect(propertyDescriptor.get).to.have.property("call", Function.prototype.call);
             expect(propertyDescriptor.get).to.have.property("apply", Function.prototype.apply);
             expect(propertyDescriptor.get()).to.have.property("call", Function.prototype.call);
@@ -711,7 +711,7 @@ describe("utilities", function () {
         });
 
         it("addChainableMethod should return a new assertion with flags copied over", function () {
-            shaniAssertion.config.proxyExcludedKeys.push("nodeType");
+            assertion.config.proxyExcludedKeys.push("nodeType");
 
             const assertion1 = expect("bar");
             const assertion2 = assertion1.foo("bar");
@@ -725,7 +725,7 @@ describe("utilities", function () {
             // Checking if it's really an instance of an Assertion
             expect(assertion2).to.be.instanceOf(assertionConstructor);
 
-            // Test shaniAssertionning `.length` after a method to guarantee it is not a function's `length`
+            // Test assertionning `.length` after a method to guarantee it is not a function's `length`
             expect("bar").to.be.a.foo("bar").length.above(2);
 
             // Ensure that foo returns an Assertion (not a function)
@@ -733,18 +733,18 @@ describe("utilities", function () {
         });
     });
 
-    describe("overwriteshaniAssertionnableMethod", function () {
+    describe("overwriteassertionnableMethod", function () {
         let assertionConstructor;
         let utils;
 
         before(function () {
-            shaniAssertion.use(function (_shaniAssertion, _utils) {
-                assertionConstructor = _shaniAssertion.Assertion;
+            assertion.use(function (_assertion, _utils) {
+                assertionConstructor = _assertion.Assertion;
                 utils = _utils;
 
-                _shaniAssertion.Assertion.addChainableMethod("x",
+                _assertion.Assertion.addChainableMethod("x",
                     function () {
-                        shaniAssertion.getAssertion(this._obj).to.be.deep.equal({ a: "x", __x: "X!" });
+                        assertion.getAssertion(this._obj).to.be.deep.equal({ a: "x", __x: "X!" });
                     }
                     , function () {
                         this._obj = this._obj || {};
@@ -752,14 +752,14 @@ describe("utilities", function () {
                     }
                 );
 
-                _shaniAssertion.Assertion.overwriteChainableMethod("x",
+                _assertion.Assertion.overwriteChainableMethod("x",
                     function (_super) {
                         return function () {
                             utils.flag(this, "mySpecificFlag", "value1");
                             utils.flag(this, "ultraSpecificFlag", "value2");
 
                             if (utils.flag(this, "marked")) {
-                                shaniAssertion.getAssertion(this._obj).to.be.equal("spot");
+                                assertion.getAssertion(this._obj).to.be.equal("spot");
                             } else {
                                 _super.apply(this, arguments);
                             }
@@ -773,7 +773,7 @@ describe("utilities", function () {
                     }
                 );
 
-                _shaniAssertion.Assertion.addMethod("checkFlags", function () {
+                _assertion.Assertion.addMethod("checkFlags", function () {
                     this.assert(
                         utils.flag(this, "mySpecificFlag") === "value1" &&
                         utils.flag(this, "ultraSpecificFlag") === "value2" &&
@@ -786,8 +786,8 @@ describe("utilities", function () {
         });
 
         after(function () {
-            delete shaniAssertion.Assertion.prototype.x;
-            delete shaniAssertion.Assertion.prototype.checkFlags;
+            delete assertion.Assertion.prototype.x;
+            delete assertion.Assertion.prototype.checkFlags;
         });
 
         it("overwriteChainableMethod", function () {
@@ -796,26 +796,26 @@ describe("utilities", function () {
             expect({ a: "x" }).x();
             expect(function () {
                 expect({ a: "foo" }).x();
-            }).to.throw(shaniAssertion.AssertionError);
+            }).to.throw(assertion.AssertionError);
             const obj = {};
             expect(obj).x.to.be.ok;
             expect(obj).to.have.property("__x", "X!");
 
             // Test the new behavior of 'x'
-            const assertion = expect({ a: "foo" }).x.to.be.ok;
-            expect(utils.flag(assertion, "message")).to.equal("x marks the spot");
+            const _assertion = expect({ a: "foo" }).x.to.be.ok;
+            expect(utils.flag(_assertion, "message")).to.equal("x marks the spot");
             expect(function () {
                 const assertion = expect({ a: "x" });
                 utils.flag(assertion, "marked", true);
                 assertion.x();
-            }).to.throw(shaniAssertion.AssertionError);
+            }).to.throw(assertion.AssertionError);
         });
 
         it("should return a new assertion with flags copied over", function () {
             const assertion1 = expect({ a: "x" });
             const assertion2 = assertion1.x();
 
-            shaniAssertion.config.proxyExcludedKeys.push("nodeType");
+            assertion.config.proxyExcludedKeys.push("nodeType");
 
             // Checking if a new assertion was returned
             expect(assertion1).to.not.be.equal(assertion2);
@@ -837,7 +837,7 @@ describe("utilities", function () {
     });
 
     it("compareByInspect", function () {
-        shaniAssertion.use(function (_shaniAssertion, _) {
+        assertion.use(function (_assertion, _) {
             const cbi = _.compareByInspect;
 
             // "'c" is less than "'d"
@@ -861,7 +861,7 @@ describe("utilities", function () {
         let gettem;
 
         beforeEach(function () {
-            shaniAssertion.use(function (_shaniAssertion, _) {
+            assertion.use(function (_assertion, _) {
                 gettem = _.getOwnEnumerablePropertySymbols;
             });
         });
@@ -902,7 +902,7 @@ describe("utilities", function () {
         let gettem;
 
         beforeEach(function () {
-            shaniAssertion.use(function (_shaniAssertion, _) {
+            assertion.use(function (_assertion, _) {
                 gettem = _.getOwnEnumerableProperties;
             });
         });
@@ -958,7 +958,7 @@ describe("utilities", function () {
         let proxify;
 
         beforeEach(function () {
-            shaniAssertion.use(function (_shaniAssertion, _) {
+            assertion.use(function (_assertion, _) {
                 proxify = _.proxify;
             });
         });
@@ -1030,7 +1030,7 @@ describe("utilities", function () {
     });
 
     describe("pathval", () => {
-        const assert = shaniAssertion.assert;
+        const assert = assertion.assert;
 
         describe("hasProperty", function () {
             it("should handle array index", function () {

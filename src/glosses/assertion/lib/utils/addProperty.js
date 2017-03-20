@@ -3,7 +3,7 @@
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
  * MIT Licensed
  */
-import $assert from "../..";
+import * as $assert from "../..";
 import flag from "./flag";
 import transferFlags from "./transferFlags";
 
@@ -48,7 +48,7 @@ export default function (ctx, name, getter = new Function()) {
             const newAssertion = $assert.getAssertion();
             transferFlags(this, newAssertion);
             return newAssertion;
-        }, 
+        },
         configurable: true
     });
 }

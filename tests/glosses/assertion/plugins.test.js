@@ -1,4 +1,6 @@
-const { assertion } = adone.shani.utils;
+const { assertion } = adone;
+
+assertion.loadExpectInterface();
 
 describe("plugins", function () {
 

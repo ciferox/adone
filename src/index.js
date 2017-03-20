@@ -124,6 +124,9 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
     });
 
     lazify({
+        assertion: "./glosses/assertion",
+        assert: () => adone.assertion.loadAssertInterface().assert,
+        expect: () => adone.assertion.loadExpectInterface().expect,
         is: "./glosses/common/is",
         bind: () => (libName) => require(adone.std.path.resolve(__dirname, "./native", libName)),
         util: "./glosses/utils",

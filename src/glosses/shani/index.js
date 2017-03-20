@@ -1,12 +1,11 @@
-
-import assertion from "./assert";
 import * as mock from "./mock";
+import * as FS from "./fs";
+import request from "./request";
 
 export const utils = {
-    assertion,
-    assert: assertion.assert,
-    expect: assertion.expect,
-    ...mock
+    ...mock,
+    request,
+    FS
 };
 
 const { is, x } = adone;
@@ -678,6 +677,7 @@ export class Engine {
                 }
                 return transpiledCache.get(filename);
             };
+            adone.assertion.loadMockInterface();
 
             for (const path of await adone.fs.glob(paths)) {
                 if (stopped) {
@@ -700,27 +700,25 @@ export class Engine {
 
                 global.$ = {};
                 adone.lazify({
-                    adone: resolve(__dirname, "..", ".."),
-                    expect: [resolve(__dirname, "assert"), ({ default: { expect } }) => expect],
-                    assert: [resolve(__dirname, "assert"), ({ default: { assert } }) => assert],
-                    spy: [resolve(__dirname, "mock"), ({ spy }) => spy],
-                    stub: [resolve(__dirname, "mock"), ({ stub }) => stub],
-                    mock: [resolve(__dirname, "mock"), ({ mock }) => mock],
-                    match: [resolve(__dirname, "mock"), ({ match }) => match],
-                    FS: resolve(__dirname, "fs"),
-                    request: resolve(__dirname, "request")
+                    expect: () => adone.expect,
+                    assert: () => adone.assert,
+                    spy: () => utils.spy,
+                    stub: () => utils.stub,
+                    mock: () => utils.mock,
+                    match: () => utils.match,
+                    request: () => utils.request,
+                    FS: () => utils.FS
                 }, global.$, m.require.bind(m), { configurable: true });
 
                 adone.lazify({
-//                    adone: () => global.$.adone,
                     expect: () => global.$.expect,
                     assert: () => global.$.assert,
                     spy: () => global.$.spy,
                     stub: () => global.$.stub,
                     mock: () => global.$.mock,
                     match: () => global.$.match,
-                    FS: () => global.$.FS,
-                    request: () => global.$.request
+                    request: () => global.$.request,
+                    FS: () => global.$.FS
                 }, global, null, { configurable: true });
 
                 for (const name of topass) {

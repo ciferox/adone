@@ -9,7 +9,7 @@
  */
 
 
-import $assert from "../..";
+import * as $assert from "../..";
 import flag from "./flag";
 import proxify from "./proxify";
 import transferFlags from "./transferFlags";
@@ -97,7 +97,7 @@ export default function (ctx, name, method, chainingBehavior) {
 
             transferFlags(this, assert);
             return proxify(assert);
-        }, 
+        },
         configurable: true
     });
 }

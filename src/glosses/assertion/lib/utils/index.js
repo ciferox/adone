@@ -48,7 +48,8 @@ export {
     getOwnEnumerablePropertySymbols,
     getOwnEnumerableProperties,
     checkError,
-    proxify
+    proxify,
+    pathval
 };
 export const type = adone.util.typeOf;
 export const eql = adone.util.deepEqual;

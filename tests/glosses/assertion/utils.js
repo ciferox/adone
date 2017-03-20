@@ -1,4 +1,6 @@
-const { util, expect, AssertionError } = adone.shani.utils.assertion;
+const { assertion } = adone;
+assertion.loadExpectInterface();
+const { util, expect, AssertionError } = assertion;
 
 export function err(fn, val) {
     if (util.type(fn) !== "function")

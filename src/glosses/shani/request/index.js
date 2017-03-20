@@ -1,5 +1,4 @@
-
-const { shani: { utils: { assert } }, net, std, is, x, util, compressor, EventEmitter } = adone;
+const { assert, net, std, is, x, util, compressor, EventEmitter } = adone;
 
 class Request extends EventEmitter {
     constructor(server) {

@@ -3,7 +3,7 @@
  * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
  * MIT Licensed
  */
-import $assert from "../..";
+import * as $assert from "../..";
 import flag from "./flag";
 import proxify from "./proxify";
 import transferFlags from "./transferFlags";
