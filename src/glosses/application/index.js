@@ -49,10 +49,19 @@ class Argument {
 
     coerce(value) {
         if (is.array(this.type)) {
+            if (is.class(this.type[this.value.length])) {
+                return new this.type[this.value.length](value);
+            }
             return this.type[this.value.length](value);
         }
         if (is.array(this.value)) {
+            if (is.class(this.type)) {
+                return new this.type(value, this.value.length);
+            }
             return this.type(value, this.value.length);
+        }
+        if (is.class(this.type)) {
+            return new this.type(value);
         }
         return this.type(value);
     }
