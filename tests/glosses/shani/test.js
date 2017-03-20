@@ -1,3 +1,4 @@
+import adone from "adone";
 import EventEmitter from "events";
 import assert from "assert";
 import * as path from "path";

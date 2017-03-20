@@ -1,15 +1,10 @@
-#!/usr/bin/env node
+const { shani: { Engine, consoleReporter }, is, std: { path } } = adone;
 
-import adone from "adone";
-
-const { shani: { Engine, consoleReporter } } = adone;
-
-const { is, std: { path } } = adone;
-
-export class ShaniCLI extends adone.application.Application {
-
+export default class ShaniCLI extends adone.application.Subsystem {
     initialize() {
-        this.defineArguments({
+        this.defineCommand({
+            name: "shani",
+            help: "cli interface to shani",
             arguments: [
                 { name: "tests", holder: "test", help: "a test file", nargs: "*" }
             ],
@@ -35,6 +30,7 @@ export class ShaniCLI extends adone.application.Application {
                 { name: "--show-handles", help: "show handles holding the event loop", group: "output" },
                 { name: "--no-ticks", help: "Don't show the test/hook/timers ticks.\nForced to be true if there is no TTY", group: "output" }
             ],
+            handler: this.main,
             commands: [
                 { name: "itself", help: "test itself", handler: this.testItself }
             ]
@@ -43,6 +39,17 @@ export class ShaniCLI extends adone.application.Application {
     }
 
     async main(args, opts) {
+        // this._unhandledRejection = (reason) => {
+        //     adone.error("unhandledRejection");
+        //     adone.error(reason.stack || reason.message || reason);
+        // };
+
+        // this._rejectionHandled = async (p) => {
+        //     adone.error("rejectionHandled");
+        //     const e = await p.catch((e) => e);
+        //     adone.error(e.stack || e.message || e);
+        // };
+
         const configPath = path.resolve(opts.get("config"));
         this.showHandles = opts.get("showHandles");
         const useConfig = !opts.get("dontUseConfig");
@@ -152,13 +159,13 @@ export class ShaniCLI extends adone.application.Application {
 
         await new Promise((resolve) => emitter.once("done", resolve));
         if (failed) {
-            await this.exit(1);
+            return 1;
         }
         this.success = true;
         if (adone.terminal.input.isTTY) {
             adone.terminal.destroy();
         }
-        await this.exit(0);
+        return 0;
     }
 
     async testItself() {
@@ -168,45 +175,6 @@ export class ShaniCLI extends adone.application.Application {
         const code = await new Promise((resolve) => {
             proc.once("exit", resolve);
         });
-        return this.exit(code);
+        return code;
     }
-
-    async uninitialize() {
-        if (this.success) {
-            let _immediate;
-            await new Promise((resolve) => {
-                // to resolve all the timers
-                _immediate = setImmediate(resolve);
-            });
-            const handles = process._getActiveHandles().filter((x) => {
-                return ![process.stdin, process.stdout, process.stderr, _immediate].includes(x);
-            });
-            if (handles.length) {
-                if (this.showHandles) {
-                    for (const [idx, handle] of adone.util.enumerate(handles, 1)) {
-                        adone.log(`${idx}) ${adone.std.util.inspect(handle)}`);
-                    }
-                }
-                // wait for resolving all the handles
-                await new Promise((resolve) => process.on("beforeExit", () => resolve()));
-            }
-        }
-    }
-
-    _unhandledRejection(reason) {
-        adone.error("unhandledRejection");
-        adone.error(reason.stack || reason.message || reason);
-    }
-
-    async _rejectionHandled(p) {
-        adone.error("rejectionHandled");
-        const e = await p.catch((e) => e);
-        adone.error(e.stack || e.message || e);
-    }
-}
-
-if (require.main === module) {
-    new ShaniCLI().run().catch((e) => {
-        console.error(e.stack || e.message || e);
-    });
 }

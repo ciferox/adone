@@ -44,10 +44,6 @@ describe("Contexts", () => {
         $assert.ok(expect);
     });
 
-    it("adone", () => {
-        $assert.ok(adone); 
-    });
-
     it("FS", () => {
         $assert.ok(FS);
     });
@@ -60,7 +56,6 @@ describe("Contexts", () => {
         $assert.ok($.match === match);
         $assert.ok($.assert === assert);
         $assert.ok($.expect === expect);
-        $assert.ok($.adone === adone);
         $assert.ok($.FS === FS);
     });
 });

@@ -9,6 +9,7 @@ export default class AdoneCLI extends adone.application.Application {
         this.addSubsystem(adone.std.path.resolve(__dirname, "./subsystems/meta"));
         this.addSubsystem(adone.std.path.resolve(__dirname, "./subsystems/omnitron"));
         this.addSubsystem(adone.std.path.resolve(__dirname, "./subsystems/bench"));
+        this.addSubsystem(adone.std.path.resolve(__dirname, "./subsystems/shani"));
 
         this.defineArguments({
             arguments: [
@@ -127,7 +128,7 @@ export default class AdoneCLI extends adone.application.Application {
         const globalPath = std.path.join(std.path.dirname(process.execPath), name);
         if (!opts.get("remove")) {
             const targetPath = std.path.join(this.adoneRootPath, "bin", "adone.js");
-            const data = adone.templating.nunjucks.render(std.path.join(this.adoneDefaultsPath, "scripts", name), { targetPath });        
+            const data = adone.templating.nunjucks.render(std.path.join(this.adoneDefaultsPath, "scripts", name), { targetPath });
             await adone.fs.writeFile(globalPath, data);
             if (!is.win32) {
                 await adone.fs.chmod(globalPath, 0o755);
