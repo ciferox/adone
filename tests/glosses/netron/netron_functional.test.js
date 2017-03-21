@@ -992,7 +992,7 @@ describe("Netron", () => {
                 });
             });
 
-            describe("Exceptions", () => {                
+            describe("Exceptions", () => {
                 @Contextable
                 class A {
                     throwError() {
@@ -1097,7 +1097,7 @@ describe("Netron", () => {
                         let okCount = 0;
                         superNetron.attachContext(new A(), "a");
                         await superNetron.bind({ port: NETRON_PORT });
-                        
+
                         let iA;
                         if (i === "local") {
                             iA = superNetron.getInterfaceByName("a");
@@ -1111,7 +1111,7 @@ describe("Netron", () => {
                                 await iA[`throw${StdError.prototype.name}`]();
                             } catch (err) {
                                 okCount += (err instanceof StdError ? 1 : 0);
-                            }    
+                            }
                         }
                         assert.isOk(okCount === stdErrors.length);
                     });
@@ -1122,7 +1122,7 @@ describe("Netron", () => {
                         let okCount = 0;
                         superNetron.attachContext(new A(), "a");
                         await superNetron.bind({ port: NETRON_PORT });
-                        
+
                         let iA;
                         if (i === "local") {
                             iA = superNetron.getInterfaceByName("a");
@@ -1136,7 +1136,7 @@ describe("Netron", () => {
                                 await iA[`throw${AdoneError.prototype.name}`]();
                             } catch (err) {
                                 okCount += (err instanceof AdoneError ? 1 : 0);
-                            }    
+                            }
                         }
                         assert.isOk(okCount === adoneErrors.length);
                     });
@@ -1155,7 +1155,7 @@ describe("Netron", () => {
             @Contextable
             class TheB {
                 constructor() {
-                    this.theC = new TheC(); 
+                    this.theC = new TheC();
                 }
                 originateC() {
                     return this.theC;
@@ -1228,7 +1228,7 @@ describe("Netron", () => {
                 await superNetron.bind();
                 const peer = await exNetron.connect();
                 const iTheA = peer.getInterfaceByName("a");
-                const theB = new TheB(); 
+                const theB = new TheB();
                 await iTheA.updateB(theB);
                 await iTheA.makeUpdateOnB();
                 assert.equal(superNetron._stubs.size, 2);
@@ -1300,14 +1300,6 @@ describe("Netron", () => {
         // });
 
         describe("critical situations", () => {
-            const babel_plugins = [
-                "transform.decoratorsLegacy",
-                "transform.classProperties",
-                "transform.ESModules",
-                "transform.asyncToGenerator",
-                "transform.functionBind"
-            ];
-
             afterEach(async () => {
                 await superNetron.disconnect();
             });
@@ -1316,7 +1308,7 @@ describe("Netron", () => {
                 await superNetron.bind();
 
                 const code = `
-                    const adone = require("../../..").default;
+                    require("../../..");
                     let n = new adone.netron.Netron();
                     n.connect({ port: ${DEFAULT_PORT} } )
                     .then(() => console.log("connected"))
@@ -1359,7 +1351,7 @@ describe("Netron", () => {
             });
         });
 
-        describe.only("Gates", () => {
+        describe("Gates", () => {
             @Contextable
             class A {
                 method1() {
