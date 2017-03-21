@@ -644,6 +644,38 @@ export const humanizeSize = (num, space = " ") => {
     return (neg ? "-" : "") + num + space + unit;
 };
 
+const sizeRegexp = /^(\d+|\d*\.\d+|\d+\.\d*)\s?((?:B|kB|MB|GB|TB|PB|EB|ZB|YB))?$/i;
+const units = new Map();
+{
+    let val = 1;
+    for (const sz of ["b", "kb", "mb", "gb", "tb", "pb", "eb", "zb", "yb"]) {
+        units.set(sz, val);
+        val *= 1024;
+    }
+}
+
+export const parseSize = (str) => {
+    if (is.number(str)) {
+        return Math.floor(str);
+    }
+    if (!is.string(str)) {
+        return null;
+    }
+    const match = str.match(sizeRegexp);
+    if (is.null(match)) {
+        return null;
+    }
+
+    const value = Number(match[1]);
+    const unit = match[2];
+
+    if (is.undefined(unit)) {
+        return Math.floor(value);
+    }
+
+    return Math.floor(value * units.get(unit.toLowerCase()));
+};
+
 export const humanizeAddr = (protocol, port, host) => {
     let addr;
     protocol = protocol || "tcp:";

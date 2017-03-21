@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "middlewares", "serve", () => {
+describe("glosses", "net", "http", "server", "middlewares", "serve", () => {
     const { net: { http: { Server } }, std: { path: { basename } } } = adone;
     const { middleware: { serve } } = Server;
 

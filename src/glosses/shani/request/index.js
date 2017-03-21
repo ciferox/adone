@@ -1,4 +1,4 @@
-const { assert, net, std, is, x, util, compressor, EventEmitter } = adone;
+const { assert, net, std, is, x, util, compressor, EventEmitter, text } = adone;
 
 class Request extends EventEmitter {
     constructor(server) {
@@ -21,7 +21,8 @@ class Request extends EventEmitter {
         this.method = null;
         this.path = null;
         this.expects = [];
-        this.header = {};
+        this.headers = {};
+        this.attachments = [];
     }
 
     get(path) {
@@ -39,6 +40,21 @@ class Request extends EventEmitter {
     post(path) {
         this.method = "POST";
         this.path = path;
+        return this;
+    }
+
+    attach(name, buffer, { type, filename = "" } = {}) {
+        this.attachments.push([name, buffer, type, filename]);
+        return this;
+    }
+
+    field(name, value) {
+        this.attachments.push([name, value, null, null]);
+        return this;
+    }
+
+    send(value) {
+        this.body = value;
         return this;
     }
 
@@ -61,7 +77,7 @@ class Request extends EventEmitter {
     }
 
     setHeader(key, value) {
-        this.header[key] = value;
+        this.headers[key] = value;
         return this;
     }
 
@@ -159,6 +175,39 @@ class Request extends EventEmitter {
 
         let response;
         try {
+            let { body, headers } = this;
+
+            if (body) {
+                if (is.object(body)) {
+                    headers["Content-Type"] = "application/json";
+                    body = JSON.stringify(body);
+                }
+            } else if (this.attachments.length) {
+                let boundary = text.random(16);
+                headers["Content-Type"] = `multipart/form-data; boundary=${boundary}`;
+                boundary = `--${boundary}`;
+                body = ["\r\n"];
+                for (const [name, buffer, type, filename] of this.attachments) {
+                    body.push(boundary, "\r\n");
+                    body.push(`Content-Disposition: form-data; name="${name}"`);
+
+                    if (type) {
+                        if (filename) {
+                            body.push(`; filename="${filename}"`);
+                        }
+                        body.push("\r\n");
+                        body.push(`Content-Type: ${type}\r\n`);
+                    } else {
+                        body.push("\r\n");
+                    }
+                    body.push("\r\n");
+                    body.push(buffer, "\r\n");
+                }
+                body.push(boundary, "\r\n");
+                body = Buffer.concat(body.map(Buffer.from));
+                headers["Content-Length"] = body.length;
+            }
+
             response = await new Promise((resolve, reject) => {
                 const req = std.http.request({
                     protocol,  // https?
@@ -166,7 +215,7 @@ class Request extends EventEmitter {
                     port: address.port,
                     method: this.method,
                     path: this.path,
-                    headers: this.header
+                    headers
                 }, (res) => {
                     this.emit("response start", res);
 
@@ -195,8 +244,11 @@ class Request extends EventEmitter {
                     reject(new x.Exception("The request was aborted by the server"));
                 });
 
-
-                req.end();
+                if (body) {
+                    req.end(body);
+                } else {
+                    req.end();
+                }
             });
 
             for (const expect of this.expects) {

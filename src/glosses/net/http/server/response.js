@@ -20,6 +20,7 @@ export default class Response {
         this.server = server;
         this.res = res;
         this.ctx = null;
+        this._checkedContinue = false;
     }
 
     get socket() {
@@ -310,5 +311,13 @@ export default class Response {
 
     flushHeaders() {
         this.res.flushHeaders();
+    }
+
+    writeContinue() {
+        if (!this._checkedContinue && this.request.req.checkContinue) {
+            this.res.writeContinue();
+            this._checkedContinue = true;
+        }
+        return this;
     }
 }

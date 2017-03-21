@@ -46,7 +46,7 @@ export default class MultipartParser {
         this.flags = 0;
     }
 
-    stateToString(stateNumber) {
+    static stateToString(stateNumber) {
         for (const state in S) {
             const number = S[state];
             if (number === stateNumber) {

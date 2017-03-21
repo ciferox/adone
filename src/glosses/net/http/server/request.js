@@ -1,10 +1,6 @@
 
 const {
-    net: {
-        http: {
-            helper: { parseURL, isFresh, contentType, Accepts, typeIs }
-        }
-    },
+    net: { http: { helper } },
     std: {
         net: { isIP },
         url: { format },
@@ -13,6 +9,7 @@ const {
     is
 } = adone;
 
+const { parseURL, isFresh, contentType, Accepts, typeIs } = helper;
 const idempotentMethods = new Set(["GET", "HEAD", "PUT", "DELETE", "OPTIONS", "TRACE"]);
 
 export default class Request {
@@ -63,7 +60,7 @@ export default class Request {
     }
 
     get path() {
-        return parseURL(this.req).pathname;
+        return helper.parseURL(this.req).pathname;
     }
 
     set path(val) {
@@ -284,5 +281,111 @@ export default class Request {
                 return req.headers[field] || "";
             }
         }
+    }
+
+    // body parsers
+
+    text(limit = "100kb") {
+        this.response.writeContinue();
+        return helper.getRawBody(this.req, {
+            limit,
+            length: this.length,
+            encoding: "utf8"
+        });
+    }
+
+    _parseJSON(text) {
+        if (this.server.jsonStrict !== false) {
+            text = text.trim();
+            const first = text[0];
+            if (first !== "{" && first !== "[") {
+                this.ctx.throw(400, "only json objects or arrays allowed");
+            }
+        }
+        try {
+            return JSON.parse(text);
+        } catch (err) {
+            this.ctx.throw(400, "invalid json received");
+        }
+    }
+
+    json(limit) {
+        if (!this.length) {
+            return Promise.resolve();
+        }
+        return this.text(limit).then((text) => this._parseJSON(text));
+    }
+
+    _parseURLencoded(text) {
+        const parse = (this.server.querystring || qs).parse;
+        try {
+            return parse(text);
+        } catch (err) {
+            this.ctx.throw(400, "invalid urlencoded received");
+        }
+    }
+
+    urlencoded(limit) {
+        if (!this.length) {
+            return Promise.resolve();
+        }
+        return this.text(limit).then((text) => this._parseURLencoded(text));
+    }
+
+    buffer(limit) {
+        this.response.writeContinue();
+        return helper.getRawBody(this.req, {
+            limit: limit || "1mb",
+            length: this.length
+        });
+    }
+
+    body(limit) {
+        switch (this.is("urlencoded", "json")) {
+            case "json": {
+                return this.json(limit);
+            }
+            case "urlencoded": {
+                return this.urlencoded(limit);
+            }
+            default: {
+                return this.buffer(limit);
+            }
+        }
+    }
+
+    async multipart(options = {}) {
+        const form = options.IncomingForm instanceof helper.IncomingForm
+            ? options.IncomingForm
+            : new helper.IncomingForm(options);
+
+        const files = [];
+        let fields = {};
+        form.on("file", (name, value) => {
+            files.push(value);
+            fields[name] = fields[name] || [];
+            fields[name].push(value);
+        });
+
+        let buff = "";
+        form.on("field", (name, value) => {
+            buff += `${name}=${value}&`;
+        });
+
+        const end = new Promise((resolve, reject) => {
+            form.once("error", reject);
+            form.once("aborted", reject);
+            form.once("end", resolve);
+        });
+        form.parse(this.req);
+        await end;
+
+        const parseQs = (this.server.querystring || qs).parse;
+
+        fields = buff && buff.length
+            ? Object.assign({}, parseQs(buff.slice(0, -1)), fields)
+            : fields;
+
+        return { fields, files };
     }
 }

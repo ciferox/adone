@@ -21,5 +21,6 @@ adone.lazify({
     send: "./send",
     IncomingForm: "./incoming_form",
     Cookies: "./cookies",
-    pathToRegexp: "./path_to_regexp"
+    pathToRegexp: "./path_to_regexp",
+    getRawBody: "./raw_body"
 }, exports, require);
