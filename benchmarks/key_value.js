@@ -14,6 +14,7 @@ export default (() => {
     for (const n of [5, 10, 15, 30, 45]) {
         const _map = new Map();
         const _object = {};
+        const _objectNull = Object.create(null);
         const keys = [...new Array(n)].map((x, i) => `hello${i}`);
         const values = [...new Array(n)].map((x, i) => `world${i}`);
         for (let i = 0; i < n; ++i) {
@@ -32,6 +33,11 @@ export default (() => {
                     for (let i = 0; i < keys.length; ++i) {
                         _object[keys[i]];
                     }
+                },
+                "Object.create(null)": () => {
+                    for (let i = 0; i < keys.length; ++i) {
+                        _objectNull[keys[i]];
+                    }
                 }
             },
             has: {
@@ -44,6 +50,11 @@ export default (() => {
                     for (let i = 0; i < keys.length; ++i) {
                         keys[i] in _object;
                     }
+                },
+                "Object.create(null)": () => {
+                    for (let i = 0; i < keys.length; ++i) {
+                        keys[i] in _objectNull;
+                    }
                 }
             },
             set: {
@@ -55,6 +66,12 @@ export default (() => {
                 },
                 Object: () => {
                     const o = {};
+                    for (let i = 0; i < keys.length; ++i) {
+                        o[keys[i]] = values[i];
+                    }
+                },
+                "Object.create(null)": () => {
+                    const o = Object.create(null);
                     for (let i = 0; i < keys.length; ++i) {
                         o[keys[i]] = values[i];
                     }
@@ -71,6 +88,12 @@ export default (() => {
                     for (let i = 0; i < keys.length; ++i) {
                         const key = keys[i];
                     }
+                },
+                "Object.create(null)": () => {
+                    const keys = Object.keys(_objectNull);
+                    for (let i = 0; i < keys.length; ++i) {
+                        const key = keys[i];
+                    }
                 }
             },
             "iterating through values": {
@@ -83,6 +106,12 @@ export default (() => {
                     const keys = Object.keys(_object);
                     for (let i = 0; i < keys.length; ++i) {
                         const value = _object[keys[i]];
+                    }
+                },
+                "Object.create(null)": () => {
+                    const keys = Object.keys(_objectNull);
+                    for (let i = 0; i < keys.length; ++i) {
+                        const value = _objectNull[keys[i]];
                     }
                 }
             }
