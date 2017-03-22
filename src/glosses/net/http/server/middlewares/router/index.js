@@ -300,6 +300,9 @@ for (const method of methods) {
         if (!is.string(path) && !is.regexp(path)) {
             [name, path, middlewares] = [null, name, [path, ...middlewares]];
         }
+        if (is.array(middlewares[0])) {
+            middlewares = middlewares[0];
+        }
         this.register(path, [method], middlewares, { name });
         return this;
     };

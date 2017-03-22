@@ -82,6 +82,40 @@ describe("glosses", "net", "http", "server", "middlewares", "router", "Router", 
             .expectBody({ message: "Hello World!" });
     });
 
+    it("registers multiple middleware for one route using an array of middlewares", async () => {
+        const server = new Server();
+        const router = new Router();
+
+        router.get("/double", [
+            (ctx, next) => {
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        ctx.body = { message: "Hello" };
+                        resolve(next());
+                    }, 1);
+                });
+            },
+            (ctx, next) => {
+                return new Promise((resolve) => {
+                    setTimeout(() => {
+                        ctx.body.message += " World";
+                        resolve(next());
+                    }, 1);
+                });
+            },
+            (ctx) => {
+                ctx.body.message += "!";
+            }
+        ]);
+
+        server.use(router.routes());
+
+        await request(server)
+            .get("/double")
+            .expectStatus(200)
+            .expectBody({ message: "Hello World!" });
+    });
+
     it("does not break when nested-routes use regexp paths", () => {
         const server = new Server();
         const parentRouter = new Router();
