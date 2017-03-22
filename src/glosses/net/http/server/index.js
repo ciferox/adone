@@ -144,5 +144,6 @@ Server.middleware = adone.lazify({
     views: "./middlewares/views",
     router: "./middlewares/router",
     body: "./middlewares/body",
-    mount: "./middlewares/mount"
+    mount: "./middlewares/mount",
+    basicAuth: "./middlewares/basic_auth"
 }, null, require);

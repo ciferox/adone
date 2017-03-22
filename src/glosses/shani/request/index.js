@@ -1,4 +1,4 @@
-const { assert, net, std, is, x, util, compressor, EventEmitter, text } = adone;
+const { assert, net, std, is, x, util, compressor, EventEmitter, text, data } = adone;
 
 class Request extends EventEmitter {
     constructor(server) {
@@ -78,6 +78,12 @@ class Request extends EventEmitter {
 
     setHeader(key, value) {
         this.headers[key] = value;
+        return this;
+    }
+
+    auth(user, pass) {
+        const creds = data.base64.encode(`${user}:${pass}`).toString();
+        this.headers.Authorization = `Basic ${creds}`;
         return this;
     }
 
