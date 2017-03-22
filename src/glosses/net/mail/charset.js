@@ -1,4 +1,4 @@
-var iconv = require("./iconv-lite");
+const { util: { iconv } } = adone;
 var charsets = require("./charsets");
 
 /**
