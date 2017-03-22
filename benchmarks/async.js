@@ -4,76 +4,49 @@ const asyncFunctions = {
     empty: {
         native: async () => {
 
-        },
+        }
     },
     "await Promise.resolve": {
         native: {
             native: async () => {
                 await Promise.resolve();
-            },
-            adone: async () => {
-                await adone.Promise.resolve();
             }
         }
     },
     "try { await Promise.reject } catch": {
-        native: {
-            native: async () => {
-                try {
-                    await Promise.reject();
-                } catch (err) {
-                    //
-                }
-            },
-            adone: async () => {
-                try {
-                    await adone.Promise.reject();
-                } catch (err) {
-                    //
-                }
+        native: async () => {
+            try {
+                await Promise.reject();
+            } catch (err) {
+                //
             }
         }
     }
 };
 
 export default {
-    "promises": {
+    promises: {
         "Promise.resolve": {
             native: [(defer) => {
                 Promise.resolve().then(() => defer.resolve());
-            }, { defer: true }],
-            adone: [(defer) => {
-                adone.Promise.resolve().then(() => defer.resolve());
             }, { defer: true }]
         },
         "Promise.reject": {
             "native catch": [(defer) => {
                 Promise.reject().catch(() => defer.resolve());
             }, { defer: true }],
-            "adone catch": [(defer) => {
-                adone.Promise.reject().catch(() => defer.resolve());
-            }, { defer: true }],
             "native then": [(defer) => {
                 Promise.reject().then(adone.noop, () => defer.resolve());
-            }, { defer: true }],
-            "adone then": [(defer) => {
-                adone.Promise.reject().then(adone.noop, () => defer.resolve());
             }, { defer: true }]
         },
         "immediate new Promise resolving": {
             native: [(defer) => {
                 new Promise((resolve) => resolve()).then(() => defer.resolve());
-            }, { defer: true }],
-            adone: [(defer) => {
-                new adone.Promise((resolve) => resolve()).then(() => defer.resolve());
             }, { defer: true }]
         },
         "immediate new Promise rejecting": {
             native: [(defer) => {
                 new Promise((resolve, reject) => reject()).catch(() => defer.resolve());
-            }, { defer: true }],
-            adone: [(defer) => {
-                new adone.Promise((resolve, reject) => reject()).catch(() => defer.resolve());
             }, { defer: true }]
         },
         "chain resolving": {
@@ -85,13 +58,6 @@ export default {
                             let p = Promise.resolve();
                             for (let i = 0; i < n; ++i) {
                                 p = p.then(() => Promise.resolve());
-                            }
-                            p.then(() => defer.resolve());
-                        }, { defer: true }],
-                        adone: [(defer) => {
-                            let p = adone.Promise.resolve();
-                            for (let i = 0; i < n; ++i) {
-                                p = p.then(() => adone.Promise.resolve());
                             }
                             p.then(() => defer.resolve());
                         }, { defer: true }]
@@ -111,13 +77,6 @@ export default {
                                 p = p.catch(() => Promise.catch());
                             }
                             p.catch(() => defer.resolve());
-                        }, { defer: true }],
-                        adone: [(defer) => {
-                            let p = adone.Promise.reject();
-                            for (let i = 0; i < n; ++i) {
-                                p = p.catch(() => adone.Promise.catch());
-                            }
-                            p.catch(() => defer.resolve());
                         }, { defer: true }]
                     };
                 }
@@ -133,11 +92,6 @@ export default {
                             new Promise((resolve) => {
                                 setTimeout(resolve, n);
                             }).then(() => defer.resolve());
-                        }, { defer: true }],
-                        adone: [(defer) => {
-                            new adone.Promise((resolve) => {
-                                setTimeout(resolve, n);
-                            }).then(() => defer.resolve());
                         }, { defer: true }]
                     };
                 }
@@ -149,21 +103,11 @@ export default {
                 new Promise((resolve) => {
                     setImmediate(resolve);
                 }).then(() => defer.resolve());
-            }, { defer: true }],
-            adone: [(defer) => {
-                new adone.Promise((resolve) => {
-                    setImmediate(resolve);
-                }).then(() => defer.resolve());
             }, { defer: true }]
         },
         "process.nextTick resolving": {
             native: [(defer) => {
                 new Promise((resolve) => {
-                    process.nextTick(resolve);
-                }).then(() => defer.resolve());
-            }, { defer: true }],
-            adone: [(defer) => {
-                new adone.Promise((resolve) => {
                     process.nextTick(resolve);
                 }).then(() => defer.resolve());
             }, { defer: true }]
@@ -177,11 +121,6 @@ export default {
                             new Promise((resolve, reject) => {
                                 setTimeout(reject, n);
                             }).catch(() => defer.resolve());
-                        }, { defer: true }],
-                        adone: [(defer) => {
-                            new adone.Promise((resolve, reject) => {
-                                setTimeout(reject, n);
-                            }).catch(() => defer.resolve());
                         }, { defer: true }]
                     };
                 }
@@ -193,21 +132,11 @@ export default {
                 new Promise((resolve, reject) => {
                     setImmediate(reject);
                 }).catch(() => defer.resolve());
-            }, { defer: true }],
-            adone: [(defer) => {
-                new adone.Promise((resolve, reject) => {
-                    setImmediate(reject);
-                }).catch(() => defer.resolve());
             }, { defer: true }]
         },
         "process.nextTick rejecting": {
             native: [(defer) => {
                 new Promise((resolve, reject) => {
-                    process.nextTick(reject);
-                }).catch(() => defer.resolve());
-            }, { defer: true }],
-            adone: [(defer) => {
-                new adone.Promise((resolve, reject) => {
                     process.nextTick(reject);
                 }).catch(() => defer.resolve());
             }, { defer: true }]
