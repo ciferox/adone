@@ -2,7 +2,6 @@
 
 var EventEmitter = require('events').EventEmitter,
     http = require('http'),
-    propagate = require('propagate'),
     DelayedBody = require('./delayed_body'),
     IncomingMessage = http.IncomingMessage,
     ClientRequest = http.ClientRequest,
@@ -13,6 +12,14 @@ var EventEmitter = require('events').EventEmitter,
     timers = require('timers'),
     ReadableStream = require('stream').Readable,
     globalEmitter = require('./global_emitter');
+
+const propagate = (a, b) => {
+    const orig = a.emit;
+    a.emit = function (...args) {
+        b.emit(...args);
+        return orig.apply(this, args);
+    };
+};
 
 function getHeader(request, name) {
     if (!request._headers) {

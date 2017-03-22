@@ -1,6 +1,6 @@
 'use strict';
 
-var deepEqual = require('deep-equal');
+const { util: { deepEqual } } = adone;
 var qs = require('querystring');
 
 module.exports =

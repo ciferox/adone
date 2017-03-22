@@ -1,6 +1,5 @@
 const mailcomposer = adone.net.mail.composer;
 const MailComposer = mailcomposer.MailComposer;
-const sinon = require("sinon");
 
 describe("MailComposer unit tests", function () {
     it("should create new MailComposer", function () {
@@ -18,7 +17,7 @@ describe("MailComposer unit tests", function () {
             };
 
             var compiler = new MailComposer(data);
-            sinon.spy(compiler, "_createMixed");
+            spy(compiler, "_createMixed");
             compiler.compile();
             expect(compiler._createMixed.callCount).to.equal(1);
             compiler._createMixed.restore();
@@ -34,7 +33,7 @@ describe("MailComposer unit tests", function () {
             };
 
             var compiler = new MailComposer(data);
-            sinon.spy(compiler, "_createMixed");
+            spy(compiler, "_createMixed");
             compiler.compile();
             expect(compiler._createMixed.callCount).to.equal(1);
             compiler._createMixed.restore();
@@ -47,7 +46,7 @@ describe("MailComposer unit tests", function () {
             };
 
             var compiler = new MailComposer(data);
-            sinon.spy(compiler, "_createAlternative");
+            spy(compiler, "_createAlternative");
             compiler.compile();
             expect(compiler._createAlternative.callCount).to.equal(1);
 
@@ -66,7 +65,7 @@ describe("MailComposer unit tests", function () {
             };
 
             var compiler = new MailComposer(data);
-            sinon.spy(compiler, "_createAlternative");
+            spy(compiler, "_createAlternative");
             compiler.compile();
             expect(compiler._createAlternative.callCount).to.equal(1);
             expect(compiler._alternatives.length).to.equal(3);
@@ -84,7 +83,7 @@ describe("MailComposer unit tests", function () {
             };
 
             var compiler = new MailComposer(data);
-            sinon.spy(compiler, "_createAlternative");
+            spy(compiler, "_createAlternative");
             compiler.compile();
             expect(compiler._createAlternative.callCount).to.equal(1);
             expect(compiler._alternatives.length).to.equal(3);
@@ -108,7 +107,7 @@ describe("MailComposer unit tests", function () {
             };
 
             var compiler = new MailComposer(data);
-            sinon.spy(compiler, "_createAlternative");
+            spy(compiler, "_createAlternative");
             compiler.compile();
             expect(compiler._createAlternative.callCount).to.equal(1);
             compiler._createAlternative.restore();
@@ -127,7 +126,7 @@ describe("MailComposer unit tests", function () {
             };
 
             var compiler = new MailComposer(data);
-            sinon.spy(compiler, "_createRelated");
+            spy(compiler, "_createRelated");
             compiler.compile();
             expect(compiler._createRelated.callCount).to.equal(1);
             compiler._createRelated.restore();
@@ -139,7 +138,7 @@ describe("MailComposer unit tests", function () {
             };
 
             var compiler = new MailComposer(data);
-            sinon.spy(compiler, "_createContentNode");
+            spy(compiler, "_createContentNode");
             compiler.compile();
             expect(compiler._createContentNode.callCount).to.equal(1);
             compiler._createContentNode.restore();
@@ -154,7 +153,7 @@ describe("MailComposer unit tests", function () {
             };
 
             var compiler = new MailComposer(data);
-            sinon.spy(compiler, "_createContentNode");
+            spy(compiler, "_createContentNode");
             compiler.compile();
             expect(compiler._createContentNode.callCount).to.equal(1);
             compiler._createContentNode.restore();

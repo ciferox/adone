@@ -1,7 +1,6 @@
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 const stubTransport = adone.net.mail.stubTransport;
-const sinon = require("sinon");
 const PassThrough = require("stream").PassThrough;
 
 function MockBuilder(envelope, message) {
@@ -70,9 +69,9 @@ describe("Stub Transport Tests", function () {
     });
 
     it("Should fire the events", function (done) {
-        var envelopeSpy = sinon.spy();
-        var dataSpy = sinon.spy();
-        var endSpy = sinon.spy();
+        var envelopeSpy = spy();
+        var dataSpy = spy();
+        var endSpy = spy();
         var client = stubTransport();
         client.on("envelope", envelopeSpy);
         client.on("data", dataSpy);

@@ -1,10 +1,8 @@
 const mailer = adone.net.mail.mailer;
 const stubTransport = adone.net.mail.stubTransport;
-var sinon = require("sinon");
 var SMTPServer = require("smtp-server").SMTPServer;
 var crypto = require("crypto");
 var stream = require("stream");
-var EmailTemplate = require("email-templates").EmailTemplate;
 var path = require("path");
 var templateDir = path.join(__dirname, "fixtures", "welcome-email");
 var net = require("net");
@@ -45,8 +43,8 @@ describe("mailer unit tests", function () {
         });
 
         it("should process compile and stream plugins", function (done) {
-            var compilePlugin = sinon.stub().yields(null);
-            var streamPlugin = sinon.stub().yields(null);
+            var compilePlugin = stub().yields(null);
+            var streamPlugin = stub().yields(null);
 
             nm.use("compile", compilePlugin);
             nm.use("compile", streamPlugin);
@@ -68,7 +66,7 @@ describe("mailer unit tests", function () {
 
     describe("#sendMail", function () {
         it("should process sendMail", function (done) {
-            sinon.stub(transport, "send").yields(null, "tere tere");
+            stub(transport, "send").yields(null, "tere tere");
 
             nm.sendMail({
                 subject: "test"
@@ -82,7 +80,7 @@ describe("mailer unit tests", function () {
         });
 
         it("should process sendMail as a Promise", function (done) {
-            sinon.stub(transport, "send").yields(null, "tere tere");
+            stub(transport, "send").yields(null, "tere tere");
 
             nm.sendMail({
                 subject: "test"
@@ -95,7 +93,7 @@ describe("mailer unit tests", function () {
         });
 
         it("should return transport error", function (done) {
-            sinon.stub(transport, "send").yields("tere tere");
+            stub(transport, "send").yields("tere tere");
 
             nm.sendMail({
                 subject: "test"
@@ -108,7 +106,7 @@ describe("mailer unit tests", function () {
         });
 
         it("should return transport error as Promise", function (done) {
-            sinon.stub(transport, "send").yields("tere tere");
+            stub(transport, "send").yields("tere tere");
 
             nm.sendMail({
                 subject: "test"
@@ -121,7 +119,7 @@ describe("mailer unit tests", function () {
         });
 
         it("should override xMailer", function (done) {
-            sinon.stub(transport, "send", function (mail, callback) {
+            stub(transport, "send").callsFake(function (mail, callback) {
                 expect(mail.message.getHeader("x-mailer")).to.equal("yyyy");
                 callback();
             });
@@ -136,7 +134,7 @@ describe("mailer unit tests", function () {
         });
 
         it("should set priority headers", function (done) {
-            sinon.stub(transport, "send", function (mail, callback) {
+            stub(transport, "send").callsFake(function (mail, callback) {
                 expect(mail.message.getHeader("X-Priority")).to.equal("5 (Lowest)");
                 expect(mail.message.getHeader("X-Msmail-Priority")).to.equal("Low");
                 expect(mail.message.getHeader("Importance")).to.equal("Low");
@@ -1110,7 +1108,15 @@ describe("Generated messages tests", function () {
     it("should send mail using external renderer", function (done) {
         var nm = mailer.createTransport(stubTransport());
 
-        var sendWelcome = nm.templateSender(new EmailTemplate(templateDir), {
+        class Renderer {
+            render({ name: { first, last } }, callback) {
+                callback(null, {
+                    html: `Hello from external renderer to ${first} ${last}!`
+                });
+            }
+        }
+
+        var sendWelcome = nm.templateSender(new Renderer(), {
             from: "sender@example.com"
         });
 
@@ -1127,8 +1133,7 @@ describe("Generated messages tests", function () {
         ).then(function (info) {
             var msg = info.response.toString();
 
-            expect(msg.indexOf("\nHello Mailer, Node!\n")).to.be.gte(0);
-            expect(msg.indexOf("<h1 style=\"text-align: center;\">Hello Mailer, Node!</h1>")).to.be.gte(0);
+            expect(msg).to.include("Hello from external renderer to Node Mailer!");
 
             done();
         }).catch(function (err) {

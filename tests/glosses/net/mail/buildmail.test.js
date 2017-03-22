@@ -1,4 +1,3 @@
-var sinon = require("sinon");
 var Buildmail = adone.net.mail.buildmail;
 var http = require("http");
 var stream = require("stream");
@@ -1011,7 +1010,7 @@ describe("Buildmail", function () {
 
         it("should generate boundary", function () {
             var mb = new Buildmail();
-            sinon.stub(mb, "_generateBoundary").returns("def");
+            stub(mb, "_generateBoundary").returns("def");
 
             expect(mb.boundary).to.not.exist;
             mb._handleContentType({

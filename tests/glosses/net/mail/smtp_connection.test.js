@@ -8,7 +8,6 @@ var HttpConnectProxy = require("proxy-test-server");
 var net = require("net");
 var xoauth2Server = require("./xoauth2_mock_server");
 var xoauth2 = require("xoauth2");
-var sinon = require("sinon");
 
 var PORT_NUMBER = 8397;
 var PROXY_PORT_NUMBER = 9999;
@@ -619,7 +618,7 @@ describe("Login tests", function () {
                 accessUrl: "http://localhost:" + XOAUTH_PORT
             });
 
-            sinon.stub(x2gen, "generateToken").yields(null, "dXNlcj10ZXN0dXNlcgFhdXRoPUJlYXJlciB1dXV1dQEB");
+            stub(x2gen, "generateToken").yields(null, "dXNlcj10ZXN0dXNlcgFhdXRoPUJlYXJlciB1dXV1dQEB");
 
             client.login({
                 xoauth2: x2gen
