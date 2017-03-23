@@ -10,6 +10,7 @@ const fs = adone.lazify({
     writeFile: () => promisify(adone.std.fs.writeFile),
     append: () => promisify(adone.std.fs.appendFile),
     access: () => promisify(adone.std.fs.access),
+    symlink: () => promisify(adone.std.fs.symlink),
     rm: "./rm",
     File: "./file",
     Directory: "./directory",
