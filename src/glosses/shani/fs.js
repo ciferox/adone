@@ -1,11 +1,6 @@
 
 const { std: { fs: sfs, path: spath, os }, is, fs } = adone;
 
-export async function createTempDirectory(prefix = spath.join(os.tmpdir(), spath.sep)) {
-    const path = await sfs.mkdtempAsync(prefix);
-    return new fs.Directory(path);
-}
-
 export async function createTempFile(prefix = spath.join(os.tmpdir(), spath.sep)) {
     for (; ;) {
         const file = new fs.File(`${prefix}${adone.util.uuid.v4()}`);

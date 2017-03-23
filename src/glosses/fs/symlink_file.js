@@ -1,4 +1,3 @@
-
 const { std: { fs: sfs }, fs } = adone;
 
 export default class SymbolicLinkFile extends fs.File {

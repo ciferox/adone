@@ -1,4 +1,3 @@
-
 const { std: { fs: sfs, path: spath }, vendor: { lodash: _ }, is, fs } = adone;
 
 export default class Directory {
@@ -7,11 +6,11 @@ export default class Directory {
     }
 
     dirname() {
-        return spath.dirname(this.path());
+        return spath.dirname(this._path);
     }
 
     filename() {
-        return spath.basename(this.path());
+        return spath.basename(this._path);
     }
 
     path() {
@@ -19,55 +18,65 @@ export default class Directory {
     }
 
     normalizedPath() {
-        return is.win32 ? adone.util.normalizePath(this.path()) : this.path();
+        return is.win32 ? adone.util.normalizePath(this._path) : this._path;
     }
 
     relativePath(path) {
         if (path instanceof Directory) {
             path = path.path();
         }
-        return spath.relative(path, this.path());
+        return spath.relative(path, this._path);
     }
 
     stat() {
-        return sfs.statAsync(this.path());
+        return sfs.statAsync(this._path);
     }
 
     lstat() {
-        return sfs.lstatAsync(this.path());
+        return sfs.lstatAsync(this._path);
     }
 
     exists() {
-        return sfs.accessAsync(this.path(), sfs.constants.F_OK).then(() => true, () => false);
+        return fs.exists(this._path);
     }
 
-    create({ mode = 0o777 } = {}) {
-        return sfs.mkdirAsync(this.path(), mode);
+    async create({ mode = 0o777 } = {}) {
+        if (!(await this.exists())) {
+            return fs.mkdir(this._path, mode);
+        }
+    }
+
+    resolve(...paths) {
+        return spath.resolve(this._path, ...paths);
+    }
+
+    getDirectory(...paths) {
+        return new Directory(this.resolve(...paths));
     }
 
     async get(...path) {
-        path = spath.resolve(this.path(), ...path);
+        path = this.resolve(...path);
         const stat = await sfs.lstatAsync(path);
         return stat.isDirectory() ? new Directory(path) : new fs.File(path);
     }
 
     getVirtualSymbolicLinkFile(...path) {
-        path = spath.resolve(this.path(), ...path);
+        path = spath.resolve(this._path, ...path);
         return new fs.SymbolicLinkFile(path);
     }
 
     getVirtualSymbolicLinkDirectory(...path) {
-        path = spath.resolve(this.path(), ...path);
+        path = spath.resolve(this._path, ...path);
         return new fs.SymbolicLinkDirectory(path);
     }
 
     getVirtualFile(...path) {
-        path = spath.resolve(this.path(), ...path);
+        path = spath.resolve(this._path, ...path);
         return new fs.File(path);
     }
 
     getVirtualDirectory(...path) {
-        path = spath.resolve(this.path(), ...path);
+        path = spath.resolve(this._path, ...path);
         return new Directory(path);
     }
 
@@ -112,9 +121,9 @@ export default class Directory {
     }
 
     async files() {
-        const paths = await sfs.readdirAsync(this.path());
+        const paths = await sfs.readdirAsync(this._path);
         const files = await Promise.all(paths.map(async (x) => {
-            const path = spath.join(this.path(), x);
+            const path = spath.join(this._path, x);
             const stat = await sfs.lstatAsync(path).catch((err) => {
                 if (err.code === "ENOENT") {  // wow
                     return null;
@@ -140,26 +149,8 @@ export default class Directory {
         }
     }
 
-    async unlink({ retries = 10, delay = 100 } = {}) {
-        for (let i = 0; i < retries; ++i) {
-            await this.clean();
-            try {
-                await sfs.rmdirAsync(this.path());
-            } catch (err) {
-                if (err.code !== "ENOENT") {
-                    break;
-                }
-                if (!adone.is.win32) {
-                    throw err;
-                }
-                if (err.code === "ENOTEMPTY" || err.code === "EPERM") {
-                    await adone.promise.delay(delay);
-                    continue;
-                }
-                throw err;
-            }
-            break;
-        }
+    unlink({ retries = 10, delay = 100 } = {}) {
+        return fs.rm(this._path, { maxBusyTries: retries, emfileWait: delay });
     }
 
     async find({ files = true, dirs = false } = {}) {
@@ -184,7 +175,7 @@ export default class Directory {
             name = name.filename();
         }
         const newPath = spath.join(this.dirname(), name);
-        await fs.rename(this.path(), newPath);
+        await fs.rename(this._path, newPath);
         this._path = newPath;
     }
 
@@ -192,6 +183,24 @@ export default class Directory {
         if (path instanceof Directory) {
             path = path.path();
         }
-        return sfs.symlinkAsync(this.path(), path).then(() => new fs.SymbolicLinkDirectory(path));
+        return sfs.symlinkAsync(this._path, path).then(() => new fs.SymbolicLinkDirectory(path));
+    }
+
+    copyTo(destPath, options) {
+        return fs.copy(this._path, destPath, options);
+    }
+
+    copyFrom(srcPath), options {
+        return fs.copy(srcPath, this._path, options);
+    }
+
+    static async create(pathName) {
+        const dir = new Directory(pathName);
+        await dir.create();
+        return dir;
+    }
+ 
+    static async createTmp(options) {
+        return Directory.create(await fs.tmpName(options));
     }
 }

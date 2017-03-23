@@ -1,70 +1,75 @@
 {
-  "name": "adone",
-  "description": "The generalized core of 'hyper-fractal systems' infrastructure.",
-  "version": "0.6.45",
-  "author": "Adone Core Team <adone@ciferox.com>",
-  "license": "Apache-2.0",
-  "devDependencies": {
-    "babel-helper-fixtures": "^6.20.0",
-    "babel-plugin-transform-async-to-generator": "^6.8.0",
-    "babel-plugin-transform-class-properties": "^6.11.5",
-    "babel-plugin-transform-decorators-legacy": "^1.3.4",
-    "babel-plugin-transform-es2015-modules-commonjs": "^6.13.0",
-    "babel-plugin-transform-export-extensions": "^6.8.0",
-    "babel-plugin-transform-flow-strip-types": "^6.18.0",
-    "babel-plugin-transform-function-bind": "^6.8.0",
-    "babel-plugin-transform-object-rest-spread": "^6.20.1",
-    "babel-preset-babili": "0.0.8",
-    "bower-config": "^1.4.0",
-    "concat-stream": "^1.6.0",
-    "del": "^2.2.2",
-    "express": "^4.14.1",
-    "group-array": "0.3.1",
-    "gulp": "^3.9.1",
-    "gulp-babel": "^6.1.2",
-    "gulp-cached": "^1.1.1",
-    "gulp-chmod": "^2.0.0",
-    "gulp-notify": "^3.0.0",
-    "gulp-plumber": "^1.1.0",
-    "gulp-sourcemaps": "^2.4.1",
-    "mongodb-topology-manager": "^1.0.11",
-    "mongodb-version-manager": "^1.0.7",
-    "node-notifier": "^4.6.1",
-    "node-sass": "^4.5.0",
-    "proxy-test-server": "^1.0.0",
-    "smtp-server": "^1.16.1",
-    "useref": "^1.2.0",
-    "xoauth2": "^1.2.0",
-    "rx": "^4.1.0",
-    "ansi-term": "^0.0.2",
-    "picture-tube": "^1.0.0",
-    "memory-streams": "^0.1.1",
-    "memorystream": "^0.3.1",
-    "x256": "0.0.2"
-  },
-  "optionalDependencies": {
-    "fsevents": "^1.0.0"
-  },
-  "engines": {
-    "node": ">=7.0.0"
-  },
-  "scripts": {
-    "test": "node --require ./lib/glosses/sourcemap/support/register bin/adone.js shani",
-    "build": "gulp build",
-    "watch": "gulp watch"
-  },
-  "files": [
-    "bin",
-    "lib",
-    "binding.gyp",
-    "src/cxx",
-    "defaults",
-    "shani",
-    "tests"
-  ],
-  "main": "lib",
-  "bin": {
-    "adone": "./bin/adone.js",
-    "shani": "./bin/shani.js"
-  }
+    "name": "adone",
+    "description": "The generalized core of 'hyper-fractal systems' infrastructure.",
+    "version": "0.6.45",
+    "author": "Adone Core Team <adone@ciferox.com>",
+    "license": "Apache-2.0",
+    "devDependencies": {
+        "babel-helper-fixtures": "^6.20.0",
+        "babel-plugin-transform-async-to-generator": "^6.8.0",
+        "babel-plugin-transform-class-properties": "^6.11.5",
+        "babel-plugin-transform-decorators-legacy": "^1.3.4",
+        "babel-plugin-transform-es2015-modules-commonjs": "^6.13.0",
+        "babel-plugin-transform-export-extensions": "^6.8.0",
+        "babel-plugin-transform-flow-strip-types": "^6.18.0",
+        "babel-plugin-transform-function-bind": "^6.8.0",
+        "babel-plugin-transform-object-rest-spread": "^6.20.1",
+        "babel-preset-babili": "0.0.8",
+        "bower-config": "^1.4.0",
+        "concat-stream": "^1.6.0",
+        "deep-equal": "^1.0.1",
+        "del": "^2.2.2",
+        "email-templates": "^2.5.4",
+        "express": "^4.14.1",
+        "group-array": "0.3.1",
+        "gulp": "^3.9.1",
+        "gulp-babel": "^6.1.2",
+        "gulp-cached": "^1.1.1",
+        "gulp-chmod": "^2.0.0",
+        "gulp-notify": "^3.0.0",
+        "gulp-plumber": "^1.1.0",
+        "gulp-sourcemaps": "^2.4.1",
+        "handlebars": "^4.0.6",
+        "mongodb-topology-manager": "^1.0.11",
+        "mongodb-version-manager": "^1.0.7",
+        "node-notifier": "^4.6.1",
+        "node-sass": "^4.5.0",
+        "propagate": "^1.0.0",
+        "proxy-test-server": "^1.0.0",
+        "sinon": "^1.17.7",
+        "smtp-server": "^1.16.1",
+        "source-map-support": "^0.4.2",
+        "streamss": "^0.2.4",
+        "supertest": "^2.0.0",
+        "useref": "^1.2.0",
+        "xoauth2": "^1.2.0",
+        "yargs": "^6.3.0",
+        "rx": "^4.1.0",
+        "ansi-term": "^0.0.2",
+        "picture-tube": "^1.0.0",
+        "memory-streams": "^0.1.1",
+        "memorystream": "^0.3.1",
+        "x256": "0.0.2"
+    },
+    "optionalDependencies": {
+        "fsevents": "^1.0.0"
+    },
+    "engines": {
+        "node": ">=7.0.0"
+    },
+    "scripts": {
+        "test": "node --require ./lib/glosses/sourcemap/support/register bin/adone.js shani",
+        "build": "gulp build",
+        "watch": "gulp watch"
+    },
+    "files": [
+        "bin",
+        "lib",
+        "defaults"
+    ],
+    "main": "lib",
+    "bin": {
+        "adone": "./bin/adone.js",
+        "shani": "./bin/shani.js"
+    }
 }

@@ -1,4 +1,3 @@
-
 const { is, fs, std, noop } = adone;
 
 let emfileTimeout = 0;  // EMFILE handling
@@ -77,7 +76,7 @@ const rmfile = async (p) => {
     });
 };
 
-const rm = async (path, { glob = true, maxBusyTries = 3, emfileWait = 1000, cwd = process.cwd() } = {}) => {
+export default async function rm(path, { glob = true, maxBusyTries = 3, emfileWait = 1000, cwd = process.cwd() } = {}) => {
     const afterGlob = async (results) => {
         if (results.length === 0) {
             return;
@@ -130,5 +129,3 @@ const rm = async (path, { glob = true, maxBusyTries = 3, emfileWait = 1000, cwd 
     }
     return afterGlob(await adone.fs.glob(path, glob));
 };
-
-export default rm;

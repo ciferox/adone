@@ -1,7 +1,7 @@
 import * as stuff from "omnitron/services/process_manager";
 import { fixture } from "./util";
 
-const { std: { child_process: cp }, netron: { Netron }, is } = adone;
+const { std: { child_process: cp }, netron: { Netron }, is, fs } = adone;
 
 describe("Process manager", () => {
     const toExecuteAfter = [];
@@ -57,7 +57,7 @@ describe("Process manager", () => {
 
     describe("PRemoteProcess", () => {
         it("should exit when the peer disconnects", async () => {
-            const dir = await FS.createTempDirectory();
+            const dir = await fs.Directory.createTmp();
             const port = is.win32 ? "\\\\.\\pipe\\port.sock" : dir.getVirtualFile("port").path();
             try {
                 const p = cp.spawn(process.execPath, [fixture("run_forever_bind.js"), port], {

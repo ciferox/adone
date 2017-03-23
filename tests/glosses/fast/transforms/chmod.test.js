@@ -219,7 +219,7 @@ describe("Fast", () => {
                 let srcPath;
 
                 before(async () => {
-                    root = await FS.createTempDirectory();
+                    root = await adone.fs.Directory.createTmp();
                     srcPath = root.getVirtualFile("from", "**", "*").path();
                 });
 

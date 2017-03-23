@@ -14,7 +14,7 @@ describe("Process manager", () => {
         });
 
         beforeEach(async () => {
-            storage = await FS.createTempDirectory();
+            storage = await adone.fs.Directory.createTmp();
         });
 
         const toExecuteAfter = [];

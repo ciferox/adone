@@ -11,7 +11,7 @@ describe("Model", () => {
         let tmpdir;
 
         before(async () => {
-            tmpdir = await FS.createTempDirectory();
+            tmpdir = await adone.fs.Directory.createTmp();
         });
 
         afterEach(async () => {

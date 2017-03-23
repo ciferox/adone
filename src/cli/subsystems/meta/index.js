@@ -106,18 +106,20 @@ export default class extends adone.application.Subsystem {
                     handler: this.extractCommand
                 },
                 {
-                    name: "slice",
-                    help: "Make a slice of adone",
-                    arguments: [
+                    name: "global",
+                    help: "Make current adone global",
+                    options: [
                         {
-                            name: "ns",
-                            help: "Name of namespace"
+                            name: "--remove",
+                            help: "Remove adone global script"
                         }
                     ],
-                    options: [
-
-                    ],
-                    handler: this.sliceCommand
+                    handler: this.globalCommand
+                },
+                {
+                    name: "publish",
+                    help: "Publish binary build of adone",
+                    handler: this.publishCommand
                 }
             ]
         });
@@ -269,5 +271,56 @@ export default class extends adone.application.Subsystem {
         }
 
         return 0;
+    }
+
+    async globalCommand(args, opts) {
+        const name = is.win32 ? "adone.cmd" : "adone";
+        const nodePath = std.path.dirname(process.execPath);        
+        const adoneScriptPath = std.path.join(nodePath, name);
+        const nodeModulesDir = new fs.Directory(std.path.resolve(fs.homeDir(), ".node_modules"));
+        await nodeModulesDir.create();
+        const destAdoneDir = nodeModulesDir.getDirectory("adone");
+        if (await destAdoneDir.exists()) {
+            // Temporary backup whole adone directory.
+            const backupPath = await fs.tmpName();
+            await destAdoneDir.copyTo(backupPath);
+            try {
+                await destAdoneDir.unlink();
+            } catch (err) {
+                // Recovery files in case of unsuccessful deletion.
+                await destAdoneDir.copyFrom(backupPath, { ignoreExisting: true });
+                adone.log(err.message);
+                return 1;
+            }
+        }
+        try {
+            await adone.fs.unlink(adoneScriptPath);
+        } catch (err) {
+        }
+        if (opts.get("remove")) {
+            adone.log("Previous adone installation successfully deleted");
+            return 0;
+        }
+
+        const targets = this._getTargets();
+        await destAdoneDir.create();
+        await adone.fast.src(targets, { base: this.app.adoneRootPath }).dest(destAdoneDir.path());
+        const data = adone.templating.nunjucks.render(std.path.join(this.app.adoneDefaultsPath, "scripts", name), { targetPath: destAdoneDir.resolve("bin", "adone.js") });
+        await adone.fs.writeFile(adoneScriptPath, data);
+        if (!is.win32) {
+            await adone.fs.chmod(adoneScriptPath, 0o755);
+        }
+        adone.log(`Adonve v${adone.package.version} successfully installed`);
+        return 0;
+    }
+
+    async publishCommand() {
+        const targets = this._getTargets();
+        // return adone.fast.src(targets, { base: this.app.adoneRootPath }).dest(outDir);
+        // adone.log(outDir.path());
+    }
+
+    _getTargets() {
+        return ["!**/*.map", "package.json", "README*", "LICENSE*"].concat(adone.package.files.map((x) => util.globize(x, { recursively: true })));
     }
 }

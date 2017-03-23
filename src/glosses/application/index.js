@@ -1115,9 +1115,7 @@ export default class Application extends adone.application.Subsystem {
         const basename = `${name}.js`;
         const defaultConfigPath = adone.std.path.join(this.defaultConfigsPath, basename);
         await this.config.load(defaultConfigPath, name);
-        await adone.fs.copy(defaultConfigPath, this.config.adone.configsPath, {
-            ignoreExisting: true
-        });
+        await adone.fs.copy(defaultConfigPath, this.config.adone.configsPath);
         const userConfigPath = adone.std.path.join(this.config.adone.configsPath, basename);
         await this.config.load(userConfigPath, name);
     }

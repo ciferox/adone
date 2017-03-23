@@ -4,7 +4,7 @@ describe("FAST", function () {
     let root;
 
     before(async () => {
-        root = await FS.createTempDirectory();
+        root = await adone.fs.Directory.createTmp();
     });
 
     after(async () => {

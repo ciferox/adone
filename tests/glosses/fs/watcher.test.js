@@ -41,7 +41,7 @@ describe("glosses", "fs", "watcher", function watcherTests() {
     };
 
     before(async () => {
-        rootFixtures = await FS.createTempDirectory();
+        rootFixtures = await adone.fs.Directory.createTmp();
     });
 
     after("restroring the cwd", async () => {
@@ -50,9 +50,7 @@ describe("glosses", "fs", "watcher", function watcherTests() {
     });
 
     beforeEach("preparing the fixtures directory for a test", async () => {
-        fixtures = await FS.createTempDirectory(
-            adone.std.path.join(rootFixtures.path(), adone.std.path.sep)
-        );
+        fixtures = await adone.fs.Directory.createTmp({ dir: rootFixtures.path() });
         process.chdir(fixtures.path());
         await Promise.all([
             fixtures.addFile("change.txt", { content: "b" }),

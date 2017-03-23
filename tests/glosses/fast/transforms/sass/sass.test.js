@@ -22,7 +22,7 @@ describe("Fast", () => {
             }
 
             before(async () => {
-                root = await FS.createTempDirectory();
+                root = await adone.fs.Directory.createTmp();
                 await generateFixtures(root);
                 scssdir = await root.getVirtualDirectory("scss");
                 expectdir = await root.getVirtualDirectory("expected");

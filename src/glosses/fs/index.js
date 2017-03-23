@@ -235,18 +235,12 @@ export const mkdir = (path, mode) => {
     });
 };
 
-export const copy = async (srcPath, dstPath, options = {}) => {
-    if (!is.boolean(options.recursively)) {
-        options.recursively = false;
-    }
-    if (!is.boolean(options.ignoreExisting)) {
-        options.ignoreExisting = false;
-    }
+export const copy = async (srcPath, dstPath, { recursively = true, ignoreExisting = false } = {}) => {
     const baseSrcPath = adone.util.globParent(srcPath);
     await fs.glob(srcPath).map(async (p) => {
         const relPath = adone.std.path.relative(baseSrcPath, p);
         const dstFilePath = adone.std.path.resolve(dstPath, relPath);
-        if (options.ignoreExisting) {
+        if (ignoreExisting) {
             if (await exists(dstFilePath)) {
                 return [dstFilePath, null];
             }
@@ -366,12 +360,7 @@ export const tmpName = async ({ name = null, tries = 3, template = null, dir = o
             return template.replace(TEMPLATE_PATTERN, adone.text.random(6));
         }
 
-        const path = adone.std.path.join(dir, [
-            prefix,
-            process.pid,
-            adone.text.random(12),
-            ext
-        ].join(""));
+        const path = adone.std.path.join(dir, `${prefix}${process.pid}${adone.text.random(12)}${ext}`);
 
         try {
             await adone.fs.stat(path);
@@ -382,3 +371,7 @@ export const tmpName = async ({ name = null, tries = 3, template = null, dir = o
     }
     throw new Error("Could not get a unique tmp filename, max tries reached");
 };
+
+export const homeDir = () => {
+    return (is.win32 ? process.env.USERPROFILE : process.env.HOME);
+}

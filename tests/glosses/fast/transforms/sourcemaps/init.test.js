@@ -63,7 +63,7 @@ describe("Fast", () => {
         describe("sourcemaps", () => {
             describe("init", () => {
                 before(async () => {
-                    root = await FS.createTempDirectory();
+                    root = await adone.fs.Directory.createTmp();
                     fromdir = await root.addDirectory("from");
                     await generateFixtures(fromdir);
                     sourceContent = await fromdir.getVirtualFile("helloworld.js").content();

@@ -60,7 +60,7 @@ describe("glosses", "net", "http", "helpers", "incoming form", () => {
     const fixtures = new adone.fs.Directory(path.resolve(__dirname, "fixtures"));
 
     before(async () => {
-        tmpdir = await FS.createTempDirectory();
+        tmpdir = await adone.fs.Directory.createTmp();
     });
 
     afterEach(async () => {

@@ -23,7 +23,7 @@ describe("Process manager", () => {
     for (const mode of ["cluster", "single"]) {
         describe(`${mode} interface`, () => {
             it("IProcess.pid() should be equal to Process.pid", async () => {
-                const storage = await FS.createTempDirectory();
+                const storage = await adone.fs.Directory.createTmp();
                 const { stdout, port, stderr } = processFiles(storage);
 
                 const p = new stuff.Process({}, {
@@ -48,7 +48,7 @@ describe("Process manager", () => {
             });
 
             it("IProcess.kill() should invoke process.kill()", async () => {
-                const storage = await FS.createTempDirectory();
+                const storage = await adone.fs.Directory.createTmp();
                 const { stdout, port, stderr } = processFiles(storage);
                 const p = new stuff.Process({}, {
                     path: fixture("run_forever.js"),
@@ -74,7 +74,7 @@ describe("Process manager", () => {
             });
 
             it("IProcess.waitForExit() should wait until the process exits", async () => {
-                const storage = await FS.createTempDirectory();
+                const storage = await adone.fs.Directory.createTmp();
                 const { stdout, port, stderr } = processFiles(storage);
                 const p = new stuff.Process({}, {
                     path: fixture("run_forever.js"),
@@ -98,7 +98,7 @@ describe("Process manager", () => {
 
             if (mode === "cluster") {
                 it("IMainProcess.workers() should return process.workers", async () => {
-                    const storage = await FS.createTempDirectory();
+                    const storage = await adone.fs.Directory.createTmp();
                     const { stdout, port, stderr } = processFiles(storage);
                     const p = new stuff.MainProcess({}, {
                         path: fixture("run_forever.js"),

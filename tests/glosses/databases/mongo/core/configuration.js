@@ -15,7 +15,7 @@ export default {
     manager: null,
     root: null,
     async setup() {
-        this.root = await FS.createTempDirectory();
+        this.root = await adone.fs.Directory.createTmp();
     },
     async teardown() {
         await this.root.unlink();

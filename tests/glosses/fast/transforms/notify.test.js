@@ -34,7 +34,7 @@ describe("output stream", function () {
         }
 
         before(async () => {
-            root = await FS.createTempDirectory();
+            root = await adone.fs.Directory.createTmp();
             fromdir = await root.addDirectory("from");
             await FS.createStructure(fromdir, ["1.txt", "2.txt", "3.txt"]);
             srcPath = fromdir.getVirtualFile("**", "*").path();

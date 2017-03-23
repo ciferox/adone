@@ -57,7 +57,7 @@ describe("FAST", function() {
                     let fixtureDir;
 
                     before(async () => {
-                        fixtureDir = await FS.createTempDirectory();
+                        fixtureDir = await adone.fs.Directory.createTmp();
                         let dir = await fixtureDir.addDirectory("test_dir");
                         dir = await dir.addDirectory("some.css");
                         await dir.addFile("test.css", {

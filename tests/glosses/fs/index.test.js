@@ -5,7 +5,7 @@ describe("fs", () => {
     let rootTmp = null;
 
     before(async () => {
-        rootTmp = await FS.createTempDirectory();
+        rootTmp = await adone.fs.Directory.createTmp();
     });
 
     afterEach(async () => {

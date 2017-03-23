@@ -8,7 +8,7 @@ describe("Cursor", () => {
     let testDb;
 
     before(async () => {
-        tmpdir = await FS.createTempDirectory();
+        tmpdir = await adone.fs.Directory.createTmp();
     });
 
     after(async () => {

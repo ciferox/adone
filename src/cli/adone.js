@@ -61,17 +61,6 @@ export default class AdoneCLI extends adone.application.Application {
                     handler: this.configCommand
                 },
                 {
-                    name: "global",
-                    help: "Make current adone global",
-                    options: [
-                        {
-                            name: "--remove",
-                            help: "Remove adone global script"
-                        }
-                    ],
-                    handler: this.globalCommand
-                },
-                {
                     name: "sloc",
                     help: "print stats of a source code",
                     arguments: [{ name: "paths", holder: "p", nargs: "+", help: "path to a script" }],
@@ -114,29 +103,6 @@ export default class AdoneCLI extends adone.application.Application {
             }
             await config.save(outPath, "__", options);
             adone.log(`\nConfiguration saved to ${outPath}!`);
-        }
-        return 0;
-    }
-
-    async globalCommand(args, opts) {
-        let name;
-        if (is.win32) {
-            name = "adone.cmd";
-        } else {
-            name = "adone";
-        }
-        const globalPath = std.path.join(std.path.dirname(process.execPath), name);
-        if (!opts.get("remove")) {
-            const targetPath = std.path.join(this.adoneRootPath, "bin", "adone.js");
-            const data = adone.templating.nunjucks.render(std.path.join(this.adoneDefaultsPath, "scripts", name), { targetPath });
-            await adone.fs.writeFile(globalPath, data);
-            if (!is.win32) {
-                await adone.fs.chmod(globalPath, 0o755);
-            }
-            adone.log(`Script saved to ${globalPath}`);
-        } else {
-            await adone.fs.unlink(globalPath);
-            adone.log(`Script deleted from ${globalPath}`);
         }
         return 0;
     }

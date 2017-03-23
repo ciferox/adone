@@ -545,8 +545,8 @@ export const sortKeys = (object: Object, { deep = false, compare }: { deep: bool
     return obj;
 };
 
-export const globize = (path, { exts = ".js", recursive = false } = {}) => {
-    const stars = recursive ? `**${adone.std.path.sep}*${exts}` : `*${exts}`;
+export const globize = (path, { exts = "", recursively = false } = {}) => {
+    const stars = recursively ? `**${adone.std.path.sep}*${exts}` : `*${exts}`;
     if (path.endsWith("/") || path.endsWith("\\")) {
         path += stars;
     } else {

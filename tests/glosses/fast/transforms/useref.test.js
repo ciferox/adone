@@ -13,7 +13,7 @@ describe("Fast", () => {
             let root;
 
             before(async () => {
-                root = await FS.createTempDirectory();
+                root = await adone.fs.Directory.createTmp();
             });
 
             after(async () => {
