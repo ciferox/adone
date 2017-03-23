@@ -260,8 +260,8 @@
 <body class="directory">
     <div id="wrapper">
         <h1>
-            {% for part in crumb %}
-            <a href="{{ part.path }}">{{ part.value | e }}</a>{% if not loop.last %} / {% endif %}
+            {% for part in crumb | crumb %}
+            <a href="{{ part.path | e }}">{{ part.value | e }}</a>{% if not loop.last %} / {% endif %}
             {% endfor %}
         </h1>
         <ul id="files" class="view-details">

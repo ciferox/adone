@@ -2,7 +2,7 @@ const {
     std: { path: { relative, resolve, extname } },
     templating: { nunjucks },
     net: { http: { helper } },
-    collection, util, fs
+    collection, util, fs, identity
 } = adone;
 
 const iconsMap = new Map([
@@ -117,12 +117,32 @@ const iconsMap = new Map([
 ]);
 const iconsCache = new Map();
 
+const defaultFilters = {
+    filename: identity,
+    size: (bytes, file) => {
+        if (file.isDirectory) {
+            return "";
+        }
+        return util.humanizeSize(bytes);
+    },
+    midificationDate: (obj) => {
+        return obj.format("DD.MM.YYYY HH:mm:ss");
+    },
+    link: (_, file) => {
+        if (file.isDirectory) {
+            return `${file.filename}/`;
+        }
+        return file.filename;
+    },
+    crumb: identity
+};
 const templatesPath = resolve(__dirname, "template");
 let environment = null;
 const getEnvironment = (options = {}) => {
     if (options.filters) {
         const env = nunjucks.configure(templatesPath);
-        for (const [name, filter] of options.filters) {
+        const filters = adone.o(defaultFilters, options.filters);
+        for (const [name, filter] of util.entries(filters)) {
             env.addFilter(name, filter);
         }
         return env;
@@ -131,24 +151,9 @@ const getEnvironment = (options = {}) => {
         return environment;
     }
     environment = nunjucks.configure(templatesPath);
-    environment.addFilter("filename", (str) => {
-        return str;
-    });
-    environment.addFilter("midificationDate", (obj) => {
-        return obj.format("DD.MM.YYYY HH:mm:ss");
-    });
-    environment.addFilter("size", (bytes, file) => {
-        if (file.isDirectory) {
-            return "";
-        }
-        return util.humanizeSize(bytes);
-    });
-    environment.addFilter("link", (_, file) => {
-        if (file.isDirectory) {
-            return `${file.filename}/`;
-        }
-        return file.filename;
-    });
+    for (const [name, filter] of util.entries(defaultFilters)) {
+        environment.addFilter(name, filter);
+    }
     return environment;
 };
 
