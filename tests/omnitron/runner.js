@@ -113,7 +113,7 @@ export class WeakOmnitron extends adone.omnitron.Omnitron.Omnitron {
     }
 }
 
-export default class OmnitronRunner extends adone.Application {
+export default class OmnitronRunner extends adone.application.Application {
     run() {
         return adone.fs.rm(process.env.ADONE_HOME).then(() => {
             return super.run({ ignoreArgs: true });

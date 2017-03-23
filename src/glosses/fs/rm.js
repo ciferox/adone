@@ -76,7 +76,7 @@ const rmfile = async (p) => {
     });
 };
 
-export default async function rm(path, { glob = true, maxBusyTries = 3, emfileWait = 1000, cwd = process.cwd() } = {}) => {
+export default async function rm(path, { glob = true, maxBusyTries = 3, emfileWait = 1000, cwd = process.cwd() } = {}) {
     const afterGlob = async (results) => {
         if (results.length === 0) {
             return;

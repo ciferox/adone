@@ -190,7 +190,7 @@ export default class Directory {
         return fs.copy(this._path, destPath, options);
     }
 
-    copyFrom(srcPath), options {
+    copyFrom(srcPath, options) {
         return fs.copy(srcPath, this._path, options);
     }
 
@@ -199,7 +199,7 @@ export default class Directory {
         await dir.create();
         return dir;
     }
- 
+
     static async createTmp(options) {
         return Directory.create(await fs.tmpName(options));
     }

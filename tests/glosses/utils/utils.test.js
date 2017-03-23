@@ -19,7 +19,7 @@ describe("glosses", "utils", () => {
                 return x.a;
             };
             const wrappedCompare = function (a, b) {
-                return Object.compare(a, b);
+                return a - b;
             };
             const compare = util.by(getA, wrappedCompare);
 

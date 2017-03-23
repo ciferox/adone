@@ -4,7 +4,7 @@ import sandbox from "./sandbox";
 const { is, x } = adone;
 const { Contextable, Private, Public, Description, Type, Args } = adone.netron.decorator;
 const { parse, traverse, generate, core } = adone.js.compiler;
-const { Set, SortedArray } = adone.collection;
+const { Set, Heap } = adone.collection;
 
 const baseClasses = ["Task", "Worker"];
 const requiredTaskMethods = ["run"];
@@ -19,11 +19,11 @@ export class TaskManager {
         this.netron = options.netron;
         this.omnitron = options.omnitron;
         this.options = options;
-        
+
         this._containers = new Map();
         this._tasks = new Map();
-        this._jobs = new Set(undefined, (jobA, jobB) => jobA.meta.id === jobB.meta.id, (j) => j.meta.id);
-        
+        this._jobs = new Set((j) => j.meta.id);
+
         this._context = null;
     }
 
@@ -44,7 +44,7 @@ export class TaskManager {
         }
     }
 
-    uninitialize() {  
+    uninitialize() {
     }
 
     get defaultContext() {
@@ -109,7 +109,7 @@ export class TaskManager {
 
         const count = this.iDs.remove({ _type: "container", _id: containerInfo.meta._id });
         this._containers.delete(id);
-        
+
         return count;
     }
 
@@ -266,7 +266,7 @@ export class TaskManager {
                     }
                     taskInfo.meta.description = description;
                     taskInfo.meta.concurrency = concurrency;
-                    
+
                     // Delete cached transformed code
                     delete taskInfo.transformedCode;
                 }
@@ -300,7 +300,7 @@ export class TaskManager {
                 }
                 delete taskInfo.isNew;
                 this._tasks.set(taskInfo.meta.name, taskInfo);
-                
+
                 taskInfo.meta = await this.iDs.insert(taskInfo.meta);
             } else {
                 await this.iDs.update( { _type: taskInfo.meta._type, name: taskInfo.meta.name }, taskInfo.meta);
@@ -350,7 +350,10 @@ export class TaskManager {
             taskInfo.meta.singleton = singleton;
             taskInfo.meta.data = null;
         } else if (_type === "worker") {
-            taskInfo.jobs = new SortedArray(undefined, (jobA, jobB) => jobA.meta.id === jobB.meta.id, (jobA, jobB) => jobB.meta.priority - jobA.meta.priority);
+            taskInfo.jobs = new Heap({
+                priority: (jobA, jobB) => jobB.meta.priority - jobA.meta.priority,
+                compare: (jobA, jobB) => jobA.meta.id - jobB.meta.id
+            });
         }
 
         return taskInfo;
@@ -406,7 +409,7 @@ export class TaskManager {
                 runJob = await promise;
 
                 this._processJobQueueInNextTick(taskInfo);
-                
+
                 await this._updateJobStatus(jobInfo, jobState.active);
                 const result = await runJob([job]);
                 jobInfo.meta.result = result;
@@ -480,8 +483,8 @@ export class TaskManager {
             runTask = await promise;
             result = await runTask(args);
             taskInfo.instances.delete(promise);
-            
-            if (taskInfo.zombi === true && taskInfo.instances.size === 0) {    
+
+            if (taskInfo.zombi === true && taskInfo.instances.size === 0) {
                 /*await */this._deleteTask(taskInfo);
             }
         }

@@ -1,214 +1,105 @@
-
-// Adapted from Eloquent JavaScript by Marijn Haverbeke
-// http://eloquentjavascript.net/appendix2.html
-require("./shim");
-const GenericCollection = require("./generic_collection");
-// Max Heap by default.  Comparison can be reversed to produce a Min Heap.
+const defaultComparator = (a, b) => {
+    if (a > b) {
+        return 1;
+    }
+    if (a < b) {
+        return -1;
+    }
+    return 0;
+};
 
 export default class Heap {
-    constructor(values, equals, compare) {
-        this.contentEquals = equals || Object.equals;
-        this.contentCompare = compare || Object.compare;
-        this.content = [];
-        this.length = 0;
-        this.addEach(values);
+    constructor({ compare = defaultComparator, priority = compare } = {}) {
+        this.nodes = [];
+        this.priority = priority;
+        this.compare = compare;
+    }
+
+    get length() {
+        return this.nodes.length;
+    }
+
+    push(a) {
+        this.nodes.push(a);
+        this._siftdown(0, this.nodes.length - 1);
+    }
+
+    pop() {
+        const lastelt = this.nodes.pop();
+        if (this.nodes.length !== 0) {
+            const returnitem = this.nodes[0];
+            this.nodes[0] = lastelt;
+            this._siftup(0);
+            return returnitem;
+        }
+        return lastelt;
+    }
+
+
+    delete(item) {
+        // ...
+        for (let i = 0; i < this.nodes.length; ++i) {
+            if (this.compare(item, this.nodes[i]) === 0) {
+                this.nodes[i] = this.nodes.pop();
+                this._siftup(i);
+                break;
+            }
+        }
+    }
+
+    replace(item) {
+        const toReturn = this.nodes[0];
+        this.nodes[0] = item;
+        this._siftup(0);
+        return toReturn;
+    }
+
+    pushpop(item) {
+        if (this.nodes.length && this.priority(this.nodes[0], item) < 0) {
+            [item, this.nodes[0]] = [this.nodes[0], item];
+            this._siftup(0);
+        }
+        return item;
+    }
+
+    _siftup(pos) {
+        const endpos = this.nodes.length;
+        const startpos = pos;
+        const newitem = this.nodes[pos];
+        let childpos = (pos << 1) + 1;
+        while (childpos < endpos) {
+            const rightpos = childpos + 1;
+            if (rightpos < endpos && this.priority(this.nodes[childpos], this.nodes[rightpos]) >= 0) {
+                childpos = rightpos;
+            }
+            this.nodes[pos] = this.nodes[childpos];
+            pos = childpos;
+            childpos = (pos << 1) + 1;
+        }
+        this.nodes[pos] = newitem;
+        return this._siftdown(startpos, pos);
+    }
+
+    _siftdown(startpos, pos) {
+        const newitem = this.nodes[pos];
+        while (pos > startpos) {
+            const parentpos = (pos - 1) >> 1;
+            const parent = this.nodes[parentpos];
+            if (this.priority(newitem, parent) < 0) {
+                this.nodes[pos] = parent;
+                pos = parentpos;
+                continue;
+            }
+            break;
+        }
+        return this.nodes[pos] = newitem;
+    }
+
+    static from(iterable, cmp = defaultComparator) {
+        const h = new this.constructor(cmp);
+        for (const i of iterable) {
+            h.push(i);
+        }
+        return h;
     }
 }
-
-Object.addEach(Heap.prototype, GenericCollection.prototype);
-
-Heap.from = function (...args) {
-    return new Heap(...args);
-};
-
-Heap.prototype.constructClone = function (values) {
-    return new this.constructor(
-        values,
-        this.contentEquals,
-        this.contentCompare
-    );
-};
-
-// TODO variadic
-Heap.prototype.push = function (value) {
-    this.content.push(value);
-    this.float(this.content.length - 1);
-    this.length++;
-};
-
-Heap.prototype.pop = function () {
-    // Store the first value so we can return it later.  This will leave a gap
-    // at index 0 that must be filled.
-    const result = this.content[0];
-    // Remove the value at the end of the array.  The value most be removed
-    // from the end to preserve the completness of the tree, despite that the
-    // last child is also among the most likely to need to sink back to the
-    // bottom.
-    const top = this.content.pop();
-    // If there are any values remaining, put the last value on the top and
-    // let it sink back down.
-    if (this.content.length > 0) {
-        this.content.set(0, top);
-        this.sink(0);
-    }
-    this.length--;
-    return result;
-};
-
-Heap.prototype.add = function (value) {
-    this.push(value);
-};
-
-// indexOf must do a linear search since a binary heap does not preserve a
-// strict sort order.  Thus, deletion takes linear time for all values except
-// for the max value.
-
-Heap.prototype.indexOf = function (value) {
-    for (let index = 0; index < this.length; index++) {
-        if (this.contentEquals(this.content[index], value)) {
-            return index;
-        }
-    }
-    return -1;
-};
-
-Heap.prototype["delete"] = function (value, equals) {
-    if (equals) {
-        throw new Error("Heap#delete does not support second argument: equals");
-    }
-    const index = this.indexOf(value);
-    if (index === -1)
-        return false;
-    const top = this.content.pop();
-    this.length = this.content.length;
-    if (index === this.content.length)
-        return true;
-    this.content.set(index, top);
-    const comparison = this.contentCompare(top, value);
-    if (comparison > 0) {
-        this.float(index);
-    } else if (comparison < 0) {
-        this.sink(index);
-    }
-    return true;
-};
-
-Heap.prototype.peek = function () {
-    if (this.length) {
-        return this.content[0];
-    }
-};
-
-Heap.prototype.max = function () {
-    return this.peek();
-};
-
-Heap.prototype.one = function () {
-    return this.peek();
-};
-
-// Brings a value up until its parent is greater than it
-Heap.prototype.float = function (index) {
-    // Grab the value that is being adjusted
-    const value = this.content[index];
-    // A value can go no higher that the top: index 0
-    while (index > 0) {
-        // Compute the parent value's index and fetch it
-        const parentIndex = Math.floor((index + 1) / 2) - 1;
-        const parent = this.content[parentIndex];
-        // If the parent is less than it
-        if (this.contentCompare(parent, value) < 0) {
-            this.content.set(parentIndex, value);
-            this.content.set(index, parent);
-        } else {
-            // Stop propagating if the parent is greater than the value.
-            break;
-        }
-        // Proceed upward
-        index = parentIndex;
-    }
-};
-
-// Brings a value down until its children are both less than it
-Heap.prototype.sink = function (index) {
-    // Moves a value downward until it is greater than its children.
-    const length = this.content.length;
-    const value = this.content[index];
-    let left;
-    let right;
-    let leftIndex;
-    let rightIndex;
-    let swapIndex;
-    let needsSwap;
-
-    while (true) {
-        // Invariant: the value is at index.
-        // Variant: the index proceedes down the tree.
-
-        // Compute the indicies of the children.
-        rightIndex = (index + 1) * 2;
-        leftIndex = rightIndex - 1;
-
-        // If the left child exists, determine whether it is greater than the
-        // parent (value) and thus whether it can be floated upward.
-        needsSwap = false;
-        if (leftIndex < length) {
-            // Look it up and compare it.
-            left = this.content[leftIndex];
-            const comparison = this.contentCompare(left, value);
-            // If the child is greater than the parent, it can be floated.
-            if (comparison > 0) {
-                swapIndex = leftIndex;
-                needsSwap = true;
-            }
-        }
-
-        // If the right child exists, determine whether it is greater than the
-        // parent (value), or even greater than the left child.
-        if (rightIndex < length) {
-            right = this.content[rightIndex];
-            const comparison = this.contentCompare(right, needsSwap ? left : value);
-            if (comparison > 0) {
-                swapIndex = rightIndex;
-                needsSwap = true;
-            }
-        }
-
-        // if there is a child that is less than the value, float the child and
-        // sink the value.
-        if (needsSwap) {
-            this.content.set(index, this.content[swapIndex]);
-            this.content.set(swapIndex, value);
-            index = swapIndex;
-            // and continue sinking
-        } else {
-            // if the children are both less than the value
-            break;
-        }
-
-    }
-
-};
-
-Heap.prototype.clear = function () {
-    this.content.clear();
-    this.length = 0;
-};
-
-Heap.prototype.reduce = function (callback, basis /*, thisp*/) {
-    const thisp = arguments[2];
-    return this.content.reduce(function (basis, value, key) {
-        return callback.call(thisp, basis, value, key, this);
-    }, basis, this);
-};
-
-Heap.prototype.reduceRight = function (callback, basis /*, thisp*/) {
-    const thisp = arguments[2];
-    return this.content.reduceRight(function (basis, value, key) {
-        return callback.call(thisp, basis, value, key, this);
-    }, basis, this);
-};
-
-Heap.prototype.toJSON = function () {
-    return this.toArray();
-};
