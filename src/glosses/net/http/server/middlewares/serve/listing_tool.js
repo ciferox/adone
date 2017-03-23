@@ -134,7 +134,8 @@ const defaultFilters = {
         }
         return file.filename;
     },
-    crumb: identity
+    crumb: identity,
+    directory: identity
 };
 const templatesPath = resolve(__dirname, "template");
 let environment = null;
