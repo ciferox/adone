@@ -1,6 +1,6 @@
 import File from "./file";
 import * as helpers from "./helpers";
-const { std, util, is } = adone;
+const { std, util, is, x } = adone;
 
 export { File, helpers };
 
@@ -141,19 +141,79 @@ export class Fast extends adone.core.Core {
         });
     }
 
-    compress(compressorType, options) {
+    compress(compressorType, options = {}) {
         if (!(compressorType in adone.compressor)) {
             throw new adone.x.InvalidArgument(`Unknown compressor: ${compressorType}`);
         }
 
         const { compress } = adone.compressor[compressorType];
+        const extname = {
+            lzma: "lzma",
+            gzip: "gz",
+            xz: "xz",
+            brotli: "br",
+            deflate: "deflate"  // ?
+        }[compressorType];
 
-        return this.through(async function (file) {
+        return this.through(async function compressor(file) {
             if (file.isStream()) {
                 file.contents = file.contents.pipe(compress.stream(options));
             } else if (file.isBuffer()) {
                 file.contents = await compress(file.contents, options);
             }
+            if (options.rename !== false) {
+                file.extname = `${file.extname}.${extname}`;
+            }
+            this.push(file);
+        });
+    }
+
+    pack(archiveType, packerOptions = {}) {
+        if (!(archiveType in adone.archive)) {
+            throw new adone.x.InvalidArgument(`Unknown archive type: ${archiveType}`);
+        }
+        if (is.string(packerOptions)) {
+            packerOptions = { filename: packerOptions };
+        }
+        if (!is.string(packerOptions.filename)) {
+            throw new x.InvalidArgument("Filename is required");
+        }
+        const archive = adone.archive[archiveType];
+        const stream = new archive.RawPackStream();
+        const self = this;
+        return this.through(async (file) => {
+            if (file.isNull()) {
+                // ok? add an empty file?
+                return;
+            }
+            const header = {
+                name: file.relative,
+                mode: file.stat && file.stat.mode,
+                mtime: file.stat && file.stat.mtime,
+                type: "file"
+            };
+            if (file.isBuffer()) {
+                stream.entry(header, file.contents);
+            } else {
+                // stream
+                // ..
+                let data = await file.contents.pipe(adone.stream.concat());
+                if (data.length === 0) {
+                    // nothing was written, empty file
+                    data = Buffer.alloc(0);
+                }
+                stream.entry(header, data);
+            }
+        }, function flush() {
+            stream.finalize();
+            const cwd = packerOptions.cwd || self._cwd || process.cwd();
+            const base = packerOptions.base || cwd;
+            const file = new File({
+                path: std.path.resolve(base, packerOptions.filename),
+                cwd: packerOptions.cwd || this._cwd || process.cwd(),
+                base: packerOptions.base || null,
+                contents: stream
+            });
             this.push(file);
         });
     }

@@ -1,6 +1,4 @@
-
-
-const { std: { stream, util } } = adone;
+const { assert, std: { stream, util } } = adone;
 
 export const native = adone.bind("lzma.node");
 
@@ -92,7 +90,7 @@ Stream.prototype.getStream = function (options) {
                     const chunkCallbacks = self.chunkCallbacks.splice(0, processedChunks);
 
                     while (chunkCallbacks.length > 0) {
-                        chunkCallbacks.shift().apply(self);   
+                        chunkCallbacks.shift().apply(self);
                     }
 
                     _forceNextTickCb();
