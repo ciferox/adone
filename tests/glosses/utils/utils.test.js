@@ -1733,4 +1733,49 @@ describe("glosses", "utils", () => {
             }
         });
     });
+
+    for (const name of ["range", "xrange"]) {
+        const { [name]: range } = util;
+
+        describe(name, () => {
+            if (name === "xrange") {
+                it("should be a generator", () => {
+                    expect(range(0, 10)).to.be.a("generator");
+                });
+            } else {
+                it("should be an array", () => {
+                    expect(range(0, 10)).to.be.an("array");
+                });
+            }
+
+            it("should return a range [start, stop)", () => {
+                expect([...range(0, 10)]).to.be.deep.equal([
+                    0, 1, 2, 3, 4, 5, 6, 7, 8, 9
+                ]);
+                expect([...range(-10, 0)]).to.be.deep.equal([
+                    -10, -9, -8, -7, -6, -5, -4, -3, -2, -1
+                ]);
+            });
+
+            it("should increment by 2", () => {
+                expect([...range(0, 10, 2)]).to.be.deep.equal([
+                    0, 2, 4, 6, 8
+                ]);
+            });
+
+            it("should decrement", () => {
+                expect([...range(10, 0, -1)]).to.be.deep.equal([
+                    10, 9, 8, 7, 6, 5, 4, 3, 2, 1
+                ]);
+            });
+
+            it("should set start = 0 if only one argument", () => {
+                expect([...range(5)]).to.be.deep.equal([0, 1, 2, 3, 4]);
+            });
+
+            it("should be empty", () => {
+                expect([...range(-5, -10)]).to.be.empty;
+            });
+        });
+    }
 });

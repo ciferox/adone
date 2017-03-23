@@ -826,6 +826,24 @@ export const asyncWaterfall = (tasks, callback = noop) => {
     nextTask([]);
 };
 
+export const xrange = function* (start = null, stop = null, step = 1) {
+    if (is.null(stop)) {
+        [start, stop] = [0, start];
+    }
+
+    if (step < 0) {
+        for (let i = start; i > stop; i += step) {
+            yield i;
+        }
+    } else {
+        for (let i = start; i < stop; i += step) {
+            yield i;
+        }
+    }
+};
+
+export const range = (start, stop, step) => [...xrange(start, stop, step)];
+
 adone.lazify({
     match: "./match",
     realpath: "./realpath",
