@@ -1,5 +1,5 @@
 const {
-    std: { path: { relative, resolve, extname } },
+    std: { path: { relative, resolve, extname }, url },
     templating: { nunjucks },
     net: { http: { helper } },
     collection, util, fs, identity
@@ -273,7 +273,7 @@ export default class ListingTool {
     }
 
     getCrumb(path) {
-        let crumb = path.split("/");
+        let crumb = url.parse(path || "/").pathname.split("/");
         if (crumb[crumb.length - 1] === "") {
             crumb.pop();
         }
