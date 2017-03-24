@@ -1093,7 +1093,7 @@ export default class Application extends adone.application.Subsystem {
                 for (const error of errors) {
                     adone.log(escape(error.message));
                 }
-                return this.exit(Application.ERROR_EXIT);
+                return this.exit(Application.ERROR);
             }
             this._errorScope = true;
             const code = await command.execute(rest, match);
@@ -1840,10 +1840,10 @@ export default class Application extends adone.application.Subsystem {
             errCode = await this.exception(err);
         } else {
             adone.error(err.stack || err.message || err);
-            errCode = this.ERROR_EXIT;
+            errCode = Application.ERROR;
         }
         if (!Number.isInteger(errCode)) {
-            errCode = this.ERROR_EXIT;
+            errCode = Application.ERROR;
         }
         return this.exit(errCode);
     }

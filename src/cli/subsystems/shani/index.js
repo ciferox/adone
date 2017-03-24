@@ -36,20 +36,10 @@ export default class ShaniCLI extends adone.application.Subsystem {
             ]
         });
         this.success = false;
+        this.started = false;
     }
 
     async main(args, opts) {
-        // this._unhandledRejection = (reason) => {
-        //     adone.error("unhandledRejection");
-        //     adone.error(reason.stack || reason.message || reason);
-        // };
-
-        // this._rejectionHandled = async (p) => {
-        //     adone.error("rejectionHandled");
-        //     const e = await p.catch((e) => e);
-        //     adone.error(e.stack || e.message || e);
-        // };
-
         const configPath = path.resolve(opts.get("config"));
         this.showHandles = opts.get("showHandles");
         const useConfig = !opts.get("dontUseConfig");
