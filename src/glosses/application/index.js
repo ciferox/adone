@@ -48,22 +48,31 @@ class Argument {
     }
 
     coerce(value) {
-        if (is.array(this.type)) {
-            if (is.class(this.type[this.value.length])) {
-                return new this.type[this.value.length](value);
+        const _coerce = (type, ...args) => {
+            if (is.class(type)) {
+                return new type(value, ...args);
             }
-            return this.type[this.value.length](value);
+            if (is.function(type)) {
+                return type(value, ...args);
+            }
+            if (is.regexp(type)) {
+                const match = value.match(type);
+                if (is.null(match)) {
+                    const err = new x.Exception(`Incorrect value, must match ${type}`);
+                    err.fatal = true;
+                    throw err;
+                }
+                return match;
+            }
+        };
+
+        if (is.array(this.type)) {
+            return _coerce(this.type[this.value.length]);
         }
         if (is.array(this.value)) {
-            if (is.class(this.type)) {
-                return new this.type(value, this.value.length);
-            }
-            return this.type(value, this.value.length);
+            return _coerce(this.type, this.value.length);
         }
-        if (is.class(this.type)) {
-            return new this.type(value);
-        }
-        return this.type(value);
+        return _coerce(this.type);
     }
 
     hasValue() {
@@ -1712,6 +1721,9 @@ export default class Application extends adone.application.Subsystem {
                         } catch (err) {
                             err.message = `${argument.names[0]}: ${err.message}`;
                             errors.push(err);
+                            if (err.fatal) {
+                                break next;
+                            }
                             state.push("finish argument");
                             nextPart();
                             continue next;

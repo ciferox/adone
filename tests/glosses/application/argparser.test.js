@@ -5,10 +5,14 @@ describe("glosses", "application", () => {
         let app = null;
 
         const parse = async (...args) => {
-            await app._parseArgs(args);
+            const { command, errors, rest, match } = await app._parseArgs(args);
             return {
                 args: app._mainCommand.getArgumentsMap(),
-                opts: app._mainCommand.getOptionsMap()
+                opts: app._mainCommand.getOptionsMap(),
+                command,
+                errors,
+                rest,
+                match
             };
         };
 
@@ -133,6 +137,35 @@ describe("glosses", "application", () => {
                     const { args } = await parse("1", "2", "3");
                     expect(args.get("x")).to.be.deep.equal([1, "2"]);
                     expect(args.get("y")).to.be.deep.equal("3");
+                });
+
+                context("regexp", () => {
+                    it("should support regexps", async () => {
+                        app.defineArguments({
+                            arguments: [
+                                { name: "x", type: /^\d+$/ },
+                                { name: "y", type: /^[a-z]+$/ },
+                                { name: "z", type: /^(\d+) (\d+)$/ }
+                            ]
+                        });
+                        const { args, errors } = await parse("1", "abcdef", "123 45");
+                        expect(errors).to.be.empty;
+                        expect(args.get("x")).to.be.deep.equal("1".match(/^\d+$/));
+                        expect(args.get("y")).to.be.deep.equal("abcdef".match(/^[a-z]+$/));
+                        expect(args.get("z")).to.be.deep.equal("123 45".match(/^(\d+) (\d+)$/));
+                    });
+
+                    it("should throw a fatal error if mismatches", async () => {
+                        app.defineArguments({
+                            arguments: [
+                                { name: "x", type: /^\d+$/ }
+                            ]
+                        });
+                        const { errors } = await parse("hey");
+                        expect(errors).to.have.lengthOf(1);
+                        expect(errors[0].message).to.be.equal(`x: Incorrect value, must match ${/^\d+$/}`);
+                        expect(errors[0].fatal).to.be.true;
+                    });
                 });
             });
 
@@ -476,6 +509,35 @@ describe("glosses", "application", () => {
                     const { opts } = await parse("--x", "1", "2", "--y");
                     expect(opts.get("x")).to.be.deep.equal([1, "2"]);
                     expect(opts.get("y")).to.be.true;
+                });
+
+                context("regexp", () => {
+                    it("should support regexps", async () => {
+                        app.defineArguments({
+                            options: [
+                                { name: "--x", type: /^\d+$/ },
+                                { name: "--y", type: /^[a-z]+$/ },
+                                { name: "--z", type: /^(\d+) (\d+)$/ }
+                            ]
+                        });
+                        const { opts, errors } = await parse("--x", "1", "--y", "abcdef", "--z", "123 45");
+                        expect(errors).to.be.empty;
+                        expect(opts.get("x")).to.be.deep.equal("1".match(/^\d+$/));
+                        expect(opts.get("y")).to.be.deep.equal("abcdef".match(/^[a-z]+$/));
+                        expect(opts.get("z")).to.be.deep.equal("123 45".match(/^(\d+) (\d+)$/));
+                    });
+
+                    it("should throw a fatal error if mismatches", async () => {
+                        app.defineArguments({
+                            options: [
+                                { name: "--x", type: /^\d+$/ }
+                            ]
+                        });
+                        const { errors } = await parse("--x", "hey");
+                        expect(errors).to.have.lengthOf(1);
+                        expect(errors[0].message).to.be.equal(`--x: Incorrect value, must match ${/^\d+$/}`);
+                        expect(errors[0].fatal).to.be.true;
+                    });
                 });
             });
 
