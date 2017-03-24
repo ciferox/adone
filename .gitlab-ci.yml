@@ -1,7 +1,20 @@
-test:
+stages:
+    - test
+
+linux:
+    stage: test
     script:
         - npm i
         - npm run build
         - npm test
     tags:
         - linux
+
+freebsd:
+    stage: test
+    script:
+        - npm i
+        - npm run build
+        - npm test
+    tags:
+        - freebsd
