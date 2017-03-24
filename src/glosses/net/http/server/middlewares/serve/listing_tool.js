@@ -273,7 +273,7 @@ export default class ListingTool {
     }
 
     getCrumb(path) {
-        let crumb = url.parse(path || "/").pathname.split("/");
+        let crumb = path.split("/");
         if (crumb[crumb.length - 1] === "") {
             crumb.pop();
         }

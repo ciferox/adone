@@ -1,6 +1,6 @@
 
 const {
-    std: { path: { resolve, normalize } },
+    std: { path: { resolve, normalize }, url },
     net: { http: { helper: { send } } },
     is, x, lazify, o
 } = adone;
@@ -38,6 +38,38 @@ export default function serve(root, opts = {}) {
         listing = new lazy.ListingTool(opts.root, listingOpts);
     }
 
+    const handleListing = async (ctx, path) => {
+        const { pathname: orig, search } = url.parse(ctx.originalUrl);
+        const trailingSlash = orig.endsWith("/");
+        if (search) {
+            if (!trailingSlash) {
+                return ctx.redirect(`${orig}/`);
+            }
+            return ctx.redirect(orig);
+        }
+        if (!trailingSlash) {
+            return ctx.redirect(`${orig}/`);
+        }
+        const format = ctx.get("accept") && ctx.accepts("text/html", "application/json", "text/plain");
+        switch (format) {
+            case "text/html": {
+                ctx.body = await listing.renderHTML(path, orig);
+                break;
+            }
+            case "application/json": {
+                ctx.body = await listing.renderJSON(path, `${ctx.origin}${orig}`);
+                break;
+            }
+            case "text/plain": {
+                ctx.body = await listing.renderPlain(path, `${ctx.origin}${orig}`);
+                break;
+            }
+            default: {
+                ctx.body = await listing.renderPlain(path, `${ctx.origin}${orig}`);
+            }
+        }
+    };
+
     let serve;
     if (!opts.defer) {
         serve = async (ctx, next) => {
@@ -51,28 +83,7 @@ export default function serve(root, opts = {}) {
                     return;
                 }
                 if (directory && listing) {
-                    const { originalUrl: orig } = ctx;
-                    if (!orig.endsWith("/")) {
-                        return ctx.redirect(`${orig}/`);
-                    }
-                    const format = ctx.get("accept") && ctx.accepts("text/html", "application/json", "text/plain");
-                    switch (format) {
-                        case "text/html": {
-                            ctx.body = await listing.renderHTML(path, orig);
-                            break;
-                        }
-                        case "application/json": {
-                            ctx.body = await listing.renderJSON(path, `${ctx.origin}${orig}`);
-                            break;
-                        }
-                        case "text/plain": {
-                            ctx.body = await listing.renderPlain(path, `${ctx.origin}${orig}`);
-                            break;
-                        }
-                        default: {
-                            ctx.body = await listing.renderPlain(path, `${ctx.origin}${orig}`);
-                        }
-                    }
+                    await handleListing(ctx, path);
                     return;
                 }
             }
@@ -97,11 +108,7 @@ export default function serve(root, opts = {}) {
                 return;
             }
             if (directory && listing) {
-                const { originalUrl: orig } = ctx;
-                if (!orig.endsWith("/")) {
-                    return ctx.redirect(`${orig}/`);
-                }
-                ctx.body = await listing.render(path, orig);
+                await handleListing(ctx, path);
                 return;
             }
         };
