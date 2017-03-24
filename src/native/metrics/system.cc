@@ -5,7 +5,6 @@
 #pragma warning(disable : 4244)
 
 #include <io.h>
-#include <windows.h>
 #include <sys/utime.h>
 #include <shlwapi.h>
 #include <psapi.h>
@@ -78,7 +77,6 @@ static IDispatch* pWmiService = NULL;
 
 #else
 
-#include <unistd.h>
 #include <sys/file.h>
 #include <utime.h>
 #include <sys/statvfs.h>

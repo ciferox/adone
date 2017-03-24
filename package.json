@@ -1,7 +1,7 @@
 {
     "name": "adone",
     "description": "The generalized core of 'hyper-fractal systems' infrastructure.",
-    "version": "0.6.45",
+    "version": "0.6.46",
     "author": "Adone Core Team <adone@ciferox.com>",
     "license": "Apache-2.0",
     "devDependencies": {
@@ -69,7 +69,6 @@
     ],
     "main": "lib",
     "bin": {
-        "adone": "./bin/adone.js",
-        "shani": "./bin/shani.js"
+        "adone": "./bin/adone.js"
     }
 }

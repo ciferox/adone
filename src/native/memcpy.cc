@@ -1,17 +1,4 @@
-#ifdef WIN32
-#pragma warning( disable : 4244 )
-#endif
-
-#include <v8.h>
-#include <node.h>
-#include <node_version.h>
-#include <node_buffer.h>
-#include <node_object_wrap.h>
-#include <stdlib.h>
-#include <string.h>
-#include <wchar.h>
-#include <stdio.h>
-#include "nan.h"
+#include "adone.h"
 
 // Descriptions:
 //
@@ -305,9 +292,6 @@ protected:
 	}
 };
 
-#if !NODE_VERSION_AT_LEAST(0,10,0)
-extern "C"
-#endif
 void init(v8::Handle<v8::Object> target)
 {
 	Nan::HandleScope scope;

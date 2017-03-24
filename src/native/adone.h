@@ -67,4 +67,22 @@ inline T Unmaybe(Nan::Maybe<T> h) {
 
 #define THROW_BAD_ARGS Nan::ThrowTypeError("Bad argument")
 
+#if ADONE_OS_WINDOWS
+#pragma warning( disable : 4244 )
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif // ADONE_OS_WINDOWS
+
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+#include <wchar.h>
+#include <v8.h>
+#include <node.h>
+#include <node_version.h>
+#include <node_buffer.h>
+#include <node_object_wrap.h>
+#include <nan.h>
+
 #endif // __ADONE_H_

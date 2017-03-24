@@ -42,7 +42,7 @@ export default class LinuxOS extends adone.metrics.OS {
         }
     
         try {
-            this.pageSize = parseInt(adone.metrics.native.system.getPageSize());
+            this.pageSize = parseInt(adone.native.system.getPageSize());
         } catch (err) {
             this.pageSize = 4096; // default
         }
@@ -104,7 +104,7 @@ export default class LinuxOS extends adone.metrics.OS {
     }
 
     getThreadCount() {
-        return adone.metrics.native.system.sysinfo().procs;
+        return adone.native.system.sysinfo().procs;
     }
 
     _readOsRelease() {

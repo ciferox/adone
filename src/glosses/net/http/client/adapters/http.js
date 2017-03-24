@@ -1,5 +1,3 @@
-
-
 const imports = adone.lazify({
     settle: "../core/settle",
     buildURL: "../helpers/build_url",
@@ -69,7 +67,8 @@ export default function httpAdapter(config) {
             method: config.method,
             headers,
             agent,
-            auth
+            auth,
+            rejectUnauthorized: false
         };
 
         let proxy = config.proxy;

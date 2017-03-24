@@ -1,4 +1,3 @@
-
 const colors = require("./colors");
 const unicode = require("./unicode");
 const helpers = require("./helpers");
@@ -756,7 +755,7 @@ export default class Screen extends adone.terminal.Node {
         }
 
         this._buf += this.terminfo.setScrollRegion(top, bottom);
-        this._buf += this.terminfo.cursorPos(y, 0);
+        this._buf += this.terminfo.moveTo(y + 1, 1);
         this._buf += this.terminfo.insertLine(n);
         this._buf += this.terminfo.setScrollRegion(0, this.height - 1);
 
@@ -778,7 +777,7 @@ export default class Screen extends adone.terminal.Node {
         }
 
         this._buf += this.terminfo.setScrollRegion(top, bottom);
-        this._buf += this.terminfo.cursorPos(y, 0);
+        this._buf += this.terminfo.moveTo(y + 1, 1);
         this._buf += this.terminfo.deleteLine(n);
         this._buf += this.terminfo.setScrollRegion(0, this.height - 1);
 
@@ -801,7 +800,7 @@ export default class Screen extends adone.terminal.Node {
         }
 
         this._buf += this.terminfo.setScrollRegion(top, bottom);
-        this._buf += this.terminfo.cursorPos(top, 0);
+        this._buf += this.terminfo.moveTo(top + 1, 1);
         this._buf += this.terminfo.deleteLine(n);
         this._buf += this.terminfo.setScrollRegion(0, this.height - 1);
 
@@ -824,7 +823,7 @@ export default class Screen extends adone.terminal.Node {
         }
 
         this._buf += this.terminfo.setScrollRegion(top, bottom);
-        this._buf += this.terminfo.cursorPos(bottom, 0);
+        this._buf += this.terminfo.moveTo(bottom + 1, 1);
         this._buf += Array(n + 1).join("\n");
         this._buf += this.terminfo.setScrollRegion(0, this.height - 1);
 
@@ -1147,7 +1146,7 @@ export default class Screen extends adone.terminal.Node {
                             out += this.codeAttr(data);
                             attr = data;
                         }
-                        out += this.terminfo.cursorPos(y, x);
+                        out += this.terminfo.moveTo(y + 1, x + 1);
                         out += this.terminfo.eraseLineAfter();
                         for (xx = x; xx < line.length; xx++) {
                             o[xx][0] = data;
@@ -1211,7 +1210,7 @@ export default class Screen extends adone.terminal.Node {
                     }
                     continue;
                 } else if (lx !== -1) {
-                    out += (y === ly ? this.terminfo.right(x - lx) : this.terminfo.cursorPos(y, x));
+                    out += (y === ly ? this.terminfo.right(x - lx) : this.terminfo.moveTo(y + 1, x + 1));
                     lx = -1, ly = -1;
                 }
                 o[x][0] = data;
@@ -1371,7 +1370,7 @@ export default class Screen extends adone.terminal.Node {
             }
 
             if (out) {
-                main += this.terminfo.cursorPos(y, 0) + out;
+                main += this.terminfo.moveTo(y + 1, 1) + out;
             }
         }
 

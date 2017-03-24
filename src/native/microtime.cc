@@ -1,11 +1,9 @@
+#include "adone.h"
 #include <errno.h>
-#include <node_version.h>
-#include <nan.h>
 
-#if defined(_MSC_VER)
+#if ADONE_OS_WINDOWS
 
 #include <time.h>
-#include <windows.h>
 
 // Pick GetSystemTimePreciseAsFileTime or GetSystemTimeAsFileTime depending on which is available at runtime.
 typedef VOID(WINAPI *WinGetSystemTime)(LPFILETIME);

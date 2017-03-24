@@ -1,76 +1,5 @@
 const { is, std, fs, util } = adone;
-
-class AdoneBuilder {
-    constructor() {
-        this.app = adone.appinstance;
-        this.scriptName = is.win32 ? "adone.cmd" : "adone";
-        this.nodePath = std.path.dirname(process.execPath);
-        this.adoneScriptPath = std.path.join(this.nodePath, this.scriptName);
-        this.nodeModulesDir = new fs.Directory(std.path.resolve(fs.homeDir(), ".node_modules"));
-        this.destAdoneDir = this.nodeModulesDir.getDirectory("adone");
-        this.adoneVersion = adone.package.version;
-    }
-
-    async install() {        
-        const targets = this.getTargets();
-        await this.destAdoneDir.create();
-        await adone.fast.src(targets, { base: this.app.adoneRootPath }).dest(this.destAdoneDir.path());
-        
-        return this.installScript();
-    }
-
-    async installLink() {
-        await this.nodeModulesDir.create();
-
-        if (is.win32) {
-            await fs.symlink(this.app.adoneRootPath, this.destAdoneDir.path(), "junction");
-        } else {
-            await fs.symlink(this.app.adoneRootPath, this.destAdoneDir.path());
-        }
-
-        return this.installScript();
-    }
-
-    async installScript() {
-        const data = adone.templating.nunjucks.render(std.path.join(this.app.adoneDefaultsPath, "scripts", this.scriptName), { targetPath: this.destAdoneDir.resolve("bin", "adone.js") });
-        await adone.fs.writeFile(this.adoneScriptPath, data);
-        if (!is.win32) {
-            await adone.fs.chmod(this.adoneScriptPath, 0o755);
-        }
-    }
-
-    async uninstall() {
-        if (await this.destAdoneDir.exists()) {
-            // Temporary backup whole adone directory.
-            const backupPath = await fs.tmpName();
-            await this.destAdoneDir.copyTo(backupPath);
-            try {
-                await this.destAdoneDir.unlink();
-            } catch (err) {
-                // Recovery files in case of unsuccessful deletion.
-                await this.destAdoneDir.copyFrom(backupPath, { ignoreExisting: true });
-                throw err;
-            }
-        }
-
-        try {
-            await adone.fs.unlink(this.adoneScriptPath);
-        } catch (err) {
-        }
-    }
-
-    async createArchive(outPath, type = "gzip") {
-        return adone.fast
-            .src(this.getTargets(), { base: this.app.adoneRootPath })
-            .pack("tar", "adone.tar")
-            .compress(type)
-            .dest(outPath);
-    }
-
-    getTargets() {
-        return ["!**/*.map", "package.json", "README*", "LICENSE*"].concat(adone.package.files.map((x) => util.globize(x, { recursively: true })));
-    }
-}
+import AdoneManager from "./adone_manager";
 
 export default class extends adone.application.Subsystem {
     initialize() {
@@ -196,6 +125,14 @@ export default class extends adone.application.Subsystem {
                 {
                     name: "publish",
                     help: "Publish binary build of adone",
+                    options: [
+                        {
+                            name: "--auth",
+                            type: String, // /(\w+):(\w+)/,
+                            required: true,
+                            help: "User and password"
+                        }
+                    ],
                     handler: this.publishCommand
                 }
             ]
@@ -351,7 +288,7 @@ export default class extends adone.application.Subsystem {
     }
 
     async installCommand(args, opts) {
-        const builder = new AdoneBuilder();
+        const builder = new AdoneManager();
         try {
             await builder.uninstall();
         } catch (err) {
@@ -363,13 +300,13 @@ export default class extends adone.application.Subsystem {
         } else {
             await builder.install();
         }
-        
+
         adone.log(`Adone v${builder.adoneVersion} successfully installed`);
         return 0;
     }
 
     async uninstallCommand() {
-        const builder = new AdoneBuilder();
+        const builder = new AdoneManager();
         try {
             await builder.uninstall();
         } catch (err) {
@@ -380,11 +317,32 @@ export default class extends adone.application.Subsystem {
         return 0;
     }
 
-    async publishCommand() {
-        const builder = new AdoneBuilder();
+    async publishCommand(args, opts) {
+        const builder = new AdoneManager();
         const outDir = await fs.Directory.createTmp();
-        // await builder.createArchive(outDir.path(), "gzip");
-        // await builder.createArchive(outDir.path(), "xz");
-        // adone.log(outDir.path());
+        await builder.createArchive(outDir.path(), "gzip");
+        await builder.createArchive(outDir.path(), "xz");
+
+        const auth = opts.get("auth").split(":");
+        const username = auth[0];
+        const password = auth[1];
+
+        for (const ext of ["gz", "xz"]) {
+            const filePath = outDir.resolve(`adone.tar.${ext}`);
+            const file = new fs.File(filePath);
+            const st = await file.stat();
+            await adone.net.http.client.post(`https://adone.io/public/dist?subject=adone&version=${builder.adoneVersion}&filename=adone.tar.${ext}`, std.fs.createReadStream(filePath), {
+                headers: {
+                    "Content-Type": "application/octet-stream",
+                    "Content-Length": st.size
+                },
+                auth: {
+                    username,
+                    password
+                }
+            });   
+        }
+
+        adone.log("Complete!");
     }
 }

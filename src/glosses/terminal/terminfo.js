@@ -79,7 +79,6 @@ const esc = {
     reset: { on: "\x1bc" },
 
     /* Cursor sequences */
-
     cursorLeft: { on: "\x1b[1000D" },
     saveCursor: { on: "\x1b7" },	// also '\x1b[s'
     restoreCursor: { on: "\x1b8" },	// also '\x1b[u'
@@ -94,14 +93,13 @@ const esc = {
     row: { on: "\x1b[%Ud" },
     scrollUp: { on: "\x1b[%US" },
     scrollDown: { on: "\x1b[%UT" },
-    moveTo: { on: "\x1b[%+1U;%-1UH" },
-    cursorPos: {
-        on: "%[cursorPos:%a%a]F",
-        handler(y, x) {
-            return `\x1b[${++y};${++x}H`;
-        }
-    },
-    //moveToBottomLeft: { on: '\x1bF' } ,	// Not widely supported
+    moveTo: { on: "\x1b[%U;%UH" },
+    // cursorPos: {
+    //     on: "%[cursorPos:%a%a]F",
+    //     handler(y, x) {
+    //         return `\x1b[${++y};${++x}H`;
+    //     }
+    // },
     hideCursor: { on: "\x1b[?25l", off: "\x1b[?25h" },
 
     // Cursor styles

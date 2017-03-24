@@ -165,7 +165,8 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
                 GridLayout: "./glosses/terminal/ui/layout/grid",
                 CarouselLayout: "./glosses/terminal/ui/layout/carousel",
                 Separator: "./glosses/terminal/ui/prompt/separator",
-                Prompt: "./glosses/terminal/ui/prompt"
+                Prompt: "./glosses/terminal/ui/prompt",
+                Progress: "./glosses/terminal/ui/progress"
             }, term);
 
             term.layout = lazify({
@@ -286,7 +287,11 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
         math: "./glosses/math",
         meta: "./glosses/meta",
         netron: "./glosses/netron",
-        shell: "./glosses/shell"
+        shell: "./glosses/shell",
+        native: () => lazify({
+            terminal: () => adone.bind("terminal.node").Terminal,
+            system: () => adone.bind("metrics.node").System
+        })
     }, adone);
 
     adone.application = lazify({
@@ -416,11 +421,6 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
         // FreebsdHAL: "./glosses/shi/hardware/freebsd"
 
         sloc: "./glosses/metrics/sloc",
-        native: () => {
-            return lazify({
-                system: () => adone.bind("metrics.node").System
-            });
-        },
         system: () => {
             let OperatingSystem;
             switch (process.platform) {

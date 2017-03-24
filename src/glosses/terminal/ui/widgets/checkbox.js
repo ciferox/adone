@@ -25,7 +25,7 @@ export default class CheckBox extends adone.terminal.widget.Input {
             var lpos = this.lpos;
             if (!lpos) return;
             this.screen.terminal.lsaveCursor("checkbox");
-            this.screen.terminal.cursorPos(lpos.yi, lpos.xi + 1);
+            this.screen.terminal.moveTo(lpos.yi, lpos.xi + 1);
             this.screen.terminal.showCursor();
         });
 

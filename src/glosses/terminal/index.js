@@ -317,8 +317,16 @@ export default class Terminal extends adone.EventEmitter {
         this._flush = this.flush.bind(this);
 
         this.terminfo = new Terminfo();
-        this.input = this.terminfo.getTTYInput();
-        this.output = this.terminfo.getTTYOutput();
+        try {
+            this.input = this.terminfo.getTTYInput();
+        } catch (err) {
+            this.input = process.stdin;
+        }
+        try {
+            this.output = this.terminfo.getTTYOutput();
+        } catch (err) {
+            this.output = process.stdout;
+        }
         this._terminal = this.terminfo.terminal;
 
         // Listen for resize on output
@@ -893,7 +901,7 @@ export default class Terminal extends adone.EventEmitter {
         return this._title;
     }
 
-    get terminal() {
+    get name() {
         return this._terminal;
     }
 
@@ -2562,6 +2570,10 @@ export default class Terminal extends adone.EventEmitter {
         return this;
     }
 
+    getCursorPos() {
+        return adone.native.terminal.getCursorPos();
+    }
+
     saveCursor(key) {
         if (key) {
             return this.lsaveCursor(key);
@@ -2601,7 +2613,7 @@ export default class Terminal extends adone.EventEmitter {
         }
         const pos = this._saved[key];
         //delete this._saved[key];
-        this.cursorPos(pos.y, pos.x);
+        this.moveTo(pos.y, pos.x);
         if (hide && pos.hidden !== this.cursorHidden) {
             if (pos.hidden) {
                 this.hideCursor();
@@ -2611,17 +2623,15 @@ export default class Terminal extends adone.EventEmitter {
         }
     }
 
-    move(x, y) {
-        return this.cursorPos(y, x);
-    }
+    // move(x, y) {
+    //     return this.cursorPos(y, x);
+    // }
 
-    cursorPos(row, col) {
-        row = row || 0;
-        col = col || 0;
+    moveTo(row = 0, col = 0) {
         this.x = col;
         this.y = row;
         this._ncoords();
-        this.write(this.terminfo.cursorPos(row, col));
+        this.write(this.terminfo.moveTo(row + 1, col + 1));
         return this;
     }
 
@@ -2637,25 +2647,25 @@ export default class Terminal extends adone.EventEmitter {
         return this;
     }
 
-    up(cnt) {
+    up(cnt = 1) {
         this.y -= cnt;
         this.write(this.terminfo.up(cnt));
         return this;
     }
 
-    down(cnt) {
+    down(cnt = 1) {
         this.y += cnt;
         this.write(this.terminfo.down(cnt));
         return this;
     }
 
-    right(cnt) {
+    right(cnt = 1) {
         this.x += cnt;
         this.write(this.terminfo.right(cnt));
         return this;
     }
 
-    left(cnt) {
+    left(cnt = 1) {
         this.x -= cnt;
         this.write(this.terminfo.left(cnt));
         return this;

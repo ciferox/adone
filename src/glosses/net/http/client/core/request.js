@@ -58,13 +58,13 @@ export default class Request {
 }
 
 for (const method of ["delete", "get", "head"]) {
-    Request.prototype[method] = function(url, config = {}) {
+    Request.prototype[method] = function (url, config = {}) {
         return this.request(adone.vendor.lodash.merge({}, config, { method, url }));
     };
 }
 
 for (const method of ["post", "put", "patch"]) {
-    Request.prototype[method] = function(url, data, config = {}) {
+    Request.prototype[method] = function (url, data, config = {}) {
         return this.request(adone.vendor.lodash.merge({}, config, { method, url, data }));
     };
 }

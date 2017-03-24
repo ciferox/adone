@@ -1,11 +1,7 @@
+#include "adone.h"
 #include <stdint.h>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
 #include <algorithm>
 #include <iostream>
-
-#include <nan.h>
 #include <openssl/bn.h>
 #include <map>
 #include <utility>

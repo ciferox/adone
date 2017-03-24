@@ -6,9 +6,9 @@ export default class FreebsdOS extends adone.metrics.OS {
         super();
 
         this.manufacturer = "Unix/BSD";
-        this.family = adone.metrics.native.system.sysctl("kern.ostype");
-        this.version = adone.metrics.native.system.sysctl("kern.osrelease");
-        const versionInfo = adone.metrics.native.system.sysctl("kern.version");
+        this.family = adone.native.system.sysctl("kern.ostype");
+        this.version = adone.native.system.sysctl("kern.osrelease");
+        const versionInfo = adone.native.system.sysctl("kern.version");
         this.buildNumber = versionInfo.split(":")[0].replace(this.family, "").replace(this.version, "").trim();
         this.codeName = "";
     }
@@ -17,7 +17,7 @@ export default class FreebsdOS extends adone.metrics.OS {
         const result = [];
         const now = (new Date()).getTime();
 
-        const procs = adone.metrics.native.system.getProcesses();
+        const procs = adone.native.system.getProcesses();
 
         for (let i = 0; i < procs.length; i++) {
             result.push(this._createProcess(procs[i], now));
@@ -27,15 +27,15 @@ export default class FreebsdOS extends adone.metrics.OS {
     }
     
     getProcess(pid) {
-        return this._createProcess(adone.metrics.native.system.getProcess(pid));
+        return this._createProcess(adone.native.system.getProcess(pid));
     }
     
     getProcessCount() {
-        return adone.metrics.native.system.getProcessCount();
+        return adone.native.system.getProcessCount();
     }
     
     getThreadCount() {
-        return adone.metrics.native.system.getThreadCount();
+        return adone.native.system.getThreadCount();
     }
     
     _createProcess(pi, now = (new Date()).getTime()) {

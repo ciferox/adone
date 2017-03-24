@@ -253,6 +253,13 @@
       ]
     },
     {
+      'target_name': 'terminal',
+      'include_dirs': ["nan"],
+      'cflags!': [ '-O3' ],
+      'cflags': [ '-O2' ],
+      'sources': [ 'src/native/terminal.cc' ]
+    },
+    {
       "target_name": "lzma",
       "sources": [
         "src/native/compressors/lzma/util.cpp",
@@ -331,7 +338,7 @@
       "variables": {
         "srcpath%": "<(module_root_dir)/build/Release",
       },
-      "dependencies" : [ "bignumber", "brotli_decode", "brotli_encode", "lzma", "bson", "hiredis", "memcpy", "metrics", "microtime", "userid", "utf8validation", "wsbufferutil" ],
+      "dependencies" : [ "bignumber", "brotli_decode", "brotli_encode", "lzma", "bson", "hiredis", "memcpy", "metrics", "microtime", "userid", "terminal", "utf8validation", "wsbufferutil" ],
       "copies": [
         {
           "files": [ 
@@ -344,6 +351,7 @@
             "<(srcpath)/metrics.node",
             "<(srcpath)/microtime.node",
             "<(srcpath)/userid.node",
+            "<(srcpath)/terminal.node",
             "<(srcpath)/utf8validation.node",
             "<(srcpath)/wsbufferutil.node",
             "<(srcpath)/lzma.node"

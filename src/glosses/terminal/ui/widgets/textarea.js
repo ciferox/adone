@@ -98,7 +98,7 @@ export default class TextArea extends adone.terminal.widget.Input {
                 terminal.up(terminal.y - cy);
             }
         } else {
-            terminal.cursorPos(cy, cx);
+            terminal.moveTo(cy, cx);
         }
     }
 

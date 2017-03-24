@@ -1,4 +1,3 @@
-
 const { std: { fs: sfs, path: spath }, is, fs } = adone;
 
 export default class File {
@@ -7,19 +6,19 @@ export default class File {
     }
 
     stat() {
-        return sfs.statAsync(this.path());
+        return sfs.statAsync(this._path);
     }
 
     statSync() {
-        return sfs.statSync(this.path());
+        return sfs.statSync(this._path);
     }
 
     lstat() {
-        return sfs.lstatAsync(this.path());
+        return sfs.lstatAsync(this._path);
     }
 
     lstatSync() {
-        return sfs.lstatSync(this.path());
+        return sfs.lstatSync(this._path);
     }
 
     mode() {
@@ -31,26 +30,26 @@ export default class File {
     }
 
     normalizedPath() {
-        return is.win32 ? adone.util.normalizePath(this.path()) : this.path();
+        return is.win32 ? adone.util.normalizePath(this._path) : this._path;
     }
 
     dirname() {
-        return spath.dirname(this.path());
+        return spath.dirname(this._path);
     }
 
     filename() {
-        return spath.basename(this.path());
+        return spath.basename(this._path);
     }
 
     relativePath(path) {
         if (path instanceof adone.fs.Directory) {
             path = path.path();
         }
-        return spath.relative(path, this.path());
+        return spath.relative(path, this._path);
     }
 
     exists() {
-        return sfs.accessAsync(this.path(), sfs.constants.F_OK).then(() => true, () => false);
+        return sfs.accessAsync(this._path, sfs.constants.F_OK).then(() => true, () => false);
     }
 
     create({ mode = 0o755 } = {}) {
@@ -58,15 +57,15 @@ export default class File {
     }
 
     write(buffer, { encoding = "utf8", mode = 0o755, flag = "w" } = {}) {
-        return sfs.writeFileAsync(this.path(), buffer, { encoding, mode, flag });
+        return sfs.writeFileAsync(this._path, buffer, { encoding, mode, flag });
     }
 
     append(buffer, { encoding = "utf8", mode = 0o755, flag = "w" } = {}) {
-        return sfs.appendFileAsync(this.path(), buffer, { encoding, mode, flag });
+        return sfs.appendFileAsync(this._path, buffer, { encoding, mode, flag });
     }
 
     unlink() {
-        return sfs.unlinkAsync(this.path()).catch((err) => {
+        return sfs.unlinkAsync(this._path).catch((err) => {
             if (err.code === "ENOENT") {
                 return;
             }
@@ -75,19 +74,19 @@ export default class File {
     }
 
     content(encoding = "utf8") {
-        return sfs.readFileAsync(this.path(), encoding);
+        return sfs.readFileAsync(this._path, encoding);
     }
 
     contentSync(encoding = "utf8") {
-        return sfs.readFileSync(this.path(), encoding);
+        return sfs.readFileSync(this._path, encoding);
     }
 
     contentStream(encoding = "utf8") {
-        return sfs.createReadStream(this.path(), { encoding });
+        return sfs.createReadStream(this._path, { encoding });
     }
 
     chmod(mode) {
-        return sfs.chmodAsync(this.path(), mode);
+        return sfs.chmodAsync(this._path, mode);
     }
 
     async rename(name) {
@@ -95,7 +94,7 @@ export default class File {
             name = name.filename();
         }
         const newPath = spath.join(this.dirname(), name);
-        await fs.rename(this.path(), newPath);
+        await fs.rename(this._path, newPath);
         this._path = newPath;
     }
 
@@ -103,6 +102,6 @@ export default class File {
         if (path instanceof File) {
             path = path.path();
         }
-        return sfs.symlinkAsync(this.path(), path).then(() => new adone.fs.SymbolicLinkFile(path));
+        return sfs.symlinkAsync(this._path, path).then(() => new adone.fs.SymbolicLinkFile(path));
     }
 }
