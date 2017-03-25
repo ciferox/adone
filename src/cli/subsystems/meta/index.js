@@ -1,14 +1,6 @@
 const { is, std, fs, util } = adone;
 import AdoneManager from "./adone_manager";
 
-const getArch = () => {
-    const arch = process.arch;
-    switch (arch) {
-        case "ia32": return "x32";
-        default: return arch;
-    }
-};
-
 export default class extends adone.application.Subsystem {
     initialize() {
         this.defineCommand({
@@ -336,19 +328,26 @@ export default class extends adone.application.Subsystem {
     async publishCommand(args, opts) {
         const builder = new AdoneManager();
         const outDir = await fs.Directory.createTmp();
-        await builder.createArchive(outDir.path(), "gzip");
-        await builder.createArchive(outDir.path(), "xz");
-
-        const name = `${process.platform}-${getArch()}`;
         const auth = opts.get("auth").split(":");
         const username = auth[0];
         const password = auth[1];
 
         for (const ext of ["gz", "xz"]) {
-            const filePath = outDir.resolve(`adone.tar.${ext}`);
+            const fileName = builder.getArchiveName(ext);
+            const bar = new adone.terminal.Progress({
+                schema: `:spinner Preparing {bold}${fileName}{/} :elapsed`
+            });
+
+            await builder.createArchive(outDir.path(), ext);    
+            
+            const filePath = outDir.resolve(fileName);
             const file = new fs.File(filePath);
             const st = await file.stat();
-            await adone.net.http.client.request.post(`https://adone.io/public/dist?subject=adone&version=${builder.adoneVersion}&filename=${name}.tar.${ext}`, std.fs.createReadStream(filePath), {
+            
+            bar.total = st.size;
+            bar.setSchema(`:spinner Uploading {bold}${fileName}{/} {green-fg}:filled{/}{gray-fg}:blank{/} :current/:total :elapsed`, true);
+            
+            await adone.net.http.client.request.post(`https://adone.io/public/dist?subject=adone&version=${builder.adoneVersion}&filename=${fileName}`, std.fs.createReadStream(filePath), {
                 headers: {
                     "Content-Type": "application/octet-stream",
                     "Content-Length": st.size
@@ -356,10 +355,16 @@ export default class extends adone.application.Subsystem {
                 auth: {
                     username,
                     password
+                },
+                rejectUnauthorized: false,
+                onUploadProgress: (evt) => {
+                    bar.update(evt.loaded / evt.total);
                 }
-            });   
+            });
+
+            bar.setSchema(`:spinner Complete {bold}${fileName}{/} :elapsed`, true);
         }
 
-        adone.log("Complete!");
+        await outDir.unlink();
     }
 }

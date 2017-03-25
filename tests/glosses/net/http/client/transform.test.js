@@ -53,7 +53,7 @@ describe("glosses", "net", "http", "client", "transform", () => {
         };
 
         request.post("http://example.org/foo", data, {
-            transformRequest: request.defaults.transformRequest.concat(
+            transformRequest: request.options.transformRequest.concat(
                 (data) => {
                     return data.replace("bar", "baz");
                 }

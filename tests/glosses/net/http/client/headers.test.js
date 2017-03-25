@@ -4,7 +4,7 @@ const { request } = adone.net.http.client;
 
 describe("glosses", "net", "http", "client", "headers", () => {
     it("should default common headers", (done) => {
-        const headers = request.defaults.headers.common;
+        const headers = request.options.headers.common;
 
         nock("http://example.org", {
             reqheaders: headers
@@ -18,7 +18,7 @@ describe("glosses", "net", "http", "client", "headers", () => {
     });
 
     it("should add extra headers for post", (done) => {
-        const headers = request.defaults.headers.common;
+        const headers = request.options.headers.common;
 
         nock("http://example.org", {
             reqheaders: headers

@@ -149,7 +149,7 @@ export class Fast extends adone.core.Core {
         const { compress } = adone.compressor[compressorType];
         const extname = {
             lzma: "lzma",
-            gzip: "gz",
+            gz: "gz",
             xz: "xz",
             brotli: "br",
             deflate: "deflate"  // ?

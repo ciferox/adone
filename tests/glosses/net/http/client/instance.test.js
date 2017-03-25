@@ -46,13 +46,13 @@ describe("glosses", "net", "http", "client", "instance", () => {
         instance.get("http://example.org/foo");
     });
 
-    it("should have defaults.headers", () => {
+    it("should have options.headers", () => {
         const instance = create({
             baseURL: "https://api.example.com"
         });
 
-        expect(typeof instance.defaults.headers, "object");
-        expect(typeof instance.defaults.headers.common, "object");
+        expect(typeof instance.options.headers, "object");
+        expect(typeof instance.options.headers.common, "object");
     });
 
     it("should have interceptors on the instance", (done) => {
@@ -74,8 +74,8 @@ describe("glosses", "net", "http", "client", "instance", () => {
         let response;
         instance.get("http://example.org/foo").then((res) => {
             response = res;
-            expect(response.config.foo).to.be.undefined;
-            expect(response.config.bar).to.be.true;
+            expect(response.options.foo).to.be.undefined;
+            expect(response.options.bar).to.be.true;
             done();
         });
     });

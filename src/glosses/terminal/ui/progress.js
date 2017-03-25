@@ -67,10 +67,11 @@ const toFixed = (value, precision) => {
     return (Math.round(value * power) / power).toFixed(precision);
 };
 
-const combine = (output, filled, blank, bare) => {
+const combine = (output, spinner, filled, blank, bare) => {
     let bar = filled + blank;
 
     if (!bare) {
+        spinner = spinner || placeholder;
         bar = bar || placeholder;
         blank = blank || placeholder;
         filled = filled || placeholder;
@@ -79,20 +80,22 @@ const combine = (output, filled, blank, bare) => {
     return output
         .replace(/:filled/g, filled)
         .replace(/:blank/g, blank)
-        .replace(/:bar/g, bar);
+        .replace(/:bar/g, bar)
+        .replace(/:spinner/g, spinner);
 };
 
 const bareLength = (output) => {
     const str = output
         .replace(/:filled/g, "")
         .replace(/:blank/g, "")
-        .replace(/:bar/g, "");
+        .replace(/:bar/g, "")
+        .replace(/:spinner/g, "");
 
     return str.length;
 };
 
 export default class ProgressBar {
-    constructor({ total = 100, current = 0, width = 60, tough = false, clean = false, blank = "—", filled = "▇", callback, schema } = {}) {
+    constructor({ total = 100, current = 0, width = 60, tough = false, clean = false, spinner = "dots", spinnerComplete = adone.text.unicode.symbol.tick, blank = "—", filled = "▇", callback, schema } = {}) {
         this.total = total;
         this.current = current;
         this.width = width;
@@ -109,10 +112,16 @@ export default class ProgressBar {
 
         this.tough = Boolean(tough);
         this.clean = Boolean(clean);
+        this.spinner = adone.text.spinner[spinner] || adone.text.spinner.dots;
+        this.spinnerComplete = spinnerComplete;
+        this.spinnerFrame = 0;
+        this.spinnerTimer = null;
         this.chars = {
             blank,
             filled
         };
+
+        this.completed = this.current >= this.total;
 
         // callback on completed
         this.callback = callback;
@@ -123,8 +132,20 @@ export default class ProgressBar {
         instances.push(this);
     }
 
-    setSchema(schema = " [:bar] :current/:total :percent :elapsed :eta", refresh) {
+    setSchema(schema = " [:bar] :current/:total :percent :elapsed :eta", refresh = false) {
         this.schema = schema;
+        
+        if (!is.null(this.spinnerTimer)) {
+            clearInterval(this.spinnerTimer);
+            this.spinnerTimer = null;
+        }
+
+        if (!this.completed && schema.indexOf(":spinner") >= 0) {    
+            this.spinnerTimer = setInterval(() => {
+                this.spinnerFrame++;
+                this.update(this.current / this.total);    
+            }, this.spinner.interval);
+        }
 
         if (refresh) {
             this.compile(refresh);
@@ -155,6 +176,7 @@ export default class ProgressBar {
         }
 
         this.current += delta;
+        this.completed = this.current >= this.total;
         this.compile(tokens);
         this.snoop();
     }
@@ -202,11 +224,17 @@ export default class ProgressBar {
         width = Math.min(width, Math.max(0, cols - bareLength(raw)));
 
         const length = Math.round(width * ratio);
+        let spinner;
+        if (!this.completed) {
+            spinner = this.spinner.frames[this.spinnerFrame % this.spinner.frames.length];
+        } else {
+            spinner = this.spinnerComplete;
+        }
         const filled = chars.filled.repeat(length);
         const blank = chars.blank.repeat(width - length);
 
-        raw = combine(raw, filled, blank, true);
-        output = combine(output, filled, blank, false);
+        raw = combine(raw, spinner, filled, blank, true);
+        output = combine(output, spinner, filled, blank, false);
 
         // without color and font styles
         this.raw = raw;
@@ -277,9 +305,10 @@ export default class ProgressBar {
     }
 
     snoop() {
-        this.completed = this.current >= this.total;
-
         if (this.completed) {
+            if (!is.null(this.spinnerTimer)) {
+                clearInterval(this.spinnerTimer);
+            }
             this.terminate();
         }
 

@@ -1,6 +1,24 @@
 describe("glosses", "utils", () => {
     const { util, is, x } = adone;
 
+    describe("arrify", () => {
+        it("no args", () => {
+            assert.equal(util.arrify().length, 0);
+        });
+
+        it.skip("'undefined' as argument", () => {
+            assert.sameMembers(util.arrify(undefined), [undefined]);
+        });
+
+        it("'null' as argument", () => {
+            assert.sameMembers(util.arrify(null), [null]);
+        });
+
+        it("array as argument", () => {
+            assert.sameMembers(util.arrify([1, 2, 3]), [1, 2, 3]);
+        });
+    });
+
     describe("Function", () => {
         describe("identity", () => {
             it("should return the first argument", () => {

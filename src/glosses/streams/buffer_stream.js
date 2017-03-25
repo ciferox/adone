@@ -1,5 +1,3 @@
-
-
 export const DEFAULT_INITIAL_SIZE = (8 * 1024);
 export const DEFAULT_INCREMENT_AMOUNT = (8 * 1024);
 export const DEFAULT_FREQUENCY = 1;
@@ -49,7 +47,7 @@ export class ReadableStream extends adone.std.stream.Readable {
             data.copy(this._buffer, this._size, 0);
             this._size += data.length;
         } else {
-            data = data + "";
+            data = String(data);
             const dataSizeInBytes = Buffer.byteLength(data);
             this._increaseBufferIfNecessary(dataSizeInBytes);
             this._buffer.write(data, this._size, encoding || "utf8");
@@ -59,6 +57,7 @@ export class ReadableStream extends adone.std.stream.Readable {
 
     _read() {
         if (!this._sendTimeout) {
+            // this._sendData();
             this._sendTimeout = setTimeout(() => this._sendData(), this.frequency);
         }
     }
@@ -78,8 +77,7 @@ export class ReadableStream extends adone.std.stream.Readable {
         let sendMore = false;
 
         if (amount > 0) {
-            let chunk = null;
-            chunk = new Buffer(amount);
+            const chunk = new Buffer(amount);
             this._buffer.copy(chunk, 0, 0, amount);
 
             sendMore = this.push(chunk) !== false;

@@ -4,9 +4,9 @@ const { request, create, defaults } = adone.net.http.client;
 
 describe("glosses", "net", "http", "client", "defaults", () => {
     afterEach(() => {
-        delete request.defaults.baseURL;
-        delete request.defaults.headers.get["X-CUSTOM-HEADER"];
-        delete request.defaults.headers.post["X-CUSTOM-HEADER"];
+        delete request.options.baseURL;
+        delete request.options.headers.get["X-CUSTOM-HEADER"];
+        delete request.options.headers.post["X-CUSTOM-HEADER"];
         // document.cookie = XSRF_COOKIE_NAME + "=;expires=" + new Date(Date.now() - 86400000).toGMTString();
     });
 
@@ -40,7 +40,7 @@ describe("glosses", "net", "http", "client", "defaults", () => {
     });
 
     it("should use modified defaults config", (done) => {
-        request.defaults.baseURL = "http://example.org/";
+        request.options.baseURL = "http://example.org/";
 
         nock("http://example.org")
             .get("/foo")
@@ -64,7 +64,7 @@ describe("glosses", "net", "http", "client", "defaults", () => {
     });
 
     it("should use GET headers", (done) => {
-        request.defaults.headers.get["X-CUSTOM-HEADER"] = "foo";
+        request.options.headers.get["X-CUSTOM-HEADER"] = "foo";
 
         nock("http://example.org", {
             reqheaders: {
@@ -90,7 +90,7 @@ describe("glosses", "net", "http", "client", "defaults", () => {
                 done();
             });
 
-        request.defaults.headers.post["X-CUSTOM-HEADER"] = "foo";
+        request.options.headers.post["X-CUSTOM-HEADER"] = "foo";
         request.post("http://example.org/foo", {});
 
     });
@@ -138,7 +138,7 @@ describe("glosses", "net", "http", "client", "defaults", () => {
                 done();
             });
 
-        request.defaults.baseURL = "http://example.org/";
+        request.options.baseURL = "http://example.org/";
         const instance = create();
 
         instance.get("/foo");
@@ -152,7 +152,7 @@ describe("glosses", "net", "http", "client", "defaults", () => {
             });
 
         const instance = create();
-        request.defaults.baseURL = "http://example.org/";
+        request.options.baseURL = "http://example.org/";
 
         instance.get("/foo");
     });

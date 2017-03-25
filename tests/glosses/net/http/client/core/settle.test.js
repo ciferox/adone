@@ -11,7 +11,7 @@ describe("glosses", "net", "http", "client", "core", "settle", () => {
 
     it("should resolve promise if status is not set", () => {
         const response = {
-            config: {
+            options: {
                 validateStatus() {
                     return true;
                 }
@@ -26,7 +26,7 @@ describe("glosses", "net", "http", "client", "core", "settle", () => {
     it("should resolve promise if validateStatus is not set", () => {
         const response = {
             status: 500,
-            config: {
+            options: {
             }
         };
         settle(resolve, reject, response);
@@ -38,7 +38,7 @@ describe("glosses", "net", "http", "client", "core", "settle", () => {
     it("should resolve promise if validateStatus returns true", () => {
         const response = {
             status: 500,
-            config: {
+            options: {
                 validateStatus() {
                     return true;
                 }
@@ -53,7 +53,7 @@ describe("glosses", "net", "http", "client", "core", "settle", () => {
     it("should reject promise if validateStatus returns false", () => {
         const response = {
             status: 500,
-            config: {
+            options: {
                 validateStatus() {
                     return false;
                 }
@@ -64,7 +64,7 @@ describe("glosses", "net", "http", "client", "core", "settle", () => {
         expect(reject).to.have.been.calledOnce;
         const reason = reject.getCall(0).args[0];
         expect(reason.message).to.be.equal("Request failed with status code 500");
-        expect(reason.config).to.be.deep.equal(response.config);
+        expect(reason.config).to.be.deep.equal(response.options);
         expect(reason.response).to.be.deep.equal(response);
     });
 
@@ -72,7 +72,7 @@ describe("glosses", "net", "http", "client", "core", "settle", () => {
         const validateStatus = spy();
         const response = {
             status: 500,
-            config: {
+            options: {
                 validateStatus
             }
         };

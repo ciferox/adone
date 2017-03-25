@@ -18,9 +18,9 @@ describe("glosses", "net", "http", "client", () => {
             promise.catch(() => {});
         });
 
-        it("should have defaults", () => {
-            expect(typeof request.defaults).to.be.equal("object");
-            expect(typeof request.defaults.headers).to.be.equal("object");
+        it("should have default options", () => {
+            expect(typeof request.options).to.be.equal("object");
+            expect(typeof request.options.headers).to.be.equal("object");
         });
 
         it("should have interceptors", () => {

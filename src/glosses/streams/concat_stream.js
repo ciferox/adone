@@ -1,5 +1,3 @@
-
-
 const { is } = adone;
 
 export default class ConcatStream extends adone.std.stream.Writable {

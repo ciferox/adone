@@ -389,21 +389,19 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
     });
 
     adone.stream = lazify({
-        buffer: () => {
-            return lazify({
-                DEFAULT_INITIAL_SIZE: ["./glosses/streams/buffer_stream", (mod) => mod.DEFAULT_INITIAL_SIZE],
-                DEFAULT_INCREMENT_AMOUNT: ["./glosses/streams/buffer_stream", (mod) => mod.DEFAULT_INCREMENT_AMOUNT],
-                DEFAULT_FREQUENCY: ["./glosses/streams/buffer_stream", (mod) => mod.DEFAULT_FREQUENCY],
-                DEFAULT_CHUNK_SIZE: ["./glosses/streams/buffer_stream", (mod) => mod.DEFAULT_CHUNK_SIZE],
-                ReadableStream: ["./glosses/streams/buffer_stream", (mod) => mod.ReadableStream],
-                WritableStream: ["./glosses/streams/buffer_stream", (mod) => mod.WritableStream]
-            });
-        },
-
+        buffer: () => lazify({
+            DEFAULT_INITIAL_SIZE: ["./glosses/streams/buffer_stream", (mod) => mod.DEFAULT_INITIAL_SIZE],
+            DEFAULT_INCREMENT_AMOUNT: ["./glosses/streams/buffer_stream", (mod) => mod.DEFAULT_INCREMENT_AMOUNT],
+            DEFAULT_FREQUENCY: ["./glosses/streams/buffer_stream", (mod) => mod.DEFAULT_FREQUENCY],
+            DEFAULT_CHUNK_SIZE: ["./glosses/streams/buffer_stream", (mod) => mod.DEFAULT_CHUNK_SIZE],
+            ReadableStream: ["./glosses/streams/buffer_stream", (mod) => mod.ReadableStream],
+            WritableStream: ["./glosses/streams/buffer_stream", (mod) => mod.WritableStream]
+        }),
         ConcatStream: "./glosses/streams/concat_stream",
         concat: () => (opts) => new adone.stream.ConcatStream(opts),
         MuteStream: "./glosses/streams/mute_stream",
-        iconv: "./glosses/streams/iconv"
+        iconv: "./glosses/streams/iconv",
+        CountingStream: "./glosses/streams/counting_stream"
     });
 
     adone.metrics = lazify({
@@ -548,7 +546,7 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
     });
 
     adone.compressor = lazify({
-        gzip: "./glosses/compressors/gzip",
+        gz: "./glosses/compressors/gzip",
         deflate: "./glosses/compressors/deflate",
         brotli: "./glosses/compressors/brotli",
         lzma: "./glosses/compressors/lzma",

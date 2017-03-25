@@ -1,3 +1,5 @@
+const { is } = adone;
+
 const imports = adone.lazify({
     createError: "./create_error",
     enhanceError: "./enhance_error",
@@ -33,30 +35,24 @@ function buildURL(url, params, paramsSerializer) {
 }
 
 
-export default function adapter(config) {
+export default function adapter(options) {
     return new Promise((resolve, reject) => {
-        let data = config.data;
-        const headers = config.headers;
+        let data = options.data;
+        const headers = options.headers;
         let timer;
         let aborted = false;
 
-        // Set User-Agent (required by some servers)
-        // Only set header if it hasn't been set in config
-        // See https://github.com/mzabriskie/axios/issues/69
-        if (!headers["User-Agent"] && !headers["user-agent"]) {
-            headers["User-Agent"] = "arequest";
+        if (!is.string(headers["User-Agent"]) && !is.string(headers["user-agent"])) {
+            headers["User-Agent"] = `Adone/${adone.package.version}`;
         }
 
-        if (data && !adone.is.stream(data)) {
-            if (adone.is.arrayBuffer(data)) {
+        if (data && !is.stream(data)) {
+            if (is.arrayBuffer(data)) {
                 data = new Buffer(new Uint8Array(data));
-            } else if (adone.is.string(data)) {
+            } else if (is.string(data)) {
                 data = new Buffer(data, "utf-8");
             } else {
-                return reject(imports.createError(
-                    "Data after transformation must be a string, an ArrayBuffer, or a Stream",
-                    config
-                ));
+                return reject(imports.createError("Data after transformation must be a string, an ArrayBuffer, or a Stream", options));
             }
 
             // Add Content-Length header if data exists
@@ -67,16 +63,16 @@ export default function adapter(config) {
 
         // HTTP basic authentication
         let auth = undefined;
-        if (config.auth) {
-            auth = `${config.auth.username || ""}:${config.auth.password || ""}`;
+        if (options.auth) {
+            auth = `${options.auth.username || ""}:${options.auth.password || ""}`;
         }
 
         // Parse url
-        const parsed = adone.std.url.parse(config.url);
-        const protocol = parsed.protocol || "http:";
+        const parsedUrl = adone.std.url.parse(options.url);
+        const protocol = parsedUrl.protocol || "http:";
 
-        if (!auth && parsed.auth) {
-            const urlAuth = parsed.auth.split(":");
+        if (!auth && parsedUrl.auth) {
+            const urlAuth = parsedUrl.auth.split(":");
             auth = `${urlAuth[0] || ""}:${urlAuth[1] || ""}`;
         }
 
@@ -85,24 +81,27 @@ export default function adapter(config) {
         }
 
         const isHttps = protocol === "https:";
-        const agent = isHttps ? config.httpsAgent : config.httpAgent;
+        const agent = isHttps ? options.httpsAgent : options.httpAgent;
 
-        const options = {
-            hostname: parsed.hostname,
-            port: parsed.port,
-            path: buildURL(parsed.path, config.params, config.paramsSerializer).replace(/^\?/, ""),
-            method: config.method,
+        const nodeOptions = {
+            hostname: parsedUrl.hostname,
+            port: parsedUrl.port,
+            path: buildURL(parsedUrl.path, options.params, options.paramsSerializer).replace(/^\?/, ""),
+            method: options.method,
             headers,
             agent,
-            auth,
-            rejectUnauthorized: false
+            auth
         };
 
-        let proxy = config.proxy;
-        if (!proxy) {
+        if (isHttps) {
+            nodeOptions.rejectUnauthorized = is.boolean(options.rejectUnauthorized) ? options.rejectUnauthorized : true;
+        }
+
+        let proxy = options.proxy;
+        if (is.nil(proxy)) {
             const proxyEnv = `${protocol.slice(0, -1)}_proxy`;
             const proxyUrl = process.env[proxyEnv] || process.env[proxyEnv.toUpperCase()];
-            if (proxyUrl) {
+            if (is.string(proxyUrl)) {
                 const parsedProxyUrl = adone.std.url.parse(proxyUrl);
                 proxy = {
                     host: parsedProxyUrl.hostname,
@@ -120,31 +119,28 @@ export default function adapter(config) {
         }
 
         if (proxy) {
-            options.hostname = proxy.host;
-            options.host = proxy.host;
-            options.headers.host = parsed.hostname + (parsed.port ? ":" + parsed.port : "");
-            options.port = proxy.port;
-            options.path = `${protocol}//${parsed.hostname}${parsed.port ? `:${parsed.port}` : ""}${options.path}`;
+            nodeOptions.hostname = proxy.host;
+            nodeOptions.host = proxy.host;
+            nodeOptions.headers.host = parsedUrl.hostname + (parsedUrl.port ? `:${parsedUrl.port}` : "");
+            nodeOptions.port = proxy.port;
+            nodeOptions.path = `${protocol}//${parsedUrl.hostname}${parsedUrl.port ? `:${parsedUrl.port}` : ""}${nodeOptions.path}`;
 
             // Basic proxy authorization
             if (proxy.auth) {
                 const base64 = new Buffer(`${proxy.auth.username}:${proxy.auth.password}`, "utf8").toString("base64");
-                options.headers["Proxy-Authorization"] = `Basic ${base64}`;
+                nodeOptions.headers["Proxy-Authorization"] = `Basic ${base64}`;
             }
         }
 
         let transport;
-        if (config.maxRedirects === 0) {
+        if (options.maxRedirects === 0) {
             transport = isHttps ? adone.std.https : adone.std.http;
         } else {
-            if (config.maxRedirects) {
-                options.maxRedirects = config.maxRedirects;
-            }
+            nodeOptions.maxRedirects = options.maxRedirects;
             transport = isHttps ? imports.followRedirects.https : imports.followRedirects.http;
         }
 
-        // Create the request
-        const req = transport.request(options, function handleResponse(res) {
+        const req = transport.request(nodeOptions, (res) => {
             if (aborted) {
                 return;
             }
@@ -172,11 +168,11 @@ export default function adapter(config) {
                 status: res.statusCode,
                 statusText: res.statusMessage,
                 headers: res.headers,
-                config,
+                options,
                 request: req
             };
 
-            if (config.responseType === "stream") {
+            if (options.responseType === "stream") {
                 response.data = stream;
                 imports.settle(resolve, reject, response);
             } else {
@@ -185,19 +181,19 @@ export default function adapter(config) {
                     responseBuffer.push(chunk);
 
                     // make sure the content length is not over the maxContentLength if specified
-                    if (config.maxContentLength > -1 && Buffer.concat(responseBuffer).length > config.maxContentLength) {
-                        reject(imports.createError(`maxContentLength size of ${config.maxContentLength} exceeded`, config));
+                    if (options.maxContentLength > -1 && Buffer.concat(responseBuffer).length > options.maxContentLength) {
+                        reject(imports.createError(`maxContentLength size of ${options.maxContentLength} exceeded`, options));
                     }
                 });
 
                 stream.on("error", function handleStreamError(err) {
-                    if (aborted) return;
-                    reject(imports.enhanceError(err, config));
+                    if (aborted) { return; }
+                    reject(imports.enhanceError(err, options));
                 });
 
                 stream.on("end", function handleStreamEnd() {
                     let responseData = Buffer.concat(responseBuffer);
-                    if (config.responseType !== "arraybuffer") {
+                    if (options.responseType !== "arraybuffer") {
                         responseData = responseData.toString("utf8");
                     }
 
@@ -207,41 +203,74 @@ export default function adapter(config) {
             }
         });
 
-        // Handle errors
-        req.on("error", function handleRequestError(err) {
-            if (aborted) {
-                return;
+        req.on("error", (err) => {
+            if (!aborted) {
+                reject(imports.enhanceError(err, options));
             }
-            reject(imports.enhanceError(err, config));
         });
 
-        // Handle request timeout
-        if (config.timeout && !timer) {
-            timer = setTimeout(function handleRequestTimeout() {
+        if (options.timeout && !timer) {
+            timer = setTimeout(() => {
                 req.abort();
-                reject(imports.createError(`timeout of ${config.timeout}ms exceeded`, config, "ECONNABORTED"));
+                reject(imports.createError(`timeout of ${options.timeout}ms exceeded`, options, "ECONNABORTED"));
                 aborted = true;
-            }, config.timeout);
+            }, options.timeout);
         }
 
-        if (config.cancelToken) {
-            // Handle cancellation
-            config.cancelToken.promise.then(function onCanceled(cancel) {
-                if (aborted) {
-                    return;
+        if (options.cancelToken) {
+            options.cancelToken.promise.then((cancel) => {
+                if (!aborted) {
+                    req.abort();
+                    reject(cancel);
+                    aborted = true;
                 }
-
-                req.abort();
-                reject(cancel);
-                aborted = true;
             });
         }
 
-        // Send the request
-        if (adone.is.stream(data)) {
-            data.pipe(req);
+        // if (typeof options.onDownloadProgress === "function") {
+        //     request.addEventListener("progress", options.onDownloadProgress);
+        // }
+
+        let uploadProgress;
+        if (is.function(options.onUploadProgress)) {
+            uploadProgress = options.onUploadProgress;
         } else {
-            req.end(data);
+            uploadProgress = adone.noop;
         }
+
+        const eventData = {
+            lengthComputable: true,
+            loaded: 0,
+            total: headers["Content-Length"] || 0
+        };
+
+        if (is.nil(data)) {
+            req.end(data);
+            uploadProgress(eventData);
+            return;
+        } else if (!is.stream(data)) {
+            if (data.length <= adone.stream.buffer.DEFAULT_INITIAL_SIZE) {
+                req.end(data);
+                eventData.loaded = eventData.total = data.length;
+                uploadProgress(eventData);
+                return;
+            }
+            const stream = new adone.stream.buffer.ReadableStream();
+            stream.put(data);
+            stream.stop();
+            data = stream;
+            eventData.total = data.length;
+        } else {
+            eventData.lengthComputable = false;
+        }
+
+        const counter = new adone.stream.CountingStream();
+
+        counter.on("data", () => {
+            eventData.loaded = counter.count;
+            uploadProgress(eventData);
+        });
+
+        data.pipe(counter).pipe(req);
     });
 }

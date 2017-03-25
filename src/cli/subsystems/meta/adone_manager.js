@@ -1,5 +1,13 @@
 const { is, std, fs, util } = adone;
 
+const getArch = () => {
+    const arch = process.arch;
+    switch (arch) {
+        case "ia32": return "x32";
+        default: return arch;
+    }
+};
+
 export default class AdoneManager {
     constructor() {
         this.app = adone.appinstance;
@@ -9,6 +17,7 @@ export default class AdoneManager {
         this.nodeModulesDir = new fs.Directory(std.path.resolve(fs.homeDir(), ".node_modules"));
         this.destAdoneDir = this.nodeModulesDir.getDirectory("adone");
         this.adoneVersion = adone.package.version;
+        this.name = `${process.platform}-${getArch()}.tar`;
     }
 
     async install() {
@@ -59,10 +68,14 @@ export default class AdoneManager {
         }
     }
 
-    async createArchive(outPath, type = "gzip") {
+    getArchiveName(type) {
+        return `${this.name}.${type}`;
+    }
+
+    async createArchive(outPath, type = "gz") {
         return adone.fast
             .src(this.getTargets(), { base: this.app.adoneRootPath })
-            .pack("tar", "adone.tar")
+            .pack("tar", this.name)
             .compress(type)
             .dest(outPath);
     }
