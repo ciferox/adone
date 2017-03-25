@@ -76,7 +76,7 @@ export default class Dispatcher {
                         detached: true,
                         cwd: process.cwd(),
                         env: Object.assign({
-                            HOME: process.env.HOME || process.env.HOMEPATH
+                            ADONE_HOME: adone.appinstance.config.adone.home
                         }, process.env),
                         stdio: ["ipc", this.descriptors.stdout, this.descriptors.stderr]
                     });

@@ -1,3 +1,5 @@
+const { is, vendor: { lodash } } = adone;
+
 const imports = adone.lazify({
     defaults: "./defaults",
     InterceptorManager: "./interceptor_manager",
@@ -22,13 +24,13 @@ export class Client {
     }
 
     request(config) {
-        if (adone.is.string(config)) {
-            config = adone.vendor.lodash.merge({
+        if (is.string(config)) {
+            config = lodash.merge({
                 url: config
             }, arguments[1]);
         }
 
-        config = adone.vendor.lodash.merge({}, imports.defaults, this.defaults, { method: "get" }, config);
+        config = lodash.merge({}, imports.defaults, this.defaults, { method: "get" }, config);
         // Support baseURL config
         if (config.baseURL && !isAbsoluteURL(config.url)) {
             config.url = combineURLs(config.baseURL, config.url);
@@ -53,29 +55,29 @@ export class Client {
     }
 
     get(url, config = {}) {
-        return this.request(adone.vendor.lodash.merge({}, config, { method: "get", url }));
+        return this.request(lodash.merge({}, config, { method: "get", url }));
     }
 
     head(url, config = {}) {
-        return this.request(adone.vendor.lodash.merge({}, config, { method: "heade", url }));
+        return this.request(lodash.merge({}, config, { method: "heade", url }));
     }
 
     post(url, data, config = {}) {
-        return this.request(adone.vendor.lodash.merge({}, config, { method: "post", url, data }));
+        return this.request(lodash.merge({}, config, { method: "post", url, data }));
     }
 
     put(url, data, config = {}) {
-        return this.request(adone.vendor.lodash.merge({}, config, { method: "put", url, data }));
+        return this.request(lodash.merge({}, config, { method: "put", url, data }));
     }
 
     patch(url, data, config = {}) {
-        return this.request(adone.vendor.lodash.merge({}, config, { method: "patch", url, data }));
+        return this.request(lodash.merge({}, config, { method: "patch", url, data }));
     }
 
 }
 
 Client.prototype.delete = function (url, config = {}) {
-    return this.request(adone.vendor.lodash.merge({}, config, { method: "delete", url }));
+    return this.request(lodash.merge({}, config, { method: "delete", url }));
 };
 
 const createInstance = (defaultConfig) => {
@@ -86,7 +88,7 @@ const createInstance = (defaultConfig) => {
     for (const [name, method] of ents) {
         instance[name] = method.bind(context);
     }
-    adone.vendor.lodash.extend(instance, context);
+    lodash.extend(instance, context);
 
     return instance;
 };
@@ -95,7 +97,7 @@ const createInstance = (defaultConfig) => {
 export const request = createInstance(imports.defaults);
 
 // Factory for creating new instances
-export const create = (instanceConfig) => createInstance(adone.vendor.lodash.merge({}, imports.defaults, instanceConfig));
+export const create = (instanceConfig) => createInstance(lodash.merge({}, imports.defaults, instanceConfig));
 
 // Expose Cancel & CancelToken
 adone.lazify({

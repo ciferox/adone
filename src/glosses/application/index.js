@@ -1077,7 +1077,9 @@ export default class Application extends adone.application.Subsystem {
             }
             // Load adone configuration.
             this.config = new adone.configuration.FileConfiguration({ base: this.adoneRootPath });
-            await this.loadAdoneConfig("adone", this.defaultConfigsPath);
+            await this.loadStdConfig("adone", this.defaultConfigsPath);
+            // Rewrite ADONE_HOME
+            process.env.ADONE_HOME = this.config.adone.home;
 
             this._errorScope = true;
             await this.initialize();
@@ -1120,7 +1122,7 @@ export default class Application extends adone.application.Subsystem {
         }
     }
 
-    async loadAdoneConfig(name) {
+    async loadStdConfig(name) {
         const basename = `${name}.js`;
         const defaultConfigPath = adone.std.path.join(this.defaultConfigsPath, basename);
         await this.config.load(defaultConfigPath, name);

@@ -11,7 +11,7 @@ export default class ConfigManager {
         this.config = this.app.config;
 
         if (is.undefined(this.config.omnitron)) {
-            await this.app.loadAdoneConfig("omnitron");
+            await this.app.loadStdConfig("omnitron");
             // Subconfiguration for services...
             this.config.omnitron.services = {};
 
@@ -36,6 +36,7 @@ export default class ConfigManager {
                     adone.error(err);
                 }
             }
+
             this.config.omnitron.services.omnitron = {
                 description: "Omnitron service",
                 path: __dirname,
