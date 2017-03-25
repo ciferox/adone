@@ -1,12 +1,39 @@
 const imports = adone.lazify({
-    settle: "../settle",
-    buildURL: "../helpers/build_url",
-    createError: "../create_error",
-    enhanceError: "../enhance_error",
-    follow: "../helpers/follow_redirects"
+    createError: "./create_error",
+    enhanceError: "./enhance_error",
+    followRedirects: "./follow_redirects",
+    settle: "./settle"
 }, null, require);
 
-export default function httpAdapter(config) {
+
+/**
+ * Build a URL by appending params to the end
+ *
+ * @param {string} url The base of the url (e.g., http://www.google.com)
+ * @param {object} [params] The params to be appended
+ * @returns {string} The formatted url
+ */
+function buildURL(url, params, paramsSerializer) {
+    if (!params) {
+        return url;
+    }
+
+    let serializedParams;
+    if (paramsSerializer) {
+        serializedParams = paramsSerializer(params);
+    } else {
+        serializedParams = adone.std.querystring.encode(params);
+    }
+
+    if (serializedParams) {
+        url += (url.indexOf("?") === -1 ? "?" : "&") + serializedParams;
+    }
+
+    return url;
+}
+
+
+export default function adapter(config) {
     return new Promise((resolve, reject) => {
         let data = config.data;
         const headers = config.headers;
@@ -63,7 +90,7 @@ export default function httpAdapter(config) {
         const options = {
             hostname: parsed.hostname,
             port: parsed.port,
-            path: imports.buildURL(parsed.path, config.params, config.paramsSerializer).replace(/^\?/, ""),
+            path: buildURL(parsed.path, config.params, config.paramsSerializer).replace(/^\?/, ""),
             method: config.method,
             headers,
             agent,
@@ -113,7 +140,7 @@ export default function httpAdapter(config) {
             if (config.maxRedirects) {
                 options.maxRedirects = config.maxRedirects;
             }
-            transport = isHttps ? imports.follow.https : imports.follow.http;
+            transport = isHttps ? imports.followRedirects.https : imports.followRedirects.http;
         }
 
         // Create the request

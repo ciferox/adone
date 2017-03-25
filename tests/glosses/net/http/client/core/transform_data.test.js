@@ -1,4 +1,4 @@
-import transformData from "adone/glosses/net/http/client/transform_data";
+const { transformData } = adone.net.http.client;
 
 describe("glosses", "net", "http", "client", "core", "transformData", () => {
     it("should support a single transformer", () => {

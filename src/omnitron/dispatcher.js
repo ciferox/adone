@@ -75,9 +75,6 @@ export default class Dispatcher {
                     const child = adone.std.child_process.spawn(process.execPath || "node", [omnitronPath], {
                         detached: true,
                         cwd: process.cwd(),
-                        env: Object.assign({
-                            ADONE_HOME: adone.appinstance.config.adone.home
-                        }, process.env),
                         stdio: ["ipc", this.descriptors.stdout, this.descriptors.stderr]
                     });
                     child.unref();

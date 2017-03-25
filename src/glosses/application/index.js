@@ -1078,8 +1078,6 @@ export default class Application extends adone.application.Subsystem {
             // Load adone configuration.
             this.config = new adone.configuration.FileConfiguration({ base: this.adoneRootPath });
             await this.loadStdConfig("adone", this.defaultConfigsPath);
-            // Rewrite ADONE_HOME
-            process.env.ADONE_HOME = this.config.adone.home;
 
             this._errorScope = true;
             await this.initialize();

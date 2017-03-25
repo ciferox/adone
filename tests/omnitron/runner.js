@@ -1,5 +1,7 @@
-if (adone.is.nil(process.env.ADONE_HOME)) {
-    let home = "";
+let home;
+if (process.platform === "win32") {
+    home = process.env.USERPROFILE;
+} else {
     if (process.env.HOME && !process.env.HOMEPATH) {
         home = adone.std.path.resolve(process.env.HOME, ".adone_test");
     } else if (process.env.HOME || process.env.HOMEPATH) {
@@ -7,8 +9,9 @@ if (adone.is.nil(process.env.ADONE_HOME)) {
     } else {
         home = adone.std.path.resolve("/etc", ".adone_test");
     }
-    process.env.ADONE_HOME = home;
 }
+// Rewrite ADONE_HOME
+process.env.ADONE_HOME = home;
 
 export class WeakOmnitron extends adone.omnitron.Omnitron.Omnitron {
     constructor(options) {

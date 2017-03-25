@@ -1,7 +1,3 @@
-
-
-
-
 const safeMethods = { GET: true, HEAD: true, OPTIONS: true, TRACE: true };
 const schemes = {};
 // RFC7231§4.2.1: Of the request methods defined by this specification,
@@ -169,6 +165,15 @@ class RedirectableRequest extends adone.std.stream.Writable {
     }
 }
 
+const followRedirects = adone.lazify({
+    http: () => wrapProtocol("http:"),
+    https: () => wrapProtocol("https:")
+}, {
+    maxRedirects: 21
+});
+
+export default followRedirects;
+
 // Export a redirecting wrapper for each native protocol
 
 function wrapProtocol(protocol) {
@@ -180,9 +185,9 @@ function wrapProtocol(protocol) {
     wrappedProtocol.request = function (options, callback) {
         if (adone.is.string(options)) {
             options = adone.std.url.parse(options);
-            options.maxRedirects = follow.maxRedirects;
+            options.maxRedirects = followRedirects.maxRedirects;
         } else {
-            options = Object.assign({ maxRedirects: follow.maxRedirects, protocol }, options);
+            options = Object.assign({ maxRedirects: followRedirects.maxRedirects, protocol }, options);
         }
         adone.std.assert.equal(options.protocol, protocol, "protocol mismatch");
 
@@ -197,12 +202,3 @@ function wrapProtocol(protocol) {
     };
     return wrappedProtocol;
 }
-
-const follow = adone.lazify({
-    http: () => wrapProtocol("http:"),
-    https: () => wrapProtocol("https:")
-}, {
-    maxRedirects: 21
-});
-
-export default follow;

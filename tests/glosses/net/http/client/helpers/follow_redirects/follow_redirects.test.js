@@ -1,4 +1,4 @@
-import followRedirects from "adone/glosses/net/http/client/helpers/follow_redirects";
+import followRedirects from "adone/glosses/net/http/client/follow_redirects";
 
 describe("glosses", "net", "http", "client", "helpers", "follow-redirects ", () => {
     const express = require("express");
