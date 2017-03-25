@@ -1,6 +1,6 @@
 import nock from "shani/helpers/nock";
 
-const { client } = adone.net.http;
+const { request, create } = adone.net.http.client;
 
 describe("glosses", "net", "http", "client", "options", () => {
     it("should default method to get", (done) => {
@@ -10,7 +10,7 @@ describe("glosses", "net", "http", "client", "options", () => {
                 done();
             });
 
-        client("http://example.org/foo");
+        request("http://example.org/foo");
     });
 
     it("should accept headers", (done) => {
@@ -22,7 +22,7 @@ describe("glosses", "net", "http", "client", "options", () => {
                 done();
             });
 
-        client("http://example.org/foo", {
+        request("http://example.org/foo", {
             headers: {
                 "X-Requested-With": "XMLHttpRequest"
             }
@@ -36,7 +36,7 @@ describe("glosses", "net", "http", "client", "options", () => {
                 done();
             });
 
-        client("http://example.org/foo", {
+        request("http://example.org/foo", {
             params: {
                 foo: 123,
                 bar: 456
@@ -53,7 +53,7 @@ describe("glosses", "net", "http", "client", "options", () => {
                 done();
             });
 
-        client("http://example.org/foo", {
+        request("http://example.org/foo", {
             headers: {
                 Accept: "foo/bar"
             }
@@ -67,7 +67,7 @@ describe("glosses", "net", "http", "client", "options", () => {
                 done();
             });
 
-        const instance = client.create({
+        const instance = create({
             baseURL: "http://test.com/"
         });
 
@@ -81,7 +81,7 @@ describe("glosses", "net", "http", "client", "options", () => {
                 done();
             });
 
-        const instance = client.create({
+        const instance = create({
             baseURL: "http://someurl.com/"
         });
 

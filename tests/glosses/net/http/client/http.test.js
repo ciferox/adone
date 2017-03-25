@@ -1,5 +1,5 @@
 const {
-    net: { http: { client } },
+    net: { http: { client: { request, Cancel, CancelToken } } },
     std: { http, url, zlib, fs }
 } = adone;
 let server;
@@ -29,7 +29,7 @@ describe("glosses", "net", "http", "client", "unit", () => {
                 let failure = false;
                 let error;
 
-                client.get("http://localhost:4444/", {
+                request.get("http://localhost:4444/", {
                     timeout: 250
                 }).then(() => {
                     success = true;
@@ -57,7 +57,7 @@ describe("glosses", "net", "http", "client", "unit", () => {
                 res.setHeader("Content-Type", "application/json;charset=utf-8");
                 res.end(JSON.stringify(data));
             }).listen(4444, () => {
-                client.get("http://localhost:4444/").then((res) => {
+                request.get("http://localhost:4444/").then((res) => {
                     expect(res.data).to.be.deep.equal(data);
                 }).then(done, done);
             });
@@ -77,7 +77,7 @@ describe("glosses", "net", "http", "client", "unit", () => {
                     res.end(str);
                 }
             }).listen(4444, () => {
-                client.get("http://localhost:4444/one").then((res) => {
+                request.get("http://localhost:4444/one").then((res) => {
                     expect(res.data).to.be.equal(str);
                     done();
                 });
@@ -90,7 +90,7 @@ describe("glosses", "net", "http", "client", "unit", () => {
                 res.statusCode = 302;
                 res.end();
             }).listen(4444, () => {
-                client.get("http://localhost:4444/", {
+                request.get("http://localhost:4444/", {
                     maxRedirects: 0,
                     validateStatus: () => true
                 }).then((res) => {
@@ -109,7 +109,7 @@ describe("glosses", "net", "http", "client", "unit", () => {
                 res.end();
                 i++;
             }).listen(4444, () => {
-                client.get("http://localhost:4444/", {
+                request.get("http://localhost:4444/", {
                     maxRedirects: 3
                 }).catch(() => {
                     done();
@@ -130,7 +130,7 @@ describe("glosses", "net", "http", "client", "unit", () => {
                     res.setHeader("Content-Encoding", "gzip");
                     res.end(zipped);
                 }).listen(4444, () => {
-                    client.get("http://localhost:4444/").then((res) => {
+                    request.get("http://localhost:4444/").then((res) => {
                         expect(res.data).to.be.deep.equal(data);
                         done();
                     });
@@ -145,7 +145,7 @@ describe("glosses", "net", "http", "client", "unit", () => {
                 res.setHeader("Content-Encoding", "gzip");
                 res.end("invalid response");
             }).listen(4444, () => {
-                client.get("http://localhost:4444/").catch(() => {
+                request.get("http://localhost:4444/").catch(() => {
                     done();
                 });
             });
@@ -158,7 +158,7 @@ describe("glosses", "net", "http", "client", "unit", () => {
                 res.setHeader("Content-Type", "text/html; charset=UTF-8");
                 res.end(str);
             }).listen(4444, () => {
-                client.get("http://localhost:4444/").then((res) => {
+                request.get("http://localhost:4444/").then((res) => {
                     expect(res.data).to.be.equal(str);
                     done();
                 });
@@ -171,7 +171,7 @@ describe("glosses", "net", "http", "client", "unit", () => {
             }).listen(4444, () => {
                 const user = "foo";
                 const headers = { Authorization: "Bearer 1234" };
-                client.get(`http://${user}@localhost:4444/`, { headers }).then((res) => {
+                request.get(`http://${user}@localhost:4444/`, { headers }).then((res) => {
                     const base64 = new Buffer(`${user}:`, "utf8").toString("base64");
                     expect(res.data).to.be.equal(`Basic ${base64}`);
                     done();
@@ -185,7 +185,7 @@ describe("glosses", "net", "http", "client", "unit", () => {
             }).listen(4444, () => {
                 const auth = { username: "foo", password: "bar" };
                 const headers = { Authorization: "Bearer 1234" };
-                client.get("http://localhost:4444/", { auth, headers }).then((res) => {
+                request.get("http://localhost:4444/", { auth, headers }).then((res) => {
                     const base64 = new Buffer("foo:bar", "utf8").toString("base64");
                     expect(res.data).to.be.equal(`Basic ${base64}`);
                     done();
@@ -204,7 +204,7 @@ describe("glosses", "net", "http", "client", "unit", () => {
                 let failure = false;
                 let error;
 
-                client.get("http://localhost:4444/", {
+                request.get("http://localhost:4444/", {
                     maxContentLength: 2000
                 }).then(() => {
                     success = true;
@@ -224,7 +224,7 @@ describe("glosses", "net", "http", "client", "unit", () => {
             server = http.createServer((req, res) => {
                 req.pipe(res);
             }).listen(4444, () => {
-                client.post("http://localhost:4444/",
+                request.post("http://localhost:4444/",
                     fs.createReadStream(__filename), {
                         responseType: "stream"
                     }).then((res) => {
@@ -266,7 +266,7 @@ describe("glosses", "net", "http", "client", "unit", () => {
                     });
 
                 }).listen(4000, () => {
-                    client.get("http://localhost:4444/", {
+                    request.get("http://localhost:4444/", {
                         proxy: {
                             host: "localhost",
                             port: 4000
@@ -307,7 +307,7 @@ describe("glosses", "net", "http", "client", "unit", () => {
                     // set the env variable
                     process.env.http_proxy = "http://localhost:4000/";
 
-                    client.get("http://localhost:4444/").then((res) => {
+                    request.get("http://localhost:4444/").then((res) => {
                         expect(res.data).to.be.equal(45671234);
                         done();
                     });
@@ -336,7 +336,7 @@ describe("glosses", "net", "http", "client", "unit", () => {
                     });
 
                 }).listen(4000, () => {
-                    client.get("http://localhost:4444/", {
+                    request.get("http://localhost:4444/", {
                         proxy: {
                             host: "localhost",
                             port: 4000,
@@ -378,7 +378,7 @@ describe("glosses", "net", "http", "client", "unit", () => {
                 }).listen(4000, () => {
                     process.env.http_proxy = "http://user:pass@localhost:4000/";
 
-                    client.get("http://localhost:4444/").then((res) => {
+                    request.get("http://localhost:4444/").then((res) => {
                         const base64 = new Buffer("user:pass", "utf8").toString("base64");
                         expect(res.data).to.be.equal(`Basic ${base64}`);
                         done();
@@ -409,7 +409,7 @@ describe("glosses", "net", "http", "client", "unit", () => {
                     });
 
                 }).listen(4000, () => {
-                    client.get("http://localhost:4444/", {
+                    request.get("http://localhost:4444/", {
                         proxy: {
                             host: "localhost",
                             port: 4000,
@@ -431,15 +431,15 @@ describe("glosses", "net", "http", "client", "unit", () => {
         });
 
         it("should support canceling", (done) => {
-            const source = client.CancelToken.source();
+            const source = CancelToken.source();
             server = http.createServer(() => {
                 // call cancel() when the request has been sent, but a response has not been received
                 source.cancel("Operation has been canceled.");
             }).listen(4444, () => {
-                client.get("http://localhost:4444/", {
+                request.get("http://localhost:4444/", {
                     cancelToken: source.token
                 }).catch((thrown) => {
-                    expect(thrown).to.be.instanceOf(client.Cancel);
+                    expect(thrown).to.be.instanceOf(Cancel);
                     expect(thrown.message).to.be.equal("Operation has been canceled.");
                     done();
                 });

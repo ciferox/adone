@@ -1,4 +1,4 @@
-import enhanceError from "adone/glosses/net/http/client/core/enhance_error";
+import enhanceError from "adone/glosses/net/http/client/enhance_error";
 
 describe("glosses", "net", "http", "client", "core", "enhanceError", () => {
     it("should add config and code to error", () => {

@@ -117,16 +117,23 @@ export const namespaces = [
     },
     {
         name: "adone.net",
-        description: "",
+        description: "Implementation of different network abstractions, protocols and associated stuff",
         paths: [
             "glosses/net"
         ]
     },
     {
-        name: "adone.netron",
-        description: "",
+        name: "adone.net.http",
+        description: "Implementation of http client/server",
         paths: [
-            "glosses/netron"
+            "glosses/net/http"
+        ]
+    },
+    {
+        name: "adone.netron",
+        description: "Implementation of Netron",
+        paths: [
+            "glosses/netron/index"
         ]
     },
     {
@@ -138,7 +145,7 @@ export const namespaces = [
     },
     {
         name: "adone.netron.ws",
-        description: "WebSocket implementation of netron/peer/adapter",
+        description: "WebSocket adapter and implementation of netron/peer",
         paths: [
             "glosses/netron/ws"
         ]

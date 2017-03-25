@@ -1,6 +1,6 @@
 import nock from "shani/helpers/nock";
 
-const { client } = adone.net.http;
+const { request } = adone.net.http.client;
 
 describe("glosses", "net", "http", "client", "transform", () => {
     it("should transform JSON to string", (done) => {
@@ -12,7 +12,7 @@ describe("glosses", "net", "http", "client", "transform", () => {
             foo: "bar"
         };
 
-        client.post("http://example.org/foo", data);
+        request.post("http://example.org/foo", data);
     });
 
     it("should transform string to JSON", (done) => {
@@ -20,7 +20,7 @@ describe("glosses", "net", "http", "client", "transform", () => {
             .get("/foo")
             .reply(200, { foo: "bar" });
 
-        client("http://example.org/foo").then((response) => {
+        request("http://example.org/foo").then((response) => {
             expect(typeof response.data).to.be.equal("object");
             expect(response.data.foo).to.be.equal("bar");
             done();
@@ -36,7 +36,7 @@ describe("glosses", "net", "http", "client", "transform", () => {
             foo: "bar"
         };
 
-        client.post("http://example.org/foo", data, {
+        request.post("http://example.org/foo", data, {
             transformRequest(data) {
                 return JSON.stringify(data);
             }
@@ -52,8 +52,8 @@ describe("glosses", "net", "http", "client", "transform", () => {
             foo: "bar"
         };
 
-        client.post("http://example.org/foo", data, {
-            transformRequest: client.defaults.transformRequest.concat(
+        request.post("http://example.org/foo", data, {
+            transformRequest: request.defaults.transformRequest.concat(
                 (data) => {
                     return data.replace("bar", "baz");
                 }
@@ -68,7 +68,7 @@ describe("glosses", "net", "http", "client", "transform", () => {
             .get("/foo")
             .reply(200, () => done());
 
-        client("http://example.org/foo", {
+        request("http://example.org/foo", {
             transformRequest(data, headers) {
                 headers["X-Authorization"] = token;
             }

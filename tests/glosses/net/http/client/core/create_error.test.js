@@ -1,4 +1,4 @@
-import createError from "adone/glosses/net/http/client/core/create_error";
+import createError from "adone/glosses/net/http/client/create_error";
 
 describe("glosses", "net", "http", "client", "core", "createError", () => {
     it("should create an Error with message, config, and code", () => {

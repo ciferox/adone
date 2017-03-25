@@ -286,6 +286,7 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
         promise: "./glosses/promise",
         math: "./glosses/math",
         meta: "./glosses/meta",
+        net: "./glosses/net",
         netron: "./glosses/netron",
         shell: "./glosses/shell",
         native: () => lazify({
@@ -535,107 +536,8 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
         mongo: "./glosses/databases/mongo"
     });
 
-    adone.net = lazify({
-        util: "./glosses/net/util",
-        Socket: "./glosses/net/socket",
-        Server: "./glosses/net/server",
-        ssh: "./glosses/net/ssh"
-    });
-
-    adone.net.http = adone.lazify({
-        Application: "./glosses/net/http",
-        Middleware: "./glosses/net/http/middleware",
-        helper: "./glosses/net/http/helpers",
-        x: "./glosses/net/http/x",
-        Server: "./glosses/net/http/server",
-        client: "./glosses/net/http/client"
-    });
-
-    adone.net.http.middleware = lazify({
-        router: "./glosses/net/http/middlewares/router",
-        renderer: ["./glosses/net/http/middlewares/renderer", (mod) => lazify({
-            Engine: ["./glosses/net/http/middlewares/renderer/engine", (mod) => {
-                mod.default.compile = mod.compile;
-                mod.default.render = mod.render;
-                return mod.default;
-            }]
-        }, mod.default)],
-        cookies: "./glosses/net/http/middlewares/cookies",
-        body: ["./glosses/net/http/middlewares/body", (mod) => lazify({
-            buffer: "./glosses/net/http/middlewares/body/buffer",
-            json: "./glosses/net/http/middlewares/body/json",
-            multipart: "./glosses/net/http/middlewares/body/multipart",
-            text: "./glosses/net/http/middlewares/body/text",
-            urlencoded: "./glosses/net/http/middlewares/body/urlencoded"
-        }, mod.default)],
-        session: ["./glosses/net/http/middlewares/session", (mod) => {
-            mod.default.Store = mod.Store;
-            return mod.default;
-        }],
-        static: "./glosses/net/http/middlewares/static",
-        favicon: "./glosses/net/http/middlewares/favicon",
-        logger: "./glosses/net/http/middlewares/logger",
-        useragent: "./glosses/net/http/middlewares/useragent",
-        geoip: "./glosses/net/http/middlewares/geoip",
-        rewrite: "./glosses/net/http/middlewares/rewrite"
-    });
-
     adone.templating = lazify({
         nunjucks: "./glosses/templating/nunjucks"
-    });
-
-    adone.net.ws = lazify({
-        WebSocket: "./glosses/net/ws/webSocket",
-        WebSocketServer: "./glosses/net/ws/webSocketServer",
-        Sender: "./glosses/net/ws/sender",
-        Receiver: "./glosses/net/ws/receiver",
-        PerMessageDeflate: "./glosses/net/ws/perMessageDeflate",
-        exts: "./glosses/net/ws/extensions",
-        buildHostHeader: ["./glosses/net/ws/webSocket", (mod) => mod.buildHostHeader],
-        bufferutil: "./glosses/net/ws/bufferutil"
-    });
-
-    adone.net.address = lazify({
-        IP4: ["./glosses/net/address", (mod) => mod.IP4],
-        IP6: ["./glosses/net/address", (mod) => mod.IP6],
-        v6helpers: "./glosses/net/address/v6helpers"
-    });
-
-    adone.net.proxy = lazify({
-        socks: "./glosses/net/proxies/socks"
-    });
-
-    adone.net.mail = lazify({
-        assign: "./glosses/net/mail/assign",
-        shared: "./glosses/net/mail/shared",
-        cookies: "./glosses/net/mail/cookies",
-        fetch: "./glosses/net/mail/fetch",
-        base64: "./glosses/net/mail/base64",
-        qp: "./glosses/net/mail/qp",
-        mime: "./glosses/net/mail/mime",
-        mimetypes: "./glosses/net/mail/mimetypes",
-        charset: "./glosses/net/mail/charset",
-        addressparser: "./glosses/net/mail/addressparser",
-        wellknown: "./glosses/net/mail/wellknown",
-        httpProxy: "./glosses/net/mail/http_proxy",
-        templateSender: "./glosses/net/mail/template_sender",
-        buildmail: "./glosses/net/mail/buildmail",
-        dataStream: "./glosses/net/mail/data_stream",
-        composer: "./glosses/net/mail/composer",
-        poolResource: "./glosses/net/mail/pool_resource",
-        stubTransport: "./glosses/net/mail/stub_transport",
-        directTransport: "./glosses/net/mail/direct_transport",
-        smtpTransport: "./glosses/net/mail/smtp_transport",
-        messageQueue: "./glosses/net/mail/message_queue",
-        smtpConnection: "./glosses/net/mail/smtp_connection",
-        smtpPool: "./glosses/net/mail/smtp_pool",
-        mailer: "./glosses/net/mail/mailer"
-    });
-
-    adone.netron.ws = lazify({
-        Adapter: "./glosses/netron/ws/adapter",
-        Netron: "./glosses/netron/ws/netron",
-        Peer: "./glosses/netron/ws/peer"
     });
 
     adone.crypto = lazify({

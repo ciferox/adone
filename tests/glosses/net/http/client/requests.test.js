@@ -1,6 +1,6 @@
 import nock from "shani/helpers/nock";
 
-const { client } = adone.net.http;
+const { request } = adone.net.http.client;
 
 describe("glosses", "net", "http", "client", "requests", () => {
     it("should treat single string arg as url", (done) => {
@@ -10,7 +10,7 @@ describe("glosses", "net", "http", "client", "requests", () => {
                 done();
             });
 
-        client("http://example.org/foo");
+        request("http://example.org/foo");
     });
 
     it("should allow string arg as url, and config arg", (done) => {
@@ -20,7 +20,7 @@ describe("glosses", "net", "http", "client", "requests", () => {
                 done();
             });
 
-        client.post("http://example.org/foo");
+        request.post("http://example.org/foo");
     });
 
     it("should reject on network errors", function (done) {
@@ -38,7 +38,7 @@ describe("glosses", "net", "http", "client", "requests", () => {
             done();
         };
 
-        client("http://thisisnotaserver")
+        request("http://thisisnotaserver")
             .then(resolveSpy, rejectSpy)
             .then(finish, finish);
     });
@@ -51,7 +51,7 @@ describe("glosses", "net", "http", "client", "requests", () => {
         const resolveSpy = spy();
         const rejectSpy = spy();
 
-        await client("http://example.org/foo", {
+        await request("http://example.org/foo", {
             validateStatus(status) {
                 return status !== 500;
             }
@@ -74,7 +74,7 @@ describe("glosses", "net", "http", "client", "requests", () => {
         const resolveSpy = spy();
         const rejectSpy = spy();
 
-        await client("http://example.org/foo", {
+        await request("http://example.org/foo", {
             validateStatus(status) {
                 return status === 500;
             }
@@ -89,7 +89,7 @@ describe("glosses", "net", "http", "client", "requests", () => {
             .post("/api/account/signup", /.*/)
             .reply(400, "{\"error\": \"BAD USERNAME\", \"code\": 1}");
 
-        client.post("http://example.org/api/account/signup", {
+        request.post("http://example.org/api/account/signup", {
             username: null,
             password: null
         }, {
@@ -112,7 +112,7 @@ describe("glosses", "net", "http", "client", "requests", () => {
                 "Content-Type": "application/json"
             });
 
-        client.post("http://someurl.com/foo").then((response) => {
+        request.post("http://someurl.com/foo").then((response) => {
             expect(response.data.foo).to.be.equal("bar");
             expect(response.status).to.be.equal(200);
             expect(response.headers["content-type"]).to.be.equal("application/json");
@@ -134,7 +134,7 @@ describe("glosses", "net", "http", "client", "requests", () => {
 
         const contentType = "application/vnd.myapp.type+json";
 
-        client.post("http://example.org/foo", { prop: "value" }, {
+        request.post("http://example.org/foo", { prop: "value" }, {
             headers: {
                 "content-type": contentType
             }
@@ -155,7 +155,7 @@ describe("glosses", "net", "http", "client", "requests", () => {
             });
 
 
-        client.post("http://example.org/foo", input.buffer);
+        request.post("http://example.org/foo", input.buffer);
     });
 
     it("should support binary data as array buffer view", (done) => {
@@ -170,7 +170,7 @@ describe("glosses", "net", "http", "client", "requests", () => {
             });
 
 
-        client.post("http://example.org/foo", input);
+        request.post("http://example.org/foo", input);
     });
 
     it("should support array buffer response", (done) => {
@@ -178,7 +178,7 @@ describe("glosses", "net", "http", "client", "requests", () => {
             .get("/foo")
             .reply(200, Buffer.from("Hello, World!"));
 
-        client("http://example.org/foo", {
+        request("http://example.org/foo", {
             responseType: "arraybuffer"
         }).then((response) => {
             expect(response.data.byteLength).to.be.equal(13);
@@ -198,6 +198,6 @@ describe("glosses", "net", "http", "client", "requests", () => {
             .reply(200, () => done());
 
 
-        client.post("http://example.org/foo", qs);
+        request.post("http://example.org/foo", qs);
     });
 });

@@ -1,6 +1,14 @@
 const { is, std, fs, util } = adone;
 import AdoneManager from "./adone_manager";
 
+const getArch = () => {
+    const arch = process.arch;
+    switch (arch) {
+        case "ia32": return "x32";
+        default: return arch;
+    }
+};
+
 export default class extends adone.application.Subsystem {
     initialize() {
         this.defineCommand({
@@ -243,14 +251,22 @@ export default class extends adone.application.Subsystem {
             const name = args.get("name");
             const { namespace, objectName } = adone.meta.parseName(name);
             if (!namespace.startsWith("adone")) {
-                throw new adone.x.NotSupported("Extraction from namespace other than 'adone' not supported");
+                throw new adone.x.NotSupported("Extraction from namespace other than 'adone' is not supported");
             }
             if (objectName === "") {
-                throw new adone.x.NotValid("Extraction of namespace not supported");
+                throw new adone.x.NotValid("Extraction of namespace is not supported");
             }
 
             const adoneMod = new adone.meta.code.Inspector({ dir: (opts.get("src") ? "src" : "lib") });
             await adoneMod.attachNamespace(namespace);
+
+            // const ns = adoneMod.getNamespace(name);
+            // adone.log(ns.modules[2].path);
+            // adone.log("Globals:");
+            // adone.log(ns.modules[2].module.globals);
+            // adone.log("References:");
+            // adone.log(ns.modules[2].module.references);
+            // return 0;
 
             const code = adoneMod.getCode(name);
 
@@ -323,6 +339,7 @@ export default class extends adone.application.Subsystem {
         await builder.createArchive(outDir.path(), "gzip");
         await builder.createArchive(outDir.path(), "xz");
 
+        const name = `${process.platform}-${getArch()}`;
         const auth = opts.get("auth").split(":");
         const username = auth[0];
         const password = auth[1];
@@ -331,7 +348,7 @@ export default class extends adone.application.Subsystem {
             const filePath = outDir.resolve(`adone.tar.${ext}`);
             const file = new fs.File(filePath);
             const st = await file.stat();
-            await adone.net.http.client.post(`https://adone.io/public/dist?subject=adone&version=${builder.adoneVersion}&filename=adone.tar.${ext}`, std.fs.createReadStream(filePath), {
+            await adone.net.http.client.request.post(`https://adone.io/public/dist?subject=adone&version=${builder.adoneVersion}&filename=${name}.tar.${ext}`, std.fs.createReadStream(filePath), {
                 headers: {
                     "Content-Type": "application/octet-stream",
                     "Content-Length": st.size

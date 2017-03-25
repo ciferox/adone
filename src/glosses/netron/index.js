@@ -67,5 +67,10 @@ adone.lazify({
         }
 
         return contextables;
-    }
+    },
+    ws: () => adone.lazify({
+        Adapter: "./ws/adapter",
+        Netron: "./ws/netron",
+        Peer: "./ws/peer"
+    }, null, require)
 }, exports, require);

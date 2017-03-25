@@ -1,11 +1,11 @@
 import nock from "shani/helpers/nock";
 
-const { client } = adone.net.http;
+const { request } = adone.net.http.client;
 
 describe("glosses", "net", "http", "client", "interceptors", () => {
     afterEach(() => {
-        client.interceptors.request.handlers = [];
-        client.interceptors.response.handlers = [];
+        request.interceptors.request.handlers = [];
+        request.interceptors.response.handlers = [];
     });
 
     it("should add a request interceptor", (done) => {
@@ -19,12 +19,12 @@ describe("glosses", "net", "http", "client", "interceptors", () => {
                 done();
             });
 
-        client.interceptors.request.use((config) => {
+        request.interceptors.request.use((config) => {
             config.headers.test = "added by interceptor";
             return config;
         });
 
-        client("http://example.org/foo");
+        request("http://example.org/foo");
     });
 
     it("should add a request interceptor that returns a new config object", (done) => {
@@ -34,14 +34,14 @@ describe("glosses", "net", "http", "client", "interceptors", () => {
                 done();
             });
 
-        client.interceptors.request.use(() => {
+        request.interceptors.request.use(() => {
             return {
                 url: "http://example.org/bar",
                 method: "post"
             };
         });
 
-        client("http://example.org/foo");
+        request("http://example.org/foo");
     });
 
     it("should add a request interceptor that returns a promise", (done) => {
@@ -55,7 +55,7 @@ describe("glosses", "net", "http", "client", "interceptors", () => {
                 done();
             });
 
-        client.interceptors.request.use((config) => {
+        request.interceptors.request.use((config) => {
             return new Promise((resolve) => {
                 // do something async
                 setTimeout(() => {
@@ -65,7 +65,7 @@ describe("glosses", "net", "http", "client", "interceptors", () => {
             });
         });
 
-        client("http://example.org/foo");
+        request("http://example.org/foo");
     });
 
     it("should add multiple request interceptors", (done) => {
@@ -81,20 +81,20 @@ describe("glosses", "net", "http", "client", "interceptors", () => {
                 done();
             });
 
-        client.interceptors.request.use((config) => {
+        request.interceptors.request.use((config) => {
             config.headers.test1 = "1";
             return config;
         });
-        client.interceptors.request.use((config) => {
+        request.interceptors.request.use((config) => {
             config.headers.test2 = "2";
             return config;
         });
-        client.interceptors.request.use((config) => {
+        request.interceptors.request.use((config) => {
             config.headers.test3 = "3";
             return config;
         });
 
-        client("http://example.org/foo");
+        request("http://example.org/foo");
     });
 
     it("should add a response interceptor", (done) => {
@@ -102,12 +102,12 @@ describe("glosses", "net", "http", "client", "interceptors", () => {
             .get("/foo")
             .reply(200, "OK");
 
-        client.interceptors.response.use((data) => {
+        request.interceptors.response.use((data) => {
             data.data = `${data.data} - modified by interceptor`;
             return data;
         });
 
-        client("http://example.org/foo").then((data) => {
+        request("http://example.org/foo").then((data) => {
             expect(data.data).to.be.equal("OK - modified by interceptor");
             done();
         });
@@ -118,13 +118,13 @@ describe("glosses", "net", "http", "client", "interceptors", () => {
             .get("/foo")
             .reply(200, "OK");
 
-        client.interceptors.response.use(() => {
+        request.interceptors.response.use(() => {
             return {
                 data: "stuff"
             };
         });
 
-        client("http://example.org/foo").then((data) => {
+        request("http://example.org/foo").then((data) => {
             expect(data.data).to.be.equal("stuff");
             done();
         });
@@ -134,7 +134,7 @@ describe("glosses", "net", "http", "client", "interceptors", () => {
         nock("http://example.org")
             .get("/foo")
             .reply(200, "OK");
-        client.interceptors.response.use((data) => {
+        request.interceptors.response.use((data) => {
             return new Promise((resolve) => {
                 // do something async
                 setTimeout(() => {
@@ -144,7 +144,7 @@ describe("glosses", "net", "http", "client", "interceptors", () => {
             });
         });
 
-        client("http://example.org/foo").then((data) => {
+        request("http://example.org/foo").then((data) => {
             expect(data.data).to.be.equal("you have been promised!");
             done();
         });
@@ -155,20 +155,20 @@ describe("glosses", "net", "http", "client", "interceptors", () => {
             .get("/foo")
             .reply(200, "OK");
 
-        client.interceptors.response.use((data) => {
+        request.interceptors.response.use((data) => {
             data.data = `${data.data}1`;
             return data;
         });
-        client.interceptors.response.use((data) => {
+        request.interceptors.response.use((data) => {
             data.data = `${data.data}2`;
             return data;
         });
-        client.interceptors.response.use((data) => {
+        request.interceptors.response.use((data) => {
             data.data = `${data.data}3`;
             return data;
         });
 
-        client("http://example.org/foo").then((data) => {
+        request("http://example.org/foo").then((data) => {
             expect(data.data).to.be.equal("OK123");
             done();
         });
@@ -179,22 +179,22 @@ describe("glosses", "net", "http", "client", "interceptors", () => {
             .get("/foo")
             .reply(200, "OK");
 
-        client.interceptors.response.use((data) => {
+        request.interceptors.response.use((data) => {
             data.data = `${data.data}1`;
             return data;
         });
-        const intercept = client.interceptors.response.use((data) => {
+        const intercept = request.interceptors.response.use((data) => {
             data.data = `${data.data}2`;
             return data;
         });
-        client.interceptors.response.use((data) => {
+        request.interceptors.response.use((data) => {
             data.data = `${data.data}3`;
             return data;
         });
 
-        client.interceptors.response.eject(intercept);
+        request.interceptors.response.eject(intercept);
 
-        client("http://example.org/foo").then((data) => {
+        request("http://example.org/foo").then((data) => {
             expect(data.data).to.be.equal("OK13");
             done();
         });
@@ -207,12 +207,12 @@ describe("glosses", "net", "http", "client", "interceptors", () => {
                 done();
             });
 
-        client.interceptors.request.use((config) => {
+        request.interceptors.request.use((config) => {
             config.data.baz = "qux";
             return config;
         });
 
-        client.post("http://example.org/foo", {
+        request.post("http://example.org/foo", {
             foo: "bar"
         });
     });

@@ -1,16 +1,13 @@
 import nock from "shani/helpers/nock";
 
-const { client } = adone.net.http;
-
-// var Cancel = request.Cancel;
-const CancelToken = client.CancelToken;
+const { request, CancelToken } = adone.net.http.client;
 
 describe("glosses", "net", "http", "client", "cancel", () => {
     describe("when called before sending request", () => {
         it("rejects Promise with a Cancel object", (done) => {
             const source = CancelToken.source();
             source.cancel("Operation has been canceled.");
-            client.get("/foo", {
+            request.get("/foo", {
                 cancelToken: source.token
             }).catch((thrown) => {
                 // expect(thrown).to.be(jasmine.any(Cancel));
@@ -31,7 +28,7 @@ describe("glosses", "net", "http", "client", "cancel", () => {
                 });
 
             source = CancelToken.source();
-            client.get("http://example.com/foo/bar", {
+            request.get("http://example.com/foo/bar", {
                 cancelToken: source.token
             }).catch((thrown) => {
                 // expect(thrown).toEqual(jasmine.any(Cancel));
@@ -49,7 +46,7 @@ describe("glosses", "net", "http", "client", "cancel", () => {
                 .reply(200, "OK");
 
             const source = CancelToken.source();
-            client.get("http://example.com/foo", {
+            request.get("http://example.com/foo", {
                 cancelToken: source.token
             }).then(() => {
                 const f = function () {

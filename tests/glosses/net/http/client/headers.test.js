@@ -1,10 +1,10 @@
 import nock from "shani/helpers/nock";
 
-const { client } = adone.net.http;
+const { request } = adone.net.http.client;
 
 describe("glosses", "net", "http", "client", "headers", () => {
     it("should default common headers", (done) => {
-        const headers = client.defaults.headers.common;
+        const headers = request.defaults.headers.common;
 
         nock("http://example.org", {
             reqheaders: headers
@@ -14,11 +14,11 @@ describe("glosses", "net", "http", "client", "headers", () => {
                 done();
             });
 
-        client("http://example.org/foo");
+        request("http://example.org/foo");
     });
 
     it("should add extra headers for post", (done) => {
-        const headers = client.defaults.headers.common;
+        const headers = request.defaults.headers.common;
 
         nock("http://example.org", {
             reqheaders: headers
@@ -28,7 +28,7 @@ describe("glosses", "net", "http", "client", "headers", () => {
                 done();
             });
 
-        client.post("http://example.org/foo", "fizz=buzz");
+        request.post("http://example.org/foo", "fizz=buzz");
     });
 
     it("should use application/json when posting an object", (done) => {
@@ -42,7 +42,7 @@ describe("glosses", "net", "http", "client", "headers", () => {
                 done();
             });
 
-        client.post("http://example.org/foo/bar", {
+        request.post("http://example.org/foo/bar", {
             firstName: "foo",
             lastName: "bar"
         });
@@ -57,7 +57,7 @@ describe("glosses", "net", "http", "client", "headers", () => {
                 done();
             });
 
-        client.post("http://example.org/foo");
+        request.post("http://example.org/foo");
     });
 
     it("should preserve content-type if data is false", (done) => {
@@ -70,6 +70,6 @@ describe("glosses", "net", "http", "client", "headers", () => {
             .reply(200, () => {
                 done();
             });
-        client.post("http://example.org/foo", false);
+        request.post("http://example.org/foo", false);
     });
 });

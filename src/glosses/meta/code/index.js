@@ -15,7 +15,7 @@ export class Inspector {
         const metaCode = adone.meta.code;
         const info = adone.meta.getNamespaceInfo(nsName);        
         const ns = {
-            info, 
+            info,
             modules: [],
             $: {}
         };
@@ -79,17 +79,25 @@ export class Inspector {
         }
     }
 
-    get(name) {
+    getNamespace(name, names = null) {
         const { namespace, objectName } = adone.meta.parseName(name);
         if (!is.propertyOwned(this.namespaces, namespace)) {
             throw new adone.x.Unknown(`Unknown namespace: '${namespace}'`);
         }
+        if (is.plainObject(names)) {
+            names.namespace = namespace;
+            names.objectName = objectName;
+        }
+        return this.namespaces[namespace];
+    }
 
-        const ns = this.namespaces[namespace];
-        if (!is.propertyOwned(ns.$, objectName)) {
+    get(name) {
+        const names = {};
+        const ns = this.getNamespace(name, names);
+        if (!is.propertyOwned(ns.$, names.objectName)) {
             throw new adone.x.NotFound(`Unknown object: ${name}`);
         }
-        return ns.$[objectName];
+        return ns.$[names.objectName];
     }
 
     getCode(name) {

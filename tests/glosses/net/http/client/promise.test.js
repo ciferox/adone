@@ -1,6 +1,6 @@
 import nock from "shani/helpers/nock";
 
-const { client } = adone.net.http;
+const { request } = adone.net.http.client;
 
 describe("glosses", "net", "http", "client", "promise", () => {
     it("should provide succinct object to then", (done) => {
@@ -10,7 +10,7 @@ describe("glosses", "net", "http", "client", "promise", () => {
                 "Content-Type": "application/json"
             });
 
-        client("http://example.org/foo").then((response) => {
+        request("http://example.org/foo").then((response) => {
             expect(typeof response).to.be.equal("object");
             expect(response.data.hello).to.be.equal("world");
             expect(response.status).to.be.equal(200);

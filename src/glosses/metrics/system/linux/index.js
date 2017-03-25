@@ -66,8 +66,8 @@ export default class LinuxOS extends adone.metrics.OS {
         }
         return procs;
     }
-
     getProcess(pid) {
+
         try {
             if (!is.number(pid)) {
                 return null;

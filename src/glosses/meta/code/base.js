@@ -1,4 +1,4 @@
-const { is, js: { compiler: { parse, traverse, generate } } } = adone;
+const { is, js: { compiler: { parse, generate } } } = adone;
 
 const jsNatives = ["Error", "EvalError", "RangeError", "ReferenceError", "SyntaxError", "TypeError", "URIError"];
 
@@ -31,10 +31,6 @@ export default class XBase {
                 "classProperties"
             ]
         });
-    }
-
-    traverse(visitors) {
-        return traverse(this.ast, visitors);
     }
 
     createXObject(ast) {

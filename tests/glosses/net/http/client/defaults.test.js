@@ -1,13 +1,13 @@
 import nock from "shani/helpers/nock";
 
-const { client } = adone.net.http;
+const { request, create } = adone.net.http.client;
 import defaults from "adone/glosses/net/http/client/defaults";
 
 describe("glosses", "net", "http", "client", "defaults", () => {
     afterEach(() => {
-        delete client.defaults.baseURL;
-        delete client.defaults.headers.get["X-CUSTOM-HEADER"];
-        delete client.defaults.headers.post["X-CUSTOM-HEADER"];
+        delete request.defaults.baseURL;
+        delete request.defaults.headers.get["X-CUSTOM-HEADER"];
+        delete request.defaults.headers.post["X-CUSTOM-HEADER"];
         // document.cookie = XSRF_COOKIE_NAME + "=;expires=" + new Date(Date.now() - 86400000).toGMTString();
     });
 
@@ -37,11 +37,11 @@ describe("glosses", "net", "http", "client", "defaults", () => {
                 done();
             });
 
-        client("http://e.com/foo");
+        request("http://e.com/foo");
     });
 
     it("should use modified defaults config", (done) => {
-        client.defaults.baseURL = "http://example.org/";
+        request.defaults.baseURL = "http://example.org/";
 
         nock("http://example.org")
             .get("/foo")
@@ -49,7 +49,7 @@ describe("glosses", "net", "http", "client", "defaults", () => {
                 done();
             });
 
-        client("/foo");
+        request("/foo");
     });
 
     it("should use request config", (done) => {
@@ -59,13 +59,13 @@ describe("glosses", "net", "http", "client", "defaults", () => {
                 done();
             });
 
-        client("/foo", {
+        request("/foo", {
             baseURL: "http://example.org"
         });
     });
 
     it("should use GET headers", (done) => {
-        client.defaults.headers.get["X-CUSTOM-HEADER"] = "foo";
+        request.defaults.headers.get["X-CUSTOM-HEADER"] = "foo";
 
         nock("http://example.org", {
             reqheaders: {
@@ -77,7 +77,7 @@ describe("glosses", "net", "http", "client", "defaults", () => {
                 done();
             });
 
-        client.get("http://example.org/foo");
+        request.get("http://example.org/foo");
     });
 
     it("should use POST headers", (done) => {
@@ -91,8 +91,8 @@ describe("glosses", "net", "http", "client", "defaults", () => {
                 done();
             });
 
-        client.defaults.headers.post["X-CUSTOM-HEADER"] = "foo";
-        client.post("http://example.org/foo", {});
+        request.defaults.headers.post["X-CUSTOM-HEADER"] = "foo";
+        request.post("http://example.org/foo", {});
 
     });
 
@@ -110,7 +110,7 @@ describe("glosses", "net", "http", "client", "defaults", () => {
                 done();
             });
 
-        const instance = client.create({
+        const instance = create({
             headers: {
                 common: {
                     "X-COMMON-HEADER": "commonHeaderValue"
@@ -139,8 +139,8 @@ describe("glosses", "net", "http", "client", "defaults", () => {
                 done();
             });
 
-        client.defaults.baseURL = "http://example.org/";
-        const instance = client.create();
+        request.defaults.baseURL = "http://example.org/";
+        const instance = create();
 
         instance.get("/foo");
     });
@@ -152,8 +152,8 @@ describe("glosses", "net", "http", "client", "defaults", () => {
                 done();
             });
 
-        const instance = client.create();
-        client.defaults.baseURL = "http://example.org/";
+        const instance = create();
+        request.defaults.baseURL = "http://example.org/";
 
         instance.get("/foo");
     });

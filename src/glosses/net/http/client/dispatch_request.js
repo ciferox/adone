@@ -2,8 +2,8 @@
 
 const imports = adone.lazify({
     transformData: "./transform_data",
-    isCancel: "../cancel/is_cancel",
-    defaults: "../defaults"
+    isCancel: "./cancel/is_cancel",
+    defaults: "./defaults"
 }, null, require);
 
 /**

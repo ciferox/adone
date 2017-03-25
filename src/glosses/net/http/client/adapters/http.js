@@ -1,8 +1,8 @@
 const imports = adone.lazify({
-    settle: "../core/settle",
+    settle: "../settle",
     buildURL: "../helpers/build_url",
-    createError: "../core/create_error",
-    enhanceError: "../core/enhance_error",
+    createError: "../create_error",
+    enhanceError: "../enhance_error",
     follow: "../helpers/follow_redirects"
 }, null, require);
 

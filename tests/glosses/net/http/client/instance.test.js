@@ -1,12 +1,12 @@
 import nock from "shani/helpers/nock";
 
-const { client } = adone.net.http;
+const { request, create } = adone.net.http.client;
 
 describe("glosses", "net", "http", "client", "instance", () => {
     it("should have the same methods as default instance", () => {
-        const instance = client.create();
+        const instance = create();
 
-        for (const prop in client) {
+        for (const prop in request) {
             if ([
                 "Axios",
                 "create",
@@ -18,7 +18,7 @@ describe("glosses", "net", "http", "client", "instance", () => {
                 "default"].indexOf(prop) > -1) {
                 continue;
             }
-            expect(typeof instance[prop]).to.be.equal(typeof client[prop]);
+            expect(typeof instance[prop]).to.be.equal(typeof request[prop]);
         }
     });
 
@@ -29,7 +29,7 @@ describe("glosses", "net", "http", "client", "instance", () => {
                 done();
             });
 
-        const instance = client.create();
+        const instance = create();
 
         instance("http://example.org/foo");
     });
@@ -41,13 +41,13 @@ describe("glosses", "net", "http", "client", "instance", () => {
                 done();
             });
 
-        const instance = client.create();
+        const instance = create();
 
         instance.get("http://example.org/foo");
     });
 
     it("should have defaults.headers", () => {
-        const instance = client.create({
+        const instance = create({
             baseURL: "https://api.example.com"
         });
 
@@ -60,12 +60,12 @@ describe("glosses", "net", "http", "client", "instance", () => {
             .get("/foo")
             .reply(200);
 
-        client.interceptors.request.use((config) => {
+        request.interceptors.request.use((config) => {
             config.foo = true;
             return config;
         });
 
-        const instance = client.create();
+        const instance = create();
         instance.interceptors.request.use((config) => {
             config.bar = true;
             return config;

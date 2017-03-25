@@ -1,10 +1,10 @@
-const { client } = adone.net.http;
+const { request } = adone.net.http.client;
 
 describe("glosses", "net", "http", "client", "adapter", () => {
     it("should support custom adapter", (done) => {
         let called = false;
 
-        client("/foo", {
+        request("/foo", {
             adapter(resolve, reject, config) {
                 called = true;
                 return Promise.resolve({});
