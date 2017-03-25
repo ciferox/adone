@@ -10,7 +10,7 @@ adone.lazify({
     }, null, require),
     proxy: () => adone.lazify({
         socks: "./proxies/socks"
-    }),
+    }, null, require),
     ws: () => adone.lazify({
         WebSocket: "./ws/webSocket",
         WebSocketServer: "./ws/webSocketServer",

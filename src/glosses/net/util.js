@@ -38,13 +38,18 @@ export const isFreePort = (port) => {
     });
 };
 
-export const getFreePort = async ({ exclude = null, lbound = 40000, rbound = 65000, rounds = 1000 } = {}) => {
+export const getFreePort = async ({
+    exclude = null,
+    lbound = 40000,
+    rbound = 65000,
+    rounds = 1000
+} = {}) => {
     while (rounds--) {
         const port = Math.floor(Math.random() * (rbound - lbound + 1)) + lbound;
         if (exclude && exclude.has(port)) {
             continue;
         }
-        if (await this.isFreePort(port)) {
+        if (await isFreePort(port)) {  // eslint-disable-line no-await-in-loop
             return port;
         }
     }
