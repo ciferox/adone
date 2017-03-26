@@ -4,10 +4,6 @@ describe("adone.text.unicode", () => {
 
     console.log(`  ${Object.keys(unicode.symbol).map((x) => unicode[x]).join("  ")}\n`);
 
-    it("symbols", () => {
-        assert.equal(unicode.symbol.tick, result("✔", "√"));
-    });
-
     it("approx", () => {
         assert.equal(unicode.approx("foo"), "foo");
         assert.equal(unicode.approx("?bar?"), "?bar?");

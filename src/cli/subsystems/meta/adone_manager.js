@@ -1,10 +1,20 @@
 const { is, std, fs, util } = adone;
 
+const configRelativePath = "defaults/configs/adone.js".replace(/\//g, std.path.sep);
+
 const getArch = () => {
     const arch = process.arch;
     switch (arch) {
         case "ia32": return "x86";
         default: return arch;
+    }
+};
+
+const getPlatform = () => {
+    const platform = process.platform;
+    switch (platform) {
+        case "win32": return "win";
+        default: return platform;
     }
 };
 
@@ -17,7 +27,7 @@ export default class AdoneManager {
         this.nodeModulesDir = new fs.Directory(std.path.resolve(fs.homeDir(), ".node_modules"));
         this.destAdoneDir = this.nodeModulesDir.getDirectory("adone");
         this.adoneVersion = adone.package.version;
-        this.name = `${process.platform}-${getArch()}.tar`;
+        this.name = `${getPlatform()}-${getArch()}.tar`;
     }
 
     async install() {
@@ -75,7 +85,7 @@ export default class AdoneManager {
     async createArchive(outPath, { env, dirName, type = "gz" } = {}) {
         return adone.fast
             .src(this.getTargets(), { base: this.app.adoneRootPath })
-            .if((f) => f.relative === "defaults/configs/adone.js", adone.fast.plugin.replace(["\"development\"", "\".adone_dev\""], [`"${env}"`, `"${dirName}"`]))
+            .if((f) => f.relative === configRelativePath, adone.fast.plugin.replace(["\"development\"", "\".adone_dev\""], [`"${env}"`, `"${dirName}"`]))
             .pack("tar", this.name)
             .compress(type)
             .dest(outPath);

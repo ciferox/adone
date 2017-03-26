@@ -344,8 +344,9 @@ export default class extends adone.application.Subsystem {
         const auth = opts.get("auth");
         const username = auth[1];
         const password = auth[2];
+        const types = ["gz", "xz"];
         
-        for (const type of ["gz", "xz"]) {
+        for (const type of types) {
             const fileName = builder.getArchiveName(type);
             const bar = new adone.terminal.Progress({
                 schema: `:spinner Preparing {bold}${fileName}{/} :elapsed`
@@ -378,6 +379,6 @@ export default class extends adone.application.Subsystem {
             bar.setSchema(`:spinner Complete {bold}${fileName}{/} :elapsed`, true);
         }
 
-        await outDir.unlink();
+        // await outDir.unlink();
     }
 }

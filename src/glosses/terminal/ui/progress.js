@@ -1,4 +1,4 @@
-const { is, terminal } = adone;
+const { is, terminal, text: { unicode: { approx, symbol } } } = adone;
 
 const newlineEvent = require("on-new-line");
 
@@ -95,7 +95,7 @@ const bareLength = (output) => {
 };
 
 export default class ProgressBar {
-    constructor({ total = 100, current = 0, width = 60, tough = false, clean = false, spinner = "dots", spinnerComplete = adone.text.unicode.symbol.tick, blank = "—", filled = "▇", callback, schema } = {}) {
+    constructor({ total = 100, current = 0, width = 60, tough = false, clean = false, spinner = "dots", spinnerComplete = approx(symbol.tick), blank = "—", filled = approx(symbol.square), callback, schema } = {}) {
         this.total = total;
         this.current = current;
         this.width = width;

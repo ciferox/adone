@@ -13,7 +13,7 @@ describe("format", () => {
         expect(format("Octal %o %o", 11, 123)).to.be.equal("Octal 13 173");
         expect(format("Hexa %h %x %x", 11, 11, 123)).to.be.equal("Hexa b 0b 7b");
         expect(format("JSON %J", { hello: "world", here: "is", my: { wonderful: "object" } })).to.be.equal('JSON {"hello":"world","here":"is","my":{"wonderful":"object"}}');
-        expect(format("Inspect %I", { hello: "world", here: "is", my: { wonderful: "object" } })).to.be.equal('Inspect <Object> <object> {\n    hello: "world" <string>(5)\n    here: "is" <string>(2)\n    my: <Object> <object> {\n        wonderful: "object" <string>(6)\n    }\n}');
+        expect(format("Inspect %I", { hello: "world", here: "is", my: { wonderful: "object" } })).to.be.equal('Inspect <Object> <Object> {\n    hello: "world" <string>(5)\n    here: "is" <string>(2)\n    my: <Object> <Object> {\n        wonderful: "object" <string>(6)\n    }\n}');
         // expect( format( 'Inspect %E' , new Error( 'Some error' ) ) ).to.be.equal( '' ) ;
     });
 
