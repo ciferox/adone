@@ -199,10 +199,9 @@ gulp.task("build-tests", ["clean-tests"], buildTests);
 gulp.task("clean-examples", () => del(paths.examples.to));
 gulp.task("build-examples", ["clean-tests"], buildExamples);
 
-gulp.task("clean-vendor", () => del(paths.vendor.to));
-gulp.task("build-vendor", ["clean-vendor"], copyVendor);
+gulp.task("build-vendor", ["clean-glosses"], copyVendor);
 
-gulp.task("clean", ["clean-examples", "clean-tests", "clean-glosses", "clean-bin", "clean-omnitron", "clean-index", "clean-vendor"]);
+gulp.task("clean", ["clean-examples", "clean-tests", "clean-glosses", "clean-bin", "clean-omnitron", "clean-index"]);
 gulp.task("build", ["build-examples", "build-tests", "build-glosses", "build-bin", "build-omnitron", "build-index", "build-vendor"]);
 
 gulp.task("watch", ["build"], () => {

@@ -117,7 +117,7 @@ class Request extends EventEmitter {
             if (opts.decompress) {
                 switch (response.headers["content-encoding"]) {
                     case "gzip": {
-                        responseBody = await compressor.gzip.decompress(responseBody);
+                        responseBody = await compressor.gz.decompress(responseBody);
                         break;
                     }
                 }
