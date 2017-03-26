@@ -1,4 +1,4 @@
-const { assert, std: { stream, util } } = adone;
+const { assert, std: { stream } } = adone;
 
 export const native = adone.bind("lzma.node");
 
@@ -6,152 +6,127 @@ const Stream = native.Stream;
 
 Stream.curAsyncStreamsCount = 0;
 
-Stream.prototype.getStream = function (options) {
-    options = options || {};
+class JSLzmaStream extends stream.Transform {
+    constructor(nativeStream, options) {
+        super(options);
 
-    const _forceNextTickCb = function () {
-        /* I know this looks like “magic/more magic”, but
-         * apparently works around a bogus process.nextTick in
-         * node v0.11. This probably does not affect real
-         * applications which perform other I/O than LZMA compression. */
-        setTimeout(function () { }, 1);
-    };
+        this.nativeStream = nativeStream;
+        this.sync = (options.sync || !native.asyncCodeAvailable) ? true : false;
+        this.chunkCallbacks = [];
 
-    const Ret = function (nativeStream) {
-        Ret.super_.call(this, options);
-        const self = this;
+        this.totalIn_ = 0;
+        this.totalOut_ = 0;
 
-        self.nativeStream = nativeStream;
-        self.sync = (options.sync || !native.asyncCodeAvailable) ? true : false;
-        self.chunkCallbacks = [];
+        this._writingLastChunk = false;
+        this._isFinished = false;
 
-        self.totalIn_ = 0;
-        self.totalOut_ = 0;
-
-        self._writingLastChunk = false;
-        self._isFinished = false;
-
-        self.totalIn = function () {
-            return self.totalIn_;
-        };
-        self.totalOut = function () {
-            return self.totalOut_;
-        };
-
-        self.cleanup = function () {
-            if (self.nativeStream) {
-                self.nativeStream.resetUnderlying();
-            }
-
-            self.nativeStream = null;
-        };
-
-        if (!self.sync) {
+        if (!this.sync) {
             Stream.curAsyncStreamsCount++;
 
-            const oldCleanup = self.cleanup;
+            const oldCleanup = this.cleanup;
             let countedCleanup = false;
-            self.cleanup = function () {
+            this.cleanup = () => {
                 if (countedCleanup === false) {
                     Stream.curAsyncStreamsCount--;
                     countedCleanup = true;
                 }
-                oldCleanup();
+                oldCleanup.call(this);
             };
         }
 
         // always clean up in case of error
-        self.once("error-cleanup", self.cleanup);
+        this.once("error-cleanup", this.cleanup);
 
-        self.nativeStream.bufferHandler = function (buf, processedChunks, err, totalIn, totalOut) {
+        this.nativeStream.bufferHandler = (buf, processedChunks, err, totalIn, totalOut) => {
             if (totalIn !== null) {
-                self.totalIn_ = totalIn;
-                self.totalOut_ = totalOut;
+                this.totalIn_  = totalIn;
+                this.totalOut_ = totalOut;
             }
 
-            process.nextTick(function () {
+            setImmediate(() => {
                 if (err) {
-                    self.push(null);
-                    self.emit("error-cleanup", err);
-                    self.emit("error", err);
-                    _forceNextTickCb();
+                    this.push(null);
+                    this.emit("error-cleanup", err);
+                    this.emit("error", err);
                 }
 
                 if (totalIn !== null) {
-                    self.emit("progress", {
-                        totalIn: self.totalIn_,
-                        totalOut: self.totalOut_
+                    this.emit("progress", {
+                        totalIn: this.totalIn_,
+                        totalOut: this.totalOut_
                     });
                 }
 
                 if (typeof processedChunks === "number") {
-                    assert.ok(processedChunks <= self.chunkCallbacks.length);
+                    assert.ok(processedChunks <= this.chunkCallbacks.length);
 
-                    const chunkCallbacks = self.chunkCallbacks.splice(0, processedChunks);
+                    const chunkCallbacks = this.chunkCallbacks.splice(0, processedChunks);
 
-                    while (chunkCallbacks.length > 0) {
-                        chunkCallbacks.shift().apply(self);
+                    while (chunkCallbacks.length > 0)              {
+                        chunkCallbacks.shift().call(this); 
                     }
-
-                    _forceNextTickCb();
                 } else if (buf === null) {
-                    if (self._writingLastChunk) {
-                        self.push(null);
+                    if (this._writingLastChunk) {
+                        this.push(null);
                     } else {
                         // There may be additional members in the file.
                         // Reset and set _isFinished to tell `_flush()` that nothing
                         // needs to be done.
-                        self._isFinished = true;
+                        this._isFinished = true;
 
-                        if (self.nativeStream && self.nativeStream._restart) {
-                            self.nativeStream._restart();
+                        if (this.nativeStream && this.nativeStream._restart) {
+                            this.nativeStream._restart();
                         } else {
-                            self.push(null);
+                            this.push(null);
                         }
                     }
                 } else {
-                    self.push(buf);
+                    this.push(buf);
                 }
             });
-
-            _forceNextTickCb();
         };
 
-        // add all methods from the native Stream
-        Object.keys(native.Stream.prototype).forEach(function (key) {
-            self[key] = function () {
-                return self.nativeStream[key].apply(self.nativeStream, arguments);
-            };
-        });
-
-        Object.defineProperty(self, "bufsize", {
-            get() {
-                return self.setBufsize(null);
-            },
-            set(n) {
-                if (typeof n !== "number" || n <= 0) {
-                    throw new TypeError("bufsize must be a positive integer");
-                }
-
-                return self.setBufsize(parseInt(n));
-            }
-        });
-
         if (typeof options.bufsize !== "undefined") {
-            return self.bufsize = options.bufsize;
+            this.bufsize = options.bufsize;
         }
-    };
+    }
 
-    util.inherits(Ret, stream.Transform);
+    get bufsize() {
+        return this.setBufsize(null);
+    }
 
-    Ret.prototype._transform = function (chunk, encoding, callback) {
+    set bufsize(n) {
+        if (typeof n !== "number" || n <= 0) {
+            throw new TypeError("bufsize must be a positive number");
+        }
+
+        return this.setBufsize(n);
+    }
+
+    totalIn() {
+        return this.totalIn_;
+    }
+
+    totalOut() {
+        return this.totalOut_;
+    }
+
+    cleanup() {
+        if (this.nativeStream) {
+            this.nativeStream.resetUnderlying();
+        }
+
+        this.nativeStream = null;
+    }
+
+    _transform(chunk, encoding, callback) {
         // Split the chunk at 'YZ'. This is used to have a clean boundary at the
         // end of each `.xz` file stream.
         let possibleEndIndex = bufferIndexOfYZ(chunk);
         if (possibleEndIndex !== -1) {
             possibleEndIndex += 2;
             if (possibleEndIndex !== chunk.length) {
-                this._transform(chunk.slice(0, possibleEndIndex), encoding, function () {
+                this._transform(chunk.slice(0, possibleEndIndex), encoding, () => {
                     this._transform(chunk.slice(possibleEndIndex), encoding, callback);
                 });
 
@@ -180,32 +155,40 @@ Stream.prototype.getStream = function (options) {
             this.emit("error-cleanup", e);
             this.emit("error", e);
         }
-    };
+    }
 
-    Ret.prototype._writev = function (chunks, callback) {
-        chunks = chunks.map(function (chunk) {
-            return chunk.chunk;
-        });
+    _writev(chunks, callback) {
+        chunks = chunks.map((chunk) => chunk.chunk);
         this._write(Buffer.concat(chunks), null, callback);
-    };
+    }
 
-    Ret.prototype._flush = function (callback) {
+    _flush(callback) {
         this._writingLastChunk = true;
-        const cleanup = this.cleanup;
 
         if (this._isFinished) {
-            cleanup();
+            this.cleanup();
             callback(null);
             return;
         }
 
         this._transform(null, null, function () {
-            cleanup();
+            this.cleanup();
             callback.apply(this, arguments);
         });
-    };
+    }
+}
 
-    return new Ret(this);
+// add all methods from the native Stream
+Object.keys(native.Stream.prototype).forEach((key) => {
+    JSLzmaStream.prototype[key] = function () {
+        return this.nativeStream[key].apply(this.nativeStream, arguments);
+    };
+});
+
+Stream.prototype.getStream = function (options) {
+    options = options || {};
+    
+    return new JSLzmaStream(this, options);
 };
 
 Stream.prototype.rawEncoder = function (options) {
@@ -271,7 +254,7 @@ Stream.prototype.aloneDecoder = function (options) {
 };
 
 /* helper functions for easy creation of streams */
-export function createStream(coder, options) {
+export const createStream = (coder, options) => {
     if (["number", "object"].indexOf(typeof coder) !== -1 && !options) {
         options = coder;
         coder = null;
@@ -292,12 +275,12 @@ export function createStream(coder, options) {
     }
 
     return stream.getStream(options);
-}
+};
 
 /* compatibility: LZMA-JS (https://github.com/nmrugg/LZMA-JS) */
-export function singleStringCoding(stream, string, on_finish, on_progress) {
-    on_progress = on_progress || function () { };
-    on_finish = on_finish || function () { };
+export const singleStringCoding = (stream, string, onFinish, onProgress) => {
+    onProgress = onProgress || adone.noop;
+    onFinish = onFinish || adone.noop;
 
     // possibly our input is an array of byte integers
     // or a typed array
@@ -307,29 +290,32 @@ export function singleStringCoding(stream, string, on_finish, on_progress) {
 
     let failed = false;
 
-    stream.once("error", function (err) {
+    stream.once("error", (err) => {
         failed = true;
-        on_finish(null, err);
+        onFinish(null, err);
     });
 
     const deferred = adone.promise.defer();
 
-    stream.once("error", function (e) {
+    // Since using the Promise API is optional, generating unhandled rejections is not okay.
+    deferred.promise.catch(adone.noop);
+
+    stream.once("error", (e) => {
         deferred.reject(e);
     });
 
     const buffers = [];
 
-    stream.on("data", function (b) {
+    stream.on("data", (b) => {
         buffers.push(b);
     });
 
-    stream.once("end", function () {
+    stream.once("end", () => {
         const result = Buffer.concat(buffers);
 
         if (!failed) {
-            on_progress(1.0);
-            on_finish(result);
+            onProgress(1.0);
+            onFinish(result);
         }
 
         if (deferred) {
@@ -337,12 +323,12 @@ export function singleStringCoding(stream, string, on_finish, on_progress) {
         }
     });
 
-    on_progress(0.0);
+    onProgress(0.0);
 
     stream.end(string);
 
     return deferred.promise;
-}
+};
 
 function skipLeadingZeroes(buffer) {
     let i;

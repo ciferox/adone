@@ -309,25 +309,33 @@
             }
           ]
         }, {
-          "actions" : [
+          "conditions" : [
+            [ 'target_arch=="x64"', {
+              'variables': {
+                "arch_lib_path" : 'bin_x86-64',
+                "arch_lib_code" : 'x64'
+              }
+            }, {
+              'variables': {
+                "arch_lib_path" : 'bin_i686',
+                "arch_lib_code" : 'ix86'
+              }
+            } ]
+          ],
+          "actions": [
             {
+              "msvs_quote_cmd": 0,
               "action_name" : "build",
-              'inputs': [''],
+              'inputs': ['src/native/compressors/lzma/deps/win/liblzma.def'],
               'outputs': [''],
-              "conditions": [
-                [ 'target_arch=="x64"', {
-				  'variables': {
-		            "srcpath%": "<(module_root_dir)\\src\\native\\compressors\\lzma\\deps\\win\\bin_x86-64"
-                  },
-                  'action': [
-                    '"lib -def:"<(module_root_dir)\\src\\native\\compressors\\lzma\\deps\\win\\liblzma.def" -out:"<(module_root_dir)\\build\\Release\\liblzma.lib" -machine:x64 && copy "<(module_root_dir)\\src\\native\\compressors\\lzma\\deps\\win\\bin_x86-64\\liblzma.dll" "<(module_root_dir)\\build\\Release\\liblzma.dll""'
-                    ]
-                }, {
-                  'action': [
-                    '"lib -def:"<(module_root_dir)\\src\\native\\compressors\\lzma\\deps\\win\\liblzma.def" -out:"<(module_root_dir)\\build\\Release\\liblzma.lib" -machine:ix86 && copy "<(module_root_dir)\\src\\native\\compressors\\lzma\\deps\\win\\bin_i686\\liblzma.dll" "<(module_root_dir)\\build\\Release\\liblzma.dll""'
-                  ]
-                }]
-              ]
+              'action': ['mkdir <(module_root_dir)/build/Release > nul 2>&1 & lib -def:"<(module_root_dir)/src/native/compressors/lzma/deps/win/liblzma.def" -out:"<(module_root_dir)/build/Release/liblzma.lib" -machine:<(arch_lib_code)']
+            },
+            {
+              "msvs_quote_cmd": 0,
+              "action_name" : "deploy",
+              'inputs': ['src/native/compressors/lzma/deps/win/<(arch_lib_path)/liblzma.dll'],
+              'outputs': ['build/Release/liblzma.dll'],
+              'action': ['copy "<(module_root_dir)/src/native/compressors/lzma/deps/win/<(arch_lib_path)/liblzma.dll" "<(module_root_dir)/build/Release/liblzma.dll"']
             }
           ]
         } ],

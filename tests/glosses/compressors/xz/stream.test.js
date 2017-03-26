@@ -456,15 +456,15 @@ describe("glosses", "compressors", "xz", "stream", () => {
 
             assert.throws(() => {
                 stream.bufsize = "Not numeric";
-            }, /bufsize must be a positive integer/);
+            }, /bufsize must be a positive number/);
 
             assert.throws(() => {
                 stream.bufsize = 0;
-            }, /bufsize must be a positive integer/);
+            }, /bufsize must be a positive number/);
 
             assert.throws(() => {
                 stream.bufsize = -65536;
-            }, /bufsize must be a positive integer/);
+            }, /bufsize must be a positive number/);
         });
 
         it("Should default to 64k", () => {
