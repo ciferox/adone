@@ -62,11 +62,6 @@
         "build": "gulp build",
         "watch": "gulp watch"
     },
-    "files": [
-        "bin",
-        "lib",
-        "defaults"
-    ],
     "main": "lib",
     "bin": {
         "adone": "./bin/adone.js"

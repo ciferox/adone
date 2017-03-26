@@ -1,7 +1,3 @@
-// @flow
-
-
-
 class ETransform extends adone.Transform {
     _end() {
         this.emit("ending");
@@ -13,6 +9,7 @@ export default function (condition, trueStream = null, falseStream = null) {
     if (!trueStream && !falseStream) {
         throw new adone.x.InvalidArgument("You must provide at least one stream");
     }
+    let outputEnd = null;
     const input = new ETransform({
         transform: async (x) => {
             const stream = await condition(x) ? trueStream : falseStream;
@@ -45,7 +42,7 @@ export default function (condition, trueStream = null, falseStream = null) {
         }
     }
 
-    const outputEnd = Promise.all([
+    outputEnd = Promise.all([
         trueStream && new Promise((resolve) => trueStream.once("end", resolve)),
         falseStream && new Promise((resolve) => falseStream.once("end", resolve))
     ]);

@@ -1,17 +1,21 @@
 let home;
+const dirName = ".adone_test";
+
 if (process.platform === "win32") {
     home = process.env.USERPROFILE;
 } else {
     if (process.env.HOME && !process.env.HOMEPATH) {
-        home = adone.std.path.resolve(process.env.HOME, ".adone_test");
+        home = adone.std.path.resolve(process.env.HOME, dirName);
     } else if (process.env.HOME || process.env.HOMEPATH) {
-        home = adone.std.path.resolve(process.env.HOMEDRIVE, process.env.HOME || process.env.HOMEPATH, ".adone_test");
+        home = adone.std.path.resolve(process.env.HOMEDRIVE, process.env.HOME || process.env.HOMEPATH, dirName);
     } else {
-        home = adone.std.path.resolve("/etc", ".adone_test");
+        home = adone.std.path.resolve("/etc", dirName);
     }
 }
-// Rewrite ADONE_HOME
+// Update ADONE_HOME
 process.env.ADONE_HOME = home;
+process.env.ADONE_ENV = "test";
+process.env.ADONE_DIRNAME = dirName;
 
 export class WeakOmnitron extends adone.omnitron.Omnitron.Omnitron {
     constructor(options) {

@@ -1,13 +1,9 @@
-// @flow
-
-
-
-const { fast: { Fast } } = adone;
+const { is, fast: { Fast } } = adone;
 
 export default function (search, replacement) {
     let replacePairs = [];
-    if (adone.is.array(search)) {
-        if (!adone.is.array(replacement)) {
+    if (is.array(search)) {
+        if (!is.array(replacement)) {
             throw new adone.x.InvalidArgument("If 'search' is an array, 'replacement' must be array too");
         }
 
@@ -18,9 +14,9 @@ export default function (search, replacement) {
         for (let i = 0; i < search.length; ++i) {
             replacePairs.push([search[i], replacement[i]]);
         }
-    } else if (adone.is.string(search) || adone.is.regexp(search)) {
+    } else if (is.string(search) || is.regexp(search)) {
         replacePairs = [[search, replacement]];
-    } else if (adone.is.object(search)) {
+    } else if (is.object(search)) {
         const replaceObj = search;
         search = adone.util.keys(replaceObj);
 
@@ -48,13 +44,13 @@ export default function (search, replacement) {
                 for (let i = 0; i < replacePairs.length; ++i) {
                     const [searchNow, replacementNow] = replacePairs[i];
 
-                    if (adone.is.regexp(searchNow)) {
+                    if (is.regexp(searchNow)) {
                         contents = contents.replace(searchNow, replacementNow);
                     } else {
                         const chunks = contents.split(searchNow);
 
                         let result;
-                        if (adone.is.function(replacementNow)) {
+                        if (is.function(replacementNow)) {
                             // Start with the first chunk already in the result
                             // Replacements will be added thereafter
                             // This is done to avoid checking the value of i in the loop

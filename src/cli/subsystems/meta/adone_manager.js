@@ -72,15 +72,16 @@ export default class AdoneManager {
         return `${this.name}.${type}`;
     }
 
-    async createArchive(outPath, type = "gz") {
+    async createArchive(outPath, { env, dirName, type = "gz" } = {}) {
         return adone.fast
             .src(this.getTargets(), { base: this.app.adoneRootPath })
+            .if((f) => f.relative === "defaults/configs/adone.js", adone.fast.plugin.replace(["\"development\"", "\".adone_dev\""], [`"${env}"`, `"${dirName}"`]))
             .pack("tar", this.name)
             .compress(type)
             .dest(outPath);
     }
 
     getTargets() {
-        return ["!**/*.map", "package.json", "README*", "LICENSE*"].concat(adone.package.files.map((x) => util.globize(x, { recursively: true })));
+        return ["!**/*.map", "package.json", "README*", "LICENSE*"].concat(["bin", "lib", "defaults"].map((x) => util.globize(x, { recursively: true })));
     }
 }

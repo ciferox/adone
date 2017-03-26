@@ -361,6 +361,20 @@ export class Omnitron extends adone.application.Application {
     }
 
     @Public
+    @Description("The environment under which the omnitron is running")
+    @Type(String)
+    environment() {
+        return adone.appinstance.config.adone.environment;
+    }
+
+    @Public
+    @Description("Omnitron's environment variables")
+    @Type(Object)
+    envs() {
+        return process.env;
+    }
+
+    @Public
     @Description("Version of omnitron")
     @Type(String)
     version() {

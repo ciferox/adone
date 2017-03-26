@@ -185,6 +185,14 @@ export default class Dispatcher {
         return (await this.getService("omnitron")).uptime();
     }
 
+    async environment() {
+        return (await this.getService("omnitron")).environment();
+    }
+
+    async envs() {
+        return (await this.getService("omnitron")).envs();
+    }
+
     async start(serviceName = "") {
         if (serviceName === "") {
             return this.connectLocal();

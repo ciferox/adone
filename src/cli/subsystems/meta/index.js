@@ -129,9 +129,21 @@ export default class extends adone.application.Subsystem {
                     options: [
                         {
                             name: "--auth",
-                            type: String, // /(\w+):(\w+)/,
+                            type: /(\w+):(\w+)/,
                             required: true,
                             help: "User and password"
+                        },
+                        {
+                            name: "--dirname",
+                            type: String,
+                            default: ".adone",
+                            help: "Name of home directory of adone"
+                        },
+                        {
+                            name: "--env",
+                            type: String,
+                            default: "production",
+                            help: "The short name of the environment the build is intended for"
                         }
                     ],
                     handler: this.publishCommand
@@ -329,17 +341,17 @@ export default class extends adone.application.Subsystem {
     async publishCommand(args, opts) {
         const builder = new AdoneManager();
         const outDir = await fs.Directory.createTmp();
-        const auth = opts.get("auth").split(":");
-        const username = auth[0];
-        const password = auth[1];
-
-        for (const ext of ["gz", "xz"]) {
-            const fileName = builder.getArchiveName(ext);
+        const auth = opts.get("auth");
+        const username = auth[1];
+        const password = auth[2];
+        
+        for (const type of ["gz", "xz"]) {
+            const fileName = builder.getArchiveName(type);
             const bar = new adone.terminal.Progress({
                 schema: `:spinner Preparing {bold}${fileName}{/} :elapsed`
             });
 
-            await builder.createArchive(outDir.path(), ext);    
+            await builder.createArchive(outDir.path(), { env: opts.get("env"), dirName: opts.get("dirname"), type });
             
             const filePath = outDir.resolve(fileName);
             const file = new fs.File(filePath);

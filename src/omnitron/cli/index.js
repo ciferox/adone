@@ -26,6 +26,16 @@ export default class extends adone.application.Subsystem {
                     handler: this.uptimeCommand
                 },
                 {
+                    name: "env",
+                    help: "the omnitron's environment",
+                    handler: this.environmentCommand
+                },
+                {
+                    name: "envs",
+                    help: "the omnitron's environment variables",
+                    handler: this.envsCommand
+                },
+                {
                     name: "status",
                     help: "show status of service(s)",
                     arguments: [
@@ -149,6 +159,16 @@ export default class extends adone.application.Subsystem {
 
     async uptimeCommand() {
         adone.log(await this.dispatcher.uptime());
+        return 0;
+    }
+
+    async environmentCommand() {
+        adone.log(await this.dispatcher.environment());
+        return 0;
+    }
+
+    async envsCommand() {
+        adone.log(adone.text.pretty.json(await this.dispatcher.envs()));
         return 0;
     }
 
