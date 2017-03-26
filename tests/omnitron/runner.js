@@ -16,7 +16,7 @@ process.env.ADONE_HOME = home;
 export class WeakOmnitron extends adone.omnitron.Omnitron.Omnitron {
     constructor(options) {
         super(options);
-        this._.configManager = new adone.omnitron.ConfigManager(this, { inMemory: true });
+        this._.configManager = new adone.omnitron.ConfigurationManager(this, { inMemory: true });
     }
 
     async initialize() {

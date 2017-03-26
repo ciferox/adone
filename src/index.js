@@ -140,8 +140,8 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
         Hooker: "./glosses/common/hooker",
         File: "./glosses/common/file",
         semver: "./glosses/semver",
-        EventEmitter: "./glosses/events/event_emitter",
-        AsyncEmitter: "./glosses/events/async_emitter",
+        EventEmitter: "./glosses/common/event_emitter",
+        AsyncEmitter: "./glosses/common/async_emitter",
         format: "./glosses/text/format",
         sprintf: ["./glosses/text/sprintf", (mod) => mod.sprintf],
         vsprintf: ["./glosses/text/sprintf", (mod) => mod.vsprintf],
@@ -319,7 +319,7 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
 
     adone.omnitron = lazify({
         const: "./omnitron/consts",
-        ConfigManager: "./omnitron/config_manager",
+        ConfigurationManager: "./omnitron/configuration_manager",
         Omnitron: "./omnitron",
         Dispatcher: "./omnitron/dispatcher"
     });

@@ -1,87 +1,83 @@
-/* global describe it */
-
-
-import { SFTPStream, constants } from "../../../../../lib/glosses/net/ssh/ssh_streams";
+import { SFTPStream, constants } from "adone/glosses/net/ssh/streams";
 const Stats = SFTPStream.Stats;
 const STATUS_CODE = SFTPStream.STATUS_CODE;
 const OPEN_MODE = SFTPStream.OPEN_MODE;
 
-
-describe("SSH-Streams", function () {
-    describe("SFTP", function () {
-        it("open", function(done) {
+describe("SSH-Streams", () => {
+    describe("SFTP", () => {
+        it("open", function (done) {
             setup(this, done);
 
-            var self = this;
-            var client = this.client;
-            var server = this.server;
+            const self = this;
+            const client = this.client;
+            const server = this.server;
 
-            this.onReady = function() {
-                var path_ = "/tmp/foo.txt";
-                var handle_ = new Buffer("node.js");
-                server.on("OPEN", function(id, path, pflags, attrs) {
+            this.onReady = function () {
+                const path_ = "/tmp/foo.txt";
+                const handle_ = new Buffer("node.js");
+                server.on("OPEN", (id, path, pflags, attrs) => {
                     assert(++self.state.requests === 1,
                         "Saw too many requests");
-                    assert(id === 0, "Wrong request id: " + id);
-                    assert(path === path_, "Wrong path: " + path);
+                    assert(id === 0, `Wrong request id: ${id}`);
+                    assert(path === path_, `Wrong path: ${path}`);
                     assert(pflags === (OPEN_MODE.TRUNC | OPEN_MODE.CREAT | OPEN_MODE.WRITE),
-                        "Wrong flags: " + flagsToHuman(pflags));
+                        `Wrong flags: ${flagsToHuman(pflags)}`);
                     server.handle(id, handle_);
                     server.end();
                 });
-                client.open(path_, "w", function(err, handle) {
+                client.open(path_, "w", (err, handle) => {
                     assert(++self.state.responses === 1,
                         "Saw too many responses");
-                    assert(!err, "Unexpected open() error: " + err);
+                    assert(!err, `Unexpected open() error: ${err}`);
                     assert.deepEqual(handle, handle_, "handle mismatch");
                 });
             };
         });
 
-        it("close", function(done) {
+        it("close", function (done) {
             setup(this, done);
 
-            var self = this;
-            var client = this.client;
-            var server = this.server;
+            const self = this;
+            const client = this.client;
+            const server = this.server;
 
-            this.onReady = function() {
-                var handle_ = new Buffer("node.js");
-                server.on("CLOSE", function(id, handle) {
+            this.onReady = function () {
+                const handle_ = new Buffer("node.js");
+                server.on("CLOSE", (id, handle) => {
                     assert(++self.state.requests === 1,
                         "Saw too many requests");
-                    assert(id === 0, "Wrong request id: " + id);
+                    assert(id === 0, `Wrong request id: ${id}`);
                     assert.deepEqual(handle, handle_, "handle mismatch");
                     server.status(id, STATUS_CODE.OK);
                     server.end();
                 });
-                client.close(handle_, function(err) {
+                client.close(handle_, (err) => {
                     assert(++self.state.responses === 1,
                         "Saw too many responses");
-                    assert(!err, "Unexpected close() error: " + err);
+                    assert(!err, `Unexpected close() error: ${err}`);
                 });
             };
         });
 
-        it("readData", function(done) {
+        it("readData", function (done) {
             setup(this, done);
 
-            var self = this;
-            var client = this.client;
-            var server = this.server;
+            const self = this;
+            const client = this.client;
+            const server = this.server;
 
-            this.onReady = function() {
-                var handle_ = new Buffer("node.js");
-                var expected = new Buffer("node.jsnode.jsnode.jsnode.jsnode.jsnode.js");
-                var buffer = new Buffer(expected.length);
+            this.onReady = function () {
+                const handle_ = new Buffer("node.js");
+                const expected = new Buffer("node.jsnode.jsnode.jsnode.jsnode.jsnode.js");
+                const buffer = new Buffer(expected.length);
                 buffer.fill(0);
-                server.on("READ", function(id, handle, offset, len) {
+                server.on("READ", (id, handle, offset, len) => {
                     assert(++self.state.requests <= 2,
                         "Saw too many requests");
-                    assert(id === 0, "Wrong request id: " + id);
+                    assert(id === 0, `Wrong request id: ${id}`);
                     assert.deepEqual(handle, handle_, "handle mismatch");
-                    assert(offset === 5, "Wrong read offset: " + offset);
-                    assert(len === buffer.length, "Wrong read len: " + len);
+                    assert(offset === 5, `Wrong read offset: ${offset}`);
+                    assert(len === buffer.length, `Wrong read len: ${len}`);
                     server.data(id, expected);
                     server.end();
                 });
@@ -90,7 +86,7 @@ describe("SSH-Streams", function () {
                 function clientReadCb(err, code) {
                     assert(++self.state.responses <= 2,
                         "Saw too many responses");
-                    assert(!err, "Unexpected readData() error: " + err);
+                    assert(!err, `Unexpected readData() error: ${err}`);
                     assert.deepEqual(buffer,
                         expected,
                         "read data mismatch");
@@ -98,244 +94,245 @@ describe("SSH-Streams", function () {
             };
         });
 
-        it("write", function(done) {
+        it("write", function (done) {
             setup(this, done);
 
-            var self = this;
-            var client = this.client;
-            var server = this.server;
+            const self = this;
+            const client = this.client;
+            const server = this.server;
 
-            this.onReady = function() {
-                var handle_ = new Buffer("node.js");
-                var buf = new Buffer("node.jsnode.jsnode.jsnode.jsnode.jsnode.js");
-                server.on("WRITE", function(id, handle, offset, data) {
+            this.onReady = function () {
+                const handle_ = new Buffer("node.js");
+                const buf = new Buffer("node.jsnode.jsnode.jsnode.jsnode.jsnode.js");
+                server.on("WRITE", (id, handle, offset, data) => {
                     assert(++self.state.requests === 1,
                         "Saw too many requests");
-                    assert(id === 0, "Wrong request id: " + id);
+                    assert(id === 0, `Wrong request id: ${id}`);
                     assert.deepEqual(handle, handle_, "handle mismatch");
-                    assert(offset === 5, "Wrong write offset: " + offset);
+                    assert(offset === 5, `Wrong write offset: ${offset}`);
                     assert.deepEqual(data, buf, "write data mismatch");
                     server.status(id, STATUS_CODE.OK);
                     server.end();
                 });
-                client.writeData(handle_, buf, 0, buf.length, 5, function(err, nb) {
+                client.writeData(handle_, buf, 0, buf.length, 5, (err, nb) => {
                     assert(++self.state.responses === 1,
                         "Saw too many responses");
-                    assert(!err, "Unexpected writeData() error: " + err);
+                    assert(!err, `Unexpected writeData() error: ${err}`);
                     assert.equal(nb, buf.length);
                 });
             };
         });
 
-        it("write (overflow)", function(done) {
+        it("write (overflow)", function (done) {
             setup(this, done, {
                 requests: 3,
                 responses: 1
             });
 
-            var self = this;
-            var client = this.client;
-            var server = this.server;
+            const self = this;
+            const client = this.client;
+            const server = this.server;
 
-            this.onReady = function() {
-                var handle_ = new Buffer("node.js");
-                var buf = new Buffer(3 * 32 * 1024);
-                server.on("WRITE", function(id, handle, offset, data) {
+            this.onReady = function () {
+                const handle_ = new Buffer("node.js");
+                const buf = new Buffer(3 * 32 * 1024);
+                server.on("WRITE", (id, handle, offset, data) => {
                     ++self.state.requests;
                     assert.equal(id,
                         self.state.requests - 1,
-                        "Wrong request id: " + id);
+                        `Wrong request id: ${id}`);
                     assert.deepEqual(handle, handle_, "handle mismatch");
                     assert.equal(offset,
                         (self.state.requests - 1) * 32 * 1024,
-                        "Wrong write offset: " + offset);
+                        `Wrong write offset: ${offset}`);
                     assert((offset + data.length) <= buf.length);
                     assert.deepEqual(data,
                         buf.slice(offset, offset + data.length),
                         "write data mismatch");
                     server.status(id, STATUS_CODE.OK);
-                    if (self.state.requests === 3)
+                    if (self.state.requests === 3) {
                         server.end();
+                    }
                 });
-                client.writeData(handle_, buf, 0, buf.length, 0, function(err, nb) {
+                client.writeData(handle_, buf, 0, buf.length, 0, (err, nb) => {
                     ++self.state.responses;
-                    assert(!err, "Unexpected writeData() error: " + err);
+                    assert(!err, `Unexpected writeData() error: ${err}`);
                     assert.equal(nb, buf.length);
                 });
             };
         });
 
-        it("lstat", function(done) {
+        it("lstat", function (done) {
             setup(this, done);
 
-            var self = this;
-            var client = this.client;
-            var server = this.server;
+            const self = this;
+            const client = this.client;
+            const server = this.server;
 
-            this.onReady = function() {
-                var path_ = "/foo/bar/baz";
-                var attrs_ = new Stats({
+            this.onReady = function () {
+                const path_ = "/foo/bar/baz";
+                const attrs_ = new Stats({
                     size: 10 * 1024,
                     uid: 9001,
                     gid: 9001,
                     atime: (Date.now() / 1000) | 0,
                     mtime: (Date.now() / 1000) | 0
                 });
-                server.on("LSTAT", function(id, path) {
+                server.on("LSTAT", (id, path) => {
                     assert(++self.state.requests === 1,
                         "Saw too many requests");
-                    assert(id === 0, "Wrong request id: " + id);
-                    assert(path === path_, "Wrong path: " + path);
+                    assert(id === 0, `Wrong request id: ${id}`);
+                    assert(path === path_, `Wrong path: ${path}`);
                     server.attrs(id, attrs_);
                     server.end();
                 });
-                client.lstat(path_, function(err, attrs) {
+                client.lstat(path_, (err, attrs) => {
                     assert(++self.state.responses === 1,
                         "Saw too many responses");
-                    assert(!err, "Unexpected lstat() error: " + err);
+                    assert(!err, `Unexpected lstat() error: ${err}`);
                     assert.deepEqual(attrs, attrs_, "attrs mismatch");
                 });
             };
         });
 
-        it("fstat", function(done) {
+        it("fstat", function (done) {
             setup(this, done);
 
-            var self = this;
-            var client = this.client;
-            var server = this.server;
+            const self = this;
+            const client = this.client;
+            const server = this.server;
 
-            this.onReady = function() {
-                var handle_ = new Buffer("node.js");
-                var attrs_ = new Stats({
+            this.onReady = function () {
+                const handle_ = new Buffer("node.js");
+                const attrs_ = new Stats({
                     size: 10 * 1024,
                     uid: 9001,
                     gid: 9001,
                     atime: (Date.now() / 1000) | 0,
                     mtime: (Date.now() / 1000) | 0
                 });
-                server.on("FSTAT", function(id, handle) {
+                server.on("FSTAT", (id, handle) => {
                     assert(++self.state.requests === 1,
                         "Saw too many requests");
-                    assert(id === 0, "Wrong request id: " + id);
+                    assert(id === 0, `Wrong request id: ${id}`);
                     assert.deepEqual(handle, handle_, "handle mismatch");
                     server.attrs(id, attrs_);
                     server.end();
                 });
-                client.fstat(handle_, function(err, attrs) {
+                client.fstat(handle_, (err, attrs) => {
                     assert(++self.state.responses === 1,
                         "Saw too many responses");
-                    assert(!err, "Unexpected fstat() error: " + err);
+                    assert(!err, `Unexpected fstat() error: ${err}`);
                     assert.deepEqual(attrs, attrs_, "attrs mismatch");
                 });
             };
         });
 
-        it("setstat", function(done) {
+        it("setstat", function (done) {
             setup(this, done);
 
-            var self = this;
-            var what = this.what;
-            var client = this.client;
-            var server = this.server;
+            const self = this;
+            const what = this.what;
+            const client = this.client;
+            const server = this.server;
 
-            this.onReady = function() {
-                var path_ = "/foo/bar/baz";
-                var attrs_ = new Stats({
+            this.onReady = function () {
+                const path_ = "/foo/bar/baz";
+                const attrs_ = new Stats({
                     uid: 9001,
                     gid: 9001,
                     atime: (Date.now() / 1000) | 0,
                     mtime: (Date.now() / 1000) | 0
                 });
-                server.on("SETSTAT", function(id, path, attrs) {
+                server.on("SETSTAT", (id, path, attrs) => {
                     assert(++self.state.requests === 1,
                         "Saw too many requests");
-                    assert(id === 0, "Wrong request id: " + id);
-                    assert(path === path_, "Wrong path: " + path);
+                    assert(id === 0, `Wrong request id: ${id}`);
+                    assert(path === path_, `Wrong path: ${path}`);
                     assert.deepEqual(attrs, attrs_, "attrs mismatch");
                     server.status(id, STATUS_CODE.OK);
                     server.end();
                 });
-                client.setstat(path_, attrs_, function(err) {
+                client.setstat(path_, attrs_, (err) => {
                     assert(++self.state.responses === 1,
                         "Saw too many responses");
-                    assert(!err, "Unexpected setstat() error: " + err);
+                    assert(!err, `Unexpected setstat() error: ${err}`);
                 });
             };
         });
 
-        it("fsetstat", function(done) {
+        it("fsetstat", function (done) {
             setup(this, done);
 
-            var self = this;
-            var what = this.what;
-            var client = this.client;
-            var server = this.server;
+            const self = this;
+            const what = this.what;
+            const client = this.client;
+            const server = this.server;
 
-            this.onReady = function() {
-                var handle_ = new Buffer("node.js");
-                var attrs_ = new Stats({
+            this.onReady = function () {
+                const handle_ = new Buffer("node.js");
+                const attrs_ = new Stats({
                     uid: 9001,
                     gid: 9001,
                     atime: (Date.now() / 1000) | 0,
                     mtime: (Date.now() / 1000) | 0
                 });
-                server.on("FSETSTAT", function(id, handle, attrs) {
+                server.on("FSETSTAT", (id, handle, attrs) => {
                     assert(++self.state.requests === 1,
                         "Saw too many requests");
-                    assert(id === 0, "Wrong request id: " + id);
+                    assert(id === 0, `Wrong request id: ${id}`);
                     assert.deepEqual(handle, handle_, "handle mismatch");
                     assert.deepEqual(attrs, attrs_, "attrs mismatch");
                     server.status(id, STATUS_CODE.OK);
                     server.end();
                 });
-                client.fsetstat(handle_, attrs_, function(err) {
+                client.fsetstat(handle_, attrs_, (err) => {
                     assert(++self.state.responses === 1,
                         "Saw too many responses");
-                    assert(!err, "Unexpected fsetstat() error: " + err);
+                    assert(!err, `Unexpected fsetstat() error: ${err}`);
                 });
             };
         });
 
-        it("opendir", function(done) {
+        it("opendir", function (done) {
             setup(this, done);
 
-            var self = this;
-            var what = this.what;
-            var client = this.client;
-            var server = this.server;
+            const self = this;
+            const what = this.what;
+            const client = this.client;
+            const server = this.server;
 
-            this.onReady = function() {
-                var handle_ = new Buffer("node.js");
-                var path_ = "/tmp";
-                server.on("OPENDIR", function(id, path) {
+            this.onReady = function () {
+                const handle_ = new Buffer("node.js");
+                const path_ = "/tmp";
+                server.on("OPENDIR", (id, path) => {
                     assert(++self.state.requests === 1,
                         "Saw too many requests");
-                    assert(id === 0, "Wrong request id: " + id);
-                    assert(path === path_, "Wrong path: " + path);
+                    assert(id === 0, `Wrong request id: ${id}`);
+                    assert(path === path_, `Wrong path: ${path}`);
                     server.handle(id, handle_);
                     server.end();
                 });
-                client.opendir(path_, function(err, handle) {
+                client.opendir(path_, (err, handle) => {
                     assert(++self.state.responses === 1,
                         "Saw too many responses");
-                    assert(!err, "Unexpected opendir() error: " + err);
+                    assert(!err, `Unexpected opendir() error: ${err}`);
                     assert.deepEqual(handle, handle_, "handle mismatch");
                 });
             };
         });
 
-        it("readdir", function(done) {
+        it("readdir", function (done) {
             setup(this, done);
 
-            var self = this;
-            var what = this.what;
-            var client = this.client;
-            var server = this.server;
+            const self = this;
+            const what = this.what;
+            const client = this.client;
+            const server = this.server;
 
-            this.onReady = function() {
-                var handle_ = new Buffer("node.js");
-                var list_ = [{
+            this.onReady = function () {
+                const handle_ = new Buffer("node.js");
+                const list_ = [{
                     filename: ".",
                     longname: "drwxr-xr-x  56 nodejs   nodejs      4096 Nov 10 01:05 .",
                     attrs: new Stats({
@@ -380,18 +377,18 @@ describe("SSH-Streams", function () {
                         mtime: 1259972199
                     })
                 }];
-                server.on("READDIR", function(id, handle) {
+                server.on("READDIR", (id, handle) => {
                     assert(++self.state.requests === 1,
                         "Saw too many requests");
-                    assert(id === 0, "Wrong request id: " + id);
+                    assert(id === 0, `Wrong request id: ${id}`);
                     assert.deepEqual(handle, handle_, "handle mismatch");
                     server.name(id, list_);
                     server.end();
                 });
-                client.readdir(handle_, function(err, list) {
+                client.readdir(handle_, (err, list) => {
                     assert(++self.state.responses === 1,
                         "Saw too many responses");
-                    assert(!err, "Unexpected readdir() error: " + err);
+                    assert(!err, `Unexpected readdir() error: ${err}`);
                     assert.deepEqual(list,
                         list_.slice(2),
                         "dir list mismatch");
@@ -399,17 +396,17 @@ describe("SSH-Streams", function () {
             };
         });
 
-        it("readdir (full)", function(done) {
+        it("readdir (full)", function (done) {
             setup(this, done);
 
-            var self = this;
-            var what = this.what;
-            var client = this.client;
-            var server = this.server;
+            const self = this;
+            const what = this.what;
+            const client = this.client;
+            const server = this.server;
 
-            this.onReady = function() {
-                var handle_ = new Buffer("node.js");
-                var list_ = [{
+            this.onReady = function () {
+                const handle_ = new Buffer("node.js");
+                const list_ = [{
                     filename: ".",
                     longname: "drwxr-xr-x  56 nodejs   nodejs      4096 Nov 10 01:05 .",
                     attrs: new Stats({
@@ -454,280 +451,280 @@ describe("SSH-Streams", function () {
                         mtime: 1259972199
                     })
                 }];
-                server.on("READDIR", function(id, handle) {
+                server.on("READDIR", (id, handle) => {
                     assert(++self.state.requests === 1,
                         "Saw too many requests");
-                    assert(id === 0, "Wrong request id: " + id);
+                    assert(id === 0, `Wrong request id: ${id}`);
                     assert.deepEqual(handle, handle_, "handle mismatch");
                     server.name(id, list_);
                     server.end();
                 });
                 client.readdir(handle_, {
                     full: true
-                }, function(err, list) {
+                }, (err, list) => {
                     assert(++self.state.responses === 1,
                         "Saw too many responses");
-                    assert(!err, "Unexpected readdir() error: " + err);
+                    assert(!err, `Unexpected readdir() error: ${err}`);
                     assert.deepEqual(list, list_, "dir list mismatch");
                 });
             };
         });
 
-        it("remove", function(done) {
+        it("remove", function (done) {
             setup(this, done);
 
-            var self = this;
-            var what = this.what;
-            var client = this.client;
-            var server = this.server;
+            const self = this;
+            const what = this.what;
+            const client = this.client;
+            const server = this.server;
 
-            this.onReady = function() {
-                var path_ = "/foo/bar/baz";
-                server.on("REMOVE", function(id, path) {
+            this.onReady = function () {
+                const path_ = "/foo/bar/baz";
+                server.on("REMOVE", (id, path) => {
                     assert(++self.state.requests === 1,
                         "Saw too many requests");
-                    assert(id === 0, "Wrong request id: " + id);
-                    assert(path === path_, "Wrong path: " + path);
+                    assert(id === 0, `Wrong request id: ${id}`);
+                    assert(path === path_, `Wrong path: ${path}`);
                     server.status(id, STATUS_CODE.OK);
                     server.end();
                 });
-                client.unlink(path_, function(err) {
+                client.unlink(path_, (err) => {
                     assert(++self.state.responses === 1,
                         "Saw too many responses");
-                    assert(!err, "Unexpected unlink() error: " + err);
+                    assert(!err, `Unexpected unlink() error: ${err}`);
                 });
             };
         });
 
-        it("mkdir", function(done) {
+        it("mkdir", function (done) {
             setup(this, done);
 
-            var self = this;
-            var what = this.what;
-            var client = this.client;
-            var server = this.server;
+            const self = this;
+            const what = this.what;
+            const client = this.client;
+            const server = this.server;
 
-            this.onReady = function() {
-                var path_ = "/foo/bar/baz";
-                server.on("MKDIR", function(id, path) {
+            this.onReady = function () {
+                const path_ = "/foo/bar/baz";
+                server.on("MKDIR", (id, path) => {
                     assert(++self.state.requests === 1,
                         "Saw too many requests");
-                    assert(id === 0, "Wrong request id: " + id);
-                    assert(path === path_, "Wrong path: " + path);
+                    assert(id === 0, `Wrong request id: ${id}`);
+                    assert(path === path_, `Wrong path: ${path}`);
                     server.status(id, STATUS_CODE.OK);
                     server.end();
                 });
-                client.mkdir(path_, function(err) {
+                client.mkdir(path_, (err) => {
                     assert(++self.state.responses === 1,
                         "Saw too many responses");
-                    assert(!err, "Unexpected mkdir() error: " + err);
+                    assert(!err, `Unexpected mkdir() error: ${err}`);
                 });
             };
         });
 
-        it("rmdir", function(done) {
+        it("rmdir", function (done) {
             setup(this, done);
 
-            var self = this;
-            var what = this.what;
-            var client = this.client;
-            var server = this.server;
+            const self = this;
+            const what = this.what;
+            const client = this.client;
+            const server = this.server;
 
-            this.onReady = function() {
-                var path_ = "/foo/bar/baz";
-                server.on("RMDIR", function(id, path) {
+            this.onReady = function () {
+                const path_ = "/foo/bar/baz";
+                server.on("RMDIR", (id, path) => {
                     assert(++self.state.requests === 1,
                         "Saw too many requests");
-                    assert(id === 0, "Wrong request id: " + id);
-                    assert(path === path_, "Wrong path: " + path);
+                    assert(id === 0, `Wrong request id: ${id}`);
+                    assert(path === path_, `Wrong path: ${path}`);
                     server.status(id, STATUS_CODE.OK);
                     server.end();
                 });
-                client.rmdir(path_, function(err) {
+                client.rmdir(path_, (err) => {
                     assert(++self.state.responses === 1,
                         "Saw too many responses");
-                    assert(!err, "Unexpected rmdir() error: " + err);
+                    assert(!err, `Unexpected rmdir() error: ${err}`);
                 });
             };
         });
 
-        it("realpath", function(done) {
+        it("realpath", function (done) {
             setup(this, done);
 
-            var self = this;
-            var what = this.what;
-            var client = this.client;
-            var server = this.server;
+            const self = this;
+            const what = this.what;
+            const client = this.client;
+            const server = this.server;
 
-            this.onReady = function() {
-                var path_ = "/foo/bar/baz";
-                var name_ = {
+            this.onReady = function () {
+                const path_ = "/foo/bar/baz";
+                const name_ = {
                     filename: "/tmp/foo"
                 };
-                server.on("REALPATH", function(id, path) {
+                server.on("REALPATH", (id, path) => {
                     assert(++self.state.requests === 1,
                         "Saw too many requests");
-                    assert(id === 0, "Wrong request id: " + id);
-                    assert(path === path_, "Wrong path: " + path);
+                    assert(id === 0, `Wrong request id: ${id}`);
+                    assert(path === path_, `Wrong path: ${path}`);
                     server.name(id, name_);
                     server.end();
                 });
-                client.realpath(path_, function(err, name) {
+                client.realpath(path_, (err, name) => {
                     assert(++self.state.responses === 1,
                         "Saw too many responses");
-                    assert(!err, "Unexpected realpath() error: " + err);
+                    assert(!err, `Unexpected realpath() error: ${err}`);
                     assert.deepEqual(name, name_.filename, "name mismatch");
                 });
             };
         });
 
-        it("stat", function(done) {
+        it("stat", function (done) {
             setup(this, done);
 
-            var self = this;
-            var what = this.what;
-            var client = this.client;
-            var server = this.server;
+            const self = this;
+            const what = this.what;
+            const client = this.client;
+            const server = this.server;
 
-            this.onReady = function() {
-                var path_ = "/foo/bar/baz";
-                var attrs_ = new Stats({
+            this.onReady = function () {
+                const path_ = "/foo/bar/baz";
+                const attrs_ = new Stats({
                     size: 10 * 1024,
                     uid: 9001,
                     gid: 9001,
                     atime: (Date.now() / 1000) | 0,
                     mtime: (Date.now() / 1000) | 0
                 });
-                server.on("STAT", function(id, path) {
+                server.on("STAT", (id, path) => {
                     assert(++self.state.requests === 1,
                         "Saw too many requests");
-                    assert(id === 0, "Wrong request id: " + id);
-                    assert(path === path_, "Wrong path: " + path);
+                    assert(id === 0, `Wrong request id: ${id}`);
+                    assert(path === path_, `Wrong path: ${path}`);
                     server.attrs(id, attrs_);
                     server.end();
                 });
-                client.stat(path_, function(err, attrs) {
+                client.stat(path_, (err, attrs) => {
                     assert(++self.state.responses === 1,
                         "Saw too many responses");
-                    assert(!err, "Unexpected stat() error: " + err);
+                    assert(!err, `Unexpected stat() error: ${err}`);
                     assert.deepEqual(attrs, attrs_, "attrs mismatch");
                 });
             };
         });
 
-        it("rename", function(done) {
+        it("rename", function (done) {
             setup(this, done);
 
-            var self = this;
-            var what = this.what;
-            var client = this.client;
-            var server = this.server;
+            const self = this;
+            const what = this.what;
+            const client = this.client;
+            const server = this.server;
 
-            this.onReady = function() {
-                var oldPath_ = "/foo/bar/baz";
-                var newPath_ = "/tmp/foo";
-                server.on("RENAME", function(id, oldPath, newPath) {
+            this.onReady = function () {
+                const oldPath_ = "/foo/bar/baz";
+                const newPath_ = "/tmp/foo";
+                server.on("RENAME", (id, oldPath, newPath) => {
                     assert(++self.state.requests === 1,
                         "Saw too many requests");
-                    assert(id === 0, "Wrong request id: " + id);
+                    assert(id === 0, `Wrong request id: ${id}`);
                     assert(oldPath === oldPath_,
-                        "Wrong old path: " + oldPath);
+                        `Wrong old path: ${oldPath}`);
                     assert(newPath === newPath_,
-                        "Wrong new path: " + newPath);
+                        `Wrong new path: ${newPath}`);
                     server.status(id, STATUS_CODE.OK);
                     server.end();
                 });
-                client.rename(oldPath_, newPath_, function(err) {
+                client.rename(oldPath_, newPath_, (err) => {
                     assert(++self.state.responses === 1,
                         "Saw too many responses");
-                    assert(!err, "Unexpected rename() error: " + err);
+                    assert(!err, `Unexpected rename() error: ${err}`);
                 });
             };
         });
 
-        it("readlink", function(done) {
+        it("readlink", function (done) {
             setup(this, done);
 
-            var self = this;
-            var what = this.what;
-            var client = this.client;
-            var server = this.server;
+            const self = this;
+            const what = this.what;
+            const client = this.client;
+            const server = this.server;
 
-            this.onReady = function() {
-                var linkPath_ = "/foo/bar/baz";
-                var name = {
+            this.onReady = function () {
+                const linkPath_ = "/foo/bar/baz";
+                const name = {
                     filename: "/tmp/foo"
                 };
-                server.on("READLINK", function(id, linkPath) {
+                server.on("READLINK", (id, linkPath) => {
                     assert(++self.state.requests === 1,
                         "Saw too many requests");
-                    assert(id === 0, "Wrong request id: " + id);
+                    assert(id === 0, `Wrong request id: ${id}`);
                     assert(linkPath === linkPath_,
-                        "Wrong link path: " + linkPath);
+                        `Wrong link path: ${linkPath}`);
                     server.name(id, name);
                     server.end();
                 });
-                client.readlink(linkPath_, function(err, targetPath) {
+                client.readlink(linkPath_, (err, targetPath) => {
                     assert(++self.state.responses === 1,
                         "Saw too many responses");
-                    assert(!err, "Unexpected readlink() error: " + err);
+                    assert(!err, `Unexpected readlink() error: ${err}`);
                     assert(targetPath === name.filename,
-                        "Wrong target path: " + targetPath);
+                        `Wrong target path: ${targetPath}`);
                 });
             };
         });
 
-        it("symlink", function(done) {
+        it("symlink", function (done) {
             setup(this, done);
 
-            var self = this;
-            var what = this.what;
-            var client = this.client;
-            var server = this.server;
+            const self = this;
+            const what = this.what;
+            const client = this.client;
+            const server = this.server;
 
-            this.onReady = function() {
-                var linkPath_ = "/foo/bar/baz";
-                var targetPath_ = "/tmp/foo";
-                server.on("SYMLINK", function(id, linkPath, targetPath) {
+            this.onReady = function () {
+                const linkPath_ = "/foo/bar/baz";
+                const targetPath_ = "/tmp/foo";
+                server.on("SYMLINK", (id, linkPath, targetPath) => {
                     assert(++self.state.requests === 1,
                         "Saw too many requests");
-                    assert(id === 0, "Wrong request id: " + id);
+                    assert(id === 0, `Wrong request id: ${id}`);
                     assert(linkPath === linkPath_,
-                        "Wrong link path: " + linkPath);
+                        `Wrong link path: ${linkPath}`);
                     assert(targetPath === targetPath_,
-                        "Wrong target path: " + targetPath);
+                        `Wrong target path: ${targetPath}`);
                     server.status(id, STATUS_CODE.OK);
                     server.end();
                 });
-                client.symlink(targetPath_, linkPath_, function(err) {
+                client.symlink(targetPath_, linkPath_, (err) => {
                     assert(++self.state.responses === 1,
                         "Saw too many responses");
-                    assert(!err, "Unexpected symlink() error: " + err);
+                    assert(!err, `Unexpected symlink() error: ${err}`);
                 });
             };
         });
 
-        it("readFile", function(done) {
+        it("readFile", function (done) {
             setup(this, done);
 
-            var self = this;
-            var what = this.what;
-            var client = this.client;
-            var server = this.server;
+            const self = this;
+            const what = this.what;
+            const client = this.client;
+            const server = this.server;
 
-            this.onReady = function() {
-                var path_ = "/foo/bar/baz";
-                var handle_ = new Buffer("hi mom!");
-                var data_ = new Buffer("hello world");
-                server.once("OPEN", function(id, path, pflags, attrs) {
-                    assert(id === 0, "Wrong request id: " + id);
-                    assert(path === path_, "Wrong path: " + path);
+            this.onReady = function () {
+                const path_ = "/foo/bar/baz";
+                const handle_ = new Buffer("hi mom!");
+                const data_ = new Buffer("hello world");
+                server.once("OPEN", (id, path, pflags, attrs) => {
+                    assert(id === 0, `Wrong request id: ${id}`);
+                    assert(path === path_, `Wrong path: ${path}`);
                     assert(pflags === OPEN_MODE.READ,
-                        "Wrong flags: " + flagsToHuman(pflags));
+                        `Wrong flags: ${flagsToHuman(pflags)}`);
                     server.handle(id, handle_);
-                }).once("FSTAT", function(id, handle) {
-                    assert(id === 1, "Wrong request id: " + id);
-                    var attrs = new Stats({
+                }).once("FSTAT", (id, handle) => {
+                    assert(id === 1, `Wrong request id: ${id}`);
+                    const attrs = new Stats({
                         size: data_.length,
                         uid: 9001,
                         gid: 9001,
@@ -735,73 +732,74 @@ describe("SSH-Streams", function () {
                         mtime: (Date.now() / 1000) | 0
                     });
                     server.attrs(id, attrs);
-                }).once("READ", function(id, handle, offset, len) {
-                    assert(id === 2, "Wrong request id: " + id);
+                }).once("READ", (id, handle, offset, len) => {
+                    assert(id === 2, `Wrong request id: ${id}`);
                     assert.deepEqual(handle, handle_, "handle mismatch");
-                    assert(offset === 0, "Wrong read offset: " + offset);
+                    assert(offset === 0, `Wrong read offset: ${offset}`);
                     server.data(id, data_);
-                }).once("CLOSE", function(id, handle) {
+                }).once("CLOSE", (id, handle) => {
                     ++self.state.requests;
-                    assert(id === 3, "Wrong request id: " + id);
+                    assert(id === 3, `Wrong request id: ${id}`);
                     assert.deepEqual(handle, handle_, "handle mismatch");
                     server.status(id, STATUS_CODE.OK);
                     server.end();
                 });
-                var buf = [];
-                client.readFile(path_, function(err, buf) {
+                const buf = [];
+                client.readFile(path_, (err, buf) => {
                     ++self.state.responses;
-                    assert(!err, "Unexpected error: " + err);
+                    assert(!err, `Unexpected error: ${err}`);
                     assert.deepEqual(buf, data_, "data mismatch");
                 });
             };
         });
 
-        it("ReadStream", function(done) {
+        it("ReadStream", function (done) {
             setup(this, done);
 
-            var self = this;
-            var what = this.what;
-            var client = this.client;
-            var server = this.server;
+            const self = this;
+            const what = this.what;
+            const client = this.client;
+            const server = this.server;
 
-            this.onReady = function() {
-                var opens = 0;
-                var reads = 0;
-                var closes = 0;
-                var path_ = "/foo/bar/baz";
-                var handle_ = new Buffer("hi mom!");
-                var data_ = new Buffer("hello world");
-                server.on("OPEN", function(id, path, pflags, attrs) {
+            this.onReady = function () {
+                let opens = 0;
+                let reads = 0;
+                let closes = 0;
+                const path_ = "/foo/bar/baz";
+                const handle_ = new Buffer("hi mom!");
+                const data_ = new Buffer("hello world");
+                server.on("OPEN", (id, path, pflags, attrs) => {
                     assert(++opens === 1, "Saw too many OPENs");
-                    assert(id === 0, "Wrong request id: " + id);
-                    assert(path === path_, "Wrong path: " + path);
+                    assert(id === 0, `Wrong request id: ${id}`);
+                    assert(path === path_, `Wrong path: ${path}`);
                     assert(pflags === OPEN_MODE.READ,
-                        "Wrong flags: " + flagsToHuman(pflags));
+                        `Wrong flags: ${flagsToHuman(pflags)}`);
                     server.handle(id, handle_);
-                }).on("READ", function(id, handle, offset, len) {
+                }).on("READ", (id, handle, offset, len) => {
                     assert(++reads <= 2, "Saw too many READs");
-                    assert(id === reads, "Wrong request id: " + id);
+                    assert(id === reads, `Wrong request id: ${id}`);
                     assert.deepEqual(handle, handle_, "handle mismatch");
                     if (reads === 1) {
-                        assert(offset === 0, "Wrong read offset: " + offset);
+                        assert(offset === 0, `Wrong read offset: ${offset}`);
                         server.data(id, data_);
-                    } else
+                    } else {
                         server.status(id, STATUS_CODE.EOF);
-                }).on("CLOSE", function(id, handle) {
+                    }
+                }).on("CLOSE", (id, handle) => {
                     ++self.state.requests;
                     assert(++closes === 1, "Saw too many CLOSEs");
-                    assert(id === 3, "Wrong request id: " + id);
+                    assert(id === 3, `Wrong request id: ${id}`);
                     assert.deepEqual(handle, handle_, "handle mismatch");
                     server.status(id, STATUS_CODE.OK);
                     server.end();
                 });
-                var buf = [];
-                client.createReadStream(path_).on("readable", function() {
-                    var chunk;
+                let buf = [];
+                client.createReadStream(path_).on("readable", function () {
+                    let chunk;
                     while ((chunk = this.read()) !== null) {
                         buf.push(chunk);
                     }
-                }).on("end", function() {
+                }).on("end", () => {
                     assert(++self.state.responses === 1,
                         "Saw too many responses");
                     buf = Buffer.concat(buf);
@@ -810,84 +808,84 @@ describe("SSH-Streams", function () {
             };
         });
 
-        it("ReadStream (error)", function(done) {
+        it("ReadStream (error)", function (done) {
             setup(this, done);
 
-            var self = this;
-            var what = this.what;
-            var client = this.client;
-            var server = this.server;
+            const self = this;
+            const what = this.what;
+            const client = this.client;
+            const server = this.server;
 
-            this.onReady = function() {
-                var opens = 0;
-                var path_ = "/foo/bar/baz";
-                var error;
-                server.on("OPEN", function(id, path, pflags, attrs) {
+            this.onReady = function () {
+                let opens = 0;
+                const path_ = "/foo/bar/baz";
+                let error;
+                server.on("OPEN", (id, path, pflags, attrs) => {
                     ++opens;
                     ++self.state.requests;
-                    assert(id === 0, "Wrong request id: " + id);
-                    assert(path === path_, "Wrong path: " + path);
-                    assert(pflags === OPEN_MODE.READ, "Wrong flags: " + flagsToHuman(pflags));
+                    assert(id === 0, `Wrong request id: ${id}`);
+                    assert(path === path_, `Wrong path: ${path}`);
+                    assert(pflags === OPEN_MODE.READ, `Wrong flags: ${flagsToHuman(pflags)}`);
                     server.status(id, STATUS_CODE.NO_SUCH_FILE);
                     server.end();
                 });
-                client.createReadStream(path_).on("error", function(err) {
+                client.createReadStream(path_).on("error", (err) => {
                     error = err;
-                }).on("close", function() {
-                    assert(opens === 1, "Saw " + opens + " OPENs");
+                }).on("close", () => {
+                    assert(opens === 1, `Saw ${opens} OPENs`);
                     assert(error, "Expected error");
                     assert(++self.state.responses === 1, "Saw too many responses");
                 });
             };
         });
 
-        it("WriteStream", function(done) {
+        it("WriteStream", function (done) {
             setup(this, done);
 
-            var self = this;
-            var client = this.client;
-            var server = this.server;
+            const self = this;
+            const client = this.client;
+            const server = this.server;
 
-            this.onReady = function() {
-                var opens = 0;
-                var writes = 0;
-                var closes = 0;
-                var fsetstat = false;
-                var path_ = "/foo/bar/baz";
-                var handle_ = new Buffer("hi mom!");
-                var data_ = new Buffer("hello world");
-                var expFlags = OPEN_MODE.TRUNC | OPEN_MODE.CREAT | OPEN_MODE.WRITE;
-                server.on("OPEN", function(id, path, pflags, attrs) {
+            this.onReady = function () {
+                let opens = 0;
+                let writes = 0;
+                let closes = 0;
+                let fsetstat = false;
+                const path_ = "/foo/bar/baz";
+                const handle_ = new Buffer("hi mom!");
+                const data_ = new Buffer("hello world");
+                const expFlags = OPEN_MODE.TRUNC | OPEN_MODE.CREAT | OPEN_MODE.WRITE;
+                server.on("OPEN", (id, path, pflags, attrs) => {
                     assert(++opens === 1, "Saw too many OPENs");
-                    assert(id === 0, "Wrong request id: " + id);
-                    assert(path === path_, "Wrong path: " + path);
+                    assert(id === 0, `Wrong request id: ${id}`);
+                    assert(path === path_, `Wrong path: ${path}`);
                     assert(pflags === expFlags,
-                        "Wrong flags: " + flagsToHuman(pflags));
+                        `Wrong flags: ${flagsToHuman(pflags)}`);
                     server.handle(id, handle_);
-                }).once("FSETSTAT", function(id, handle, attrs) {
+                }).once("FSETSTAT", (id, handle, attrs) => {
                     fsetstat = true;
-                    assert(id === 1, "Wrong request id: " + id);
+                    assert(id === 1, `Wrong request id: ${id}`);
                     assert.deepEqual(handle, handle_, "handle mismatch");
                     assert.strictEqual(attrs.mode,
                         parseInt("0666", 8),
                         "Wrong file mode");
                     server.status(id, STATUS_CODE.OK);
-                }).on("WRITE", function(id, handle, offset, data) {
+                }).on("WRITE", (id, handle, offset, data) => {
                     assert(++writes <= 3, "Saw too many WRITEs");
-                    assert(id === writes + 1, "Wrong request id: " + id);
+                    assert(id === writes + 1, `Wrong request id: ${id}`);
                     assert.deepEqual(handle, handle_, "handle mismatch");
                     assert(offset === ((writes - 1) * data_.length),
-                        "Wrong write offset: " + offset);
+                        `Wrong write offset: ${offset}`);
                     assert.deepEqual(data, data_, "Wrong data");
                     server.status(id, STATUS_CODE.OK);
-                }).on("CLOSE", function(id, handle) {
+                }).on("CLOSE", (id, handle) => {
                     ++self.state.requests;
                     assert(++closes === 1, "Saw too many CLOSEs");
-                    assert(id === 5, "Wrong request id: " + id);
+                    assert(id === 5, `Wrong request id: ${id}`);
                     assert.deepEqual(handle, handle_, "handle mismatch");
                     server.status(id, STATUS_CODE.OK);
                     server.end();
-                }).on("end", function() {
+                }).on("end", () => {
                     assert(++self.state.responses === 1,
                         "Saw too many responses");
                     assert(opens === 1, "Wrong OPEN count");
@@ -896,58 +894,60 @@ describe("SSH-Streams", function () {
                     assert(fsetstat, "Expected FSETSTAT");
                 });
 
-                var writer = client.createWriteStream(path_);
-                if (writer.cork)
+                const writer = client.createWriteStream(path_);
+                if (writer.cork) {
                     writer.cork();
+                }
                 writer.write(data_);
                 writer.write(data_);
                 writer.write(data_);
-                if (writer.uncork)
+                if (writer.uncork) {
                     writer.uncork();
+                }
                 writer.end();
             };
         });
 
-        it("readdir (EOF)", function(done) {
+        it("readdir (EOF)", function (done) {
             setup(this, done);
 
-            var self = this;
-            var client = this.client;
-            var server = this.server;
+            const self = this;
+            const client = this.client;
+            const server = this.server;
 
-            this.onReady = function() {
-                var handle_ = new Buffer("node.js");
-                server.on("READDIR", function(id, handle) {
+            this.onReady = function () {
+                const handle_ = new Buffer("node.js");
+                server.on("READDIR", (id, handle) => {
                     assert(++self.state.requests === 1,
                         "Saw too many requests");
-                    assert(id === 0, "Wrong request id: " + id);
+                    assert(id === 0, `Wrong request id: ${id}`);
                     assert.deepEqual(handle, handle_, "handle mismatch");
                     server.status(id, STATUS_CODE.EOF);
                     server.end();
                 });
-                client.readdir(handle_, function(err, list) {
+                client.readdir(handle_, (err, list) => {
                     assert(++self.state.responses === 1,
                         "Saw too many responses");
                     assert(err && err.code === STATUS_CODE.EOF,
-                        "Expected EOF, got: " + err);
+                        `Expected EOF, got: ${err}`);
                 });
             };
         });
 
-        it("\"continue\" event after push() === false", function(done) {
+        it("\"continue\" event after push() === false", function (done) {
             setup(this, done, {
                 requests: -1,
                 responses: -1
             });
 
-            var self = this;
-            var client = this.client;
-            var server = this.server;
+            const self = this;
+            const client = this.client;
+            const server = this.server;
 
-            this.onReady = function() {
-                var path_ = "/tmp/foo.txt";
-                var reqs = 0;
-                var continues = 0;
+            this.onReady = function () {
+                const path_ = "/tmp/foo.txt";
+                let reqs = 0;
+                let continues = 0;
 
                 client.unpipe(server);
 
@@ -960,24 +960,25 @@ describe("SSH-Streams", function () {
                     }
                 }
 
-                client.on("continue", function() {
+                client.on("continue", () => {
                     assert(++continues === 1, "saw > 1 continue event");
                 });
 
-                for (;;) {
+                for (; ;) {
                     ++reqs;
-                    if (!client.open(path_, "w", clientCb))
+                    if (!client.open(path_, "w", clientCb)) {
                         break;
+                    }
                 }
 
                 client.pipe(server);
             };
         });
 
-        it("Can parse status response without language", function(done) {
-            var client = new SFTPStream();
-            client.once("ready", function() {
-                client.open("/foo/bar", "w", function(err, handle) {
+        it("Can parse status response without language", (done) => {
+            const client = new SFTPStream();
+            client.once("ready", () => {
+                client.open("/foo/bar", "w", (err, handle) => {
                     assert(err, "Expected error");
                     assert.strictEqual(err.code, 4);
                     assert.strictEqual(err.message, "Uh oh");
@@ -999,10 +1000,10 @@ describe("SSH-Streams", function () {
             ]));
         });
 
-        it("Can parse status response without message", function(done) {
-            var client = new SFTPStream();
-            client.once("ready", function() {
-                client.open("/foo/bar", "w", function(err, handle) {
+        it("Can parse status response without message", (done) => {
+            const client = new SFTPStream();
+            client.once("ready", () => {
+                client.open("/foo/bar", "w", (err, handle) => {
                     assert(err, "Expected error");
                     assert.strictEqual(err.code, 4);
                     assert.strictEqual(err.message, "Failure");
@@ -1026,10 +1027,10 @@ describe("SSH-Streams", function () {
 });
 
 function setup(self, done, expected) {
-    var expectedRequests = (expected && expected.requests) || 1;
-    var expectedResponses = (expected && expected.responses) || 1;
-    var clientEnded = false;
-    var serverEnded = false;
+    const expectedRequests = (expected && expected.requests) || 1;
+    const expectedResponses = (expected && expected.responses) || 1;
+    let clientEnded = false;
+    let serverEnded = false;
 
     self.state = {
         clientReady: false,
@@ -1051,8 +1052,8 @@ function setup(self, done, expected) {
         .on("end", onEnd);
 
     function onError(err) {
-        var which = (this === self.server ? "server" : "client");
-        assert(false, "Unexpected " + which + " error: " + err);
+        const which = (this === self.server ? "server" : "client");
+        assert(false, `Unexpected ${which} error: ${err}`);
     }
 
     function onReady() {
@@ -1063,8 +1064,9 @@ function setup(self, done, expected) {
             assert(!self.state.serverReady, "Received multiple ready events for server");
             self.state.serverReady = true;
         }
-        if (self.state.clientReady && self.state.serverReady)
+        if (self.state.clientReady && self.state.serverReady) {
             self.onReady && self.onReady();
+        }
     }
 
     function onEnd() {
@@ -1076,32 +1078,34 @@ function setup(self, done, expected) {
             serverEnded = true;
         }
         if (clientEnded && serverEnded) {
-            var msg;
+            let msg;
             if (expectedRequests > 0) {
-                msg = "Expected " + expectedRequests + " request(s) but received " +
-                    self.state.requests;
+                msg = `Expected ${expectedRequests} request(s) but received ${
+                    self.state.requests}`;
                 assert(self.state.requests === expectedRequests, msg);
             }
             if (expectedResponses > 0) {
-                msg = "Expected " + expectedResponses + " response(s) but received " +
-                    self.state.responses;
+                msg = `Expected ${expectedResponses} response(s) but received ${
+                    self.state.responses}`;
                 assert(self.state.responses === expectedResponses, msg);
             }
             done();
         }
     }
 
-    process.nextTick(function() {
+    process.nextTick(() => {
         self.client.pipe(self.server).pipe(self.client);
     });
 }
 
 function flagsToHuman(flags) {
-    var ret = [];
+    const ret = [];
 
-    for (var i = 0, keys = Object.keys(OPEN_MODE), len = keys.length; i < len; ++i)
-        if (flags & OPEN_MODE[keys[i]])
+    for (let i = 0, keys = Object.keys(OPEN_MODE), len = keys.length; i < len; ++i) {
+        if (flags & OPEN_MODE[keys[i]]) {
             ret.push(keys[i]);
+        }
+    }
 
     return ret.join(" | ");
 }

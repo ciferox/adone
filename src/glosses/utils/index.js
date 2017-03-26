@@ -160,6 +160,14 @@ export const slice = (args, sliceStart = 0, sliceEnd) => {
     return ret;
 };
 
+// About 1.5x faster than the two-arg version of Array#splice().
+export const spliceOne = (list, index) => {
+    for (let i = index, k = i + 1, n = list.length; k < n; i += 1, k += 1) {
+        list[i] = list[k];
+    }
+    list.pop();
+};
+
 export const normalizePath = (str, stripTrailing = false) => {
     if (typeof str !== "string") {
         throw new TypeError("path must be a string");

@@ -1,7 +1,4 @@
-/* global describe it */
-
-import { SSH2Stream, utils, constants } from "../../../../../lib/glosses/net/ssh/ssh_streams";
-
+import { SSH2Stream, utils, constants } from "adone/glosses/net/ssh/streams";
 
 const parseKey = utils.parseKey;
 const genPubKey = utils.genPublicKey;
@@ -13,22 +10,22 @@ const SERVER_KEY = fs.readFileSync(adone.std.path.join(__dirname, "fixtures", "s
 const SERVER_KEY_PRV = parseKey(SERVER_KEY);
 const SERVER_KEY_PUB = genPubKey(SERVER_KEY_PRV);
 
-describe("SSH-Streams", function () {
-    describe("kexdh", function () {
-        it("kexdh", function (done) {
-            let server = new SSH2Stream({
+describe("SSH-Streams", () => {
+    describe("kexdh", () => {
+        it("kexdh", (done) => {
+            const server = new SSH2Stream({
                 server: true,
                 hostKeys: {
                     "ssh-rsa": {
                         privateKey: SERVER_KEY_PRV,
-                        publicKey: SERVER_KEY_PUB,
+                        publicKey: SERVER_KEY_PUB
                     }
                 }
             });
-            let client = new SSH2Stream();
+            const client = new SSH2Stream();
             let srvError;
 
-            server.on("error", function(err) {
+            server.on("error", (err) => {
                 assert(err);
                 assert(/unexpected/.test(err.message));
                 assert(!srvError);
@@ -44,21 +41,21 @@ describe("SSH-Streams", function () {
             client.removeAllListeners("NEWKEYS");
             // Added 'KEXDH_REPLY' which violates protocol and re-sends 'KEXDH_INIT'
             // packet
-            client.on("KEXDH_REPLY", function(info) {
-                let state = client._state;
-                let outstate = state.outgoing;
-                let buf = new Buffer(1 + 4 + outstate.pubkey.length);
+            client.on("KEXDH_REPLY", (info) => {
+                const state = client._state;
+                const outstate = state.outgoing;
+                const buf = new Buffer(1 + 4 + outstate.pubkey.length);
                 buf[0] = MESSAGE.KEXDH_INIT;
                 buf.writeUInt32BE(outstate.pubkey.length, 1, true);
                 outstate.pubkey.copy(buf, 5);
                 SSH2Stream._send(client, buf, undefined, true);
             });
-            client.on("error", function(err) {
+            client.on("error", (err) => {
                 assert(err);
                 assert.equal(
                     err.message,
                     "PROTOCOL_ERROR",
-                    "Expected Error: PROTOCOL_ERROR Got Error: " + err.message
+                    `Expected Error: PROTOCOL_ERROR Got Error: ${err.message}`
                 );
                 done();
             });

@@ -3,7 +3,7 @@ const { is, std, fs, util } = adone;
 const getArch = () => {
     const arch = process.arch;
     switch (arch) {
-        case "ia32": return "x32";
+        case "ia32": return "x86";
         default: return arch;
     }
 };

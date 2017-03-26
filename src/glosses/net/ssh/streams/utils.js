@@ -14,22 +14,22 @@ const MAX_STRING_LEN = Infinity; //2400; // taken from dropbear
 const PPK_IV = new Buffer([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
 module.exports = {
-    iv_inc: iv_inc,
-    isStreamCipher: isStreamCipher,
-    readInt: readInt,
-    readString: readString,
+    iv_inc,
+    isStreamCipher,
+    readInt,
+    readString,
     parseKey: keyParser,
-    genPublicKey: genPublicKey,
-    convertPPKPrivate: convertPPKPrivate,
-    verifyPPKMAC: verifyPPKMAC,
-    decryptKey: decryptKey,
-    DSASigBERToBare: DSASigBERToBare,
-    DSASigBareToBER: DSASigBareToBER,
-    ECDSASigASN1ToSSH: ECDSASigASN1ToSSH,
-    ECDSASigSSHToASN1: ECDSASigSSHToASN1,
-    RSAKeySSHToASN1: RSAKeySSHToASN1,
-    DSAKeySSHToASN1: DSAKeySSHToASN1,
-    ECDSAKeySSHToASN1: ECDSAKeySSHToASN1
+    genPublicKey,
+    convertPPKPrivate,
+    verifyPPKMAC,
+    decryptKey,
+    DSASigBERToBare,
+    DSASigBareToBER,
+    ECDSASigASN1ToSSH,
+    ECDSASigSSHToASN1,
+    RSAKeySSHToASN1,
+    DSAKeySSHToASN1,
+    ECDSAKeySSHToASN1
 };
 
 function iv_inc(iv) {
@@ -39,7 +39,7 @@ function iv_inc(iv) {
         --n;
         c = iv[n];
         if (c === 255)
-            iv[n] = 0;
+        { iv[n] = 0; }
         else {
             iv[n] = ++c;
             return;
@@ -52,7 +52,7 @@ function isStreamCipher(name) {
 }
 
 function readInt(buffer, start, stream, cb) {
-    let bufferLen = buffer.length;
+    const bufferLen = buffer.length;
     if (start < 0 || start >= bufferLen || (bufferLen - start) < 4) {
         stream && stream._cleanup(cb);
         return false;
@@ -63,33 +63,33 @@ function readInt(buffer, start, stream, cb) {
 
 function DSASigBERToBare(signature) {
     if (signature.length <= 40)
-        return signature;
+    { return signature; }
     // This is a quick and dirty way to get from BER encoded r and s that
     // OpenSSL gives us, to just the bare values back to back (40 bytes
     // total) like OpenSSH (and possibly others) are expecting
-    let asnReader = new Ber.Reader(signature);
+    const asnReader = new Ber.Reader(signature);
     asnReader.readSequence();
     let r = asnReader.readString(Ber.Integer, true);
     let s = asnReader.readString(Ber.Integer, true);
     let rOffset = 0;
     let sOffset = 0;
     if (r.length < 20) {
-        let rNew = new Buffer(20);
+        const rNew = new Buffer(20);
         r.copy(rNew, 1);
         r = rNew;
         r[0] = 0;
     }
     if (s.length < 20) {
-        let sNew = new Buffer(20);
+        const sNew = new Buffer(20);
         s.copy(sNew, 1);
         s = sNew;
         s[0] = 0;
     }
     if (r.length > 20 && r[0] === 0x00)
-        rOffset = 1;
+    { rOffset = 1; }
     if (s.length > 20 && s[0] === 0x00)
-        sOffset = 1;
-    let newSig = new Buffer((r.length - rOffset) + (s.length - sOffset));
+    { sOffset = 1; }
+    const newSig = new Buffer((r.length - rOffset) + (s.length - sOffset));
     r.copy(newSig, 0, rOffset);
     s.copy(newSig, r.length - rOffset, sOffset);
     return newSig;
@@ -97,14 +97,14 @@ function DSASigBERToBare(signature) {
 
 function DSASigBareToBER(signature) {
     if (signature.length > 40)
-        return signature;
+    { return signature; }
     // Change bare signature r and s values to ASN.1 BER values for OpenSSL
-    let asnWriter = new Ber.Writer();
+    const asnWriter = new Ber.Writer();
     asnWriter.startSequence();
     let r = signature.slice(0, 20);
     let s = signature.slice(20);
     if (r[0] & 0x80) {
-        let rNew = new Buffer(21);
+        const rNew = new Buffer(21);
         rNew[0] = 0x00;
         r.copy(rNew, 1);
         r = rNew;
@@ -112,7 +112,7 @@ function DSASigBareToBER(signature) {
         r = r.slice(1);
     }
     if (s[0] & 0x80) {
-        let sNew = new Buffer(21);
+        const sNew = new Buffer(21);
         sNew[0] = 0x00;
         s.copy(sNew, 1);
         s = sNew;
@@ -127,15 +127,15 @@ function DSASigBareToBER(signature) {
 
 function ECDSASigASN1ToSSH(signature) {
     if (signature[0] === 0x00)
-        return signature;
+    { return signature; }
     // Convert SSH signature parameters to ASN.1 BER values for OpenSSL
-    let asnReader = new Ber.Reader(signature);
+    const asnReader = new Ber.Reader(signature);
     asnReader.readSequence();
-    let r = asnReader.readString(Ber.Integer, true);
-    let s = asnReader.readString(Ber.Integer, true);
+    const r = asnReader.readString(Ber.Integer, true);
+    const s = asnReader.readString(Ber.Integer, true);
     if (r === null || s === null)
-        throw new Error("Invalid signature");
-    let newSig = new Buffer(4 + r.length + 4 + s.length);
+    { throw new Error("Invalid signature"); }
+    const newSig = new Buffer(4 + r.length + 4 + s.length);
     newSig.writeUInt32BE(r.length, 0, true);
     r.copy(newSig, 4);
     newSig.writeUInt32BE(s.length, 4 + r.length, true);
@@ -145,14 +145,14 @@ function ECDSASigASN1ToSSH(signature) {
 
 function ECDSASigSSHToASN1(signature, self, callback) {
     // Convert SSH signature parameters to ASN.1 BER values for OpenSSL
-    let r = readString(signature, 0, self, callback);
+    const r = readString(signature, 0, self, callback);
     if (r === false)
-        return false;
-    let s = readString(signature, signature._pos, self, callback);
+    { return false; }
+    const s = readString(signature, signature._pos, self, callback);
     if (s === false)
-        return false;
+    { return false; }
 
-    let asnWriter = new Ber.Writer();
+    const asnWriter = new Ber.Writer();
     asnWriter.startSequence();
     asnWriter.writeBuffer(r, Ber.Integer);
     asnWriter.writeBuffer(s, Ber.Integer);
@@ -162,14 +162,14 @@ function ECDSASigSSHToASN1(signature, self, callback) {
 
 function RSAKeySSHToASN1(key, self, callback) {
     // Convert SSH key parameters to ASN.1 BER values for OpenSSL
-    let e = readString(key, key._pos, self, callback);
+    const e = readString(key, key._pos, self, callback);
     if (e === false)
-        return false;
-    let n = readString(key, key._pos, self, callback);
+    { return false; }
+    const n = readString(key, key._pos, self, callback);
     if (n === false)
-        return false;
+    { return false; }
 
-    let asnWriter = new Ber.Writer();
+    const asnWriter = new Ber.Writer();
     asnWriter.startSequence();
     // algorithm
     asnWriter.startSequence();
@@ -192,20 +192,20 @@ function RSAKeySSHToASN1(key, self, callback) {
 
 function DSAKeySSHToASN1(key, self, callback) {
     // Convert SSH key parameters to ASN.1 BER values for OpenSSL
-    let p = readString(key, key._pos, self, callback);
+    const p = readString(key, key._pos, self, callback);
     if (p === false)
-        return false;
-    let q = readString(key, key._pos, self, callback);
+    { return false; }
+    const q = readString(key, key._pos, self, callback);
     if (q === false)
-        return false;
-    let g = readString(key, key._pos, self, callback);
+    { return false; }
+    const g = readString(key, key._pos, self, callback);
     if (g === false)
-        return false;
-    let y = readString(key, key._pos, self, callback);
+    { return false; }
+    const y = readString(key, key._pos, self, callback);
     if (y === false)
-        return false;
+    { return false; }
 
-    let asnWriter = new Ber.Writer();
+    const asnWriter = new Ber.Writer();
     asnWriter.startSequence();
     // algorithm
     asnWriter.startSequence();
@@ -229,12 +229,12 @@ function DSAKeySSHToASN1(key, self, callback) {
 
 function ECDSAKeySSHToASN1(key, self, callback) {
     // Convert SSH key parameters to ASN.1 BER values for OpenSSL
-    let curve = readString(key, key._pos, self, callback);
+    const curve = readString(key, key._pos, self, callback);
     if (curve === false)
-        return false;
-    let Q = readString(key, key._pos, self, callback);
+    { return false; }
+    const Q = readString(key, key._pos, self, callback);
     if (Q === false)
-        return false;
+    { return false; }
 
     let ecCurveOID;
     switch (curve.toString("ascii")) {
@@ -253,7 +253,7 @@ function ECDSAKeySSHToASN1(key, self, callback) {
         default:
             return false;
     }
-    let asnWriter = new Ber.Writer();
+    const asnWriter = new Ber.Writer();
     asnWriter.startSequence();
     // algorithm
     asnWriter.startSequence();
@@ -277,7 +277,7 @@ function ECDSAKeySSHToASN1(key, self, callback) {
 
 function decryptKey(keyInfo, passphrase) {
     if (keyInfo._decrypted || !keyInfo.encryption)
-        return;
+    { return; }
 
     let keylen = 0;
     let key;
@@ -304,8 +304,8 @@ function decryptKey(keyInfo, passphrase) {
             keylen = 16;
             break;
         default:
-            throw new Error("Unsupported cipher for encrypted key: " +
-                keyInfo.encryption);
+            throw new Error(`Unsupported cipher for encrypted key: ${
+                keyInfo.encryption}`);
     }
 
     if (keyInfo.ppk) {
@@ -313,11 +313,11 @@ function decryptKey(keyInfo, passphrase) {
 
         key = Buffer.concat([
             crypto.createHash("sha1")
-            .update("\x00\x00\x00\x00" + passphrase, "utf8")
-            .digest(),
+                .update(`\x00\x00\x00\x00${passphrase}`, "utf8")
+                .digest(),
             crypto.createHash("sha1")
-            .update("\x00\x00\x00\x01" + passphrase, "utf8")
-            .digest()
+                .update(`\x00\x00\x00\x01${passphrase}`, "utf8")
+                .digest()
         ]);
         key = key.slice(0, keylen);
     } else {
@@ -339,7 +339,7 @@ function decryptKey(keyInfo, passphrase) {
             ]);
         }
         if (key.length > keylen)
-            key = key.slice(0, keylen);
+        { key = key.slice(0, keylen); }
     }
 
     dc = crypto.createDecipheriv(keyInfo.encryption, key, iv);
@@ -350,18 +350,18 @@ function decryptKey(keyInfo, passphrase) {
 
     if (keyInfo.privateOrig) {
         // Update our original base64-encoded version of the private key
-        let orig = keyInfo.privateOrig.toString("utf8");
+        const orig = keyInfo.privateOrig.toString("utf8");
         let newOrig = /^(.+(?:\r\n|\n))/.exec(orig)[1];
-        let b64key = keyInfo.private.toString("base64");
+        const b64key = keyInfo.private.toString("base64");
 
         newOrig += b64key.match(/.{1,70}/g).join("\n");
         newOrig += /((?:\r\n|\n).+)$/.exec(orig)[1];
 
         keyInfo.privateOrig = newOrig;
     } else if (keyInfo.ppk) {
-        let valid = verifyPPKMAC(keyInfo, passphrase, keyInfo.private);
+        const valid = verifyPPKMAC(keyInfo, passphrase, keyInfo.private);
         if (!valid)
-            throw new Error("PPK MAC mismatch");
+        { throw new Error("PPK MAC mismatch"); }
         // Automatically convert private key data to OpenSSL format
         // (including PEM)
         convertPPKPrivate(keyInfo);
@@ -370,15 +370,15 @@ function decryptKey(keyInfo, passphrase) {
     // Fill in full key type
     // TODO: make DRY, we do this also in keyParser
     if (keyInfo.type !== "ec") {
-        keyInfo.fulltype = "ssh-" + keyInfo.type;
+        keyInfo.fulltype = `ssh-${keyInfo.type}`;
     } else {
         // ECDSA
-        let asnReader = new Ber.Reader(keyInfo.private);
+        const asnReader = new Ber.Reader(keyInfo.private);
         asnReader.readSequence();
         asnReader.readInt();
         asnReader.readString(Ber.OctetString, true);
         asnReader.readByte(); // Skip "complex" context type byte
-        let offset = asnReader.readLength(); // Skip context length
+        const offset = asnReader.readLength(); // Skip context length
         if (offset !== null) {
             asnReader._offset = offset;
             switch (asnReader.readOID()) {
@@ -397,7 +397,7 @@ function decryptKey(keyInfo, passphrase) {
             }
         }
         if (keyInfo.fulltype === undefined)
-            return new Error("Unsupported EC private key type");
+        { return new Error("Unsupported EC private key type"); }
     }
 }
 
@@ -423,14 +423,14 @@ function genPublicKey(keyInfo) {
 
     if (keyInfo.private) {
         // parsing private key in ASN.1 format in order to generate a public key
-        let privKey = keyInfo.private;
-        let asnReader = new Ber.Reader(privKey);
+        const privKey = keyInfo.private;
+        const asnReader = new Ber.Reader(privKey);
         let errMsg;
 
         if (asnReader.readSequence() === null) {
             errMsg = "Malformed private key (expected sequence)";
             if (keyInfo._decrypted)
-                errMsg += ". Bad passphrase?";
+            { errMsg += ". Bad passphrase?"; }
             throw new Error(errMsg);
         }
 
@@ -438,7 +438,7 @@ function genPublicKey(keyInfo) {
         if (asnReader.readInt() === null) {
             errMsg = "Malformed private key (expected version)";
             if (keyInfo._decrypted)
-                errMsg += ". Bad passphrase?";
+            { errMsg += ". Bad passphrase?"; }
             throw new Error(errMsg);
         }
 
@@ -448,7 +448,7 @@ function genPublicKey(keyInfo) {
             if (n === null) {
                 errMsg = "Malformed private key (expected RSA n value)";
                 if (keyInfo._decrypted)
-                    errMsg += ". Bad passphrase?";
+                { errMsg += ". Bad passphrase?"; }
                 throw new Error(errMsg);
             }
 
@@ -457,7 +457,7 @@ function genPublicKey(keyInfo) {
             if (e === null) {
                 errMsg = "Malformed private key (expected RSA e value)";
                 if (keyInfo._decrypted)
-                    errMsg += ". Bad passphrase?";
+                { errMsg += ". Bad passphrase?"; }
                 throw new Error(errMsg);
             }
 
@@ -481,7 +481,7 @@ function genPublicKey(keyInfo) {
             if (p === null) {
                 errMsg = "Malformed private key (expected DSA p value)";
                 if (keyInfo._decrypted)
-                    errMsg += ". Bad passphrase?";
+                { errMsg += ". Bad passphrase?"; }
                 throw new Error(errMsg);
             }
 
@@ -490,7 +490,7 @@ function genPublicKey(keyInfo) {
             if (q === null) {
                 errMsg = "Malformed private key (expected DSA q value)";
                 if (keyInfo._decrypted)
-                    errMsg += ". Bad passphrase?";
+                { errMsg += ". Bad passphrase?"; }
                 throw new Error(errMsg);
             }
 
@@ -499,7 +499,7 @@ function genPublicKey(keyInfo) {
             if (g === null) {
                 errMsg = "Malformed private key (expected DSA g value)";
                 if (keyInfo._decrypted)
-                    errMsg += ". Bad passphrase?";
+                { errMsg += ". Bad passphrase?"; }
                 throw new Error(errMsg);
             }
 
@@ -508,7 +508,7 @@ function genPublicKey(keyInfo) {
             if (y === null) {
                 errMsg = "Malformed private key (expected DSA y value)";
                 if (keyInfo._decrypted)
-                    errMsg += ". Bad passphrase?";
+                { errMsg += ". Bad passphrase?"; }
                 throw new Error(errMsg);
             }
 
@@ -537,15 +537,15 @@ function genPublicKey(keyInfo) {
         } else { // ECDSA
             d = asnReader.readString(Ber.OctetString, true);
             if (d === null)
-                throw new Error("Malformed private key (expected ECDSA private key)");
+            { throw new Error("Malformed private key (expected ECDSA private key)"); }
             asnReader.readByte(); // Skip "complex" context type byte
-            let offset = asnReader.readLength(); // Skip context length
+            const offset = asnReader.readLength(); // Skip context length
             if (offset === null)
-                throw new Error("Malformed private key (expected ECDSA context value)");
+            { throw new Error("Malformed private key (expected ECDSA context value)"); }
             asnReader._offset = offset;
             ecCurveOID = asnReader.readOID();
             if (ecCurveOID === null)
-                throw new Error("Malformed private key (expected ECDSA curve)");
+            { throw new Error("Malformed private key (expected ECDSA curve)"); }
             let tempECDH;
             switch (ecCurveOID) {
                 case "1.2.840.10045.3.1.7":
@@ -576,7 +576,7 @@ function genPublicKey(keyInfo) {
                 4 + Q.length);
 
             publicKey.writeUInt32BE(19, 0, true);
-            publicKey.write("ecdsa-sha2-" + ecCurveName, 4, 19, "ascii");
+            publicKey.write(`ecdsa-sha2-${ecCurveName}`, 4, 19, "ascii");
 
             publicKey.writeUInt32BE(8, 23, true);
             publicKey.write(ecCurveName, 27, 8, "ascii");
@@ -600,22 +600,22 @@ function genPublicKey(keyInfo) {
             publicKey[6] !== 104 ||
             publicKey[7] !== 45 ||
             ((publicKey[8] !== 114 ||
-                    publicKey[9] !== 115 ||
-                    publicKey[10] !== 97) &&
+                publicKey[9] !== 115 ||
+                publicKey[10] !== 97) &&
                 ((publicKey[8] !== 100 ||
                     publicKey[9] !== 115 ||
                     publicKey[10] !== 115)))) {
-            let newPK = new Buffer(4 + 7 + publicKey.length);
+            const newPK = new Buffer(4 + 7 + publicKey.length);
             publicKey.copy(newPK, 11);
             newPK.writeUInt32BE(7, 0, true);
             if (keyInfo.type === "rsa")
-                newPK.write("ssh-rsa", 4, 7, "ascii");
+            { newPK.write("ssh-rsa", 4, 7, "ascii"); }
             else
-                newPK.write("ssh-dss", 4, 7, "ascii");
+            { newPK.write("ssh-dss", 4, 7, "ascii"); }
             publicKey = newPK;
         }
     } else
-        throw new Error("Missing data generated by parseKey()");
+    { throw new Error("Missing data generated by parseKey()"); }
 
     // generate a public key format for use with OpenSSL
 
@@ -630,22 +630,22 @@ function genPublicKey(keyInfo) {
         fulltype = "ssh-dss";
         asn1KeyBuf = DSAKeySSHToASN1(publicKey.slice(4 + 7));
     } else { // ECDSA
-        fulltype = "ecdsa-sha2-" + ecCurveName;
+        fulltype = `ecdsa-sha2-${ecCurveName}`;
         asn1KeyBuf = ECDSAKeySSHToASN1(publicKey.slice(4 + 19));
     }
 
     if (!asn1KeyBuf)
-        throw new Error("Invalid SSH-formatted public key");
+    { throw new Error("Invalid SSH-formatted public key"); }
 
-    let b64key = asn1KeyBuf.toString("base64").replace(RE_KEY_LEN, "$1\n");
-    let fullkey = "-----BEGIN PUBLIC KEY-----\n" +
-        b64key +
-        (b64key[b64key.length - 1] === "\n" ? "" : "\n") +
-        "-----END PUBLIC KEY-----";
+    const b64key = asn1KeyBuf.toString("base64").replace(RE_KEY_LEN, "$1\n");
+    const fullkey = `-----BEGIN PUBLIC KEY-----\n${
+        b64key
+        }${b64key[b64key.length - 1] === "\n" ? "" : "\n"
+        }-----END PUBLIC KEY-----`;
 
     return {
         type: keyInfo.type,
-        fulltype: fulltype,
+        fulltype,
         curve: ecCurveName,
         public: publicKey,
         publicOrig: new Buffer(fullkey)
@@ -654,30 +654,30 @@ function genPublicKey(keyInfo) {
 
 function verifyPPKMAC(keyInfo, passphrase, privateKey) {
     if (keyInfo._macresult !== undefined)
-        return keyInfo._macresult;
+    { return keyInfo._macresult; }
     else if (!keyInfo.ppk)
-        throw new Error("Key isn't a PPK");
+    { throw new Error("Key isn't a PPK"); }
     else if (!keyInfo.privateMAC)
-        throw new Error("Missing MAC");
+    { throw new Error("Missing MAC"); }
     else if (!privateKey)
-        throw new Error("Missing raw private key data");
+    { throw new Error("Missing raw private key data"); }
     else if (keyInfo.encryption && typeof passphrase !== "string")
-        throw new Error("Missing passphrase for encrypted PPK");
+    { throw new Error("Missing passphrase for encrypted PPK"); }
     else if (keyInfo.encryption && !keyInfo._decrypted)
-        throw new Error("PPK must be decrypted before verifying MAC");
+    { throw new Error("PPK must be decrypted before verifying MAC"); }
 
-    let mac = keyInfo.privateMAC;
-    let typelen = keyInfo.fulltype.length;
+    const mac = keyInfo.privateMAC;
+    const typelen = keyInfo.fulltype.length;
     // encryption algorithm is converted at this point for use with OpenSSL,
     // so we need to use the original value so that the MAC is calculated
     // correctly
-    let enc = (keyInfo.encryption ? "aes256-cbc" : "none");
-    let enclen = enc.length;
-    let commlen = Buffer.byteLength(keyInfo.comment);
-    let pub = keyInfo.public;
-    let publen = pub.length;
-    let privlen = privateKey.length;
-    let macdata = new Buffer(4 + typelen +
+    const enc = (keyInfo.encryption ? "aes256-cbc" : "none");
+    const enclen = enc.length;
+    const commlen = Buffer.byteLength(keyInfo.comment);
+    const pub = keyInfo.public;
+    const publen = pub.length;
+    const privlen = privateKey.length;
+    const macdata = new Buffer(4 + typelen +
         4 + enclen +
         4 + commlen +
         4 + publen +
@@ -696,14 +696,14 @@ function verifyPPKMAC(keyInfo, passphrase, privateKey) {
     privateKey.copy(macdata, p += 4);
 
     if (typeof passphrase !== "string")
-        passphrase = "";
+    { passphrase = ""; }
 
-    let mackey = crypto.createHash("sha1")
+    const mackey = crypto.createHash("sha1")
         .update("putty-private-key-file-mac-key", "ascii")
         .update(passphrase, "utf8")
         .digest();
 
-    let calcMAC = crypto.createHmac("sha1", mackey)
+    const calcMAC = crypto.createHmac("sha1", mackey)
         .update(macdata)
         .digest("hex");
 
@@ -712,25 +712,25 @@ function verifyPPKMAC(keyInfo, passphrase, privateKey) {
 
 function convertPPKPrivate(keyInfo) {
     if (!keyInfo.ppk || !keyInfo.public || !keyInfo.private)
-        throw new Error("Key isn't a PPK");
+    { throw new Error("Key isn't a PPK"); }
     else if (keyInfo._converted)
-        return false;
+    { return false; }
 
-    let pub = keyInfo.public;
-    let priv = keyInfo.private;
-    let asnWriter = new Ber.Writer();
+    const pub = keyInfo.public;
+    const priv = keyInfo.private;
+    const asnWriter = new Ber.Writer();
     let p;
     let q;
 
     if (keyInfo.type === "rsa") {
-        let e = readString(pub, 4 + 7);
-        let n = readString(pub, pub._pos);
-        let d = readString(priv, 0);
+        const e = readString(pub, 4 + 7);
+        const n = readString(pub, pub._pos);
+        const d = readString(priv, 0);
         p = readString(priv, priv._pos);
         q = readString(priv, priv._pos);
-        let iqmp = readString(priv, priv._pos);
-        let p1 = new BigInteger(p, 256);
-        let q1 = new BigInteger(q, 256);
+        const iqmp = readString(priv, priv._pos);
+        const p1 = new BigInteger(p, 256);
+        const q1 = new BigInteger(q, 256);
         let dmp1 = new BigInteger(d, 256);
         let dmq1 = new BigInteger(d, 256);
 
@@ -751,9 +751,9 @@ function convertPPKPrivate(keyInfo) {
     } else {
         p = readString(pub, 4 + 7);
         q = readString(pub, pub._pos);
-        let g = readString(pub, pub._pos);
-        let y = readString(pub, pub._pos);
-        let x = readString(priv, 0);
+        const g = readString(pub, pub._pos);
+        const y = readString(pub, pub._pos);
+        const x = readString(priv, 0);
 
         asnWriter.startSequence();
         asnWriter.writeInt(0x00, Ber.Integer);
@@ -765,15 +765,15 @@ function convertPPKPrivate(keyInfo) {
         asnWriter.endSequence();
     }
 
-    let b64key = asnWriter.buffer.toString("base64").replace(RE_KEY_LEN, "$1\n");
-    let fullkey = "-----BEGIN " +
-        (keyInfo.type === "rsa" ? "RSA" : "DSA") +
-        " PRIVATE KEY-----\n" +
-        b64key +
-        (b64key[b64key.length - 1] === "\n" ? "" : "\n") +
-        "-----END " +
-        (keyInfo.type === "rsa" ? "RSA" : "DSA") +
-        " PRIVATE KEY-----";
+    const b64key = asnWriter.buffer.toString("base64").replace(RE_KEY_LEN, "$1\n");
+    const fullkey = `-----BEGIN ${
+        keyInfo.type === "rsa" ? "RSA" : "DSA"
+        } PRIVATE KEY-----\n${
+        b64key
+        }${b64key[b64key.length - 1] === "\n" ? "" : "\n"
+        }-----END ${
+        keyInfo.type === "rsa" ? "RSA" : "DSA"
+        } PRIVATE KEY-----`;
 
     keyInfo.private = asnWriter.buffer;
     keyInfo.privateOrig = new Buffer(fullkey);
@@ -784,15 +784,15 @@ function convertPPKPrivate(keyInfo) {
 function readString(buffer, start, encoding, stream, cb, maxLen) {
     if (encoding && !Buffer.isBuffer(encoding) && typeof encoding !== "string") {
         if (typeof cb === "number")
-            maxLen = cb;
+        { maxLen = cb; }
         cb = stream;
         stream = encoding;
         encoding = undefined;
     }
 
     start || (start = 0);
-    let bufferLen = buffer.length;
-    let left = (bufferLen - start);
+    const bufferLen = buffer.length;
+    const left = (bufferLen - start);
     let len;
     let end;
     if (start < 0 || start >= bufferLen || left < 4) {
@@ -814,8 +814,10 @@ function readString(buffer, start, encoding, stream, cb, maxLen) {
         if (Buffer.isBuffer(encoding)) {
             buffer.copy(encoding, 0, start, end);
             return encoding;
-        } else
+        } else {
             return buffer.toString(encoding, start, end);
-    } else
+        }
+    } else {
         return buffer.slice(start, end);
+    }
 }

@@ -3,7 +3,6 @@
 //    * more thorough validation?
 let utils;
 
-
 const Ber = adone.crypto.asn1.Ber;
 
 const RE_PPK = /^PuTTY-User-Key-File-2: ssh-(rsa|dss)\r?\nEncryption: (aes256-cbc|none)\r?\nComment: ([^\r\n]*)\r?\nPublic-Lines: \d+\r?\n([\s\S]+?)\r?\nPrivate-Lines: \d+\r?\n([\s\S]+?)\r?\nPrivate-MAC: ([^\r\n]+)/;
@@ -16,11 +15,12 @@ const RE_FOOTER_RFC4716_PUB = /^---- END SSH2 PUBLIC KEY ----$/i;
 const RE_HEADER_OPENSSH = /^([^:]+):\s*([\S].*)?$/i;
 const RE_HEADER_RFC4716 = /^([^:]+): (.*)?$/i;
 
-module.exports = function(data) {
-    if (Buffer.isBuffer(data))
+module.exports = function (data) {
+    if (Buffer.isBuffer(data)) {
         data = data.toString("utf8");
-    else if (typeof data !== "string")
+    } else if (typeof data !== "string") {
         return new Error("Key data must be a Buffer or string");
+    }
 
     const ret = {
         fulltype: undefined,
@@ -40,10 +40,12 @@ module.exports = function(data) {
 
     data = data.trim().split(/\r\n|\n/);
 
-    while (!data[0].length)
+    while (!data[0].length) {
         data.shift();
-    while (!data.slice(-1)[0].length)
+    }
+    while (!data.slice(-1)[0].length) {
         data.pop();
+    }
 
     const orig = data.join("\n");
 
@@ -51,8 +53,9 @@ module.exports = function(data) {
         RE_FOOTER_OPENSSH_PRIV.test(data.slice(-1))) {
         // OpenSSH private key
         let keyType = m[1].toLowerCase();
-        if (keyType === "dsa")
+        if (keyType === "dsa") {
             keyType = "dss";
+        }
 
         if (keyType === "ec" && adone.semver.lt(process.version, "5.2.0")) {
             return new Error(
@@ -64,7 +67,7 @@ module.exports = function(data) {
             // unencrypted, no headers
             const privData = new Buffer(data.slice(1, -1).join(""), "base64");
             if (keyType !== "ec") {
-                ret.fulltype = "ssh-" + keyType;
+                ret.fulltype = `ssh-${keyType}`;
             } else {
                 // ECDSA
                 const asnReader = new Ber.Reader(privData);
@@ -90,8 +93,9 @@ module.exports = function(data) {
                             break;
                     }
                 }
-                if (ret.fulltype === undefined)
+                if (ret.fulltype === undefined) {
                     return new Error("Unsupported EC private key type");
+                }
             }
             ret.private = privData;
         } else {
@@ -103,11 +107,13 @@ module.exports = function(data) {
                     if (m[1] === "dek-info") {
                         m[2] = m[2].split(",");
                         ret.encryption = m[2][0].toLowerCase();
-                        if (m[2].length > 1)
+                        if (m[2].length > 1) {
                             ret.extra = m[2].slice(1);
+                        }
                     }
-                } else if (data[i].length)
+                } else if (data[i].length) {
                     break;
+                }
             }
             ret.private = new Buffer(data.slice(i, -1).join(""), "base64");
         }
@@ -120,8 +126,9 @@ module.exports = function(data) {
         ret.public = new Buffer(m[4], "base64");
         ret.publicOrig = new Buffer(orig);
         ret.comment = m[5];
-        if (m[3]) // ECDSA only
-            ret.curve = "nistp" + m[3];
+        if (m[3]) { // ECDSA only
+            ret.curve = `nistp${m[3]}`;
+        }
     } else if (RE_HEADER_RFC4716_PUB.test(data[0]) &&
         RE_FOOTER_RFC4716_PUB.test(data.slice(-1))) {
         if (data[1].indexOf(": ") === -1) {
@@ -131,41 +138,46 @@ module.exports = function(data) {
             // headers
             for (i = 1, len = data.length; i < len; ++i) {
                 if (data[i].indexOf(": ") === -1) {
-                    if (data[i].length)
-                        break; // start of key data
-                    else
-                        continue; // empty line
+                    if (data[i].length) {
+                        break;
+                    } else { // start of key data
+                        continue;
+                    } // empty line
                 }
                 while (data[i].substr(-1) === "\\") {
                     if (i + 1 < len) {
                         data[i] = data[i].slice(0, -1) + data[i + 1];
                         data.splice(i + 1, 1);
                         --len;
-                    } else
+                    } else {
                         return new Error("RFC4716 public key missing header continuation line");
+                    }
                 }
                 m = RE_HEADER_RFC4716.exec(data[i]);
                 if (m) {
                     m[1] = m[1].toLowerCase();
                     if (m[1] === "comment") {
                         ret.comment = m[2] || "";
-                        if (ret.comment[0] === "\"" && ret.comment.substr(-1) === "\"")
+                        if (ret.comment[0] === "\"" && ret.comment.substr(-1) === "\"") {
                             ret.comment = ret.comment.slice(1, -1);
+                        }
                     }
-                } else
+                } else {
                     return new Error("RFC4716 public key invalid header line");
+                }
             }
             ret.public = new Buffer(data.slice(i, -1).join(""), "base64");
         }
         len = ret.public.readUInt32BE(0, true);
         const fulltype = ret.public.toString("ascii", 4, 4 + len);
         ret.fulltype = fulltype;
-        if (fulltype === "ssh-dss")
+        if (fulltype === "ssh-dss") {
             ret.type = "dss";
-        else if (fulltype === "ssh-rsa")
+        } else if (fulltype === "ssh-rsa") {
             ret.type = "rsa";
-        else
-            return new Error("Unsupported RFC4716 public key type: " + fulltype);
+        } else {
+            return new Error(`Unsupported RFC4716 public key type: ${fulltype}`);
+        }
         ret.public = ret.public.slice(11);
         ret.publicOrig = new Buffer(orig);
     } else if (m = RE_PPK.exec(orig)) { // eslint-disable-line no-cond-assign
@@ -199,14 +211,16 @@ module.exports = function(data) {
         //          string  private-plaintext (including the final padding)
 
         // avoid cyclic require by requiring on first use
-        if (!utils)
+        if (!utils) {
             utils = require("./utils");
+        }
 
         ret.ppk = true;
         ret.type = m[1];
-        ret.fulltype = "ssh-" + m[1];
-        if (m[2] !== "none")
+        ret.fulltype = `ssh-${m[1]}`;
+        if (m[2] !== "none") {
             ret.encryption = m[2];
+        }
         ret.comment = m[3];
 
         ret.public = new Buffer(m[4].replace(/\r?\n/g, ""), "base64");
@@ -218,8 +232,9 @@ module.exports = function(data) {
         // decryption
         if (!ret.encryption) {
             const valid = utils.verifyPPKMAC(ret, undefined, privateKey);
-            if (!valid)
+            if (!valid) {
                 throw new Error("PPK MAC mismatch");
+            }
         }
 
         // generate a PEM encoded version of the public key
@@ -231,10 +246,12 @@ module.exports = function(data) {
 
         // automatically convert private key data to OpenSSL format (including PEM)
         // if we don't need to wait for decryption
-        if (!ret.encryption)
+        if (!ret.encryption) {
             utils.convertPPKPrivate(ret);
-    } else
+        }
+    } else {
         return new Error("Unsupported key format");
+    }
 
     return ret;
 };

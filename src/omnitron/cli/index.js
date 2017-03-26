@@ -5,7 +5,8 @@ export default class extends adone.application.Subsystem {
     initialize() {
         this.defineCommand({
             name: "omnitron",
-            help: "cli interface of omnitron",
+            group: "service_cli",
+            help: "omnitron common service",
             options: [
                 {
                     name: "--version",

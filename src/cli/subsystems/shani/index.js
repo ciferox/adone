@@ -4,7 +4,8 @@ export default class ShaniCLI extends adone.application.Subsystem {
     initialize() {
         this.defineCommand({
             name: "shani",
-            help: "cli interface to shani",
+            group: "subsystem",
+            help: "cli interface to 'shani' test framework",
             arguments: [
                 { name: "tests", holder: "test", help: "a test file", nargs: "*" }
             ],

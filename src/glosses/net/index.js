@@ -2,7 +2,10 @@ adone.lazify({
     util: "./util",
     Socket: "./socket",
     Server: "./server",
-    ssh: "./ssh",
+    ssh: () => adone.lazify({
+        Client: "./ssh/client",
+        Server: "./ssh/server"
+    }, null, require),
     address: () => adone.lazify({
         IP4: ["./address", (mod) => mod.IP4],
         IP6: ["./address", (mod) => mod.IP6],

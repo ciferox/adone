@@ -1,4 +1,3 @@
-
 const helpers = require("./v6helpers.js");
 const { BigNumber } = adone.math;
 const { repeat, padStart, max, find } = adone.vendor.lodash;
@@ -92,7 +91,7 @@ const constants6 = adone.o({
     RE_URL_WITH_PORT: new RegExp(/\[([0-9a-f:]+)\]:([0-9]{1,5})/)
 });
 
-const common = adone.o(); 
+const common = adone.o();
 // A wrapper function that returns false if the address is not valid; used to avoid boilerplate checks for `if (!this.valid) { return false; }`
 const falseIfInvalid = common.falseIfInvalid = function (fn) {
     return function () {
@@ -189,7 +188,7 @@ function padGroup(group) {
 function simpleRegularExpression(groups) {
     const zeroIndexes = [];
 
-    groups.forEach(function (group, i) {
+    groups.forEach((group, i) => {
         const groupInteger = parseInt(group, 16);
 
         if (groupInteger === 0) {
@@ -199,8 +198,8 @@ function simpleRegularExpression(groups) {
 
     // You can technically elide a single 0, this creates the regular expressions
     // to match that eventuality
-    const possibilities = zeroIndexes.map(function (zeroIndex) {
-        return groups.map(function (group, i) {
+    const possibilities = zeroIndexes.map((zeroIndex) => {
+        return groups.map((group, i) => {
             if (i === zeroIndex) {
                 const elision = (i === 0 || i === constants6.GROUPS - 1) ? ":" : "";
 
@@ -281,7 +280,7 @@ export class IP4 {
         if (subnet) {
             this.parsedSubnet = subnet[0].replace("/", "");
             this.subnetMask = parseInt(this.parsedSubnet, 10);
-            this.subnet = "/" + this.subnetMask;
+            this.subnet = `/${this.subnetMask}`;
 
             if (this.subnetMask < 0 || this.subnetMask > constants4.BITS) {
                 this.valid = false;
@@ -330,7 +329,7 @@ export class IP4 {
      * @returns {String}
      */
     correctForm() {
-        return this.parsedAddress.map(function (part) {
+        return this.parsedAddress.map((part) => {
             return parseInt(part, 10);
         }).join(".");
     }
@@ -342,7 +341,7 @@ export class IP4 {
      * @returns {String}
      */
     toHex() {
-        return this.parsedAddress.map(function (part) {
+        return this.parsedAddress.map((part) => {
             return adone.sprintf("%02x", parseInt(part, 10));
         }).join(":");
     }
@@ -354,7 +353,7 @@ export class IP4 {
      * @returns {Array}
      */
     toArray() {
-        return this.parsedAddress.map(function (part) {
+        return this.parsedAddress.map((part) => {
             return parseInt(part, 10);
         });
     }
@@ -543,7 +542,7 @@ export class IP6 {
         if (subnet) {
             this.parsedSubnet = subnet[0].replace("/", "");
             this.subnetMask = parseInt(this.parsedSubnet, 10);
-            this.subnet = "/" + this.subnetMask;
+            this.subnet = `/${this.subnetMask}`;
 
             if (isNaN(this.subnetMask) ||
                 this.subnetMask < 0 ||
@@ -794,10 +793,10 @@ export class IP6 {
         // Do we end with a string of zeroes?
         if (zeroCounter > 1) {
             zeroes.push([this.parsedAddress.length - zeroCounter,
-            this.parsedAddress.length - 1]);
+                this.parsedAddress.length - 1]);
         }
 
-        const zeroLengths = zeroes.map(function (n) {
+        const zeroLengths = zeroes.map((n) => {
             return (n[1] - n[0]) + 1;
         });
 
@@ -936,7 +935,7 @@ export class IP6 {
             this.elisionBegin = first.length;
             this.elisionEnd = first.length + this.elidedGroups;
 
-            first.forEach(function (group) {
+            first.forEach((group) => {
                 groups.push(group);
             });
 
@@ -944,7 +943,7 @@ export class IP6 {
                 groups.push(0);
             }
 
-            last.forEach(function (group) {
+            last.forEach((group) => {
                 groups.push(group);
             });
         } else if (halves.length === 1) {
@@ -958,7 +957,7 @@ export class IP6 {
             return null;
         }
 
-        groups = groups.map(function (g) {
+        groups = groups.map((g) => {
             return adone.sprintf("%x", parseInt(g, 16));
         });
 
@@ -999,7 +998,7 @@ export class IP6 {
             return null;
         }
 
-        return this.parsedAddress.map(function (n) {
+        return this.parsedAddress.map((n) => {
             return adone.sprintf("%05d", parseInt(n, 16));
         }).join(":");
     }
@@ -1167,7 +1166,7 @@ export class IP6 {
         const arr = new Array(buf.length);
         for (let i = 0; i < buf.length; i++) {
             arr[i] = buf[i];
-        } 
+        }
         return arr;
     }
 
@@ -1306,7 +1305,7 @@ export class IP6 {
      */
     group() {
         const address4 = this.address.match(constants4.RE_ADDRESS);
-        
+
         if (address4) {
             // The IPv4 case
             const segments = address4[0].split(".");
@@ -1442,7 +1441,7 @@ export class IP6 {
 
         return {
             address: new IP6(host),
-            port: port
+            port
         };
     }
 
@@ -1458,7 +1457,42 @@ export class IP6 {
      * address.to4in6(); // '::ffff:192.168.0.1'
      */
     static fromIP4(address4) {
-        return new IP6("::ffff:" + address4);
+        return new IP6(`::ffff:${address4}`);
+    }
+
+    /**
+     * Return an address from ip6.arpa form
+     * @memberof Address6
+     * @static
+     * @param {string} arpaFormAddress - an 'ip6.arpa' form address 
+     * @returns {Adress6}
+     * @example
+     * var address = Address6.fromArpa(e.f.f.f.3.c.2.6.f.f.f.e.6.6.8.e.1.0.6.7.9.4.e.c.0.0.0.0.1.0.0.2.ip6.arpa.)
+     * address.correctForm(); // '2001:0:ce49:7601:e866:efff:62c3:fffe'
+     */
+    static fromArpa(arpaFormAddress) {
+        //remove ending ".ip6.arpa." or just "."
+        let address = arpaFormAddress.replace(/(\.ip6\.arpa)?\.$/, "");
+        const semicolonAmount = 7;
+
+        //correct ip6.arpa form with ending removed will be 63 characters
+        if (address.length !== 63) {
+            address = {
+                error: "Not Valid 'ip6.arpa' form",
+                address: null
+            };
+            return address;
+        }
+
+        address = address.split(".").reverse();
+
+        for (let i = semicolonAmount; i > 0; i--) {
+            const insertIndex = i * 4;
+            address.splice(insertIndex, 0, ":");
+        }
+
+        address = address.join("");
+        return new IP6(address);
     }
 
     /**
@@ -1525,7 +1559,7 @@ IP6.prototype.isCanonical = common.falseIfInvalid(function () {
  * @returns {boolean}
  */
 IP6.prototype.isLinkLocal = common.falseIfInvalid(function () {
-  // Zeroes are required, i.e. we can't check isInSubnet with 'fe80::/10'
+    // Zeroes are required, i.e. we can't check isInSubnet with 'fe80::/10'
     if (this.getBitsBase2(0, 64) === "1111111010000000000000000000000000000000000000000000000000000000") {
         return true;
     }

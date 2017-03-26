@@ -1,12 +1,8 @@
-
-
-exports.MODULE_VER = "0.1.16";
-
 let i;
 let keys;
 let len;
 
-let MESSAGE = exports.MESSAGE = {
+const MESSAGE = exports.MESSAGE = {
     // Transport layer protocol -- generic (1-19)
     DISCONNECT: 1,
     IGNORE: 2,
@@ -51,7 +47,7 @@ let MESSAGE = exports.MESSAGE = {
 
     // Local extensions (192-155)
 };
-for (i = 0, keys = Object.keys(MESSAGE), len = keys.length; i < len; ++i){
+for (i = 0, keys = Object.keys(MESSAGE), len = keys.length; i < len; ++i) {
     MESSAGE[MESSAGE[keys[i]]] = keys[i];
 }
 // context-specific message codes:
@@ -68,15 +64,15 @@ MESSAGE.USERAUTH_PK_OK = 60;
 MESSAGE.USERAUTH_INFO_REQUEST = 60;
 MESSAGE.USERAUTH_INFO_RESPONSE = 61;
 
-let DYNAMIC_KEXDH_MESSAGE = exports.DYNAMIC_KEXDH_MESSAGE = {};
+const DYNAMIC_KEXDH_MESSAGE = exports.DYNAMIC_KEXDH_MESSAGE = {};
 DYNAMIC_KEXDH_MESSAGE[MESSAGE.KEXDH_GEX_GROUP] = "KEXDH_GEX_GROUP";
 DYNAMIC_KEXDH_MESSAGE[MESSAGE.KEXDH_GEX_REPLY] = "KEXDH_GEX_REPLY";
 
-let KEXDH_MESSAGE = exports.KEXDH_MESSAGE = {};
+const KEXDH_MESSAGE = exports.KEXDH_MESSAGE = {};
 KEXDH_MESSAGE[MESSAGE.KEXDH_INIT] = "KEXDH_INIT";
 KEXDH_MESSAGE[MESSAGE.KEXDH_REPLY] = "KEXDH_REPLY";
 
-let DISCONNECT_REASON = exports.DISCONNECT_REASON = {
+const DISCONNECT_REASON = exports.DISCONNECT_REASON = {
     HOST_NOT_ALLOWED_TO_CONNECT: 1,
     PROTOCOL_ERROR: 2,
     KEY_EXCHANGE_FAILED: 3,
@@ -98,7 +94,7 @@ for (i = 0, keys = Object.keys(DISCONNECT_REASON), len = keys.length; i < len;
     DISCONNECT_REASON[DISCONNECT_REASON[keys[i]]] = keys[i];
 }
 
-let CHANNEL_OPEN_FAILURE = exports.CHANNEL_OPEN_FAILURE = {
+const CHANNEL_OPEN_FAILURE = exports.CHANNEL_OPEN_FAILURE = {
     ADMINISTRATIVELY_PROHIBITED: 1,
     CONNECT_FAILED: 2,
     UNKNOWN_CHANNEL_TYPE: 3,
@@ -109,7 +105,7 @@ for (i = 0, keys = Object.keys(CHANNEL_OPEN_FAILURE), len = keys.length; i < len
     CHANNEL_OPEN_FAILURE[CHANNEL_OPEN_FAILURE[keys[i]]] = keys[i];
 }
 
-let TERMINAL_MODE = exports.TERMINAL_MODE = {
+const TERMINAL_MODE = exports.TERMINAL_MODE = {
     TTY_OP_END: 0, // Indicates end of options.
     VINTR: 1, // Interrupt character; 255 if none. Similarly for the
     //  other characters.  Not all of these characters are
@@ -175,10 +171,11 @@ let TERMINAL_MODE = exports.TERMINAL_MODE = {
     TTY_OP_ISPEED: 128, // Specifies the input baud rate in bits per second.
     TTY_OP_OSPEED: 129 // Specifies the output baud rate in bits per second.
 };
-for (i = 0, keys = Object.keys(TERMINAL_MODE), len = keys.length; i < len; ++i)
+for (i = 0, keys = Object.keys(TERMINAL_MODE), len = keys.length; i < len; ++i) {
     TERMINAL_MODE[TERMINAL_MODE[keys[i]]] = keys[i];
+}
 
-let CHANNEL_EXTENDED_DATATYPE = exports.CHANNEL_EXTENDED_DATATYPE = {
+const CHANNEL_EXTENDED_DATATYPE = exports.CHANNEL_EXTENDED_DATATYPE = {
     STDERR: 1
 };
 for (i = 0, keys = Object.keys(CHANNEL_EXTENDED_DATATYPE), len = keys.length; i < len;
@@ -214,10 +211,10 @@ if (adone.semver.gte(process.version, "0.11.14")) {
         "ecdh-sha2-nistp521"
     ].concat(DEFAULT_KEX);
 }
-let KEX_BUF = new Buffer(DEFAULT_KEX.join(","), "ascii");
+const KEX_BUF = new Buffer(DEFAULT_KEX.join(","), "ascii");
 SUPPORTED_KEX = DEFAULT_KEX.concat(SUPPORTED_KEX);
 
-let DEFAULT_SERVER_HOST_KEY = [
+const DEFAULT_SERVER_HOST_KEY = [
     "ssh-rsa"
 ];
 let SUPPORTED_SERVER_HOST_KEY = [
@@ -233,7 +230,7 @@ if (adone.semver.gte(process.version, "5.2.0")) {
         "ecdsa-sha2-nistp521"
     );
 }
-let SERVER_HOST_KEY_BUF = new Buffer(DEFAULT_SERVER_HOST_KEY.join(","),
+const SERVER_HOST_KEY_BUF = new Buffer(DEFAULT_SERVER_HOST_KEY.join(","),
     "ascii");
 SUPPORTED_SERVER_HOST_KEY = DEFAULT_SERVER_HOST_KEY.concat(
     SUPPORTED_SERVER_HOST_KEY
@@ -271,13 +268,13 @@ DEFAULT_CIPHER = [
     "aes192-ctr",
     "aes256-ctr"
 ].concat(DEFAULT_CIPHER);
-let CIPHER_BUF = new Buffer(DEFAULT_CIPHER.join(","), "ascii");
+const CIPHER_BUF = new Buffer(DEFAULT_CIPHER.join(","), "ascii");
 SUPPORTED_CIPHER = DEFAULT_CIPHER.concat(SUPPORTED_CIPHER);
 
-let DEFAULT_HMAC = [
+const DEFAULT_HMAC = [
     "hmac-sha2-256",
     "hmac-sha2-512",
-    "hmac-sha1",
+    "hmac-sha1"
 ];
 let SUPPORTED_HMAC = [
     "hmac-md5",
@@ -287,10 +284,10 @@ let SUPPORTED_HMAC = [
     "hmac-sha1-96", // first 96 bits of HMAC-SHA1
     "hmac-md5-96" // first 96 bits of HMAC-MD5
 ];
-let HMAC_BUF = new Buffer(DEFAULT_HMAC.join(","), "ascii");
+const HMAC_BUF = new Buffer(DEFAULT_HMAC.join(","), "ascii");
 SUPPORTED_HMAC = DEFAULT_HMAC.concat(SUPPORTED_HMAC);
 
-let DEFAULT_COMPRESS = [
+const DEFAULT_COMPRESS = [
     "none",
     "zlib@openssh.com", // ZLIB (LZ77) compression, except
     // compression/decompression does not start until after
@@ -298,29 +295,29 @@ let DEFAULT_COMPRESS = [
     "zlib" // ZLIB (LZ77) compression
 ];
 let SUPPORTED_COMPRESS = [];
-let COMPRESS_BUF = new Buffer(DEFAULT_COMPRESS.join(","), "ascii");
+const COMPRESS_BUF = new Buffer(DEFAULT_COMPRESS.join(","), "ascii");
 SUPPORTED_COMPRESS = DEFAULT_COMPRESS.concat(SUPPORTED_COMPRESS);
 
 exports.ALGORITHMS = {
     KEX: DEFAULT_KEX,
-    KEX_BUF: KEX_BUF,
-    SUPPORTED_KEX: SUPPORTED_KEX,
+    KEX_BUF,
+    SUPPORTED_KEX,
 
     SERVER_HOST_KEY: DEFAULT_SERVER_HOST_KEY,
-    SERVER_HOST_KEY_BUF: SERVER_HOST_KEY_BUF,
-    SUPPORTED_SERVER_HOST_KEY: SUPPORTED_SERVER_HOST_KEY,
+    SERVER_HOST_KEY_BUF,
+    SUPPORTED_SERVER_HOST_KEY,
 
     CIPHER: DEFAULT_CIPHER,
-    CIPHER_BUF: CIPHER_BUF,
-    SUPPORTED_CIPHER: SUPPORTED_CIPHER,
+    CIPHER_BUF,
+    SUPPORTED_CIPHER,
 
     HMAC: DEFAULT_HMAC,
-    HMAC_BUF: HMAC_BUF,
-    SUPPORTED_HMAC: SUPPORTED_HMAC,
+    HMAC_BUF,
+    SUPPORTED_HMAC,
 
     COMPRESS: DEFAULT_COMPRESS,
-    COMPRESS_BUF: COMPRESS_BUF,
-    SUPPORTED_COMPRESS: SUPPORTED_COMPRESS
+    COMPRESS_BUF,
+    SUPPORTED_COMPRESS
 };
 exports.SSH_TO_OPENSSL = {
     // ECDH key exchange
@@ -340,10 +337,10 @@ exports.SSH_TO_OPENSSL = {
     "idea-cbc": "idea-cbc",
     "cast128-cbc": "cast-cbc",
     "rijndael-cbc@lysator.liu.se": "aes-256-cbc",
-    "arcfour128": "rc4",
-    "arcfour256": "rc4",
-    "arcfour512": "rc4",
-    "arcfour": "rc4",
+    arcfour128: "rc4",
+    arcfour256: "rc4",
+    arcfour512: "rc4",
+    arcfour: "rc4",
     "camellia128-cbc": "camellia-128-cbc",
     "camellia192-cbc": "camellia-192-cbc",
     "camellia256-cbc": "camellia-256-cbc",
@@ -374,7 +371,7 @@ exports.SSH_TO_OPENSSL = {
     "hmac-ripemd160": "ripemd160"
 };
 
-let BUGS = exports.BUGS = {
+const BUGS = exports.BUGS = {
     BAD_DHGEX: 1,
     OLD_EXIT: 2,
     DYN_RPORT_BUG: 4

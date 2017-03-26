@@ -1,146 +1,144 @@
-/* global describe it */
-
-
-import { utils } from "adone/glosses/net/ssh/ssh_streams";
+import { utils } from "adone/glosses/net/ssh/streams";
 
 const fs = adone.std.fs;
 const path = adone.std.path;
 const fixturesdir = path.join(__dirname, "fixtures");
 
-describe("SSH-Streams", function () {
-    describe("Utils", function () {
-        it("readInt - without stream callback - failure #1", function(done) {
-            var r;
+describe("SSH-Streams", () => {
+    describe("Utils", () => {
+        it("readInt - without stream callback - failure #1", (done) => {
+            let r;
 
             assert.strictEqual(r = utils.readInt(new Buffer([0, 0, 0]), 0),
                 false,
-                "Wrong result: " + r);
+                `Wrong result: ${r}`);
             done();
         });
 
-        it("readInt - without stream callback - failure #2", function(done) {
-            var r;
+        it("readInt - without stream callback - failure #2", (done) => {
+            let r;
 
             assert.strictEqual(r = utils.readInt(new Buffer([]), 0),
                 false,
-                "Wrong result: " + r);
+                `Wrong result: ${r}`);
             done();
         });
 
-        it("readInt - without stream callback - success", function(done) {
-            var r;
+        it("readInt - without stream callback - success", (done) => {
+            let r;
 
             assert.strictEqual(r = utils.readInt(new Buffer([0, 0, 0, 5]), 0),
                 5,
-                "Wrong result: " + r);
+                `Wrong result: ${r}`);
             done();
         });
 
-        it("readInt - with stream callback", function(done) {
-            var callback = function() {};
-            var stream = {
-                _cleanup: function(cb) {
+        it("readInt - with stream callback", (done) => {
+            let cleanupCalled = false;
+            let r;
+            const callback = function () { };
+            const stream = {
+                _cleanup(cb) {
                     cleanupCalled = true;
                     assert(cb === callback, "Wrong callback");
                 }
             };
-            var cleanupCalled = false;
-            var r;
 
             assert.strictEqual(r = utils.readInt(new Buffer([]), 0, stream, callback),
                 false,
-                "Wrong result: " + r);
+                `Wrong result: ${r}`);
             assert(cleanupCalled, "Cleanup not called");
             done();
         });
 
-        it("readString - without stream callback - bad length #1", function(done) {
-            var r;
+        it("readString - without stream callback - bad length #1", (done) => {
+            let r;
 
             assert.strictEqual(r = utils.readString(new Buffer([0, 0, 0]), 0),
                 false,
-                "Wrong result: " + r);
+                `Wrong result: ${r}`);
             done();
         });
 
-        it("readString - without stream callback - bad length #2", function(done) {
-            var r;
+        it("readString - without stream callback - bad length #2", (done) => {
+            let r;
 
             assert.strictEqual(r = utils.readString(new Buffer([]), 0),
                 false,
-                "Wrong result: " + r);
+                `Wrong result: ${r}`);
             done();
         });
 
-        it("readString - without stream callback - success", function(done) {
-            var r;
+        it("readString - without stream callback - success", (done) => {
+            let r;
 
             assert.deepEqual(r = utils.readString(new Buffer([0, 0, 0, 1, 5]), 0),
                 new Buffer([5]),
-                "Wrong result: " + r);
+                `Wrong result: ${r}`);
             done();
         });
 
-        it("readString - without stream callback - encoding", function(done) {
-            var r;
+        it("readString - without stream callback - encoding", (done) => {
+            let r;
 
             assert.deepEqual(r = utils.readString(new Buffer([0, 0, 0, 1, 33]), 0, "ascii"),
                 "!",
-                "Wrong result: " + r);
+                `Wrong result: ${r}`);
             done();
         });
 
-        it("readString - with stream callback - no encoding", function(done) {
-            var callback = function() {};
-            var stream = {
-                _cleanup: function(cb) {
+        it("readString - with stream callback - no encoding", (done) => {
+            let cleanupCalled = false;
+            let r;
+            const callback = function () { };
+            const stream = {
+                _cleanup(cb) {
                     cleanupCalled = true;
                     assert(cb === callback, "Wrong callback");
                 }
             };
-            var cleanupCalled = false;
-            var r;
 
             assert.deepEqual(r = utils.readString(new Buffer([0, 0, 0, 1]),
-                    0,
-                    stream,
-                    callback),
+                0,
+                stream,
+                callback),
                 false,
-                "Wrong result: " + r);
+                `Wrong result: ${r}`);
             assert(cleanupCalled, "Cleanup not called");
             done();
         });
 
-        it("readString - with stream callback - encoding", function(done) {
-            var callback = function() {};
-            var stream = {
-                _cleanup: function(cb) {
+        it("readString - with stream callback - encoding", (done) => {
+            let cleanupCalled = false;
+            let r;
+
+            const callback = function () { };
+            const stream = {
+                _cleanup(cb) {
                     cleanupCalled = true;
                     assert(cb === callback, "Wrong callback");
                 }
             };
-            var cleanupCalled = false;
-            var r;
 
             assert.deepEqual(r = utils.readString(new Buffer([0, 0, 0, 1]),
-                    0,
-                    "ascii",
-                    stream,
-                    callback),
+                0,
+                "ascii",
+                stream,
+                callback),
                 false,
-                "Wrong result: " + r);
+                `Wrong result: ${r}`);
             assert(cleanupCalled, "Cleanup not called");
             done();
         });
 
-        it("decryptKey - with encrypted RSA PPK", function(done) {
-            var filepath = fixturesdir + "/encrypted-rsa.ppk";
-            var passphrase = "node.js";
-            var keyInfo = utils.parseKey(fs.readFileSync(filepath));
+        it("decryptKey - with encrypted RSA PPK", (done) => {
+            const filepath = `${fixturesdir}/encrypted-rsa.ppk`;
+            const passphrase = "node.js";
+            const keyInfo = utils.parseKey(fs.readFileSync(filepath));
 
             utils.decryptKey(keyInfo, passphrase);
 
-            var expPrivOrig = new Buffer([
+            const expPrivOrig = new Buffer([
                 45, 45, 45, 45, 45, 66, 69, 71, 73, 78, 32, 82, 83, 65, 32, 80, 82, 73, 86, 65, 84, 69, 32, 75,
                 69, 89, 45, 45, 45, 45, 45, 10, 77, 73, 73, 67, 87, 81, 73, 66, 65, 65, 75, 66, 103, 71, 115,
                 70, 89, 82, 77, 66, 85, 68, 73, 109, 97, 52, 48, 98, 110, 101, 80, 66, 77, 48, 79, 86, 115,
@@ -196,14 +194,14 @@ describe("SSH-Streams", function () {
             done();
         });
 
-        it("decryptKey - with encrypted DSA PPK", function(done) {
-            var filepath = fixturesdir + "/encrypted-dsa.ppk";
-            var passphrase = "node.js";
-            var keyInfo = utils.parseKey(fs.readFileSync(filepath));
+        it("decryptKey - with encrypted DSA PPK", (done) => {
+            const filepath = `${fixturesdir}/encrypted-dsa.ppk`;
+            const passphrase = "node.js";
+            const keyInfo = utils.parseKey(fs.readFileSync(filepath));
 
             utils.decryptKey(keyInfo, passphrase);
 
-            var expPrivOrig = new Buffer([
+            const expPrivOrig = new Buffer([
                 45, 45, 45, 45, 45, 66, 69, 71, 73, 78, 32, 68, 83, 65, 32, 80, 82, 73, 86, 65, 84, 69, 32, 75,
                 69, 89, 45, 45, 45, 45, 45, 10, 77, 73, 73, 66, 117, 103, 73, 66, 65, 65, 75, 66, 103, 81, 67,
                 90, 57, 105, 80, 71, 72, 110, 48, 97, 78, 119, 98, 66, 72, 111, 112, 48, 76, 102, 67, 107,
@@ -234,7 +232,7 @@ describe("SSH-Streams", function () {
                 82, 67, 87, 54, 100, 109, 43, 50, 108, 84, 104, 55, 110, 116, 114, 108, 105, 56, 109, 67,
                 107, 53, 103, 73, 85, 67, 74, 90, 75, 65, 77, 65, 122, 10, 107, 121, 114, 50, 118, 108, 50,
                 80, 101, 52, 56, 97, 100, 105, 56, 86, 115, 57, 115, 61, 10, 45, 45, 45, 45, 45, 69, 78, 68,
-                32, 68, 83, 65, 32, 80, 82, 73, 86, 65, 84, 69, 32, 75, 69, 89, 45, 45, 45, 45, 45,
+                32, 68, 83, 65, 32, 80, 82, 73, 86, 65, 84, 69, 32, 75, 69, 89, 45, 45, 45, 45, 45
             ]);
             assert(keyInfo.ppk === true, "Expected PPK flag");
             assert(keyInfo._converted === true,
@@ -249,14 +247,14 @@ describe("SSH-Streams", function () {
             done();
         });
 
-        it("decryptKey - with encrypted RSA", function(done) {
-            var filepath = fixturesdir + "/id_rsa_enc";
-            var passphrase = "foobarbaz";
-            var keyInfo = utils.parseKey(fs.readFileSync(filepath));
+        it("decryptKey - with encrypted RSA", (done) => {
+            const filepath = `${fixturesdir}/id_rsa_enc`;
+            const passphrase = "foobarbaz";
+            const keyInfo = utils.parseKey(fs.readFileSync(filepath));
 
             utils.decryptKey(keyInfo, passphrase);
 
-            var expPriv = new Buffer([
+            const expPriv = new Buffer([
                 0x30, 0x82, 0x04, 0xa5, 0x02, 0x01, 0x00, 0x02, 0x82, 0x01, 0x01, 0x00,
                 0xec, 0x9f, 0xd7, 0x6e, 0x17, 0xfa, 0xe4, 0xc5, 0xff, 0xac, 0x83, 0x6e,
                 0xbe, 0x60, 0x66, 0xb2, 0xf2, 0x6a, 0x34, 0xfa, 0x4f, 0xe2, 0x49, 0xcd,
@@ -356,9 +354,9 @@ describe("SSH-Streams", function () {
                 0xa8, 0x13, 0x4a, 0xc4, 0xaa, 0x5a, 0x4c, 0xf9, 0x32, 0xc0, 0x4b, 0x65,
                 0x47, 0x65, 0xba, 0x38, 0x57, 0x17, 0x0c, 0xdd, 0xe1, 0x68, 0xd1, 0x4f,
                 0x3d, 0xb9, 0x0e, 0xdd, 0x3f, 0x53, 0xe6, 0x91, 0x0e, 0x33, 0xba, 0x77,
-                0xc2, 0x03, 0xf5, 0x90, 0x60, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07,
+                0xc2, 0x03, 0xf5, 0x90, 0x60, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07, 0x07
             ]);
-            var expPrivOrig = [
+            const expPrivOrig = [
                 "-----BEGIN RSA PRIVATE KEY-----",
                 "MIIEpQIBAAKCAQEA7J/Xbhf65MX/rINuvmBmsvJqNPpP4knNVCk0lTtVwfUfFj9qn+WTfC",
                 "Xgkttjjbu0wiR8nGlM4KchrPzTRDsar55gkwnTrLRliDmFjNIELK+FJ5JZGyhzmfnBbDcI",
@@ -401,8 +399,8 @@ describe("SSH-Streams", function () {
             done();
         });
 
-        it("Generate public key from parsed public key", function(done) {
-            var pubkey = [
+        it("Generate public key from parsed public key", (done) => {
+            const pubkey = [
                 "---- BEGIN SSH2 PUBLIC KEY ----",
                 "Comment: \"dsa-key-20151028\"",
                 "AAAAB3NzaC1kc3MAAAEBAJ0Gth9JHw/a8RmY3Y0UFqBWVWkzWxkzG+DR2oqHwTIq",
@@ -425,8 +423,8 @@ describe("SSH-Streams", function () {
                 "dA==",
                 "---- END SSH2 PUBLIC KEY ----"
             ].join("\n");
-            assert.doesNotThrow(function() {
-                var res = utils.genPublicKey(utils.parseKey(pubkey));
+            assert.doesNotThrow(() => {
+                const res = utils.genPublicKey(utils.parseKey(pubkey));
                 assert.deepEqual(
                     res, {
                         type: "dss",
@@ -507,7 +505,7 @@ describe("SSH-Streams", function () {
                             0x23, 0x0a, 0x0a, 0x97, 0x51, 0x01, 0x2c, 0xce, 0x06, 0xec, 0xa4,
                             0x64, 0xa6, 0x19, 0x9a, 0x7b, 0x3a, 0x48, 0x0d, 0x14, 0xa8, 0x0a,
                             0x7b, 0x64, 0xb0, 0xca, 0xb9, 0xb6, 0xe1, 0x93, 0xd6, 0x4b, 0x57,
-                            0x20, 0x0e, 0x74,
+                            0x20, 0x0e, 0x74
                         ]),
                         publicOrig: new Buffer([
                             0x2d, 0x2d, 0x2d, 0x2d, 0x2d, 0x42, 0x45, 0x47, 0x49, 0x4e, 0x20,

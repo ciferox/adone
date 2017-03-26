@@ -2203,20 +2203,22 @@ function addressIs(addressString, descriptors) {
 
                 it("matches the correct form via regex", () => {
                     expect(re.test(address6.correctForm())).to.equal(true);
-                    expect(reSubstring.test(`abc ${  address6.correctForm()  } def`)).to.equal(true);
+                    expect(reSubstring.test(`abc ${address6.correctForm()} def`)).to.equal(true);
                 });
 
                 it("matches the canonical form via regex", () => {
                     expect(re.test(address6.canonicalForm())).to.equal(true);
-                    expect(reSubstring.test(`abc ${  address6.canonicalForm()  } def`)).to.equal(true);
+                    expect(reSubstring.test(`abc ${address6.canonicalForm()} def`)).to.equal(true);
                 });
 
                 it("matches the given form via regex", () => {
                     // We can't match addresses like ::192.168.0.1 yet
-                    if (address6.is4()) {return;}
+                    if (address6.is4()) {
+                        return; 
+                    }
 
                     expect(re.test(addressString)).to.equal(true);
-                    expect(reSubstring.test(`abc ${  addressString  } def`)).to.equal(true);
+                    expect(reSubstring.test(`abc ${addressString} def`)).to.equal(true);
                 });
             }
 
@@ -2822,6 +2824,25 @@ describe("Functionality IPv4", () => {
 
             it("should generate a v4 address", () => {
                 expect(obj.to4().correctForm()).to.equal("192.168.0.1");
+            });
+        });
+
+        describe("Address given in ap6.arpa form", () => {
+            const obj = IP6.fromArpa("e.f.f.f.3.c.2.6.f.f.f.e.6.6.8.e.1.0.6.7.9.4.e.c.0.0.0.0.1.0.0.2.ip6.arpa.");
+
+            it("should return an Address6 object", () => {
+                expect(obj instanceof IP6).to.equal(true);
+            });
+
+            it("should generate a valid v6 address", () => {
+                expect(obj.correctForm()).to.equal("2001:0:ce49:7601:e866:efff:62c3:fffe");
+            });
+
+            it("should fail with an invalid ip6.arpa length", () => {
+                const obj = IP6.fromArpa("e.f.f.f.3.c.2.6.f.f.f.e.6.6.8.0.6.7.9.4.e.c.0.0.0.0.1.0.0.2.ip6.arpa.");
+
+                expect(obj.error).to.equal("Not Valid 'ip6.arpa' form");
+                expect(obj.address).to.equal(null);
             });
         });
 

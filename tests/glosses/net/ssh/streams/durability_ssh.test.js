@@ -1,7 +1,4 @@
-/* global describe it */
-
-import { SSH2Stream } from "adone/glosses/net/ssh/ssh_streams";
-
+import { SSH2Stream } from "adone/glosses/net/ssh/streams";
 
 const fs = adone.std.fs;
 const path = adone.std.path;
@@ -22,25 +19,25 @@ function SimpleStream() {
     this.buffer = "";
 }
 inherits(SimpleStream, TransformStream);
-SimpleStream.prototype._transform = function(chunk, encoding, cb) {
+SimpleStream.prototype._transform = function (chunk, encoding, cb) {
     this.buffer += chunk.toString("binary");
     cb();
 };
 
-describe("SSH-Streams", function () {
-    describe("durability.ssh", function () {
-        it("Incompatible client SSH protocol version", function(done) {
+describe("SSH-Streams", () => {
+    describe("durability.ssh", () => {
+        it("Incompatible client SSH protocol version", (done) => {
             let serverError = false;
-            let server = new SSH2Stream(SERVER_CONFIG);
-            let client = new SimpleStream();
+            const server = new SSH2Stream(SERVER_CONFIG);
+            const client = new SimpleStream();
 
             client.pipe(server).pipe(client);
 
-            server.on("error", function (err) {
+            server.on("error", (err) => {
                 serverError = err;
                 assert(err.message === "Protocol version not supported", "Wrong error message");
-            }).on("end", function () {
-                assert(client.buffer === server.config.ident + "\r\n", "Wrong server ident: " + inspect(client.buffer));
+            }).on("end", () => {
+                assert(client.buffer === `${server.config.ident}\r\n`, `Wrong server ident: ${inspect(client.buffer)}`);
                 assert(serverError, "Expected server error");
                 done();
             });
@@ -48,56 +45,56 @@ describe("SSH-Streams", function () {
             client.push("SSH-1.0-aaa\r\n");
         });
 
-        it("Malformed client protocol identification", function(done) {
+        it("Malformed client protocol identification", (done) => {
             let serverError = false;
-            let server = new SSH2Stream(SERVER_CONFIG);
-            let client = new SimpleStream();
+            const server = new SSH2Stream(SERVER_CONFIG);
+            const client = new SimpleStream();
 
             client.pipe(server).pipe(client);
 
-            server.on("error", function (err) {
+            server.on("error", (err) => {
                 serverError = err;
                 assert(err.message === "Bad identification start", "Wrong error message");
-            }).on("end", function () {
-                assert(client.buffer === server.config.ident + "\r\n", "Wrong server ident: " + inspect(client.buffer));
+            }).on("end", () => {
+                assert(client.buffer === `${server.config.ident}\r\n`, `Wrong server ident: ${inspect(client.buffer)}`);
                 assert(serverError, "Expected server error");
                 done();
             });
             client.push("LOL-2.0-asdf\r\n");
         });
 
-        it("SSH client protocol identification too long (> 255 characters)", function(done) {
+        it("SSH client protocol identification too long (> 255 characters)", (done) => {
             let serverError = false;
-            let server = new SSH2Stream(SERVER_CONFIG);
-            let client = new SimpleStream();
+            const server = new SSH2Stream(SERVER_CONFIG);
+            const client = new SimpleStream();
 
             client.pipe(server).pipe(client);
 
-            server.on("error", function (err) {
+            server.on("error", (err) => {
                 serverError = err;
                 assert(err.message === "Max identification string size exceeded", "Wrong error message");
-            }).on("end", function () {
-                assert(client.buffer === server.config.ident + "\r\n", "Wrong server ident: " + inspect(client.buffer));
+            }).on("end", () => {
+                assert(client.buffer === `${server.config.ident}\r\n`, `Wrong server ident: ${inspect(client.buffer)}`);
                 assert(serverError, "Expected server error");
                 done();
             });
             let ident = "SSH-2.0-";
-            for (let i = 0; i < 30; ++i) ident += "foobarbaz";
+            for (let i = 0; i < 30; ++i) { ident += "foobarbaz"; }
             ident += "\r\n";
             client.push(ident);
         });
 
-        it("Bad packet length (max)", function(done) {
+        it("Bad packet length (max)", (done) => {
             let serverError = false;
-            let server = new SSH2Stream(SERVER_CONFIG);
-            let client = new SimpleStream();
+            const server = new SSH2Stream(SERVER_CONFIG);
+            const client = new SimpleStream();
 
             client.pipe(server).pipe(client);
 
-            server.on("error", function (err) {
+            server.on("error", (err) => {
                 serverError = err;
                 assert(err.message === "Bad packet length", "Wrong error message");
-            }).on("end", function () {
+            }).on("end", () => {
                 assert(client.buffer.length, "Expected server data");
                 assert(serverError, "Expected server error");
                 done();
@@ -107,17 +104,17 @@ describe("SSH-Streams", function () {
             client.push(new Buffer([0x00, 0x07, 0xA1, 0x20, 0x00, 0x00, 0x00, 0x00]));
         });
 
-        it("Bad packet length (min)", function(done) {
+        it("Bad packet length (min)", (done) => {
             let serverError = false;
-            let server = new SSH2Stream(SERVER_CONFIG);
-            let client = new SimpleStream();
+            const server = new SSH2Stream(SERVER_CONFIG);
+            const client = new SimpleStream();
 
             client.pipe(server).pipe(client);
 
-            server.on("error", function (err) {
+            server.on("error", (err) => {
                 serverError = err;
                 assert(err.message === "Bad packet length", "Wrong error message");
-            }).on("end", function () {
+            }).on("end", () => {
                 assert(client.buffer.length, "Expected server data");
                 assert(serverError, "Expected server error");
                 done();

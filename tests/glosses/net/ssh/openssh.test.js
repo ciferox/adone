@@ -1,9 +1,7 @@
-/* global describe it skip */
-
-import semver from "semver" ;
+import semver from "semver";
 
 const { Server } = adone.net.ssh;
-import { utils } from "../../../../lib/glosses/net/ssh/ssh_streams";
+import { utils } from "adone/glosses/net/ssh/streams";
 
 const fs = adone.std.fs;
 const crypto = adone.std.crypto;
@@ -26,7 +24,7 @@ const CLIENT_KEY_DSA = fs.readFileSync(CLIENT_KEY_DSA_PATH);
 const CLIENT_KEY_DSA_PUB = utils.genPublicKey(utils.parseKey(CLIENT_KEY_DSA));
 if (semver.gte(process.version, "5.2.0")) {
     var CLIENT_KEY_ECDSA_PATH = join(fixturesdir, "id_ecdsa");
-    var CLIENT_KEY_ECDSA = fs.readFileSync(CLIENT_KEY_ECDSA_PATH);
+    const CLIENT_KEY_ECDSA = fs.readFileSync(CLIENT_KEY_ECDSA_PATH);
     var CLIENT_KEY_ECDSA_PUB = utils.genPublicKey(
         utils.parseKey(CLIENT_KEY_ECDSA)
     );
@@ -36,13 +34,13 @@ const DEBUG_MODE = false;
 
 skip(() => {
     return new Promise((resolve) => {
-        exec("ssh -V", function(err, stdout, stderr) {
+        exec("ssh -V", (err, stdout, stderr) => {
             if (err) {
                 // console.log("OpenSSH client is required for these tests");
                 resolve(true);
                 return;
             }
-            let re = /^OpenSSH_([\d\.]+)/;
+            const re = /^OpenSSH_([\d\.]+)/;
             let m = re.exec(stdout.toString());
             if (!m || !m[1]) {
                 m = re.exec(stderr.toString());
@@ -59,13 +57,13 @@ skip(() => {
 });
 
 // Fix file modes to avoid OpenSSH client complaints about keys" permissions
-fs.readdirSync(fixturesdir).forEach(function(file) {
+fs.readdirSync(fixturesdir).forEach((file) => {
     fs.chmodSync(join(fixturesdir, file), "0600");
 });
 
-describe("SSH", function () {
-    describe("OpenSSH", function () {
-        it("Authenticate with an RSA key", function(done) {
+describe("SSH", () => {
+    describe("OpenSSH", () => {
+        it("Authenticate with an RSA key", function (done) {
             let server;
 
             server = setup(
@@ -77,39 +75,41 @@ describe("SSH", function () {
                 done
             );
 
-            server.on("connection", function(conn) {
-                conn.on("authentication", function(ctx) {
-                    if (ctx.method === "none")
+            server.on("connection", (conn) => {
+                conn.on("authentication", (ctx) => {
+                    if (ctx.method === "none") {
                         return ctx.reject();
+                    }
                     assert(ctx.method === "publickey",
-                        "Unexpected auth method: " + ctx.method);
+                        `Unexpected auth method: ${ctx.method}`);
                     assert(ctx.username === USER,
-                        "Unexpected username: " + ctx.username);
+                        `Unexpected username: ${ctx.username}`);
                     assert(ctx.key.algo === "ssh-rsa",
-                        "Unexpected key algo: " + ctx.key.algo);
+                        `Unexpected key algo: ${ctx.key.algo}`);
                     assert.deepEqual(CLIENT_KEY_RSA_PUB.public,
                         ctx.key.data,
                         "Public key mismatch");
                     if (ctx.signature) {
-                        let verifier = crypto.createVerify("RSA-SHA1");
-                        let pem = CLIENT_KEY_RSA_PUB.publicOrig;
+                        const verifier = crypto.createVerify("RSA-SHA1");
+                        const pem = CLIENT_KEY_RSA_PUB.publicOrig;
                         verifier.update(ctx.blob);
                         assert(verifier.verify(pem, ctx.signature),
                             "Could not verify PK signature");
                         ctx.accept();
-                    } else
+                    } else {
                         ctx.accept();
-                }).on("ready", function() {
-                    conn.on("session", function(accept, reject) {
-                        let session = accept();
+                    }
+                }).on("ready", () => {
+                    conn.on("session", (accept, reject) => {
+                        const session = accept();
                         if (session) {
-                            session.on("exec", function(accept, reject) {
-                                let stream = accept();
+                            session.on("exec", (accept, reject) => {
+                                const stream = accept();
                                 if (stream) {
                                     stream.exit(0);
                                     stream.end();
                                 }
-                            }).on("pty", function(accept, reject) {
+                            }).on("pty", (accept, reject) => {
                                 accept && accept();
                             });
                         }
@@ -118,7 +118,7 @@ describe("SSH", function () {
             });
         });
 
-        it("Authenticate with a DSA key", function(done) {
+        it("Authenticate with a DSA key", function (done) {
             let server;
 
             server = setup(
@@ -130,39 +130,41 @@ describe("SSH", function () {
                 done
             );
 
-            server.on("connection", function(conn) {
-                conn.on("authentication", function(ctx) {
-                    if (ctx.method === "none")
+            server.on("connection", (conn) => {
+                conn.on("authentication", (ctx) => {
+                    if (ctx.method === "none") {
                         return ctx.reject();
+                    }
                     assert(ctx.method === "publickey",
-                        "Unexpected auth method: " + ctx.method);
+                        `Unexpected auth method: ${ctx.method}`);
                     assert(ctx.username === USER,
-                        "Unexpected username: " + ctx.username);
+                        `Unexpected username: ${ctx.username}`);
                     assert(ctx.key.algo === "ssh-dss",
-                        "Unexpected key algo: " + ctx.key.algo);
+                        `Unexpected key algo: ${ctx.key.algo}`);
                     assert.deepEqual(CLIENT_KEY_DSA_PUB.public,
                         ctx.key.data,
                         "Public key mismatch");
                     if (ctx.signature) {
-                        let verifier = crypto.createVerify("DSA-SHA1");
-                        let pem = CLIENT_KEY_DSA_PUB.publicOrig;
+                        const verifier = crypto.createVerify("DSA-SHA1");
+                        const pem = CLIENT_KEY_DSA_PUB.publicOrig;
                         verifier.update(ctx.blob);
                         assert(verifier.verify(pem, ctx.signature),
                             "Could not verify PK signature");
                         ctx.accept();
-                    } else
+                    } else {
                         ctx.accept();
-                }).on("ready", function() {
-                    conn.on("session", function(accept, reject) {
-                        let session = accept();
+                    }
+                }).on("ready", () => {
+                    conn.on("session", (accept, reject) => {
+                        const session = accept();
                         if (session) {
-                            session.on("exec", function(accept, reject) {
-                                let stream = accept();
+                            session.on("exec", (accept, reject) => {
+                                const stream = accept();
                                 if (stream) {
                                     stream.exit(0);
                                     stream.end();
                                 }
-                            }).on("pty", function(accept, reject) {
+                            }).on("pty", (accept, reject) => {
                                 accept && accept();
                             });
                         }
@@ -171,9 +173,10 @@ describe("SSH", function () {
             });
         });
 
-        it("Authenticate with a ECDSA key", function(done) {
-            if (semver.lt(process.version, "5.2.0"))
+        it("Authenticate with a ECDSA key", function (done) {
+            if (semver.lt(process.version, "5.2.0")) {
                 return done();
+            }
             let server;
 
             server = setup(
@@ -185,39 +188,41 @@ describe("SSH", function () {
                 done
             );
 
-            server.on("connection", function(conn) {
-                conn.on("authentication", function(ctx) {
-                    if (ctx.method === "none")
+            server.on("connection", (conn) => {
+                conn.on("authentication", (ctx) => {
+                    if (ctx.method === "none") {
                         return ctx.reject();
+                    }
                     assert(ctx.method === "publickey",
-                        "Unexpected auth method: " + ctx.method);
+                        `Unexpected auth method: ${ctx.method}`);
                     assert(ctx.username === USER,
-                        "Unexpected username: " + ctx.username);
+                        `Unexpected username: ${ctx.username}`);
                     assert(ctx.key.algo === "ecdsa-sha2-nistp256",
-                        "Unexpected key algo: " + ctx.key.algo);
+                        `Unexpected key algo: ${ctx.key.algo}`);
                     assert.deepEqual(CLIENT_KEY_ECDSA_PUB.public,
                         ctx.key.data,
                         "Public key mismatch");
                     if (ctx.signature) {
-                        let verifier = crypto.createVerify("sha256");
-                        let pem = CLIENT_KEY_ECDSA_PUB.publicOrig;
+                        const verifier = crypto.createVerify("sha256");
+                        const pem = CLIENT_KEY_ECDSA_PUB.publicOrig;
                         verifier.update(ctx.blob);
                         assert(verifier.verify(pem, ctx.signature),
                             "Could not verify PK signature");
                         ctx.accept();
-                    } else
+                    } else {
                         ctx.accept();
-                }).on("ready", function() {
-                    conn.on("session", function(accept, reject) {
-                        let session = accept();
+                    }
+                }).on("ready", () => {
+                    conn.on("session", (accept, reject) => {
+                        const session = accept();
                         if (session) {
-                            session.on("exec", function(accept, reject) {
-                                let stream = accept();
+                            session.on("exec", (accept, reject) => {
+                                const stream = accept();
                                 if (stream) {
                                     stream.exit(0);
                                     stream.end();
                                 }
-                            }).on("pty", function(accept, reject) {
+                            }).on("pty", (accept, reject) => {
                                 accept && accept();
                             });
                         }
@@ -226,7 +231,7 @@ describe("SSH", function () {
             });
         });
 
-        it("Server with DSA host key", function(done) {
+        it("Server with DSA host key", function (done) {
             let server;
 
             server = setup(
@@ -238,20 +243,20 @@ describe("SSH", function () {
                 done
             );
 
-            server.on("connection", function(conn) {
-                conn.on("authentication", function(ctx) {
+            server.on("connection", (conn) => {
+                conn.on("authentication", (ctx) => {
                     ctx.accept();
-                }).on("ready", function() {
-                    conn.on("session", function(accept, reject) {
-                        let session = accept();
+                }).on("ready", () => {
+                    conn.on("session", (accept, reject) => {
+                        const session = accept();
                         if (session) {
-                            session.on("exec", function(accept, reject) {
-                                let stream = accept();
+                            session.on("exec", (accept, reject) => {
+                                const stream = accept();
                                 if (stream) {
                                     stream.exit(0);
                                     stream.end();
                                 }
-                            }).on("pty", function(accept, reject) {
+                            }).on("pty", (accept, reject) => {
                                 accept && accept();
                             });
                         }
@@ -260,9 +265,10 @@ describe("SSH", function () {
             });
         });
 
-        it("Server with ECDSA host key", function(done) {
-            if (semver.lt(process.version, "5.2.0"))
+        it("Server with ECDSA host key", function (done) {
+            if (semver.lt(process.version, "5.2.0")) {
                 return done();
+            }
             let server;
 
             server = setup(
@@ -274,20 +280,20 @@ describe("SSH", function () {
                 done
             );
 
-            server.on("connection", function(conn) {
-                conn.on("authentication", function(ctx) {
+            server.on("connection", (conn) => {
+                conn.on("authentication", (ctx) => {
                     ctx.accept();
-                }).on("ready", function() {
-                    conn.on("session", function(accept, reject) {
-                        let session = accept();
+                }).on("ready", () => {
+                    conn.on("session", (accept, reject) => {
+                        const session = accept();
                         if (session) {
-                            session.on("exec", function(accept, reject) {
-                                let stream = accept();
+                            session.on("exec", (accept, reject) => {
+                                const stream = accept();
                                 if (stream) {
                                     stream.exit(0);
                                     stream.end();
                                 }
-                            }).on("pty", function(accept, reject) {
+                            }).on("pty", (accept, reject) => {
                                 accept && accept();
                             });
                         }
@@ -296,9 +302,9 @@ describe("SSH", function () {
             });
         });
 
-        it("Server closes stdin too early", function(done) {
+        it("Server closes stdin too early", function (done) {
             let server;
-            let what = this.what;
+            const what = this.what;
 
             server = setup(
                 this, {
@@ -309,31 +315,31 @@ describe("SSH", function () {
                 done
             );
 
-            server.on("_child", function(childProc) {
-                childProc.stderr.once("data", function(data) {
+            server.on("_child", (childProc) => {
+                childProc.stderr.once("data", (data) => {
                     childProc.stdin.end();
                 });
                 childProc.stdin.write("ping");
-            }).on("connection", function(conn) {
-                conn.on("authentication", function(ctx) {
+            }).on("connection", (conn) => {
+                conn.on("authentication", (ctx) => {
                     ctx.accept();
-                }).on("ready", function() {
-                    conn.on("session", function(accept, reject) {
-                        let session = accept();
+                }).on("ready", () => {
+                    conn.on("session", (accept, reject) => {
+                        const session = accept();
                         assert(session, "Missing session");
-                        session.on("exec", function(accept, reject) {
-                            let stream = accept();
+                        session.on("exec", (accept, reject) => {
+                            const stream = accept();
                             assert(stream, "Missing exec stream");
-                            stream.stdin.on("data", function(data) {
+                            stream.stdin.on("data", (data) => {
                                 stream.stdout.write("pong on stdout");
                                 stream.stderr.write("pong on stderr");
-                            }).on("end", function() {
+                            }).on("end", () => {
                                 stream.stdout.write("pong on stdout");
                                 stream.stderr.write("pong on stderr");
                                 stream.exit(0);
                                 stream.close();
                             });
-                        }).on("pty", function(accept, reject) {
+                        }).on("pty", (accept, reject) => {
                             accept && accept();
                         });
                     });
@@ -351,10 +357,10 @@ function setup(self, clientcfg, servercfg, done) {
     };
 
     let client;
-    let server = new Server(servercfg);
+    const server = new Server(servercfg);
 
     server.on("error", onError)
-        .on("connection", function(conn) {
+        .on("connection", (conn) => {
             conn.on("error", onError)
                 .on("ready", onReady);
             server.close();
@@ -362,8 +368,8 @@ function setup(self, clientcfg, servercfg, done) {
         .on("close", onClose);
 
     function onError(err) {
-        let which = (arguments.length >= 3 ? "client" : "server");
-        assert(false, "Unexpected " + which + " error: " + err);
+        const which = (arguments.length >= 3 ? "client" : "server");
+        assert(false, `Unexpected ${which} error: ${err}`);
     }
 
     function onReady() {
@@ -380,14 +386,15 @@ function setup(self, clientcfg, servercfg, done) {
             assert(!self.state.serverClose, "Received multiple close events for server");
             self.state.serverClose = true;
         }
-        if (self.state.clientClose && self.state.serverClose)
+        if (self.state.clientClose && self.state.serverClose) {
             done();
+        }
     }
 
-    process.nextTick(function() {
-        server.listen(0, "localhost", function() {
-            let cmd = "ssh";
-            let args = ["-o", "UserKnownHostsFile=/dev/null",
+    process.nextTick(() => {
+        server.listen(0, "localhost", () => {
+            const cmd = "ssh";
+            const args = ["-o", "UserKnownHostsFile=/dev/null",
                 "-o", "StrictHostKeyChecking=no",
                 "-o", "CheckHostIP=no",
                 "-o", "ConnectTimeout=3",
@@ -404,8 +411,9 @@ function setup(self, clientcfg, servercfg, done) {
                 "-o", "PasswordAuthentication=no",
                 "-o", "PubkeyAuthentication=yes",
                 "-o", "PreferredAuthentications=publickey"];
-            if (clientcfg.privateKeyPath)
-                args.push("-o", "IdentityFile=" + clientcfg.privateKeyPath);
+            if (clientcfg.privateKeyPath) {
+                args.push("-o", `IdentityFile=${clientcfg.privateKeyPath}`);
+            }
             if (!/^[0-6]\./.test(opensshVer)) {
                 // OpenSSH 7.0+ disables DSS/DSA host (and user) key support by
                 // default, so we explicitly enable it here
@@ -425,16 +433,17 @@ function setup(self, clientcfg, servercfg, done) {
                 client.stdout.resume();
                 client.stderr.resume();
             }
-            client.on("error", function(err) {
+            client.on("error", (err) => {
                 onError(err, null, null);
-            }).on("exit", function(code) {
+            }).on("exit", (code) => {
                 clearTimeout(client.timer);
-                if (code !== 0)
-                    return onError(new Error("Non-zero exit code " + code), null, null);
+                if (code !== 0) {
+                    return onError(new Error(`Non-zero exit code ${code}`), null, null);
+                }
                 onClose(null, null, null);
             });
 
-            client.timer = setTimeout(function() {
+            client.timer = setTimeout(() => {
                 assert(false, "Client timeout");
             }, CLIENT_TIMEOUT);
         });

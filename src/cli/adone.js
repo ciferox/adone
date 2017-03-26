@@ -6,12 +6,24 @@ const { is, std } = adone;
 
 export default class AdoneCLI extends adone.application.Application {
     async initialize() {
-        this.addSubsystem(adone.std.path.resolve(__dirname, "./subsystems/meta"));
-        this.addSubsystem(adone.std.path.resolve(__dirname, "./subsystems/omnitron"));
-        this.addSubsystem(adone.std.path.resolve(__dirname, "./subsystems/bench"));
-        this.addSubsystem(adone.std.path.resolve(__dirname, "./subsystems/shani"));
+        // Loading common subsystems
+        this.loadSubsystem(adone.std.path.resolve(__dirname, "./subsystems/meta"));
+        this.loadSubsystem(adone.std.path.resolve(__dirname, "./subsystems/bench"));
+        this.loadSubsystem(adone.std.path.resolve(__dirname, "./subsystems/shani"));
+
+        this.loadSubsystem(adone.std.path.resolve(__dirname, "../lib/omnitron/cli"));
 
         this.defineArguments({
+            commandsGroups: [
+                {
+                    name: "subsystem",
+                    help: "Subsystems"
+                },
+                {
+                    name: "service_cli",
+                    help: "Cli interfaces for omnitron services"
+                }
+            ],
             arguments: [
                 { name: "expr", help: "run script or inspect adone-object", default: "index.js" }
             ],

@@ -1,13 +1,13 @@
 const { is, std } = adone;
 const { ENABLED } = adone.omnitron.const;
 
-export default class ConfigManager {
+export default class ConfigurationManager {
     constructor(app, { inMemory = false } = {}) {
         this.app = app;
         this.inMemory = inMemory;
     }
 
-    async load() {
+    async loadBaseConfigs() {
         this.config = this.app.config;
 
         if (is.undefined(this.config.omnitron)) {
@@ -70,25 +70,21 @@ export default class ConfigManager {
         return this.config.omnitron;
     }
 
-    async saveServicesConfig() {
-        if (this.inMemory) {
-            return;
-        }
-        try {
-            await this.config.save(this.config.omnitron.servicesConfigFilePath, "omnitron.services", { space: 4 });
-            adone.info(`Configuration '${this.config.omnitron.servicesConfigFilePath}' saved`);
-        } catch (err) {
-            adone.error(err);
-        }
+    saveServicesConfig() {
+        return this.saveBaseConfig("services", this.config.omnitron.servicesConfigFilePath);
     }
 
-    async saveGatesConfig() {
+    saveGatesConfig() {
+        return this.saveBaseConfig("gates", this.config.omnitron.gatesConfigFilePath);
+    }
+
+    async saveBaseConfig(name, path) {
         if (this.inMemory) {
             return;
         }
         try {
-            await this.config.save(this.config.omnitron.gatesConfigFilePath, "omnitron.gates", { space: 4 });
-            adone.info(`Configuration '${this.config.omnitron.gatesConfigFilePath}' saved`);
+            await this.config.save(path, `omnitron.${name}`, { space: 4 });
+            adone.info(`Configuration '${path}' saved`);
         } catch (err) {
             adone.error(err);
         }

@@ -159,7 +159,7 @@ export default class EventEmitter {
             } else if (position === 0) {
                 list.shift();
             } else {
-                spliceOne(list, position);
+                adone.util.spliceOne(list, position);
             }
 
             if (events.removeListener) {
@@ -389,13 +389,6 @@ function _onceWrap(target, type, listener) {
     return wrapped;
 }
 
-// About 1.5x faster than the two-arg version of Array#splice().
-function spliceOne(list, index) {
-    for (let i = index, k = i + 1, n = list.length; k < n; i += 1, k += 1) {
-        list[i] = list[k];
-    }
-    list.pop();
-}
 
 function arrayClone(arr, n) {
     const copy = new Array(n);

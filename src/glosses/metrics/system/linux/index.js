@@ -1,4 +1,3 @@
-
 import LinuxProcess from "./process";
 import LinuxFS from "./file_system";
 const { is } = adone;
@@ -67,13 +66,14 @@ export default class LinuxOS extends adone.metrics.OS {
         return procs;
     }
     getProcess(pid) {
-
         try {
             if (!is.number(pid)) {
                 return null;
             }
             const parts = adone.fs.readWordsSync(adone.sprintf("/proc/%d/stat", pid));
-            if (is.null(parts) || parts.length < 24) return null;
+            if (is.null(parts) || parts.length < 24) {
+                return null;
+            }
             const path = adone.std.fs.readlinkSync(adone.sprintf("/proc/%d/exe", pid));
             const io = this._readKeyValues(adone.sprintf("/proc/%d/io", pid), ":");
 

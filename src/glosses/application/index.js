@@ -1129,7 +1129,7 @@ export default class Application extends adone.application.Subsystem {
         await this.config.load(userConfigPath, name);
     }
 
-    addSubsystem(subsystem) {
+    loadSubsystem(subsystem) {
         if (is.string(subsystem)) {
             if (!adone.std.path.isAbsolute(subsystem)) {
                 subsystem = adone.std.path.resolve(process.cwd(), subsystem);

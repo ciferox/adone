@@ -9,6 +9,7 @@ export default class extends adone.application.Subsystem {
     initialize() {
         this.defineCommand({
             name: "bench",
+            group: "subsystem",
             help: "adone benchmarking utility",
             arguments: [
                 { name: "script", help: "path to script with suites", nargs: "?", default: "index.js" }

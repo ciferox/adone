@@ -1,4 +1,4 @@
-import adone from "adone";
+// import adone from "adone";
 
 async function shi() {
     const term = adone.terminal;
@@ -28,7 +28,7 @@ async function shi() {
     });
 
     for (const store of stores) {
-        storesTable.push([store.name, store.fsType, store.uuid, adone.text.humanizeSize(store.freeSpace), adone.text.humanizeSize(store.totalSpace), store.mount, store.description]);
+        storesTable.push([store.name, store.fsType, store.uuid, adone.util.humanizeSize(store.freeSpace), adone.util.humanizeSize(store.totalSpace), store.mount, store.description]);
     }
 
     console.log(storesTable.toString());
@@ -51,13 +51,13 @@ async function shi() {
             proc.getParentPID(),
             adone.metrics.Process.humanState(proc.getState()),
             proc.getPriority(),
-            adone.text.humanizeSize(proc.getVirtualSize()),
-            adone.text.humanizeSize(proc.getResidentSetSize()),
-            adone.text.humanizeTime(proc.getUpTime()),
-            adone.text.humanizeTime(proc.getKernelTime()),
-            adone.text.humanizeTime(proc.getUserTime()),
-            adone.text.humanizeSize(proc.getBytesRead()),
-            adone.text.humanizeSize(proc.getBytesWritten())
+            adone.util.humanizeSize(proc.getVirtualSize()),
+            adone.util.humanizeSize(proc.getResidentSetSize()),
+            adone.util.humanizeTime(proc.getUpTime()),
+            adone.util.humanizeTime(proc.getKernelTime()),
+            adone.util.humanizeTime(proc.getUserTime()),
+            adone.util.humanizeSize(proc.getBytesRead()),
+            adone.util.humanizeSize(proc.getBytesWritten())
         ]);
     }
     console.log(procsTable.toString());

@@ -40,8 +40,8 @@ const { DISABLED, ENABLED, INITIALIZING, RUNNING, UNINITIALIZING, STATUSES } = a
 @Private
 export class Omnitron extends adone.application.Application {
     async initialize() {
-        this._.configManager = new adone.omnitron.ConfigManager(this);
-        await this._.configManager.load();
+        this._.configManager = new adone.omnitron.ConfigurationManager(this);
+        await this._.configManager.loadBaseConfigs();
 
         await this.createPidFile();
 
@@ -57,9 +57,12 @@ export class Omnitron extends adone.application.Application {
 
         this.createNetron({ isSuper: true });
         await this.bindNetron();
+        
+        // Save services config for pm-service-container.
+        await this._.configManager.saveServicesConfig();
+
         await this.attachServices();
 
-        await this._.configManager.saveServicesConfig();
         await this._.configManager.saveGatesConfig();
 
         if (is.function(process.send)) {
