@@ -542,7 +542,8 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
         stringCompare: "./glosses/crypto/string_compare",
         Keygrip: "./glosses/crypto/keygrip",
         password: "./glosses/crypto/password",
-        asn1: "./glosses/crypto/asn1"
+        asn1: "./glosses/crypto/asn1",
+        crc32: "./glosses/crypto/crc32"
     });
 
     adone.compressor = lazify({
