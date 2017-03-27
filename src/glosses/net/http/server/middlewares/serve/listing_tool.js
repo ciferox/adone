@@ -5,6 +5,16 @@ const {
     collection, util, fs, identity
 } = adone;
 
+const iconsPath = resolve(
+    adone.appinstance.adoneEtcPath,
+    "glosses",
+    "net",
+    "http",
+    "server",
+    "middlewares",
+    "serve",
+    "icons"
+);
 const iconsMap = new Map([
     // base icons
     ["default", "page_white"],
@@ -162,7 +172,7 @@ const loadIcon = async (className) => {
     if (iconsCache.has(className)) {
         return iconsCache.get(className);
     }
-    const content = fs.readFile(resolve(__dirname, "template", "icons", `${className}.png`), {
+    const content = await fs.readFile(resolve(iconsPath, `${className}.png`), {
         encoding: "base64"
     });
     iconsCache.set(className, content);

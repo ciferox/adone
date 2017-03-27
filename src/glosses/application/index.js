@@ -1027,8 +1027,8 @@ export default class Application extends adone.application.Subsystem {
 
         this._subsystems = [];
         this.adoneRootPath = adone.std.path.resolve(__dirname, "../../..");
-        this.adoneDefaultsPath = adone.std.path.resolve(this.adoneRootPath, "defaults");
-        this.defaultConfigsPath = adone.std.path.resolve(this.adoneDefaultsPath, "configs");
+        this.adoneEtcPath = adone.std.path.resolve(this.adoneRootPath, "etc");
+        this.defaultConfigsPath = adone.std.path.resolve(this.adoneEtcPath, "configs");
 
         if (main) {
             this._setupMain();

@@ -51,7 +51,7 @@ export default class AdoneManager {
     }
 
     async installScript() {
-        const data = adone.templating.nunjucks.render(std.path.join(this.app.adoneDefaultsPath, "scripts", this.scriptName), { targetPath: this.destAdoneDir.resolve("bin", "adone.js") });
+        const data = adone.templating.nunjucks.render(std.path.join(this.app.adoneEtcPath, "scripts", this.scriptName), { targetPath: this.destAdoneDir.resolve("bin", "adone.js") });
         await adone.fs.writeFile(this.adoneScriptPath, data);
         if (!is.win32) {
             await adone.fs.chmod(this.adoneScriptPath, 0o755);
