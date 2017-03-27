@@ -510,21 +510,7 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
             decode: () => (buf) => adone.data.mpak.serializer.decode(buf),
             tryDecode: () => (buf) => adone.data.mpak.serializer.decoder.tryDecode(buf)
         })),
-        bson: () => (lazify({
-            BSON: "./glosses/data/bson",
-            serializer: () => {
-                const { BSON } = adone.data.bson;
-                return new BSON([
-                    BSON.Binary, BSON.Code, BSON.DBRef,
-                    BSON.Decimal128, BSON.Double, BSON.Int32,
-                    BSON.Long, BSON.Map, BSON.MaxKey,
-                    BSON.MinKey, BSON.ObjectId, BSON.BSONRegExp,
-                    BSON.Symbol, BSON.Timestamp
-                ]);
-            },
-            encode: () => (obj) => adone.data.bson.serializer.serialize(obj),
-            decode: () => (buf) => adone.data.bson.serializer.deserialize(buf)
-        })),
+        bson: "./glosses/data/bson",
         base64: "./glosses/data/base64"
     });
 

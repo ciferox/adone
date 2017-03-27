@@ -1,31 +1,34 @@
-let Long = require("./long");
 
-let PARSE_STRING_REGEXP = /^(\+|\-)?(\d+|(\d*\.\d*))?(E|e)?([\-\+])?(\d+)?$/;
-let PARSE_INF_REGEXP = /^(\+|\-)?(Infinity|inf)$/i;
-let PARSE_NAN_REGEXP = /^(\+|\-)?NaN$/i;
 
-let EXPONENT_MAX = 6111;
-let EXPONENT_MIN = -6176;
+const Long = require("./long");
+// const Long = adone.math.Long;
+
+const PARSE_STRING_REGEXP = /^(\+|\-)?(\d+|(\d*\.\d*))?(E|e)?([\-\+])?(\d+)?$/;
+const PARSE_INF_REGEXP = /^(\+|\-)?(Infinity|inf)$/i;
+const PARSE_NAN_REGEXP = /^(\+|\-)?NaN$/i;
+
+const EXPONENT_MAX = 6111;
+const EXPONENT_MIN = -6176;
 var EXPONENT_BIAS = 6176;
-let MAX_DIGITS = 34;
+const MAX_DIGITS = 34;
 
 // Nan value bits as 32 bit values (due to lack of longs)
-let NAN_BUFFER = [0x7c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00].reverse();
+const NAN_BUFFER = [0x7c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00].reverse();
 // Infinity value bits 32 bit values (due to lack of longs)
-let INF_NEGATIVE_BUFFER = [0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00].reverse();
-let INF_POSITIVE_BUFFER = [0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00].reverse();
+const INF_NEGATIVE_BUFFER = [0xf8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00].reverse();
+const INF_POSITIVE_BUFFER = [0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00].reverse();
 
-let EXPONENT_REGEX = /^([\-\+])?(\d+)?$/;
+const EXPONENT_REGEX = /^([\-\+])?(\d+)?$/;
 
 
 // Detect if the value is a digit
-let isDigit = function (value) {
+const isDigit = function (value) {
     return !isNaN(parseInt(value, 10));
 };
 
 // Divide two uint128 values
-let divideu128 = function (value) {
-    let DIVISOR = Long.fromNumber(1000 * 1000 * 1000);
+const divideu128 = function (value) {
+    const DIVISOR = Long.fromNumber(1000 * 1000 * 1000);
     let _rem = Long.fromNumber(0);
     var i = 0;
 
@@ -47,19 +50,19 @@ let divideu128 = function (value) {
 };
 
 // Multiply two Long values and return the 128 bit value
-let multiply64x2 = function (left, right) {
+const multiply64x2 = function (left, right) {
     if (!left && !right) {
         return { high: Long.fromNumber(0), low: Long.fromNumber(0) };
     }
 
-    let leftHigh = left.shiftRightUnsigned(32);
-    let leftLow = new Long(left.getLowBits(), 0);
-    let rightHigh = right.shiftRightUnsigned(32);
-    let rightLow = new Long(right.getLowBits(), 0);
+    const leftHigh = left.shiftRightUnsigned(32);
+    const leftLow = new Long(left.getLowBits(), 0);
+    const rightHigh = right.shiftRightUnsigned(32);
+    const rightLow = new Long(right.getLowBits(), 0);
 
     let productHigh = leftHigh.multiply(rightHigh);
     let productMid = leftHigh.multiply(rightLow);
-    let productMid2 = leftLow.multiply(rightHigh);
+    const productMid2 = leftLow.multiply(rightHigh);
     let productLow = leftLow.multiply(rightLow);
 
     productHigh = productHigh.add(productMid.shiftRightUnsigned(32));
@@ -74,25 +77,27 @@ let multiply64x2 = function (left, right) {
     return { high: productHigh, low: productLow };
 };
 
-let lessThan = function (left, right) {
+const lessThan = function (left, right) {
     // Make values unsigned
-    let uhleft = left.high_ >>> 0;
-    let uhright = right.high_ >>> 0;
+    const uhleft = left.high_ >>> 0;
+    const uhright = right.high_ >>> 0;
 
     // Compare high bits first
     if (uhleft < uhright) {
         return true;
     } else if (uhleft == uhright) {
-        let ulleft = left.low_ >>> 0;
-        let ulright = right.low_ >>> 0;
-        if (ulleft < ulright) return true;
+        const ulleft = left.low_ >>> 0;
+        const ulright = right.low_ >>> 0;
+        if (ulleft < ulright) {
+            return true;
+        }
     }
 
     return false;
 };
 
-let longtoHex = function (value) {
-    let buffer = new Buffer(8);
+const longtoHex = function (value) {
+    const buffer = new Buffer(8);
     let index = 0;
     // Encode the low 64 bits of the decimal
     // Encode low bits
@@ -108,8 +113,8 @@ let longtoHex = function (value) {
     return buffer.reverse().toString("hex");
 };
 
-let int32toHex = function (value) {
-    let buffer = new Buffer(4);
+const int32toHex = function (value) {
+    const buffer = new Buffer(4);
     let index = 0;
     // Encode the low 64 bits of the decimal
     // Encode low bits
@@ -120,7 +125,7 @@ let int32toHex = function (value) {
     return buffer.reverse().toString("hex");
 };
 
-let Decimal128 = function (bytes) {
+const Decimal128 = function (bytes) {
     this._bsontype = "Decimal128";
     this.bytes = bytes;
 };
@@ -143,7 +148,7 @@ Decimal128.fromString = function (string) {
     let firstNonZero = 0;
 
     // Digits Array
-    let digits = [0];
+    const digits = [0];
     // The number of digits in digits
     let nDigitsStored = 0;
     // Insertion pointer for digits
@@ -171,20 +176,20 @@ Decimal128.fromString = function (string) {
     string = string.trim();
 
     // Results
-    let stringMatch = string.match(PARSE_STRING_REGEXP);
-    let infMatch = string.match(PARSE_INF_REGEXP);
-    let nanMatch = string.match(PARSE_NAN_REGEXP);
+    const stringMatch = string.match(PARSE_STRING_REGEXP);
+    const infMatch = string.match(PARSE_INF_REGEXP);
+    const nanMatch = string.match(PARSE_NAN_REGEXP);
 
     // Validate the string
     if (!stringMatch
         && !infMatch
         && !nanMatch || string.length == 0) {
-        throw new Error("" + string + " not a valid Decimal128 string");
+        throw new Error(`${String(string)} not a valid Decimal128 string`);
     }
 
     // Check if we have an illegal exponent format
     if (stringMatch && stringMatch[4] && stringMatch[2] === undefined) {
-        throw new Error("" + string + " not a valid Decimal128 string");
+        throw new Error(`${String(string)} not a valid Decimal128 string`);
     }
 
     // Get the negative or positive sign
@@ -240,13 +245,13 @@ Decimal128.fromString = function (string) {
     }
 
     if (sawRadix && !nDigitsRead) {
-        throw new Error("" + string + " not a valid Decimal128 string");
+        throw new Error(`${String(string)} not a valid Decimal128 string`);
     }
 
     // Read exponent if exists
     if (string[index] == "e" || string[index] == "E") {
         // Read exponent digits
-        let match = string.substr(++index).match(EXPONENT_REGEX);
+        const match = string.substr(++index).match(EXPONENT_REGEX);
 
         // No digits read
         if (!match || !match[2]) {
@@ -361,7 +366,7 @@ Decimal128.fromString = function (string) {
             endOfString = endOfString + 1;
         }
 
-        let roundDigit = parseInt(string[firstNonZero + lastDigit + 1], 10);
+        const roundDigit = parseInt(string[firstNonZero + lastDigit + 1], 10);
         let roundBit = 0;
 
         if (roundDigit >= 5) {
@@ -438,7 +443,7 @@ Decimal128.fromString = function (string) {
         }
     }
 
-    let significand = multiply64x2(significandHigh, Long.fromString("100000000000000000"));
+    const significand = multiply64x2(significandHigh, Long.fromString("100000000000000000"));
 
     significand.low = significand.low.add(significandLow);
 
@@ -448,7 +453,7 @@ Decimal128.fromString = function (string) {
 
     // Biased exponent
     var biasedExponent = (exponent + EXPONENT_BIAS);
-    let dec = { low: Long.fromNumber(0), high: Long.fromNumber(0) };
+    const dec = { low: Long.fromNumber(0), high: Long.fromNumber(0) };
 
     // Encode combination, exponent, and significand.
     if (significand.high.shiftRightUnsigned(49).and(Long.fromNumber(1)).equals(Long.fromNumber)) {
@@ -469,7 +474,7 @@ Decimal128.fromString = function (string) {
     }
 
     // Encode into a buffer
-    let buffer = new Buffer(16);
+    const buffer = new Buffer(16);
     var index = 0;
 
     // Encode the low 64 bits of the decimal
@@ -501,15 +506,15 @@ Decimal128.fromString = function (string) {
 };
 
 // Extract least significant 5 bits
-let COMBINATION_MASK = 0x1f;
+const COMBINATION_MASK = 0x1f;
 // Extract least significant 14 bits
-let EXPONENT_MASK = 0x3fff;
+const EXPONENT_MASK = 0x3fff;
 // Value of combination field for Inf
-let COMBINATION_INFINITY = 30;
+const COMBINATION_INFINITY = 30;
 // Value of combination field for NaN
-let COMBINATION_NAN = 31;
+const COMBINATION_NAN = 31;
 // Value of combination field for NaN
-let COMBINATION_SNAN = 32;
+const COMBINATION_SNAN = 32;
 // decimal128 exponent bias
 var EXPONENT_BIAS = 6176;
 
@@ -532,8 +537,10 @@ Decimal128.prototype.toString = function () {
     // the number of significand digits
     let significand_digits = 0;
     // the base-10 digits in the significand
-    let significand = new Array(36);
-    for (var i = 0; i < significand.length; i++) significand[i] = 0;
+    const significand = new Array(36);
+    for (var i = 0; i < significand.length; i++) {
+        significand[i] = 0;
+    }
     // read pointer into significand
     var index = 0;
 
@@ -554,13 +561,13 @@ Decimal128.prototype.toString = function () {
     var j, k;
 
     // Output string
-    let string = [];
+    const string = [];
 
     // Unpack index
     var index = 0;
 
     // Buffer reference
-    let buffer = this.bytes;
+    const buffer = this.bytes;
 
     // Unpack the low 64bits into a long
     low = buffer[index++] | buffer[index++] << 8 | buffer[index++] << 16 | buffer[index++] << 24;
@@ -574,7 +581,7 @@ Decimal128.prototype.toString = function () {
     var index = 0;
 
     // Create the state of the decimal
-    let dec = {
+    const dec = {
         low: new Long(low, midl),
         high: new Long(midh, high)
     };
@@ -589,7 +596,7 @@ Decimal128.prototype.toString = function () {
     if ((combination >> 3) == 3) {
         // Check for 'special' values
         if (combination == COMBINATION_INFINITY) {
-            return string.join("") + "Infinity";
+            return `${string.join("")}Infinity`;
         } else if (combination == COMBINATION_NAN) {
             return "NaN";
         } else {
@@ -620,13 +627,15 @@ Decimal128.prototype.toString = function () {
         for (var k = 3; k >= 0; k--) {
             let least_digits = 0;
             // Peform the divide
-            let result = divideu128(significand128);
+            const result = divideu128(significand128);
             significand128 = result.quotient;
             least_digits = result.rem.low_;
 
             // We now have the 9 least significant digits (in base 2).
             // Convert and output to string.
-            if (!least_digits) continue;
+            if (!least_digits) {
+                continue;
+            }
 
             for (var j = 8; j >= 0; j--) {
                 // significand[k * 9 + j] = Math.round(least_digits % 10);
@@ -682,7 +691,7 @@ Decimal128.prototype.toString = function () {
         // Exponent
         string.push("E");
         if (scientific_exponent > 0) {
-            string.push("+" + scientific_exponent);
+            string.push(`+${scientific_exponent}`);
         } else {
             string.push(scientific_exponent);
         }
@@ -720,7 +729,7 @@ Decimal128.prototype.toString = function () {
 };
 
 Decimal128.prototype.toJSON = function () {
-    return { "$numberDecimal": this.toString() };
+    return { $numberDecimal: this.toString() };
 };
 
 module.exports = Decimal128;

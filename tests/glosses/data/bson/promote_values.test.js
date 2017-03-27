@@ -2,14 +2,13 @@
 
 import { BinaryParser } from "./binary_parser";
 
-const { BSON } = adone.data.bson;
-const Int32 = BSON.Int32;
-const Double = BSON.Double;
+const { bson } = adone.data;
+const { BSON } = bson;
+const Int32 = bson.Int32;
+const Double = bson.Double;
 
 function createBSON() {
-    return new BSON([BSON.Binary, BSON.Code, BSON.DBRef, BSON.Decimal128,
-    BSON.Double, BSON.Int32, BSON.Long, BSON.Map, BSON.MaxKey, BSON.MinKey,
-    BSON.ObjectId, BSON.BSONRegExp, BSON.Symbol, BSON.Timestamp]);
+    return new BSON();
 }
 
 // for tests

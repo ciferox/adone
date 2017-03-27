@@ -6,16 +6,18 @@
  * that would mean an asyc call to gethostname, so we don't bother.
  * @ignore
  */
-let MACHINE_ID = parseInt(Math.random() * 0xFFFFFF, 10);
+const MACHINE_ID = parseInt(Math.random() * 0xFFFFFF, 10);
 
 // Regular expression that checks for hex value
-let checkForHexRegExp = new RegExp("^[0-9a-fA-F]{24}$");
+const checkForHexRegExp = new RegExp("^[0-9a-fA-F]{24}$");
 let hasBufferType = false;
 
 // Check if buffer exist
 try {
-   if(Buffer && Buffer.from) hasBufferType = true;
- } catch(err) {};
+    if (Buffer && Buffer.from) {
+        hasBufferType = true;
+    }
+} catch (err) { }
 
 /**
 * Create a new ObjectID instance
@@ -25,32 +27,38 @@ try {
 * @property {number} generationTime The generation time of this ObjectId instance
 * @return {ObjectID} instance of ObjectID.
 */
-let ObjectID = function ObjectID(id) {
+const ObjectID = function ObjectID(id) {
     // Duck-typing to support ObjectId from different npm packages
-    if (id instanceof ObjectID) return id;
-    if (!(this instanceof ObjectID)) return new ObjectID(id);
+    if (id instanceof ObjectID) {
+        return id;
+    }
+    if (!(this instanceof ObjectID)) {
+        return new ObjectID(id);
+    }
 
     this._bsontype = "ObjectID";
 
     // The most common usecase (blank id, new objectId instance)
-    if(id == null || typeof id == 'number') {
-      // Generate a new id
-      this.id = this.generate(id);
-      // If we are caching the hex string
-      if(ObjectID.cacheHexString) this.__id = this.toString('hex');
-      // Return the object
-      return;
+    if (id == null || typeof id === "number") {
+        // Generate a new id
+        this.id = this.generate(id);
+        // If we are caching the hex string
+        if (ObjectID.cacheHexString) {
+            this.__id = this.toString("hex");
+        }
+        // Return the object
+        return;
     }
-  
+
     // Check if the passed in id is valid
-    let valid = ObjectID.isValid(id);
+    const valid = ObjectID.isValid(id);
 
     // Throw an error if it's not a valid setup
     if (!valid && id != null) {
         throw new Error("Argument passed in must be a single String of 12 bytes or a string of 24 hex characters");
-    } else if(valid && typeof id == 'string' && id.length == 24 && hasBufferType) {
-        return new ObjectID(Buffer.from(id, 'hex'));
-    } else if (valid && typeof id == "string" && id.length == 24) {
+    } else if (valid && typeof id === "string" && id.length == 24 && hasBufferType) {
+        return new ObjectID(Buffer.from(id, "hex"));
+    } else if (valid && typeof id === "string" && id.length == 24) {
         return ObjectID.createFromHexString(id);
     } else if (id != null && id.length === 12) {
         // assume 12 byte string
@@ -62,14 +70,16 @@ let ObjectID = function ObjectID(id) {
         throw new Error("Argument passed in must be a single String of 12 bytes or a string of 24 hex characters");
     }
 
-    if(ObjectID.cacheHexString) this.__id = this.toString('hex');
+    if (ObjectID.cacheHexString) {
+        this.__id = this.toString("hex");
+    }
 };
 
 // Allow usage of ObjectId as well as ObjectID
-let ObjectId = ObjectID;
+const ObjectId = ObjectID;
 
 // Precomputed hex table enables speedy hex string conversion
-let hexTable = [];
+const hexTable = [];
 for (var i = 0; i < 256; i++) {
     hexTable[i] = (i <= 15 ? "0" : "") + i.toString(16);
 }
@@ -81,16 +91,20 @@ for (var i = 0; i < 256; i++) {
 * @return {string} return the 24 byte hex string representation.
 */
 ObjectID.prototype.toHexString = function () {
-    if (ObjectID.cacheHexString && this.__id) return this.__id;
+    if (ObjectID.cacheHexString && this.__id) {
+        return this.__id;
+    }
 
     let hexString = "";
     if (!this.id || !this.id.length) {
-        throw new Error("invalid ObjectId, ObjectId.id must be either a string or a Buffer, but is [" + JSON.stringify(this.id) + "]");
+        throw new Error(`invalid ObjectId, ObjectId.id must be either a string or a Buffer, but is [${JSON.stringify(this.id)}]`);
     }
 
     if (this.id instanceof _Buffer) {
         hexString = convertToHex(this.id);
-        if (ObjectID.cacheHexString) this.__id = hexString;
+        if (ObjectID.cacheHexString) {
+            this.__id = hexString;
+        }
         return hexString;
     }
 
@@ -98,7 +112,9 @@ ObjectID.prototype.toHexString = function () {
         hexString += hexTable[this.id.charCodeAt(i)];
     }
 
-    if (ObjectID.cacheHexString) this.__id = hexString;
+    if (ObjectID.cacheHexString) {
+        this.__id = hexString;
+    }
     return hexString;
 };
 
@@ -132,15 +148,15 @@ ObjectID.prototype.getInc = function () {
 * @return {Buffer} return the 12 byte id buffer string.
 */
 ObjectID.prototype.generate = function (time) {
-    if ("number" != typeof time) {
+    if (typeof time !== "number") {
         time = ~~(Date.now() / 1000);
     }
 
     // Use pid
-    let pid = (typeof process === "undefined" ? Math.floor(Math.random() * 100000) : process.pid) % 0xFFFF;
-    let inc = this.get_inc();
+    const pid = (typeof process === "undefined" ? Math.floor(Math.random() * 100000) : process.pid) % 0xFFFF;
+    const inc = this.get_inc();
     // Buffer used
-    let buffer = new Buffer(12);
+    const buffer = new Buffer(12);
     // Encode time
     buffer[3] = time & 0xff;
     buffer[2] = (time >> 8) & 0xff;
@@ -168,12 +184,12 @@ ObjectID.prototype.generate = function (time) {
 * @return {String} return the 24 byte hex string representation.
 * @ignore
 */
-ObjectID.prototype.toString = function(format) {
+ObjectID.prototype.toString = function (format) {
     // Is the id a buffer then use the buffer toString method to return the format
     if (this.id && this.id.copy) {
-        return this.id.toString(typeof format === 'string' ? format : 'hex');
+        return this.id.toString(typeof format === "string" ? format : "hex");
     }
-  
+
     // if(this.buffer )
     return this.toHexString();
 };
@@ -208,11 +224,11 @@ ObjectID.prototype.equals = function equals(otherId) {
 
     if (otherId instanceof ObjectID) {
         return this.toString() == otherId.toString();
-    } else if (typeof otherId == "string" && ObjectID.isValid(otherId) && otherId.length == 12 && this.id instanceof _Buffer) {
+    } else if (typeof otherId === "string" && ObjectID.isValid(otherId) && otherId.length == 12 && this.id instanceof _Buffer) {
         return otherId === this.id.toString("binary");
-    } else if (typeof otherId == "string" && ObjectID.isValid(otherId) && otherId.length == 24) {
+    } else if (typeof otherId === "string" && ObjectID.isValid(otherId) && otherId.length == 24) {
         return otherId.toLowerCase() === this.toHexString();
-    } else if (typeof otherId == "string" && ObjectID.isValid(otherId) && otherId.length == 12) {
+    } else if (typeof otherId === "string" && ObjectID.isValid(otherId) && otherId.length == 12) {
         return otherId === this.id;
     } else if (otherId != null && (otherId instanceof ObjectID || otherId.toHexString)) {
         return otherId.toHexString() === this.toHexString();
@@ -228,8 +244,8 @@ ObjectID.prototype.equals = function equals(otherId) {
 * @return {date} the generation date
 */
 ObjectID.prototype.getTimestamp = function () {
-    let timestamp = new Date();
-    let time = this.id[3] | this.id[2] << 8 | this.id[1] << 16 | this.id[0] << 24;
+    const timestamp = new Date();
+    const time = this.id[3] | this.id[2] << 8 | this.id[1] << 16 | this.id[0] << 24;
     timestamp.setTime(Math.floor(time) * 1000);
     return timestamp;
 };
@@ -254,7 +270,7 @@ ObjectID.createPk = function createPk() {
 * @return {ObjectID} return the created ObjectID
 */
 ObjectID.createFromTime = function createFromTime(time) {
-    let buffer = new Buffer([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    const buffer = new Buffer([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
     // Encode time into first 4 bytes
     buffer[3] = time & 0xff;
     buffer[2] = (time >> 8) & 0xff;
@@ -265,14 +281,18 @@ ObjectID.createFromTime = function createFromTime(time) {
 };
 
 // Lookup tables
-let encodeLookup = "0123456789abcdef".split("");
-let decodeLookup = [];
+const encodeLookup = "0123456789abcdef".split("");
+const decodeLookup = [];
 var i = 0;
-while (i < 10) decodeLookup[0x30 + i] = i++;
-while (i < 16) decodeLookup[0x41 - 10 + i] = decodeLookup[0x61 - 10 + i] = i++;
+while (i < 10) {
+    decodeLookup[0x30 + i] = i++;
+}
+while (i < 16) {
+    decodeLookup[0x41 - 10 + i] = decodeLookup[0x61 - 10 + i] = i++;
+}
 
-let _Buffer = Buffer;
-let convertToHex = function (bytes) {
+const _Buffer = Buffer;
+const convertToHex = function (bytes) {
     return bytes.toString("hex");
 };
 
@@ -290,7 +310,9 @@ ObjectID.createFromHexString = function createFromHexString(string) {
     }
 
     // Use Buffer.from method if available
-    if (hasBufferType) return new ObjectID(Buffer.from(string, 'hex'));
+    if (hasBufferType) {
+        return new ObjectID(Buffer.from(string, "hex"));
+    }
 
     // Calculate lengths
     const array = new _Buffer(12);
@@ -311,13 +333,15 @@ ObjectID.createFromHexString = function createFromHexString(string) {
 * @return {boolean} return true if the value is a valid bson ObjectId, return false otherwise.
 */
 ObjectID.isValid = function isValid(id) {
-    if (id == null) return false;
+    if (id == null) {
+        return false;
+    }
 
-    if (typeof id == "number") {
+    if (typeof id === "number") {
         return true;
     }
 
-    if (typeof id == "string") {
+    if (typeof id === "string") {
         return id.length == 12 || (id.length == 24 && checkForHexRegExp.test(id));
     }
 
@@ -342,10 +366,10 @@ ObjectID.isValid = function isValid(id) {
 */
 Object.defineProperty(ObjectID.prototype, "generationTime", {
     enumerable: true
-    , get: function () {
+    , get() {
         return this.id[3] | this.id[2] << 8 | this.id[1] << 16 | this.id[0] << 24;
     }
-    , set: function (value) {
+    , set(value) {
         // Encode time into first 4 bytes
         this.id[3] = value & 0xff;
         this.id[2] = (value >> 8) & 0xff;

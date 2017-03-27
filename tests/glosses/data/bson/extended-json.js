@@ -1,4 +1,4 @@
-let bson = adone.data.bson.BSON;
+let bson = adone.data.bson;
 let Binary = bson.Binary
     , Long = bson.Long
     , MaxKey = bson.MaxKey
@@ -29,7 +29,7 @@ let serialize = function (document) {
             } else if (document[name] && typeof document[name] == "object") {
                 if (document[name] instanceof Binary || document[name]._bsontype == "Binary") {
                     doc[name] = {
-                        "$binary": document[name].buffer.toString("base64"), "$type": new Buffer([document[name].sub_type]).toString("hex")
+                        "$binary": document[name].buffer.toString("base64"), "$type": new Buffer([document[name].subType]).toString("hex")
                     };
                 } else if (document[name] instanceof Code || document[name]._bsontype == "Code") {
                     doc[name] = { "$code": document[name].code };

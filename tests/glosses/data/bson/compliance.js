@@ -1,25 +1,23 @@
-const { BSON } = adone.data.bson;
-const Code = BSON.Code;
-const Binary = BSON.Binary;
-const Timestamp = BSON.Timestamp;
-const Long = BSON.Long;
-const MongoReply = BSON.MongoReply;
-const ObjectID = BSON.ObjectID;
-const ObjectId = BSON.ObjectID;
-const Symbol = BSON.Symbol;
-const DBRef = BSON.DBRef;
-const Int32 = BSON.Int32;
-const BSONRegExp = BSON.BSONRegExp;
-const Decimal128 = BSON.Decimal128;
-const Double = BSON.Double;
-const MinKey = BSON.MinKey;
-const MaxKey = BSON.MaxKey;
+const { bson } = adone.data;
+const { BSON } = bson;
+const Code = bson.Code;
+const Binary = bson.Binary;
+const Timestamp = bson.Timestamp;
+const Long = bson.Long;
+const MongoReply = bson.MongoReply;
+const ObjectId = bson.ObjectId;
+const Symbol = bson.Symbol;
+const DBRef = bson.DBRef;
+const Int32 = bson.Int32;
+const BSONRegExp = bson.BSONRegExp;
+const Decimal128 = bson.Decimal128;
+const Double = bson.Double;
+const MinKey = bson.MinKey;
+const MaxKey = bson.MaxKey;
 const { fs } = adone.std;
 
 function createBSON() {
-    return new BSON([BSON.Binary, BSON.Code, BSON.DBRef, BSON.Decimal128,
-    BSON.Double, BSON.Int32, BSON.Long, BSON.Map, BSON.MaxKey, BSON.MinKey,
-    BSON.ObjectId, BSON.BSONRegExp, BSON.Symbol, BSON.Timestamp]);
+    return new BSON();
 }
 
 describe("bson", () => {
@@ -75,7 +73,7 @@ describe("bson", () => {
                     } else if (doc[name]["$regexp"]) {
                         object[name] = new RegExp(doc[name]["$regexp"], doc[name]["$options"] || "");
                     } else if (doc[name]["$oid"]) {
-                        object[name] = new ObjectID(doc[name]["$oid"]);
+                        object[name] = new ObjectId(doc[name]["$oid"]);
                     } else if (doc[name]["$binary"]) {
                         object[name] = new Binary(doc[name]["$binary"], doc[name]["$type"] || 1);
                     } else if (doc[name]["$timestamp"]) {

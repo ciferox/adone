@@ -1,12 +1,11 @@
 /* global describe it */
 
-const { BSON } = adone.data.bson;
-const ObjectID = BSON.ObjectID;
+const { bson } = adone.data;
+const { BSON } = bson;
+const ObjectId = bson.ObjectId;
 
 function createBSON() {
-    return new BSON([BSON.Binary, BSON.Code, BSON.DBRef, BSON.Decimal128,
-    BSON.Double, BSON.Int32, BSON.Long, BSON.Map, BSON.MaxKey, BSON.MinKey,
-    BSON.ObjectId, BSON.BSONRegExp, BSON.Symbol, BSON.Timestamp]);
+    return new BSON();
 }
 
 describe("bson", () => {
@@ -14,7 +13,7 @@ describe("bson", () => {
         it("Should correctly handle toBson function for an object", function () {
             // Test object
             const doc = {
-                hello: new ObjectID(),
+                hello: new ObjectId(),
                 a: 1
             };
 
@@ -40,7 +39,7 @@ describe("bson", () => {
         it("Should correctly handle embedded toBson function for an object", function () {
             // Test object
             const doc = {
-                hello: new ObjectID(),
+                hello: new ObjectId(),
                 a: 1,
                 b: {
                     d: 1
@@ -68,7 +67,7 @@ describe("bson", () => {
         it("Should correctly serialize when embedded non object returned by toBSON", function () {
             // Test object
             const doc = {
-                hello: new ObjectID(),
+                hello: new ObjectId(),
                 a: 1,
                 b: {
                     d: 1
@@ -97,7 +96,7 @@ describe("bson", () => {
         it("Should fail when top level object returns a non object type", function () {
             // Test object
             const doc = {
-                hello: new ObjectID(),
+                hello: new ObjectId(),
                 a: 1,
                 b: {
                     d: 1

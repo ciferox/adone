@@ -2,15 +2,13 @@
 
 const assert = adone.std.assert;
 const { BSON } = adone.data.bson;
-const Decimal128 = BSON.Decimal128;
-const Long = BSON.Long;
+const Decimal128 = adone.data.bson.Decimal128;
+const Long = adone.data.bson.Long;
 import { deserialize, serialize } from "./extended-json";
 const { fs } = adone.std;
 
 function createBSON() {
-    return new BSON([BSON.Binary, BSON.Code, BSON.DBRef, BSON.Decimal128,
-    BSON.Double, BSON.Int32, BSON.Long, BSON.Map, BSON.MaxKey, BSON.MinKey,
-    BSON.ObjectId, BSON.BSONRegExp, BSON.Symbol, BSON.Timestamp]);
+    return new BSON();
 }
 
 var bson = createBSON();

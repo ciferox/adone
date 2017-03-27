@@ -41,7 +41,9 @@
  * @return {Long}
  */
 function Long(low, high) {
-    if (!(this instanceof Long)) return new Long(low, high);
+    if (!(this instanceof Long)) {
+        return new Long(low, high);
+    }
 
     this._bsontype = "Long";
     /**
@@ -96,9 +98,9 @@ Long.prototype.toJSON = function () {
  * @return {string} the textual representation of this value.
  */
 Long.prototype.toString = function (opt_radix) {
-    let radix = opt_radix || 10;
-    if (radix < 2 || 36 < radix) {
-        throw Error("radix out of range: " + radix);
+    const radix = opt_radix || 10;
+    if (radix < 2 || radix > 36) {
+        throw Error(`radix out of range: ${radix}`);
     }
 
     if (this.isZero()) {
@@ -109,24 +111,24 @@ Long.prototype.toString = function (opt_radix) {
         if (this.equals(Long.MIN_VALUE)) {
             // We need to change the Long value before it can be negated, so we remove
             // the bottom-most digit in this base and then recurse to do the rest.
-            let radixLong = Long.fromNumber(radix);
-            let div = this.div(radixLong);
+            const radixLong = Long.fromNumber(radix);
+            const div = this.div(radixLong);
             var rem = div.multiply(radixLong).subtract(this);
             return div.toString(radix) + rem.toInt().toString(radix);
         } else {
-            return "-" + this.negate().toString(radix);
+            return `-${this.negate().toString(radix)}`;
         }
     }
 
     // Do several (6) digits each time through the loop, so as to
     // minimize the calls to the very expensive emulated div.
-    let radixToPower = Long.fromNumber(Math.pow(radix, 6));
+    const radixToPower = Long.fromNumber(Math.pow(radix, 6));
 
     var rem = this;
     let result = "";
     while (true) {
-        let remDiv = rem.div(radixToPower);
-        let intval = rem.subtract(remDiv.multiply(radixToPower)).toInt();
+        const remDiv = rem.div(radixToPower);
+        const intval = rem.subtract(remDiv.multiply(radixToPower)).toInt();
         let digits = intval.toString(radix);
 
         rem = remDiv;
@@ -134,9 +136,9 @@ Long.prototype.toString = function (opt_radix) {
             return digits + result;
         } else {
             while (digits.length < 6) {
-                digits = "0" + digits;
+                digits = `0${digits}`;
             }
-            result = "" + digits + result;
+            result = String(digits) + result;
         }
     }
 };
@@ -186,7 +188,7 @@ Long.prototype.getNumBitsAbs = function () {
             return this.negate().getNumBitsAbs();
         }
     } else {
-        let val = this.high_ != 0 ? this.high_ : this.low_;
+        const val = this.high_ != 0 ? this.high_ : this.low_;
         for (var bit = 31; bit > 0; bit--) {
             if ((val & (1 << bit)) != 0) {
                 break;
@@ -304,8 +306,8 @@ Long.prototype.compare = function (other) {
         return 0;
     }
 
-    let thisNeg = this.isNegative();
-    let otherNeg = other.isNegative();
+    const thisNeg = this.isNegative();
+    const otherNeg = other.isNegative();
     if (thisNeg && !otherNeg) {
         return -1;
     }
@@ -345,15 +347,15 @@ Long.prototype.negate = function () {
 Long.prototype.add = function (other) {
     // Divide each number into 4 chunks of 16 bits, and then sum the chunks.
 
-    let a48 = this.high_ >>> 16;
-    let a32 = this.high_ & 0xFFFF;
-    let a16 = this.low_ >>> 16;
-    let a00 = this.low_ & 0xFFFF;
+    const a48 = this.high_ >>> 16;
+    const a32 = this.high_ & 0xFFFF;
+    const a16 = this.low_ >>> 16;
+    const a00 = this.low_ & 0xFFFF;
 
-    let b48 = other.high_ >>> 16;
-    let b32 = other.high_ & 0xFFFF;
-    let b16 = other.low_ >>> 16;
-    let b00 = other.low_ & 0xFFFF;
+    const b48 = other.high_ >>> 16;
+    const b32 = other.high_ & 0xFFFF;
+    const b16 = other.low_ >>> 16;
+    const b00 = other.low_ & 0xFFFF;
 
     let c48 = 0, c32 = 0, c16 = 0, c00 = 0;
     c00 += a00 + b00;
@@ -420,15 +422,15 @@ Long.prototype.multiply = function (other) {
     // Divide each Long into 4 chunks of 16 bits, and then add up 4x4 products.
     // We can skip products that would overflow.
 
-    let a48 = this.high_ >>> 16;
-    let a32 = this.high_ & 0xFFFF;
-    let a16 = this.low_ >>> 16;
-    let a00 = this.low_ & 0xFFFF;
+    const a48 = this.high_ >>> 16;
+    const a32 = this.high_ & 0xFFFF;
+    const a16 = this.low_ >>> 16;
+    const a00 = this.low_ & 0xFFFF;
 
-    let b48 = other.high_ >>> 16;
-    let b32 = other.high_ & 0xFFFF;
-    let b16 = other.low_ >>> 16;
-    let b00 = other.low_ & 0xFFFF;
+    const b48 = other.high_ >>> 16;
+    const b32 = other.high_ & 0xFFFF;
+    const b16 = other.low_ >>> 16;
+    const b00 = other.low_ & 0xFFFF;
 
     let c48 = 0, c32 = 0, c16 = 0, c00 = 0;
     c00 += a00 * b00;
@@ -476,13 +478,13 @@ Long.prototype.div = function (other) {
             return Long.ONE;
         } else {
             // At this point, we have |other| >= 2, so |this/other| < |MIN_VALUE|.
-            let halfThis = this.shiftRight(1);
+            const halfThis = this.shiftRight(1);
             var approx = halfThis.div(other).shiftLeft(1);
             if (approx.equals(Long.ZERO)) {
                 return other.isNegative() ? Long.ONE : Long.NEG_ONE;
             } else {
                 var rem = this.subtract(other.multiply(approx));
-                let result = approx.add(rem.div(other));
+                const result = approx.add(rem.div(other));
                 return result;
             }
         }
@@ -514,8 +516,8 @@ Long.prototype.div = function (other) {
 
         // We will tweak the approximate result by changing it in the 48-th digit or
         // the smallest non-fractional digit, whichever is larger.
-        let log2 = Math.ceil(Math.log(approx) / Math.LN2);
-        let delta = (log2 <= 48) ? 1 : Math.pow(2, log2 - 48);
+        const log2 = Math.ceil(Math.log(approx) / Math.LN2);
+        const delta = (log2 <= 48) ? 1 : Math.pow(2, log2 - 48);
 
         // Decrease the approximation until it is smaller than the remainder.  Note
         // that if it is too large, the product overflows and is negative.
@@ -605,9 +607,9 @@ Long.prototype.shiftLeft = function (numBits) {
     if (numBits == 0) {
         return this;
     } else {
-        let low = this.low_;
+        const low = this.low_;
         if (numBits < 32) {
-            let high = this.high_;
+            const high = this.high_;
             return Long.fromBits(
                 low << numBits,
                 (high << numBits) | (low >>> (32 - numBits)));
@@ -629,9 +631,9 @@ Long.prototype.shiftRight = function (numBits) {
     if (numBits == 0) {
         return this;
     } else {
-        let high = this.high_;
+        const high = this.high_;
         if (numBits < 32) {
-            let low = this.low_;
+            const low = this.low_;
             return Long.fromBits(
                 (low >>> numBits) | (high << (32 - numBits)),
                 high >> numBits);
@@ -655,9 +657,9 @@ Long.prototype.shiftRightUnsigned = function (numBits) {
     if (numBits == 0) {
         return this;
     } else {
-        let high = this.high_;
+        const high = this.high_;
         if (numBits < 32) {
-            let low = this.low_;
+            const low = this.low_;
             return Long.fromBits(
                 (low >>> numBits) | (high << (32 - numBits)),
                 high >>> numBits);
@@ -677,15 +679,15 @@ Long.prototype.shiftRightUnsigned = function (numBits) {
  * @return {Long} the corresponding Long value.
  */
 Long.fromInt = function (value) {
-    if (-128 <= value && value < 128) {
-        let cachedObj = Long.INT_CACHE_[value];
+    if (value >= -128 && value < 128) {
+        const cachedObj = Long.INT_CACHE_[value];
         if (cachedObj) {
             return cachedObj;
         }
     }
 
-    let obj = new Long(value | 0, value < 0 ? -1 : 0);
-    if (-128 <= value && value < 128) {
+    const obj = new Long(value | 0, value < 0 ? -1 : 0);
+    if (value >= -128 && value < 128) {
         Long.INT_CACHE_[value] = obj;
     }
     return obj;
@@ -739,27 +741,27 @@ Long.fromString = function (str, opt_radix) {
         throw Error("number format error: empty string");
     }
 
-    let radix = opt_radix || 10;
-    if (radix < 2 || 36 < radix) {
-        throw Error("radix out of range: " + radix);
+    const radix = opt_radix || 10;
+    if (radix < 2 || radix > 36) {
+        throw Error(`radix out of range: ${radix}`);
     }
 
     if (str.charAt(0) == "-") {
         return Long.fromString(str.substring(1), radix).negate();
     } else if (str.indexOf("-") >= 0) {
-        throw Error("number format error: interior \"-\" character: " + str);
+        throw Error(`number format error: interior "-" character: ${str}`);
     }
 
     // Do several (8) digits each time through the loop, so as to
     // minimize the calls to the very expensive emulated div.
-    let radixToPower = Long.fromNumber(Math.pow(radix, 8));
+    const radixToPower = Long.fromNumber(Math.pow(radix, 8));
 
     let result = Long.ZERO;
     for (let i = 0; i < str.length; i += 8) {
-        let size = Math.min(8, str.length - i);
-        let value = parseInt(str.substring(i, i + size), radix);
+        const size = Math.min(8, str.length - i);
+        const value = parseInt(str.substring(i, i + size), radix);
         if (size < 8) {
-            let power = Long.fromNumber(Math.pow(radix, size));
+            const power = Long.fromNumber(Math.pow(radix, size));
             result = result.multiply(power).add(Long.fromNumber(value));
         } else {
             result = result.multiply(radixToPower);

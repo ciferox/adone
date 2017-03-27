@@ -1,7 +1,7 @@
 /* global describe it */
 
 
-const ObjectId = adone.data.bson.BSON.ObjectId;
+const ObjectId = adone.data.bson.ObjectId;
 
 describe("bson", () => {
     describe("object id", () => {

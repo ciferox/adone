@@ -6,9 +6,7 @@ const INF_POSITIVE_BUFFER = new Buffer([0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 const { BSON } = adone.data.bson;
 
 function createBSON() {
-    return new BSON([BSON.Binary, BSON.Code, BSON.DBRef, BSON.Decimal128,
-    BSON.Double, BSON.Int32, BSON.Long, BSON.Map, BSON.MaxKey, BSON.MinKey,
-    BSON.ObjectId, BSON.BSONRegExp, BSON.Symbol, BSON.Timestamp]);
+    return new BSON();
 }
 
 const shouldFail = function () {
@@ -20,7 +18,7 @@ const shouldFail = function () {
 };
 
 describe("bson", () => {
-    const { data: { bson: { BSON: { Decimal128 } } } } = adone;
+    const { data: { bson: { Decimal128 } } } = adone;
 
     describe("decimal128", () => {
         it("fromString invalid input", function () {
