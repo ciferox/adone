@@ -1,11 +1,10 @@
 describe("glosses", "net", "http", "server", "middlewares", "logger", () => {
     const {
-        net: { http: { Server } },
+        net: { http: { server: { Server, middleware: { logger } } } },
         collection: { BufferList },
         util: { humanizeSize },
         fs, noop
     } = adone;
-    const { middleware: { logger } } = Server;
 
     const getLogger = () => {
         const buffer = new BufferList();

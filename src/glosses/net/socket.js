@@ -1,4 +1,3 @@
-
 const { is } = adone;
 
 export default class Socket extends adone.EventEmitter {

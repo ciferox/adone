@@ -1,7 +1,7 @@
 import * as helpers from "../helpers";
 
 describe("glosses", "net", "http", "server", "response", "attachment", () => {
-    const { net: { http: { Server } } } = adone;
+    const { net: { http: { server: { Server } } } } = adone;
     const { context } = helpers;
 
     describe("when given a filename", () => {

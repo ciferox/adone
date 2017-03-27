@@ -1,8 +1,7 @@
 describe("glosses", "net", "http", "server", "middlewares", "session", function session() {
     this.timeout(10000);
 
-    const { net: { http: { Server } }, promise, util } = adone;
-    const { middleware: { session } } = Server;
+    const { net: { http: { server: { Server, middleware: { session } } } }, promise, util } = adone;
     const { Store } = session;
 
     class CustomStore extends Store {

@@ -51,39 +51,8 @@ adone.lazify({
         mailer: "./mail/mailer"
     }, null, require),
     http: () => adone.lazify({
-        Application: "./http",
-        Middleware: "./http/middleware",
-        helper: "./http/helpers",
-        x: "./http/x",
-        Server: "./http/server",
+        server: "./http/server",
         client: "./http/client",
-        middleware: () => adone.lazify({
-            router: "./http/middlewares/router",
-            renderer: ["./http/middlewares/renderer", (mod) => adone.lazify({
-                Engine: ["./http/middlewares/renderer/engine", (mod) => {
-                    mod.default.compile = mod.compile;
-                    mod.default.render = mod.render;
-                    return mod.default;
-                }]
-            }, mod.default, require)],
-            cookies: "./http/middlewares/cookies",
-            body: ["./http/middlewares/body", (mod) => adone.lazify({
-                buffer: "./http/middlewares/body/buffer",
-                json: "./http/middlewares/body/json",
-                multipart: "./http/middlewares/body/multipart",
-                text: "./http/middlewares/body/text",
-                urlencoded: "./http/middlewares/body/urlencoded"
-            }, mod.default, require)],
-            session: ["./http/middlewares/session", (mod) => {
-                mod.default.Store = mod.Store;
-                return mod.default;
-            }],
-            static: "./http/middlewares/static",
-            favicon: "./http/middlewares/favicon",
-            logger: "./http/middlewares/logger",
-            useragent: "./http/middlewares/useragent",
-            geoip: "./http/middlewares/geoip",
-            rewrite: "./http/middlewares/rewrite"
-        })
+        x: "./http/x"
     }, null, require)
 }, exports, require);

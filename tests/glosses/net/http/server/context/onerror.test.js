@@ -1,7 +1,7 @@
 import * as helpers from "../helpers";
 
 describe("glosses", "net", "http", "server", "context", "onerror(err)", () => {
-    const { net: { http: { Server } } } = adone;
+    const { net: { http: { server: { Server } } } } = adone;
     const { context } = helpers;
 
     it("should respond", async () => {

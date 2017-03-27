@@ -1,4 +1,4 @@
-const { is, x, net: { http: { helper } } } = adone;
+const { is, x, net: { http: { server: { helper } } } } = adone;
 
 export default function basicAuth(verify, options = {}) {
     if (!is.function(verify)) {

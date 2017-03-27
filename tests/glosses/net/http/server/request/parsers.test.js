@@ -1,5 +1,5 @@
 describe("glosses", "net", "http", "server", "request", "parsers", () => {
-    const { net: { http: { Server } }, fs, noop } = adone;
+    const { net: { http: { server: { Server } } }, fs, noop } = adone;
 
     describe("json", () => {
         it("should parse a json body", async () => {

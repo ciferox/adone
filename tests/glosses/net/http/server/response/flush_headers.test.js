@@ -1,7 +1,7 @@
 import * as helpers from "../helpers";
 
 describe("glosses", "net", "http", "server", "response", "flush headers", () => {
-    const { net: { http: { Server } }, std: { stream: { PassThrough }, http } } = adone;
+    const { net: { http: { server: { Server } } }, std: { stream: { PassThrough }, http } } = adone;
     const { response } = helpers;
 
     describe("get", () => {

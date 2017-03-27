@@ -1,5 +1,5 @@
 const { is, util, x, lazify, std: { http: { METHODS } }, net: { http } } = adone;
-const { helper } = http;
+const { server: { helper } } = http;
 
 const lazy = lazify({
     Layer: "./layer"

@@ -1,6 +1,5 @@
 describe("glosses", "net", "http", "server", "middlewares", "router", "Router", () => {
-    const { std, net: { http: { Server } }, promise } = adone;
-    const { middleware: { router: { Router, Layer } } } = Server;
+    const { std, net: { http: { server: { Server, middleware: { router: { Router, Layer } } } } }, promise } = adone;
     const methods = std.http.METHODS.map((x) => x.toLowerCase());
 
     it("shares context between routers", async () => {

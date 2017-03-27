@@ -1,5 +1,5 @@
 describe("glosses", "net", "http", "server", "context", () => {
-    const { net: { http: { Server: { Context } } } } = adone;
+    const { net: { http: { server: { Context } } } } = adone;
 
     it("should throw an error", () => {
         const ctx = new Context({}, {}, {});

@@ -1,4 +1,3 @@
-
 const { x } = adone;
 
 export class TemplateError extends x.Exception {

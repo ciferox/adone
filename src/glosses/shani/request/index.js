@@ -165,7 +165,7 @@ class Request extends EventEmitter {
 
     async _process() {
         let server = this.server;
-        if (server instanceof net.http.Server) {
+        if (server instanceof net.http.server.Server) {
             server = std.http.createServer(server.callback());
         }
 

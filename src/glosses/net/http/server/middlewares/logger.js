@@ -1,6 +1,6 @@
 
 const {
-    net: { http: { helper: { status: { isEmptyBody } } } },
+    net: { http: { server: { helper: { status: { isEmptyBody } } } } },
     util: { humanizeSize, humanizeTime },
     is, application: { Logger }
 } = adone;

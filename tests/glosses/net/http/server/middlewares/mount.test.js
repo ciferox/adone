@@ -1,6 +1,5 @@
 describe("glosses", "net", "http", "server", "middlewares", "mount", () => {
-    const { net: { http: { Server } } } = adone;
-    const { middleware: { mount } } = Server;
+    const { net: { http: { server: { Server, middleware: { mount } } } } } = adone;
 
     it("should mount middleware", async () => {
         const server = new Server();

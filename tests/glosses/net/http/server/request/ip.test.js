@@ -1,7 +1,7 @@
 import * as helpers from "../helpers";
 
 describe("glosses", "net", "http", "server", "request", "ip", () => {
-    const { net: { http: { Server } }, std: { stream: { Duplex } } } = adone;
+    const { net: { http: { server: { Server } } }, std: { stream: { Duplex } } } = adone;
     const { request } = helpers;
 
     describe("with req.ips present", () => {

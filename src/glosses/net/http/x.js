@@ -1,5 +1,5 @@
 
-const { net: { http: { helper: { status } } }, is } = adone;
+const { net: { http: { server: { helper: { status } } } }, is } = adone;
 
 const x = {};
 

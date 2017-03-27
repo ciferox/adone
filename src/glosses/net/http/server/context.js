@@ -1,6 +1,5 @@
-
 const { is, net: { http }, x, util } = adone;
-const { helper: { assert, status, Cookies } } = http;
+const { server: { helper: { assert, status, Cookies } } } = http;
 
 export default class Context {
     constructor(server, request, response) {

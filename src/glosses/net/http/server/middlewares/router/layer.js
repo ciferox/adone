@@ -1,4 +1,4 @@
-const { is, x, util, net: { http: { helper: { pathToRegexp } } } } = adone;
+const { is, x, util, net: { http: { server: { helper: { pathToRegexp } } } } } = adone;
 
 const safeDecodeURIComponent = (text) => {
     try {

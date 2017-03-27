@@ -1,6 +1,5 @@
 describe("glosses", "net", "http", "server", "middlewares", "serve", () => {
-    const { net: { http: { Server } }, std: { path: { basename } } } = adone;
-    const { middleware: { serve } } = Server;
+    const { net: { http: { server: { Server, middleware: { serve } } } }, std: { path: { basename } } } = adone;
 
     let _cwd;
 

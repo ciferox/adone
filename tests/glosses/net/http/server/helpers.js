@@ -1,4 +1,4 @@
-const { net: { http: { Server } }, std: { stream: { Duplex, Stream } } } = adone;
+const { net: { http: { server: { Server } } }, std: { stream: { Duplex, Stream } } } = adone;
 
 export const context = (req, res, server) => {
     const socket = new Duplex();

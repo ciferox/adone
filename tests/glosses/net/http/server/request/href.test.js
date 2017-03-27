@@ -1,7 +1,7 @@
 import * as helpers from "../helpers";
 
 describe("glosses", "net", "http", "server", "request", "href", () => {
-    const { net: { http: { Server } }, std: { stream: { Duplex, Readable } } } = adone;
+    const { net: { http: { server: { Server } } }, std: { stream: { Duplex, Readable } } } = adone;
     const { context } = helpers;
 
     it("should return the full request url", () => {

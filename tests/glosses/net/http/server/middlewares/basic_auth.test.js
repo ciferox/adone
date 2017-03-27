@@ -1,6 +1,5 @@
 describe("glosses", "net", "http", "server", "middlewares", "basic auth", () => {
-    const { net: { http: { Server } } } = adone;
-    const { middleware: { basicAuth } } = Server;
+    const { net: { http: { server: { Server, middleware: { basicAuth } } } } } = adone;
 
     it("should throw if no verifier function and creds", () => {
         expect(basicAuth).to.throw("verify function or creds are required");

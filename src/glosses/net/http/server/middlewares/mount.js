@@ -1,4 +1,4 @@
-const { is, net: { http: { helper } } } = adone;
+const { is, net: { http: { server: { helper } } } } = adone;
 
 export default function mount(mountPath, middleware) {
     if (is.array(middleware)) {

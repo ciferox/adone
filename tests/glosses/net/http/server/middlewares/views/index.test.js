@@ -1,6 +1,5 @@
 describe("glosses", "net", "http", "server", "middlewares", "views", () => {
-    const { net: { http: { Server } }, templating: { nunjucks } } = adone;
-    const { middleware: { views } } = Server;
+    const { net: { http: { server: { Server, middleware: { views } } } }, templating: { nunjucks } } = adone;
 
     const oldCwd = process.cwd();
 

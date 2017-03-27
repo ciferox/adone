@@ -1,7 +1,7 @@
 import * as helpers from "../helpers";
 
 describe("glosses", "net", "http", "server", "response", "header", () => {
-    const { net: { http: { Server } } } = adone;
+    const { net: { http: { server: { Server } } } } = adone;
     const { response } = helpers;
 
     it("should return the response header object", () => {

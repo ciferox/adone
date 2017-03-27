@@ -1,4 +1,3 @@
-
 const { x } = adone;
 
 const whitespaceChars = " \n\t\r\u00A0";

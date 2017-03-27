@@ -1,5 +1,5 @@
 describe("glosses", "net", "http", "server", "context", "state", () => {
-    const { net: { http: { Server } } } = adone;
+    const { net: { http: { server: { Server } } } } = adone;
 
     it("should provide a ctx.state namespace", async () => {
         const server = new Server();

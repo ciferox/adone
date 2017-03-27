@@ -1,4 +1,3 @@
-
 const { is } = adone;
 
 const traverseAndCheck = (obj, type, results) => {

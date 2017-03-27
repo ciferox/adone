@@ -1,5 +1,5 @@
 describe("glosses", "net", "http", "server", "context", "cookies", () => {
-    const { net: { http: { Server } } } = adone;
+    const { net: { http: { server: { Server } } } } = adone;
 
     describe("ctx.cookies.set()", () => {
         it("should set an unsigned cookie", async () => {

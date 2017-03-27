@@ -1,7 +1,7 @@
 import * as helpers from "../helpers";
 
 describe("glosses", "net", "http", "server", "response", "status", () => {
-    const { net: { http: { Server, helper: { status } } } } = adone;
+    const { net: { http: { server: { Server, helper: { status } } } } } = adone;
 
     describe("when a status code", () => {
         describe("and valid", () => {

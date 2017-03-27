@@ -1,7 +1,7 @@
 import { TemplateError } from "./x";
 import * as runtime from "./runtime";
 
-const { is, util, net: { http: { helper } } } = adone;
+const { is, util, net: { http: { server: { helper } } } } = adone;
 
 const normalize = (value, defaultValue) => {
     if (is.nil(value) || value === false) {

@@ -1,13 +1,56 @@
+adone.lazify({
+    Context: "./context",
+    Request: "./request",
+    Response: "./response",
+    helper: "./helpers",
+    middleware: () => adone.lazify({
+        serve: "./middlewares/serve",
+        favicon: "./middlewares/favicon",
+        logger: "./middlewares/logger",
+        session: "./middlewares/session",
+        views: "./middlewares/views",
+        router: "./middlewares/router",
+        body: "./middlewares/body",
+        mount: "./middlewares/mount",
+        basicAuth: "./middlewares/basic_auth"
+    }, null, require)
 
-import Context from "./context";
-import Request from "./request";
-import Response from "./response";
+    // middleware: () => adone.lazify({
+    //     router: "./http/middlewares/router",
+    //     renderer: ["./http/middlewares/renderer", (mod) => adone.lazify({
+    //         Engine: ["./http/middlewares/renderer/engine", (mod) => {
+    //             mod.default.compile = mod.compile;
+    //             mod.default.render = mod.render;
+    //             return mod.default;
+    //         }]
+    //     }, mod.default, require)],
+    //     cookies: "./http/middlewares/cookies",
+    //     body: ["./http/middlewares/body", (mod) => adone.lazify({
+    //         buffer: "./http/middlewares/body/buffer",
+    //         json: "./http/middlewares/body/json",
+    //         multipart: "./http/middlewares/body/multipart",
+    //         text: "./http/middlewares/body/text",
+    //         urlencoded: "./http/middlewares/body/urlencoded"
+    //     }, mod.default, require)],
+    //     session: ["./http/middlewares/session", (mod) => {
+    //         mod.default.Store = mod.Store;
+    //         return mod.default;
+    //     }],
+    //     static: "./http/middlewares/static",
+    //     favicon: "./http/middlewares/favicon",
+    //     logger: "./http/middlewares/logger",
+    //     useragent: "./http/middlewares/useragent",
+    //     geoip: "./http/middlewares/geoip",
+    //     rewrite: "./http/middlewares/rewrite"
+    // })
+}, exports, require);
+
 const {
-    net: { http: { helper: { compose, onFinished, status: { isEmptyBody } } } },
+    net: { http: { server: { helper: { compose, onFinished, status: { isEmptyBody } } } } },
     is, x, std, EventEmitter
 } = adone;
 
-export default class Server extends EventEmitter {
+export class Server extends EventEmitter {
     constructor() {
         super();
 
@@ -48,11 +91,11 @@ export default class Server extends EventEmitter {
     }
 
     createContext(req, res) {
-        const request = new Request(this, req);
-        const response = new Response(this, res);
+        const request = new adone.net.http.server.Request(this, req);
+        const response = new adone.net.http.server.Response(this, res);
         request.response = response;
         response.request = request;
-        const context = new Context(this, request, response);
+        const context = new adone.net.http.server.Context(this, request, response);
         request.ctx = response.ctx = context;
         return context;
     }
@@ -131,19 +174,3 @@ export default class Server extends EventEmitter {
         res.end(body);
     }
 }
-
-Server.Context = Context;
-Server.Request = Request;
-Server.Response = Response;
-
-Server.middleware = adone.lazify({
-    serve: "./middlewares/serve",
-    favicon: "./middlewares/favicon",
-    logger: "./middlewares/logger",
-    session: "./middlewares/session",
-    views: "./middlewares/views",
-    router: "./middlewares/router",
-    body: "./middlewares/body",
-    mount: "./middlewares/mount",
-    basicAuth: "./middlewares/basic_auth"
-}, null, require);

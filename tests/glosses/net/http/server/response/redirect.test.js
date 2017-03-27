@@ -1,7 +1,7 @@
 import * as helpers from "../helpers";
 
 describe("glosses", "net", "http", "server", "response", "redirect", () => {
-    const { net: { http: { helper: { escapeHTML } } } } = adone;
+    const { net: { http: { server: { helper: { escapeHTML } } } } } = adone;
     const { context } = helpers;
 
     it("should redirect to the given url", () => {

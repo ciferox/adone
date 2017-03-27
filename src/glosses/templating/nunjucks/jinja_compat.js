@@ -1,4 +1,3 @@
-
 const { is, x, util } = adone;
 
 export default function installCompat() {

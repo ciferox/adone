@@ -2,7 +2,7 @@ import * as helpers from "../helpers";
 
 describe("glosses", "net", "http", "server", "request", "querystring", () => {
     const { context } = helpers;
-    const { net: { http: { helper: { parseURL } } } } = adone;
+    const { net: { http: { server: { helper: { parseURL } } } } } = adone;
 
     describe("get", () => {
         it("should return the querystring", () => {

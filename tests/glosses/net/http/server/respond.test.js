@@ -1,5 +1,5 @@
 describe("glosses", "net", "http", "server", "respond", () => {
-    const { fs, net: { http: { Server, helper: { status } } } } = adone;
+    const { fs, net: { http: { server: { Server, helper: { status } } } } } = adone;
 
     describe("when ctx.respond === false", () => {
         it("should function (ctx)", async () => {

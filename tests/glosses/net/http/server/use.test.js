@@ -1,5 +1,5 @@
-describe("glosses", "net", "http", "server", "use", () => {
-    const { net: { http: { Server } } } = adone;
+describe("glosses", "net", "http", "server", "Server.use", () => {
+    const { net: { http: { server: { Server } } } } = adone;
 
     it("should compose middleware", async () => {
         const server = new Server();

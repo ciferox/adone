@@ -1,5 +1,5 @@
 describe("glosses", "net", "http", "server", "response", "writable", () => {
-    const { net: { http: { Server } }, std: { net } } = adone;
+    const { net: { http: { server: { Server } } }, std: { net } } = adone;
 
     describe("when continuous requests in one persistent connection", () => {
         const requestTwice = (server, done) => {
