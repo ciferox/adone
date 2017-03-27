@@ -12,7 +12,8 @@ adone.lazify({
         router: "./middlewares/router",
         body: "./middlewares/body",
         mount: "./middlewares/mount",
-        basicAuth: "./middlewares/basic_auth"
+        basicAuth: "./middlewares/basic_auth",
+        rewrite: "./middlewares/rewrite"
     }, null, require)
 
     // middleware: () => adone.lazify({
