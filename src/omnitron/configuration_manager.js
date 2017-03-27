@@ -7,11 +7,11 @@ export default class ConfigurationManager {
         this.inMemory = inMemory;
     }
 
-    async loadBaseConfigs() {
+    async loadAll() {
         this.config = this.app.config;
 
         if (is.undefined(this.config.omnitron)) {
-            await this.app.loadStdConfig("omnitron");
+            await this.app.loadConfig("omnitron", { ext: "js", defaults: true });
             // Subconfiguration for services...
             this.config.omnitron.services = {};
 
@@ -30,7 +30,7 @@ export default class ConfigurationManager {
 
             // Merge with user-defined configuration.
             try {
-                await this.config.load(this.config.omnitron.servicesConfigFilePath, "omnitron.services");
+                await this.app.loadConfig("services", { path: "omnitron.services" });
             } catch (err) {
                 if (!(err instanceof adone.x.NotFound)) {
                     adone.error(err);
@@ -51,7 +51,7 @@ export default class ConfigurationManager {
             };
             // Load configuration of gates.
             try {
-                await this.config.load(this.config.omnitron.gatesConfigFilePath, "omnitron.gates");
+                await this.app.loadConfig("gates", { path: "omnitron.gates" });
             } catch (err) {
                 if (err instanceof adone.x.NotFound) {
                     this.config.omnitron.gates = [
@@ -71,20 +71,20 @@ export default class ConfigurationManager {
     }
 
     saveServicesConfig() {
-        return this.saveBaseConfig("services", this.config.omnitron.servicesConfigFilePath);
+        return this._saveConfig("services");
     }
 
     saveGatesConfig() {
-        return this.saveBaseConfig("gates", this.config.omnitron.gatesConfigFilePath);
+        return this._saveConfig("gates");
     }
 
-    async saveBaseConfig(name, path) {
+    async _saveConfig(name) {
         if (this.inMemory) {
             return;
         }
         try {
-            await this.config.save(path, `omnitron.${name}`, { space: 4 });
-            adone.info(`Configuration '${path}' saved`);
+            await this.app.saveConfig(name, { path: `omnitron.${name}` });
+            adone.info("Configuration '${name}' saved");
         } catch (err) {
             adone.error(err);
         }

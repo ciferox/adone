@@ -260,5 +260,5 @@ export default class AdoneCLI extends adone.application.Application {
 }
 
 if (require.main === module) {
-    new AdoneCLI().run();
+    adone.run(AdoneCLI);
 }

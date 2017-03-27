@@ -124,6 +124,7 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
     });
 
     lazify({
+        run: () => (App) => (new App()).run(),
         package: "../package.json",
         assertion: "./glosses/assertion",
         assert: () => adone.assertion.loadAssertInterface().assert,

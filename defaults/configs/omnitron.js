@@ -8,8 +8,6 @@ module.exports = {
     logFilePath: join(home, "omnitron.log"),
     errorLogFilePath: join(home, "omnitron-err.log"),
     pidFilePath: join(home, "omnitron.pid"),
-    servicesConfigFilePath: join(home, "configs", "services.json"),
-    gatesConfigFilePath: join(home, "configs", "gates.json"),
     servicesPath: join(home, "services"),
     getGate(opts) {
         if (opts.id !== undefined) {

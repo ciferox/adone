@@ -41,7 +41,7 @@ const { DISABLED, ENABLED, INITIALIZING, RUNNING, UNINITIALIZING, STATUSES } = a
 export class Omnitron extends adone.application.Application {
     async initialize() {
         this._.configManager = new adone.omnitron.ConfigurationManager(this);
-        await this._.configManager.loadBaseConfigs();
+        await this._.configManager.loadAll();
 
         await this.createPidFile();
 
@@ -522,6 +522,11 @@ export class Omnitron extends adone.application.Application {
     gates() {
         return this.config.omnitron.gates;
     }
+
+    @Public
+    @Description("")
+    @Type()
+
 
     @Public
     @Description("Force garbage collector")

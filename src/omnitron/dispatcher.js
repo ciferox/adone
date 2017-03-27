@@ -19,7 +19,7 @@ export default class Dispatcher {
         if (is.null(this.configManager)) {
             this.configManager = new adone.omnitron.ConfigurationManager(this.app);
         }
-        return this.configManager.loadBaseConfigs();
+        return this.configManager.loadAll();
     }
 
     async connectLocal(options, forceStart = true, _secondTime = false) {
