@@ -18,3 +18,12 @@ freebsd:
         - npm test
     tags:
         - freebsd
+
+windows:
+    stage: test
+    script:
+        - npm i
+        - npm run build
+        - npm test
+    tags:
+        - windows
