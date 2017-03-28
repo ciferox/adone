@@ -12,6 +12,7 @@ export default class AdoneCLI extends adone.application.Application {
         this.loadSubsystem(adone.std.path.resolve(__dirname, "./subsystems/shani"));
 
         this.loadSubsystem(adone.std.path.resolve(__dirname, "../lib/omnitron/cli"));
+        this.loadSubsystem(adone.std.path.resolve(__dirname, "../lib/omnitron/services/process_manager/cli"));
 
         this.defineArguments({
             commandsGroups: [
