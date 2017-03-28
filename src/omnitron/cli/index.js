@@ -129,7 +129,7 @@ export default class extends adone.application.Subsystem {
                 },
                 {
                     name: "gates",
-                    help: "Show gates",
+                    help: "show gates",
                     handler: this.gatesCommand
                 }
             ]

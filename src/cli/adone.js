@@ -18,11 +18,11 @@ export default class AdoneCLI extends adone.application.Application {
             commandsGroups: [
                 {
                     name: "subsystem",
-                    help: "Subsystems"
+                    description: "Core subsystems"
                 },
                 {
                     name: "service_cli",
-                    help: "Cli interfaces for omnitron services"
+                    description: "Omnitron interaction"
                 }
             ],
             arguments: [

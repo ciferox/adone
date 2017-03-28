@@ -260,6 +260,43 @@
       'sources': [ 'src/native/terminal.cc' ]
     },
     {
+      "target_name": "leveldown",
+        "conditions": [
+          ["OS == 'win'", {
+              "defines": [
+                  "_HAS_EXCEPTIONS=0"
+              ],
+              "msvs_settings": {
+                  "VCCLCompilerTool": {
+                      "RuntimeTypeInfo": "false",
+                      "EnableFunctionLevelLinking": "true",
+                      "ExceptionHandling": "2",
+                      "DisableSpecificWarnings": [ "4355", "4530" ,"4267", "4244", "4506" ]
+                  }
+              }
+          }],
+          ['OS == "linux"', {
+              'cflags': [
+              ],
+              'cflags!': [ '-fno-tree-vrp' ]
+          }]
+        ],
+        "dependencies": [
+            "<(module_root_dir)/src/native/leveldown/leveldb/leveldb.gyp:leveldb"
+        ],
+        "include_dirs": ["nan"],
+        "sources": [
+            "src/native/leveldown/batch.cc",
+            "src/native/leveldown/batch_async.cc",
+            "src/native/leveldown/database.cc",
+            "src/native/leveldown/database_async.cc",
+            "src/native/leveldown/iterator.cc",
+            "src/native/leveldown/iterator_async.cc",
+            "src/native/leveldown/leveldown.cc",
+            "src/native/leveldown/leveldown_async.cc"
+        ]
+    },
+    {
       "target_name": "lzma",
       "sources": [
         "src/native/compressors/lzma/util.cpp",
@@ -346,7 +383,7 @@
       "variables": {
         "srcpath%": "<(module_root_dir)/build/Release",
       },
-      "dependencies" : [ "bignumber", "brotli_decode", "brotli_encode", "lzma", "bson", "hiredis", "memcpy", "metrics", "microtime", "userid", "terminal", "utf8validation", "wsbufferutil" ],
+      "dependencies" : [ "bignumber", "brotli_decode", "brotli_encode", "lzma", "bson", "hiredis", "memcpy", "metrics", "microtime", "userid", "terminal", "leveldown", "utf8validation", "wsbufferutil" ],
       "copies": [
         {
           "files": [ 
@@ -360,6 +397,7 @@
             "<(srcpath)/microtime.node",
             "<(srcpath)/userid.node",
             "<(srcpath)/terminal.node",
+            "<(srcpath)/leveldown.node",
             "<(srcpath)/utf8validation.node",
             "<(srcpath)/wsbufferutil.node",
             "<(srcpath)/lzma.node"
