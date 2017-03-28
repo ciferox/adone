@@ -1,36 +1,11 @@
-// Copyright 2009 The Closure Library Authors. All Rights Reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//            http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS-IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+describe("glosses", "math", "Long", "math", () => {
+    const { math: { Long } } = adone;
 
-
-
-const { Long } = adone.math;
-
-before(function () {
-    if (Object.seal) {
-        Object.seal(Long);
-    }
-});
-
-describe("Long - Math", function() {
-
-    // Interprets the given numbers as the bits of a 32-bit int.    In particular,
-    // this takes care of the 32-bit being interpretted as the sign.
-    function toInt32s(arr) {
+    const toInt32s = (arr) => {
         for (let i = 0; i < arr.length; ++i) {
             arr[i] = arr[i] & 0xFFFFFFFF;
         }
-    }
+    };
 
     // Note that these are in numerical order.
     const TEST_BITS = [
@@ -1307,7 +1282,7 @@ describe("Long - Math", function() {
         "9223372036854775807"
     ];
 
-    it("fromBits", function() {
+    it("fromBits", () => {
         for (let i = 0; i < TEST_BITS.length; i += 2) {
             const val = Long.fromBits(TEST_BITS[i + 1], TEST_BITS[i]);
             assert.equal(val.getHighBits(), TEST_BITS[i]);
@@ -1315,18 +1290,18 @@ describe("Long - Math", function() {
         }
     });
 
-    it("fromInt", function() {
+    it("fromInt", () => {
         for (let i = 0; i < TEST_BITS.length; i += 1) {
             const val = Long.fromInt(TEST_BITS[i]);
             assert.equal(val.toInt(), TEST_BITS[i]);
         }
     });
 
-    it("fromNumber", function() {
+    it("fromNumber", () => {
         for (let i = 0; i < TEST_BITS.length; i += 2) {
             const num = TEST_BITS[i] * Math.pow(2, 32) + TEST_BITS[i + 1] >= 0 ?
-                    TEST_BITS[i + 1] :
-                    Math.pow(2, 32) + TEST_BITS[i + 1];
+                TEST_BITS[i + 1] :
+                Math.pow(2, 32) + TEST_BITS[i + 1];
             const val = Long.fromNumber(num);
             assert.equal(val.toNumber(), num);
         }
@@ -1336,21 +1311,21 @@ describe("Long - Math", function() {
         assert.deepEqual(Long.fromNumber(-Infinity), Long.MIN_VALUE);
     });
 
-    it("isZero", function() {
+    it("isZero", () => {
         for (let i = 0; i < TEST_BITS.length; i += 2) {
             const val = Long.fromBits(TEST_BITS[i + 1], TEST_BITS[i]);
             assert.equal(val.isZero(), TEST_BITS[i] === 0 && TEST_BITS[i + 1] === 0);
         }
     });
 
-    it("isNegative", function() {
+    it("isNegative", () => {
         for (let i = 0; i < TEST_BITS.length; i += 2) {
             const val = Long.fromBits(TEST_BITS[i + 1], TEST_BITS[i]);
             assert.equal(val.isNegative(), (TEST_BITS[i] >> 31) !== 0);
         }
     });
 
-    it("isOdd", function() {
+    it("isOdd", () => {
         for (let i = 0; i < TEST_BITS.length; i += 2) {
             const val = Long.fromBits(TEST_BITS[i + 1], TEST_BITS[i]);
             assert.equal(val.isOdd(), (TEST_BITS[i + 1] & 1) !== 0);
@@ -1358,7 +1333,7 @@ describe("Long - Math", function() {
     });
 
     // In original theese tests runs parallel
-    it("comparisons", function() {
+    it("comparisons", () => {
         for (let i = 0; i < TEST_BITS.length; i += 2) {
             const vi = Long.fromBits(TEST_BITS[i + 1], TEST_BITS[i]);
             for (let j = 0; j < TEST_BITS.length; j += 2) {
@@ -1373,7 +1348,7 @@ describe("Long - Math", function() {
         }
     });
 
-    it("bit operations", function() {
+    it("bit operations", () => {
         for (let i = 0; i < TEST_BITS.length; i += 2) {
             const vi = Long.fromBits(TEST_BITS[i + 1], TEST_BITS[i]);
             assert.equal(vi.not().getHighBits(), ~TEST_BITS[i]);
@@ -1399,19 +1374,19 @@ describe("Long - Math", function() {
             for (let len = 1; len < 64; ++len) {
                 if (len < 32) {
                     assert.equal(
-                            vi.shl(len).getHighBits(),
-                            (TEST_BITS[i] << len) | (TEST_BITS[i + 1] >>> (32 - len)));
+                        vi.shl(len).getHighBits(),
+                        (TEST_BITS[i] << len) | (TEST_BITS[i + 1] >>> (32 - len)));
                     assert.equal(vi.shl(len).getLowBits(), TEST_BITS[i + 1] << len);
 
                     assert.equal(vi.shr(len).getHighBits(), TEST_BITS[i] >> len);
                     assert.equal(
-                            vi.shr(len).getLowBits(),
-                            (TEST_BITS[i + 1] >>> len) | (TEST_BITS[i] << (32 - len)));
+                        vi.shr(len).getLowBits(),
+                        (TEST_BITS[i + 1] >>> len) | (TEST_BITS[i] << (32 - len)));
 
                     assert.equal(vi.shru(len).getHighBits(), TEST_BITS[i] >>> len);
                     assert.equal(
-                            vi.shru(len).getLowBits(),
-                            (TEST_BITS[i + 1] >>> len) | (TEST_BITS[i] << (32 - len)));
+                        vi.shru(len).getLowBits(),
+                        (TEST_BITS[i + 1] >>> len) | (TEST_BITS[i] << (32 - len)));
                 } else {
                     assert.equal(vi.shl(len).getHighBits(), TEST_BITS[i + 1] << (len - 32));
                     assert.equal(vi.shl(len).getLowBits(), 0);
@@ -1437,7 +1412,7 @@ describe("Long - Math", function() {
         }
     });
 
-    it("negation", function() {
+    it("negation", () => {
         for (let i = 0; i < TEST_BITS.length; i += 2) {
             const vi = Long.fromBits(TEST_BITS[i + 1], TEST_BITS[i]);
             if (TEST_BITS[i + 1] === 0) {
@@ -1450,7 +1425,7 @@ describe("Long - Math", function() {
         }
     });
 
-    it("add", function() {
+    it("add", () => {
         let count = 0;
         for (let i = 0; i < TEST_BITS.length; i += 2) {
             const vi = Long.fromBits(TEST_BITS[i + 1], TEST_BITS[i]);
@@ -1463,7 +1438,7 @@ describe("Long - Math", function() {
         }
     });
 
-    it("sub", function() {
+    it("sub", () => {
         let count = 0;
         for (let i = 0; i < TEST_BITS.length; i += 2) {
             const vi = Long.fromBits(TEST_BITS[i + 1], TEST_BITS[i]);
@@ -1476,7 +1451,7 @@ describe("Long - Math", function() {
         }
     });
 
-    it("mul", function() {
+    it("mul", () => {
         let count = 0;
         for (let i = 0; i < TEST_BITS.length; i += 2) {
             const vi = Long.fromBits(TEST_BITS[i + 1], TEST_BITS[i]);
@@ -1497,7 +1472,7 @@ describe("Long - Math", function() {
         }
     }
 
-    it("div, mod", function() {
+    it("div, mod", () => {
         let countDivMod = 0;
         for (let i = 0; i < TEST_BITS.length; i += 2) {
             const vi = Long.fromBits(TEST_BITS[i + 1], TEST_BITS[i]);
@@ -1507,9 +1482,9 @@ describe("Long - Math", function() {
                 if (!vj.isZero()) {
                     const divResult = vi.div(vj);
                     assert.equal(divResult.getHighBits(), TEST_DIV_BITS[count++],
-                                `Division of ${vi.toString()} and ${vj.toString()}. High bits`);
+                        `Division of ${vi.toString()} and ${vj.toString()}. High bits`);
                     assert.equal(divResult.getLowBits(), TEST_DIV_BITS[count++],
-                                `Division of ${vi.toString()} and ${vj.toString()}. Low bits`);
+                        `Division of ${vi.toString()} and ${vj.toString()}. Low bits`);
 
                     const modResult = vi.mod(vj);
                     const combinedResult = divResult.mul(vj).add(modResult);
@@ -1521,39 +1496,7 @@ describe("Long - Math", function() {
         }
     });
 
-    // function createTestDivMod(i, count) {
-    //     return function() {
-    //         let vi = Long.fromBits(TEST_BITS[i + 1], TEST_BITS[i]);
-    //         for (let j = 0; j < TEST_BITS.length; j += 2) {
-    //             let vj = Long.fromBits(TEST_BITS[j + 1], TEST_BITS[j]);
-    //             if (!vj.isZero()) {
-    //                 let divResult = vi.div(vj);
-    //                 assert.equal(divResult.getHighBits(), TEST_DIV_BITS[count++]);
-    //                 assert.equal(divResult.getLowBits(), TEST_DIV_BITS[count++]);
-    //
-    //                 let modResult = vi.modulo(vj);
-    //                 let combinedResult = divResult.mul(vj).add(modResult);
-    //                 assertTrue(vi.equals(combinedResult));
-    //             }
-    //         }
-    //     }
-    // }
-    //
-    // let countPerDivModCall = 0;
-    // for (let j = 0; j < TEST_BITS.length; j += 2) {
-    //     let vj = Long.fromBits(TEST_BITS[j + 1], TEST_BITS[j]);
-    //     if (!vj.isZero()) {
-    //         countPerDivModCall += 2;
-    //     }
-    // }
-
-    // let countDivMod = 0;
-    // for (let i = 0; i < TEST_BITS.length; i += 2) {
-    //     goog.global['testDivMod' + i] = createTestDivMod(i, countDivMod);
-    //     countDivMod += countPerDivModCall;
-    // }
-
-    it("fromString", function() {
+    it("fromString", () => {
         for (let i = 0; i < TEST_BITS.length; i += 2) {
             const vi = Long.fromBits(TEST_BITS[i + 1], TEST_BITS[i]);
             const str = vi.toString(10);
@@ -1571,7 +1514,7 @@ describe("Long - Math", function() {
 
     // Regression test for
     // https://github.com/google/closure-library/pull/498
-    it("Base36 to String", function() {
+    it("Base36 to String", () => {
         assert.equal(Long.fromString("zzzzzz", 36).toString(36), "zzzzzz");
     });
 });
