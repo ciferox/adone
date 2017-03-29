@@ -1,5 +1,4 @@
-// Copyright 2011 Mark Cavage <mcavage@gmail.com> All rights reserved.
-module.exports = {
+export default {
     EOC: 0,
     Boolean: 1,
     Integer: 2,

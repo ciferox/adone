@@ -1,6 +1,6 @@
 
 const crypto = adone.std.crypto;
-const Ber = adone.crypto.asn1.Ber;
+const asn1 = adone.crypto.asn1;
 
 import BigInteger from "./jsbn"; // only for converting PPK -> OpenSSL format
 import { SSH_TO_OPENSSL } from "./constants";
@@ -67,10 +67,10 @@ function DSASigBERToBare(signature) {
     // This is a quick and dirty way to get from BER encoded r and s that
     // OpenSSL gives us, to just the bare values back to back (40 bytes
     // total) like OpenSSH (and possibly others) are expecting
-    const asnReader = new Ber.Reader(signature);
+    const asnReader = new asn1.ber.Reader(signature);
     asnReader.readSequence();
-    let r = asnReader.readString(Ber.Integer, true);
-    let s = asnReader.readString(Ber.Integer, true);
+    let r = asnReader.readString(asn1.type.Integer, true);
+    let s = asnReader.readString(asn1.type.Integer, true);
     let rOffset = 0;
     let sOffset = 0;
     if (r.length < 20) {
@@ -99,7 +99,7 @@ function DSASigBareToBER(signature) {
     if (signature.length > 40)
     { return signature; }
     // Change bare signature r and s values to ASN.1 BER values for OpenSSL
-    const asnWriter = new Ber.Writer();
+    const asnWriter = new asn1.ber.Writer();
     asnWriter.startSequence();
     let r = signature.slice(0, 20);
     let s = signature.slice(20);
@@ -119,8 +119,8 @@ function DSASigBareToBER(signature) {
     } else if (s[0] === 0x00 && !(s[1] & 0x80)) {
         s = s.slice(1);
     }
-    asnWriter.writeBuffer(r, Ber.Integer);
-    asnWriter.writeBuffer(s, Ber.Integer);
+    asnWriter.writeBuffer(r, asn1.type.Integer);
+    asnWriter.writeBuffer(s, asn1.type.Integer);
     asnWriter.endSequence();
     return asnWriter.buffer;
 }
@@ -129,10 +129,10 @@ function ECDSASigASN1ToSSH(signature) {
     if (signature[0] === 0x00)
     { return signature; }
     // Convert SSH signature parameters to ASN.1 BER values for OpenSSL
-    const asnReader = new Ber.Reader(signature);
+    const asnReader = new asn1.ber.Reader(signature);
     asnReader.readSequence();
-    const r = asnReader.readString(Ber.Integer, true);
-    const s = asnReader.readString(Ber.Integer, true);
+    const r = asnReader.readString(asn1.type.Integer, true);
+    const s = asnReader.readString(asn1.type.Integer, true);
     if (r === null || s === null)
     { throw new Error("Invalid signature"); }
     const newSig = new Buffer(4 + r.length + 4 + s.length);
@@ -152,10 +152,10 @@ function ECDSASigSSHToASN1(signature, self, callback) {
     if (s === false)
     { return false; }
 
-    const asnWriter = new Ber.Writer();
+    const asnWriter = new asn1.ber.Writer();
     asnWriter.startSequence();
-    asnWriter.writeBuffer(r, Ber.Integer);
-    asnWriter.writeBuffer(s, Ber.Integer);
+    asnWriter.writeBuffer(r, asn1.type.Integer);
+    asnWriter.writeBuffer(s, asn1.type.Integer);
     asnWriter.endSequence();
     return asnWriter.buffer;
 }
@@ -169,7 +169,7 @@ function RSAKeySSHToASN1(key, self, callback) {
     if (n === false)
     { return false; }
 
-    const asnWriter = new Ber.Writer();
+    const asnWriter = new asn1.ber.Writer();
     asnWriter.startSequence();
     // algorithm
     asnWriter.startSequence();
@@ -179,11 +179,11 @@ function RSAKeySSHToASN1(key, self, callback) {
     asnWriter.endSequence();
 
     // subjectPublicKey
-    asnWriter.startSequence(Ber.BitString);
+    asnWriter.startSequence(asn1.type.BitString);
     asnWriter.writeByte(0x00);
     asnWriter.startSequence();
-    asnWriter.writeBuffer(n, Ber.Integer);
-    asnWriter.writeBuffer(e, Ber.Integer);
+    asnWriter.writeBuffer(n, asn1.type.Integer);
+    asnWriter.writeBuffer(e, asn1.type.Integer);
     asnWriter.endSequence();
     asnWriter.endSequence();
     asnWriter.endSequence();
@@ -205,23 +205,23 @@ function DSAKeySSHToASN1(key, self, callback) {
     if (y === false)
     { return false; }
 
-    const asnWriter = new Ber.Writer();
+    const asnWriter = new asn1.ber.Writer();
     asnWriter.startSequence();
     // algorithm
     asnWriter.startSequence();
     asnWriter.writeOID("1.2.840.10040.4.1"); // id-dsa
     // algorithm parameters
     asnWriter.startSequence();
-    asnWriter.writeBuffer(p, Ber.Integer);
-    asnWriter.writeBuffer(q, Ber.Integer);
-    asnWriter.writeBuffer(g, Ber.Integer);
+    asnWriter.writeBuffer(p, asn1.type.Integer);
+    asnWriter.writeBuffer(q, asn1.type.Integer);
+    asnWriter.writeBuffer(g, asn1.type.Integer);
     asnWriter.endSequence();
     asnWriter.endSequence();
 
     // subjectPublicKey
-    asnWriter.startSequence(Ber.BitString);
+    asnWriter.startSequence(asn1.type.BitString);
     asnWriter.writeByte(0x00);
-    asnWriter.writeBuffer(y, Ber.Integer);
+    asnWriter.writeBuffer(y, asn1.type.Integer);
     asnWriter.endSequence();
     asnWriter.endSequence();
     return asnWriter.buffer;
@@ -253,7 +253,7 @@ function ECDSAKeySSHToASN1(key, self, callback) {
         default:
             return false;
     }
-    const asnWriter = new Ber.Writer();
+    const asnWriter = new asn1.ber.Writer();
     asnWriter.startSequence();
     // algorithm
     asnWriter.startSequence();
@@ -263,7 +263,7 @@ function ECDSAKeySSHToASN1(key, self, callback) {
     asnWriter.endSequence();
 
     // subjectPublicKey
-    asnWriter.startSequence(Ber.BitString);
+    asnWriter.startSequence(asn1.type.BitString);
     asnWriter.writeByte(0x00);
     // XXX: hack to write a raw buffer without a tag -- yuck
     asnWriter._ensure(Q.length);
@@ -373,10 +373,10 @@ function decryptKey(keyInfo, passphrase) {
         keyInfo.fulltype = `ssh-${keyInfo.type}`;
     } else {
         // ECDSA
-        const asnReader = new Ber.Reader(keyInfo.private);
+        const asnReader = new asn1.ber.Reader(keyInfo.private);
         asnReader.readSequence();
         asnReader.readInt();
-        asnReader.readString(Ber.OctetString, true);
+        asnReader.readString(asn1.type.OctetString, true);
         asnReader.readByte(); // Skip "complex" context type byte
         const offset = asnReader.readLength(); // Skip context length
         if (offset !== null) {
@@ -424,7 +424,7 @@ function genPublicKey(keyInfo) {
     if (keyInfo.private) {
         // parsing private key in ASN.1 format in order to generate a public key
         const privKey = keyInfo.private;
-        const asnReader = new Ber.Reader(privKey);
+        const asnReader = new asn1.ber.Reader(privKey);
         let errMsg;
 
         if (asnReader.readSequence() === null) {
@@ -444,7 +444,7 @@ function genPublicKey(keyInfo) {
 
         if (keyInfo.type === "rsa") {
             // modulus (n) -- integer
-            n = asnReader.readString(Ber.Integer, true);
+            n = asnReader.readString(asn1.type.Integer, true);
             if (n === null) {
                 errMsg = "Malformed private key (expected RSA n value)";
                 if (keyInfo._decrypted)
@@ -453,7 +453,7 @@ function genPublicKey(keyInfo) {
             }
 
             // public exponent (e) -- integer
-            e = asnReader.readString(Ber.Integer, true);
+            e = asnReader.readString(asn1.type.Integer, true);
             if (e === null) {
                 errMsg = "Malformed private key (expected RSA e value)";
                 if (keyInfo._decrypted)
@@ -477,7 +477,7 @@ function genPublicKey(keyInfo) {
             n.copy(publicKey, i += 4);
         } else if (keyInfo.type === "dss") { // DSA
             // prime (p) -- integer
-            p = asnReader.readString(Ber.Integer, true);
+            p = asnReader.readString(asn1.type.Integer, true);
             if (p === null) {
                 errMsg = "Malformed private key (expected DSA p value)";
                 if (keyInfo._decrypted)
@@ -486,7 +486,7 @@ function genPublicKey(keyInfo) {
             }
 
             // group order (q) -- integer
-            q = asnReader.readString(Ber.Integer, true);
+            q = asnReader.readString(asn1.type.Integer, true);
             if (q === null) {
                 errMsg = "Malformed private key (expected DSA q value)";
                 if (keyInfo._decrypted)
@@ -495,7 +495,7 @@ function genPublicKey(keyInfo) {
             }
 
             // group generator (g) -- integer
-            g = asnReader.readString(Ber.Integer, true);
+            g = asnReader.readString(asn1.type.Integer, true);
             if (g === null) {
                 errMsg = "Malformed private key (expected DSA g value)";
                 if (keyInfo._decrypted)
@@ -504,7 +504,7 @@ function genPublicKey(keyInfo) {
             }
 
             // public key value (y) -- integer
-            y = asnReader.readString(Ber.Integer, true);
+            y = asnReader.readString(asn1.type.Integer, true);
             if (y === null) {
                 errMsg = "Malformed private key (expected DSA y value)";
                 if (keyInfo._decrypted)
@@ -535,7 +535,7 @@ function genPublicKey(keyInfo) {
             publicKey.writeUInt32BE(y.length, i += g.length, true);
             y.copy(publicKey, i += 4);
         } else { // ECDSA
-            d = asnReader.readString(Ber.OctetString, true);
+            d = asnReader.readString(asn1.type.OctetString, true);
             if (d === null)
             { throw new Error("Malformed private key (expected ECDSA private key)"); }
             asnReader.readByte(); // Skip "complex" context type byte
@@ -718,7 +718,7 @@ function convertPPKPrivate(keyInfo) {
 
     const pub = keyInfo.public;
     const priv = keyInfo.private;
-    const asnWriter = new Ber.Writer();
+    const asnWriter = new asn1.ber.Writer();
     let p;
     let q;
 
@@ -738,15 +738,15 @@ function convertPPKPrivate(keyInfo) {
         dmq1 = new Buffer(dmq1.mod(q1.subtract(BigInteger.ONE)).toByteArray());
 
         asnWriter.startSequence();
-        asnWriter.writeInt(0x00, Ber.Integer);
-        asnWriter.writeBuffer(n, Ber.Integer);
-        asnWriter.writeBuffer(e, Ber.Integer);
-        asnWriter.writeBuffer(d, Ber.Integer);
-        asnWriter.writeBuffer(p, Ber.Integer);
-        asnWriter.writeBuffer(q, Ber.Integer);
-        asnWriter.writeBuffer(dmp1, Ber.Integer);
-        asnWriter.writeBuffer(dmq1, Ber.Integer);
-        asnWriter.writeBuffer(iqmp, Ber.Integer);
+        asnWriter.writeInt(0x00, asn1.type.Integer);
+        asnWriter.writeBuffer(n, asn1.type.Integer);
+        asnWriter.writeBuffer(e, asn1.type.Integer);
+        asnWriter.writeBuffer(d, asn1.type.Integer);
+        asnWriter.writeBuffer(p, asn1.type.Integer);
+        asnWriter.writeBuffer(q, asn1.type.Integer);
+        asnWriter.writeBuffer(dmp1, asn1.type.Integer);
+        asnWriter.writeBuffer(dmq1, asn1.type.Integer);
+        asnWriter.writeBuffer(iqmp, asn1.type.Integer);
         asnWriter.endSequence();
     } else {
         p = readString(pub, 4 + 7);
@@ -756,12 +756,12 @@ function convertPPKPrivate(keyInfo) {
         const x = readString(priv, 0);
 
         asnWriter.startSequence();
-        asnWriter.writeInt(0x00, Ber.Integer);
-        asnWriter.writeBuffer(p, Ber.Integer);
-        asnWriter.writeBuffer(q, Ber.Integer);
-        asnWriter.writeBuffer(g, Ber.Integer);
-        asnWriter.writeBuffer(y, Ber.Integer);
-        asnWriter.writeBuffer(x, Ber.Integer);
+        asnWriter.writeInt(0x00, asn1.type.Integer);
+        asnWriter.writeBuffer(p, asn1.type.Integer);
+        asnWriter.writeBuffer(q, asn1.type.Integer);
+        asnWriter.writeBuffer(g, asn1.type.Integer);
+        asnWriter.writeBuffer(y, asn1.type.Integer);
+        asnWriter.writeBuffer(x, asn1.type.Integer);
         asnWriter.endSequence();
     }
 
