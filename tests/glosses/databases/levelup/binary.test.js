@@ -1,168 +1,102 @@
-const async = require("async");
-const common = require("./common");
-const refute = require("referee").refute;
+import Manager from "./common";
+const { x: { NotFoundError } } = adone.database.level;
 
 describe("Binary API", () => {
     let testData;
-    let ctx;
+    let manager;
 
-    beforeEach((done) => {
-        ctx = {};
-        common.commonSetUp(ctx, () => {
-            common.loadBinaryTestData((err, data) => {
-                refute(err);
-                testData = data;
-                done();
-            });
-        });
+    beforeEach(async () => {
+        manager = new Manager();
+        await manager.setUp();
+        testData = await manager.loadBinaryTestData();
     });
 
-    afterEach((done) => {
-        common.commonTearDown(done);
+    afterEach(() => {
+        return manager.shutdown();
     });
 
-    it("sanity check on test data", (done) => {
+    it("sanity check on test data", () => {
         assert.isOk(Buffer.isBuffer(testData));
-        common.checkBinaryTestData(testData, done);
+        manager.checkBinaryTestData(testData);
     });
 
-    it("test put() and get() with binary value {valueEncoding:binary}", (done) => {
-        ctx.openTestDatabase((db) => {
-            db.put("binarydata", testData, { valueEncoding: "binary" }, (err) => {
-                refute(err);
-                db.get("binarydata", { valueEncoding: "binary" }, (err, value) => {
-                    refute(err);
-                    assert(value);
-                    common.checkBinaryTestData(value, done);
-                });
-            });
-        });
+    it("test put() and get() with binary value {valueEncoding:binary}", async () => {
+        const db = await manager.openTestDatabase();
+        await db.put("binarydata", testData, { valueEncoding: "binary" });
+        const value = await db.get("binarydata", { valueEncoding: "binary" });
+        assert(value);
+        manager.checkBinaryTestData(value);
     });
 
-    it("test put() and get() with binary value {valueEncoding:binary} on createDatabase()", (done) => {
-        ctx.openTestDatabase({ createIfMissing: true, errorIfExists: true, valueEncoding: "binary" }, (db) => {
-            db.put("binarydata", testData, (err) => {
-                refute(err);
-                db.get("binarydata", (err, value) => {
-                    refute(err);
-                    assert(value);
-                    common.checkBinaryTestData(value, done);
-                });
-            });
-        });
+    it("test put() and get() with binary value {valueEncoding:binary} on createDatabase()", async () => {
+        const db = await manager.openTestDatabase(null, { createIfMissing: true, errorIfExists: true, valueEncoding: "binary" });
+        await db.put("binarydata", testData);
+        const value = await db.get("binarydata");
+        assert(value);
+        manager.checkBinaryTestData(value);
     });
 
-    it("test put() and get() with binary key {valueEncoding:binary}", (done) => {
-        ctx.openTestDatabase((db) => {
-            db.put(testData, "binarydata", { valueEncoding: "binary" }, (err) => {
-                refute(err);
-                db.get(testData, { valueEncoding: "binary" }, (err, value) => {
-                    refute(err);
-                    assert(value instanceof Buffer, "value is buffer");
-                    assert.equal(value.toString(), "binarydata");
-                    done();
-                });
-            });
-        });
+    it("test put() and get() with binary key {valueEncoding:binary}", async () => {
+        const db = await manager.openTestDatabase();
+        await db.put(testData, "binarydata", { valueEncoding: "binary" });
+        const value = await db.get(testData, { valueEncoding: "binary" });
+        assert(value instanceof Buffer, "value is buffer");
+        assert.equal(value.toString(), "binarydata");
     });
 
-    it("test put() and get() with binary value {keyEncoding:utf8,valueEncoding:binary}", (done) => {
-        ctx.openTestDatabase((db) => {
-            db.put("binarydata", testData, { keyEncoding: "utf8", valueEncoding: "binary" }, (err) => {
-                refute(err);
-                db.get("binarydata", { keyEncoding: "utf8", valueEncoding: "binary" }, (err, value) => {
-                    refute(err);
-                    assert(value);
-                    common.checkBinaryTestData(value, done);
-                });
-            });
-        });
+    it("test put() and get() with binary value {keyEncoding:utf8,valueEncoding:binary}", async () => {
+        const db = await manager.openTestDatabase();
+        await db.put("binarydata", testData, { keyEncoding: "utf8", valueEncoding: "binary" });
+        const value = await db.get("binarydata", { keyEncoding: "utf8", valueEncoding: "binary" });
+        assert(value);
+        manager.checkBinaryTestData(value);
     });
 
-    it("test put() and get() with binary value {keyEncoding:utf8,valueEncoding:binary} on createDatabase()", (done) => {
-        ctx.openTestDatabase({ createIfMissing: true, errorIfExists: true, keyEncoding: "utf8", valueEncoding: "binary" }, (db) => {
-            db.put("binarydata", testData, (err) => {
-                refute(err);
-                db.get("binarydata", (err, value) => {
-                    refute(err);
-                    assert(value);
-                    common.checkBinaryTestData(value, done);
-                });
-            });
-        });
+    it("test put() and get() with binary value {keyEncoding:utf8,valueEncoding:binary} on createDatabase()", async () => {
+        const db = await manager.openTestDatabase(null, { createIfMissing: true, errorIfExists: true, keyEncoding: "utf8", valueEncoding: "binary" });
+        await db.put("binarydata", testData);
+        const value = await db.get("binarydata");
+        assert(value);
+        manager.checkBinaryTestData(value);
     });
 
-    it("test put() and get() with binary key {keyEncoding:binary,valueEncoding:utf8}", (done) => {
-        ctx.openTestDatabase((db) => {
-            db.put(testData, "binarydata", { keyEncoding: "binary", valueEncoding: "utf8" }, (err) => {
-                refute(err);
-                db.get(testData, { keyEncoding: "binary", valueEncoding: "utf8" }, (err, value) => {
-                    refute(err);
-                    assert.equal(value, "binarydata");
-                    done();
-                });
-            });
-        });
+    it("test put() and get() with binary key {keyEncoding:binary,valueEncoding:utf8}", async () => {
+        const db = await manager.openTestDatabase();
+        await db.put(testData, "binarydata", { keyEncoding: "binary", valueEncoding: "utf8" });
+        const value = await db.get(testData, { keyEncoding: "binary", valueEncoding: "utf8" });
+        assert.equal(value, "binarydata");
     });
 
-    it("test put() and get() with binary key & value {valueEncoding:binary}", (done) => {
-        ctx.openTestDatabase((db) => {
-            db.put(testData, testData, { valueEncoding: "binary" }, (err) => {
-                refute(err);
-                db.get(testData, { valueEncoding: "binary" }, (err, value) => {
-                    refute(err);
-                    common.checkBinaryTestData(value, done);
-                });
-            });
-        });
+    it("test put() and get() with binary key & value {valueEncoding:binary}", async () => {
+        const db = await manager.openTestDatabase();
+        await db.put(testData, testData, { valueEncoding: "binary" });
+        const value = await db.get(testData, { valueEncoding: "binary" });
+        manager.checkBinaryTestData(value);
     });
 
-
-    it("test put() and del() and get() with binary key {valueEncoding:binary}", (done) => {
-        ctx.openTestDatabase((db) => {
-            db.put(testData, "binarydata", { valueEncoding: "binary" }, (err) => {
-                refute(err);
-                db.del(testData, { valueEncoding: "binary" }, (err) => {
-                    refute(err);
-                    db.get(testData, { valueEncoding: "binary" }, (err, value) => {
-                        assert(err);
-                        refute(value);
-                        done();
-                    });
-                });
-            });
-        });
+    it("test put() and del() and get() with binary key {valueEncoding:binary}", async () => {
+        const db = await manager.openTestDatabase();
+        await db.put(testData, "binarydata", { valueEncoding: "binary" });
+        await db.del(testData, { valueEncoding: "binary" });
+        Manager.shouldThrows(() => db.get(testData, { valueEncoding: "binary" }), NotFoundError);
     });
 
-    it("batch() with multiple puts", (done) => {
-        ctx.openTestDatabase((db) => {
-            db.batch(
-                [
-                    { type: "put", key: "foo", value: testData }
-                    , { type: "put", key: "bar", value: testData }
-                    , { type: "put", key: "baz", value: "abazvalue" }
-                ]
-                , { keyEncoding: "utf8", valueEncoding: "binary" }
-                , (err) => {
-                    refute(err);
-                    async.forEach(
-                        ["foo", "bar", "baz"]
-                        , (key, callback) => {
-                            db.get(key, { valueEncoding: "binary" }, (err, value) => {
-                                refute(err);
-                                if (key === "baz") {
-                                    assert(value instanceof Buffer, "value is buffer");
-                                    assert.equal(value.toString(), `a${key}value`);
-                                    callback();
-                                } else {
-                                    common.checkBinaryTestData(value, callback);
-                                }
-                            });
-                        }
-                        , done
-                    );
-                }
-            );
-        });
+    it("batch() with multiple puts", async () => {
+        const db = await manager.openTestDatabase();
+        await db.batch([
+            { type: "put", key: "foo", value: testData },
+            { type: "put", key: "bar", value: testData },
+            { type: "put", key: "baz", value: "abazvalue" }
+        ], { keyEncoding: "utf8", valueEncoding: "binary" });
+
+        for (const key of ["foo", "bar", "baz"]) {
+            const value = await db.get(key, { valueEncoding: "binary" });
+            if (key === "baz") {
+                assert(value instanceof Buffer, "value is buffer");
+                assert.equal(value.toString(), `a${key}value`);
+            } else {
+                manager.checkBinaryTestData(value);
+            }
+        }
     });
 });
