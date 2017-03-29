@@ -90,8 +90,45 @@ export default class extends adone.application.Subsystem {
             adone.log();
         }
 
+        const { terminal } = adone;
+
+        const formatEventMessage = (event, oldResult) => {
+            const { target } = event;
+
+            const size = target.stats.sample.length;
+            let message = `> ${formatNumber(target.hz.toFixed(target.hz < 100 ? 2 : 0))}`;
+            if (oldResult) {
+                const diff = target.hz - oldResult[target.name].hz;
+                const percent = (diff / oldResult[target.name].hz * 100).toFixed(2);
+                if (diff >= 0) {
+                    message += terminal.parse(` ({#4CAF50-fg}+${formatNumber(diff.toFixed(diff < 100 ? 2 : 0))} : +${percent}%{/})`);
+                } else {
+                    message += terminal.parse(` ({#F44336-fg}${formatNumber(diff.toFixed(diff > -100 ? 2 : 0))} : ${percent}%{/})`);
+                }
+            }
+            message += ` ops/sec ±${target.stats.rme.toFixed(2)}% (${size} run${size === 1 ? "" : "s"} sampled)`;
+            if (oldResult) {
+                const diff = target.stats.sample.length - oldResult[target.name].sampleLength;
+                if (diff >= 0) {
+                    message += terminal.parse(` ({#4CAF50-fg}+${diff}{/})`);
+                } else {
+                    message += terminal.parse(` ({#F44336-fg}${diff}{/})`);
+                }
+            }
+            return `${message} : ${target.name}`;
+        };
+
         const defaultOptions = {
-            defer: opts.get("defer")
+            defer: opts.get("defer"),
+            onCycle: (event) => {
+                terminal.column(0);
+                terminal.eraseLine();
+                terminal.write(`${formatEventMessage(event)}`);
+            },
+            onComplete: () => {
+                terminal.column(0);
+                terminal.eraseLine();
+            }
         };
 
         for (const key of ["minSamples", "minTime", "maxTime", "initCount"]) {
@@ -125,7 +162,7 @@ export default class extends adone.application.Subsystem {
         }
 
         for (const suite of suites) {
-            console.log(`Suite: ${suite.name}`);
+            terminal.print(`Suite: ${suite.name}\n`);
             const result = {};
             let oldResult = db ? await db.findOne({ name: suite.name }) : null;  // eslint-disable-line
             if (oldResult) {
@@ -139,33 +176,9 @@ export default class extends adone.application.Subsystem {
 
                         result[target.name] = {
                             hz: target.hz,
-                            elapsed: target.times.elapsed,
-                            rme: target.stats.rme,
-                            count: target.count,
                             sampleLength: target.stats.sample.length
                         };
-                        const size = target.stats.sample.length;
-                        const message = [formatNumber(target.hz.toFixed(target.hz < 100 ? 2 : 0))];
-                        if (oldResult) {
-                            const diff = result[target.name].hz - oldResult[target.name].hz;
-                            const percent = (diff / oldResult[target.name].hz * 100).toFixed(2);
-                            if (diff >= 0) {
-                                message.push(adone.terminal.parse(`({#4CAF50-fg}+${formatNumber(diff.toFixed(diff < 100 ? 2 : 0))} : +${percent}%{/})`));
-                            } else {
-                                message.push(adone.terminal.parse(`({#F44336-fg}${formatNumber(diff.toFixed(diff > -100 ? 2 : 0))} : ${percent}%{/})`));
-                            }
-                        }
-                        message.push(`ops/sec ±${target.stats.rme.toFixed(2)}% (${size} run${size === 1 ? "" : "s"} sampled)`);
-                        if (oldResult) {
-                            const diff = result[target.name].sampleLength - oldResult[target.name].sampleLength;
-                            if (diff >= 0) {
-                                message.push(adone.terminal.parse(`({#4CAF50-fg}+${diff}{/})`));
-                            } else {
-                                message.push(adone.terminal.parse(`({#F44336-fg}${diff}{/})`));
-                            }
-                        }
-                        message.push(":", target.name);
-                        console.log(message.join(" "));
+                        terminal.write(`${formatEventMessage(event, oldResult)}\n`);
                     })
                     .on("complete", function onComplete() {
                         adone.log(`Fastest is ${this.filter("fastest").map("name")}`);
@@ -185,7 +198,6 @@ export default class extends adone.application.Subsystem {
         const suites = [];
         const suite = new adone.vendor.Benchmark.Suite(suiteName);
         for (const [name, fn] of adone.util.entries(funcs)) {
-            // console.log(name);
             if (is.function(fn)) {
                 suite.add(name, fn, defaultOptions);
             } else if (is.array(fn)) {
