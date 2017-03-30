@@ -3,6 +3,7 @@ adone.lazify({
     Request: "./request",
     Response: "./response",
     helper: "./helpers",
+    util: "./utils",
     middleware: () => adone.lazify({
         serve: "./middlewares/serve",
         favicon: "./middlewares/favicon",

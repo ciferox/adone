@@ -1,8 +1,8 @@
 const { std: { fs: sfs, path: spath }, is, fs } = adone;
 
 export default class File {
-    constructor(path) {
-        this._path = path;
+    constructor(...path) {
+        this._path = spath.resolve(...path);
     }
 
     stat() {
