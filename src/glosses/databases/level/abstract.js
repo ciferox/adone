@@ -4,7 +4,7 @@ export const isLevelDOWN = (db) => {
     if (!db || typeof db !== "object") {
         return false;
     }
-    return Object.keys(adone.database.AbstractBackend.prototype).filter((name) => {
+    return Object.keys(adone.database.level.AbstractBackend.prototype).filter((name) => {
         // TODO remove approximateSize check when method is gone
         return name[0] !== "_" && name !== "approximateSize";
     }).every((name) => {
