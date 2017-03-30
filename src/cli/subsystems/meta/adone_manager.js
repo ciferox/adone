@@ -1,6 +1,6 @@
 const { is, std, fs, util } = adone;
 
-const configRelativePath = "defaults/configs/adone.js".replace(/\//g, std.path.sep);
+const configRelativePath = "etc/configs/adone.js".replace(/\//g, std.path.sep);
 
 const getArch = () => {
     const arch = process.arch;
@@ -21,44 +21,27 @@ const getPlatform = () => {
 export default class AdoneManager {
     constructor() {
         this.app = adone.appinstance;
-        this.scriptName = is.win32 ? "adone.cmd" : "adone";
         this.nodePath = std.path.dirname(process.execPath);
-        this.adoneScriptPath = std.path.join(this.nodePath, this.scriptName);
         this.nodeModulesDir = new fs.Directory(std.path.resolve(fs.homeDir(), ".node_modules"));
-        this.destAdoneDir = this.nodeModulesDir.getDirectory("adone");
         this.adoneVersion = adone.package.version;
         this.name = `${getPlatform()}-${getArch()}.tar`;
     }
 
-    async install() {
-        const targets = this.getTargets();
-        await this.destAdoneDir.create();
-        await adone.fast.src(targets, { base: this.app.adoneRootPath }).dest(this.destAdoneDir.path());
+    async install(name, dirName, env) {
+        this.destAdoneDir = this.nodeModulesDir.getDirectory(name);
+        if (!(await this.destAdoneDir.exists())) {
+            await this.destAdoneDir.create();
+            await adone.fast.src(this.getTargets(), { base: this.app.adoneRootPath })
+                .if((f) => f.relative === configRelativePath, adone.fast.plugin.replace(["\"development\"", "\".adone_dev\""], [`"${env}"`, `"${dirName}"`])).dest(this.destAdoneDir.path());
 
-        return this.installScript();
-    }
-
-    async installLink() {
-        await this.nodeModulesDir.create();
-
-        if (is.win32) {
-            await fs.symlink(this.app.adoneRootPath, this.destAdoneDir.path(), "junction");
-        } else {
-            await fs.symlink(this.app.adoneRootPath, this.destAdoneDir.path());
+            await this.installScript(name);
+            return true;
         }
-
-        return this.installScript();
+        return false;
     }
 
-    async installScript() {
-        const data = adone.templating.nunjucks.render(std.path.join(this.app.adoneEtcPath, "scripts", this.scriptName), { targetPath: this.destAdoneDir.resolve("bin", "adone.js") });
-        await adone.fs.writeFile(this.adoneScriptPath, data);
-        if (!is.win32) {
-            await adone.fs.chmod(this.adoneScriptPath, 0o755);
-        }
-    }
-
-    async uninstall() {
+    async uninstall(name) {
+        this.destAdoneDir = this.nodeModulesDir.getDirectory(name);
         if (await this.destAdoneDir.exists()) {
             // Temporary backup whole adone directory.
             const backupPath = await fs.tmpName();
@@ -72,10 +55,50 @@ export default class AdoneManager {
             }
         }
 
+        return this.uninstallScript(name);
+    }
+
+    async installLink(name) {
+        this.destAdoneDir = this.nodeModulesDir.getDirectory(name);
+        const destPath = this.destAdoneDir.path();
+        if (is.win32) {
+            await fs.symlink(this.app.adoneRootPath, destPath, "junction");
+        } else {
+            await fs.symlink(this.app.adoneRootPath, destPath);
+        }
+
+        return this.installScript(name);
+    }
+
+    async uninstallLink(name) {
+        this.destAdoneDir = this.nodeModulesDir.getDirectory(name);
+        const destPath = this.destAdoneDir.path();
+        const st = await adone.fs.lstat(destPath);
+        if (st.isSymbolicLink()) {
+            await adone.fs.rm(destPath);
+        }
+        return this.uninstallScript(name);
+    }
+
+    async installScript(name) {
+        const scriptPath = this.getScriptPath(name);
+        const data = adone.templating.nunjucks.render(std.path.join(this.app.adoneEtcPath, "scripts", (is.win32 ? "adone.cmd" : "adone")), { targetPath: this.destAdoneDir.resolve("bin", "adone.js") });
+        await adone.fs.writeFile(scriptPath, data);
+        if (!is.win32) {
+            await adone.fs.chmod(scriptPath, 0o755);
+        }
+    }
+
+    async uninstallScript(name) {
+        const scriptPath = this.getScriptPath(name);
         try {
-            await adone.fs.unlink(this.adoneScriptPath);
+            await adone.fs.unlink(scriptPath);
         } catch (err) {
         }
+    }
+
+    getScriptPath(name) {
+        return std.path.join(this.nodePath, `${name}${(is.win32 ? ".cmd" : "")}`);
     }
 
     getArchiveName(type) {
@@ -92,6 +115,6 @@ export default class AdoneManager {
     }
 
     getTargets() {
-        return ["!**/*.map", "package.json", "README*", "LICENSE*"].concat(["bin", "lib", "defaults"].map((x) => util.globize(x, { recursively: true })));
+        return ["!**/*.map", "package.json", "README*", "LICENSE*"].concat(["bin", "lib", "etc"].map((x) => util.globize(x, { recursively: true })));
     }
 }

@@ -110,10 +110,26 @@ export default class extends adone.application.Subsystem {
                 {
                     name: "install",
                     help: "Install current adone globally",
+                    arguments: [
+                        {
+                            name: "name",
+                            type: String,
+                            default: "adone",
+                            help: "Name of global link and module directory"
+                        }
+                    ],
                     options: [
                         {
-                            name: "--link",
-                            help: "Make link instead of copy files"
+                            name: "--dirname",
+                            type: String,
+                            default: ".adone",
+                            help: "Name of home directory of adone"
+                        },
+                        {
+                            name: "--env",
+                            type: String,
+                            default: "production",
+                            help: "The short name of the environment the build is intended for"
                         }
                     ],
                     handler: this.installCommand
@@ -121,7 +137,33 @@ export default class extends adone.application.Subsystem {
                 {
                     name: "uninstall",
                     help: "Uninstall globally installed adone",
+                    arguments: [
+                        {
+                            name: "name",
+                            type: String,
+                            default: "adone",
+                            help: "Name of global link and module directory"
+                        }
+                    ],
                     handler: this.uninstallCommand
+                },
+                {
+                    name: "link",
+                    help: "Create global link to current adone",
+                    arguments: [
+                        {
+                            name: "name",
+                            default: "adone",
+                            help: "Link name"
+                        }
+                    ],
+                    options: [
+                        {
+                            name: "--del",
+                            help: "Delete link instead of create"
+                        }
+                    ],
+                    handler: this.linkCommand
                 },
                 {
                     name: "publish",
@@ -310,32 +352,37 @@ export default class extends adone.application.Subsystem {
 
     async installCommand(args, opts) {
         const builder = new AdoneManager();
-        try {
-            await builder.uninstall();
-        } catch (err) {
-            adone.log(err.message);
+        if (await builder.install(args.get("name"), opts.get("dirname"), opts.get("env"))) {
+            adone.log(`Adone v${builder.adoneVersion} successfully installed`);
+            return 0;
+        } else {
+            adone.log("Something already exists");
             return 1;
         }
-        if (opts.get("link")) {
-            await builder.installLink();
-        } else {
-            await builder.install();
-        }
-
-        adone.log(`Adone v${builder.adoneVersion} successfully installed`);
-        return 0;
     }
 
-    async uninstallCommand() {
+    async uninstallCommand(args) {
         const builder = new AdoneManager();
         try {
-            await builder.uninstall();
+            await builder.uninstall(args.get("name"));
         } catch (err) {
             adone.log(err.message);
             return 1;
         }
         adone.log("Adone successfully uninstalled");
         return 0;
+    }
+
+    async linkCommand(args, opts) {
+        const builder = new AdoneManager();
+        const linkName = args.get("name");
+        if (!opts.has("del")) {
+            await builder.installLink(linkName);
+            adone.log(`Global link '${linkName}' successfully created`);
+        } else {
+            await builder.uninstallLink(linkName);
+            adone.log(`Global link '${linkName}' successfully deleted`);
+        }
     }
 
     async publishCommand(args, opts) {

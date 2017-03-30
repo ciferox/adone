@@ -41,21 +41,70 @@ export const PEER_TYPE = {
     ACTIVE: 1
 };
 
+const MAX_INTEGER = Number.MAX_SAFE_INTEGER >>> 0;
+
+export class SequenceId {
+    constructor() {
+        this._id = 0 >>> 0;
+    }
+
+    next() {
+        if (this._id === MAX_INTEGER) {
+            this._id = 1;
+        } else {
+            this._id++;
+        }
+        return this._id;
+    }
+}
+
+export class Definition {
+    constructor() {
+        this.id = undefined;
+        this.name = undefined;
+        this.description = undefined;
+        this.$ = undefined;
+        this.twin = undefined;
+    }
+}
+adone.tag.set(Definition, adone.tag.NETRON_DEFINITION);
+
+export class Reference {
+    constructor(defId) {
+        this.defId = defId;
+    }
+}
+adone.tag.set(Reference, adone.tag.NETRON_REFERENCE);
+
+export class Interface {
+    constructor(def, uid) {
+        this.$def = def;
+        this.$uid = uid;
+    }
+}
+adone.tag.set(Interface, adone.tag.NETRON_INTERFACE);
+
+const { util: { uuid } } = adone;
+
+export class Identity {
+    constructor(uid = uuid.v4()) {
+        this.uid = uid;
+
+    }
+
+}
+
+
 adone.lazify({
     decorator: "./decorators",
     Investigator: "./investigator",
-    SequenceId: "./sequence_id",
     GenesisNetron: "./genesis_netron",
     GenesisPeer: "./genesis_peer",
     Netron: "./netron",
     Peer: "./peer",
     Stub: "./stub",
-    Identity: "./identity",
     RemoteStub: "./remote_stub",
-    Definition: "./definition",
     Definitions: "./definitions",
-    Reference: "./reference",
-    Interface: "./interface",
     Adapter: "./adapter",
     Stream: "./stream",
     contextable: () => {

@@ -377,3 +377,4 @@ export const tmpName = async ({ name = null, tries = 3, template = null, dir = o
 export const homeDir = () => {
     return (is.win32 ? process.env.USERPROFILE : process.env.HOME);
 }
+;
