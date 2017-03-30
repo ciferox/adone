@@ -254,6 +254,32 @@ export const width = (str) => {
     return width;
 };
 
+export const indent = (string, spaces) => {
+    const ind = " ".repeat(spaces);
+    const { length } = string;
+    let result = "";
+
+    for (let position = 0; position < length;) {
+        const next = string.indexOf("\n", position);
+        let line;
+        if (next === -1) {
+            line = string.slice(position);
+            position = length;
+        } else {
+            line = string.slice(position, next + 1);
+            position = next + 1;
+        }
+
+        if (line.length && line !== "\n") {
+            result += ind;
+        }
+
+        result += line;
+    }
+
+    return result;
+};
+
 adone.lazify({
     unicode: "./unicode",
     spinner: "./spinners",

@@ -512,7 +512,8 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
             tryDecode: () => (buf) => adone.data.mpak.serializer.decoder.tryDecode(buf)
         })),
         bson: "./glosses/data/bson",
-        base64: "./glosses/data/base64"
+        base64: "./glosses/data/base64",
+        yaml: "./glosses/data/yaml"
     });
 
     adone.database = lazify({

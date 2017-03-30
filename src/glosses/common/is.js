@@ -150,7 +150,8 @@ const is = {
     // Checks whether given value is an even number.
     even: (number) => (is.integer(number) && number % 2 === 0),
     // Checks whether given value is a float number.
-    float: (number) => (number !== Math.floor(number)),
+    float: (number) => is.number(number) && number !== Math.floor(number),
+    negativeZero: (number) => (number === 0) && (Number.NEGATIVE_INFINITY === 1 / number),
     // Checks whether given value is a string.
     string: (value) => (typeof value === "string"),
     // Checks whether given value is an empty string, i.e, a string with whitespace characters only.

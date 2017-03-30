@@ -104,6 +104,7 @@ export const isFileSync = (path) => statSync(path).isFile();
 export const isDirectory = (path) => adone.fs.stat(path).then((st) => st.isDirectory());
 export const isDirectorySync = (path) => statSync(path).isDirectory();
 export const writeFileSync = adone.std.fs.writeFileSync;
+export const readdirSync = adone.std.fs.readdirSync;
 
 export const readFile = async (filepath, { check = false, encoding = null } = {}) => {
     if (check) {

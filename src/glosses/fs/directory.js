@@ -1,8 +1,8 @@
 const { std: { fs: sfs, path: spath }, vendor: { lodash: _ }, is, fs } = adone;
 
 export default class Directory {
-    constructor(path) {
-        this._path = path;
+    constructor(...path) {
+        this._path = spath.resolve(...path);
     }
 
     dirname() {
