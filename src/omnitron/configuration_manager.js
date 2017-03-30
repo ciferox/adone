@@ -84,7 +84,7 @@ export default class ConfigurationManager {
         }
         try {
             await this.app.saveConfig(name, { path: `omnitron.${name}` });
-            adone.info("Configuration '${name}' saved");
+            adone.info(`Configuration '${name}' saved`);
         } catch (err) {
             adone.error(err);
         }

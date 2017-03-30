@@ -379,6 +379,6 @@ export default class extends adone.application.Subsystem {
             bar.setSchema(`:spinner Complete {bold}${fileName}{/} :elapsed`, true);
         }
 
-        // await outDir.unlink();
+        await outDir.unlink();
     }
 }

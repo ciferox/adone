@@ -1,4 +1,4 @@
-const { is } = adone;
+const { is, text: { pretty } } = adone;
 const { STATUSES } = adone.omnitron.const;
 
 export default class extends adone.application.Subsystem {
@@ -174,7 +174,33 @@ export default class extends adone.application.Subsystem {
 
     async statusCommand(args) {
         try {
-            adone.log(adone.text.pretty.json(await this.dispatcher.status(args.get("service"))));
+            adone.log(pretty.table(await this.dispatcher.status(args.get("service")), {
+                noHeader: true,
+                style: {
+                    compact: true
+                },
+                model: [
+                    {
+                        id: "name",
+                        header: "Name",
+                        style: "{green-fg}"
+                    },
+                    {
+                        id: "status",
+                        header: "Status",
+                        style: (val) => {
+                            switch (val) {
+                                case "disabled": return "{red-bg}{white-fg}";
+                                case "enabled": return "{yellow-bg}{black-fg}";
+                                case "active": return "{green-bg}{black-fg}";
+                                default: return "";
+                            }
+                        },
+                        format: " %s ",
+                        align: "right"
+                    }
+                ]
+            }));
         } catch (err) {
             adone.log(err.message);
         }
@@ -237,7 +263,54 @@ export default class extends adone.application.Subsystem {
     async listCommand(args, opts) {
         const status = opts.get("status");
         try {
-            adone.log(adone.text.pretty.json(await this.dispatcher.list(status)));    
+            adone.log(pretty.table(await this.dispatcher.list(status), {
+                style: {
+                    head: ["gray"],
+                    compact: true
+                },
+                model: [
+                    {
+                        id: "name",
+                        header: "Name",
+                        style: "{green-fg}"
+
+                    },
+                    {
+                        id: "contexts",
+                        header: "Contexts",
+                        format: (contexts) => {
+                            return contexts.map((c) => {
+                                if (c.default === true) {
+                                    return `{bold}{white-fg}${c.id}{/}`;
+                                }
+                                return `${c.id}`;
+                            }).join(", ");
+                        }
+                    },
+                    {
+                        id: "description",
+                        header: "Description"
+                    },
+                    {
+                        id: "status",
+                        header: "Status",
+                        style: (val) => {
+                            switch (val) {
+                                case "disabled": return "{red-bg}{white-fg}";
+                                case "enabled": return "{yellow-bg}{black-fg}";
+                                case "active": return "{green-bg}{black-fg}";
+                                default: return "";
+                            }
+                        },
+                        format: " %s ",
+                        align: "right"
+                    },
+                    {
+                        id: "path",
+                        header: "Path"
+                    }
+                ]
+            }));
         } catch (err) {
             adone.error(err.message);
         }
@@ -246,7 +319,43 @@ export default class extends adone.application.Subsystem {
 
     async gatesCommand() {
         try {
-            adone.log(adone.text.pretty.json(await this.dispatcher.gates()));
+            adone.log(pretty.table(await this.dispatcher.gates(), {
+                style: {
+                    head: ["gray"],
+                    compact: true
+                },
+                model: [
+                    {
+                        id: "id",
+                        header: "ID",
+                        style: "{green-fg}"
+
+                    },
+                    {
+                        id: "port",
+                        header: "Address",
+                        style: "{bold}"
+                    },
+                    {
+                        id: "type",
+                        header: "Type"
+                    },
+                    {
+                        id: "status",
+                        header: "Status",
+                        style: (val) => {
+                            switch (val) {
+                                case "disabled": return "{red-bg}{white-bg}";
+                                case "enabled": return "{yellow-bg}{black-fg}";
+                                case "active": return "{green-bg}{black-fg}";
+                                default: return "";
+                            }
+                        },
+                        format: " %s ",
+                        align: "right"
+                    }
+                ]
+            }));
         } catch (err) {
             adone.log(err.message);
         }

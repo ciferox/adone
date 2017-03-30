@@ -259,7 +259,8 @@ adone.lazify({
     spinner: "./spinners",
     table: "./table",
     pretty: () => adone.lazify({
-        json: "./pretties/json"
+        json: "./pretties/json",
+        table: "./pretties/table"
     }, null, require),
     Fuzzy: "./fuzzy"
 }, exports, require);

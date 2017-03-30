@@ -958,8 +958,10 @@ Table.computeWidths = makeComputeWidths("colSpan", "desiredWidth", "x", 1);
 Table.computeHeights = makeComputeWidths("rowSpan", "desiredHeight", "y", 1);
 
 export class BorderlessTable extends Table {
-    constructor({ colWidths }) {
+    constructor({ colWidths = [], head = [], colAligns = [], style = {} } = {}) {
         super({
+            head,
+            colAligns,
             colWidths,
             chars: {
                 top: "",
@@ -978,10 +980,10 @@ export class BorderlessTable extends Table {
                 "right-mid": "",
                 middle: ""
             },
-            style: {
+            style: Object.assign({
                 "padding-left": 0,
                 "padding-right": 0
-            }
+            }, style)
         });
     }
 }

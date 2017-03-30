@@ -3,7 +3,7 @@ const startedAt = adone.util.microtime.now();
 import * as pkg from "adone/../package.json";
 const { is, std, vendor: { lodash: _ } } = adone;
 const { Contextable, Public, Private, Description, Type } = adone.netron.decorator;
-const { DISABLED, ENABLED, INITIALIZING, RUNNING, UNINITIALIZING, STATUSES } = adone.omnitron.const;
+const { DISABLED, ENABLED, INITIALIZING, ACTIVE, UNINITIALIZING, STATUSES } = adone.omnitron.const;
 
 // Service requirements:
 // 1. Each service should be in its own directory.
@@ -57,7 +57,7 @@ export class Omnitron extends adone.application.Application {
 
         this.createNetron({ isSuper: true });
         await this.bindNetron();
-        
+
         // Save services config for pm-service-container.
         await this._.configManager.saveServicesConfig();
 
@@ -79,6 +79,8 @@ export class Omnitron extends adone.application.Application {
         await adone.promise.delay(500);
 
         await this.unbindNetron();
+
+        await this._.configManager.saveGatesConfig();
 
         return this.deletePidFile();
     }
@@ -114,12 +116,14 @@ export class Omnitron extends adone.application.Application {
                 switch (gate.type) {
                     case "socket": {
                         await this._.netron.bind(bindOptions);
+                        gate.status = ACTIVE;
                         break;
                     }
                     case "websocket": {
                         const adapter = new adone.netron.ws.Adapter(bindOptions);
                         await this._.netron.attachAdapter(adapter);
                         await this._.netron.bind(gate.id);
+                        gate.status = ACTIVE;
                         break;
                     }
                 }
@@ -131,6 +135,13 @@ export class Omnitron extends adone.application.Application {
         try {
             await this._.netron.disconnect();
             await this._.netron.unbind();
+
+            // this way is not reliable
+            for (const gate of this.config.omnitron.gates) {
+                if (gate.status === ACTIVE) {
+                    gate.status = ENABLED;
+                }
+            }
         } catch (err) {
             adone.error(err);
         }
@@ -278,7 +289,7 @@ export class Omnitron extends adone.application.Application {
                 if (defaulted) {
                     service.defaultContext = this._.context[id];
                 }
-                serviceConfig.status = RUNNING;
+                serviceConfig.status = ACTIVE;
             }
             this._.uninitOrder.unshift(serviceName);
             adone.info(`Service '${serviceName}' attached`);
@@ -399,7 +410,7 @@ export class Omnitron extends adone.application.Application {
                 names = serviceName;
             }
         } else {
-            throw new adone.x.InvalidArgument(`Invalid type of argument: ${typeof(serviceName)}`);
+            throw new adone.x.InvalidArgument(`Invalid type of argument: ${typeof (serviceName)}`);
         }
 
         const result = [];
@@ -429,7 +440,7 @@ export class Omnitron extends adone.application.Application {
             }
         } else {
             if (service.config.status !== DISABLED) {
-                if (service.config.status === RUNNING) {
+                if (service.config.status === ACTIVE) {
                     await this.detachService(service);
                 } else if (service.config.status !== ENABLED) {
                     throw new adone.x.IllegalState(`Cannot disable service with '${service.config.status}' status`);
@@ -463,7 +474,7 @@ export class Omnitron extends adone.application.Application {
         const status = service.config.status;
         if (status === DISABLED) {
             throw new adone.x.IllegalState("Service is disabled");
-        } else if (status === RUNNING) {
+        } else if (status === ACTIVE) {
             return this.detachService(service);
         } else {
             throw new adone.x.IllegalState(`Illegal status of service: ${status}`);
