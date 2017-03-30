@@ -28,7 +28,7 @@ function it(description, callback) {
 }
 
 function run() {
-    const emitter = new EventEmitter;
+    const emitter = new EventEmitter();
 
     async function runner(block, level = 0) {
         emitter.emit("header", { name: block.name, level });
@@ -70,7 +70,7 @@ const nop = () => { };
 const waitFor = (emitter, event) => new Promise((resolve) => emitter.once(event, resolve));
 
 describe("Engine", () => {
-    it("should execute tests", async function () {
+    it("should execute tests", async () => {
         const engine = new Engine();
         const { describe, it, start } = engine.context();
 
@@ -90,7 +90,7 @@ describe("Engine", () => {
         assert.deepEqual(calls, [1, 2]);
     });
 
-    it("should execute tests in the right order", async function () {
+    it("should execute tests in the right order", async () => {
         const engine = new Engine();
         const { describe, it, start } = engine.context();
 
@@ -110,18 +110,18 @@ describe("Engine", () => {
         assert.deepEqual(calls, [1, 2]);
     });
 
-    it("should work with async functions", async function () {
+    it("should work with async functions", async () => {
         const engine = new Engine();
         const { describe, it, start } = engine.context();
 
         const calls = [];
         describe("/", () => {
-            it("test1", async function () {
+            it("test1", async () => {
                 await new Promise((resolve) => setTimeout(resolve, 100));
                 calls.push(1);
             });
 
-            it("test2", async function () {
+            it("test2", async () => {
                 await new Promise((resolve) => setTimeout(resolve, 100));
                 calls.push(2);
             });
@@ -159,12 +159,12 @@ describe("Engine", () => {
         const { describe, it, start } = engine.context();
 
         describe("/", () => {
-            it("test1", async function () {
+            it("test1", async () => {
                 await new Promise((resolve) => setTimeout(resolve, 100));
             });
 
             describe("nested", () => {
-                it("test2", async function () {
+                it("test2", async () => {
                     await new Promise((resolve) => setTimeout(resolve, 100));
                 });
             });
@@ -194,16 +194,16 @@ describe("Engine", () => {
         ]);
     });
 
-    it("should emit events for tests", async function () {
+    it("should emit events for tests", async () => {
         const engine = new Engine();
         const { describe, it, start } = engine.context();
 
         describe("/", () => {
-            it("test1", async function () {
+            it("test1", async () => {
                 await new Promise((resolve) => setTimeout(resolve, 100));
             });
 
-            it("test2", async function () {
+            it("test2", async () => {
                 await new Promise((resolve) => setTimeout(resolve, 100));
             });
         });
@@ -231,20 +231,20 @@ describe("Engine", () => {
         ]);
     });
 
-    it("should set the err property if a test fails", async function () {
+    it("should set the err property if a test fails", async () => {
         const engine = new Engine();
         const { describe, it, start } = engine.context();
 
         describe("/", () => {
-            it("test1", async function () {
+            it("test1", async () => {
                 await new Promise((resolve) => setTimeout(resolve, 100));
             });
 
-            it("test2", async function () {
+            it("test2", async () => {
                 await new Promise((resolve) => setTimeout(resolve, 100));
             });
 
-            it("test3", async function () {
+            it("test3", async () => {
                 throw new Error("123");
             });
         });
@@ -262,20 +262,20 @@ describe("Engine", () => {
         assert.deepEqual(results, [["test1", null], ["test2", null], ["test3", "123"]]);
     });
 
-    it("should set the elapsed proeprty", async function () {
+    it("should set the elapsed proeprty", async () => {
         const engine = new Engine();
         const { describe, it, start } = engine.context();
 
         describe("/", () => {
-            it("test1", async function () {
+            it("test1", async () => {
                 await new Promise((resolve) => setTimeout(resolve, 123));
             });
 
-            it("test2", async function () {
+            it("test2", async () => {
                 await new Promise((resolve) => setTimeout(resolve, 456));
             });
 
-            it("test3", async function () {
+            it("test3", async () => {
                 throw new Error("123");
             });
         });
@@ -291,8 +291,8 @@ describe("Engine", () => {
 
         assert.equal(results.length, 3);
 
-        assert.ok(113 < results[0] && results[0] < 133);
-        assert.ok(446 < results[1] && results[1] < 466);
+        assert.ok(results[0] > 113 && results[0] < 133);
+        assert.ok(results[1] > 446 && results[1] < 466);
         assert.ok(results[2] < 10);
     });
 
@@ -328,18 +328,18 @@ describe("Engine", () => {
     // });
 
     describe("nested", () => {
-        it("should work with nested describes", async function () {
+        it("should work with nested describes", async () => {
             const engine = new Engine();
             const { describe, it, start } = engine.context();
 
             const calls = [];
             describe("/", () => {
-                it("test1", async function () {
+                it("test1", async () => {
                     await new Promise((resolve) => setTimeout(resolve, 100));
                     calls.push(1);
                 });
 
-                it("test2", async function () {
+                it("test2", async () => {
                     await new Promise((resolve) => setTimeout(resolve, 100));
                     calls.push(2);
                 });
@@ -349,7 +349,7 @@ describe("Engine", () => {
                         calls.push(3);
                     });
 
-                    it("test4", async function () {
+                    it("test4", async () => {
                         await new Promise((resolve) => setTimeout(resolve, 100));
                         calls.push(4);
                     });
@@ -360,13 +360,13 @@ describe("Engine", () => {
             assert.deepEqual(calls, [1, 2, 3, 4]);
         });
 
-        it("should execute nested blocks and the current level tests in the right order", async function () {
+        it("should execute nested blocks and the current level tests in the right order", async () => {
             const engine = new Engine();
             const { describe, it, start } = engine.context();
 
             const calls = [];
             describe("/", () => {
-                it("test1", async function () {
+                it("test1", async () => {
                     await new Promise((resolve) => setTimeout(resolve, 100));
                     calls.push("1");
                 });
@@ -376,13 +376,13 @@ describe("Engine", () => {
                         calls.push("3");
                     });
 
-                    it("test4", async function () {
+                    it("test4", async () => {
                         await new Promise((resolve) => setTimeout(resolve, 100));
                         calls.push("4");
                     });
                 });
 
-                it("test2", async function () {
+                it("test2", async () => {
                     await new Promise((resolve) => setTimeout(resolve, 100));
                     calls.push("2");
                 });
@@ -393,7 +393,7 @@ describe("Engine", () => {
             assert.deepEqual(calls, ["1", "3", "4", "2"]);
         });
 
-        it("should execute nested blocks in the right order", async function () {
+        it("should execute nested blocks in the right order", async () => {
             const engine = new Engine();
             const { describe, it, start } = engine.context();
 
@@ -423,7 +423,7 @@ describe("Engine", () => {
     });
 
     describe("inclusive", () => {
-        it("should execute only one test", async function () {
+        it("should execute only one test", async () => {
             const engine = new Engine();
             const { describe, it, start } = engine.context();
 
@@ -440,7 +440,7 @@ describe("Engine", () => {
             assert.deepEqual(calls, ["test2"]);
         });
 
-        it("should execute only the deepest describe", async function () {
+        it("should execute only the deepest describe", async () => {
             const engine = new Engine();
             const { describe, it, start } = engine.context();
 
@@ -464,7 +464,7 @@ describe("Engine", () => {
             assert.deepEqual(calls, ["test4"]);
         });
 
-        it("should work with many top-level describes", async function () {
+        it("should work with many top-level describes", async () => {
             const engine = new Engine();
             const { describe, it, start } = engine.context();
 
@@ -487,7 +487,7 @@ describe("Engine", () => {
             assert.deepEqual(calls, ["test2"]);
         });
 
-        it("should not execute all the tests if the parent is marked and some nested children too", async function () {
+        it("should not execute all the tests if the parent is marked and some nested children too", async () => {
             const engine = new Engine();
             const { describe, it, start } = engine.context();
 
@@ -507,7 +507,7 @@ describe("Engine", () => {
             assert.deepEqual(calls, ["test3"]);
         });
 
-        it("should correcly execute tests when .only on different levels", async function () {
+        it("should correcly execute tests when .only on different levels", async () => {
             const engine = new Engine();
             const { describe, it, start } = engine.context();
 
@@ -535,7 +535,7 @@ describe("Engine", () => {
     });
 
     describe("exclusive", () => {
-        it("should skip tests", async function () {
+        it("should skip tests", async () => {
             const engine = new Engine();
             const { describe, it, start } = engine.context();
 
@@ -552,7 +552,7 @@ describe("Engine", () => {
             assert.deepEqual(calls, ["test1", "test3"]);
         });
 
-        it("should skip blocks", async function () {
+        it("should skip blocks", async () => {
             const engine = new Engine();
             const { describe, it, start } = engine.context();
 
@@ -578,7 +578,7 @@ describe("Engine", () => {
             assert.deepEqual(calls, ["test1", "test4"]);
         });
 
-        it("should skip tests in runtime", async function () {
+        it("should skip tests in runtime", async () => {
             const engine = new Engine();
             const { describe, it, start } = engine.context();
 
@@ -604,7 +604,7 @@ describe("Engine", () => {
             assert.deepEqual(res, [["test2", true]]);
         });
 
-        it("the runner must not consider inclusive tests if the parent is skipped", async function () {
+        it("the runner must not consider inclusive tests if the parent is skipped", async () => {
             const engine = new Engine();
             const { describe, it, start } = engine.context();
 
@@ -653,7 +653,7 @@ describe("Engine", () => {
 
     describe("hooks", () => {
         describe("before", () => {
-            it("should be invoked only once in the beginning", async function () {
+            it("should be invoked only once in the beginning", async () => {
                 const engine = new Engine();
                 const { describe, it, start, before } = engine.context();
 
@@ -663,12 +663,12 @@ describe("Engine", () => {
                         calls.push("before");
                     });
 
-                    it("test1", async function () {
+                    it("test1", async () => {
                         await new Promise((resolve) => setTimeout(resolve, 100));
                         calls.push("1");
                     });
 
-                    it("test2", async function () {
+                    it("test2", async () => {
                         await new Promise((resolve) => setTimeout(resolve, 100));
                         calls.push("2");
                     });
@@ -679,7 +679,7 @@ describe("Engine", () => {
                 assert.deepEqual(calls, ["before", "1", "2"]);
             });
 
-            it("should invoke the hook only once even if there are nested blocks", async function () {
+            it("should invoke the hook only once even if there are nested blocks", async () => {
                 const engine = new Engine();
                 const { describe, it, start, before } = engine.context();
 
@@ -689,11 +689,11 @@ describe("Engine", () => {
                         calls.push("before");
                     });
 
-                    it("test1", async function () {
+                    it("test1", async () => {
                         calls.push("1");
                     });
 
-                    it("test2", async function () {
+                    it("test2", async () => {
                         calls.push("2");
                     });
 
@@ -713,7 +713,7 @@ describe("Engine", () => {
                 assert.deepEqual(calls, ["before", "1", "2", "3", "4"]);
             });
 
-            it("should invoke nested hooks", async function () {
+            it("should invoke nested hooks", async () => {
                 const engine = new Engine();
                 const { describe, it, start, before } = engine.context();
 
@@ -723,11 +723,11 @@ describe("Engine", () => {
                         calls.push("before");
                     });
 
-                    it("test1", async function () {
+                    it("test1", async () => {
                         calls.push("1");
                     });
 
-                    it("test2", async function () {
+                    it("test2", async () => {
                         calls.push("2");
                     });
 
@@ -760,7 +760,7 @@ describe("Engine", () => {
                 assert.deepEqual(calls, ["before", "1", "2", "before#1", "3", "4", "before#2", "5"]);
             });
 
-            it("should not invoke the hook if there are not tests", async function () {
+            it("should not invoke the hook if there are not tests", async () => {
                 const engine = new Engine();
                 const { describe, start, before } = engine.context();
 
@@ -776,7 +776,7 @@ describe("Engine", () => {
                 assert.equal(calls.length, 0);
             });
 
-            it("should invoke the hook if a nested describe has a test but the current level has not", async function () {
+            it("should invoke the hook if a nested describe has a test but the current level has not", async () => {
                 const engine = new Engine();
                 const { describe, it, start, before } = engine.context();
 
@@ -796,13 +796,13 @@ describe("Engine", () => {
                 assert.deepEqual(calls, ["before", "1"]);
             });
 
-            it("should work with async functions", async function () {
+            it("should work with async functions", async () => {
                 const engine = new Engine();
                 const { describe, it, start, before } = engine.context();
 
                 const calls = [];
                 describe("/", () => {
-                    before(async function () {
+                    before(async () => {
                         calls.push("before");
                     });
 
@@ -816,7 +816,7 @@ describe("Engine", () => {
                 assert.deepEqual(calls, ["before", "1"]);
             });
 
-            it("top-level hook", async function () {
+            it("top-level hook", async () => {
                 const engine = new Engine();
                 const { describe, it, start, before } = engine.context();
 
@@ -825,7 +825,7 @@ describe("Engine", () => {
                     calls.push("top");
                 });
                 describe("/", () => {
-                    before(async function () {
+                    before(async () => {
                         calls.push("before");
                     });
 
@@ -839,14 +839,14 @@ describe("Engine", () => {
                 assert.deepEqual(calls, ["top", "before", "1"]);
             });
 
-            it("should not invoke in case of skip", async function () {
+            it("should not invoke in case of skip", async () => {
                 const engine = new Engine();
                 const { describe, it, start, before } = engine.context();
 
                 const calls = [];
 
                 describe.skip("/", () => {
-                    before(async function () {
+                    before(async () => {
                         calls.push("before");
                     });
 
@@ -913,7 +913,7 @@ describe("Engine", () => {
                 const e = start();
 
                 e.on("end before hook", ({ meta }) => {
-                    results.push(meta.err.message);
+                    results.push(meta.err && meta.err.message);
                 });
 
                 await waitFor(e, "done");
@@ -977,16 +977,130 @@ describe("Engine", () => {
                 const e = start();
 
                 e.on("end before hook", ({ meta }) => {
-                    results.push(meta.err.message);
+                    results.push(meta.err && meta.err.message);
                 });
 
                 await waitFor(e, "done");
                 assert.deepEqual(["Timeout of 240ms exceeded"], results);
             });
+
+            it("should throw a timeout error (sync)", async () => {
+                const engine = new Engine();
+                const { describe, it, start, before } = engine.context();
+
+                const results = [];
+
+                describe("/", () => {
+                    before(function () {
+                        this.timeout(240);
+                        const t = new Date();
+                        while (new Date() - t < 300) { }
+                    });
+
+                    it("test1", () => {
+                        results.push("1");
+                    });
+
+                    describe("nested", () => {
+                        it("test2", () => {
+                            results.push("2");
+                        });
+                    });
+                });
+
+                const e = start();
+
+                e.on("end before hook", ({ meta }) => {
+                    results.push(meta.err && meta.err.message);
+                });
+
+                await waitFor(e, "done");
+                assert.deepEqual(["Timeout of 240ms exceeded"], results);
+            });
+
+            it("should trigger even if doesnt resolve", async () => {
+                const engine = new Engine();
+                const { describe, it, start, before, after } = engine.context();
+
+                const results = [];
+
+                describe("/", () => {
+                    let timer = null;
+
+                    before(function (done) {
+                        this.timeout(240);
+                        timer = setTimeout(done, 1010100);
+                    });
+
+                    after(() => {
+                        clearTimeout(timer);
+                    });
+
+                    it("test1", () => {
+                        results.push("1");
+                    });
+
+                    describe("nested", () => {
+                        it("test2", () => {
+                            results.push("2");
+                        });
+                    });
+                });
+
+                const e = start();
+
+                e.on("end before hook", ({ meta }) => {
+                    results.push(meta.err && meta.err.message);
+                });
+
+                await waitFor(e, "done");
+                assert.deepEqual(["Timeout of 240ms exceeded"], results);
+            });
+
+            for (const val of [0, null, false, Infinity]) {
+                it(`should set value to ${val}`, async () => {
+                    const engine = new Engine();
+                    const { describe, it, start, before, after } = engine.context();
+
+                    const results = [];
+
+                    describe("/", () => {
+                        let timer = null;
+
+                        before(function (done) {
+                            this.timeout(val);
+                            timer = setTimeout(done, 500);
+                        });
+
+                        after(() => {
+                            clearTimeout(timer);
+                        });
+
+                        it("test1", () => {
+                            results.push("1");
+                        });
+
+                        describe("nested", () => {
+                            it("test2", () => {
+                                results.push("2");
+                            });
+                        });
+                    });
+
+                    const e = start();
+
+                    e.on("end before hook", ({ meta }) => {
+                        results.push(meta.err && meta.err.message);
+                    });
+
+                    await waitFor(e, "done");
+                    assert.deepEqual([null, "1", "2"], results);
+                });
+            }
         });
 
         describe("after", () => {
-            it("should be invoked only once in the end", async function () {
+            it("should be invoked only once in the end", async () => {
                 const engine = new Engine();
                 const { describe, it, start, after } = engine.context();
 
@@ -996,12 +1110,12 @@ describe("Engine", () => {
                         calls.push("after");
                     });
 
-                    it("test1", async function () {
+                    it("test1", async () => {
                         await new Promise((resolve) => setTimeout(resolve, 100));
                         calls.push("1");
                     });
 
-                    it("test2", async function () {
+                    it("test2", async () => {
                         await new Promise((resolve) => setTimeout(resolve, 100));
                         calls.push("2");
                     });
@@ -1012,7 +1126,7 @@ describe("Engine", () => {
                 assert.deepEqual(calls, ["1", "2", "after"]);
             });
 
-            it("should invoke the hook only once even if there are nested blocks", async function () {
+            it("should invoke the hook only once even if there are nested blocks", async () => {
                 const engine = new Engine();
                 const { describe, it, start, after } = engine.context();
 
@@ -1022,11 +1136,11 @@ describe("Engine", () => {
                         calls.push("after");
                     });
 
-                    it("test1", async function () {
+                    it("test1", async () => {
                         calls.push("1");
                     });
 
-                    it("test2", async function () {
+                    it("test2", async () => {
                         calls.push("2");
                     });
 
@@ -1046,7 +1160,7 @@ describe("Engine", () => {
                 assert.deepEqual(calls, ["1", "2", "3", "4", "after"]);
             });
 
-            it("should invoke nested hooks", async function () {
+            it("should invoke nested hooks", async () => {
                 const engine = new Engine();
                 const { describe, it, start, after } = engine.context();
 
@@ -1056,11 +1170,11 @@ describe("Engine", () => {
                         calls.push("after");
                     });
 
-                    it("test1", async function () {
+                    it("test1", async () => {
                         calls.push("1");
                     });
 
-                    it("test2", async function () {
+                    it("test2", async () => {
                         calls.push("2");
                     });
 
@@ -1093,7 +1207,7 @@ describe("Engine", () => {
                 assert.deepEqual(calls, ["1", "2", "3", "4", "after#1", "5", "after#2", "after"]);
             });
 
-            it("should not invoke the hook if there are not tests", async function () {
+            it("should not invoke the hook if there are not tests", async () => {
                 const engine = new Engine();
                 const { describe, start, after } = engine.context();
 
@@ -1109,7 +1223,7 @@ describe("Engine", () => {
                 assert.equal(calls.length, 0);
             });
 
-            it("should invoke the hook if a nested describe has a test but the current level has not", async function () {
+            it("should invoke the hook if a nested describe has a test but the current level has not", async () => {
                 const engine = new Engine();
                 const { describe, it, start, after } = engine.context();
 
@@ -1129,13 +1243,13 @@ describe("Engine", () => {
                 assert.deepEqual(calls, ["1", "after"]);
             });
 
-            it("should work with async functions", async function () {
+            it("should work with async functions", async () => {
                 const engine = new Engine();
                 const { describe, it, start, after } = engine.context();
 
                 const calls = [];
                 describe("/", () => {
-                    after(async function () {
+                    after(async () => {
                         calls.push("after");
                     });
 
@@ -1149,7 +1263,7 @@ describe("Engine", () => {
                 assert.deepEqual(calls, ["1", "after"]);
             });
 
-            it("top-level hook", async function () {
+            it("top-level hook", async () => {
                 const engine = new Engine();
                 const { describe, it, start, after } = engine.context();
 
@@ -1158,7 +1272,7 @@ describe("Engine", () => {
                     calls.push("top");
                 });
                 describe("/", () => {
-                    after(async function () {
+                    after(async () => {
                         calls.push("after");
                     });
 
@@ -1172,14 +1286,14 @@ describe("Engine", () => {
                 assert.deepEqual(calls, ["1", "after", "top"]);
             });
 
-            it("should not invoke in case of skip", async function () {
+            it("should not invoke in case of skip", async () => {
                 const engine = new Engine();
                 const { describe, it, start, after } = engine.context();
 
                 const calls = [];
 
                 describe.skip("/", () => {
-                    after(async function () {
+                    after(async () => {
                         calls.push("after");
                     });
 
@@ -1250,7 +1364,7 @@ describe("Engine", () => {
                 const e = start();
 
                 e.on("end after hook", ({ meta }) => {
-                    results.push(meta.err.message);
+                    results.push(meta.err && meta.err.message);
                 });
 
                 await waitFor(e, "done");
@@ -1314,7 +1428,41 @@ describe("Engine", () => {
                 const e = start();
 
                 e.on("end after hook", ({ meta }) => {
-                    results.push(meta.err.message);
+                    results.push(meta.err && meta.err.message);
+                });
+
+                await waitFor(e, "done");
+                assert.deepEqual(["1", "2", "Timeout of 240ms exceeded"], results);
+            });
+
+            it("should throw a timeout error (sync)", async () => {
+                const engine = new Engine();
+                const { describe, it, start, after } = engine.context();
+
+                const results = [];
+
+                describe("/", () => {
+                    after(function () {
+                        this.timeout(240);
+                        const t = new Date();
+                        while (new Date() - t < 300) { }
+                    });
+
+                    it("test1", () => {
+                        results.push("1");
+                    });
+
+                    describe("nested", () => {
+                        it("test2", () => {
+                            results.push("2");
+                        });
+                    });
+                });
+
+                const e = start();
+
+                e.on("end after hook", ({ meta }) => {
+                    results.push(meta.err && meta.err.message);
                 });
 
                 await waitFor(e, "done");
@@ -1323,7 +1471,7 @@ describe("Engine", () => {
         });
 
         describe("beforeEach", () => {
-            it("should work with tests", async function () {
+            it("should work with tests", async () => {
                 const engine = new Engine();
                 const { describe, it, start, beforeEach } = engine.context();
 
@@ -1347,7 +1495,7 @@ describe("Engine", () => {
                 assert.deepEqual(calls, ["before", "1", "before", "2"]);
             });
 
-            it("should work with nested blocks", async function () {
+            it("should work with nested blocks", async () => {
                 const engine = new Engine();
                 const { describe, it, start, beforeEach } = engine.context();
 
@@ -1395,13 +1543,13 @@ describe("Engine", () => {
                 ]);
             });
 
-            it("should work with async functions", async function () {
+            it("should work with async functions", async () => {
                 const engine = new Engine();
                 const { describe, it, start, beforeEach } = engine.context();
 
                 const calls = [];
                 describe("/", () => {
-                    beforeEach(async function () {
+                    beforeEach(async () => {
                         calls.push("before");
                     });
 
@@ -1415,7 +1563,7 @@ describe("Engine", () => {
                 assert.deepEqual(calls, ["before", "1"]);
             });
 
-            it("top-level hook", async function () {
+            it("top-level hook", async () => {
                 const engine = new Engine();
                 const { describe, it, start, beforeEach } = engine.context();
 
@@ -1424,7 +1572,7 @@ describe("Engine", () => {
                     calls.push("top");
                 });
                 describe("/", () => {
-                    beforeEach(async function () {
+                    beforeEach(async () => {
                         calls.push("before");
                     });
 
@@ -1438,14 +1586,14 @@ describe("Engine", () => {
                 assert.deepEqual(calls, ["top", "before", "1"]);
             });
 
-            it("should not invoke in case of skip", async function () {
+            it("should not invoke in case of skip", async () => {
                 const engine = new Engine();
                 const { describe, it, start, beforeEach } = engine.context();
 
                 const calls = [];
 
                 describe.skip("/", () => {
-                    beforeEach(async function () {
+                    beforeEach(async () => {
                         calls.push("beforeEach");
                     });
 
@@ -1537,7 +1685,7 @@ describe("Engine", () => {
                 const e = start();
 
                 e.on("end before each hook", ({ meta }) => {
-                    results.push(meta.err.message);
+                    results.push(meta.err && meta.err.message);
                 });
 
                 await waitFor(e, "done");
@@ -1600,7 +1748,41 @@ describe("Engine", () => {
                 const e = start();
 
                 e.on("end before each hook", ({ meta }) => {
-                    results.push(meta.err.message);
+                    results.push(meta.err && meta.err.message);
+                });
+
+                await waitFor(e, "done");
+                assert.deepEqual(["Timeout of 240ms exceeded"], results);
+            });
+
+            it("should throw a timeout error (sync)", async () => {
+                const engine = new Engine();
+                const { describe, it, start, beforeEach } = engine.context();
+
+                const results = [];
+
+                describe("/", () => {
+                    beforeEach(function () {
+                        this.timeout(240);
+                        const t = new Date();
+                        while (new Date() - t < 300) { }
+                    });
+
+                    it("test1", () => {
+                        results.push("1");
+                    });
+
+                    describe("nested", () => {
+                        it("test2", () => {
+                            results.push("2");
+                        });
+                    });
+                });
+
+                const e = start();
+
+                e.on("end before each hook", ({ meta }) => {
+                    results.push(meta.err && meta.err.message);
                 });
 
                 await waitFor(e, "done");
@@ -1609,7 +1791,7 @@ describe("Engine", () => {
         });
 
         describe("afterEach", () => {
-            it("should work with tests", async function () {
+            it("should work with tests", async () => {
                 const engine = new Engine();
                 const { describe, it, start, afterEach } = engine.context();
 
@@ -1633,7 +1815,7 @@ describe("Engine", () => {
                 assert.deepEqual(calls, ["1", "after", "2", "after"]);
             });
 
-            it("should work with nested blocks", async function () {
+            it("should work with nested blocks", async () => {
                 const engine = new Engine();
                 const { describe, it, start, afterEach } = engine.context();
 
@@ -1677,17 +1859,17 @@ describe("Engine", () => {
                     "2", "after",
                     "3", "after",
                     "5", "after",
-                    "4", "after",
+                    "4", "after"
                 ]);
             });
 
-            it("should work with async functions", async function () {
+            it("should work with async functions", async () => {
                 const engine = new Engine();
                 const { describe, it, start, afterEach } = engine.context();
 
                 const calls = [];
                 describe("/", () => {
-                    afterEach(async function () {
+                    afterEach(async () => {
                         calls.push("after");
                     });
 
@@ -1701,7 +1883,7 @@ describe("Engine", () => {
                 assert.deepEqual(calls, ["1", "after"]);
             });
 
-            it("top-level hook", async function () {
+            it("top-level hook", async () => {
                 const engine = new Engine();
                 const { describe, it, start, afterEach } = engine.context();
 
@@ -1710,7 +1892,7 @@ describe("Engine", () => {
                     calls.push("top");
                 });
                 describe("/", () => {
-                    afterEach(async function () {
+                    afterEach(async () => {
                         calls.push("after");
                     });
 
@@ -1724,14 +1906,14 @@ describe("Engine", () => {
                 assert.deepEqual(calls, ["1", "after", "top"]);
             });
 
-            it("should not invoke in case of skip", async function () {
+            it("should not invoke in case of skip", async () => {
                 const engine = new Engine();
                 const { describe, it, start, afterEach } = engine.context();
 
                 const calls = [];
 
                 describe.skip("/", () => {
-                    afterEach(async function () {
+                    afterEach(async () => {
                         calls.push("afterEach");
                     });
 
@@ -1823,7 +2005,7 @@ describe("Engine", () => {
                 const e = start();
 
                 e.on("end after each hook", ({ meta }) => {
-                    results.push(meta.err.message);
+                    results.push(meta.err && meta.err.message);
                 });
 
                 await waitFor(e, "done");
@@ -1886,7 +2068,41 @@ describe("Engine", () => {
                 const e = start();
 
                 e.on("end after each hook", ({ meta }) => {
-                    results.push(meta.err.message);
+                    results.push(meta.err && meta.err.message);
+                });
+
+                await waitFor(e, "done");
+                assert.deepEqual(["1", "Timeout of 240ms exceeded"], results);
+            });
+
+            it("should throw a timeout error (sync)", async () => {
+                const engine = new Engine();
+                const { describe, it, start, afterEach } = engine.context();
+
+                const results = [];
+
+                describe("/", () => {
+                    afterEach(function () {
+                        this.timeout(240);
+                        const t = new Date();
+                        while (new Date() - t < 300) { }
+                    });
+
+                    it("test1", () => {
+                        results.push("1");
+                    });
+
+                    describe("nested", () => {
+                        it("test2", () => {
+                            results.push("2");
+                        });
+                    });
+                });
+
+                const e = start();
+
+                e.on("end after each hook", ({ meta }) => {
+                    results.push(meta.err && meta.err.message);
                 });
 
                 await waitFor(e, "done");
@@ -1905,7 +2121,7 @@ describe("Engine", () => {
                     throw new Error("fail");
                 });
 
-                it("test1", async function () {
+                it("test1", async () => {
                     calls.push("shouldn't be called");
                 });
 
@@ -1930,7 +2146,7 @@ describe("Engine", () => {
                     throw new Error("fail");
                 });
 
-                it("test1", async function () {
+                it("test1", async () => {
                     calls.push("shouldn't be called");
                 });
 
@@ -1956,7 +2172,7 @@ describe("Engine", () => {
                         throw new Error("fail");
                     });
 
-                    it("test1", async function () {
+                    it("test1", async () => {
                         calls.push("shouldn't be called");
                     });
                 });
@@ -1987,7 +2203,7 @@ describe("Engine", () => {
                         throw new Error("fail");
                     });
 
-                    it("test1", async function () {
+                    it("test1", async () => {
                         calls.push("shouldn't be called");
                     });
                 });
@@ -2076,14 +2292,14 @@ describe("Engine", () => {
     });
 
     describe("timeout", () => {
-        it("should work", async function () {
+        it("should work", async () => {
             const engine = new Engine();
             const { describe, it, start } = engine.context();
 
             describe("/", function () {
                 this.timeout(240);
 
-                it("test", async function () {
+                it("test", async () => {
                     await new Promise((resolve) => setTimeout(resolve, 250));
                 });
             });
@@ -2099,14 +2315,43 @@ describe("Engine", () => {
             await waitFor(e, "done");
 
             assert.equal(results.length, 1);
+            assert(results[0]);
             assert.equal(results[0].message, "Timeout of 240ms exceeded");
         });
 
-        it("should set timeout in runtime", async function () {
+        it("should work (sync)", async () => {
             const engine = new Engine();
             const { describe, it, start } = engine.context();
 
             describe("/", function () {
+                this.timeout(240);
+
+                it("test", () => {
+                    const t = new Date();
+                    while (new Date() - t < 300) { }
+                });
+            });
+
+            const results = [];
+
+            const e = start();
+
+            e.on("end test", ({ meta }) => {
+                results.push(meta.err);
+            });
+
+            await waitFor(e, "done");
+
+            assert.equal(results.length, 1);
+            assert(results[0]);
+            assert.equal(results[0].message, "Timeout of 240ms exceeded");
+        });
+
+        it("should set timeout in runtime", async () => {
+            const engine = new Engine();
+            const { describe, it, start } = engine.context();
+
+            describe("/", () => {
                 it("test", async function () {
                     this.timeout(240);
                     await new Promise((resolve) => setTimeout(resolve, 250));
@@ -2123,10 +2368,37 @@ describe("Engine", () => {
             await waitFor(e, "done");
 
             assert.equal(results.length, 1);
+            assert(results[0]);
             assert.equal(results[0].message, "Timeout of 240ms exceeded");
         });
 
-        it("should inherit the timeout value", async function () {
+        it("should set timeout in runtime (sync)", async () => {
+            const engine = new Engine();
+            const { describe, it, start } = engine.context();
+
+            describe("/", () => {
+                it("test", function () {
+                    this.timeout(240);
+                    const t = new Date();
+                    while (new Date() - t < 300) { }
+                });
+            });
+
+            const results = [];
+            const e = start();
+
+            e.on("end test", ({ meta }) => {
+                results.push(meta.err);
+            });
+
+            await waitFor(e, "done");
+
+            assert.equal(results.length, 1);
+            assert(results[0]);
+            assert.equal(results[0].message, "Timeout of 240ms exceeded");
+        });
+
+        it("should inherit the timeout value", async () => {
             const engine = new Engine();
             const { describe, it, start } = engine.context();
 
@@ -2134,7 +2406,7 @@ describe("Engine", () => {
                 this.timeout(240);
 
                 describe("nested", () => {
-                    it("test", async function () {
+                    it("test", async () => {
                         await new Promise((resolve) => setTimeout(resolve, 250));
                     });
                 });
@@ -2150,10 +2422,40 @@ describe("Engine", () => {
             await waitFor(e, "done");
 
             assert.equal(results.length, 1);
+            assert(results[0]);
             assert.equal(results[0].message, "Timeout of 240ms exceeded");
         });
 
-        it("should rewrite the timeout value", async function () {
+        it("should inherit the timeout value (sync)", async () => {
+            const engine = new Engine();
+            const { describe, it, start } = engine.context();
+
+            describe("/", function () {
+                this.timeout(240);
+
+                describe("nested", () => {
+                    it("test", () => {
+                        const t = new Date();
+                        while (new Date() - t < 300) { }
+                    });
+                });
+            });
+
+            const results = [];
+            const e = start();
+
+            e.on("end test", ({ meta }) => {
+                results.push(meta.err);
+            });
+
+            await waitFor(e, "done");
+
+            assert.equal(results.length, 1);
+            assert(results[0]);
+            assert.equal(results[0].message, "Timeout of 240ms exceeded");
+        });
+
+        it("should rewrite the timeout value", async () => {
             const engine = new Engine();
             const { describe, it, start } = engine.context();
 
@@ -2162,7 +2464,7 @@ describe("Engine", () => {
 
                 describe("nested", () => {
                     this.timeout(245);
-                    it("test", async function () {
+                    it("test", async () => {
                         await new Promise((resolve) => setTimeout(resolve, 250));
                     });
                 });
@@ -2178,16 +2480,47 @@ describe("Engine", () => {
             await waitFor(e, "done");
 
             assert.equal(results.length, 1);
+            assert(results[0]);
             assert.equal(results[0].message, "Timeout of 245ms exceeded");
         });
 
-        it("should set the default value if no one set the timeout value", async function () {
-            const engine = new Engine({ defaultTimeout: 245 });
+        it("should rewrite the timeout value (sync)", async () => {
+            const engine = new Engine();
             const { describe, it, start } = engine.context();
 
             describe("/", function () {
+                this.timeout(240);
+
                 describe("nested", () => {
-                    it("test", async function () {
+                    this.timeout(245);
+                    it("test", () => {
+                        const t = new Date();
+                        while (new Date() - t < 300) { }
+                    });
+                });
+            });
+
+            const results = [];
+            const e = start();
+
+            e.on("end test", ({ meta }) => {
+                results.push(meta.err);
+            });
+
+            await waitFor(e, "done");
+
+            assert.equal(results.length, 1);
+            assert(results[0]);
+            assert.equal(results[0].message, "Timeout of 245ms exceeded");
+        });
+
+        it("should set the default value if no one set the timeout value", async () => {
+            const engine = new Engine({ defaultTimeout: 245 });
+            const { describe, it, start } = engine.context();
+
+            describe("/", () => {
+                describe("nested", () => {
+                    it("test", async () => {
                         await new Promise((resolve) => setTimeout(resolve, 250));
                     });
                 });
@@ -2203,8 +2536,123 @@ describe("Engine", () => {
             await waitFor(e, "done");
 
             assert.equal(results.length, 1);
+            assert(results[0]);
             assert.equal(results[0].message, "Timeout of 245ms exceeded");
         });
+
+        it("should set the default value if no one set the timeout value (sync)", async () => {
+            const engine = new Engine({ defaultTimeout: 245 });
+            const { describe, it, start } = engine.context();
+
+            describe("/", () => {
+                describe("nested", () => {
+                    it("test", () => {
+                        const t = new Date();
+                        while (new Date() - t < 300) { }
+                    });
+                });
+            });
+
+            const results = [];
+            const e = start();
+
+            e.on("end test", ({ meta }) => {
+                results.push(meta.err);
+            });
+
+            await waitFor(e, "done");
+
+            assert.equal(results.length, 1);
+            assert(results[0]);
+            assert.equal(results[0].message, "Timeout of 245ms exceeded");
+        });
+
+        it("should should trigger even if doesnt resolve", async () => {
+            const engine = new Engine();
+            const { describe, it, start, after } = engine.context();
+
+            describe("/", function () {
+                this.timeout(240);
+
+                let timer = null;
+
+                after(() => clearTimeout(timer));
+
+                it("test", async () => {
+                    await new Promise((resolve) => timer = setTimeout(resolve, 2501012));
+                });
+            });
+
+            const results = [];
+
+            const e = start();
+
+            e.on("end test", ({ meta }) => {
+                results.push(meta.err);
+            });
+
+            await waitFor(e, "done");
+
+            assert.equal(results.length, 1);
+            assert(results[0]);
+            assert.equal(results[0].message, "Timeout of 240ms exceeded");
+        });
+
+        for (const val of [0, null, false, Infinity]) {
+            it(`should set value to ${val}`, async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+
+                describe("/", function () {
+                    this.timeout(val);
+
+                    it("test", async () => {
+                        await new Promise((resolve) => setTimeout(resolve, 250));
+                    });
+                });
+
+                const results = [];
+
+                const e = start();
+
+                e.on("end test", ({ meta }) => {
+                    results.push(meta.err);
+                });
+
+                await waitFor(e, "done");
+
+                assert.equal(results.length, 1);
+                assert(!results[0]);
+            });
+        }
+
+        for (const val of [0, null, false, Infinity]) {
+            it(`should set value to ${val} in runtime`, async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+
+                describe("/", function () {
+
+                    it("test", async function() {
+                        this.timeout(val);
+                        await new Promise((resolve) => setTimeout(resolve, 250));
+                    });
+                });
+
+                const results = [];
+
+                const e = start();
+
+                e.on("end test", ({ meta }) => {
+                    results.push(meta.err);
+                });
+
+                await waitFor(e, "done");
+
+                assert.equal(results.length, 1);
+                assert(!results[0]);
+            });
+        }
     });
 
     // describe("firstFailExit option", () => {
@@ -2298,7 +2746,7 @@ describe("Engine", () => {
 
     describe("reading from files", () => {
 
-        it("should work", async function () {
+        it("should work", async () => {
             const engine = new Engine();
             engine.include(script("simple.js"));
 
@@ -2331,7 +2779,7 @@ describe("Engine", () => {
             ]);
         });
 
-        it("check default context", async function () {
+        it("check default context", async () => {
             const engine = new Engine({ firstFailExit: true });
             engine.include(script("default_context.js"));
 
@@ -2348,7 +2796,7 @@ describe("Engine", () => {
             assert.equal(errors.length, 0);
         });
 
-        it("should not swallow errors in describe's", async function () {
+        it("should not swallow errors in describe's", async () => {
             const engine = new Engine({ firstFailExit: true });
             engine.include(script("invalid_describe.js"));
             const emitter = engine.start();
@@ -2361,7 +2809,7 @@ describe("Engine", () => {
             assert.ok(e);
         });
 
-        it("should throw an error if an async function is passed to a describe", async function () {
+        it("should throw an error if an async function is passed to a describe", async () => {
             const engine = new Engine();
             engine.include(script("invalid_async_describe.js"));
             const emitter = engine.start();
@@ -2420,7 +2868,7 @@ describe("Engine", () => {
         });
     });
 
-    it("should catch 'uncaughtException'", async function () {
+    it("should catch 'uncaughtException'", async () => {
         const engine = new Engine();
         const { describe, it, start } = engine.context();
 
@@ -2433,7 +2881,7 @@ describe("Engine", () => {
                 });
             });
 
-            it("test2", async function () {
+            it("test2", async () => {
                 const p = new Promise(() => {
                     setTimeout(() => {
                         throw new Error("error2");
@@ -2562,14 +3010,14 @@ describe("Engine", () => {
     //     });
     // });
 
-    it("should not swallow errors in describe's", async function () {
+    it("should not swallow errors in describe's", async () => {
         const engine = new Engine();
         const { describe } = engine.context();
 
         let err = null;
         try {
             describe("/1", () => {
-                throw new Error;
+                throw new Error();
             });
         } catch (_err) {
             err = _err;
@@ -2578,13 +3026,13 @@ describe("Engine", () => {
         assert.ok(err);
     });
 
-    it("should throw an error if an async function is passed to a describe", async function () {
+    it("should throw an error if an async function is passed to a describe", async () => {
         const engine = new Engine();
         const { describe } = engine.context();
 
         let err = null;
         try {
-            describe("/1", async function () {
+            describe("/1", async () => {
             });
         } catch (_err) {
             err = _err;
@@ -2943,7 +3391,7 @@ describe("Engine", () => {
             const engine = new Engine();
             const { root, describe, it } = engine.context();
             describe("a", "b", "c", "d", () => {
-                it("e", () => {});
+                it("e", () => { });
             });
             assert.equal(root.children.length, 1);
             assert.equal(root.children[0].name, "a");
@@ -2968,7 +3416,7 @@ describe("Engine", () => {
         it("should return the last block", () => {
             const engine = new Engine();
             const { describe, it } = engine.context();
-            const c = describe("a", "b", "c", () => {});
+            const c = describe("a", "b", "c", () => { });
 
             assert.equal(c.name, "c");
         });

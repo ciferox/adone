@@ -74,6 +74,36 @@ describe("glosses", "promise", () => {
             expect(q).to.be.instanceOf(Error);
             expect(q.message).to.be.equal("hello");
         });
+
+        it("should work for synchronous code", async () => {
+            const q = await promise.timeout(new Promise((resolve) => {
+                const t = new Date();
+                process.nextTick(() => {
+                    while (new Date() - t < 200) {
+                        //
+                    }
+                    resolve();
+                });
+            }), 100).then(() => null, (x) => x);
+            expect(q).to.be.instanceOf(adone.x.Timeout);
+            expect(q.message).to.be.equal("Timeout of 100ms exceeded");
+        });
+
+        it("should be rejected by timeout even if rejects by itself synchronously", async () => {
+            const q = await promise.timeout(new Promise((resolve, reject) => {
+                const t = new Date();
+                process.nextTick(() => {
+                    while (new Date() - t < 200) {
+                        //
+                    }
+                    reject(new Error("hello"));
+                });
+            }), 100).then(() => null, (x) => x);
+            expect(q).to.be.instanceOf(adone.x.Timeout);
+            expect(q.message).to.be.equal("Timeout of 100ms exceeded");
+            expect(q.original).to.be.instanceOf(Error);
+            expect(q.original.message).to.be.equal("hello");
+        });
     });
 
     describe("nodeify", () => {
@@ -197,7 +227,7 @@ describe("glosses", "promise", () => {
         });
 
         it("should use the same function name", () => {
-            const helloWorld = function () {};
+            const helloWorld = function () { };
             const g = promise.promisify(helloWorld);
             expect(g.name).to.be.equal(helloWorld.name);
         });

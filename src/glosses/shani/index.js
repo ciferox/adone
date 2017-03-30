@@ -10,6 +10,8 @@ export const utils = {
 
 const { is, x } = adone;
 
+const SET_TIMEOUT_MAX = 2 ** 31 - 1;
+
 class Hook {
     constructor(description, callback) {
         this.description = description;
@@ -31,9 +33,12 @@ class Hook {
         return this._failed;
     }
 
-    timeout(value) {
-        if (!adone.is.undefined(value)) {
-            this._timeout = value;
+    timeout(ms = adone.null) {
+        if (ms !== adone.null) {
+            if (is.number(ms) && ms > SET_TIMEOUT_MAX) {
+                ms = SET_TIMEOUT_MAX;
+            }
+            this._timeout = ms;
             return this;
         }
         return this._timeout;
@@ -56,9 +61,9 @@ class Hook {
                     Promise.resolve(this.callback()).then(resolve, reject);
                 }
             });
-
-            if (this.timeout()) {
-                p = adone.promise.timeout(p, this.timeout());
+            const timeout = this.timeout();
+            if (timeout) {
+                p = adone.promise.timeout(p, timeout);
             }
             await p;
         } catch (_err) {
@@ -71,7 +76,16 @@ class Hook {
             s = process.hrtime(s);
         }
         this._failed = err;
-        return { err, elapsed: s[0] * 1e3 + s[1] / 1e6 };
+        const elapsed = s[0] * 1e3 + s[1] / 1e6;
+        const timeout = this.timeout();
+        if (timeout && elapsed >= timeout) {
+            this._failed = new x.Timeout(`Timeout of ${this.timeout()}ms exceeded`);
+            if (err) {
+                this._failed.original = err.original || err;
+            }
+            err = this._failed;
+        }
+        return { err, elapsed };
     }
 }
 
@@ -90,7 +104,7 @@ class Block {
         this.children = [];
         this.parent = parent;
 
-        this._timeout = null;
+        this._timeout = adone.null;
         this._level = null;
         this._skip = false;
         this._only = false;
@@ -149,11 +163,14 @@ class Block {
         return this;
     }
 
-    timeout(ms) {
-        if (ms) {
+    timeout(ms = adone.null) {
+        if (ms !== adone.null) {
+            if (is.number(ms) && ms > SET_TIMEOUT_MAX) {
+                ms = SET_TIMEOUT_MAX;
+            }
             this._timeout = ms;
         }
-        if (this._timeout) {
+        if (this._timeout !== adone.null) {
             return this._timeout;
         }
         if (this.parent) {
@@ -210,7 +227,7 @@ class Test {
         this.block = block;
         this._skip = false;
         this._only = false;
-        this._timeout = null;
+        this._timeout = adone.null;
         this._beforeHooks = [];
         this._afterHooks = [];
         this._beforeHooksFired = false;
@@ -233,9 +250,9 @@ class Test {
                     Promise.resolve(this.callback()).then(resolve, reject);
                 }
             });
-
-            if (this.timeout()) {
-                p = adone.promise.timeout(p, this.timeout());
+            const timeout = this.timeout();
+            if (timeout) {
+                p = adone.promise.timeout(p, timeout);
             }
             await p;
         } catch (_err) {
@@ -247,7 +264,16 @@ class Test {
             process.removeListener("uncaughtException", uncaught);
             s = process.hrtime(s);
         }
-        return { err, elapsed: s[0] * 1e3 + s[1] / 1e6 };
+        const elapsed = s[0] * 1e3 + s[1] / 1e6;
+        const timeout = this.timeout();
+        if (timeout && elapsed >= timeout) {
+            const _err = new x.Timeout(`Timeout of ${this.timeout()}ms exceeded`);
+            if (err) {
+                _err.original = err;
+            }
+            err = _err;
+        }
+        return { err, elapsed };
     }
 
     isExclusive() {
@@ -268,11 +294,19 @@ class Test {
         return this;
     }
 
-    timeout(ms) {
-        if (ms) {
+    timeout(ms = adone.null) {
+        if (ms !== adone.null) {
+            if (is.number(ms) && ms > SET_TIMEOUT_MAX) {
+                ms = SET_TIMEOUT_MAX;
+            }
             this._timeout = ms;
         }
-        return this._timeout || this.block.timeout();
+
+        if (this._timeout !== adone.null) {
+            return this._timeout;
+        }
+
+        return this.block.timeout();
     }
 
     retries(n) {
