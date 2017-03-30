@@ -356,11 +356,21 @@ export class Omnitron extends adone.application.Application {
     }
 
     _signalExit(sigName) {
-        adone.info(`Received signal '${sigName}'`);
+        if (is.string(sigName)) {
+            adone.info(`Received signal '${sigName}'`);
+        } else {
+            adone.info("Omnitron killed using api");
+        }
         return super._signalExit(sigName);
     }
 
     // Omnitron interface
+
+    @Public
+    @Description("Kill omnitron")
+    killSelf() {
+        this._signalExit();
+    }
 
     @Public
     @Description("Uptime of omnitron")

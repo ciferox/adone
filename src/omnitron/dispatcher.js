@@ -101,17 +101,33 @@ export default class Dispatcher {
     async kill({ clean = false, killChildren = true } = {}) {
         const isOnline = await this.isOnline();
         if (isOnline) {
-            this.netron && await this.netron.disconnect();
-            this.netron = null;
-            this.peer = null;
             // Can be used in test environment.
             if (is.string(this.app.config.omnitron.pidFilePath)) {
                 try {
                     const pid = parseInt(adone.std.fs.readFileSync(this.app.config.omnitron.pidFilePath).toString());
-                    if (killChildren) {
-                        await this._killProcessChildren(pid);
+                    if (is.win32) {
+                        try {
+                            await this.killSelf();
+                            this.noisily && adone.log("Called omnitron's killSelf()");
+                            await this._isAlive(pid, 3000); // wait 3 sec
+                        } catch (err) {
+                            this.noisily && adone.error(err.message);
+                        }
+                    } else {
+                        this.netron && await this.netron.disconnect();
+                        this.netron = null;
+                        this.peer = null;
+                        
+                        try {
+                            const pid = parseInt(adone.std.fs.readFileSync(this.app.config.omnitron.pidFilePath).toString());
+                            if (killChildren) {
+                                await this._killProcessChildren(pid);
+                            }
+                            await this._killProcess(pid, 10000); // awaiting 10 sec...
+                        } catch (err) {
+                            this.noisily && adone.log(err.message);
+                        }
                     }
-                    await this._killProcess(pid, 10000); // awaiting 10 sec...
                 } catch (err) {
                     this.noisily && adone.log("Omnitron is offline");
                 }
@@ -179,6 +195,10 @@ export default class Dispatcher {
     async ping() {
         await this.connectLocal();
         return this.netron.ping();
+    }
+
+    async killSelf() {
+        return (await this.getService("omnitron")).killSelf();
     }
 
     async uptime() {
@@ -272,7 +292,7 @@ export default class Dispatcher {
         if (exists) {
             process.kill(pid, "SIGKILL");
             this.noisily && adone.log(`Sent SIGKILL to omnitron's process (PID: ${pid})`);
-            exists = this._isAlive(pid, 3000); // wait 3 sec
+            exists = await this._isAlive(pid, 3000); // wait 3 sec
             if (exists) {
                 this.noisily && adone.error(`Process ${pid} is still running`);
             }

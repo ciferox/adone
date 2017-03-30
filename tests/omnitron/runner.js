@@ -2,7 +2,7 @@ let home;
 const dirName = ".adone_test";
 
 if (process.platform === "win32") {
-    home = process.env.USERPROFILE;
+    home = adone.std.path.resolve(process.env.USERPROFILE, dirName);
 } else {
     if (process.env.HOME && !process.env.HOMEPATH) {
         home = adone.std.path.resolve(process.env.HOME, dirName);

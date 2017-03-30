@@ -786,21 +786,21 @@ export default class Terminfo {
     }
 
     _useXtermCap() {
-        return this.injectTermcap(adone.std.path.join(__dirname, "../../../defaults/terminal/xterm.termcap"));
+        return this.injectTermcap(adone.std.path.join(__dirname, "../../../etc/terminal/xterm.termcap"));
     }
 
     _useXtermInfo() {
-        return this.injectTerminfo(adone.std.path.join(__dirname, "../../../defaults/terminal/xterm"));
+        return this.injectTerminfo(adone.std.path.join(__dirname, "../../../etc/terminal/xterm"));
     }
 
     _useInternalInfo(name) {
         name = adone.std.path.basename(name);
-        return this.injectTerminfo(adone.std.path.join(__dirname, "../../../defaults/terminal", name));
+        return this.injectTerminfo(adone.std.path.join(__dirname, "../../../etc/terminal", name));
     }
 
     _useInternalCap(name) {
         name = adone.std.path.basename(name);
-        return this.injectTermcap(adone.std.path.join(__dirname, "../../../defaults/terminal", `${name}.termcap`));
+        return this.injectTermcap(adone.std.path.join(__dirname, "../../../etc/terminal", `${name}.termcap`));
     }
 
     readTerminfo(term) {
