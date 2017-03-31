@@ -1,5 +1,5 @@
 {
-    "description": "ObjectId",
+    "description": "ObjectID",
     "bson_type": "0x07",
     "test_key": "a",
     "valid": [

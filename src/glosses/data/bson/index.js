@@ -10,9 +10,10 @@ const bson = lazify({
     Double: "./double",
     Int32: "./int_32",
     Long: "./long",
+    Map: () => Map,
     MaxKey: "./max_key",
     MinKey: "./min_key",
-    ObjectId: "./objectid",
+    ObjectID: "./objectid",
     BSONRegExp: "./regexp",
     Symbol: "./symbol",
     Timestamp: "./timestamp",
@@ -21,7 +22,7 @@ const bson = lazify({
             bson.Binary, bson.Code, bson.DBRef,
             bson.Decimal128, bson.Double, bson.Int32,
             bson.Long, bson.Map, bson.MaxKey,
-            bson.MinKey, bson.ObjectId, bson.BSONRegExp,
+            bson.MinKey, bson.ObjectID, bson.BSONRegExp,
             bson.Symbol, bson.Timestamp
         ]) {
             super(types);

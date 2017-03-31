@@ -161,7 +161,6 @@ describe("bson", () => {
 });
 
 function executeValid(spec, scenarios) {
-
     for (let i = 0; i < scenarios.length; i++) {
         let scenario = scenarios[i];
 

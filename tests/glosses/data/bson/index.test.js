@@ -12,7 +12,7 @@ const Binary = bson.Binary;
 const Timestamp = bson.Timestamp;
 const Long = bson.Long;
 const MongoReply = bson.MongoReply;
-const ObjectId = bson.ObjectId;
+const ObjectID = bson.ObjectID;
 const Symbol = bson.Symbol;
 const DBRef = bson.DBRef;
 const Decimal128 = bson.Decimal128;
@@ -100,20 +100,6 @@ const ISODate = function (string) {
 };
 
 describe("bson", () => {
-    it("Should Correctly convert ObjectID to itself", function () {
-        let myObject, newObject;
-        const selfConvertion = function () {
-            myObject = new ObjectId();
-            newObject = ObjectId(myObject);
-        };
-
-        expect(selfConvertion).not.to.throw();
-        expect(myObject).to.be.equal(newObject);
-    });
-
-    /**
-     * @ignore
-     */
     it("Should Correctly Deserialize object", function () {
         const bytes = [95, 0, 0, 0, 2, 110, 115, 0, 42, 0, 0, 0, 105, 110, 116, 101, 103, 114, 97, 116, 105, 111, 110, 95, 116, 101, 115, 116, 115, 95, 46, 116, 101, 115, 116, 95, 105, 110, 100, 101, 120, 95, 105, 110, 102, 111, 114, 109, 97, 116, 105, 111, 110, 0, 8, 117, 110, 105, 113, 117, 101, 0, 0, 3, 107, 101, 121, 0, 12, 0, 0, 0, 16, 97, 0, 1, 0, 0, 0, 0, 2, 110, 97, 109, 101, 0, 4, 0, 0, 0, 97, 95, 49, 0, 0];
         let serialized_data = "";
@@ -548,8 +534,8 @@ describe("bson", () => {
      * @ignore
      */
     it("Should Correctly Serialize and Deserialize Oid", function () {
-        const doc = { doc: new ObjectId() };
-        const doc2 = { doc: ObjectId.createFromHexString(doc.doc.toHexString()) };
+        const doc = { doc: new ObjectID() };
+        const doc2 = { doc: ObjectID.createFromHexString(doc.doc.toHexString()) };
         const serialized_data = createBSON().serialize(doc);
 
         const serialized_data2 = new Buffer(createBSON().calculateObjectSize(doc));
@@ -674,7 +660,7 @@ describe("bson", () => {
      * @ignore
      */
     it("Should Correctly Serialize and Deserialize DBRef", function () {
-        const oid = new ObjectId();
+        const oid = new ObjectID();
         const doc = { dbref: new DBRef("namespace", oid, null) };
         const serialized_data = createBSON().serialize(doc);
 
@@ -691,7 +677,7 @@ describe("bson", () => {
      * @ignore
      */
     it("Should Correctly Serialize and Deserialize partial DBRef", function () {
-        const id = new ObjectId();
+        const id = new ObjectID();
         const doc = { "name": "something", "user": { "$ref": "username", "$id": id } };
         const serialized_data = createBSON().serialize(doc);
 
@@ -937,7 +923,7 @@ describe("bson", () => {
      * @ignore
      */
     it("Should Correctly Serialize and Deserialize array based doc", function () {
-        const doc = { b: [1, 2, 3], _id: new ObjectId() };
+        const doc = { b: [1, 2, 3], _id: new ObjectID() };
         const serialized_data = createBSON().serialize(doc);
 
         const serialized_data2 = new Buffer(createBSON().calculateObjectSize(doc));
@@ -989,7 +975,7 @@ describe("bson", () => {
     it("Should handle complicated all typed object", function () {
         // First doc
         const date = new Date();
-        var oid = new ObjectId();
+        var oid = new ObjectID();
         var string = "binstring";
         var bin = new Binary();
         for (var index = 0; index < string.length; index++) {
@@ -1013,7 +999,7 @@ describe("bson", () => {
         };
 
         // Second doc
-        var oid = new ObjectId.createFromHexString(oid.toHexString());
+        var oid = ObjectID.createFromHexString(oid.toHexString());
         var string = "binstring";
         var bin = new Binary();
         for (var index = 0; index < string.length; index++) {
@@ -1062,7 +1048,7 @@ describe("bson", () => {
             password_salt: "salty",
             profile_fields: [],
             username: "amit",
-            _id: new ObjectId()
+            _id: new ObjectID()
         };
 
         const serialized_data = createBSON().serialize(doc);
@@ -1072,7 +1058,7 @@ describe("bson", () => {
         assertBuffersEqual(serialized_data, serialized_data2, 0);
 
         const doc2 = doc;
-        doc2._id = ObjectId.createFromHexString(doc2._id.toHexString());
+        doc2._id = ObjectID.createFromHexString(doc2._id.toHexString());
         var serialized_data2 = createBSON().serialize(doc2, false, true);
 
         for (let i = 0; i < serialized_data2.length; i++) {
@@ -1084,8 +1070,8 @@ describe("bson", () => {
      * @ignore
      */
     it("Should correctly massive doc", function () {
-        const oid1 = new ObjectId();
-        const oid2 = new ObjectId();
+        const oid1 = new ObjectID();
+        const oid2 = new ObjectID();
 
         // JS doc
         const doc = {
@@ -1094,8 +1080,8 @@ describe("bson", () => {
         };
 
         const doc2 = {
-            dbref2: new DBRef("namespace", ObjectId.createFromHexString(oid1.toHexString()), "integration_tests_"),
-            _id: new ObjectId.createFromHexString(oid2.toHexString())
+            dbref2: new DBRef("namespace", ObjectID.createFromHexString(oid1.toHexString()), "integration_tests_"),
+            _id: ObjectID.createFromHexString(oid2.toHexString())
         };
 
         const serialized_data = createBSON().serialize(doc);
@@ -1130,7 +1116,7 @@ describe("bson", () => {
      * @ignore
      */
     it("Should Correctly Serialize/Deserialize complicated object", function () {
-        const doc = { a: { b: { c: [new ObjectId(), new ObjectId()] } }, d: { f: 1332.3323 } };
+        const doc = { a: { b: { c: [new ObjectID(), new ObjectID()] } }, d: { f: 1332.3323 } };
 
         const serialized_data = createBSON().serialize(doc);
 
@@ -1231,7 +1217,7 @@ describe("bson", () => {
      */
     it("Should deserialize correctly", function () {
         const doc = {
-            "_id": new ObjectId("4e886e687ff7ef5e00000162"),
+            "_id": new ObjectID("4e886e687ff7ef5e00000162"),
             "str": "foreign",
             "type": 2,
             "timestamp": ISODate("2011-10-02T14:00:08.383Z"),
@@ -1252,7 +1238,7 @@ describe("bson", () => {
      */
     it("Should correctly serialize and deserialize MinKey and MaxKey values", function () {
         const doc = {
-            _id: new ObjectId("4e886e687ff7ef5e00000162"),
+            _id: new ObjectID("4e886e687ff7ef5e00000162"),
             minKey: new MinKey(),
             maxKey: new MaxKey()
         };
@@ -1294,8 +1280,8 @@ describe("bson", () => {
      */
     it("ObjectID should correctly create objects", function () {
         try {
-            const object1 = ObjectId.createFromHexString("000000000000000000000001");
-            const object2 = ObjectId.createFromHexString("00000000000000000000001");
+            const object1 = ObjectID.createFromHexString("000000000000000000000001");
+            const object2 = ObjectID.createFromHexString("00000000000000000000001");
             expect(false).to.be.ok;
         } catch (err) {
             expect(err != null).to.be.ok;
@@ -1307,7 +1293,7 @@ describe("bson", () => {
      */
     it("ObjectID should correctly retrieve timestamp", function () {
         const testDate = new Date();
-        const object1 = new ObjectId();
+        const object1 = new ObjectID();
         expect(Math.floor(testDate.getTime() / 1000)).to.be.equal(Math.floor(object1.getTimestamp().getTime() / 1000));
     });
 
@@ -1679,23 +1665,23 @@ describe("bson", () => {
      * @ignore
      */
     it("ObjectID should have a correct cached representation of the hexString", function () {
-        ObjectId.cacheHexString = true;
-        let a = new ObjectId();
+        ObjectID.cacheHexString = true;
+        let a = new ObjectID();
         let __id = a.__id;
         expect(__id).to.be.equal(a.toHexString());
 
         // hexString
-        a = new ObjectId(__id);
+        a = new ObjectID(__id);
         expect(__id).to.be.equal(a.toHexString());
 
         // fromHexString
-        a = ObjectId.createFromHexString(__id);
+        a = ObjectID.createFromHexString(__id);
         expect(a.__id).to.be.equal(a.toHexString());
         expect(__id).to.be.equal(a.toHexString());
 
         // number
         const genTime = a.generationTime;
-        a = new ObjectId(genTime);
+        a = new ObjectID(genTime);
         __id = a.__id;
         expect(__id).to.be.equal(a.toHexString());
 
@@ -1705,10 +1691,10 @@ describe("bson", () => {
         expect(__id).to.be.equal(a.toHexString());
 
         // createFromTime
-        a = ObjectId.createFromTime(genTime);
+        a = ObjectID.createFromTime(genTime);
         __id = a.__id;
         expect(__id).to.be.equal(a.toHexString());
-        ObjectId.cacheHexString = false;
+        ObjectID.cacheHexString = false;
     });
 
     /**
@@ -1716,23 +1702,23 @@ describe("bson", () => {
      */
     it("Should fail to create ObjectID due to illegal hex code", function () {
         try {
-            new ObjectId("zzzzzzzzzzzzzzzzzzzzzzzz");
+            new ObjectID("zzzzzzzzzzzzzzzzzzzzzzzz");
             expect(false).to.be.ok;
         } catch (err) { }
 
-        expect(false).to.be.equal(ObjectId.isValid(null));
-        expect(false).to.be.equal(ObjectId.isValid({}));
-        expect(false).to.be.equal(ObjectId.isValid({ length: 12 }));
-        expect(false).to.be.equal(ObjectId.isValid([]));
-        expect(false).to.be.equal(ObjectId.isValid(true));
-        expect(true).to.be.equal(ObjectId.isValid(0));
-        expect(false).to.be.equal(ObjectId.isValid("invalid"));
-        expect(true).to.be.equal(ObjectId.isValid("zzzzzzzzzzzz"));
-        expect(false).to.be.equal(ObjectId.isValid("zzzzzzzzzzzzzzzzzzzzzzzz"));
-        expect(true).to.be.equal(ObjectId.isValid("000000000000000000000000"));
-        expect(true).to.be.equal(ObjectId.isValid(new ObjectId("thisis12char")));
+        expect(false).to.be.equal(ObjectID.isValid(null));
+        expect(false).to.be.equal(ObjectID.isValid({}));
+        expect(false).to.be.equal(ObjectID.isValid({ length: 12 }));
+        expect(false).to.be.equal(ObjectID.isValid([]));
+        expect(false).to.be.equal(ObjectID.isValid(true));
+        expect(true).to.be.equal(ObjectID.isValid(0));
+        expect(false).to.be.equal(ObjectID.isValid("invalid"));
+        expect(true).to.be.equal(ObjectID.isValid("zzzzzzzzzzzz"));
+        expect(false).to.be.equal(ObjectID.isValid("zzzzzzzzzzzzzzzzzzzzzzzz"));
+        expect(true).to.be.equal(ObjectID.isValid("000000000000000000000000"));
+        expect(true).to.be.equal(ObjectID.isValid(new ObjectID("thisis12char")));
 
-        const tmp = new ObjectId();
+        const tmp = new ObjectID();
         // Cloning tmp so that instanceof fails to fake import from different version/instance of the same npm package
         const objectIdLike = {
             id: tmp.id,
@@ -1742,8 +1728,8 @@ describe("bson", () => {
         };
 
         expect(true).to.be.equal(tmp.equals(objectIdLike));
-        expect(true).to.be.equal(tmp.equals(new ObjectId(objectIdLike)));
-        expect(true).to.be.equal(ObjectId.isValid(objectIdLike));
+        expect(true).to.be.equal(tmp.equals(new ObjectID(objectIdLike)));
+        expect(true).to.be.equal(ObjectID.isValid(objectIdLike));
     });
 
     /**
@@ -1785,8 +1771,8 @@ describe("bson", () => {
      * @ignore
      */
     it("Should return boolean for ObjectID equality check", function () {
-        const id = new ObjectId();
-        expect(true).to.be.equal(id.equals(new ObjectId(id.toString())));
+        const id = new ObjectID();
+        expect(true).to.be.equal(id.equals(new ObjectID(id.toString())));
         expect(true).to.be.equal(id.equals(id.toString()));
         expect(false).to.be.equal(id.equals("1234567890abcdef12345678"));
         expect(false).to.be.equal(id.equals("zzzzzzzzzzzzzzzzzzzzzzzz"));

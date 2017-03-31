@@ -1,7 +1,5 @@
 const { is, x } = adone;
 
-const INT_CACHE = new Map();  // small integers
-const UINT_CACHE = new Map();  // small unsigned integers
 const TWO_PWR_16_DBL = 1 << 16;
 const TWO_PWR_24_DBL = 1 << 24;
 const TWO_PWR_32_DBL = TWO_PWR_16_DBL * TWO_PWR_16_DBL;
@@ -34,10 +32,10 @@ export default class Long {
             return "0";
         }
         if (this.isNegative()) {
-            if (this.equals(Long.MIN_VALUE)) {
+            if (this.equals(this.constructor.MIN_VALUE)) {
                 // We need to change the Long value before it can be negated, so we remove
                 // the bottom-most digit in this base and then recurse to do the rest.
-                const radixLong = Long.fromNumber(radix);
+                const radixLong = this.constructor.fromNumber(radix);
                 const div = this.div(radixLong);
                 const rem1 = div.mul(radixLong).sub(this);
                 return div.toString(radix) + rem1.toInt().toString(radix);
@@ -47,7 +45,7 @@ export default class Long {
 
         // Do several (6) digits each time through the loop, so as to
         // minimize the calls to the very expensive emulated div.
-        const radixToPower = Long.fromNumber(radix ** 6, this.unsigned);
+        const radixToPower = this.constructor.fromNumber(radix ** 6, this.unsigned);
         let rem = this;
         let result = "";
         for (; ;) {
@@ -83,7 +81,7 @@ export default class Long {
 
     getNumBitsAbs() {
         if (this.isNegative()) {
-            return this.equals(Long.MIN_VALUE) ? 64 : this.negate().getNumBitsAbs();
+            return this.equals(this.constructor.MIN_VALUE) ? 64 : this.negate().getNumBitsAbs();
         }
         const val = this.high !== 0 ? this.high : this.low;
         let bit = 31;
@@ -122,7 +120,7 @@ export default class Long {
     // Tests if this Long's value equals the specified's.
     equals(other) {
         if (!is.long(other)) {
-            other = Long.fromValue(other);
+            other = this.constructor.fromValue(other);
         }
         if (
             this.unsigned !== other.unsigned &&
@@ -152,7 +150,7 @@ export default class Long {
 
     compare(other) {
         if (!is.long(other)) {
-            other = Long.fromValue(other);
+            other = this.constructor.fromValue(other);
         }
         if (this.equals(other)) {
             return 0;
@@ -177,15 +175,15 @@ export default class Long {
     }
 
     negate() {
-        if (!this.unsigned && this.equals(Long.MIN_VALUE)) {
-            return Long.MIN_VALUE;
+        if (!this.unsigned && this.equals(this.constructor.MIN_VALUE)) {
+            return this.constructor.MIN_VALUE;
         }
-        return this.not().add(Long.ONE);
+        return this.not().add(this.constructor.ONE);
     }
 
     add(addend) {
         if (!is.long(addend)) {
-            addend = Long.fromValue(addend);
+            addend = this.constructor.fromValue(addend);
         }
 
         // Divide each number into 4 chunks of 16 bits, and then sum the chunks.
@@ -214,31 +212,31 @@ export default class Long {
         c32 &= 0xFFFF;
         c48 += a48 + b48;
         c48 &= 0xFFFF;
-        return Long.fromBits((c16 << 16) | c00, (c48 << 16) | c32, this.unsigned);
+        return this.constructor.fromBits((c16 << 16) | c00, (c48 << 16) | c32, this.unsigned);
     }
 
     sub(subtrahend) {
         if (!is.long(subtrahend)) {
-            subtrahend = Long.fromValue(subtrahend);
+            subtrahend = this.constructor.fromValue(subtrahend);
         }
         return this.add(subtrahend.negate());
     }
 
     mul(multiplier) {
         if (this.isZero()) {
-            return Long.ZERO;
+            return this.constructor.ZERO;
         }
         if (!is.long(multiplier)) {
-            multiplier = Long.fromValue(multiplier);
+            multiplier = this.constructor.fromValue(multiplier);
         }
         if (multiplier.isZero()) {
-            return Long.ZERO;
+            return this.constructor.ZERO;
         }
-        if (this.equals(Long.MIN_VALUE)) {
-            return multiplier.isOdd() ? Long.MIN_VALUE : Long.ZERO;
+        if (this.equals(this.constructor.MIN_VALUE)) {
+            return multiplier.isOdd() ? this.constructor.MIN_VALUE : this.constructor.ZERO;
         }
-        if (multiplier.equals(Long.MIN_VALUE)) {
-            return this.isOdd() ? Long.MIN_VALUE : Long.ZERO;
+        if (multiplier.equals(this.constructor.MIN_VALUE)) {
+            return this.isOdd() ? this.constructor.MIN_VALUE : this.constructor.ZERO;
         }
 
         if (this.isNegative()) {
@@ -253,10 +251,10 @@ export default class Long {
 
         // If both longs are small, use float multiplication
         if (
-            this.lessThan(Long.fromInt(TWO_PWR_24_DBL)) &&
-            multiplier.lessThan(Long.fromInt(TWO_PWR_24_DBL))
+            this.lessThan(this.constructor.fromInt(TWO_PWR_24_DBL)) &&
+            multiplier.lessThan(this.constructor.fromInt(TWO_PWR_24_DBL))
         ) {
-            return Long.fromNumber(this.toNumber() * multiplier.toNumber(), this.unsigned);
+            return this.constructor.fromNumber(this.toNumber() * multiplier.toNumber(), this.unsigned);
         }
 
         // Divide each long into 4 chunks of 16 bits, and then add up 4x4 products.
@@ -295,18 +293,18 @@ export default class Long {
         c32 &= 0xFFFF;
         c48 += a48 * b00 + a32 * b16 + a16 * b32 + a00 * b48;
         c48 &= 0xFFFF;
-        return Long.fromBits((c16 << 16) | c00, (c48 << 16) | c32, this.unsigned);
+        return this.constructor.fromBits((c16 << 16) | c00, (c48 << 16) | c32, this.unsigned);
     }
 
     div(divisor) {
         if (!is.long(divisor)) {
-            divisor = Long.fromValue(divisor);
+            divisor = this.constructor.fromValue(divisor);
         }
         if (divisor.isZero()) {
             throw new x.IllegalState("division by zero");
         }
         if (this.isZero()) {
-            return this.unsigned ? Long.UZERO : Long.ZERO;
+            return this.unsigned ? this.constructor.UZERO : this.constructor.ZERO;
         }
         let approx;
         let rem;
@@ -315,25 +313,25 @@ export default class Long {
         if (!this.unsigned) {
             // This section is only relevant for signed longs and is derived from the
             // closure library as a whole.
-            if (this.equals(Long.MIN_VALUE)) {
-                if (divisor.equals(Long.ONE) || divisor.equals(Long.NEG_ONE)) {
-                    return Long.MIN_VALUE;  // recall that -MIN_VALUE == MIN_VALUE
+            if (this.equals(this.constructor.MIN_VALUE)) {
+                if (divisor.equals(this.constructor.ONE) || divisor.equals(this.constructor.NEG_ONE)) {
+                    return this.constructor.MIN_VALUE;  // recall that -MIN_VALUE == MIN_VALUE
                 }
-                if (divisor.equals(Long.MIN_VALUE)) {
-                    return Long.ONE;
+                if (divisor.equals(this.constructor.MIN_VALUE)) {
+                    return this.constructor.ONE;
                 }
                 // At this point, we have |other| >= 2, so |this/other| < |MIN_VALUE|.
                 const halfThis = this.shr(1);
                 approx = halfThis.div(divisor).shl(1);
-                if (approx.equals(Long.ZERO)) {
-                    return divisor.isNegative() ? Long.ONE : Long.NEG_ONE;
+                if (approx.equals(this.constructor.ZERO)) {
+                    return divisor.isNegative() ? this.constructor.ONE : this.constructor.NEG_ONE;
                 }
                 rem = this.sub(divisor.mul(approx));
                 res = approx.add(rem.div(divisor));
                 return res;
             }
-            if (divisor.equals(Long.MIN_VALUE)) {
-                return this.unsigned ? Long.UZERO : Long.ZERO;
+            if (divisor.equals(this.constructor.MIN_VALUE)) {
+                return this.unsigned ? this.constructor.UZERO : this.constructor.ZERO;
             }
             if (this.isNegative()) {
                 if (divisor.isNegative()) {
@@ -343,7 +341,7 @@ export default class Long {
             } else if (divisor.isNegative()) {
                 return this.div(divisor.negate()).negate();
             }
-            res = Long.ZERO;
+            res = this.constructor.ZERO;
         } else {
             // The algorithm below has not been made for unsigned longs. It's therefore
             // required to take special care of the MSB prior to running it.
@@ -351,13 +349,13 @@ export default class Long {
                 divisor = divisor.toUnsigned();
             }
             if (divisor.greaterThan(this)) {
-                return Long.UZERO;
+                return this.constructor.UZERO;
             }
             // 15 >>> 1 = 7 ; with divisor = 8 ; true
             if (divisor.greaterThan(this.shru(1))) {
-                return Long.UONE;
+                return this.constructor.UONE;
             }
-            res = Long.UZERO;
+            res = this.constructor.UZERO;
         }
 
         // Repeat the following until the remainder is less than other:  find a
@@ -378,18 +376,18 @@ export default class Long {
 
             // Decrease the approximation until it is smaller than the remainder.  Note
             // that if it is too large, the product overflows and is negative.
-            let approxRes = Long.fromNumber(approx);
+            let approxRes = this.constructor.fromNumber(approx);
             let approxRem = approxRes.mul(divisor);
             while (approxRem.isNegative() || approxRem.greaterThan(rem)) {
                 approx -= delta;
-                approxRes = Long.fromNumber(approx, this.unsigned);
+                approxRes = this.constructor.fromNumber(approx, this.unsigned);
                 approxRem = approxRes.mul(divisor);
             }
 
             // We know the answer can't be zero... and actually, zero would cause
             // infinite recursion since we would make no progress.
             if (approxRes.isZero()) {
-                approxRes = Long.ONE;
+                approxRes = this.constructor.ONE;
             }
 
             res = res.add(approxRes);
@@ -400,34 +398,34 @@ export default class Long {
 
     mod(divisor) {
         if (!is.long(divisor)) {
-            divisor = Long.fromValue(divisor);
+            divisor = this.constructor.fromValue(divisor);
         }
         return this.sub(this.div(divisor).mul(divisor));
     }
 
     not() {
-        return Long.fromBits(~this.low, ~this.high, this.unsigned);
+        return this.constructor.fromBits(~this.low, ~this.high, this.unsigned);
     }
 
     and(other) {
         if (!is.long(other)) {
-            other = Long.fromValue(other);
+            other = this.constructor.fromValue(other);
         }
-        return Long.fromBits(this.low & other.low, this.high & other.high, this.unsigned);
+        return this.constructor.fromBits(this.low & other.low, this.high & other.high, this.unsigned);
     }
 
     or(other) {
         if (!is.long(other)) {
-            other = Long.fromValue(other);
+            other = this.constructor.fromValue(other);
         }
-        return Long.fromBits(this.low | other.low, this.high | other.high, this.unsigned);
+        return this.constructor.fromBits(this.low | other.low, this.high | other.high, this.unsigned);
     }
 
     xor(other) {
         if (!is.long(other)) {
-            other = Long.fromValue(other);
+            other = this.constructor.fromValue(other);
         }
-        return Long.fromBits(this.low ^ other.low, this.high ^ other.high, this.unsigned);
+        return this.constructor.fromBits(this.low ^ other.low, this.high ^ other.high, this.unsigned);
     }
 
     shl(numBits) {
@@ -438,13 +436,13 @@ export default class Long {
             return this;
         }
         if (numBits < 32) {
-            return Long.fromBits(
+            return this.constructor.fromBits(
                 this.low << numBits,
                 (this.high << numBits) | (this.low >>> (32 - numBits)),
                 this.unsigned
             );
         }
-        return Long.fromBits(0, this.low << (numBits - 32), this.unsigned);
+        return this.constructor.fromBits(0, this.low << (numBits - 32), this.unsigned);
     }
 
     shr(numBits) {
@@ -455,13 +453,13 @@ export default class Long {
             return this;
         }
         if (numBits < 32) {
-            return Long.fromBits(
+            return this.constructor.fromBits(
                 (this.low >>> numBits) | (this.high << (32 - numBits)),
                 this.high >> numBits,
                 this.unsigned
             );
         }
-        return Long.fromBits(
+        return this.constructor.fromBits(
             this.high >> (numBits - 32),
             this.high >= 0 ? 0 : -1,
             this.unsigned
@@ -479,30 +477,30 @@ export default class Long {
         const high = this.high;
         if (numBits < 32) {
             const low = this.low;
-            return Long.fromBits(
+            return this.constructor.fromBits(
                 (low >>> numBits) | (high << (32 - numBits)),
                 high >>> numBits,
                 this.unsigned
             );
         }
         if (numBits === 32) {
-            return Long.fromBits(high, 0, this.unsigned);
+            return this.constructor.fromBits(high, 0, this.unsigned);
         }
-        return Long.fromBits(high >>> (numBits - 32), 0, this.unsigned);
+        return this.constructor.fromBits(high >>> (numBits - 32), 0, this.unsigned);
     }
 
     toSigned() {
         if (!this.unsigned) {
             return this;
         }
-        return Long.fromBits(this.low, this.high, false);
+        return this.constructor.fromBits(this.low, this.high, false);
     }
 
     toUnsigned() {
         if (this.unsigned) {
             return this;
         }
-        return Long.fromBits(this.low, this.high, true);
+        return this.constructor.fromBits(this.low, this.high, true);
     }
 
     toBytes(le) {
@@ -542,54 +540,40 @@ export default class Long {
     static fromInt(value, unsigned) {
         if (unsigned) {
             value >>>= 0;
-            const cache = value >= 0 && value < 256;
-            if (cache && UINT_CACHE.has(value)) {
-                return UINT_CACHE.get(value);
-            }
-            const obj = Long.fromBits(value, (value | 0) < 0 ? -1 : 0, true);
-            if (cache) {
-                UINT_CACHE.set(value, obj);
-            }
+            const obj = this.fromBits(value, (value | 0) < 0 ? -1 : 0, true);
             return obj;
         }
         value |= 0;
-        const cache = value >= -128 && value < 128;
-        if (cache && INT_CACHE.has(value)) {
-            return INT_CACHE.get(value);
-        }
-        const obj = Long.fromBits(value, value < 0 ? -1 : 0, false);
-        if (cache) {
-            INT_CACHE.set(value, obj);
-        }
+        const obj = this.fromBits(value, value < 0 ? -1 : 0, false);
         return obj;
     }
 
     static fromNumber(value, unsigned) {
         if (isNaN(value)) {
-            return unsigned ? Long.UZERO : Long.ZERO;
+            return unsigned ? this.UZERO : this.ZERO;
         }
         if (unsigned) {
             if (value < 0) {
-                return Long.UZERO;
+                return this.UZERO;
             }
             if (value >= TWO_PWR_64_DBL) {
-                return Long.MAX_UNSIGNED_VALUE;
+                return this.MAX_UNSIGNED_VALUE;
             }
         }
         if (value <= -TWO_PWR_63_DBL) {
-            return Long.MIN_VALUE;
+            return this.MIN_VALUE;
         }
         if (value + 1 >= TWO_PWR_63_DBL) {
-            return Long.MAX_VALUE;
+            return this.MAX_VALUE;
         }
         if (value < 0) {
-            return Long.fromNumber(-value, unsigned).negate();
+            return this.fromNumber(-value, unsigned).negate();
         }
-        return Long.fromBits((value % TWO_PWR_32_DBL) | 0, (value / TWO_PWR_32_DBL) | 0, unsigned);
+        return this.fromBits((value % TWO_PWR_32_DBL) | 0, (value / TWO_PWR_32_DBL) | 0, unsigned);
     }
 
     static fromBits(lowBits, highBits, unsigned) {
-        return new Long(lowBits, highBits, unsigned);
+        return new this(lowBits, highBits, unsigned);
     }
 
     static fromString(str, unsigned, radix = 10) {
@@ -597,7 +581,7 @@ export default class Long {
             throw new x.InvalidArgument("empty string");
         }
         if (str === "NaN" || str === "Infinity" || str === "+Infinity" || str === "-Infinity") {
-            return Long.ZERO;
+            return this.ZERO;
         }
         if (is.number(unsigned)) {
             // For goog.math.long compatibility
@@ -615,23 +599,23 @@ export default class Long {
             throw new x.InvalidArgument("interior hyphen");
         }
         if (p === 0) {
-            return Long.fromString(str.substring(1), unsigned, radix).negate();
+            return this.fromString(str.substring(1), unsigned, radix).negate();
         }
 
         // Do several (8) digits each time through the loop, so as to
         // minimize the calls to the very expensive emulated div.
-        const radixToPower = Long.fromNumber(radix ** 8);
+        const radixToPower = this.fromNumber(radix ** 8);
 
-        let result = Long.ZERO;
+        let result = this.ZERO;
         for (let i = 0; i < str.length; i += 8) {
             const size = Math.min(8, str.length - i);
             const value = parseInt(str.substring(i, i + size), radix);
             if (size < 8) {
-                const power = Long.fromNumber(radix ** size);
-                result = result.mul(power).add(Long.fromNumber(value));
+                const power = this.fromNumber(radix ** size);
+                result = result.mul(power).add(this.fromNumber(value));
             } else {
                 result = result.mul(radixToPower);
-                result = result.add(Long.fromNumber(value));
+                result = result.add(this.fromNumber(value));
             }
         }
         result.unsigned = unsigned;
@@ -643,13 +627,13 @@ export default class Long {
             return val;
         }
         if (is.number(val)) {
-            return Long.fromNumber(val);
+            return this.fromNumber(val);
         }
         if (is.string(val)) {
-            return Long.fromString(val);
+            return this.fromString(val);
         }
         // Throws for non-objects, converts non-instanceof Long:
-        return Long.fromBits(val.low, val.high, val.unsigned);
+        return this.fromBits(val.low, val.high, val.unsigned);
     }
 }
 adone.tag.set(Long, adone.tag.LONG);

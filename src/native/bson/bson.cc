@@ -64,8 +64,8 @@ static const char* INT32_CLASS_NAME = "Int32";
 
 // Equality speed up comparison objects
 static const char* BSONTYPE_PROPERTY_NAME = "_bsontype";
-static const char* LONG_LOW_PROPERTY_NAME = "low_";
-static const char* LONG_HIGH_PROPERTY_NAME = "high_";
+static const char* LONG_LOW_PROPERTY_NAME = "low";
+static const char* LONG_HIGH_PROPERTY_NAME = "high";
 static const char* OBJECT_ID_ID_PROPERTY_NAME = "id";
 static const char* BINARY_POSITION_PROPERTY_NAME = "position";
 static const char* BINARY_SUBTYPE_PROPERTY_NAME = "subType";

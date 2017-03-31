@@ -2,7 +2,7 @@
 
 const { bson } = adone.data;
 const { BSON } = bson;
-const ObjectId = bson.ObjectId;
+const ObjectID = bson.ObjectID;
 
 function createBSON() {
     return new BSON();
@@ -13,7 +13,7 @@ describe("bson", () => {
         it("Should correctly handle toBson function for an object", function () {
             // Test object
             const doc = {
-                hello: new ObjectId(),
+                hello: new ObjectID(),
                 a: 1
             };
 
@@ -39,7 +39,7 @@ describe("bson", () => {
         it("Should correctly handle embedded toBson function for an object", function () {
             // Test object
             const doc = {
-                hello: new ObjectId(),
+                hello: new ObjectID(),
                 a: 1,
                 b: {
                     d: 1
@@ -67,7 +67,7 @@ describe("bson", () => {
         it("Should correctly serialize when embedded non object returned by toBSON", function () {
             // Test object
             const doc = {
-                hello: new ObjectId(),
+                hello: new ObjectID(),
                 a: 1,
                 b: {
                     d: 1
@@ -96,7 +96,7 @@ describe("bson", () => {
         it("Should fail when top level object returns a non object type", function () {
             // Test object
             const doc = {
-                hello: new ObjectId(),
+                hello: new ObjectID(),
                 a: 1,
                 b: {
                     d: 1

@@ -5,7 +5,7 @@ let Binary = bson.Binary
     , MinKey = bson.MinKey
     , BSONRegExp = bson.BSONRegExp
     , Timestamp = bson.Timestamp
-    , ObjectId = bson.ObjectId
+    , ObjectID = bson.ObjectID
     , Code = bson.Code
     , Decimal128 = bson.Decimal128;
 
@@ -42,12 +42,12 @@ let serialize = function (document) {
                     doc[name] = { "$maxKey": true };
                 } else if (document[name] instanceof MinKey || document[name]._bsontype == "MinKey") {
                     doc[name] = { "$minKey": true };
-                } else if (document[name] instanceof ObjectId || document[name]._bsontype == "ObjectID") {
+                } else if (document[name] instanceof ObjectID || document[name]._bsontype == "ObjectID") {
                     doc[name] = { "$oid": document[name].toString() };
                 } else if (document[name] instanceof BSONRegExp) {
                     doc[name] = { "$regex": document[name].pattern, "$options": document[name].options };
                 } else if (document[name] instanceof Timestamp || document[name]._bsontype == "Timestamp") {
-                    doc[name] = { "$timestamp": { t: document[name].high_, i: document[name].low_ } };
+                    doc[name] = { "$timestamp": { t: document[name].high, i: document[name].low } };
                 } else if (document[name] instanceof Decimal128 || document[name]._bsontype == "Decimal128") {
                     doc[name] = { "$numberDecimal": document[name].toString() };
                 } else if (document[name] === undefined) {
@@ -104,13 +104,13 @@ let deserialize = function (document) {
                 } else if (document[name]["$minKey"] != undefined) {
                     doc[name] = new MinKey();
                 } else if (document[name]["$oid"] != undefined) {
-                    doc[name] = new ObjectId(new Buffer(document[name]["$oid"], "hex"));
+                    doc[name] = new ObjectID(new Buffer(document[name]["$oid"], "hex"));
                 } else if (document[name]["$regex"] != undefined) {
                     doc[name] = new BSONRegExp(document[name]["$regex"], document[name]["$options"]);
                 } else if (document[name]["$timestamp"] != undefined) {
                     doc[name] = new Timestamp(document[name]["$timestamp"].i, document[name]["$timestamp"].t);
                 } else if (document[name]["$numberDecimal"] != undefined) {
-                    doc[name] = new Decimal128.fromString(document[name]["$numberDecimal"]);
+                    doc[name] = Decimal128.fromString(document[name]["$numberDecimal"]);
                 } else if (document[name]["$undefined"] != undefined) {
                     doc[name] = undefined;
                 } else {

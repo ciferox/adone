@@ -5,7 +5,7 @@ const Binary = bson.Binary;
 const Timestamp = bson.Timestamp;
 const Long = bson.Long;
 const MongoReply = bson.MongoReply;
-const ObjectId = bson.ObjectId;
+const ObjectID = bson.ObjectID;
 const Symbol = bson.Symbol;
 const DBRef = bson.DBRef;
 const Int32 = bson.Int32;
@@ -73,7 +73,7 @@ describe("bson", () => {
                     } else if (doc[name]["$regexp"]) {
                         object[name] = new RegExp(doc[name]["$regexp"], doc[name]["$options"] || "");
                     } else if (doc[name]["$oid"]) {
-                        object[name] = new ObjectId(doc[name]["$oid"]);
+                        object[name] = new ObjectID(doc[name]["$oid"]);
                     } else if (doc[name]["$binary"]) {
                         object[name] = new Binary(doc[name]["$binary"], doc[name]["$type"] || 1);
                     } else if (doc[name]["$timestamp"]) {
