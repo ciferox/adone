@@ -348,7 +348,7 @@ export class Omnitron extends adone.application.Application {
         return id;
     }
 
-    async _checkDependencies(service, handler = adone.noop) {
+    async _checkDependencies(service, handler = adone.noop, { checkDisabled = true } = {}) {
         if (is.array(service.config.dependencies)) {
             for (const depName of service.config.dependencies) {
                 const depService = this._.service[depName];
@@ -362,7 +362,7 @@ export class Omnitron extends adone.application.Application {
                 } else {
                     config = depService.config;
                 }
-                if (config.status === DISABLED) {
+                if (checkDisabled && config.status === DISABLED) {
                     throw new adone.x.IllegalState(`Dependent service '${depName}' is disabled`);
                 }
                 await handler(depName, config);
@@ -453,11 +453,11 @@ export class Omnitron extends adone.application.Application {
     @Public
     @Description("Enable service with specified name")
     @Type()
-    async enable(serviceName, needEnabled) {
+    async enable(serviceName, needEnabled, { enableDeps = false } = {}) {
         const service = this.getServiceByName(serviceName);
         if (needEnabled) {
             if (service.config.status === DISABLED) {
-                await this._checkDependencies(service);
+                await this._checkDependencies(service, (depName) => this.enable(depName, needEnabled, { enableDeps }), { checkDisabled: !enableDeps });
                 service.config.status = ENABLED;
                 return this._.configManager.saveServicesConfig();
             } else {

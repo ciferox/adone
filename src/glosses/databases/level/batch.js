@@ -1,4 +1,4 @@
-const { x: { WriteError }, util: { getOptions, dispatchError } } = adone.database.level;
+const { x: { WriteError }, util: { getOptions } } = adone.database.level;
 
 export default class Batch {
     constructor(db, codec) {

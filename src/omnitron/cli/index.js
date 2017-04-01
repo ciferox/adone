@@ -6,7 +6,7 @@ export default class extends adone.application.Subsystem {
         this.defineCommand({
             name: ["omnitron", "om", "0"],
             group: "service_cli",
-            help: "omnitron common service",
+            help: "Omnitron common service",
             options: [
                 {
                     name: "--version",
@@ -56,8 +56,13 @@ export default class extends adone.application.Subsystem {
                         {
                             name: "service",
                             type: String,
-                            nargs: "*",
                             help: "Name of service"
+                        }
+                    ],
+                    options: [
+                        {
+                            name: "--deps",
+                            help: "Enable dependent services"
                         }
                     ],
                     handler: this.enableCommand
@@ -228,9 +233,9 @@ export default class extends adone.application.Subsystem {
         return 0;
     }
 
-    async enableCommand(args) {
+    async enableCommand(args, opts) {
         try {
-            await this.dispatcher.enable(args.get("service"));
+            await this.dispatcher.enable(args.get("service"), { enableDeps: opts.has("deps") });
             adone.log(adone.ok);
         } catch (err) {
             adone.log(err.message);

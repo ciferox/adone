@@ -292,8 +292,7 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
         shell: "./glosses/shell",
         native: () => lazify({
             terminal: () => adone.bind("terminal.node").Terminal,
-            system: () => adone.bind("metrics.node").System,
-            leveldown: () => adone.bind("leveldown.node").leveldown
+            system: () => adone.bind("metrics.node").System
         })
     }, adone);
 
@@ -519,6 +518,7 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
     adone.database = lazify({
         local: "./glosses/databases/local",
         level: "./glosses/databases/level",
+        db: "./glosses/databases/db",
         mysql: "./glosses/databases/mysql/promise",
         redis: "./glosses/databases/redis",
         mongo: "./glosses/databases/mongo"

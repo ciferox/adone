@@ -2,7 +2,7 @@ export default class Iterator extends adone.database.level.AbstractIterator {
     constructor(db, options) {
         super(db);
 
-        this.binding = db.binding.iterator(options);
+        this.native = db.native.iterator(options);
         this.cache = null;
         this.finished = false;
     }
@@ -23,7 +23,7 @@ export default class Iterator extends adone.database.level.AbstractIterator {
         }
 
         this.cache = null;
-        this.binding.seek(target);
+        this.native.seek(target);
         this.finished = false;
     }
 
@@ -41,7 +41,7 @@ export default class Iterator extends adone.database.level.AbstractIterator {
             });
         } else {
             return new Promise((resolve, reject) => {
-                this.binding.next((err, array, finished) => {
+                this.native.next((err, array, finished) => {
                     if (err) {
                         return reject(err);
                     }
@@ -56,6 +56,6 @@ export default class Iterator extends adone.database.level.AbstractIterator {
 
     _end(callback) {
         delete this.cache;
-        this.binding.end(callback);
+        this.native.end(callback);
     }
 }

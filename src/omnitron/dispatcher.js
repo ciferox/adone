@@ -241,8 +241,8 @@ export default class Dispatcher {
         return (await this.getService("omnitron")).status(serviceName);
     }
 
-    async enable(serviceName) {
-        return (await this.getService("omnitron")).enable(serviceName, true);
+    async enable(serviceName, options) {
+        return (await this.getService("omnitron")).enable(serviceName, true, options);
     }
 
     async disable(serviceName) {
