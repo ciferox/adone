@@ -13,12 +13,11 @@ export default class Binary {
 
         if (!is.nil(buffer) && !is.number(buffer)) {
             // Only accept Buffer, Uint8Array or Arrays
-            if (is.string(buffer)) {
+            if (is.string(buffer) || is.buffer(buffer)) {
                 // Different ways of writing the length of the string for the different types
                 this.buffer = Buffer.from(buffer);
-                throw new x.InvalidArgument("only String, Buffer, Uint8Array or Array accepted");
             } else {
-                this.buffer = buffer;
+                throw new x.InvalidArgument("only String, Buffer, Uint8Array or Array accepted");
             }
             this.position = buffer.length;
         } else {
