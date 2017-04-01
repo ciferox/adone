@@ -1,5 +1,3 @@
-
-
 // Service statuses
 export const DISABLED = "disabled";
 export const ENABLED = "enabled";

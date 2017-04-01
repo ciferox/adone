@@ -2,7 +2,6 @@ adone.lazify({
     AbstractIterator: ["./abstract", (mod) => mod.AbstractIterator],
     AbstractChainedBatch: ["./abstract", (mod) => mod.AbstractChainedBatch],
     AbstractBackend: ["./abstract", (mod) => mod.AbstractBackend],
-    isLevelDOWN: ["./abstract", (mod) => mod.isLevelDOWN],
     Batch: "./batch",
     Codec: "./codec",
     DB: "./db",

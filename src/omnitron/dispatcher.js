@@ -263,6 +263,18 @@ export default class Dispatcher {
         return (await this.getService("omnitron")).gates();
     }
 
+    async getStore(name, options) {
+        return (await this.getService("omnitron")).getStore(name, options);
+    }
+
+    async system() {
+        return (await this.getService("omnitron")).system();
+    }
+
+    async hardware() {
+        return (await this.getService("omnitron")).hardware();
+    }
+
     async _isAlive(pid, timeout = 0) {
         try {
             let exists = true;

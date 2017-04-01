@@ -1,6 +1,10 @@
 import adone from "adone";
+const context = adone.lazify({
+    Store: "./contexts/store",
+    System: "./contexts/system",
+    Hardware: "./contexts/hardware"
+}, null, require);
 const startedAt = adone.util.microtime.now();
-import * as pkg from "adone/../package.json";
 const { is, std, vendor: { lodash: _ } } = adone;
 const { Contextable, Public, Private, Description, Type } = adone.netron.decorator;
 const { DISABLED, ENABLED, INITIALIZING, ACTIVE, UNINITIALIZING, STATUSES } = adone.omnitron.const;
@@ -43,10 +47,6 @@ export class Omnitron extends adone.application.Application {
         this._.configManager = new adone.omnitron.ConfigurationManager(this);
         await this._.configManager.loadAll();
 
-        await this.createPidFile();
-
-        await adone.fs.mkdir(this.config.omnitron.servicesPath);
-
         this.exitOnSignal("SIGQUIT");
         this.exitOnSignal("SIGTERM");
         this.exitOnSignal("SIGINT");
@@ -54,6 +54,18 @@ export class Omnitron extends adone.application.Application {
             global.gc();
             adone.info("running garbage collector");
         });
+
+        await this.createPidFile();
+
+        this._.systemStore = null;
+        this._.hostsStore = null;
+        this._.stores = {};
+
+        this._.system = null;
+        this._.hardware = null;
+
+        // await adone.fs.mkdir(this.config.omnitron.servicesPath);
+        await adone.fs.mkdir(this.config.omnitron.storesPath);
 
         this.createNetron({ isSuper: true });
         await this.bindNetron();
@@ -68,6 +80,9 @@ export class Omnitron extends adone.application.Application {
         if (is.function(process.send)) {
             process.send({ pid: process.pid });
         }
+
+        // Log information message and force load of package.json.
+        adone.info(`Omnitron v${adone.package.version} successfully started`);
     }
 
     async uninitialize() {
@@ -399,7 +414,7 @@ export class Omnitron extends adone.application.Application {
     @Description("Version of omnitron")
     @Type(String)
     version() {
-        return pkg.version;
+        return adone.package.version;
     }
 
     @Public
@@ -538,21 +553,66 @@ export class Omnitron extends adone.application.Application {
     }
 
     @Public
-    @Description("Return list of all gates")
+    @Description("Returns list of all gates")
     @Type(Array)
     gates() {
         return this.config.omnitron.gates;
     }
 
     @Public
+    @Description("Returns instance of system metrics observer")
+    system() {
+        if (is.null(this._.system)) {
+            this._.system = new context.System();
+        }
+        return this._.system;
+    }
+
+    @Public
+    @Description("Returns instance of hardware metrics observer")
+    hardware() {
+        if (is.null(this._.hardware)) {
+            this._.hardware = new context.Hardware();
+        }
+        return this._.hardware;
+    }
+
+    @Public
     @Description("")
     @Type()
+    async getStore(name, options) {
+        let db = null;
+        switch (name) {
+            case "system": {
+                if (is.null(this._.systemStore)) {
+                    db = this._.systemStore = new context.Store(this.config.omnitron.systemDbPath, { createIfMissing: true });
+                    await this._.systemStore.open();
+                } else {
+                    db = this._.systemStore;
+                }
+                break;
+            }
+            case "hosts": {
+                if (is.null(this._.hostsStore)) {
+                    db = this._.hostsStore = new context.Store(this.config.omnitron.hostsDbPath, { createIfMissing: true });
+                    await this._.hostsStore.open();
+                } else {
+                    db = this._.hostsStore;
+                }
+                break;
+            }
+            default: {
 
+            }
+        }
+
+        return db;
+    }
 
     @Public
     @Description("Force garbage collector")
     gc() {
-
+        global.gc();
     }
 }
 

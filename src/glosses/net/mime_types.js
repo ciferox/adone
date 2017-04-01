@@ -1,4 +1,4 @@
-import rawDB from "./db";
+import rawDB from "adone/../etc/glosses/net/mime_types";
 
 const { is, std: { path: { extname } }, util } = adone;
 

@@ -1,4 +1,4 @@
-const { is, net: { http: { server: { helper: { mediaTyper, mimeType } } } } } = adone;
+const { is, net: { mimeType, http: { server: { helper: { mediaTyper } } } } } = adone;
 
 const normalizeType = (value) => {
     const type = mediaTyper.parse(value);

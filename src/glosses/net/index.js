@@ -1,5 +1,6 @@
 adone.lazify({
     util: "./util",
+    mimeType: "./mime_types",
     Socket: "./socket",
     Server: "./server",
     ssh: () => adone.lazify({

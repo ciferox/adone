@@ -3,7 +3,7 @@ const { Type, Contextable, Description } = adone.netron.decorator;
 
 @Contextable
 @Description("Hardware metrics")
-export class Hardware {    
+export default class Hardware {    
     @Description("")
     @Type(Array)
     test() {

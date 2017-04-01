@@ -5,7 +5,6 @@ adone.lazify({
     parseURL: "./parse_url",
     isFresh: "./is_fresh",
     contentType: "./content_type",
-    mimeType: "./mime_types",
     Negotiator: "./negotiator",
     mediaTyper: "./media_typer",
     typeIs: "./type_is",

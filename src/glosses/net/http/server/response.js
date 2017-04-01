@@ -1,10 +1,11 @@
 const {
     is, x,
     net: {
+        mimeType: { contentType },
         http: {
             server: {
                 helper: {
-                    status, onFinished, vary, escapeHTML, contentDisposition, typeIs, mimeType: { contentType }
+                    status, onFinished, vary, escapeHTML, contentDisposition, typeIs
                 }
             }
         }

@@ -1,5 +1,5 @@
 
-const { is, net: { http: { server: { helper: { mimeType, Negotiator } } } } } = adone;
+const { is, net: { mimeType, http: { server: { helper: { Negotiator } } } } } = adone;
 
 const extToMime = (type) => type.includes("/") ? type : mimeType.lookup(type);
 

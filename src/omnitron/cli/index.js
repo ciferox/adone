@@ -4,7 +4,7 @@ const { STATUSES } = adone.omnitron.const;
 export default class extends adone.application.Subsystem {
     initialize() {
         this.defineCommand({
-            name: "omnitron",
+            name: ["omnitron", "om", "0"],
             group: "service_cli",
             help: "omnitron common service",
             options: [
@@ -131,6 +131,27 @@ export default class extends adone.application.Subsystem {
                     name: "gates",
                     help: "show gates",
                     handler: this.gatesCommand
+                },
+                {
+                    name: "sys",
+                    help: "system metrics",
+                    commands: [
+                        {
+                            name: "info",
+                            help: "show system information",
+                            handler: this.systemInfoCommand
+                        },
+                        {
+                            name: "volumes",
+                            help: "show list of volumes",
+                            handler: this.systemVolumesCommand
+                        },
+                        {
+                            name: "ps",
+                            help: "show list of processes",
+                            handler: this.systemPsCommand
+                        }
+                    ]
                 }
             ]
         });
@@ -359,6 +380,94 @@ export default class extends adone.application.Subsystem {
         } catch (err) {
             adone.log(err.message);
         }
+        return 0;
+    }
+
+    async systemInfoCommand() {
+        const system = await this.dispatcher.system();
+        adone.log((await system.info()).full);
+        return 0;
+    }
+
+    async systemVolumesCommand(args, opts) {
+        const system = await this.dispatcher.system();
+        adone.log(pretty.table(await system.volumes(), {
+            style: {
+                head: ["gray"],
+                compact: true
+            },
+            model: [
+                {
+                    id: "mount",
+                    header: "Mount",
+                    style: "{green-fg}"
+
+                },
+                {
+                    id: "fsType",
+                    header: "Type"
+                },
+                {
+                    id: "freeSpace",
+                    header: "Free space",
+                    format: (space) => adone.util.humanizeSize(space)
+                },
+                {
+                    id: "totalSpace",
+                    header: "Total space",
+                    format: (space) => adone.util.humanizeSize(space)
+                }
+            ]
+        }));
+
+        return 0;
+    }
+
+    async systemPsCommand() {
+        const system = await this.dispatcher.system();
+        adone.log(pretty.table(await system.processes(), {
+            style: {
+                head: ["gray"],
+                compact: true
+            },
+            model: [
+                {
+                    id: "name",
+                    header: "Name",
+                    style: "{green-fg}"
+
+                },
+                {
+                    id: "pid",
+                    header: "PID"
+                },
+                {
+                    id: "ppid",
+                    header: "PPID"
+                },
+                {
+                    id: "state",
+                    header: "State",
+                    format: (state) => adone.metrics.Process.humanState(state)
+                },
+                {
+                    id: "vsize",
+                    header: "VSIZE",
+                    format: (vsize) => adone.util.humanizeSize(vsize)
+                },
+                {
+                    id: "rss",
+                    header: "RSS",
+                    format: (rss) => adone.util.humanizeSize(rss)
+                },
+                {
+                    id: "upTime",
+                    header: "Uptime",
+                    format: (uptime) => adone.util.humanizeTime(uptime)
+                }
+            ]
+        }));
+
         return 0;
     }
 }
