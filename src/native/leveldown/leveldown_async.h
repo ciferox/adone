@@ -10,34 +10,31 @@
 
 #include "async.h"
 
-namespace leveldown {
+namespace leveldown
+{
 
-class DestroyWorker : public AsyncWorker {
-public:
-  DestroyWorker (
-      Nan::Utf8String* location
-    , Nan::Callback *callback
-  );
+class DestroyWorker : public AsyncWorker
+{
+  public:
+    DestroyWorker(Nan::Utf8String *location, Nan::Callback *callback);
 
-  virtual ~DestroyWorker ();
-  virtual void Execute ();
+    virtual ~DestroyWorker();
+    virtual void Execute();
 
-private:
-  Nan::Utf8String* location;
+  private:
+    Nan::Utf8String *location;
 };
 
-class RepairWorker : public AsyncWorker {
-public:
-  RepairWorker (
-      Nan::Utf8String* location
-    , Nan::Callback *callback
-  );
+class RepairWorker : public AsyncWorker
+{
+  public:
+    RepairWorker(Nan::Utf8String *location, Nan::Callback *callback);
 
-  virtual ~RepairWorker ();
-  virtual void Execute ();
+    virtual ~RepairWorker();
+    virtual void Execute();
 
-private:
-  Nan::Utf8String* location;
+  private:
+    Nan::Utf8String *location;
 };
 
 } // namespace leveldown

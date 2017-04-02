@@ -52,6 +52,8 @@ export class NotAllowed extends Exception { }
 NotAllowed.prototype.name = "NotAllowed";
 export class LimitExceeded extends Exception { }
 LimitExceeded.prototype.name = "LimitExceeded";
+export class Encoding extends Exception { }
+Encoding.prototype.name = "Encoding";
 
 export class Network extends Exception { }
 Network.prototype.name = "Network";
@@ -59,6 +61,17 @@ export class Bind extends Network { }
 Bind.prototype.name = "Bind";
 export class Connect extends Network { }
 Connect.prototype.name = "Connect";
+
+export class Database extends Exception { }
+Database.prototype.name = "Database";
+export class DatabaseInitialization extends Database { }
+DatabaseInitialization.prototype.name = "DatabaseInitialization";
+export class DatabaseOpen extends Database { }
+DatabaseOpen.prototype.name = "DatabaseOpen";
+export class DatabaseRead extends Database { }
+DatabaseRead.prototype.name = "DatabaseRead";
+export class DatabaseWrite extends Database { }
+DatabaseWrite.prototype.name = "DatabaseWrite";
 
 export class NetronIllegalState extends Exception { }
 NetronIllegalState.prototype.name = "NetronIllegalState";
@@ -95,10 +108,17 @@ export const idExceptionMap = {
     26: Incorrect,
     27: NotAllowed,
     28: LimitExceeded,
+    29: Encoding,
 
     100: Network,
     101: Bind,
     102: Connect,
+
+    110: Database,
+    111: DatabaseInitialization,
+    112: DatabaseOpen,
+    113: DatabaseRead,
+    114: DatabaseWrite,
 
     1000: NetronIllegalState,
     1001: NetronPeerDisconnected,

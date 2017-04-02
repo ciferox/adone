@@ -1,5 +1,4 @@
-const { is } = adone;
-const { Codec, x: { InitializationError, OpenError, ReadError, WriteError, NotFoundError, EncodingError }, util: { getOptions, defaultOptions } } = adone.database.level;
+const { is, x, database: { level: { Codec, util: { getOptions, defaultOptions } } } } = adone;
 
 class IteratorStream extends adone.std.stream.Readable {
     constructor(iterator, options) {
@@ -35,7 +34,7 @@ class IteratorStream extends adone.std.stream.Readable {
                 try {
                     value = this._decoder(result.key, result.value);
                 } catch (err) {
-                    this.emit("error", new EncodingError(err));
+                    this.emit("error", new x.Encoding(err));
                     this.push(null);
                     return;
                 }
@@ -85,7 +84,7 @@ export default class DB extends adone.EventEmitter {
         }
 
         if ((!options || typeof options.db !== "function") && typeof location !== "string") {
-            throw new InitializationError("Must provide a location for the database");
+            throw new x.DatabaseInitialization("Must provide a location for the database");
         }
 
         options = getOptions(options);
@@ -117,7 +116,7 @@ export default class DB extends adone.EventEmitter {
                 this.emit("open");
                 this.emit("ready");
             } catch (err) {
-                err = new OpenError(err);
+                err = new x.DatabaseOpen(err);
                 this.emit("error", err);
                 throw err;
             }
@@ -157,7 +156,7 @@ export default class DB extends adone.EventEmitter {
         this.maybeError();
 
         if (key_ === null || key_ === undefined) {
-            const err = new ReadError("get() requires key argument");
+            const err = new x.DatabaseRead("get() requires key argument");
             this.emit("error", err);
             throw err;
         }
@@ -172,16 +171,16 @@ export default class DB extends adone.EventEmitter {
             try {
                 value = this._codec.decodeValue(value, options);
             } catch (err) {
-                err = new EncodingError(err);
+                err = new x.Encoding(err);
                 this.emit("error", err);
                 throw err;
             }
             return value;
         } catch (err) {
             if ((/notfound/i).test(err) || err.notFound) {
-                err = new NotFoundError(`Key not found in database [${key_}]`, err);
-            } else if (!(err instanceof EncodingError)) {
-                err = new ReadError(err);
+                err = new x.NotFound(`Key not found in database [${key_}]`, err);
+            } else if (!(err instanceof x.Encoding)) {
+                err = new x.DatabaseRead(err);
             }
             this.emit("error", err);
             throw err;
@@ -192,7 +191,7 @@ export default class DB extends adone.EventEmitter {
         this.maybeError();
 
         if (key_ === null || key_ === undefined) {
-            const err = new WriteError("put() requires a key argument");
+            const err = new x.DatabaseWrite("put() requires a key argument");
             this.emit("error", err);
             throw err;
         }
@@ -204,7 +203,7 @@ export default class DB extends adone.EventEmitter {
             await this.db.put(key, value, options);
             this.emit("put", key_, value_);
         } catch (err) {
-            err = new WriteError(err);
+            err = new x.DatabaseWrite(err);
             this.emit("error", err);
             throw err;
         }
@@ -214,7 +213,7 @@ export default class DB extends adone.EventEmitter {
         this.maybeError();
 
         if (key_ === null || key_ === undefined) {
-            const err = new WriteError("del() requires a key argument");
+            const err = new x.DatabaseWrite("del() requires a key argument");
             this.emit("error", err);
             throw err;
         }
@@ -225,7 +224,7 @@ export default class DB extends adone.EventEmitter {
             await this.db.del(key, options);
             this.emit("del", key_);
         } catch (err) {
-            err = new WriteError(err);
+            err = new x.DatabaseWrite(err);
             this.emit("error", err);
             throw err;
         }
@@ -237,7 +236,7 @@ export default class DB extends adone.EventEmitter {
         this.maybeError();
 
         if (!is.array(arr_)) {
-            const err = new WriteError("batch() requires an array argument");
+            const err = new x.DatabaseWrite("batch() requires an array argument");
             this.emit("error", err);
             throw err;
         }
@@ -254,7 +253,7 @@ export default class DB extends adone.EventEmitter {
             await this.db.batch(arr, options);
             this.emit("batch", arr_);
         } catch (err) {
-            err = new WriteError(err);
+            err = new x.DatabaseWrite(err);
             this.emit("error", err);
             throw err;
         }
@@ -289,7 +288,7 @@ export default class DB extends adone.EventEmitter {
 
     maybeError() {
         if (!this._isOpening() && !this.isOpen()) {
-            const err = new ReadError("Database is not open");
+            const err = new x.DatabaseRead("Database is not open");
             this.emit("error", err);
             throw err;
         }

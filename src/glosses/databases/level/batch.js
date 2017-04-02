@@ -1,4 +1,4 @@
-const { x: { WriteError }, util: { getOptions } } = adone.database.level;
+const { x, database: { level: { util: { getOptions } } } } = adone;
 
 export default class Batch {
     constructor(db, codec) {
@@ -16,7 +16,7 @@ export default class Batch {
         try {
             this.batch.put(key, value);
         } catch (err) {
-            throw new WriteError(err);
+            throw new x.DatabaseWrite(err);
         }
         this.ops.push({ type: "put", key, value });
         this.length++;
@@ -32,7 +32,7 @@ export default class Batch {
         try {
             this.batch.del(key);
         } catch (err) {
-            throw new WriteError(err);
+            throw new x.DatabaseWrite(err);
         }
         this.ops.push({ type: "del", key });
         this.length++;
@@ -44,7 +44,7 @@ export default class Batch {
         try {
             this.batch.clear();
         } catch (err) {
-            throw new WriteError(err);
+            throw new x.DatabaseWrite(err);
         }
 
         this.ops = [];
@@ -60,7 +60,7 @@ export default class Batch {
             await this.batch.write();
             levelup.emit("batch", ops);
         } catch (err) {
-            err = new WriteError(err);
+            err = new x.DatabaseWrite(err);
             levelup.emit("error", err);
             throw err;
         }

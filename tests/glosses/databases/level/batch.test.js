@@ -1,5 +1,5 @@
 import Manager from "./common";
-const { x: { WriteError, NotFoundError }, Batch } = adone.database.level;
+const { x, database: { level: { Batch } } } = adone;
 
 describe("batch()", () => {
     let manager;
@@ -62,7 +62,7 @@ describe("batch()", () => {
 
         // these shouldn't exist
         for (const key of ["1", "foo"]) {
-            Manager.shouldThrows(() => db.get(key), NotFoundError);
+            Manager.shouldThrows(() => db.get(key), x.NotFound);
         }
     });
 
@@ -133,7 +133,7 @@ describe("batch()", () => {
         }
         // these shouldn't exist
         for (const key of ["1", "foo"]) {
-            Manager.shouldThrows(() => db.get(key), NotFoundError);
+            Manager.shouldThrows(() => db.get(key), x.NotFound);
         }
     });
 
@@ -151,10 +151,10 @@ describe("batch()", () => {
             assert.isNotNull(value);
         }
         // this shouldn't exist
-        await Manager.shouldThrows(() => db.get("1"), NotFoundError);
+        await Manager.shouldThrows(() => db.get("1"), x.NotFound);
     });
 
-    describe.only("chained batch() arguments", () => {
+    describe("chained batch() arguments", () => {
         let _db;
         let _batch;
         beforeEach(async () => {
@@ -170,32 +170,32 @@ describe("batch()", () => {
 
         it("test batch#put() with missing `key`", () => {
             // key = undefined
-            assert.throws(() => _batch.put(undefined, "foo1"), WriteError, "key cannot be `null` or `undefined`");
+            assert.throws(() => _batch.put(undefined, "foo1"), x.DatabaseWrite, "Error: key cannot be `null` or `undefined`");
 
             // key = null
-            assert.throws(() => _batch.put(null, "foo1"), WriteError, "key cannot be `null` or `undefined`");
+            assert.throws(() => _batch.put(null, "foo1"), x.DatabaseWrite, "Error: key cannot be `null` or `undefined`");
         });
 
         it("test batch#put() with missing `key` and `value`", () => {
             // undefined
-            assert.throws(() => _batch.put(), WriteError, "key cannot be `null` or `undefined`");
+            assert.throws(() => _batch.put(), x.DatabaseWrite, "Error: key cannot be `null` or `undefined`");
 
             // null
-            assert.throws(() => _batch.put(null, null), WriteError, "key cannot be `null` or `undefined`");
+            assert.throws(() => _batch.put(null, null), x.DatabaseWrite, "Error: key cannot be `null` or `undefined`");
         });
 
         it("test batch#del() with missing `key`", () => {
             // key = undefined
-            assert.throws(() => _batch.del(undefined, "foo1"), WriteError, "key cannot be `null` or `undefined`");
+            assert.throws(() => _batch.del(undefined, "foo1"), x.DatabaseWrite, "Error: key cannot be `null` or `undefined`");
 
             // key = null
-            assert.throws(() => _batch.del(null, "foo1"), WriteError, "key cannot be `null` or `undefined`");
+            assert.throws(() => _batch.del(null, "foo1"), x.DatabaseWrite, "Error: key cannot be `null` or `undefined`");
         });
 
         describe("test batch operations after write()", () => {
             beforeEach(async () => {
                 await _batch.put("foo", "bar").put("boom", "bang").del("foo").write();
-                manager.verify = (cb) => Manager.shouldThrows(cb, WriteError, "write() already called on this batch");
+                manager.verify = (cb) => Manager.shouldThrows(cb, x.DatabaseWrite, "Error: write() already called on this batch");
             });
 
             it("test put()", () => {

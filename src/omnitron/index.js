@@ -382,6 +382,12 @@ export class Omnitron extends adone.application.Application {
     // Omnitron interface
 
     @Public
+    @Description("Force garbage collector")
+    gc() {
+        global.gc();
+    }
+
+    @Public
     @Description("Kill omnitron")
     killSelf() {
         this._signalExit();
@@ -607,12 +613,6 @@ export class Omnitron extends adone.application.Application {
         }
 
         return db;
-    }
-
-    @Public
-    @Description("Force garbage collector")
-    gc() {
-        global.gc();
     }
 }
 

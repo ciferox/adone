@@ -8,42 +8,39 @@
 #include "leveldown.h"
 #include "leveldown_async.h"
 
-namespace leveldown {
+namespace leveldown
+{
 
 /** DESTROY WORKER **/
 
-DestroyWorker::DestroyWorker (
-    Nan::Utf8String* location
-  , Nan::Callback *callback
-) : AsyncWorker(NULL, callback)
-  , location(location)
-{};
+DestroyWorker::DestroyWorker(
+    Nan::Utf8String *location, Nan::Callback *callback) : AsyncWorker(NULL, callback), location(location){};
 
-DestroyWorker::~DestroyWorker () {
-  delete location;
+DestroyWorker::~DestroyWorker()
+{
+    delete location;
 }
 
-void DestroyWorker::Execute () {
-  leveldb::Options options;
-  SetStatus(leveldb::DestroyDB(**location, options));
+void DestroyWorker::Execute()
+{
+    leveldb::Options options;
+    SetStatus(leveldb::DestroyDB(**location, options));
 }
 
 /** REPAIR WORKER **/
 
-RepairWorker::RepairWorker (
-    Nan::Utf8String* location
-  , Nan::Callback *callback
-) : AsyncWorker(NULL, callback)
-  , location(location)
-{};
+RepairWorker::RepairWorker(
+    Nan::Utf8String *location, Nan::Callback *callback) : AsyncWorker(NULL, callback), location(location){};
 
-RepairWorker::~RepairWorker () {
-  delete location;
+RepairWorker::~RepairWorker()
+{
+    delete location;
 }
 
-void RepairWorker::Execute () {
-  leveldb::Options options;
-  SetStatus(leveldb::RepairDB(**location, options));
+void RepairWorker::Execute()
+{
+    leveldb::Options options;
+    SetStatus(leveldb::RepairDB(**location, options));
 }
 
 } // namespace leveldown

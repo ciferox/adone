@@ -1,5 +1,5 @@
 import Manager from "./common";
-const { DB, x: { InitializationError, LevelUPError, OpenError }, backend: { Memory } } = adone.database.level;
+const { x, database: { level: { DB, backend: { Memory } } } } = adone;
 
 describe("Init & open()", () => {
     let manager;
@@ -13,7 +13,7 @@ describe("Init & open()", () => {
     });
 
     it("DB", () => {
-        assert.throws(() => new DB(), InitializationError); // no location
+        assert.throws(() => new DB(), x.DatabaseInitialization); // no location
     });
 
     it("default options", async () => {
@@ -90,8 +90,9 @@ describe("Init & open()", () => {
             const db = await Manager.open(manager.cleanupDirs[0] = manager.nextLocation(), { createIfMissing: false });
         } catch (err) {
             assert.instanceOf(err, Error);
-            assert.instanceOf(err, LevelUPError);
-            assert.instanceOf(err, OpenError);
+            assert.instanceOf(err, x.Exception);
+            assert.instanceOf(err, x.Database);
+            assert.instanceOf(err, x.DatabaseOpen);
             assert(err.notFound === undefined, "err.notFound is `undefined`, should only be on NotFoundError");
         }
     });
@@ -112,8 +113,9 @@ describe("Init & open()", () => {
             await Manager.open(manager.cleanupDirs[0], { errorIfExists: true });
         } catch (err) {
             assert.instanceOf(err, Error);
-            assert.instanceOf(err, LevelUPError);
-            assert.instanceOf(err, OpenError);
+            assert.instanceOf(err, x.Exception);
+            assert.instanceOf(err, x.Database);
+            assert.instanceOf(err, x.DatabaseOpen);
             await db.close();
         }
     });

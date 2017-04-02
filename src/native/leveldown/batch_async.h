@@ -13,20 +13,20 @@
 #include "batch.h"
 #include "database.h"
 
-namespace leveldown {
+namespace leveldown
+{
 
-class BatchWriteWorker : public AsyncWorker {
-public:
-  BatchWriteWorker (
-      Batch* batch
-    , Nan::Callback *callback
-  );
+class BatchWriteWorker : public AsyncWorker
+{
+  public:
+    BatchWriteWorker(
+        Batch *batch, Nan::Callback *callback);
 
-  virtual ~BatchWriteWorker ();
-  virtual void Execute ();
+    virtual ~BatchWriteWorker();
+    virtual void Execute();
 
-private:
-  Batch* batch;
+  private:
+    Batch *batch;
 };
 
 } // namespace leveldown

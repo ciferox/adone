@@ -1,5 +1,5 @@
 import Manager from "./common";
-const { x: { EncodingError } } = adone.database.level;
+const { x } = adone;
 
 describe("Encoding", () => {
     let manager;
@@ -17,7 +17,7 @@ describe("Encoding", () => {
         await db.put("foo", "this {} is [] not : json");
         await db.close();
         db = await Manager.open(db.location, { createIfMissing: false, errorIfExists: false, valueEncoding: "json" });
-        await Manager.shouldThrows(() => db.get("foo"), EncodingError);
+        await Manager.shouldThrows(() => db.get("foo"), x.Encoding);
         await db.close();
     });
 
@@ -35,7 +35,7 @@ describe("Encoding", () => {
             .on("close", () => {
                 assert.equal(dataSpy.callCount, 0, "no data");
                 assert.equal(errorSpy.callCount, 1, "error emitted");
-                assert.equal("EncodingError", errorSpy.getCall(0).args[0].name);
+                assert.equal("Encoding", errorSpy.getCall(0).args[0].name);
                 db.close().then(done);
             });
     });

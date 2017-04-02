@@ -1,5 +1,5 @@
 import Manager from "./common";
-const { x: { LevelUPError } } = adone.database.level;
+const { x } = adone;
 
 describe("null & undefined keys & values", () => {
     let manager;
@@ -22,27 +22,27 @@ describe("null & undefined keys & values", () => {
         });
 
         it("get() with null key causes error", async () => {
-            await Manager.shouldThrows(() => _db.get(null), LevelUPError);
+            await Manager.shouldThrows(() => _db.get(null), x.Database);
         });
 
         it("get() with undefined key causes error", async () => {
-            await Manager.shouldThrows(() => _db.get(undefined), LevelUPError);
+            await Manager.shouldThrows(() => _db.get(undefined), x.Database);
         });
 
         it("del() with null key causes error", async () => {
-            await Manager.shouldThrows(() => _db.del(null), LevelUPError);
+            await Manager.shouldThrows(() => _db.del(null), x.Database);
         });
 
         it("del() with undefined key causes error", async () => {
-            await Manager.shouldThrows(() => _db.del(undefined), LevelUPError);
+            await Manager.shouldThrows(() => _db.del(undefined), x.Database);
         });
 
         it("put() with null key causes error", async () => {
-            await Manager.shouldThrows(() => _db.put(null, "foo"), LevelUPError);
+            await Manager.shouldThrows(() => _db.put(null, "foo"), x.Database);
         });
 
         it("put() with undefined key causes error", async () => {
-            await Manager.shouldThrows(() => _db.put(undefined, "foo"), LevelUPError);
+            await Manager.shouldThrows(() => _db.put(undefined, "foo"), x.Database);
         });
 
         it("put() with null value works", async () => {
@@ -62,11 +62,11 @@ describe("null & undefined keys & values", () => {
         });
 
         it("batch() with undefined key causes error", async () => {
-            await Manager.shouldThrows(() => _db.batch([{ key: undefined, value: "bar", type: "put" }]), LevelUPError);
+            await Manager.shouldThrows(() => _db.batch([{ key: undefined, value: "bar", type: "put" }]), x.Database);
         });
 
         it("batch() with null key causes error", async () => {
-            await Manager.shouldThrows(() => _db.batch([{ key: null, value: "bar", type: "put" }]), LevelUPError);
+            await Manager.shouldThrows(() => _db.batch([{ key: null, value: "bar", type: "put" }]), x.Database);
         });
     });
 });

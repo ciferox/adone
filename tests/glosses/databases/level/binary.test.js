@@ -1,5 +1,5 @@
 import Manager from "./common";
-const { x: { NotFoundError } } = adone.database.level;
+const { x } = adone;
 
 describe("Binary API", () => {
     let testData;
@@ -78,7 +78,7 @@ describe("Binary API", () => {
         const db = await manager.openTestDatabase();
         await db.put(testData, "binarydata", { valueEncoding: "binary" });
         await db.del(testData, { valueEncoding: "binary" });
-        Manager.shouldThrows(() => db.get(testData, { valueEncoding: "binary" }), NotFoundError);
+        Manager.shouldThrows(() => db.get(testData, { valueEncoding: "binary" }), x.NotFound);
     });
 
     it("batch() with multiple puts", async () => {

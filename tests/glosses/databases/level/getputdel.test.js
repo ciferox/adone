@@ -1,5 +1,5 @@
 import Manager from "./common";
-const { x: { LevelUPError, ReadError, WriteError, NotFoundError } } = adone.database.level;
+const { x } = adone;
 
 describe("get() / put() / del()", () => {
     let manager;
@@ -19,10 +19,8 @@ describe("get() / put() / del()", () => {
                 const value = await db.get("undefkey");
             } catch (err) {
                 assert.instanceOf(err, Error);
-                assert.instanceOf(err, LevelUPError);
-                assert.instanceOf(err, NotFoundError);
-                assert(err.notFound === true, "err.notFound is `true`");
-                assert.equal(err.status, 404, "err.status is 404");
+                assert.instanceOf(err, x.Exception);
+                assert.instanceOf(err, x.NotFound);
                 assert.match(err, /[undefkey]/);
                 return;
             }
@@ -52,7 +50,7 @@ describe("get() / put() / del()", () => {
                 
                 // we should get foo & baz but not bar
                 if (key === "bar") {
-                    await Manager.shouldThrows(() => db.get(key), NotFoundError);
+                    await Manager.shouldThrows(() => db.get(key), x.NotFound);
                 } else {
                     await db.get(key);
                 }
@@ -62,16 +60,16 @@ describe("get() / put() / del()", () => {
 
     it("test get() throwables", async () => {
         const db = await manager.openTestDatabase();
-        await Manager.shouldThrows(() => db.get(), ReadError, "get() requires key argument", "no-arg get() throws");
+        await Manager.shouldThrows(() => db.get(), x.DatabaseRead, "get() requires key argument", "no-arg get() throws");
     });
 
     it("test put() throwables", async () => {
         const db = await manager.openTestDatabase();
-        await Manager.shouldThrows(() => db.put(), WriteError, "put() requires a key argument", "no-arg put() throws");
+        await Manager.shouldThrows(() => db.put(), x.DatabaseWrite, "put() requires a key argument", "no-arg put() throws");
     });
 
     it("test del() throwables", async () => {
         const db = await manager.openTestDatabase();
-        await Manager.shouldThrows(() => db.del(), WriteError, "del() requires a key argument", "no-arg del() throws");
+        await Manager.shouldThrows(() => db.del(), x.DatabaseWrite, "del() requires a key argument", "no-arg del() throws");
     });
 });

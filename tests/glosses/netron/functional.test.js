@@ -994,7 +994,7 @@ describe("Netron", () => {
 
             describe("Exceptions", () => {
                 @Contextable
-                class A {
+                class StdErrs {
                     throwError() {
                         throw new Error("description");
                     }
@@ -1022,80 +1022,12 @@ describe("Netron", () => {
                     throwURIError() {
                         throw new URIError("description");
                     }
-
-
-                    throwException() {
-                        throw new x.Exception("description");
-                    }
-                    throwRuntime() {
-                        throw new x.Runtime("description");
-                    }
-                    throwIncompleteBufferError() {
-                        throw new x.IncompleteBufferError("description");
-                    }
-                    throwNotImplemented() {
-                        throw new x.NotImplemented("description");
-                    }
-                    throwIllegalState() {
-                        throw new x.IllegalState("description");
-                    }
-                    throwNotValid() {
-                        throw new x.NotValid("description");
-                    }
-                    throwUnknown() {
-                        throw new x.Unknown("description");
-                    }
-                    throwNotExists() {
-                        throw new x.NotExists("description");
-                    }
-                    throwExists() {
-                        throw new x.Exists("description");
-                    }
-                    throwEmpty() {
-                        throw new x.Empty("description");
-                    }
-                    throwInvalidAccess() {
-                        throw new x.InvalidAccess("description");
-                    }
-                    throwNotSupported() {
-                        throw new x.NotSupported("description");
-                    }
-                    throwInvalidArgument() {
-                        throw new x.InvalidArgument("description");
-                    }
-                    throwInvalidNumberOfArguments() {
-                        throw new x.InvalidNumberOfArguments("description");
-                    }
-                    throwNotFound() {
-                        throw new x.NotFound("description");
-                    }
-                    throwTimeout() {
-                        throw new x.Timeout("description");
-                    }
-                    throwIncorrect() {
-                        throw new x.Incorrect("description");
-                    }
-                    throwNotAllowed() {
-                        throw new x.NotAllowed("description");
-                    }
-                    throwLimitExceeded() {
-                        throw new x.LimitExceeded("description");
-                    }
-                    throwNetwork() {
-                        throw new x.Network("description");
-                    }
-                    throwBind() {
-                        throw new x.Bind("description");
-                    }
-                    throwConnect() {
-                        throw new x.Connect("description");
-                    }
                 }
 
                 for (const i of ["local", "remote"]) {
                     it(`${i} - standart exceptions`, async() => {
                         let okCount = 0;
-                        superNetron.attachContext(new A(), "a");
+                        superNetron.attachContext(new StdErrs(), "a");
                         await superNetron.bind({ port: NETRON_PORT });
 
                         let iA;
@@ -1118,9 +1050,22 @@ describe("Netron", () => {
                 }
 
                 for (const i of ["local", "remote"]) {
-                    it(`${i} - adone exceptions`, async() => {
+                    it(`${i} - adone exceptions`, async () => {
                         let okCount = 0;
-                        superNetron.attachContext(new A(), "a");
+
+                        @Contextable
+                        class AdoneErrs {}
+                        
+                        const adoneErrors = adone.x.adoneExceptions;
+                        for (const AdoneError of adoneErrors) {
+                            if (adone.x.exceptionIdMap[AdoneError] < 1000) {
+                                AdoneErrs.prototype[`throw${AdoneError.prototype.name}`] = function () {
+                                    throw new AdoneError("description");
+                                };
+                            }
+                        }
+
+                        superNetron.attachContext(new AdoneErrs(), "a");
                         await superNetron.bind({ port: NETRON_PORT });
 
                         let iA;
@@ -1130,7 +1075,7 @@ describe("Netron", () => {
                             const peer = await exNetron.connect({ port: NETRON_PORT });
                             iA = peer.getInterfaceByName("a");
                         }
-                        const adoneErrors = adone.x.adoneExceptions;
+                        
                         for (const AdoneError of adoneErrors) {
                             try {
                                 await iA[`throw${AdoneError.prototype.name}`]();

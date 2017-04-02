@@ -1,5 +1,5 @@
 import Manager from "./common";
-const { x: { NotFoundError }, Batch } = adone.database.level;
+const { x, database: { level: { Batch } } } = adone;
 
 describe("Deferred open()", () => {
     let manager;
@@ -29,7 +29,7 @@ describe("Deferred open()", () => {
             const v = await db.get(`k${k}`);
             assert.equal(v, `v${k}`);
         }
-        await Manager.shouldThrows(() => db.get("k4"), NotFoundError);
+        await Manager.shouldThrows(() => db.get("k4"), x.NotFound);
     });
 
     it("batch() on pre-opened database", async () => {
@@ -51,7 +51,7 @@ describe("Deferred open()", () => {
             const v = await db.get(`k${k}`);
             assert.equal(v, `v${k}`);
         }
-        await Manager.shouldThrows(() => db.get("k4"), NotFoundError);
+        await Manager.shouldThrows(() => db.get("k4"), x.NotFound);
     });
 
     it("chained batch() on pre-opened database", async () => {
@@ -73,7 +73,7 @@ describe("Deferred open()", () => {
             const v = await db.get(`k${k}`);
             assert.equal(v, `v${k}`);
         }
-        await Manager.shouldThrows(() => db.get("k4"), NotFoundError);
+        await Manager.shouldThrows(() => db.get("k4"), x.NotFound);
     });
 
     describe("test deferred ReadStream", () => {
