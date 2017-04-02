@@ -120,7 +120,8 @@ module.exports = {
             "ignoreTemplateLiterals": true,
             "ignoreUrls": true,
             "ignoreComments": true
-        }]
+        }],
+        "comma-style": ["error", "last"]
     },
     "plugins": [
         "babel",
