@@ -1,14 +1,23 @@
 stages:
     - test
 
-linux:
+ubuntu:
     stage: test
     script:
         - npm i
         - npm run build
         - npm test
     tags:
-        - linux
+        - ubuntu
+
+debian:
+    stage: test
+    script:
+        - npm i
+        - npm run build
+        - npm test
+    tags:
+        - debian
 
 freebsd:
     stage: test
@@ -18,12 +27,3 @@ freebsd:
         - npm test
     tags:
         - freebsd
-
-windows:
-    stage: test
-    script:
-        - npm i
-        - npm run build
-        - npm test
-    tags:
-        - windows
