@@ -1,5 +1,4 @@
-const { AbstractBackend, AbstractIterator } = adone.database.level;
-const ltgt = require("ltgt");
+const { AbstractBackend, AbstractIterator, ltgt } = adone.database.level;
 const createRBT = require("functional-red-black-tree");
 let globalStore = {};
 

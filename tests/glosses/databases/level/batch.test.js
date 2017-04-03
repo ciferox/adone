@@ -170,32 +170,32 @@ describe("batch()", () => {
 
         it("test batch#put() with missing `key`", () => {
             // key = undefined
-            assert.throws(() => _batch.put(undefined, "foo1"), x.DatabaseWrite, "Error: key cannot be `null` or `undefined`");
+            assert.throws(() => _batch.put(undefined, "foo1"), x.DatabaseWrite, "key cannot be `null` or `undefined`");
 
             // key = null
-            assert.throws(() => _batch.put(null, "foo1"), x.DatabaseWrite, "Error: key cannot be `null` or `undefined`");
+            assert.throws(() => _batch.put(null, "foo1"), x.DatabaseWrite, "key cannot be `null` or `undefined`");
         });
 
         it("test batch#put() with missing `key` and `value`", () => {
             // undefined
-            assert.throws(() => _batch.put(), x.DatabaseWrite, "Error: key cannot be `null` or `undefined`");
+            assert.throws(() => _batch.put(), x.DatabaseWrite, "key cannot be `null` or `undefined`");
 
             // null
-            assert.throws(() => _batch.put(null, null), x.DatabaseWrite, "Error: key cannot be `null` or `undefined`");
+            assert.throws(() => _batch.put(null, null), x.DatabaseWrite, "key cannot be `null` or `undefined`");
         });
 
         it("test batch#del() with missing `key`", () => {
             // key = undefined
-            assert.throws(() => _batch.del(undefined, "foo1"), x.DatabaseWrite, "Error: key cannot be `null` or `undefined`");
+            assert.throws(() => _batch.del(undefined, "foo1"), x.DatabaseWrite, "key cannot be `null` or `undefined`");
 
             // key = null
-            assert.throws(() => _batch.del(null, "foo1"), x.DatabaseWrite, "Error: key cannot be `null` or `undefined`");
+            assert.throws(() => _batch.del(null, "foo1"), x.DatabaseWrite, "key cannot be `null` or `undefined`");
         });
 
         describe("test batch operations after write()", () => {
             beforeEach(async () => {
                 await _batch.put("foo", "bar").put("boom", "bang").del("foo").write();
-                manager.verify = (cb) => Manager.shouldThrows(cb, x.DatabaseWrite, "Error: write() already called on this batch");
+                manager.verify = (cb) => Manager.shouldThrows(cb, x.DatabaseWrite, "write() already called on this batch");
             });
 
             it("test put()", () => {

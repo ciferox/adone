@@ -1,16 +1,26 @@
+export const exceptionIdMap = {};
+export const stdIdMap = {};
+export const stdExceptions = [];
+export const adoneExceptions = [];
+
 export class Exception extends Error {
     constructor(message) {
-        super(message);
+        if (message instanceof Error) {
+            super(message.message);
+            this.stack = message.stack;
+        } else {
+            super(message);
+            // special case for mpak-serializer
+            if (message === null) {
+                return;
+            }
+            
+            this.message = message;
 
-        // special case for mpak-serializer
-        if (message === null) {
-            return;
+            Error.captureStackTrace(this, this.constructor);
         }
-        // eslint-disable-next-line
-        this.id = exceptionIdMap[this.constructor];
-        this.message = message;
 
-        Error.captureStackTrace(this, this.constructor);
+        this.id = exceptionIdMap[this.constructor];
         void this.stack;
     }
 }
@@ -75,9 +85,9 @@ DatabaseWrite.prototype.name = "DatabaseWrite";
 
 export class NetronIllegalState extends Exception { }
 NetronIllegalState.prototype.name = "NetronIllegalState";
-export class NetronPeerDisconnected extends Exception {}
+export class NetronPeerDisconnected extends Exception { }
 NetronPeerDisconnected.prototype.name = "NetronPeerDisconnected";
-export class NetronTimeout extends Exception {}
+export class NetronTimeout extends Exception { }
 NetronTimeout.prototype.name = "NetronTimeout";
 
 export const idExceptionMap = {
@@ -125,11 +135,6 @@ export const idExceptionMap = {
     1002: NetronTimeout
 };
 
-export const exceptionIdMap = {};
-export const stdIdMap = {};
-export const stdExceptions = [];
-export const adoneExceptions = [];
-
 const keys = Object.keys(idExceptionMap);
 for (let i = 0; i < keys.length; i++) {
     const keyName = keys[i];
@@ -152,12 +157,3 @@ export const create = (id, message, stack) => {
 };
 
 export const getStdId = (err) => stdIdMap[err.constructor.name];
-
-export const wrap = (err, { name = false } = {}) => {
-    if (err instanceof Exception) {
-        return err;
-    }
-    const e = new Exception(name ? `${err.name}: ${err.message}` : err.message);
-    e.stack = err.stack;
-    return e;
-};

@@ -37,5 +37,6 @@ adone.lazify({
                 return typeof v !== "undefined";
             }
         };
-    }
+    },
+    ltgt: "./ltgt"
 }, exports, require);
