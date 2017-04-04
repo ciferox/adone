@@ -27,3 +27,12 @@ freebsd:
         - npm test
     tags:
         - freebsd
+
+osx:
+    stage: test
+    script:
+        - npm i
+        - npm run build
+        - npm test
+    tags:
+        - osx
