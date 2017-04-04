@@ -3,14 +3,12 @@ adone.lazify({
     mimeType: "./mime_types",
     Socket: "./socket",
     Server: "./server",
-    ssh: () => adone.lazify({
-        Client: "./ssh/client",
-        Server: "./ssh/server"
-    }, null, require),
+    ssh: "./ssh",
     address: () => adone.lazify({
         IP4: ["./address", (mod) => mod.IP4],
         IP6: ["./address", (mod) => mod.IP6],
-        v6helpers: "./address/v6helpers"
+        v6helpers: "./address/v6helpers",
+        lookup: () => adone.promise.promisify(adone.std.dns.lookup)
     }, null, require),
     proxy: () => adone.lazify({
         socks: "./proxies/socks"

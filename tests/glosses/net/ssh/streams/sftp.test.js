@@ -1,4 +1,4 @@
-import { SFTPStream, constants } from "adone/glosses/net/ssh/streams";
+const { SFTPStream } = adone.net.ssh.stream;
 const Stats = SFTPStream.Stats;
 const STATUS_CODE = SFTPStream.STATUS_CODE;
 const OPEN_MODE = SFTPStream.OPEN_MODE;
@@ -336,7 +336,7 @@ describe("SSH-Streams", () => {
                     filename: ".",
                     longname: "drwxr-xr-x  56 nodejs   nodejs      4096 Nov 10 01:05 .",
                     attrs: new Stats({
-                        mode: 0o755 | constants.S_IFDIR,
+                        mode: 0o755 | adone.net.ssh.stream.const.S_IFDIR,
                         size: 4096,
                         uid: 9001,
                         gid: 8001,
@@ -347,7 +347,7 @@ describe("SSH-Streams", () => {
                     filename: "..",
                     longname: "drwxr-xr-x   4 root     root        4096 May 16  2013 ..",
                     attrs: new Stats({
-                        mode: 0o755 | constants.S_IFDIR,
+                        mode: 0o755 | adone.net.ssh.stream.const.S_IFDIR,
                         size: 4096,
                         uid: 0,
                         gid: 0,
@@ -358,7 +358,7 @@ describe("SSH-Streams", () => {
                     filename: "foo",
                     longname: "drwxrwxrwx   2 nodejs   nodejs      4096 Mar  8  2009 foo",
                     attrs: new Stats({
-                        mode: 0o777 | constants.S_IFDIR,
+                        mode: 0o777 | adone.net.ssh.stream.const.S_IFDIR,
                         size: 4096,
                         uid: 9001,
                         gid: 8001,
@@ -369,7 +369,7 @@ describe("SSH-Streams", () => {
                     filename: "bar",
                     longname: "-rw-r--r--   1 nodejs   nodejs 513901992 Dec  4  2009 bar",
                     attrs: new Stats({
-                        mode: 0o644 | constants.S_IFREG,
+                        mode: 0o644 | adone.net.ssh.stream.const.S_IFREG,
                         size: 513901992,
                         uid: 9001,
                         gid: 8001,
@@ -410,7 +410,7 @@ describe("SSH-Streams", () => {
                     filename: ".",
                     longname: "drwxr-xr-x  56 nodejs   nodejs      4096 Nov 10 01:05 .",
                     attrs: new Stats({
-                        mode: 0o755 | constants.S_IFDIR,
+                        mode: 0o755 | adone.net.ssh.stream.const.S_IFDIR,
                         size: 4096,
                         uid: 9001,
                         gid: 8001,
@@ -421,7 +421,7 @@ describe("SSH-Streams", () => {
                     filename: "..",
                     longname: "drwxr-xr-x   4 root     root        4096 May 16  2013 ..",
                     attrs: new Stats({
-                        mode: 0o755 | constants.S_IFDIR,
+                        mode: 0o755 | adone.net.ssh.stream.const.S_IFDIR,
                         size: 4096,
                         uid: 0,
                         gid: 0,
@@ -432,7 +432,7 @@ describe("SSH-Streams", () => {
                     filename: "foo",
                     longname: "drwxrwxrwx   2 nodejs   nodejs      4096 Mar  8  2009 foo",
                     attrs: new Stats({
-                        mode: 0o777 | constants.S_IFDIR,
+                        mode: 0o777 | adone.net.ssh.stream.const.S_IFDIR,
                         size: 4096,
                         uid: 9001,
                         gid: 8001,
@@ -443,7 +443,7 @@ describe("SSH-Streams", () => {
                     filename: "bar",
                     longname: "-rw-r--r--   1 nodejs   nodejs 513901992 Dec  4  2009 bar",
                     attrs: new Stats({
-                        mode: 0o644 | constants.S_IFREG,
+                        mode: 0o644 | adone.net.ssh.stream.const.S_IFREG,
                         size: 513901992,
                         uid: 9001,
                         gid: 8001,

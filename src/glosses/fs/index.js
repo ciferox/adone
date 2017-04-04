@@ -374,7 +374,4 @@ export const tmpName = async ({ name = null, tries = 3, template = null, dir = o
     throw new Error("Could not get a unique tmp filename, max tries reached");
 };
 
-export const homeDir = () => {
-    return (is.win32 ? process.env.USERPROFILE : process.env.HOME);
-}
-;
+export const homeDir = () => (is.win32 ? process.env.USERPROFILE : process.env.HOME);

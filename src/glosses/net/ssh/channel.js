@@ -1,6 +1,6 @@
-import { constants } from "./streams";
+const { stream } = adone.net.ssh;
 
-const STDERR = constants.CHANNEL_EXTENDED_DATATYPE.STDERR;
+const STDERR = stream.const.CHANNEL_EXTENDED_DATATYPE.STDERR;
 const PACKET_SIZE = 32 * 1024;
 const MAX_WINDOW = 1 * 1024 * 1024;
 const WINDOW_THRESHOLD = MAX_WINDOW / 2;

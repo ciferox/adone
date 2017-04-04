@@ -1,6 +1,6 @@
-import { SSH2Stream, utils } from "adone/glosses/net/ssh/streams";
-const parseKey = utils.parseKey;
-const genPubKey = utils.genPublicKey;
+const { SSH2Stream, util } = adone.net.ssh.stream;
+const parseKey = util.parseKey;
+const genPubKey = util.genPublicKey;
 const fs = adone.std.fs;
 
 const makeServerKey = (raw) => {

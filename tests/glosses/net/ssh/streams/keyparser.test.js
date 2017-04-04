@@ -1,4 +1,4 @@
-import { keyParser as parser } from "adone/glosses/net/ssh/streams";
+const { keyParser } = adone.net.ssh.stream;
 
 const path = adone.std.path;
 const inspect = adone.std.util.inspect;
@@ -2282,7 +2282,7 @@ describe("SSH-Streams", () => {
             adone.std.buffer.INSPECT_MAX_BYTES = Infinity;
 
             it(test.name, () => {
-                const result = parser(test.source);
+                const result = keyParser(test.source);
                 assert.deepEqual(result,
                     test.expected,
                     `[${group}${test.name}]: parser output mismatch.` +

@@ -1,8 +1,9 @@
-import { SSH2Stream, utils, constants } from "adone/glosses/net/ssh/streams";
+const { stream } = adone.net.ssh;
+const { SSH2Stream, util } = stream;
 
-const parseKey = utils.parseKey;
-const genPubKey = utils.genPublicKey;
-const MESSAGE = constants.MESSAGE;
+const parseKey = util.parseKey;
+const genPubKey = util.genPublicKey;
+const MESSAGE = stream.const.MESSAGE;
 
 const fs = adone.std.fs;
 

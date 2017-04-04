@@ -4,6 +4,7 @@
 //       * Filter control codes from strings
 //         (as per http://tools.ietf.org/html/rfc4251#section-9.2)
 
+const { is } = adone;
 
 import {
     isStreamCipher,
@@ -37,8 +38,6 @@ const BUGGY_IMPLS_LEN = BUGGY_IMPLS.length;
 const crypto = adone.std.crypto;
 const zlib = adone.std.zlib;
 const TransformStream = adone.std.stream.Transform;
-const inherits = adone.std.util.inherits;
-const inspect = adone.std.util.inspect;
 const BUFFER_MAX_LEN = adone.std.buffer.kMaxLength;
 
 let I = 0;
@@ -95,2222 +94,6 @@ const KEXDH_GEX_REQ_PACKET = new Buffer([
     0, 0, 20, 0 // 8192, modp18
 ]);
 
-function SSH2Stream(cfg) {
-    if (typeof cfg !== "object" || cfg === null) {
-        cfg = {};
-    }
-
-    TransformStream.call(this, {
-        highWaterMark: (typeof cfg.highWaterMark === "number" ?
-            cfg.highWaterMark :
-            32 * 1024)
-    });
-
-    this._needContinue = false;
-    this.bytesSent = this.bytesReceived = 0;
-    this.debug = (typeof cfg.debug === "function" ? cfg.debug : adone.noop);
-    this.server = (cfg.server === true);
-    this.maxPacketSize = (typeof cfg.maxPacketSize === "number" ?
-        cfg.maxPacketSize :
-        MAX_PACKET_SIZE);
-    // Bitmap that indicates any bugs the remote side has. This is determined
-    // by the reported software version.
-    this.remoteBugs = 0;
-
-    if (this.server) {
-        // TODO: Remove when we support group exchange for server implementation
-        this.remoteBugs = BUGS.BAD_DHGEX;
-    }
-
-    const self = this;
-
-    const hostKeys = cfg.hostKeys;
-    if (this.server && (typeof hostKeys !== "object" || hostKeys === null)) {
-        throw new Error("hostKeys must be an object keyed on host key type");
-    }
-
-    this.config = {
-        // Server
-        hostKeys, // All keys supported by server
-
-        // Client/Server
-        ident: `SSH-2.0-${cfg.ident || (`ssh2js${adone.package.version}${this.server ? "srv" : ""}`)}`,
-        algorithms: {
-            kex: ALGORITHMS.KEX,
-            kexBuf: ALGORITHMS.KEX_BUF,
-            serverHostKey: ALGORITHMS.SERVER_HOST_KEY,
-            serverHostKeyBuf: ALGORITHMS.SERVER_HOST_KEY_BUF,
-            cipher: ALGORITHMS.CIPHER,
-            cipherBuf: ALGORITHMS.CIPHER_BUF,
-            hmac: ALGORITHMS.HMAC,
-            hmacBuf: ALGORITHMS.HMAC_BUF,
-            compress: ALGORITHMS.COMPRESS,
-            compressBuf: ALGORITHMS.COMPRESS_BUF
-        }
-    };
-
-    // RFC 4253 states the identification string must not contain NULL
-    this.config.ident.replace(RE_NULL, "");
-
-    if (this.config.ident.length + 2 /* Account for "\r\n" */ > 255) {
-        throw new Error("ident too long");
-    }
-
-    if (typeof cfg.algorithms === "object" && cfg.algorithms !== null) {
-        const algos = cfg.algorithms;
-        if (Array.isArray(algos.kex) && algos.kex.length > 0) {
-            this.config.algorithms.kex = algos.kex;
-            if (!Buffer.isBuffer(algos.kexBuf)) {
-                algos.kexBuf = new Buffer(algos.kex.join(","), "ascii");
-            }
-            this.config.algorithms.kexBuf = algos.kexBuf;
-        }
-        if (Array.isArray(algos.serverHostKey) && algos.serverHostKey.length > 0) {
-            this.config.algorithms.serverHostKey = algos.serverHostKey;
-            if (!Buffer.isBuffer(algos.serverHostKeyBuf)) {
-                algos.serverHostKeyBuf = new Buffer(algos.serverHostKey.join(","),
-                    "ascii");
-            }
-            this.config.algorithms.serverHostKeyBuf = algos.serverHostKeyBuf;
-        }
-        if (Array.isArray(algos.cipher) && algos.cipher.length > 0) {
-            this.config.algorithms.cipher = algos.cipher;
-            if (!Buffer.isBuffer(algos.cipherBuf)) {
-                algos.cipherBuf = new Buffer(algos.cipher.join(","), "ascii");
-            }
-            this.config.algorithms.cipherBuf = algos.cipherBuf;
-        }
-        if (Array.isArray(algos.hmac) && algos.hmac.length > 0) {
-            this.config.algorithms.hmac = algos.hmac;
-            if (!Buffer.isBuffer(algos.hmacBuf)) {
-                algos.hmacBuf = new Buffer(algos.hmac.join(","), "ascii");
-            }
-            this.config.algorithms.hmacBuf = algos.hmacBuf;
-        }
-        if (Array.isArray(algos.compress) && algos.compress.length > 0) {
-            this.config.algorithms.compress = algos.compress;
-            if (!Buffer.isBuffer(algos.compressBuf)) {
-                algos.compressBuf = new Buffer(algos.compress.join(","), "ascii");
-            }
-            this.config.algorithms.compressBuf = algos.compressBuf;
-        }
-    }
-
-    this.reset(true);
-
-    // Common events
-    this.on("end", () => {
-        // Let GC collect any Buffers we were previously storing
-        self._state = undefined;
-        self.reset();
-        self._state.incoming.hmac.bufCompute = undefined;
-        self._state.outgoing.bufSeqno = undefined;
-    });
-    this.on("DISCONNECT", (reason, code, desc, lang) => {
-        onDISCONNECT(self, reason, code, desc, lang);
-    });
-    this.on("KEXINIT", (init, firstFollows) => {
-        onKEXINIT(self, init, firstFollows);
-    });
-    this.on("NEWKEYS", () => {
-        onNEWKEYS(self);
-    });
-
-    if (this.server) {
-        // Server-specific events
-        this.on("KEXDH_INIT", (e) => {
-            onKEXDH_INIT(self, e);
-        });
-    } else {
-        // Client-specific events
-        this.on("KEXDH_REPLY", (info) => {
-            onKEXDH_REPLY(self, info);
-        })
-            .on("KEXDH_GEX_GROUP", (prime, gen) => {
-                onKEXDH_GEX_GROUP(self, prime, gen);
-            });
-    }
-
-    if (this.server) {
-        // Greeting displayed before the ssh identification string is sent, this is
-        // usually ignored by most clients
-        if (typeof cfg.greeting === "string" && cfg.greeting.length) {
-            if (cfg.greeting.slice(-2) === "\r\n") {
-                this.push(cfg.greeting);
-            } else {
-                this.push(`${cfg.greeting}\r\n`);
-            }
-        }
-        // Banner shown after the handshake completes, but before user
-        // authentication begins
-        if (typeof cfg.banner === "string" && cfg.banner.length) {
-            if (cfg.banner.slice(-2) === "\r\n") {
-                this.banner = cfg.banner;
-            } else {
-                this.banner = `${cfg.banner}\r\n`;
-            }
-        }
-    }
-    this.debug(`DEBUG: Local ident: ${inspect(this.config.ident)}`);
-    this.push(`${this.config.ident}\r\n`);
-
-    this._state.incoming.expectedPacket = "KEXINIT";
-}
-inherits(SSH2Stream, TransformStream);
-
-SSH2Stream.prototype.__read = TransformStream.prototype._read;
-SSH2Stream.prototype._read = function (n) {
-    if (this._needContinue) {
-        this._needContinue = false;
-        this.emit("continue");
-    }
-    return this.__read(n);
-};
-SSH2Stream.prototype.__push = TransformStream.prototype.push;
-SSH2Stream.prototype.push = function (chunk, encoding) {
-    const ret = this.__push(chunk, encoding);
-    this._needContinue = (ret === false);
-    return ret;
-};
-
-SSH2Stream.prototype._cleanup = function (callback) {
-    this.reset();
-    this.debug("DEBUG: Parser: Malformed packet");
-    callback && callback(new Error("Malformed packet"));
-};
-
-SSH2Stream.prototype._transform = function (chunk, encoding, callback, decomp) {
-    let skipDecrypt = false;
-    let doDecryptGCM = false;
-    const state = this._state;
-    const instate = state.incoming;
-    const outstate = state.outgoing;
-    const expect = instate.expect;
-    const decrypt = instate.decrypt;
-    const decompress = instate.decompress;
-    const chlen = chunk.length;
-    let chleft = 0;
-    const debug = this.debug;
-    const self = this;
-    let i = 0;
-    let p = i;
-    let buffer;
-    let buf;
-    let r;
-
-    this.bytesReceived += chlen;
-
-    for (; ;) {
-        if (expect.type !== undefined) {
-            if (i >= chlen) {
-                break;
-            }
-            if (expect.type === EXP_TYPE_BYTES) {
-                chleft = (chlen - i);
-                const pktLeft = (expect.buf.length - expect.ptr);
-                if (pktLeft <= chleft) {
-                    chunk.copy(expect.buf, expect.ptr, i, i + pktLeft);
-                    i += pktLeft;
-                    buffer = expect.buf;
-                    expect.buf = undefined;
-                    expect.ptr = 0;
-                    expect.type = undefined;
-                } else {
-                    chunk.copy(expect.buf, expect.ptr, i);
-                    expect.ptr += chleft;
-                    i += chleft;
-                }
-                continue;
-            } else if (expect.type === EXP_TYPE_HEADER) {
-                i += instate.search.push(chunk);
-                if (expect.type !== undefined) {
-                    continue;
-                }
-            } else if (expect.type === EXP_TYPE_LF) {
-                if (++expect.ptr + 4 /* Account for "SSH-" */ > 255) {
-                    this.reset();
-                    debug("DEBUG: Parser: Identification string exceeded 255 characters");
-                    return callback(new Error("Max identification string size exceeded"));
-                }
-                if (chunk[i] === 0x0A) {
-                    expect.type = undefined;
-                    if (p < i) {
-                        if (expect.buf === undefined) {
-                            expect.buf = chunk.toString("ascii", p, i);
-                        } else {
-                            expect.buf += chunk.toString("ascii", p, i);
-                        }
-                    }
-                    buffer = expect.buf;
-                    expect.buf = undefined;
-                    ++i;
-                } else {
-                    if (++i === chlen && p < i) {
-                        if (expect.buf === undefined) {
-                            expect.buf = chunk.toString("ascii", p, i);
-                        } else {
-                            expect.buf += chunk.toString("ascii", p, i);
-                        }
-                    }
-                    continue;
-                }
-            }
-        }
-
-        if (instate.status === IN_INIT) {
-            if (this.server) {
-                // Retrieve what should be the start of the protocol version exchange
-                if (!buffer) {
-                    debug("DEBUG: Parser: IN_INIT (waiting for identification begin)");
-                    expectData(this, EXP_TYPE_BYTES, 4);
-                } else {
-                    if (buffer[0] === 0x53 // S
-                        &&
-                        buffer[1] === 0x53 // S
-                        &&
-                        buffer[2] === 0x48 // H
-                        &&
-                        buffer[3] === 0x2D) { // -
-                        instate.status = IN_GREETING;
-                        debug("DEBUG: Parser: IN_INIT (waiting for rest of identification)");
-                    } else {
-                        this.reset();
-                        debug("DEBUG: Parser: Bad identification start");
-                        return callback(new Error("Bad identification start"));
-                    }
-                }
-            } else {
-                debug("DEBUG: Parser: IN_INIT");
-                // Retrieve any bytes that may come before the protocol version exchange
-                const ss = instate.search = new adone.util.StreamSearch(IDENT_PREFIX_BUFFER);
-                ss.on("info", function onInfo(matched, data, start, end) {
-                    if (data) {
-                        if (instate.greeting === undefined) {
-                            instate.greeting = data.toString("binary", start, end);
-                        } else {
-                            instate.greeting += data.toString("binary", start, end);
-                        }
-                    }
-                    if (matched) {
-                        expect.type = undefined;
-                        instate.search.removeListener("info", onInfo);
-                    }
-                });
-                ss.maxMatches = 1;
-                expectData(this, EXP_TYPE_HEADER);
-                instate.status = IN_GREETING;
-            }
-        } else if (instate.status === IN_GREETING) {
-            debug("DEBUG: Parser: IN_GREETING");
-            instate.search = undefined;
-            // Retrieve the identification bytes after the "SSH-" header
-            p = i;
-            expectData(this, EXP_TYPE_LF);
-            instate.status = IN_HEADER;
-        } else if (instate.status === IN_HEADER) {
-            debug("DEBUG: Parser: IN_HEADER");
-            buffer = buffer.trim();
-            const idxDash = buffer.indexOf("-");
-            const idxSpace = buffer.indexOf(" ");
-            const header = {
-                // RFC says greeting SHOULD be utf8
-                greeting: instate.greeting,
-                identRaw: `SSH-${buffer}`,
-                versions: {
-                    protocol: buffer.substr(0, idxDash),
-                    software: (idxSpace === -1 ?
-                        buffer.substring(idxDash + 1) :
-                        buffer.substring(idxDash + 1, idxSpace))
-                },
-                comments: (idxSpace > -1 ? buffer.substring(idxSpace + 1) : undefined)
-            };
-            instate.greeting = undefined;
-
-            if (header.versions.protocol !== "1.99" &&
-                header.versions.protocol !== "2.0") {
-                this.reset();
-                debug(`DEBUG: Parser: protocol version not supported: ${
-                    header.versions.protocol}`);
-                return callback(new Error("Protocol version not supported"));
-            } else {
-                this.emit("header", header);
-            }
-
-            if (instate.status === IN_INIT) {
-                // We reset from an event handler, possibly due to an unsupported SSH
-                // protocol version?
-                return;
-            }
-
-            const identRaw = header.identRaw;
-            const software = header.versions.software;
-            this.debug(`DEBUG: Remote ident: ${inspect(identRaw)}`);
-            for (let j = 0, rule; j < BUGGY_IMPLS_LEN; ++j) {
-                rule = BUGGY_IMPLS[j];
-                if (typeof rule[0] === "string") {
-                    if (software === rule[0]) {
-                        this.remoteBugs |= rule[1];
-                    }
-                } else if (rule[0].test(software)) {
-                    this.remoteBugs |= rule[1];
-                }
-            }
-            instate.identRaw = identRaw;
-            // Adjust bytesReceived first otherwise it will have an incorrectly larger
-            // total when we call back into this function after completing KEXINIT
-            this.bytesReceived -= (chlen - i);
-            KEXINIT(this, () => {
-                if (i === chlen) {
-                    callback();
-                } else {
-                    self._transform(chunk.slice(i), encoding, callback);
-                }
-            });
-            instate.status = IN_PACKETBEFORE;
-            return;
-        } else if (instate.status === IN_PACKETBEFORE) {
-            debug(`DEBUG: Parser: IN_PACKETBEFORE (expecting ${decrypt.size})`);
-            // Wait for the right number of bytes so we can determine the incoming
-            // packet length
-            expectData(this, EXP_TYPE_BYTES, decrypt.size, decrypt.buf);
-            instate.status = IN_PACKET;
-        } else if (instate.status === IN_PACKET) {
-            debug("DEBUG: Parser: IN_PACKET");
-            doDecryptGCM = (decrypt.instance && decrypt.isGCM);
-            if (decrypt.instance && !decrypt.isGCM) {
-                buffer = decryptData(this, buffer);
-            }
-
-            r = readInt(buffer, 0, this, callback);
-            if (r === false) {
-                return;
-            }
-            const macSize = (instate.hmac.size || 0);
-            const fullPacketLen = r + 4 + macSize;
-            let maxPayloadLen = this.maxPacketSize;
-            if (decompress.instance) {
-                // Account for compressed payloads
-                // This formula is taken from dropbear which derives it from zlib"s
-                // documentation. Explanation from dropbear:
-                /* For exact details see http://www.zlib.net/zlib_tech.html
-                 * 5 bytes per 16kB block, plus 6 bytes for the stream.
-                 * We might allocate 5 unnecessary bytes here if it"s an
-                 * exact multiple. */
-                maxPayloadLen += (((this.maxPacketSize / 16384) + 1) * 5 + 6);
-            }
-            if (r > maxPayloadLen
-                // TODO: Change 16 to "MAX(16, decrypt.size)" when/if SSH2 adopts
-                // 512-bit ciphers
-                ||
-                fullPacketLen < (16 + macSize) ||
-                ((r + (doDecryptGCM ? 0 : 4)) % decrypt.size) !== 0) {
-                this.disconnect(DISCONNECT_REASON.PROTOCOL_ERROR);
-                debug(`DEBUG: Parser: Bad packet length (${fullPacketLen})`);
-                return callback(new Error("Bad packet length"));
-            }
-
-            instate.pktLen = r;
-            const remainLen = instate.pktLen + 4 - decrypt.size;
-            if (doDecryptGCM) {
-                decrypt.instance.setAAD(buffer.slice(0, 4));
-                debug(`DEBUG: Parser: pktLen:${
-                    instate.pktLen
-                    },remainLen:${
-                    remainLen}`);
-            } else {
-                instate.padLen = buffer[4];
-                debug(`DEBUG: Parser: pktLen:${
-                    instate.pktLen
-                    },padLen:${
-                    instate.padLen
-                    },remainLen:${
-                    remainLen}`);
-            }
-            if (remainLen > 0) {
-                if (doDecryptGCM) {
-                    instate.pktExtra = buffer.slice(4);
-                } else {
-                    instate.pktExtra = buffer.slice(5);
-                }
-                // Grab the rest of the packet
-                expectData(this, EXP_TYPE_BYTES, remainLen);
-                instate.status = IN_PACKETDATA;
-            } else if (remainLen < 0) {
-                instate.status = IN_PACKETBEFORE;
-            } else {
-                // Entire message fit into one block
-                skipDecrypt = true;
-                instate.status = IN_PACKETDATA;
-                continue;
-            }
-        } else if (instate.status === IN_PACKETDATA) {
-            debug("DEBUG: Parser: IN_PACKETDATA");
-            doDecryptGCM = (decrypt.instance && decrypt.isGCM);
-            if (decrypt.instance && !skipDecrypt && !doDecryptGCM) {
-                buffer = decryptData(this, buffer);
-            } else if (skipDecrypt) {
-                skipDecrypt = false;
-            }
-            const padStart = instate.pktLen - instate.padLen - 1;
-            // TODO: Allocate a Buffer once that is slightly larger than maxPacketSize
-            // (to accommodate for packet length field and MAC) and re-use that
-            // instead
-            if (instate.pktExtra) {
-                buf = new Buffer(instate.pktExtra.length + buffer.length);
-                instate.pktExtra.copy(buf);
-                buffer.copy(buf, instate.pktExtra.length);
-                instate.payload = buf.slice(0, padStart);
-            } else {
-                // Entire message fit into one block
-                if (doDecryptGCM) {
-                    buf = buffer.slice(4);
-                } else {
-                    buf = buffer.slice(5);
-                }
-                instate.payload = buffer.slice(5, 5 + padStart);
-            }
-            if (instate.hmac.size !== undefined) {
-                // Wait for hmac hash
-                debug(`DEBUG: Parser: HMAC size:${instate.hmac.size}`);
-                expectData(this, EXP_TYPE_BYTES, instate.hmac.size, instate.hmac.buf);
-                instate.status = IN_PACKETDATAVERIFY;
-                instate.packet = buf;
-            } else {
-                instate.status = IN_PACKETDATAAFTER;
-            }
-            instate.pktExtra = undefined;
-            buf = undefined;
-        } else if (instate.status === IN_PACKETDATAVERIFY) {
-            debug("DEBUG: Parser: IN_PACKETDATAVERIFY");
-            // Verify packet data integrity
-            if (hmacVerify(this, buffer)) {
-                debug("DEBUG: Parser: IN_PACKETDATAVERIFY (Valid HMAC)");
-                instate.status = IN_PACKETDATAAFTER;
-                instate.packet = undefined;
-            } else {
-                this.reset();
-                debug("DEBUG: Parser: IN_PACKETDATAVERIFY (Invalid HMAC)");
-                return callback(new Error("Invalid HMAC"));
-            }
-        } else if (instate.status === IN_PACKETDATAAFTER) {
-            if (decompress.instance) {
-                if (!decomp) {
-                    debug("DEBUG: Parser: Decompressing");
-                    decompress.instance.write(instate.payload);
-                    let decompBuf = [];
-                    let decompBufLen = 0;
-                    decompress.instance.on("readable", function () {
-                        let buf;
-                        while (buf = this.read()) {
-                            decompBuf.push(buf);
-                            decompBufLen += buf.length;
-                        }
-                    }).flush(Z_PARTIAL_FLUSH, () => {
-                        decompress.instance.removeAllListeners("readable");
-                        if (decompBuf.length === 1) {
-                            instate.payload = decompBuf[0];
-                        } else {
-                            instate.payload = Buffer.concat(decompBuf, decompBufLen);
-                        }
-                        decompBuf = null;
-                        let nextSlice;
-                        if (i === chlen) {
-                            nextSlice = EMPTY_BUFFER;
-                        } else { // Avoid slicing a zero-length buffer
-                            nextSlice = chunk.slice(i);
-                        }
-                        self._transform(nextSlice, encoding, callback, true);
-                    });
-                    return;
-                } else {
-                    // Make sure we reset this after this first time in the loop,
-                    // otherwise we could end up trying to interpret as-is another
-                    // compressed packet that is within the same chunk
-                    decomp = false;
-                }
-            }
-
-            this.emit("packet");
-
-            const ptype = instate.payload[0];
-
-            if (debug !== adone.noop) {
-                let msgPacket = "DEBUG: Parser: IN_PACKETDATAAFTER, packet: ";
-                const kexdh = state.kexdh;
-                const authMethod = state.authsQueue[0];
-                let msgPktType = null;
-
-                if (outstate.status === OUT_REKEYING && !(ptype <= 4 || (ptype >= 20 && ptype <= 49))) {
-                    msgPacket += "(enqueued) ";
-                }
-
-                if (ptype === MESSAGE.KEXDH_INIT) {
-                    if (kexdh === "group") {
-                        msgPktType = "KEXDH_INIT";
-                    } else if (kexdh[0] === "e") {
-                        msgPktType = "KEXECDH_INIT";
-                    } else {
-                        msgPktType = "KEXDH_GEX_REQUEST";
-                    }
-                } else if (ptype === MESSAGE.KEXDH_REPLY) {
-                    if (kexdh === "group") {
-                        msgPktType = "KEXDH_REPLY";
-                    } else if (kexdh[0] === "e") {
-                        msgPktType = "KEXECDH_REPLY";
-                    } else {
-                        msgPktType = "KEXDH_GEX_GROUP";
-                    }
-                } else if (ptype === MESSAGE.KEXDH_GEX_GROUP) {
-                    msgPktType = "KEXDH_GEX_GROUP";
-                } else if (ptype === MESSAGE.KEXDH_GEX_REPLY) {
-                    msgPktType = "KEXDH_GEX_REPLY";
-                } else if (ptype === 60) {
-                    if (authMethod === "password") {
-                        msgPktType = "USERAUTH_PASSWD_CHANGEREQ";
-                    } else if (authMethod === "keyboard-interactive") {
-                        msgPktType = "USERAUTH_INFO_REQUEST";
-                    } else if (authMethod === "publickey") {
-                        msgPktType = "USERAUTH_PK_OK";
-                    } else {
-                        msgPktType = "UNKNOWN PACKET 60";
-                    }
-                } else if (ptype === 61) {
-                    if (authMethod === "keyboard-interactive") {
-                        msgPktType = "USERAUTH_INFO_RESPONSE";
-                    } else {
-                        msgPktType = "UNKNOWN PACKET 61";
-                    }
-                }
-
-                if (msgPktType === null) {
-                    msgPktType = MESSAGE[ptype];
-                }
-
-                // Don"t write debug output for messages we custom make in parsePacket()
-                if (ptype !== MESSAGE.CHANNEL_OPEN &&
-                    ptype !== MESSAGE.CHANNEL_REQUEST &&
-                    ptype !== MESSAGE.CHANNEL_SUCCESS &&
-                    ptype !== MESSAGE.CHANNEL_FAILURE &&
-                    ptype !== MESSAGE.CHANNEL_EOF &&
-                    ptype !== MESSAGE.CHANNEL_CLOSE &&
-                    ptype !== MESSAGE.CHANNEL_DATA &&
-                    ptype !== MESSAGE.CHANNEL_EXTENDED_DATA &&
-                    ptype !== MESSAGE.CHANNEL_WINDOW_ADJUST &&
-                    ptype !== MESSAGE.DISCONNECT &&
-                    ptype !== MESSAGE.USERAUTH_REQUEST) {
-                    debug(msgPacket + msgPktType);
-                }
-            }
-
-            // Only parse packet if we are not re-keying or the packet is not a
-            // transport layer packet needed for re-keying
-            if (outstate.status === OUT_READY ||
-                ptype <= 4 ||
-                (ptype >= 20 && ptype <= 49)) {
-                if (parsePacket(this, callback) === false) {
-                    return;
-                }
-
-                if (instate.status === IN_INIT) {
-                    // We were reset due to some error/disagreement ?
-                    return;
-                }
-            } else if (outstate.status === OUT_REKEYING) {
-                if (instate.rekeyQueue.length === MAX_PACKETS_REKEYING) {
-                    debug("DEBUG: Parser: Max incoming re-key queue length reached");
-                    this.disconnect(DISCONNECT_REASON.PROTOCOL_ERROR);
-                    return callback(
-                        new Error("Incoming re-key queue length limit reached")
-                    );
-                }
-
-                // Make sure to record the sequence number in case we need it later on
-                // when we drain the queue (e.g. unknown packet)
-                const seqno = instate.seqno;
-                if (++instate.seqno > MAX_SEQNO) {
-                    instate.seqno = 0;
-                }
-
-                instate.rekeyQueue.push(seqno, instate.payload);
-            }
-
-            instate.status = IN_PACKETBEFORE;
-            instate.payload = undefined;
-        }
-        if (buffer !== undefined) {
-            buffer = undefined;
-        }
-    }
-
-    callback();
-};
-
-SSH2Stream.prototype.reset = function (noend) {
-    if (this._state) {
-        const state = this._state;
-        state.incoming.status = IN_INIT;
-        state.outgoing.status = OUT_INIT;
-    } else {
-        this._state = {
-            authsQueue: [],
-            hostkeyFormat: undefined,
-            kex: undefined,
-            kexdh: undefined,
-
-            incoming: {
-                status: IN_INIT,
-                expectedPacket: undefined,
-                search: undefined,
-                greeting: undefined,
-                seqno: 0,
-                pktLen: undefined,
-                padLen: undefined,
-                pktExtra: undefined,
-                payload: undefined,
-                packet: undefined,
-                kexinit: undefined,
-                identRaw: undefined,
-                rekeyQueue: [],
-                ignoreNext: false,
-
-                expect: {
-                    amount: undefined,
-                    type: undefined,
-                    ptr: 0,
-                    buf: undefined
-                },
-
-                decrypt: {
-                    instance: false,
-                    size: 8,
-                    isGCM: false,
-                    iv: undefined, // GCM
-                    key: undefined, // GCM
-                    buf: undefined,
-                    type: undefined
-                },
-
-                hmac: {
-                    size: undefined,
-                    key: undefined,
-                    buf: undefined,
-                    bufCompute: new Buffer(9),
-                    type: false
-                },
-
-                decompress: {
-                    instance: false,
-                    type: false
-                }
-            },
-
-            outgoing: {
-                status: OUT_INIT,
-                seqno: 0,
-                bufSeqno: new Buffer(4),
-                rekeyQueue: [],
-                kexinit: undefined,
-                kexsecret: undefined,
-                pubkey: undefined,
-                exchangeHash: undefined,
-                sessionId: undefined,
-                sentNEWKEYS: false,
-
-                encrypt: {
-                    instance: false,
-                    size: 8,
-                    isGCM: false,
-                    iv: undefined, // GCM
-                    key: undefined, // GCM
-                    type: undefined
-                },
-
-                hmac: {
-                    size: undefined,
-                    key: undefined,
-                    buf: undefined,
-                    type: false
-                },
-
-                compress: {
-                    instance: false,
-                    type: false
-                }
-            }
-        };
-    }
-    if (!noend) {
-        if (this.readable) {
-            this.push(null);
-        }
-    }
-};
-
-// Common methods
-// Global
-SSH2Stream.prototype.disconnect = function (reason) {
-    /*
-      byte      SSH_MSG_DISCONNECT
-      uint32    reason code
-      string    description in ISO-10646 UTF-8 encoding
-      string    language tag
-    */
-    const buf = new Buffer(1 + 4 + 4 + 4);
-
-    buf.fill(0);
-    buf[0] = MESSAGE.DISCONNECT;
-
-    if (DISCONNECT_REASON[reason] === undefined) {
-        reason = DISCONNECT_REASON.BY_APPLICATION;
-    }
-    buf.writeUInt32BE(reason, 1, true);
-
-    this.debug(`DEBUG: Outgoing: Writing DISCONNECT (${
-        DISCONNECT_REASON[reason]
-        })`);
-    send(this, buf);
-    this.reset();
-
-    return false;
-};
-SSH2Stream.prototype.ping = function () {
-    this.debug("DEBUG: Outgoing: Writing ping (GLOBAL_REQUEST: keepalive@openssh.com)");
-    return send(this, PING_PACKET);
-};
-SSH2Stream.prototype.rekey = function () {
-    const status = this._state.outgoing.status;
-    if (status === OUT_REKEYING) {
-        throw new Error("A re-key is already in progress");
-    } else if (status !== OUT_READY) {
-        throw new Error("Cannot re-key yet");
-    }
-
-    this.debug("DEBUG: Outgoing: Starting re-key");
-    return KEXINIT(this);
-};
-
-// "ssh-connection" service-specific
-SSH2Stream.prototype.requestSuccess = function (data) {
-    let buf;
-    if (Buffer.isBuffer(data)) {
-        buf = new Buffer(1 + data.length);
-
-        buf[0] = MESSAGE.REQUEST_SUCCESS;
-
-        data.copy(buf, 1);
-    } else {
-        buf = REQUEST_SUCCESS_PACKET;
-    }
-
-    this.debug("DEBUG: Outgoing: Writing REQUEST_SUCCESS");
-    return send(this, buf);
-};
-SSH2Stream.prototype.requestFailure = function () {
-    this.debug("DEBUG: Outgoing: Writing REQUEST_FAILURE");
-    return send(this, REQUEST_FAILURE_PACKET);
-};
-SSH2Stream.prototype.channelSuccess = function (chan) {
-    // Does not consume window space
-    const buf = new Buffer(1 + 4);
-
-    buf[0] = MESSAGE.CHANNEL_SUCCESS;
-
-    buf.writeUInt32BE(chan, 1, true);
-
-    this.debug(`DEBUG: Outgoing: Writing CHANNEL_SUCCESS (${chan})`);
-    return send(this, buf);
-};
-SSH2Stream.prototype.channelFailure = function (chan) {
-    // Does not consume window space
-    const buf = new Buffer(1 + 4);
-
-    buf[0] = MESSAGE.CHANNEL_FAILURE;
-
-    buf.writeUInt32BE(chan, 1, true);
-
-    this.debug(`DEBUG: Outgoing: Writing CHANNEL_FAILURE (${chan})`);
-    return send(this, buf);
-};
-SSH2Stream.prototype.channelEOF = function (chan) {
-    // Does not consume window space
-    const buf = new Buffer(1 + 4);
-
-    buf[0] = MESSAGE.CHANNEL_EOF;
-
-    buf.writeUInt32BE(chan, 1, true);
-
-    this.debug(`DEBUG: Outgoing: Writing CHANNEL_EOF (${chan})`);
-    return send(this, buf);
-};
-SSH2Stream.prototype.channelClose = function (chan) {
-    // Does not consume window space
-    const buf = new Buffer(1 + 4);
-
-    buf[0] = MESSAGE.CHANNEL_CLOSE;
-
-    buf.writeUInt32BE(chan, 1, true);
-
-    this.debug(`DEBUG: Outgoing: Writing CHANNEL_CLOSE (${chan})`);
-    return send(this, buf);
-};
-SSH2Stream.prototype.channelWindowAdjust = function (chan, amount) {
-    // Does not consume window space
-    const buf = new Buffer(1 + 4 + 4);
-
-    buf[0] = MESSAGE.CHANNEL_WINDOW_ADJUST;
-
-    buf.writeUInt32BE(chan, 1, true);
-
-    buf.writeUInt32BE(amount, 5, true);
-
-    this.debug(`DEBUG: Outgoing: Writing CHANNEL_WINDOW_ADJUST (${
-        chan
-        }, ${
-        amount
-        })`);
-    return send(this, buf);
-};
-SSH2Stream.prototype.channelData = function (chan, data) {
-    const dataIsBuffer = Buffer.isBuffer(data);
-    const dataLen = (dataIsBuffer ? data.length : Buffer.byteLength(data));
-    const buf = new Buffer(1 + 4 + 4 + dataLen);
-
-    buf[0] = MESSAGE.CHANNEL_DATA;
-
-    buf.writeUInt32BE(chan, 1, true);
-
-    buf.writeUInt32BE(dataLen, 5, true);
-    if (dataIsBuffer) {
-        data.copy(buf, 9);
-    } else {
-        buf.write(data, 9, dataLen, "utf8");
-    }
-
-    this.debug(`DEBUG: Outgoing: Writing CHANNEL_DATA (${chan})`);
-    return send(this, buf);
-};
-SSH2Stream.prototype.channelExtData = function (chan, data, type) {
-    const dataIsBuffer = Buffer.isBuffer(data);
-    const dataLen = (dataIsBuffer ? data.length : Buffer.byteLength(data));
-    const buf = new Buffer(1 + 4 + 4 + 4 + dataLen);
-
-    buf[0] = MESSAGE.CHANNEL_EXTENDED_DATA;
-
-    buf.writeUInt32BE(chan, 1, true);
-
-    buf.writeUInt32BE(type, 5, true);
-
-    buf.writeUInt32BE(dataLen, 9, true);
-    if (dataIsBuffer) {
-        data.copy(buf, 13);
-    } else {
-        buf.write(data, 13, dataLen, "utf8");
-    }
-
-    this.debug(`DEBUG: Outgoing: Writing CHANNEL_EXTENDED_DATA (${chan})`);
-    return send(this, buf);
-};
-SSH2Stream.prototype.channelOpenConfirm = function (remoteChan, localChan,
-    initWindow, maxPacket) {
-    const buf = new Buffer(1 + 4 + 4 + 4 + 4);
-
-    buf[0] = MESSAGE.CHANNEL_OPEN_CONFIRMATION;
-
-    buf.writeUInt32BE(remoteChan, 1, true);
-
-    buf.writeUInt32BE(localChan, 5, true);
-
-    buf.writeUInt32BE(initWindow, 9, true);
-
-    buf.writeUInt32BE(maxPacket, 13, true);
-
-    this.debug(`DEBUG: Outgoing: Writing CHANNEL_OPEN_CONFIRMATION (r:${
-        remoteChan
-        }, l:${
-        localChan
-        })`);
-    return send(this, buf);
-};
-SSH2Stream.prototype.channelOpenFail = function (remoteChan, reason, desc,
-    lang) {
-    if (typeof desc !== "string") {
-        desc = "";
-    }
-    if (typeof lang !== "string") {
-        lang = "";
-    }
-
-    const descLen = Buffer.byteLength(desc);
-    const langLen = Buffer.byteLength(lang);
-    let p = 9;
-    const buf = new Buffer(1 + 4 + 4 + 4 + descLen + 4 + langLen);
-
-    buf[0] = MESSAGE.CHANNEL_OPEN_FAILURE;
-
-    buf.writeUInt32BE(remoteChan, 1, true);
-
-    buf.writeUInt32BE(reason, 5, true);
-
-    buf.writeUInt32BE(descLen, p, true);
-    p += 4;
-    if (descLen) {
-        buf.write(desc, p, descLen, "utf8");
-        p += descLen;
-    }
-
-    buf.writeUInt32BE(langLen, p, true);
-    if (langLen) {
-        buf.write(lang, p += 4, langLen, "ascii");
-    }
-
-    this.debug(`DEBUG: Outgoing: Writing CHANNEL_OPEN_FAILURE (${
-        remoteChan
-        })`);
-    return send(this, buf);
-};
-
-// Client-specific methods
-// Global
-SSH2Stream.prototype.service = function (svcName) {
-    if (this.server) {
-        throw new Error("Client-only method called in server mode");
-    }
-
-    const svcNameLen = Buffer.byteLength(svcName);
-    const buf = new Buffer(1 + 4 + svcNameLen);
-
-    buf[0] = MESSAGE.SERVICE_REQUEST;
-
-    buf.writeUInt32BE(svcNameLen, 1, true);
-    buf.write(svcName, 5, svcNameLen, "ascii");
-
-    this.debug(`DEBUG: Outgoing: Writing SERVICE_REQUEST (${svcName})`);
-    return send(this, buf);
-};
-// "ssh-connection" service-specific
-SSH2Stream.prototype.tcpipForward = function (bindAddr, bindPort, wantReply) {
-    if (this.server) {
-        throw new Error("Client-only method called in server mode");
-    }
-
-    const addrlen = Buffer.byteLength(bindAddr);
-    const buf = new Buffer(1 + 4 + 13 + 1 + 4 + addrlen + 4);
-
-    buf[0] = MESSAGE.GLOBAL_REQUEST;
-
-    buf.writeUInt32BE(13, 1, true);
-    buf.write("tcpip-forward", 5, 13, "ascii");
-
-    buf[18] = (wantReply === undefined || wantReply === true ? 1 : 0);
-
-    buf.writeUInt32BE(addrlen, 19, true);
-    buf.write(bindAddr, 23, addrlen, "ascii");
-
-    buf.writeUInt32BE(bindPort, 23 + addrlen, true);
-
-    this.debug("DEBUG: Outgoing: Writing GLOBAL_REQUEST (tcpip-forward)");
-    return send(this, buf);
-};
-SSH2Stream.prototype.cancelTcpipForward = function (bindAddr, bindPort,
-    wantReply) {
-    if (this.server) {
-        throw new Error("Client-only method called in server mode");
-    }
-
-    const addrlen = Buffer.byteLength(bindAddr);
-    const buf = new Buffer(1 + 4 + 20 + 1 + 4 + addrlen + 4);
-
-    buf[0] = MESSAGE.GLOBAL_REQUEST;
-
-    buf.writeUInt32BE(20, 1, true);
-    buf.write("cancel-tcpip-forward", 5, 20, "ascii");
-
-    buf[25] = (wantReply === undefined || wantReply === true ? 1 : 0);
-
-    buf.writeUInt32BE(addrlen, 26, true);
-    buf.write(bindAddr, 30, addrlen, "ascii");
-
-    buf.writeUInt32BE(bindPort, 30 + addrlen, true);
-
-    this.debug("DEBUG: Outgoing: Writing GLOBAL_REQUEST (cancel-tcpip-forward)");
-    return send(this, buf);
-};
-SSH2Stream.prototype.openssh_streamLocalForward = function (socketPath, wantReply) {
-    if (this.server) {
-        throw new Error("Client-only method called in server mode");
-    }
-
-    const pathlen = Buffer.byteLength(pathlen);
-    const buf = new Buffer(1 + 4 + 31 + 1 + 4 + pathlen);
-
-    buf[0] = MESSAGE.GLOBAL_REQUEST;
-
-    buf.writeUInt32BE(31, 1, true);
-    buf.write("streamlocal-forward@openssh.com", 5, 31, "ascii");
-
-    buf[36] = (wantReply === undefined || wantReply === true ? 1 : 0);
-
-    buf.writeUInt32BE(pathlen, 37, true);
-    buf.write(socketPath, 41, pathlen, "utf8");
-
-    this.debug("DEBUG: Outgoing: Writing GLOBAL_REQUEST (streamlocal-forward@openssh.com)");
-    return send(this, buf);
-};
-SSH2Stream.prototype.openssh_cancelStreamLocalForward = function (socketPath,
-    wantReply) {
-    if (this.server) {
-        throw new Error("Client-only method called in server mode");
-    }
-
-    const pathlen = Buffer.byteLength(pathlen);
-    const buf = new Buffer(1 + 4 + 38 + 1 + 4 + pathlen);
-
-    buf[0] = MESSAGE.GLOBAL_REQUEST;
-
-    buf.writeUInt32BE(38, 1, true);
-    buf.write("cancel-streamlocal-forward@openssh.com", 5, 38, "ascii");
-
-    buf[43] = (wantReply === undefined || wantReply === true ? 1 : 0);
-
-    buf.writeUInt32BE(pathlen, 44, true);
-    buf.write(socketPath, 48, pathlen, "utf8");
-
-    this.debug("DEBUG: Outgoing: Writing GLOBAL_REQUEST (cancel-streamlocal-forward@openssh.com)");
-    return send(this, buf);
-};
-SSH2Stream.prototype.directTcpip = function (chan, initWindow, maxPacket, cfg) {
-    if (this.server) {
-        throw new Error("Client-only method called in server mode");
-    }
-
-    const srclen = Buffer.byteLength(cfg.srcIP);
-    const dstlen = Buffer.byteLength(cfg.dstIP);
-    let p = 29;
-    const buf = new Buffer(1 + 4 + 12 + 4 + 4 + 4 + 4 + srclen + 4 + 4 + dstlen +
-        4);
-
-    buf[0] = MESSAGE.CHANNEL_OPEN;
-
-    buf.writeUInt32BE(12, 1, true);
-    buf.write("direct-tcpip", 5, 12, "ascii");
-
-    buf.writeUInt32BE(chan, 17, true);
-
-    buf.writeUInt32BE(initWindow, 21, true);
-
-    buf.writeUInt32BE(maxPacket, 25, true);
-
-    buf.writeUInt32BE(dstlen, p, true);
-    buf.write(cfg.dstIP, p += 4, dstlen, "ascii");
-
-    buf.writeUInt32BE(cfg.dstPort, p += dstlen, true);
-
-    buf.writeUInt32BE(srclen, p += 4, true);
-    buf.write(cfg.srcIP, p += 4, srclen, "ascii");
-
-    buf.writeUInt32BE(cfg.srcPort, p += srclen, true);
-
-    this.debug(`DEBUG: Outgoing: Writing CHANNEL_OPEN (${
-        chan
-        }, direct-tcpip)`);
-    return send(this, buf);
-};
-SSH2Stream.prototype.openssh_directStreamLocal = function (chan, initWindow,
-    maxPacket, cfg) {
-    if (this.server) {
-        throw new Error("Client-only method called in server mode");
-    }
-
-    const pathlen = Buffer.byteLength(cfg.socketPath);
-    let p = 47;
-    const buf = new Buffer(1 + 4 + 30 + 4 + 4 + 4 + 4 + pathlen + 4);
-
-    buf[0] = MESSAGE.CHANNEL_OPEN;
-
-    buf.writeUInt32BE(30, 1, true);
-    buf.write("direct-streamlocal@openssh.com", 5, 30, "ascii");
-
-    buf.writeUInt32BE(chan, 35, true);
-
-    buf.writeUInt32BE(initWindow, 39, true);
-
-    buf.writeUInt32BE(maxPacket, 43, true);
-
-    buf.writeUInt32BE(pathlen, p, true);
-    buf.write(cfg.socketPath, p += 4, pathlen, "utf8");
-
-    this.debug(`DEBUG: Outgoing: Writing CHANNEL_OPEN (${
-        chan
-        }, direct-streamlocal@openssh.com)`);
-    return send(this, buf);
-};
-SSH2Stream.prototype.openssh_noMoreSessions = function (wantReply) {
-    if (this.server) {
-        throw new Error("Client-only method called in server mode");
-    }
-
-    const buf = new Buffer(1 + 4 + 28 + 1);
-
-    buf[0] = MESSAGE.GLOBAL_REQUEST;
-
-    buf.writeUInt32BE(28, 1, true);
-    buf.write("no-more-sessions@openssh.com", 5, 28, "ascii");
-
-    buf[33] = (wantReply === undefined || wantReply === true ? 1 : 0);
-
-    this.debug("DEBUG: Outgoing: Writing GLOBAL_REQUEST (no-more-sessions@openssh.com)");
-    return send(this, buf);
-};
-SSH2Stream.prototype.session = function (chan, initWindow, maxPacket) {
-    if (this.server) {
-        throw new Error("Client-only method called in server mode");
-    }
-
-    // Does not consume window space
-    const buf = new Buffer(1 + 4 + 7 + 4 + 4 + 4);
-
-    buf[0] = MESSAGE.CHANNEL_OPEN;
-
-    buf.writeUInt32BE(7, 1, true);
-    buf.write("session", 5, 7, "ascii");
-
-    buf.writeUInt32BE(chan, 12, true);
-
-    buf.writeUInt32BE(initWindow, 16, true);
-
-    buf.writeUInt32BE(maxPacket, 20, true);
-
-    this.debug(`DEBUG: Outgoing: Writing CHANNEL_OPEN (${
-        chan
-        }, session)`);
-    return send(this, buf);
-};
-SSH2Stream.prototype.windowChange = function (chan, rows, cols, height, width) {
-    if (this.server) {
-        throw new Error("Client-only method called in server mode");
-    }
-
-    // Does not consume window space
-    const buf = new Buffer(1 + 4 + 4 + 13 + 1 + 4 + 4 + 4 + 4);
-
-    buf[0] = MESSAGE.CHANNEL_REQUEST;
-
-    buf.writeUInt32BE(chan, 1, true);
-
-    buf.writeUInt32BE(13, 5, true);
-    buf.write("window-change", 9, 13, "ascii");
-
-    buf[22] = 0;
-
-    buf.writeUInt32BE(cols, 23, true);
-
-    buf.writeUInt32BE(rows, 27, true);
-
-    buf.writeUInt32BE(width, 31, true);
-
-    buf.writeUInt32BE(height, 35, true);
-
-    this.debug(`DEBUG: Outgoing: Writing CHANNEL_REQUEST (${
-        chan
-        }, window-change)`);
-    return send(this, buf);
-};
-SSH2Stream.prototype.pty = function (chan, rows, cols, height,
-    width, term, modes, wantReply) {
-    if (this.server) {
-        throw new Error("Client-only method called in server mode");
-    }
-
-    // Does not consume window space
-    if (!term || !term.length) {
-        term = "vt100";
-    }
-    if (modes &&
-        !Buffer.isBuffer(modes) &&
-        !Array.isArray(modes) &&
-        typeof modes === "object") {
-        modes = modesToBytes(modes);
-    }
-    if (!modes || !modes.length) {
-        modes = NO_TERMINAL_MODES_BUFFER;
-    }
-
-    const termLen = term.length;
-    const modesLen = modes.length;
-    let p = 21;
-    const buf = new Buffer(1 + 4 + 4 + 7 + 1 + 4 + termLen + 4 + 4 + 4 + 4 + 4 +
-        modesLen);
-
-    buf[0] = MESSAGE.CHANNEL_REQUEST;
-
-    buf.writeUInt32BE(chan, 1, true);
-
-    buf.writeUInt32BE(7, 5, true);
-    buf.write("pty-req", 9, 7, "ascii");
-
-    buf[16] = (wantReply === undefined || wantReply === true ? 1 : 0);
-
-    buf.writeUInt32BE(termLen, 17, true);
-    buf.write(term, 21, termLen, "utf8");
-
-    buf.writeUInt32BE(cols, p += termLen, true);
-
-    buf.writeUInt32BE(rows, p += 4, true);
-
-    buf.writeUInt32BE(width, p += 4, true);
-
-    buf.writeUInt32BE(height, p += 4, true);
-
-    buf.writeUInt32BE(modesLen, p += 4, true);
-    p += 4;
-    if (Array.isArray(modes)) {
-        for (let i = 0; i < modesLen; ++i) {
-            buf[p++] = modes[i];
-        }
-    } else if (Buffer.isBuffer(modes)) {
-        modes.copy(buf, p);
-    }
-
-    this.debug(`DEBUG: Outgoing: Writing CHANNEL_REQUEST (${
-        chan
-        }, pty-req)`);
-    return send(this, buf);
-};
-SSH2Stream.prototype.shell = function (chan, wantReply) {
-    if (this.server) {
-        throw new Error("Client-only method called in server mode");
-    }
-
-    // Does not consume window space
-    const buf = new Buffer(1 + 4 + 4 + 5 + 1);
-
-    buf[0] = MESSAGE.CHANNEL_REQUEST;
-
-    buf.writeUInt32BE(chan, 1, true);
-
-    buf.writeUInt32BE(5, 5, true);
-    buf.write("shell", 9, 5, "ascii");
-
-    buf[14] = (wantReply === undefined || wantReply === true ? 1 : 0);
-
-    this.debug(`DEBUG: Outgoing: Writing CHANNEL_REQUEST (${
-        chan
-        }, shell)`);
-    return send(this, buf);
-};
-SSH2Stream.prototype.exec = function (chan, cmd, wantReply) {
-    if (this.server) {
-        throw new Error("Client-only method called in server mode");
-    }
-
-    // Does not consume window space
-    const cmdlen = (Buffer.isBuffer(cmd) ? cmd.length : Buffer.byteLength(cmd));
-    const buf = new Buffer(1 + 4 + 4 + 4 + 1 + 4 + cmdlen);
-
-    buf[0] = MESSAGE.CHANNEL_REQUEST;
-
-    buf.writeUInt32BE(chan, 1, true);
-
-    buf.writeUInt32BE(4, 5, true);
-    buf.write("exec", 9, 4, "ascii");
-
-    buf[13] = (wantReply === undefined || wantReply === true ? 1 : 0);
-
-    buf.writeUInt32BE(cmdlen, 14, true);
-    if (Buffer.isBuffer(cmd)) { cmd.copy(buf, 18); } else {
-        buf.write(cmd, 18, cmdlen, "utf8");
-    }
-
-    this.debug(`DEBUG: Outgoing: Writing CHANNEL_REQUEST (${
-        chan
-        }, exec)`);
-    return send(this, buf);
-};
-SSH2Stream.prototype.signal = function (chan, signal) {
-    if (this.server) {
-        throw new Error("Client-only method called in server mode");
-    }
-
-    // Does not consume window space
-    signal = signal.toUpperCase();
-    if (signal.slice(0, 3) === "SIG") {
-        signal = signal.substring(3);
-    }
-
-    if (SIGNALS.indexOf(signal) === -1) {
-        throw new Error(`Invalid signal: ${signal}`);
-    }
-
-    const signalLen = signal.length;
-    const buf = new Buffer(1 + 4 + 4 + 6 + 1 + 4 + signalLen);
-
-    buf[0] = MESSAGE.CHANNEL_REQUEST;
-
-    buf.writeUInt32BE(chan, 1, true);
-
-    buf.writeUInt32BE(6, 5, true);
-    buf.write("signal", 9, 6, "ascii");
-
-    buf[15] = 0;
-
-    buf.writeUInt32BE(signalLen, 16, true);
-    buf.write(signal, 20, signalLen, "ascii");
-
-    this.debug(`DEBUG: Outgoing: Writing CHANNEL_REQUEST (${
-        chan
-        }, signal)`);
-    return send(this, buf);
-};
-SSH2Stream.prototype.env = function (chan, key, val, wantReply) {
-    if (this.server) {
-        throw new Error("Client-only method called in server mode");
-    }
-
-    // Does not consume window space
-    const keyLen = Buffer.byteLength(key);
-    const valLen = (Buffer.isBuffer(val) ? val.length : Buffer.byteLength(val));
-    const buf = new Buffer(1 + 4 + 4 + 3 + 1 + 4 + keyLen + 4 + valLen);
-
-    buf[0] = MESSAGE.CHANNEL_REQUEST;
-
-    buf.writeUInt32BE(chan, 1, true);
-
-    buf.writeUInt32BE(3, 5, true);
-    buf.write("env", 9, 3, "ascii");
-
-    buf[12] = (wantReply === undefined || wantReply === true ? 1 : 0);
-
-    buf.writeUInt32BE(keyLen, 13, true);
-    buf.write(key, 17, keyLen, "ascii");
-
-    buf.writeUInt32BE(valLen, 17 + keyLen, true);
-    if (Buffer.isBuffer(val)) {
-        val.copy(buf, 17 + keyLen + 4);
-    }
-    else {
-        buf.write(val, 17 + keyLen + 4, valLen, "utf8");
-    }
-
-    this.debug(`DEBUG: Outgoing: Writing CHANNEL_REQUEST (${
-        chan
-        }, env)`);
-    return send(this, buf);
-};
-SSH2Stream.prototype.x11Forward = function (chan, cfg, wantReply) {
-    if (this.server) {
-        throw new Error("Client-only method called in server mode");
-    }
-
-    // Does not consume window space
-    const protolen = Buffer.byteLength(cfg.protocol);
-    const cookielen = Buffer.byteLength(cfg.cookie);
-    const buf = new Buffer(1 + 4 + 4 + 7 + 1 + 1 + 4 + protolen + 4 + cookielen +
-        4);
-
-    buf[0] = MESSAGE.CHANNEL_REQUEST;
-
-    buf.writeUInt32BE(chan, 1, true);
-
-    buf.writeUInt32BE(7, 5, true);
-    buf.write("x11-req", 9, 7, "ascii");
-
-    buf[16] = (wantReply === undefined || wantReply === true ? 1 : 0);
-
-    buf[17] = (cfg.single ? 1 : 0);
-
-    buf.writeUInt32BE(protolen, 18, true);
-    let bp = 22;
-    if (Buffer.isBuffer(cfg.protocol)) {
-        cfg.protocol.copy(buf, bp);
-    } else {
-        buf.write(cfg.protocol, bp, protolen, "utf8");
-    }
-    bp += protolen;
-
-    buf.writeUInt32BE(cookielen, bp, true);
-    bp += 4;
-    if (Buffer.isBuffer(cfg.cookie)) {
-        cfg.cookie.copy(buf, bp);
-    } else {
-        buf.write(cfg.cookie, bp, cookielen, "utf8");
-    }
-    bp += cookielen;
-
-    buf.writeUInt32BE((cfg.screen || 0), bp, true);
-
-    this.debug(`DEBUG: Outgoing: Writing CHANNEL_REQUEST (${
-        chan
-        }, x11-req)`);
-    return send(this, buf);
-};
-SSH2Stream.prototype.subsystem = function (chan, name, wantReply) {
-    if (this.server) {
-        throw new Error("Client-only method called in server mode");
-    }
-
-    // Does not consume window space
-    const nameLen = Buffer.byteLength(name);
-    const buf = new Buffer(1 + 4 + 4 + 9 + 1 + 4 + nameLen);
-
-    buf[0] = MESSAGE.CHANNEL_REQUEST;
-
-    buf.writeUInt32BE(chan, 1, true);
-
-    buf.writeUInt32BE(9, 5, true);
-    buf.write("subsystem", 9, 9, "ascii");
-
-    buf[18] = (wantReply === undefined || wantReply === true ? 1 : 0);
-
-    buf.writeUInt32BE(nameLen, 19, true);
-    buf.write(name, 23, nameLen, "ascii");
-
-    this.debug(`DEBUG: Outgoing: Writing CHANNEL_REQUEST (${
-        chan
-        }, subsystem: ${
-        name
-        })`);
-    return send(this, buf);
-};
-SSH2Stream.prototype.openssh_agentForward = function (chan, wantReply) {
-    if (this.server) {
-        throw new Error("Client-only method called in server mode");
-    }
-
-    // Does not consume window space
-    const buf = new Buffer(1 + 4 + 4 + 26 + 1);
-
-    buf[0] = MESSAGE.CHANNEL_REQUEST;
-
-    buf.writeUInt32BE(chan, 1, true);
-
-    buf.writeUInt32BE(26, 5, true);
-    buf.write("auth-agent-req@openssh.com", 9, 26, "ascii");
-
-    buf[35] = (wantReply === undefined || wantReply === true ? 1 : 0);
-
-    this.debug(`DEBUG: Outgoing: Writing CHANNEL_REQUEST (${
-        chan
-        }, auth-agent-req@openssh.com)`);
-    return send(this, buf);
-};
-// "ssh-userauth" service-specific
-SSH2Stream.prototype.authPassword = function (username, password) {
-    if (this.server) {
-        throw new Error("Client-only method called in server mode");
-    }
-
-    const userLen = Buffer.byteLength(username);
-    const passLen = Buffer.byteLength(password);
-    let p = 0;
-    const buf = new Buffer(1 +
-        4 + userLen +
-        4 + 14 // "ssh-connection"
-        +
-        4 + 8 // "password"
-        +
-        1 +
-        4 + passLen);
-
-    buf[p] = MESSAGE.USERAUTH_REQUEST;
-
-    buf.writeUInt32BE(userLen, ++p, true);
-    buf.write(username, p += 4, userLen, "utf8");
-
-    buf.writeUInt32BE(14, p += userLen, true);
-    buf.write("ssh-connection", p += 4, 14, "ascii");
-
-    buf.writeUInt32BE(8, p += 14, true);
-    buf.write("password", p += 4, 8, "ascii");
-
-    buf[p += 8] = 0;
-
-    buf.writeUInt32BE(passLen, ++p, true);
-    buf.write(password, p += 4, passLen, "utf8");
-
-    this._state.authsQueue.push("password");
-    this.debug("DEBUG: Outgoing: Writing USERAUTH_REQUEST (password)");
-    return send(this, buf);
-};
-SSH2Stream.prototype.authPK = function (username, pubKey, cbSign) {
-    if (this.server) {
-        throw new Error("Client-only method called in server mode");
-    }
-
-    const self = this;
-    const outstate = this._state.outgoing;
-    let pubKeyFullType;
-
-    if (pubKey.public) {
-        pubKeyFullType = pubKey.fulltype;
-        pubKey = pubKey.public;
-    } else {
-        pubKeyFullType = pubKey.toString("ascii",
-            4,
-            4 + pubKey.readUInt32BE(0, true));
-    }
-
-    const userLen = Buffer.byteLength(username);
-    const algoLen = Buffer.byteLength(pubKeyFullType);
-    const pubKeyLen = pubKey.length;
-    const sesLen = outstate.sessionId.length;
-    let p = 0;
-    const buf = new Buffer((cbSign ? 4 + sesLen : 0) +
-        1 +
-        4 + userLen +
-        4 + 14 // "ssh-connection"
-        +
-        4 + 9 // "publickey"
-        +
-        1 +
-        4 + algoLen +
-        4 + pubKeyLen
-    );
-
-    if (cbSign) {
-        buf.writeUInt32BE(sesLen, p, true);
-        outstate.sessionId.copy(buf, p += 4);
-        buf[p += sesLen] = MESSAGE.USERAUTH_REQUEST;
-    } else {
-        buf[p] = MESSAGE.USERAUTH_REQUEST;
-    }
-
-    buf.writeUInt32BE(userLen, ++p, true);
-    buf.write(username, p += 4, userLen, "utf8");
-
-    buf.writeUInt32BE(14, p += userLen, true);
-    buf.write("ssh-connection", p += 4, 14, "ascii");
-
-    buf.writeUInt32BE(9, p += 14, true);
-    buf.write("publickey", p += 4, 9, "ascii");
-
-    buf[p += 9] = (cbSign ? 1 : 0);
-
-    buf.writeUInt32BE(algoLen, ++p, true);
-    buf.write(pubKeyFullType, p += 4, algoLen, "ascii");
-
-    buf.writeUInt32BE(pubKeyLen, p += algoLen, true);
-    pubKey.copy(buf, p += 4);
-
-    if (!cbSign) {
-        this._state.authsQueue.push("publickey");
-        this.debug("DEBUG: Outgoing: Writing USERAUTH_REQUEST (publickey -- check)");
-        return send(this, buf);
-    }
-
-    cbSign(buf, (signature) => {
-        if (pubKeyFullType === "ssh-dss") {
-            signature = DSASigBERToBare(signature);
-        } else if (pubKeyFullType !== "ssh-rsa") {
-            // ECDSA
-            signature = ECDSASigASN1ToSSH(signature);
-        }
-
-        const sigLen = signature.length;
-        const sigbuf = new Buffer(1 +
-            4 + userLen +
-            4 + 14 // "ssh-connection"
-            +
-            4 + 9 // "publickey"
-            +
-            1 +
-            4 + algoLen +
-            4 + pubKeyLen +
-            4 // 4 + algoLen + 4 + sigLen
-            +
-            4 + algoLen +
-            4 + sigLen);
-
-        p = 0;
-
-        sigbuf[p] = MESSAGE.USERAUTH_REQUEST;
-
-        sigbuf.writeUInt32BE(userLen, ++p, true);
-        sigbuf.write(username, p += 4, userLen, "utf8");
-
-        sigbuf.writeUInt32BE(14, p += userLen, true);
-        sigbuf.write("ssh-connection", p += 4, 14, "ascii");
-
-        sigbuf.writeUInt32BE(9, p += 14, true);
-        sigbuf.write("publickey", p += 4, 9, "ascii");
-
-        sigbuf[p += 9] = 1;
-
-        sigbuf.writeUInt32BE(algoLen, ++p, true);
-        sigbuf.write(pubKeyFullType, p += 4, algoLen, "ascii");
-
-        sigbuf.writeUInt32BE(pubKeyLen, p += algoLen, true);
-        pubKey.copy(sigbuf, p += 4);
-        sigbuf.writeUInt32BE(4 + algoLen + 4 + sigLen, p += pubKeyLen, true);
-        sigbuf.writeUInt32BE(algoLen, p += 4, true);
-        sigbuf.write(pubKeyFullType, p += 4, algoLen, "ascii");
-        sigbuf.writeUInt32BE(sigLen, p += algoLen, true);
-        signature.copy(sigbuf, p += 4);
-
-        // Servers shouldn"t send packet type 60 in response to signed publickey
-        // attempts, but if they do, interpret as type 60.
-        self._state.authsQueue.push("publickey");
-        self.debug("DEBUG: Outgoing: Writing USERAUTH_REQUEST (publickey)");
-        return send(self, sigbuf);
-    });
-    return true;
-};
-SSH2Stream.prototype.authHostbased = function (username, pubKey, hostname,
-    userlocal, cbSign) {
-    // TODO: Make DRY by sharing similar code with authPK()
-
-    if (this.server) {
-        throw new Error("Client-only method called in server mode");
-    }
-
-    const self = this;
-    const outstate = this._state.outgoing;
-    let pubKeyFullType;
-
-    if (pubKey.public) {
-        pubKeyFullType = pubKey.fulltype;
-        pubKey = pubKey.public;
-    } else {
-        pubKeyFullType = pubKey.toString("ascii",
-            4,
-            4 + pubKey.readUInt32BE(0, true));
-    }
-
-    const userLen = Buffer.byteLength(username);
-    const algoLen = Buffer.byteLength(pubKeyFullType);
-    const pubKeyLen = pubKey.length;
-    const sesLen = outstate.sessionId.length;
-    const hostnameLen = Buffer.byteLength(hostname);
-    const userlocalLen = Buffer.byteLength(userlocal);
-    let p = 0;
-    const buf = new Buffer(4 + sesLen +
-        1 +
-        4 + userLen +
-        4 + 14 // "ssh-connection"
-        +
-        4 + 9 // "hostbased"
-        +
-        4 + algoLen +
-        4 + pubKeyLen +
-        4 + hostnameLen +
-        4 + userlocalLen
-    );
-
-    buf.writeUInt32BE(sesLen, p, true);
-    outstate.sessionId.copy(buf, p += 4);
-
-    buf[p += sesLen] = MESSAGE.USERAUTH_REQUEST;
-
-    buf.writeUInt32BE(userLen, ++p, true);
-    buf.write(username, p += 4, userLen, "utf8");
-
-    buf.writeUInt32BE(14, p += userLen, true);
-    buf.write("ssh-connection", p += 4, 14, "ascii");
-
-    buf.writeUInt32BE(9, p += 14, true);
-    buf.write("hostbased", p += 4, 9, "ascii");
-
-    buf.writeUInt32BE(algoLen, p += 9, true);
-    buf.write(pubKeyFullType, p += 4, algoLen, "ascii");
-
-    buf.writeUInt32BE(pubKeyLen, p += algoLen, true);
-    pubKey.copy(buf, p += 4);
-
-    buf.writeUInt32BE(hostnameLen, p += pubKeyLen, true);
-    buf.write(hostname, p += 4, hostnameLen, "ascii");
-
-    buf.writeUInt32BE(userlocalLen, p += hostnameLen, true);
-    buf.write(userlocal, p += 4, userlocalLen, "utf8");
-
-    cbSign(buf, (signature) => {
-        if (pubKeyFullType === "ssh-dss") {
-            signature = DSASigBERToBare(signature);
-        } else if (pubKeyFullType !== "ssh-rsa") {
-            // ECDSA
-            signature = ECDSASigASN1ToSSH(signature);
-        }
-        const sigLen = signature.length;
-        const sigbuf = new Buffer((buf.length - sesLen) + sigLen);
-
-        buf.copy(sigbuf, 0, 4 + sesLen);
-        sigbuf.writeUInt32BE(sigLen, sigbuf.length - sigLen - 4, true);
-        signature.copy(sigbuf, sigbuf.length - sigLen);
-
-        self._state.authsQueue.push("hostbased");
-        self.debug("DEBUG: Outgoing: Writing USERAUTH_REQUEST (hostbased)");
-        return send(self, sigbuf);
-    });
-    return true;
-};
-SSH2Stream.prototype.authKeyboard = function (username) {
-    if (this.server) {
-        throw new Error("Client-only method called in server mode");
-    }
-
-    const userLen = Buffer.byteLength(username);
-    let p = 0;
-    const buf = new Buffer(1 +
-        4 + userLen +
-        4 + 14 // "ssh-connection"
-        +
-        4 + 20 // "keyboard-interactive"
-        +
-        4 // no language set
-        +
-        4 // no submethods
-    );
-
-    buf[p] = MESSAGE.USERAUTH_REQUEST;
-
-    buf.writeUInt32BE(userLen, ++p, true);
-    buf.write(username, p += 4, userLen, "utf8");
-
-    buf.writeUInt32BE(14, p += userLen, true);
-    buf.write("ssh-connection", p += 4, 14, "ascii");
-
-    buf.writeUInt32BE(20, p += 14, true);
-    buf.write("keyboard-interactive", p += 4, 20, "ascii");
-
-    buf.writeUInt32BE(0, p += 20, true);
-
-    buf.writeUInt32BE(0, p += 4, true);
-
-    this._state.authsQueue.push("keyboard-interactive");
-    this.debug("DEBUG: Outgoing: Writing USERAUTH_REQUEST (keyboard-interactive)");
-    return send(this, buf);
-};
-SSH2Stream.prototype.authNone = function (username) {
-    if (this.server) {
-        throw new Error("Client-only method called in server mode");
-    }
-
-    const userLen = Buffer.byteLength(username);
-    let p = 0;
-    const buf = new Buffer(1 +
-        4 + userLen +
-        4 + 14 // "ssh-connection"
-        +
-        4 + 4 // "none"
-    );
-
-    buf[p] = MESSAGE.USERAUTH_REQUEST;
-
-    buf.writeUInt32BE(userLen, ++p, true);
-    buf.write(username, p += 4, userLen, "utf8");
-
-    buf.writeUInt32BE(14, p += userLen, true);
-    buf.write("ssh-connection", p += 4, 14, "ascii");
-
-    buf.writeUInt32BE(4, p += 14, true);
-    buf.write("none", p += 4, 4, "ascii");
-
-    this._state.authsQueue.push("none");
-    this.debug("DEBUG: Outgoing: Writing USERAUTH_REQUEST (none)");
-    return send(this, buf);
-};
-SSH2Stream.prototype.authInfoRes = function (responses) {
-    if (this.server) {
-        throw new Error("Client-only method called in server mode");
-    }
-
-    let responsesLen = 0;
-    let p = 0;
-    let resLen;
-    let len;
-    let i;
-
-    if (responses) {
-        for (i = 0, len = responses.length; i < len; ++i) {
-            responsesLen += 4 + Buffer.byteLength(responses[i]);
-        }
-    }
-    const buf = new Buffer(1 + 4 + responsesLen);
-
-    buf[p++] = MESSAGE.USERAUTH_INFO_RESPONSE;
-
-    buf.writeUInt32BE(responses ? responses.length : 0, p, true);
-    if (responses) {
-        p += 4;
-        for (i = 0, len = responses.length; i < len; ++i) {
-            resLen = Buffer.byteLength(responses[i]);
-            buf.writeUInt32BE(resLen, p, true);
-            p += 4;
-            if (resLen) {
-                buf.write(responses[i], p, resLen, "utf8");
-                p += resLen;
-            }
-        }
-    }
-
-    this.debug("DEBUG: Outgoing: Writing USERAUTH_INFO_RESPONSE");
-    return send(this, buf);
-};
-
-// Server-specific methods
-// Global
-SSH2Stream.prototype.serviceAccept = function (svcName) {
-    if (!this.server) {
-        throw new Error("Server-only method called in client mode");
-    }
-
-    const svcNameLen = svcName.length;
-    const buf = new Buffer(1 + 4 + svcNameLen);
-
-    buf[0] = MESSAGE.SERVICE_ACCEPT;
-
-    buf.writeUInt32BE(svcNameLen, 1, true);
-    buf.write(svcName, 5, svcNameLen, "ascii");
-
-    this.debug(`DEBUG: Outgoing: Writing SERVICE_ACCEPT (${svcName})`);
-    send(this, buf);
-
-    if (this.server && this.banner && svcName === "ssh-userauth") {
-        /*
-          byte      SSH_MSG_USERAUTH_BANNER
-          string    message in ISO-10646 UTF-8 encoding
-          string    language tag
-        */
-        let bannerLen = Buffer.byteLength(this.banner);
-        let packetLen = 1 + 4 + bannerLen + 4;
-        if (packetLen > BUFFER_MAX_LEN) {
-            bannerLen -= 1 + 4 + 4;
-            packetLen -= 1 + 4 + 4;
-        }
-        const packet = new Buffer(packetLen);
-        packet[0] = MESSAGE.USERAUTH_BANNER;
-        packet.writeUInt32BE(bannerLen, 1, true);
-        packet.write(this.banner, 5, bannerLen, "utf8");
-        packet.fill(0, packetLen - 4); // Empty language tag
-        this.debug("DEBUG: Outgoing: Writing USERAUTH_BANNER");
-        send(this, packet);
-        this.banner = undefined; // Prevent banner from being displayed again
-    }
-};
-// "ssh-connection" service-specific
-SSH2Stream.prototype.forwardedTcpip = function (chan, initWindow, maxPacket,
-    cfg) {
-    if (!this.server) {
-        throw new Error("Server-only method called in client mode");
-    }
-
-    const boundAddrLen = Buffer.byteLength(cfg.boundAddr);
-    const remoteAddrLen = Buffer.byteLength(cfg.remoteAddr);
-    let p = 36 + boundAddrLen;
-    const buf = new Buffer(1 + 4 + 15 + 4 + 4 + 4 + 4 + boundAddrLen + 4 + 4 +
-        remoteAddrLen + 4);
-
-    buf[0] = MESSAGE.CHANNEL_OPEN;
-
-    buf.writeUInt32BE(15, 1, true);
-    buf.write("forwarded-tcpip", 5, 15, "ascii");
-
-    buf.writeUInt32BE(chan, 20, true);
-
-    buf.writeUInt32BE(initWindow, 24, true);
-
-    buf.writeUInt32BE(maxPacket, 28, true);
-
-    buf.writeUInt32BE(boundAddrLen, 32, true);
-    buf.write(cfg.boundAddr, 36, boundAddrLen, "ascii");
-
-    buf.writeUInt32BE(cfg.boundPort, p, true);
-
-    buf.writeUInt32BE(remoteAddrLen, p += 4, true);
-    buf.write(cfg.remoteAddr, p += 4, remoteAddrLen, "ascii");
-
-    buf.writeUInt32BE(cfg.remotePort, p += remoteAddrLen, true);
-
-    this.debug(`DEBUG: Outgoing: Writing CHANNEL_OPEN (${
-        chan
-        }, forwarded-tcpip)`);
-    return send(this, buf);
-};
-SSH2Stream.prototype.x11 = function (chan, initWindow, maxPacket, cfg) {
-    if (!this.server) {
-        throw new Error("Server-only method called in client mode");
-    }
-
-    const addrLen = Buffer.byteLength(cfg.originAddr);
-    const p = 24 + addrLen;
-    const buf = new Buffer(1 + 4 + 3 + 4 + 4 + 4 + 4 + addrLen + 4);
-
-    buf[0] = MESSAGE.CHANNEL_OPEN;
-
-    buf.writeUInt32BE(3, 1, true);
-    buf.write("x11", 5, 3, "ascii");
-
-    buf.writeUInt32BE(chan, 8, true);
-
-    buf.writeUInt32BE(initWindow, 12, true);
-
-    buf.writeUInt32BE(maxPacket, 16, true);
-
-    buf.writeUInt32BE(addrLen, 20, true);
-    buf.write(cfg.originAddr, 24, addrLen, "ascii");
-
-    buf.writeUInt32BE(cfg.originPort, p, true);
-
-    this.debug(`DEBUG: Outgoing: Writing CHANNEL_OPEN (${
-        chan
-        }, x11)`);
-    return send(this, buf);
-};
-SSH2Stream.prototype.openssh_forwardedStreamLocal = function (chan, initWindow,
-    maxPacket, cfg) {
-    if (!this.server) {
-        throw new Error("Server-only method called in client mode");
-    }
-
-    const pathlen = Buffer.byteLength(cfg.socketPath);
-    const buf = new Buffer(1 + 4 + 33 + 4 + 4 + 4 + 4 + pathlen + 4);
-
-    buf[0] = MESSAGE.CHANNEL_OPEN;
-
-    buf.writeUInt32BE(33, 1, true);
-    buf.write("forwarded-streamlocal@openssh.com", 5, 33, "ascii");
-
-    buf.writeUInt32BE(chan, 38, true);
-
-    buf.writeUInt32BE(initWindow, 42, true);
-
-    buf.writeUInt32BE(maxPacket, 46, true);
-
-    buf.writeUInt32BE(pathlen, 50, true);
-    buf.write(cfg.socketPath, 54, pathlen, "utf8");
-
-    buf.writeUInt32BE(0, 54 + pathlen, true);
-
-    this.debug(`DEBUG: Outgoing: Writing CHANNEL_OPEN (${
-        chan
-        }, forwarded-streamlocal@openssh.com)`);
-    return send(this, buf);
-};
-SSH2Stream.prototype.exitStatus = function (chan, status) {
-    if (!this.server) {
-        throw new Error("Server-only method called in client mode");
-    }
-
-    // Does not consume window space
-    const buf = new Buffer(1 + 4 + 4 + 11 + 1 + 4);
-
-    buf[0] = MESSAGE.CHANNEL_REQUEST;
-
-    buf.writeUInt32BE(chan, 1, true);
-
-    buf.writeUInt32BE(11, 5, true);
-    buf.write("exit-status", 9, 11, "ascii");
-
-    buf[20] = 0;
-
-    buf.writeUInt32BE(status, 21, true);
-
-    this.debug(`DEBUG: Outgoing: Writing CHANNEL_REQUEST (${
-        chan
-        }, exit-status)`);
-    return send(this, buf);
-};
-SSH2Stream.prototype.exitSignal = function (chan, name, coreDumped, msg) {
-    if (!this.server) {
-        throw new Error("Server-only method called in client mode");
-    }
-
-    // Does not consume window space
-    const nameLen = Buffer.byteLength(name);
-    const msgLen = (msg ? Buffer.byteLength(msg) : 0);
-    let p = 25 + nameLen;
-    const buf = new Buffer(1 + 4 + 4 + 11 + 1 + 4 + nameLen + 1 + 4 + msgLen + 4);
-
-    buf[0] = MESSAGE.CHANNEL_REQUEST;
-
-    buf.writeUInt32BE(chan, 1, true);
-
-    buf.writeUInt32BE(11, 5, true);
-    buf.write("exit-signal", 9, 11, "ascii");
-
-    buf[20] = 0;
-
-    buf.writeUInt32BE(nameLen, 21, true);
-    buf.write(name, 25, nameLen, "utf8");
-
-    buf[p++] = (coreDumped ? 1 : 0);
-
-    buf.writeUInt32BE(msgLen, p, true);
-    p += 4;
-    if (msgLen) {
-        buf.write(msg, p, msgLen, "utf8");
-        p += msgLen;
-    }
-
-    buf.writeUInt32BE(0, p, true);
-
-    this.debug(`DEBUG: Outgoing: Writing CHANNEL_REQUEST (${
-        chan
-        }, exit-signal)`);
-    return send(this, buf);
-};
-// "ssh-userauth" service-specific
-SSH2Stream.prototype.authFailure = function (authMethods, isPartial) {
-    if (!this.server) {
-        throw new Error("Server-only method called in client mode");
-    }
-
-    const authsQueue = this._state.authsQueue;
-    if (!authsQueue.length) {
-        throw new Error("No auth in progress");
-    }
-
-    let methods;
-
-    if (typeof authMethods === "boolean") {
-        isPartial = authMethods;
-        authMethods = undefined;
-    }
-
-    if (authMethods) {
-        methods = [];
-        for (let i = 0, len = authMethods.length; i < len; ++i) {
-            if (authMethods[i].toLowerCase() === "none") {
-                continue;
-            }
-            methods.push(authMethods[i]);
-        }
-        methods = methods.join(",");
-    } else {
-        methods = "";
-    }
-
-    const methodsLen = methods.length;
-    const buf = new Buffer(1 + 4 + methodsLen + 1);
-
-    buf[0] = MESSAGE.USERAUTH_FAILURE;
-
-    buf.writeUInt32BE(methodsLen, 1, true);
-    buf.write(methods, 5, methodsLen, "ascii");
-
-    buf[5 + methodsLen] = (isPartial === true ? 1 : 0);
-
-    this._state.authsQueue.shift();
-    this.debug("DEBUG: Outgoing: Writing USERAUTH_FAILURE");
-    return send(this, buf);
-};
-SSH2Stream.prototype.authSuccess = function () {
-    if (!this.server) {
-        throw new Error("Server-only method called in client mode");
-    }
-
-    const authsQueue = this._state.authsQueue;
-    if (!authsQueue.length) {
-        throw new Error("No auth in progress");
-    }
-
-    this._state.authsQueue.shift();
-    this.debug("DEBUG: Outgoing: Writing USERAUTH_SUCCESS");
-    return send(this, USERAUTH_SUCCESS_PACKET);
-};
-SSH2Stream.prototype.authPKOK = function (keyAlgo, key) {
-    if (!this.server) {
-        throw new Error("Server-only method called in client mode");
-    }
-
-    const authsQueue = this._state.authsQueue;
-    if (!authsQueue.length || authsQueue[0] !== "publickey") {
-        throw new Error("\"publickey\" auth not in progress");
-    }
-
-    const keyAlgoLen = keyAlgo.length;
-    const keyLen = key.length;
-    const buf = new Buffer(1 + 4 + keyAlgoLen + 4 + keyLen);
-
-    buf[0] = MESSAGE.USERAUTH_PK_OK;
-
-    buf.writeUInt32BE(keyAlgoLen, 1, true);
-    buf.write(keyAlgo, 5, keyAlgoLen, "ascii");
-
-    buf.writeUInt32BE(keyLen, 5 + keyAlgoLen, true);
-    key.copy(buf, 5 + keyAlgoLen + 4);
-
-    this._state.authsQueue.shift();
-    this.debug("DEBUG: Outgoing: Writing USERAUTH_PK_OK");
-    return send(this, buf);
-};
-SSH2Stream.prototype.authPasswdChg = function (prompt, lang) {
-    if (!this.server) {
-        throw new Error("Server-only method called in client mode");
-    }
-
-    const promptLen = Buffer.byteLength(prompt);
-    const langLen = lang ? lang.length : 0;
-    let p = 0;
-    const buf = new Buffer(1 + 4 + promptLen + 4 + langLen);
-
-    buf[p] = MESSAGE.USERAUTH_PASSWD_CHANGEREQ;
-
-    buf.writeUInt32BE(promptLen, ++p, true);
-    buf.write(prompt, p += 4, promptLen, "utf8");
-
-    buf.writeUInt32BE(langLen, p += promptLen, true);
-    if (langLen) {
-        buf.write(lang, p += 4, langLen, "ascii");
-    }
-
-    this.debug("DEBUG: Outgoing: Writing USERAUTH_PASSWD_CHANGEREQ");
-    return send(this, buf);
-};
-SSH2Stream.prototype.authInfoReq = function (name, instructions, prompts) {
-    if (!this.server) {
-        throw new Error("Server-only method called in client mode");
-    }
-
-    let promptsLen = 0;
-    const nameLen = name ? Buffer.byteLength(name) : 0;
-    const instrLen = instructions ? Buffer.byteLength(instructions) : 0;
-    let p = 0;
-    let promptLen;
-    let prompt;
-    let len;
-    let i;
-
-    for (i = 0, len = prompts.length; i < len; ++i) {
-        promptsLen += 4 + Buffer.byteLength(prompts[i].prompt) + 1;
-    }
-    const buf = new Buffer(1 + 4 + nameLen + 4 + instrLen + 4 + 4 + promptsLen);
-
-    buf[p++] = MESSAGE.USERAUTH_INFO_REQUEST;
-
-    buf.writeUInt32BE(nameLen, p, true);
-    p += 4;
-    if (name) {
-        buf.write(name, p, nameLen, "utf8");
-        p += nameLen;
-    }
-
-    buf.writeUInt32BE(instrLen, p, true);
-    p += 4;
-    if (instructions) {
-        buf.write(instructions, p, instrLen, "utf8");
-        p += instrLen;
-    }
-
-    buf.writeUInt32BE(0, p, true);
-    p += 4;
-
-    buf.writeUInt32BE(prompts.length, p, true);
-    p += 4;
-    for (i = 0, len = prompts.length; i < len; ++i) {
-        prompt = prompts[i];
-        promptLen = Buffer.byteLength(prompt.prompt);
-        buf.writeUInt32BE(promptLen, p, true);
-        p += 4;
-        if (promptLen) {
-            buf.write(prompt.prompt, p, promptLen, "utf8");
-            p += promptLen;
-        }
-        buf[p++] = (prompt.echo ? 1 : 0);
-    }
-
-    this.debug("DEBUG: Outgoing: Writing USERAUTH_INFO_REQUEST");
-    return send(this, buf);
-};
-
 // Shared incoming/parser functions
 function onDISCONNECT(self, reason, code, desc, lang) { // Client/Server
     if (code !== DISCONNECT_REASON.BY_APPLICATION) {
@@ -2326,7 +109,6 @@ function onKEXINIT(self, init, firstFollows) { // Client/Server
     const outstate = state.outgoing;
 
     if (outstate.status === OUT_READY) {
-        self.debug("DEBUG: Received re-key request");
         outstate.status = OUT_REKEYING;
         outstate.kexinit = undefined;
         KEXINIT(self, check);
@@ -2338,11 +120,15 @@ function onKEXINIT(self, init, firstFollows) { // Client/Server
         if (check_KEXINIT(self, init, firstFollows) === true) {
             const isGEX = RE_GEX.test(state.kexdh);
             if (!self.server) {
-                if (isGEX) { KEXDH_GEX_REQ(self); } else {
+                if (isGEX) {
+                    KEXDH_GEX_REQ(self);
+                } else {
                     KEXDH_INIT(self);
                 }
             } else {
-                if (isGEX) { state.incoming.expectedPacket = "KEXDH_GEX_REQ"; } else {
+                if (isGEX) {
+                    state.incoming.expectedPacket = "KEXDH_GEX_REQ";
+                } else {
                     state.incoming.expectedPacket = "KEXDH_INIT";
                 }
             }
@@ -2354,14 +140,11 @@ function check_KEXINIT(self, init, firstFollows) {
     const state = self._state;
     const instate = state.incoming;
     const outstate = state.outgoing;
-    const debug = self.debug;
     let serverList;
     let clientList;
     let val;
     let len;
     let i;
-
-    debug("DEBUG: Comparing KEXINITs ...");
 
     const algos = self.config.algorithms;
 
@@ -2379,8 +162,6 @@ function check_KEXINIT(self, init, firstFollows) {
         }
     }
 
-    debug(`DEBUG: (local) KEX algorithms: ${kexList}`);
-    debug(`DEBUG: (remote) KEX algorithms: ${init.algorithms.kex}`);
     if (self.server) {
         serverList = kexList;
         clientList = init.algorithms.kex;
@@ -2389,11 +170,9 @@ function check_KEXINIT(self, init, firstFollows) {
         clientList = kexList;
     }
     // Check for agreeable key exchange algorithm
-    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1;
-        ++i) { }
+    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1; ++i) { }
     if (i === len) {
         // No suitable match found!
-        debug("DEBUG: No matching key exchange algorithm");
         const err = new Error("Handshake failed: no matching key exchange algorithm");
         err.level = "handshake";
         self.emit("error", err);
@@ -2402,15 +181,12 @@ function check_KEXINIT(self, init, firstFollows) {
     }
 
     const kexAlgorithm = clientList[i];
-    debug(`DEBUG: KEX algorithm: ${kexAlgorithm}`);
     if (firstFollows &&
         (!init.algorithms.kex.length || kexAlgorithm !== init.algorithms.kex[0])) {
         // Ignore next incoming packet, it was a wrong first guess at KEX algorithm
         instate.ignoreNext = true;
     }
 
-    debug(`DEBUG: (local) Host key formats: ${algos.serverHostKey}`);
-    debug(`DEBUG: (remote) Host key formats: ${init.algorithms.srvHostKey}`);
     if (self.server) {
         serverList = algos.serverHostKey;
         clientList = init.algorithms.srvHostKey;
@@ -2419,11 +195,9 @@ function check_KEXINIT(self, init, firstFollows) {
         clientList = algos.serverHostKey;
     }
     // Check for agreeable server host key format
-    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1;
-        ++i) { }
+    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1; ++i) { }
     if (i === len) {
         // No suitable match found!
-        debug("DEBUG: No matching host key format");
         const err = new Error("Handshake failed: no matching host key format");
         err.level = "handshake";
         self.emit("error", err);
@@ -2432,11 +206,6 @@ function check_KEXINIT(self, init, firstFollows) {
     }
 
     state.hostkeyFormat = clientList[i];
-    debug(`DEBUG: Host key format: ${state.hostkeyFormat}`);
-
-    debug(`DEBUG: (local) Client->Server ciphers: ${algos.cipher}`);
-    debug(`DEBUG: (remote) Client->Server ciphers: ${
-        init.algorithms.cs.encrypt}`);
     if (self.server) {
         serverList = algos.cipher;
         clientList = init.algorithms.cs.encrypt;
@@ -2445,11 +214,9 @@ function check_KEXINIT(self, init, firstFollows) {
         clientList = algos.cipher;
     }
     // Check for agreeable client->server cipher
-    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1;
-        ++i) { }
+    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1; ++i) { }
     if (i === len) {
         // No suitable match found!
-        debug("DEBUG: No matching Client->Server cipher");
         const err = new Error("Handshake failed: no matching client->server cipher");
         err.level = "handshake";
         self.emit("error", err);
@@ -2464,11 +231,7 @@ function check_KEXINIT(self, init, firstFollows) {
         val = outstate.encrypt.type = clientList[i];
         outstate.encrypt.isGCM = RE_GCM.test(val);
     }
-    debug(`DEBUG: Client->Server Cipher: ${val}`);
 
-    debug(`DEBUG: (local) Server->Client ciphers: ${algos.cipher}`);
-    debug(`DEBUG: (remote) Server->Client ciphers: ${
-        init.algorithms.sc.encrypt}`);
     if (self.server) {
         serverList = algos.cipher;
         clientList = init.algorithms.sc.encrypt;
@@ -2477,11 +240,9 @@ function check_KEXINIT(self, init, firstFollows) {
         clientList = algos.cipher;
     }
     // Check for agreeable server->client cipher
-    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1;
-        ++i) { }
+    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1; ++i) { }
     if (i === len) {
         // No suitable match found!
-        debug("DEBUG: No matching Server->Client cipher");
         const err = new Error("Handshake failed: no matching server->client cipher");
         err.level = "handshake";
         self.emit("error", err);
@@ -2496,11 +257,6 @@ function check_KEXINIT(self, init, firstFollows) {
         val = instate.decrypt.type = clientList[i];
         instate.decrypt.isGCM = RE_GCM.test(val);
     }
-    debug(`DEBUG: Server->Client Cipher: ${val}`);
-
-    debug(`DEBUG: (local) Client->Server HMAC algorithms: ${algos.hmac}`);
-    debug(`DEBUG: (remote) Client->Server HMAC algorithms: ${
-        init.algorithms.cs.mac}`);
     if (self.server) {
         serverList = algos.hmac;
         clientList = init.algorithms.cs.mac;
@@ -2509,12 +265,10 @@ function check_KEXINIT(self, init, firstFollows) {
         clientList = algos.hmac;
     }
     // Check for agreeable client->server hmac algorithm
-    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1;
-        ++i) { }
+    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1; ++i) { }
     if (i === len) {
         // No suitable match found!
-        debug("DEBUG: No matching Client->Server HMAC algorithm");
-        var err = new Error("Handshake failed: no matching client->server HMAC");
+        const err = new Error("Handshake failed: no matching client->server HMAC");
         err.level = "handshake";
         self.emit("error", err);
         self.disconnect(DISCONNECT_REASON.KEY_EXCHANGE_FAILED);
@@ -2523,15 +277,9 @@ function check_KEXINIT(self, init, firstFollows) {
 
     if (self.server) {
         val = instate.hmac.type = clientList[i];
-    }
-    else {
+    } else {
         val = outstate.hmac.type = clientList[i];
     }
-    debug(`DEBUG: Client->Server HMAC algorithm: ${val}`);
-
-    debug(`DEBUG: (local) Server->Client HMAC algorithms: ${algos.hmac}`);
-    debug(`DEBUG: (remote) Server->Client HMAC algorithms: ${
-        init.algorithms.sc.mac}`);
     if (self.server) {
         serverList = algos.hmac;
         clientList = init.algorithms.sc.mac;
@@ -2544,7 +292,6 @@ function check_KEXINIT(self, init, firstFollows) {
         ++i) { }
     if (i === len) {
         // No suitable match found!
-        debug("DEBUG: No matching Server->Client HMAC algorithm");
         const err = new Error("Handshake failed: no matching server->client HMAC");
         err.level = "handshake";
         self.emit("error", err);
@@ -2552,15 +299,11 @@ function check_KEXINIT(self, init, firstFollows) {
         return false;
     }
 
-    if (self.server) { val = outstate.hmac.type = clientList[i]; } else {
+    if (self.server) {
+        val = outstate.hmac.type = clientList[i];
+    } else {
         val = instate.hmac.type = clientList[i];
     }
-    debug(`DEBUG: Server->Client HMAC algorithm: ${val}`);
-
-    debug(`DEBUG: (local) Client->Server compression algorithms: ${
-        algos.compress}`);
-    debug(`DEBUG: (remote) Client->Server compression algorithms: ${
-        init.algorithms.cs.compress}`);
     if (self.server) {
         serverList = algos.compress;
         clientList = init.algorithms.cs.compress;
@@ -2569,13 +312,10 @@ function check_KEXINIT(self, init, firstFollows) {
         clientList = algos.compress;
     }
     // Check for agreeable client->server compression algorithm
-    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1;
-        ++i) { }
+    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1; ++i) { }
     if (i === len) {
         // No suitable match found!
-        debug("DEBUG: No matching Client->Server compression algorithm");
-        const err = new Error("Handshake failed: no matching client->server " +
-            "compression algorithm");
+        const err = new Error("Handshake failed: no matching client->server compression algorithm");
         err.level = "handshake";
         self.emit("error", err);
         self.disconnect(DISCONNECT_REASON.KEY_EXCHANGE_FAILED);
@@ -2587,12 +327,7 @@ function check_KEXINIT(self, init, firstFollows) {
     } else {
         val = outstate.compress.type = clientList[i];
     }
-    debug(`DEBUG: Client->Server compression algorithm: ${val}`);
 
-    debug(`DEBUG: (local) Server->Client compression algorithms: ${
-        algos.compress}`);
-    debug(`DEBUG: (remote) Server->Client compression algorithms: ${
-        init.algorithms.sc.compress}`);
     if (self.server) {
         serverList = algos.compress;
         clientList = init.algorithms.sc.compress;
@@ -2601,13 +336,10 @@ function check_KEXINIT(self, init, firstFollows) {
         clientList = algos.compress;
     }
     // Check for agreeable server->client compression algorithm
-    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1;
-        ++i) { }
+    for (i = 0, len = clientList.length; i < len && serverList.indexOf(clientList[i]) === -1; ++i) { }
     if (i === len) {
         // No suitable match found!
-        debug("DEBUG: No matching Server->Client compression algorithm");
-        const err = new Error("Handshake failed: no matching server->client " +
-            "compression algorithm");
+        const err = new Error("Handshake failed: no matching server->client compression algorithm");
         err.level = "handshake";
         self.emit("error", err);
         self.disconnect(DISCONNECT_REASON.KEY_EXCHANGE_FAILED);
@@ -2619,7 +351,6 @@ function check_KEXINIT(self, init, firstFollows) {
     } else {
         val = instate.decompress.type = clientList[i];
     }
-    debug(`DEBUG: Server->Client compression algorithm: ${val}`);
 
     switch (kexAlgorithm) {
         case "diffie-hellman-group1-sha1":
@@ -2645,8 +376,7 @@ function check_KEXINIT(self, init, firstFollows) {
         default:
             if (kexAlgorithm === "diffie-hellman-group-exchange-sha1") {
                 state.kexdh = "gex-sha1";
-            }
-            else if (kexAlgorithm === "diffie-hellman-group-exchange-sha256") {
+            } else if (kexAlgorithm === "diffie-hellman-group-exchange-sha256") {
                 state.kexdh = "gex-sha256";
             }
             // Reset kex object if DH group exchange is selected on re-key and DH
@@ -2703,7 +433,6 @@ function onKEXDH_REPLY(self, info, verifiedHost) { // Client
     const state = self._state;
     const instate = state.incoming;
     const outstate = state.outgoing;
-    const debug = self.debug;
     let len;
     let i;
 
@@ -2711,7 +440,6 @@ function onKEXDH_REPLY(self, info, verifiedHost) { // Client
         instate.expectedPacket = "NEWKEYS";
         outstate.sentNEWKEYS = false;
 
-        debug("DEBUG: Checking host key format");
         // Ensure all host key formats agree
         const hostkeyFormat = readString(info.hostkey, 0, "ascii", self);
         if (hostkeyFormat === false) {
@@ -2720,7 +448,6 @@ function onKEXDH_REPLY(self, info, verifiedHost) { // Client
         if (info.hostkey_format !== state.hostkeyFormat ||
             info.hostkey_format !== hostkeyFormat) {
             // Expected and actual server host key format do not match!
-            debug("DEBUG: Host key format mismatch");
             self.disconnect(DISCONNECT_REASON.KEY_EXCHANGE_FAILED);
             self.reset();
             const err = new Error("Handshake failed: host key format mismatch");
@@ -2729,14 +456,12 @@ function onKEXDH_REPLY(self, info, verifiedHost) { // Client
             return false;
         }
 
-        debug("DEBUG: Checking signature format");
         // Ensure signature formats agree
         const sigFormat = readString(info.sig, 0, "ascii", self);
         if (sigFormat === false) {
             return false;
         }
         if (info.sig_format !== sigFormat) {
-            debug("DEBUG: Signature format mismatch");
             self.disconnect(DISCONNECT_REASON.KEY_EXCHANGE_FAILED);
             self.reset();
             const err = new Error("Handshake failed: signature format mismatch");
@@ -2749,7 +474,6 @@ function onKEXDH_REPLY(self, info, verifiedHost) { // Client
     // Verify the host fingerprint first if needed
     if (outstate.status === OUT_INIT) {
         if (verifiedHost === undefined) {
-            debug("DEBUG: Verifying host fingerprint");
             let sync = true;
             const emitted = self.emit("fingerprint", info.hostkey, (permitted) => {
                 // Prevent multiple calls to this callback
@@ -2769,11 +493,8 @@ function onKEXDH_REPLY(self, info, verifiedHost) { // Client
             }
         }
         if (verifiedHost === undefined) {
-            debug("DEBUG: Host accepted by default (no verification)");
         } else if (verifiedHost === true) {
-            debug("DEBUG: Host accepted (verified)");
         } else {
-            debug("DEBUG: Host denied via fingerprint verification");
             self.disconnect(DISCONNECT_REASON.KEY_EXCHANGE_FAILED);
             self.reset();
             const err = new Error("Handshake failed: " +
@@ -2992,7 +713,6 @@ function onKEXDH_REPLY(self, info, verifiedHost) { // Client
             keyAlgo = "sha512";
             break;
         default:
-            debug(`DEBUG: Signature format unsupported: ${info.sig_format}`);
             self.disconnect(DISCONNECT_REASON.KEY_EXCHANGE_FAILED);
             self.reset();
             const err = new Error(`Handshake failed: signature format unsupported: ${
@@ -3020,8 +740,6 @@ function onKEXDH_REPLY(self, info, verifiedHost) { // Client
         return false;
     }
 
-    debug("DEBUG: Verifying signature");
-
     const b64key = asn1KeyBuf.toString("base64").replace(/(.{64})/g, "$1\n");
     const fullkey = `-----BEGIN PUBLIC KEY-----\n${
         b64key
@@ -3031,7 +749,6 @@ function onKEXDH_REPLY(self, info, verifiedHost) { // Client
     const verified = verifier.verify(fullkey, rawsig);
 
     if (!verified) {
-        debug("DEBUG: Signature verification failed");
         self.disconnect(DISCONNECT_REASON.KEY_EXCHANGE_FAILED);
         self.reset();
         const err = new Error("Handshake failed: signature verification failed");
@@ -3045,11 +762,9 @@ function onKEXDH_REPLY(self, info, verifiedHost) { // Client
     }
     outstate.kexsecret = info.secret;
 
-    debug("DEBUG: Outgoing: Writing NEWKEYS");
     if (outstate.status === OUT_REKEYING) {
         send(self, NEWKEYS_PACKET, undefined, true);
-    }
-    else {
+    } else {
         send(self, NEWKEYS_PACKET);
     }
     outstate.sentNEWKEYS = true;
@@ -3503,8 +1218,6 @@ function onNEWKEYS(self) { // Client/Server
             // asynchronously and the incoming packet parser is still expecting an
             // unencrypted packet, etc.
 
-            self.debug(`DEBUG: Parser: IN_PACKETBEFORE (update) (expecting ${
-                instate.decrypt.size})`);
             // Wait for the right number of bytes so we can determine the incoming
             // packet length
             expectData(self,
@@ -3541,7 +1254,6 @@ function parsePacket(self, callback) {
     }
 
     if (instate.ignoreNext) {
-        self.debug("DEBUG: Parser: Packet ignored");
         instate.ignoreNext = false;
         return;
     }
@@ -3554,14 +1266,7 @@ function parsePacket(self, callback) {
     // If we receive a packet during handshake that is not the expected packet
     // and it is not one of: DISCONNECT, IGNORE, UNIMPLEMENTED, or DEBUG, then we
     // close the stream
-    if (outstate.status !== OUT_READY &&
-        MESSAGE[type] !== instate.expectedPacket &&
-        type < 1 &&
-        type > 4) {
-        self.debug(`DEBUG: Parser: IN_PACKETDATAAFTER, expected: ${
-            instate.expectedPacket
-            } but got: ${
-            MESSAGE[type]}`);
+    if (outstate.status !== OUT_READY && MESSAGE[type] !== instate.expectedPacket && type < 1 && type > 4) {
         // XXX: Potential issue where the module user decides to initiate a rekey
         // via KEXINIT() (which sets `expectedPacket`) after receiving a packet
         // and there is still another packet already waiting to be parsed at the
@@ -3590,9 +1295,6 @@ function parsePacket(self, callback) {
         if (data === false) {
             return false;
         }
-        self.debug(`DEBUG: Parser: IN_PACKETDATAAFTER, packet: CHANNEL_DATA (${
-            chan
-            })`);
         self.emit(`CHANNEL_DATA:${chan}`, data);
     } else if (type === MESSAGE.CHANNEL_EXTENDED_DATA) {
         /*
@@ -3613,10 +1315,6 @@ function parsePacket(self, callback) {
         if (data === false) {
             return false;
         }
-        self.debug(`${"DEBUG: Parser: IN_PACKETDATAAFTER, packet: " +
-            "CHANNEL_EXTENDED_DATA ("}${
-            chan
-            })`);
         self.emit(`CHANNEL_EXTENDED_DATA:${chan}`, dataType, data);
     } else if (type === MESSAGE.CHANNEL_WINDOW_ADJUST) {
         /*
@@ -3632,12 +1330,6 @@ function parsePacket(self, callback) {
         if (bytesToAdd === false) {
             return false;
         }
-        self.debug(`${"DEBUG: Parser: IN_PACKETDATAAFTER, packet: " +
-            "CHANNEL_WINDOW_ADJUST ("}${
-            chan
-            }, ${
-            bytesToAdd
-            })`);
         self.emit(`CHANNEL_WINDOW_ADJUST:${chan}`, bytesToAdd);
     } else if (type === MESSAGE.CHANNEL_SUCCESS) {
         /*
@@ -3648,9 +1340,6 @@ function parsePacket(self, callback) {
         if (chan === false) {
             return false;
         }
-        self.debug(`DEBUG: Parser: IN_PACKETDATAAFTER, packet: CHANNEL_SUCCESS (${
-            chan
-            })`);
         self.emit(`CHANNEL_SUCCESS:${chan}`);
     } else if (type === MESSAGE.CHANNEL_FAILURE) {
         /*
@@ -3661,9 +1350,6 @@ function parsePacket(self, callback) {
         if (chan === false) {
             return false;
         }
-        self.debug(`DEBUG: Parser: IN_PACKETDATAAFTER, packet: CHANNEL_FAILURE (${
-            chan
-            })`);
         self.emit(`CHANNEL_FAILURE:${chan}`);
     } else if (type === MESSAGE.CHANNEL_EOF) {
         /*
@@ -3674,9 +1360,6 @@ function parsePacket(self, callback) {
         if (chan === false) {
             return false;
         }
-        self.debug(`DEBUG: Parser: IN_PACKETDATAAFTER, packet: CHANNEL_EOF (${
-            chan
-            })`);
         self.emit(`CHANNEL_EOF:${chan}`);
     } else if (type === MESSAGE.CHANNEL_OPEN) {
         /*
@@ -3704,12 +1387,6 @@ function parsePacket(self, callback) {
             return false;
         }
         let channel;
-
-        self.debug(`DEBUG: Parser: IN_PACKETDATAAFTER, packet: CHANNEL_OPEN (${
-            sender
-            }, ${
-            chanType
-            })`);
 
         if (chanType === "forwarded-tcpip" // Server->Client
             ||
@@ -3897,9 +1574,6 @@ function parsePacket(self, callback) {
         if (chan === false) {
             return false;
         }
-        self.debug(`DEBUG: Parser: IN_PACKETDATAAFTER, packet: CHANNEL_CLOSE (${
-            chan
-            })`);
         self.emit(`CHANNEL_CLOSE:${chan}`);
     } else if (type === MESSAGE.IGNORE) {
         /*
@@ -3924,10 +1598,6 @@ function parsePacket(self, callback) {
         }
 
         lang = readString(payload, payload._pos, "ascii", self, callback);
-
-        self.debug(`DEBUG: Parser: IN_PACKETDATAAFTER, packet: DISCONNECT (${
-            reasonText
-            })`);
 
         self.emit("DISCONNECT", reasonText, reason, description, lang);
     } else if (type === MESSAGE.DEBUG) {
@@ -4092,10 +1762,6 @@ function parsePacket(self, callback) {
         } else if (method !== "none") {
             methodData = payload.slice(payload._pos);
         }
-
-        self.debug(`DEBUG: Parser: IN_PACKETDATAAFTER, packet: USERAUTH_REQUEST (${
-            method
-            })`);
 
         self._state.authsQueue.push(method);
         self.emit("USERAUTH_REQUEST", username, svcName, method, methodData);
@@ -4344,10 +2010,6 @@ function parse_KEX(self, type, callback) {
 
     if (state.outgoing.status === OUT_READY ||
         instate.expectedPacket !== pktType) {
-        self.debug(`DEBUG: Parser: IN_PACKETDATAAFTER, expected: ${
-            instate.expectedPacket
-            } but got: ${
-            pktType}`);
         self.disconnect(DISCONNECT_REASON.PROTOCOL_ERROR);
         const err = new Error("Received unexpected packet");
         err.level = "protocol";
@@ -4980,19 +2642,12 @@ function parse_CHANNEL_REQUEST(self, callback) {
             wantReply
         };
     }
-    self.debug(`DEBUG: Parser: IN_PACKETDATAAFTER, packet: CHANNEL_REQUEST (${
-        recipient
-        }, ${
-        request
-        })`);
     self.emit(`CHANNEL_REQUEST:${recipient}`, info);
 }
 
 function hmacVerify(self, data) {
     const instate = self._state.incoming;
     const hmac = instate.hmac;
-
-    self.debug("DEBUG: Parser: Verifying MAC");
 
     if (instate.decrypt.isGCM) {
         const decrypt = instate.decrypt;
@@ -5032,7 +2687,6 @@ function hmacVerify(self, data) {
 
 function decryptData(self, data) {
     const instance = self._state.incoming.decrypt.instance;
-    self.debug("DEBUG: Parser: Decrypting");
     return instance.update(data);
 }
 
@@ -5043,8 +2697,7 @@ function expectData(self, type, amount, bufferKey) {
     expect.ptr = 0;
     if (bufferKey && self[bufferKey]) {
         expect.buf = self[bufferKey];
-    }
-    else if (amount) {
+    } else if (amount) {
         expect.buf = new Buffer(amount);
     }
 }
@@ -5081,7 +2734,7 @@ function modesToBytes(modes) {
         opcode = TERMINAL_MODE[key];
         if (opcode &&
             !RE_IS_NUM.test(key) &&
-            typeof modes[key] === "number" &&
+            is.number(modes[key]) &&
             key !== "TTY_OP_END") {
             val = modes[key];
             bytes[b++] = opcode;
@@ -5199,8 +2852,6 @@ function KEXINIT(self, cb) { // Client/Server
 
         // Skip language lists, first_kex_packet_follows, and reserved bytes
 
-        self.debug("DEBUG: Outgoing: Writing KEXINIT");
-
         self._state.incoming.expectedPacket = "KEXINIT";
 
         const outstate = self._state.outgoing;
@@ -5225,15 +2876,9 @@ function KEXDH_INIT(self) { // Client
     if (RE_GEX.test(state.kexdh)) {
         state.incoming.expectedPacket = "KEXDH_GEX_REPLY";
         buf[0] = MESSAGE.KEXDH_GEX_INIT;
-        self.debug("DEBUG: Outgoing: Writing KEXDH_GEX_INIT");
     } else {
         state.incoming.expectedPacket = "KEXDH_REPLY";
         buf[0] = MESSAGE.KEXDH_INIT;
-        if (state.kexdh !== "group") {
-            self.debug("DEBUG: Outgoing: Writing KEXECDH_INIT");
-        } else {
-            self.debug("DEBUG: Outgoing: Writing KEXDH_INIT");
-        }
     }
 
     buf.writeUInt32BE(outstate.pubkey.length, 1, true);
@@ -5520,23 +3165,15 @@ function KEXDH_REPLY(self, e) { // Server
 
     state.incoming.expectedPacket = "NEWKEYS";
 
-    if (isGEX) { self.debug("DEBUG: Outgoing: Writing KEXDH_GEX_REPLY"); } else if (state.kexdh !== "group") {
-        self.debug("DEBUG: Outgoing: Writing KEXECDH_REPLY");
-    }
-    else {
-        self.debug("DEBUG: Outgoing: Writing KEXDH_REPLY");
-    }
     send(self, buf, undefined, true);
 
     outstate.sentNEWKEYS = true;
-    self.debug("DEBUG: Outgoing: Writing NEWKEYS");
     return send(self, NEWKEYS_PACKET, undefined, true);
 }
 
 function KEXDH_GEX_REQ(self) { // Client
     self._state.incoming.expectedPacket = "KEXDH_GEX_GROUP";
 
-    self.debug("DEBUG: Outgoing: Writing KEXDH_GEX_REQUEST");
     return send(self, KEXDH_GEX_REQ_PACKET, undefined, true);
 }
 
@@ -5549,7 +3186,7 @@ function send(self, payload, cb, bypass) {
 
     const outstate = state.outgoing;
     if (outstate.status === OUT_REKEYING && !bypass) {
-        if (typeof cb === "function") {
+        if (is.function(cb)) {
             outstate.rekeyQueue.push([payload, cb]);
         } else {
             outstate.rekeyQueue.push(payload);
@@ -5700,5 +3337,2055 @@ function tryComputeSecret(dh, e) {
     }
 }
 
-module.exports = SSH2Stream;
-module.exports._send = send;
+export default class SSH2Stream extends TransformStream {
+    constructor(cfg = {}) {
+        super({
+            highWaterMark: (is.number(cfg.highWaterMark) ? cfg.highWaterMark : 32 * 1024)
+        });
+
+        this._needContinue = false;
+        this.bytesSent = this.bytesReceived = 0;
+        this.server = (cfg.server === true);
+        this.maxPacketSize = (is.number(cfg.maxPacketSize) ? cfg.maxPacketSize : MAX_PACKET_SIZE);
+        // Bitmap that indicates any bugs the remote side has. This is determined
+        // by the reported software version.
+        this.remoteBugs = 0;
+
+        if (this.server) {
+            // TODO: Remove when we support group exchange for server implementation
+            this.remoteBugs = BUGS.BAD_DHGEX;
+        }
+
+        const self = this;
+
+        const hostKeys = cfg.hostKeys;
+        if (this.server && (typeof hostKeys !== "object" || hostKeys === null)) {
+            throw new Error("hostKeys must be an object keyed on host key type");
+        }
+
+        this.config = {
+            // Server
+            hostKeys, // All keys supported by server
+
+            // Client/Server
+            ident: `SSH-2.0-${cfg.ident || (`ssh2js${adone.package.version}${this.server ? "srv" : ""}`)}`,
+            algorithms: {
+                kex: ALGORITHMS.KEX,
+                kexBuf: ALGORITHMS.KEX_BUF,
+                serverHostKey: ALGORITHMS.SERVER_HOST_KEY,
+                serverHostKeyBuf: ALGORITHMS.SERVER_HOST_KEY_BUF,
+                cipher: ALGORITHMS.CIPHER,
+                cipherBuf: ALGORITHMS.CIPHER_BUF,
+                hmac: ALGORITHMS.HMAC,
+                hmacBuf: ALGORITHMS.HMAC_BUF,
+                compress: ALGORITHMS.COMPRESS,
+                compressBuf: ALGORITHMS.COMPRESS_BUF
+            }
+        };
+
+        // RFC 4253 states the identification string must not contain NULL
+        this.config.ident.replace(RE_NULL, "");
+
+        if (this.config.ident.length + 2 /* Account for "\r\n" */ > 255) {
+            throw new Error("ident too long");
+        }
+
+        if (typeof cfg.algorithms === "object" && cfg.algorithms !== null) {
+            const algos = cfg.algorithms;
+            if (Array.isArray(algos.kex) && algos.kex.length > 0) {
+                this.config.algorithms.kex = algos.kex;
+                if (!Buffer.isBuffer(algos.kexBuf)) {
+                    algos.kexBuf = new Buffer(algos.kex.join(","), "ascii");
+                }
+                this.config.algorithms.kexBuf = algos.kexBuf;
+            }
+            if (Array.isArray(algos.serverHostKey) && algos.serverHostKey.length > 0) {
+                this.config.algorithms.serverHostKey = algos.serverHostKey;
+                if (!Buffer.isBuffer(algos.serverHostKeyBuf)) {
+                    algos.serverHostKeyBuf = new Buffer(algos.serverHostKey.join(","),
+                        "ascii");
+                }
+                this.config.algorithms.serverHostKeyBuf = algos.serverHostKeyBuf;
+            }
+            if (Array.isArray(algos.cipher) && algos.cipher.length > 0) {
+                this.config.algorithms.cipher = algos.cipher;
+                if (!Buffer.isBuffer(algos.cipherBuf)) {
+                    algos.cipherBuf = new Buffer(algos.cipher.join(","), "ascii");
+                }
+                this.config.algorithms.cipherBuf = algos.cipherBuf;
+            }
+            if (Array.isArray(algos.hmac) && algos.hmac.length > 0) {
+                this.config.algorithms.hmac = algos.hmac;
+                if (!Buffer.isBuffer(algos.hmacBuf)) {
+                    algos.hmacBuf = new Buffer(algos.hmac.join(","), "ascii");
+                }
+                this.config.algorithms.hmacBuf = algos.hmacBuf;
+            }
+            if (Array.isArray(algos.compress) && algos.compress.length > 0) {
+                this.config.algorithms.compress = algos.compress;
+                if (!Buffer.isBuffer(algos.compressBuf)) {
+                    algos.compressBuf = new Buffer(algos.compress.join(","), "ascii");
+                }
+                this.config.algorithms.compressBuf = algos.compressBuf;
+            }
+        }
+
+        this.reset(true);
+
+        // Common events
+        this.on("end", () => {
+            // Let GC collect any Buffers we were previously storing
+            self._state = undefined;
+            self.reset();
+            self._state.incoming.hmac.bufCompute = undefined;
+            self._state.outgoing.bufSeqno = undefined;
+        });
+        this.on("DISCONNECT", (reason, code, desc, lang) => {
+            onDISCONNECT(self, reason, code, desc, lang);
+        });
+        this.on("KEXINIT", (init, firstFollows) => {
+            onKEXINIT(self, init, firstFollows);
+        });
+        this.on("NEWKEYS", () => {
+            onNEWKEYS(self);
+        });
+
+        if (this.server) {
+            // Server-specific events
+            this.on("KEXDH_INIT", (e) => {
+                onKEXDH_INIT(self, e);
+            });
+        } else {
+            // Client-specific events
+            this.on("KEXDH_REPLY", (info) => {
+                onKEXDH_REPLY(self, info);
+            })
+                .on("KEXDH_GEX_GROUP", (prime, gen) => {
+                    onKEXDH_GEX_GROUP(self, prime, gen);
+                });
+        }
+
+        if (this.server) {
+            // Greeting displayed before the ssh identification string is sent, this is
+            // usually ignored by most clients
+            if (is.string(cfg.greeting) && cfg.greeting.length) {
+                if (cfg.greeting.slice(-2) === "\r\n") {
+                    this.push(cfg.greeting);
+                } else {
+                    this.push(`${cfg.greeting}\r\n`);
+                }
+            }
+            // Banner shown after the handshake completes, but before user
+            // authentication begins
+            if (is.string(cfg.banner) && cfg.banner.length) {
+                if (cfg.banner.slice(-2) === "\r\n") {
+                    this.banner = cfg.banner;
+                } else {
+                    this.banner = `${cfg.banner}\r\n`;
+                }
+            }
+        }
+        this.push(`${this.config.ident}\r\n`);
+
+        this._state.incoming.expectedPacket = "KEXINIT";
+    }
+
+    _read(n) {
+        if (this._needContinue) {
+            this._needContinue = false;
+            this.emit("continue");
+        }
+        return super._read(n);
+    }
+
+    push(chunk, encoding) {
+        const ret = super.push(chunk, encoding);
+        this._needContinue = (ret === false);
+        return ret;
+    }
+
+    _cleanup(callback) {
+        this.reset();
+        callback && callback(new Error("Malformed packet"));
+    }
+
+    _transform(chunk, encoding, callback, decomp) {
+        let skipDecrypt = false;
+        let doDecryptGCM = false;
+        const state = this._state;
+        const instate = state.incoming;
+        const outstate = state.outgoing;
+        const expect = instate.expect;
+        const decrypt = instate.decrypt;
+        const decompress = instate.decompress;
+        const chlen = chunk.length;
+        let chleft = 0;
+        const self = this;
+        let i = 0;
+        let p = i;
+        let buffer;
+        let buf;
+        let r;
+
+        this.bytesReceived += chlen;
+
+        for (; ;) {
+            if (expect.type !== undefined) {
+                if (i >= chlen) {
+                    break;
+                }
+                if (expect.type === EXP_TYPE_BYTES) {
+                    chleft = (chlen - i);
+                    const pktLeft = (expect.buf.length - expect.ptr);
+                    if (pktLeft <= chleft) {
+                        chunk.copy(expect.buf, expect.ptr, i, i + pktLeft);
+                        i += pktLeft;
+                        buffer = expect.buf;
+                        expect.buf = undefined;
+                        expect.ptr = 0;
+                        expect.type = undefined;
+                    } else {
+                        chunk.copy(expect.buf, expect.ptr, i);
+                        expect.ptr += chleft;
+                        i += chleft;
+                    }
+                    continue;
+                } else if (expect.type === EXP_TYPE_HEADER) {
+                    i += instate.search.push(chunk);
+                    if (expect.type !== undefined) {
+                        continue;
+                    }
+                } else if (expect.type === EXP_TYPE_LF) {
+                    if (++expect.ptr + 4 /* Account for "SSH-" */ > 255) {
+                        this.reset();
+                        return callback(new Error("Max identification string size exceeded"));
+                    }
+                    if (chunk[i] === 0x0A) {
+                        expect.type = undefined;
+                        if (p < i) {
+                            if (expect.buf === undefined) {
+                                expect.buf = chunk.toString("ascii", p, i);
+                            } else {
+                                expect.buf += chunk.toString("ascii", p, i);
+                            }
+                        }
+                        buffer = expect.buf;
+                        expect.buf = undefined;
+                        ++i;
+                    } else {
+                        if (++i === chlen && p < i) {
+                            if (expect.buf === undefined) {
+                                expect.buf = chunk.toString("ascii", p, i);
+                            } else {
+                                expect.buf += chunk.toString("ascii", p, i);
+                            }
+                        }
+                        continue;
+                    }
+                }
+            }
+
+            if (instate.status === IN_INIT) {
+                if (this.server) {
+                    // Retrieve what should be the start of the protocol version exchange
+                    if (!buffer) {
+                        expectData(this, EXP_TYPE_BYTES, 4);
+                    } else {
+                        if (buffer[0] === 0x53 // S
+                            &&
+                            buffer[1] === 0x53 // S
+                            &&
+                            buffer[2] === 0x48 // H
+                            &&
+                            buffer[3] === 0x2D) { // -
+                            instate.status = IN_GREETING;
+                        } else {
+                            this.reset();
+                            return callback(new Error("Bad identification start"));
+                        }
+                    }
+                } else {
+                    // Retrieve any bytes that may come before the protocol version exchange
+                    const ss = instate.search = new adone.util.StreamSearch(IDENT_PREFIX_BUFFER);
+                    ss.on("info", function onInfo(matched, data, start, end) {
+                        if (data) {
+                            if (instate.greeting === undefined) {
+                                instate.greeting = data.toString("binary", start, end);
+                            } else {
+                                instate.greeting += data.toString("binary", start, end);
+                            }
+                        }
+                        if (matched) {
+                            expect.type = undefined;
+                            instate.search.removeListener("info", onInfo);
+                        }
+                    });
+                    ss.maxMatches = 1;
+                    expectData(this, EXP_TYPE_HEADER);
+                    instate.status = IN_GREETING;
+                }
+            } else if (instate.status === IN_GREETING) {
+                instate.search = undefined;
+                // Retrieve the identification bytes after the "SSH-" header
+                p = i;
+                expectData(this, EXP_TYPE_LF);
+                instate.status = IN_HEADER;
+            } else if (instate.status === IN_HEADER) {
+                buffer = buffer.trim();
+                const idxDash = buffer.indexOf("-");
+                const idxSpace = buffer.indexOf(" ");
+                const header = {
+                    // RFC says greeting SHOULD be utf8
+                    greeting: instate.greeting,
+                    identRaw: `SSH-${buffer}`,
+                    versions: {
+                        protocol: buffer.substr(0, idxDash),
+                        software: (idxSpace === -1 ?
+                            buffer.substring(idxDash + 1) :
+                            buffer.substring(idxDash + 1, idxSpace))
+                    },
+                    comments: (idxSpace > -1 ? buffer.substring(idxSpace + 1) : undefined)
+                };
+                instate.greeting = undefined;
+
+                if (header.versions.protocol !== "1.99" &&
+                    header.versions.protocol !== "2.0") {
+                    this.reset();
+                    return callback(new Error("Protocol version not supported"));
+                } else {
+                    this.emit("header", header);
+                }
+
+                if (instate.status === IN_INIT) {
+                    // We reset from an event handler, possibly due to an unsupported SSH
+                    // protocol version?
+                    return;
+                }
+
+                const identRaw = header.identRaw;
+                const software = header.versions.software;
+                for (let j = 0, rule; j < BUGGY_IMPLS_LEN; ++j) {
+                    rule = BUGGY_IMPLS[j];
+                    if (is.string(rule[0])) {
+                        if (software === rule[0]) {
+                            this.remoteBugs |= rule[1];
+                        }
+                    } else if (rule[0].test(software)) {
+                        this.remoteBugs |= rule[1];
+                    }
+                }
+                instate.identRaw = identRaw;
+                // Adjust bytesReceived first otherwise it will have an incorrectly larger
+                // total when we call back into this function after completing KEXINIT
+                this.bytesReceived -= (chlen - i);
+                KEXINIT(this, () => {
+                    if (i === chlen) {
+                        callback();
+                    } else {
+                        self._transform(chunk.slice(i), encoding, callback);
+                    }
+                });
+                instate.status = IN_PACKETBEFORE;
+                return;
+            } else if (instate.status === IN_PACKETBEFORE) {
+                // Wait for the right number of bytes so we can determine the incoming
+                // packet length
+                expectData(this, EXP_TYPE_BYTES, decrypt.size, decrypt.buf);
+                instate.status = IN_PACKET;
+            } else if (instate.status === IN_PACKET) {
+                doDecryptGCM = (decrypt.instance && decrypt.isGCM);
+                if (decrypt.instance && !decrypt.isGCM) {
+                    buffer = decryptData(this, buffer);
+                }
+
+                r = readInt(buffer, 0, this, callback);
+                if (r === false) {
+                    return;
+                }
+                const macSize = (instate.hmac.size || 0);
+                const fullPacketLen = r + 4 + macSize;
+                let maxPayloadLen = this.maxPacketSize;
+                if (decompress.instance) {
+                    // Account for compressed payloads
+                    // This formula is taken from dropbear which derives it from zlib"s
+                    // documentation. Explanation from dropbear:
+                    /* For exact details see http://www.zlib.net/zlib_tech.html
+                    * 5 bytes per 16kB block, plus 6 bytes for the stream.
+                    * We might allocate 5 unnecessary bytes here if it"s an
+                    * exact multiple. */
+                    maxPayloadLen += (((this.maxPacketSize / 16384) + 1) * 5 + 6);
+                }
+                if (r > maxPayloadLen
+                    // TODO: Change 16 to "MAX(16, decrypt.size)" when/if SSH2 adopts
+                    // 512-bit ciphers
+                    ||
+                    fullPacketLen < (16 + macSize) ||
+                    ((r + (doDecryptGCM ? 0 : 4)) % decrypt.size) !== 0) {
+                    this.disconnect(DISCONNECT_REASON.PROTOCOL_ERROR);
+                    return callback(new Error("Bad packet length"));
+                }
+
+                instate.pktLen = r;
+                const remainLen = instate.pktLen + 4 - decrypt.size;
+                if (doDecryptGCM) {
+                    decrypt.instance.setAAD(buffer.slice(0, 4));
+                } else {
+                    instate.padLen = buffer[4];
+                }
+                if (remainLen > 0) {
+                    if (doDecryptGCM) {
+                        instate.pktExtra = buffer.slice(4);
+                    } else {
+                        instate.pktExtra = buffer.slice(5);
+                    }
+                    // Grab the rest of the packet
+                    expectData(this, EXP_TYPE_BYTES, remainLen);
+                    instate.status = IN_PACKETDATA;
+                } else if (remainLen < 0) {
+                    instate.status = IN_PACKETBEFORE;
+                } else {
+                    // Entire message fit into one block
+                    skipDecrypt = true;
+                    instate.status = IN_PACKETDATA;
+                    continue;
+                }
+            } else if (instate.status === IN_PACKETDATA) {
+                doDecryptGCM = (decrypt.instance && decrypt.isGCM);
+                if (decrypt.instance && !skipDecrypt && !doDecryptGCM) {
+                    buffer = decryptData(this, buffer);
+                } else if (skipDecrypt) {
+                    skipDecrypt = false;
+                }
+                const padStart = instate.pktLen - instate.padLen - 1;
+                // TODO: Allocate a Buffer once that is slightly larger than maxPacketSize
+                // (to accommodate for packet length field and MAC) and re-use that
+                // instead
+                if (instate.pktExtra) {
+                    buf = new Buffer(instate.pktExtra.length + buffer.length);
+                    instate.pktExtra.copy(buf);
+                    buffer.copy(buf, instate.pktExtra.length);
+                    instate.payload = buf.slice(0, padStart);
+                } else {
+                    // Entire message fit into one block
+                    if (doDecryptGCM) {
+                        buf = buffer.slice(4);
+                    } else {
+                        buf = buffer.slice(5);
+                    }
+                    instate.payload = buffer.slice(5, 5 + padStart);
+                }
+                if (instate.hmac.size !== undefined) {
+                    // Wait for hmac hash
+                    expectData(this, EXP_TYPE_BYTES, instate.hmac.size, instate.hmac.buf);
+                    instate.status = IN_PACKETDATAVERIFY;
+                    instate.packet = buf;
+                } else {
+                    instate.status = IN_PACKETDATAAFTER;
+                }
+                instate.pktExtra = undefined;
+                buf = undefined;
+            } else if (instate.status === IN_PACKETDATAVERIFY) {
+                // Verify packet data integrity
+                if (hmacVerify(this, buffer)) {
+                    instate.status = IN_PACKETDATAAFTER;
+                    instate.packet = undefined;
+                } else {
+                    this.reset();
+                    return callback(new Error("Invalid HMAC"));
+                }
+            } else if (instate.status === IN_PACKETDATAAFTER) {
+                if (decompress.instance) {
+                    if (!decomp) {
+                        decompress.instance.write(instate.payload);
+                        let decompBuf = [];
+                        let decompBufLen = 0;
+                        decompress.instance.on("readable", function () {
+                            let buf;
+                            while (buf = this.read()) {
+                                decompBuf.push(buf);
+                                decompBufLen += buf.length;
+                            }
+                        }).flush(Z_PARTIAL_FLUSH, () => {
+                            decompress.instance.removeAllListeners("readable");
+                            if (decompBuf.length === 1) {
+                                instate.payload = decompBuf[0];
+                            } else {
+                                instate.payload = Buffer.concat(decompBuf, decompBufLen);
+                            }
+                            decompBuf = null;
+                            let nextSlice;
+                            if (i === chlen) {
+                                nextSlice = EMPTY_BUFFER;
+                            } else { // Avoid slicing a zero-length buffer
+                                nextSlice = chunk.slice(i);
+                            }
+                            self._transform(nextSlice, encoding, callback, true);
+                        });
+                        return;
+                    } else {
+                        // Make sure we reset this after this first time in the loop,
+                        // otherwise we could end up trying to interpret as-is another
+                        // compressed packet that is within the same chunk
+                        decomp = false;
+                    }
+                }
+
+                this.emit("packet");
+
+                const ptype = instate.payload[0];
+
+                // Only parse packet if we are not re-keying or the packet is not a
+                // transport layer packet needed for re-keying
+                if (outstate.status === OUT_READY ||
+                    ptype <= 4 ||
+                    (ptype >= 20 && ptype <= 49)) {
+                    if (parsePacket(this, callback) === false) {
+                        return;
+                    }
+
+                    if (instate.status === IN_INIT) {
+                        // We were reset due to some error/disagreement ?
+                        return;
+                    }
+                } else if (outstate.status === OUT_REKEYING) {
+                    if (instate.rekeyQueue.length === MAX_PACKETS_REKEYING) {
+                        this.disconnect(DISCONNECT_REASON.PROTOCOL_ERROR);
+                        return callback(
+                            new Error("Incoming re-key queue length limit reached")
+                        );
+                    }
+
+                    // Make sure to record the sequence number in case we need it later on
+                    // when we drain the queue (e.g. unknown packet)
+                    const seqno = instate.seqno;
+                    if (++instate.seqno > MAX_SEQNO) {
+                        instate.seqno = 0;
+                    }
+
+                    instate.rekeyQueue.push(seqno, instate.payload);
+                }
+
+                instate.status = IN_PACKETBEFORE;
+                instate.payload = undefined;
+            }
+            if (buffer !== undefined) {
+                buffer = undefined;
+            }
+        }
+
+        callback();
+    }
+
+    reset(noend) {
+        if (this._state) {
+            const state = this._state;
+            state.incoming.status = IN_INIT;
+            state.outgoing.status = OUT_INIT;
+        } else {
+            this._state = {
+                authsQueue: [],
+                hostkeyFormat: undefined,
+                kex: undefined,
+                kexdh: undefined,
+
+                incoming: {
+                    status: IN_INIT,
+                    expectedPacket: undefined,
+                    search: undefined,
+                    greeting: undefined,
+                    seqno: 0,
+                    pktLen: undefined,
+                    padLen: undefined,
+                    pktExtra: undefined,
+                    payload: undefined,
+                    packet: undefined,
+                    kexinit: undefined,
+                    identRaw: undefined,
+                    rekeyQueue: [],
+                    ignoreNext: false,
+
+                    expect: {
+                        amount: undefined,
+                        type: undefined,
+                        ptr: 0,
+                        buf: undefined
+                    },
+
+                    decrypt: {
+                        instance: false,
+                        size: 8,
+                        isGCM: false,
+                        iv: undefined, // GCM
+                        key: undefined, // GCM
+                        buf: undefined,
+                        type: undefined
+                    },
+
+                    hmac: {
+                        size: undefined,
+                        key: undefined,
+                        buf: undefined,
+                        bufCompute: new Buffer(9),
+                        type: false
+                    },
+
+                    decompress: {
+                        instance: false,
+                        type: false
+                    }
+                },
+
+                outgoing: {
+                    status: OUT_INIT,
+                    seqno: 0,
+                    bufSeqno: new Buffer(4),
+                    rekeyQueue: [],
+                    kexinit: undefined,
+                    kexsecret: undefined,
+                    pubkey: undefined,
+                    exchangeHash: undefined,
+                    sessionId: undefined,
+                    sentNEWKEYS: false,
+
+                    encrypt: {
+                        instance: false,
+                        size: 8,
+                        isGCM: false,
+                        iv: undefined, // GCM
+                        key: undefined, // GCM
+                        type: undefined
+                    },
+
+                    hmac: {
+                        size: undefined,
+                        key: undefined,
+                        buf: undefined,
+                        type: false
+                    },
+
+                    compress: {
+                        instance: false,
+                        type: false
+                    }
+                }
+            };
+        }
+        if (!noend) {
+            if (this.readable) {
+                this.push(null);
+            }
+        }
+    }
+
+    // Common methods
+    // Global
+    disconnect(reason) {
+        /*
+        byte      SSH_MSG_DISCONNECT
+        uint32    reason code
+        string    description in ISO-10646 UTF-8 encoding
+        string    language tag
+        */
+        const buf = new Buffer(1 + 4 + 4 + 4);
+
+        buf.fill(0);
+        buf[0] = MESSAGE.DISCONNECT;
+
+        if (DISCONNECT_REASON[reason] === undefined) {
+            reason = DISCONNECT_REASON.BY_APPLICATION;
+        }
+        buf.writeUInt32BE(reason, 1, true);
+
+        send(this, buf);
+        this.reset();
+
+        return false;
+    }
+
+    ping() {
+        return send(this, PING_PACKET);
+    }
+
+    rekey() {
+        const status = this._state.outgoing.status;
+        if (status === OUT_REKEYING) {
+            throw new Error("A re-key is already in progress");
+        } else if (status !== OUT_READY) {
+            throw new Error("Cannot re-key yet");
+        }
+
+        return KEXINIT(this);
+    }
+
+    // "ssh-connection" service-specific
+    requestSuccess(data) {
+        let buf;
+        if (Buffer.isBuffer(data)) {
+            buf = new Buffer(1 + data.length);
+
+            buf[0] = MESSAGE.REQUEST_SUCCESS;
+
+            data.copy(buf, 1);
+        } else {
+            buf = REQUEST_SUCCESS_PACKET;
+        }
+
+        return send(this, buf);
+    }
+
+    requestFailure() {
+        return send(this, REQUEST_FAILURE_PACKET);
+    }
+
+    channelSuccess(chan) {
+        // Does not consume window space
+        const buf = new Buffer(1 + 4);
+
+        buf[0] = MESSAGE.CHANNEL_SUCCESS;
+
+        buf.writeUInt32BE(chan, 1, true);
+
+        return send(this, buf);
+    }
+
+    channelFailure(chan) {
+        // Does not consume window space
+        const buf = new Buffer(1 + 4);
+
+        buf[0] = MESSAGE.CHANNEL_FAILURE;
+
+        buf.writeUInt32BE(chan, 1, true);
+
+        return send(this, buf);
+    }
+
+    channelEOF(chan) {
+        // Does not consume window space
+        const buf = new Buffer(1 + 4);
+
+        buf[0] = MESSAGE.CHANNEL_EOF;
+
+        buf.writeUInt32BE(chan, 1, true);
+
+        return send(this, buf);
+    }
+
+    channelClose(chan) {
+        // Does not consume window space
+        const buf = new Buffer(1 + 4);
+
+        buf[0] = MESSAGE.CHANNEL_CLOSE;
+
+        buf.writeUInt32BE(chan, 1, true);
+
+        return send(this, buf);
+    }
+
+    channelWindowAdjust(chan, amount) {
+        // Does not consume window space
+        const buf = new Buffer(1 + 4 + 4);
+
+        buf[0] = MESSAGE.CHANNEL_WINDOW_ADJUST;
+
+        buf.writeUInt32BE(chan, 1, true);
+
+        buf.writeUInt32BE(amount, 5, true);
+
+        return send(this, buf);
+    }
+
+    channelData(chan, data) {
+        const dataIsBuffer = Buffer.isBuffer(data);
+        const dataLen = (dataIsBuffer ? data.length : Buffer.byteLength(data));
+        const buf = new Buffer(1 + 4 + 4 + dataLen);
+
+        buf[0] = MESSAGE.CHANNEL_DATA;
+
+        buf.writeUInt32BE(chan, 1, true);
+
+        buf.writeUInt32BE(dataLen, 5, true);
+        if (dataIsBuffer) {
+            data.copy(buf, 9);
+        } else {
+            buf.write(data, 9, dataLen, "utf8");
+        }
+
+        return send(this, buf);
+    }
+
+    channelExtData(chan, data, type) {
+        const dataIsBuffer = Buffer.isBuffer(data);
+        const dataLen = (dataIsBuffer ? data.length : Buffer.byteLength(data));
+        const buf = new Buffer(1 + 4 + 4 + 4 + dataLen);
+
+        buf[0] = MESSAGE.CHANNEL_EXTENDED_DATA;
+
+        buf.writeUInt32BE(chan, 1, true);
+
+        buf.writeUInt32BE(type, 5, true);
+
+        buf.writeUInt32BE(dataLen, 9, true);
+        if (dataIsBuffer) {
+            data.copy(buf, 13);
+        } else {
+            buf.write(data, 13, dataLen, "utf8");
+        }
+
+        return send(this, buf);
+    }
+
+    channelOpenConfirm(remoteChan, localChan,
+        initWindow, maxPacket) {
+        const buf = new Buffer(1 + 4 + 4 + 4 + 4);
+
+        buf[0] = MESSAGE.CHANNEL_OPEN_CONFIRMATION;
+
+        buf.writeUInt32BE(remoteChan, 1, true);
+
+        buf.writeUInt32BE(localChan, 5, true);
+
+        buf.writeUInt32BE(initWindow, 9, true);
+
+        buf.writeUInt32BE(maxPacket, 13, true);
+
+        return send(this, buf);
+    }
+
+    channelOpenFail(remoteChan, reason, desc,
+        lang) {
+        if (!is.string(desc)) {
+            desc = "";
+        }
+        if (!is.string(lang)) {
+            lang = "";
+        }
+
+        const descLen = Buffer.byteLength(desc);
+        const langLen = Buffer.byteLength(lang);
+        let p = 9;
+        const buf = new Buffer(1 + 4 + 4 + 4 + descLen + 4 + langLen);
+
+        buf[0] = MESSAGE.CHANNEL_OPEN_FAILURE;
+
+        buf.writeUInt32BE(remoteChan, 1, true);
+
+        buf.writeUInt32BE(reason, 5, true);
+
+        buf.writeUInt32BE(descLen, p, true);
+        p += 4;
+        if (descLen) {
+            buf.write(desc, p, descLen, "utf8");
+            p += descLen;
+        }
+
+        buf.writeUInt32BE(langLen, p, true);
+        if (langLen) {
+            buf.write(lang, p += 4, langLen, "ascii");
+        }
+
+        return send(this, buf);
+    }
+
+    // Client-specific methods
+    // Global
+    service(svcName) {
+        if (this.server) {
+            throw new Error("Client-only method called in server mode");
+        }
+
+        const svcNameLen = Buffer.byteLength(svcName);
+        const buf = new Buffer(1 + 4 + svcNameLen);
+
+        buf[0] = MESSAGE.SERVICE_REQUEST;
+
+        buf.writeUInt32BE(svcNameLen, 1, true);
+        buf.write(svcName, 5, svcNameLen, "ascii");
+
+        return send(this, buf);
+    }
+
+    // "ssh-connection" service-specific
+    tcpipForward(bindAddr, bindPort, wantReply) {
+        if (this.server) {
+            throw new Error("Client-only method called in server mode");
+        }
+
+        const addrlen = Buffer.byteLength(bindAddr);
+        const buf = new Buffer(1 + 4 + 13 + 1 + 4 + addrlen + 4);
+
+        buf[0] = MESSAGE.GLOBAL_REQUEST;
+
+        buf.writeUInt32BE(13, 1, true);
+        buf.write("tcpip-forward", 5, 13, "ascii");
+
+        buf[18] = (wantReply === undefined || wantReply === true ? 1 : 0);
+
+        buf.writeUInt32BE(addrlen, 19, true);
+        buf.write(bindAddr, 23, addrlen, "ascii");
+
+        buf.writeUInt32BE(bindPort, 23 + addrlen, true);
+
+        return send(this, buf);
+    }
+
+    cancelTcpipForward(bindAddr, bindPort,
+        wantReply) {
+        if (this.server) {
+            throw new Error("Client-only method called in server mode");
+        }
+
+        const addrlen = Buffer.byteLength(bindAddr);
+        const buf = new Buffer(1 + 4 + 20 + 1 + 4 + addrlen + 4);
+
+        buf[0] = MESSAGE.GLOBAL_REQUEST;
+
+        buf.writeUInt32BE(20, 1, true);
+        buf.write("cancel-tcpip-forward", 5, 20, "ascii");
+
+        buf[25] = (wantReply === undefined || wantReply === true ? 1 : 0);
+
+        buf.writeUInt32BE(addrlen, 26, true);
+        buf.write(bindAddr, 30, addrlen, "ascii");
+
+        buf.writeUInt32BE(bindPort, 30 + addrlen, true);
+
+        return send(this, buf);
+    }
+
+    openssh_streamLocalForward(socketPath, wantReply) {
+        if (this.server) {
+            throw new Error("Client-only method called in server mode");
+        }
+
+        const pathlen = Buffer.byteLength(pathlen);
+        const buf = new Buffer(1 + 4 + 31 + 1 + 4 + pathlen);
+
+        buf[0] = MESSAGE.GLOBAL_REQUEST;
+
+        buf.writeUInt32BE(31, 1, true);
+        buf.write("streamlocal-forward@openssh.com", 5, 31, "ascii");
+
+        buf[36] = (wantReply === undefined || wantReply === true ? 1 : 0);
+
+        buf.writeUInt32BE(pathlen, 37, true);
+        buf.write(socketPath, 41, pathlen, "utf8");
+
+        return send(this, buf);
+    }
+
+    openssh_cancelStreamLocalForward(socketPath,
+        wantReply) {
+        if (this.server) {
+            throw new Error("Client-only method called in server mode");
+        }
+
+        const pathlen = Buffer.byteLength(pathlen);
+        const buf = new Buffer(1 + 4 + 38 + 1 + 4 + pathlen);
+
+        buf[0] = MESSAGE.GLOBAL_REQUEST;
+
+        buf.writeUInt32BE(38, 1, true);
+        buf.write("cancel-streamlocal-forward@openssh.com", 5, 38, "ascii");
+
+        buf[43] = (wantReply === undefined || wantReply === true ? 1 : 0);
+
+        buf.writeUInt32BE(pathlen, 44, true);
+        buf.write(socketPath, 48, pathlen, "utf8");
+
+        return send(this, buf);
+    }
+
+    directTcpip(chan, initWindow, maxPacket, cfg) {
+        if (this.server) {
+            throw new Error("Client-only method called in server mode");
+        }
+
+        const srclen = Buffer.byteLength(cfg.srcIP);
+        const dstlen = Buffer.byteLength(cfg.dstIP);
+        let p = 29;
+        const buf = new Buffer(1 + 4 + 12 + 4 + 4 + 4 + 4 + srclen + 4 + 4 + dstlen +
+            4);
+
+        buf[0] = MESSAGE.CHANNEL_OPEN;
+
+        buf.writeUInt32BE(12, 1, true);
+        buf.write("direct-tcpip", 5, 12, "ascii");
+
+        buf.writeUInt32BE(chan, 17, true);
+
+        buf.writeUInt32BE(initWindow, 21, true);
+
+        buf.writeUInt32BE(maxPacket, 25, true);
+
+        buf.writeUInt32BE(dstlen, p, true);
+        buf.write(cfg.dstIP, p += 4, dstlen, "ascii");
+
+        buf.writeUInt32BE(cfg.dstPort, p += dstlen, true);
+
+        buf.writeUInt32BE(srclen, p += 4, true);
+        buf.write(cfg.srcIP, p += 4, srclen, "ascii");
+
+        buf.writeUInt32BE(cfg.srcPort, p += srclen, true);
+        return send(this, buf);
+    }
+
+    openssh_directStreamLocal(chan, initWindow,
+        maxPacket, cfg) {
+        if (this.server) {
+            throw new Error("Client-only method called in server mode");
+        }
+
+        const pathlen = Buffer.byteLength(cfg.socketPath);
+        let p = 47;
+        const buf = new Buffer(1 + 4 + 30 + 4 + 4 + 4 + 4 + pathlen + 4);
+
+        buf[0] = MESSAGE.CHANNEL_OPEN;
+
+        buf.writeUInt32BE(30, 1, true);
+        buf.write("direct-streamlocal@openssh.com", 5, 30, "ascii");
+
+        buf.writeUInt32BE(chan, 35, true);
+
+        buf.writeUInt32BE(initWindow, 39, true);
+
+        buf.writeUInt32BE(maxPacket, 43, true);
+
+        buf.writeUInt32BE(pathlen, p, true);
+        buf.write(cfg.socketPath, p += 4, pathlen, "utf8");
+
+        return send(this, buf);
+    }
+
+    openssh_noMoreSessions(wantReply) {
+        if (this.server) {
+            throw new Error("Client-only method called in server mode");
+        }
+
+        const buf = new Buffer(1 + 4 + 28 + 1);
+
+        buf[0] = MESSAGE.GLOBAL_REQUEST;
+
+        buf.writeUInt32BE(28, 1, true);
+        buf.write("no-more-sessions@openssh.com", 5, 28, "ascii");
+
+        buf[33] = (wantReply === undefined || wantReply === true ? 1 : 0);
+
+        return send(this, buf);
+    }
+
+    session(chan, initWindow, maxPacket) {
+        if (this.server) {
+            throw new Error("Client-only method called in server mode");
+        }
+
+        // Does not consume window space
+        const buf = new Buffer(1 + 4 + 7 + 4 + 4 + 4);
+
+        buf[0] = MESSAGE.CHANNEL_OPEN;
+
+        buf.writeUInt32BE(7, 1, true);
+        buf.write("session", 5, 7, "ascii");
+
+        buf.writeUInt32BE(chan, 12, true);
+
+        buf.writeUInt32BE(initWindow, 16, true);
+
+        buf.writeUInt32BE(maxPacket, 20, true);
+
+        return send(this, buf);
+    }
+
+    windowChange(chan, rows, cols, height, width) {
+        if (this.server) {
+            throw new Error("Client-only method called in server mode");
+        }
+
+        // Does not consume window space
+        const buf = new Buffer(1 + 4 + 4 + 13 + 1 + 4 + 4 + 4 + 4);
+
+        buf[0] = MESSAGE.CHANNEL_REQUEST;
+
+        buf.writeUInt32BE(chan, 1, true);
+
+        buf.writeUInt32BE(13, 5, true);
+        buf.write("window-change", 9, 13, "ascii");
+
+        buf[22] = 0;
+
+        buf.writeUInt32BE(cols, 23, true);
+
+        buf.writeUInt32BE(rows, 27, true);
+
+        buf.writeUInt32BE(width, 31, true);
+
+        buf.writeUInt32BE(height, 35, true);
+
+        return send(this, buf);
+    }
+
+    pty(chan, rows, cols, height,
+        width, term, modes, wantReply) {
+        if (this.server) {
+            throw new Error("Client-only method called in server mode");
+        }
+
+        // Does not consume window space
+        if (!term || !term.length) {
+            term = "vt100";
+        }
+        if (modes &&
+            !Buffer.isBuffer(modes) &&
+            !Array.isArray(modes) &&
+            typeof modes === "object") {
+            modes = modesToBytes(modes);
+        }
+        if (!modes || !modes.length) {
+            modes = NO_TERMINAL_MODES_BUFFER;
+        }
+
+        const termLen = term.length;
+        const modesLen = modes.length;
+        let p = 21;
+        const buf = new Buffer(1 + 4 + 4 + 7 + 1 + 4 + termLen + 4 + 4 + 4 + 4 + 4 +
+            modesLen);
+
+        buf[0] = MESSAGE.CHANNEL_REQUEST;
+
+        buf.writeUInt32BE(chan, 1, true);
+
+        buf.writeUInt32BE(7, 5, true);
+        buf.write("pty-req", 9, 7, "ascii");
+
+        buf[16] = (wantReply === undefined || wantReply === true ? 1 : 0);
+
+        buf.writeUInt32BE(termLen, 17, true);
+        buf.write(term, 21, termLen, "utf8");
+
+        buf.writeUInt32BE(cols, p += termLen, true);
+
+        buf.writeUInt32BE(rows, p += 4, true);
+
+        buf.writeUInt32BE(width, p += 4, true);
+
+        buf.writeUInt32BE(height, p += 4, true);
+
+        buf.writeUInt32BE(modesLen, p += 4, true);
+        p += 4;
+        if (Array.isArray(modes)) {
+            for (let i = 0; i < modesLen; ++i) {
+                buf[p++] = modes[i];
+            }
+        } else if (Buffer.isBuffer(modes)) {
+            modes.copy(buf, p);
+        }
+
+        return send(this, buf);
+    }
+
+    shell(chan, wantReply) {
+        if (this.server) {
+            throw new Error("Client-only method called in server mode");
+        }
+
+        // Does not consume window space
+        const buf = new Buffer(1 + 4 + 4 + 5 + 1);
+
+        buf[0] = MESSAGE.CHANNEL_REQUEST;
+
+        buf.writeUInt32BE(chan, 1, true);
+
+        buf.writeUInt32BE(5, 5, true);
+        buf.write("shell", 9, 5, "ascii");
+
+        buf[14] = (wantReply === undefined || wantReply === true ? 1 : 0);
+
+        return send(this, buf);
+    }
+
+    exec(chan, cmd, wantReply) {
+        if (this.server) {
+            throw new Error("Client-only method called in server mode");
+        }
+
+        // Does not consume window space
+        const cmdlen = (Buffer.isBuffer(cmd) ? cmd.length : Buffer.byteLength(cmd));
+        const buf = new Buffer(1 + 4 + 4 + 4 + 1 + 4 + cmdlen);
+
+        buf[0] = MESSAGE.CHANNEL_REQUEST;
+
+        buf.writeUInt32BE(chan, 1, true);
+
+        buf.writeUInt32BE(4, 5, true);
+        buf.write("exec", 9, 4, "ascii");
+
+        buf[13] = (wantReply === undefined || wantReply === true ? 1 : 0);
+
+        buf.writeUInt32BE(cmdlen, 14, true);
+        if (Buffer.isBuffer(cmd)) {
+            cmd.copy(buf, 18);
+        } else {
+            buf.write(cmd, 18, cmdlen, "utf8");
+        }
+
+        return send(this, buf);
+    }
+
+    signal(chan, signal) {
+        if (this.server) {
+            throw new Error("Client-only method called in server mode");
+        }
+
+        // Does not consume window space
+        signal = signal.toUpperCase();
+        if (signal.slice(0, 3) === "SIG") {
+            signal = signal.substring(3);
+        }
+
+        if (SIGNALS.indexOf(signal) === -1) {
+            throw new Error(`Invalid signal: ${signal}`);
+        }
+
+        const signalLen = signal.length;
+        const buf = new Buffer(1 + 4 + 4 + 6 + 1 + 4 + signalLen);
+
+        buf[0] = MESSAGE.CHANNEL_REQUEST;
+
+        buf.writeUInt32BE(chan, 1, true);
+
+        buf.writeUInt32BE(6, 5, true);
+        buf.write("signal", 9, 6, "ascii");
+
+        buf[15] = 0;
+
+        buf.writeUInt32BE(signalLen, 16, true);
+        buf.write(signal, 20, signalLen, "ascii");
+
+        return send(this, buf);
+    }
+
+    env(chan, key, val, wantReply) {
+        if (this.server) {
+            throw new Error("Client-only method called in server mode");
+        }
+
+        // Does not consume window space
+        const keyLen = Buffer.byteLength(key);
+        const valLen = (Buffer.isBuffer(val) ? val.length : Buffer.byteLength(val));
+        const buf = new Buffer(1 + 4 + 4 + 3 + 1 + 4 + keyLen + 4 + valLen);
+
+        buf[0] = MESSAGE.CHANNEL_REQUEST;
+
+        buf.writeUInt32BE(chan, 1, true);
+
+        buf.writeUInt32BE(3, 5, true);
+        buf.write("env", 9, 3, "ascii");
+
+        buf[12] = (wantReply === undefined || wantReply === true ? 1 : 0);
+
+        buf.writeUInt32BE(keyLen, 13, true);
+        buf.write(key, 17, keyLen, "ascii");
+
+        buf.writeUInt32BE(valLen, 17 + keyLen, true);
+        if (Buffer.isBuffer(val)) {
+            val.copy(buf, 17 + keyLen + 4);
+        } else {
+            buf.write(val, 17 + keyLen + 4, valLen, "utf8");
+        }
+
+        return send(this, buf);
+    }
+
+    x11Forward(chan, cfg, wantReply) {
+        if (this.server) {
+            throw new Error("Client-only method called in server mode");
+        }
+
+        // Does not consume window space
+        const protolen = Buffer.byteLength(cfg.protocol);
+        const cookielen = Buffer.byteLength(cfg.cookie);
+        const buf = new Buffer(1 + 4 + 4 + 7 + 1 + 1 + 4 + protolen + 4 + cookielen +
+            4);
+
+        buf[0] = MESSAGE.CHANNEL_REQUEST;
+
+        buf.writeUInt32BE(chan, 1, true);
+
+        buf.writeUInt32BE(7, 5, true);
+        buf.write("x11-req", 9, 7, "ascii");
+
+        buf[16] = (wantReply === undefined || wantReply === true ? 1 : 0);
+
+        buf[17] = (cfg.single ? 1 : 0);
+
+        buf.writeUInt32BE(protolen, 18, true);
+        let bp = 22;
+        if (Buffer.isBuffer(cfg.protocol)) {
+            cfg.protocol.copy(buf, bp);
+        } else {
+            buf.write(cfg.protocol, bp, protolen, "utf8");
+        }
+        bp += protolen;
+
+        buf.writeUInt32BE(cookielen, bp, true);
+        bp += 4;
+        if (Buffer.isBuffer(cfg.cookie)) {
+            cfg.cookie.copy(buf, bp);
+        } else {
+            buf.write(cfg.cookie, bp, cookielen, "utf8");
+        }
+        bp += cookielen;
+
+        buf.writeUInt32BE((cfg.screen || 0), bp, true);
+
+        return send(this, buf);
+    }
+
+    subsystem(chan, name, wantReply) {
+        if (this.server) {
+            throw new Error("Client-only method called in server mode");
+        }
+
+        // Does not consume window space
+        const nameLen = Buffer.byteLength(name);
+        const buf = new Buffer(1 + 4 + 4 + 9 + 1 + 4 + nameLen);
+
+        buf[0] = MESSAGE.CHANNEL_REQUEST;
+
+        buf.writeUInt32BE(chan, 1, true);
+
+        buf.writeUInt32BE(9, 5, true);
+        buf.write("subsystem", 9, 9, "ascii");
+
+        buf[18] = (wantReply === undefined || wantReply === true ? 1 : 0);
+
+        buf.writeUInt32BE(nameLen, 19, true);
+        buf.write(name, 23, nameLen, "ascii");
+
+        return send(this, buf);
+    }
+
+    openssh_agentForward(chan, wantReply) {
+        if (this.server) {
+            throw new Error("Client-only method called in server mode");
+        }
+
+        // Does not consume window space
+        const buf = new Buffer(1 + 4 + 4 + 26 + 1);
+
+        buf[0] = MESSAGE.CHANNEL_REQUEST;
+
+        buf.writeUInt32BE(chan, 1, true);
+
+        buf.writeUInt32BE(26, 5, true);
+        buf.write("auth-agent-req@openssh.com", 9, 26, "ascii");
+
+        buf[35] = (wantReply === undefined || wantReply === true ? 1 : 0);
+
+        return send(this, buf);
+    }
+
+    // "ssh-userauth" service-specific
+    authPassword(username, password) {
+        if (this.server) {
+            throw new Error("Client-only method called in server mode");
+        }
+
+        const userLen = Buffer.byteLength(username);
+        const passLen = Buffer.byteLength(password);
+        let p = 0;
+        const buf = new Buffer(1 +
+            4 + userLen +
+            4 + 14 // "ssh-connection"
+            +
+            4 + 8 // "password"
+            +
+            1 +
+            4 + passLen);
+
+        buf[p] = MESSAGE.USERAUTH_REQUEST;
+
+        buf.writeUInt32BE(userLen, ++p, true);
+        buf.write(username, p += 4, userLen, "utf8");
+
+        buf.writeUInt32BE(14, p += userLen, true);
+        buf.write("ssh-connection", p += 4, 14, "ascii");
+
+        buf.writeUInt32BE(8, p += 14, true);
+        buf.write("password", p += 4, 8, "ascii");
+
+        buf[p += 8] = 0;
+
+        buf.writeUInt32BE(passLen, ++p, true);
+        buf.write(password, p += 4, passLen, "utf8");
+
+        this._state.authsQueue.push("password");
+        return send(this, buf);
+    }
+
+    authPK(username, pubKey, cbSign) {
+        if (this.server) {
+            throw new Error("Client-only method called in server mode");
+        }
+
+        const self = this;
+        const outstate = this._state.outgoing;
+        let pubKeyFullType;
+
+        if (pubKey.public) {
+            pubKeyFullType = pubKey.fulltype;
+            pubKey = pubKey.public;
+        } else {
+            pubKeyFullType = pubKey.toString("ascii",
+                4,
+                4 + pubKey.readUInt32BE(0, true));
+        }
+
+        const userLen = Buffer.byteLength(username);
+        const algoLen = Buffer.byteLength(pubKeyFullType);
+        const pubKeyLen = pubKey.length;
+        const sesLen = outstate.sessionId.length;
+        let p = 0;
+        const buf = new Buffer((cbSign ? 4 + sesLen : 0) +
+            1 +
+            4 + userLen +
+            4 + 14 // "ssh-connection"
+            +
+            4 + 9 // "publickey"
+            +
+            1 +
+            4 + algoLen +
+            4 + pubKeyLen
+        );
+
+        if (cbSign) {
+            buf.writeUInt32BE(sesLen, p, true);
+            outstate.sessionId.copy(buf, p += 4);
+            buf[p += sesLen] = MESSAGE.USERAUTH_REQUEST;
+        } else {
+            buf[p] = MESSAGE.USERAUTH_REQUEST;
+        }
+
+        buf.writeUInt32BE(userLen, ++p, true);
+        buf.write(username, p += 4, userLen, "utf8");
+
+        buf.writeUInt32BE(14, p += userLen, true);
+        buf.write("ssh-connection", p += 4, 14, "ascii");
+
+        buf.writeUInt32BE(9, p += 14, true);
+        buf.write("publickey", p += 4, 9, "ascii");
+
+        buf[p += 9] = (cbSign ? 1 : 0);
+
+        buf.writeUInt32BE(algoLen, ++p, true);
+        buf.write(pubKeyFullType, p += 4, algoLen, "ascii");
+
+        buf.writeUInt32BE(pubKeyLen, p += algoLen, true);
+        pubKey.copy(buf, p += 4);
+
+        if (!cbSign) {
+            this._state.authsQueue.push("publickey");
+            return send(this, buf);
+        }
+
+        cbSign(buf, (signature) => {
+            if (pubKeyFullType === "ssh-dss") {
+                signature = DSASigBERToBare(signature);
+            } else if (pubKeyFullType !== "ssh-rsa") {
+                // ECDSA
+                signature = ECDSASigASN1ToSSH(signature);
+            }
+
+            const sigLen = signature.length;
+            const sigbuf = new Buffer(1 +
+                4 + userLen +
+                4 + 14 // "ssh-connection"
+                +
+                4 + 9 // "publickey"
+                +
+                1 +
+                4 + algoLen +
+                4 + pubKeyLen +
+                4 // 4 + algoLen + 4 + sigLen
+                +
+                4 + algoLen +
+                4 + sigLen);
+
+            p = 0;
+
+            sigbuf[p] = MESSAGE.USERAUTH_REQUEST;
+
+            sigbuf.writeUInt32BE(userLen, ++p, true);
+            sigbuf.write(username, p += 4, userLen, "utf8");
+
+            sigbuf.writeUInt32BE(14, p += userLen, true);
+            sigbuf.write("ssh-connection", p += 4, 14, "ascii");
+
+            sigbuf.writeUInt32BE(9, p += 14, true);
+            sigbuf.write("publickey", p += 4, 9, "ascii");
+
+            sigbuf[p += 9] = 1;
+
+            sigbuf.writeUInt32BE(algoLen, ++p, true);
+            sigbuf.write(pubKeyFullType, p += 4, algoLen, "ascii");
+
+            sigbuf.writeUInt32BE(pubKeyLen, p += algoLen, true);
+            pubKey.copy(sigbuf, p += 4);
+            sigbuf.writeUInt32BE(4 + algoLen + 4 + sigLen, p += pubKeyLen, true);
+            sigbuf.writeUInt32BE(algoLen, p += 4, true);
+            sigbuf.write(pubKeyFullType, p += 4, algoLen, "ascii");
+            sigbuf.writeUInt32BE(sigLen, p += algoLen, true);
+            signature.copy(sigbuf, p += 4);
+
+            // Servers shouldn"t send packet type 60 in response to signed publickey
+            // attempts, but if they do, interpret as type 60.
+            self._state.authsQueue.push("publickey");
+            return send(self, sigbuf);
+        });
+        return true;
+    }
+
+    authHostbased(username, pubKey, hostname,
+        userlocal, cbSign) {
+        // TODO: Make DRY by sharing similar code with authPK()
+
+        if (this.server) {
+            throw new Error("Client-only method called in server mode");
+        }
+
+        const self = this;
+        const outstate = this._state.outgoing;
+        let pubKeyFullType;
+
+        if (pubKey.public) {
+            pubKeyFullType = pubKey.fulltype;
+            pubKey = pubKey.public;
+        } else {
+            pubKeyFullType = pubKey.toString("ascii",
+                4,
+                4 + pubKey.readUInt32BE(0, true));
+        }
+
+        const userLen = Buffer.byteLength(username);
+        const algoLen = Buffer.byteLength(pubKeyFullType);
+        const pubKeyLen = pubKey.length;
+        const sesLen = outstate.sessionId.length;
+        const hostnameLen = Buffer.byteLength(hostname);
+        const userlocalLen = Buffer.byteLength(userlocal);
+        let p = 0;
+        const buf = new Buffer(4 + sesLen +
+            1 +
+            4 + userLen +
+            4 + 14 // "ssh-connection"
+            +
+            4 + 9 // "hostbased"
+            +
+            4 + algoLen +
+            4 + pubKeyLen +
+            4 + hostnameLen +
+            4 + userlocalLen
+        );
+
+        buf.writeUInt32BE(sesLen, p, true);
+        outstate.sessionId.copy(buf, p += 4);
+
+        buf[p += sesLen] = MESSAGE.USERAUTH_REQUEST;
+
+        buf.writeUInt32BE(userLen, ++p, true);
+        buf.write(username, p += 4, userLen, "utf8");
+
+        buf.writeUInt32BE(14, p += userLen, true);
+        buf.write("ssh-connection", p += 4, 14, "ascii");
+
+        buf.writeUInt32BE(9, p += 14, true);
+        buf.write("hostbased", p += 4, 9, "ascii");
+
+        buf.writeUInt32BE(algoLen, p += 9, true);
+        buf.write(pubKeyFullType, p += 4, algoLen, "ascii");
+
+        buf.writeUInt32BE(pubKeyLen, p += algoLen, true);
+        pubKey.copy(buf, p += 4);
+
+        buf.writeUInt32BE(hostnameLen, p += pubKeyLen, true);
+        buf.write(hostname, p += 4, hostnameLen, "ascii");
+
+        buf.writeUInt32BE(userlocalLen, p += hostnameLen, true);
+        buf.write(userlocal, p += 4, userlocalLen, "utf8");
+
+        cbSign(buf, (signature) => {
+            if (pubKeyFullType === "ssh-dss") {
+                signature = DSASigBERToBare(signature);
+            } else if (pubKeyFullType !== "ssh-rsa") {
+                // ECDSA
+                signature = ECDSASigASN1ToSSH(signature);
+            }
+            const sigLen = signature.length;
+            const sigbuf = new Buffer((buf.length - sesLen) + sigLen);
+
+            buf.copy(sigbuf, 0, 4 + sesLen);
+            sigbuf.writeUInt32BE(sigLen, sigbuf.length - sigLen - 4, true);
+            signature.copy(sigbuf, sigbuf.length - sigLen);
+
+            self._state.authsQueue.push("hostbased");
+            return send(self, sigbuf);
+        });
+        return true;
+    }
+
+    authKeyboard(username) {
+        if (this.server) {
+            throw new Error("Client-only method called in server mode");
+        }
+
+        const userLen = Buffer.byteLength(username);
+        let p = 0;
+        const buf = new Buffer(1 +
+            4 + userLen +
+            4 + 14 // "ssh-connection"
+            +
+            4 + 20 // "keyboard-interactive"
+            +
+            4 // no language set
+            +
+            4 // no submethods
+        );
+
+        buf[p] = MESSAGE.USERAUTH_REQUEST;
+
+        buf.writeUInt32BE(userLen, ++p, true);
+        buf.write(username, p += 4, userLen, "utf8");
+
+        buf.writeUInt32BE(14, p += userLen, true);
+        buf.write("ssh-connection", p += 4, 14, "ascii");
+
+        buf.writeUInt32BE(20, p += 14, true);
+        buf.write("keyboard-interactive", p += 4, 20, "ascii");
+
+        buf.writeUInt32BE(0, p += 20, true);
+
+        buf.writeUInt32BE(0, p += 4, true);
+
+        this._state.authsQueue.push("keyboard-interactive");
+        return send(this, buf);
+    }
+
+    authNone(username) {
+        if (this.server) {
+            throw new Error("Client-only method called in server mode");
+        }
+
+        const userLen = Buffer.byteLength(username);
+        let p = 0;
+        const buf = new Buffer(1 +
+            4 + userLen +
+            4 + 14 // "ssh-connection"
+            +
+            4 + 4 // "none"
+        );
+
+        buf[p] = MESSAGE.USERAUTH_REQUEST;
+
+        buf.writeUInt32BE(userLen, ++p, true);
+        buf.write(username, p += 4, userLen, "utf8");
+
+        buf.writeUInt32BE(14, p += userLen, true);
+        buf.write("ssh-connection", p += 4, 14, "ascii");
+
+        buf.writeUInt32BE(4, p += 14, true);
+        buf.write("none", p += 4, 4, "ascii");
+
+        this._state.authsQueue.push("none");
+        return send(this, buf);
+    }
+
+    authInfoRes(responses) {
+        if (this.server) {
+            throw new Error("Client-only method called in server mode");
+        }
+
+        let responsesLen = 0;
+        let p = 0;
+        let resLen;
+        let len;
+        let i;
+
+        if (responses) {
+            for (i = 0, len = responses.length; i < len; ++i) {
+                responsesLen += 4 + Buffer.byteLength(responses[i]);
+            }
+        }
+        const buf = new Buffer(1 + 4 + responsesLen);
+
+        buf[p++] = MESSAGE.USERAUTH_INFO_RESPONSE;
+
+        buf.writeUInt32BE(responses ? responses.length : 0, p, true);
+        if (responses) {
+            p += 4;
+            for (i = 0, len = responses.length; i < len; ++i) {
+                resLen = Buffer.byteLength(responses[i]);
+                buf.writeUInt32BE(resLen, p, true);
+                p += 4;
+                if (resLen) {
+                    buf.write(responses[i], p, resLen, "utf8");
+                    p += resLen;
+                }
+            }
+        }
+
+        return send(this, buf);
+    }
+
+    // Server-specific methods
+    // Global
+    serviceAccept(svcName) {
+        if (!this.server) {
+            throw new Error("Server-only method called in client mode");
+        }
+
+        const svcNameLen = svcName.length;
+        const buf = new Buffer(1 + 4 + svcNameLen);
+
+        buf[0] = MESSAGE.SERVICE_ACCEPT;
+
+        buf.writeUInt32BE(svcNameLen, 1, true);
+        buf.write(svcName, 5, svcNameLen, "ascii");
+
+        send(this, buf);
+
+        if (this.server && this.banner && svcName === "ssh-userauth") {
+            /*
+            byte      SSH_MSG_USERAUTH_BANNER
+            string    message in ISO-10646 UTF-8 encoding
+            string    language tag
+            */
+            let bannerLen = Buffer.byteLength(this.banner);
+            let packetLen = 1 + 4 + bannerLen + 4;
+            if (packetLen > BUFFER_MAX_LEN) {
+                bannerLen -= 1 + 4 + 4;
+                packetLen -= 1 + 4 + 4;
+            }
+            const packet = new Buffer(packetLen);
+            packet[0] = MESSAGE.USERAUTH_BANNER;
+            packet.writeUInt32BE(bannerLen, 1, true);
+            packet.write(this.banner, 5, bannerLen, "utf8");
+            packet.fill(0, packetLen - 4); // Empty language tag
+            send(this, packet);
+            this.banner = undefined; // Prevent banner from being displayed again
+        }
+    }
+
+    // "ssh-connection" service-specific
+    forwardedTcpip(chan, initWindow, maxPacket,
+        cfg) {
+        if (!this.server) {
+            throw new Error("Server-only method called in client mode");
+        }
+
+        const boundAddrLen = Buffer.byteLength(cfg.boundAddr);
+        const remoteAddrLen = Buffer.byteLength(cfg.remoteAddr);
+        let p = 36 + boundAddrLen;
+        const buf = new Buffer(1 + 4 + 15 + 4 + 4 + 4 + 4 + boundAddrLen + 4 + 4 +
+            remoteAddrLen + 4);
+
+        buf[0] = MESSAGE.CHANNEL_OPEN;
+
+        buf.writeUInt32BE(15, 1, true);
+        buf.write("forwarded-tcpip", 5, 15, "ascii");
+
+        buf.writeUInt32BE(chan, 20, true);
+
+        buf.writeUInt32BE(initWindow, 24, true);
+
+        buf.writeUInt32BE(maxPacket, 28, true);
+
+        buf.writeUInt32BE(boundAddrLen, 32, true);
+        buf.write(cfg.boundAddr, 36, boundAddrLen, "ascii");
+
+        buf.writeUInt32BE(cfg.boundPort, p, true);
+
+        buf.writeUInt32BE(remoteAddrLen, p += 4, true);
+        buf.write(cfg.remoteAddr, p += 4, remoteAddrLen, "ascii");
+
+        buf.writeUInt32BE(cfg.remotePort, p += remoteAddrLen, true);
+
+        return send(this, buf);
+    }
+
+    x11(chan, initWindow, maxPacket, cfg) {
+        if (!this.server) {
+            throw new Error("Server-only method called in client mode");
+        }
+
+        const addrLen = Buffer.byteLength(cfg.originAddr);
+        const p = 24 + addrLen;
+        const buf = new Buffer(1 + 4 + 3 + 4 + 4 + 4 + 4 + addrLen + 4);
+
+        buf[0] = MESSAGE.CHANNEL_OPEN;
+
+        buf.writeUInt32BE(3, 1, true);
+        buf.write("x11", 5, 3, "ascii");
+
+        buf.writeUInt32BE(chan, 8, true);
+
+        buf.writeUInt32BE(initWindow, 12, true);
+
+        buf.writeUInt32BE(maxPacket, 16, true);
+
+        buf.writeUInt32BE(addrLen, 20, true);
+        buf.write(cfg.originAddr, 24, addrLen, "ascii");
+
+        buf.writeUInt32BE(cfg.originPort, p, true);
+
+        return send(this, buf);
+    }
+
+    openssh_forwardedStreamLocal(chan, initWindow,
+        maxPacket, cfg) {
+        if (!this.server) {
+            throw new Error("Server-only method called in client mode");
+        }
+
+        const pathlen = Buffer.byteLength(cfg.socketPath);
+        const buf = new Buffer(1 + 4 + 33 + 4 + 4 + 4 + 4 + pathlen + 4);
+
+        buf[0] = MESSAGE.CHANNEL_OPEN;
+
+        buf.writeUInt32BE(33, 1, true);
+        buf.write("forwarded-streamlocal@openssh.com", 5, 33, "ascii");
+
+        buf.writeUInt32BE(chan, 38, true);
+
+        buf.writeUInt32BE(initWindow, 42, true);
+
+        buf.writeUInt32BE(maxPacket, 46, true);
+
+        buf.writeUInt32BE(pathlen, 50, true);
+        buf.write(cfg.socketPath, 54, pathlen, "utf8");
+
+        buf.writeUInt32BE(0, 54 + pathlen, true);
+
+        return send(this, buf);
+    }
+
+    exitStatus(chan, status) {
+        if (!this.server) {
+            throw new Error("Server-only method called in client mode");
+        }
+
+        // Does not consume window space
+        const buf = new Buffer(1 + 4 + 4 + 11 + 1 + 4);
+
+        buf[0] = MESSAGE.CHANNEL_REQUEST;
+
+        buf.writeUInt32BE(chan, 1, true);
+
+        buf.writeUInt32BE(11, 5, true);
+        buf.write("exit-status", 9, 11, "ascii");
+
+        buf[20] = 0;
+
+        buf.writeUInt32BE(status, 21, true);
+
+        return send(this, buf);
+    }
+
+    exitSignal(chan, name, coreDumped, msg) {
+        if (!this.server) {
+            throw new Error("Server-only method called in client mode");
+        }
+
+        // Does not consume window space
+        const nameLen = Buffer.byteLength(name);
+        const msgLen = (msg ? Buffer.byteLength(msg) : 0);
+        let p = 25 + nameLen;
+        const buf = new Buffer(1 + 4 + 4 + 11 + 1 + 4 + nameLen + 1 + 4 + msgLen + 4);
+
+        buf[0] = MESSAGE.CHANNEL_REQUEST;
+
+        buf.writeUInt32BE(chan, 1, true);
+
+        buf.writeUInt32BE(11, 5, true);
+        buf.write("exit-signal", 9, 11, "ascii");
+
+        buf[20] = 0;
+
+        buf.writeUInt32BE(nameLen, 21, true);
+        buf.write(name, 25, nameLen, "utf8");
+
+        buf[p++] = (coreDumped ? 1 : 0);
+
+        buf.writeUInt32BE(msgLen, p, true);
+        p += 4;
+        if (msgLen) {
+            buf.write(msg, p, msgLen, "utf8");
+            p += msgLen;
+        }
+
+        buf.writeUInt32BE(0, p, true);
+
+        return send(this, buf);
+    }
+
+    // "ssh-userauth" service-specific
+    authFailure(authMethods, isPartial) {
+        if (!this.server) {
+            throw new Error("Server-only method called in client mode");
+        }
+
+        const authsQueue = this._state.authsQueue;
+        if (!authsQueue.length) {
+            throw new Error("No auth in progress");
+        }
+
+        let methods;
+
+        if (typeof authMethods === "boolean") {
+            isPartial = authMethods;
+            authMethods = undefined;
+        }
+
+        if (authMethods) {
+            methods = [];
+            for (let i = 0, len = authMethods.length; i < len; ++i) {
+                if (authMethods[i].toLowerCase() === "none") {
+                    continue;
+                }
+                methods.push(authMethods[i]);
+            }
+            methods = methods.join(",");
+        } else {
+            methods = "";
+        }
+
+        const methodsLen = methods.length;
+        const buf = new Buffer(1 + 4 + methodsLen + 1);
+
+        buf[0] = MESSAGE.USERAUTH_FAILURE;
+
+        buf.writeUInt32BE(methodsLen, 1, true);
+        buf.write(methods, 5, methodsLen, "ascii");
+
+        buf[5 + methodsLen] = (isPartial === true ? 1 : 0);
+
+        this._state.authsQueue.shift();
+        return send(this, buf);
+    }
+
+    authSuccess() {
+        if (!this.server) {
+            throw new Error("Server-only method called in client mode");
+        }
+
+        const authsQueue = this._state.authsQueue;
+        if (!authsQueue.length) {
+            throw new Error("No auth in progress");
+        }
+
+        this._state.authsQueue.shift();
+        return send(this, USERAUTH_SUCCESS_PACKET);
+    }
+
+    authPKOK(keyAlgo, key) {
+        if (!this.server) {
+            throw new Error("Server-only method called in client mode");
+        }
+
+        const authsQueue = this._state.authsQueue;
+        if (!authsQueue.length || authsQueue[0] !== "publickey") {
+            throw new Error("\"publickey\" auth not in progress");
+        }
+
+        const keyAlgoLen = keyAlgo.length;
+        const keyLen = key.length;
+        const buf = new Buffer(1 + 4 + keyAlgoLen + 4 + keyLen);
+
+        buf[0] = MESSAGE.USERAUTH_PK_OK;
+
+        buf.writeUInt32BE(keyAlgoLen, 1, true);
+        buf.write(keyAlgo, 5, keyAlgoLen, "ascii");
+
+        buf.writeUInt32BE(keyLen, 5 + keyAlgoLen, true);
+        key.copy(buf, 5 + keyAlgoLen + 4);
+
+        this._state.authsQueue.shift();
+        return send(this, buf);
+    }
+
+    authPasswdChg(prompt, lang) {
+        if (!this.server) {
+            throw new Error("Server-only method called in client mode");
+        }
+
+        const promptLen = Buffer.byteLength(prompt);
+        const langLen = lang ? lang.length : 0;
+        let p = 0;
+        const buf = new Buffer(1 + 4 + promptLen + 4 + langLen);
+
+        buf[p] = MESSAGE.USERAUTH_PASSWD_CHANGEREQ;
+
+        buf.writeUInt32BE(promptLen, ++p, true);
+        buf.write(prompt, p += 4, promptLen, "utf8");
+
+        buf.writeUInt32BE(langLen, p += promptLen, true);
+        if (langLen) {
+            buf.write(lang, p += 4, langLen, "ascii");
+        }
+
+        return send(this, buf);
+    }
+
+    authInfoReq(name, instructions, prompts) {
+        if (!this.server) {
+            throw new Error("Server-only method called in client mode");
+        }
+
+        let promptsLen = 0;
+        const nameLen = name ? Buffer.byteLength(name) : 0;
+        const instrLen = instructions ? Buffer.byteLength(instructions) : 0;
+        let p = 0;
+        let promptLen;
+        let prompt;
+        let len;
+        let i;
+
+        for (i = 0, len = prompts.length; i < len; ++i) {
+            promptsLen += 4 + Buffer.byteLength(prompts[i].prompt) + 1;
+        }
+        const buf = new Buffer(1 + 4 + nameLen + 4 + instrLen + 4 + 4 + promptsLen);
+
+        buf[p++] = MESSAGE.USERAUTH_INFO_REQUEST;
+
+        buf.writeUInt32BE(nameLen, p, true);
+        p += 4;
+        if (name) {
+            buf.write(name, p, nameLen, "utf8");
+            p += nameLen;
+        }
+
+        buf.writeUInt32BE(instrLen, p, true);
+        p += 4;
+        if (instructions) {
+            buf.write(instructions, p, instrLen, "utf8");
+            p += instrLen;
+        }
+
+        buf.writeUInt32BE(0, p, true);
+        p += 4;
+
+        buf.writeUInt32BE(prompts.length, p, true);
+        p += 4;
+        for (i = 0, len = prompts.length; i < len; ++i) {
+            prompt = prompts[i];
+            promptLen = Buffer.byteLength(prompt.prompt);
+            buf.writeUInt32BE(promptLen, p, true);
+            p += 4;
+            if (promptLen) {
+                buf.write(prompt.prompt, p, promptLen, "utf8");
+                p += promptLen;
+            }
+            buf[p++] = (prompt.echo ? 1 : 0);
+        }
+
+        return send(this, buf);
+    }
+}
+SSH2Stream._send = send;

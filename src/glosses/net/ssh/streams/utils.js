@@ -1,4 +1,3 @@
-
 const crypto = adone.std.crypto;
 const asn1 = adone.crypto.asn1;
 
@@ -13,45 +12,26 @@ const RE_KEY_LEN = /(.{64})/g;
 const MAX_STRING_LEN = Infinity; //2400; // taken from dropbear
 const PPK_IV = new Buffer([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
-module.exports = {
-    iv_inc,
-    isStreamCipher,
-    readInt,
-    readString,
-    parseKey: keyParser,
-    genPublicKey,
-    convertPPKPrivate,
-    verifyPPKMAC,
-    decryptKey,
-    DSASigBERToBare,
-    DSASigBareToBER,
-    ECDSASigASN1ToSSH,
-    ECDSASigSSHToASN1,
-    RSAKeySSHToASN1,
-    DSAKeySSHToASN1,
-    ECDSAKeySSHToASN1
-};
+module.exports.parseKey = keyParser;
 
-function iv_inc(iv) {
+export const iv_inc = (iv) => {
     let n = 12;
     let c = 0;
     do {
         --n;
         c = iv[n];
-        if (c === 255)
-        { iv[n] = 0; }
-        else {
+        if (c === 255) {
+            iv[n] = 0;
+        } else {
             iv[n] = ++c;
             return;
         }
     } while (n > 4);
-}
+};
 
-function isStreamCipher(name) {
-    return RE_STREAM.test(name);
-}
+export const isStreamCipher = (name) => RE_STREAM.test(name);
 
-function readInt(buffer, start, stream, cb) {
+export const readInt = (buffer, start, stream, cb) => {
     const bufferLen = buffer.length;
     if (start < 0 || start >= bufferLen || (bufferLen - start) < 4) {
         stream && stream._cleanup(cb);
@@ -59,662 +39,54 @@ function readInt(buffer, start, stream, cb) {
     }
 
     return buffer.readUInt32BE(start, true);
-}
+};
 
-function DSASigBERToBare(signature) {
-    if (signature.length <= 40)
-    { return signature; }
-    // This is a quick and dirty way to get from BER encoded r and s that
-    // OpenSSL gives us, to just the bare values back to back (40 bytes
-    // total) like OpenSSH (and possibly others) are expecting
-    const asnReader = new asn1.ber.Reader(signature);
-    asnReader.readSequence();
-    let r = asnReader.readString(asn1.type.Integer, true);
-    let s = asnReader.readString(asn1.type.Integer, true);
-    let rOffset = 0;
-    let sOffset = 0;
-    if (r.length < 20) {
-        const rNew = new Buffer(20);
-        r.copy(rNew, 1);
-        r = rNew;
-        r[0] = 0;
-    }
-    if (s.length < 20) {
-        const sNew = new Buffer(20);
-        s.copy(sNew, 1);
-        s = sNew;
-        s[0] = 0;
-    }
-    if (r.length > 20 && r[0] === 0x00)
-    { rOffset = 1; }
-    if (s.length > 20 && s[0] === 0x00)
-    { sOffset = 1; }
-    const newSig = new Buffer((r.length - rOffset) + (s.length - sOffset));
-    r.copy(newSig, 0, rOffset);
-    s.copy(newSig, r.length - rOffset, sOffset);
-    return newSig;
-}
-
-function DSASigBareToBER(signature) {
-    if (signature.length > 40)
-    { return signature; }
-    // Change bare signature r and s values to ASN.1 BER values for OpenSSL
-    const asnWriter = new asn1.ber.Writer();
-    asnWriter.startSequence();
-    let r = signature.slice(0, 20);
-    let s = signature.slice(20);
-    if (r[0] & 0x80) {
-        const rNew = new Buffer(21);
-        rNew[0] = 0x00;
-        r.copy(rNew, 1);
-        r = rNew;
-    } else if (r[0] === 0x00 && !(r[1] & 0x80)) {
-        r = r.slice(1);
-    }
-    if (s[0] & 0x80) {
-        const sNew = new Buffer(21);
-        sNew[0] = 0x00;
-        s.copy(sNew, 1);
-        s = sNew;
-    } else if (s[0] === 0x00 && !(s[1] & 0x80)) {
-        s = s.slice(1);
-    }
-    asnWriter.writeBuffer(r, asn1.type.Integer);
-    asnWriter.writeBuffer(s, asn1.type.Integer);
-    asnWriter.endSequence();
-    return asnWriter.buffer;
-}
-
-function ECDSASigASN1ToSSH(signature) {
-    if (signature[0] === 0x00)
-    { return signature; }
-    // Convert SSH signature parameters to ASN.1 BER values for OpenSSL
-    const asnReader = new asn1.ber.Reader(signature);
-    asnReader.readSequence();
-    const r = asnReader.readString(asn1.type.Integer, true);
-    const s = asnReader.readString(asn1.type.Integer, true);
-    if (r === null || s === null)
-    { throw new Error("Invalid signature"); }
-    const newSig = new Buffer(4 + r.length + 4 + s.length);
-    newSig.writeUInt32BE(r.length, 0, true);
-    r.copy(newSig, 4);
-    newSig.writeUInt32BE(s.length, 4 + r.length, true);
-    s.copy(newSig, 4 + 4 + r.length);
-    return newSig;
-}
-
-function ECDSASigSSHToASN1(signature, self, callback) {
-    // Convert SSH signature parameters to ASN.1 BER values for OpenSSL
-    const r = readString(signature, 0, self, callback);
-    if (r === false)
-    { return false; }
-    const s = readString(signature, signature._pos, self, callback);
-    if (s === false)
-    { return false; }
-
-    const asnWriter = new asn1.ber.Writer();
-    asnWriter.startSequence();
-    asnWriter.writeBuffer(r, asn1.type.Integer);
-    asnWriter.writeBuffer(s, asn1.type.Integer);
-    asnWriter.endSequence();
-    return asnWriter.buffer;
-}
-
-function RSAKeySSHToASN1(key, self, callback) {
-    // Convert SSH key parameters to ASN.1 BER values for OpenSSL
-    const e = readString(key, key._pos, self, callback);
-    if (e === false)
-    { return false; }
-    const n = readString(key, key._pos, self, callback);
-    if (n === false)
-    { return false; }
-
-    const asnWriter = new asn1.ber.Writer();
-    asnWriter.startSequence();
-    // algorithm
-    asnWriter.startSequence();
-    asnWriter.writeOID("1.2.840.113549.1.1.1"); // rsaEncryption
-    // algorithm parameters (RSA has none)
-    asnWriter.writeNull();
-    asnWriter.endSequence();
-
-    // subjectPublicKey
-    asnWriter.startSequence(asn1.type.BitString);
-    asnWriter.writeByte(0x00);
-    asnWriter.startSequence();
-    asnWriter.writeBuffer(n, asn1.type.Integer);
-    asnWriter.writeBuffer(e, asn1.type.Integer);
-    asnWriter.endSequence();
-    asnWriter.endSequence();
-    asnWriter.endSequence();
-    return asnWriter.buffer;
-}
-
-function DSAKeySSHToASN1(key, self, callback) {
-    // Convert SSH key parameters to ASN.1 BER values for OpenSSL
-    const p = readString(key, key._pos, self, callback);
-    if (p === false)
-    { return false; }
-    const q = readString(key, key._pos, self, callback);
-    if (q === false)
-    { return false; }
-    const g = readString(key, key._pos, self, callback);
-    if (g === false)
-    { return false; }
-    const y = readString(key, key._pos, self, callback);
-    if (y === false)
-    { return false; }
-
-    const asnWriter = new asn1.ber.Writer();
-    asnWriter.startSequence();
-    // algorithm
-    asnWriter.startSequence();
-    asnWriter.writeOID("1.2.840.10040.4.1"); // id-dsa
-    // algorithm parameters
-    asnWriter.startSequence();
-    asnWriter.writeBuffer(p, asn1.type.Integer);
-    asnWriter.writeBuffer(q, asn1.type.Integer);
-    asnWriter.writeBuffer(g, asn1.type.Integer);
-    asnWriter.endSequence();
-    asnWriter.endSequence();
-
-    // subjectPublicKey
-    asnWriter.startSequence(asn1.type.BitString);
-    asnWriter.writeByte(0x00);
-    asnWriter.writeBuffer(y, asn1.type.Integer);
-    asnWriter.endSequence();
-    asnWriter.endSequence();
-    return asnWriter.buffer;
-}
-
-function ECDSAKeySSHToASN1(key, self, callback) {
-    // Convert SSH key parameters to ASN.1 BER values for OpenSSL
-    const curve = readString(key, key._pos, self, callback);
-    if (curve === false)
-    { return false; }
-    const Q = readString(key, key._pos, self, callback);
-    if (Q === false)
-    { return false; }
-
-    let ecCurveOID;
-    switch (curve.toString("ascii")) {
-        case "nistp256":
-            // prime256v1/secp256r1
-            ecCurveOID = "1.2.840.10045.3.1.7";
-            break;
-        case "nistp384":
-            // secp384r1
-            ecCurveOID = "1.3.132.0.34";
-            break;
-        case "nistp521":
-            // secp521r1
-            ecCurveOID = "1.3.132.0.35";
-            break;
-        default:
-            return false;
-    }
-    const asnWriter = new asn1.ber.Writer();
-    asnWriter.startSequence();
-    // algorithm
-    asnWriter.startSequence();
-    asnWriter.writeOID("1.2.840.10045.2.1"); // id-ecPublicKey
-    // algorithm parameters (namedCurve)
-    asnWriter.writeOID(ecCurveOID);
-    asnWriter.endSequence();
-
-    // subjectPublicKey
-    asnWriter.startSequence(asn1.type.BitString);
-    asnWriter.writeByte(0x00);
-    // XXX: hack to write a raw buffer without a tag -- yuck
-    asnWriter._ensure(Q.length);
-    Q.copy(asnWriter._buf, asnWriter._offset, 0, Q.length);
-    asnWriter._offset += Q.length;
-    // end hack
-    asnWriter.endSequence();
-    asnWriter.endSequence();
-    return asnWriter.buffer;
-}
-
-function decryptKey(keyInfo, passphrase) {
-    if (keyInfo._decrypted || !keyInfo.encryption)
-    { return; }
-
-    let keylen = 0;
-    let key;
-    let iv;
-    let dc;
-
-    keyInfo.encryption = (SSH_TO_OPENSSL[keyInfo.encryption] ||
-        keyInfo.encryption);
-    switch (keyInfo.encryption) {
-        case "aes-256-cbc":
-        case "aes-256-ctr":
-            keylen = 32;
-            break;
-        case "des-ede3-cbc":
-        case "des-ede3":
-        case "aes-192-cbc":
-        case "aes-192-ctr":
-            keylen = 24;
-            break;
-        case "aes-128-cbc":
-        case "aes-128-ctr":
-        case "cast-cbc":
-        case "bf-cbc":
-            keylen = 16;
-            break;
-        default:
-            throw new Error(`Unsupported cipher for encrypted key: ${
-                keyInfo.encryption}`);
+export const readString = (buffer, start, encoding, stream, cb, maxLen) => {
+    if (encoding && !Buffer.isBuffer(encoding) && typeof encoding !== "string") {
+        if (typeof cb === "number") {
+            maxLen = cb;
+        }
+        cb = stream;
+        stream = encoding;
+        encoding = undefined;
     }
 
-    if (keyInfo.ppk) {
-        iv = PPK_IV;
+    start || (start = 0);
+    const bufferLen = buffer.length;
+    const left = (bufferLen - start);
+    if (start < 0 || start >= bufferLen || left < 4) {
+        stream && stream._cleanup(cb);
+        return false;
+    }
 
-        key = Buffer.concat([
-            crypto.createHash("sha1")
-                .update(`\x00\x00\x00\x00${passphrase}`, "utf8")
-                .digest(),
-            crypto.createHash("sha1")
-                .update(`\x00\x00\x00\x01${passphrase}`, "utf8")
-                .digest()
-        ]);
-        key = key.slice(0, keylen);
+    const len = buffer.readUInt32BE(start, true);
+    if (len > (maxLen || MAX_STRING_LEN) || left < (4 + len)) {
+        stream && stream._cleanup(cb);
+        return false;
+    }
+
+    start += 4;
+    const end = start + len;
+    buffer._pos = end;
+
+    if (encoding) {
+        if (Buffer.isBuffer(encoding)) {
+            buffer.copy(encoding, 0, start, end);
+            return encoding;
+        } else {
+            return buffer.toString(encoding, start, end);
+        }
     } else {
-        iv = new Buffer(keyInfo.extra[0], "hex");
-
-        key = crypto.createHash("md5")
-            .update(passphrase, "utf8")
-            .update(iv.slice(0, 8))
-            .digest();
-
-        while (keylen > key.length) {
-            key = Buffer.concat([
-                key,
-                (crypto.createHash("md5")
-                    .update(key)
-                    .update(passphrase, "utf8")
-                    .update(iv)
-                    .digest()).slice(0, 8)
-            ]);
-        }
-        if (key.length > keylen)
-        { key = key.slice(0, keylen); }
+        return buffer.slice(start, end);
     }
+};
 
-    dc = crypto.createDecipheriv(keyInfo.encryption, key, iv);
-    dc.setAutoPadding(false);
-    keyInfo.private = Buffer.concat([dc.update(keyInfo.private), dc.final()]);
-
-    keyInfo._decrypted = true;
-
-    if (keyInfo.privateOrig) {
-        // Update our original base64-encoded version of the private key
-        const orig = keyInfo.privateOrig.toString("utf8");
-        let newOrig = /^(.+(?:\r\n|\n))/.exec(orig)[1];
-        const b64key = keyInfo.private.toString("base64");
-
-        newOrig += b64key.match(/.{1,70}/g).join("\n");
-        newOrig += /((?:\r\n|\n).+)$/.exec(orig)[1];
-
-        keyInfo.privateOrig = newOrig;
-    } else if (keyInfo.ppk) {
-        const valid = verifyPPKMAC(keyInfo, passphrase, keyInfo.private);
-        if (!valid)
-        { throw new Error("PPK MAC mismatch"); }
-        // Automatically convert private key data to OpenSSL format
-        // (including PEM)
-        convertPPKPrivate(keyInfo);
+export const convertPPKPrivate = (keyInfo) => {
+    if (!keyInfo.ppk || !keyInfo.public || !keyInfo.private) {
+        throw new Error("Key isn't a PPK");
+    } else if (keyInfo._converted) {
+        return false;
     }
-
-    // Fill in full key type
-    // TODO: make DRY, we do this also in keyParser
-    if (keyInfo.type !== "ec") {
-        keyInfo.fulltype = `ssh-${keyInfo.type}`;
-    } else {
-        // ECDSA
-        const asnReader = new asn1.ber.Reader(keyInfo.private);
-        asnReader.readSequence();
-        asnReader.readInt();
-        asnReader.readString(asn1.type.OctetString, true);
-        asnReader.readByte(); // Skip "complex" context type byte
-        const offset = asnReader.readLength(); // Skip context length
-        if (offset !== null) {
-            asnReader._offset = offset;
-            switch (asnReader.readOID()) {
-                case "1.2.840.10045.3.1.7":
-                    // prime256v1/secp256r1
-                    keyInfo.fulltype = "ecdsa-sha2-nistp256";
-                    break;
-                case "1.3.132.0.34":
-                    // secp384r1
-                    keyInfo.fulltype = "ecdsa-sha2-nistp384";
-                    break;
-                case "1.3.132.0.35":
-                    // secp521r1
-                    keyInfo.fulltype = "ecdsa-sha2-nistp521";
-                    break;
-            }
-        }
-        if (keyInfo.fulltype === undefined)
-        { return new Error("Unsupported EC private key type"); }
-    }
-}
-
-function genPublicKey(keyInfo) {
-    let publicKey;
-    let i;
-
-    // RSA
-    let n;
-    let e;
-
-    // DSA
-    let p;
-    let q;
-    let g;
-    let y;
-
-    // ECDSA
-    let d;
-    let Q;
-    let ecCurveOID;
-    let ecCurveName;
-
-    if (keyInfo.private) {
-        // parsing private key in ASN.1 format in order to generate a public key
-        const privKey = keyInfo.private;
-        const asnReader = new asn1.ber.Reader(privKey);
-        let errMsg;
-
-        if (asnReader.readSequence() === null) {
-            errMsg = "Malformed private key (expected sequence)";
-            if (keyInfo._decrypted)
-            { errMsg += ". Bad passphrase?"; }
-            throw new Error(errMsg);
-        }
-
-        // version (ignored)
-        if (asnReader.readInt() === null) {
-            errMsg = "Malformed private key (expected version)";
-            if (keyInfo._decrypted)
-            { errMsg += ". Bad passphrase?"; }
-            throw new Error(errMsg);
-        }
-
-        if (keyInfo.type === "rsa") {
-            // modulus (n) -- integer
-            n = asnReader.readString(asn1.type.Integer, true);
-            if (n === null) {
-                errMsg = "Malformed private key (expected RSA n value)";
-                if (keyInfo._decrypted)
-                { errMsg += ". Bad passphrase?"; }
-                throw new Error(errMsg);
-            }
-
-            // public exponent (e) -- integer
-            e = asnReader.readString(asn1.type.Integer, true);
-            if (e === null) {
-                errMsg = "Malformed private key (expected RSA e value)";
-                if (keyInfo._decrypted)
-                { errMsg += ". Bad passphrase?"; }
-                throw new Error(errMsg);
-            }
-
-            publicKey = new Buffer(4 + 7 // ssh-rsa
-                +
-                4 + n.length +
-                4 + e.length);
-
-            publicKey.writeUInt32BE(7, 0, true);
-            publicKey.write("ssh-rsa", 4, 7, "ascii");
-
-            i = 4 + 7;
-            publicKey.writeUInt32BE(e.length, i, true);
-            e.copy(publicKey, i += 4);
-
-            publicKey.writeUInt32BE(n.length, i += e.length, true);
-            n.copy(publicKey, i += 4);
-        } else if (keyInfo.type === "dss") { // DSA
-            // prime (p) -- integer
-            p = asnReader.readString(asn1.type.Integer, true);
-            if (p === null) {
-                errMsg = "Malformed private key (expected DSA p value)";
-                if (keyInfo._decrypted)
-                { errMsg += ". Bad passphrase?"; }
-                throw new Error(errMsg);
-            }
-
-            // group order (q) -- integer
-            q = asnReader.readString(asn1.type.Integer, true);
-            if (q === null) {
-                errMsg = "Malformed private key (expected DSA q value)";
-                if (keyInfo._decrypted)
-                { errMsg += ". Bad passphrase?"; }
-                throw new Error(errMsg);
-            }
-
-            // group generator (g) -- integer
-            g = asnReader.readString(asn1.type.Integer, true);
-            if (g === null) {
-                errMsg = "Malformed private key (expected DSA g value)";
-                if (keyInfo._decrypted)
-                { errMsg += ". Bad passphrase?"; }
-                throw new Error(errMsg);
-            }
-
-            // public key value (y) -- integer
-            y = asnReader.readString(asn1.type.Integer, true);
-            if (y === null) {
-                errMsg = "Malformed private key (expected DSA y value)";
-                if (keyInfo._decrypted)
-                { errMsg += ". Bad passphrase?"; }
-                throw new Error(errMsg);
-            }
-
-            publicKey = new Buffer(4 + 7 // ssh-dss
-                +
-                4 + p.length +
-                4 + q.length +
-                4 + g.length +
-                4 + y.length);
-
-            publicKey.writeUInt32BE(7, 0, true);
-            publicKey.write("ssh-dss", 4, 7, "ascii");
-
-            i = 4 + 7;
-            publicKey.writeUInt32BE(p.length, i, true);
-            p.copy(publicKey, i += 4);
-
-            publicKey.writeUInt32BE(q.length, i += p.length, true);
-            q.copy(publicKey, i += 4);
-
-            publicKey.writeUInt32BE(g.length, i += q.length, true);
-            g.copy(publicKey, i += 4);
-
-            publicKey.writeUInt32BE(y.length, i += g.length, true);
-            y.copy(publicKey, i += 4);
-        } else { // ECDSA
-            d = asnReader.readString(asn1.type.OctetString, true);
-            if (d === null)
-            { throw new Error("Malformed private key (expected ECDSA private key)"); }
-            asnReader.readByte(); // Skip "complex" context type byte
-            const offset = asnReader.readLength(); // Skip context length
-            if (offset === null)
-            { throw new Error("Malformed private key (expected ECDSA context value)"); }
-            asnReader._offset = offset;
-            ecCurveOID = asnReader.readOID();
-            if (ecCurveOID === null)
-            { throw new Error("Malformed private key (expected ECDSA curve)"); }
-            let tempECDH;
-            switch (ecCurveOID) {
-                case "1.2.840.10045.3.1.7":
-                    // prime256v1/secp256r1
-                    keyInfo.curve = ecCurveName = "nistp256";
-                    tempECDH = crypto.createECDH("prime256v1");
-                    break;
-                case "1.3.132.0.34":
-                    // secp384r1
-                    keyInfo.curve = ecCurveName = "nistp384";
-                    tempECDH = crypto.createECDH("secp384r1");
-                    break;
-                case "1.3.132.0.35":
-                    // secp521r1
-                    keyInfo.curve = ecCurveName = "nistp521";
-                    tempECDH = crypto.createECDH("secp521r1");
-                    break;
-                default:
-                    throw new Error("Malformed private key (unsupported EC curve)");
-            }
-            tempECDH.setPrivateKey(d);
-            Q = tempECDH.getPublicKey();
-
-            publicKey = new Buffer(4 + 19 // ecdsa-sha2-<curve name>
-                +
-                4 + 8 // <curve name>
-                +
-                4 + Q.length);
-
-            publicKey.writeUInt32BE(19, 0, true);
-            publicKey.write(`ecdsa-sha2-${ecCurveName}`, 4, 19, "ascii");
-
-            publicKey.writeUInt32BE(8, 23, true);
-            publicKey.write(ecCurveName, 27, 8, "ascii");
-
-            publicKey.writeUInt32BE(Q.length, 35, true);
-            Q.copy(publicKey, 39);
-        }
-    } else if (keyInfo.public) {
-        publicKey = keyInfo.public;
-        if (keyInfo.type === "ec") {
-            // TODO: support adding ecdsa-* prefix
-            ecCurveName = keyInfo.curve;
-        } else if (publicKey[0] !== 0
-            // check for missing ssh-{dsa,rsa} prefix
-            ||
-            publicKey[1] !== 0 ||
-            publicKey[2] !== 0 ||
-            publicKey[3] !== 7 ||
-            publicKey[4] !== 115 ||
-            publicKey[5] !== 115 ||
-            publicKey[6] !== 104 ||
-            publicKey[7] !== 45 ||
-            ((publicKey[8] !== 114 ||
-                publicKey[9] !== 115 ||
-                publicKey[10] !== 97) &&
-                ((publicKey[8] !== 100 ||
-                    publicKey[9] !== 115 ||
-                    publicKey[10] !== 115)))) {
-            const newPK = new Buffer(4 + 7 + publicKey.length);
-            publicKey.copy(newPK, 11);
-            newPK.writeUInt32BE(7, 0, true);
-            if (keyInfo.type === "rsa")
-            { newPK.write("ssh-rsa", 4, 7, "ascii"); }
-            else
-            { newPK.write("ssh-dss", 4, 7, "ascii"); }
-            publicKey = newPK;
-        }
-    } else
-    { throw new Error("Missing data generated by parseKey()"); }
-
-    // generate a public key format for use with OpenSSL
-
-    i = 4 + 7;
-
-    let fulltype;
-    let asn1KeyBuf;
-    if (keyInfo.type === "rsa") {
-        fulltype = "ssh-rsa";
-        asn1KeyBuf = RSAKeySSHToASN1(publicKey.slice(4 + 7));
-    } else if (keyInfo.type === "dss") {
-        fulltype = "ssh-dss";
-        asn1KeyBuf = DSAKeySSHToASN1(publicKey.slice(4 + 7));
-    } else { // ECDSA
-        fulltype = `ecdsa-sha2-${ecCurveName}`;
-        asn1KeyBuf = ECDSAKeySSHToASN1(publicKey.slice(4 + 19));
-    }
-
-    if (!asn1KeyBuf)
-    { throw new Error("Invalid SSH-formatted public key"); }
-
-    const b64key = asn1KeyBuf.toString("base64").replace(RE_KEY_LEN, "$1\n");
-    const fullkey = `-----BEGIN PUBLIC KEY-----\n${
-        b64key
-        }${b64key[b64key.length - 1] === "\n" ? "" : "\n"
-        }-----END PUBLIC KEY-----`;
-
-    return {
-        type: keyInfo.type,
-        fulltype,
-        curve: ecCurveName,
-        public: publicKey,
-        publicOrig: new Buffer(fullkey)
-    };
-}
-
-function verifyPPKMAC(keyInfo, passphrase, privateKey) {
-    if (keyInfo._macresult !== undefined)
-    { return keyInfo._macresult; }
-    else if (!keyInfo.ppk)
-    { throw new Error("Key isn't a PPK"); }
-    else if (!keyInfo.privateMAC)
-    { throw new Error("Missing MAC"); }
-    else if (!privateKey)
-    { throw new Error("Missing raw private key data"); }
-    else if (keyInfo.encryption && typeof passphrase !== "string")
-    { throw new Error("Missing passphrase for encrypted PPK"); }
-    else if (keyInfo.encryption && !keyInfo._decrypted)
-    { throw new Error("PPK must be decrypted before verifying MAC"); }
-
-    const mac = keyInfo.privateMAC;
-    const typelen = keyInfo.fulltype.length;
-    // encryption algorithm is converted at this point for use with OpenSSL,
-    // so we need to use the original value so that the MAC is calculated
-    // correctly
-    const enc = (keyInfo.encryption ? "aes256-cbc" : "none");
-    const enclen = enc.length;
-    const commlen = Buffer.byteLength(keyInfo.comment);
-    const pub = keyInfo.public;
-    const publen = pub.length;
-    const privlen = privateKey.length;
-    const macdata = new Buffer(4 + typelen +
-        4 + enclen +
-        4 + commlen +
-        4 + publen +
-        4 + privlen);
-    let p = 0;
-
-    macdata.writeUInt32BE(typelen, p, true);
-    macdata.write(keyInfo.fulltype, p += 4, typelen, "ascii");
-    macdata.writeUInt32BE(enclen, p += typelen, true);
-    macdata.write(enc, p += 4, enclen, "ascii");
-    macdata.writeUInt32BE(commlen, p += enclen, true);
-    macdata.write(keyInfo.comment, p += 4, commlen, "utf8");
-    macdata.writeUInt32BE(publen, p += commlen, true);
-    pub.copy(macdata, p += 4);
-    macdata.writeUInt32BE(privlen, p += publen, true);
-    privateKey.copy(macdata, p += 4);
-
-    if (typeof passphrase !== "string")
-    { passphrase = ""; }
-
-    const mackey = crypto.createHash("sha1")
-        .update("putty-private-key-file-mac-key", "ascii")
-        .update(passphrase, "utf8")
-        .digest();
-
-    const calcMAC = crypto.createHmac("sha1", mackey)
-        .update(macdata)
-        .digest("hex");
-
-    return (keyInfo._macresult = (calcMAC === mac));
-}
-
-function convertPPKPrivate(keyInfo) {
-    if (!keyInfo.ppk || !keyInfo.public || !keyInfo.private)
-    { throw new Error("Key isn't a PPK"); }
-    else if (keyInfo._converted)
-    { return false; }
 
     const pub = keyInfo.public;
     const priv = keyInfo.private;
@@ -779,45 +151,688 @@ function convertPPKPrivate(keyInfo) {
     keyInfo.privateOrig = new Buffer(fullkey);
     keyInfo._converted = true;
     return true;
-}
+};
 
-function readString(buffer, start, encoding, stream, cb, maxLen) {
-    if (encoding && !Buffer.isBuffer(encoding) && typeof encoding !== "string") {
-        if (typeof cb === "number")
-        { maxLen = cb; }
-        cb = stream;
-        stream = encoding;
-        encoding = undefined;
+export const verifyPPKMAC = (keyInfo, passphrase, privateKey) => {
+    if (keyInfo._macresult !== undefined) {
+        return keyInfo._macresult;
+    } else if (!keyInfo.ppk) {
+        throw new Error("Key isn't a PPK");
+    } else if (!keyInfo.privateMAC) {
+        throw new Error("Missing MAC");
+    } else if (!privateKey) {
+        throw new Error("Missing raw private key data");
+    } else if (keyInfo.encryption && typeof passphrase !== "string") {
+        throw new Error("Missing passphrase for encrypted PPK");
+    } else if (keyInfo.encryption && !keyInfo._decrypted) {
+        throw new Error("PPK must be decrypted before verifying MAC");
     }
 
-    start || (start = 0);
-    const bufferLen = buffer.length;
-    const left = (bufferLen - start);
-    let len;
-    let end;
-    if (start < 0 || start >= bufferLen || left < 4) {
-        stream && stream._cleanup(cb);
+    const mac = keyInfo.privateMAC;
+    const typelen = keyInfo.fulltype.length;
+    // encryption algorithm is converted at this point for use with OpenSSL,
+    // so we need to use the original value so that the MAC is calculated
+    // correctly
+    const enc = (keyInfo.encryption ? "aes256-cbc" : "none");
+    const enclen = enc.length;
+    const commlen = Buffer.byteLength(keyInfo.comment);
+    const pub = keyInfo.public;
+    const publen = pub.length;
+    const privlen = privateKey.length;
+    const macdata = new Buffer(4 + typelen +
+        4 + enclen +
+        4 + commlen +
+        4 + publen +
+        4 + privlen);
+    let p = 0;
+
+    macdata.writeUInt32BE(typelen, p, true);
+    macdata.write(keyInfo.fulltype, p += 4, typelen, "ascii");
+    macdata.writeUInt32BE(enclen, p += typelen, true);
+    macdata.write(enc, p += 4, enclen, "ascii");
+    macdata.writeUInt32BE(commlen, p += enclen, true);
+    macdata.write(keyInfo.comment, p += 4, commlen, "utf8");
+    macdata.writeUInt32BE(publen, p += commlen, true);
+    pub.copy(macdata, p += 4);
+    macdata.writeUInt32BE(privlen, p += publen, true);
+    privateKey.copy(macdata, p += 4);
+
+    if (typeof passphrase !== "string") {
+        passphrase = "";
+    }
+
+    const mackey = crypto.createHash("sha1")
+        .update("putty-private-key-file-mac-key", "ascii")
+        .update(passphrase, "utf8")
+        .digest();
+
+    const calcMAC = crypto.createHmac("sha1", mackey)
+        .update(macdata)
+        .digest("hex");
+
+    return (keyInfo._macresult = (calcMAC === mac));
+};
+
+export const DSASigBERToBare = (signature) => {
+    if (signature.length <= 40) {
+        return signature;
+    }
+    // This is a quick and dirty way to get from BER encoded r and s that
+    // OpenSSL gives us, to just the bare values back to back (40 bytes
+    // total) like OpenSSH (and possibly others) are expecting
+    const asnReader = new asn1.ber.Reader(signature);
+    asnReader.readSequence();
+    let r = asnReader.readString(asn1.type.Integer, true);
+    let s = asnReader.readString(asn1.type.Integer, true);
+    let rOffset = 0;
+    let sOffset = 0;
+    if (r.length < 20) {
+        const rNew = new Buffer(20);
+        r.copy(rNew, 1);
+        r = rNew;
+        r[0] = 0;
+    }
+    if (s.length < 20) {
+        const sNew = new Buffer(20);
+        s.copy(sNew, 1);
+        s = sNew;
+        s[0] = 0;
+    }
+    if (r.length > 20 && r[0] === 0x00) {
+        rOffset = 1;
+    }
+    if (s.length > 20 && s[0] === 0x00) {
+        sOffset = 1;
+    }
+    const newSig = new Buffer((r.length - rOffset) + (s.length - sOffset));
+    r.copy(newSig, 0, rOffset);
+    s.copy(newSig, r.length - rOffset, sOffset);
+    return newSig;
+};
+
+export const DSASigBareToBER = (signature) => {
+    if (signature.length > 40) {
+        return signature;
+    }
+    // Change bare signature r and s values to ASN.1 BER values for OpenSSL
+    const asnWriter = new asn1.ber.Writer();
+    asnWriter.startSequence();
+    let r = signature.slice(0, 20);
+    let s = signature.slice(20);
+    if (r[0] & 0x80) {
+        const rNew = new Buffer(21);
+        rNew[0] = 0x00;
+        r.copy(rNew, 1);
+        r = rNew;
+    } else if (r[0] === 0x00 && !(r[1] & 0x80)) {
+        r = r.slice(1);
+    }
+    if (s[0] & 0x80) {
+        const sNew = new Buffer(21);
+        sNew[0] = 0x00;
+        s.copy(sNew, 1);
+        s = sNew;
+    } else if (s[0] === 0x00 && !(s[1] & 0x80)) {
+        s = s.slice(1);
+    }
+    asnWriter.writeBuffer(r, asn1.type.Integer);
+    asnWriter.writeBuffer(s, asn1.type.Integer);
+    asnWriter.endSequence();
+    return asnWriter.buffer;
+};
+
+export const ECDSASigASN1ToSSH = (signature) => {
+    if (signature[0] === 0x00) {
+        return signature;
+    }
+    // Convert SSH signature parameters to ASN.1 BER values for OpenSSL
+    const asnReader = new asn1.ber.Reader(signature);
+    asnReader.readSequence();
+    const r = asnReader.readString(asn1.type.Integer, true);
+    const s = asnReader.readString(asn1.type.Integer, true);
+    if (r === null || s === null) {
+        throw new Error("Invalid signature");
+    }
+    const newSig = new Buffer(4 + r.length + 4 + s.length);
+    newSig.writeUInt32BE(r.length, 0, true);
+    r.copy(newSig, 4);
+    newSig.writeUInt32BE(s.length, 4 + r.length, true);
+    s.copy(newSig, 4 + 4 + r.length);
+    return newSig;
+};
+
+export const ECDSASigSSHToASN1 = (signature, self, callback) => {
+    // Convert SSH signature parameters to ASN.1 BER values for OpenSSL
+    const r = readString(signature, 0, self, callback);
+    if (r === false) {
+        return false;
+    }
+    const s = readString(signature, signature._pos, self, callback);
+    if (s === false) {
         return false;
     }
 
-    len = buffer.readUInt32BE(start, true);
-    if (len > (maxLen || MAX_STRING_LEN) || left < (4 + len)) {
-        stream && stream._cleanup(cb);
+    const asnWriter = new asn1.ber.Writer();
+    asnWriter.startSequence();
+    asnWriter.writeBuffer(r, asn1.type.Integer);
+    asnWriter.writeBuffer(s, asn1.type.Integer);
+    asnWriter.endSequence();
+    return asnWriter.buffer;
+};
+
+export const RSAKeySSHToASN1 = (key, self, callback) => {
+    // Convert SSH key parameters to ASN.1 BER values for OpenSSL
+    const e = readString(key, key._pos, self, callback);
+    if (e === false) {
+        return false;
+    }
+    const n = readString(key, key._pos, self, callback);
+    if (n === false) {
         return false;
     }
 
-    start += 4;
-    end = start + len;
-    buffer._pos = end;
+    const asnWriter = new asn1.ber.Writer();
+    asnWriter.startSequence();
+    // algorithm
+    asnWriter.startSequence();
+    asnWriter.writeOID("1.2.840.113549.1.1.1"); // rsaEncryption
+    // algorithm parameters (RSA has none)
+    asnWriter.writeNull();
+    asnWriter.endSequence();
 
-    if (encoding) {
-        if (Buffer.isBuffer(encoding)) {
-            buffer.copy(encoding, 0, start, end);
-            return encoding;
-        } else {
-            return buffer.toString(encoding, start, end);
+    // subjectPublicKey
+    asnWriter.startSequence(asn1.type.BitString);
+    asnWriter.writeByte(0x00);
+    asnWriter.startSequence();
+    asnWriter.writeBuffer(n, asn1.type.Integer);
+    asnWriter.writeBuffer(e, asn1.type.Integer);
+    asnWriter.endSequence();
+    asnWriter.endSequence();
+    asnWriter.endSequence();
+    return asnWriter.buffer;
+};
+
+export const DSAKeySSHToASN1 = (key, self, callback) => {
+    // Convert SSH key parameters to ASN.1 BER values for OpenSSL
+    const p = readString(key, key._pos, self, callback);
+    if (p === false) {
+        return false;
+    }
+    const q = readString(key, key._pos, self, callback);
+    if (q === false) {
+        return false;
+    }
+    const g = readString(key, key._pos, self, callback);
+    if (g === false) {
+        return false;
+    }
+    const y = readString(key, key._pos, self, callback);
+    if (y === false) {
+        return false;
+    }
+
+    const asnWriter = new asn1.ber.Writer();
+    asnWriter.startSequence();
+    // algorithm
+    asnWriter.startSequence();
+    asnWriter.writeOID("1.2.840.10040.4.1"); // id-dsa
+    // algorithm parameters
+    asnWriter.startSequence();
+    asnWriter.writeBuffer(p, asn1.type.Integer);
+    asnWriter.writeBuffer(q, asn1.type.Integer);
+    asnWriter.writeBuffer(g, asn1.type.Integer);
+    asnWriter.endSequence();
+    asnWriter.endSequence();
+
+    // subjectPublicKey
+    asnWriter.startSequence(asn1.type.BitString);
+    asnWriter.writeByte(0x00);
+    asnWriter.writeBuffer(y, asn1.type.Integer);
+    asnWriter.endSequence();
+    asnWriter.endSequence();
+    return asnWriter.buffer;
+};
+
+export const ECDSAKeySSHToASN1 = (key, self, callback) => {
+    // Convert SSH key parameters to ASN.1 BER values for OpenSSL
+    const curve = readString(key, key._pos, self, callback);
+    if (curve === false) {
+        return false;
+    }
+    const Q = readString(key, key._pos, self, callback);
+    if (Q === false) {
+        return false;
+    }
+
+    let ecCurveOID;
+    switch (curve.toString("ascii")) {
+        case "nistp256":
+            // prime256v1/secp256r1
+            ecCurveOID = "1.2.840.10045.3.1.7";
+            break;
+        case "nistp384":
+            // secp384r1
+            ecCurveOID = "1.3.132.0.34";
+            break;
+        case "nistp521":
+            // secp521r1
+            ecCurveOID = "1.3.132.0.35";
+            break;
+        default:
+            return false;
+    }
+    const asnWriter = new asn1.ber.Writer();
+    asnWriter.startSequence();
+    // algorithm
+    asnWriter.startSequence();
+    asnWriter.writeOID("1.2.840.10045.2.1"); // id-ecPublicKey
+    // algorithm parameters (namedCurve)
+    asnWriter.writeOID(ecCurveOID);
+    asnWriter.endSequence();
+
+    // subjectPublicKey
+    asnWriter.startSequence(asn1.type.BitString);
+    asnWriter.writeByte(0x00);
+    // XXX: hack to write a raw buffer without a tag -- yuck
+    asnWriter._ensure(Q.length);
+    Q.copy(asnWriter._buf, asnWriter._offset, 0, Q.length);
+    asnWriter._offset += Q.length;
+    // end hack
+    asnWriter.endSequence();
+    asnWriter.endSequence();
+    return asnWriter.buffer;
+};
+
+export const decryptKey = (keyInfo, passphrase) => {
+    if (keyInfo._decrypted || !keyInfo.encryption) {
+        return;
+    }
+
+    let keylen = 0;
+    let key;
+    let iv;
+
+    keyInfo.encryption = (SSH_TO_OPENSSL[keyInfo.encryption] ||
+        keyInfo.encryption);
+    switch (keyInfo.encryption) {
+        case "aes-256-cbc":
+        case "aes-256-ctr":
+            keylen = 32;
+            break;
+        case "des-ede3-cbc":
+        case "des-ede3":
+        case "aes-192-cbc":
+        case "aes-192-ctr":
+            keylen = 24;
+            break;
+        case "aes-128-cbc":
+        case "aes-128-ctr":
+        case "cast-cbc":
+        case "bf-cbc":
+            keylen = 16;
+            break;
+        default:
+            throw new Error(`Unsupported cipher for encrypted key: ${
+                keyInfo.encryption}`);
+    }
+
+    if (keyInfo.ppk) {
+        iv = PPK_IV;
+
+        key = Buffer.concat([
+            crypto.createHash("sha1")
+                .update(`\x00\x00\x00\x00${passphrase}`, "utf8")
+                .digest(),
+            crypto.createHash("sha1")
+                .update(`\x00\x00\x00\x01${passphrase}`, "utf8")
+                .digest()
+        ]);
+        key = key.slice(0, keylen);
+    } else {
+        iv = new Buffer(keyInfo.extra[0], "hex");
+
+        key = crypto.createHash("md5")
+            .update(passphrase, "utf8")
+            .update(iv.slice(0, 8))
+            .digest();
+
+        while (keylen > key.length) {
+            key = Buffer.concat([
+                key,
+                (crypto.createHash("md5")
+                    .update(key)
+                    .update(passphrase, "utf8")
+                    .update(iv)
+                    .digest()).slice(0, 8)
+            ]);
+        }
+        if (key.length > keylen) {
+            key = key.slice(0, keylen);
+        }
+    }
+
+    const dc = crypto.createDecipheriv(keyInfo.encryption, key, iv);
+    dc.setAutoPadding(false);
+    keyInfo.private = Buffer.concat([dc.update(keyInfo.private), dc.final()]);
+
+    keyInfo._decrypted = true;
+
+    if (keyInfo.privateOrig) {
+        // Update our original base64-encoded version of the private key
+        const orig = keyInfo.privateOrig.toString("utf8");
+        let newOrig = /^(.+(?:\r\n|\n))/.exec(orig)[1];
+        const b64key = keyInfo.private.toString("base64");
+
+        newOrig += b64key.match(/.{1,70}/g).join("\n");
+        newOrig += /((?:\r\n|\n).+)$/.exec(orig)[1];
+
+        keyInfo.privateOrig = newOrig;
+    } else if (keyInfo.ppk) {
+        const valid = verifyPPKMAC(keyInfo, passphrase, keyInfo.private);
+        if (!valid) {
+            throw new Error("PPK MAC mismatch");
+        }
+        // Automatically convert private key data to OpenSSL format
+        // (including PEM)
+        convertPPKPrivate(keyInfo);
+    }
+
+    // Fill in full key type
+    // TODO: make DRY, we do this also in keyParser
+    if (keyInfo.type !== "ec") {
+        keyInfo.fulltype = `ssh-${keyInfo.type}`;
+    } else {
+        // ECDSA
+        const asnReader = new asn1.ber.Reader(keyInfo.private);
+        asnReader.readSequence();
+        asnReader.readInt();
+        asnReader.readString(asn1.type.OctetString, true);
+        asnReader.readByte(); // Skip "complex" context type byte
+        const offset = asnReader.readLength(); // Skip context length
+        if (offset !== null) {
+            asnReader._offset = offset;
+            switch (asnReader.readOID()) {
+                case "1.2.840.10045.3.1.7":
+                    // prime256v1/secp256r1
+                    keyInfo.fulltype = "ecdsa-sha2-nistp256";
+                    break;
+                case "1.3.132.0.34":
+                    // secp384r1
+                    keyInfo.fulltype = "ecdsa-sha2-nistp384";
+                    break;
+                case "1.3.132.0.35":
+                    // secp521r1
+                    keyInfo.fulltype = "ecdsa-sha2-nistp521";
+                    break;
+            }
+        }
+        if (keyInfo.fulltype === undefined) {
+            return new Error("Unsupported EC private key type");
+        }
+    }
+};
+
+export const genPublicKey = (keyInfo) => {
+    let publicKey;
+    let i;
+
+    // RSA
+    let n;
+    let e;
+
+    // DSA
+    let p;
+    let q;
+    let g;
+    let y;
+
+    // ECDSA
+    let d;
+    let Q;
+    let ecCurveOID;
+    let ecCurveName;
+
+    if (keyInfo.private) {
+        // parsing private key in ASN.1 format in order to generate a public key
+        const privKey = keyInfo.private;
+        const asnReader = new asn1.ber.Reader(privKey);
+        let errMsg;
+
+        if (asnReader.readSequence() === null) {
+            errMsg = "Malformed private key (expected sequence)";
+            if (keyInfo._decrypted) {
+                errMsg += ". Bad passphrase?";
+            }
+            throw new Error(errMsg);
+        }
+
+        // version (ignored)
+        if (asnReader.readInt() === null) {
+            errMsg = "Malformed private key (expected version)";
+            if (keyInfo._decrypted) {
+                errMsg += ". Bad passphrase?";
+            }
+            throw new Error(errMsg);
+        }
+
+        if (keyInfo.type === "rsa") {
+            // modulus (n) -- integer
+            n = asnReader.readString(asn1.type.Integer, true);
+            if (n === null) {
+                errMsg = "Malformed private key (expected RSA n value)";
+                if (keyInfo._decrypted) {
+                    errMsg += ". Bad passphrase?";
+                }
+                throw new Error(errMsg);
+            }
+
+            // public exponent (e) -- integer
+            e = asnReader.readString(asn1.type.Integer, true);
+            if (e === null) {
+                errMsg = "Malformed private key (expected RSA e value)";
+                if (keyInfo._decrypted) {
+                    errMsg += ". Bad passphrase?";
+                }
+                throw new Error(errMsg);
+            }
+
+            publicKey = new Buffer(4 + 7 // ssh-rsa
+                +
+                4 + n.length +
+                4 + e.length);
+
+            publicKey.writeUInt32BE(7, 0, true);
+            publicKey.write("ssh-rsa", 4, 7, "ascii");
+
+            i = 4 + 7;
+            publicKey.writeUInt32BE(e.length, i, true);
+            e.copy(publicKey, i += 4);
+
+            publicKey.writeUInt32BE(n.length, i += e.length, true);
+            n.copy(publicKey, i += 4);
+        } else if (keyInfo.type === "dss") { // DSA
+            // prime (p) -- integer
+            p = asnReader.readString(asn1.type.Integer, true);
+            if (p === null) {
+                errMsg = "Malformed private key (expected DSA p value)";
+                if (keyInfo._decrypted) {
+                    errMsg += ". Bad passphrase?";
+                }
+                throw new Error(errMsg);
+            }
+
+            // group order (q) -- integer
+            q = asnReader.readString(asn1.type.Integer, true);
+            if (q === null) {
+                errMsg = "Malformed private key (expected DSA q value)";
+                if (keyInfo._decrypted) {
+                    errMsg += ". Bad passphrase?";
+                }
+                throw new Error(errMsg);
+            }
+
+            // group generator (g) -- integer
+            g = asnReader.readString(asn1.type.Integer, true);
+            if (g === null) {
+                errMsg = "Malformed private key (expected DSA g value)";
+                if (keyInfo._decrypted) {
+                    errMsg += ". Bad passphrase?";
+                }
+                throw new Error(errMsg);
+            }
+
+            // public key value (y) -- integer
+            y = asnReader.readString(asn1.type.Integer, true);
+            if (y === null) {
+                errMsg = "Malformed private key (expected DSA y value)";
+                if (keyInfo._decrypted) {
+                    errMsg += ". Bad passphrase?";
+                }
+                throw new Error(errMsg);
+            }
+
+            publicKey = new Buffer(4 + 7 // ssh-dss
+                +
+                4 + p.length +
+                4 + q.length +
+                4 + g.length +
+                4 + y.length);
+
+            publicKey.writeUInt32BE(7, 0, true);
+            publicKey.write("ssh-dss", 4, 7, "ascii");
+
+            i = 4 + 7;
+            publicKey.writeUInt32BE(p.length, i, true);
+            p.copy(publicKey, i += 4);
+
+            publicKey.writeUInt32BE(q.length, i += p.length, true);
+            q.copy(publicKey, i += 4);
+
+            publicKey.writeUInt32BE(g.length, i += q.length, true);
+            g.copy(publicKey, i += 4);
+
+            publicKey.writeUInt32BE(y.length, i += g.length, true);
+            y.copy(publicKey, i += 4);
+        } else { // ECDSA
+            d = asnReader.readString(asn1.type.OctetString, true);
+            if (d === null) {
+                throw new Error("Malformed private key (expected ECDSA private key)");
+            }
+            asnReader.readByte(); // Skip "complex" context type byte
+            const offset = asnReader.readLength(); // Skip context length
+            if (offset === null) {
+                throw new Error("Malformed private key (expected ECDSA context value)");
+            }
+            asnReader._offset = offset;
+            ecCurveOID = asnReader.readOID();
+            if (ecCurveOID === null) {
+                throw new Error("Malformed private key (expected ECDSA curve)");
+            }
+            let tempECDH;
+            switch (ecCurveOID) {
+                case "1.2.840.10045.3.1.7":
+                    // prime256v1/secp256r1
+                    keyInfo.curve = ecCurveName = "nistp256";
+                    tempECDH = crypto.createECDH("prime256v1");
+                    break;
+                case "1.3.132.0.34":
+                    // secp384r1
+                    keyInfo.curve = ecCurveName = "nistp384";
+                    tempECDH = crypto.createECDH("secp384r1");
+                    break;
+                case "1.3.132.0.35":
+                    // secp521r1
+                    keyInfo.curve = ecCurveName = "nistp521";
+                    tempECDH = crypto.createECDH("secp521r1");
+                    break;
+                default:
+                    throw new Error("Malformed private key (unsupported EC curve)");
+            }
+            tempECDH.setPrivateKey(d);
+            Q = tempECDH.getPublicKey();
+
+            publicKey = new Buffer(4 + 19 // ecdsa-sha2-<curve name>
+                +
+                4 + 8 // <curve name>
+                +
+                4 + Q.length);
+
+            publicKey.writeUInt32BE(19, 0, true);
+            publicKey.write(`ecdsa-sha2-${ecCurveName}`, 4, 19, "ascii");
+
+            publicKey.writeUInt32BE(8, 23, true);
+            publicKey.write(ecCurveName, 27, 8, "ascii");
+
+            publicKey.writeUInt32BE(Q.length, 35, true);
+            Q.copy(publicKey, 39);
+        }
+    } else if (keyInfo.public) {
+        publicKey = keyInfo.public;
+        if (keyInfo.type === "ec") {
+            // TODO: support adding ecdsa-* prefix
+            ecCurveName = keyInfo.curve;
+        } else if (publicKey[0] !== 0
+            // check for missing ssh-{dsa,rsa} prefix
+            ||
+            publicKey[1] !== 0 ||
+            publicKey[2] !== 0 ||
+            publicKey[3] !== 7 ||
+            publicKey[4] !== 115 ||
+            publicKey[5] !== 115 ||
+            publicKey[6] !== 104 ||
+            publicKey[7] !== 45 ||
+            ((publicKey[8] !== 114 ||
+                publicKey[9] !== 115 ||
+                publicKey[10] !== 97) &&
+                ((publicKey[8] !== 100 ||
+                    publicKey[9] !== 115 ||
+                    publicKey[10] !== 115)))) {
+            const newPK = new Buffer(4 + 7 + publicKey.length);
+            publicKey.copy(newPK, 11);
+            newPK.writeUInt32BE(7, 0, true);
+            if (keyInfo.type === "rsa") {
+                newPK.write("ssh-rsa", 4, 7, "ascii");
+            } else {
+                newPK.write("ssh-dss", 4, 7, "ascii");
+            }
+            publicKey = newPK;
         }
     } else {
-        return buffer.slice(start, end);
+        throw new Error("Missing data generated by parseKey()");
     }
-}
+
+    // generate a public key format for use with OpenSSL
+
+    i = 4 + 7;
+
+    let fulltype;
+    let asn1KeyBuf;
+    if (keyInfo.type === "rsa") {
+        fulltype = "ssh-rsa";
+        asn1KeyBuf = RSAKeySSHToASN1(publicKey.slice(4 + 7));
+    } else if (keyInfo.type === "dss") {
+        fulltype = "ssh-dss";
+        asn1KeyBuf = DSAKeySSHToASN1(publicKey.slice(4 + 7));
+    } else { // ECDSA
+        fulltype = `ecdsa-sha2-${ecCurveName}`;
+        asn1KeyBuf = ECDSAKeySSHToASN1(publicKey.slice(4 + 19));
+    }
+
+    if (!asn1KeyBuf) {
+        throw new Error("Invalid SSH-formatted public key");
+    }
+
+    const b64key = asn1KeyBuf.toString("base64").replace(RE_KEY_LEN, "$1\n");
+    const fullkey = `-----BEGIN PUBLIC KEY-----\n${
+        b64key
+        }${b64key[b64key.length - 1] === "\n" ? "" : "\n"
+        }-----END PUBLIC KEY-----`;
+
+    return {
+        type: keyInfo.type,
+        fulltype,
+        curve: ecCurveName,
+        public: publicKey,
+        publicOrig: new Buffer(fullkey)
+    };
+};

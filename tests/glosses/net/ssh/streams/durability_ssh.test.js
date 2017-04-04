@@ -1,4 +1,4 @@
-import { SSH2Stream } from "adone/glosses/net/ssh/streams";
+const { SSH2Stream } = adone.net.ssh.stream;
 
 const fs = adone.std.fs;
 const path = adone.std.path;

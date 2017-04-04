@@ -1,11 +1,7 @@
-import semver from "semver";
-
+const { semver, std: { fs, crypto, path } } = adone;
 const { Server } = adone.net.ssh;
-import { utils } from "adone/glosses/net/ssh/streams";
+const { util } = adone.net.ssh.stream;
 
-const fs = adone.std.fs;
-const crypto = adone.std.crypto;
-const path = adone.std.path;
 const join = path.join;
 const { spawn, exec } = adone.std.child_process;
 
@@ -18,15 +14,17 @@ const HOST_KEY_DSA = fs.readFileSync(join(fixturesdir, "ssh_host_dsa_key"));
 const HOST_KEY_ECDSA = fs.readFileSync(join(fixturesdir, "ssh_host_ecdsa_key"));
 const CLIENT_KEY_RSA_PATH = join(fixturesdir, "id_rsa");
 const CLIENT_KEY_RSA = fs.readFileSync(CLIENT_KEY_RSA_PATH);
-const CLIENT_KEY_RSA_PUB = utils.genPublicKey(utils.parseKey(CLIENT_KEY_RSA));
+const CLIENT_KEY_RSA_PUB = util.genPublicKey(util.parseKey(CLIENT_KEY_RSA));
 const CLIENT_KEY_DSA_PATH = join(fixturesdir, "id_dsa");
 const CLIENT_KEY_DSA = fs.readFileSync(CLIENT_KEY_DSA_PATH);
-const CLIENT_KEY_DSA_PUB = utils.genPublicKey(utils.parseKey(CLIENT_KEY_DSA));
+const CLIENT_KEY_DSA_PUB = util.genPublicKey(util.parseKey(CLIENT_KEY_DSA));
+let CLIENT_KEY_ECDSA_PATH;
+let CLIENT_KEY_ECDSA_PUB;
 if (semver.gte(process.version, "5.2.0")) {
-    var CLIENT_KEY_ECDSA_PATH = join(fixturesdir, "id_ecdsa");
+    CLIENT_KEY_ECDSA_PATH = join(fixturesdir, "id_ecdsa");
     const CLIENT_KEY_ECDSA = fs.readFileSync(CLIENT_KEY_ECDSA_PATH);
-    var CLIENT_KEY_ECDSA_PUB = utils.genPublicKey(
-        utils.parseKey(CLIENT_KEY_ECDSA)
+    CLIENT_KEY_ECDSA_PUB = util.genPublicKey(
+        util.parseKey(CLIENT_KEY_ECDSA)
     );
 }
 let opensshVer;

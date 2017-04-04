@@ -1,29 +1,42 @@
-const { is } = adone;
-const crypto = adone.std.crypto;
-const Socket = adone.std.net.Socket;
-const dnsLookup = adone.std.dns.lookup;
+const { is, net: { ssh: { Channel } }, std } = adone;
+const crypto = std.crypto;
+const Socket = std.net.Socket;
+const dnsLookup = std.dns.lookup;
 const HASHES = crypto.getHashes();
 
-import {
-    SSH2Stream,
-    SFTPStream,
-    constants as consts,
-    utils as SSHStreamUtils
-} from "./streams";
-const BUGS = consts.BUGS;
-const ALGORITHMS = consts.ALGORITHMS;
-const parseKey = SSHStreamUtils.parseKey;
-const decryptKey = SSHStreamUtils.decryptKey;
-const genPublicKey = SSHStreamUtils.genPublicKey;
+const { stream } = adone.net.ssh;
+const { SSH2Stream, SFTPStream, util } = stream;
+const BUGS = stream.const.BUGS;
+const ALGORITHMS = stream.const.ALGORITHMS;
+const parseKey = util.parseKey;
+const decryptKey = util.decryptKey;
+const genPublicKey = util.genPublicKey;
 
-import Channel from "./channel";
 import agentQuery from "./agent";
 import SFTPWrapper from "./sftp_wrapper";
 
 const MAX_CHANNEL = Math.pow(2, 32) - 1;
 const RE_OPENSSH = /^OpenSSH_(?:(?![0-4])\d)|(?:\d{2,})/;
 
-function openChannel(self, type, opts, cb) {
+const nextChannel = (self) => {
+    // get the next available channel number
+
+    // optimized path
+    if (self._curChan < MAX_CHANNEL) {
+        return ++self._curChan;
+    }
+
+    // slower lookup path
+    for (let i = 0, channels = self._channels; i < MAX_CHANNEL; ++i) {
+        if (!channels[i]) {
+            return i;
+        }
+    }
+
+    return false;
+};
+
+const openChannel = (self, type, opts, cb) => {
     // ask the server to open a channel for some purpose
     // (e.g. session (sftp, exec, shell), or forwarding a TCP connection
     const localChan = nextChannel(self);
@@ -101,26 +114,9 @@ function openChannel(self, type, opts, cb) {
         }
         cb(err);
     }
-}
+};
 
-function nextChannel(self) {
-    // get the next available channel number
-
-    // optimized path
-    if (self._curChan < MAX_CHANNEL) {
-        return ++self._curChan;
-    }
-
-    // slower lookup path
-    for (let i = 0, channels = self._channels; i < MAX_CHANNEL; ++i) {
-        if (!channels[i])
-        { return i; }
-    }
-
-    return false;
-}
-
-function reqX11(chan, screen, cb) {
+const reqX11 = (chan, screen, cb) => {
     // asks server to start sending us X11 connections
     const cfg = {
         single: false,
@@ -166,9 +162,9 @@ function reqX11(chan, screen, cb) {
     }
 
     return chan._client._sshstream.x11Forward(chan.outgoing.id, cfg, wantReply);
-}
+};
 
-function reqPty(chan, opts, cb) {
+const reqPty = (chan, opts, cb) => {
     let rows = 24;
     let cols = 80;
     let width = 640;
@@ -214,9 +210,9 @@ function reqPty(chan, opts, cb) {
     return chan._client._sshstream.pty(chan.outgoing.id,
         rows, cols, height, width, term, null, wantReply
     );
-}
+};
 
-function reqAgentFwd(chan, cb) {
+const reqAgentFwd = (chan, cb) => {
     const wantReply = is.function(cb);
 
     if (chan.outgoing.state !== "open") {
@@ -240,9 +236,9 @@ function reqAgentFwd(chan, cb) {
     });
 
     return chan._client._sshstream.openssh_agentForward(chan.outgoing.id, true);
-}
+};
 
-function reqShell(chan, cb) {
+const reqShell = (chan, cb) => {
     if (chan.outgoing.state !== "open") {
         cb(new Error("Channel is not open"));
         return true;
@@ -256,9 +252,9 @@ function reqShell(chan, cb) {
     });
 
     return chan._client._sshstream.shell(chan.outgoing.id, true);
-}
+};
 
-function reqExec(chan, cmd, opts, cb) {
+const reqExec = (chan, cmd, opts, cb) => {
     if (chan.outgoing.state !== "open") {
         cb(new Error("Channel is not open"));
         return true;
@@ -273,9 +269,9 @@ function reqExec(chan, cmd, opts, cb) {
     });
 
     return chan._client._sshstream.exec(chan.outgoing.id, cmd, true);
-}
+};
 
-function reqEnv(chan, env) {
+const reqEnv = (chan, env) => {
     if (chan.outgoing.state !== "open") {
         return true;
     }
@@ -291,9 +287,9 @@ function reqEnv(chan, env) {
     }
 
     return ret;
-}
+};
 
-function reqSubsystem(chan, name, cb) {
+const reqSubsystem = (chan, name, cb) => {
     if (chan.outgoing.state !== "open") {
         cb(new Error("Channel is not open"));
         return true;
@@ -307,7 +303,7 @@ function reqSubsystem(chan, name, cb) {
     });
 
     return chan._client._sshstream.subsystem(chan.outgoing.id, name, true);
-}
+};
 
 function onCHANNEL_OPEN(self, info) {
     // the server is trying to open a channel with us, this is usually when
@@ -346,9 +342,9 @@ function onCHANNEL_OPEN(self, info) {
     function reject() {
         if (reason === undefined) {
             if (localChan === false) {
-                reason = consts.CHANNEL_OPEN_FAILURE.RESOURCE_SHORTAGE;
+                reason = stream.const.CHANNEL_OPEN_FAILURE.RESOURCE_SHORTAGE;
             } else {
-                reason = consts.CHANNEL_OPEN_FAILURE.CONNECT_FAILED;
+                reason = stream.const.CHANNEL_OPEN_FAILURE.CONNECT_FAILED;
             }
         }
 
@@ -376,7 +372,7 @@ function onCHANNEL_OPEN(self, info) {
                 self._channels[localChan] = true;
             }
         } else {
-            reason = consts.CHANNEL_OPEN_FAILURE.ADMINISTRATIVELY_PROHIBITED;
+            reason = stream.const.CHANNEL_OPEN_FAILURE.ADMINISTRATIVELY_PROHIBITED;
             self.config.debug(`DEBUG: Client: Automatic rejection of incoming channel open: unexpected channel open for: ${info.type}`);
         }
 
@@ -403,7 +399,7 @@ function onCHANNEL_OPEN(self, info) {
     } else {
         // automatically reject any unsupported channel open requests
         self.config.debug(`DEBUG: Client: Automatic rejection of incoming channel open: unsupported type: ${info.type}`);
-        reason = consts.CHANNEL_OPEN_FAILURE.UNKNOWN_CHANNEL_TYPE;
+        reason = stream.const.CHANNEL_OPEN_FAILURE.UNKNOWN_CHANNEL_TYPE;
         reject();
     }
 }
@@ -457,24 +453,14 @@ export default class Client extends adone.EventEmitter {
         this._resetKA = undefined;
     }
 
-    connect(cfg) {
-        const self = this;
-
-        if (this._sock && this._sock.writable) {
-            this.once("close", () => {
-                self.connect(cfg);
-            });
-            this.end();
-            return;
-        }
-
-        this.config.host = cfg.hostname || cfg.host || "localhost";
-        this.config.port = cfg.port || 22;
-        this.config.forceIPv4 = cfg.forceIPv4 || false;
-        this.config.forceIPv6 = cfg.forceIPv6 || false;
-        this.config.keepaliveCountMax = (is.number(cfg.keepaliveCountMax) && cfg.keepaliveCountMax >= 0 ? cfg.keepaliveCountMax : 3);
-        this.config.keepaliveInterval = (is.number(cfg.keepaliveInterval) && cfg.keepaliveInterval > 0 ? cfg.keepaliveInterval : 0);
-        this.config.readyTimeout = (is.number(cfg.readyTimeout) && cfg.readyTimeout >= 0 ? cfg.readyTimeout : 20000);
+    connect(options) {
+        this.config.hostname = options.hostname || "localhost";
+        this.config.port = options.port || 22;
+        this.config.forceIPv4 = options.forceIPv4 || false;
+        this.config.forceIPv6 = options.forceIPv6 || false;
+        this.config.keepaliveCountMax = (is.number(options.keepaliveCountMax) && options.keepaliveCountMax >= 0 ? options.keepaliveCountMax : 3);
+        this.config.keepaliveInterval = (is.number(options.keepaliveInterval) && options.keepaliveInterval > 0 ? options.keepaliveInterval : 0);
+        this.config.readyTimeout = (is.number(options.readyTimeout) && options.readyTimeout >= 0 ? options.readyTimeout : 20000);
 
         const algorithms = {
             kex: undefined,
@@ -489,12 +475,12 @@ export default class Client extends adone.EventEmitter {
             compressBuf: undefined
         };
         let i;
-        if (typeof cfg.algorithms === "object" && cfg.algorithms !== null) {
+        if (typeof options.algorithms === "object" && options.algorithms !== null) {
             let algosSupported;
             let algoList;
 
-            algoList = cfg.algorithms.kex;
-            if (Array.isArray(algoList) && algoList.length > 0) {
+            algoList = options.algorithms.kex;
+            if (is.array(algoList) && algoList.length > 0) {
                 algosSupported = ALGORITHMS.SUPPORTED_KEX;
                 for (i = 0; i < algoList.length; ++i) {
                     if (algosSupported.indexOf(algoList[i]) === -1) {
@@ -504,8 +490,8 @@ export default class Client extends adone.EventEmitter {
                 algorithms.kex = algoList;
             }
 
-            algoList = cfg.algorithms.cipher;
-            if (Array.isArray(algoList) && algoList.length > 0) {
+            algoList = options.algorithms.cipher;
+            if (is.array(algoList) && algoList.length > 0) {
                 algosSupported = ALGORITHMS.SUPPORTED_CIPHER;
                 for (i = 0; i < algoList.length; ++i) {
                     if (algosSupported.indexOf(algoList[i]) === -1) {
@@ -515,8 +501,8 @@ export default class Client extends adone.EventEmitter {
                 algorithms.cipher = algoList;
             }
 
-            algoList = cfg.algorithms.serverHostKey;
-            if (Array.isArray(algoList) && algoList.length > 0) {
+            algoList = options.algorithms.serverHostKey;
+            if (is.array(algoList) && algoList.length > 0) {
                 algosSupported = ALGORITHMS.SUPPORTED_SERVER_HOST_KEY;
                 for (i = 0; i < algoList.length; ++i) {
                     if (algosSupported.indexOf(algoList[i]) === -1) {
@@ -527,8 +513,8 @@ export default class Client extends adone.EventEmitter {
                 algorithms.serverHostKey = algoList;
             }
 
-            algoList = cfg.algorithms.hmac;
-            if (Array.isArray(algoList) && algoList.length > 0) {
+            algoList = options.algorithms.hmac;
+            if (is.array(algoList) && algoList.length > 0) {
                 algosSupported = ALGORITHMS.SUPPORTED_HMAC;
                 for (i = 0; i < algoList.length; ++i) {
                     if (algosSupported.indexOf(algoList[i]) === -1) {
@@ -538,8 +524,8 @@ export default class Client extends adone.EventEmitter {
                 algorithms.hmac = algoList;
             }
 
-            algoList = cfg.algorithms.compress;
-            if (Array.isArray(algoList) && algoList.length > 0) {
+            algoList = options.algorithms.compress;
+            if (is.array(algoList) && algoList.length > 0) {
                 algosSupported = ALGORITHMS.SUPPORTED_COMPRESS;
                 for (i = 0; i < algoList.length; ++i) {
                     if (algosSupported.indexOf(algoList[i]) === -1) {
@@ -550,35 +536,35 @@ export default class Client extends adone.EventEmitter {
             }
         }
         if (algorithms.compress === undefined) {
-            if (cfg.compress) {
+            if (options.compress) {
                 algorithms.compress = ["zlib@openssh.com", "zlib"];
-                if (cfg.compress !== "force") {
+                if (options.compress !== "force") {
                     algorithms.compress.push("none");
                 }
-            } else if (cfg.compress === false) {
+            } else if (options.compress === false) {
                 algorithms.compress = ["none"];
             }
         }
 
-        this.config.username = cfg.username || cfg.user;
-        this.config.password = (is.string(cfg.password) ? cfg.password : undefined);
-        this.config.privateKey = (is.string(cfg.privateKey) || Buffer.isBuffer(cfg.privateKey) ? cfg.privateKey : undefined);
+        this.config.username = options.username || options.user;
+        this.config.password = (is.string(options.password) ? options.password : undefined);
+        this.config.privateKey = (is.string(options.privateKey) || Buffer.isBuffer(options.privateKey) ? options.privateKey : undefined);
         this.config.publicKey = undefined;
-        this.config.localHostname = (is.string(cfg.localHostname) && cfg.localHostname.length ? cfg.localHostname : undefined);
-        this.config.localUsername = (is.string(cfg.localUsername) && cfg.localUsername.length ? cfg.localUsername : undefined);
-        this.config.tryKeyboard = (cfg.tryKeyboard === true);
-        this.config.agent = (is.string(cfg.agent) && cfg.agent.length ? cfg.agent : undefined);
-        this.config.allowAgentFwd = (cfg.agentForward === true && this.config.agent !== undefined);
+        this.config.localHostname = (is.string(options.localHostname) && options.localHostname.length ? options.localHostname : undefined);
+        this.config.localUsername = (is.string(options.localUsername) && options.localUsername.length ? options.localUsername : undefined);
+        this.config.tryKeyboard = (options.tryKeyboard === true);
+        this.config.agent = (is.string(options.agent) && options.agent.length ? options.agent : undefined);
+        this.config.allowAgentFwd = (options.agentForward === true && this.config.agent !== undefined);
 
-        this.config.strictVendor = (is.boolean(cfg.strictVendor) ? cfg.strictVendor : true);
+        this.config.strictVendor = (is.boolean(options.strictVendor) ? options.strictVendor : true);
 
-        const debug = this.config.debug = (is.function(cfg.debug) ? cfg.debug : adone.noop);
+        const debug = this.config.debug = (is.function(options.debug) ? options.debug : adone.noop);
 
         if (!is.string(this.config.username)) {
             throw new Error("Invalid username");
         }
 
-        if (cfg.agentForward === true && !this.config.allowAgentFwd) {
+        if (options.agentForward === true && !this.config.allowAgentFwd) {
             throw new Error("You must set a valid agent path to allow agent forwarding");
         }
 
@@ -599,10 +585,10 @@ export default class Client extends adone.EventEmitter {
                 throw new Error("privateKey value does not contain a (valid) private key");
             }
             if (privKeyInfo.encryption) {
-                if (!is.string(typeof cfg.passphrase)) {
+                if (!is.string(typeof options.passphrase)) {
                     throw new Error("Encrypted private key detected, but no passphrase given");
                 }
-                decryptKey(privKeyInfo, cfg.passphrase);
+                decryptKey(privKeyInfo, options.passphrase);
             }
             this.config.privateKey = privKeyInfo;
             this.config.publicKey = genPublicKey(privKeyInfo);
@@ -612,7 +598,7 @@ export default class Client extends adone.EventEmitter {
             algorithms,
             debug: (debug === adone.noop ? undefined : debug)
         });
-        const sock = this._sock = (cfg.sock || new Socket());
+        const sock = this._sock = (options.sock || new Socket());
 
         // drain stderr if we are connection hopping using an exec stream
         if (this._sock.stderr) {
@@ -624,6 +610,8 @@ export default class Client extends adone.EventEmitter {
         const kacountmax = this.config.keepaliveCountMax;
         let kacount = 0;
         let katimer;
+
+        const self = this;
 
         function sendKA() {
             if (++kacount > kacountmax) {
@@ -657,36 +645,36 @@ export default class Client extends adone.EventEmitter {
         this._resetKA = resetKA;
 
         stream.on("USERAUTH_BANNER", (msg) => {
-            self.emit("banner", msg);
+            this.emit("banner", msg);
         });
 
         sock.on("connect", () => {
             debug("DEBUG: Client: Connected");
-            self.emit("connect");
-            if (!cfg.sock) {
+            this.emit("connect");
+            if (!options.sock) {
                 stream.pipe(sock).pipe(stream);
             }
         }).on("timeout", () => {
-            self.emit("timeout");
+            this.emit("timeout");
         }).on("error", (err) => {
-            clearTimeout(self._readyTimeout);
+            clearTimeout(this._readyTimeout);
             err.level = "client-socket";
-            self.emit("error", err);
+            this.emit("error", err);
         }).on("end", () => {
             stream.unpipe(sock);
-            clearTimeout(self._readyTimeout);
+            clearTimeout(this._readyTimeout);
             clearInterval(katimer);
-            self.emit("end");
+            this.emit("end");
         }).on("close", () => {
             stream.unpipe(sock);
-            clearTimeout(self._readyTimeout);
+            clearTimeout(this._readyTimeout);
             clearInterval(katimer);
-            self.emit("close");
+            this.emit("close");
 
             // notify outstanding channel requests of disconnection ...
             const callbacks_ = callbacks;
             const err = new Error("No response from server");
-            callbacks = self._callbacks = [];
+            callbacks = this._callbacks = [];
             for (i = 0; i < callbacks_.length; ++i) {
                 callbacks_[i](err);
             }
@@ -695,8 +683,8 @@ export default class Client extends adone.EventEmitter {
             // against successfully opened channels because the success and failure
             // event handlers are automatically removed when a success/failure response
             // is received
-            const chanNos = Object.keys(self._channels);
-            self._channels = {};
+            const chanNos = Object.keys(this._channels);
+            this._channels = {};
             for (i = 0; i < chanNos.length; ++i) {
                 stream.emit(`CHANNEL_OPEN_FAILURE:${chanNos[i]}`, err);
                 // emitting CHANNEL_CLOSE should be safe too and should help for any
@@ -706,25 +694,25 @@ export default class Client extends adone.EventEmitter {
             }
         });
         stream.on("drain", () => {
-            self.emit("drain");
+            this.emit("drain");
         }).once("header", (header) => {
-            self._remoteVer = header.versions.software;
+            this._remoteVer = header.versions.software;
             if (header.greeting) {
-                self.emit("greeting", header.greeting);
+                this.emit("greeting", header.greeting);
             }
         }).on("continue", () => {
-            self.emit("continue");
+            this.emit("continue");
         }).on("error", (err) => {
             err.level = "protocol";
-            self.emit("error", err);
+            this.emit("error", err);
         });
 
-        if (is.function(cfg.hostVerifier)) {
-            if (HASHES.indexOf(cfg.hostHash) === -1) {
-                throw new Error(`Invalid host hash algorithm: ${cfg.hostHash}`);
+        if (is.function(options.hostVerifier)) {
+            if (HASHES.indexOf(options.hostHash) === -1) {
+                throw new Error(`Invalid host hash algorithm: ${options.hostHash}`);
             }
-            const hashCb = cfg.hostVerifier;
-            const hasher = crypto.createHash(cfg.hostHash);
+            const hashCb = options.hostVerifier;
+            const hasher = crypto.createHash(options.hostHash);
             stream.once("fingerprint", (key, verify) => {
                 hasher.update(key);
                 const ret = hashCb(hasher.digest("hex"), verify);
@@ -870,7 +858,7 @@ export default class Client extends adone.EventEmitter {
         }
 
         function onUSERAUTH_INFO_REQUEST(name, instructions, lang, prompts) {
-            const nprompts = (Array.isArray(prompts) ? prompts.length : 0);
+            const nprompts = (is.array(prompts) ? prompts.length : 0);
             if (nprompts === 0) {
                 debug("DEBUG: Client: Sending automatic USERAUTH_INFO_RESPONSE");
                 return stream.authInfoRes();
@@ -1035,8 +1023,8 @@ export default class Client extends adone.EventEmitter {
             }
         });
 
-        if (!cfg.sock) {
-            let host = this.config.host;
+        if (!options.sock) {
+            let host = this.config.hostname;
             const forceIPv4 = this.config.forceIPv4;
             const forceIPv6 = this.config.forceIPv6;
 
@@ -1052,7 +1040,7 @@ export default class Client extends adone.EventEmitter {
                 self._sock.connect(self.config.port, host);
                 self._sock.setNoDelay(true);
                 self._sock.setMaxListeners(0);
-                self._sock.setTimeout(is.number(cfg.timeout) ? cfg.timeout : 0);
+                self._sock.setTimeout(is.number(options.timeout) ? options.timeout : 0);
             }
 
             if ((!forceIPv4 && !forceIPv6) || (forceIPv4 && forceIPv6)) {
@@ -1532,8 +1520,6 @@ export default class Client extends adone.EventEmitter {
         return true;
     }
 }
-// pass some useful utilities on to end user (e.g. parseKey(), genPublicKey())
-Client.utils = SSHStreamUtils;
 // expose useful SFTPStream constants for sftp server usage
 Client.SFTP_STATUS_CODE = SFTPStream.STATUS_CODE;
 Client.SFTP_OPEN_MODE = SFTPStream.OPEN_MODE;

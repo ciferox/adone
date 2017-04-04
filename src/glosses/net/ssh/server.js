@@ -1,22 +1,17 @@
-const { is } = adone;
+const { is, net: { ssh: { Channel } } } = adone;
 const net = adone.std.net;
 const listenerCount = adone.EventEmitter.listenerCount;
 
-import Channel from "./channel";
 import KeepaliveManager from "./keepalivemgr";
 
-import {
-    SSH2Stream,
-    SFTPStream,
-    constants as consts,
-    utils
-} from "./streams";
-const parseKey = utils.parseKey;
-const genPublicKey = utils.genPublicKey;
-const decryptKey = utils.decryptKey;
-const DISCONNECT_REASON = consts.DISCONNECT_REASON;
-const CHANNEL_OPEN_FAILURE = consts.CHANNEL_OPEN_FAILURE;
-const ALGORITHMS = consts.ALGORITHMS;
+const { stream } = adone.net.ssh;
+const { SSH2Stream, SFTPStream, util } = stream;
+const parseKey = util.parseKey;
+const genPublicKey = util.genPublicKey;
+const decryptKey = util.decryptKey;
+const DISCONNECT_REASON = stream.const.DISCONNECT_REASON;
+const CHANNEL_OPEN_FAILURE = stream.const.CHANNEL_OPEN_FAILURE;
+const ALGORITHMS = stream.const.ALGORITHMS;
 
 const MAX_CHANNEL = Math.pow(2, 32) - 1;
 const MAX_PENDING_AUTHS = 10;
