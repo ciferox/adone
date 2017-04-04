@@ -121,7 +121,8 @@ module.exports = {
             "ignoreUrls": true,
             "ignoreComments": true
         }],
-        "comma-style": ["error", "last"]
+        "comma-style": ["error", "last"],
+        "no-self-compare": "error"
     },
     "plugins": [
         "babel",
