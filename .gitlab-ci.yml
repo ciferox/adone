@@ -40,26 +40,26 @@ osx:
 windows 7:
     stage: test
     script:
-        - npm i
-        - npm run build
-        - npm test
+        - call npm i
+        - call npm run build
+        - call npm test
     tags:
         - windows 7
 
 windows 8.1:
     stage: test
     script:
-        - npm i
-        - npm run build
-        - npm test
+        - call npm i
+        - call npm run build
+        - call npm test
     tags:
         - windows 8.1
 
 windows 10:
     stage: test
     script:
-        - npm i
-        - npm run build
-        - npm test
+        - call npm i
+        - call npm run build
+        - call npm test
     tags:
         - windows 10
