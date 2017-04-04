@@ -99,21 +99,24 @@ describe("FAST", function () {
                 .watch("src1/**/*", { cwd: root.path() })
                 .dest("dest1", { produceFiles: true })
                 .through((f) => files.push(f));
-            await adone.promise.delay(100);  // time to init the watcher
-            const src1 = root.getVirtualDirectory("src1");
-            const dest1 = root.getVirtualDirectory("dest1");
 
-            await src1.addFile("hello");
-            await adone.promise.delay(100);
-            expect(files).to.have.lengthOf(1);
-            expect(files[0].path).to.be.equal(dest1.getVirtualFile("hello").path());
+            try {
+                await adone.promise.delay(100);  // time to init the watcher
+                const src1 = root.getVirtualDirectory("src1");
+                const dest1 = root.getVirtualDirectory("dest1");
 
-            await src1.addFile("we", "need", "to", "go", "deeper", "index.js");
-            await adone.promise.delay(100);
-            expect(files).to.have.lengthOf(2);
-            expect(files[1].path).to.be.equal(dest1.getVirtualFile("we", "need", "to", "go", "deeper", "index.js").path());
+                await src1.addFile("hello");
+                await adone.promise.delay(100);
+                expect(files).to.have.lengthOf(1);
+                expect(files[0].path).to.be.equal(dest1.getVirtualFile("hello").path());
 
-            stream.end();
+                await src1.addFile("we", "need", "to", "go", "deeper", "index.js");
+                await adone.promise.delay(100);
+                expect(files).to.have.lengthOf(2);
+                expect(files[1].path).to.be.equal(dest1.getVirtualFile("we", "need", "to", "go", "deeper", "index.js").path());
+            } finally {
+                stream.end();
+            }
         });
 
         it.skip("should unlink files", async () => {
