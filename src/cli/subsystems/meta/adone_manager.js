@@ -22,7 +22,8 @@ export default class AdoneManager {
     constructor() {
         this.app = adone.appinstance;
         this.nodePath = std.path.dirname(process.execPath);
-        this.nodeModulesDir = new fs.Directory(std.path.resolve(fs.homeDir(), ".node_modules"));
+        // this.nodeModulesDir = new fs.Directory(std.path.resolve(fs.homeDir(), ".node_modules"));
+        this.nodeModulesDir = new fs.Directory("/usr/local/lib/node");
         this.adoneVersion = adone.package.version;
         this.name = `${getPlatform()}-${getArch()}.tar`;
     }

@@ -1,6 +1,7 @@
 adone.lazify({
     Channel: "./channel",
     Client: "./client",
+    Session: "./session",
     Server: "./server",
     stream: () => adone.lazify({
         util: "./streams/utils",

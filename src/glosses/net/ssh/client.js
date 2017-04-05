@@ -1162,10 +1162,7 @@ export default class Client extends adone.EventEmitter {
     }
 
     shell(wndopts, opts, cb) {
-        if (!this._sock ||
-            !this._sock.writable ||
-            !this._sshstream ||
-            !this._sshstream.writable) {
+        if (!this._sock || !this._sock.writable || !this._sshstream || !this._sshstream.writable) {
             throw new Error("Not connected");
         }
 
