@@ -1,10 +1,30 @@
 const { is, std } = adone;
 const { ENABLED } = adone.omnitron.const;
 
-export default class ConfigurationManager {
+export default class Configurator {
     constructor(app, { inMemory = false } = {}) {
         this.app = app;
         this.inMemory = inMemory;
+        this._gateManager = null;
+        this._hostManager = null;
+    }
+
+    get omnitron() {
+        return this.config.omnitron;
+    }
+
+    get gates() {
+        if (is.null(this._gateManager)) {
+            this._gateManager = new adone.omnitron.GateManager(this.config.omnitron);
+        }
+        return this._gateManager;
+    }
+
+    get hosts() {
+        if (is.null(this._hostManager)) {
+            this._hostManager = new adone.omnitron.HostManager(this.config.omnitron);
+        }
+        return this._hostManager;
     }
 
     async loadAll() {
@@ -67,7 +87,7 @@ export default class ConfigurationManager {
                 }
             }
         }
-        return this.config.omnitron;
+        return this;
     }
 
     saveServicesConfig() {

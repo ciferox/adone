@@ -36,6 +36,11 @@ export default class extends adone.application.Subsystem {
                     handler: this.envsCommand
                 },
                 {
+                    name: "shell",
+                    help: "run omnitron's shell",
+                    handler: this.shellCommand
+                },
+                {
                     name: "status",
                     help: "show status of service(s)",
                     arguments: [
@@ -198,6 +203,10 @@ export default class extends adone.application.Subsystem {
         return 0;
     }
 
+    async shellCommand() {
+
+    }
+
     async statusCommand(args) {
         try {
             adone.log(pretty.table(await this.dispatcher.status(args.get("service")), {
@@ -299,7 +308,6 @@ export default class extends adone.application.Subsystem {
                         id: "name",
                         header: "Name",
                         style: "{green-fg}"
-
                     },
                     {
                         id: "contexts",
@@ -355,7 +363,6 @@ export default class extends adone.application.Subsystem {
                         id: "id",
                         header: "ID",
                         style: "{green-fg}"
-
                     },
                     {
                         id: "port",
@@ -406,7 +413,6 @@ export default class extends adone.application.Subsystem {
                     id: "mount",
                     header: "Mount",
                     style: "{green-fg}"
-
                 },
                 {
                     id: "fsType",
@@ -440,7 +446,6 @@ export default class extends adone.application.Subsystem {
                     id: "name",
                     header: "Name",
                     style: "{green-fg}"
-
                 },
                 {
                     id: "pid",

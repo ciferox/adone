@@ -46,7 +46,6 @@ export const ansi = {
     escapeCodesRegexp: () => /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-PRZcf-nqry=><]/g,
     stripEscapeCodes: (str) => (is.string(str) ? str.replace(ansi.escapeCodesRegexp(), "") : str)
 };
-
 export const escapeStringRegexp = (str) => {
     if (typeof str !== "string") {
         throw new TypeError("Expected a string");
@@ -279,6 +278,8 @@ export const indent = (string, spaces) => {
 
     return result;
 };
+
+export const stripLastCRLF = (str) => str.replace(/(\r?\n|\r)$/, "");
 
 adone.lazify({
     unicode: "./unicode",

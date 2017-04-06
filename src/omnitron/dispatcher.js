@@ -2,10 +2,10 @@ const { is } = adone;
 const { STATUSES } = adone.omnitron.const;
 
 export default class Dispatcher {
-    constructor(app, { noisily = true, configManager = null, omnitron = null } = {}) {
+    constructor(app, { noisily = true, configurator = null, omnitron = null } = {}) {
         this.app = app;
         this.noisily = noisily;
-        this.configManager = configManager;
+        this._configurator = configurator;
         this.omnitron = omnitron;
         this.netron = null;
         this.peer = null;
@@ -15,17 +15,17 @@ export default class Dispatcher {
         };
     }
 
-    config() {
-        if (is.null(this.configManager)) {
-            this.configManager = new adone.omnitron.ConfigurationManager(this.app);
+    configurator() {
+        if (is.null(this._configurator)) {
+            this._configurator = new adone.omnitron.Configurator(this.app);
         }
-        return this.configManager.loadAll();
+        return this._configurator.loadAll();
     }
 
     async connectLocal(options, forceStart = true, _secondTime = false) {
         if (is.null(this.netron)) {
-            const omnitronConfig = await this.config();
-            const localGate = omnitronConfig.getGate({ id: (is.plainObject(options) && is.string(options.gateId) ? options.gateId : "local") });
+            const gates = (await this.configurator()).gates;
+            const localGate = gates.getGate({ id: (is.plainObject(options) && is.string(options.gateId) ? options.gateId : "local") });
             if (is.nil(localGate)) {
                 throw new adone.x.NotExists("Configuration for gate 'local' is not found");
             }
@@ -69,7 +69,8 @@ export default class Dispatcher {
         const omnitronPath = adone.std.path.resolve(adone.appinstance.adoneRootPath, "lib/omnitron/index.js");
         if (spiritualWay) {
             return new Promise((resolve, reject) => {
-                this.config().then((omnitronConfig) => {
+                this.configurator().then((configurator) => {
+                    const omnitronConfig = configurator.omnitron;
                     this.descriptors.stdout = adone.std.fs.openSync(omnitronConfig.logFilePath, "a");
                     this.descriptors.stderr = adone.std.fs.openSync(omnitronConfig.errorLogFilePath, "a");
                     const child = adone.std.child_process.spawn(process.execPath || "node", [omnitronPath], {
@@ -160,8 +161,8 @@ export default class Dispatcher {
         let isOK = false;
         try {
             if (is.nil(options) || !options.port) {
-                const omnitronConfig = await this.config();
-                const localGate = omnitronConfig.getGate({ id: "local" });
+                const gates = (await this.configurator()).gates;
+                const localGate = gates.getGate({ id: "local" });
                 if (is.nil(localGate)) {
                     throw new adone.x.NotExists("Configuration for gate 'local' is not found");
                 }

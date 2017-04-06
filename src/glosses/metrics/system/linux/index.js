@@ -18,9 +18,6 @@ export default class LinuxOS extends adone.metrics.OS {
         }
 
         this.version = this.versionId;
-        if (this.codeName.length > 0) {
-            this.version += ` (${this.codeName})`;
-        }
 
         try {
             const procVersion = adone.fs.readLinesSync("/proc/version");
@@ -35,9 +32,6 @@ export default class LinuxOS extends adone.metrics.OS {
             }
         } catch (err) {
             this.buildNumber = "";
-        }
-        if (this.buildNumber.length > 0) {
-            this.version += ` build ${this.buildNumber}`;
         }
     
         try {

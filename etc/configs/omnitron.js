@@ -16,33 +16,6 @@ module.exports = {
     storesPath,
     systemDbPath: join(storesPath, "system"),
     hostsDbPath: join(storesPath, "hosts"),
-    getGate(opts) {
-        if (opts.id !== undefined) {
-            for (const gate of this.gates) {
-                if (opts.id === gate.id) {
-                    return gate;
-                }
-            }
-            return;
-        }
-        const gates = [];
-        for (const gate of this.gates) {
-            if ((opts.type === undefined || opts.type === gate.type) && (opts.enabled === undefined || opts.enabled === gate.enabled)) {
-                if (!Array.isArray(opts.contexts) || gate.access === undefined || !Array.isArray(gate.access.contexts)) {
-                    gates.push(gate);
-                } else {
-                    const contexts = gate.access.contexts;
-                    for (const svcName of opts.contexts) {
-                        if (contexts.includes(svcName)) {
-                            gates.push(gate);
-                        }
-                    }
-                }
-            }
-        }
-
-        return gates;
-    },
     getServicePath(serviceName, dirName) {
         let fullPath;
         if (typeof(dirType) === "string") {            

@@ -20,7 +20,7 @@ process.env.ADONE_DIRNAME = dirName;
 export class WeakOmnitron extends adone.omnitron.Omnitron.Omnitron {
     constructor(options) {
         super(options);
-        this._.configManager = new adone.omnitron.ConfigurationManager(this, { inMemory: true });
+        this._.configurator = new adone.omnitron.Configurator(this, { inMemory: true });
     }
 
     async initialize() {
@@ -48,33 +48,6 @@ export class WeakOmnitron extends adone.omnitron.Omnitron.Omnitron {
                     ]
                 }
             },
-            getGate(opts) {
-                if (opts.id !== undefined) {
-                    for (const gate of this.gates) {
-                        if (opts.id === gate.id) {
-                            return gate;
-                        }
-                    }
-                    return;
-                }
-                const gates = [];
-                for (const gate of this.gates) {
-                    if ((opts.type === undefined || opts.type === gate.type) && (opts.enabled === undefined || opts.enabled === gate.enabled)) {
-                        if (!Array.isArray(opts.contexts) || gate.access === undefined || !Array.isArray(gate.access.contexts)) {
-                            gates.push(gate);
-                        } else {
-                            const contexts = gate.access.contexts;
-                            for (const svcName of opts.contexts) {
-                                if (contexts.includes(svcName)) {
-                                    gates.push(gate);
-                                }
-                            }
-                        }
-                    }
-                }
-
-                return gates;
-            },
             getServicePath(serviceName, dirName) {
                 let fullPath;
                 if (typeof dirName === "string") {
@@ -94,14 +67,14 @@ export class WeakOmnitron extends adone.omnitron.Omnitron.Omnitron {
         await this.bindNetron();
         await this.attachServices();
 
-        // await this._.configManager.saveServicesConfig();
-        // await this._.configManager.saveGatesConfig();
+        // await this._.configurator.saveServicesConfig();
+        // await this._.configurator.saveGatesConfig();
     }
 
     async uninitialize() {
         await this.detachServices();
 
-        // await this._.configManager.saveServicesConfig();
+        // await this._.configurator.saveServicesConfig();
 
         // Let netron gracefully complete all disconnects
         await adone.promise.delay(500);
@@ -134,7 +107,7 @@ export default class OmnitronRunner extends adone.application.Application {
         if (!adone.is.null(omnitron)) {
             this.omnitron = omnitron;
             options.omnitron = omnitron;
-            options.configManager = this.omnitron._.configManager;
+            options.configurator = this.omnitron._.configurator;
         }
         return this.dispatcher = new adone.omnitron.Dispatcher(this, options);
     }

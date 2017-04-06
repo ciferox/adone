@@ -4,6 +4,7 @@ const defaultPorts = {
     http: "80",
     https: "443",
     ftp: "21",
+    ssh: "22",
     gopher: "70",
     ws: "80",
     wss: "443"
@@ -1290,6 +1291,7 @@ export default class URI {
 
     normalizePort() {
         // remove port of it's the protocol's default
+        adone.log(this._parts.protocol);
         if (is.string(this._parts.protocol)) {
             if (this._parts.port === defaultPorts[this._parts.protocol]) {
                 this._parts.port = null;

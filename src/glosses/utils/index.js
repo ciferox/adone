@@ -865,7 +865,7 @@ adone.lazify({
     memcpy: "./memcpy",
     microtime: "./microtime",
     uuid: "./uuid",
-    userid: "./userid",
+    userid: () => adone.bind("userid.node").UserId,
     StreamSearch: "./streamsearch",
     delegate: "./delegate",
     GlobExp: "./globexp",

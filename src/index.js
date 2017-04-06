@@ -293,7 +293,8 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
         native: () => lazify({
             terminal: () => adone.bind("terminal.node").Terminal,
             system: () => adone.bind("metrics.node").System
-        })
+        }),
+        specter: "./glosses/specter"
     }, adone);
 
     adone.application = lazify({
@@ -320,7 +321,9 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
 
     adone.omnitron = lazify({
         const: "./omnitron/consts",
-        ConfigurationManager: "./omnitron/configuration_manager",
+        GateManager: "./omnitron/gate_manager",
+        HostManager: "./omnitron/host_manager",
+        Configurator: "./omnitron/configurator",
         Omnitron: "./omnitron",
         Dispatcher: "./omnitron/dispatcher"
     });

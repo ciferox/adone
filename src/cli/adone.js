@@ -10,6 +10,7 @@ export default class AdoneCLI extends adone.application.Application {
         this.loadSubsystem(adone.std.path.resolve(__dirname, "./subsystems/meta"));
         this.loadSubsystem(adone.std.path.resolve(__dirname, "./subsystems/bench"));
         this.loadSubsystem(adone.std.path.resolve(__dirname, "./subsystems/shani"));
+        this.loadSubsystem(adone.std.path.resolve(__dirname, "./subsystems/specter"));
 
         this.loadSubsystem(adone.std.path.resolve(__dirname, "../lib/omnitron/cli"));
         this.loadSubsystem(adone.std.path.resolve(__dirname, "../lib/omnitron/services/process_manager/cli"));
@@ -29,39 +30,6 @@ export default class AdoneCLI extends adone.application.Application {
                 { name: "expr", help: "run script or inspect adone-object", default: "index.js" }
             ],
             commands: [
-                {
-                    name: "rinit",
-                    help: "Perform remote init of adone infrastructure",
-                    arguments: [
-                        {
-                            name: "host",
-                            nargs: "+",
-                            type: String,
-                            help: "host identity(ies)"
-                        }
-                    ],
-                    options: [
-                        {
-                            name: ["--username", "-u"],
-                            type: String,
-                            required: true,
-                            help: "ssh username"
-                        },
-                        {
-                            name: ["--password", "-p"],
-                            type: String,
-                            required: true,
-                            help: "ssh password"
-                        },
-                        {
-                            name: ["--port", "-P"],
-                            type: String,
-                            default: 22,
-                            help: "ssh port"
-                        }
-                    ],
-                    handler: this.initCommand
-                },
                 {
                     name: "config",
                     help: "configurations management",
@@ -130,48 +98,6 @@ export default class AdoneCLI extends adone.application.Application {
         }
 
         return adone.require(expr);
-    }
-
-    async initCommand(args, opts) {
-        const privateKey = await adone.fs.readFile(adone.std.path.resolve(adone.fs.homeDir(), ".ssh", "id_rsa"));
-        const options = {
-            hostname: undefined,
-            port: opts.get("port"),
-            username: opts.get("username"),
-            password: opts.get("password"),
-            privateKey
-        };
-        for (const host of args.get("host")) {
-            try {
-                const addr = await adone.net.address.lookup(host);
-                options.hostname = addr;
-                const sshSession = await adone.net.ssh.Session.connect(options);
-                adone.log(`Host: ${addr}`);
-
-                const systemInfo = (await sshSession.execOne("uname -a")).replace(/[\n\r]/g, "");
-                adone.log(`System: ${systemInfo}`);
-
-                const result = (await sshSession.execOne("which node")).replace(/[\n\r]/g, "");
-                if (result === "") {
-                    adone.info("nodejs not found, trying to install it...");
-                    adone.log(adone.std.path.join(this.adoneEtcPath, "scripts", "avm"));
-                    const remotePath = `/home/${sshSession.options.username}`;
-                    const remoteAvmBin = `${remotePath}/avm/avm`;
-                    await sshSession.putFile(adone.std.path.join(this.adoneEtcPath, "scripts", "avm"), remoteAvmBin);
-                    await sshSession.chmod(remoteAvmBin, 777);
-                    const nodeInstallCmd = `sudo ${remotePath}/avm/avm --prefix ${remotePath} latest`;
-                    adone.log(nodeInstallCmd);
-                    const result = (await sshSession.execOne(nodeInstallCmd));
-                    adone.log(result);
-                } else {
-                    adone.log(`Node path: ${result}`);
-                    adone.log(`Node version: ${(await sshSession.execOne("node --version")).replace(/[\n\r]/g, "")}`);
-                }
-            } catch (err) {
-                adone.error(err.message);
-            }
-        }
-        return 0;
     }
 
     async configCommand(args, opts) {

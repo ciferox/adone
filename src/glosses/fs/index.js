@@ -3,6 +3,7 @@ const { is, x, promise: { promisify } } = adone;
 const fs = adone.lazify({
     unlink: () => promisify(adone.std.fs.unlink),  // we have rm, should we have this one?
     chmod: () => promisify(adone.std.fs.chmod),
+    chown: () => promisify(adone.std.fs.chown),
     rmdir: () => promisify(adone.std.fs.rmdir),
     readdir: () => promisify(adone.std.fs.readdir),
     lstat: () => promisify(adone.std.fs.lstat),
