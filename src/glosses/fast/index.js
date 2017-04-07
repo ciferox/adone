@@ -1,11 +1,12 @@
-import File from "./file";
-import * as helpers from "./helpers";
-const { std, util, is, x } = adone;
+const { lazify, std, util, is, x, core: { Core } } = adone;
 
-export { File, helpers };
+const fast = lazify({
+    File: "./file",
+    helpers: "./helpers"
+}, exports, require);
 
 // Plugins
-export const plugin = adone.lazify({
+export const plugin = lazify({
     transpile: "./transforms/transpile",
     if: "./transforms/if",
     deleteLines: "./transforms/delete-lines",
@@ -29,7 +30,7 @@ export const plugin = adone.lazify({
     wiredep: "./transforms/wiredep"
 }, null, require);
 
-export class Fast extends adone.core.Core {
+export class Fast extends Core {
     transpile(options) {
         return this.pipe(plugin.transpile(options));
     }
@@ -126,12 +127,12 @@ export class Fast extends adone.core.Core {
 
     decompress(compressorName, options = {}) {
         if (!(compressorName in adone.compressor)) {
-            throw new adone.x.InvalidArgument(`Unknown compressor: ${compressorName}`);
+            throw new x.InvalidArgument(`Unknown compressor: ${compressorName}`);
         }
 
         const { decompress } = adone.compressor[compressorName];
 
-        return this.through(async function (file) {
+        return this.through(async function decompressing(file) {
             if (file.isStream()) {
                 file.contents = file.contents.pipe(decompress.stream(options));
             } else if (file.isBuffer()) {
@@ -170,7 +171,7 @@ export class Fast extends adone.core.Core {
 
     pack(archiveType, packerOptions = {}) {
         if (!(archiveType in adone.archive)) {
-            throw new adone.x.InvalidArgument(`Unknown archive type: ${archiveType}`);
+            throw new x.InvalidArgument(`Unknown archive type: ${archiveType}`);
         }
         if (is.string(packerOptions)) {
             packerOptions = { filename: packerOptions };
@@ -208,7 +209,7 @@ export class Fast extends adone.core.Core {
             stream.finalize();
             const cwd = packerOptions.cwd || self._cwd || process.cwd();
             const base = packerOptions.base || cwd;
-            const file = new File({
+            const file = new fast.File({
                 path: std.path.resolve(base, packerOptions.filename),
                 cwd: packerOptions.cwd || this._cwd || process.cwd(),
                 base: packerOptions.base || null,
@@ -220,11 +221,11 @@ export class Fast extends adone.core.Core {
 
     extract(archiveType, extractorOptions = {}) {
         if (!(archiveType in adone.archive)) {
-            throw new adone.x.InvalidArgument(`Unknown archive type: ${archiveType}`);
+            throw new x.InvalidArgument(`Unknown archive type: ${archiveType}`);
         }
         const archive = adone.archive[archiveType];
 
-        return this.through(async function (file) {
+        return this.through(async function extracting(file) {
             if (file.isNull()) {
                 this.push(file);
                 return;
@@ -325,12 +326,17 @@ export class FastFS extends Fast {
         return file;
     }
 
-    dest(dir, { mode = 0o644, flag = "w", cwd = this._cwd || process.cwd(), produceFiles = false } = {}) {
+    dest(dir, {
+        mode = 0o644,
+        flag = "w",
+        cwd = this._cwd || process.cwd(),
+        produceFiles = false
+    } = {}) {
         const isDirFunction = is.function(dir);
         if (!isDirFunction) {
             dir = std.path.resolve(cwd, dir);
         }
-        return this.through(async function (file) {
+        return this.through(async function writing(file) {
             if (file.isNull()) {
                 file.contents = Buffer.alloc(0);
             }
@@ -360,7 +366,7 @@ export class FastFS extends Fast {
                 file.cwd = cwd;
                 file.base = dirname;
                 file.path = destPath;
-                await helpers.updateMetadata(fd, file);
+                await fast.helpers.updateMetadata(fd, file);
             } finally {
                 await std.fs.closeAsync(fd);
             }
@@ -373,51 +379,49 @@ export class FastFS extends Fast {
 
 adone.tag.set(FastFS, adone.tag.FAST_FS_STREAM);
 
-function resolveGlob(glob, cwd) {
+const resolveGlob = (glob, cwd) => {
     if (glob[0] === "!") {
-        return "!" + adone.std.path.resolve(cwd, glob.slice(1));
+        return `!${adone.std.path.resolve(cwd, glob.slice(1))}`;
     }
     return adone.std.path.resolve(cwd, glob);
-}
+};
 
-function globSource(globs, { cwd = process.cwd(), base = null, dot = true } = {}) {
+const globSource = (globs, { cwd = process.cwd(), base = null, dot = true } = {}) => {
     let globsParents;
     if (!base) {
         globsParents = globs.map((x) => util.globParent(x));
     }
-    return adone.fs.glob(globs, { dot, patternIndex: true }).through(async function ({ path, patternIndex }) {
-        const stat = await std.fs.statAsync(path);
-        if (stat.isDirectory()) {
-            return;
-        }
-        const _base = base || globsParents[patternIndex];
-        this.push(new File({
-            cwd,
-            base: _base,
-            path,
-            contents: null,
-            stat: await std.fs.statAsync(path)  // TODO, it should be handled by the glob
-        }));
-    });
-}
+    return adone.fs.glob(globs, { dot, patternIndex: true })
+        .through(async function fileWrapper({ path, patternIndex }) {
+            const stat = await std.fs.statAsync(path);
+            if (stat.isDirectory()) {
+                return;
+            }
+            const _base = base || globsParents[patternIndex];
+            this.push(new fast.File({
+                cwd,
+                base: _base,
+                path,
+                contents: null,
+                stat: await std.fs.statAsync(path)  // TODO, it should be handled by the glob
+            }));
+        });
+};
 
-export function src(globs, { cwd = process.cwd(), base = null, read = true, buffer = true, stream = false, dot = true } = {}) {
+export const src = (globs, {
+    cwd = process.cwd(),
+    base = null,
+    read = true,
+    buffer = true,
+    stream = false,
+    dot = true
+} = {}) => {
     globs = util.arrify(globs).map((x) => resolveGlob(x, cwd));
     const source = globSource(globs, { cwd, base, dot });
     const fast = new FastFS(source, { read, buffer, stream, cwd });
     fast.once("end", () => source.end({ force: true }));
     return fast;
-}
-
-export function map(mappings, { cwd = process.cwd(), base = null, read = true, buffer = true, stream = false, dot = true } = {}) {
-    mappings = util.arrify(mappings).map(({ from, to }) => {
-        return { from: resolveGlob(from, cwd), to };
-    });
-    const source = globSource(mappings.map((x) => x.from), { cwd, base, dot });
-    const fast = new FastFSMapper(source, mappings, { read, buffer, stream, cwd, dot });
-    fast.once("end", () => source.end({ force: true }));
-    return fast;
-}
+};
 
 class FastFSMapper extends FastFS {
     constructor(source, mappings, options) {
@@ -449,47 +453,86 @@ class FastFSMapper extends FastFS {
     }
 }
 
-function watchSource(globs, { cwd = process.cwd(), base = null, dot = true, ...watcherOptions } = {}) {
+export const map = (mappings, {
+    cwd = process.cwd(),
+    base = null,
+    read = true,
+    buffer = true,
+    stream = false,
+    dot = true
+} = {}) => {
+    mappings = util.arrify(mappings).map(({ from, to }) => {
+        return { from: resolveGlob(from, cwd), to };
+    });
+    const source = globSource(mappings.map((x) => x.from), { cwd, base, dot });
+    const fast = new FastFSMapper(source, mappings, { read, buffer, stream, cwd, dot });
+    fast.once("end", () => source.end({ force: true }));
+    return fast;
+};
+
+
+export const watchSource = (globs, {
+    cwd = process.cwd(),
+    base = null,
+    dot = true,
+    ...watcherOptions
+} = {}) => {
     let globsParents;
     if (!base) {
         globsParents = globs.map((x) => adone.util.globParent(x));
     }
-    const watcher = adone.fs.watch(globs, { alwaysStat: true, ignoreInitial: true, ...watcherOptions })
-        .on("all", (event, path, stat) => {
-            if (event !== "add" && event !== "change") {
-                return;
-            }
-            if (!dot) {
-                const filename = std.path.basename(path);
-                if (filename[0] === ".") {
-                    return;
-                }
-            }
-            let _base = base;
-            if (!_base) {
-                const i = util.match(globs, path, { index: true, dot: true });
-                _base = std.path.resolve(cwd, globsParents[i]);
-            }
-            stream.write(new File({
-                cwd,
-                base: _base,
-                path,
-                contents: null,
-                stat
-            }));
-        });
 
     const stream = adone.core(null, {
         flush: () => {
+            // eslint-disable-next-line no-use-before-define
             watcher.close();
         }
     });
+
+    const watcher = adone.fs.watch(globs, {
+        alwaysStat: true,
+        ignoreInitial: true,
+        ...watcherOptions
+    }).on("all", (event, path, stat) => {
+        if (event !== "add" && event !== "change") {
+            return;
+        }
+        if (!dot) {
+            const filename = std.path.basename(path);
+            if (filename[0] === ".") {
+                return;
+            }
+        }
+        let _base = base;
+        if (!_base) {
+            const i = util.match(globs, path, { index: true, dot: true });
+            _base = std.path.resolve(cwd, globsParents[i]);
+        }
+        stream.write(new fast.File({
+            cwd,
+            base: _base,
+            path,
+            contents: null,
+            stat
+        }));
+    });
+
+
     return stream;
-}
+};
 
 adone.tag.set(FastFSMapper, adone.tag.FAST_FS_MAP_STREAM);
 
-export function watch(globs, { cwd = process.cwd(), base = null, read = true, buffer = true, stream = false, dot = true, resume = true, ...watcherOptions } = {}) {
+export const watch = (globs, {
+    cwd = process.cwd(),
+    base = null,
+    read = true,
+    buffer = true,
+    stream = false,
+    dot = true,
+    resume = true,
+    ...watcherOptions
+} = {}) => {
     globs = util.arrify(globs).map((x) => resolveGlob(x, cwd));
     const source = watchSource(globs, { cwd, base, dot, ...watcherOptions });
     const fast = new FastFS(source, { read, buffer, stream, cwd });
@@ -498,9 +541,18 @@ export function watch(globs, { cwd = process.cwd(), base = null, read = true, bu
         process.nextTick(() => fast.resume());
     }
     return fast;
-}
+};
 
-export function watchMap(mappings, { cwd = process.cwd(), base = null, read = true, buffer = true, stream = false, dot = true, resume = true, ...watcherOptions } = {}) {
+export const watchMap = (mappings, {
+    cwd = process.cwd(),
+    base = null,
+    read = true,
+    buffer = true,
+    stream = false,
+    dot = true,
+    resume = true,
+    ...watcherOptions
+} = {}) => {
     mappings = util.arrify(mappings).map(({ from, to }) => {
         return { from: resolveGlob(from, cwd), to };
     });
@@ -511,4 +563,4 @@ export function watchMap(mappings, { cwd = process.cwd(), base = null, read = tr
         process.nextTick(() => fast.resume());
     }
     return fast;
-}
+};
