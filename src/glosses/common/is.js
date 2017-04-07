@@ -444,6 +444,7 @@ const is = {
         return last !== -1 ? str.charCodeAt(last + 1) === 46  /* . */ : false;
     },
     function: (fn) => typeof fn === "function",
+    asyncFunction: (fn) => fn && toString.call(fn).slice(8, -1) === "AsyncFunction",
     promise: (obj) => (!is.nil(obj) && is.function(obj.then)),
     validDate: (str) => !isNaN(Date.parse(str)),
     buffer: (obj) => Buffer.isBuffer(obj),

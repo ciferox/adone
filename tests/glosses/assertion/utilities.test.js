@@ -38,7 +38,7 @@ describe("utilities", function () {
         });
     });
 
-    it("transferFlags, includeAll = false", function () {
+    it.skip("transferFlags, includeAll = false", function () {
         assertion.use(function (_assertion, utils) {
             const obj = {};
             const test = function () { };

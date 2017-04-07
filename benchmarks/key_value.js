@@ -34,7 +34,7 @@ export default (() => {
                         _object[keys[i]];
                     }
                 },
-                "Object.create(null)": () => {
+                "Object create(null)": () => {
                     for (let i = 0; i < keys.length; ++i) {
                         _objectNull[keys[i]];
                     }
@@ -51,7 +51,7 @@ export default (() => {
                         keys[i] in _object;
                     }
                 },
-                "Object.create(null)": () => {
+                "Object create(null)": () => {
                     for (let i = 0; i < keys.length; ++i) {
                         keys[i] in _objectNull;
                     }
@@ -70,7 +70,7 @@ export default (() => {
                         o[keys[i]] = values[i];
                     }
                 },
-                "Object.create(null)": () => {
+                "Object create(null)": () => {
                     const o = Object.create(null);
                     for (let i = 0; i < keys.length; ++i) {
                         o[keys[i]] = values[i];
@@ -89,7 +89,7 @@ export default (() => {
                         const key = keys[i];
                     }
                 },
-                "Object.create(null)": () => {
+                "Object create(null)": () => {
                     const keys = Object.keys(_objectNull);
                     for (let i = 0; i < keys.length; ++i) {
                         const key = keys[i];
@@ -108,7 +108,7 @@ export default (() => {
                         const value = _object[keys[i]];
                     }
                 },
-                "Object.create(null)": () => {
+                "Object create(null)": () => {
                     const keys = Object.keys(_objectNull);
                     for (let i = 0; i < keys.length; ++i) {
                         const value = _objectNull[keys[i]];

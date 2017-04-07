@@ -22,11 +22,13 @@
  * @name flag
  * @api private
  */
-
 const flags = Symbol.for("shani:assert:flags");
 
 export default function (obj, key, value) {
-    const f = obj[flags] || (obj[flags] = Object.create(null));
+    if (!obj[flags]) {
+        obj[flags] = Object.create(null);
+    }
+    const f = obj[flags];
     if (arguments.length === 3) {
         f[key] = value;
     } else {

@@ -51,8 +51,6 @@ const apply = Function.prototype.apply;
  * @api public
  */
 
-const methods = Symbol.for("shani:assert:methods");
-
 export default function (ctx, name, method, chainingBehavior) {
     if (!adone.is.function(chainingBehavior)) {
         chainingBehavior = adone.noop;
@@ -64,10 +62,10 @@ export default function (ctx, name, method, chainingBehavior) {
     };
 
     // save the methods so we can overwrite them later, if we need to.
-    if (!ctx[methods]) {
-        ctx[methods] = {};
+    if (!ctx.__methods) {
+        ctx.__methods = {};
     }
-    ctx[methods][name] = chainableBehavior;
+    ctx.__methods[name] = chainableBehavior;
 
     Object.defineProperty(ctx, name, {
         get() {

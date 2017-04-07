@@ -40,10 +40,8 @@ import transferFlags from "./transferFlags";
  * @api public
  */
 
-const methods = Symbol.for("shani:assert:methods");
-
 export default function (ctx, name, method, chainingBehavior) {
-    const chainableBehavior = ctx[methods][name];
+    const chainableBehavior = ctx.__methods[name];
 
     const _chainingBehavior = chainableBehavior.chainingBehavior;
     chainableBehavior.chainingBehavior = function () {

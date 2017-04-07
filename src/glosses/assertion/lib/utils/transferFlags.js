@@ -29,19 +29,28 @@
 
 const flags = Symbol.for("shani:assert:flags");
 
-export default function (assertion, object, includeAll) {
+export default function (assertion, object, includeAll = true) {
     const f = assertion[flags] || (assertion[flags] = Object.create(null));
 
     if (!object[flags]) {
         object[flags] = Object.create(null);
     }
 
-    includeAll = arguments.length === 3 ? includeAll : true;
+    const tmp = {};
 
-    for (const flag in f) {
-        if (includeAll ||
-            (flag !== "object" && flag !== "ssfi" && flag !== "message")) {
-            object[flags][flag] = f[flag];
-        }
+    if (!includeAll) {
+        // omg
+        tmp.ssfi = assertion[flags].ssfi;
+        tmp.object = assertion[flags].object;
+        tmp.message = assertion[flags].message;
+    }
+
+    object[flags] = Object.create(f);
+
+    if (!includeAll) {
+        // omg
+        object[flags].ssfi = tmp.ssfi;
+        object[flags].object = tmp.object;
+        object[flags].message = tmp.message;
     }
 }

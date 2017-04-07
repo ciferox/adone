@@ -2549,4 +2549,49 @@ describe("expect", function () {
             }, { name: "TypeError" });
         }
     });
+
+    describe("eventually", () => {
+        specify("_obj should be a promise", () => {
+            const e = expect(1).to.be.eventually.equal(1);
+            expect(e._obj).to.be.a("promise");
+        });
+
+        it("should expose catch and then methods", () => {
+            const e = expect(1).to.be.eventually.equal(1);
+            expect(e.then).to.be.a("function");
+            expect(e.catch).to.be.a("function");
+        });
+
+        it("should resolve if ok", async () => {
+            await expect(1).to.be.eventually.equal(1);
+        });
+
+        it("should reject if not ok", async () => {
+            const e = await expect(1).not.to.be.eventually.equal(1).then(() => null, (e) => e);
+            expect(e).to.exist;
+            expect(e.message).to.be.equal("expected 1 to not equal 1");
+        });
+
+        it("should support throws", async () => {
+            await expect(async () => {
+                throw new Error("hello");
+            }).to.eventually.throw("hello");
+
+            await expect(async () => {
+                return 123;
+            }).not.to.eventually.throw();
+        });
+
+        it("should work with properties", async () => {
+            // await expect(Promise.resolve(100)).to.eventually.exist;
+            const e = await expect(Promise.resolve(100)).eventually.not.to.exist.then(() => null, (e) => e);
+            expect(e).to.exist;
+            expect(e.message).to.be.equal("expected 100 to not exist");
+        });
+
+        it("should workd with chainable methods", async () => {
+            await expect(Promise.resolve(() => {})).eventually.to.be.a("function");
+            await expect(Promise.resolve(1)).eventually.not.to.be.a("function");
+        });
+    });
 });

@@ -1,7 +1,7 @@
-export default function (lib, utils) {
+export default function (lib, util) {
     const { is, x } = adone;
     const { getAssertion, Assertion, AssertionError } = lib;
-    const { flag } = utils;
+    const { flag } = util;
 
     for (const chain of [
         "to", "be", "been", "is",
@@ -54,7 +54,7 @@ export default function (lib, utils) {
         const article = vowels.has(type.charAt(0)) ? "an " : "a ";
 
         this.assert(
-            type === utils.type(obj).toLowerCase(),
+            type === util.type(obj).toLowerCase(),
             `expected #{this} to be ${article}${type}`,
             `expected #{this} not to be ${article}${type}`
         );
@@ -67,16 +67,16 @@ export default function (lib, utils) {
         flag(this, "contains", true);
     };
 
-    const isDeepIncluded = (arr, val) => arr.some((arrVal) => utils.eql(arrVal, val));
+    const isDeepIncluded = (arr, val) => arr.some((arrVal) => util.eql(arrVal, val));
 
     const include = function (val, msg) {
-        utils.expectTypes(this, ["array", "object", "string"]);
+        util.expectTypes(this, ["array", "object", "string"]);
 
         if (msg) {
             flag(this, "message", msg);
         }
         const obj = flag(this, "object");
-        const objType = utils.type(obj).toLowerCase();
+        const objType = util.type(obj).toLowerCase();
         const isDeep = flag(this, "deep");
         const descriptor = isDeep ? "deep " : "";
 
@@ -90,7 +90,7 @@ export default function (lib, utils) {
 
             for (const prop of props) {
                 const propAssertion = getAssertion(obj);
-                utils.transferFlags(this, propAssertion, false);
+                util.transferFlags(this, propAssertion);
 
                 if (!negate || props.length === 1) {
                     propAssertion.property(prop, val[prop]);
@@ -100,7 +100,7 @@ export default function (lib, utils) {
                 try {
                     propAssertion.property(prop, val[prop]);
                 } catch (err) {
-                    if (!utils.checkError.compatibleConstructor(err, AssertionError)) {
+                    if (!util.checkError.compatibleConstructor(err, AssertionError)) {
                         throw err;
                     }
                     if (firstErr === null) {
@@ -124,8 +124,8 @@ export default function (lib, utils) {
         // Assert inclusion in an array or substring in a string.
         this.assert(
             objType === "string" || !isDeep ? obj.includes(val) : isDeepIncluded(obj, val),
-            `expected #{this} to ${descriptor}include ${utils.inspect(val)}`,
-            `expected #{this} to not ${descriptor}include ${utils.inspect(val)}`);
+            `expected #{this} to ${descriptor}include ${util.inspect(val)}`,
+            `expected #{this} to not ${descriptor}include ${util.inspect(val)}`);
     };
 
     Assertion.addChainableMethod("include", include, includeChainingBehavior);
@@ -196,7 +196,7 @@ export default function (lib, utils) {
         const val = flag(this, "object");
         let itemsCount;
 
-        switch (utils.type(val).toLowerCase()) {
+        switch (util.type(val).toLowerCase()) {
             case "array":
             case "string": {
                 itemsCount = val.length;
@@ -212,12 +212,12 @@ export default function (lib, utils) {
                 throw new TypeError(".empty was passed a weak collection");
             }
             case "function": {
-                const msg = `.empty was passed a function ${utils.getName(val)}`;
+                const msg = `.empty was passed a function ${util.getName(val)}`;
                 throw new TypeError(msg.trim());
             }
             default: {
                 if (val !== Object(val)) {
-                    throw new TypeError(`.empty was passed non-string primitive ${utils.inspect(val)}`);
+                    throw new TypeError(`.empty was passed non-string primitive ${util.inspect(val)}`);
                 }
                 itemsCount = adone.util.keys(val).length;
             }
@@ -232,7 +232,7 @@ export default function (lib, utils) {
 
     const checkArguments = function () {
         const obj = flag(this, "object");
-        const type = utils.type(obj);
+        const type = util.type(obj);
         this.assert(
             type === "Arguments"
             , `expected #{this} to be arguments but got ${type}`
@@ -270,7 +270,7 @@ export default function (lib, utils) {
             flag(this, "message", msg);
         }
         this.assert(
-            utils.eql(obj, flag(this, "object")),
+            util.eql(obj, flag(this, "object")),
             "expected #{this} to deeply equal #{exp}",
             "expected #{this} to not deeply equal #{exp}",
             obj,
@@ -474,7 +474,7 @@ export default function (lib, utils) {
         if (msg) {
             flag(this, "message", msg);
         }
-        const name = utils.getName(constructor);
+        const name = util.getName(constructor);
         this.assert(
             flag(this, "object") instanceof constructor,
             `expected #{this} to be an instance of ${name}`,
@@ -500,7 +500,7 @@ export default function (lib, utils) {
         const isDeep = flag(this, "deep");
         const negate = flag(this, "negate");
         const obj = flag(this, "object");
-        const pathInfo = isNested ? utils.getPathInfo(obj, name) : null;
+        const pathInfo = isNested ? util.getPathInfo(obj, name) : null;
         const value = isNested ? pathInfo.value : obj[name];
 
         let descriptor = "";
@@ -521,7 +521,7 @@ export default function (lib, utils) {
         } else if (isNested) {
             hasProperty = pathInfo.exists;
         } else {
-            hasProperty = utils.hasProperty(obj, name);
+            hasProperty = util.hasProperty(obj, name);
         }
 
         // When performing a negated assertion for both name and val, merely having
@@ -532,15 +532,15 @@ export default function (lib, utils) {
         if (!negate || arguments.length === 1) {
             this.assert(
                 hasProperty,
-                `expected #{this} to have ${descriptor}${utils.inspect(name)}`,
-                `expected #{this} to not have ${descriptor}${utils.inspect(name)}`);
+                `expected #{this} to have ${descriptor}${util.inspect(name)}`,
+                `expected #{this} to not have ${descriptor}${util.inspect(name)}`);
         }
 
         if (arguments.length > 1) {
             this.assert(
-                hasProperty && (isDeep ? utils.eql(val, value) : val === value),
-                `expected #{this} to have ${descriptor}${utils.inspect(name)} of #{exp}, but got #{act}`,
-                `expected #{this} to not have ${descriptor}${utils.inspect(name)} of #{act}`,
+                hasProperty && (isDeep ? util.eql(val, value) : val === value),
+                `expected #{this} to have ${descriptor}${util.inspect(name)} of #{exp}, but got #{act}`,
+                `expected #{this} to not have ${descriptor}${util.inspect(name)} of #{act}`,
                 val,
                 value
             );
@@ -571,9 +571,9 @@ export default function (lib, utils) {
         const actualDescriptor = Object.getOwnPropertyDescriptor(Object(obj), name);
         if (actualDescriptor && descriptor) {
             this.assert(
-                utils.eql(descriptor, actualDescriptor),
-                `expected the own property descriptor for ${utils.inspect(name)} on #{this} to match ${utils.inspect(descriptor)}, got ${utils.inspect(actualDescriptor)}`,
-                `expected the own property descriptor for ${utils.inspect(name)} on #{this} to not match ${utils.inspect(descriptor)}`,
+                util.eql(descriptor, actualDescriptor),
+                `expected the own property descriptor for ${util.inspect(name)} on #{this} to match ${util.inspect(descriptor)}, got ${util.inspect(actualDescriptor)}`,
+                `expected the own property descriptor for ${util.inspect(name)} on #{this} to not match ${util.inspect(descriptor)}`,
                 descriptor,
                 actualDescriptor,
                 true
@@ -581,8 +581,8 @@ export default function (lib, utils) {
         } else {
             this.assert(
                 actualDescriptor,
-                `expected #{this} to have an own property descriptor for ${utils.inspect(name)}`,
-                `expected #{this} to not have an own property descriptor for ${utils.inspect(name)}`
+                `expected #{this} to have an own property descriptor for ${util.inspect(name)}`,
+                `expected #{this} to not have an own property descriptor for ${util.inspect(name)}`
             );
         }
         flag(this, "object", actualDescriptor);
@@ -639,16 +639,16 @@ export default function (lib, utils) {
 
         this.assert(
             obj.includes(str),
-            `expected #{this} to contain ${utils.inspect(str)}`,
-            `expected #{this} to not contain ${utils.inspect(str)}`
+            `expected #{this} to contain ${util.inspect(str)}`,
+            `expected #{this} to not contain ${util.inspect(str)}`
         );
     });
 
     const assertKeys = function (...args) {
         let [keys] = args;
         const obj = flag(this, "object");
-        const objType = utils.type(obj);
-        const keysType = utils.type(keys);
+        const objType = util.type(obj);
+        const keysType = util.type(keys);
         const isDeep = flag(this, "deep");
         let str;
         let deepStr = "";
@@ -669,7 +669,7 @@ export default function (lib, utils) {
             }
 
         } else {
-            actual = utils.getOwnEnumerableProperties(obj);
+            actual = util.getOwnEnumerableProperties(obj);
 
             switch (keysType) {
                 case "Array": {
@@ -710,14 +710,14 @@ export default function (lib, utils) {
         // Has any
         if (any) {
             ok = expected.some((expectedKey) => actual.some((actualKey) => {
-                return isDeep ? utils.eql(expectedKey, actualKey) : expectedKey === actualKey;
+                return isDeep ? util.eql(expectedKey, actualKey) : expectedKey === actualKey;
             }));
         }
 
         // Has all
         if (all) {
             ok = expected.every((expectedKey) => actual.some((actualKey) => {
-                return isDeep ? utils.eql(expectedKey, actualKey) : expectedKey === actualKey;
+                return isDeep ? util.eql(expectedKey, actualKey) : expectedKey === actualKey;
             }));
 
             if (!flag(this, "negate") && !flag(this, "contains")) {
@@ -727,7 +727,7 @@ export default function (lib, utils) {
 
         // Key string
         if (length > 1) {
-            keys = keys.map((key) => utils.inspect(key));
+            keys = keys.map((key) => util.inspect(key));
             const last = keys.pop();
             if (all) {
                 str = `${keys.join(", ")}, and ${last}`;
@@ -736,7 +736,7 @@ export default function (lib, utils) {
                 str = `${keys.join(", ")}, or ${last}`;
             }
         } else {
-            str = utils.inspect(keys[0]);
+            str = util.inspect(keys[0]);
         }
 
         // Form
@@ -750,8 +750,8 @@ export default function (lib, utils) {
             ok,
             `expected #{this} to ${deepStr}${str}`,
             `expected #{this} to not ${deepStr}${str}`,
-            expected.slice(0).sort(utils.compareByInspect),
-            actual.sort(utils.compareByInspect),
+            expected.slice(0).sort(util.compareByInspect),
+            actual.sort(util.compareByInspect),
             true
         );
     };
@@ -772,128 +772,137 @@ export default function (lib, utils) {
             errorLike = null;
         }
 
-        let caughtErr;
-        try {
-            obj();
-        } catch (err) {
-            caughtErr = err;
-        }
+        const handle = (caughtErr) => {
+            // If we have the negate flag enabled and at least one valid argument it means we do expect an error
+            // but we want it to match a given set of criteria
+            const everyArgIsUndefined = is.undefined(errorLike) && is.undefined(errMsgMatcher);
 
-        // If we have the negate flag enabled and at least one valid argument it means we do expect an error
-        // but we want it to match a given set of criteria
-        const everyArgIsUndefined = is.undefined(errorLike) && is.undefined(errMsgMatcher);
+            // If we've got the negate flag enabled and both args, we should only fail if both aren't compatible
+            const everyArgIsDefined = Boolean(errorLike && errMsgMatcher);
+            let errorLikeFail = false;
+            let errMsgMatcherFail = false;
 
-        // If we've got the negate flag enabled and both args, we should only fail if both aren't compatible
-        const everyArgIsDefined = Boolean(errorLike && errMsgMatcher);
-        let errorLikeFail = false;
-        let errMsgMatcherFail = false;
+            // Checking if error was thrown
+            if (everyArgIsUndefined || !everyArgIsUndefined && !negate) {
+                // We need this to display results correctly according to their types
+                let errorLikeString = "an error";
+                if (errorLike instanceof Error) {
+                    errorLikeString = "#{exp}";
+                } else if (errorLike) {
+                    errorLikeString = util.checkError.getConstructorName(errorLike);
+                }
 
-        // Checking if error was thrown
-        if (everyArgIsUndefined || !everyArgIsUndefined && !negate) {
-            // We need this to display results correctly according to their types
-            let errorLikeString = "an error";
-            if (errorLike instanceof Error) {
-                errorLikeString = "#{exp}";
-            } else if (errorLike) {
-                errorLikeString = utils.checkError.getConstructorName(errorLike);
+                this.assert(
+                    caughtErr,
+                    `expected #{this} to throw ${errorLikeString}`,
+                    "expected #{this} to not throw an error but #{act} was thrown",
+                    errorLike && errorLike.toString(),
+                    (caughtErr instanceof Error ? caughtErr.toString() :
+                        (typeof caughtErr === "string" ? caughtErr :
+                            caughtErr && util.checkError.getConstructorName(caughtErr)))
+                );
             }
 
-            this.assert(
-                caughtErr,
-                `expected #{this} to throw ${errorLikeString}`,
-                "expected #{this} to not throw an error but #{act} was thrown",
-                errorLike && errorLike.toString(),
-                (caughtErr instanceof Error ? caughtErr.toString() :
-                    (typeof caughtErr === "string" ? caughtErr :
-                        caughtErr && utils.checkError.getConstructorName(caughtErr)))
-            );
-        }
+            if (errorLike && caughtErr) {
+                // We should compare instances only if `errorLike` is an instance of `Error`
+                if (errorLike instanceof Error) {
+                    const isCompatibleInstance = util.checkError.compatibleInstance(
+                        caughtErr,
+                        errorLike
+                    );
 
-        if (errorLike && caughtErr) {
-            // We should compare instances only if `errorLike` is an instance of `Error`
-            if (errorLike instanceof Error) {
-                const isCompatibleInstance = utils.checkError.compatibleInstance(
+                    if (isCompatibleInstance === negate) {
+                        // These checks were created to ensure we won't fail too soon when we've got both args and a negate
+                        if (everyArgIsDefined && negate) {
+                            errorLikeFail = true;
+                        } else {
+                            this.assert(
+                                negate,
+                                "expected #{this} to throw #{exp} but #{act} was thrown",
+                                `expected #{this} to not throw #{exp}${caughtErr && !negate ? " but #{act} was thrown" : ""}`,
+                                errorLike.toString(),
+                                caughtErr.toString()
+                            );
+                        }
+                    }
+                }
+
+                const isCompatibleConstructor = util.checkError.compatibleConstructor(
                     caughtErr,
                     errorLike
                 );
-
-                if (isCompatibleInstance === negate) {
-                    // These checks were created to ensure we won't fail too soon when we've got both args and a negate
+                if (isCompatibleConstructor === negate) {
                     if (everyArgIsDefined && negate) {
                         errorLikeFail = true;
                     } else {
                         this.assert(
                             negate,
                             "expected #{this} to throw #{exp} but #{act} was thrown",
-                            `expected #{this} to not throw #{exp}${caughtErr && !negate ? " but #{act} was thrown" : ""}`,
-                            errorLike.toString(),
-                            caughtErr.toString()
+                            `expected #{this} to not throw #{exp}${caughtErr ? " but #{act} was thrown" : ""}`,
+                            (errorLike instanceof Error ? errorLike.toString() :
+                                errorLike && util.checkError.getConstructorName(errorLike)),
+                            (caughtErr instanceof Error ? caughtErr.toString() :
+                                caughtErr && util.checkError.getConstructorName(caughtErr))
                         );
                     }
                 }
             }
 
-            const isCompatibleConstructor = utils.checkError.compatibleConstructor(
-                caughtErr,
-                errorLike
-            );
-            if (isCompatibleConstructor === negate) {
-                if (everyArgIsDefined && negate) {
-                    errorLikeFail = true;
-                } else {
-                    this.assert(
-                        negate,
-                        "expected #{this} to throw #{exp} but #{act} was thrown",
-                        `expected #{this} to not throw #{exp}${caughtErr ? " but #{act} was thrown" : ""}`,
-                        (errorLike instanceof Error ? errorLike.toString() :
-                            errorLike && utils.checkError.getConstructorName(errorLike)),
-                        (caughtErr instanceof Error ? caughtErr.toString() :
-                            caughtErr && utils.checkError.getConstructorName(caughtErr))
-                    );
+            if (caughtErr && !is.nil(errMsgMatcher)) {
+                // Here we check compatible messages
+                let placeholder = "including";
+                if (is.regexp(errMsgMatcher)) {
+                    placeholder = "matching";
+                }
+
+                const isCompatibleMessage = util.checkError.compatibleMessage(
+                    caughtErr,
+                    errMsgMatcher
+                );
+                if (isCompatibleMessage === negate) {
+                    if (everyArgIsDefined && negate) {
+                        errMsgMatcherFail = true;
+                    } else {
+                        this.assert(
+                            negate,
+                            `expected #{this} to throw error ${placeholder} #{exp} but got #{act}`,
+                            `expected #{this} to throw error not ${placeholder} #{exp}`,
+                            errMsgMatcher,
+                            util.checkError.getMessage(caughtErr)
+                        );
+                    }
                 }
             }
-        }
 
-        if (caughtErr && !is.nil(errMsgMatcher)) {
-            // Here we check compatible messages
-            let placeholder = "including";
-            if (is.regexp(errMsgMatcher)) {
-                placeholder = "matching";
+            // If both assertions failed and both should've matched we throw an error
+            if (errorLikeFail && errMsgMatcherFail) {
+                this.assert(
+                    negate,
+                    "expected #{this} to throw #{exp} but #{act} was thrown",
+                    `expected #{this} to not throw #{exp}${caughtErr ? " but #{act} was thrown" : ""}`,
+                    (errorLike instanceof Error ? errorLike.toString() :
+                        errorLike && util.checkError.getConstructorName(errorLike)),
+                    (caughtErr instanceof Error ? caughtErr.toString() :
+                        caughtErr && util.checkError.getConstructorName(caughtErr))
+                );
             }
 
-            const isCompatibleMessage = utils.checkError.compatibleMessage(
-                caughtErr,
-                errMsgMatcher
-            );
-            if (isCompatibleMessage === negate) {
-                if (everyArgIsDefined && negate) {
-                    errMsgMatcherFail = true;
-                } else {
-                    this.assert(
-                        negate,
-                        `expected #{this} to throw error ${placeholder} #{exp} but got #{act}`,
-                        `expected #{this} to throw error not ${placeholder} #{exp}`,
-                        errMsgMatcher,
-                        utils.checkError.getMessage(caughtErr)
-                    );
-                }
+
+            flag(this, "object", caughtErr);
+        };
+
+        if (is.asyncFunction(obj)) {
+            flag(this, "eventually", true);
+            this._obj = obj().then(() => null, (e) => e).then(handle);
+        } else {
+            let caughtErr = null;
+            try {
+                obj();
+            } catch (err) {
+                caughtErr = err;
             }
+            handle(caughtErr);
         }
-
-        // If both assertions failed and both should've matched we throw an error
-        if (errorLikeFail && errMsgMatcherFail) {
-            this.assert(
-                negate,
-                "expected #{this} to throw #{exp} but #{act} was thrown",
-                `expected #{this} to not throw #{exp}${caughtErr ? " but #{act} was thrown" : ""}`,
-                (errorLike instanceof Error ? errorLike.toString() :
-                    errorLike && utils.checkError.getConstructorName(errorLike)),
-                (caughtErr instanceof Error ? caughtErr.toString() :
-                    caughtErr && utils.checkError.getConstructorName(caughtErr))
-            );
-        }
-
-        flag(this, "object", caughtErr);
     };
 
     Assertion.addMethod("throw", assertThrows);
@@ -910,8 +919,8 @@ export default function (lib, utils) {
 
         this.assert(
             is.function(context),
-            `expected #{this} to respond to ${utils.inspect(method)}`,
-            `expected #{this} to not respond to ${utils.inspect(method)}`
+            `expected #{this} to respond to ${util.inspect(method)}`,
+            `expected #{this} to not respond to ${util.inspect(method)}`
         );
     };
 
@@ -930,8 +939,8 @@ export default function (lib, utils) {
         const result = matcher(obj);
         this.assert(
             result,
-            `expected #{this} to satisfy ${utils.objDisplay(matcher)}`,
-            `expected #{this} to not satisfy${utils.objDisplay(matcher)}`,
+            `expected #{this} to satisfy ${util.objDisplay(matcher)}`,
+            `expected #{this} to not satisfy${util.objDisplay(matcher)}`,
             flag(this, "negate") ? false : true,
             result
         );
@@ -1028,7 +1037,7 @@ export default function (lib, utils) {
             failNegateMsg = `expected #{this} to not have the same ${subject} as #{exp}`;
         }
 
-        const cmp = flag(this, "deep") ? utils.eql : undefined;
+        const cmp = flag(this, "deep") ? util.eql : undefined;
 
         this.assert(
             isSubsetOf(subset, obj, cmp, contains, ordered),
@@ -1239,4 +1248,90 @@ export default function (lib, utils) {
             "expected #{this} to not be a finite number"
         );
     });
+
+    {
+        // wrap everything and support promises
+
+        Assertion.addProperty("eventually", function eventually() {
+            flag(this, "eventually", true);
+        });
+
+        const properties = Object.getOwnPropertyNames(Assertion.prototype);
+
+        const descriptors = {};
+        for (const prop of properties) {
+            descriptors[prop] = Object.getOwnPropertyDescriptor(Assertion.prototype, prop);
+        }
+        const methodNames = properties.filter((x) => {
+            return x !== "assert" && x !== "constructor" && is.function(descriptors[x].value);
+        });
+
+        const eventuallyHandler = (context, original, args = []) => {
+            if (!flag(context, "eventually")) {
+                original.apply(context, args);
+                return;
+            }
+
+            context._obj = Promise.resolve(context._obj).then((value) => {
+                context._obj = value;
+                return original.apply(context, args);
+            }).then(() => {
+                // console.log(cotnext._obj);
+                // context._obj = Promise.resolve(context._obj);
+                return context._obj;
+            });
+        };
+
+        for (const methodName of methodNames) {
+            Assertion.overwriteMethod(methodName, (original) => {
+                return function (...args) {
+                    eventuallyHandler(this, original, args);
+                };
+            });
+        }
+
+        const getterNames = properties.filter((x) => {
+            return x !== "_obj" && is.function(descriptors[x].get);
+        });
+
+        for (const getterName of getterNames) {
+            // Chainable methods are things like `an`, which can work both for `.should.be.an.instanceOf` and as
+            // `should.be.an("object")`. We need to handle those specially.
+            const isChainableMethod = Assertion.prototype.__methods.hasOwnProperty(getterName);
+
+            if (isChainableMethod) {
+                Assertion.overwriteChainableMethod(
+                    getterName,
+                    function method(original) {
+                        return function (...args) {
+                            eventuallyHandler(this, original, args);
+                        };
+                    },
+                    function getter(original) {
+                        return function () {
+                            eventuallyHandler(this, original);
+                        };
+                    }
+                );
+            } else {
+                Assertion.overwriteProperty(getterName, function getter(original) {
+                    return function () {
+                        eventuallyHandler(this, original);
+                    };
+                });
+            }
+        }
+
+        Assertion.addMethod("then", function _then(onResolve, onReject) {
+            const obj = flag(this, "object");
+            const o = is.promise(obj) ? obj : Promise.resolve(obj);
+            return o.then(onResolve, onReject);
+        });
+
+        Assertion.addMethod("catch", function _catch(onReject) {
+            const obj = flag(this, "object");
+            const o = is.promise(obj) ? obj : Promise.resolve(obj);
+            return o.catch(onReject);
+        });
+    }
 }

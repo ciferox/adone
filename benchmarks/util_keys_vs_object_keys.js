@@ -21,10 +21,10 @@ export default (() => {
 
         suites[`length of ${n}`] = {
             "Plain object": {
-                "util.keys": () => {
+                "util keys": () => {
                     adone.util.keys(obj);
                 },
-                "Object.keys": () => {
+                "Object keys": () => {
                     Object.keys(obj);
                 }
             }
