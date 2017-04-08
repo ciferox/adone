@@ -454,6 +454,11 @@ describe("Table", function () {
         });
 
         it("test table colors", function () {
+            if (!process.stdout.isTTY) {
+                // no colors support
+                this.skip();
+                return;
+            }
             const table = new Table({
                 head: ["Rel", "By"],
                 style: { head: ["red"], border: ["grey"] }

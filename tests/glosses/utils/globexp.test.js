@@ -527,28 +527,18 @@ describe("glosses", "utils", "GlobExp", () => {
     });
 
     it("redos", () => {
-        // utility function for generating long strings
-        const genstr = (len, chr) => {
-            let result = "";
-            for (let i = 0; i <= len; i++) {
-                result = result + chr;
-            }
-
-            return result;
-        };
-
-        let exploit = `!(${genstr(1024 * 15, "\\")}A)`;
+        let exploit = `!(${"|".repeat(1024 * 15)}A)`;
 
         // within the limits, and valid match
         assert.isOk(GlobExp.test("A", exploit));
 
         // within the limits, but results in an invalid regexp
-        exploit = `[!(${genstr(1024 * 15, "\\")}A`;
+        exploit = `[!(${"|".repeat(1024 * 15)}A`;
         assert.isNotOk(GlobExp.test("A", exploit));
 
         assert.throw(() => {
             // too long, throws TypeError
-            exploit = `!(${genstr(1024 * 64, "\\")}A)`;
+            exploit = `!(${"|".repeat(1024 * 64)}A)`;
             GlobExp.test("A", exploit);
         }, TypeError);
     });

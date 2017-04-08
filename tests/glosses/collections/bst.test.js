@@ -1107,6 +1107,7 @@ describe("Binary search tree", function () {
     // By their nature, BSTs can be hard to test (many possible cases, bug at one operation whose
     // effect begins to be felt only after several operations etc.)
     describe("Randomized test (takes much longer than the rest of the test suite)", function () {
+        this.timeout(30000);
         let bst = new BinarySearchTree(),
             data = {};
 

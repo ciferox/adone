@@ -176,8 +176,8 @@ describe("Fast", () => {
                             }
                             const contents = JSON.parse(file.contents.toString());
                             expect(contents.sources.sort()).to.be.deep.equal([
-                                fromdir.getVirtualFile("test3.js").path(), 
-                                fromdir.getVirtualFile("test4.js").path()
+                                fromdir.getVirtualFile("test3.js").path().replace(/\//g, "/"),
+                                fromdir.getVirtualFile("test4.js").path().replace(/\//g, "/")
                             ]);
                         });
                     expect(files).to.have.lengthOf(2);  // index + map

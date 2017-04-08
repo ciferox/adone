@@ -119,7 +119,7 @@ export default function (destPath, options) {
                 }
                 sourceMapPathRelative = `${prefix}${adone.std.path.join("/", sourceMapPathRelative)}`;
             }
-            comment = commentFormatter(adone.util.unixifyPath(sourceMapPathRelative));
+            comment = commentFormatter(sourceMapPathRelative.split("\\").join("/"));
 
             if (options.sourceMappingURL && is.function(options.sourceMappingURL)) {
                 comment = commentFormatter(options.sourceMappingURL(file));
