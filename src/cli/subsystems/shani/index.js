@@ -41,6 +41,14 @@ export default class ShaniCLI extends adone.application.Subsystem {
     }
 
     async main(args, opts) {
+        this.app._uncaughtException = (err) => {
+            adone.log("Uncaught exception", err.stack);
+        };
+        this.app._unhandledRejection = (err) => {
+            adone.log("Unhandled rejection", err.stack);
+        };
+        this.app.__rejectionHandled = () => {};
+
         const configPath = path.resolve(opts.get("config"));
         this.showHandles = opts.get("showHandles");
         const useConfig = !opts.get("dontUseConfig");

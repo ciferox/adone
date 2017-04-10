@@ -1,14 +1,10 @@
-import * as mock from "./mock";
-import * as FS from "./fs";
-import request from "./request";
+const { is, x, lazify } = adone;
 
-export const utils = {
-    ...mock,
-    request,
-    FS
-};
-
-const { is, x } = adone;
+export const util = lazify({
+    request: "./request",
+    mock: "./mock",
+    FS: "./fs"
+}, null, require);
 
 const SET_TIMEOUT_MAX = 2 ** 31 - 1;
 
@@ -146,7 +142,13 @@ class Block {
 
     hasInclusive(exclusiveMode = false) {
         for (const child of this.children) {
-            if ((child.isInclusive() && !child.isExclusive()) || (child instanceof Block && child.hasInclusive(exclusiveMode || child.isExclusive()))) {
+            if (
+                (child.isInclusive() && !child.isExclusive()) ||
+                (
+                    child instanceof Block &&
+                    child.hasInclusive(exclusiveMode || child.isExclusive())
+                )
+            ) {
                 return true;
             }
         }
@@ -351,7 +353,12 @@ class Test {
 }
 
 export class Engine {
-    constructor({ defaultTimeout = 5000, firstFailExit = false, transpilerOptions = {}, watch = false } = {}) {
+    constructor({
+        defaultTimeout = 5000,
+        firstFailExit = false,
+        transpilerOptions = {},
+        watch = false
+    } = {}) {
         this._paths = [];  // path can be a glob or a path
         this.defaultTimeout = defaultTimeout;
         this.firstFailExit = firstFailExit;
@@ -374,7 +381,7 @@ export class Engine {
         root.retries(1);
         const stack = new adone.collection.Stack([root]);
 
-        function describe(...args) {
+        const describe = function (...args) {
             const callback = args.pop();
             if (!is.function(callback)) {
                 throw new x.InvalidArgument("The last argument must be a function");
@@ -396,68 +403,58 @@ export class Engine {
                 stack.pop();
             }
             return block;
-        }
+        };
 
         describe.skip = (...args) => describe(...args).skip();
         describe.only = (...args) => describe(...args).only();
 
-        function describes(...names) {
-            let block;
-            for (const name of names) {
-                block = new Block(name, stack.top);
-                stack.top.addChild(block);
-                stack.push(block);
-            }
-            return block;
-        }
-
-        function it(description, callback) {
+        const it = function (description, callback) {
             const test = new Test(description, callback, stack.top);
             stack.top.addChild(test);
             return test;
-        }
+        };
 
         it.skip = (...args) => it(...args).skip();
         it.only = (...args) => it(...args).only();
 
-        function before(description, callback) {
+        const before = function (description, callback) {
             if (adone.is.function(description)) {
                 [description, callback] = ["", description];
             }
             stack.top.hooks.before.push(new Hook(description, callback));
-        }
+        };
 
-        function after(description, callback) {
+        const after = function (description, callback) {
             if (adone.is.function(description)) {
                 [description, callback] = ["", description];
             }
             stack.top.hooks.after.push(new Hook(description, callback));
-        }
+        };
 
-        function beforeEach(description, callback) {
+        const beforeEach = function (description, callback) {
             if (adone.is.function(description)) {
                 [description, callback] = ["", description];
             }
             stack.top.hooks.beforeEach.push(new Hook(description, callback));
-        }
+        };
 
-        function afterEach(description, callback) {
+        const afterEach = function (description, callback) {
             if (adone.is.function(description)) {
                 [description, callback] = ["", description];
             }
             stack.top.hooks.afterEach.push(new Hook(description, callback));
-        }
+        };
 
-        function skip(callback) {
+        const skip = function (callback) {
             skip.promise = new Promise((resolve) => resolve(callback())).then((skipped) => {
                 if (skipped) {
                     root.skip();
                 }
             });
-        }
+        };
         skip.promise = Promise.resolve();
 
-        function start() {
+        const start = function () {
             const emitter = new adone.EventEmitter();
 
             // mark all the skipped nodes
@@ -572,6 +569,7 @@ export class Engine {
                                     continue;
                                 }
                                 emitter.emit("start before hook", { block, hook });
+                                // eslint-disable-next-line no-await-in-loop
                                 const meta = await hook.run();
                                 emitter.emit("end before hook", { block, hook, meta });
                                 if (meta.err) {
@@ -593,6 +591,7 @@ export class Engine {
                                     continue;
                                 }
                                 if (node instanceof Block) {
+                                    // eslint-disable-next-line no-await-in-loop
                                     const meta = await executor(node);
                                     failed = failed || meta.failed;
                                     // hookFailed should be always false here, so just assign
@@ -608,6 +607,7 @@ export class Engine {
                                                 break;
                                             }
                                             emitter.emit("start before each hook", { block, test: node, hook });
+                                            // eslint-disable-next-line no-await-in-loop
                                             const meta = await hook.run();
                                             emitter.emit("end before each hook", { block, test: node, hook, meta });
                                             if (meta.err) {
@@ -624,6 +624,7 @@ export class Engine {
                                         emitter.emit("start test", { block, test: node });
                                         let meta;
                                         if (!hookFailed) {
+                                            // eslint-disable-next-line no-await-in-loop
                                             meta = await node.run();
                                         } else {
                                             meta = { elapsed: 0, err: new Error("Rejected due the hook fail") };
@@ -643,6 +644,7 @@ export class Engine {
                                     for (const parentBlock of blocksFired.reverse()) {
                                         for (const hook of parentBlock.afterEachHooks()) {
                                             emitter.emit("start after each hook", { block, test: node, hook });
+                                            // eslint-disable-next-line no-await-in-loop
                                             const meta = await hook.run();
                                             emitter.emit("end after each hook", { block, test: node, hook, meta });
                                             if (meta.err) {
@@ -658,6 +660,7 @@ export class Engine {
                                 continue;
                             }
                             emitter.emit("start after hook", { block, hook });
+                            // eslint-disable-next-line no-await-in-loop
                             const meta = await hook.run();
                             emitter.emit("end after hook", { block, hook, meta });
                             if (meta.err) {
@@ -679,22 +682,36 @@ export class Engine {
             }).then(() => emitter.emit("done"));
 
             return emitter;
-        }
+        };
 
-        return { describe, describes, context: describe, it, specify: it, before, after, beforeEach, afterEach, start, root, skip };
+        return {
+            describe,
+            context: describe,
+            it,
+            specify: it,
+            before,
+            after,
+            beforeEach,
+            afterEach,
+            start,
+            root,
+            skip
+        };
     }
 
     start() {
-        const self = this;
         let executing = null;
+        const executingDone = () => new Promise((resolve) => {
+            executing.once("done", resolve);
+        });
+
         let stopped = false;
         const emitter = new adone.EventEmitter();
         emitter.stop = () => {
             stopped = true;
             executing && executing.stop();
         };
-        async function main(paths) {
-            const { resolve } = adone.std.path;
+        const main = async (paths) => {
             const contentCache = new Map();
             const transpiledCache = new Map();
             const loader = (module, filename) => {
@@ -704,7 +721,7 @@ export class Engine {
                 const content = contentCache.get(filename);
                 module._compile(content, filename);
             };
-            const transpile = adone.js.Module.transforms.transpile(self.transpilerOptions);
+            const transpile = adone.js.Module.transforms.transpile(this.transpilerOptions);
             const transform = (content, filename) => {
                 if (!transpiledCache.has(filename)) {
                     transpiledCache.set(filename, transpile(content, filename));
@@ -717,7 +734,7 @@ export class Engine {
                 if (stopped) {
                     break;
                 }
-                const context = self.context();
+                const context = this.context();
                 const topass = [
                     "describe", "context",
                     "it", "specify",
@@ -736,12 +753,12 @@ export class Engine {
                 adone.lazify({
                     expect: () => adone.expect,
                     assert: () => adone.assert,
-                    spy: () => utils.spy,
-                    stub: () => utils.stub,
-                    mock: () => utils.mock,
-                    match: () => utils.match,
-                    request: () => utils.request,
-                    FS: () => utils.FS
+                    spy: () => util.mock.spy,
+                    stub: () => util.mock.stub,
+                    mock: () => util.mock.mock,
+                    match: () => util.mock.match,
+                    request: () => util.request,
+                    FS: () => util.FS
                 }, global.$, m.require.bind(m), { configurable: true });
 
                 adone.lazify({
@@ -762,6 +779,7 @@ export class Engine {
 
                 try {
                     m.loadItself();
+                    // eslint-disable-next-line no-await-in-loop
                     await context.skip.promise;
                     executing = context.start();
                     const events = [
@@ -777,7 +795,8 @@ export class Engine {
                             emitter.emit(e, ...data);
                         });
                     }
-                    await new Promise((resolve) => executing.once("done", resolve));
+                    // eslint-disable-next-line no-await-in-loop
+                    await executingDone();
                 } catch (err) {
                     err.message = `Error while loading this file: ${path}\n${err.message}`;
                     emitter.emit("error", err);
@@ -785,7 +804,7 @@ export class Engine {
                     m.cache.delete(path);
                 }
             }
-        }
+        };
 
         Promise.resolve().then(() => main(this._paths)).catch((err) => {
             emitter.emit("error", err);
@@ -797,7 +816,13 @@ export class Engine {
     }
 }
 
-export function consoleReporter({ allTimings = false, timers = false, showHooks = false, keepHooks = false, ticks = true } = {}) {
+export const consoleReporter = ({
+    allTimings = false,
+    timers = false,
+    showHooks = false,
+    keepHooks = false,
+    ticks = true
+} = {}) => {
     const term = adone.terminal;
 
     const { isTTY } = process.stdout;
@@ -831,7 +856,7 @@ export function consoleReporter({ allTimings = false, timers = false, showHooks 
         const globalErrors = [];
         let timer = null;
 
-        function elapsedToString(elapsed, timeout, little = true) {
+        const elapsedToString = (elapsed, timeout, little = true) => {
             let elapsedString = adone.util.humanizeTime(elapsed);  // ms
 
             const k = elapsed / timeout;
@@ -847,7 +872,7 @@ export function consoleReporter({ allTimings = false, timers = false, showHooks 
                 elapsedString = `{red-fg}${elapsedString}{/}`;
             }
             return elapsedString;
-        }
+        };
 
         if (showHooks) {
             const colorizeHook = (type) => {
@@ -885,7 +910,11 @@ export function consoleReporter({ allTimings = false, timers = false, showHooks 
                     if (keepHooks) {
                         const padding = "    ".repeat(Math.max(block.level() + (test ? 1 : 0), 0));
                         let msg = `${ticks ? "\x1b[F\x1b[K" : ""}${padding} ${meta.err ? "{red-fg}\u2717" : "{green-fg}\u2713"}{/} {escape}${type} hook${hook.description ? `: ${hook.description}` : ""}{/escape}`;
-                        const elapsedString = elapsedToString(meta.elapsed, hook.timeout(), allTimings);
+                        const elapsedString = elapsedToString(
+                            meta.elapsed,
+                            hook.timeout(),
+                            allTimings
+                        );
                         if (elapsedString) {
                             msg = `{escape}${msg}{/escape} (${elapsedString})`;
                         }
@@ -1016,8 +1045,14 @@ export function consoleReporter({ allTimings = false, timers = false, showHooks 
                         }
 
                         if (err.expected && err.actual) {
-                            if (adone.is.string(err.expected) && adone.is.string(err.actual)
-                                && (adone.text.splitLines(err.expected).length > 1 || adone.text.splitLines(err.actual).length > 1)) {
+                            if (
+                                adone.is.string(err.expected) &&
+                                adone.is.string(err.actual) &&
+                                (
+                                    adone.text.splitLines(err.expected).length > 1 ||
+                                    adone.text.splitLines(err.actual).length > 1
+                                )
+                            ) {
                                 printColorDiff(adone.util.diff.lines(err.actual, err.expected));
                             } else if (adone.is.sameType(err.expected, err.actual)) {
                                 printColorDiff(adone.util.diff.objects(err.actual, err.expected));
@@ -1052,8 +1087,9 @@ export function consoleReporter({ allTimings = false, timers = false, showHooks 
                 log();
                 totalElapsed = process.hrtime(totalElapsed);
                 testsElapsed = adone.util.humanizeTime(testsElapsed);
-                totalElapsed = adone.util.humanizeTime(totalElapsed[0] * 1e3 + totalElapsed[1] / 1e6);
-
+                totalElapsed = adone.util.humanizeTime(
+                    totalElapsed[0] * 1e3 + totalElapsed[1] / 1e6
+                );
                 log(`    {green-fg}${passed} passing{/} {grey-fg}(${testsElapsed}){/}`);
                 if (pending) {
                     log(`{cyan-fg}    ${pending} pending{/}`);
@@ -1072,4 +1108,4 @@ export function consoleReporter({ allTimings = false, timers = false, showHooks 
                 globalErrors.push(err);
             });
     };
-}
+};

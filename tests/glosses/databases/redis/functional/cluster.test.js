@@ -1001,7 +1001,7 @@ describe("glosses", "databases", "redis", "cluster", () => {
             const client = new Cluster([{ host: "127.0.0.1", port: "30001" }]);
 
             client.subscribe("test cluster", () => {
-                stub(Redis.prototype, "subscribe").callsFake((...args) => {
+                stub(Redis.prototype, "subscribe").callsFake(function (...args) {
                     const [channels] = args;
                     expect(channels).to.eql(["test cluster"]);
                     Redis.prototype.subscribe.restore();

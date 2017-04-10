@@ -265,7 +265,7 @@ export class Redis extends redis.Commander.mixin(EventEmitter) {
             return this.emit(eventName, ...args);
         }
         if (error && is.error(error)) {
-            adone.error("[ioredis] Unhandled error event:", error.stack);
+            adone.error("[redis] Unhandled error event:", error.stack);
         }
         return false;
     }
