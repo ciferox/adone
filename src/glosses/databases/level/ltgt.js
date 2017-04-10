@@ -1,7 +1,7 @@
 const { is } = adone;
 
 export const compare = (a, b) => {
-    if (Buffer.isBuffer(a)) {
+    if (is.buffer(a)) {
         const l = Math.min(a.length, b.length);
         for (let i = 0; i < l; i++) {
             const cmp = a[i] - b[i];

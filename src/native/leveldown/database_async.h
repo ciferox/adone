@@ -20,7 +20,7 @@ class OpenWorker : public AsyncWorker
 {
   public:
     OpenWorker(
-        Database *database, Nan::Callback *callback, leveldb::Cache *blockCache, const leveldb::FilterPolicy *filterPolicy, bool createIfMissing, bool errorIfExists, bool compression, uint32_t writeBufferSize, uint32_t blockSize, uint32_t maxOpenFiles, uint32_t blockRestartInterval);
+        Database *database, Nan::Callback *callback, leveldb::Cache *blockCache, const leveldb::FilterPolicy *filterPolicy, bool createIfMissing, bool errorIfExists, bool compression, uint32_t writeBufferSize, uint32_t blockSize, uint32_t maxOpenFiles, uint32_t blockRestartInterval, uint32_t maxFileSize);
 
     virtual ~OpenWorker();
     virtual void Execute();

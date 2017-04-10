@@ -1,11 +1,22 @@
-const { AbstractBackend, AbstractIterator, ltgt } = adone.database.level;
+const { is, database: { level: { AbstractBackend, AbstractIterator, ltgt } } } = adone;
 const createRBT = require("functional-red-black-tree");
 let globalStore = {};
 
-const gt = (value) => ltgt.compare(value, this._end) > 0;
-const gte = (value) => ltgt.compare(value, this._end) >= 0;
-const lt = (value) => ltgt.compare(value, this._end) < 0;
-const lte = (value) => ltgt.compare(value, this._end) <= 0;
+const gt = function (value) {
+    return ltgt.compare(value, this._end) > 0;
+};
+
+const gte = function (value) {
+    return ltgt.compare(value, this._end) >= 0;
+};
+
+const lt = function (value) {
+    return ltgt.compare(value, this._end) < 0;
+};
+
+const lte = function (value) {
+    return ltgt.compare(value, this._end) <= 0;
+};
 
 class MemoryIterator extends AbstractIterator {
     constructor(db, options) {
@@ -29,7 +40,7 @@ class MemoryIterator extends AbstractIterator {
             this._start = ltgt.lowerBound(options);
             this._end = ltgt.upperBound(options);
 
-            if (typeof this._start === "undefined") {
+            if (is.undefined(this._start)) {
                 this._tree = tree.begin;
             } else if (ltgt.lowerBoundInclusive(options)) {
                 this._tree = tree.ge(this._start);
@@ -49,7 +60,7 @@ class MemoryIterator extends AbstractIterator {
             this._start = ltgt.upperBound(options);
             this._end = ltgt.lowerBound(options);
 
-            if (typeof this._start === "undefined") {
+            if (is.undefined(this._start)) {
                 this._tree = tree.end;
             } else if (ltgt.upperBoundInclusive(options)) {
                 this._tree = tree.le(this._start);
@@ -67,23 +78,23 @@ class MemoryIterator extends AbstractIterator {
         }
     }
 
-    _next() {
+    _next(callback) {
         let key;
         let value;
 
         if (this._done++ >= this._limit) {
-            return Promise.resolve();
+            return callback(null);
         }
 
         if (!this._tree.valid) {
-            return Promise.resolve();
+            return callback(null);
         }
 
         key = this._tree.key;
         value = this._tree.value;
 
         if (!this._test(key)) {
-            return Promise.resolve();
+            return callback(null);
         }
 
         if (this.keyAsBuffer) {
@@ -96,9 +107,7 @@ class MemoryIterator extends AbstractIterator {
 
         this._tree[this._incr]();
 
-        return new Promise((resolve) => {
-            resolve({ key, value });
-        });
+        callback(null, { key, value });
     }
 
     _test() {
@@ -108,7 +117,7 @@ class MemoryIterator extends AbstractIterator {
 
 export default class Memory extends AbstractBackend {
     constructor(location) {
-        super(typeof location === "string" ? location : "");
+        super(is.string(location) ? location : "");
 
         this._location = this.location ? (`$${this.location}`) : "_tree";
         this._store = this.location ? globalStore : this;
@@ -120,7 +129,7 @@ export default class Memory extends AbstractBackend {
     }
 
     _put(key, value, options, callback) {
-        if (typeof value === "undefined" || value === null) {
+        if (is.undefined(value) || value === null) {
             value = "";
         }
 
@@ -138,14 +147,14 @@ export default class Memory extends AbstractBackend {
     _get(key, options, callback) {
         let value = this._store[this._location].get(key);
 
-        if (typeof value === "undefined") {
+        if (is.undefined(value)) {
             // 'NotFound' error, consistent with LevelDOWN API
             return setImmediate(function callNext() {
                 callback(new Error("NotFound"));
             });
         }
 
-        if (options.asBuffer !== false && !this._isBuffer(value)) {
+        if (options.asBuffer !== false && !is.buffer(value)) {
             value = new Buffer(String(value));
         }
 
@@ -172,11 +181,11 @@ export default class Memory extends AbstractBackend {
                 continue;
             }
 
-            key = this._isBuffer(array[i].key) ? array[i].key : String(array[i].key);
+            key = is.buffer(array[i].key) ? array[i].key : String(array[i].key);
             iter = tree.find(key);
 
             if (array[i].type === "put") {
-                value = this._isBuffer(array[i].value) ? array[i].value : String(array[i].value);
+                value = is.buffer(array[i].value) ? array[i].value : String(array[i].value);
                 tree = iter.valid ? iter.update(value) : tree.insert(key, value);
             } else {
                 tree = iter.remove();
@@ -192,10 +201,6 @@ export default class Memory extends AbstractBackend {
         return new MemoryIterator(this, options);
     }
 
-    _isBuffer(obj) {
-        return Buffer.isBuffer(obj);
-    }
-
     static clearGlobalStore(strict) {
         if (strict) {
             Object.keys(globalStore).forEach((key) => {
@@ -206,13 +211,11 @@ export default class Memory extends AbstractBackend {
         }
     }
 
-    static destroy(name, callback) {
+    static destroy(name) {
         const key = `$${name}`;
 
         if (key in globalStore) {
             delete globalStore[key];
         }
-
-        setImmediate(callback);
     }
 }

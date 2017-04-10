@@ -147,6 +147,7 @@ module.exports = {
         "FS": true,
         "skip": true,
         "$": true,  // only for tests...
-        "request": true
+        "request": true,
+        "specter": true
     }
 };

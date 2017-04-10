@@ -1,4 +1,4 @@
-const { AbstractBackend, _: { native } } = adone.database.level;
+const { is, database: { level: { AbstractBackend, _: { native } } } } = adone;
 
 const imports = adone.lazify({
     ChainedBatch: "./chained-batch",
@@ -44,7 +44,7 @@ export default class Default extends AbstractBackend {
     }
 
     getProperty(property) {
-        if (typeof property !== "string") {
+        if (!is.string(property)) {
             throw new Error("getProperty() requires a valid `property` argument");
         }
 
@@ -60,11 +60,11 @@ export default class Default extends AbstractBackend {
             throw new Error("destroy() requires `location` and `callback` arguments");
         }
 
-        if (typeof location !== "string") {
+        if (!is.string(location)) {
             throw new Error("destroy() requires a location string argument");
         }
 
-        if (typeof callback !== "function") {
+        if (!is.function(callback)) {
             throw new Error("destroy() requires a callback function argument");
         }
 
@@ -76,7 +76,7 @@ export default class Default extends AbstractBackend {
             throw new Error("repair() requires `location` and `callback` arguments");
         }
 
-        if (typeof location !== "string") {
+        if (!is.string(location)) {
             throw new Error("repair() requires a location string argument");
         }
 

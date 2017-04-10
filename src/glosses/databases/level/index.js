@@ -14,22 +14,6 @@ adone.lazify({
     }, null, require),
     util: () => {
         return {
-            defaultOptions: {
-                createIfMissing: true,
-                errorIfExists: false,
-                keyEncoding: "utf8",
-                valueEncoding: "utf8",
-                compression: true
-            },
-            getOptions: (options) => {
-                if (typeof options === "string") {
-                    options = { valueEncoding: options };
-                }
-                if (typeof options !== "object") {
-                    options = {};
-                }
-                return options;
-            },
             dispatchError: (db, error, callback) => {
                 typeof callback === "function" ? callback(error) : db.emit("error", error);
             },

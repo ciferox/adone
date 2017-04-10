@@ -4,8 +4,8 @@
 //
 // See port_example.h for documentation for the following types/functions.
 
-#ifndef STORAGE_LEVELDB_PORT_PORT_LIBUV_H_
-#define STORAGE_LEVELDB_PORT_PORT_LIBUV_H_
+#ifndef STORAGE_LEVELDB_PORT_PORT_POSIX_H_
+#define STORAGE_LEVELDB_PORT_PORT_POSIX_H_
 
 #undef PLATFORM_IS_LITTLE_ENDIAN
 #if defined(OS_MACOSX)
@@ -21,37 +21,30 @@
   #else
     #define PLATFORM_IS_LITTLE_ENDIAN false
   #endif
-#elif defined(OS_FREEBSD) || defined(OS_OPENBSD) || defined(OS_NETBSD) ||\
-      defined(OS_DRAGONFLYBSD) || defined(OS_ANDROID)
+#elif defined(OS_FREEBSD) || defined(OS_OPENBSD) ||\
+      defined(OS_NETBSD) || defined(OS_DRAGONFLYBSD)
   #include <sys/types.h>
   #include <sys/endian.h>
-#elif defined(_MSC_VER)
-#if _MSC_VER < 1600
-  #include "stdint-msvc2008.h"
-#endif
-  #define PLATFORM_IS_LITTLE_ENDIAN true
-#if _MSC_VER < 1900
-  #define snprintf _snprintf
-#endif
-  #define close _close
-  #define fread_unlocked _fread_nolock
+  #define PLATFORM_IS_LITTLE_ENDIAN (_BYTE_ORDER == _LITTLE_ENDIAN)
+#elif defined(OS_HPUX)
+  #define PLATFORM_IS_LITTLE_ENDIAN false
+#elif defined(OS_ANDROID)
+  // Due to a bug in the NDK x86 <sys/endian.h> definition,
+  // _BYTE_ORDER must be used instead of __BYTE_ORDER on Android.
+  // See http://code.google.com/p/android/issues/detail?id=39824
+  #include <endian.h>
+  #define PLATFORM_IS_LITTLE_ENDIAN  (_BYTE_ORDER == _LITTLE_ENDIAN)
 #else
   #include <endian.h>
 #endif
 
-#include <uv.h>
-
+#include <pthread.h>
 #ifdef SNAPPY
 #include <snappy.h>
 #endif
 #include <stdint.h>
 #include <string>
-#if defined(_MSC_VER)
-  #include "atomic_pointer_win.h"
-  #undef small
-#else
-  #include "port/atomic_pointer.h"
-#endif
+#include "port/atomic_pointer.h"
 
 #ifndef PLATFORM_IS_LITTLE_ENDIAN
 #define PLATFORM_IS_LITTLE_ENDIAN (__BYTE_ORDER == __LITTLE_ENDIAN)
@@ -59,7 +52,7 @@
 
 #if defined(OS_MACOSX) || defined(OS_SOLARIS) || defined(OS_FREEBSD) ||\
     defined(OS_NETBSD) || defined(OS_OPENBSD) || defined(OS_DRAGONFLYBSD) ||\
-    defined(OS_ANDROID)
+    defined(OS_ANDROID) || defined(OS_HPUX) || defined(CYGWIN)
 // Use fread/fwrite/fflush on platforms without _unlocked variants
 #define fread_unlocked fread
 #define fwrite_unlocked fwrite
@@ -69,6 +62,12 @@
 #if defined(OS_MACOSX) || defined(OS_FREEBSD) ||\
     defined(OS_OPENBSD) || defined(OS_DRAGONFLYBSD)
 // Use fsync() on platforms without fdatasync()
+#define fdatasync fsync
+#endif
+
+#if defined(OS_ANDROID) && __ANDROID_API__ < 9
+// fdatasync() was only introduced in API level 9 on Android. Use fsync()
+// when targetting older platforms.
 #define fdatasync fsync
 #endif
 
@@ -91,7 +90,7 @@ class Mutex {
 
  private:
   friend class CondVar;
-  uv_mutex_t mu_;
+  pthread_mutex_t mu_;
 
   // No copying
   Mutex(const Mutex&);
@@ -106,12 +105,12 @@ class CondVar {
   void Signal();
   void SignalAll();
  private:
-  uv_cond_t cv_;
+  pthread_cond_t cv_;
   Mutex* mu_;
 };
 
-typedef uv_once_t OnceType;
-#define LEVELDB_ONCE_INIT UV_ONCE_INIT
+typedef pthread_once_t OnceType;
+#define LEVELDB_ONCE_INIT PTHREAD_ONCE_INIT
 extern void InitOnce(OnceType* once, void (*initializer)());
 
 inline bool Snappy_Compress(const char* input, size_t length,
@@ -154,4 +153,4 @@ uint32_t AcceleratedCRC32C(uint32_t crc, const char* buf, size_t size);
 } // namespace port
 } // namespace leveldb
 
-#endif  // STORAGE_LEVELDB_PORT_PORT_LIBUV_H_
+#endif  // STORAGE_LEVELDB_PORT_PORT_POSIX_H_

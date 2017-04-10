@@ -20,18 +20,21 @@ namespace leveldown
 /** OPEN WORKER **/
 
 OpenWorker::OpenWorker(
-    Database *database, Nan::Callback *callback, leveldb::Cache *blockCache, const leveldb::FilterPolicy *filterPolicy, bool createIfMissing, bool errorIfExists, bool compression, uint32_t writeBufferSize, uint32_t blockSize, uint32_t maxOpenFiles, uint32_t blockRestartInterval) : AsyncWorker(database, callback)
+    Database *database, Nan::Callback *callback, leveldb::Cache *blockCache, const leveldb::FilterPolicy *filterPolicy, bool createIfMissing, bool errorIfExists, bool compression, uint32_t writeBufferSize, uint32_t blockSize, uint32_t maxOpenFiles, uint32_t blockRestartInterval, uint32_t maxFileSize) : AsyncWorker(database, callback)
 {
     options = new leveldb::Options();
     options->block_cache = blockCache;
     options->filter_policy = filterPolicy;
     options->create_if_missing = createIfMissing;
     options->error_if_exists = errorIfExists;
-    options->compression = compression ? leveldb::kSnappyCompression : leveldb::kNoCompression;
+    options->compression = compression
+                               ? leveldb::kSnappyCompression
+                               : leveldb::kNoCompression;
     options->write_buffer_size = writeBufferSize;
     options->block_size = blockSize;
     options->max_open_files = maxOpenFiles;
     options->block_restart_interval = blockRestartInterval;
+    options->max_file_size = maxFileSize;
 };
 
 OpenWorker::~OpenWorker()

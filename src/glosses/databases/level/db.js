@@ -1,4 +1,4 @@
-const { is, x, database: { level: { Codec, util: { getOptions, defaultOptions } } } } = adone;
+const { is, x, database: { level: { Codec } } } = adone;
 
 class IteratorStream extends adone.std.stream.Readable {
     constructor(iterator, options) {
@@ -59,8 +59,7 @@ class IteratorStream extends adone.std.stream.Readable {
 }
 IteratorStream.prototype.destroy = IteratorStream.prototype._cleanup;
 
-
-// Possible LevelUP#_status values:
+// Possible status values:
 //  - 'new'     - newly created, not opened or closed
 //  - 'opening' - waiting for the database to be opened, post open()
 //  - 'open'    - successfully opened the database, available for use
@@ -68,34 +67,64 @@ IteratorStream.prototype.destroy = IteratorStream.prototype._cleanup;
 //  - 'closed'  - database has been successfully closed, should not be
 //                 used except for another open() operation
 
+const BINARY_CODECS = ["bson", "mpak"];
+
 export default class DB extends adone.EventEmitter {
-    constructor(location, options) {
+    constructor(options = {}) {
         super();
 
-        this.setMaxListeners(Infinity);
-
-        if (is.function(location)) {
-            options = typeof options === "object" ? options : {};
-            options.db = location;
-            location = null;
-        } else if (typeof location === "object" && typeof location.db === "function") {
-            options = location;
-            location = null;
-        }
-
-        if ((!options || typeof options.db !== "function") && typeof location !== "string") {
+        if (!is.class(options.db) && !is.string(options.location)) {
             throw new x.DatabaseInitialization("Must provide a location for the database");
         }
 
-        options = getOptions(options);
-        this.options = Object.assign({}, defaultOptions, options);
+        this.options = Object.assign({
+            createIfMissing: true,
+            errorIfExists: false,
+            keyEncoding: "utf8",
+            valueEncoding: "utf8",
+            compression: true
+        }, options);
+
+        if (is.plainObject(options.encryption)) {
+            // Force binary encoding of key/value for encryption mode 
+            this.options.keyEncoding = BINARY_CODECS.includes(this.options.keyEncoding) ? this.options.keyEncoding : "binary";
+            this.options.valueEncoding = BINARY_CODECS.includes(this.options.valueEncoding) ? this.options.valueEncoding : "binary";
+
+            if (is.buffer(options.encryption.key)) {
+                adone.vendor.lodash.defaults(this.options.encryption, {
+                    algorithm: "aes-256-cbc",
+                    ivBytes: 16
+                });
+            } else {
+                adone.vendor.lodash.defaults(this.options.encryption, {
+                    saltBytes: 32,
+                    digest: "sha256",
+                    keyBytes: 32,
+                    iterations: 64000,
+                    algorithm: "aes-256-cbc",
+                    ivBytes: 16
+                });
+
+                const encOptions = this.options.encryption;
+
+                if (!is.string(encOptions.password) && !is.buffer(encOptions.password)) {
+                    throw new adone.x.NotValid("Password is not valid");
+                }
+
+                if (!is.undefined(encOptions.salt)) {
+                    encOptions.key = adone.std.crypto.pbkdf2Sync(encOptions.password, encOptions.salt, encOptions.iterations, encOptions.keyBytes, encOptions.digest);
+                }
+            }
+        }
         this._codec = new Codec(this.options);
         this._status = "new";
-        // set this.location as enumerable but not configurable or writable
+
         Object.defineProperty(this, "location", {
             enumerable: true,
-            value: location
+            value: options.location
         });
+
+        this.setMaxListeners(Infinity);
     }
 
     async open() {
@@ -104,10 +133,101 @@ export default class DB extends adone.EventEmitter {
 
             this._status = "opening";
             const Backend = this.options.db || adone.database.level.backend.Default;
-            if (is.class(Backend)) {
-                this.db = new Backend(this.location);
+
+            if (is.plainObject(this.options.encryption)) {
+                const encOptions = this.options.encryption;
+
+                class XBackend extends Backend {
+                    _get(key, options, callback) {
+                        return super._get(this._hashKey(key), options, (err, value) => {
+                            if (err) {
+                                return callback(err, value);
+                            }
+                            callback(err, this._decryptValue(value));
+                        });
+                    }
+
+                    _put(key, value, options, callback) {
+                        return super._put(this._hashKey(key), this._encryptValue(value), options, callback);
+                    }
+
+                    _del(key, options, callback) {
+                        return super._del(this._hashKey(key), options, callback);
+                    }
+
+                    _batch(operations, options, callback) {
+                        for (const op of operations) {
+                            op.key = this._hashKey(op.key);
+                            if (op.type === "put") {
+                                op.value = this._encryptValue(op.value);
+                            }
+                        }
+                        return super._batch(operations, options, callback);
+                    }
+
+                    _hashKey(key) {
+                        return adone.std.crypto.createHash("sha256").update(key).digest();
+                    }
+
+                    _encryptValue(value) {
+                        let salt;
+                        let encKey;
+                        if (is.undefined(encOptions.key)) {
+                            salt = adone.std.crypto.randomBytes(encOptions.saltBytes);
+                            encKey = adone.std.crypto.pbkdf2Sync(encOptions.password, salt, encOptions.iterations, encOptions.keyBytes, encOptions.digest);
+                        } else {
+                            salt = encOptions.salt;
+                            encKey = encOptions.key;
+                        }
+                        const iv = encOptions.iv || adone.std.crypto.randomBytes(encOptions.ivBytes);
+                        const cipher = adone.std.crypto.createCipheriv(encOptions.algorithm, encKey, iv);
+                        const ciphered = Buffer.concat([cipher.update(value), cipher.final()]);
+                        const parts = [
+                            iv,
+                            ciphered
+                        ];
+
+                        if (is.undefined(encOptions.salt)) {
+                            parts.push(salt);
+                        }
+
+                        return adone.data.mpak.encode(parts);
+                    }
+
+                    _decryptValue(value) {
+                        const parts = adone.data.mpak.decode(value);
+                        let key;
+
+                        if (is.undefined(encOptions.key)) {
+                            key = adone.std.crypto.pbkdf2Sync(encOptions.password, parts[2], encOptions.iterations, encOptions.keyBytes, encOptions.digest);
+                        } else {
+                            key = encOptions.key;
+                        }
+
+                        const decipher = adone.std.crypto.createDecipheriv(encOptions.algorithm, key, parts[0]);
+                        return Buffer.concat([decipher.update(parts[1]), decipher.final()]);
+                    }
+
+                    _unserialize(buf) {
+                        const parts = [];
+                        const l = buf.length;
+                        let idx = 0;
+                        while (idx < l) {
+                            const dlen = buf.readUInt32BE(idx);
+                            idx += 4;
+                            const start = idx;
+                            const end = start + dlen;
+                            const part = buf.slice(start, end);
+                            parts.push(part);
+                            idx += part.length;
+                        }
+                        return parts;
+                    }
+                }
+
+                this.db = new XBackend(this.location);
             } else {
-                this.db = Backend();
+                this.db = new Backend(this.location);
             }
 
             try {
@@ -155,12 +275,6 @@ export default class DB extends adone.EventEmitter {
     async get(key_, options = {}) {
         this.maybeError();
 
-        if (key_ === null || key_ === undefined) {
-            const err = new x.DatabaseRead("get() requires key argument");
-            this.emit("error", err);
-            throw err;
-        }
-
         const key = this._codec.encodeKey(key_, options);
 
         options.asBuffer = this._codec.valueAsBuffer(options);
@@ -178,7 +292,7 @@ export default class DB extends adone.EventEmitter {
             return value;
         } catch (err) {
             if ((/notfound/i).test(err) || err.notFound) {
-                err = new x.NotFound(`Key not found in database [${key_}]`, err);
+                err = new x.NotFound(`Key '${key_}' not found in database`, err);
             } else if (!(err instanceof x.Encoding)) {
                 err = new x.DatabaseRead(err);
             }
@@ -188,13 +302,7 @@ export default class DB extends adone.EventEmitter {
     }
 
     async put(key_, value_, options = {}) {
-        this.maybeError();
-
-        if (key_ === null || key_ === undefined) {
-            const err = new x.DatabaseWrite("put() requires a key argument");
-            this.emit("error", err);
-            throw err;
-        }
+        this.maybeError();        
 
         const key = this._codec.encodeKey(key_, options);
         const value = this._codec.encodeValue(value_, options);
@@ -211,12 +319,6 @@ export default class DB extends adone.EventEmitter {
 
     async del(key_, options = {}) {
         this.maybeError();
-
-        if (key_ === null || key_ === undefined) {
-            const err = new x.DatabaseWrite("del() requires a key argument");
-            this.emit("error", err);
-            throw err;
-        }
 
         const key = this._codec.encodeKey(key_, options);
 

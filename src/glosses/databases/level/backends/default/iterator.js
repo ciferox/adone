@@ -27,30 +27,24 @@ export default class Iterator extends adone.database.level.AbstractIterator {
         this.finished = false;
     }
 
-    _next() {
+    _next(callback) {
         if (this.cache && this.cache.length) {
             const key = this.cache.pop();
             const value = this.cache.pop();
 
-            return new Promise((resolve) => {
-                process.nextTick(() => resolve({ key, value }));
-            });
+            process.nextTick(() => callback(null, { key, value }));
         } else if (this.finished) {
-            return new Promise((resolve) => {
-                process.nextTick(() => resolve());
-            });
+            process.nextTick(() => callback(null));
         } else {
-            return new Promise((resolve, reject) => {
-                this.native.next((err, array, finished) => {
-                    if (err) {
-                        return reject(err);
-                    }
+            this.native.next((err, array, finished) => {
+                if (err) {
+                    return callback(err);
+                }
 
-                    this.cache = array;
-                    this.finished = finished;
-                    resolve(this._next());
-                });
-            }); 
+                this.cache = array;
+                this.finished = finished;
+                this._next(callback);
+            });
         }
     }
 

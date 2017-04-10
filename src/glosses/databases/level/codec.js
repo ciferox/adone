@@ -1,4 +1,6 @@
-const isBinary = (data) => (data === undefined || data === null || Buffer.isBuffer(data));
+const { is } = adone;
+
+const isBinary = (data) => (data === undefined || data === null || is.buffer(data));
 
 const encodings = {
     utf8: {
@@ -6,7 +8,7 @@ const encodings = {
             return isBinary(data) ? data : String(data);
         },
         decode(data) {
-            return typeof data === "string" ? data : String(data);
+            return is.string(data) ? data : String(data);
         },
         buffer: false,
         type: "utf8"
@@ -17,9 +19,21 @@ const encodings = {
         buffer: false,
         type: "json"
     },
+    bson: {
+        encode: adone.data.bson.encode,
+        decode: adone.data.bson.decode,
+        buffer: true,
+        type: "bson"
+    },
+    mpak: {
+        encode: adone.data.mpak.encode,
+        decode: adone.data.mpak.decode,
+        buffer: true,
+        type: "bson"
+    },
     binary: {
         encode(data) {
-            return isBinary(data) ? data : new Buffer(data);
+            return isBinary(data) ? data : Buffer.from(data);
         },
         decode: adone.identity,
         buffer: true,
@@ -48,7 +62,7 @@ const bufferEncodings = [
 bufferEncodings.forEach((type) => {
     encodings[type] = {
         encode(data) {
-            return isBinary(data) ? data : new Buffer(data, type);
+            return isBinary(data) ? data : Buffer.from(data, type);
         },
         decode(buffer) {
             return buffer.toString(type);
@@ -68,7 +82,7 @@ export default class Codec {
     }
 
     _encoding(encoding) {
-        if (typeof encoding === "string") {
+        if (is.string(encoding)) {
             encoding = encodings[encoding];
         }
         if (!encoding) {
@@ -129,9 +143,7 @@ export default class Codec {
         const self = this;
         const ret = {};
         Object.keys(ltgt).forEach((key) => {
-            ret[key] = ltgtKeys.indexOf(key) > -1
-                ? self.encodeKey(ltgt[key], ltgt)
-                : ltgt[key];
+            ret[key] = ltgtKeys.indexOf(key) > -1 ? self.encodeKey(ltgt[key], ltgt) : ltgt[key];
         });
         return ret;
     }

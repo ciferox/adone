@@ -17,9 +17,14 @@ export class AbstractIterator {
 
         this._nexting = true;
         if (is.function(this._next)) {
-            return this._next().then((result) => {
-                this._nexting = false;
-                return result;
+            return new Promise((resolve, reject) => {
+                return this._next((err, result) => {
+                    this._nexting = false;
+                    if (err) {
+                        return reject(err);
+                    }
+                    resolve(result);
+                });
             });
         }
 
@@ -31,22 +36,25 @@ export class AbstractIterator {
         });
     }
 
-    end(callback) {
-        if (typeof callback !== "function") {
-            throw new Error("end() requires a callback argument");
-        }
-
+    end() {
         if (this._ended) {
-            return callback(new Error("end() already called on iterator"));
+            throw new Error("end() already called on iterator");
         }
 
         this._ended = true;
 
-        if (typeof this._end === "function") {
-            return this._end(callback);
+        if (is.function(this._end)) {
+            return new Promise((resolve, reject) => {
+                this._end((err) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    resolve();
+                });
+            });
         }
 
-        process.nextTick(callback);
+        return new Promise((resolve) => process.nextTick(resolve));
     }
 }
 
@@ -75,7 +83,7 @@ export class AbstractChainedBatch {
     put(key, value) {
         this._checkWritten();
 
-        const err = this._db._checkKey(key, "key", this._db._isBuffer);
+        const err = this._db._checkKey(key, "key");
         if (err) {
             throw err;
         }
@@ -95,7 +103,7 @@ export class AbstractChainedBatch {
     del(key) {
         this._checkWritten();
 
-        const err = this._db._checkKey(key, "key", this._db._isBuffer);
+        const err = this._db._checkKey(key, "key");
         if (err) {
             throw err;
         }
@@ -166,7 +174,8 @@ export class AbstractBackend {
         this.status = "new";
     }
 
-    open(options = { createIfMissing: true, errorIfExists: false }) {
+    open(options) {
+        options = Object.assign({ createIfMissing: true, errorIfExists: false }, options);
         const oldStatus = this.status;
 
         if (is.function(this._open)) {
@@ -206,21 +215,20 @@ export class AbstractBackend {
         }
     }
 
-    get(key, options = { asBuffer: true }) {
+    get(key, options) {
+        options = Object.assign({ asBuffer: true }, options);
         this._checkKey(key, "key");
 
         key = this._serializeKey(key);
 
-        if (is.function(this._get)) {
-            return new Promise((resolve, reject) => {
-                this._get(key, options, (err, value) => {
-                    if (err) {
-                        return reject(err);
-                    }
-                    resolve(value);
-                });
+        return new Promise((resolve, reject) => {
+            this._get(key, options, (err, value) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(value);
             });
-        }
+        });
     }
 
     put(key, value, options = {}) {
@@ -229,16 +237,14 @@ export class AbstractBackend {
         key = this._serializeKey(key);
         value = this._serializeValue(value);
 
-        if (is.function(this._put)) {
-            return new Promise((resolve, reject) => {
-                this._put(key, value, options, (err) => {
-                    if (err) {
-                        return reject(err);
-                    }
-                    resolve();
-                });
+        return new Promise((resolve, reject) => {
+            this._put(key, value, options, (err) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve();
             });
-        }
+        });
     }
 
     del(key, options = {}) {
@@ -246,23 +252,22 @@ export class AbstractBackend {
 
         key = this._serializeKey(key);
 
-        if (is.function(this._del)) {
-            return new Promise((resolve, reject) => {
-                return this._del(key, options, (err) => {
-                    if (err) {
-                        return reject(err);
-                    }
-                    resolve();
-                });
+        return new Promise((resolve, reject) => {
+            return this._del(key, options, (err) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve();
             });
-        }
+        });
     }
 
     chainedBatch() {
         return new AbstractChainedBatch(this);
     }
 
-    batch(array, options = {}) {
+    batch(array, options) {
+        options = Object.assign({}, options);
         if (!is.array(array)) {
             throw new Error("batch(array) requires an array argument");
         }
@@ -315,11 +320,11 @@ export class AbstractBackend {
         });
     }
 
-    _setupIteratorOptions(options) {
+    iterator(options) {
         options = Object.assign({}, options);
 
         ["start", "end", "gt", "gte", "lt", "lte"].forEach((o) => {
-            if (options[o] && this._isBuffer(options[o]) && options[o].length === 0) {
+            if (options[o] && is.buffer(options[o]) && options[o].length === 0) {
                 delete options[o];
             }
         });
@@ -331,12 +336,6 @@ export class AbstractBackend {
         options.keyAsBuffer = options.keyAsBuffer !== false;
         options.valueAsBuffer = options.valueAsBuffer !== false;
 
-        return options;
-    }
-
-    iterator(options = {}) {
-        options = this._setupIteratorOptions(options);
-
         if (is.function(this._iterator)) {
             return this._iterator(options);
         }
@@ -344,23 +343,19 @@ export class AbstractBackend {
         return new AbstractIterator(this);
     }
 
-    _isBuffer(obj) {
-        return Buffer.isBuffer(obj);
-    }
-
     _serializeKey(key) {
-        return this._isBuffer(key) ? key : String(key);
+        return is.buffer(key) ? key : String(key);
     }
 
     _serializeValue(value) {
-        return this._isBuffer(value) || process.browser || value == null ? value : String(value);
+        return is.buffer(value) || process.browser || value == null ? value : String(value);
     }
 
     _checkKey(obj, type) {
         if (obj === null || obj === undefined) {
             throw new Error(`${type} cannot be \`null\` or \`undefined\``);
         }
-        if (this._isBuffer(obj) && obj.length === 0) {
+        if (is.buffer(obj) && obj.length === 0) {
             throw new Error(`${type} cannot be an empty Buffer`);
         } else if (String(obj) === "") {
             throw new Error(`${type} cannot be an empty String`);

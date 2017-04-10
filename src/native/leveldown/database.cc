@@ -22,15 +22,8 @@ namespace leveldown
 
 static Nan::Persistent<v8::FunctionTemplate> database_constructor;
 
-Database::Database(const v8::Local<v8::Value> &from) :
-location(new Nan::Utf8String(from)),
-db(NULL), currentIteratorId(0),
-pendingCloseWorker(NULL),
-blockCache(NULL),
-filterPolicy(NULL)
-{
-    
-};
+Database::Database(const v8::Local<v8::Value> &from)
+    : location(new Nan::Utf8String(from)), db(NULL), currentIteratorId(0), pendingCloseWorker(NULL), blockCache(NULL), filterPolicy(NULL){};
 
 Database::~Database()
 {
@@ -53,17 +46,20 @@ leveldb::Status Database::PutToDatabase(
     return db->Put(*options, key, value);
 }
 
-leveldb::Status Database::GetFromDatabase(leveldb::ReadOptions *options, leveldb::Slice key, std::string &value)
+leveldb::Status Database::GetFromDatabase(
+    leveldb::ReadOptions *options, leveldb::Slice key, std::string &value)
 {
     return db->Get(*options, key, &value);
 }
 
-leveldb::Status Database::DeleteFromDatabase(leveldb::WriteOptions *options, leveldb::Slice key)
+leveldb::Status Database::DeleteFromDatabase(
+    leveldb::WriteOptions *options, leveldb::Slice key)
 {
     return db->Delete(*options, key);
 }
 
-leveldb::Status Database::WriteBatchToDatabase(leveldb::WriteOptions *options, leveldb::WriteBatch *batch)
+leveldb::Status Database::WriteBatchToDatabase(
+    leveldb::WriteOptions *options, leveldb::WriteBatch *batch)
 {
     return db->Write(*options, batch);
 }
@@ -75,7 +71,8 @@ uint64_t Database::ApproximateSizeFromDatabase(const leveldb::Range *range)
     return size;
 }
 
-void Database::CompactRangeFromDatabase(const leveldb::Slice *start, const leveldb::Slice *end)
+void Database::CompactRangeFromDatabase(const leveldb::Slice *start,
+                                        const leveldb::Slice *end)
 {
     db->CompactRange(start, end);
 }
@@ -202,12 +199,13 @@ NAN_METHOD(Database::Open)
     uint32_t maxOpenFiles = UInt32OptionValue(optionsObj, "maxOpenFiles", 1000);
     uint32_t blockRestartInterval = UInt32OptionValue(
         optionsObj, "blockRestartInterval", 16);
+    uint32_t maxFileSize = UInt32OptionValue(optionsObj, "maxFileSize", 2 << 20);
 
     database->blockCache = leveldb::NewLRUCache(cacheSize);
     database->filterPolicy = leveldb::NewBloomFilterPolicy(10);
 
     OpenWorker *worker = new OpenWorker(
-        database, new Nan::Callback(callback), database->blockCache, database->filterPolicy, createIfMissing, errorIfExists, compression, writeBufferSize, blockSize, maxOpenFiles, blockRestartInterval);
+        database, new Nan::Callback(callback), database->blockCache, database->filterPolicy, createIfMissing, errorIfExists, compression, writeBufferSize, blockSize, maxOpenFiles, blockRestartInterval, maxFileSize);
     // persist to prevent accidental GC
     v8::Local<v8::Object> _this = info.This();
     worker->SaveToPersistent("database", _this);

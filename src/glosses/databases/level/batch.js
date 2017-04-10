@@ -1,4 +1,4 @@
-const { x, database: { level: { util: { getOptions } } } } = adone;
+const { x } = adone;
 
 export default class Batch {
     constructor(db, codec) {
@@ -24,9 +24,7 @@ export default class Batch {
         return this;
     }
 
-    del(key_, options) {
-        options = getOptions(options);
-
+    del(key_, options = {}) {
         const key = this._codec.encodeKey(key_, options);
 
         try {
