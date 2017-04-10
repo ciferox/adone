@@ -41,6 +41,8 @@ export default function prettyTable(data, {
         }
     }
 
+    const padLeft = style["padding-left"] || (borderless ? 0 : 1);  // bad, table defaults
+    const padRight = style["padding-right"] || (borderless ? 0 : 1);
     const head = [];
     const colAligns = [];
     const map = {};
@@ -52,12 +54,6 @@ export default function prettyTable(data, {
         map[m.id] = adone.vendor.lodash.omit(m, "id");
         map[m.id].col = col++;
 
-        if (m.maxWidth) {
-            if (is.number(m.maxWidth)) {
-                map[m.id].maxWidth = m.maxWidth;
-            }
-        }
-
         if (m.wordwrap) {
             map[m.id].wordwrap = is.string(m.wordwrap) ? m.wordwrap : "soft";
         }
@@ -68,6 +64,7 @@ export default function prettyTable(data, {
     let predefinedWidthCols = 0;
     let remainingWidth = tableWidth;
 
+    // precise value
     for (const m of model) {
         let colWidth = null;
         if (is.number(m.width)) {
@@ -85,14 +82,58 @@ export default function prettyTable(data, {
         }
     }
 
+    // using maxWidth
+    for (const m of model) {
+        let maxWidth = null;
+        if (m.maxWidth) {
+            if (is.number(m.maxWidth)) {
+                maxWidth = m.maxWidth;
+            } else if (!is.null(tableWidth) && is.string(m.maxWidth)) {
+                maxWidth = coercePercent(m.maxWidth, tableWidth);
+            }
+        }
+        if (is.null(maxWidth)) {
+            map[m.id].maxWidth = null;
+            continue;
+        }
+
+        const colWidth = data.reduce((x, y) => {
+            const v = y[m.id];
+            const l = is.nil(v) ? 0 : v.toString().length + padLeft + padRight;
+            return Math.max(x, l);
+        }, 0);
+
+        map[m.id].maxWidth = Math.min(colWidth, maxWidth);
+    }
+
     if (!is.null(tableWidth)) {
-        const colSize = Math.floor(remainingWidth / (model.length - predefinedWidthCols));
+        let colSize = Math.floor(remainingWidth / (model.length - predefinedWidthCols));
+
+        for (const m of model) {
+            if (is.null(map[m.id].maxWidth)) {
+                continue;
+            }
+            if (map[m.id].maxWidth < colSize) {
+                map[m.id].colWidth = map[m.id].maxWidth;
+                ++predefinedWidthCols;
+                remainingWidth -= map[m.id].colWidth;
+            }
+        }
+
+        colSize = Math.floor(remainingWidth / (model.length - predefinedWidthCols));
 
         for (const m of model) {
             if (!is.null(map[m.id].colWidth)) {
                 continue;
             }
             map[m.id].colWidth = colSize;
+        }
+    } else {
+        for (const m of model) {
+            if (is.null(map[m.id].maxWidth)) {
+                continue;
+            }
+            map[m.id].colWidth = map[m.id].maxWidth;
         }
     }
 
@@ -106,9 +147,6 @@ export default function prettyTable(data, {
     }
 
     const table = new TableClass({ head, colAligns, colWidths, style });
-
-    const padLeft = table.options.style["padding-left"];
-    const padRight = table.options.style["padding-right"];
 
     for (const item of data) {
         const row = new Array(model.length).fill(null);

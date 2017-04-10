@@ -860,25 +860,22 @@ class Command {
             helpMessage.push("");
             if (this.arguments.length) {
                 helpMessage.push("Arguments:");
-                const table = new text.table.BorderlessTable({
-                    colWidths: [4, null, 2, null]
-                });
-                const namesMessages = this.arguments.map((arg) => {
-                    return text.wordwrap(arg.getNamesMessage(), 40);
-                });
-                const maxNamesLength = namesMessages.reduce((x, y) => Math.max(x, y.length), 0);
-                for (const arg of this.arguments) {
-                    table.push([
-                        null,
-                        namesMessages.shift(),
-                        null,
-                        text.wordwrap(
-                            arg.getShortHelpMessage(),
-                            totalWidth - 4 - maxNamesLength - 2
-                        )
-                    ]);
-                }
-                helpMessage.push(table.toString());
+                helpMessage.push(text.pretty.table(this.arguments.map((arg) => {
+                    return {
+                        names: arg.getNamesMessage(),
+                        message: arg.getShortHelpMessage()
+                    };
+                }), {
+                    model: [
+                        { id: "left-spacing", width: 4 },
+                        { id: "names", maxWidth: 40, wordwrap: true },
+                        { id: "between-cells", width: 2 },
+                        { id: "message", wordwrap: true }
+                    ],
+                    width: "100%",
+                    borderless: true,
+                    noHeader: true
+                }));
             }
             if (options.length) {
                 if (this.arguments.length) {
@@ -902,28 +899,23 @@ class Command {
                     } else {
                         helpMessage.push(`${group.description}:`);
                     }
-                    const table = new text.table.BorderlessTable({
-                        colWidths: [4, null, 2, null]
-                    });
-                    const namesMessages = [...group].map((opt) => {
-                        return text.wordwrap(
-                            opt.getUsageMessage({ required: false, allNames: true }),
-                            40
-                        );
-                    });
-                    const maxNamesLength = namesMessages.reduce((x, y) => Math.max(x, y.length), 0);
-                    for (const opt of group) {
-                        table.push([
-                            null,
-                            namesMessages.shift(),
-                            null,
-                            text.wordwrap(
-                                opt.getShortHelpMessage(),
-                                totalWidth - 4 - maxNamesLength - 2
-                            )
-                        ]);
-                    }
-                    helpMessage.push(table.toString());
+
+                    helpMessage.push(text.pretty.table([...group].map((opt) => {
+                        return {
+                            names: opt.getUsageMessage({ required: false, allNames: true }),
+                            message: opt.getShortHelpMessage()
+                        };
+                    }), {
+                        model: [
+                            { id: "left-spacing", width: 4 },
+                            { id: "names", maxWidth: 40, wordwrap: true },
+                            { id: "between-cells", width: 2 },
+                            { id: "message", wordwrap: true }
+                        ],
+                        width: "100%",
+                        borderless: true,
+                        noHeader: true
+                    }));
                 }
             }
             if (commands.length) {
@@ -948,26 +940,23 @@ class Command {
                     } else {
                         helpMessage.push(`${group.description}:`);
                     }
-                    const table = new text.table.BorderlessTable({
-                        colWidths: [4, null, 2, null]
-                    });
-                    const namesMessages = [...group].map((cmd) => {
-                        return text.wordwrap(cmd.getNamesMessage(), 40);
-                    });
-                    const maxNamesLength = namesMessages.reduce((x, y) => Math.max(x, y.length), 0);
-                    for (const cmd of group) {
-                        table.push([
-                            null,
-                            namesMessages.shift(),
-                            null,
-                            text.wordwrap(
-                                cmd.getShortHelpMessage(),
-                                totalWidth - 4 - maxNamesLength - 2
-                            )
-                        ]);
-                    }
-                    helpMessage.push(table.toString());
 
+                    helpMessage.push(text.pretty.table([...group].map((cmd) => {
+                        return {
+                            names: cmd.getNamesMessage(),
+                            message: cmd.getShortHelpMessage()
+                        };
+                    }), {
+                        model: [
+                            { id: "left-spacing", width: 4 },
+                            { id: "names", maxWidth: 40, wordwrap: true },
+                            { id: "between-cells", width: 2 },
+                            { id: "message", wordwrap: true }
+                        ],
+                        width: "100%",
+                        borderless: true,
+                        noHeader: true
+                    }));
                 }
             }
         }
