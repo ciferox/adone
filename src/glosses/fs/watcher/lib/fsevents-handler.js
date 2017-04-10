@@ -15,7 +15,7 @@ const consolidateThreshhold = 10;
 
 /**
  * Instantiates the fsevents interface
- * 
+ *
  * @private
  * @param {string} path - path to be watched
  * @param {function} callback - called when fsevents is bound and ready
@@ -25,7 +25,7 @@ const createFSEventsInstance = (path, callback) => new FSEvents(path).on("fseven
 
 /**
  * Instantiates the fsevents interface or binds listeners to an existing one covering the same file tree
- * 
+ *
  * @private
  * @param {string} path - path to be watched
  * @param {string} realPath - real path (in case of symlinks)
@@ -90,7 +90,7 @@ const setFSEventsListener = (path, realPath, listener, rawEmitter) => {
     return () => {
         delete watchContainer.listeners[listenerIndex];
         delete watchContainer.rawEmitters[listenerIndex];
-        if (!adone.util.properties(watchContainer.listeners).length) {
+        if (!watchContainer.listeners.length) {
             watchContainer.watcher.stop();
             FSEventsWatchers.delete(watchPath);
         }
@@ -99,7 +99,7 @@ const setFSEventsListener = (path, realPath, listener, rawEmitter) => {
 
 /**
  * Decide whether or not we should start a new higher-level parent watcher
- * 
+ *
  * @param {string} path
  * @returns {Boolean}
  */
@@ -119,7 +119,7 @@ const couldConsolidate = (path) => {
 
 /**
  * determines subdirectory traversal levels from root to path
- * 
+ *
  * @param {string} path
  * @param {string} root
  * @returns {number}
@@ -134,7 +134,7 @@ const depth = (path, root) => {
 
 /**
  * indicating whether fsevents can be used
- * 
+ *
  * @returns {Boolean}
  */
 export const canUse = () => FSEvents && [...FSEventsWatchers.keys()].length < 128;
@@ -142,7 +142,7 @@ export const canUse = () => FSEvents && [...FSEventsWatchers.keys()].length < 12
 export default {
     /**
      * Handle symlinks encountered during directory scan
-     * 
+     *
      * @private
      * @param {string} watchPath - file/dir path to be watched with fsevents
      * @param {string} realPath - real path (in case of symlinks)
@@ -218,7 +218,7 @@ export default {
             const checkFd = () => {
                 adone.std.fs.open(path, "r", (error, fd) => {
                     if (fd) {
-                        adone.std.fs.close(fd);
+                        adone.std.fs.close(fd, adone.noop);
                     }
                     error && error.code !== "EACCES" ? handleEvent("unlink") : addOrChange();
                 });
@@ -254,7 +254,7 @@ export default {
     },
     /**
      * Handle added path with fsevents
-     * 
+     *
      * @private
      * @param {string} path - file/directory path or glob pattern
      * @param {function} transform - converts working path to what the user expects
@@ -331,9 +331,9 @@ export default {
                     } else {
                         emitAdd(joinedPath, entry.stat);
                     }
-                }).error((err) => {
+                }).on("error", (err) => {
                     this._handleError(err);
-                }, { all: true }).done(() => {
+                }).done(() => {
                     this._emitReady();
                 });
             } else {
@@ -351,7 +351,10 @@ export default {
                     wh.globFilter
                 );
                 if (closer) {
-                    this._closers.set(path, closer);
+                    if (!this._closers.has(path)) {
+                        this._closers.set(path, []);
+                    }
+                    this._closers.get(path).push(closer);
                 }
             };
 
@@ -366,7 +369,7 @@ export default {
     /**
      * Handle symlinks encountered during directory scan
      *
-     * @private 
+     * @private
      * @param {string} linkPath - path to symlink
      * @param {string} fullPath - absolute path to the symlink
      * @param {function} transform - pre-existing path transformer
