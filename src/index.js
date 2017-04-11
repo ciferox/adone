@@ -294,6 +294,7 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
             terminal: () => adone.bind("terminal.node").Terminal,
             system: () => adone.bind("metrics.node").System
         }),
+        vault: "./glosses/vault",
         specter: "./glosses/specter"
     }, adone);
 

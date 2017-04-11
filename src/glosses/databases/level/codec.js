@@ -29,7 +29,7 @@ const encodings = {
         encode: adone.data.mpak.encode,
         decode: adone.data.mpak.decode,
         buffer: true,
-        type: "bson"
+        type: "mpak"
     },
     binary: {
         encode(data) {
@@ -76,8 +76,8 @@ bufferEncodings.forEach((type) => {
 const ltgtKeys = ["lt", "gt", "lte", "gte", "start", "end"];
 
 export default class Codec {
-    constructor(opts) {
-        this.opts = opts || {};
+    constructor(options = {}) {
+        this.options = options;
         this.encodings = encodings;
     }
 
@@ -92,11 +92,11 @@ export default class Codec {
     }
 
     _keyEncoding(opts, batchOpts) {
-        return this._encoding(batchOpts && batchOpts.keyEncoding || opts && opts.keyEncoding || this.opts.keyEncoding);
+        return this._encoding(batchOpts && batchOpts.keyEncoding || opts && opts.keyEncoding || this.options.keyEncoding);
     }
 
     _valueEncoding(opts, batchOpts) {
-        return this._encoding(batchOpts && (batchOpts.valueEncoding || batchOpts.encoding) || opts && (opts.valueEncoding || opts.encoding) || (this.opts.valueEncoding || this.opts.encoding));
+        return this._encoding(batchOpts && (batchOpts.valueEncoding || batchOpts.encoding) || opts && (opts.valueEncoding || opts.encoding) || (this.options.valueEncoding || this.options.encoding));
     }
 
     encodeKey(key, opts, batchOpts) {

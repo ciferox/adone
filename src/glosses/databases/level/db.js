@@ -116,15 +116,15 @@ export default class DB extends adone.EventEmitter {
                 }
             }
         }
+
         this._codec = new Codec(this.options);
         this._status = "new";
 
-        Object.defineProperty(this, "location", {
-            enumerable: true,
-            value: options.location
-        });
-
         this.setMaxListeners(Infinity);
+    }
+
+    get location() {
+        return this.options.location;
     }
 
     async open() {
@@ -272,11 +272,12 @@ export default class DB extends adone.EventEmitter {
         return (/^clos/).test(this._status);
     }
 
-    async get(key_, options = {}) {
+    async get(key_, options) {
         this.maybeError();
 
         const key = this._codec.encodeKey(key_, options);
 
+        options = options || {};
         options.asBuffer = this._codec.valueAsBuffer(options);
 
         try {
@@ -301,8 +302,8 @@ export default class DB extends adone.EventEmitter {
         }
     }
 
-    async put(key_, value_, options = {}) {
-        this.maybeError();        
+    async put(key_, value_, options) {
+        this.maybeError();
 
         const key = this._codec.encodeKey(key_, options);
         const value = this._codec.encodeValue(value_, options);
@@ -317,7 +318,7 @@ export default class DB extends adone.EventEmitter {
         }
     }
 
-    async del(key_, options = {}) {
+    async del(key_, options) {
         this.maybeError();
 
         const key = this._codec.encodeKey(key_, options);
