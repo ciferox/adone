@@ -43,7 +43,7 @@ export default class Dispatcher {
                 peer = await netron.connect(localGate);
             } catch (err) {
                 if (_secondTime) {
-                    return null;
+                    throw err;
                 }
                 if (!forceStart) {
                     throw err;
@@ -274,6 +274,18 @@ export default class Dispatcher {
 
     async hardware() {
         return (await this.getService("omnitron")).hardware();
+    }
+
+    async openVault(name, options) {
+        return (await this.getService("omnitron")).openVault(name, options);
+    }
+
+    async getVault(name) {
+        return (await this.getService("omnitron")).getVault(name);
+    }
+
+    async closeVault(name) {
+        return (await this.getService("omnitron")).closeVault(name);
     }
 
     async _isAlive(pid, timeout = 0) {

@@ -585,8 +585,14 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
             }
             return false;
         },
-        define(tag) {
+        define(tag, predicate) {
             adone.tag[tag] = Symbol();
+            if (typeof(predicate) === "string") {
+                Object.defineProperty(adone.is, predicate, {
+                    enumerable: true,
+                    value: (obj) => adone.tag.has(obj, tag)
+                });
+            }
         },
         SUBSYSTEM: Symbol(),
         APPLICATION: Symbol(),

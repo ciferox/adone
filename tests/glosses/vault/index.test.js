@@ -260,4 +260,25 @@ describe("Vault", () => {
         await val.clear();
         assert.lengthOf(val.keys(), 0);
     });
+
+    it("valuable substitution", async () => {
+        class ExValuable extends adone.vault.Valuable {
+            constructor(vault, id, metaData, tags) {
+                super(vault, id, metaData, tags);
+                this.exProperty = "extended";
+            }
+        }
+        await openVault(null, {
+            valuable: ExValuable
+        });
+        const val = await vault.create("val");
+        assert.equal(val.exProperty, "extended");
+    });
+
+    it("valuables cache", async () => {
+        await openVault();
+        const val = await vault.create("val");
+        const val1 = await vault.get("val");
+        assert.deepEqual(val, val1);
+    });
 });

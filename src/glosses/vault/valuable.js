@@ -57,6 +57,14 @@ export default class Valuable {
         return this.vault.getMeta(_.vvalue(this.id, this._getKey(name).id));
     }
 
+    type(name) {
+        return this._getKey(name).type;
+    }
+
+    has(name) {
+        return this._keys.has(name);
+    }
+
     async delete(name) {
         const keyMeta = this._getKey(name);
         const index = this.meta.kids.indexOf(keyMeta.id);
@@ -114,7 +122,7 @@ export default class Valuable {
     _getKey(name) {
         const keyMeta = this._getKeyUnsafe(name);
         if (is.undefined(keyMeta)) {
-            throw new adone.x.NotExists("Key not exists: ${name}");
+            throw new adone.x.NotExists(`Key not exists: ${name}`);
         }
         return keyMeta;
     }
@@ -123,3 +131,5 @@ export default class Valuable {
         return this.vault.setMeta(_.valuable(this.id), this.meta);
     }
 }
+adone.tag.define("VAULT_VALUABLE", "vaultValuable");
+adone.tag.set(Valuable, adone.tag.VAULT_VALUABLE);

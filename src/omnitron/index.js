@@ -1,6 +1,6 @@
 import adone from "adone";
 const context = adone.lazify({
-    Store: "./contexts/store",
+    Vault: "./contexts/vault",
     System: "./contexts/system",
     Hardware: "./contexts/hardware"
 }, null, require);
@@ -63,6 +63,7 @@ export class Omnitron extends adone.application.Application {
 
         this._.system = null;
         this._.hardware = null;
+        this._.vaults = null;
 
         // await adone.fs.mkdir(this.config.omnitron.servicesPath);
         await adone.fs.mkdir(this.config.omnitron.storesPath);
@@ -93,6 +94,13 @@ export class Omnitron extends adone.application.Application {
         await adone.promise.delay(500);
 
         await this.uninitializeNetron();
+
+        // Close opened vaults
+        if (!is.null(this._.vaults)) {
+            for (const vault of this._.vaults.values()) {
+                await vault.close();
+            }
+        }
 
         await this._.configurator.saveGatesConfig();
 
@@ -564,36 +572,100 @@ export class Omnitron extends adone.application.Application {
     }
 
     @Public
-    @Description("")
-    @Type()
-    async getStore(name, options) {
-        let db = null;
-        switch (name) {
-            case "system": {
-                if (is.null(this._.systemStore)) {
-                    db = this._.systemStore = new context.Store(this.config.omnitron.systemDbPath, { createIfMissing: true });
-                    await this._.systemStore.open();
-                } else {
-                    db = this._.systemStore;
-                }
-                break;
-            }
-            case "hosts": {
-                if (is.null(this._.hostsStore)) {
-                    db = this._.hostsStore = new context.Store(this.config.omnitron.hostsDbPath, { createIfMissing: true });
-                    await this._.hostsStore.open();
-                } else {
-                    db = this._.hostsStore;
-                }
-                break;
-            }
-            default: {
+    @Description("Opens vault with specified name and returns it")
+    @Type(context.Vault)
+    async openVault(name, options = {}) {
+        const vaultsPath = adone.std.path.join(this.config.adone.home, "vaults");
+        await adone.fs.mkdir(vaultsPath);
+        const location = adone.std.path.join(vaultsPath, name);
 
-            }
+        if (is.null(this._.vaults)) {
+            this._.vaults = new Map();
         }
 
-        return db;
+        let vault = this._.vaults.get(location);
+        if (is.undefined(vault)) {
+            delete options.location;
+            vault = new context.Vault(this, Object.assign({
+                location
+            }, options));
+            this._.vaults.set(location, vault);
+        } else {
+            throw new adone.x.IllegalState(`Vault '${name}' already opened`);
+        }
+
+        await vault.open();
+
+        return vault;
     }
+
+    @Public
+    @Description("Returns opened vault with specified name")
+    @Type(context.Vault)
+    async getVault(name) {
+        const vaultsPath = adone.std.path.join(this.config.adone.home, "vaults");
+        await adone.fs.mkdir(vaultsPath);
+        const location = adone.std.path.join(vaultsPath, name);
+
+        if (is.null(this._.vaults)) {
+            this._.vaults = new Map();
+        }
+
+        const vault = this._.vaults.get(location);
+        if (is.undefined(vault)) {
+            throw new adone.x.IllegalState(`Vault '${name}' is not opened`);
+        }
+        return vault;
+    }
+
+    @Public
+    @Description("Closes vault with specified name")
+    @Type()
+    async closeVault(name) {
+        const vaultsPath = adone.std.path.join(this.config.adone.home, "vaults");
+        await adone.fs.mkdir(vaultsPath);
+        const location = adone.std.path.join(vaultsPath, name);
+
+        if (is.null(this._.vaults)) {
+            this._.vaults = new Map();
+        }
+
+        const vault = this._.vaults.get(location);
+        if (is.undefined(vault)) {
+            throw new adone.x.IllegalState(`Vault '${name}' is not opened`);
+        }
+
+        this._.vaults.delete(location);
+        return vault.close();
+    }
+
+    //     let db = null;
+    //     switch (name) {
+    //         case "system": {
+    //             if (is.null(this._.systemStore)) {
+    //                 db = this._.systemStore = new context.Store(this.config.omnitron.systemDbPath, { createIfMissing: true });
+    //                 await this._.systemStore.open();
+    //             } else {
+    //                 db = this._.systemStore;
+    //             }
+    //             break;
+    //         }
+    //         case "hosts": {
+    //             if (is.null(this._.hostsStore)) {
+    //                 db = this._.hostsStore = new context.Store(this.config.omnitron.hostsDbPath, { createIfMissing: true });
+    //                 await this._.hostsStore.open();
+    //             } else {
+    //                 db = this._.hostsStore;
+    //             }
+    //             break;
+    //         }
+    //         default: {
+
+    //         }
+    //     }
+
+    //     return db;
+    // }
 }
 
 if (require.main === module) {

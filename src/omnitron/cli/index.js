@@ -162,6 +162,181 @@ export default class extends adone.application.Subsystem {
                             handler: this.systemPsCommand
                         }
                     ]
+                },
+                {
+                    name: "vault",
+                    help: "vault management",
+                    commands: [
+                        {
+                            name: "open",
+                            help: "open vault",
+                            arguments: [
+                                {
+                                    name: "name",
+                                    type: String,
+                                    help: "name of vault"
+                                }
+                            ],
+                            handler: this.vaultOpenCommand
+                        },
+                        {
+                            name: "close",
+                            help: "close vault",
+                            arguments: [
+                                {
+                                    name: "name",
+                                    type: String,
+                                    help: "name of vault"
+                                }
+                            ],
+                            handler: this.vaultCloseCommand
+                        },
+                        {
+                            name: "set",
+                            help: "set value of valuable's item",
+                            arguments: [
+                                {
+                                    name: "vault",
+                                    type: String,
+                                    help: "name of vault"
+                                },
+                                {
+                                    name: "valuable",
+                                    type: String,
+                                    help: "name of valuable"
+                                },
+                                {
+                                    name: "key",
+                                    type: String,
+                                    help: "key of item"
+                                },
+                                {
+                                    name: "value",
+                                    type: String,
+                                    help: "value of item"
+                                }
+                            ],
+                            handler: this.vaultSetCommand
+                        },
+                        {
+                            name: "get",
+                            help: "get value of valuable's item",
+                            arguments: [
+                                {
+                                    name: "vault",
+                                    type: String,
+                                    help: "name of vault"
+                                },
+                                {
+                                    name: "valuable",
+                                    type: String,
+                                    help: "name of valuable"
+                                },
+                                {
+                                    name: "key",
+                                    type: String,
+                                    help: "key of item"
+                                }
+                            ],
+                            handler: this.vaultGetCommand
+                        },
+                        {
+                            name: "type",
+                            help: "get type of valuable's item",
+                            arguments: [
+                                {
+                                    name: "vault",
+                                    type: String,
+                                    help: "name of vault"
+                                },
+                                {
+                                    name: "valuable",
+                                    type: String,
+                                    help: "name of valuable"
+                                },
+                                {
+                                    name: "key",
+                                    type: String,
+                                    help: "key of item"
+                                }
+                            ],
+                            handler: this.vaultTypeCommand
+                        },
+                        {
+                            name: "del",
+                            help: "delete valuable or valuable's item",
+                            arguments: [
+                                {
+                                    name: "vault",
+                                    type: String,
+                                    help: "name of vault"
+                                },
+                                {
+                                    name: "valuable",
+                                    type: String,
+                                    help: "name of valuable"
+                                },
+                                {
+                                    name: "key",
+                                    type: String,
+                                    default: "",
+                                    help: "key of item"
+                                }
+                            ],
+                            handler: this.vaultDeleteCommand
+                        },
+                        {
+                            name: "keys",
+                            help: "show valuable keys",
+                            arguments: [
+                                {
+                                    name: "vault",
+                                    type: String,
+                                    help: "name of vault"
+                                },
+                                {
+                                    name: "valuable",
+                                    type: String,
+                                    help: "name of valuable"
+                                }
+                            ],
+                            handler: this.vaultKeysCommand
+                        },
+                        {
+                            name: "tags",
+                            help: "show valuable tags",
+                            arguments: [
+                                {
+                                    name: "vault",
+                                    type: String,
+                                    help: "name of vault"
+                                },
+                                {
+                                    name: "valuable",
+                                    type: String,
+                                    help: "name of valuable"
+                                }
+                            ],
+                            handler: this.vaultTagsCommand
+                        },
+                        {
+                            name: "clear",
+                            help: "clear valuable",
+                            arguments: [
+                                {
+                                    name: "vault",
+                                    type: String,
+                                    help: "name of vault"
+                                },
+                                {
+                                    name: "valuable",
+                                    type: String,
+                                    help: "name of valuable"
+                                }
+                            ],
+                            handler: this.vaultClearCommand
+                        }
+                    ]
                 }
             ]
         });
@@ -478,6 +653,122 @@ export default class extends adone.application.Subsystem {
             ]
         }));
 
+        return 0;
+    }
+
+    async vaultOpenCommand(args, opts) {
+        try {
+            await this.dispatcher.openVault(args.get("name"));
+            adone.log(adone.ok);
+        } catch (err) {
+            adone.error(err.message);
+            return 1;
+        }
+        return 0;
+    }
+
+    async vaultCloseCommand(args, opts) {
+        try {
+            await this.dispatcher.closeVault(args.get("name"));
+            adone.log(adone.ok);
+        } catch (err) {
+            adone.error(err.message);
+            return 1;
+        }
+        return 0;
+    }
+
+    async vaultSetCommand(args, opts) {
+        try {
+            const iVault = await this.dispatcher.getVault(args.get("vault"));
+            const iValuable = await iVault.get(args.get("valuable"));
+            await iValuable.set(args.get("key"), args.get("value"));
+            adone.log(adone.ok);
+        } catch (err) {
+            adone.error(err.message);
+            return 1;
+        }
+        return 0;
+    }
+
+    async vaultGetCommand(args, opts) {
+        try {
+            const iVault = await this.dispatcher.getVault(args.get("vault"));
+            const iValuable = await iVault.get(args.get("valuable"));
+            adone.log(await iValuable.get(args.get("key")));
+        } catch (err) {
+            adone.error(err.message);
+            return 1;
+        }
+        return 0;
+    }
+
+    async vaultTypeCommand(args, opts) {
+        try {
+            const iVault = await this.dispatcher.getVault(args.get("vault"));
+            const iValuable = await iVault.get(args.get("valuable"));
+            adone.log(await iValuable.type(args.get("key")));
+        } catch (err) {
+            adone.error(err.message);
+            return 1;
+        }
+        return 0;
+    }
+
+    async vaultDeleteCommand(args, opts) {
+        try {
+            const iVault = await this.dispatcher.getVault(args.get("vault"));
+            const key = args.get("key");
+            const valuable = args.get("valuable");
+            if (key === "") {
+                await iVault.delete(valuable);
+            } else {
+                const iValuable = await iVault.get(valuable);
+                await iValuable.delete(key);
+            }
+            adone.log(adone.ok);
+        } catch (err) {
+            adone.error(err.message);
+            return 1;
+        }
+        return 0;
+    }
+
+    async vaultKeysCommand(args, opts) {
+        try {
+            const iVault = await this.dispatcher.getVault(args.get("vault"));
+            const iValuable = await iVault.get(args.get("valuable"));
+            adone.log(adone.text.pretty.json(await iValuable.keys()));
+        } catch (err) {
+            adone.error(err.message);
+            return 1;
+        }
+        return 0;
+    }
+
+    async vaultTagsCommand(args, opts) {
+        try {
+            const iVault = await this.dispatcher.getVault(args.get("vault"));
+            const iValuable = await iVault.get(args.get("valuable"));
+            adone.log(adone.text.pretty.json(await iValuable.tags()));
+        } catch (err) {
+            adone.error(err.message);
+            return 1;
+        }
+        return 0;
+    }
+
+
+    async vaultClearCommand(args, opts) {
+        try {
+            const iVault = await this.dispatcher.getVault(args.get("vault"));
+            const iValuable = await iVault.get(args.get("valuable"));
+            await iValuable.clear();
+            adone.log(adone.ok);
+        } catch (err) {
+            adone.error(err.message);
+            return 1;
+        }
         return 0;
     }
 }

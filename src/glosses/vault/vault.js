@@ -1,4 +1,4 @@
-const { is, vault: { _ } } = adone;
+const { is, vault: { _, Valuable } } = adone;
 
 const vids = "vids";
 const tids = "tids";
@@ -10,6 +10,12 @@ export default class Vault {
         this.options = Object.assign({}, options, {
             valueEncoding: "mpak"
         });
+        if (is.class(this.options.valuable)) {
+            this.Valuable = this.options.valuable;
+            delete this.options.valuable;
+        } else {
+            this.Valuable = Valuable;
+        }
         this._db = new adone.database.level.DB(this.options);
         this.vids = undefined; // valuable ids
         this.tids = undefined; // tag ids
@@ -17,6 +23,7 @@ export default class Vault {
         this.tagIdMap = new Map();
         this.nextTagId = undefined;
         this.nextValuableId = undefined;
+        this._vcache = new Map();
     }
 
     async open() {
@@ -81,20 +88,30 @@ export default class Vault {
         };
         await this.setMeta(_.valuable(id), metaData);
  
-        return new adone.vault.Valuable(this, id, metaData, tags);
+        const valuable = new this.Valuable(this, id, metaData, tags);
+        this._vcache.set(id, valuable);
+        return valuable;
     }
 
     async get(name) {
         const id = this._getVid(name);
 
-        const metaData = await this.getMeta(_.valuable(id));
-        const val = new adone.vault.Valuable(this, id, metaData, await this._getTagNames(metaData.tids));
-        
-        for (const kid of metaData.kids) {
-            const keyMeta = await this.getMeta(_.vkey(id, kid));
-            val._keys.set(keyMeta.name, keyMeta); 
+        let valuable = this._vcache.get(id);
+        if (is.undefined(valuable)) {
+            const metaData = await this.getMeta(_.valuable(id));
+            valuable = new this.Valuable(this, id, metaData, await this._getTagNames(metaData.tids));
+            
+            for (const kid of metaData.kids) {
+                const keyMeta = await this.getMeta(_.vkey(id, kid));
+                valuable._keys.set(keyMeta.name, keyMeta); 
+            }
         }
-        return val;
+            
+        return valuable;
+    }
+
+    release(name) {
+        return this._vcache.delete(this._getVid(name).id);
     }
 
     async delete(name) {
