@@ -4,6 +4,9 @@ const jsNatives = ["Error", "EvalError", "RangeError", "ReferenceError", "Syntax
 
 export default class XBase {
     constructor({ xModule = null, parent = null, code = null, ast = null, path = null, type = "script" } = {}) {
+        if (is.nil(xModule) && !adone.meta.code.is.module(this)) {
+            throw new adone.x.NotValid("XModule cannot be null");
+        }
         this.xModule = xModule;
         this.parent = parent;
         this.code = code;
@@ -12,7 +15,6 @@ export default class XBase {
         this.path = path;
         this.scope = [];
         this._references = [];
-        this.isGlobalScope = false;
 
         if (is.null(this.ast) && is.string(this.code)) {
             this.parse();
@@ -76,7 +78,7 @@ export default class XBase {
         return this._references;
     }
 
-    createXObject({ ast, path = null, xModule = null } = {}) {
+    createXObject({ ast, path = null, kind, xModule = null } = {}) {
         let xObj = null;
         const parent = this;
         switch (ast.type) {
@@ -84,8 +86,22 @@ export default class XBase {
             case "ExportNamedDeclaration":
                 xObj = new adone.meta.code.Export({ parent, ast, path, xModule });
                 break;
+            case "VariableDeclaration": {
+                if (ast.declarations.length > 1) {
+                    throw new SyntaxError("Detected unsupported declaration of multiple variables.");
+                }
+                let xObj = null;
+                path.traverse({
+                    enter: (subPath) => {
+                        xObj = this.createXObject({ ast: subPath.node, path: subPath, kind: ast.kind, xModule });
+                        subPath.stop();
+                    }
+                });
+                return xObj;
+            }
             case "VariableDeclarator": {
                 xObj = new adone.meta.code.Variable({ parent, ast, path, xModule });
+                xObj.kind = kind;
                 break;
             }
             case "MemberExpression":
@@ -128,6 +144,10 @@ export default class XBase {
                 xObj = new adone.meta.code.Statement({ parent, ast, path, xModule });
                 break;
             case "ClassDeclaration": xObj = new adone.meta.code.Class({ parent, ast, path, xModule }); break;
+            case "FunctionDeclaration": {
+                xObj = new adone.meta.code.Function({ parent, ast, path, xModule }); break;
+                break;
+            }
             case "FunctionExpression": xObj = new adone.meta.code.Function({ parent, ast, path, xModule }); break;
             case "ArrowFunctionExpression": xObj = new adone.meta.code.ArrowFunction({ parent, ast, path, xModule }); break;
             case "ObjectExpression": xObj = new adone.meta.code.Object({ parent, ast, path, xModule }); break;
@@ -137,7 +157,7 @@ export default class XBase {
                 } else {
                     xObj = this.lookupInGlobalScope(ast.name);
                     if (is.null(xObj)) {
-                        xObj = this._tryJsNative(ast);
+                        xObj = this._tryJsNative({ ast, path, xModule });
                         if (is.null(xObj)) {
                             throw new adone.x.NotFound(`Variable '${ast.name}' not found in global scope`);
                         }
@@ -168,32 +188,24 @@ export default class XBase {
     }
 
     lookupInGlobalScope(name) {
-        if (this.isGlobalScope) {
-            for (const xObj of this.scope) {
-                const node = xObj.ast;
-                switch (node.type) {
-                    case "ExportNamedDeclaration": {
-                        return this.lookupInExportsByDeclaration(name);
-                    }
-                    case "VariableDeclaration": {
-                        for (const d of node.declarations) {
-                            if (d.id.name === name) {
-                                return xObj;
-                            }
-                        }
-                        break;
-                    }
-                    case "ClassDeclaration": {
-                        if (node.id.name === name) {
-                            return xObj;
-                        }
-                        break;
-                    }
+        for (const xObj of this.xModule.scope) {
+            const node = xObj.ast;
+            switch (node.type) {
+                case "ExportNamedDeclaration": {
+                    return this.lookupInExportsByDeclaration(name);
                 }
-            }
-        } else {
-            if (!is.null(this.parent)) {
-                return this.parent.lookupInGlobalScope(name);
+                case "VariableDeclarator": {
+                    if (xObj.name === name) {
+                        return xObj;
+                    }
+                    break;
+                }
+                case "ClassDeclaration": {
+                    if (node.id.name === name) {
+                        return xObj;
+                    }
+                    break;
+                }
             }
         }
         return null;
@@ -219,9 +231,9 @@ export default class XBase {
         }
     }
 
-    _tryJsNative(ast) {
+    _tryJsNative({ ast, path, xModule }) {
         if (jsNatives.includes(ast.name)) {
-            return new adone.meta.code.JsNative({ ast });
+            return new adone.meta.code.JsNative({ ast, path, xModule });
         }
         return null;
     }

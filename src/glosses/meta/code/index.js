@@ -79,6 +79,10 @@ export class Inspector {
         }
     }
 
+    listNamespaces() {
+        return Object.keys(this.namespaces);
+    }
+
     getNamespace(name, names = null) {
         const { namespace, objectName } = adone.meta.parseName(name);
         if (!is.propertyOwned(this.namespaces, namespace)) {

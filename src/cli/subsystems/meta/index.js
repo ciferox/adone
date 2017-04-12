@@ -1,37 +1,7 @@
 const { is, std, fs, util } = adone;
 import AdoneManager from "./adone_manager";
+import Bundler from "./bundler";
 
-const bundleTemplate = `
-; (function () {
-    const lazify = (modules, obj_) => {
-        const obj = obj_ || {};
-        const keys = Object.keys(modules);
-        for (const key of keys) {
-            Object.defineProperty(obj, key, {
-                configurable: true,
-                get() {
-                    const value = modules[key];
-                    const mod = value(key);
-                    Object.defineProperty(obj, key, {
-                        configurable: false,
-                        value: mod
-                    });
-                    return mod;
-                }
-            });
-        }
-    };
-    const adone = Object.create({
-        lazify
-    });
-
-    lazify({
-        {{ namespaces }}
-    }, adone);
-
-    window["adone"] = adone;
-})();
-`;
 
 export default class extends adone.application.Subsystem {
     initialize() {
@@ -327,50 +297,37 @@ export default class extends adone.application.Subsystem {
 
     async bundleCommand(args, opts) {
         try {
-            const name = args.get("name");
-            const { namespace, objectName } = adone.meta.parseName(name);
-            if (!namespace.startsWith("adone")) {
-                throw new adone.x.NotSupported("Extraction from namespace other than 'adone' is not supported");
-            }
-            if (objectName === "") {
-                throw new adone.x.NotValid("Extraction of namespace is not supported");
-            }
+            const bundler = new Bundler({ dir: (opts.get("src") ? "src" : "lib") });
+            await bundler.prepare(args.get("name"));
+            return 0;
 
-            const adoneMod = new adone.meta.code.Inspector({ dir: (opts.get("src") ? "src" : "lib") });
-            await adoneMod.attachNamespace(namespace);
+            // const code = x.code;
 
-            const x = adoneMod.get(name);
+            // let out;
+            // if (opts.has("out")) {
+            //     out = opts.get("out");
+            //     if (!adone.std.path.isAbsolute(out)) {
+            //         out = adone.std.path.resolve(process.cwd(), out);
+            //     }
+            // }
+            // if (opts.has("editor")) {
+            //     const options = {
+            //         editor: opts.get("editor"),
+            //         text: code,
+            //         ext: ".js"
+            //     };
+            //     if (is.string(out)) {
+            //         options.path = out;
+            //     }
 
-            // adone.log(x.name, x.ast.type, adone.meta.inspect(x.references(), { style: "color" }));
-            // adone.log(x.code);
-
-            const code = x.code;
-
-            let out;
-            if (opts.has("out")) {
-                out = opts.get("out");
-                if (!adone.std.path.isAbsolute(out)) {
-                    out = adone.std.path.resolve(process.cwd(), out);
-                }
-            }
-            if (opts.has("editor")) {
-                const options = {
-                    editor: opts.get("editor"),
-                    text: code,
-                    ext: ".js"
-                };
-                if (is.string(out)) {
-                    options.path = out;
-                }
-
-                const editor = new util.Editor(options);
-                await editor.run();
-            } else if (is.string(out)) {
-                await fs.writeFile(out, code);
-                adone.log(`Saved to ${out}.`);
-            } else {
-                console.log(code);
-            }
+            //     const editor = new util.Editor(options);
+            //     await editor.run();
+            // } else if (is.string(out)) {
+            //     await fs.writeFile(out, code);
+            //     adone.log(`Saved to ${out}.`);
+            // } else {
+            //     console.log(code);
+            // }
         } catch (err) {
             adone.error(err/*.message*/);
             return 1;

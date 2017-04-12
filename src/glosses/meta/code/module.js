@@ -3,7 +3,7 @@ const { is, js: { compiler: { traverse } } } = adone;
 export default class XModule extends adone.meta.code.Base {
     constructor({ code = null, filePath = "index.js" } = {}) {
         super({ code, type: "module" });
-        this.isGlobalScope = true;
+        this.xModule = this;
         this.filePath = filePath;
         this.exports = {};
         this.globals = [
@@ -25,44 +25,48 @@ export default class XModule extends adone.meta.code.Base {
                     return;
                 }
 
-                let realPath = path;
-                let node = path.node;
-                let isDefault = undefined;
-                if (node.type === "ExportDefaultDeclaration") {
-                    isDefault = true;
-                    path.traverse({
-                        enter(subPath) {
-                            realPath = subPath;
-                            subPath.stop();
+                let isDefault = undefined;                
+                const expandDeclaration = (realPath) => {
+                    const node = realPath.node;
+    
+                    if (["ExportDefaultDeclaration", "ExportNamedDeclaration"].includes(node.type)) {
+                        isDefault = (node.type === "ExportDefaultDeclaration");
+                        let subPath;
+                        realPath.traverse({
+                            enter(p) {
+                                subPath = p;
+                                p.stop();
+                            }
+                        });
+                        return expandDeclaration(subPath);
+                    } else if (node.type === "VariableDeclaration") {
+                        if (node.declarations.length > 1) {
+                            throw new SyntaxError("Detected unsupported declaration of multiple variables.");
                         }
-                    });
-                } else if (node.type === "ExportNamedDeclaration") {
-                    isDefault = false;
-                    path.traverse({
-                        enter(subPath) {
-                            realPath = subPath;
-                            subPath.stop();
-                        }
-                    });
-                } else if (node.type === "VariableDeclaration") {
-                    if (node.kind === "const") {
-                        for (const decl of node.declarations) {
-                            this._traverseVariableDeclarator(decl);
-                        }
+                        this._traverseVariableDeclarator(node.declarations[0], node.kind);
+                        realPath.traverse({
+                            enter(subPath) {
+                                realPath = subPath;
+                                subPath.stop();
+                            }
+                        });
                     }
-                    path.traverse({
-                        enter(subPath) {
-                            realPath = subPath;
-                            subPath.stop();
-                        }
-                    });
+
+                    return realPath;
+                };
+
+                const realPath = expandDeclaration(path);
+                const node = realPath.node; 
+                const xObjData = {
+                    ast: node,
+                    path: realPath,
+                    xModule: this
+                };
+                if (path.node.type.endsWith("Declaration")) {
+                    xObjData.kind = path.node.kind;
                 }
 
-                node = realPath.node;
-
-                // adone.log(node.type);
-                
-                const xObj = this.createXObject({ ast: node, path: realPath, xModule: this });
+                const xObj = this.createXObject(xObjData);
                 this.addToScope(xObj);
 
                 if (!is.undefined(isDefault)) {
@@ -106,7 +110,7 @@ export default class XModule extends adone.meta.code.Base {
         return null;
     }
 
-    _traverseVariableDeclarator(node) {
+    _traverseVariableDeclarator(node, kind) {
         let prefix = "";
         if (node.init === null) {
             return;
@@ -115,6 +119,11 @@ export default class XModule extends adone.meta.code.Base {
         switch (initType) {
             case "Identifier": prefix = node.init.name; break;
             case "MemberExpression": prefix = this._traverseMemberExpression(node.init); break;
+            default: {
+                if (node.id.type === "Identifier") {
+                    return this._addGlobal(node.id.name, null, kind, false);
+                }
+            }
         }
 
         if (prefix.length > 0) {
@@ -122,29 +131,29 @@ export default class XModule extends adone.meta.code.Base {
         }
 
         if (node.id.type === "ObjectPattern") {
-            const exprs = this._traverseObjectPattern(node.id);
+            const exprs = this._traverseObjectPattern(node.id, kind);
             for (const expr of exprs) {
                 const name = `${prefix}${expr}`;
                 const { namespace, objectName } = adone.meta.parseName(name);
                 if (objectName === "") {
                     const parts = namespace.split(".");
-                    this._addGlobal(parts[parts.length - 1], parts.slice(0, -1).join("."), true);
+                    this._addGlobal(parts[parts.length - 1], parts.slice(0, -1).join("."), kind, true);
                 } else {
                     this._addReference(name);
-                    this._addGlobal(objectName, namespace, false);
+                    this._addGlobal(objectName, namespace, kind, false);
                 }
             }
         }
     }
 
-    _traverseObjectProperty(node) {
+    _traverseObjectProperty(node, kind) {
         const key = node.key;
         const value = node.value;
         if (key.type === value.type) {
             if (key.start === value.start && key.end === value.end) {
                 return [value.name];
             } else {
-                this._addGlobal(value.name);
+                this._addGlobal(value.name, null, kind, false);
                 return [key.name];
             }
         } else if (value.type === "ObjectPattern") {
@@ -158,11 +167,11 @@ export default class XModule extends adone.meta.code.Base {
         }
     }
 
-    _traverseObjectPattern(node) {
+    _traverseObjectPattern(node, kind) {
         const result = [];
         for (const prop of node.properties) {
             if (prop.type === "ObjectProperty") {
-                const exprs = this._traverseObjectProperty(prop);
+                const exprs = this._traverseObjectProperty(prop, kind);
                 for (const expr of exprs) {
                     result.push(expr);
                 }
@@ -171,11 +180,13 @@ export default class XModule extends adone.meta.code.Base {
         return result;
     }
 
-    _addGlobal(name, prefix, isNamespace) {
+    _addGlobal(name, prefix, kind, isNamespace) {
         if (name.length > 0 && !this.globals.map((x) => x.name).includes(name)) {
+            const full = is.null(prefix) ? name : `${prefix}.${name}`;
             this.globals.push({
                 name,
-                full: `${prefix}.${name}`,
+                full,
+                kind,
                 isNamespace
             });
         }

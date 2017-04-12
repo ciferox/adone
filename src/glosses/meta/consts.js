@@ -8,8 +8,7 @@ export const namespaces = [
         name: "adone",
         description: "Adone root namespace",
         paths: [
-            "index",
-            "glosses/common"
+            "index"
         ]
     },
     {

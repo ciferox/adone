@@ -5,6 +5,7 @@ export default class XVariable extends adone.meta.code.Base {
         const node = this.ast; 
         this.name = node.id.name;
         this.value = this.createXObject({ ast: node.init, xModule: this.xModule });
+        this.kind = null;
     }
 }
 adone.tag.define("CODEMOD_VAR");
