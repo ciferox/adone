@@ -1,6 +1,38 @@
 const { is, std, fs, util } = adone;
 import AdoneManager from "./adone_manager";
 
+const bundleTemplate = `
+; (function () {
+    const lazify = (modules, obj_) => {
+        const obj = obj_ || {};
+        const keys = Object.keys(modules);
+        for (const key of keys) {
+            Object.defineProperty(obj, key, {
+                configurable: true,
+                get() {
+                    const value = modules[key];
+                    const mod = value(key);
+                    Object.defineProperty(obj, key, {
+                        configurable: false,
+                        value: mod
+                    });
+                    return mod;
+                }
+            });
+        }
+    };
+    const adone = Object.create({
+        lazify
+    });
+
+    lazify({
+        {{ namespaces }}
+    }, adone);
+
+    window["adone"] = adone;
+})();
+`;
+
 export default class extends adone.application.Subsystem {
     initialize() {
         this.defineCommand({
@@ -78,8 +110,8 @@ export default class extends adone.application.Subsystem {
                     handler: this.searchCommand
                 },
                 {
-                    name: "extract",
-                    help: "Extract object/function/class with all dependencies",
+                    name: "bundle",
+                    help: "Bundle object/function/class with all dependencies",
                     arguments: [
                         {
                             name: "name",
@@ -105,7 +137,7 @@ export default class extends adone.application.Subsystem {
                             help: "Open result code in text editor"
                         }
                     ],
-                    handler: this.extractCommand
+                    handler: this.bundleCommand
                 },
                 {
                     name: "install",
@@ -293,7 +325,7 @@ export default class extends adone.application.Subsystem {
         return 0;
     }
 
-    async extractCommand(args, opts) {
+    async bundleCommand(args, opts) {
         try {
             const name = args.get("name");
             const { namespace, objectName } = adone.meta.parseName(name);
@@ -307,15 +339,12 @@ export default class extends adone.application.Subsystem {
             const adoneMod = new adone.meta.code.Inspector({ dir: (opts.get("src") ? "src" : "lib") });
             await adoneMod.attachNamespace(namespace);
 
-            // const ns = adoneMod.getNamespace(name);
-            // adone.log(ns.modules[2].path);
-            // adone.log("Globals:");
-            // adone.log(ns.modules[2].module.globals);
-            // adone.log("References:");
-            // adone.log(ns.modules[2].module.references);
-            // return 0;
+            const x = adoneMod.get(name);
 
-            const code = adoneMod.getCode(name);
+            // adone.log(x.name, x.ast.type, adone.meta.inspect(x.references(), { style: "color" }));
+            // adone.log(x.code);
+
+            const code = x.code;
 
             let out;
             if (opts.has("out")) {
@@ -343,7 +372,7 @@ export default class extends adone.application.Subsystem {
                 console.log(code);
             }
         } catch (err) {
-            adone.error(err.message);
+            adone.error(err/*.message*/);
             return 1;
         }
 
@@ -392,7 +421,7 @@ export default class extends adone.application.Subsystem {
         const username = auth[1];
         const password = auth[2];
         const types = ["gz", "xz"];
-        
+
         for (const type of types) {
             const fileName = builder.getArchiveName(type);
             const bar = new adone.terminal.Progress({
@@ -400,14 +429,14 @@ export default class extends adone.application.Subsystem {
             });
 
             await builder.createArchive(outDir.path(), { env: opts.get("env"), dirName: opts.get("dirname"), type });
-            
+
             const filePath = outDir.resolve(fileName);
             const file = new fs.File(filePath);
             const st = await file.stat();
-            
+
             bar.total = st.size;
             bar.setSchema(`:spinner Uploading {bold}${fileName}{/} {green-fg}:filled{/}{gray-fg}:blank{/} :current/:total :elapsed`, true);
-            
+
             await adone.net.http.client.request.post(`https://adone.io/public/dist?subject=adone&version=${builder.adoneVersion}&filename=${fileName}`, std.fs.createReadStream(filePath), {
                 headers: {
                     "Content-Type": "application/octet-stream",

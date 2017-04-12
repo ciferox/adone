@@ -18,100 +18,79 @@ export default class XModule extends adone.meta.code.Base {
                 isNamespace: true
             }
         ];
-        this.references = [];
 
-        const exportDecls = [];
-
-        for (const item of this.ast.program.body) {
-            const xObj = this.createXObject(item);
-            const node = xObj.ast;
-            if (node.type === "ExportDefaultDeclaration") {
-                exportDecls.push({
-                    node: node.declaration,
-                    isDefault: true
-                });
-            } else if (node.type === "ExportNamedDeclaration") {
-                exportDecls.push({
-                    node: node.declaration,
-                    isDefault: false
-                });
-            } else if (node.type === "VariableDeclaration") {
-                if (node.kind === "const") {
-                    for (const decl of node.declarations) {
-                        this._traverseVariableDeclarator(decl);
-                    }
-                }               
-            }
-
-            this.addToScope(xObj);
-        }
-
-        // Traverse references
         traverse(this.ast, {
-            MemberExpression: (path) => {
-                if (path.node.computed) {
+            enter: (path) => {
+                if (path.node.type === "Program") {
                     return;
                 }
-                switch (path.node.object.type) {
-                    case "Identifier": {
-                        const name = path.node.object.name;
-                        if (is.undefined(name)) {
-                            return;
-                        }
-                        const globalObject = this.globals.find((g) => (g.name === name && g.isNamespace));
-                        if (!is.undefined(globalObject)) {
-                            this._addReference(`${globalObject.full}.${path.node.property.name}`);
-                        }
-                        break;
-                    }
-                    case "MemberExpression": {
-                        const parts = [];
-                        let obj = path.node;
-                        while (obj.type === "MemberExpression") {
-                            parts.unshift(obj.property.name);
-                            obj = obj.object;
-                        }
-                        if (obj.type === "Identifier") {
-                            parts.unshift(obj.name);
-                            const name = parts.join(".");
-                            const { namespace, objectName } = adone.meta.parseName(name);
-                            if (namespace.length > 0 && objectName.length > 0) {
-                                this._addReference(name);
-                            }
-                        }
 
-                        break;
+                let realPath = path;
+                let node = path.node;
+                let isDefault = undefined;
+                if (node.type === "ExportDefaultDeclaration") {
+                    isDefault = true;
+                    path.traverse({
+                        enter(subPath) {
+                            realPath = subPath;
+                            subPath.stop();
+                        }
+                    });
+                } else if (node.type === "ExportNamedDeclaration") {
+                    isDefault = false;
+                    path.traverse({
+                        enter(subPath) {
+                            realPath = subPath;
+                            subPath.stop();
+                        }
+                    });
+                } else if (node.type === "VariableDeclaration") {
+                    if (node.kind === "const") {
+                        for (const decl of node.declarations) {
+                            this._traverseVariableDeclarator(decl);
+                        }
+                    }
+                    path.traverse({
+                        enter(subPath) {
+                            realPath = subPath;
+                            subPath.stop();
+                        }
+                    });
+                }
+
+                node = realPath.node;
+
+                // adone.log(node.type);
+                
+                const xObj = this.createXObject({ ast: node, path: realPath, xModule: this });
+                this.addToScope(xObj);
+
+                if (!is.undefined(isDefault)) {
+                    switch (node.type) {
+                        case "ClassDeclaration": {
+                            if (is.null(node.id)) {
+                                throw new adone.x.NotValid("Anonymous class");
+                            }
+                            this.exports[isDefault ? "default" : node.id.name] = xObj;
+                            break;
+                        }
+                        case "VariableDeclaration": {
+                            if (adone.meta.code.is.arrowFunction(xObj)) {
+                                xObj.name = node.id.name;
+                            }
+                            this.exports[node.id.name] = xObj;
+                            break;
+                        }
+                        case "Identifier": {
+                            this.exports[isDefault ? "default" : node.name] = xObj;
+                            break;
+                        }
                     }
                 }
-                
+
+                path.skip();
             }
         });
-
-        for (const { node, isDefault } of exportDecls) {
-            switch (node.type) {
-                case "ClassDeclaration": {
-                    if (is.null(node.id)) {
-                        throw new adone.x.NotValid("Anonymous class");
-                    }
-                    this.exports[isDefault ? "default" : node.id.name] = this.createXObject(node);
-                    break;
-                }
-                case "VariableDeclaration": {
-                    for (const d of node.declarations) {
-                        const xObj = this.createXObject(d.init);
-                        if (adone.meta.code.is.arrowFunction(xObj)) {
-                            xObj.name = d.id.name;
-                        }
-                        this.exports[d.id.name] = xObj;
-                    }
-                    break;
-                }
-                case "Identifier": {
-                    this.exports[isDefault ? "default" : node.name] = this.createXObject(node);
-                    break;
-                }
-            }
-        }
     }
 
     numberOfExports() {
@@ -141,7 +120,7 @@ export default class XModule extends adone.meta.code.Base {
         if (prefix.length > 0) {
             prefix = `${prefix}.`;
         }
-        
+
         if (node.id.type === "ObjectPattern") {
             const exprs = this._traverseObjectPattern(node.id);
             for (const expr of exprs) {
@@ -155,22 +134,6 @@ export default class XModule extends adone.meta.code.Base {
                     this._addGlobal(objectName, namespace, false);
                 }
             }
-        }
-    }
-
-    _traverseMemberExpression(node) {
-        let prefix;
-        const type = node.object.type;
-        if (type === "MemberExpression") {
-            prefix = this._traverseMemberExpression(node.object);
-        } else if (type === "Identifier") {
-            return `${node.object.name}.${node.property.name}`;
-        }
-
-        if (is.undefined(prefix)) {
-            return node.property.name;
-        } else {
-            return `${prefix}.${node.property.name}`;
         }
     }
 
@@ -207,7 +170,7 @@ export default class XModule extends adone.meta.code.Base {
         }
         return result;
     }
-    
+
     _addGlobal(name, prefix, isNamespace) {
         if (name.length > 0 && !this.globals.map((x) => x.name).includes(name)) {
             this.globals.push({
@@ -215,12 +178,6 @@ export default class XModule extends adone.meta.code.Base {
                 full: `${prefix}.${name}`,
                 isNamespace
             });
-        }
-    }
-
-    _addReference(name) {
-        if (name.length > 0 && !this.references.includes(name)) {
-            this.references.push(name);
         }
     }
 }

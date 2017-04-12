@@ -5,7 +5,7 @@ export default class XObject extends adone.meta.code.Base {
         this._entries = {};
 
         for (const prop of this.ast.properties) {
-            this._entries[prop.key.name] = this.createXObject(prop.value);
+            this._entries[prop.key.name] = this.createXObject({ ast: prop.value, xModule: this.xModule });
         }
     }
 
