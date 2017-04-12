@@ -447,7 +447,7 @@ const is = {
     asyncFunction: (fn) => fn && toString.call(fn).slice(8, -1) === "AsyncFunction",
     promise: (obj) => (!is.nil(obj) && is.function(obj.then)),
     validDate: (str) => !isNaN(Date.parse(str)),
-    buffer: (obj) => Buffer.isBuffer(obj),
+    buffer: (obj) => obj != null && ((Boolean(obj.constructor) && is.function(obj.constructor.isBuffer) && obj.constructor.isBuffer(obj)) || Boolean(obj._isBuffer)),
     callback: (fn, names) => (is.inArray(names || callbackNames, adone.util.functionName(fn))),
     generator: (value) => {
         if (!value || !value.constructor) {

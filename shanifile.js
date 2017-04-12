@@ -3,7 +3,7 @@ const fs = require("fs");
 
 module.exports = {
     options: {
-        tests: "tests/{glosses,omnitron,fast}/**/*.test.js",
+        tests: "tests/{glosses,omnitron,polyfills}/**/*.test.js",
         first: false,
         timeout: 5000,
         showHandles: false,
