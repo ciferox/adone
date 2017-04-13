@@ -94,7 +94,6 @@ export class Identity {
 
 }
 
-
 adone.lazify({
     decorator: "./decorators",
     Investigator: "./investigator",
@@ -107,16 +106,6 @@ adone.lazify({
     Definitions: "./definitions",
     Adapter: "./adapter",
     Stream: "./stream",
-    contextable: () => {
-        const contextables = {};
-        const mod = require("./contextables");
-
-        for (const [className, Cls] of Object.entries(mod)) {
-            contextables[className.replace("Contextable", "")] = Cls;
-        }
-
-        return contextables;
-    },
     ws: () => adone.lazify({
         Adapter: "./ws/adapter",
         Netron: "./ws/netron",

@@ -36,11 +36,12 @@ export default class Bundler {
     }
     async prepare(name) {
         await this._lookupRefs(name);
-        adone.log(this.inspector.listNamespaces());
+        // adone.log(this.inspector.listNamespaces());
+
         const x = this.inspector.get(name);
 
         // adone.log(x.name, x.ast.type, x.code);
-        adone.log(adone.meta.inspect(x.references(), { style: "color" }));
+        // adone.log(adone.meta.inspect(x.references(), { style: "color" }));
 
         // adone.log(x.name, x.ast.type, adone.meta.inspect(x.xModule.globals, { style: "color" }));
     }

@@ -1,11 +1,12 @@
-const { is, js: { compiler: { traverse } } } = adone;
+const { is, fs, js: { compiler: { traverse } } } = adone;
 
 export default class XModule extends adone.meta.code.Base {
-    constructor({ code = null, filePath = "index.js" } = {}) {
+    constructor({ nsName = "global", code = null, filePath = "index.js" } = {}) {
         super({ code, type: "module" });
+        this.nsName = nsName;
         this.xModule = this;
         this.filePath = filePath;
-        this.exports = {};
+        this._exports = {};
         this.globals = [
             {
                 name: "global",
@@ -18,17 +19,47 @@ export default class XModule extends adone.meta.code.Base {
                 isNamespace: true
             }
         ];
+        this._lazyModules = null;
+    }
+
+    async load() {
+        this.code = await fs.readFile(this.filePath, { check: true, encoding: "utf8" });
+        this.init();
+
+        const lazies = [];
 
         traverse(this.ast, {
             enter: (path) => {
-                if (path.node.type === "Program") {
+                const nodeType = path.node.type;
+                if (nodeType === "Program") {
                     return;
+                } else if (nodeType === "ExpressionStatement" && this._isLazifier(path.node.expression)) {
+                    // Process adone lazyfier
+                    const callExpr = path.node.expression;
+                    if (adone.meta.code.nodeInfo(callExpr.arguments[0]) === "ObjectExpression" &&
+                        adone.meta.code.nodeInfo(callExpr.arguments[1]) === "Identifier:exports" &&
+                        adone.meta.code.nodeInfo(callExpr.arguments[2]) === "Identifier:require") {
+
+                        const props = callExpr.arguments[0].properties;
+                        const basePath = adone.std.path.dirname(this.filePath);
+
+                        for (const prop of props) {
+                            const name = prop.key.name;
+                            const fullName = `${this.nsName}.${name}`;
+                            const { namespace, objectName } = adone.meta.parseName(fullName);
+                            if (namespace === this.nsName) {
+                                if (prop.value.type === "StringLiteral") {
+                                    lazies.push({ name: objectName, path: adone.std.path.join(basePath, prop.value.value) });
+                                }
+                            }
+                        }
+                    }
                 }
 
-                let isDefault = undefined;                
+                let isDefault = undefined;
                 const expandDeclaration = (realPath) => {
                     const node = realPath.node;
-    
+
                     if (["ExportDefaultDeclaration", "ExportNamedDeclaration"].includes(node.type)) {
                         isDefault = (node.type === "ExportDefaultDeclaration");
                         let subPath;
@@ -56,13 +87,13 @@ export default class XModule extends adone.meta.code.Base {
                 };
 
                 const realPath = expandDeclaration(path);
-                const node = realPath.node; 
+                const node = realPath.node;
                 const xObjData = {
                     ast: node,
                     path: realPath,
                     xModule: this
                 };
-                if (path.node.type.endsWith("Declaration")) {
+                if (nodeType.endsWith("Declaration")) {
                     xObjData.kind = path.node.kind;
                 }
 
@@ -75,18 +106,18 @@ export default class XModule extends adone.meta.code.Base {
                             if (is.null(node.id)) {
                                 throw new adone.x.NotValid("Anonymous class");
                             }
-                            this.exports[isDefault ? "default" : node.id.name] = xObj;
+                            this._exports[isDefault ? "default" : node.id.name] = xObj;
                             break;
                         }
                         case "VariableDeclaration": {
                             if (adone.meta.code.is.arrowFunction(xObj)) {
                                 xObj.name = node.id.name;
                             }
-                            this.exports[node.id.name] = xObj;
+                            this._exports[node.id.name] = xObj;
                             break;
                         }
                         case "Identifier": {
-                            this.exports[isDefault ? "default" : node.name] = xObj;
+                            this._exports[isDefault ? "default" : node.name] = xObj;
                             break;
                         }
                     }
@@ -95,19 +126,62 @@ export default class XModule extends adone.meta.code.Base {
                 path.skip();
             }
         });
+
+        if (lazies.length > 0) {
+            this._lazyModules = new Map();
+            for (const { name, path } of lazies) {
+                const filePath = await fs.lookup(path);
+                const lazyModule = new adone.meta.code.Module({ nsName: this.nsName, filePath });
+                await lazyModule.load();
+                this._lazyModules.set(name, lazyModule);
+            }
+        }
+        // adone.log(Object.keys(this.exports()));
+    }
+
+    exports() {
+        const result = {};
+        Object.assign(result, this._exports);
+        if (!is.null(this._lazyModules)) {
+            for (const lazyModule of this._lazyModules.values()) {
+                Object.assign(result, XModule.lazyExports(lazyModule.exports()));
+            }
+        }
+        return result;
     }
 
     numberOfExports() {
-        return Object.keys(this.exports).length;
+        return Object.keys(this.exports()).length;
     }
 
     lookupInExportsByDeclaration(name) {
-        for (const [key, value] of Object.entries(this.exports)) {
+        for (const [key, value] of Object.entries(this._exports)) {
             if (key === name) {
                 return value;
             }
         }
         return null;
+    }
+
+    getGlobal(name) {
+        return this.globals.find((g) => (g.name === name));
+    }
+
+    _isLazifier(expr) {
+        if (expr.type !== "CallExpression") {
+            return false;
+        }
+        // Special case - adone lazyfing mechanism
+        switch (expr.callee.type) {
+            case "Identifier": {
+                const g = this.getGlobal(expr.callee.name);
+                return !is.undefined(g) && g.full === "adone.lazify";
+            }
+            case "MemberExpression": {
+                return this._getMemberExpressionName(expr.callee) === "adone.lazify";
+            }
+        }
+        return false;
     }
 
     _traverseVariableDeclarator(node, kind) {
@@ -118,7 +192,7 @@ export default class XModule extends adone.meta.code.Base {
         const initType = node.init.type;
         switch (initType) {
             case "Identifier": prefix = node.init.name; break;
-            case "MemberExpression": prefix = this._traverseMemberExpression(node.init); break;
+            case "MemberExpression": prefix = this._getMemberExpressionName(node.init); break;
             default: {
                 if (node.id.type === "Identifier") {
                     return this._addGlobal(node.id.name, null, kind, false);
@@ -190,6 +264,20 @@ export default class XModule extends adone.meta.code.Base {
                 isNamespace
             });
         }
+    }
+
+    static lazyExports(rawExports) {
+        const result = {};
+        if (adone.meta.code.is.object(rawExports.default)) {
+            for (const [key, val] of rawExports.default.entries()) {
+                result[key] = val;
+            }
+        } else if (adone.meta.code.is.functionLike(rawExports.default)) {
+            result[rawExports.default.name] = rawExports.default;
+        } else if (is.undefined(rawExports.default)) {
+            return rawExports;
+        }
+        return result;
     }
 }
 adone.tag.define("CODEMOD_MODULE");

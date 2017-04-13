@@ -15,7 +15,11 @@ export default class XBase {
         this.path = path;
         this.scope = [];
         this._references = [];
+        
+        this.init();
+    }
 
+    init() {
         if (is.null(this.ast) && is.string(this.code)) {
             this.parse();
         } else if (!is.null(this.ast) && is.null(this.code)) {
@@ -52,7 +56,7 @@ export default class XBase {
                         return;
                     }
 
-                    const globalObject = this.xModule.globals.find((g) => (g.name === name));
+                    const globalObject = this.xModule.getGlobal(name);
                     
                     if (!is.undefined(globalObject)) {
                         this._addReference(globalObject.full);
@@ -63,9 +67,9 @@ export default class XBase {
                         return;
                     }
                     const node = path.node;
-                    const name = this._traverseMemberExpression(node);
+                    const name = this._getMemberExpressionName(node);
                     const parts = name.split(".");
-                    const globalObject = this.xModule.globals.find((g) => (g.name === parts[0]));
+                    const globalObject = this.xModule.getGlobal(parts[0]);
                     if (!is.undefined(globalObject)) {
                         const fullName = `${globalObject.full}.${parts.slice(1).join(".")}`;
                         const { namespace, objectName } = adone.meta.parseName(fullName);
@@ -181,12 +185,6 @@ export default class XBase {
         this.code = generated.code;
     }
 
-    getName(node) {
-        switch (node.type) {
-            case "ClassDeclaration": return node.id.name;
-        }
-    }
-
     lookupInGlobalScope(name) {
         for (const xObj of this.xModule.scope) {
             const node = xObj.ast;
@@ -215,11 +213,11 @@ export default class XBase {
         return null;
     }
 
-    _traverseMemberExpression(node) {
+    _getMemberExpressionName(node) {
         let prefix;
         const type = node.object.type;
         if (type === "MemberExpression") {
-            prefix = this._traverseMemberExpression(node.object);
+            prefix = this._getMemberExpressionName(node.object);
         } else if (type === "Identifier") {
             return `${node.object.name}.${node.property.name}`;
         }

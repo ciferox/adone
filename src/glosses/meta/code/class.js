@@ -14,7 +14,7 @@ export default class XClass extends adone.meta.code.Base {
             const node = this.ast.superClass;
             switch (node.type) {
                 case "Identifier": {
-                    const globalObject = this.xModule.globals.find((g) => (g.name === node.name && !g.isNamespace));
+                    const globalObject = this.xModule.getGlobal(node.name);
                     if (!is.undefined(globalObject)) {
                         this.superClassName = globalObject.full;
                     }

@@ -61,13 +61,9 @@ export const getNamespacePaths = async ({ name, relative = true, pathPrefix = st
                 isDirectory = false;
             }
         } else {
-            for (const ext of adone.exts) {
-                const newPath = `${path}${ext}`;
-                if ((await fs.exists(newPath)) && (await fs.isFile(newPath))) {
-                    isDirectory = false;
-                    path = `${path}${ext}`;
-                    break;
-                }
+            path = await fs.lookup(path);
+            if (await fs.isFile(path)) {
+                isDirectory = false;
             }
         }
         if (is.undefined(isDirectory)) {

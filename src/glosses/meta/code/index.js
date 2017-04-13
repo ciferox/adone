@@ -1,8 +1,4 @@
-const { is, fs, std } = adone;
-
-const indexRe = /^index\.(js|ajs|tjs)$/;
-
-const isFunctionLike = (xObj) => (adone.meta.code.is.function(xObj) || adone.meta.code.is.arrowFunction(xObj) || adone.meta.code.is.class(xObj));
+const { is, std } = adone;
 
 export class Inspector {
     constructor({ dir = "lib" }) {
@@ -12,71 +8,7 @@ export class Inspector {
     }
 
     async attachNamespace(nsName) {
-        const metaCode = adone.meta.code;
-        const info = adone.meta.getNamespaceInfo(nsName);        
-        const ns = {
-            info,
-            modules: [],
-            $: {}
-        };
-
-        const sources = await adone.meta.getNamespacePaths({ name: nsName, pathPrefix: this.path, relative: false });
-        for (const filePath of sources) {
-            const code = await fs.readFile(filePath, { check: true, encoding: "utf8" });
-            const sourceModule = new metaCode.Module({ code, filePath });
-            ns.modules.push({
-                path: filePath,
-                module: sourceModule
-            });
-        }
-
-        this.namespaces[nsName] = ns;
-
-        if (ns.modules.length === 1) {
-            const nsModule = ns.modules[0].module;
-            const moduleExports = nsModule.exports;
-            if (nsModule.numberOfExports() === 1 && metaCode.is.object(moduleExports.default)) { // #1
-                this._mapModuleToNamespace(ns, nsModule);
-                return;
-            } else if (nsModule.numberOfExports() >= 1 && !metaCode.is.object(moduleExports.default)) { // #2
-                this._mapModuleToNamespace(ns, nsModule);
-                return;
-            }
-        }
-
-        // #3
-        if (ns.modules.length >= 1) {
-            const isOk = ns.modules.every((x) => {
-                const nsModule = x.module;
-                const moduleExports = nsModule.exports;
-                const numberOfExports = nsModule.numberOfExports();
-                return !indexRe.test(std.path.basename(x.path)) &&
-                    ((numberOfExports === 1 && isFunctionLike(moduleExports.default) && is.string(moduleExports.default.name)) ||
-                    (is.undefined(moduleExports.default) && numberOfExports >= 1));
-            });
-            if (isOk) {
-                for (const nsModInfo of ns.modules) {
-                    const nsModule = nsModInfo.module;
-                    this._mapModuleToNamespace(ns, nsModule);
-                }
-                return;
-            }
-        }
-    }
-
-    _mapModuleToNamespace(ns, nsModule) {
-        const moduleExports = nsModule.exports;
-        if (adone.meta.code.is.object(moduleExports.default)) {
-            for (const [key, val] of moduleExports.default.entries()) {
-                ns.$[key] = val;
-            }
-        } else if (isFunctionLike(moduleExports.default)) {
-            ns.$[moduleExports.default.name] = moduleExports.default;
-        } else if (is.undefined(moduleExports.default)) {
-            for (const [key, val] of Object.entries(moduleExports)) {
-                ns.$[key] = val;
-            }
-        }
+        this.namespaces[nsName] = await adone.meta.code.Namespace.inspect(nsName, this.path);
     }
 
     listNamespaces() {
@@ -98,10 +30,10 @@ export class Inspector {
     get(name) {
         const names = {};
         const ns = this.getNamespace(name, names);
-        if (!is.propertyOwned(ns.$, names.objectName)) {
+        if (!is.propertyOwned(ns.exports, names.objectName)) {
             throw new adone.x.NotFound(`Unknown object: ${name}`);
         }
-        return ns.$[names.objectName];
+        return ns.exports[names.objectName];
     }
 
     getCode(name) {
@@ -111,6 +43,7 @@ export class Inspector {
 }
 
 adone.lazify({
+    Namespace: "./namespace",
     Base: "./base",
     Module: "./module",
     Class: "./class",
@@ -124,7 +57,16 @@ adone.lazify({
     Export: "./export",
     JsNative: "./js_native",
     Adone: "./adone",
+    Global: "./global",
+    nodeInfo: () => (node) => {
+        switch (node.type) {
+            case "Identifier": return `Identifier:${node.name}`;
+            case "ClassDeclaration": return `ClassDeclaration:${node.id.name}`;
+        }
+        return node.type;
+    },
     is: () => ({
+        functionLike: (x) => (adone.meta.code.is.function(x) || adone.meta.code.is.arrowFunction(x) || adone.meta.code.is.class(x)),
         module: (x) => adone.tag.has(x, adone.tag.CODEMOD_MODULE),
         class: (x) => adone.tag.has(x, adone.tag.CODEMOD_CLASS),
         variable: (x) => adone.tag.has(x, adone.tag.CODEMOD_VAR),

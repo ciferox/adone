@@ -376,3 +376,16 @@ export const tmpName = async ({ name = null, tries = 3, template = null, dir = o
 };
 
 export const homeDir = () => (is.win32 ? process.env.USERPROFILE : process.env.HOME);
+
+export const lookup = async (path) => {
+    if (!(await fs.exists(path))) {
+        for (const ext of adone.exts) {
+            const newPath = `${path}${ext}`;
+            if (await fs.exists(newPath)) {
+                path = `${path}${ext}`;
+                break;
+            }
+        }
+    }
+    return path;
+};

@@ -1,5 +1,5 @@
 import { schemas, userGroup, adminGroup } from "./defaults";
-const { is, netron: { contextable, decorator: { Contextable, Description, Public, Private, Type, Property, Method } }, vendor: { lodash: _ } } = adone;
+const { is, netron: { decorator: { Contextable, Description, Public, Private, Type, Property, Method } }, vendor: { lodash: _ } } = adone;
 
 @Contextable
 @Private
@@ -263,9 +263,9 @@ export class Auth {
         this.userGroup = null;
         this.adminGroup = null;
 
-        this.sessions = new contextable.Map();
-        this.users = new contextable.Map();
-        this.groups = new contextable.Map();
+        this.sessions = new Map();
+        this.users = new Map();
+        this.groups = new Map();
     }
 
     async initialize() {
@@ -613,9 +613,9 @@ export class Auth {
 @Private
 @Contextable
 @Description("System context")
-@Property("groups", { private: false, readonly: true, type: contextable.Map, description: "In-memory map of groups" })
-@Property("users", { private: false, readonly: true, type: contextable.Map, description: "In-memory map of users" })
-@Property("sessions", { private: false, readonly: true, type: contextable.Map, description: "In-memory map of sessions" })
+@Property("groups", { private: false, readonly: true, type: Map, description: "In-memory map of groups" })
+@Property("users", { private: false, readonly: true, type: Map, description: "In-memory map of users" })
+@Property("sessions", { private: false, readonly: true, type: Map, description: "In-memory map of sessions" })
 @Method("addUser", { private: false, description: "Adds a new user and returns it id", type: String })
 @Method("addGroup", { private: false, description: "Adds a new group and returns group id", type: Group })
 @Method("getGroupByName", { private: false, description: "Returns group by name", type: Group })
