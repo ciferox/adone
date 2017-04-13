@@ -1,8 +1,8 @@
-const { document } = adone.database.db;
+const { document } = adone.database.local2;
 const _ = require("underscore");
 const util = require("util");
 
-describe("Document", () => {
+describe.skip("Document", () => {
 
     describe("Serialization, deserialization", () => {
 

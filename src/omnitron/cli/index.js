@@ -658,7 +658,7 @@ export default class extends adone.application.Subsystem {
 
     async vaultOpenCommand(args, opts) {
         try {
-            await this.dispatcher.openVault(args.get("name"));
+            await (await this.dispatcher.vaults()).open(args.get("name"));
             adone.log(adone.ok);
         } catch (err) {
             adone.error(err.message);
@@ -669,7 +669,7 @@ export default class extends adone.application.Subsystem {
 
     async vaultCloseCommand(args, opts) {
         try {
-            await this.dispatcher.closeVault(args.get("name"));
+            await (await this.dispatcher.vaults()).close(args.get("name"));
             adone.log(adone.ok);
         } catch (err) {
             adone.error(err.message);
@@ -680,7 +680,7 @@ export default class extends adone.application.Subsystem {
 
     async vaultSetCommand(args, opts) {
         try {
-            const iVault = await this.dispatcher.getVault(args.get("vault"));
+            const iVault = await (await this.dispatcher.vaults()).get(args.get("vault"));
             const iValuable = await iVault.get(args.get("valuable"));
             await iValuable.set(args.get("key"), args.get("value"));
             adone.log(adone.ok);
@@ -693,7 +693,7 @@ export default class extends adone.application.Subsystem {
 
     async vaultGetCommand(args, opts) {
         try {
-            const iVault = await this.dispatcher.getVault(args.get("vault"));
+            const iVault = await (await this.dispatcher.vaults()).get(args.get("vault"));
             const iValuable = await iVault.get(args.get("valuable"));
             adone.log(await iValuable.get(args.get("key")));
         } catch (err) {
@@ -705,7 +705,7 @@ export default class extends adone.application.Subsystem {
 
     async vaultTypeCommand(args, opts) {
         try {
-            const iVault = await this.dispatcher.getVault(args.get("vault"));
+            const iVault = await (await this.dispatcher.vaults()).get(args.get("vault"));
             const iValuable = await iVault.get(args.get("valuable"));
             adone.log(await iValuable.type(args.get("key")));
         } catch (err) {
@@ -717,7 +717,7 @@ export default class extends adone.application.Subsystem {
 
     async vaultDeleteCommand(args, opts) {
         try {
-            const iVault = await this.dispatcher.getVault(args.get("vault"));
+            const iVault = await (await this.dispatcher.vaults()).get(args.get("vault"));
             const key = args.get("key");
             const valuable = args.get("valuable");
             if (key === "") {
@@ -736,7 +736,7 @@ export default class extends adone.application.Subsystem {
 
     async vaultKeysCommand(args, opts) {
         try {
-            const iVault = await this.dispatcher.getVault(args.get("vault"));
+            const iVault = await (await this.dispatcher.vaults()).get(args.get("vault"));
             const iValuable = await iVault.get(args.get("valuable"));
             adone.log(adone.text.pretty.json(await iValuable.keys()));
         } catch (err) {
@@ -748,7 +748,7 @@ export default class extends adone.application.Subsystem {
 
     async vaultTagsCommand(args, opts) {
         try {
-            const iVault = await this.dispatcher.getVault(args.get("vault"));
+            const iVault = await (await this.dispatcher.vaults()).get(args.get("vault"));
             const iValuable = await iVault.get(args.get("valuable"));
             adone.log(adone.text.pretty.json(await iValuable.tags()));
         } catch (err) {
@@ -761,7 +761,7 @@ export default class extends adone.application.Subsystem {
 
     async vaultClearCommand(args, opts) {
         try {
-            const iVault = await this.dispatcher.getVault(args.get("vault"));
+            const iVault = await (await this.dispatcher.vaults()).get(args.get("vault"));
             const iValuable = await iVault.get(args.get("valuable"));
             await iValuable.clear();
             adone.log(adone.ok);

@@ -1,49 +1,19 @@
 import adone from "adone";
-const context = adone.lazify({
-    Vault: "./contexts/vault",
-    System: "./contexts/system",
-    Hardware: "./contexts/hardware"
-}, null, require);
+import Contexts from "./contexts";
+// import Services from "./services";
+
 const startedAt = adone.util.microtime.now();
+
 const { is, std } = adone;
 const { Contextable, Public, Private, Description, Type } = adone.netron.decorator;
 const { DISABLED, ENABLED, INITIALIZING, ACTIVE, UNINITIALIZING, STATUSES } = adone.omnitron.const;
-
-// Service requirements:
-// 1. Each service should be in its own directory.
-// 2. File index.js can obviously export one or more netron-contexts (default exports it not allowed).
-// 3. Сonfiguration for each service must be placed in meta.json with folowing format:.
-//    {
-//        "description": String,
-//        "enabled": Boolean,
-//        "dependencies": Array,
-//        "contexts": [
-//            {
-//                "id": String,
-//                "class": String, // format: "filename[.ext]:classname"
-//                "default": Boolean,
-//                "options": Object
-//            }
-//        ]
-//    }
-//
-// Service:
-//   description (optional) - Service description.
-//   enabled - Should be service enabled or disabled. Disabled services cannot be started.
-//   dependencies (optional) - List of dependent services.
-//   contexts - List of exposed contexts
-//
-// Context:
-//   id - ID of context. If ID starts with '.', then full context ID wiil be 'name.id'.
-//   class - Name of the context's class exported from index.js.
-//   default - Indicates that the context is default (only one context can be default).
-//   options (optional) - context-specific options (changable in user-defined configuration).
-//
 
 @Contextable
 @Private
 export class Omnitron extends adone.application.Application {
     async initialize() {
+        this._.netron = null;
+
         this._.configurator = new adone.omnitron.Configurator(this);
         await this._.configurator.loadAll();
 
@@ -55,27 +25,24 @@ export class Omnitron extends adone.application.Application {
             adone.info("running garbage collector");
         });
 
-        await this.createPidFile();
-
-        this._.systemStore = null;
-        this._.hostsStore = null;
-        this._.stores = {};
-
-        this._.system = null;
-        this._.hardware = null;
-        this._.vaults = null;
+        this._.contexts = new Contexts(this);
+        await this._.contexts.initialize();
 
         // await adone.fs.mkdir(this.config.omnitron.servicesPath);
-        await adone.fs.mkdir(this.config.omnitron.storesPath);
 
         await this.initializeNetron({ isSuper: true });
 
         // Save services config for pm-service-container.
         await this._.configurator.saveServicesConfig();
 
+        // this._.services = new Services(this);
+        // await this._.services.initialize();
+
         await this.attachServices();
 
         await this._.configurator.saveGatesConfig();
+
+        await this.createPidFile();
 
         if (is.function(process.send)) {
             process.send({ pid: process.pid });
@@ -87,7 +54,6 @@ export class Omnitron extends adone.application.Application {
 
     async uninitialize() {
         await this.detachServices();
-
         await this._.configurator.saveServicesConfig();
 
         // Let netron gracefully complete all disconnects
@@ -95,12 +61,7 @@ export class Omnitron extends adone.application.Application {
 
         await this.uninitializeNetron();
 
-        // Close opened vaults
-        if (!is.null(this._.vaults)) {
-            for (const vault of this._.vaults.values()) {
-                await vault.close();
-            }
-        }
+        await this._.contexts.uninitialize();
 
         await this._.configurator.saveGatesConfig();
 
@@ -135,14 +96,16 @@ export class Omnitron extends adone.application.Application {
 
     async uninitializeNetron() {
         try {
-            await this._.netron.disconnect();
-            await this._.netron.unbind();
+            if (!is.null(this._.netron)) {
+                await this._.netron.disconnect();
+                await this._.netron.unbind();
 
-            const gates = this._.configurator.gates;
-            // this way is not reliable
-            for (const gate of gates.list()) {
-                if (gate.status === ACTIVE) {
-                    gates.setStatus(gate, ENABLED);
+                const gates = this._.configurator.gates;
+                // this way is not reliable
+                for (const gate of gates.list()) {
+                    if (gate.status === ACTIVE) {
+                        gates.setStatus(gate, ENABLED);
+                    }
                 }
             }
         } catch (err) {
@@ -173,18 +136,20 @@ export class Omnitron extends adone.application.Application {
     async detachServices() {
         try {
             // First detach omnitron service
-            this._.netron.detachContext("omnitron");
-            this.config.omnitron.services.omnitron.status = ENABLED;
-            adone.info("Service 'omnitron' detached");
+            if (!is.null(this._.netron)) {
+                this._.netron.detachContext("omnitron");
+                this.config.omnitron.services.omnitron.status = ENABLED;
+                adone.info("Service 'omnitron' detached");
 
-            for (const serviceName of this._.uninitOrder) {
-                const service = this._.service[serviceName];
-                try {
-                    if (serviceName !== "omnitron") {
-                        await this.detachService(service);
+                for (const serviceName of this._.uninitOrder) {
+                    const service = this._.service[serviceName];
+                    try {
+                        if (serviceName !== "omnitron") {
+                            await this.detachService(service);
+                        }
+                    } catch (err) {
+                        adone.error(err);
                     }
-                } catch (err) {
-                    adone.error(err);
                 }
             }
         } catch (err) {
@@ -556,116 +521,26 @@ export class Omnitron extends adone.application.Application {
     @Public
     @Description("Returns instance of system metrics observer")
     system() {
-        if (is.null(this._.system)) {
-            this._.system = new context.System();
-        }
-        return this._.system;
+        return this._.contexts.get("system");
     }
 
     @Public
     @Description("Returns instance of hardware metrics observer")
     hardware() {
-        if (is.null(this._.hardware)) {
-            this._.hardware = new context.Hardware();
-        }
-        return this._.hardware;
+        return this._.contexts.get("hardware");
     }
 
     @Public
-    @Description("Opens vault with specified name and returns it")
-    @Type(context.Vault)
-    async openVault(name, options = {}) {
-        const vaultsPath = adone.std.path.join(this.config.adone.home, "vaults");
-        await adone.fs.mkdir(vaultsPath);
-        const location = adone.std.path.join(vaultsPath, name);
-
-        if (is.null(this._.vaults)) {
-            this._.vaults = new Map();
-        }
-
-        let vault = this._.vaults.get(location);
-        if (is.undefined(vault)) {
-            delete options.location;
-            vault = new context.Vault(this, Object.assign({
-                location
-            }, options));
-            this._.vaults.set(location, vault);
-        } else {
-            throw new adone.x.IllegalState(`Vault '${name}' already opened`);
-        }
-
-        await vault.open();
-
-        return vault;
+    @Description("Returns instance of hosts")
+    hosts() {
+        return this._.contexts.get("hosts");
     }
 
     @Public
-    @Description("Returns opened vault with specified name")
-    @Type(context.Vault)
-    async getVault(name) {
-        const vaultsPath = adone.std.path.join(this.config.adone.home, "vaults");
-        await adone.fs.mkdir(vaultsPath);
-        const location = adone.std.path.join(vaultsPath, name);
-
-        if (is.null(this._.vaults)) {
-            this._.vaults = new Map();
-        }
-
-        const vault = this._.vaults.get(location);
-        if (is.undefined(vault)) {
-            throw new adone.x.IllegalState(`Vault '${name}' is not opened`);
-        }
-        return vault;
+    @Description("Returns instance of vault manager")
+    vaults() {
+        return this._.contexts.get("vaults");
     }
-
-    @Public
-    @Description("Closes vault with specified name")
-    @Type()
-    async closeVault(name) {
-        const vaultsPath = adone.std.path.join(this.config.adone.home, "vaults");
-        await adone.fs.mkdir(vaultsPath);
-        const location = adone.std.path.join(vaultsPath, name);
-
-        if (is.null(this._.vaults)) {
-            this._.vaults = new Map();
-        }
-
-        const vault = this._.vaults.get(location);
-        if (is.undefined(vault)) {
-            throw new adone.x.IllegalState(`Vault '${name}' is not opened`);
-        }
-
-        this._.vaults.delete(location);
-        return vault.close();
-    }
-
-    //     let db = null;
-    //     switch (name) {
-    //         case "system": {
-    //             if (is.null(this._.systemStore)) {
-    //                 db = this._.systemStore = new context.Store(this.config.omnitron.systemDbPath, { createIfMissing: true });
-    //                 await this._.systemStore.open();
-    //             } else {
-    //                 db = this._.systemStore;
-    //             }
-    //             break;
-    //         }
-    //         case "hosts": {
-    //             if (is.null(this._.hostsStore)) {
-    //                 db = this._.hostsStore = new context.Store(this.config.omnitron.hostsDbPath, { createIfMissing: true });
-    //                 await this._.hostsStore.open();
-    //             } else {
-    //                 db = this._.hostsStore;
-    //             }
-    //             break;
-    //         }
-    //         default: {
-
-    //         }
-    //     }
-
-    //     return db;
-    // }
 }
 
 if (require.main === module) {

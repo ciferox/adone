@@ -6,7 +6,6 @@ export default class Configurator {
         this.app = app;
         this.inMemory = inMemory;
         this._gateManager = null;
-        this._hostManager = null;
     }
 
     get omnitron() {
@@ -18,13 +17,6 @@ export default class Configurator {
             this._gateManager = new adone.omnitron.GateManager(this.config.omnitron);
         }
         return this._gateManager;
-    }
-
-    get hosts() {
-        if (is.null(this._hostManager)) {
-            this._hostManager = new adone.omnitron.HostManager(this.config.omnitron);
-        }
-        return this._hostManager;
     }
 
     async loadAll() {

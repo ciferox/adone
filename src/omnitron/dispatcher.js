@@ -264,10 +264,6 @@ export default class Dispatcher {
         return (await this.getService("omnitron")).gates();
     }
 
-    async getStore(name, options) {
-        return (await this.getService("omnitron")).getStore(name, options);
-    }
-
     async system() {
         return (await this.getService("omnitron")).system();
     }
@@ -276,16 +272,8 @@ export default class Dispatcher {
         return (await this.getService("omnitron")).hardware();
     }
 
-    async openVault(name, options) {
-        return (await this.getService("omnitron")).openVault(name, options);
-    }
-
-    async getVault(name) {
-        return (await this.getService("omnitron")).getVault(name);
-    }
-
-    async closeVault(name) {
-        return (await this.getService("omnitron")).closeVault(name);
+    async vaults() {
+        return (await this.getService("omnitron")).vaults();
     }
 
     async _isAlive(pid, timeout = 0) {

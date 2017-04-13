@@ -3,11 +3,11 @@ const _ = require("underscore");
 const async = require("async");
 const rimraf = require("rimraf");
 //  , document = require('../lib/document')
-const Model = adone.database.db.DB;
-const { Cursor } = adone.database.db;
+const Model = adone.database.local2.DB;
+const { Cursor } = adone.database.local2;
 
 
-describe("Database", () => {
+describe.skip("Database", () => {
     let d;
 
     function remove_ids(docs) {

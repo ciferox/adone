@@ -522,7 +522,7 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
     adone.database = lazify({
         local: "./glosses/databases/local",
         level: "./glosses/databases/level",
-        db: "./glosses/databases/db",
+        local2: "./glosses/databases/local2",
         mysql: "./glosses/databases/mysql/promise",
         redis: "./glosses/databases/redis",
         mongo: "./glosses/databases/mongo"

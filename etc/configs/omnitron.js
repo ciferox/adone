@@ -6,16 +6,11 @@ const home = process.env.ADONE_HOME;
 
 // Below are configurable options
 
-const storesPath = join(home, "stores");
-
 module.exports = {
     logFilePath: join(home, "omnitron.log"),
     errorLogFilePath: join(home, "omnitron-err.log"),
     pidFilePath: join(home, "omnitron.pid"),
     servicesPath: join(home, "services"),
-    storesPath,
-    systemDbPath: join(storesPath, "system"),
-    hostsDbPath: join(storesPath, "hosts"),
     getServicePath(serviceName, dirName) {
         let fullPath;
         if (typeof(dirType) === "string") {            
