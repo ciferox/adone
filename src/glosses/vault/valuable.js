@@ -53,6 +53,12 @@ export default class Valuable {
         return isNew;
     }
 
+    async setMulti(pairs) {
+        for (const [name, value] of Object.entries(pairs)) {
+            await this.set(name, value);
+        }
+    }
+
     get(name) {
         return this.vault.getMeta(_.vvalue(this.id, this._getKey(name).id));
     }
@@ -97,6 +103,10 @@ export default class Valuable {
         return false;
     }
 
+    hasTag(tag) {
+        return (this._tags.indexOf(tag) >= 0);
+    }
+
     async deleteTag(tag) {
         if (this._tags.includes(tag)) {
             this._tags.splice(this._tags.indexOf(tag), 1);
@@ -109,6 +119,17 @@ export default class Valuable {
 
     keys() {
         return [...this._keys.keys()];
+    }
+
+    async entries() {
+        const result = {};
+        const keys = this.keys();
+
+        for (const key of keys) {
+            result[key] = await this.get(key);
+        }
+
+        return result;
     }
 
     tags() {

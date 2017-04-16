@@ -34,9 +34,7 @@ export default class Contexts {
     }
 
     async get(name) {
-        if (!(name in this._lazy)) {
-            throw new adone.x.Unknown(`Unknown context: ${name}`);
-        }
+        this._checkName(name);
 
         let context = this._cache.get(name);
         if (is.undefined(context)) {
@@ -49,5 +47,15 @@ export default class Contexts {
         }
 
         return context;
+    }
+
+    getExport(name, exportName) {
+        this._checkName(name);
+    }
+
+    _checkName(name) {
+        if (!(name in this._lazy)) {
+            throw new adone.x.Unknown(`Unknown context: ${name}`);
+        }
     }
 }

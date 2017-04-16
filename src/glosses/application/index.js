@@ -490,7 +490,9 @@ class Group {
 class ArgumentsMap {
     constructor(args) {
         this.args = new Map();
+        this._allRaw = {};
         for (const arg of args) {
+            let counter = 0;
             for (let name of arg.names) {
                 let i = 0;
                 while (name[i] === "-") {
@@ -498,8 +500,27 @@ class ArgumentsMap {
                 }
                 name = name.slice(i);
                 this.args.set(name, arg);
-                this.args.set(text.toCamelCase(name), arg);
+                const camalized = text.toCamelCase(name);
+                this.args.set(camalized, arg);
+                if (counter++ === 0 && camalized !== "help") {
+                    this._allRaw[camalized] = this.get(camalized);
+                }
             }
+        }
+    }
+
+    getAll(onlyDefined = false) {
+        if (onlyDefined) {
+            const result = {};
+            for (const [key, value] of Object.entries(this._allRaw)) {
+                if (this.has(key)) {
+                    result[key] = value;
+                }
+            }
+
+            return result;
+        } else {
+            return this._allRaw;
         }
     }
 
@@ -866,16 +887,16 @@ class Command {
                         message: arg.getShortHelpMessage()
                     };
                 }), {
-                    model: [
-                        { id: "left-spacing", width: 4 },
-                        { id: "names", maxWidth: 40, wordwrap: true },
-                        { id: "between-cells", width: 2 },
-                        { id: "message", wordwrap: true }
-                    ],
-                    width: "100%",
-                    borderless: true,
-                    noHeader: true
-                }));
+                        model: [
+                            { id: "left-spacing", width: 4 },
+                            { id: "names", maxWidth: 40, wordwrap: true },
+                            { id: "between-cells", width: 2 },
+                            { id: "message", wordwrap: true }
+                        ],
+                        width: "100%",
+                        borderless: true,
+                        noHeader: true
+                    }));
             }
             if (options.length) {
                 if (this.arguments.length) {
@@ -906,16 +927,16 @@ class Command {
                             message: opt.getShortHelpMessage()
                         };
                     }), {
-                        model: [
-                            { id: "left-spacing", width: 4 },
-                            { id: "names", maxWidth: 40, wordwrap: true },
-                            { id: "between-cells", width: 2 },
-                            { id: "message", wordwrap: true }
-                        ],
-                        width: "100%",
-                        borderless: true,
-                        noHeader: true
-                    }));
+                            model: [
+                                { id: "left-spacing", width: 4 },
+                                { id: "names", maxWidth: 40, wordwrap: true },
+                                { id: "between-cells", width: 2 },
+                                { id: "message", wordwrap: true }
+                            ],
+                            width: "100%",
+                            borderless: true,
+                            noHeader: true
+                        }));
                 }
             }
             if (commands.length) {
@@ -947,16 +968,16 @@ class Command {
                             message: cmd.getShortHelpMessage()
                         };
                     }), {
-                        model: [
-                            { id: "left-spacing", width: 4 },
-                            { id: "names", maxWidth: 40, wordwrap: true },
-                            { id: "between-cells", width: 2 },
-                            { id: "message", wordwrap: true }
-                        ],
-                        width: "100%",
-                        borderless: true,
-                        noHeader: true
-                    }));
+                            model: [
+                                { id: "left-spacing", width: 4 },
+                                { id: "names", maxWidth: 40, wordwrap: true },
+                                { id: "between-cells", width: 2 },
+                                { id: "message", wordwrap: true }
+                            ],
+                            width: "100%",
+                            borderless: true,
+                            noHeader: true
+                        }));
                 }
             }
         }

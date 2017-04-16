@@ -281,4 +281,29 @@ describe("Vault", () => {
         const val1 = await vault.get("val");
         assert.deepEqual(val, val1);
     });
+
+    it("keys()", async () => {
+        await openVault();
+        await vault.create("foo");
+        await vault.create("bar");
+        await vault.create("baz");
+        assert.sameMembers(vault.keys(), ["foo", "bar", "baz"]);
+    });
+
+    it("entries() valuables in order of creating", async () => {
+        await openVault();
+        const v1 = await vault.create("v1");
+        const v2 = await vault.create("v2");
+        const v3 = await vault.create("v3");
+        await v1.set("kv1", "vv1");
+        await v2.set("kv2", "vv2");
+        await v3.set("kv3", "vv3");
+
+        const entries = await vault.entries();
+        assert.sameMembers(Object.keys(entries), ["v1", "v2", "v3"]);
+
+        for (const [name, v] of Object.entries(entries)) {
+            assert.equal(await v.get(`k${name}`), `v${name}`);
+        }
+    });
 });

@@ -337,6 +337,205 @@ export default class extends adone.application.Subsystem {
                             handler: this.vaultClearCommand
                         }
                     ]
+                },
+                {
+                    name: "hosts",
+                    help: "hosts management and statistics",
+                    commands: [
+                        {
+                            name: "add",
+                            help: "add new host",
+                            arguments: [
+                                {
+                                    name: "host",
+                                    type: String,
+                                    help: "ip address/domain/alias of host"
+                                }
+                            ],
+                            options: [
+                                {
+                                    name: "--aliases",
+                                    nargs: "*",
+                                    type: String,
+                                    help: "host aliases"
+                                },
+                                {
+                                    name: "--groups",
+                                    nargs: "*",
+                                    type: String,
+                                    help: "host aliases"
+                                },
+                                {
+                                    name: "--ssh-port",
+                                    type: Number,
+                                    default: 22,
+                                    help: "ssh port number"
+                                },
+                                {
+                                    name: "--ssh-username",
+                                    type: String,
+                                    help: "ssh username"
+                                },
+                                {
+                                    name: "--ssh-password",
+                                    type: String,
+                                    help: "ssh password"
+                                },
+                                {
+                                    name: "--ssh-private-key",
+                                    type: String,
+                                    help: "path of ssh private key"
+                                },
+                                {
+                                    name: "--netron-port",
+                                    type: Number,
+                                    default: adone.netron.DEFAULT_PORT,
+                                    help: "netron port number"
+                                }
+                            ],
+                            handler: this.hostsAddCommand
+                        },
+                        {
+                            name: "set",
+                            help: "set parameters of host",
+                            arguments: [
+                                {
+                                    name: "host",
+                                    type: String,
+                                    help: "ip address/domain/alias of host"
+                                }
+                            ],
+                            options: [
+                                {
+                                    name: "--aliases",
+                                    nargs: "*",
+                                    type: String,
+                                    help: "host aliases"
+                                },
+                                {
+                                    name: "--groups",
+                                    nargs: "*",
+                                    type: String,
+                                    help: "host aliases"
+                                },
+                                {
+                                    name: "--ssh-port",
+                                    type: Number,
+                                    default: 22,
+                                    help: "ssh port number"
+                                },
+                                {
+                                    name: "--ssh-username",
+                                    type: String,
+                                    help: "ssh username"
+                                },
+                                {
+                                    name: "--ssh-password",
+                                    type: String,
+                                    help: "ssh password"
+                                },
+                                {
+                                    name: "--ssh-private-key",
+                                    type: String,
+                                    help: "path of ssh private key"
+                                },
+                                {
+                                    name: "--netron-port",
+                                    type: Number,
+                                    default: adone.netron.DEFAULT_PORT,
+                                    help: "netron port number"
+                                }
+                            ],
+                            handler: this.hostsSetCommand
+                        },
+                        {
+                            name: "get",
+                            help: "show hosts parameters",
+                            arguments: [
+                                {
+                                    name: "host",
+                                    type: String,
+                                    help: "ip address/domain/alias of host"
+                                }
+                            ],
+                            handler: this.hostsGetCommand
+                        },
+                        {
+                            name: "del",
+                            help: "delete host",
+                            arguments: [
+                                {
+                                    name: "host",
+                                    type: String,
+                                    help: "ip address/domain/alias of host"
+                                }
+                            ],
+                            handler: this.hostsDelCommand
+                        },
+                        {
+                            name: "delkey",
+                            help: "delete host property",
+                            arguments: [
+                                {
+                                    name: "host",
+                                    type: String,
+                                    help: "ip address/domain/alias of host"
+                                },
+                                {
+                                    name: "key",
+                                    type: String,
+                                    help: "name of property"
+                                }
+                            ],
+                            handler: this.hostsDelKeyCommand
+                        },
+                        {
+                            name: "groups",
+                            help: "show groups",
+                            handler: this.hostsGroupsCommand
+                        },
+                        {
+                            name: "group",
+                            help: "groups management",
+                            commands: [
+                                {
+                                    name: "add",
+                                    help: "add host in group",
+                                    arguments: [
+                                        {
+                                            name: "host",
+                                            type: String,
+                                            help: "ip address/domain/alias of host"
+                                        },
+                                        {
+                                            name: "group",
+                                            type: String,
+                                            help: "group name"
+                                        }
+                                    ],
+                                    handler: this.hostsGroupAppCommand
+                                },
+                                {
+                                    name: "del",
+                                    help: "delete host from group",
+                                    arguments: [
+                                        {
+                                            name: "host",
+                                            type: String,
+                                            help: "ip address/domain/alias of host"
+                                        },
+                                        {
+                                            name: "group",
+                                            type: String,
+                                            help: "group name"
+                                        }
+                                    ],
+                                    handler: this.hostsGroupDelCommand
+                                }
+                            ]
+                        }
+                    ],
+                    handler: this.hostsListCommand
                 }
             ]
         });
@@ -694,7 +893,7 @@ export default class extends adone.application.Subsystem {
     async vaultGetCommand(args, opts) {
         try {
             const iVault = await (await this.dispatcher.vaults()).get(args.get("vault"));
-            const iValuable = await iVault.get(args.get("valuable"));
+            const iValuable = await iVault.getOrCreate(args.get("valuable"));
             adone.log(await iValuable.get(args.get("key")));
         } catch (err) {
             adone.error(err.message);
@@ -764,6 +963,172 @@ export default class extends adone.application.Subsystem {
             const iVault = await (await this.dispatcher.vaults()).get(args.get("vault"));
             const iValuable = await iVault.get(args.get("valuable"));
             await iValuable.clear();
+            adone.log(adone.ok);
+        } catch (err) {
+            adone.error(err.message);
+            return 1;
+        }
+        return 0;
+    }
+
+    async hostsListCommand(args, opts) {
+        try {
+            const iHosts = await this.dispatcher.hosts();
+            adone.log(adone.text.pretty.json(await iHosts.list()));
+        } catch (err) {
+            adone.error(err.message);
+            return 1;
+        }
+        return 0;
+    }
+
+    async hostsAddCommand(args, opts) {
+        try {
+            const iHosts = await this.dispatcher.hosts();
+            const iHost = await iHosts.add(args.get("host"));
+            await iHost.setMulti(opts.getAll(true));
+            adone.log(adone.ok);
+        } catch (err) {
+            adone.error(err.message);
+            return 1;
+        }
+        return 0;
+    }
+
+    async hostsSetCommand(args, opts) {
+        try {
+            let params = opts.getAll(true);
+            if (Object.keys(params).length === 0) {
+                adone.log("Nothing to set");
+                return 0;
+            }
+            
+            const iHosts = await this.dispatcher.hosts();
+            
+            // Checking aliases
+            let isOk = true;
+            let alias;
+            if (is.array(params.aliases)) {
+                for (alias of params.aliases) {
+                    try {
+                        await iHosts.get(alias);
+                        isOk = false;
+                        break;
+                    } catch (err) {
+                        /* ok */
+                    }
+                }
+            }
+            if (!isOk) {
+                throw new adone.x.Exists(`Host '${alias}' already exists. Use another alias`);
+            }
+            
+            const host = args.get("host");
+            let iHost;
+            try {
+                iHost = await iHosts.get(host);
+            } catch (err) {
+                if (err instanceof adone.x.NotExists) {
+                    iHost = await iHosts.add(host);
+                    params = opts.getAll(true);
+                } else {
+                    throw err;
+                }
+            }
+            await iHost.setMulti(params);
+            adone.log(adone.ok);
+        } catch (err) {
+            adone.error(err.message);
+            return 1;
+        }
+        return 0;
+    }
+
+    async hostsGetCommand(args) {
+        try {
+            const iHosts = await this.dispatcher.hosts();
+            const host = args.get("host");
+            const iHost = await iHosts.get(host);
+            const entries = await iHost.entries();
+            let names;
+            if (is.array(entries.aliases)) {
+                names = entries.aliases.concat(await iHost.name());
+                delete entries.aliases;
+            } else {
+                names = [host];
+            }
+
+            entries.names = names.join(", ");
+            const groups = await iHost.tags();
+            if (groups.length > 0) {
+                entries.groups = groups.join(", ");
+            }
+            adone.log(adone.text.pretty.json(entries));
+        } catch (err) {
+            adone.error(err.message);
+            return 1;
+        }
+        return 0;
+    }
+
+    async hostsDelCommand(args) {
+        try {
+            const iHosts = await this.dispatcher.hosts();
+            await iHosts.delete(args.get("host"));
+            adone.log(adone.ok);
+        } catch (err) {
+            adone.error(err.message);
+            return 1;
+        }
+        return 0;
+    }
+
+    async hostsDelKeyCommand(args) {
+        try {
+            const key = args.get("key");
+            if (key === "aliases") {
+                throw new adone.x.NotAllowed("Deletion of 'aliases' key is not allowed");
+            }
+            const iHosts = await this.dispatcher.hosts();
+            const iHost = await iHosts.get(args.get("host"));
+            await iHost.delete(args.get("key"));
+            adone.log(adone.ok);
+        } catch (err) {
+            adone.error(err.message);
+            return 1;
+        }
+        return 0;
+    }
+
+    async hostsGroupsCommand() {
+        try {
+            const iHosts = await this.dispatcher.hosts();
+            adone.log(adone.text.pretty.json(await iHosts.listGroups()));
+        } catch (err) {
+            adone.error(err.message);
+            return 1;
+        }
+        return 0;
+    }
+
+    async hostsGroupAppCommand(args) {
+        try {
+            const iHosts = await this.dispatcher.hosts();
+            const iHost = await iHosts.get(args.get("host"));
+            await iHost.addTag(args.get("group"));
+            adone.log(adone.ok);
+        } catch (err) {
+            adone.error(err.message);
+            return 1;
+        }
+        return 0;
+    }
+
+    async hostsGroupDelCommand(args) {
+        try {
+            const iHosts = await this.dispatcher.hosts();
+            const iHost = await iHosts.get(args.get("host"));
+            await iHost.deleteTag(args.get("group"));
             adone.log(adone.ok);
         } catch (err) {
             adone.error(err.message);

@@ -5,16 +5,18 @@ const { Contextable, Private, Public, Description, Method, Type } = adone.netron
 @Contextable
 @Description("The valuable of vault")
 @Method("set", { private: false })
+@Method("setMulti", { private: false })
 @Method("get", { private: false })
 @Method("type", { private: false })
 @Method("has", { private: false })
 @Method("delete", { private: false })
 @Method("clear", { private: false })
 @Method("keys", { private: false })
+@Method("entries", { private: false })
 @Method("tags", { private: false })
 @Method("addTag", { private: false })
 @Method("deleteTag", { private: false })
-class Valuable extends adone.vault.Valuable {
+export class Valuable extends adone.vault.Valuable {
 }
 
 @Private
@@ -34,7 +36,7 @@ class Vault extends adone.vault.Vault {
     @Public
     @Description("Returns existing valuable and create it if needed")
     @Type(Valuable)
-    get(name) {
+    getOrCreate(name) {
         if (this.has(name)) {
             return super.get(name);
         } else {
@@ -56,7 +58,7 @@ class Vault extends adone.vault.Vault {
     }
 }
 
-
+@Private
 @Contextable
 @Description("Vault manager")
 export default class Vaults {

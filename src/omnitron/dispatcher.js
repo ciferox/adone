@@ -276,6 +276,10 @@ export default class Dispatcher {
         return (await this.getService("omnitron")).vaults();
     }
 
+    async hosts() {
+        return (await this.getService("omnitron")).hosts();
+    }
+
     async _isAlive(pid, timeout = 0) {
         try {
             let exists = true;

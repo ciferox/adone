@@ -73,7 +73,7 @@ export default class Vault {
 
     async create(name, tags = []) {
         if (this.nameIdMap.has(name)) {
-            throw new adone.x.Exists(`Valuable '${name}' already exists`);
+            throw new adone.x.Exists(`Already exists: '${name}'`);
         }
 
         const id = await this._getNextId(nextValuableId);
@@ -126,6 +126,32 @@ export default class Vault {
         return this.nameIdMap.has(name);
     }
 
+    keys() {
+        return [...this.nameIdMap.keys()];
+    }
+
+    async values() {
+        const vaults = [];
+        for (const name of this.nameIdMap.keys()) {
+            vaults.push(await this.get(name));
+        }
+
+        return vaults;
+    }
+
+    async entries() {
+        const vaults = {};
+        for (const name of this.nameIdMap.keys()) {
+            vaults[name] = await this.get(name);
+        }
+
+        return vaults;
+    }
+
+    tags() {
+        return this._getTagNames(this.tids);
+    }
+
     getMeta(id) {
         return this._db.get(id);
     }
@@ -136,10 +162,6 @@ export default class Vault {
 
     deleteMeta(id) {
         return this._db.del(id);
-    }
-
-    tags() {
-        return this._getTagNames(this.tids);
     }
 
     async _getTagNames(ids) {
@@ -157,7 +179,7 @@ export default class Vault {
     _getVid(name) {
         const id = this.nameIdMap.get(name);
         if (is.undefined(id)) {
-            throw new adone.x.NotExists(`Valuable '${name}' not exists`);
+            throw new adone.x.NotExists(`Not exists: '${name}'`);
         }
         return id;
     }

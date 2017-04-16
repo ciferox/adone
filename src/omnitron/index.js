@@ -531,15 +531,15 @@ export class Omnitron extends adone.application.Application {
     }
 
     @Public
-    @Description("Returns instance of hosts")
-    hosts() {
-        return this._.contexts.get("hosts");
-    }
-
-    @Public
     @Description("Returns instance of vault manager")
     vaults() {
         return this._.contexts.get("vaults");
+    }
+
+    @Public
+    @Description("Returns instance of hosts")
+    hosts() {
+        return this._.contexts.get("hosts");
     }
 }
 
