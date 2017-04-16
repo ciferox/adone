@@ -18,7 +18,13 @@ export default class XNamespace {
 
         const sources = await adone.meta.getNamespacePaths({ name, pathPrefix, relative: false });
         for (const filePath of sources) {
-            const sourceModule = new adone.meta.code.Module({ nsName: name, filePath });
+            const relIndexPath = adone.std.path.normalize("/adone/src/index.js");
+            let sourceModule;
+            if (filePath.endsWith(relIndexPath)) {
+                sourceModule = new adone.meta.code.AdoneModule({ nsName: name, filePath });
+            } else {
+                sourceModule = new adone.meta.code.Module({ nsName: name, filePath });
+            }
             await sourceModule.load();
             ns.modules.push({
                 path: filePath,

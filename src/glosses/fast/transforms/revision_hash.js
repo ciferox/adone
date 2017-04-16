@@ -66,7 +66,7 @@ export function rev() {
 async function getManifestFile(opts) {
     const file = new File(opts);
     try {
-        const data = await fs.readFileAsync(opts.path);
+        const data = await adone.fs.readFile(opts.path);
         file.contents = data;
     } catch (err) {
         if (err.code !== "ENOENT") {

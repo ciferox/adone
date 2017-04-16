@@ -11,6 +11,11 @@ export class Inspector {
         this.namespaces[nsName] = await adone.meta.code.Namespace.inspect(nsName, this.path);
     }
 
+    isAttached(name) {
+        const { namespace } = adone.meta.parseName(name);
+        return is.propertyOwned(this.namespaces, namespace);
+    }
+
     listNamespaces() {
         return Object.keys(this.namespaces);
     }
@@ -46,6 +51,7 @@ adone.lazify({
     Namespace: "./namespace",
     Base: "./base",
     Module: "./module",
+    AdoneModule: "./adone_module",
     Class: "./class",
     Function: "./function",
     ArrowFunction: "./arrow_function",

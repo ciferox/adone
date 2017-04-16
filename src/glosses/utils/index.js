@@ -485,15 +485,15 @@ export const readdir = (root, {
         const realPath = await adone.util.realpath.async(path);
         const relativePath = adone.std.path.relative(realPath, resolvedRoot);
 
-        const files = await adone.std.fs.readdirAsync(path);
-        const statMethod = lstat ? "lstatAsync" : "statAsync";
+        const files = await adone.fs.readdir(path);
+        const statMethod = lstat ? "lstat" : "stat";
 
         await Promise.all(files.map((name) => {
             const fullPath = adone.std.path.join(realPath, name);
             const path = adone.std.path.join(relativePath, name);
             const parentDir = relativePath;
             const fullParentDir = realPath;
-            return adone.std.fs[statMethod](fullPath).then((stat) => {
+            return adone.fs[statMethod](fullPath).then((stat) => {
                 const entry = { name, fullPath, path, parentDir, fullParentDir, stat };
                 if (stat.isDirectory()) {
                     if (directoryEntries && directoryFilter(entry)) {

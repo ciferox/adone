@@ -72,13 +72,13 @@ describe("Glob", () => {
         await Promise.all(files.sort().map(async (f) => {
             f = path.resolve(fixtureDir, f);
             await adone.fs.mkdir(path.dirname(f), 0o755);
-            await fs.writeFileAsync(f, "i like tests");
+            await adone.fs.writeFile(f, "i like tests");
         }));
 
         if (!is.win32) {
             const d = path.dirname(symlinkTo);
             await adone.fs.mkdir(d, 0o755);
-            await fs.symlinkAsync(symlinkFrom, symlinkTo, "dir");
+            await adone.fs.symlink(symlinkFrom, symlinkTo, "dir");
         }
 
         await Promise.all(["foo", "bar", "baz", "asdf", "quux", "qwer", "rewq"].map((w) => {
@@ -164,7 +164,7 @@ describe("Glob", () => {
 
         const fname = path.resolve(__dirname, "bash-results.json");
         const data = `${JSON.stringify(bashOutput, null, 2)}\n`;
-        await fs.writeFileAsync(fname, data);
+        await adone.fs.writeFile(fname, data);
     });
 
     //remove the fixtures
@@ -1537,7 +1537,7 @@ describe("Glob", () => {
                     fs.writeFileSync(q, "hello");
                 } else {
                     // eslint-disable-next-line no-await-in-loop
-                    await fs.mkdirAsync(q);
+                    await adone.fs.mkdir(q);
                     // eslint-disable-next-line no-await-in-loop
                     await createDirectories(n, level - 1, q);
                 }
@@ -1549,7 +1549,7 @@ describe("Glob", () => {
         const dirDepth = 1;
 
         before(async () => {
-            await fs.mkdirAsync(hello);
+            await adone.fs.mkdir(hello);
             await createDirectories(dirWidth, dirDepth, hello);
         });
 

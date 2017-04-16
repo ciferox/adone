@@ -225,7 +225,7 @@ describe("Process manager", () => {
                 if (p.alive) {
                     await p.waitForExit();
                 }
-                const data = await adone.std.fs.readFileAsync(stdout, "utf-8");
+                const data = await adone.fs.readFile(stdout, { encoding: "utf-8" });
                 expect(data).to.be.equal("Some important message\n");
             });
 
@@ -243,7 +243,7 @@ describe("Process manager", () => {
                 if (p.alive) {
                     await p.waitForExit();
                 }
-                const data = await adone.std.fs.readFileAsync(stderr, "utf-8");
+                const data = await adone.fs.readFile(stderr, { encoding: "utf-8" });
                 expect(data).to.be.equal("Important debug messages\n");
             });
 
@@ -329,7 +329,7 @@ describe("Process manager", () => {
                 });
                 await p.start();
                 p.kill("SIGKILL");
-                const data = JSON.parse(await adone.std.fs.readFileAsync(stdout, "utf-8"));
+                const data = JSON.parse(await adone.fs.readFile(stdout, { encoding: "utf-8" }));
                 expect(data).to.be.deep.equal([
                     process.execPath,  // resolve?
                     fixture("print_process_argv.js"),
@@ -599,7 +599,7 @@ describe("Process manager", () => {
                     await p.exit({ graceful: true });
                     proc = await OS.getProcess(p.pid);
                     expect(proc).to.be.null;
-                    expect(await adone.std.fs.readFileAsync(stdout, "utf-8")).to.be.equal("graceful\n");
+                    expect(await adone.fs.readFile(stdout, { encoding: "utf-8" })).to.be.equal("graceful\n");
                 });
 
                 it("should kill the process if it doesnt want to exit", async () => {

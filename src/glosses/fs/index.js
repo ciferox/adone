@@ -9,9 +9,10 @@ const fs = adone.lazify({
     lstat: () => promisify(adone.std.fs.lstat),
     stat: () => promisify(adone.std.fs.stat),
     writeFile: () => promisify(adone.std.fs.writeFile),
-    append: () => promisify(adone.std.fs.appendFile),
+    appendFile: () => promisify(adone.std.fs.appendFile),
     access: () => promisify(adone.std.fs.access),
     symlink: () => promisify(adone.std.fs.symlink),
+    realpath: () => promisify(adone.std.fs.realpath),
     rm: "./rm",
     File: "./file",
     Directory: "./directory",
@@ -74,6 +75,8 @@ export const fd = {
     writeSync: adone.std.fs.writeSync,
     sync: promisify(adone.std.fs.fsync),
     syncSync: adone.std.fs.fsyncSync,
+    chown: promisify(adone.std.fs.fchown),
+    chmod: promisify(adone.std.fs.fchmod),
 
     seek: (fd, offset, whence) => {
         return new Promise((resolve, reject) => {
@@ -113,7 +116,14 @@ export const readFile = async (filepath, { check = false, encoding = null } = {}
             return null;
         }
     }
-    return adone.std.fs.readFileAsync(filepath, { encoding }).catch(() => null);
+    return new Promise((resolve, reject) => {
+        return adone.std.fs.readFile(filepath, { encoding }, (err, data) => {
+            if (err) {
+                return reject(err);
+            }
+            resolve(data);
+        });
+    });
 };
 
 export const readFileSync = (filepath, { check = false, encoding = null } = {}) => {
@@ -260,7 +270,7 @@ export const copy = async (srcPath, dstPath, { recursively = true, ignoreExistin
         }
         const destFilePath = fData[0];
         await mkdir(adone.std.path.dirname(destFilePath));
-        return adone.std.fs.writeFileAsync(destFilePath, content);
+        return adone.fs.writeFile(destFilePath, content);
     });
 };
 

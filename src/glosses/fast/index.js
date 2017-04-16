@@ -301,7 +301,7 @@ export class FastFS extends Fast {
             return file;
         }
         if (file.isNull()) {
-            file.contents = await std.fs.readFileAsync(file.path);
+            file.contents = await adone.fs.readFile(file.path);
         } else {
             const buf = [];
             let len;
@@ -349,7 +349,7 @@ export class FastFS extends Fast {
 
             await adone.fs.mkdir(dirname);
 
-            const fd = await std.fs.openAsync(destPath, "w");
+            const fd = await adone.fs.fd.open(destPath, "w");
             try {
                 if (file.isStream()) {
                     await new Promise((resolve, reject) => {
@@ -360,7 +360,7 @@ export class FastFS extends Fast {
                         file.contents.pipe(writeStream, { end: false });
                     });
                 } else {
-                    await std.fs.writeAsync(fd, file.contents);
+                    await adone.fs.fd.write(fd, file.contents);
                 }
                 file.flag = flag;
                 file.cwd = cwd;
@@ -368,7 +368,7 @@ export class FastFS extends Fast {
                 file.path = destPath;
                 await fast.helpers.updateMetadata(fd, file);
             } finally {
-                await std.fs.closeAsync(fd);
+                await adone.fs.fd.close(fd);
             }
             if (produceFiles) {
                 this.push(file);
@@ -393,7 +393,7 @@ const globSource = (globs, { cwd = process.cwd(), base = null, dot = true } = {}
     }
     return adone.fs.glob(globs, { dot, patternIndex: true })
         .through(async function fileWrapper({ path, patternIndex }) {
-            const stat = await std.fs.statAsync(path);
+            const stat = await adone.fs.stat(path);
             if (stat.isDirectory()) {
                 return;
             }
@@ -403,7 +403,7 @@ const globSource = (globs, { cwd = process.cwd(), base = null, dot = true } = {}
                 base: _base,
                 path,
                 contents: null,
-                stat: await std.fs.statAsync(path)  // TODO, it should be handled by the glob
+                stat: await adone.fs.stat(path)  // TODO, it should be handled by the glob
             }));
         });
 };

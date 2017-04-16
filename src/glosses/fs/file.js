@@ -6,7 +6,7 @@ export default class File {
     }
 
     stat() {
-        return sfs.statAsync(this._path);
+        return fs.stat(this._path);
     }
 
     statSync() {
@@ -14,7 +14,7 @@ export default class File {
     }
 
     lstat() {
-        return sfs.lstatAsync(this._path);
+        return fs.lstat(this._path);
     }
 
     lstatSync() {
@@ -53,7 +53,7 @@ export default class File {
     }
 
     exists() {
-        return sfs.accessAsync(this._path, sfs.constants.F_OK).then(() => true, () => false);
+        return fs.access(this._path, sfs.constants.F_OK).then(() => true, () => false);
     }
 
     create({ mode = 0o755 } = {}) {
@@ -61,15 +61,15 @@ export default class File {
     }
 
     write(buffer, { encoding = "utf8", mode = 0o755, flag = "w" } = {}) {
-        return sfs.writeFileAsync(this._path, buffer, { encoding, mode, flag });
+        return fs.writeFile(this._path, buffer, { encoding, mode, flag });
     }
 
     append(buffer, { encoding = "utf8", mode = 0o755, flag = "w" } = {}) {
-        return sfs.appendFileAsync(this._path, buffer, { encoding, mode, flag });
+        return fs.appendFile(this._path, buffer, { encoding, mode, flag });
     }
 
     unlink() {
-        return sfs.unlinkAsync(this._path).catch((err) => {
+        return fs.unlink(this._path).catch((err) => {
             if (err.code === "ENOENT") {
                 return;
             }
@@ -78,7 +78,7 @@ export default class File {
     }
 
     content(encoding = "utf8") {
-        return sfs.readFileAsync(this._path, encoding);
+        return fs.readFile(this._path, { encoding });
     }
 
     contentSync(encoding = "utf8") {
@@ -90,7 +90,7 @@ export default class File {
     }
 
     chmod(mode) {
-        return sfs.chmodAsync(this._path, mode);
+        return fs.chmod(this._path, mode);
     }
 
     async rename(name) {
@@ -106,6 +106,6 @@ export default class File {
         if (path instanceof File) {
             path = path.path();
         }
-        return sfs.symlinkAsync(this._path, path).then(() => new adone.fs.SymbolicLinkFile(path));
+        return fs.symlink(this._path, path).then(() => new adone.fs.SymbolicLinkFile(path));
     }
 }

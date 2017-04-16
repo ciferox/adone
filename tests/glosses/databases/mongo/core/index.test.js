@@ -1239,7 +1239,7 @@ describe("mongodb", function () {
 
         async function executeEntry(entry, path) {
             // Read and parse the json file
-            const file = JSON.parse(await adone.std.fs.readFileAsync(path));
+            const file = JSON.parse(await adone.fs.readFile(path));
 
             // Let's pick out the parts of the selection specification
             const error = file.error;
@@ -1388,7 +1388,7 @@ describe("mongodb", function () {
 
         async function executeEntry(entry, path) {
             // Read and parse the json file
-            const file = JSON.parse(await adone.std.fs.readFileAsync(path));
+            const file = JSON.parse(await adone.fs.readFile(path));
             // Let's pick out the parts of the selection specification
             const topology_description = file.topology_description;
             const in_latency_window = file.in_latency_window;
@@ -2936,7 +2936,7 @@ describe("mongodb", function () {
         }
 
         async function executeEntry(entry, path) {
-            const file = JSON.parse(await adone.std.fs.readFileAsync(path));
+            const file = JSON.parse(await adone.fs.readFile(path));
             // Let's pick out the parts of the selection specification
             const topology_description = file.topology_description;
             const in_latency_window = file.in_latency_window;
@@ -3035,7 +3035,7 @@ describe("mongodb", function () {
     describe("replset state", () => {
         async function executeEntry(path) {
             // Read and parse the json file
-            const file = JSON.parse(await adone.std.fs.readFileAsync(path));
+            const file = JSON.parse(await adone.fs.readFile(path));
             // Unpack entry
             const uri = file.uri;
             const phases = file.phases;

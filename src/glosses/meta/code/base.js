@@ -43,7 +43,7 @@ export default class XBase {
     }
 
     references() {
-        if (!is.null(this.path)) {
+        if (!is.null(this.path) && !["VariableDeclarator"].includes(this.ast.type)) {
             // Clear array
             this._references.length = 0;
 

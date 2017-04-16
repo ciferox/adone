@@ -35,9 +35,8 @@ export default class Bundler {
         this.inspector = new adone.meta.code.Inspector({ dir });
     }
     async prepare(name) {
+        adone.info(`Preparing bundle for '${name}'`);
         await this._lookupRefs(name);
-        // adone.log(this.inspector.listNamespaces());
-
         const x = this.inspector.get(name);
 
         // adone.log(x.name, x.ast.type, x.code);
@@ -47,22 +46,32 @@ export default class Bundler {
     }
 
     async _lookupRefs(name) {
-        const { namespace, objectName } = adone.meta.parseName(name);
+        const { namespace } = adone.meta.parseName(name);
+        // if (namespace === "adone") {
+        //     return;
+        // }
+        adone.info(`Attaching namespace: '${namespace}'`);
         if (!namespace.startsWith("adone")) {
             throw new adone.x.NotSupported("Extraction from namespace other than 'adone' is not supported");
-        }
-        if (objectName === "") {
-            throw new adone.x.NotValid("Extraction of namespace is not supported");
         }
 
         await this.inspector.attachNamespace(namespace);
 
         const x = this.inspector.get(name);
-
         const refs = x.references();
 
+        // const namespaces = [];
+        // for (const ref of refs) {
+        //     const { namespace } = adone.meta.parseName(ref);
+        //     if (!namespaces.includes(namespace) && namespace !== "adone") {
+        //         namespaces.push(namespace);
+        //     }
+        // }
+
+        adone.info("Referenced namespaces:");
+        adone.log(adone.text.pretty.json(refs));
         for (const ref of refs) {
-            if (ref.startsWith("adone.is.") || ref.startsWith("adone.x.")) {
+            if (!this.inspector.isAttached(ref)) {
                 await this._lookupRefs(ref);
             }
         }

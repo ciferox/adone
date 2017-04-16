@@ -474,7 +474,7 @@ describe("Process manager", function () {
                             });
                             const stdout = await pm.stdoutPath(name);
                             await pm.stop(name, { graceful: true });
-                            const data = await adone.std.fs.readFileAsync(stdout, "utf-8");
+                            const data = await adone.fs.readFile(stdout, { encoding: "utf-8" });
                             if (isCluster) {
                                 expect(data).to.be.equal("shutting down\n".repeat(4));
                             } else {
@@ -678,7 +678,7 @@ describe("Process manager", function () {
                             });
                             const stdout = await pm.stdoutPath(name);
                             await pm.delete(name, { graceful: true });
-                            const data = await adone.std.fs.readFileAsync(stdout, "utf-8");
+                            const data = await adone.fs.readFile(stdout, { encoding: "utf-8" });
                             if (isCluster) {
                                 expect(data).to.be.equal("shutting down\n".repeat(4));
                             } else {
@@ -1725,7 +1725,7 @@ describe("Process manager", function () {
 
                         it("should use the restarting delay when restarts the workers", async () => {
                             const f = fixture("dynamic.js");
-                            await adone.std.fs.writeFileAsync(f, `
+                            await adone.fs.writeFile(f, `
                                 setInterval(() => {}, 1000);
                             `);
                             const p = await pm.start({
@@ -1739,12 +1739,12 @@ describe("Process manager", function () {
                             try {
                                 const workers = await p.workers();
                                 const t = new Date().getTime();
-                                await adone.std.fs.writeFileAsync(f, `
+                                await adone.fs.writeFile(f, `
                                     process.exit(1);
                                 `);
                                 process.kill(workers[0].pid);
                                 await adone.promise.delay(500);
-                                await adone.std.fs.writeFileAsync(f, `
+                                await adone.fs.writeFile(f, `
                                     setInterval(() => {}, 1000);
                                 `);
                                 await waitFor(async () => {
@@ -1754,7 +1754,7 @@ describe("Process manager", function () {
                                 expect(new Date().getTime() - t).to.be.at.least(2500);
                             } finally {
                                 await pm.stop("test");
-                                await adone.std.fs.unlinkAsync(f).catch(() => { });
+                                await adone.fs.unlink(f).catch(() => { });
                             }
                         });
 

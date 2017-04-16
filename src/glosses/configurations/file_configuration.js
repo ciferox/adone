@@ -111,7 +111,7 @@ export default class FileConfiguration extends adone.configuration.Configuration
         } else {
             obj = this.get(name);
         }
-        await adone.std.fs.writeFileAsync(conf.path, await conf.serializer.encode(obj, options));
+        await adone.fs.writeFile(conf.path, await conf.serializer.encode(obj, options));
     }
 
     async _checkPath(confPath, checkExists) {
@@ -138,7 +138,7 @@ export default class FileConfiguration extends adone.configuration.Configuration
         if (checkExists) {
             let st;
             try {
-                st = await adone.std.fs.statAsync(path);
+                st = await adone.fs.stat(path);
             } catch (err) {
                 throw new adone.x.NotFound(`${path} not exists`);
             }

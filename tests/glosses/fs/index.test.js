@@ -191,9 +191,9 @@ describe("fs", () => {
         it("should append to file", async () => {
             const tmp = await rootTmp.addDirectory("tmp");
             const tmpFile = path.join(tmp.path(), "appended");
-            await fs.append(tmpFile, "hello\n");
+            await fs.appendFile(tmpFile, "hello\n");
             expect(await fs.readLines(tmpFile)).to.be.deep.equal(["hello", ""]);
-            await fs.append(tmpFile, "world");
+            await fs.appendFile(tmpFile, "world");
             expect(await fs.readLines(tmpFile)).to.be.deep.equal(["hello", "world"]);
         });
     });

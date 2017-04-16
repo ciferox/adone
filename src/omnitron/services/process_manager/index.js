@@ -195,7 +195,7 @@ export class Process extends AsyncEmitter {
         if (!(await adone.fs.exists(std.path.dirname(path)))) {
             await adone.fs.mkdir(std.path.dirname(path));
         }
-        await adone.std.fs.appendFileAsync(path, `[${timestamp}][MASTER] ${message}\n`);
+        await adone.fs.appendFile(path, `[${timestamp}][MASTER] ${message}\n`);
     }
 
     writeToStdout(...args) {
@@ -214,14 +214,14 @@ export class Process extends AsyncEmitter {
         await adone.fs.mkdir(stdoutDir);
         await adone.fs.mkdir(stderrDir);
 
-        this.fd.stdout = await std.fs.openAsync(config.stdout, "a");
-        this.fd.stderr = await std.fs.openAsync(config.stderr, "a");
+        this.fd.stdout = await adone.fs.fd.open(config.stdout, "a");
+        this.fd.stderr = await adone.fs.fd.open(config.stderr, "a");
     }
 
     async closeStdStreams() {
-        await adone.std.fs.closeAsync(this.fd.stdout);
+        await adone.fs.fd.close(this.fd.stdout);
         delete this.fd.stdout;
-        await adone.std.fs.closeAsync(this.fd.stderr);
+        await adone.fs.fd.close(this.fd.stderr);
         delete this.fd.stderr;
     }
 

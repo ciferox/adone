@@ -2,9 +2,7 @@ Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-if (Object.prototype.hasOwnProperty.call(global, "adone")) {
-    exports.default = global.adone;
-} else {
+if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
     const adone = Object.create({
         null: Symbol(),
         noop: () => { },
@@ -86,11 +84,11 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
         value: global
     });
 
-    const lazify = adone.lazify;
+    const { lazify } = adone;
 
     adone.std = lazify({
         assert: "assert",
-        fs: () => adone.promise.promisifyAll(require("fs")),
+        fs: "fs",
         path: "path",
         util: "util",
         events: "events",
@@ -577,7 +575,7 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
         },
         has(obj, tag) {
             if (obj != null && typeof obj === "object") {
-                for ( ; (obj = obj.__proto__) != null; ) {
+                for (; (obj = obj.__proto__) != null;) {
                     if (obj[tag] === 1) {
                         return true;
                     }
@@ -587,7 +585,7 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
         },
         define(tag, predicate) {
             adone.tag[tag] = Symbol();
-            if (typeof(predicate) === "string") {
+            if (typeof (predicate) === "string") {
                 Object.defineProperty(adone.is, predicate, {
                     enumerable: true,
                     value: (obj) => adone.tag.has(obj, tag)
@@ -623,4 +621,6 @@ if (Object.prototype.hasOwnProperty.call(global, "adone")) {
         FAST_FS_STREAM: Symbol(),
         FAST_FS_MAP_STREAM: Symbol()
     };
+} else {
+    exports.default = global.adone;
 }

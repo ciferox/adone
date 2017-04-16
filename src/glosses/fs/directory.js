@@ -29,11 +29,11 @@ export default class Directory {
     }
 
     stat() {
-        return sfs.statAsync(this._path);
+        return fs.stat(this._path);
     }
 
     lstat() {
-        return sfs.lstatAsync(this._path);
+        return fs.lstat(this._path);
     }
 
     exists() {
@@ -56,7 +56,7 @@ export default class Directory {
 
     async get(...path) {
         path = this.resolve(...path);
-        const stat = await sfs.lstatAsync(path);
+        const stat = await fs.lstat(path);
         return stat.isDirectory() ? new Directory(path) : new fs.File(path);
     }
 
@@ -121,10 +121,10 @@ export default class Directory {
     }
 
     async files() {
-        const paths = await sfs.readdirAsync(this._path);
+        const paths = await fs.readdir(this._path);
         const files = await Promise.all(paths.map(async (x) => {
             const path = spath.join(this._path, x);
-            const stat = await sfs.lstatAsync(path).catch((err) => {
+            const stat = await fs.lstat(path).catch((err) => {
                 if (err.code === "ENOENT") {  // wow
                     return null;
                 }
@@ -183,7 +183,7 @@ export default class Directory {
         if (path instanceof Directory) {
             path = path.path();
         }
-        return sfs.symlinkAsync(this._path, path).then(() => new fs.SymbolicLinkDirectory(path));
+        return fs.symlink(this._path, path).then(() => new fs.SymbolicLinkDirectory(path));
     }
 
     copyTo(destPath, options) {

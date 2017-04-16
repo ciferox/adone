@@ -236,7 +236,7 @@ describe("Process manager", () => {
                     await p.createNewWorker();
                     const res = await p.killWorker(0, { graceful: true });
                     try {
-                        expect(await adone.std.fs.readFileAsync(stdout, "utf-8")).to.be.equal("shutting down\n");
+                        expect(await adone.fs.readFile(stdout, { encoding: "utf-8" })).to.be.equal("shutting down\n");
                         expect(res.code).to.be.equal(0);
                         expect(res.signal).to.be.equal(null);
                     } finally {
@@ -392,7 +392,7 @@ describe("Process manager", () => {
                     await p.createNewWorker();
                     try {
                         await p.deleteWorker(0, { graceful: true });
-                        expect(await adone.std.fs.readFileAsync(stdout, "utf-8")).to.be.equal("shutting down\n");
+                        expect(await adone.fs.readFile(stdout, { encoding: "utf-8" })).to.be.equal("shutting down\n");
                     } finally {
                         process.kill(p.pid, "SIGKILL");
                         await p.waitForExit();
@@ -545,7 +545,7 @@ describe("Process manager", () => {
                             expect(stuff.RemoteProcess.alive(child)).to.be.false;
                         }
                         s += t;
-                        const data = await adone.std.fs.readFileAsync(stdout, "utf-8");
+                        const data = await adone.fs.readFile(stdout, { encoding: "utf-8" });
                         expect(data).to.be.equal("shutting down\n".repeat(s));
                     }
                 }
@@ -626,7 +626,7 @@ describe("Process manager", () => {
                 await p.start();
                 await adone.promise.delay(100);
                 p.kill("SIGKILL");
-                const data = (await adone.std.fs.readFileAsync(stdout, "utf-8")).split("\n");
+                const data = (await adone.fs.readFile(stdout, { encoding: "utf-8" })).split("\n");
                 data.pop();  // an empty string at the end
                 expect(data).to.have.lengthOf(4);
                 for (const a of data) {
@@ -812,7 +812,7 @@ describe("Process manager", () => {
                 ensureDies(p);
                 try {
                     await p.reload({ graceful: false });
-                    let data = await adone.std.fs.readFileAsync(stdout, "utf-8");
+                    let data = await adone.fs.readFile(stdout, { encoding: "utf-8" });
                     data = data.split("\n").slice(4, -1);  // first 4 are "start"
                     const s = data.filter((_, i) => i % 2);
                     const f = data.filter((_, i) => !(i % 2));
@@ -845,7 +845,7 @@ describe("Process manager", () => {
                 ensureDies(p);
                 try {
                     await p.reload({ graceful: true });
-                    let data = await adone.std.fs.readFileAsync(stdout, "utf-8");
+                    let data = await adone.fs.readFile(stdout, { encoding: "utf-8" });
                     data = data.split("\n").slice(4, -1);  // first 4 are "start"
                     const s = data.filter((_, i) => i % 2);
                     const f = data.filter((_, i) => !(i % 2));
@@ -894,7 +894,7 @@ describe("Process manager", () => {
                 await p.start();
                 ensureDies(p);
                 await p.exit({ graceful: true });
-                const data = await adone.std.fs.readFileAsync(stdout, "utf-8");
+                const data = await adone.fs.readFile(stdout, { encoding: "utf-8" });
                 expect(data).to.be.equal("shutting down\n".repeat(4));
             });
 
@@ -1116,7 +1116,7 @@ describe("Process manager", () => {
                         await p.createNewWorker();
                         const res = await p.killWorker(0, { graceful: true });
                         try {
-                            expect(await adone.std.fs.readFileAsync(stdout, "utf-8")).to.be.equal("shutting down\n");
+                            expect(await adone.fs.readFile(stdout, { encoding: "utf-8" })).to.be.equal("shutting down\n");
                             expect(res.code).to.be.equal(0);
                             expect(res.signal).to.be.equal(null);
                         } finally {
@@ -1287,7 +1287,7 @@ describe("Process manager", () => {
                         await p.createNewWorker();
                         try {
                             await p.deleteWorker(0, { graceful: true });
-                            expect(await adone.std.fs.readFileAsync(stdout, "utf-8")).to.be.equal("shutting down\n");
+                            expect(await adone.fs.readFile(stdout, { encoding: "utf-8" })).to.be.equal("shutting down\n");
                         } finally {
                             process.kill(p.pid, "SIGKILL");
                             await p.waitForExit();
@@ -1446,7 +1446,7 @@ describe("Process manager", () => {
                                 expect(stuff.RemoteProcess.alive(child)).to.be.false;
                             }
                             s += t;
-                            const data = await adone.std.fs.readFileAsync(stdout, "utf-8");
+                            const data = await adone.fs.readFile(stdout, { encoding: "utf-8" });
                             expect(data).to.be.equal("shutting down\n".repeat(s));
                         }
                     }
@@ -1562,7 +1562,7 @@ describe("Process manager", () => {
                     const p = new stuff.MainProcess({}, config);
                     await p.attach(_p.pid, "master2");
                     await p.exit({ graceful: true });
-                    const data = await adone.std.fs.readFileAsync(stdout, "utf-8");
+                    const data = await adone.fs.readFile(stdout, { encoding: "utf-8" });
                     expect(data).to.be.equal("shutting down\n".repeat(4));
                 });
             });

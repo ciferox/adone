@@ -1327,7 +1327,7 @@ describe("Database", () => {
 
                 expect(d.getAllData()).to.be.empty;
 
-                await adone.std.fs.writeFileAsync(testDb, rawData, "utf8");
+                await adone.fs.writeFile(testDb, rawData, "utf8");
                 await d.load();
 
                 expect(d.getAllData()).to.have.lengthOf(3);
@@ -1379,7 +1379,7 @@ describe("Database", () => {
 
                 expect(d.getAllData()).to.be.empty;
 
-                await adone.std.fs.writeFileAsync(testDb, rawData, "utf-8");
+                await adone.fs.writeFile(testDb, rawData, "utf-8");
                 await d.load();
 
                 expect(d.getAllData()).to.have.lengthOf(2);
@@ -1436,7 +1436,7 @@ describe("Database", () => {
                 expect(z.sparse).to.be.false;
                 expect(z.tree.getNumberOfKeys()).to.be.equal(0);
 
-                await adone.std.fs.writeFileAsync(testDb, rawData, "utf8");
+                await adone.fs.writeFile(testDb, rawData, "utf8");
                 await d.load();
                 const doc1 = d.getAllData().find((doc) => doc.z === "1");
                 const doc2 = d.getAllData().find((doc) => doc.z === "2");
@@ -1465,7 +1465,7 @@ describe("Database", () => {
                 expect(a.tree.getNumberOfKeys()).to.be.equal(0);
                 expect(z.tree.getNumberOfKeys()).to.be.equal(0);
 
-                await adone.std.fs.writeFileAsync(testDb, rawData, "utf8");
+                await adone.fs.writeFile(testDb, rawData, "utf8");
                 await d.load();
                 const doc1 = d.getAllData().find((doc) => doc.z === "1");
                 const doc2 = d.getAllData().find((doc) => doc.z === "2");
@@ -1493,7 +1493,7 @@ describe("Database", () => {
                 const z = d.indexes.get("z");
                 expect(z.tree.getNumberOfKeys()).to.be.equal(0);
 
-                await adone.std.fs.writeFileAsync(testDb, rawData, "utf8");
+                await adone.fs.writeFile(testDb, rawData, "utf8");
 
                 try {
                     await d.load();

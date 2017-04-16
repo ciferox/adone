@@ -124,7 +124,7 @@ describe("FileConfiguration", function () {
             const savedConf = new adone.configuration.FileConfiguration(options);
             await savedConf.load(filename);
             assert.deepEqual(savedConf, conf);
-            await adone.std.fs.unlinkAsync(adone.std.path.resolve(options.base, filename));
+            await adone.fs.unlink(adone.std.path.resolve(options.base, filename));
         });
     }
 
@@ -145,7 +145,7 @@ describe("FileConfiguration", function () {
         await conf.save("nested.json", "b.nested");
         const savedConf = new adone.configuration.FileConfiguration(options);
         await savedConf.load("nested.json");
-        await adone.std.fs.unlinkAsync(adone.std.path.resolve(options.base, "nested.json"));
+        await adone.fs.unlink(adone.std.path.resolve(options.base, "nested.json"));
         assert.equal(savedConf.str2, "val2");
         assert.equal(savedConf.num2, 8);
     });

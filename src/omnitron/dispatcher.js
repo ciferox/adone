@@ -138,11 +138,11 @@ export default class Dispatcher {
         }
 
         if (!is.nil(this.descriptors.stdout)) {
-            await adone.std.fs.closeAsync(this.descriptors.stdout);
+            await adone.fs.fd.close(this.descriptors.stdout);
             this.descriptors.stdout = null;
         }
         if (!is.nil(this.descriptors.stderr)) {
-            await adone.std.fs.closeAsync(this.descriptors.stderr);
+            await adone.fs.fd.close(this.descriptors.stderr);
             this.descriptors.stderr = null;
         }
         if (clean) {

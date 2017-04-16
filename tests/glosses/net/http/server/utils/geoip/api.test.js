@@ -14,7 +14,7 @@ describe("glosses", "net", "http", "server", "utils", "geoip", "api", () => {
         it("should successfully handle errors while opening a db", async () => {
             const err = await geoip.open("/foo/bar").then(() => null, (e) => e);
             expect(err).not.to.be.null;
-            expect(err.message).to.be.equal("Invalid database file");
+            expect(err.message).to.be.match(/no such file or directory/);
         });
     });
 

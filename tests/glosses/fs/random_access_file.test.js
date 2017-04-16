@@ -165,11 +165,11 @@ describe("fs", "RandomAccessFile", function() {
         let isOk = true;
         try {
             await file.end();
-            let stats = await adone.std.fs.statAsync(name);
+            let stats = await adone.fs.stat(name);
             assert.deepEqual(stats.atime, atime);
             assert.notDeepEqual(stats.mtime, mtime);
             await file.end({ mtime });
-            stats = await adone.std.fs.statAsync(name);
+            stats = await adone.fs.stat(name);
             assert.deepEqual(stats.mtime, mtime);
             assert.deepEqual(stats.atime, atime);
             await file.close();

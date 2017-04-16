@@ -95,7 +95,7 @@ export default class Persistence {
             return;
         }
 
-        await fs.append(this.filename, toPersist, "utf8");
+        await fs.appendFile(this.filename, toPersist, "utf8");
     }
 
     // From a database's raw data, return the corresponding machine understandable collection
