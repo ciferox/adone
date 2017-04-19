@@ -1,5 +1,28 @@
 const { is, x, text } = adone;
 
+export class Subsystem extends adone.EventEmitter {
+    constructor() {
+        super();
+
+        this.app = this;
+        this._ = this.data = { };
+    }
+
+    initialize() {
+
+    }
+
+    uninitialize() {
+
+    }
+
+    defineCommand(...args) {
+        return this.app.defineCommand(this, ...args);
+    }
+}
+adone.tag.set(Subsystem, adone.tag.SUBSYSTEM);
+
+
 const INTERNAL = Symbol.for("adone:application:internal");
 const UNNAMED = Symbol.for("adone:application:unnamed");
 const EMPTY_VALUE = Symbol.for("adone:application:emptyValue");
@@ -1012,7 +1035,7 @@ const mergeGroupsLists = (a, b) => {
     return result;
 };
 
-export default class Application extends adone.application.Subsystem {
+export class Application extends Subsystem {
     constructor({
         name = adone.std.path.basename(process.argv[1], adone.std.path.extname(process.argv[1])),
         main,
@@ -1900,3 +1923,7 @@ Application.Argument = Argument;
 Application.PositionalArgument = PositionalArgument;
 Application.OptionalArgument = OptionalArgument;
 Application.Command = Command;
+
+adone.lazify({
+    Logger: "./logger"
+}, exports, require);

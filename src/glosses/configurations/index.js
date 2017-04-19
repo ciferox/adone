@@ -1,7 +1,6 @@
-
 const { is } = adone;
 
-export default class Configuration {
+export class Configuration {
     constructor() {
         Object.defineProperty(this, "_", {
             value: {
@@ -111,3 +110,7 @@ export default class Configuration {
     }
 }
 adone.tag.set(Configuration, adone.tag.CONFIGURATION);
+
+adone.lazify({
+    FileConfiguration: "./file_configuration"
+}, exports, require);

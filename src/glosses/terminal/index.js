@@ -266,7 +266,7 @@ const emitKeys = (stream, s) => {
     });
 };
 
-export default class Terminal extends adone.EventEmitter {
+class Terminal extends adone.EventEmitter {
     constructor() {
         super();
 
@@ -1376,7 +1376,7 @@ export default class Terminal extends adone.EventEmitter {
         const self = this;
         const gpmclient = require("./gpmclient");
 
-        if (this.gpm) {return;}
+        if (this.gpm) { return; }
 
         this.gpm = gpmclient();
 
@@ -2796,3 +2796,103 @@ export default class Terminal extends adone.EventEmitter {
     }
 }
 Terminal.prototype.type = "program";
+
+const defaultTerm = new Terminal();
+
+adone.lazify({
+    style: "./styles",
+    Node: "./ui/node",
+    Screen: "./ui/screen",
+    GridLayout: "./ui/layout/grid",
+    CarouselLayout: "./ui/layout/carousel",
+    Separator: "./ui/prompt/separator",
+    Prompt: "./ui/prompt",
+    Progress: "./ui/progress"
+}, defaultTerm, require);
+
+defaultTerm.layout = adone.lazify({
+    Grid: "./ui/layout/grid",
+    Carousel: "./ui/layout/carousel"
+});
+
+defaultTerm.widget = adone.lazify({
+    Element: "./ui/widgets/element",
+    Text: "./ui/widgets/text",
+    Line: "./ui/widgets/line",
+    ScrollableBox: "./ui/widgets/scrollablebox",
+    ScrollableText: "./ui/widgets/scrollabletext",
+    BigText: "./ui/widgets/bigtext",
+    List: "./ui/widgets/list",
+    Form: "./ui/widgets/form",
+    Input: "./ui/widgets/input",
+    TextArea: "./ui/widgets/textarea",
+    TextBox: "./ui/widgets/textbox",
+    Button: "./ui/widgets/button",
+    ProgressBar: "./ui/widgets/progressbar",
+    FileManager: "./ui/widgets/filemanager",
+    CheckBox: "./ui/widgets/checkbox",
+    RadioSet: "./ui/widgets/radioset",
+    RadioButton: "./ui/widgets/radiobutton",
+    Prompt: "./ui/widgets/prompt",
+    Question: "./ui/widgets/question",
+    Message: "./ui/widgets/message",
+    Loading: "./ui/widgets/loading",
+    ListBar: "./ui/widgets/listbar",
+    Log: "./ui/widgets/log",
+    Table: "./ui/widgets/table",
+    ListTable: "./ui/widgets/listtable",
+    Terminal: "./glosses/widgets/Terminal",
+    ANSIImage: "./ui/widgets/ansiimage",
+    OverlayImage: "./ui/widgets/overlayimage",
+    Video: "./ui/widgets/video",
+    Layout: "./ui/widgets/layout",
+    Grid: "./ui/widgets/grid",
+    MultiPage: "./ui/widgets/multipage",
+    TabBar: "./ui/widgets/tabbar",
+    Canvas: "./ui/widgets/canvas",
+    Map: "./ui/widgets/map",
+    Donut: "./ui/widgets/donut",
+    Gauge: "./ui/widgets/gauge",
+    GaugeList: "./ui/widgets/gaugelist",
+    SparkLine: "./ui/widgets/sparkline",
+    ExTable: "./ui/widgets/extable",
+    LCD: "./ui/widgets/lcd",
+    ExLog: "./ui/widgets/exlog",
+    Tree: "./ui/widgets/tree",
+    Markdown: "./ui/widgets/markdown",
+    Picture: "./ui/widgets/picture",
+    BarChart: "./ui/widgets/charts/bar",
+    LineChart: "./ui/widgets/charts/line",
+    StackedBarChart: "./ui/widgets/charts/stackedbar",
+    chart: () => {
+        return adone.lazify({
+            Bar: "./ui/widgets/charts/bar",
+            StackedBar: "./ui/widgets/charts/stackedbar",
+            Line: "./ui/widgets/charts/line"
+        });
+    }
+});
+
+defaultTerm.unicode = require("./ui/unicode");
+defaultTerm.helpers = require("./ui/helpers");
+defaultTerm.helpers.merge(defaultTerm, defaultTerm.helpers);
+
+defaultTerm.prompt = (questions) => {
+    const ui = new defaultTerm.Prompt(adone.lazify({
+        list: "./ui/prompt/species/list",
+        input: "./ui/prompt/species/input",
+        confirm: "./ui/prompt/species/confirm",
+        rawlist: "./ui/prompt/species/rawlist",
+        expand: "./ui/prompt/species/expand",
+        checkbox: "./ui/prompt/species/checkbox",
+        password: "./ui/prompt/species/password",
+        editor: "./ui/prompt/species/editor",
+        autocomplete: "./ui/prompt/species/autocomplete",
+        directory: "./ui/prompt/species/directory"
+    }));
+    const promise = ui.run(questions);
+    promise.ui = ui;
+    return promise;
+};
+
+export default defaultTerm;
