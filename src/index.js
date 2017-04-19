@@ -404,7 +404,8 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         concat: () => (opts) => new adone.stream.ConcatStream(opts),
         MuteStream: "./glosses/streams/mute_stream",
         iconv: "./glosses/streams/iconv",
-        CountingStream: "./glosses/streams/counting_stream"
+        CountingStream: "./glosses/streams/counting_stream",
+        newlineCounter: "./glosses/streams/newline_counter"
     });
 
     adone.metrics = lazify({

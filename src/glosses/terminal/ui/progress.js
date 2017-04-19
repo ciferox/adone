@@ -1,7 +1,5 @@
 const { is, terminal, text: { unicode: { approx, symbol } } } = adone;
 
-const newlineEvent = require("on-new-line");
-
 const placeholder = "\uFFFC";
 let rendering = false;
 const instances = [];
@@ -10,8 +8,7 @@ const beginUpdate = () => rendering = true;
 const endUpdate = () => rendering = false;
 const isUpdating = () => rendering === true;
 
-newlineEvent(terminal.output);
-terminal.output.on("before:newlines", (count) => {
+const newlineHandler = (count) => {
     if (isUpdating() || instances.length === 0) {
         return;
     }
@@ -27,25 +24,18 @@ terminal.output.on("before:newlines", (count) => {
     beginUpdate();
 
     instances.forEach((instance) => {
-
         if (instance.rendered && (!instance.completed || instance.tough)) {
             // clear the rendered bar
             instance.clear();
             instance.origin.row = Math.max(minRow, instance.origin.row - count);
             minRow += instance.rows;
-        } else if (instance.rendered
-            && instance.completed
-            && !instance.tough
-            && !instance.archived
-            && !instance.clean) {
-
+        } else if (instance.rendered && instance.completed && !instance.tough && !instance.archived && !instance.clean) {
             instance.clear();
             instance.origin.row = -instance.rows;
             instance.print(instance.output);
             instance.archived = true;
         }
     });
-
 
     // append empty row for the new lines, the screen will scroll up,
     // then we can move the bars to their's new position.
@@ -60,7 +50,12 @@ terminal.output.on("before:newlines", (count) => {
     terminal.moveTo(current.row - count - 1, current.col - 1);
 
     endUpdate();
-});
+};
+
+adone.stream.newlineCounter.install(terminal.output);
+terminal.output.on("newlines:before", newlineHandler);
+adone.stream.newlineCounter.install(process.stderr);
+process.stderr.on("newlines:before", newlineHandler);
 
 const toFixed = (value, precision) => {
     const power = Math.pow(10, precision);
