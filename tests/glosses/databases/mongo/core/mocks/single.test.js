@@ -123,6 +123,135 @@ describe("mongodb", function () {
                         running = false;
                     }
                 });
+
+                it("Should correctly recover from an immediate shutdown mid insert", async () => {
+                    // Contain mock server
+                    let running = true;
+                    // Current index for the ismaster
+                    let currentStep = 0;
+                    // Should fail due to broken pipe
+                    let brokenPipe = false;
+
+                    // Default message fields
+                    const defaultFields = {
+                        ismaster: true,
+                        maxBsonObjectSize: 16777216,
+                        maxMessageSizeBytes: 48000000,
+                        maxWriteBatchSize: 1000,
+                        localTime: new Date(),
+                        maxWireVersion: 3,
+                        minWireVersion: 0,
+                        ok: 1
+                    };
+
+                    // Primary server states
+                    const serverIsMaster = [lodash.defaults({}, defaultFields)];
+
+                    // Boot the mock
+                    (async () => {
+                        const server = await mockupdb.createServer(37017, "localhost", {
+                            onRead(server, connection, buffer) {
+                                // Force EPIPE error
+                                if (currentStep == 1) {
+                                    // Destroy connection mid write
+                                    connection.destroy();
+                                    // Reset the mock to accept ismasters
+                                    setTimeout(() => {
+                                        currentStep += 1;
+                                    }, 10);
+                                    // Return connection was destroyed
+                                    return true;
+                                }
+                            }
+                        });
+
+                        // Primary state machine
+                        (async () => {
+                            while (running) {
+                                const request = await server.receive();
+                                // Get the document
+                                const doc = request.document;
+                                if (doc.ismaster && currentStep == 0) {
+                                    currentStep += 1;
+                                    request.reply(serverIsMaster[0]);
+                                } else if (doc.insert && currentStep == 2) {
+                                    currentStep += 1;
+                                    request.reply({ ok: 1, n: doc.documents, lastOp: new Date() });
+                                } else if (doc.ismaster) {
+                                    request.reply(serverIsMaster[0]);
+                                }
+                            }
+                        })();
+                    })();
+
+                    // Attempt to connect
+                    const server = new Server({
+                        host: "localhost",
+                        port: "37017",
+                        connectionTimeout: 3000,
+                        socketTimeout: 2000,
+                        size: 1
+                    });
+
+                    // console.log("!!!! server connect")
+                    const docs = [];
+                    // Create big insert message
+                    for (let i = 0; i < 1000; i++) {
+                        docs.push({
+                            a: i,
+                            string: "hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world",
+                            string1: "hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world",
+                            string2: "hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world",
+                            string3: "hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world",
+                            string4: "hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world",
+                            string5: "hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world",
+                            string6: "hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world",
+                            string7: "hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world",
+                            string8: "hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world",
+                            string9: "hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world",
+                            string10: "hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world",
+                            string11: "hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world",
+                            string12: "hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world",
+                            string13: "hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world",
+                            string14: "hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world",
+                            string15: "hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world",
+                            string16: "hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world",
+                            string17: "hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world",
+                            string18: "hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world",
+                            string19: "hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world",
+                            string20: "hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world",
+                            string21: "hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world",
+                            string22: "hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world",
+                            string23: "hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world",
+                            string24: "hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world",
+                            string25: "hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world",
+                            string26: "hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world",
+                            string27: "hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world",
+                            string28: "hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world hello world"
+                        });
+                    }
+
+                    // Add event listeners
+                    server.once("connect", (_server) => {
+                        _server.insert("test.test", docs, (err) => {
+                            // console.log("!!!! insert")
+                            expect(err).to.exist;
+                            brokenPipe = true;
+                        });
+                    });
+
+                    server.on("error", () => { });
+                    server.connect();
+
+                    const _server = await new Promise((resolve) => {
+                        server.once("reconnect", resolve);
+                    });
+
+                    await promisify(_server.insert).call(_server, "test.test", [{ created: new Date() }]);
+                    expect(brokenPipe).to.be.true;
+                    _server.destroy();
+                    running = false;
+                });
             });
         });
     });

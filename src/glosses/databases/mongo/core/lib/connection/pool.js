@@ -76,7 +76,7 @@ const Pool = function (options) {
         noDelay: true,
         // SSL Settings
         ssl: false, checkServerIdentity: true,
-        ca: null, cert: null, key: null, passPhrase: null,
+        ca: null, crl: null, cert: null, key: null, passPhrase: null,
         rejectUnauthorized: false,
         promoteLongs: true,
         promoteValues: true,
@@ -120,6 +120,10 @@ const Pool = function (options) {
         , "plain": new Plain(options.bson), "gssapi": new GSSAPI(options.bson)
         , "sspi": new SSPI(options.bson), "scram-sha-1": new ScramSHA1(options.bson)
     };
+
+    // Contains the reconnect connection
+    this.reconnectConnection = null;
+
 
     // Are we currently authenticating
     this.authenticating = false;
@@ -341,6 +345,8 @@ function attemptReconnect(self) {
                     self.retriesLeft = self.options.reconnectTries;
                     // Push to available connections
                     self.availableConnections.push(connection);
+                    // Set the reconnectConnection to null
+                    self.reconnectConnection = null;
                     // Emit reconnect event
                     self.emit("reconnect", self);
                     // Trigger execute to start everything up again
@@ -350,16 +356,16 @@ function attemptReconnect(self) {
         }
 
         // Create a connection
-        const connection = new Connection(messageHandler(self), self.options);
+        self.reconnectConnection = new Connection(messageHandler(self), self.options);
         // Add handlers
-        connection.on("close", _connectionFailureHandler(self, "close"));
-        connection.on("error", _connectionFailureHandler(self, "error"));
-        connection.on("timeout", _connectionFailureHandler(self, "timeout"));
-        connection.on("parseError", _connectionFailureHandler(self, "parseError"));
+        self.reconnectConnection.on('close', _connectionFailureHandler(self, 'close'));
+        self.reconnectConnection.on('error', _connectionFailureHandler(self, 'error'));
+        self.reconnectConnection.on('timeout', _connectionFailureHandler(self, 'timeout'));
+        self.reconnectConnection.on('parseError', _connectionFailureHandler(self, 'parseError'));
         // On connection
-        connection.on("connect", _connectHandler(self));
+        self.reconnectConnection.on('connect', _connectHandler(self));
         // Attempt connection
-        connection.connect();
+        self.reconnectConnection.connect();
     };
 }
 
@@ -592,6 +598,22 @@ Pool.prototype.connect = function () {
     // Add listeners to the connection
     connection.once("connect", function (connection) {
         if (self.state == DESTROYED || self.state == DESTROYING) return self.destroy();
+
+        // ????
+
+        // If we are in a topology, delegate the auth to it
+        // This is to avoid issues where we would auth against an
+        // arbiter
+        // if (self.options.inTopology) {
+        //     // Set connected mode
+        //     stateTransition(self, CONNECTED);
+
+        //     // Move the active connection
+        //     moveConnectionBetween(connection, self.connectingConnections, self.availableConnections);
+
+        //     // Emit the connect event
+        //     return self.emit('connect', self);
+        // }
 
         // Apply any store credentials
         reauthenticate(self, connection, function (err) {
@@ -832,8 +854,21 @@ Pool.prototype.destroy = function (force) {
         return destroy(self, connections);
     }
 
+    // Clear out the reconnect if set
+    if (this.reconnectId) {
+        clearTimeout(this.reconnectId);
+    }
+
+    // If we have a reconnect connection running, close
+    // immediately
+    if (this.reconnectConnection) {
+        this.reconnectConnection.destroy();
+    }
+
     // Wait for the operations to drain before we close the pool
     function checkStatus() {
+        flushMonitoringOperations(self.queue);
+
         if (self.queue.length == 0) {
             // Get all the known connections
             const connections = self.availableConnections

@@ -15,8 +15,10 @@ const WireProtocol = function () { };
 //
 // Execute a write operation
 const executeWrite = function (pool, bson, type, opsField, ns, ops, options, callback) {
-    if (ops.length == 0) throw new MongoError("insert must contain at least one document");
-    if (typeof options == "function") {
+    if (ops.length == 0) {
+        throw new MongoError("insert must contain at least one document");
+    }
+    if (typeof options === "function") {
         callback = options;
         options = {};
         options = options || {};
@@ -26,7 +28,7 @@ const executeWrite = function (pool, bson, type, opsField, ns, ops, options, cal
     const p = ns.split(".");
     const d = p.shift();
     // Options
-    const ordered = typeof options.ordered == "boolean" ? options.ordered : true;
+    const ordered = typeof options.ordered === "boolean" ? options.ordered : true;
     const writeConcern = options.writeConcern;
 
     // return skeleton
@@ -41,18 +43,27 @@ const executeWrite = function (pool, bson, type, opsField, ns, ops, options, cal
     }
 
     // Do we have bypassDocumentValidation set, then enable it on the write command
-    if (typeof options.bypassDocumentValidation == "boolean") {
+    if (typeof options.bypassDocumentValidation === "boolean") {
         writeCommand.bypassDocumentValidation = options.bypassDocumentValidation;
     }
 
     // Options object
     const opts = { command: true };
     const queryOptions = { checkKeys: false, numberToSkip: 0, numberToReturn: 1 };
-    if (type == "insert") queryOptions.checkKeys = true;
+    if (type == "insert") {
+        queryOptions.checkKeys = true;
+    }
+    if (typeof options.checkKeys === "boolean") {
+        queryOptions.checkKeys = options.checkKeys;
+    }
     // Ensure we support serialization of functions
-    if (options.serializeFunctions) queryOptions.serializeFunctions = options.serializeFunctions;
+    if (options.serializeFunctions) {
+        queryOptions.serializeFunctions = options.serializeFunctions;
+    }
     // Do not serialize the undefined fields
-    if (options.ignoreUndefined) queryOptions.ignoreUndefined = options.ignoreUndefined;
+    if (options.ignoreUndefined) {
+        queryOptions.ignoreUndefined = options.ignoreUndefined;
+    }
 
     try {
         // Create write command
@@ -91,7 +102,9 @@ WireProtocol.prototype.killCursor = function (bson, ns, cursorId, pool, callback
     }
 
     // Callback
-    if (typeof callback == "function") callback(null, null);
+    if (typeof callback === "function") {
+        callback(null, null);
+    }
 };
 
 WireProtocol.prototype.getMore = function (bson, ns, cursorState, batchSize, raw, connection, options, callback) {
@@ -100,7 +113,9 @@ WireProtocol.prototype.getMore = function (bson, ns, cursorState, batchSize, raw
 
     // Query callback
     const queryCallback = function (err, result) {
-        if (err) return callback(err);
+        if (err) {
+            return callback(err);
+        }
         // Get the raw message
         const r = result.message;
 
@@ -110,7 +125,7 @@ WireProtocol.prototype.getMore = function (bson, ns, cursorState, batchSize, raw
         }
 
         // Ensure we have a Long valie cursor id
-        const cursorId = typeof r.cursorId == "number"
+        const cursorId = typeof r.cursorId === "number"
             ? Long.fromNumber(r.cursorId)
             : r.cursorId;
 
@@ -122,26 +137,29 @@ WireProtocol.prototype.getMore = function (bson, ns, cursorState, batchSize, raw
         callback(null, null, r.connection);
     };
 
+    // Contains any query options
+    const queryOptions = {};
+
     // If we have a raw query decorate the function
     if (raw) {
-        queryCallback.raw = raw;
+        queryOptions.raw = raw;
     }
 
     // Check if we need to promote longs
-    if (typeof cursorState.promoteLongs == "boolean") {
-        queryCallback.promoteLongs = cursorState.promoteLongs;
+    if (typeof cursorState.promoteLongs === "boolean") {
+        queryOptions.promoteLongs = cursorState.promoteLongs;
     }
 
-    if (typeof cursorState.promoteValues == "boolean") {
-        queryCallback.promoteValues = cursorState.promoteValues;
+    if (typeof cursorState.promoteValues === "boolean") {
+        queryOptions.promoteValues = cursorState.promoteValues;
     }
 
-    if (typeof cursorState.promoteBuffers == "boolean") {
-        queryCallback.promoteBuffers = cursorState.promoteBuffers;
+    if (typeof cursorState.promoteBuffers === "boolean") {
+        queryOptions.promoteBuffers = cursorState.promoteBuffers;
     }
 
     // Write out the getMore command
-    connection.write(getMore, queryCallback);
+    connection.write(getMore, queryOptions, queryCallback);
 };
 
 WireProtocol.prototype.command = function (bson, ns, cmd, cursorState, topology, options) {
@@ -185,33 +203,53 @@ const setupClassicFind = function (bson, ns, cmd, cursorState, topology, options
 
     // We have a Mongos topology, check if we need to add a readPreference
     if (topology.type == "mongos" && readPreference) {
-        findCmd["$readPreference"] = readPreference.toJSON();
+        findCmd.$readPreference = readPreference.toJSON();
         usesSpecialModifier = true;
     }
 
     // Add special modifiers to the query
-    if (cmd.sort) findCmd["orderby"] = cmd.sort, usesSpecialModifier = true;
-    if (cmd.hint) findCmd["$hint"] = cmd.hint, usesSpecialModifier = true;
-    if (cmd.snapshot) findCmd["$snapshot"] = cmd.snapshot, usesSpecialModifier = true;
-    if (cmd.returnKey) findCmd["$returnKey"] = cmd.returnKey, usesSpecialModifier = true;
-    if (cmd.maxScan) findCmd["$maxScan"] = cmd.maxScan, usesSpecialModifier = true;
-    if (cmd.min) findCmd["$min"] = cmd.min, usesSpecialModifier = true;
-    if (cmd.max) findCmd["$max"] = cmd.max, usesSpecialModifier = true;
-    if (cmd.showDiskLoc) findCmd["$showDiskLoc"] = cmd.showDiskLoc, usesSpecialModifier = true;
-    if (cmd.comment) findCmd["$comment"] = cmd.comment, usesSpecialModifier = true;
-    if (cmd.maxTimeMS) findCmd["$maxTimeMS"] = cmd.maxTimeMS, usesSpecialModifier = true;
+    if (cmd.sort) {
+        findCmd.orderby = cmd.sort, usesSpecialModifier = true;
+    }
+    if (cmd.hint) {
+        findCmd.$hint = cmd.hint, usesSpecialModifier = true;
+    }
+    if (cmd.snapshot) {
+        findCmd.$snapshot = cmd.snapshot, usesSpecialModifier = true;
+    }
+    if (cmd.returnKey) {
+        findCmd.$returnKey = cmd.returnKey, usesSpecialModifier = true;
+    }
+    if (cmd.maxScan) {
+        findCmd.$maxScan = cmd.maxScan, usesSpecialModifier = true;
+    }
+    if (cmd.min) {
+        findCmd.$min = cmd.min, usesSpecialModifier = true;
+    }
+    if (cmd.max) {
+        findCmd.$max = cmd.max, usesSpecialModifier = true;
+    }
+    if (cmd.showDiskLoc) {
+        findCmd.$showDiskLoc = cmd.showDiskLoc, usesSpecialModifier = true;
+    }
+    if (cmd.comment) {
+        findCmd.$comment = cmd.comment, usesSpecialModifier = true;
+    }
+    if (cmd.maxTimeMS) {
+        findCmd.$maxTimeMS = cmd.maxTimeMS, usesSpecialModifier = true;
+    }
 
     if (cmd.explain) {
         // nToReturn must be 0 (match all) or negative (match N and close cursor)
         // nToReturn > 0 will give explain results equivalent to limit(0)
         numberToReturn = -Math.abs(cmd.limit || 0);
         usesSpecialModifier = true;
-        findCmd["$explain"] = true;
+        findCmd.$explain = true;
     }
 
     // If we have a special modifier
     if (usesSpecialModifier) {
-        findCmd["$query"] = cmd.query;
+        findCmd.$query = cmd.query;
     } else {
         findCmd = cmd.query;
     }
@@ -224,44 +262,44 @@ const setupClassicFind = function (bson, ns, cmd, cursorState, topology, options
     // Remove readConcern, ensure no failing commands
     if (cmd.readConcern) {
         cmd = copy(cmd);
-        delete cmd["readConcern"];
+        delete cmd.readConcern;
     }
 
     // Serialize functions
-    const serializeFunctions = typeof options.serializeFunctions == "boolean"
+    const serializeFunctions = typeof options.serializeFunctions === "boolean"
         ? options.serializeFunctions : false;
-    const ignoreUndefined = typeof options.ignoreUndefined == "boolean"
+    const ignoreUndefined = typeof options.ignoreUndefined === "boolean"
         ? options.ignoreUndefined : false;
 
     // Build Query object
     const query = new Query(bson, ns, findCmd, {
-        numberToSkip, numberToReturn
-        , checkKeys: false, returnFieldSelector: cmd.fields
-        , serializeFunctions
-        , ignoreUndefined
+        numberToSkip, numberToReturn,
+        checkKeys: false, returnFieldSelector: cmd.fields,
+        serializeFunctions,
+        ignoreUndefined
     });
 
     // Set query flags
     query.slaveOk = readPreference.slaveOk();
 
     // Set up the option bits for wire protocol
-    if (typeof cmd.tailable == "boolean") {
+    if (typeof cmd.tailable === "boolean") {
         query.tailable = cmd.tailable;
     }
 
-    if (typeof cmd.oplogReplay == "boolean") {
+    if (typeof cmd.oplogReplay === "boolean") {
         query.oplogReplay = cmd.oplogReplay;
     }
 
-    if (typeof cmd.noCursorTimeout == "boolean") {
+    if (typeof cmd.noCursorTimeout === "boolean") {
         query.noCursorTimeout = cmd.noCursorTimeout;
     }
 
-    if (typeof cmd.awaitData == "boolean") {
+    if (typeof cmd.awaitData === "boolean") {
         query.awaitData = cmd.awaitData;
     }
 
-    if (typeof cmd.partial == "boolean") {
+    if (typeof cmd.partial === "boolean") {
         query.partial = cmd.partial;
     }
 
@@ -287,10 +325,10 @@ const setupCommand = function (bson, ns, cmd, cursorState, topology, options) {
     const parts = ns.split(/\./);
 
     // Serialize functions
-    const serializeFunctions = typeof options.serializeFunctions == "boolean"
+    const serializeFunctions = typeof options.serializeFunctions === "boolean"
         ? options.serializeFunctions : false;
 
-    const ignoreUndefined = typeof options.ignoreUndefined == "boolean"
+    const ignoreUndefined = typeof options.ignoreUndefined === "boolean"
         ? options.ignoreUndefined : false;
 
     // Throw on majority readConcern passed in
@@ -299,23 +337,25 @@ const setupCommand = function (bson, ns, cmd, cursorState, topology, options) {
     }
 
     // Remove readConcern, ensure no failing commands
-    if (cmd.readConcern) delete cmd["readConcern"];
+    if (cmd.readConcern) {
+        delete cmd.readConcern;
+    }
 
     // We have a Mongos topology, check if we need to add a readPreference
     if (topology.type == "mongos"
         && readPreference
         && readPreference.preference != "primary") {
         finalCmd = {
-            "$query": finalCmd,
-            "$readPreference": readPreference.toJSON()
+            $query: finalCmd,
+            $readPreference: readPreference.toJSON()
         };
     }
 
     // Build Query object
     const query = new Query(bson, f("%s.$cmd", parts.shift()), finalCmd, {
-        numberToSkip: 0, numberToReturn: -1
-        , checkKeys: false, serializeFunctions
-        , ignoreUndefined
+        numberToSkip: 0, numberToReturn: -1,
+        checkKeys: false, serializeFunctions,
+        ignoreUndefined
     });
 
     // Set query flags

@@ -1195,6 +1195,259 @@ describe("mongodb", function () {
                     server.destroy();
                     running = false;
                 });
+
+                specify("Successful connection to replicaset of 1 primary, 1 secondary and 1 arbiter with secondaryOnlyConnectionAllowed", async () => {
+                    // Contain mock server
+                    let running = true;
+                    const electionIds = [new adone.data.bson.ObjectID(), new adone.data.bson.ObjectID()];
+
+                    // Default message fields
+                    const defaultFields = {
+                        setName: "rs",
+                        setVersion: 1,
+                        electionId: electionIds[0],
+                        maxBsonObjectSize: 16777216,
+                        maxMessageSizeBytes: 48000000,
+                        maxWriteBatchSize: 1000,
+                        localTime: new Date(),
+                        maxWireVersion: 4,
+                        minWireVersion: 0,
+                        ok: 1,
+                        hosts: ["localhost:32000", "localhost:32001", "localhost:32002"],
+                        arbiters: ["localhost:32002"]
+                    };
+
+                    // Primary server states
+                    const primary = [lodash.defaults({
+                        ismaster: true,
+                        secondary: false,
+                        me: "localhost:32000",
+                        primary: "localhost:32000",
+                        tags: { loc: "ny" }
+                    }, defaultFields)];
+
+                    // Primary server states
+                    const firstSecondary = [lodash.defaults({
+                        ismaster: false,
+                        secondary: true,
+                        me: "localhost:32001",
+                        primary: "localhost:32000",
+                        tags: { loc: "sf" }
+                    }, defaultFields)];
+
+                    // Primary server states
+                    const arbiter = [lodash.defaults({
+                        ismaster: false,
+                        secondary: false,
+                        arbiterOnly: true,
+                        me: "localhost:32002",
+                        primary: "localhost:32000"
+                    }, defaultFields)];
+
+                    // Boot the mock
+                    const primaryServer = await mockupdb.createServer(32000, "localhost");
+                    const firstSecondaryServer = await mockupdb.createServer(32001, "localhost");
+                    const arbiterServer = await mockupdb.createServer(32002, "localhost");
+
+                    // Primary state machine
+                    (async () => {
+                        while (running) {
+                            const request = await primaryServer.receive();
+                            const doc = request.document;
+
+                            if (doc.ismaster) {
+                                request.reply(primary[0]);
+                            }
+                        }
+                    })().catch((err) => {
+                        // console.log(err.stack);
+                    });
+
+                    // First secondary state machine
+                    (async () => {
+                        while (running) {
+                            const request = await firstSecondaryServer.receive();
+                            const doc = request.document;
+
+                            if (doc.ismaster) {
+                                request.reply(firstSecondary[0]);
+                            }
+                        }
+                    })().catch((err) => {
+                        // console.log(err.stack);
+                    });
+
+                    // Second secondary state machine
+                    (async () => {
+                        while (running) {
+                            const request = await arbiterServer.receive();
+                            const doc = request.document;
+
+                            if (doc.ismaster) {
+                                request.reply(arbiter[0]);
+                            }
+                        }
+                    })().catch((err) => {
+                        // console.log(err.stack);
+                    });
+
+                    Connection.enableConnectionAccounting();
+                    try {
+
+                        // Attempt to connect
+                        const server = new ReplSet([
+                            { host: "localhost", port: 32000 },
+                            { host: "localhost", port: 32001 },
+                            { host: "localhost", port: 32002 }], {
+                                setName: "rs",
+                                connectionTimeout: 3000,
+                                socketTimeout: 0,
+                                haInterval: 2000,
+                                size: 1,
+                                secondaryOnlyConnectionAllowed: true
+                            });
+
+                        await adone.promise.delay(100);
+
+                        await new Promise((resolve) => {
+                            server.connect();
+                            server.once("connect", resolve);
+                        });
+
+                        await new Promise((resolve) => {
+                            server.on("joined", (_type) => {
+                                if (_type == "arbiter" || _type == "secondary" || _type == "primary") {
+                                    if (server.s.replicaSetState.secondaries.length == 1 &&
+                                        server.s.replicaSetState.arbiters.length == 1 &&
+                                        server.s.replicaSetState.primary) {
+                                        resolve();
+                                    }
+                                }
+                            });
+                        });
+
+                        expect(server.s.replicaSetState.secondaries).to.have.lengthOf(1);
+                        expect(server.s.replicaSetState.secondaries[0].name).to.be.equal("localhost:32001");
+
+                        expect(server.s.replicaSetState.arbiters).to.have.lengthOf(1);
+                        expect(server.s.replicaSetState.arbiters[0].name).to.be.equal("localhost:32002");
+
+                        expect(server.s.replicaSetState.primary).to.exist;
+                        expect(server.s.replicaSetState.primary.name).to.be.equal("localhost:32000");
+
+                        primaryServer.destroy();
+                        firstSecondaryServer.destroy();
+                        arbiterServer.destroy();
+                        server.destroy();
+                        running = false;
+
+                        await adone.promise.delay(1000);
+
+                        expect(Connection.connections()).to.be.empty;
+                    } finally {
+                        Connection.disableConnectionAccounting();
+                    }
+                });
+
+                specify.only("Correctly return lastIsMaster when connected to a secondary only for a replicaset connection", async () => {
+                    // Contain mock server
+                    let running = true;
+                    const electionIds = [new adone.data.bson.ObjectID(), new adone.data.bson.ObjectID()];
+
+                    // Default message fields
+                    const defaultFields = {
+                        setName: "rs",
+                        setVersion: 1,
+                        electionId: electionIds[0],
+                        maxBsonObjectSize: 16777216,
+                        maxMessageSizeBytes: 48000000,
+                        maxWriteBatchSize: 1000,
+                        localTime: new Date(),
+                        maxWireVersion: 4,
+                        minWireVersion: 0,
+                        ok: 1,
+                        hosts: ["localhost:32000", "localhost:32001", "localhost:32002"],
+                        arbiters: ["localhost:32002"]
+                    };
+
+                    // Primary server states
+                    const firstSecondary = [lodash.defaults({
+                        ismaster: false,
+                        secondary: true,
+                        me: "localhost:32001",
+                        primary: "localhost:32000",
+                        tags: { loc: "sf" }
+                    }, defaultFields)];
+
+                    // Primary server states
+                    const arbiter = [lodash.defaults({
+                        ismaster: false,
+                        secondary: false,
+                        arbiterOnly: true,
+                        me: "localhost:32002",
+                        primary: "localhost:32000"
+                    }, defaultFields)];
+
+                    const firstSecondaryServer = await mockupdb.createServer(32001, "localhost");
+                    const arbiterServer = await mockupdb.createServer(32002, "localhost");
+
+                    // First secondary state machine
+                    (async () => {
+                        while (running) {
+                            const request = await firstSecondaryServer.receive();
+                            const doc = request.document;
+
+                            if (doc.ismaster) {
+                                request.reply(firstSecondary[0]);
+                            }
+                        }
+                    })().catch((err) => {
+                        // console.log(err.stack);
+                    });
+
+                    // Second secondary state machine
+                    (async () => {
+                        while (running) {
+                            const request = await arbiterServer.receive();
+                            const doc = request.document;
+
+                            if (doc.ismaster) {
+                                request.reply(arbiter[0]);
+                            }
+                        }
+                    })().catch((err) => {
+                        // console.log(err.stack);
+                    });
+
+                    Connection.enableConnectionAccounting();
+                    try {
+                        // Attempt to connect
+                        const server = new ReplSet([
+                            { host: "localhost", port: 32000 },
+                            { host: "localhost", port: 32001 },
+                            { host: "localhost", port: 32002 }], {
+                                setName: "rs",
+                                connectionTimeout: 3000,
+                                socketTimeout: 0,
+                                haInterval: 2000,
+                                size: 1,
+                                secondaryOnlyConnectionAllowed: true
+                            });
+
+                        await new Promise((resolve) => {
+                            server.connect();
+                            server.once("connect", resolve);
+                        });
+
+                        expect(server.lastIsMaster()).to.exist;
+                        server.destroy();
+                    } finally {
+                        firstSecondaryServer.destroy();
+                        arbiterServer.destroy();
+                        Connection.disableConnectionAccounting();
+                        running = false;
+                    }
+                });
             });
         });
     });

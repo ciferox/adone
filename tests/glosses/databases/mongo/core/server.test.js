@@ -546,5 +546,65 @@ describe("mongodb", function () {
                 server.destroy();
             }
         });
+
+        it("Should correctly promoteValues when calling getMore on queries", async () => {
+            // Attempt to connect
+            const _server = new Server({
+                host: configuration.host,
+                port: configuration.port,
+                size: 10,
+                bson: new BSON()
+            });
+            // Namespace
+            const ns = "integration_tests.remove_example";
+
+            // Add event listeners
+            const server = await new Promise((resolve) => {
+                _server.connect();
+                _server.once("connect", resolve);
+            });
+
+            const docs = new Array(150).fill(0).map((_, i) => {
+                return {
+                    _id: `needle_${i}`,
+                    is_even: i % 2,
+                    long: adone.data.bson.Long.fromString("1234567890"),
+                    double: 0.23456,
+                    int: 1234
+                };
+            });
+
+            await promisify(server.insert).call(server, ns, docs);
+
+            const r = await promisify(server.insert).call(server, ns, docs);
+            expect(r.result.ok).to.be.equal(1);
+
+            // Execute find
+            const cursor = server.cursor(ns, {
+                find: ns,
+                query: {},
+                limit: 102
+            }, {
+                promoteValues: false
+            });
+
+            const next = promisify(cursor.next, { context: cursor });
+
+            let i = 0;
+            for (; ;) {
+                const doc = await next();
+                if (!doc) {
+                    break;
+                }
+                ++i;
+                expect(typeof doc.int).to.be.equal("object");
+                expect(doc.int._bsontype).to.be.equal("Int32");
+                expect(typeof doc.long).to.be.equal("object");
+                expect(doc.long._bsontype).to.be.equal("Long");
+                expect(typeof doc.double).to.be.equal("object");
+                expect(doc.double._bsontype).to.be.equal("Double");
+            }
+            expect(i).to.be.equal(102);
+        });
     });
 });

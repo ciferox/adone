@@ -26,11 +26,13 @@ const WireProtocol = function () { };
 WireProtocol.prototype.insert = function (pool, ismaster, ns, bson, ops, options, callback) {
     options = options || {};
     // Default is ordered execution
-    const ordered = typeof options.ordered == "boolean" ? options.ordered : true;
+    const ordered = typeof options.ordered === "boolean" ? options.ordered : true;
     ops = Array.isArray(ops) ? ops : [ops];
 
     // If we have more than a 1000 ops fails
-    if (ops.length > 1000) return callback(new MongoError("exceeded maximum write batch size of 1000"));
+    if (ops.length > 1000) {
+        return callback(new MongoError("exceeded maximum write batch size of 1000"));
+    }
 
     // Write concern
     const writeConcern = options.writeConcern || { w: 1 };
@@ -46,7 +48,7 @@ WireProtocol.prototype.insert = function (pool, ismaster, ns, bson, ops, options
 WireProtocol.prototype.update = function (pool, ismaster, ns, bson, ops, options, callback) {
     options = options || {};
     // Default is ordered execution
-    const ordered = typeof options.ordered == "boolean" ? options.ordered : true;
+    const ordered = typeof options.ordered === "boolean" ? options.ordered : true;
     ops = Array.isArray(ops) ? ops : [ops];
 
     // Write concern
@@ -63,7 +65,7 @@ WireProtocol.prototype.update = function (pool, ismaster, ns, bson, ops, options
 WireProtocol.prototype.remove = function (pool, ismaster, ns, bson, ops, options, callback) {
     options = options || {};
     // Default is ordered execution
-    const ordered = typeof options.ordered == "boolean" ? options.ordered : true;
+    const ordered = typeof options.ordered === "boolean" ? options.ordered : true;
     ops = Array.isArray(ops) ? ops : [ops];
 
     // Write concern
@@ -88,7 +90,9 @@ WireProtocol.prototype.killCursor = function (bson, ns, cursorId, pool, callback
     }
 
     // Callback
-    if (typeof callback == "function") callback(null, null);
+    if (typeof callback === "function") {
+        callback(null, null);
+    }
 };
 
 WireProtocol.prototype.getMore = function (bson, ns, cursorState, batchSize, raw, connection, options, callback) {
@@ -97,7 +101,9 @@ WireProtocol.prototype.getMore = function (bson, ns, cursorState, batchSize, raw
 
     // Query callback
     const queryCallback = function (err, result) {
-        if (err) return callback(err);
+        if (err) {
+            return callback(err);
+        }
         // Get the raw message
         const r = result.message;
 
@@ -107,7 +113,7 @@ WireProtocol.prototype.getMore = function (bson, ns, cursorState, batchSize, raw
         }
 
         // Ensure we have a Long valie cursor id
-        const cursorId = typeof r.cursorId == "number"
+        const cursorId = typeof r.cursorId === "number"
             ? Long.fromNumber(r.cursorId)
             : r.cursorId;
 
@@ -119,26 +125,29 @@ WireProtocol.prototype.getMore = function (bson, ns, cursorState, batchSize, raw
         callback(null, null, r.connection);
     };
 
+    // Contains any query options
+    const queryOptions = {};
+
     // If we have a raw query decorate the function
     if (raw) {
-        queryCallback.raw = raw;
+        queryOptions.raw = raw;
     }
 
     // Check if we need to promote longs
-    if (typeof cursorState.promoteLongs == "boolean") {
-        queryCallback.promoteLongs = cursorState.promoteLongs;
+    if (typeof cursorState.promoteLongs === "boolean") {
+        queryOptions.promoteLongs = cursorState.promoteLongs;
     }
 
-    if (typeof cursorState.promoteValues == "boolean") {
-        queryCallback.promoteValues = cursorState.promoteValues;
+    if (typeof cursorState.promoteValues === "boolean") {
+        queryOptions.promoteValues = cursorState.promoteValues;
     }
 
-    if (typeof cursorState.promoteBuffers == "boolean") {
-        queryCallback.promoteBuffers = cursorState.promoteBuffers;
+    if (typeof cursorState.promoteBuffers === "boolean") {
+        queryOptions.promoteBuffers = cursorState.promoteBuffers;
     }
 
     // Write out the getMore command
-    connection.write(getMore, queryCallback);
+    connection.write(getMore, queryOptions, queryCallback);
 };
 
 WireProtocol.prototype.command = function (bson, ns, cmd, cursorState, topology, options) {
@@ -182,33 +191,53 @@ const setupClassicFind = function (bson, ns, cmd, cursorState, topology, options
 
     // We have a Mongos topology, check if we need to add a readPreference
     if (topology.type == "mongos" && readPreference) {
-        findCmd["$readPreference"] = readPreference.toJSON();
+        findCmd.$readPreference = readPreference.toJSON();
         usesSpecialModifier = true;
     }
 
     // Add special modifiers to the query
-    if (cmd.sort) findCmd["orderby"] = cmd.sort, usesSpecialModifier = true;
-    if (cmd.hint) findCmd["$hint"] = cmd.hint, usesSpecialModifier = true;
-    if (cmd.snapshot) findCmd["$snapshot"] = cmd.snapshot, usesSpecialModifier = true;
-    if (cmd.returnKey) findCmd["$returnKey"] = cmd.returnKey, usesSpecialModifier = true;
-    if (cmd.maxScan) findCmd["$maxScan"] = cmd.maxScan, usesSpecialModifier = true;
-    if (cmd.min) findCmd["$min"] = cmd.min, usesSpecialModifier = true;
-    if (cmd.max) findCmd["$max"] = cmd.max, usesSpecialModifier = true;
-    if (cmd.showDiskLoc) findCmd["$showDiskLoc"] = cmd.showDiskLoc, usesSpecialModifier = true;
-    if (cmd.comment) findCmd["$comment"] = cmd.comment, usesSpecialModifier = true;
-    if (cmd.maxTimeMS) findCmd["$maxTimeMS"] = cmd.maxTimeMS, usesSpecialModifier = true;
+    if (cmd.sort) {
+        findCmd.orderby = cmd.sort, usesSpecialModifier = true;
+    }
+    if (cmd.hint) {
+        findCmd.$hint = cmd.hint, usesSpecialModifier = true;
+    }
+    if (cmd.snapshot) {
+        findCmd.$snapshot = cmd.snapshot, usesSpecialModifier = true;
+    }
+    if (cmd.returnKey) {
+        findCmd.$returnKey = cmd.returnKey, usesSpecialModifier = true;
+    }
+    if (cmd.maxScan) {
+        findCmd.$maxScan = cmd.maxScan, usesSpecialModifier = true;
+    }
+    if (cmd.min) {
+        findCmd.$min = cmd.min, usesSpecialModifier = true;
+    }
+    if (cmd.max) {
+        findCmd.$max = cmd.max, usesSpecialModifier = true;
+    }
+    if (cmd.showDiskLoc) {
+        findCmd.$showDiskLoc = cmd.showDiskLoc, usesSpecialModifier = true;
+    }
+    if (cmd.comment) {
+        findCmd.$comment = cmd.comment, usesSpecialModifier = true;
+    }
+    if (cmd.maxTimeMS) {
+        findCmd.$maxTimeMS = cmd.maxTimeMS, usesSpecialModifier = true;
+    }
 
     if (cmd.explain) {
         // nToReturn must be 0 (match all) or negative (match N and close cursor)
         // nToReturn > 0 will give explain results equivalent to limit(0)
         numberToReturn = -Math.abs(cmd.limit || 0);
         usesSpecialModifier = true;
-        findCmd["$explain"] = true;
+        findCmd.$explain = true;
     }
 
     // If we have a special modifier
     if (usesSpecialModifier) {
-        findCmd["$query"] = cmd.query;
+        findCmd.$query = cmd.query;
     } else {
         findCmd = cmd.query;
     }
@@ -221,31 +250,41 @@ const setupClassicFind = function (bson, ns, cmd, cursorState, topology, options
     // Remove readConcern, ensure no failing commands
     if (cmd.readConcern) {
         cmd = copy(cmd);
-        delete cmd["readConcern"];
+        delete cmd.readConcern;
     }
 
     // Set up the serialize and ignoreUndefined fields
-    const serializeFunctions = typeof options.serializeFunctions == "boolean"
+    const serializeFunctions = typeof options.serializeFunctions === "boolean"
         ? options.serializeFunctions : false;
-    const ignoreUndefined = typeof options.ignoreUndefined == "boolean"
+    const ignoreUndefined = typeof options.ignoreUndefined === "boolean"
         ? options.ignoreUndefined : false;
 
     // Build Query object
     const query = new Query(bson, ns, findCmd, {
-        numberToSkip, numberToReturn
-        , checkKeys: false, returnFieldSelector: cmd.fields
-        , serializeFunctions, ignoreUndefined
+        numberToSkip, numberToReturn,
+        checkKeys: false, returnFieldSelector: cmd.fields,
+        serializeFunctions, ignoreUndefined
     });
 
     // Set query flags
     query.slaveOk = readPreference.slaveOk();
 
     // Set up the option bits for wire protocol
-    if (typeof cmd.tailable == "boolean") query.tailable = cmd.tailable;
-    if (typeof cmd.oplogReplay == "boolean") query.oplogReplay = cmd.oplogReplay;
-    if (typeof cmd.noCursorTimeout == "boolean") query.noCursorTimeout = cmd.noCursorTimeout;
-    if (typeof cmd.awaitData == "boolean") query.awaitData = cmd.awaitData;
-    if (typeof cmd.partial == "boolean") query.partial = cmd.partial;
+    if (typeof cmd.tailable === "boolean") {
+        query.tailable = cmd.tailable;
+    }
+    if (typeof cmd.oplogReplay === "boolean") {
+        query.oplogReplay = cmd.oplogReplay;
+    }
+    if (typeof cmd.noCursorTimeout === "boolean") {
+        query.noCursorTimeout = cmd.noCursorTimeout;
+    }
+    if (typeof cmd.awaitData === "boolean") {
+        query.awaitData = cmd.awaitData;
+    }
+    if (typeof cmd.partial === "boolean") {
+        query.partial = cmd.partial;
+    }
     // Return the query
     return query;
 };
@@ -272,14 +311,16 @@ const setupCommand = function (bson, ns, cmd, cursorState, topology, options) {
     }
 
     // Remove readConcern, ensure no failing commands
-    if (cmd.readConcern) delete cmd["readConcern"];
+    if (cmd.readConcern) {
+        delete cmd.readConcern;
+    }
 
     // Serialize functions
-    const serializeFunctions = typeof options.serializeFunctions == "boolean"
+    const serializeFunctions = typeof options.serializeFunctions === "boolean"
         ? options.serializeFunctions : false;
 
     // Set up the serialize and ignoreUndefined fields
-    const ignoreUndefined = typeof options.ignoreUndefined == "boolean"
+    const ignoreUndefined = typeof options.ignoreUndefined === "boolean"
         ? options.ignoreUndefined : false;
 
     // We have a Mongos topology, check if we need to add a readPreference
@@ -287,16 +328,16 @@ const setupCommand = function (bson, ns, cmd, cursorState, topology, options) {
         && readPreference
         && readPreference.preference != "primary") {
         finalCmd = {
-            "$query": finalCmd,
-            "$readPreference": readPreference.toJSON()
+            $query: finalCmd,
+            $readPreference: readPreference.toJSON()
         };
     }
 
     // Build Query object
     const query = new Query(bson, f("%s.$cmd", parts.shift()), finalCmd, {
-        numberToSkip: 0, numberToReturn: -1
-        , checkKeys: false, serializeFunctions
-        , ignoreUndefined
+        numberToSkip: 0, numberToReturn: -1,
+        checkKeys: false, serializeFunctions,
+        ignoreUndefined
     });
 
     // Set query flags
@@ -319,10 +360,18 @@ const hasWriteConcern = function (writeConcern) {
 
 const cloneWriteConcern = function (writeConcern) {
     const wc = {};
-    if (writeConcern.w != null) wc.w = writeConcern.w;
-    if (writeConcern.wtimeout != null) wc.wtimeout = writeConcern.wtimeout;
-    if (writeConcern.j != null) wc.j = writeConcern.j;
-    if (writeConcern.fsync != null) wc.fsync = writeConcern.fsync;
+    if (writeConcern.w != null) {
+        wc.w = writeConcern.w;
+    }
+    if (writeConcern.wtimeout != null) {
+        wc.wtimeout = writeConcern.wtimeout;
+    }
+    if (writeConcern.j != null) {
+        wc.j = writeConcern.j;
+    }
+    if (writeConcern.fsync != null) {
+        wc.fsync = writeConcern.fsync;
+    }
     return wc;
 };
 
@@ -363,7 +412,9 @@ const aggregateWriteOperationResults = function (opType, ops, results, connectio
 
         // We have a command error
         if (result != null && result.ok == 0 || result.err || result.errmsg) {
-            if (result.ok == 0) finalResult.ok = 0;
+            if (result.ok == 0) {
+                finalResult.ok = 0;
+            }
             finalResult.code = result.code;
             finalResult.errmsg = result.errmsg || result.err || result.errMsg;
 
@@ -376,26 +427,30 @@ const aggregateWriteOperationResults = function (opType, ops, results, connectio
                 || result.code == 16542
                 || result.code == 14
                 || result.code == 13511) {
-                if (finalResult.writeErrors == null) finalResult.writeErrors = [];
+                if (finalResult.writeErrors == null) {
+                    finalResult.writeErrors = [];
+                }
                 finalResult.writeErrors.push({
-                    index: i
-                    , code: result.code
-                    , errmsg: result.errmsg || result.err || result.errMsg
+                    index: i,
+                    code: result.code,
+                    errmsg: result.errmsg || result.err || result.errMsg
                 });
             } else {
                 finalResult.writeConcernError = {
-                    code: result.code
-                    , errmsg: result.errmsg || result.err || result.errMsg
+                    code: result.code,
+                    errmsg: result.errmsg || result.err || result.errMsg
                 };
             }
-        } else if (typeof result.n == "number") {
+        } else if (typeof result.n === "number") {
             finalResult.n += result.n;
         } else {
             finalResult.n += 1;
         }
 
         // Result as expected
-        if (result != null && result.lastOp) finalResult.lastOp = result.lastOp;
+        if (result != null && result.lastOp) {
+            finalResult.lastOp = result.lastOp;
+        }
     }
 
     // Return finalResult aggregated results
@@ -413,7 +468,7 @@ const executeOrdered = function (opType, command, ismaster, ns, bson, pool, ops,
     const executeOp = function (list, _callback) {
         // No more items in the list
         if (list.length == 0) {
-            return process.nextTick(function () {
+            return process.nextTick(() => {
                 _callback(null, aggregateWriteOperationResults(opType, ops, getLastErrors, null));
             });
         }
@@ -450,7 +505,9 @@ const executeOrdered = function (opType, command, ismaster, ns, bson, pool, ops,
 
             // getLastError callback
             const getLastErrorCallback = function (err, result) {
-                if (err) return callback(err);
+                if (err) {
+                    return callback(err);
+                }
                 // Get the document
                 const doc = result.result;
                 // Save the getLastError document
@@ -470,9 +527,9 @@ const executeOrdered = function (opType, command, ismaster, ns, bson, pool, ops,
         } catch (err) {
             // We have a serialization error, rewrite as a write error to have same behavior as modern
             // write commands
-            getLastErrors.push({ ok: 1, errmsg: typeof err == "string" ? err : err.message, code: 14 });
+            getLastErrors.push({ ok: 1, errmsg: typeof err === "string" ? err : err.message, code: 14 });
             // Return due to an error
-            process.nextTick(function () {
+            process.nextTick(() => {
                 _callback(null, aggregateWriteOperationResults(opType, ops, getLastErrors, null));
             });
         }
@@ -510,8 +567,9 @@ const executeUnordered = function (opType, command, ismaster, ns, bson, pool, op
                 const getLastErrorCmd = { getlasterror: 1 };
                 // Merge all the fields
                 for (let j = 0; j < writeConcernFields.length; j++) {
-                    if (writeConcern[writeConcernFields[j]] != null)
+                    if (writeConcern[writeConcernFields[j]] != null)                        {
                         getLastErrorCmd[writeConcernFields[j]] = writeConcern[writeConcernFields[j]];
+                    }
                 }
 
                 // Create a getLastError command
@@ -522,15 +580,21 @@ const executeUnordered = function (opType, command, ismaster, ns, bson, pool, op
                 // Give the result from getLastError the right index
                 const callbackOp = function (_index) {
                     return function (err, result) {
-                        if (err) error = err;
+                        if (err) {
+                            error = err;
+                        }
                         // Update the number of operations executed
                         totalOps = totalOps - 1;
                         // Save the getLastError document
-                        if (!err) getLastErrors[_index] = result.result;
+                        if (!err) {
+                            getLastErrors[_index] = result.result;
+                        }
                         // Check if we are done
                         if (totalOps == 0) {
-                            process.nextTick(function () {
-                                if (error) return callback(error);
+                            process.nextTick(() => {
+                                if (error) {
+                                    return callback(error);
+                                }
                                 callback(null, aggregateWriteOperationResults(opType, ops, getLastErrors, result.connection));
                             });
                         }
@@ -547,7 +611,7 @@ const executeUnordered = function (opType, command, ismaster, ns, bson, pool, op
             totalOps = totalOps - 1;
             // We have a serialization error, rewrite as a write error to have same behavior as modern
             // write commands
-            getLastErrors[i] = { ok: 1, errmsg: typeof err == "string" ? err : err.message, code: 14 };
+            getLastErrors[i] = { ok: 1, errmsg: typeof err === "string" ? err : err.message, code: 14 };
             // Check if we are done
             if (totalOps == 0) {
                 callback(null, aggregateWriteOperationResults(opType, ops, getLastErrors, null));

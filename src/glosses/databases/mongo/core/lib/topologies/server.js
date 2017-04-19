@@ -17,10 +17,10 @@ const assign = require("./shared").assign;
 const createClientInfo = require("./shared").createClientInfo;
 
 // Used for filtering out fields for loggin
-const debugFields = ["reconnect", "reconnectTries", "reconnectInterval", "emitError", "cursorFactory", "host"
-    , "port", "size", "keepAlive", "keepAliveInitialDelay", "noDelay", "connectionTimeout", "checkServerIdentity"
-    , "socketTimeout", "singleBufferSerializtion", "ssl", "ca", "cert", "key", "rejectUnauthorized", "promoteLongs", "promoteValues"
-    , "promoteBuffers", "servername"];
+const debugFields = ["reconnect", "reconnectTries", "reconnectInterval", "emitError", "cursorFactory", "host",
+    "port", "size", "keepAlive", "keepAliveInitialDelay", "noDelay", "connectionTimeout", "checkServerIdentity",
+    "socketTimeout", "singleBufferSerializtion", "ssl", "ca", "crl", "cert", "key", "rejectUnauthorized", "promoteLongs", "promoteValues",
+    "promoteBuffers", "servername"];
 
 // Server instance id
 let id = 0;
@@ -48,6 +48,7 @@ const BSON = retrieveBSON();
  * @param {boolean} [options.ssl=false] Use SSL for connection
  * @param {boolean|function} [options.checkServerIdentity=true] Ensure we check server identify during SSL, set to false to disable checking. Only works for Node 0.12.x or higher. You can pass in a boolean or your own checkServerIdentity override function.
  * @param {Buffer} [options.ca] SSL Certificate store binary buffer
+ * @param {Buffer} [options.crl] SSL Certificate revocation store binary buffer
  * @param {Buffer} [options.cert] SSL Certificate binary buffer
  * @param {Buffer} [options.key] SSL Key file binary buffer
  * @param {string} [options.passphrase] SSL Certificate pass phrase
@@ -99,11 +100,11 @@ const Server = function (options) {
         // Disconnect handler
         disconnectHandler: options.disconnectHandler,
         // Monitor thread (keeps the connection alive)
-        monitoring: typeof options.monitoring == "boolean" ? options.monitoring : true,
+        monitoring: typeof options.monitoring === "boolean" ? options.monitoring : true,
         // Is the server in a topology
-        inTopology: typeof options.inTopology == "boolean" ? options.inTopology : false,
+        inTopology: typeof options.inTopology === "boolean" ? options.inTopology : false,
         // Monitoring timeout
-        monitoringInterval: typeof options.monitoringInterval == "number"
+        monitoringInterval: typeof options.monitoringInterval === "number"
             ? options.monitoringInterval
             : 5000,
         // Topology id
@@ -138,11 +139,13 @@ const Server = function (options) {
 inherits(Server, EventEmitter);
 
 Object.defineProperty(Server.prototype, "type", {
-    enumerable: true, get () { return this._type; }
+    enumerable: true, get() {
+        return this._type;
+    }
 });
 
 Object.defineProperty(Server.prototype, "parserType", {
-    enumerable: true, get () {
+    enumerable: true, get() {
         return BSON.native ? "c++" : "js";
     }
 });
@@ -162,7 +165,9 @@ Server.servers = function () {
 
 Object.defineProperty(Server.prototype, "name", {
     enumerable: true,
-    get () { return this.s.options.host + ":" + this.s.options.port; }
+    get() {
+        return `${this.s.options.host}:${this.s.options.port}`;
+    }
 });
 
 function configureWireProtocolHandler(self, ismaster) {
@@ -198,7 +203,9 @@ function disconnectHandler(self, type, ns, cmd, options, callback) {
 function monitoringProcess(self) {
     return function () {
         // Pool was destroyed do not continue process
-        if (self.s.pool.isDestroyed()) return;
+        if (self.s.pool.isDestroyed()) {
+            return;
+        }
         // Emit monitoring Process event
         self.emit("monitoring", self);
         // Perform ismaster call
@@ -211,11 +218,14 @@ function monitoringProcess(self) {
 
         // Execute the ismaster query
         self.s.pool.write(query, {
-            socketTimeout: self.s.options.connectionTimeout || 2000
-        }, function (err, result) {
+            socketTimeout: (typeof self.s.options.connectionTimeout !== "number") ? 2000 : self.s.options.connectionTimeout,
+            monitoring: true
+        }, (err, result) => {
             // Set initial lastIsMasterMS
             self.lastIsMasterMS = new Date().getTime() - start;
-            if (self.s.pool.isDestroyed()) return;
+            if (self.s.pool.isDestroyed()) {
+                return;
+            }
             // Update the ismaster view if we have a result
             if (result) {
                 self.ismaster = result.result;
@@ -247,12 +257,14 @@ const eventHandler = function (self, event) {
             // Execute the ismaster query
             self.s.pool.write(query, {
                 socketTimeout: self.s.options.connectionTimeout || 2000
-            }, function (err, result) {
+            }, (err, result) => {
                 // Set initial lastIsMasterMS
                 self.lastIsMasterMS = new Date().getTime() - start;
                 if (err) {
                     self.destroy();
-                    if (self.listeners("error").length > 0) self.emit("error", err);
+                    if (self.listeners("error").length > 0) {
+                        self.emit("error", err);
+                    }
                     return;
                 }
 
@@ -318,7 +330,7 @@ const eventHandler = function (self, event) {
             // On first connect fail
             if (self.s.pool.state == "disconnected" && self.initalConnect && ["close", "timeout", "error", "parseError"].indexOf(event) != -1) {
                 self.initalConnect = false;
-                return self.emit("error", new MongoError(f("failed to connect to server [%s] on first connect", self.name)));
+                return self.emit("error", new MongoError(f("failed to connect to server [%s] on first connect [%s]", self.name, err)));
             }
 
             // Reconnect event, emit the server
@@ -342,7 +354,9 @@ Server.prototype.connect = function (options) {
     options = options || {};
 
     // Set the connections
-    if (serverAccounting) servers[this.id] = this;
+    if (serverAccounting) {
+        servers[this.id] = this;
+    }
 
     // Do not allow connect to be called on anything that's not disconnected
     if (self.s.pool && !self.s.pool.isDisconnected() && !self.s.pool.isDestroyed()) {
@@ -393,10 +407,18 @@ Server.prototype.getDescription = function () {
     };
 
     // Add fields if available
-    if (ismaster.hosts) description.hosts = ismaster.hosts;
-    if (ismaster.arbiters) description.arbiters = ismaster.arbiters;
-    if (ismaster.passives) description.passives = ismaster.passives;
-    if (ismaster.setName) description.setName = ismaster.setName;
+    if (ismaster.hosts) {
+        description.hosts = ismaster.hosts;
+    }
+    if (ismaster.arbiters) {
+        description.arbiters = ismaster.arbiters;
+    }
+    if (ismaster.passives) {
+        description.passives = ismaster.passives;
+    }
+    if (ismaster.setName) {
+        description.setName = ismaster.setName;
+    }
     return description;
 };
 
@@ -423,7 +445,9 @@ Server.prototype.unref = function () {
  * @return {boolean}
  */
 Server.prototype.isConnected = function () {
-    if (!this.s.pool) return false;
+    if (!this.s.pool) {
+        return false;
+    }
     return this.s.pool.isConnected();
 };
 
@@ -433,13 +457,19 @@ Server.prototype.isConnected = function () {
  * @return {boolean}
  */
 Server.prototype.isDestroyed = function () {
-    if (!this.s.pool) return false;
+    if (!this.s.pool) {
+        return false;
+    }
     return this.s.pool.isDestroyed();
 };
 
 function basicWriteValidations(self) {
-    if (!self.s.pool) return MongoError.create("server instance is not connected");
-    if (self.s.pool.isDestroyed()) return MongoError.create("server instance pool was destroyed");
+    if (!self.s.pool) {
+        return MongoError.create("server instance is not connected");
+    }
+    if (self.s.pool.isDestroyed()) {
+        return MongoError.create("server instance pool was destroyed");
+    }
 }
 
 function basicReadValidations(self, options) {
@@ -457,23 +487,35 @@ function basicReadValidations(self, options) {
  * @param {object} cmd The command hash
  * @param {ReadPreference} [options.readPreference] Specify read preference if command supports it
  * @param {Boolean} [options.serializeFunctions=false] Specify if functions on an object should be serialized.
+ * @param {Boolean} [options.checkKeys=false] Specify if the bson parser should validate keys.
  * @param {Boolean} [options.ignoreUndefined=false] Specify if the BSON serializer should ignore undefined fields.
  * @param {Boolean} [options.fullResult=false] Return the full envelope instead of just the result document.
  * @param {opResultCallback} callback A callback function
  */
 Server.prototype.command = function (ns, cmd, options, callback) {
     const self = this;
-    if (typeof options == "function") callback = options, options = {}, options = options || {};
+    if (typeof options === "function") {
+        callback = options, options = {}, options = options || {};
+    }
     const result = basicReadValidations(self, options);
-    if (result) return callback(result);
+    if (result) {
+        return callback(result);
+    }
+
+    // Clone the options
+    options = assign({}, options, { wireProtocolCommand: false });
 
     // Debug log
-    if (self.s.logger.isDebug()) self.s.logger.debug(f("executing command [%s] against %s", JSON.stringify({
-        ns, cmd, options: debugOptions(debugFields, options)
-    }), self.name));
+    if (self.s.logger.isDebug()) {
+        self.s.logger.debug(f("executing command [%s] against %s", JSON.stringify({
+            ns, cmd, options: debugOptions(debugFields, options)
+        }), self.name));
+    }
 
     // If we are not connected or have a disconnectHandler specified
-    if (disconnectHandler(self, "command", ns, cmd, options, callback)) return;
+    if (disconnectHandler(self, "command", ns, cmd, options, callback)) {
+        return;
+    }
 
     // Check if we have collation support
     if (this.ismaster && this.ismaster.maxWireVersion < 5 && cmd.collation) {
@@ -484,27 +526,29 @@ Server.prototype.command = function (ns, cmd, options, callback) {
     const queryOptions = {
         numberToSkip: 0,
         numberToReturn: -1,
-        checkKeys: typeof options.checkKeys == "boolean" ? options.checkKeys : false,
-        serializeFunctions: typeof options.serializeFunctions == "boolean" ? options.serializeFunctions : false,
-        ignoreUndefined: typeof options.ignoreUndefined == "boolean" ? options.ignoreUndefined : false
+        checkKeys: typeof options.checkKeys === "boolean" ? options.checkKeys : false,
+        serializeFunctions: typeof options.serializeFunctions === "boolean" ? options.serializeFunctions : false,
+        ignoreUndefined: typeof options.ignoreUndefined === "boolean" ? options.ignoreUndefined : false
     };
 
-    // Create a query instance
-    const query = new Query(self.s.bson, ns, cmd, queryOptions);
+    // Are we executing against a specific topology
+    const topology = options.topology || {};
+    // Create the query object
+    const query = self.wireProtocolHandler.command(self.s.bson, ns, cmd, {}, topology, options);
     // Set slave OK of the query
     query.slaveOk = options.readPreference ? options.readPreference.slaveOk() : false;
 
     // Write options
     const writeOptions = {
-        raw: typeof options.raw == "boolean" ? options.raw : false,
-        promoteLongs: typeof options.promoteLongs == "boolean" ? options.promoteLongs : true,
-        promoteValues: typeof options.promoteValues == "boolean" ? options.promoteValues : true,
-        promoteBuffers: typeof options.promoteBuffers == "boolean" ? options.promoteBuffers : false,
+        raw: typeof options.raw === "boolean" ? options.raw : false,
+        promoteLongs: typeof options.promoteLongs === "boolean" ? options.promoteLongs : true,
+        promoteValues: typeof options.promoteValues === "boolean" ? options.promoteValues : true,
+        promoteBuffers: typeof options.promoteBuffers === "boolean" ? options.promoteBuffers : false,
         command: true,
-        monitoring: typeof options.monitoring == "boolean" ? options.monitoring : false,
-        fullResult: typeof options.fullResult == "boolean" ? options.fullResult : false,
+        monitoring: typeof options.monitoring === "boolean" ? options.monitoring : false,
+        fullResult: typeof options.fullResult === "boolean" ? options.fullResult : false,
         requestId: query.requestId,
-        socketTimeout: typeof options.socketTimeout == "number" ? options.socketTimeout : null
+        socketTimeout: typeof options.socketTimeout === "number" ? options.socketTimeout : null
     };
 
     // Write the operation to the pool
@@ -524,12 +568,18 @@ Server.prototype.command = function (ns, cmd, options, callback) {
  */
 Server.prototype.insert = function (ns, ops, options, callback) {
     const self = this;
-    if (typeof options == "function") callback = options, options = {}, options = options || {};
+    if (typeof options === "function") {
+        callback = options, options = {}, options = options || {};
+    }
     const result = basicWriteValidations(self, options);
-    if (result) return callback(result);
+    if (result) {
+        return callback(result);
+    }
 
     // If we are not connected or have a disconnectHandler specified
-    if (disconnectHandler(self, "insert", ns, ops, options, callback)) return;
+    if (disconnectHandler(self, "insert", ns, ops, options, callback)) {
+        return;
+    }
 
     // Setup the docs as an array
     ops = Array.isArray(ops) ? ops : [ops];
@@ -551,12 +601,18 @@ Server.prototype.insert = function (ns, ops, options, callback) {
  */
 Server.prototype.update = function (ns, ops, options, callback) {
     const self = this;
-    if (typeof options == "function") callback = options, options = {}, options = options || {};
+    if (typeof options === "function") {
+        callback = options, options = {}, options = options || {};
+    }
     const result = basicWriteValidations(self, options);
-    if (result) return callback(result);
+    if (result) {
+        return callback(result);
+    }
 
     // If we are not connected or have a disconnectHandler specified
-    if (disconnectHandler(self, "update", ns, ops, options, callback)) return;
+    if (disconnectHandler(self, "update", ns, ops, options, callback)) {
+        return;
+    }
 
     // Check if we have collation support
     if (this.ismaster && this.ismaster.maxWireVersion < 5 && options.collation) {
@@ -582,12 +638,18 @@ Server.prototype.update = function (ns, ops, options, callback) {
  */
 Server.prototype.remove = function (ns, ops, options, callback) {
     const self = this;
-    if (typeof options == "function") callback = options, options = {}, options = options || {};
+    if (typeof options === "function") {
+        callback = options, options = {}, options = options || {};
+    }
     const result = basicWriteValidations(self, options);
-    if (result) return callback(result);
+    if (result) {
+        return callback(result);
+    }
 
     // If we are not connected or have a disconnectHandler specified
-    if (disconnectHandler(self, "remove", ns, ops, options, callback)) return;
+    if (disconnectHandler(self, "remove", ns, ops, options, callback)) {
+        return;
+    }
 
     // Check if we have collation support
     if (this.ismaster && this.ismaster.maxWireVersion < 5 && options.collation) {
@@ -678,8 +740,12 @@ Server.prototype.auth = function (mechanism, db) {
  * @return {boolean}
  */
 Server.prototype.equals = function (server) {
-    if(typeof server == 'string') return this.name.toLowerCase() == server.toLowerCase();
-    if(server.name) return this.name.toLowerCase() == server.name.toLowerCase();
+    if (typeof server === "string") {
+        return this.name.toLowerCase() == server.toLowerCase();
+    }
+    if (server.name) {
+        return this.name.toLowerCase() == server.name.toLowerCase();
+    }
     return false;
 };
 
@@ -724,7 +790,9 @@ Server.prototype.destroy = function (options) {
     const self = this;
 
     // Set the connections
-    if (serverAccounting) delete servers[this.id];
+    if (serverAccounting) {
+        delete servers[this.id];
+    }
 
     // Destroy the monitoring process if any
     if (this.monitoringProcessId) {
@@ -732,7 +800,9 @@ Server.prototype.destroy = function (options) {
     }
 
     // No pool, return
-    if (!self.s.pool) return;
+    if (!self.s.pool) {
+        return;
+    }
 
     // Emit close event
     if (options.emitClose) {
@@ -745,14 +815,16 @@ Server.prototype.destroy = function (options) {
     }
 
     // Remove all listeners
-    listeners.forEach(function (event) {
+    listeners.forEach((event) => {
         self.s.pool.removeAllListeners(event);
     });
 
     // Emit opening server event
-    if (self.listeners("serverClosed").length > 0) self.emit("serverClosed", {
-        topologyId: self.s.topologyId != -1 ? self.s.topologyId : self.id, address: self.name
-    });
+    if (self.listeners("serverClosed").length > 0) {
+        self.emit("serverClosed", {
+            topologyId: self.s.topologyId != -1 ? self.s.topologyId : self.id, address: self.name
+        });
+    }
 
     // Emit toplogy opening event if not in topology
     if (self.listeners("topologyClosed").length > 0 && !self.s.inTopology) {
