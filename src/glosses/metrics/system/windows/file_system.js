@@ -4,7 +4,7 @@ const { is } = adone;
 export default class WindowsFS extends adone.metrics.FileSystem {
     getFileStores() {
         const stores = [];
-        const volumes = adone.native.system.getLocalVolumes();
+        const volumes = adone.metrics.native.getLocalVolumes();
 
         for (let i = 0; i < volumes.length; i++) {
             const volume = volumes[i];

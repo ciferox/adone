@@ -40,7 +40,7 @@ export default class LinuxFS extends adone.metrics.FileSystem {
             } else {
                 uuid = "";
             }
-            const diskInfo = await adone.native.system.diskCheck(path);
+            const diskInfo = await adone.metrics.native.diskCheck(path);
             const totalSpace = diskInfo.total;
             const usableSpace = diskInfo.total - diskInfo.free;
             let description;

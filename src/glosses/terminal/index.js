@@ -2571,7 +2571,7 @@ class Terminal extends adone.EventEmitter {
     }
 
     getCursorPos() {
-        return adone.native.terminal.getCursorPos();
+        return adone.terminal.native.getCursorPos();
     }
 
     saveCursor(key) {
@@ -2800,6 +2800,7 @@ Terminal.prototype.type = "program";
 const defaultTerm = new Terminal();
 
 adone.lazify({
+    native: () => adone.bind("terminal.node").Terminal,
     style: "./styles",
     Node: "./ui/node",
     Screen: "./ui/screen",

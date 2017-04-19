@@ -9,7 +9,7 @@ export default class WindowsOS extends adone.metrics.OS {
 
         this.manufacturer = "Microsoft";
         this.family = "Windows";
-        const versionInfo = adone.native.system.getVersionInfo();
+        const versionInfo = adone.metrics.native.getVersionInfo();
         this.version = versionInfo.version;
         this.codeName = versionInfo.codeName;
         this.buildNumber = versionInfo.buildNumber;
@@ -21,7 +21,7 @@ export default class WindowsOS extends adone.metrics.OS {
 
     getProcesses(limit = Number.MAX_SAFE_INTEGER, sort = adone.metrics.OS.SORT_OLDEST) {
         const procs = [];
-        const list = adone.native.system.getProcesses();
+        const list = adone.metrics.native.getProcesses();
         const now = (new Date()).getTime();
 
         for (let i = 0; i < list.length; i++) {
@@ -36,7 +36,7 @@ export default class WindowsOS extends adone.metrics.OS {
             if (!is.number(pid)) {
                 return null;
             }
-            const pi = adone.native.system.getProcess(pid);
+            const pi = adone.metrics.native.getProcess(pid);
             return this._createProcess(pi);
         } catch (err) {
             return null;
@@ -44,11 +44,11 @@ export default class WindowsOS extends adone.metrics.OS {
     }
 
     getProcessCount() {
-        return adone.native.system.getProcessCount();
+        return adone.metrics.native.getProcessCount();
     }
 
     async getThreadCount() {
-        return adone.native.system.getThreadCount();
+        return adone.metrics.native.getThreadCount();
     }
 
     _createProcess(pi, now = (new Date()).getTime()) {

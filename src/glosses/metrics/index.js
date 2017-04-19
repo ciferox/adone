@@ -1,4 +1,5 @@
 adone.lazify({
+    native: () => adone.bind("metrics.node").System,
     OS: "./system/operating_system",
     HAL: "./hardware/hal",
     FileSystem: "./system/file_system",

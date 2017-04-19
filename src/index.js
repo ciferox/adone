@@ -85,42 +85,41 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         }
     });
 
-    adone.std = adone.lazify({
-        assert: "assert",
-        fs: "fs",
-        path: "path",
-        util: "util",
-        events: "events",
-        stream: "stream",
-        url: "url",
-        net: "net",
-        http: "http",
-        https: "https",
-        child_process: "child_process", // eslint-disable-line
-        os: "os",
-        cluster: "cluster",
-        repl: "repl",
-        punycode: "punycode",
-        readline: "readline",
-        string_decoder: "string_decoder",  // eslint-disable-line
-        querystring: "querystring",
-        crypto: "crypto",
-        vm: "vm",
-        v8: "v8",
-        domain: "domain",
-        module: "module",
-        tty: "tty",
-        buffer: "buffer",
-        constants: "constants",
-        zlib: "zlib",
-        tls: "tls",
-        console: "console",
-        dns: "dns",
-        timers: "timers",
-        dgram: "dgram"
-    });
-
     adone.lazify({
+        std: () => adone.lazify({
+            assert: "assert",
+            fs: "fs",
+            path: "path",
+            util: "util",
+            events: "events",
+            stream: "stream",
+            url: "url",
+            net: "net",
+            http: "http",
+            https: "https",
+            child_process: "child_process", // eslint-disable-line
+            os: "os",
+            cluster: "cluster",
+            repl: "repl",
+            punycode: "punycode",
+            readline: "readline",
+            string_decoder: "string_decoder",  // eslint-disable-line
+            querystring: "querystring",
+            crypto: "crypto",
+            vm: "vm",
+            v8: "v8",
+            domain: "domain",
+            module: "module",
+            tty: "tty",
+            buffer: "buffer",
+            constants: "constants",
+            zlib: "zlib",
+            tls: "tls",
+            console: "console",
+            dns: "dns",
+            timers: "timers",
+            dgram: "dgram"
+        }),
         run: () => (App) => (new App()).run(),
         package: "../package.json",
         assertion: "./glosses/assertion",
@@ -199,10 +198,6 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         netron: "./glosses/netron",
         metrics: "./glosses/metrics",
         shell: "./glosses/shell",
-        native: () => adone.lazify({
-            terminal: () => adone.bind("terminal.node").Terminal,
-            system: () => adone.bind("metrics.node").System
-        }),
         vendor: "./glosses/vendor",
         virt: "./glosses/virt",
         vault: "./glosses/vault",
