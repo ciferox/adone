@@ -1,138 +1,138 @@
-const { is, fs, js: { compiler: { traverse } } } = adone;
+const { fs, js: { compiler: { traverse } } } = adone;
+
+const STATE_PROGRAM = 1;
+const STATE_IF_STMT = 2;
+const STATE_UNARY_EXPR = 3;
+const STATE_CONSEQUENT_BLOCK = 4;
+const STATE_ADONE_DECL = 5;
+const STATE_ADONE_PROTO = 6;
+const STATE_LAZY_DEFS = 7;
+const STATE_ADONE_LAZIFIERS = 8;
 
 export default class XAdoneModule extends adone.meta.code.Module {
     async load() {
         this.code = await fs.readFile(this.filePath, { check: true, encoding: "utf8" });
         this.init();
 
+        this.adoneProto = {};
+
         const lazies = [];
 
-        let isIndexFile = false;
-        let isConsequent = false;
-        let consequentBlock = null;
+        let traverseState;
 
         traverse(this.ast, {
             enter: (path) => {
                 const nodeType = path.node.type;
-                if (nodeType === "Program") {
-                    return;
-                } else if (nodeType === "ExpressionStatement" && this._isLazifier(path.node.expression)) {
-                    // Process adone lazyfier
-                    const callExpr = path.node.expression;
-                    if (adone.meta.code.nodeInfo(callExpr.arguments[0]) === "ObjectExpression" &&
-                        adone.meta.code.nodeInfo(callExpr.arguments[1]) === "Identifier:exports" &&
-                        adone.meta.code.nodeInfo(callExpr.arguments[2]) === "Identifier:require") {
-
-                        const props = callExpr.arguments[0].properties;
-                        const basePath = adone.std.path.dirname(this.filePath);
-
-                        for (const prop of props) {
-                            const name = prop.key.name;
-                            const fullName = `${this.nsName}.${name}`;
-                            const { namespace, objectName } = adone.meta.parseName(fullName);
-                            if (namespace === this.nsName) {
-                                if (prop.value.type === "StringLiteral") {
-                                    lazies.push({ name: objectName, path: adone.std.path.join(basePath, prop.value.value) });
-                                }
-                            }
-                        }
-                    }
-                } else if (nodeType === "IfStatement") {
-                    const relIndexPath = adone.std.path.normalize("/adone/src/index.js");
-                    if (this.filePath.endsWith(relIndexPath)) {
-                        isIndexFile = true;
+                switch (nodeType) {
+                    case "Program": {
+                        traverseState = STATE_PROGRAM;
                         return;
                     }
-                }
-
-                if (isIndexFile) {
-                    if (!isConsequent) {
-                        if (nodeType === "UnaryExpression") {
+                    case "ExpressionStatement": {
+                        if (traverseState === STATE_PROGRAM) {
                             path.skip();
                             return;
+                        }
+                        break;
+                    }
+                    case "IfStatement": {
+                        if (traverseState === STATE_PROGRAM) {
+                            traverseState = STATE_IF_STMT;
+                        }
+                        return;
+                    }
+                    case "UnaryExpression": {
+                        if (traverseState === STATE_IF_STMT) {
+                            traverseState = STATE_UNARY_EXPR;
+                        }
+                        path.skip();
+                        return;
+                    }
+                    case "BlockStatement": {
+                        if (traverseState === STATE_UNARY_EXPR) {
+                            traverseState = STATE_CONSEQUENT_BLOCK;
                         } else {
-                            isConsequent = true;
-                            consequentBlock = path.node;
+                            path.skip();
+                        }
+                        return;
+                    }
+                    case "VariableDeclaration": {
+                        if (traverseState < STATE_CONSEQUENT_BLOCK) {
+                            path.skip();
+                        } else {
+                            traverseState = STATE_ADONE_DECL;
+                        }
+                        return;
+                    }
+                    case "ObjectExpression": {
+                        if (traverseState === STATE_ADONE_DECL) {
+                            traverseState = STATE_ADONE_PROTO;
+                            return;
+                        } else if (traverseState === STATE_LAZY_DEFS) {
+                            traverseState = STATE_ADONE_LAZIFIERS;
                             return;
                         }
+                        break;
+                    }
+                    case "ObjectProperty": {
+                        if (traverseState === STATE_ADONE_PROTO) {
+                            const node = path.node;
+                            let protoPath;
+                            path.traverse({
+                                enter: (subPath) => {
+                                    if (subPath.node.type === "Identifier") {
+                                        subPath.skip();
+                                        return;
+                                    }
+                                    protoPath = subPath;
+                                    subPath.stop();
+                                }
+                            });
+                            const xObj = this.createXObject({ path: protoPath, ast: protoPath.node, xModule: this });
+                            xObj.adoneProto = true;
+                            this.adoneProto[node.key.name] = xObj;
+                            adone.log(node.key.name);
+                            path.skip();
+                            return;
+                        } else if (traverseState === STATE_ADONE_LAZIFIERS) {
+                            const basePath = adone.std.path.dirname(this.filePath);
+                            const node = path.node;
+                            const name = node.key.name;
+                            const fullName = `adone.${name}`;
+                            const { namespace, objectName } = adone.meta.parseName(fullName);
+                            if (namespace === "adone") {
+                                if (node.value.type === "StringLiteral") {
+                                    adone.log(namespace, objectName);
+                                    lazies.push({ name: objectName, path: adone.std.path.join(basePath, node.value.value) });
+                                }
+                            }
+                            path.skip();
+                            return;
+                        }
+                        break;
+                    }
+                    case "CallExpression": {
+                        if (traverseState === STATE_CONSEQUENT_BLOCK) {
+                            if (this._getMemberExpressionName(path.node.callee) === "adone.lazify" && path.node.arguments.length >= 2 &&
+                                path.node.arguments[1].type === "Identifier" && path.node.arguments[1].name === "adone") {
+                                traverseState = STATE_LAZY_DEFS;
+                            }
+                            return;
+                        }
+                        break;
                     }
                 }
-
-                if (isIndexFile && path.parent !== consequentBlock) {
-                    path.skip();
-                    return;
-                }
-
-                // adone.log(nodeType);
-
-                let isDefault = undefined;
-                const expandDeclaration = (realPath) => {
-                    const node = realPath.node;
-
-                    if (["ExportDefaultDeclaration", "ExportNamedDeclaration"].includes(node.type)) {
-                        isDefault = (node.type === "ExportDefaultDeclaration");
-                        let subPath;
-                        realPath.traverse({
-                            enter(p) {
-                                subPath = p;
-                                p.stop();
-                            }
-                        });
-                        return expandDeclaration(subPath);
-                    } else if (node.type === "VariableDeclaration") {
-                        if (node.declarations.length > 1) {
-                            throw new SyntaxError("Detected unsupported declaration of multiple variables.");
+            },
+            exit: (path) => {
+                const nodeType = path.node.type;
+                switch (nodeType) {
+                    case "ObjectExpression": {
+                        if (traverseState === STATE_ADONE_PROTO) {
+                            traverseState = STATE_CONSEQUENT_BLOCK;
                         }
-                        this._traverseVariableDeclarator(node.declarations[0], node.kind);
-                        realPath.traverse({
-                            enter(subPath) {
-                                realPath = subPath;
-                                subPath.stop();
-                            }
-                        });
-                    }
-
-                    return realPath;
-                };
-
-                const realPath = expandDeclaration(path);
-                const node = realPath.node;
-                const xObjData = {
-                    ast: node,
-                    path: realPath,
-                    xModule: this
-                };
-                if (nodeType.endsWith("Declaration")) {
-                    xObjData.kind = path.node.kind;
-                }
-
-                const xObj = this.createXObject(xObjData);
-                this.addToScope(xObj);
-
-                if (!is.undefined(isDefault)) {
-                    switch (node.type) {
-                        case "ClassDeclaration": {
-                            if (is.null(node.id)) {
-                                throw new adone.x.NotValid("Anonymous class");
-                            }
-                            this._exports[isDefault ? "default" : node.id.name] = xObj;
-                            break;
-                        }
-                        case "VariableDeclarator": {
-                            if (adone.meta.code.is.arrowFunction(xObj)) {
-                                xObj.name = node.id.name;
-                            }
-                            this._exports[node.id.name] = xObj;
-                            break;
-                        }
-                        case "Identifier": {
-                            this._exports[isDefault ? "default" : node.name] = xObj;
-                            break;
-                        }
+                        break;
                     }
                 }
-
-                path.skip();
             }
         });
 

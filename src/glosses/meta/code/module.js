@@ -28,10 +28,6 @@ export default class XModule extends adone.meta.code.Base {
 
         const lazies = [];
 
-        let isIndexFile = false;
-        let isConsequent = false;
-        let consequentBlock = null;
-
         traverse(this.ast, {
             enter: (path) => {
                 const nodeType = path.node.type;
@@ -58,33 +54,7 @@ export default class XModule extends adone.meta.code.Base {
                             }
                         }
                     }
-                } else if (nodeType === "IfStatement") {
-                    const relIndexPath = adone.std.path.normalize("/adone/src/index.js");
-                    if (this.filePath.endsWith(relIndexPath)) {
-                        isIndexFile = true;
-                        return;
-                    }
                 }
-
-                if (isIndexFile) {
-                    if (!isConsequent) {
-                        if (nodeType === "UnaryExpression") {
-                            path.skip();
-                            return;
-                        } else {
-                            isConsequent = true;
-                            consequentBlock = path.node;
-                            return;
-                        }
-                    }
-                }
-
-                if (isIndexFile && path.parent !== consequentBlock) {
-                    path.skip();
-                    return;
-                }
-
-                // adone.log(nodeType);
 
                 let isDefault = undefined;
                 const expandDeclaration = (realPath) => {

@@ -12,6 +12,13 @@ export const namespaces = [
         ]
     },
     {
+        name: "adone.assertion",
+        description: "Assertion utilites",
+        paths: [
+            "glosses/assertion/index"
+        ]
+    },
+    {
         name: "adone.application",
         description: "Complete application framework",
         paths: [
@@ -29,7 +36,14 @@ export const namespaces = [
         name: "adone.compressor",
         description: "",
         paths: [
-            "glosses/compressors"
+            "glosses/compressors/index"
+        ] 
+    },
+    {
+        name: "adone.archive",
+        description: "",
+        paths: [
+            "glosses/archives/index"
         ] 
     },
     {
@@ -57,7 +71,28 @@ export const namespaces = [
         name: "adone.data",
         description: "",
         paths: [
-            "glosses/data"
+            "glosses/data/index"
+        ]
+    },
+    {
+        name: "adone.database",
+        description: "",
+        paths: [
+            "glosses/databases/index"
+        ]
+    },
+    {
+        name: "adone.date",
+        description: "",
+        paths: [
+            "glosses/date/exdate"
+        ]
+    },
+    {
+        name: "adone.fast",
+        description: "File automation streaming templates/transforms",
+        paths: [
+            "glosses/fast/index"
         ]
     },
     {
@@ -115,6 +150,13 @@ export const namespaces = [
         ]
     },
     {
+        name: "adone.metrics",
+        description: "Different metrics",
+        paths: [
+            "glosses/metrics/index"
+        ]
+    },
+    {
         name: "adone.net",
         description: "Implementation of different network abstractions, protocols and associated stuff",
         paths: [
@@ -150,10 +192,31 @@ export const namespaces = [
         ]
     },
     {
+        name: "adone.omnitron",
+        description: "Omnitron",
+        paths: [
+            "omnitron"
+        ]
+    },
+    {
+        name: "adone.package",
+        description: "Adone package",
+        paths: [
+            "../package.json"
+        ]
+    },
+    {
         name: "adone.promise",
         description: "Promise utilites",
         paths: [
             "glosses/promise"
+        ]
+    },
+    {
+        name: "adone.shani",
+        description: "Testing framework",
+        paths: [
+            "glosses/shani/index"
         ]
     },
     {
@@ -164,9 +227,42 @@ export const namespaces = [
         ]
     },
     {
+        name: "adone.shell",
+        description: "Implementation of some shell utilites",
+        paths: [
+            "glosses/shell/index"
+        ]
+    },
+    {
+        name: "adone.sourcemap",
+        description: "Sourcemaps",
+        paths: [
+            "glosses/sourcemap/index"
+        ]
+    },
+    {
+        name: "adone.stream",
+        description: "Different streams and stream utilites",
+        paths: [
+            "glosses/streams/index"
+        ]
+    },
+    {
         name: "adone.tag",
         description: "",
         paths: []
+    },
+    {
+        name: "adone.transform",
+        description: "",
+        paths: []
+    },
+    {
+        name: "adone.templating",
+        description: "Template engines",
+        paths: [
+            "glosses/templating/index"
+        ]
     },
     {
         name: "adone.util",
@@ -194,6 +290,13 @@ export const namespaces = [
         description: "Exceptions and helpers",
         paths: [
             "glosses/common/x"
+        ]
+    },
+    {
+        name: "adone.specter",
+        description: "SPECification TERm",
+        paths: [
+            "glosses/specter/index"
         ]
     },
     {
@@ -263,6 +366,20 @@ export const namespaces = [
         description: "Implementations of CUI widgets",
         paths: [
             "glosses/terminal/ui/widgets"
+        ]
+    },
+    {
+        name: "adone.virt",
+        description: "Some stuff for virtualization",
+        paths: [
+            "glosses/virt/index"
+        ]
+    },
+    {
+        name: "adone.vault",
+        description: "Vault",
+        paths: [
+            "glosses/vault/index"
         ]
     }
 ];

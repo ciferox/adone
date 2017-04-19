@@ -1,5 +1,3 @@
-
-
 const { is, Transform } = adone;
 
 class Core extends adone.EventEmitter {

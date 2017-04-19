@@ -86,6 +86,56 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
     });
 
     adone.lazify({
+        tag: () => ({
+            set(Class, tag) {
+                Class.prototype[tag] = 1;
+            },
+            has(obj, tag) {
+                if (obj != null && typeof obj === "object") {
+                    for (; (obj = obj.__proto__) != null;) {
+                        if (obj[tag] === 1) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            },
+            define(tag, predicate) {
+                adone.tag[tag] = Symbol();
+                if (typeof (predicate) === "string") {
+                    Object.defineProperty(adone.is, predicate, {
+                        enumerable: true,
+                        value: (obj) => adone.tag.has(obj, tag)
+                    });
+                }
+            },
+            SUBSYSTEM: Symbol(),
+            APPLICATION: Symbol(),
+            TRANSFORM: Symbol(),
+            CORE_STREAM: Symbol(),
+            LOGGER: Symbol(),
+            LONG: Symbol(),
+            EXBUFFER: Symbol(),
+            EXDATE: Symbol(),
+            CONFIGURATION: Symbol(),
+
+            GENESIS_NETRON: Symbol(),
+            GENESIS_PEER: Symbol(),
+            NETRON: Symbol(),
+            NETRON_PEER: Symbol(),
+            NETRON_ADAPTER: Symbol(),
+            NETRON_DEFINITION: Symbol(),
+            NETRON_DEFINITIONS: Symbol(),
+            NETRON_REFERENCE: Symbol(),
+            NETRON_INTERFACE: Symbol(),
+            NETRON_STUB: Symbol(),
+            NETRON_REMOTESTUB: Symbol(),
+            NETRON_STREAM: Symbol(),
+
+            FAST_STREAM: Symbol(),
+            FAST_FS_STREAM: Symbol(),
+            FAST_FS_MAP_STREAM: Symbol()
+        }),
         std: () => adone.lazify({
             assert: "assert",
             fs: "fs",
@@ -120,48 +170,6 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             timers: "timers",
             dgram: "dgram"
         }),
-        run: () => (App) => (new App()).run(),
-        package: "../package.json",
-        assertion: "./glosses/assertion",
-        assert: () => adone.assertion.loadAssertInterface().assert,
-        expect: () => adone.assertion.loadExpectInterface().expect,
-        is: "./glosses/common/is",
-        bind: () => (libName) => require(adone.std.path.resolve(__dirname, "./native", libName)),
-        application: "./glosses/application",
-        configuration: "./glosses/configurations",
-        collection: "./glosses/collections",
-        compressor: "./glosses/compressors",
-        archive: "./glosses/archives",
-        crypto: "./glosses/crypto",
-        data: "./glosses/data",
-        database: "./glosses/databases",
-        util: "./glosses/utils",
-        date: "./glosses/dates/exdate",
-        fs: "./glosses/fs",
-        js: "./glosses/js",
-        sourcemap: "./glosses/sourcemap",
-        Benchmark: "./glosses/common/benchmark",
-        ExBuffer: "./glosses/common/exbuffer",
-        x: "./glosses/common/x",
-        URI: "./glosses/uri",
-        Hooker: "./glosses/common/hooker",
-        File: "./glosses/common/file",
-        semver: "./glosses/semver",
-        EventEmitter: "./glosses/common/event_emitter",
-        AsyncEmitter: "./glosses/common/async_emitter",
-        format: "./glosses/text/format",
-        sprintf: ["./glosses/text/sprintf", (mod) => mod.sprintf],
-        vsprintf: ["./glosses/text/sprintf", (mod) => mod.vsprintf],
-        core: "./glosses/core",
-        Transform: "./glosses/core/transform",
-        WebApplication: "./glosses/webapplication",
-        WebMiddleware: "./glosses/webapplication/middleware",
-        LoggerWebMiddleware: "./glosses/webapplication/middlewares/logger",
-        ProcessManager: "./glosses/process_manager",
-        defaultLogger: () => adone.application.Logger.default(),
-        text: "./glosses/text",
-        terminal: "./glosses/terminal",
-        fsevents: "fsevents",
         require: () => {
             const options = {
                 compact: false,
@@ -186,6 +194,40 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             $require.resolve = (request) => adone.js.Module._resolveFilename(request, module);
             return $require;
         },
+        run: () => (App) => (new App()).run(),
+        bind: () => (libName) => require(adone.std.path.resolve(__dirname, "./native", libName)),
+        package: "../package.json",
+        assertion: "./glosses/assertion",
+        assert: () => adone.assertion.loadAssertInterface().assert,
+        expect: () => adone.assertion.loadExpectInterface().expect,
+        defaultLogger: () => adone.application.Logger.default(),
+        is: "./glosses/common/is",
+        application: "./glosses/application",
+        configuration: "./glosses/configurations",
+        collection: "./glosses/collections",
+        compressor: "./glosses/compressors",
+        archive: "./glosses/archives",
+        crypto: "./glosses/crypto",
+        data: "./glosses/data",
+        database: "./glosses/databases",
+        util: "./glosses/utils",
+        date: "./glosses/dates/exdate",
+        fs: "./glosses/fs",
+        js: "./glosses/js",
+        sourcemap: "./glosses/sourcemap",
+        ExBuffer: "./glosses/common/exbuffer",
+        x: "./glosses/common/x",
+        URI: "./glosses/uri",
+        semver: "./glosses/semver",
+        EventEmitter: "./glosses/common/event_emitter",
+        AsyncEmitter: "./glosses/common/async_emitter",
+        format: "./glosses/text/format",
+        sprintf: ["./glosses/text/sprintf", (mod) => mod.sprintf],
+        vsprintf: ["./glosses/text/sprintf", (mod) => mod.vsprintf],
+        core: "./glosses/core",
+        Transform: "./glosses/core/transform",
+        text: "./glosses/text",
+        terminal: "./glosses/terminal",
         stream: "./glosses/streams",
         transform: "./glosses/core/transforms",
         templating: "./glosses/templating",
@@ -202,58 +244,6 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         virt: "./glosses/virt",
         vault: "./glosses/vault",
         specter: "./glosses/specter",
-        tag: () => ({
-            set(Class, tag) {
-                Class.prototype[tag] = 1;
-            },
-            has(obj, tag) {
-                if (obj != null && typeof obj === "object") {
-                    for (; (obj = obj.__proto__) != null;) {
-                        if (obj[tag] === 1) {
-                            return true;
-                        }
-                    }
-                }
-                return false;
-            },
-            define(tag, predicate) {
-                adone.tag[tag] = Symbol();
-                if (typeof (predicate) === "string") {
-                    Object.defineProperty(adone.is, predicate, {
-                        enumerable: true,
-                        value: (obj) => adone.tag.has(obj, tag)
-                    });
-                }
-            },
-            SUBSYSTEM: Symbol(),
-            APPLICATION: Symbol(),
-            WEBAPPLICATION: Symbol(),
-            WEBMIDDLEWARE: Symbol(),
-            TRANSFORM: Symbol(),
-            CORE_STREAM: Symbol(),
-            LOGGER: Symbol(),
-            LONG: Symbol(),
-            EXBUFFER: Symbol(),
-            EXDATE: Symbol(),
-            CONFIGURATION: Symbol(),
-
-            GENESIS_NETRON: Symbol(),
-            GENESIS_PEER: Symbol(),
-            NETRON: Symbol(),
-            NETRON_PEER: Symbol(),
-            NETRON_ADAPTER: Symbol(),
-            NETRON_DEFINITION: Symbol(),
-            NETRON_DEFINITIONS: Symbol(),
-            NETRON_REFERENCE: Symbol(),
-            NETRON_INTERFACE: Symbol(),
-            NETRON_STUB: Symbol(),
-            NETRON_REMOTESTUB: Symbol(),
-            NETRON_STREAM: Symbol(),
-
-            FAST_STREAM: Symbol(),
-            FAST_FS_STREAM: Symbol(),
-            FAST_FS_MAP_STREAM: Symbol()
-        }),
         omnitron: () => adone.lazify({
             const: "./omnitron/consts",
             GateManager: "./omnitron/gate_manager",
