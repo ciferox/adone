@@ -909,14 +909,14 @@ export const consoleReporter = ({
                     }
                     if (keepHooks) {
                         const padding = "    ".repeat(Math.max(block.level() + (test ? 1 : 0), 0));
-                        let msg = `${ticks ? "\x1b[F\x1b[K" : ""}${padding} ${meta.err ? "{red-fg}\u2717" : "{green-fg}\u2713"}{/} {escape}${type} hook${hook.description ? `: ${hook.description}` : ""}{/escape}`;
+                        let msg = `${ticks ? "\x1b[F\x1b[K" : ""}${padding} ${meta.err ? "{red-fg}\u2717" : "{green-fg}\u2713"}{/} ${type} hook{escape}${hook.description ? `: ${hook.description}` : ""}{/escape}`;
                         const elapsedString = elapsedToString(
                             meta.elapsed,
                             hook.timeout(),
                             allTimings
                         );
                         if (elapsedString) {
-                            msg = `{escape}${msg}{/escape} (${elapsedString})`;
+                            msg = `${msg} (${elapsedString})`;
                         }
                         log(msg);
                     } else if (ticks) {
