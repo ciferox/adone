@@ -1,5 +1,4 @@
-const { data: { bson: { BSON } } } = adone;
-const { Long } = BSON;
+const { data: { bson: { BSON, Long } } } = adone;
 
 var net = require('net'),
   Request = require('./request'),
@@ -68,7 +67,7 @@ Server.prototype.start = function() {
       self.connections = self.connections + 1;
       self.sockets.push(c);
 
-      
+
       c.on('error', function(e) {  });
       c.on('data', dataHandler(self, {
         buffer: new Buffer(0),

@@ -5,7 +5,7 @@ const MongoError = require("../error");
 const getReadPreference = require("./shared").getReadPreference;
 
 const BSON = retrieveBSON();
-const Long = BSON.Long;
+const Long = adone.data.bson.Long;
 
 const WireProtocol = function (legacyWireProtocol) {
     this.legacyWireProtocol = legacyWireProtocol;

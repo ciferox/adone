@@ -7,7 +7,7 @@ const MongoError = require("../core").MongoError;
 const Readable = require("stream").Readable;
 const Define = require("./metadata");
 const CoreCursor = require("../core").Cursor;
-const Map = require("../core").BSON.Map;
+const Map = adone.data.bson.Map;
 const CoreReadPreference = require("../core").ReadPreference;
 
 /**

@@ -8,7 +8,7 @@ const MongoError = require("../error");
 const getReadPreference = require("./shared").getReadPreference;
 
 let BSON = retrieveBSON(),
-    Long = BSON.Long;
+    Long = adone.data.bson.Long;
 
 const WireProtocol = function () { };
 

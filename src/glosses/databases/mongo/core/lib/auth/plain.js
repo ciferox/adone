@@ -3,7 +3,7 @@ var retrieveBSON = require('../connection/utils').retrieveBSON;
 var BSON = retrieveBSON();
 
 var f = require('util').format
-  , Binary = BSON.Binary
+  , Binary = adone.data.bson.Binary
   , Query = require('../connection/commands').Query
   , MongoError = require('../error');
 

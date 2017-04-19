@@ -28,20 +28,20 @@ connect.CoreServer = core.Server;
 connect.CoreConnection = core.Connection;
 
 // BSON types exported
-connect.Binary = core.BSON.Binary;
-connect.Code = core.BSON.Code;
-connect.Map = core.BSON.Map;
-connect.DBRef = core.BSON.DBRef;
-connect.Double = core.BSON.Double;
-connect.Int32 = core.BSON.Int32;
-connect.Long = core.BSON.Long;
-connect.MinKey = core.BSON.MinKey;
-connect.MaxKey = core.BSON.MaxKey;
-connect.ObjectID = core.BSON.ObjectID;
-connect.ObjectId = core.BSON.ObjectID;
-connect.Symbol = core.BSON.Symbol;
-connect.Timestamp = core.BSON.Timestamp;
-connect.Decimal128 = core.BSON.Decimal128;
+connect.Binary = adone.data.bson.Binary;
+connect.Code = adone.data.bson.Code;
+connect.Map = adone.data.bson.Map;
+connect.DBRef = adone.data.bson.DBRef;
+connect.Double = adone.data.bson.Double;
+connect.Int32 = adone.data.bson.Int32;
+connect.Long = adone.data.bson.Long;
+connect.MinKey = adone.data.bson.MinKey;
+connect.MaxKey = adone.data.bson.MaxKey;
+connect.ObjectID = adone.data.bson.ObjectID;
+connect.ObjectID = adone.data.bson.ObjectID;
+connect.Symbol = adone.data.bson.Symbol;
+connect.Timestamp = adone.data.bson.Timestamp;
+connect.Decimal128 = adone.data.bson.Decimal128;
 
 // Add connect method
 connect.connect = connect;

@@ -1,4 +1,4 @@
-import { 
+import {
     Server as ServerManager,
     ReplSet as ReplSetManager
 } from "mongodb-topology-manager";
@@ -102,7 +102,7 @@ export default {
                 await manager.stop();
             }
 
-            const opts = { 
+            const opts = {
                 dbpath: this.root.getVirtualDirectory("db", "data-27017").path()
             };
             if (this.useAuth) {

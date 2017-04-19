@@ -33,7 +33,7 @@
  * });
  */
 const Chunk = require("./chunk");
-const ObjectID = require("mongodb-core").BSON.ObjectID;
+const ObjectID = adone.data.bson.ObjectID;
 const ReadPreference = require("../read_preference");
 const Buffer = require("buffer").Buffer;
 const Collection = require("../collection");

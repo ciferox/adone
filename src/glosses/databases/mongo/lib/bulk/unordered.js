@@ -4,15 +4,13 @@ const toError = require("../utils").toError;
 const handleCallback = require("../utils").handleCallback;
 const shallowClone = utils.shallowClone;
 const BulkWriteResult = common.BulkWriteResult;
-const ObjectID = require("../../core").BSON.ObjectID;
+const ObjectID = adone.data.bson.ObjectID;
 const BSON = require("../../core").BSON;
 const Define = require("../metadata");
 const Batch = common.Batch;
 const mergeBatchResults = common.mergeBatchResults;
 
-const bson = new BSON([BSON.Binary, BSON.Code, BSON.DBRef, BSON.Decimal128,
-BSON.Double, BSON.Int32, BSON.Long, BSON.Map, BSON.MaxKey, BSON.MinKey,
-BSON.ObjectId, BSON.BSONRegExp, BSON.Symbol, BSON.Timestamp]);
+const bson = new BSON();
 
 /**
  * Create a FindOperatorsUnordered instance (INTERNAL TYPE, do not instantiate directly)
@@ -302,7 +300,7 @@ const define = UnorderedBulkOperation.define = new Define("UnorderedBulkOperatio
  * @return {UnorderedBulkOperation}
  */
 UnorderedBulkOperation.prototype.insert = function (document) {
-    if (this.s.collection.s.db.options.forceServerObjectId !== true && document._id == null) document._id = new ObjectID();
+    if (this.s.collection.s.db.options.forceServerObjectID !== true && document._id == null) document._id = new ObjectID();
     return addToOperationsList(this, common.INSERT, document);
 };
 
@@ -338,8 +336,8 @@ UnorderedBulkOperation.prototype.raw = function (op) {
     const key = Object.keys(op)[0];
 
     // Set up the force server object id
-    const forceServerObjectId = typeof this.s.options.forceServerObjectId == "boolean"
-        ? this.s.options.forceServerObjectId : this.s.collection.s.db.options.forceServerObjectId;
+    const forceServerObjectID = typeof this.s.options.forceServerObjectID == "boolean"
+        ? this.s.options.forceServerObjectID : this.s.collection.s.db.options.forceServerObjectID;
 
     // Update operations
     if ((op.updateOne && op.updateOne.q)
@@ -372,16 +370,16 @@ UnorderedBulkOperation.prototype.raw = function (op) {
 
     // Insert operations
     if (op.insertOne && op.insertOne.document == null) {
-        if (forceServerObjectId !== true && op.insertOne._id == null) op.insertOne._id = new ObjectID();
+        if (forceServerObjectID !== true && op.insertOne._id == null) op.insertOne._id = new ObjectID();
         return addToOperationsList(this, common.INSERT, op.insertOne);
     } else if (op.insertOne && op.insertOne.document) {
-        if (forceServerObjectId !== true && op.insertOne.document._id == null) op.insertOne.document._id = new ObjectID();
+        if (forceServerObjectID !== true && op.insertOne.document._id == null) op.insertOne.document._id = new ObjectID();
         return addToOperationsList(this, common.INSERT, op.insertOne.document);
     }
 
     if (op.insertMany) {
         for (let i = 0; i < op.insertMany.length; i++) {
-            if (forceServerObjectId !== true && op.insertMany[i]._id == null) op.insertMany[i]._id = new ObjectID();
+            if (forceServerObjectID !== true && op.insertMany[i]._id == null) op.insertMany[i]._id = new ObjectID();
             addToOperationsList(this, common.INSERT, op.insertMany[i]);
         }
 

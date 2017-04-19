@@ -1,5 +1,5 @@
-const Long = require("../../core").BSON.Long;
-const Timestamp = require("../../core").BSON.Timestamp;
+const Long = adone.data.bson.Long;
+const Timestamp = adone.data.bson.Timestamp;
 
 // Error codes
 const UNKNOWN_ERROR = 8;

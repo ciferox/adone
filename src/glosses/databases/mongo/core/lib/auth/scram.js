@@ -5,7 +5,7 @@ var f = require('util').format
   , MongoError = require('../error');
 
 var BSON = retrieveBSON(),
-  Binary = BSON.Binary;
+  Binary = adone.data.bson.Binary;
 
 var AuthSession = function(db, username, password) {
   this.db = db;

@@ -1,7 +1,7 @@
 const checkCollectionName = require("./utils").checkCollectionName;
-const ObjectID = require("../core").BSON.ObjectID;
-const Long = require("../core").BSON.Long;
-const Code = require("../core").BSON.Code;
+const ObjectID = adone.data.bson.ObjectID;
+const Long = adone.data.bson.Long;
+const Code = adone.data.bson.Code;
 const f = require("util").format;
 const AggregationCursor = require("./aggregation_cursor");
 const MongoError = require("../core").MongoError;
@@ -378,7 +378,7 @@ define.classMethod("find", { callback: false, promise: false, returns: [Cursor] 
 /**
  * Inserts a single document into MongoDB. If documents passed in do not contain the **_id** field,
  * one will be added to each of the documents missing it by the driver, mutating the document. This behavior
- * can be overridden by setting the **forceServerObjectId** flag.
+ * can be overridden by setting the **forceServerObjectID** flag.
  *
  * @method
  * @param {object} doc Document to insert.
@@ -387,7 +387,7 @@ define.classMethod("find", { callback: false, promise: false, returns: [Cursor] 
  * @param {number} [options.wtimeout=null] The write concern timeout.
  * @param {boolean} [options.j=false] Specify a journal write concern.
  * @param {boolean} [options.serializeFunctions=false] Serialize functions on any object.
- * @param {boolean} [options.forceServerObjectId=false] Force server to assign _id values instead of driver.
+ * @param {boolean} [options.forceServerObjectID=false] Force server to assign _id values instead of driver.
  * @param {boolean} [options.bypassDocumentValidation=false] Allow driver to bypass schema validation in MongoDB 3.2 or higher.
  * @param {Collection~insertOneWriteOpCallback} [callback] The command result callback
  * @return {Promise} returns Promise if no callback passed
@@ -465,7 +465,7 @@ define.classMethod("insertOne", { callback: true, promise: true });
 /**
  * Inserts an array of documents into MongoDB. If documents passed in do not contain the **_id** field,
  * one will be added to each of the documents missing it by the driver, mutating the document. This behavior
- * can be overridden by setting the **forceServerObjectId** flag.
+ * can be overridden by setting the **forceServerObjectID** flag.
  *
  * @method
  * @param {object[]} docs Documents to insert.
@@ -474,7 +474,7 @@ define.classMethod("insertOne", { callback: true, promise: true });
  * @param {number} [options.wtimeout=null] The write concern timeout.
  * @param {boolean} [options.j=false] Specify a journal write concern.
  * @param {boolean} [options.serializeFunctions=false] Serialize functions on any object.
- * @param {boolean} [options.forceServerObjectId=false] Force server to assign _id values instead of driver.
+ * @param {boolean} [options.forceServerObjectID=false] Force server to assign _id values instead of driver.
  * @param {boolean} [options.bypassDocumentValidation=false] Allow driver to bypass schema validation in MongoDB 3.2 or higher.
  * @param {boolean} [options.ordered=true] If true, when an insert fails, don't execute the remaining writes. If false, continue with remaining inserts when one fails.
  * @param {Collection~insertWriteOpCallback} [callback] The command result callback
@@ -501,11 +501,11 @@ Collection.prototype.insertMany = function (docs, options, callback) {
     options["serializeFunctions"] = options["serializeFunctions"] || self.s.serializeFunctions;
 
     // Set up the force server object id
-    const forceServerObjectId = typeof options.forceServerObjectId == "boolean"
-        ? options.forceServerObjectId : self.s.db.options.forceServerObjectId;
+    const forceServerObjectID = typeof options.forceServerObjectID == "boolean"
+        ? options.forceServerObjectID : self.s.db.options.forceServerObjectID;
 
     // Do we want to force the server to assign the _id key
-    if (forceServerObjectId !== true) {
+    if (forceServerObjectID !== true) {
         // Add _id if not specified
         for (let i = 0; i < docs.length; i++) {
             if (docs[i]._id == null) docs[i]._id = self.s.pkFactory.createPk();
@@ -572,7 +572,7 @@ define.classMethod("insertMany", { callback: true, promise: true });
  *
  * If documents passed in do not contain the **_id** field,
  * one will be added to each of the documents missing it by the driver, mutating the document. This behavior
- * can be overridden by setting the **forceServerObjectId** flag.
+ * can be overridden by setting the **forceServerObjectID** flag.
  *
  * @method
  * @param {object[]} operations Bulk operations to perform.
@@ -717,11 +717,11 @@ const insertDocuments = function (self, docs, options, callback) {
     finalOptions["serializeFunctions"] = options["serializeFunctions"] || self.s.serializeFunctions;
 
     // Set up the force server object id
-    const forceServerObjectId = typeof options.forceServerObjectId == "boolean"
-        ? options.forceServerObjectId : self.s.db.options.forceServerObjectId;
+    const forceServerObjectID = typeof options.forceServerObjectID == "boolean"
+        ? options.forceServerObjectID : self.s.db.options.forceServerObjectID;
 
     // Add _id if not specified
-    if (forceServerObjectId !== true) {
+    if (forceServerObjectID !== true) {
         for (let i = 0; i < docs.length; i++) {
             if (docs[i]._id == null) docs[i]._id = self.s.pkFactory.createPk();
         }
@@ -745,7 +745,7 @@ define.classMethod("bulkWrite", { callback: true, promise: true });
 
 /**
  * @typedef {Object} Collection~WriteOpResult
- * @property {object[]} ops All the documents inserted using insertOne/insertMany/replaceOne. Documents contain the _id field if forceServerObjectId == false for insertOne/insertMany
+ * @property {object[]} ops All the documents inserted using insertOne/insertMany/replaceOne. Documents contain the _id field if forceServerObjectID == false for insertOne/insertMany
  * @property {object} connection The connection object used for the operation.
  * @property {object} result The command result object.
  */
@@ -760,8 +760,8 @@ define.classMethod("bulkWrite", { callback: true, promise: true });
 /**
  * @typedef {Object} Collection~insertWriteOpResult
  * @property {Number} insertedCount The total amount of documents inserted.
- * @property {object[]} ops All the documents inserted using insertOne/insertMany/replaceOne. Documents contain the _id field if forceServerObjectId == false for insertOne/insertMany
- * @property {ObjectId[]} insertedIds All the generated _id's for the inserted documents.
+ * @property {object[]} ops All the documents inserted using insertOne/insertMany/replaceOne. Documents contain the _id field if forceServerObjectID == false for insertOne/insertMany
+ * @property {ObjectID[]} insertedIds All the generated _id's for the inserted documents.
  * @property {object} connection The connection object used for the operation.
  * @property {object} result The raw command result object returned from MongoDB (content might vary by server version).
  * @property {Number} result.ok Is 1 if the command executed correctly.
@@ -771,8 +771,8 @@ define.classMethod("bulkWrite", { callback: true, promise: true });
 /**
  * @typedef {Object} Collection~insertOneWriteOpResult
  * @property {Number} insertedCount The total amount of documents inserted.
- * @property {object[]} ops All the documents inserted using insertOne/insertMany/replaceOne. Documents contain the _id field if forceServerObjectId == false for insertOne/insertMany
- * @property {ObjectId} insertedId The driver generated ObjectId for the insert operation.
+ * @property {object[]} ops All the documents inserted using insertOne/insertMany/replaceOne. Documents contain the _id field if forceServerObjectID == false for insertOne/insertMany
+ * @property {ObjectID} insertedId The driver generated ObjectID for the insert operation.
  * @property {object} connection The connection object used for the operation.
  * @property {object} result The raw command result object returned from MongoDB (content might vary by server version).
  * @property {Number} result.ok Is 1 if the command executed correctly.
@@ -796,7 +796,7 @@ define.classMethod("bulkWrite", { callback: true, promise: true });
 /**
  * Inserts a single document or a an array of documents into MongoDB. If documents passed in do not contain the **_id** field,
  * one will be added to each of the documents missing it by the driver, mutating the document. This behavior
- * can be overridden by setting the **forceServerObjectId** flag.
+ * can be overridden by setting the **forceServerObjectID** flag.
  *
  * @method
  * @param {(object|object[])} docs Documents to insert.
@@ -805,7 +805,7 @@ define.classMethod("bulkWrite", { callback: true, promise: true });
  * @param {number} [options.wtimeout=null] The write concern timeout.
  * @param {boolean} [options.j=false] Specify a journal write concern.
  * @param {boolean} [options.serializeFunctions=false] Serialize functions on any object.
- * @param {boolean} [options.forceServerObjectId=false] Force server to assign _id values instead of driver.
+ * @param {boolean} [options.forceServerObjectID=false] Force server to assign _id values instead of driver.
  * @param {boolean} [options.bypassDocumentValidation=false] Allow driver to bypass schema validation in MongoDB 3.2 or higher.
  * @param {Collection~insertWriteOpCallback} [callback] The command result callback
  * @return {Promise} returns Promise if no callback passed
@@ -836,7 +836,7 @@ define.classMethod("insert", { callback: true, promise: true });
  * @property {Number} modifiedCount The number of documents that were modified.
  * @property {Number} upsertedCount The number of documents upserted.
  * @property {Object} upsertedId The upserted id.
- * @property {ObjectId} upsertedId._id The upserted _id returned from the server.
+ * @property {ObjectID} upsertedId._id The upserted _id returned from the server.
  */
 
 /**

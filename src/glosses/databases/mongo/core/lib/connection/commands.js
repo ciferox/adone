@@ -1,6 +1,6 @@
 var retrieveBSON = require('../connection/utils').retrieveBSON;
 var BSON = retrieveBSON();
-var Long = BSON.Long;
+var Long = adone.data.bson.Long;
 
 // Incrementing request id
 var _requestId = 0;

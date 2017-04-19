@@ -34,7 +34,7 @@ function GridFSBucketWriteStream(bucket, filename, options) {
     this.files = bucket.s._filesCollection;
     this.options = options;
 
-    this.id = options.id ? options.id : core.BSON.ObjectId();
+    this.id = options.id ? options.id : new adone.data.bson.ObjectID();
     this.chunkSizeBytes = this.options.chunkSizeBytes;
     this.bufToStore = new Buffer(this.chunkSizeBytes);
     this.length = 0;
@@ -187,7 +187,7 @@ function __handleError(_this, error, callback) {
 
 function createChunkDoc(filesId, n, data) {
     return {
-        _id: core.BSON.ObjectId(),
+        _id: new adone.data.bson.ObjectID(),
         files_id: filesId,
         n,
         data

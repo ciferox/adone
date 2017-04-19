@@ -1,4 +1,4 @@
-const { data: { bson: { BSON: { Long } } } } = adone;
+const { data: { bson: { Long } } } = adone;
 
 /*
  * Request class

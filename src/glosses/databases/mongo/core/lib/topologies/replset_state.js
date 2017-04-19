@@ -334,7 +334,7 @@ ReplSetState.prototype.update = function (server) {
         if (!this.maxElectionId && ismasterElectionId) {
             this.maxElectionId = ismasterElectionId;
         } else if (this.maxElectionId && ismasterElectionId) {
-            var result = compareObjectIds(this.maxElectionId, ismasterElectionId);
+            var result = compareObjectIDs(this.maxElectionId, ismasterElectionId);
             // Get the electionIds
             var ismasterSetVersion = server.lastIsMaster().setVersion;
 
@@ -407,7 +407,7 @@ ReplSetState.prototype.update = function (server) {
 
         // Check if we need to replace the server
         if (currentElectionId && ismasterElectionId) {
-            result = compareObjectIds(currentElectionId, ismasterElectionId);
+            result = compareObjectIDs(currentElectionId, ismasterElectionId);
 
             if (result == 1) {
                 return false;
@@ -424,7 +424,7 @@ ReplSetState.prototype.update = function (server) {
         if (!this.maxElectionId && ismasterElectionId) {
             this.maxElectionId = ismasterElectionId;
         } else if (this.maxElectionId && ismasterElectionId) {
-            result = compareObjectIds(this.maxElectionId, ismasterElectionId);
+            result = compareObjectIDs(this.maxElectionId, ismasterElectionId);
 
             if (result == 1) {
                 return false;
@@ -858,7 +858,7 @@ function addToList(self, type, ismaster, server, list) {
     list.push(server);
 }
 
-function compareObjectIds(id1, id2) {
+function compareObjectIDs(id1, id2) {
     const a = new Buffer(id1.toHexString(), "hex");
     const b = new Buffer(id2.toHexString(), "hex");
 

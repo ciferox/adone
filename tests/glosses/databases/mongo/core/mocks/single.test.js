@@ -1,0 +1,129 @@
+import Server from "adone/glosses/databases/mongo/core/lib/topologies/server";
+import mongodbVersionManager from "mongodb-version-manager";
+import mockupdb from "../mock";
+import configuration from "../configuration";
+
+const {
+    vendor: { lodash }
+} = adone;
+const promisify = adone.promise.promisify;
+const waitFor = (emitter, event) => new Promise((resolve) => emitter.once(event, (...args) => {
+    if (args.length === 1) {
+        args = args[0];
+    }
+    resolve(args);
+}));
+
+
+describe("mongodb", function () {
+    this.timeout(120000);
+
+    before(async function () {
+        this.timeout(999999999); // long enough
+        // Kill any running MongoDB processes and `install $MONGODB_VERSION` || `use existing installation` || `install stable`
+        await promisify(mongodbVersionManager)();
+        const version = await promisify(mongodbVersionManager.current)();
+        adone.info(`Running tests against MongoDB version ${version}`);
+        return configuration.setup();
+    });
+
+    after(() => {
+        return configuration.teardown();
+    });
+
+    describe("mocks", () => {
+        describe("single", () => {
+            context("timeout", () => {
+                it("Should correctly timeout socket operation and then correctly re-execute", async () => {
+                    let running = true;
+                    // Current index for the ismaster
+                    let currentStep = 0;
+                    // Primary stop responding
+                    let stopRespondingPrimary = false;
+
+                    // Default message fields
+                    const defaultFields = {
+                        ismaster: true,
+                        maxBsonObjectSize: 16777216,
+                        maxMessageSizeBytes: 48000000,
+                        maxWriteBatchSize: 1000,
+                        localTime: new Date(),
+                        maxWireVersion: 3,
+                        minWireVersion: 0,
+                        ok: 1
+                    };
+
+                    // Primary server states
+                    const serverIsMaster = [lodash.defaults({}, defaultFields)];
+
+                    const sserver = await mockupdb.createServer(37019, "localhost");
+
+                    // Primary state machine
+                    (async () => {
+                        while (running) {
+                            const request = await sserver.receive();
+                            // Get the document
+                            const doc = request.document;
+                            if (doc.ismaster && currentStep === 0) {
+                                request.reply(serverIsMaster[0]);
+                                currentStep += 1;
+                            } else if (doc.insert && currentStep === 1) {
+                                // Stop responding to any calls (emulate dropping packets on the floor)
+                                if (stopRespondingPrimary) {
+                                    await adone.promise.delay(3000);
+                                    continue;
+                                }
+
+                                currentStep += 1;
+                            } else if (doc.ismaster && currentStep === 2) {
+                                request.reply(serverIsMaster[0]);
+                            } else if (doc.insert && currentStep === 2) {
+                                request.reply({
+                                    ok: 1,
+                                    n: doc.documents,
+                                    lastOp: new Date()
+                                });
+                            }
+                        }
+                    })().catch(() => { });
+
+                    // Start dropping the packets
+                    adone.promise.delay(5000).then(() => {
+                        stopRespondingPrimary = true;
+                    });
+
+                    // Attempt to connect
+                    const replset = new Server({
+                        host: "localhost",
+                        port: 37019,
+                        connectionTimeout: 5000,
+                        socketTimeout: 1000,
+                        size: 1
+                    });
+
+                    // Add event listeners
+                    replset.on("error", () => { });
+                    replset.connect();
+                    const _server = await waitFor(replset, "connect");
+                    const insert = promisify(_server.insert).bind(_server);
+                    const e = await insert("test.test", [{ created: new Date() }]).then(() => null, (e) => e);
+                    expect(e).to.be.ok;
+                    try {
+                        for (; ;) {
+                            await adone.promise.delay(500);
+                            const r = await insert("test.test", [{ created: new Date() }]).catch(() => { });
+                            if (r) {
+                                expect(r.connection.port).to.be.equal(37019);
+                                break;
+                            }
+                        }
+                    } finally {
+                        replset.destroy({ force: true });
+                        sserver.destroy();
+                        running = false;
+                    }
+                });
+            });
+        });
+    });
+});

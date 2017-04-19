@@ -127,7 +127,7 @@ GridFSBucket.prototype.openUploadStreamWithId = function (id, filename, options)
  * Returns a readable stream (GridFSBucketReadStream) for streaming file
  * data from GridFS.
  * @method
- * @param {ObjectId} id The id of the file doc
+ * @param {ObjectID} id The id of the file doc
  * @param {Object} [options=null] Optional settings.
  * @param {Number} [options.start=null] Optional 0-based offset in bytes to start streaming from
  * @param {Number} [options.end=null] Optional 0-based offset in bytes to stop streaming before
@@ -148,7 +148,7 @@ GridFSBucket.prototype.openDownloadStream = function (id, options) {
 /**
  * Deletes a file with the given id
  * @method
- * @param {ObjectId} id The id of the file doc
+ * @param {ObjectID} id The id of the file doc
  * @param {GridFSBucket~errorCallback} [callback]
  */
 
@@ -278,7 +278,7 @@ GridFSBucket.prototype.openDownloadStreamByName = function (filename, options) {
 /**
  * Renames the file with the given _id to the given string
  * @method
- * @param {ObjectId} id the id of the file to rename
+ * @param {ObjectID} id the id of the file to rename
  * @param {String} filename new name for the file
  * @param {GridFSBucket~errorCallback} [callback]
  */
