@@ -493,7 +493,7 @@ class Glob extends adone.EventEmitter {
             } else {
                 try {
                     // benchmarks show that glob with sync realpath is fastest
-                    e = adone.util.realpath.realpathSync(abs);
+                    e = adone.fs.realpathSync(abs);
                 } catch (error) {
                     if (error.syscall === "stat") {
                         e = abs;

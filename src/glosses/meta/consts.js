@@ -50,7 +50,7 @@ export const namespaces = [
         name: "adone.configuration",
         description: "",
         paths: [
-            "glosses/configurations"
+            "glosses/configurations/index"
         ]
     },
     {

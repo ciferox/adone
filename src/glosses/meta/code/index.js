@@ -4,32 +4,34 @@ export class Inspector {
     constructor({ dir = "lib" }) {
         this.dir = dir;
         this.path = std.path.join(adone.appinstance.adoneRootPath, this.dir);
-        this.namespaces = {};
+        this.namespaces = new Map();
     }
 
     async attachNamespace(nsName) {
-        this.namespaces[nsName] = await adone.meta.code.Namespace.inspect(nsName, this.path);
+        if (!this.namespaces.has(nsName)) {
+            this.namespaces.set(nsName, await adone.meta.code.Namespace.inspect(nsName, this.path));
+        }
     }
 
     isAttached(name) {
         const { namespace } = adone.meta.parseName(name);
-        return is.propertyOwned(this.namespaces, namespace);
+        return this.namespaces.has(namespace);
     }
 
     listNamespaces() {
-        return Object.keys(this.namespaces);
+        return [...this.namespaces.keys()];
     }
 
     getNamespace(name, names = null) {
         const { namespace, objectName } = adone.meta.parseName(name);
-        if (!is.propertyOwned(this.namespaces, namespace)) {
+        if (!this.namespaces.has(namespace)) {
             throw new adone.x.Unknown(`Unknown namespace: '${namespace}'`);
         }
         if (is.plainObject(names)) {
             names.namespace = namespace;
             names.objectName = objectName;
         }
-        return this.namespaces[namespace];
+        return this.namespaces.get(namespace);
     }
 
     get(name) {

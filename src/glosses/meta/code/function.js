@@ -3,7 +3,7 @@ const { is } = adone;
 export default class XFunction extends adone.meta.code.Base {
     constructor(options) {
         super(options);
-        if (!is.null(this.ast)) {
+        if (!is.null(this.ast) && is.plainObject(this.ast.id)) {
             this.name = this.ast.id.name;
         } else {
             this.name = null;            

@@ -14,7 +14,7 @@ export default class XAdoneModule extends adone.meta.code.Module {
         this.code = await fs.readFile(this.filePath, { check: true, encoding: "utf8" });
         this.init();
 
-        this.adoneProto = {};
+        this._adoneProto = {};
 
         const lazies = [];
 
@@ -89,9 +89,8 @@ export default class XAdoneModule extends adone.meta.code.Module {
                                 }
                             });
                             const xObj = this.createXObject({ path: protoPath, ast: protoPath.node, xModule: this });
-                            xObj.adoneProto = true;
-                            this.adoneProto[node.key.name] = xObj;
-                            adone.log(node.key.name);
+                            xObj._adoneProto = true;
+                            this._adoneProto[node.key.name] = xObj;
                             path.skip();
                             return;
                         } else if (traverseState === STATE_ADONE_LAZIFIERS) {
@@ -102,7 +101,6 @@ export default class XAdoneModule extends adone.meta.code.Module {
                             const { namespace, objectName } = adone.meta.parseName(fullName);
                             if (namespace === "adone") {
                                 if (node.value.type === "StringLiteral") {
-                                    adone.log(namespace, objectName);
                                     lazies.push({ name: objectName, path: adone.std.path.join(basePath, node.value.value) });
                                 }
                             }
@@ -145,6 +143,11 @@ export default class XAdoneModule extends adone.meta.code.Module {
                 this._lazyModules.set(name, lazyModule);
             }
         }
-        // adone.log(Object.keys(this.exports()));
+    }
+
+    exports() {
+        const result = super.exports();
+        Object.assign(result, this._adoneProto);
+        return result;
     }
 }

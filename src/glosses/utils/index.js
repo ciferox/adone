@@ -482,7 +482,7 @@ export const readdir = (root, {
     let pending = 0;
     const source = adone.core().through(async function ([path, depth]) {
         --pending;
-        const realPath = await adone.util.realpath.async(path);
+        const realPath = await adone.fs.realpath(path);
         const relativePath = adone.std.path.relative(realPath, resolvedRoot);
 
         const files = await adone.fs.readdir(path);
@@ -518,7 +518,7 @@ export const readdir = (root, {
             source.end();
         }
     });
-    adone.util.realpath.async(root).then((_resolvedRoot) => {
+    adone.fs.realpath(root).then((_resolvedRoot) => {
         resolvedRoot = _resolvedRoot;
         ++pending;
         source.write([resolvedRoot, 0]);
@@ -529,7 +529,7 @@ export const readdir = (root, {
     return source;
 };
 
-export const toFastProperties = (obj: Object): void => {
+export const toFastProperties = (obj) => {
     function f() { }
     f.prototype = obj;
     new f();
@@ -544,7 +544,7 @@ export const stripBom = (x) => {
     return x;
 };
 
-export const sortKeys = (object: Object, { deep = false, compare }: { deep: boolean; compare: ?Function } = {}): Object => {
+export const sortKeys = (object, { deep = false, compare } = {}) => {
     const obj = {};
     const keys = Object.keys(object).sort(compare);
     for (const key of keys) {
@@ -854,7 +854,6 @@ export const range = (start, stop, step) => [...xrange(start, stop, step)];
 
 adone.lazify({
     match: "./match",
-    realpath: "./realpath",
     throat: "./throat",
     toposort: "./toposort",
     jsesc: "./jsesc",

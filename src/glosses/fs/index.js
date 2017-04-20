@@ -12,7 +12,7 @@ const fs = adone.lazify({
     appendFile: () => promisify(adone.std.fs.appendFile),
     access: () => promisify(adone.std.fs.access),
     symlink: () => promisify(adone.std.fs.symlink),
-    realpath: () => promisify(adone.std.fs.realpath),
+    // realpath: () => promisify(adone.std.fs.realpath),
     rm: "./rm",
     File: "./file",
     Directory: "./directory",
@@ -98,6 +98,301 @@ export const fd = {
                 resolve();
             });
         });
+    }
+};
+
+const ok = /^v[0-5]\./.test(process.version);
+
+const newError = (err) => err && err.syscall === "realpath" && (err.code === "ELOOP" || err.code === "ENOMEM" || err.code === "ENAMETOOLONG");
+
+let nextPartRe;
+let splitRootRe;
+
+// Regexp that finds the next partion of a (partial) path
+// result is [base_with_slash, base], e.g. ['somedir/', 'somedir']
+if (is.win32) {
+    nextPartRe = /(.*?)(?:[\/\\]+|$)/g;
+} else {
+    nextPartRe = /(.*?)(?:[\/]+|$)/g;
+}
+
+// Regex to find the device root, including trailing slash. E.g. 'c:\\'.
+if (is.win32) {
+    splitRootRe = /^(?:[a-zA-Z]:|[\\\/]{2}[^\\\/]+[\\\/][^\\\/]+)?[\\\/]*/;
+} else {
+    splitRootRe = /^[\/]*/;
+}
+
+export const realpath = (p, cache) => {
+    if (ok) {
+        return new Promise((resolve, reject) => {
+            adone.std.fs.realpath(p, cache, (err, resolvedPath) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(resolvedPath);
+            });
+        });
+    }
+
+    return new Promise((resolve, reject) => {
+        adone.std.fs.realpath(p, cache, (err, result) => {
+            if (newError(err)) {
+                // make p is absolute
+                p = adone.std.path.resolve(p);
+
+                if (cache && Object.prototype.hasOwnProperty.call(cache, p)) {
+                    return process.nextTick(resolve, cache[p]);
+                }
+
+                const original = p;
+                const seenLinks = {};
+                const knownHard = {};
+
+                // current character position in p
+                let pos;
+                // the partial path so far, including a trailing slash if any
+                let current;
+                // the partial path without a trailing slash (except when pointing at a root)
+                let base;
+                // the partial path scanned in the previous round, with slash
+                let previous;
+
+                let start = null;
+                let loop = null;
+
+                const gotResolvedLink = (resolvedLink) => {
+                    // resolve the link, then start over
+                    p = adone.std.path.resolve(resolvedLink, p.slice(pos));
+                    start();
+                };
+
+                const gotTarget = (err, target, base) => {
+                    if (err) {
+                        return reject(err);
+                    }
+
+                    const resolvedLink = adone.std.path.resolve(previous, target);
+                    if (cache) {
+                        cache[base] = resolvedLink;
+                    }
+                    gotResolvedLink(resolvedLink);
+                };
+
+                const gotStat = (err, stat) => {
+                    if (err) {
+                        return reject(err);
+                    }
+
+                    // if not a symlink, skip to the next path part
+                    if (!stat.isSymbolicLink()) {
+                        knownHard[base] = true;
+                        if (cache) {
+                            cache[base] = base;
+                        }
+                        return process.nextTick(loop);
+                    }
+
+                    // stat & read the link if not read before
+                    // call gotTarget as soon as the link target is known
+                    // dev/ino always return 0 on windows, so skip the check.
+                    let id = null;
+                    if (!is.win32) {
+                        id = `${stat.dev.toString(32)}:${stat.ino.toString(32)}`;
+                        if (seenLinks.hasOwnProperty(id)) {
+                            return gotTarget(null, seenLinks[id], base);
+                        }
+                    }
+                    fs.stat(base, (err) => {
+                        if (err) {
+                            return reject(err);
+                        }
+
+                        fs.readlink(base, (err, target) => {
+                            if (!is.win32) {
+                                seenLinks[id] = target;
+                            }
+                            gotTarget(err, target);
+                        });
+                    });
+                };
+
+                // walk down the path, swapping out linked pathparts for their real values
+                loop = () => {
+                    // stop if scanned past end of path
+                    if (pos >= p.length) {
+                        if (cache) {
+                            cache[original] = p;
+                        }
+                        return resolve(p);
+                    }
+
+                    // find the next part
+                    nextPartRe.lastIndex = pos;
+                    const result = nextPartRe.exec(p);
+                    previous = current;
+                    current += result[0];
+                    base = previous + result[1];
+                    pos = nextPartRe.lastIndex;
+
+                    // continue if not a symlink
+                    if (knownHard[base] || (cache && cache[base] === base)) {
+                        return process.nextTick(loop);
+                    }
+
+                    if (cache && Object.prototype.hasOwnProperty.call(cache, base)) {
+                        // known symbolic link.  no need to stat again.
+                        return gotResolvedLink(cache[base]);
+                    }
+
+                    return fs.lstat(base, gotStat);
+                };
+
+                start = () => {
+                    // Skip over roots
+                    const m = splitRootRe.exec(p);
+                    pos = m[0].length;
+                    current = m[0];
+                    base = m[0];
+                    previous = "";
+
+                    // On windows, check that the root exists. On unix there is no need.
+                    if (is.win32 && !knownHard[base]) {
+                        fs.lstat(base, (err) => {
+                            if (err) {
+                                return reject(err);
+                            }
+                            knownHard[base] = true;
+                            loop();
+                        });
+                    } else {
+                        process.nextTick(loop);
+                    }
+                };
+
+                start();
+            } else {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(result);
+            }
+        });
+    });
+};
+
+export const realpathSync = (p, cache) => {
+    if (ok) {
+        return adone.std.fs.realpathSync(p, cache);
+    }
+
+    try {
+        return adone.std.fs.realpathSync(p, cache);
+    } catch (err) {
+        if (newError(err)) {
+            p = adone.std.path.resolve(p);
+
+            if (cache && Object.prototype.hasOwnProperty.call(cache, p)) {
+                return cache[p];
+            }
+
+            const original = p;
+            const seenLinks = {};
+            const knownHard = {};
+
+            // current character position in p
+            let pos;
+            // the partial path so far, including a trailing slash if any
+            let current;
+            // the partial path without a trailing slash (except when pointing at a root)
+            let base;
+            // the partial path scanned in the previous round, with slash
+            let previous;
+
+            const start = () => {
+                // Skip over roots
+                const m = splitRootRe.exec(p);
+                pos = m[0].length;
+                current = m[0];
+                base = m[0];
+                previous = "";
+
+                // On windows, check that the root exists. On unix there is no need.
+                if (is.win32 && !knownHard[base]) {
+                    fs.lstatSync(base);
+                    knownHard[base] = true;
+                }
+            };
+
+            start();
+
+            // walk down the path, swapping out linked pathparts for their real values
+            // NB: p.length changes.
+            while (pos < p.length) {
+                // find the next part
+                nextPartRe.lastIndex = pos;
+                const result = nextPartRe.exec(p);
+                previous = current;
+                current += result[0];
+                base = previous + result[1];
+                pos = nextPartRe.lastIndex;
+
+                // continue if not a symlink
+                if (knownHard[base] || (cache && cache[base] === base)) {
+                    continue;
+                }
+
+                let resolvedLink;
+                if (cache && Object.prototype.hasOwnProperty.call(cache, base)) {
+                    // some known symbolic link.  no need to stat again.
+                    resolvedLink = cache[base];
+                } else {
+                    const stat = fs.lstatSync(base);
+                    if (!stat.isSymbolicLink()) {
+                        knownHard[base] = true;
+                        if (cache) {
+                            cache[base] = base;
+                        }
+                        continue;
+                    }
+
+                    // read the link if it wasn't read before
+                    // dev/ino always return 0 on windows, so skip the check.
+                    let linkTarget = null;
+                    let id = null;
+                    if (!is.win32) {
+                        id = `${stat.dev.toString(32)}:${stat.ino.toString(32)}`;
+                        if (seenLinks.hasOwnProperty(id)) {
+                            linkTarget = seenLinks[id];
+                        }
+                    }
+                    if (linkTarget === null) {
+                        fs.statSync(base);
+                        linkTarget = fs.readlinkSync(base);
+                    }
+                    resolvedLink = adone.std.path.resolve(previous, linkTarget);
+                    // track this, if given a cache.
+                    if (cache) {
+                        cache[base] = resolvedLink;
+                    }
+                    if (!is.win32) {
+                        seenLinks[id] = linkTarget;
+                    }
+                }
+
+                // resolve the link, then start over
+                p = adone.std.path.resolve(resolvedLink, p.slice(pos));
+                start();
+            }
+
+            if (cache) {
+                cache[original] = p;
+            }
+
+            return p;
+        } else {
+            throw err;
+        }
     }
 };
 

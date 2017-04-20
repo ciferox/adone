@@ -33,46 +33,50 @@ const bundleTemplate = `
 export default class Bundler {
     constructor({ dir }) {
         this.inspector = new adone.meta.code.Inspector({ dir });
+        this._refExprs = [];
     }
     async prepare(name) {
         adone.info(`Preparing bundle for '${name}'`);
         await this._lookupRefs(name);
-        const x = this.inspector.get(name);
+        // const x = this.inspector.get(name);
 
         // adone.log(x.name, x.ast.type, x.code);
         // adone.log(adone.meta.inspect(x.references(), { style: "color" }));
 
         // adone.log(x.name, x.ast.type, adone.meta.inspect(x.xModule.globals, { style: "color" }));
+    
+        // adone.log(this._refExprs);
     }
 
     async _lookupRefs(name) {
         const { namespace } = adone.meta.parseName(name);
-        // if (namespace === "adone") {
-        //     return;
-        // }
-        adone.info(`Attaching namespace: '${namespace}'`);
+        adone.info(`Processing: '${name}'`);
         if (!namespace.startsWith("adone")) {
             throw new adone.x.NotSupported("Extraction from namespace other than 'adone' is not supported");
+        }
+        if (namespace.startsWith("adone.vendor")) {
+            adone.info("Skipping 'adone.vendor.*' code");
+            return;
         }
 
         await this.inspector.attachNamespace(namespace);
 
         const x = this.inspector.get(name);
         const refs = x.references();
-
-        // const namespaces = [];
-        // for (const ref of refs) {
-        //     const { namespace } = adone.meta.parseName(ref);
-        //     if (!namespaces.includes(namespace) && namespace !== "adone") {
-        //         namespaces.push(namespace);
-        //     }
-        // }
+        this._collectRefExprs(refs);
 
         adone.info("Referenced namespaces:");
         adone.log(adone.text.pretty.json(refs));
+
         for (const ref of refs) {
-            if (!this.inspector.isAttached(ref)) {
-                await this._lookupRefs(ref);
+            await this._lookupRefs(ref);
+        }
+    }
+
+    _collectRefExprs(refs) {
+        for (const ref of refs) {
+            if (!this._refExprs.includes(ref)) {
+                this._refExprs.push(ref);
             }
         }
     }
