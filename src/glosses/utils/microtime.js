@@ -1,5 +1,3 @@
-
-
 const b = adone.bind("microtime.node");
 
 export default {

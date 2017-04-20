@@ -1,5 +1,3 @@
-// @flow
-
 export default function toposort(edges) {
     return toposortArray(uniqueNodes(edges), edges);
 }

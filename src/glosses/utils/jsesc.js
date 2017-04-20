@@ -1,4 +1,3 @@
-
 const { is, data } = adone;
 
 const singleEscapes = {
@@ -17,6 +16,8 @@ const regexDigit = /[0-9]/;
 const regexWhitelist = /[ !#-&\(-\[\]-~]/;
 
 export default function jsesc(argument, options) {
+    let oldIndent = "";
+    let indent;
     const increaseIndentation = function () {
         oldIndent = indent;
         ++options.indentLevel;
@@ -51,8 +52,7 @@ export default function jsesc(argument, options) {
     const quote = options.quotes === "double" ? '"' : "'";
     const compact = options.compact;
     const lowercaseHex = options.lowercaseHex;
-    let indent = options.indent.repeat(options.indentLevel);
-    let oldIndent = "";
+    indent = options.indent.repeat(options.indentLevel);
     const inline1 = options.__inline1__;
     const inline2 = options.__inline2__;
     const newLine = compact ? "" : "\n";

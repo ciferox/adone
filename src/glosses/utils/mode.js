@@ -1,7 +1,3 @@
-// @flow
-
-
-
 /**
  * Constants (defined in `stat.h`).
  */
@@ -27,185 +23,6 @@ const S_IXGRP = 8;      /* 0000010 execute/search permission, group */
 const S_IROTH = 4;      /* 0000004 read permission, others */
 const S_IWOTH = 2;      /* 0000002 write permission, others */
 const S_IXOTH = 1;      /* 0000001 execute/search permission, others */
-
-/**
- * `Mode` class.
- *
- * @param {fs.Stat} stat a "stat" object (anything with a `mode` Number property)
- * @api public
- */
-export default class Mode {
-    constructor(stat) {
-        if (!stat) {
-            throw new adone.x.InvalidArgument("You must pass in a \"stat\" object");
-        }
-        if (!adone.is.number(stat.mode)) {
-            stat.mode = 0;
-        }
-        this.stat = stat;
-        this.owner = new Owner(stat);
-        this.group = new Group(stat);
-        this.others = new Others(stat);
-    }
-
-    /**
-     * Returns the Number value of the `mode`.
-     *
-     * @return {Number}
-     * @api public
-     */
-    valueOf(): number {
-        return this.stat.mode;
-    }
-
-    /**
-     * Returns a String representation of the `mode`.
-     * The output resembles something similiar to what `ls -l` would output.
-     *
-     * http://en.wikipedia.org/wiki/Unix_file_types
-     *
-     * @return {String}
-     * @api public
-     */
-
-    toString() {
-        const str = [];
-
-        // file type
-        if (this.isDirectory()) {
-            str.push("d");
-        } else if (this.isFile()) {
-            str.push("-");
-        } else if (this.isBlockDevice()) {
-            str.push("b");
-        } else if (this.isCharacterDevice()) {
-            str.push("c");
-        } else if (this.isSymbolicLink()) {
-            str.push("l");
-        } else if (this.isFIFO()) {
-            str.push("p");
-        } else if (this.isSocket()) {
-            str.push("s");
-        } else {
-            throw new TypeError("unexpected \"file type\"");
-        }
-
-        // owner read, write, execute
-        str.push(this.owner.read ? "r" : "-");
-        str.push(this.owner.write ? "w" : "-");
-        if (this.setuid) {
-            str.push(this.owner.execute ? "s" : "S");
-        } else {
-            str.push(this.owner.execute ? "x" : "-");
-        }
-
-        // group read, write, execute
-        str.push(this.group.read ? "r" : "-");
-        str.push(this.group.write ? "w" : "-");
-        if (this.setgid) {
-            str.push(this.group.execute ? "s" : "S");
-        } else {
-            str.push(this.group.execute ? "x" : "-");
-        }
-
-        // others read, write, execute
-        str.push(this.others.read ? "r" : "-");
-        str.push(this.others.write ? "w" : "-");
-        if (this.sticky) {
-            str.push(this.others.execute ? "t" : "T");
-        } else {
-            str.push(this.others.execute ? "x" : "-");
-        }
-
-        return str.join("");
-    }
-
-    /**
-     * Returns an octal representation of the `mode`, eg. "0754".
-     *
-     * http://en.wikipedia.org/wiki/File_system_permissions#Numeric_notation
-     *
-     * @return {String}
-     * @api public
-     */
-
-    toOctal() {
-        const octal = this.stat.mode & 4095;
-        return ("0000" + octal.toString(8)).slice(-4);
-    }
-
-    _checkModeProperty(property, set) {
-        const mode = this.stat.mode;
-        if (set) {
-            this.stat.mode = (mode | S_IFMT) & property | mode & ~S_IFMT;
-        }
-        return (mode & S_IFMT) === property;
-    }
-
-    isDirectory(v) {
-        return this._checkModeProperty(S_IFDIR, v);
-    }
-
-    isFile(v) {
-        return this._checkModeProperty(S_IFREG, v);
-    }
-
-    isBlockDevice(v) {
-        return this._checkModeProperty(S_IFBLK, v);
-    }
-
-    isCharacterDevice(v) {
-        return this._checkModeProperty(S_IFCHR, v);
-    }
-
-    isSymbolicLink(v) {
-        return this._checkModeProperty(S_IFLNK, v);
-    }
-
-    isFIFO(v) {
-        return this._checkModeProperty(S_IFIFO, v);
-    }
-
-    isSocket(v) {
-        return this._checkModeProperty(S_IFSOCK, v);
-    }
-
-    get setuid() {
-        return Boolean(this.stat.mode & S_ISUID);
-    }
-
-    set setuid(v) {
-        if (v) {
-            this.stat.mode |= S_ISUID;
-        } else {
-            this.stat.mode &= ~S_ISUID;
-        }
-    }
-
-    get setgid() {
-        return Boolean(this.stat.mode & S_ISGID);
-    }
-
-    set setgid(v) {
-        if (v) {
-            this.stat.mode |= S_ISGID;
-        } else {
-            this.stat.mode &= ~S_ISGID;
-        }
-    }
-
-    get sticky() {
-        return Boolean(this.stat.mode & S_ISVTX);
-    }
-
-    set sticky(v) {
-        if (v) {
-            this.stat.mode |= S_ISVTX;
-        } else {
-            this.stat.mode &= ~S_ISVTX;
-        }
-    }
-}
 
 class Owner {
     constructor(stat) {
@@ -329,6 +146,185 @@ class Others {
             this.stat.mode |= S_IXOTH;
         } else {
             this.stat.mode &= ~S_IXOTH;
+        }
+    }
+}
+
+/**
+ * `Mode` class.
+ *
+ * @param {fs.Stat} stat a "stat" object (anything with a `mode` Number property)
+ * @api public
+ */
+export default class Mode {
+    constructor(stat) {
+        if (!stat) {
+            throw new adone.x.InvalidArgument("You must pass in a \"stat\" object");
+        }
+        if (!adone.is.number(stat.mode)) {
+            stat.mode = 0;
+        }
+        this.stat = stat;
+        this.owner = new Owner(stat);
+        this.group = new Group(stat);
+        this.others = new Others(stat);
+    }
+
+    /**
+     * Returns the Number value of the `mode`.
+     *
+     * @return {Number}
+     * @api public
+     */
+    valueOf() {
+        return this.stat.mode;
+    }
+
+    /**
+     * Returns a String representation of the `mode`.
+     * The output resembles something similiar to what `ls -l` would output.
+     *
+     * http://en.wikipedia.org/wiki/Unix_file_types
+     *
+     * @return {String}
+     * @api public
+     */
+
+    toString() {
+        const str = [];
+
+        // file type
+        if (this.isDirectory()) {
+            str.push("d");
+        } else if (this.isFile()) {
+            str.push("-");
+        } else if (this.isBlockDevice()) {
+            str.push("b");
+        } else if (this.isCharacterDevice()) {
+            str.push("c");
+        } else if (this.isSymbolicLink()) {
+            str.push("l");
+        } else if (this.isFIFO()) {
+            str.push("p");
+        } else if (this.isSocket()) {
+            str.push("s");
+        } else {
+            throw new TypeError("unexpected \"file type\"");
+        }
+
+        // owner read, write, execute
+        str.push(this.owner.read ? "r" : "-");
+        str.push(this.owner.write ? "w" : "-");
+        if (this.setuid) {
+            str.push(this.owner.execute ? "s" : "S");
+        } else {
+            str.push(this.owner.execute ? "x" : "-");
+        }
+
+        // group read, write, execute
+        str.push(this.group.read ? "r" : "-");
+        str.push(this.group.write ? "w" : "-");
+        if (this.setgid) {
+            str.push(this.group.execute ? "s" : "S");
+        } else {
+            str.push(this.group.execute ? "x" : "-");
+        }
+
+        // others read, write, execute
+        str.push(this.others.read ? "r" : "-");
+        str.push(this.others.write ? "w" : "-");
+        if (this.sticky) {
+            str.push(this.others.execute ? "t" : "T");
+        } else {
+            str.push(this.others.execute ? "x" : "-");
+        }
+
+        return str.join("");
+    }
+
+    /**
+     * Returns an octal representation of the `mode`, eg. "0754".
+     *
+     * http://en.wikipedia.org/wiki/File_system_permissions#Numeric_notation
+     *
+     * @return {String}
+     * @api public
+     */
+
+    toOctal() {
+        const octal = this.stat.mode & 4095;
+        return (`0000${octal.toString(8)}`).slice(-4);
+    }
+
+    _checkModeProperty(property, set) {
+        const mode = this.stat.mode;
+        if (set) {
+            this.stat.mode = (mode | S_IFMT) & property | mode & ~S_IFMT;
+        }
+        return (mode & S_IFMT) === property;
+    }
+
+    isDirectory(v) {
+        return this._checkModeProperty(S_IFDIR, v);
+    }
+
+    isFile(v) {
+        return this._checkModeProperty(S_IFREG, v);
+    }
+
+    isBlockDevice(v) {
+        return this._checkModeProperty(S_IFBLK, v);
+    }
+
+    isCharacterDevice(v) {
+        return this._checkModeProperty(S_IFCHR, v);
+    }
+
+    isSymbolicLink(v) {
+        return this._checkModeProperty(S_IFLNK, v);
+    }
+
+    isFIFO(v) {
+        return this._checkModeProperty(S_IFIFO, v);
+    }
+
+    isSocket(v) {
+        return this._checkModeProperty(S_IFSOCK, v);
+    }
+
+    get setuid() {
+        return Boolean(this.stat.mode & S_ISUID);
+    }
+
+    set setuid(v) {
+        if (v) {
+            this.stat.mode |= S_ISUID;
+        } else {
+            this.stat.mode &= ~S_ISUID;
+        }
+    }
+
+    get setgid() {
+        return Boolean(this.stat.mode & S_ISGID);
+    }
+
+    set setgid(v) {
+        if (v) {
+            this.stat.mode |= S_ISGID;
+        } else {
+            this.stat.mode &= ~S_ISGID;
+        }
+    }
+
+    get sticky() {
+        return Boolean(this.stat.mode & S_ISVTX);
+    }
+
+    set sticky(v) {
+        if (v) {
+            this.stat.mode |= S_ISVTX;
+        } else {
+            this.stat.mode &= ~S_ISVTX;
         }
     }
 }

@@ -1,5 +1,3 @@
-
-
 export default class Diff {
     diff(oldString, newString, options = {}) {
         let callback = options.callback;

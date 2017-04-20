@@ -1,8 +1,6 @@
-import rawDB from "adone/../etc/glosses/net/mime_types";
-
 const { is, std: { path: { extname } }, util } = adone;
 
-const db = new Map(util.entries(rawDB));
+const db = new Map(util.entries(adone.loadAsset("glosses/net/mimes.json")));
 
 const extractTypeRegExp = /^\s*([^;\s]*)(?:;|\s|$)/;
 const textTypeRegExp = /^text\//i;

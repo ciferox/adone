@@ -1,4 +1,4 @@
-const { is, net: { mimeType, http: { server: { helper: { mediaTyper } } } } } = adone;
+const { is, net: { mime, http: { server: { helper: { mediaTyper } } } } } = adone;
 
 const normalizeType = (value) => {
     const type = mediaTyper.parse(value);
@@ -70,7 +70,7 @@ const normalize = (type) => {
         return `*/*${type}`;
     }
 
-    return type.includes("/") ? type : mimeType.lookup(type);
+    return type.includes("/") ? type : mime.lookup(type);
 };
 
 const typeis = (value, types) => {

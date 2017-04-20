@@ -150,6 +150,13 @@ export const namespaces = [
         ]
     },
     {
+        name: "adone.meta.reflect",
+        description: "Metadata reflection",
+        paths: [
+            "glosses/meta/reflect"
+        ]
+    },
+    {
         name: "adone.metrics",
         description: "Different metrics",
         paths: [
@@ -161,6 +168,13 @@ export const namespaces = [
         description: "Implementation of different network abstractions, protocols and associated stuff",
         paths: [
             "glosses/net"
+        ]
+    },
+    {
+        name: "adone.net.util",
+        description: "Different net utilites",
+        paths: [
+            "glosses/net/utils"
         ]
     },
     {
@@ -268,7 +282,21 @@ export const namespaces = [
         name: "adone.util",
         description: "",
         paths: [
-            "glosses/utils"
+            "glosses/utils/index"
+        ]
+    },
+    {
+        name: "adone.util.diff",
+        description: "Text differencing",
+        paths: [
+            "glosses/utils/diff/index"
+        ]
+    },
+    {
+        name: "adone.util.uuid",
+        description: "UUID v1/v4",
+        paths: [
+            "glosses/utils/uuid"
         ]
     },
     {

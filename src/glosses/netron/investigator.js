@@ -113,7 +113,7 @@ export default class Investigator {
     }
 
     toString() {
-        let classDef =  `// ${this.getDescription()}\nclass ${this.getName()} {\n`;
+        let classDef = `// ${this.getDescription()}\nclass ${this.getName()} {\n`;
         if (this.getMethods().size > 0) {
             classDef += "\n// Methods\n";
         }
@@ -151,7 +151,7 @@ export default class Investigator {
         } else if (is.propertyDefined(obj, "__proto__") && is.propertyDefined(obj.__proto__, "constructor")) {
             isContextable = reflect.getMetadata("meta:contextable", obj.__proto__.constructor);
         }
-        return !!isContextable;
+        return Boolean(isContextable);
     }
 
     static hasMethods(obj) {
@@ -219,7 +219,7 @@ export default class Investigator {
             this._twin = twin;
         }
 
-        const privateClass = !!reflect.getMetadata("meta:private", this.aClass);
+        const privateClass = Boolean(reflect.getMetadata("meta:private", this.aClass));
 
         const instance = this.instance;
         for (const [key, val] of util.entries(instance, { all: true })) {
@@ -338,7 +338,7 @@ export default class Investigator {
                 this._methodMap.set(key, descr);
             } else {
                 meta = reflect.getMetadata("meta:readonly", instance, key);
-                descr.readonly = !!meta;
+                descr.readonly = Boolean(meta);
                 descr.default = val;
 
                 const propMeta = reflect.getMetadata(`meta:property:${key}`, this.aClass);

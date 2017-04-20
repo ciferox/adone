@@ -1,5 +1,3 @@
-
-
 const { is } = adone;
 
 class Delayed {

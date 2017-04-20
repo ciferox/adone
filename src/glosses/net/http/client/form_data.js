@@ -1,4 +1,4 @@
-const { is, std, net: { mimeType } } = adone;
+const { is, std, net: { mime } } = adone;
 const asynckit = require("asynckit");
 
 class DelayedStream extends std.stream.Stream {
@@ -484,12 +484,12 @@ export default class FormData extends CombinedStream {
 
         // or try `name` from formidable, browser
         if (!contentType && value.name) {
-            contentType = mimeType.lookup(value.name);
+            contentType = mime.lookup(value.name);
         }
 
         // or try `path` from fs-, request- streams
         if (!contentType && value.path) {
-            contentType = mimeType.lookup(value.path);
+            contentType = mime.lookup(value.path);
         }
 
         // or if it's http-reponse
@@ -499,7 +499,7 @@ export default class FormData extends CombinedStream {
 
         // or guess it from the filename
         if (!contentType && options.filename) {
-            contentType = mimeType.lookup(options.filename);
+            contentType = mime.lookup(options.filename);
         }
 
         // fallback to the default content type if `value` is not simple value

@@ -64,6 +64,17 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             });
 
             return obj;
+        },
+        loadAsset: (relPath) => {
+            const extName = adone.std.path.extname(relPath);
+            const buf = adone.std.fs.readFileSync(adone.std.path.resolve(__dirname, "..", "etc", adone.std.path.normalize(relPath)));
+            switch (extName) {
+                case ".json": {
+                    return JSON.parse(buf.toString("utf8"));
+                }
+                default:
+                    return buf;
+            }
         }
     });
 

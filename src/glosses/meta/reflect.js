@@ -1,4 +1,3 @@
-
 const { is } = adone;
 
 // feature test for Symbol support

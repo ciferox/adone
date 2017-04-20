@@ -1,7 +1,7 @@
 const {
     std: { path: { relative, resolve, extname } },
     templating: { nunjucks },
-    net: { mimeType },
+    net,
     collection, util, fs, identity
 } = adone;
 
@@ -187,7 +187,7 @@ const getIconClass = (file) => {
     if (iconsMap.has(ext)) {
         return iconsMap.get(ext);
     }
-    const mime = mimeType.lookup(ext);
+    const mime = net.mime.lookup(ext);
 
     if (mime !== false) {
         if (iconsMap.has(mime)) {

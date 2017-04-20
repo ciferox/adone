@@ -1,6 +1,3 @@
-// @flow
-
-
 import scanCodes from "./scan_codes";
 
 const { std, noop } = adone;
@@ -12,6 +9,81 @@ const exec = (cmd) => new Promise((resolve, reject) => {
         resolve({ stdout, stderr });
     });
 });
+
+class Machine {
+    constructor(vbox, name) {
+        this.vbox = vbox;
+        this.name = name;
+    }
+
+    reset() {
+        return this.vbox.reset(this.name);
+    }
+
+    resume() {
+        return this.vbox.resume(this.name);
+    }
+
+    start(options) {
+        return this.vbox.start(this.name, options);
+    }
+
+    stop() {
+        return this.vbox.stop(this.name);
+    }
+
+    savestate() {
+        return this.vbox.savestate(this.name);
+    }
+
+    poweroff() {
+        return this.vbox.poweroff(this.name);
+    }
+
+    acpiPowerButton() {
+        return this.vbox.acpiPowerButton(this.name);
+    }
+
+    acpiSleepButton() {
+        return this.vbox.acpiSleepButton(this.name);
+    }
+
+    getSnapshots() {
+        return this.vbox.getSnapshots(this.name);
+    }
+
+    takeSnapshot(options) {
+        return this.vbox.takeSnapshot(this.name, options);
+    }
+
+    deleteSnapshot(uuid) {
+        return this.vbox.deleteSnapshot(this.name, uuid);
+    }
+
+    restoreSnapshot(uuid) {
+        return this.vbox.restoreSnapshot(this.name, uuid);
+    }
+
+    putKeyboardScancode(codes) {
+        return this.vbox.putKeyboardScancode(this.name, codes);
+    }
+
+    getOSType() {
+        return this.vbox.getOSType(this.name);
+    }
+
+    getProperty(key) {
+        return this.vbox.getProperty(this.name, key);
+    }
+
+    internalExec(options) {
+        return this.vbox.internalExec(this.name, options);
+    }
+
+    internalKill(options) {
+        return this.vbox.internalKill(this.name, options);
+    }
+}
 
 class VirtualBox {
     constructor() {
@@ -162,8 +234,8 @@ class VirtualBox {
             const scan = code.type === "down" ? scanCodes[code.key] : scanCodes.getBreakCode(code.key);
             for (const i of scan) {
                 let s = i.toString(16);
-                if (s.length == 1) {
-                    s = "0" + s;
+                if (s.length === 1) {
+                    s = `0${s}`;
                 }
                 scancodes.push(s);
             }
@@ -202,7 +274,7 @@ class VirtualBox {
             path = path.replace(/\\/g, "\\\\");
             cmd += `${runcmd} "cmd.exe" --username "${username}" ${password ? ` --password "${password}"` : ""} -- /c "${path}" "${params}"`;
         } else if (osType === "mac") {
-            cmd += `${runcmd} "/usr/bin/open -a" --username ${username} ${password ? ` --password "${password}"` : ""} -- -c "${path}" "${params}"`;    
+            cmd += `${runcmd} "/usr/bin/open -a" --username ${username} ${password ? ` --password "${password}"` : ""} -- -c "${path}" "${params}"`;
         } else if (osType === "linux") {
             cmd += `${runcmd} "/bin/sh" --username "${username}" ${password ? ` --password "${password}"` : ""} -- -c "${path}" "${params}"`;
         }
@@ -232,84 +304,6 @@ class VirtualBox {
 
     get(vmname) {
         return new Machine(this, vmname);
-    }
-}
-
-class Machine {
-    vbox: VirtualBox;
-    name: string;
-
-    constructor(vbox: VirtualBox, name: string) {
-        this.vbox = vbox;
-        this.name = name;
-    }
-
-    reset() {
-        return this.vbox.reset(this.name);
-    }
-
-    resume() {
-        return this.vbox.resume(this.name);
-    }
-
-    start(options) {
-        return this.vbox.start(this.name, options);
-    }
-
-    stop() {
-        return this.vbox.stop(this.name);
-    }
-
-    savestate() {
-        return this.vbox.savestate(this.name);
-    }
-
-    poweroff() {
-        return this.vbox.poweroff(this.name);
-    }
-
-    acpiPowerButton() {
-        return this.vbox.acpiPowerButton(this.name);
-    }
-
-    acpiSleepButton() {
-        return this.vbox.acpiSleepButton(this.name);
-    }
-
-    getSnapshots() {
-        return this.vbox.getSnapshots(this.name);
-    }
-
-    takeSnapshot(options) {
-        return this.vbox.takeSnapshot(this.name, options);
-    }
-
-    deleteSnapshot(uuid) {
-        return this.vbox.deleteSnapshot(this.name, uuid);
-    }
-
-    restoreSnapshot(uuid) {
-        return this.vbox.restoreSnapshot(this.name, uuid);
-    }
-
-    putKeyboardScancode(codes) {
-        return this.vbox.putKeyboardScancode(this.name, codes);
-    }
-
-    getOSType() {
-        return this.vbox.getOSType(this.name);
-    }
-
-    getProperty(key) {
-        return this.vbox.getProperty(this.name, key);
-    }
-
-    internalExec(options) {
-        return this.vbox.internalExec(this.name, options);
-    }
-
-    internalKill(options) {
-        return this.vbox.internalKill(this.name, options);
     }
 }
 

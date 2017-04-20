@@ -1,4 +1,3 @@
-
 const { is, std: { path } } = adone;
 
 const getRegExpMatch = (reg, str) => {

@@ -1,7 +1,7 @@
 const {
     is, x,
     net: {
-        mimeType: { contentType },
+        mime: { contentType },
         http: {
             server: {
                 helper: {

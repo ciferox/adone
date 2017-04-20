@@ -15,6 +15,7 @@ export default class XBase {
         this.path = path;
         this.scope = [];
         this._references = [];
+        this._scopedReferences = [];
         
         this.init();
     }
@@ -29,6 +30,15 @@ export default class XBase {
 
     addToScope(xObj) {
         this.scope.push(xObj);
+    }
+
+    getInmoduleReference(name) {
+        for (const xObj of this.xModule.scope) {
+            if (is.string(xObj.name) && xObj.name === name) {
+                return xObj;
+            }
+        }
+        return;
     }
 
     parse() {
@@ -55,11 +65,14 @@ export default class XBase {
                     if (is.undefined(name)) {
                         return;
                     }
-
-                    const globalObject = this.xModule.getGlobal(name);
-                    
-                    if (!is.undefined(globalObject)) {
-                        this._addReference(globalObject.full);
+                    const xObj = this.getInmoduleReference(name);
+                    if (!is.undefined(xObj)) {
+                        this._scopedReferences.push(xObj);
+                    } else {
+                        const globalObject = this.xModule.getGlobal(name);
+                        if (!is.undefined(globalObject)) {
+                            this._addReference(globalObject.full);
+                        }
                     }
                 },
                 MemberExpression: (path) => {

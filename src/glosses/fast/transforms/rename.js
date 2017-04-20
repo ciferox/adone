@@ -1,10 +1,6 @@
-// @flow
-
-
-
 const { std: { path }, is, fast: { Fast } } = adone;
 
-export default function (handler: string | Object | Function) {
+export default function (handler) {
     return new Fast(null, {
         transform(file) {
             const obj = {
