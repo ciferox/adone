@@ -1,5 +1,4 @@
 const { is, database: { level: { AbstractBackend, AbstractIterator, ltgt } } } = adone;
-const createRBT = require("functional-red-black-tree");
 let globalStore = {};
 
 const gt = function (value) {
@@ -121,7 +120,7 @@ export default class Memory extends AbstractBackend {
 
         this._location = this.location ? (`$${this.location}`) : "_tree";
         this._store = this.location ? globalStore : this;
-        this._store[this._location] = this._store[this._location] || createRBT(ltgt.compare);
+        this._store[this._location] = this._store[this._location] || new adone.collection.RedBlackTree(ltgt.compare);
     }
 
     _open(options, callback) {
