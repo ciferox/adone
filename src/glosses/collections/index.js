@@ -8,6 +8,7 @@ adone.lazify({
     BQueue: "./bqueue",
     BinarySearchTree: "./bst",
     AVLTree: "./avl_tree",
+    RedBlackTree: "./rb_tree",
     Stack: "./stack",
     BufferList: "./buffer_list",
     ArraySet: "./array_set"
