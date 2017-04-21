@@ -1,4 +1,4 @@
-const ProgressBar = adone.terminal.Progress;
+const ProgressBar = adone.cui.Progress;
 
 const bar1 = new ProgressBar({
     schema: "progress: \n[:bar]",

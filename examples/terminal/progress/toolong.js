@@ -1,4 +1,4 @@
-const ProgressBar = adone.terminal.Progress;
+const ProgressBar = adone.cui.Progress;
 
 // simulated download, passing the chunk lengths to tick()
 

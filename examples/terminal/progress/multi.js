@@ -1,4 +1,4 @@
-const ProgressBar = adone.terminal.Progress;
+const ProgressBar = adone.cui.Progress;
 
 const bar0 = new ProgressBar({
     current: 0

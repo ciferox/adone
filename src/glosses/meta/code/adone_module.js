@@ -151,6 +151,7 @@ export default class XAdoneModule extends adone.meta.code.Module {
             this._lazyModules = new Map();
             for (const { name, path } of lazies) {
                 const filePath = await fs.lookup(path);
+                // adone.log(filePath);
                 const lazyModule = new adone.meta.code.Module({ nsName: this.nsName, filePath });
                 await lazyModule.load();
                 this._lazyModules.set(name, lazyModule);

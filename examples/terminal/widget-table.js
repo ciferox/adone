@@ -1,4 +1,4 @@
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     dump: `${__dirname}/logs/table.log`,
     autoPadding: false,
     fullUnicode: true,
@@ -8,7 +8,7 @@ const screen = new adone.terminal.Screen({
 const DU = "杜";
 const JUAN = "鹃";
 
-const table = new adone.terminal.widget.Table({
+const table = new adone.cui.widget.Table({
     //parent: screen,
     top: "center",
     left: "center",

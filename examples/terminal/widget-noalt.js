@@ -1,13 +1,13 @@
 // import adone from "adone";
 
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     dump: `${__dirname}/logs/noalt.log`,
     title: "widget-noalt test",
     noAlt: true,
     warnings: true
 });
 
-const list = new adone.terminal.widget.List({
+const list = new adone.cui.widget.List({
     parent: screen,
     align: "center",
     mouse: true,

@@ -1,5 +1,4 @@
-
-const { terminal } = adone;
+const { cui } = adone;
 
 /**
  * Creates a string with the same length as `numSpaces` parameter
@@ -57,22 +56,22 @@ const addColorToData = function (input, options) {
 
     if (typeof input === "string") {
         // Print strings in regular terminal color
-        return options.stringColor ? terminal.style[options.stringColor](input) : input;
+        return options.stringColor ? cui.style[options.stringColor](input) : input;
     }
 
     const sInput = String(input);
 
     if (input === true) {
-        return terminal.style.green(sInput);
+        return cui.style.green(sInput);
     }
     if (input === false) {
-        return terminal.style.red(sInput);
+        return cui.style.red(sInput);
     }
     if (input === null) {
-        return terminal.style.grey(sInput);
+        return cui.style.grey(sInput);
     }
     if (typeof input === "number") {
-        return terminal.style[options.numberColor](sInput);
+        return cui.style[options.numberColor](sInput);
     }
     if (typeof input === "function") {
         return "function() {}";
@@ -120,7 +119,7 @@ const renderToArray = function (data, options, indentation) {
             // Prepend the dash at the begining of each array's element line
             let line = "- ";
             if (!options.noColor) {
-                line = terminal.style[options.dashColor](line);
+                line = cui.style[options.dashColor](line);
             }
             line = indent(indentation) + line;
 
@@ -166,7 +165,7 @@ const renderToArray = function (data, options, indentation) {
         // Prepend the index at the beginning of the line
         key = (`${i}: `);
         if (!options.noColor) {
-            key = terminal.style[options.keysColor](key);
+            key = cui.style[options.keysColor](key);
         }
         key = indent(indentation) + key;
 

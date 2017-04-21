@@ -1,6 +1,6 @@
 // import adone from "adone";
 
-const screen = new adone.terminal.Screen();
+const screen = new adone.cui.Screen();
 
 //create layout and widgets
 
@@ -9,7 +9,7 @@ function randomColor() {
     return [Math.random() * 255, Math.random() * 255, Math.random() * 255];
 }
 
-const grid = new adone.terminal.layout.Grid({ rows: 12, cols: 12, screen });
+const grid = new adone.cui.layout.Grid({ rows: 12, cols: 12, screen });
 
 /**
  * Donut Options
@@ -17,7 +17,7 @@ const grid = new adone.terminal.layout.Grid({ rows: 12, cols: 12, screen });
   self.options.arcWidth = options.arcWidth || 4; //width of the donut
   self.options.yPadding = options.yPadding || 2; //padding from the top
  */
-const donut = grid.set(8, 8, 4, 2, adone.terminal.widget.Donut,
+const donut = grid.set(8, 8, 4, 2, adone.cui.widget.Donut,
     {
         label: "Percent Donut",
         radius: 16,
@@ -35,17 +35,17 @@ const donut = grid.set(8, 8, 4, 2, adone.terminal.widget.Donut,
 //   , xPadding: 5
 //   , label: 'Network Latency (sec)'})
 
-const gauge = grid.set(8, 10, 2, 2, adone.terminal.widget.Gauge, { label: "Storage", percent: [80, 20] });
-const gauge_two = grid.set(2, 9, 2, 3, adone.terminal.widget.Gauge, { label: "Deployment Progress", percent: 80 });
+const gauge = grid.set(8, 10, 2, 2, adone.cui.widget.Gauge, { label: "Storage", percent: [80, 20] });
+const gauge_two = grid.set(2, 9, 2, 3, adone.cui.widget.Gauge, { label: "Deployment Progress", percent: 80 });
 
-const sparkline = grid.set(10, 10, 2, 2, adone.terminal.widget.SparkLine,
+const sparkline = grid.set(10, 10, 2, 2, adone.cui.widget.SparkLine,
     {
         label: "Throughput (bits/sec)"
         , tags: true
         , style: { fg: "blue", titleFg: "white" }
     });
 
-const bar = grid.set(4, 6, 4, 3, adone.terminal.widget.chart.Bar,
+const bar = grid.set(4, 6, 4, 3, adone.cui.widget.chart.Bar,
     {
         label: "Server Utilization (%)"
         , barWidth: 4
@@ -54,7 +54,7 @@ const bar = grid.set(4, 6, 4, 3, adone.terminal.widget.chart.Bar,
         , maxHeight: 9
     });
 
-const table = grid.set(4, 9, 4, 3, adone.terminal.widget.ExTable,
+const table = grid.set(4, 9, 4, 3, adone.cui.widget.ExTable,
     {
         keys: true
         , fg: "green"
@@ -78,7 +78,7 @@ const table = grid.set(4, 9, 4, 3, adone.terminal.widget.ExTable,
 //coloring
   options.color = options.color || "white";
 */
-const lcdLineOne = grid.set(0, 9, 2, 3, adone.terminal.widget.LCD,
+const lcdLineOne = grid.set(0, 9, 2, 3, adone.cui.widget.LCD,
     {
         label: "LCD Test",
         segmentWidth: 0.06,
@@ -91,7 +91,7 @@ const lcdLineOne = grid.set(0, 9, 2, 3, adone.terminal.widget.LCD,
     }
 );
 
-const errorsLine = grid.set(0, 6, 4, 3, adone.terminal.widget.chart.Line,
+const errorsLine = grid.set(0, 6, 4, 3, adone.cui.widget.chart.Line,
     {
         style:
         {
@@ -104,7 +104,7 @@ const errorsLine = grid.set(0, 6, 4, 3, adone.terminal.widget.chart.Line,
         , showLegend: true
     });
 
-const transactionsLine = grid.set(0, 0, 6, 6, adone.terminal.widget.chart.Line,
+const transactionsLine = grid.set(0, 0, 6, 6, adone.cui.widget.chart.Line,
     {
         showNthLabel: 5
         , maxY: 100
@@ -113,9 +113,9 @@ const transactionsLine = grid.set(0, 0, 6, 6, adone.terminal.widget.chart.Line,
         , legend: { width: 10 }
     });
 
-const map = grid.set(6, 0, 6, 6, adone.terminal.widget.Map, { label: "Servers Location" });
+const map = grid.set(6, 0, 6, 6, adone.cui.widget.Map, { label: "Servers Location" });
 
-const log = grid.set(8, 6, 4, 2, adone.terminal.widget.ExLog,
+const log = grid.set(8, 6, 4, 2, adone.cui.widget.ExLog,
     {
         fg: randomColor()
         , selectedFg: randomColor()

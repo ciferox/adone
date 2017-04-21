@@ -1,11 +1,11 @@
 // import adone from "adone";
 
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     dump: `${__dirname}/logs/padding.log`,
     warnings: true
 });
 
-new adone.terminal.widget.Element({
+new adone.cui.widget.Element({
     parent: screen,
     border: "line",
     style: {

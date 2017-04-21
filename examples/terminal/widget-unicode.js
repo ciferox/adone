@@ -1,7 +1,7 @@
 const fs = adone.std.fs;
 const unicode = adone.terminal.unicode;
 
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     dump: `${__dirname}/logs/unicode.log`,
     smartCSR: true,
     dockBorders: true,
@@ -76,7 +76,7 @@ for (let point = 0x1f600; point <= 0x1f64f; point++) {
  * UI
  */
 
-const main = new adone.terminal.widget.Element({
+const main = new adone.cui.widget.Element({
     parent: screen,
     left: "center",
     top: "center",

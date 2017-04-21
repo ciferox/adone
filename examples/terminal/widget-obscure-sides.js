@@ -1,13 +1,13 @@
 // import adone from "adone";
 
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     smartCSR: true,
     dump: `${__dirname}/logs/obscure-sides.log`,
     autoPadding: true,
     warnings: true
 });
 
-const box = new adone.terminal.widget.Element({
+const box = new adone.cui.widget.Element({
     parent: screen,
     scrollable: true,
     alwaysScroll: true,
@@ -36,7 +36,7 @@ const box = new adone.terminal.widget.Element({
     }
 });
 
-const child = new adone.terminal.widget.Element({
+const child = new adone.cui.widget.Element({
     parent: box,
     content: "hello",
     style: {
@@ -49,7 +49,7 @@ const child = new adone.terminal.widget.Element({
     left: 15
 });
 
-const child2 = new adone.terminal.widget.Element({
+const child2 = new adone.cui.widget.Element({
     parent: box,
     content: "hello",
     style: {

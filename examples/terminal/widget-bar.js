@@ -1,7 +1,7 @@
 // import adone from "adone";
 
-const screen = new adone.terminal.Screen();
-const bar = new adone.terminal.widget.BarChart({
+const screen = new adone.cui.Screen();
+const bar = new adone.cui.widget.BarChart({
     label: "Server Utilization (%)",
     barWidth: 4,
     barSpacing: 6,

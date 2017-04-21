@@ -1,4 +1,4 @@
-const ProgressBar = adone.terminal.Progress;
+const ProgressBar = adone.cui.Progress;
 
 const list = [
     "image01.jpg", "image02.jpg", "image03.jpg", "image04.jpg", "image05.jpg",

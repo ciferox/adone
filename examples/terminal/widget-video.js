@@ -1,12 +1,12 @@
 import adone from "adone";
 
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     smartCSR: true,
     dump: `${__dirname}/logs/video.log`,
     warnings: true
 });
 
-const video = new adone.terminal.widget.Video({
+const video = new adone.cui.widget.Video({
     parent: screen,
     left: 1,
     top: 1,

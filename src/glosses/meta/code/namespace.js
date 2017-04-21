@@ -20,6 +20,7 @@ export default class XNamespace {
         for (const filePath of sources) {
             const relIndexPath = adone.std.path.normalize("/adone/src/index.js");
             let sourceModule;
+            // adone.log(filePath);
             if (filePath.endsWith(relIndexPath)) {
                 sourceModule = new adone.meta.code.AdoneModule({ nsName: name, filePath });
             } else {

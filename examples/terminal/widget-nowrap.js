@@ -5,12 +5,12 @@ const fs = adone.std.fs;
 // {open}xxxx{close} xxxx xxxx xxxx xxxx xxxx xxxx xxxx xxxx xxxx xxxx xxxx
 // xxxx xxxx xxxx xxxx xxxx xxxx xxxx xxxx xxxx {red-bg}xxxx xxxx xxxx{/red-bg}
 
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     dump: `${__dirname}/logs/nowrap.log`,
     warnings: true
 });
 
-const box = new adone.terminal.widget.Element({
+const box = new adone.cui.widget.Element({
     parent: screen,
     width: 60,
     wrap: false,

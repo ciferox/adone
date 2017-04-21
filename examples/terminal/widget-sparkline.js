@@ -1,7 +1,7 @@
 // import adone from "adone";
-const screen = new adone.terminal.Screen();
+const screen = new adone.cui.Screen();
 
-const spark = new adone.terminal.widget.SparkLine(
+const spark = new adone.cui.widget.SparkLine(
     {
         label: "Sparkline"
         , tags: true

@@ -1,10 +1,10 @@
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     dump: `${__dirname}/logs/scrollable-boxes.log`,
     smartCSR: true,
     warnings: true
 });
 
-const box = new adone.terminal.widget.Element({
+const box = new adone.cui.widget.Element({
     parent: screen,
     //padding: 2,
     scrollable: true,
@@ -26,7 +26,7 @@ const box = new adone.terminal.widget.Element({
     }
 });
 
-const text = new adone.terminal.widget.Element({
+const text = new adone.cui.widget.Element({
     parent: box,
     content: "hello1\nhello2\nhello3\nhello4",
     padding: 2,
@@ -39,7 +39,7 @@ const text = new adone.terminal.widget.Element({
     height: 6
 });
 
-const text2 = new adone.terminal.widget.Element({
+const text2 = new adone.cui.widget.Element({
     parent: box,
     content: "world",
     padding: 1,
@@ -52,7 +52,7 @@ const text2 = new adone.terminal.widget.Element({
     height: 3
 });
 
-const box2 = new adone.terminal.widget.Element({
+const box2 = new adone.cui.widget.Element({
     parent: box,
     scrollable: true,
     content: "foo-one\nfoo-two\nfoo-three",
@@ -82,7 +82,7 @@ const box2 = new adone.terminal.widget.Element({
     // }
 });
 
-const box3 = new adone.terminal.widget.Element({
+const box3 = new adone.cui.widget.Element({
     parent: box2,
     scrollable: true,
     //content: 'foo1\nfoo2\nfoo3\nfoo4\nfoo5\nfoo6\nfoo7\nf008',

@@ -1,13 +1,13 @@
 // import adone from "adone";
 
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     dump: `${__dirname}/logs/autopad.log`,
     smartCSR: true,
     autoPadding: true,
     warnings: true
 });
 
-const elem1 = new adone.terminal.widget.Element({
+const elem1 = new adone.cui.widget.Element({
     parent: screen,
     top: "center",
     left: "center",
@@ -16,7 +16,7 @@ const elem1 = new adone.terminal.widget.Element({
     border: "line"
 });
 
-new adone.terminal.widget.Element({
+new adone.cui.widget.Element({
     parent: elem1,
     top: 0,
     left: 0,

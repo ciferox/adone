@@ -532,7 +532,7 @@ export class Cell {
     wrapWithStyleColors(styleProperty, content) {
         if (this[styleProperty] && this[styleProperty].length) {
             try {
-                let colors = adone.terminal.style;
+                let colors = adone.cui.style;
                 for (let i = this[styleProperty].length - 1; i >= 0; i--) {
                     colors = colors[this[styleProperty][i]];
                 }

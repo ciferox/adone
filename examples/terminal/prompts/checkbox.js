@@ -6,7 +6,7 @@ adone.terminal.prompt([
         message: "Select toppings",
         name: "toppings",
         choices: [
-            new adone.terminal.Separator(" = The Meats = "),
+            new adone.cui.Separator(" = The Meats = "),
             {
                 name: "Pepperoni"
             },
@@ -19,7 +19,7 @@ adone.terminal.prompt([
             {
                 name: "Bacon"
             },
-            new adone.terminal.Separator(" = The Cheeses = "),
+            new adone.cui.Separator(" = The Cheeses = "),
             {
                 name: "Mozzarella",
                 checked: true
@@ -30,14 +30,14 @@ adone.terminal.prompt([
             {
                 name: "Parmesan"
             },
-            new adone.terminal.Separator(" = The usual ="),
+            new adone.cui.Separator(" = The usual ="),
             {
                 name: "Mushroom"
             },
             {
                 name: "Tomato"
             },
-            new adone.terminal.Separator(" = The extras = "),
+            new adone.cui.Separator(" = The extras = "),
             {
                 name: "Pineapple"
             },

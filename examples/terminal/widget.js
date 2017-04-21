@@ -1,4 +1,4 @@
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     dump: `${__dirname}/logs/widget.log`,
     title: "widget test",
     resizeTimeout: 300,
@@ -32,7 +32,7 @@ screen.on("event", (event, el) => {
     screen.terminal.log("emit(\"%s\", {%s})", event, type);
 });
 
-screen.append(new adone.terminal.widget.Text({
+screen.append(new adone.cui.widget.Text({
     top: 0,
     left: 2,
     width: "100%",
@@ -46,14 +46,14 @@ screen.append(new adone.terminal.widget.Text({
     align: "center"
 }));
 
-screen.append(new adone.terminal.widget.Line({
+screen.append(new adone.cui.widget.Line({
     orientation: "horizontal",
     top: 1,
     left: 0,
     right: 0
 }));
 
-const list = new adone.terminal.widget.List({
+const list = new adone.cui.widget.List({
     align: "center",
     mouse: true,
     label: " My list ",
@@ -126,7 +126,7 @@ list.on("select", (item, select) => {
     screen.render();
 });
 
-const progress = new adone.terminal.widget.ProgressBar({
+const progress = new adone.cui.widget.ProgressBar({
     border: "line",
     style: {
         fg: "blue",
@@ -159,7 +159,7 @@ var lorem = require("fs").readFileSync(`${__dirname}/data/git.diff`, "utf8");
 
 //lorem = lorem.replace(/\x1b[^m]*m/g, '');
 
-const stext = new adone.terminal.widget.ScrollableText({
+const stext = new adone.cui.widget.ScrollableText({
     //padding: 1,
     mouse: true,
     content: lorem,
@@ -232,7 +232,7 @@ screen.on("element focus", (cur, old) => {
     screen.render();
 });
 
-const input = new adone.terminal.widget.TextBox({
+const input = new adone.cui.widget.TextBox({
     label: " My Input ",
     content: "",
     border: "line",
@@ -268,7 +268,7 @@ input.on("submit", (value) => {
 
 screen.append(input);
 
-const button = new adone.terminal.widget.Button({
+const button = new adone.cui.widget.Button({
     //content: 'Click me!',
     content: "Click\nme!",
     shrink: true,

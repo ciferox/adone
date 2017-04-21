@@ -1,6 +1,6 @@
 // import adone from "adone";
 
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     dump: `${__dirname}/logs/exit.log`,
     smartCSR: true,
     autoPadding: true,
@@ -8,7 +8,7 @@ const screen = new adone.terminal.Screen({
     ignoreLocked: ["C-q"]
 });
 
-const box = new adone.terminal.widget.Prompt({
+const box = new adone.cui.widget.Prompt({
     parent: screen,
     left: "center",
     top: "center",

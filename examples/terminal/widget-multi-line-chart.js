@@ -1,6 +1,6 @@
 // import adone from "adone";
-const screen = new adone.terminal.Screen();
-const line = new adone.terminal.widget.LineChart(
+const screen = new adone.cui.Screen();
+const line = new adone.cui.widget.LineChart(
     {
         width: 80
         , height: 30

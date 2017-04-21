@@ -6,7 +6,7 @@ adone.terminal.prompt([
         choices: [
             "Order a pizza",
             "Make a reservation",
-            new adone.terminal.Separator(),
+            new adone.cui.Separator(),
             "Ask for opening hours",
             {
                 name: "Contact support",

@@ -1,11 +1,11 @@
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     dump: `${__dirname}/logs/shadow.log`,
     smartCSR: true,
     dockBorders: true,
     warnings: true
 });
 
-const bg = new adone.terminal.widget.Element({
+const bg = new adone.cui.widget.Element({
     parent: screen,
     shadow: true,
     left: 0,
@@ -18,7 +18,7 @@ const bg = new adone.terminal.widget.Element({
     content: "Foo"
 });
 
-const under = new adone.terminal.widget.Element({
+const under = new adone.cui.widget.Element({
     parent: screen,
     shadow: true,
     left: 10,
@@ -32,7 +32,7 @@ const under = new adone.terminal.widget.Element({
     tags: true
 });
 
-const over = new adone.terminal.widget.Element({
+const over = new adone.cui.widget.Element({
     parent: screen,
     shadow: true,
     left: "center",

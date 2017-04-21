@@ -57,6 +57,9 @@ export default class Bundler {
         if (namespace.startsWith("adone.vendor")) {
             adone.info("Skipping 'adone.vendor.*' code");
             return;
+        } else if (namespace.startsWith("adone.std")) {
+            adone.info("Skipping 'adone.std.*' code");
+            return;
         }
 
         await this.inspector.attachNamespace(namespace);

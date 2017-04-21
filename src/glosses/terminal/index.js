@@ -4303,10 +4303,11 @@ const emitKeys = (stream, s) => {
     });
 };
 
-class Terminal extends adone.EventEmitter {
+export default class Terminal extends adone.EventEmitter {
     constructor() {
         super();
 
+        this._native = null;
         this.useBuffer = false;
         this._resizeTimeout = 0;
         this.grabbing = false;
@@ -4403,6 +4404,13 @@ class Terminal extends adone.EventEmitter {
             process.on("SIGWINCH", this.output._resizeHandler);
         }
         this.setMaxListeners(Infinity);
+    }
+
+    get native() {
+        if (is.null(this._native)) {
+            this._native = adone.bind("terminal.node").Terminal;
+        }
+        return this._native;
     }
 
     get readline() {
@@ -4578,7 +4586,7 @@ class Terminal extends adone.EventEmitter {
             val = false;
         }
 
-        const esc = adone.terminal.style.styles;
+        const esc = adone.cui.style.styles;
 
         switch (param) {
             // attributes
@@ -4694,10 +4702,10 @@ class Terminal extends adone.EventEmitter {
                 let m = /^(#(?:[0-9a-f]{3}){1,2}) (fg|bg)$/.exec(param);
                 if (m) {
                     if (m[2] === "fg") {
-                        return adone.terminal.style.styles.color.ansi16m.hex(m[1]);
+                        return adone.cui.style.styles.color.ansi16m.hex(m[1]);
                     }
                     if (m[2] === "bg") {
-                        return adone.terminal.style.styles.bgColor.ansi16m.hex(m[1]);
+                        return adone.cui.style.styles.bgColor.ansi16m.hex(m[1]);
                     }
                 }
                 m = /^(=|~)([01]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5]) (fg|bg)$/.exec(param);
@@ -4705,17 +4713,17 @@ class Terminal extends adone.EventEmitter {
                     color = Number.parseInt(m[2], 10);
                     if (m[1] === "=") {
                         if (m[3] === "fg") {
-                            return adone.terminal.style.styles.color.ansi256.rgb(color, color, color);
+                            return adone.cui.style.styles.color.ansi256.rgb(color, color, color);
                         }
                         if (m[3] === "bg") {
-                            return adone.terminal.style.styles.bgColor.ansi256.rgb(color, color, color);
+                            return adone.cui.style.styles.bgColor.ansi256.rgb(color, color, color);
                         }
                     } else if (m[1] === "~") {
                         if (m[3] === "fg") {
-                            return adone.terminal.style.styles.color.ansi16m.rgb(color, color, color);
+                            return adone.cui.style.styles.color.ansi16m.rgb(color, color, color);
                         }
                         if (m[3] === "bg") {
-                            return adone.terminal.style.styles.bgColor.ansi16m.rgb(color, color, color);
+                            return adone.cui.style.styles.bgColor.ansi16m.rgb(color, color, color);
                         }
                     } else {
                         return null;
@@ -6573,7 +6581,7 @@ class Terminal extends adone.EventEmitter {
     }
 
     styleReset() {
-        this.write(adone.terminal.style.styles.reset.open);
+        this.write(adone.cui.style.styles.reset.open);
         return this;
     }
 
@@ -6608,7 +6616,7 @@ class Terminal extends adone.EventEmitter {
     }
 
     getCursorPos() {
-        return adone.terminal.native.getCursorPos();
+        return this.native.getCursorPos();
     }
 
     saveCursor(key) {
@@ -6831,106 +6839,12 @@ class Terminal extends adone.EventEmitter {
             this.y = this.rows - 1;
         }
     }
+
+    prompt(questions) {
+        const ui = new adone.cui.Prompt(adone.cui.prompt);
+        const promise = ui.run(questions);
+        promise.ui = ui;
+        return promise;
+    }
 }
 Terminal.prototype.type = "program";
-
-const defaultTerm = new Terminal();
-
-adone.lazify({
-    native: () => adone.bind("terminal.node").Terminal,
-    style: "./styles",
-    Node: "./ui/node",
-    Screen: "./ui/screen",
-    GridLayout: "./ui/layout/grid",
-    CarouselLayout: "./ui/layout/carousel",
-    Separator: "./ui/prompt/separator",
-    Prompt: "./ui/prompt",
-    Progress: "./ui/progress"
-}, defaultTerm, require);
-
-defaultTerm.layout = adone.lazify({
-    Grid: "./ui/layout/grid",
-    Carousel: "./ui/layout/carousel"
-});
-
-defaultTerm.widget = adone.lazify({
-    Element: "./ui/widgets/element",
-    Text: "./ui/widgets/text",
-    Line: "./ui/widgets/line",
-    ScrollableBox: "./ui/widgets/scrollablebox",
-    ScrollableText: "./ui/widgets/scrollabletext",
-    BigText: "./ui/widgets/bigtext",
-    List: "./ui/widgets/list",
-    Form: "./ui/widgets/form",
-    Input: "./ui/widgets/input",
-    TextArea: "./ui/widgets/textarea",
-    TextBox: "./ui/widgets/textbox",
-    Button: "./ui/widgets/button",
-    ProgressBar: "./ui/widgets/progressbar",
-    FileManager: "./ui/widgets/filemanager",
-    CheckBox: "./ui/widgets/checkbox",
-    RadioSet: "./ui/widgets/radioset",
-    RadioButton: "./ui/widgets/radiobutton",
-    Prompt: "./ui/widgets/prompt",
-    Question: "./ui/widgets/question",
-    Message: "./ui/widgets/message",
-    Loading: "./ui/widgets/loading",
-    ListBar: "./ui/widgets/listbar",
-    Log: "./ui/widgets/log",
-    Table: "./ui/widgets/table",
-    ListTable: "./ui/widgets/listtable",
-    Terminal: "./glosses/widgets/Terminal",
-    ANSIImage: "./ui/widgets/ansiimage",
-    OverlayImage: "./ui/widgets/overlayimage",
-    Video: "./ui/widgets/video",
-    Layout: "./ui/widgets/layout",
-    Grid: "./ui/widgets/grid",
-    MultiPage: "./ui/widgets/multipage",
-    TabBar: "./ui/widgets/tabbar",
-    Canvas: "./ui/widgets/canvas",
-    Map: "./ui/widgets/map",
-    Donut: "./ui/widgets/donut",
-    Gauge: "./ui/widgets/gauge",
-    GaugeList: "./ui/widgets/gaugelist",
-    SparkLine: "./ui/widgets/sparkline",
-    ExTable: "./ui/widgets/extable",
-    LCD: "./ui/widgets/lcd",
-    ExLog: "./ui/widgets/exlog",
-    Tree: "./ui/widgets/tree",
-    Markdown: "./ui/widgets/markdown",
-    Picture: "./ui/widgets/picture",
-    BarChart: "./ui/widgets/charts/bar",
-    LineChart: "./ui/widgets/charts/line",
-    StackedBarChart: "./ui/widgets/charts/stackedbar",
-    chart: () => {
-        return adone.lazify({
-            Bar: "./ui/widgets/charts/bar",
-            StackedBar: "./ui/widgets/charts/stackedbar",
-            Line: "./ui/widgets/charts/line"
-        });
-    }
-});
-
-defaultTerm.unicode = require("./ui/unicode");
-defaultTerm.helpers = require("./ui/helpers");
-defaultTerm.helpers.merge(defaultTerm, defaultTerm.helpers);
-
-defaultTerm.prompt = (questions) => {
-    const ui = new defaultTerm.Prompt(adone.lazify({
-        list: "./ui/prompt/species/list",
-        input: "./ui/prompt/species/input",
-        confirm: "./ui/prompt/species/confirm",
-        rawlist: "./ui/prompt/species/rawlist",
-        expand: "./ui/prompt/species/expand",
-        checkbox: "./ui/prompt/species/checkbox",
-        password: "./ui/prompt/species/password",
-        editor: "./ui/prompt/species/editor",
-        autocomplete: "./ui/prompt/species/autocomplete",
-        directory: "./ui/prompt/species/directory"
-    }));
-    const promise = ui.run(questions);
-    promise.ui = ui;
-    return promise;
-};
-
-export default defaultTerm;

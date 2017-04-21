@@ -68,6 +68,20 @@ export const namespaces = [
         ]
     },
     {
+        name: "adone.cui",
+        description: "Console user interface",
+        paths: [
+            "glosses/cui/index"
+        ]
+    },
+    {
+        name: "adone.cui.widget",
+        description: "Implementations of CUI widgets",
+        paths: [
+            "glosses/cui/widgets"
+        ]
+    },
+    {
         name: "adone.data",
         description: "",
         paths: [
@@ -333,13 +347,6 @@ export const namespaces = [
         paths: []
     },
     {
-        name: "adone.terminal",
-        description: "Terminal implementation and common cli utilites",
-        paths: [
-            "glosses/terminal/index"
-        ]
-    },
-    {
         name: "adone.text",
         description: "Text utilites",
         paths: [
@@ -386,13 +393,6 @@ export const namespaces = [
         description: "Implementation of cli table",
         paths: [
             "glosses/text/table"
-        ]
-    },
-    {
-        name: "adone.terminal.widget",
-        description: "Implementations of CUI widgets",
-        paths: [
-            "glosses/terminal/ui/widgets"
         ]
     },
     {

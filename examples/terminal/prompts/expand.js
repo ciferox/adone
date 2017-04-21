@@ -19,7 +19,7 @@ adone.terminal.prompt([
         name: 'Show diff',
         value: 'diff'
       },
-      new adone.terminal.Separator(),
+      new adone.cui.Separator(),
       {
         key: 'x',
         name: 'Abort',

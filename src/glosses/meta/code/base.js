@@ -47,7 +47,8 @@ export default class XBase {
             plugins: [
                 "decorators",
                 "functionBind",
-                "classProperties"
+                "classProperties",
+                "objectRestSpread"
             ]
         });
     }

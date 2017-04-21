@@ -1,5 +1,5 @@
 // import adone from "adone";
-const screen = new adone.terminal.Screen();
+const screen = new adone.cui.Screen();
 
 /**
  * Donut Options
@@ -10,7 +10,7 @@ const screen = new adone.terminal.Screen();
   self.options.yPadding = options.yPadding || 2;
  */
 
-const donut = new adone.terminal.widget.Donut({
+const donut = new adone.cui.widget.Donut({
     label: "Test",
     radius: 8,
     arcWidth: 3,

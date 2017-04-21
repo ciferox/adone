@@ -1,10 +1,10 @@
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     dump: `${__dirname}/logs/textarea.log`,
     fullUnicode: true,
     warnings: true
 });
 
-const box = new adone.terminal.widget.TextArea({
+const box = new adone.cui.widget.TextArea({
     parent: screen,
     // Possibly support:
     // align: 'center',

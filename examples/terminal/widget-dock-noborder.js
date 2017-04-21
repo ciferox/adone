@@ -1,13 +1,13 @@
 // import adone from "adone";
 
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     dump: `${__dirname}/logs/dock.log`,
     smartCSR: true,
     dockBorders: true,
     warnings: true
 });
 
-new adone.terminal.widget.Element({
+new adone.cui.widget.Element({
     parent: screen,
     left: -1,
     top: -1,
@@ -17,7 +17,7 @@ new adone.terminal.widget.Element({
     content: "Foo"
 });
 
-new adone.terminal.widget.Element({
+new adone.cui.widget.Element({
     parent: screen,
     left: "50%-1",
     top: -1,
@@ -27,7 +27,7 @@ new adone.terminal.widget.Element({
     border: "line"
 });
 
-new adone.terminal.widget.Element({
+new adone.cui.widget.Element({
     parent: screen,
     left: -1,
     top: "50%-1",
@@ -37,7 +37,7 @@ new adone.terminal.widget.Element({
     content: "Foo"
 });
 
-new adone.terminal.widget.ListTable({
+new adone.cui.widget.ListTable({
     parent: screen,
     left: "50%-1",
     top: "50%-1",

@@ -1,7 +1,7 @@
 // import adone from "adone";
 const assert = require("assert");
 
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     dump: `${__dirname}/logs/pos.log`
 });
 
@@ -10,7 +10,7 @@ screen.terminal.cols = 154;
 screen.terminal.rows = 19;
 screen.alloc();
 
-const main = new adone.terminal.widget.Element({
+const main = new adone.cui.widget.Element({
     //width: '75%',
     //height: '75%',
     width: 115,
@@ -25,7 +25,7 @@ const main = new adone.terminal.widget.Element({
 
 screen.append(main);
 
-const inner = new adone.terminal.widget.Element({
+const inner = new adone.cui.widget.Element({
     width: "50%",
     height: "50%",
     //width: 57,

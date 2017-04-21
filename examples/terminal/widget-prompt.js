@@ -1,13 +1,13 @@
 // import adone from "adone";
 
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     smartCSR: true,
     dump: `${__dirname}/logs/prompt.log`,
     autoPadding: true,
     warnings: true
 });
 
-const prompt = new adone.terminal.widget.Prompt({
+const prompt = new adone.cui.widget.Prompt({
     parent: screen,
     border: "line",
     height: "shrink",
@@ -20,7 +20,7 @@ const prompt = new adone.terminal.widget.Prompt({
     vi: true
 });
 
-const question = new adone.terminal.widget.Question({
+const question = new adone.cui.widget.Question({
     parent: screen,
     border: "line",
     height: "shrink",
@@ -33,7 +33,7 @@ const question = new adone.terminal.widget.Question({
     vi: true
 });
 
-const msg = new adone.terminal.widget.Message({
+const msg = new adone.cui.widget.Message({
     parent: screen,
     border: "line",
     height: "shrink",
@@ -47,7 +47,7 @@ const msg = new adone.terminal.widget.Message({
     vi: true
 });
 
-const loader = new adone.terminal.widget.Loading({
+const loader = new adone.cui.widget.Loading({
     parent: screen,
     border: "line",
     height: "shrink",

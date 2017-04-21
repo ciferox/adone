@@ -381,7 +381,7 @@ export default class extends adone.application.Subsystem {
 
         for (const type of types) {
             const fileName = builder.getArchiveName(type);
-            const bar = new adone.terminal.Progress({
+            const bar = new adone.cui.Progress({
                 schema: `:spinner Preparing {bold}${fileName}{/} :elapsed`
             });
 

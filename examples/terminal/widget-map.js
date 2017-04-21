@@ -1,7 +1,7 @@
 // import adone from "adone";
 
-const screen = new adone.terminal.Screen();
-const map = new adone.terminal.widget.Map({ label: "World Map" });
+const screen = new adone.cui.Screen();
+const map = new adone.cui.widget.Map({ label: "World Map" });
 
 screen.append(map);
 

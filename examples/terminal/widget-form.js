@@ -1,11 +1,11 @@
 // import adone from "adone";
 
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     dump: `${__dirname}/logs/form.log`,
     warnings: true
 });
 
-const form = new adone.terminal.widget.Form({
+const form = new adone.cui.widget.Form({
     parent: screen,
     mouse: true,
     keys: true,
@@ -50,7 +50,7 @@ form.key("u", () => {
     screen.render();
 });
 
-const set = new adone.terminal.widget.RadioSet({
+const set = new adone.cui.widget.RadioSet({
     parent: form,
     left: 1,
     top: 1,
@@ -62,7 +62,7 @@ const set = new adone.terminal.widget.RadioSet({
     }
 });
 
-const radio1 = new adone.terminal.widget.RadioButton({
+const radio1 = new adone.cui.widget.RadioButton({
     parent: set,
     mouse: true,
     keys: true,
@@ -77,7 +77,7 @@ const radio1 = new adone.terminal.widget.RadioButton({
     content: "radio1"
 });
 
-const radio2 = new adone.terminal.widget.RadioButton({
+const radio2 = new adone.cui.widget.RadioButton({
     parent: set,
     mouse: true,
     keys: true,
@@ -92,7 +92,7 @@ const radio2 = new adone.terminal.widget.RadioButton({
     content: "radio2"
 });
 
-const text = new adone.terminal.widget.TextBox({
+const text = new adone.cui.widget.TextBox({
     parent: form,
     mouse: true,
     keys: true,
@@ -110,7 +110,7 @@ text.on("focus", () => {
     text.readInput();
 });
 
-const check = new adone.terminal.widget.CheckBox({
+const check = new adone.cui.widget.CheckBox({
     parent: form,
     mouse: true,
     keys: true,
@@ -125,7 +125,7 @@ const check = new adone.terminal.widget.CheckBox({
     content: "check"
 });
 
-const check2 = new adone.terminal.widget.CheckBox({
+const check2 = new adone.cui.widget.CheckBox({
     parent: form,
     mouse: true,
     keys: true,
@@ -140,7 +140,7 @@ const check2 = new adone.terminal.widget.CheckBox({
     content: "foooooooo2"
 });
 
-const submit = new adone.terminal.widget.Button({
+const submit = new adone.cui.widget.Button({
     parent: form,
     mouse: true,
     keys: true,
@@ -166,7 +166,7 @@ submit.on("press", () => {
     form.submit();
 });
 
-const box1 = new adone.terminal.widget.Element({
+const box1 = new adone.cui.widget.Element({
     parent: form,
     left: 1,
     top: 10,
@@ -178,7 +178,7 @@ const box1 = new adone.terminal.widget.Element({
     }
 });
 
-const box2 = new adone.terminal.widget.Element({
+const box2 = new adone.cui.widget.Element({
     parent: box1,
     left: 1,
     top: 2,
@@ -190,7 +190,7 @@ const box2 = new adone.terminal.widget.Element({
     }
 });
 
-const box3 = new adone.terminal.widget.Element({
+const box3 = new adone.cui.widget.Element({
     parent: box2,
     left: 1,
     top: 2,
@@ -202,7 +202,7 @@ const box3 = new adone.terminal.widget.Element({
     }
 });
 
-const box4 = new adone.terminal.widget.Element({
+const box4 = new adone.cui.widget.Element({
     parent: box3,
     left: 1,
     top: 2,
@@ -214,7 +214,7 @@ const box4 = new adone.terminal.widget.Element({
     }
 });
 
-const output = new adone.terminal.widget.ScrollableText({
+const output = new adone.cui.widget.ScrollableText({
     parent: form,
     mouse: true,
     keys: true,
@@ -229,7 +229,7 @@ const output = new adone.terminal.widget.ScrollableText({
     content: "foobar"
 });
 
-const bottom = new adone.terminal.widget.Line({
+const bottom = new adone.cui.widget.Line({
     parent: form,
     type: "line",
     orientation: "horizontal",

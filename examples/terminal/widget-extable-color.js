@@ -1,8 +1,8 @@
 // import adone from "adone";
-const screen = new adone.terminal.Screen();
+const screen = new adone.cui.Screen();
 const colors = require("colors/safe");
 
-const table = new adone.terminal.widget.ExTable(
+const table = new adone.cui.widget.ExTable(
     {
         keys: true
         , fg: "white"

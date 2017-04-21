@@ -1,6 +1,6 @@
 // import adone from "adone";
 
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     dump: `${__dirname}/logs/listtable.log`,
     autoPadding: false,
     fullUnicode: true,
@@ -28,7 +28,7 @@ var box = blessed.box({
 });
 */
 
-const table = new adone.terminal.widget.ListTable({
+const table = new adone.cui.widget.ListTable({
     //parent: screen,
     top: "center",
     left: "center",

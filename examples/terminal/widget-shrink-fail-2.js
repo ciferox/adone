@@ -1,11 +1,11 @@
 // import adone from "adone";
 
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     autoPadding: true,
     warnings: true
 });
 
-const tab = new adone.terminal.widget.Element({
+const tab = new adone.cui.widget.Element({
     parent: screen,
     top: 2,
     left: 0,
@@ -25,7 +25,7 @@ const tab = new adone.terminal.widget.Element({
     }
 });
 
-tab._.data = new adone.terminal.widget.Text({
+tab._.data = new adone.cui.widget.Text({
     parent: tab,
     top: 0,
     left: 3,

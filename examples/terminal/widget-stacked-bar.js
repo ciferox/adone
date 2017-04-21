@@ -1,5 +1,5 @@
-const screen = new adone.terminal.Screen();
-const bar = new adone.terminal.widget.StackedBarChart(
+const screen = new adone.cui.Screen();
+const bar = new adone.cui.widget.StackedBarChart(
     {
         label: "Server Utilization (%)"
         , barWidth: 4

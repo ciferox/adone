@@ -1,18 +1,18 @@
 // import adone from "adone";
 const fs = adone.std.fs;
-const screen = new adone.terminal.Screen();
+const screen = new adone.cui.Screen();
 
 //create layout and widgets
-const grid = new adone.terminal.GridLayout({ rows: 1, cols: 2, screen });
+const grid = new adone.cui.GridLayout({ rows: 1, cols: 2, screen });
 
-const tree = grid.set(0, 0, 1, 1, adone.terminal.widget.Tree,
+const tree = grid.set(0, 0, 1, 1, adone.cui.widget.Tree,
     {
         style: { text: "red" }
         , template: { lines: true }
         , label: "Filesystem Tree"
     });
 
-const table = grid.set(0, 1, 1, 1, adone.terminal.widget.ExTable,
+const table = grid.set(0, 1, 1, 1, adone.cui.widget.ExTable,
     {
         keys: true
         , fg: "green"

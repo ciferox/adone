@@ -65,9 +65,10 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
 
             return obj;
         },
+        getAssetAbsolutePath: (relPath) => adone.std.path.resolve(__dirname, "..", "etc", adone.std.path.normalize(relPath)),
         loadAsset: (relPath) => {
             const extName = adone.std.path.extname(relPath);
-            const buf = adone.std.fs.readFileSync(adone.std.path.resolve(__dirname, "..", "etc", adone.std.path.normalize(relPath)));
+            const buf = adone.std.fs.readFileSync(adone.getAssetAbsolutePath(relPath));
             switch (extName) {
                 case ".json": {
                     return JSON.parse(buf.toString("utf8"));
@@ -213,6 +214,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         expect: () => adone.assertion.loadExpectInterface().expect,
         defaultLogger: () => adone.application.Logger.default(),
         is: "./glosses/common/is",
+        cui: "./glosses/cui",
         application: "./glosses/application",
         configuration: "./glosses/configurations",
         collection: "./glosses/collections",
@@ -238,7 +240,15 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         core: "./glosses/core",
         Transform: "./glosses/core/transform",
         text: "./glosses/text",
-        terminal: "./glosses/terminal",
+        Terminal: "./glosses/terminal",
+        terminal: () => {
+            const defaultTerm = new adone.Terminal();
+
+            // defaultTerm.unicode = require("../cui/unicode");
+            // defaultTerm.helpers = require("../cui/helpers");
+            // defaultTerm.helpers.merge(defaultTerm, defaultTerm.helpers);
+            return defaultTerm;
+        },
         stream: "./glosses/streams",
         transform: "./glosses/core/transforms",
         templating: "./glosses/templating",

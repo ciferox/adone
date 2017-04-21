@@ -2,13 +2,13 @@
 
 const auto = true;
 
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     dump: `${__dirname}/logs/listbar.log`,
     autoPadding: auto,
     warnings: true
 });
 
-const box = new adone.terminal.widget.Element({
+const box = new adone.cui.widget.Element({
     parent: screen,
     top: 0,
     right: 0,
@@ -17,7 +17,7 @@ const box = new adone.terminal.widget.Element({
     content: "..."
 });
 
-const bar = new adone.terminal.widget.ListBar({
+const bar = new adone.cui.widget.ListBar({
     //parent: screen,
     bottom: 0,
     left: 3,

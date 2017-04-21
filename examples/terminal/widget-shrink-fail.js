@@ -1,11 +1,11 @@
 // import adone from "adone";
 
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     autoPadding: true,
     warnings: true
 });
 
-const tab = new adone.terminal.widget.Element({
+const tab = new adone.cui.widget.Element({
     parent: screen,
     top: 2,
     left: 0,
@@ -25,7 +25,7 @@ const tab = new adone.terminal.widget.Element({
     }
 });
 
-const form = new adone.terminal.widget.Element({
+const form = new adone.cui.widget.Element({
     parent: tab,
     top: 0,
     left: 1,
@@ -40,7 +40,7 @@ const form = new adone.terminal.widget.Element({
     tags: true
 });
 
-form._.ftext = new adone.terminal.widget.Text({
+form._.ftext = new adone.cui.widget.Text({
     parent: form,
     top: 0,
     left: 0,
@@ -49,7 +49,7 @@ form._.ftext = new adone.terminal.widget.Text({
     tags: true
 });
 
-form._.foo = new adone.terminal.widget.TextBox({
+form._.foo = new adone.cui.widget.TextBox({
     parent: form,
     name: "foo",
     inputOnFocus: true,
@@ -68,7 +68,7 @@ form._.foo = new adone.terminal.widget.TextBox({
     }
 });
 
-form._.btext = new adone.terminal.widget.Text({
+form._.btext = new adone.cui.widget.Text({
     parent: form,
     top: 2,
     left: 0,
@@ -77,7 +77,7 @@ form._.btext = new adone.terminal.widget.Text({
     tags: true
 });
 
-form._.bar = new adone.terminal.widget.TextBox({
+form._.bar = new adone.cui.widget.TextBox({
     parent: form,
     name: "bar",
     inputOnFocus: true,
@@ -96,7 +96,7 @@ form._.bar = new adone.terminal.widget.TextBox({
     }
 });
 
-form._.ztext = new adone.terminal.widget.Text({
+form._.ztext = new adone.cui.widget.Text({
     parent: form,
     top: 4,
     left: 0,
@@ -105,7 +105,7 @@ form._.ztext = new adone.terminal.widget.Text({
     tags: true
 });
 
-form._.baz = new adone.terminal.widget.TextBox({
+form._.baz = new adone.cui.widget.TextBox({
     parent: form,
     name: "baz",
     inputOnFocus: true,
@@ -124,7 +124,7 @@ form._.baz = new adone.terminal.widget.TextBox({
     }
 });
 
-form._.submit = new adone.terminal.widget.Button({
+form._.submit = new adone.cui.widget.Button({
     parent: form,
     name: "submit",
     top: 6,

@@ -1,12 +1,12 @@
 // import adone from "adone";
 
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     dump: `${__dirname}/logs/bigtext.log`,
     smartCSR: true,
     warnings: true
 });
 
-new adone.terminal.widget.BigText({
+new adone.cui.widget.BigText({
     parent: screen,
     content: "Hello",
     shrink: true,

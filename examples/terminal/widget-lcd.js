@@ -1,5 +1,5 @@
 // import adone from "adone";
-const screen = new adone.terminal.Screen();
+const screen = new adone.cui.Screen();
 
 /*
 //these options need to be modified epending on the resulting positioning/size
@@ -18,7 +18,7 @@ const screen = new adone.terminal.Screen();
 */
 
 
-const lcd = new adone.terminal.widget.LCD({
+const lcd = new adone.cui.widget.LCD({
     label: "Test",
     elements: 4
 });

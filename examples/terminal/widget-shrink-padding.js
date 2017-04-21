@@ -1,11 +1,11 @@
 // import adone from "adone";
 
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     dump: `${__dirname}/logs/shrink-padding.log`,
     warnings: true
 });
 
-const outer = new adone.terminal.widget.Element({
+const outer = new adone.cui.widget.Element({
     parent: screen,
     //left: 0,
     //top: 0,
@@ -20,7 +20,7 @@ const outer = new adone.terminal.widget.Element({
     }
 });
 
-const inner = new adone.terminal.widget.Element({
+const inner = new adone.cui.widget.Element({
     parent: outer,
     left: 0,
     top: 0,

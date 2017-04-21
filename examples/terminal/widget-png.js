@@ -20,13 +20,13 @@ process.argv = process.argv.map((arg, i) => {
     return arg;
 }).filter(Boolean);
 
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     smartCSR: true,
     dump: `${__dirname}/logs/png.log`,
     warnings: true
 });
 
-new adone.terminal.widget.Element({
+new adone.cui.widget.Element({
     parent: screen,
     left: 4,
     top: 3,
@@ -39,7 +39,7 @@ new adone.terminal.widget.Element({
     content: fs.readFileSync(`${__dirname}/data/lorem.txt`, "utf8")
 });
 
-new adone.terminal.widget.Element({
+new adone.cui.widget.Element({
     parent: screen,
     left: 20,
     top: 8,
@@ -63,7 +63,7 @@ const url = "https://people.mozilla.org/~dolske/apng/spinfox.png";
 if (!file) {
     try {
         if (!fs.existsSync(spinfox)) {
-            const buf = new adone.terminal.widget.ANSIImage.curl(url);
+            const buf = new adone.cui.widget.ANSIImage.curl(url);
             fs.writeFileSync(spinfox, buf);
         }
         file = spinfox;
@@ -76,7 +76,7 @@ if (!argv.width && !argv.height && !argv.scale) {
     argv.width = 20;
 }
 
-const png = new adone.terminal.widget.ANSIImage({
+const png = new adone.cui.widget.ANSIImage({
     parent: screen,
     // border: 'line',
     width: argv.width,

@@ -1,12 +1,12 @@
 // import adone from "adone";
 
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     smartCSR: true,
     dump: `${__dirname}/logs/file.log`,
     warnings: true
 });
 
-const fm = new adone.terminal.widget.FileManager({
+const fm = new adone.cui.widget.FileManager({
     parent: screen,
     border: "line",
     style: {
@@ -28,7 +28,7 @@ const fm = new adone.terminal.widget.FileManager({
     }
 });
 
-const box = new adone.terminal.widget.Element({
+const box = new adone.cui.widget.Element({
     parent: screen,
     style: {
         bg: "green"

@@ -1,6 +1,6 @@
 // import adone from "adone";
 
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     dump: `${__dirname}/logs/csr.log`,
     smartCSR: true,
     warnings: true
@@ -36,7 +36,7 @@ blessed.box({
 expectClean(false);
 */
 
-const btext = new adone.terminal.widget.Element({
+const btext = new adone.cui.widget.Element({
     parent: screen,
     left: "center",
     top: "center",
@@ -54,7 +54,7 @@ btext.scroll = function (offset, always) {
     return btext._oscroll(offset, always);
 };
 
-const text = new adone.terminal.widget.ScrollableText({
+const text = new adone.cui.widget.ScrollableText({
     parent: screen,
     content: lorem,
     border: "line",

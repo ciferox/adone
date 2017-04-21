@@ -1,13 +1,13 @@
 // import adone from "adone";
 
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     dump: `${__dirname}/logs/logger.log`,
     smartCSR: true,
     autoPadding: false,
     warnings: true
 });
 
-const logger = new adone.terminal.widget.Log({
+const logger = new adone.cui.widget.Log({
     parent: screen,
     top: "center",
     left: "center",

@@ -1,11 +1,11 @@
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     dump: `${__dirname}/logs/valign.log`,
     smartCSR: true,
     autoPadding: false,
     warnings: true
 });
 
-const box = new adone.terminal.widget.Element({
+const box = new adone.cui.widget.Element({
     parent: screen,
     top: "center",
     left: "center",

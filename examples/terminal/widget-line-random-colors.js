@@ -4,8 +4,8 @@ function randomColor() {
     return [Math.random() * 255, Math.random() * 255, Math.random() * 255];
 }
 
-const screen = new adone.terminal.Screen();
-const line = new adone.terminal.widget.LineChart(
+const screen = new adone.cui.Screen();
+const line = new adone.cui.widget.LineChart(
     {
         width: 80
         , height: 30

@@ -1,12 +1,12 @@
 const fs = adone.std.fs;
 
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     dump: `${__dirname}/logs/record.log`,
     smartCSR: true,
     warnings: true
 });
 
-const btext = new adone.terminal.widget.Element({
+const btext = new adone.cui.widget.Element({
     parent: screen,
     left: "center",
     top: "center",
@@ -19,7 +19,7 @@ const btext = new adone.terminal.widget.Element({
     content: "CSR should still work."
 });
 
-const text = new adone.terminal.widget.ScrollableText({
+const text = new adone.cui.widget.ScrollableText({
     parent: screen,
     content: fs.readFileSync(`${__dirname}/data/git.diff`, "utf8"),
     border: "line",

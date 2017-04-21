@@ -1,4 +1,4 @@
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     dump: `${__dirname}/logs/play.log`,
     smartCSR: true,
     warnings: true

@@ -1,4 +1,4 @@
-const screen = new adone.terminal.Screen({
+const screen = new adone.cui.Screen({
     dump: `${__dirname}/logs/widget.log`,
     title: "terminal screen",
     resizeTimeout: 300,

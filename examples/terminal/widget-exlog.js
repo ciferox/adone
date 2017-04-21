@@ -1,6 +1,6 @@
 // import adone from "adone";
-const screen = new adone.terminal.Screen();
-const log = new adone.terminal.widget.ExLog(
+const screen = new adone.cui.Screen();
+const log = new adone.cui.widget.ExLog(
     {
         fg: "green"
         , label: "Server Log"
