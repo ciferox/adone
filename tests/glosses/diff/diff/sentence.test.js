@@ -1,6 +1,6 @@
 "use string";
 
-const { sentences, convertChangesToXML } = adone.util.diff;
+const { sentences, convertChangesToXML } = adone.diff;
 
 describe("diff/sentence", function () {
     describe("#sentences", function () {

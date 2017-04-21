@@ -34,7 +34,7 @@ describe("glosses", "net", "http", "server", "util", "user agent", "samples", ()
     for (const ftype of ["quick", "big"]) {
         specify(ftype, async function test() {
             if (ftype === "big") {
-                this.timeout(30000);
+                this.timeout(120000);
             }
             const file = new fs.File(__dirname, "fixtures", "samples", `${ftype}.json`);
             const lines = (await file.content()).split("\n");

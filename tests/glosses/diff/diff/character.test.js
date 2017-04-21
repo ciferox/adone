@@ -1,6 +1,6 @@
 "use string";
 
-const { chars, convertChangesToXML } = adone.util.diff;
+const { chars, convertChangesToXML } = adone.diff;
 
 describe("diff/character", function () {
     describe("#chars", function () {

@@ -1,6 +1,6 @@
 "use string";
 
-const { arrays } = adone.util.diff;
+const { arrays } = adone.diff;
 
 describe("diff/array", function () {
     describe("#arrays", function () {

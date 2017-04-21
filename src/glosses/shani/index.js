@@ -1055,9 +1055,9 @@ export const consoleReporter = ({
                                     adone.text.splitLines(err.actual).length > 1
                                 )
                             ) {
-                                printColorDiff(adone.util.diff.lines(err.actual, err.expected));
+                                printColorDiff(adone.diff.lines(err.actual, err.expected));
                             } else if (adone.is.sameType(err.expected, err.actual)) {
-                                printColorDiff(adone.util.diff.objects(err.actual, err.expected));
+                                printColorDiff(adone.diff.objects(err.actual, err.expected));
                             }
                         }
                         if (adone.is.string(err.stack)) {

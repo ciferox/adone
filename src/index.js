@@ -223,6 +223,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         crypto: "./glosses/crypto",
         data: "./glosses/data",
         database: "./glosses/databases",
+        diff: "./glosses/diff",
         util: "./glosses/utils",
         date: "./glosses/dates/exdate",
         fs: "./glosses/fs",

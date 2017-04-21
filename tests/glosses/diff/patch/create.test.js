@@ -1,6 +1,6 @@
 "use string";
 
-const { words, createPatch, createTwoFilesPatch, createStructuredPatch } = adone.util.diff;
+const { words, createPatch, createTwoFilesPatch, createStructuredPatch } = adone.diff;
 
 const VERBOSE = false;
 

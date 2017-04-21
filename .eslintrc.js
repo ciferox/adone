@@ -122,7 +122,16 @@ module.exports = {
             "ignoreComments": true
         }],
         "comma-style": ["error", "last"],
-        "no-self-compare": "error"
+        "no-self-compare": "error",
+        "no-else-return": "error",
+        "no-empty-pattern": "error",
+        "no-eval": "error",
+        "no-extend-native": "error",
+        "no-extra-bind": "error",
+        "no-extra-label": "error",
+        "no-fallthrough": "error",
+        "no-floating-decimal": "error",
+        "no-implied-eval": "error"
     },
     "plugins": [
         "babel",

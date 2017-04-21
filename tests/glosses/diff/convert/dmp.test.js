@@ -1,6 +1,6 @@
 "use string";
 
-const { convertChangesToDMP, words } = adone.util.diff;
+const { convertChangesToDMP, words } = adone.diff;
 
 describe("convertToDMP", function () {
     it("should output diff-match-patch format", function () {

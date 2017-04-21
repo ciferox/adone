@@ -1,6 +1,6 @@
 "use string";
 
-const { objects, canonicalizeObject, convertChangesToXML } = adone.util.diff;
+const { objects, canonicalizeObject, convertChangesToXML } = adone.diff;
 
 describe("diff/object", function () {
     describe("#objects", function () {

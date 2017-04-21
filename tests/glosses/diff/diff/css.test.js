@@ -1,6 +1,6 @@
 "use string";
 
-const { css, convertChangesToXML } = adone.util.diff;
+const { css, convertChangesToXML } = adone.diff;
 
 describe("diff/css", function () {
     describe("#css", function () {

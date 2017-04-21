@@ -540,7 +540,7 @@ spyApi.formatters = {
                     message += colorMatchText(args[j], calledArgs[j], calledArgMessage);
                 } else {
                     const expectedArgMessage = j < args.length ? format(args[j]) : "";
-                    const diff = adone.util.diff.object(calledArgMessage, expectedArgMessage);
+                    const diff = adone.diff.object(calledArgMessage, expectedArgMessage);
                     message += colorDiffText(diff);
                 }
             }

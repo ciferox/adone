@@ -1,6 +1,6 @@
 "use string";
 
-const { wordDiff, words, wordsWithSpace, convertChangesToXML } = adone.util.diff;
+const { wordDiff, words, wordsWithSpace, convertChangesToXML } = adone.diff;
 
 describe("WordDiff", function () {
     describe("#words", function () {

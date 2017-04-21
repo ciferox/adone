@@ -1,6 +1,6 @@
 "use string";
 
-const { applyPatch, applyPatches, parsePatch, createPatch } = adone.util.diff;
+const { applyPatch, applyPatches, parsePatch, createPatch } = adone.diff;
 
 describe("patch/apply", function () {
     describe("#applyPatch", function () {

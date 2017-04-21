@@ -37,14 +37,14 @@ export const namespaces = [
         description: "",
         paths: [
             "glosses/compressors/index"
-        ] 
+        ]
     },
     {
         name: "adone.archive",
         description: "",
         paths: [
             "glosses/archives/index"
-        ] 
+        ]
     },
     {
         name: "adone.configuration",
@@ -300,10 +300,10 @@ export const namespaces = [
         ]
     },
     {
-        name: "adone.util.diff",
+        name: "adone.diff",
         description: "Text differencing",
         paths: [
-            "glosses/utils/diff/index"
+            "glosses/diff/index"
         ]
     },
     {
