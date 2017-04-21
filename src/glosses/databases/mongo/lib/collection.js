@@ -20,6 +20,9 @@ const Cursor = require("./cursor");
 const unordered = require("./bulk/unordered");
 const ordered = require("./bulk/ordered");
 const assign = require("./utils").assign;
+const mergeOptions = require("./utils").mergeOptions;
+
+const mergeKeys = ["readPreference", "ignoreUndefined"];
 
 /**
  * @fileOverview The **Collection** class is an internal class that embodies a MongoDB collection
@@ -74,7 +77,7 @@ const Collection = function (db, topology, dbName, name, pkFactory, options) {
 
     // No promise library selected fall back
     if (!promiseLibrary) {
-        promiseLibrary = typeof global.Promise == "function" ?
+        promiseLibrary = typeof global.Promise === "function" ?
             global.Promise : require("es6-promise").Promise;
     }
 
@@ -93,66 +96,80 @@ const Collection = function (db, topology, dbName, name, pkFactory, options) {
     // Internal state
     this.s = {
         // Set custom primary key factory if provided
-        pkFactory
+        pkFactory,
         // Db
-        , db
+        db,
         // Topology
-        , topology
+        topology,
         // dbName
-        , dbName
+        dbName,
         // Options
-        , options
+        options,
         // Namespace
-        , namespace
+        namespace,
         // Read preference
-        , readPreference
+        readPreference,
         // SlaveOK
-        , slaveOk
+        slaveOk,
         // Serialize functions
-        , serializeFunctions
+        serializeFunctions,
         // Raw
-        , raw
+        raw,
         // promoteLongs
-        , promoteLongs
+        promoteLongs,
         // promoteValues
-        , promoteValues
+        promoteValues,
         // promoteBuffers
-        , promoteBuffers
+        promoteBuffers,
         // internalHint
-        , internalHint
+        internalHint,
         // collectionHint
-        , collectionHint
+        collectionHint,
         // Name
-        , name
+        name,
         // Promise library
-        , promiseLibrary
+        promiseLibrary,
         // Read Concern
-        , readConcern: options.readConcern
+        readConcern: options.readConcern
     };
 };
 
 const define = Collection.define = new Define("Collection", Collection, false);
 
 Object.defineProperty(Collection.prototype, "collectionName", {
-    enumerable: true, get () { return this.s.name; }
+    enumerable: true, get() {
+        return this.s.name;
+    }
 });
 
 Object.defineProperty(Collection.prototype, "namespace", {
-    enumerable: true, get () { return this.s.namespace; }
+    enumerable: true, get() {
+        return this.s.namespace;
+    }
 });
 
 Object.defineProperty(Collection.prototype, "readConcern", {
-    enumerable: true, get () { return this.s.readConcern || { level: "local" }; }
+    enumerable: true, get() {
+        return this.s.readConcern || { level: "local" };
+    }
 });
 
 Object.defineProperty(Collection.prototype, "writeConcern", {
     enumerable: true,
-    get () {
+    get() {
         const ops = {};
-        if (this.s.options.w != null) ops.w = this.s.options.w;
-        if (this.s.options.j != null) ops.j = this.s.options.j;
-        if (this.s.options.fsync != null) ops.fsync = this.s.options.fsync;
-        if (this.s.options.wtimeout != null) ops.wtimeout = this.s.options.wtimeout;
+        if (this.s.options.w != null) {
+            ops.w = this.s.options.w;
+        }
+        if (this.s.options.j != null) {
+            ops.j = this.s.options.j;
+        }
+        if (this.s.options.fsync != null) {
+            ops.fsync = this.s.options.fsync;
+        }
+        if (this.s.options.wtimeout != null) {
+            ops.wtimeout = this.s.options.wtimeout;
+        }
         return ops;
     }
 });
@@ -161,9 +178,13 @@ Object.defineProperty(Collection.prototype, "writeConcern", {
  * @ignore
  */
 Object.defineProperty(Collection.prototype, "hint", {
-    enumerable: true
-    , get () { return this.s.collectionHint; }
-    , set (v) { this.s.collectionHint = normalizeHintField(v); }
+    enumerable: true,
+    get() {
+        return this.s.collectionHint;
+    },
+    set(v) {
+        this.s.collectionHint = normalizeHintField(v);
+    }
 });
 
 /**
@@ -174,14 +195,14 @@ Object.defineProperty(Collection.prototype, "hint", {
  * @return {Cursor}
  */
 Collection.prototype.find = function () {
-    let options
-        , args = Array.prototype.slice.call(arguments, 0)
-        , has_callback = typeof args[args.length - 1] === "function"
-        , has_weird_callback = typeof args[0] === "function"
-        , callback = has_callback ? args.pop() : (has_weird_callback ? args.shift() : null)
-        , len = args.length
-        , selector = len >= 1 ? args[0] : {}
-        , fields = len >= 2 ? args[1] : undefined;
+    let options,
+        args = Array.prototype.slice.call(arguments, 0),
+        has_callback = typeof args[args.length - 1] === "function",
+        has_weird_callback = typeof args[0] === "function",
+        callback = has_callback ? args.pop() : (has_weird_callback ? args.shift() : null),
+        len = args.length,
+        selector = len >= 1 ? args[0] : {},
+        fields = len >= 2 ? args[1] : undefined;
 
     if (len === 1 && has_weird_callback) {
         // backwards compat for callback?, options case
@@ -216,7 +237,7 @@ Collection.prototype.find = function () {
         fields = newFields;
     }
 
-    if (3 === len) {
+    if (len === 3) {
         options = args[2];
     }
 
@@ -227,7 +248,7 @@ Collection.prototype.find = function () {
     if (Buffer.isBuffer(object)) {
         var object_size = object[0] | object[1] << 8 | object[2] << 16 | object[3] << 24;
         if (object_size != object.length) {
-            var error = new Error("query selector raw message size does not match message header size [" + object.length + "] != [" + object_size + "]");
+            var error = new Error(`query selector raw message size does not match message header size [${object.length}] != [${object_size}]`);
             error.name = "MongoError";
             throw error;
         }
@@ -238,7 +259,7 @@ Collection.prototype.find = function () {
     if (Buffer.isBuffer(object)) {
         object_size = object[0] | object[1] << 8 | object[2] << 16 | object[3] << 24;
         if (object_size != object.length) {
-            error = new Error("query fields raw message size does not match message header size [" + object.length + "] != [" + object_size + "]");
+            error = new Error(`query fields raw message size does not match message header size [${object.length}] != [${object_size}]`);
             error.name = "MongoError";
             throw error;
         }
@@ -256,7 +277,7 @@ Collection.prototype.find = function () {
 
         if (Array.isArray(options.fields)) {
             if (!options.fields.length) {
-                fields["_id"] = 1;
+                fields._id = 1;
             } else {
                 const l = options.fields.length;
 
@@ -269,9 +290,20 @@ Collection.prototype.find = function () {
         }
     }
 
-    if (!options) options = {};
+    if (!options) {
+        options = {};
+    }
 
     let newOptions = {};
+
+    // Make a shallow copy of the collection options
+    for (const key in this.s.options) {
+        if (mergeKeys.indexOf(key) != -1) {
+            newOptions[key] = this.s.options[key];
+        }
+    }
+
+
     // Make a shallow copy of options
     for (const key in options) {
         newOptions[key] = options[key];
@@ -296,29 +328,33 @@ Collection.prototype.find = function () {
     }
 
     // Ensure the query is an object
-    if (selector != null && typeof selector != "object") {
+    if (selector != null && typeof selector !== "object") {
         throw MongoError.create({ message: "query selector must be an object", driver: true });
     }
 
     // Build the find command
     const findCommand = {
-        find: this.s.namespace
-        , limit: newOptions.limit
-        , skip: newOptions.skip
-        , query: selector
+        find: this.s.namespace,
+        limit: newOptions.limit,
+        skip: newOptions.skip,
+        query: selector
     };
 
     // Ensure we use the right await data option
-    if (typeof newOptions.awaitdata == "boolean") {
+    if (typeof newOptions.awaitdata === "boolean") {
         newOptions.awaitData = newOptions.awaitdata;
     }
 
     // Translate to new command option noCursorTimeout
-    if (typeof newOptions.timeout == "boolean") newOptions.noCursorTimeout = newOptions.timeout;
+    if (typeof newOptions.timeout === "boolean") {
+        newOptions.noCursorTimeout = newOptions.timeout;
+    }
 
     // Merge in options to command
     for (const name in newOptions) {
-        if (newOptions[name] != null) findCommand[name] = newOptions[name];
+        if (newOptions[name] != null) {
+            findCommand[name] = newOptions[name];
+        }
     }
 
     // Format the fields
@@ -340,7 +376,9 @@ Collection.prototype.find = function () {
     };
 
     // Special treatment for the fields selector
-    if (fields) findCommand.fields = formatFields(fields);
+    if (fields) {
+        findCommand.fields = formatFields(fields);
+    }
 
     // Add db object to the new options
     newOptions.db = this.s.db;
@@ -349,11 +387,19 @@ Collection.prototype.find = function () {
     newOptions.promiseLibrary = this.s.promiseLibrary;
 
     // Set raw if available at collection level
-    if (newOptions.raw == null && typeof this.s.raw == "boolean") newOptions.raw = this.s.raw;
+    if (newOptions.raw == null && typeof this.s.raw === "boolean") {
+        newOptions.raw = this.s.raw;
+    }
     // Set promoteLongs if available at collection level
-    if (newOptions.promoteLongs == null && typeof this.s.promoteLongs == "boolean") newOptions.promoteLongs = this.s.promoteLongs;
-    if (newOptions.promoteValues == null && typeof this.s.promoteValues == "boolean") newOptions.promoteValues = this.s.promoteValues;
-    if (newOptions.promoteBuffers == null && typeof this.s.promoteBuffers == "boolean") newOptions.promoteBuffers = this.s.promoteBuffers;
+    if (newOptions.promoteLongs == null && typeof this.s.promoteLongs === "boolean") {
+        newOptions.promoteLongs = this.s.promoteLongs;
+    }
+    if (newOptions.promoteValues == null && typeof this.s.promoteValues === "boolean") {
+        newOptions.promoteValues = this.s.promoteValues;
+    }
+    if (newOptions.promoteBuffers == null && typeof this.s.promoteBuffers === "boolean") {
+        newOptions.promoteBuffers = this.s.promoteBuffers;
+    }
 
     // Sort options
     if (findCommand.sort) {
@@ -369,7 +415,9 @@ Collection.prototype.find = function () {
     decorateWithCollation(findCommand, this, options);
 
     // Create the cursor
-    if (typeof callback == "function") return handleCallback(callback, null, this.s.topology.cursor(this.s.namespace, findCommand, newOptions));
+    if (typeof callback === "function") {
+        return handleCallback(callback, null, this.s.topology.cursor(this.s.namespace, findCommand, newOptions));
+    }
     return this.s.topology.cursor(this.s.namespace, findCommand, newOptions);
 };
 
@@ -394,12 +442,14 @@ define.classMethod("find", { callback: false, promise: false, returns: [Cursor] 
  */
 Collection.prototype.insertOne = function (doc, options, callback) {
     const self = this;
-    if (typeof options == "function") callback = options, options = {};
+    if (typeof options === "function") {
+        callback = options, options = {};
+    }
     options = options || {};
-    if (Array.isArray(doc) && typeof callback == "function") {
+    if (Array.isArray(doc) && typeof callback === "function") {
         return callback(MongoError.create({ message: "doc parameter must be an object", driver: true }));
     } else if (Array.isArray(doc)) {
-        return new this.s.promiseLibrary(function (resolve, reject) {
+        return new this.s.promiseLibrary((resolve, reject) => {
             reject(MongoError.create({ message: "doc parameter must be an object", driver: true }));
         });
     }
@@ -411,27 +461,39 @@ Collection.prototype.insertOne = function (doc, options, callback) {
     }
 
     // Execute using callback
-    if (typeof callback == "function") return insertOne(self, doc, options, callback);
+    if (typeof callback === "function") {
+        return insertOne(self, doc, options, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        insertOne(self, doc, options, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        insertOne(self, doc, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
 };
 
 const insertOne = function (self, doc, options, callback) {
-    insertDocuments(self, [doc], options, function (err, r) {
-        if (callback == null) return;
-        if (err && callback) return callback(err);
+    insertDocuments(self, [doc], options, (err, r) => {
+        if (callback == null) {
+            return;
+        }
+        if (err && callback) {
+            return callback(err);
+        }
         // Workaround for pre 2.6 servers
-        if (r == null) return callback(null, { result: { ok: 1 } });
+        if (r == null) {
+            return callback(null, { result: { ok: 1 } });
+        }
         // Add values to top level to ensure crud spec compatibility
         r.insertedCount = r.result.n;
         r.insertedId = doc._id;
-        if (callback) callback(null, r);
+        if (callback) {
+            callback(null, r);
+        }
     });
 };
 
@@ -482,33 +544,37 @@ define.classMethod("insertOne", { callback: true, promise: true });
  */
 Collection.prototype.insertMany = function (docs, options, callback) {
     const self = this;
-    if (typeof options == "function") callback = options, options = {};
+    if (typeof options === "function") {
+        callback = options, options = {};
+    }
     options = options || { ordered: true };
-    if (!Array.isArray(docs) && typeof callback == "function") {
+    if (!Array.isArray(docs) && typeof callback === "function") {
         return callback(MongoError.create({ message: "docs parameter must be an array of documents", driver: true }));
     } else if (!Array.isArray(docs)) {
-        return new this.s.promiseLibrary(function (resolve, reject) {
+        return new this.s.promiseLibrary((resolve, reject) => {
             reject(MongoError.create({ message: "docs parameter must be an array of documents", driver: true }));
         });
     }
 
     // Get the write concern options
-    if (typeof options.checkKeys != "boolean") {
+    if (typeof options.checkKeys !== "boolean") {
         options.checkKeys = true;
     }
 
     // If keep going set unordered
-    options["serializeFunctions"] = options["serializeFunctions"] || self.s.serializeFunctions;
+    options.serializeFunctions = options.serializeFunctions || self.s.serializeFunctions;
 
     // Set up the force server object id
-    const forceServerObjectID = typeof options.forceServerObjectID == "boolean"
+    const forceServerObjectID = typeof options.forceServerObjectID === "boolean"
         ? options.forceServerObjectID : self.s.db.options.forceServerObjectID;
 
     // Do we want to force the server to assign the _id key
     if (forceServerObjectID !== true) {
         // Add _id if not specified
         for (let i = 0; i < docs.length; i++) {
-            if (docs[i]._id == null) docs[i]._id = self.s.pkFactory.createPk();
+            if (docs[i]._id == null) {
+                docs[i]._id = self.s.pkFactory.createPk();
+            }
         }
     }
 
@@ -518,15 +584,21 @@ Collection.prototype.insertMany = function (docs, options, callback) {
     }];
 
     // Execute using callback
-    if (typeof callback == "function") return bulkWrite(self, operations, options, function (err, r) {
-        if (err) return callback(err, r);
-        callback(null, mapInserManyResults(docs, r));
-    });
+    if (typeof callback === "function") {
+        return bulkWrite(self, operations, options, (err, r) => {
+            if (err) {
+                return callback(err, r);
+            }
+            callback(null, mapInserManyResults(docs, r));
+        });
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        bulkWrite(self, operations, options, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        bulkWrite(self, operations, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(mapInserManyResults(docs, r));
         });
     });
@@ -588,7 +660,9 @@ define.classMethod("insertMany", { callback: true, promise: true });
  */
 Collection.prototype.bulkWrite = function (operations, options, callback) {
     const self = this;
-    if (typeof options == "function") callback = options, options = {};
+    if (typeof options === "function") {
+        callback = options, options = {};
+    }
     options = options || { ordered: true };
 
     if (!Array.isArray(operations)) {
@@ -596,12 +670,16 @@ Collection.prototype.bulkWrite = function (operations, options, callback) {
     }
 
     // Execute using callback
-    if (typeof callback == "function") return bulkWrite(self, operations, options, callback);
+    if (typeof callback === "function") {
+        return bulkWrite(self, operations, options, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        bulkWrite(self, operations, options, function (err, r) {
-            if (err && r == null) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        bulkWrite(self, operations, options, (err, r) => {
+            if (err && r == null) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -648,9 +726,11 @@ const bulkWrite = function (self, operations, options, callback) {
     }
 
     // Execute the bulk
-    bulk.execute(writeCon, function (err, r) {
+    bulk.execute(writeCon, (err, r) => {
         // We have connection level error
-        if (!r && err) return callback(err, null);
+        if (!r && err) {
+            return callback(err, null);
+        }
         // We have single error
         if (r && r.hasWriteErrors() && r.getWriteErrorCount() == 1) {
             return callback(toError(r.getWriteErrorAt(0)), r);
@@ -703,37 +783,55 @@ const bulkWrite = function (self, operations, options, callback) {
 };
 
 const insertDocuments = function (self, docs, options, callback) {
-    if (typeof options == "function") callback = options, options = {};
+    if (typeof options === "function") {
+        callback = options, options = {};
+    }
     options = options || {};
     // Ensure we are operating on an array op docs
     docs = Array.isArray(docs) ? docs : [docs];
 
     // Get the write concern options
     const finalOptions = writeConcern(shallowClone(options), self.s.db, self, options);
-    if (typeof finalOptions.checkKeys != "boolean") finalOptions.checkKeys = true;
+    if (typeof finalOptions.checkKeys !== "boolean") {
+        finalOptions.checkKeys = true;
+    }
 
     // If keep going set unordered
-    if (finalOptions.keepGoing == true) finalOptions.ordered = false;
-    finalOptions["serializeFunctions"] = options["serializeFunctions"] || self.s.serializeFunctions;
+    if (finalOptions.keepGoing == true) {
+        finalOptions.ordered = false;
+    }
+    finalOptions.serializeFunctions = options.serializeFunctions || self.s.serializeFunctions;
 
     // Set up the force server object id
-    const forceServerObjectID = typeof options.forceServerObjectID == "boolean"
+    const forceServerObjectID = typeof options.forceServerObjectID === "boolean"
         ? options.forceServerObjectID : self.s.db.options.forceServerObjectID;
 
     // Add _id if not specified
     if (forceServerObjectID !== true) {
         for (let i = 0; i < docs.length; i++) {
-            if (docs[i]._id == null) docs[i]._id = self.s.pkFactory.createPk();
+            if (docs[i]._id == null) {
+                docs[i]._id = self.s.pkFactory.createPk();
+            }
         }
     }
 
     // File inserts
-    self.s.topology.insert(self.s.namespace, docs, finalOptions, function (err, result) {
-        if (callback == null) return;
-        if (err) return handleCallback(callback, err);
-        if (result == null) return handleCallback(callback, null, null);
-        if (result.result.code) return handleCallback(callback, toError(result.result));
-        if (result.result.writeErrors) return handleCallback(callback, toError(result.result.writeErrors[0]));
+    self.s.topology.insert(self.s.namespace, docs, finalOptions, (err, result) => {
+        if (callback == null) {
+            return;
+        }
+        if (err) {
+            return handleCallback(callback, err);
+        }
+        if (result == null) {
+            return handleCallback(callback, null, null);
+        }
+        if (result.result.code) {
+            return handleCallback(callback, toError(result.result));
+        }
+        if (result.result.writeErrors) {
+            return handleCallback(callback, toError(result.result.writeErrors[0]));
+        }
         // Add docs to the list
         result.ops = docs;
         // Return the results
@@ -812,7 +910,9 @@ define.classMethod("bulkWrite", { callback: true, promise: true });
  * @deprecated Use insertOne, insertMany or bulkWrite
  */
 Collection.prototype.insert = function (docs, options, callback) {
-    if (typeof options == "function") callback = options, options = {};
+    if (typeof options === "function") {
+        callback = options, options = {};
+    }
     options = options || { ordered: false };
     docs = !Array.isArray(docs) ? [docs] : docs;
 
@@ -862,7 +962,9 @@ define.classMethod("insert", { callback: true, promise: true });
  */
 Collection.prototype.updateOne = function (filter, update, options, callback) {
     const self = this;
-    if (typeof options == "function") callback = options, options = {};
+    if (typeof options === "function") {
+        callback = options, options = {};
+    }
     options = shallowClone(options);
 
     // Add ignoreUndfined
@@ -872,12 +974,16 @@ Collection.prototype.updateOne = function (filter, update, options, callback) {
     }
 
     // Execute using callback
-    if (typeof callback == "function") return updateOne(self, filter, update, options, callback);
+    if (typeof callback === "function") {
+        return updateOne(self, filter, update, options, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        updateOne(self, filter, update, options, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        updateOne(self, filter, update, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -887,15 +993,23 @@ const updateOne = function (self, filter, update, options, callback) {
     // Set single document update
     options.multi = false;
     // Execute update
-    updateDocuments(self, filter, update, options, function (err, r) {
-        if (callback == null) return;
-        if (err && callback) return callback(err);
-        if (r == null) return callback(null, { result: { ok: 1 } });
+    updateDocuments(self, filter, update, options, (err, r) => {
+        if (callback == null) {
+            return;
+        }
+        if (err && callback) {
+            return callback(err);
+        }
+        if (r == null) {
+            return callback(null, { result: { ok: 1 } });
+        }
         r.modifiedCount = r.result.nModified != null ? r.result.nModified : r.result.n;
         r.upsertedId = Array.isArray(r.result.upserted) && r.result.upserted.length > 0 ? r.result.upserted[0] : null;
         r.upsertedCount = Array.isArray(r.result.upserted) && r.result.upserted.length ? r.result.upserted.length : 0;
         r.matchedCount = Array.isArray(r.result.upserted) && r.result.upserted.length > 0 ? 0 : r.result.n;
-        if (callback) callback(null, r);
+        if (callback) {
+            callback(null, r);
+        }
     });
 };
 
@@ -917,7 +1031,9 @@ define.classMethod("updateOne", { callback: true, promise: true });
  */
 Collection.prototype.replaceOne = function (filter, doc, options, callback) {
     const self = this;
-    if (typeof options == "function") callback = options, options = {};
+    if (typeof options === "function") {
+        callback = options, options = {};
+    }
     options = shallowClone(options);
 
     // Add ignoreUndfined
@@ -927,12 +1043,16 @@ Collection.prototype.replaceOne = function (filter, doc, options, callback) {
     }
 
     // Execute using callback
-    if (typeof callback == "function") return replaceOne(self, filter, doc, options, callback);
+    if (typeof callback === "function") {
+        return replaceOne(self, filter, doc, options, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        replaceOne(self, filter, doc, options, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        replaceOne(self, filter, doc, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -943,17 +1063,25 @@ const replaceOne = function (self, filter, doc, options, callback) {
     options.multi = false;
 
     // Execute update
-    updateDocuments(self, filter, doc, options, function (err, r) {
-        if (callback == null) return;
-        if (err && callback) return callback(err);
-        if (r == null) return callback(null, { result: { ok: 1 } });
+    updateDocuments(self, filter, doc, options, (err, r) => {
+        if (callback == null) {
+            return;
+        }
+        if (err && callback) {
+            return callback(err);
+        }
+        if (r == null) {
+            return callback(null, { result: { ok: 1 } });
+        }
 
         r.modifiedCount = r.result.nModified != null ? r.result.nModified : r.result.n;
         r.upsertedId = Array.isArray(r.result.upserted) && r.result.upserted.length > 0 ? r.result.upserted[0] : null;
         r.upsertedCount = Array.isArray(r.result.upserted) && r.result.upserted.length ? r.result.upserted.length : 0;
         r.matchedCount = Array.isArray(r.result.upserted) && r.result.upserted.length > 0 ? 0 : r.result.n;
         r.ops = [doc];
-        if (callback) callback(null, r);
+        if (callback) {
+            callback(null, r);
+        }
     });
 };
 
@@ -974,7 +1102,9 @@ define.classMethod("replaceOne", { callback: true, promise: true });
  */
 Collection.prototype.updateMany = function (filter, update, options, callback) {
     const self = this;
-    if (typeof options == "function") callback = options, options = {};
+    if (typeof options === "function") {
+        callback = options, options = {};
+    }
     options = shallowClone(options);
 
     // Add ignoreUndfined
@@ -984,12 +1114,16 @@ Collection.prototype.updateMany = function (filter, update, options, callback) {
     }
 
     // Execute using callback
-    if (typeof callback == "function") return updateMany(self, filter, update, options, callback);
+    if (typeof callback === "function") {
+        return updateMany(self, filter, update, options, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        updateMany(self, filter, update, options, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        updateMany(self, filter, update, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -999,28 +1133,46 @@ const updateMany = function (self, filter, update, options, callback) {
     // Set single document update
     options.multi = true;
     // Execute update
-    updateDocuments(self, filter, update, options, function (err, r) {
-        if (callback == null) return;
-        if (err && callback) return callback(err);
-        if (r == null) return callback(null, { result: { ok: 1 } });
+    updateDocuments(self, filter, update, options, (err, r) => {
+        if (callback == null) {
+            return;
+        }
+        if (err && callback) {
+            return callback(err);
+        }
+        if (r == null) {
+            return callback(null, { result: { ok: 1 } });
+        }
         r.modifiedCount = r.result.nModified != null ? r.result.nModified : r.result.n;
         r.upsertedId = Array.isArray(r.result.upserted) && r.result.upserted.length > 0 ? r.result.upserted[0] : null;
         r.upsertedCount = Array.isArray(r.result.upserted) && r.result.upserted.length ? r.result.upserted.length : 0;
         r.matchedCount = Array.isArray(r.result.upserted) && r.result.upserted.length > 0 ? 0 : r.result.n;
-        if (callback) callback(null, r);
+        if (callback) {
+            callback(null, r);
+        }
     });
 };
 
 define.classMethod("updateMany", { callback: true, promise: true });
 
 const updateDocuments = function (self, selector, document, options, callback) {
-    if ("function" === typeof options) callback = options, options = null;
-    if (options == null) options = {};
-    if (!("function" === typeof callback)) callback = null;
+    if (typeof options === "function") {
+        callback = options, options = null;
+    }
+    if (options == null) {
+        options = {};
+    }
+    if (!(typeof callback === "function")) {
+        callback = null;
+    }
 
     // If we are not providing a selector or document throw
-    if (selector == null || typeof selector != "object") return callback(toError("selector must be a valid JavaScript object"));
-    if (document == null || typeof document != "object") return callback(toError("document must be a valid JavaScript object"));
+    if (selector == null || typeof selector !== "object") {
+        return callback(toError("selector must be a valid JavaScript object"));
+    }
+    if (document == null || typeof document !== "object") {
+        return callback(toError("document must be a valid JavaScript object"));
+    }
 
     // Get the write concern options
     const finalOptions = writeConcern(shallowClone(options), self.s.db, self, options);
@@ -1028,23 +1180,33 @@ const updateDocuments = function (self, selector, document, options, callback) {
     // Do we return the actual result document
     // Either use override on the function, or go back to default on either the collection
     // level or db
-    finalOptions["serializeFunctions"] = options["serializeFunctions"] || self.s.serializeFunctions;
+    finalOptions.serializeFunctions = options.serializeFunctions || self.s.serializeFunctions;
 
     // Execute the operation
     const op = { q: selector, u: document };
-    op.upsert = typeof options.upsert == "boolean" ? options.upsert : false;
-    op.multi = typeof options.multi == "boolean" ? options.multi : false;
+    op.upsert = typeof options.upsert === "boolean" ? options.upsert : false;
+    op.multi = typeof options.multi === "boolean" ? options.multi : false;
 
     // Have we specified collation
     decorateWithCollation(finalOptions, self, options);
 
     // Update options
-    self.s.topology.update(self.s.namespace, [op], finalOptions, function (err, result) {
-        if (callback == null) return;
-        if (err) return handleCallback(callback, err, null);
-        if (result == null) return handleCallback(callback, null, null);
-        if (result.result.code) return handleCallback(callback, toError(result.result));
-        if (result.result.writeErrors) return handleCallback(callback, toError(result.result.writeErrors[0]));
+    self.s.topology.update(self.s.namespace, [op], finalOptions, (err, result) => {
+        if (callback == null) {
+            return;
+        }
+        if (err) {
+            return handleCallback(callback, err, null);
+        }
+        if (result == null) {
+            return handleCallback(callback, null, null);
+        }
+        if (result.result.code) {
+            return handleCallback(callback, toError(result.result));
+        }
+        if (result.result.writeErrors) {
+            return handleCallback(callback, toError(result.result.writeErrors[0]));
+        }
         // Return the results
         handleCallback(callback, null, result);
     });
@@ -1078,12 +1240,16 @@ Collection.prototype.update = function (selector, document, options, callback) {
     }
 
     // Execute using callback
-    if (typeof callback == "function") return updateDocuments(self, selector, document, options, callback);
+    if (typeof callback === "function") {
+        return updateDocuments(self, selector, document, options, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        updateDocuments(self, selector, document, options, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        updateDocuments(self, selector, document, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -1120,7 +1286,9 @@ define.classMethod("update", { callback: true, promise: true });
  */
 Collection.prototype.deleteOne = function (filter, options, callback) {
     const self = this;
-    if (typeof options == "function") callback = options, options = {};
+    if (typeof options === "function") {
+        callback = options, options = {};
+    }
     options = shallowClone(options);
 
     // Add ignoreUndfined
@@ -1130,12 +1298,16 @@ Collection.prototype.deleteOne = function (filter, options, callback) {
     }
 
     // Execute using callback
-    if (typeof callback == "function") return deleteOne(self, filter, options, callback);
+    if (typeof callback === "function") {
+        return deleteOne(self, filter, options, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        deleteOne(self, filter, options, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        deleteOne(self, filter, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -1143,12 +1315,20 @@ Collection.prototype.deleteOne = function (filter, options, callback) {
 
 const deleteOne = function (self, filter, options, callback) {
     options.single = true;
-    removeDocuments(self, filter, options, function (err, r) {
-        if (callback == null) return;
-        if (err && callback) return callback(err);
-        if (r == null) return callback(null, { result: { ok: 1 } });
+    removeDocuments(self, filter, options, (err, r) => {
+        if (callback == null) {
+            return;
+        }
+        if (err && callback) {
+            return callback(err);
+        }
+        if (r == null) {
+            return callback(null, { result: { ok: 1 } });
+        }
         r.deletedCount = r.result.n;
-        if (callback) callback(null, r);
+        if (callback) {
+            callback(null, r);
+        }
     });
 };
 
@@ -1171,7 +1351,9 @@ define.classMethod("removeOne", { callback: true, promise: true });
  */
 Collection.prototype.deleteMany = function (filter, options, callback) {
     const self = this;
-    if (typeof options == "function") callback = options, options = {};
+    if (typeof options === "function") {
+        callback = options, options = {};
+    }
     options = shallowClone(options);
 
     // Add ignoreUndfined
@@ -1181,12 +1363,16 @@ Collection.prototype.deleteMany = function (filter, options, callback) {
     }
 
     // Execute using callback
-    if (typeof callback == "function") return deleteMany(self, filter, options, callback);
+    if (typeof callback === "function") {
+        return deleteMany(self, filter, options, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        deleteMany(self, filter, options, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        deleteMany(self, filter, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -1195,17 +1381,25 @@ Collection.prototype.deleteMany = function (filter, options, callback) {
 const deleteMany = function (self, filter, options, callback) {
     options.single = false;
 
-    removeDocuments(self, filter, options, function (err, r) {
-        if (callback == null) return;
-        if (err && callback) return callback(err);
-        if (r == null) return callback(null, { result: { ok: 1 } });
+    removeDocuments(self, filter, options, (err, r) => {
+        if (callback == null) {
+            return;
+        }
+        if (err && callback) {
+            return callback(err);
+        }
+        if (r == null) {
+            return callback(null, { result: { ok: 1 } });
+        }
         r.deletedCount = r.result.n;
-        if (callback) callback(null, r);
+        if (callback) {
+            callback(null, r);
+        }
     });
 };
 
 const removeDocuments = function (self, selector, options, callback) {
-    if (typeof options == "function") {
+    if (typeof options === "function") {
         callback = options, options = {};
     } else if (typeof selector === "function") {
         callback = selector;
@@ -1220,22 +1414,36 @@ const removeDocuments = function (self, selector, options, callback) {
     const finalOptions = writeConcern(shallowClone(options), self.s.db, self, options);
 
     // If selector is null set empty
-    if (selector == null) selector = {};
+    if (selector == null) {
+        selector = {};
+    }
 
     // Build the op
     const op = { q: selector, limit: 0 };
-    if (options.single) op.limit = 1;
+    if (options.single) {
+        op.limit = 1;
+    }
 
     // Have we specified collation
     decorateWithCollation(finalOptions, self, options);
 
     // Execute the remove
-    self.s.topology.remove(self.s.namespace, [op], finalOptions, function (err, result) {
-        if (callback == null) return;
-        if (err) return handleCallback(callback, err, null);
-        if (result == null) return handleCallback(callback, null, null);
-        if (result.result.code) return handleCallback(callback, toError(result.result));
-        if (result.result.writeErrors) return handleCallback(callback, toError(result.result.writeErrors[0]));
+    self.s.topology.remove(self.s.namespace, [op], finalOptions, (err, result) => {
+        if (callback == null) {
+            return;
+        }
+        if (err) {
+            return handleCallback(callback, err, null);
+        }
+        if (result == null) {
+            return handleCallback(callback, null, null);
+        }
+        if (result.result.code) {
+            return handleCallback(callback, toError(result.result));
+        }
+        if (result.result.writeErrors) {
+            return handleCallback(callback, toError(result.result.writeErrors[0]));
+        }
         // Return the results
         handleCallback(callback, null, result);
     });
@@ -1270,12 +1478,16 @@ Collection.prototype.remove = function (selector, options, callback) {
     }
 
     // Execute using callback
-    if (typeof callback == "function") return removeDocuments(self, selector, options, callback);
+    if (typeof callback === "function") {
+        return removeDocuments(self, selector, options, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        removeDocuments(self, selector, options, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        removeDocuments(self, selector, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -1298,7 +1510,9 @@ define.classMethod("remove", { callback: true, promise: true });
  */
 Collection.prototype.save = function (doc, options, callback) {
     const self = this;
-    if (typeof options == "function") callback = options, options = {};
+    if (typeof options === "function") {
+        callback = options, options = {};
+    }
     options = options || {};
 
     // Add ignoreUndfined
@@ -1308,12 +1522,16 @@ Collection.prototype.save = function (doc, options, callback) {
     }
 
     // Execute using callback
-    if (typeof callback == "function") return save(self, doc, options, callback);
+    if (typeof callback === "function") {
+        return save(self, doc, options, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        save(self, doc, options, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        save(self, doc, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -1329,10 +1547,16 @@ const save = function (self, doc, options, callback) {
     }
 
     // Insert the document
-    insertDocuments(self, [doc], options, function (err, r) {
-        if (callback == null) return;
-        if (doc == null) return handleCallback(callback, null, null);
-        if (err) return handleCallback(callback, err, null);
+    insertDocuments(self, [doc], options, (err, r) => {
+        if (callback == null) {
+            return;
+        }
+        if (doc == null) {
+            return handleCallback(callback, null, null);
+        }
+        if (err) {
+            return handleCallback(callback, err, null);
+        }
         handleCallback(callback, null, r);
     });
 };
@@ -1382,15 +1606,21 @@ Collection.prototype.findOne = function () {
     const self = this;
     const args = Array.prototype.slice.call(arguments, 0);
     const callback = args.pop();
-    if (typeof callback != "function") args.push(callback);
+    if (typeof callback !== "function") {
+        args.push(callback);
+    }
 
     // Execute using callback
-    if (typeof callback == "function") return findOne(self, args, callback);
+    if (typeof callback === "function") {
+        return findOne(self, args, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        findOne(self, args, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        findOne(self, args, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -1399,8 +1629,10 @@ Collection.prototype.findOne = function () {
 const findOne = function (self, args, callback) {
     const cursor = self.find.apply(self, args).limit(-1).batchSize(1);
     // Return the item
-    cursor.next(function (err, item) {
-        if (err != null) return handleCallback(callback, toError(err), null);
+    cursor.next((err, item) => {
+        if (err != null) {
+            return handleCallback(callback, toError(err), null);
+        }
         handleCallback(callback, null, item);
     });
 };
@@ -1426,16 +1658,22 @@ define.classMethod("findOne", { callback: true, promise: true });
  */
 Collection.prototype.rename = function (newName, opt, callback) {
     const self = this;
-    if (typeof opt == "function") callback = opt, opt = {};
+    if (typeof opt === "function") {
+        callback = opt, opt = {};
+    }
     opt = assign({}, opt, { readPreference: ReadPreference.PRIMARY });
 
     // Execute using callback
-    if (typeof callback == "function") return rename(self, newName, opt, callback);
+    if (typeof callback === "function") {
+        return rename(self, newName, opt, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        rename(self, newName, opt, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        rename(self, newName, opt, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -1447,17 +1685,18 @@ const rename = function (self, newName, opt, callback) {
     // Build the command
     const renameCollection = f("%s.%s", self.s.dbName, self.s.name);
     const toCollection = f("%s.%s", self.s.dbName, newName);
-    const dropTarget = typeof opt.dropTarget == "boolean" ? opt.dropTarget : false;
-    const cmd = { renameCollection, "to": toCollection, dropTarget };
-
-    // Decorate command with writeConcern if supported
-    decorateWithWriteConcern(cmd, self, opt);
+    const dropTarget = typeof opt.dropTarget === "boolean" ? opt.dropTarget : false;
+    const cmd = { renameCollection, to: toCollection, dropTarget };
 
     // Execute against admin
-    self.s.db.admin().command(cmd, opt, function (err, doc) {
-        if (err) return handleCallback(callback, err, null);
+    self.s.db.admin().command(cmd, opt, (err, doc) => {
+        if (err) {
+            return handleCallback(callback, err, null);
+        }
         // We have an error
-        if (doc.errmsg) return handleCallback(callback, toError(doc), null);
+        if (doc.errmsg) {
+            return handleCallback(callback, toError(doc), null);
+        }
         try {
             return handleCallback(callback, null, new Collection(self.s.db, self.s.topology, self.s.dbName, newName, self.s.pkFactory, self.s.options));
         } catch (err) {
@@ -1478,15 +1717,21 @@ define.classMethod("rename", { callback: true, promise: true });
  */
 Collection.prototype.drop = function (options, callback) {
     const self = this;
-    if (typeof options == "function") callback = options, options = {};
+    if (typeof options === "function") {
+        callback = options, options = {};
+    }
     options = options || {};
 
     // Execute using callback
-    if (typeof callback == "function") return self.s.db.dropCollection(self.s.name, options, callback);
+    if (typeof callback === "function") {
+        return self.s.db.dropCollection(self.s.name, options, callback);
+    }
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        self.s.db.dropCollection(self.s.name, options, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        self.s.db.dropCollection(self.s.name, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -1505,20 +1750,26 @@ Collection.prototype.options = function (callback) {
     const self = this;
 
     // Execute using callback
-    if (typeof callback == "function") return options(self, callback);
+    if (typeof callback === "function") {
+        return options(self, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        options(self, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        options(self, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
 };
 
 const options = function (self, callback) {
-    self.s.db.listCollections({ name: self.s.name }).toArray(function (err, collections) {
-        if (err) return handleCallback(callback, err);
+    self.s.db.listCollections({ name: self.s.name }).toArray((err, collections) => {
+        if (err) {
+            return handleCallback(callback, err);
+        }
         if (collections.length == 0) {
             return handleCallback(callback, MongoError.create({ message: f("collection %s not found", self.s.namespace), driver: true }));
         }
@@ -1540,20 +1791,26 @@ Collection.prototype.isCapped = function (callback) {
     const self = this;
 
     // Execute using callback
-    if (typeof callback == "function") return isCapped(self, callback);
+    if (typeof callback === "function") {
+        return isCapped(self, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        isCapped(self, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        isCapped(self, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
 };
 
 const isCapped = function (self, callback) {
-    self.options(function (err, document) {
-        if (err) return handleCallback(callback, err);
+    self.options((err, document) => {
+        if (err) {
+            return handleCallback(callback, err);
+        }
         handleCallback(callback, null, document && document.capped);
     });
 };
@@ -1586,18 +1843,24 @@ Collection.prototype.createIndex = function (fieldOrSpec, options, callback) {
     const self = this;
     const args = Array.prototype.slice.call(arguments, 1);
     callback = args.pop();
-    if (typeof callback != "function") args.push(callback);
+    if (typeof callback !== "function") {
+        args.push(callback);
+    }
     options = args.length ? args.shift() || {} : {};
     options = typeof callback === "function" ? options : callback;
     options = options == null ? {} : options;
 
     // Execute using callback
-    if (typeof callback == "function") return createIndex(self, fieldOrSpec, options, callback);
+    if (typeof callback === "function") {
+        return createIndex(self, fieldOrSpec, options, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        createIndex(self, fieldOrSpec, options, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        createIndex(self, fieldOrSpec, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -1622,12 +1885,16 @@ Collection.prototype.createIndexes = function (indexSpecs, callback) {
     const self = this;
 
     // Execute using callback
-    if (typeof callback == "function") return createIndexes(self, indexSpecs, callback);
+    if (typeof callback === "function") {
+        return createIndexes(self, indexSpecs, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        createIndexes(self, indexSpecs, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        createIndexes(self, indexSpecs, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -1678,18 +1945,24 @@ Collection.prototype.dropIndex = function (indexName, options, callback) {
     const self = this;
     const args = Array.prototype.slice.call(arguments, 1);
     callback = args.pop();
-    if (typeof callback != "function") args.push(callback);
+    if (typeof callback !== "function") {
+        args.push(callback);
+    }
     options = args.length ? args.shift() || {} : {};
     // Run only against primary
     options.readPreference = ReadPreference.PRIMARY;
 
     // Execute using callback
-    if (typeof callback == "function") return dropIndex(self, indexName, options, callback);
+    if (typeof callback === "function") {
+        return dropIndex(self, indexName, options, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        dropIndex(self, indexName, options, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        dropIndex(self, indexName, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -1697,15 +1970,19 @@ Collection.prototype.dropIndex = function (indexName, options, callback) {
 
 const dropIndex = function (self, indexName, options, callback) {
     // Delete index command
-    const cmd = { "dropIndexes": self.s.name, "index": indexName };
+    const cmd = { dropIndexes: self.s.name, index: indexName };
 
     // Decorate command with writeConcern if supported
     decorateWithWriteConcern(cmd, self, options);
 
     // Execute command
-    self.s.db.command(cmd, options, function (err, result) {
-        if (typeof callback != "function") return;
-        if (err) return handleCallback(callback, err, null);
+    self.s.db.command(cmd, options, (err, result) => {
+        if (typeof callback !== "function") {
+            return;
+        }
+        if (err) {
+            return handleCallback(callback, err, null);
+        }
         handleCallback(callback, null, result);
     });
 };
@@ -1722,24 +1999,32 @@ Collection.prototype.dropIndexes = function (options, callback) {
     const self = this;
 
     // Do we have options
-    if (typeof options == "function") callback = options, options = {};
+    if (typeof options === "function") {
+        callback = options, options = {};
+    }
     options = options || {};
 
     // Execute using callback
-    if (typeof callback == "function") return dropIndexes(self, options, callback);
+    if (typeof callback === "function") {
+        return dropIndexes(self, options, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        dropIndexes(self, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        dropIndexes(self, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
 };
 
 const dropIndexes = function (self, options, callback) {
-    self.dropIndex("*", options, function (err) {
-        if (err) return handleCallback(callback, err, false);
+    self.dropIndex("*", options, (err) => {
+        if (err) {
+            return handleCallback(callback, err, false);
+        }
         handleCallback(callback, null, true);
     });
 };
@@ -1766,16 +2051,22 @@ define.classMethod("dropAllIndexes", { callback: true, promise: true });
  */
 Collection.prototype.reIndex = function (options, callback) {
     const self = this;
-    if (typeof options == "function") callback = options, options = {};
+    if (typeof options === "function") {
+        callback = options, options = {};
+    }
     options = options || {};
 
     // Execute using callback
-    if (typeof callback == "function") return reIndex(self, options, callback);
+    if (typeof callback === "function") {
+        return reIndex(self, options, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        reIndex(self, options, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        reIndex(self, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -1783,15 +2074,19 @@ Collection.prototype.reIndex = function (options, callback) {
 
 const reIndex = function (self, options, callback) {
     // Reindex
-    const cmd = { "reIndex": self.s.name };
+    const cmd = { reIndex: self.s.name };
 
     // Decorate command with writeConcern if supported
     decorateWithWriteConcern(cmd, self, options);
 
     // Execute the command
-    self.s.db.command(cmd, options, function (err, result) {
-        if (callback == null) return;
-        if (err) return handleCallback(callback, err, null);
+    self.s.db.command(cmd, options, (err, result) => {
+        if (callback == null) {
+            return;
+        }
+        if (err) {
+            return handleCallback(callback, err, null);
+        }
         handleCallback(callback, null, result.ok ? true : false);
     });
 };
@@ -1831,7 +2126,9 @@ Collection.prototype.listIndexes = function (options) {
         // Execute the cursor
         cursor = this.s.topology.cursor(f("%s.$cmd", this.s.dbName), command, options);
         // Do we have a readPreference, apply it
-        if (options.readPreference) cursor.setReadPreference(options.readPreference);
+        if (options.readPreference) {
+            cursor.setReadPreference(options.readPreference);
+        }
         // Return the cursor
         return cursor;
     }
@@ -1841,9 +2138,13 @@ Collection.prototype.listIndexes = function (options) {
     // Get the query
     cursor = this.s.topology.cursor(ns, { find: ns, query: { ns: this.s.namespace } }, options);
     // Do we have a readPreference, apply it
-    if (options.readPreference) cursor.setReadPreference(options.readPreference);
+    if (options.readPreference) {
+        cursor.setReadPreference(options.readPreference);
+    }
     // Set the passed in batch size if one was provided
-    if (options.batchSize) cursor = cursor.batchSize(options.batchSize);
+    if (options.batchSize) {
+        cursor = cursor.batchSize(options.batchSize);
+    }
     // Return the cursor
     return cursor;
 };
@@ -1874,16 +2175,22 @@ define.classMethod("listIndexes", { callback: false, promise: false, returns: [C
  */
 Collection.prototype.ensureIndex = function (fieldOrSpec, options, callback) {
     const self = this;
-    if (typeof options == "function") callback = options, options = {};
+    if (typeof options === "function") {
+        callback = options, options = {};
+    }
     options = options || {};
 
     // Execute using callback
-    if (typeof callback == "function") return ensureIndex(self, fieldOrSpec, options, callback);
+    if (typeof callback === "function") {
+        return ensureIndex(self, fieldOrSpec, options, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        ensureIndex(self, fieldOrSpec, options, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        ensureIndex(self, fieldOrSpec, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -1906,23 +2213,31 @@ Collection.prototype.indexExists = function (indexes, callback) {
     const self = this;
 
     // Execute using callback
-    if (typeof callback == "function") return indexExists(self, indexes, callback);
+    if (typeof callback === "function") {
+        return indexExists(self, indexes, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        indexExists(self, indexes, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        indexExists(self, indexes, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
 };
 
 const indexExists = function (self, indexes, callback) {
-    self.indexInformation(function (err, indexInformation) {
+    self.indexInformation((err, indexInformation) => {
         // If we have an error return
-        if (err != null) return handleCallback(callback, err, null);
+        if (err != null) {
+            return handleCallback(callback, err, null);
+        }
         // Let's check for the index names
-        if (!Array.isArray(indexes)) return handleCallback(callback, null, indexInformation[indexes] != null);
+        if (!Array.isArray(indexes)) {
+            return handleCallback(callback, null, indexInformation[indexes] != null);
+        }
         // Check in list of indexes
         for (let i = 0; i < indexes.length; i++) {
             if (indexInformation[indexes[i]] == null) {
@@ -1950,16 +2265,22 @@ Collection.prototype.indexInformation = function (options, callback) {
     // Unpack calls
     const args = Array.prototype.slice.call(arguments, 0);
     callback = args.pop();
-    if (typeof callback != "function") args.push(callback);
+    if (typeof callback !== "function") {
+        args.push(callback);
+    }
     options = args.length ? args.shift() || {} : {};
 
     // Execute using callback
-    if (typeof callback == "function") return indexInformation(self, options, callback);
+    if (typeof callback === "function") {
+        return indexInformation(self, options, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        indexInformation(self, options, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        indexInformation(self, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -1995,21 +2316,27 @@ Collection.prototype.count = function (query, options, callback) {
     const self = this;
     const args = Array.prototype.slice.call(arguments, 0);
     callback = args.pop();
-    if (typeof callback != "function") args.push(callback);
+    if (typeof callback !== "function") {
+        args.push(callback);
+    }
     const queryOption = args.length ? args.shift() || {} : {};
     const optionsOption = args.length ? args.shift() || {} : {};
 
     // Execute using callback
-    if (typeof callback == "function") return count(self, queryOption, optionsOption, callback);
+    if (typeof callback === "function") {
+        return count(self, queryOption, optionsOption, callback);
+    }
 
     // Check if query is empty
     query = query || {};
     options = options || {};
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        count(self, query, options, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        count(self, query, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -2023,14 +2350,22 @@ const count = function (self, query, options, callback) {
 
     // Final query
     const cmd = {
-        "count": self.s.name, query
+        count: self.s.name, query
     };
 
     // Add limit, skip and maxTimeMS if defined
-    if (typeof skip == "number") cmd.skip = skip;
-    if (typeof limit == "number") cmd.limit = limit;
-    if (typeof maxTimeMS == "number") cmd.maxTimeMS = maxTimeMS;
-    if (hint) options.hint = hint;
+    if (typeof skip === "number") {
+        cmd.skip = skip;
+    }
+    if (typeof limit === "number") {
+        cmd.limit = limit;
+    }
+    if (typeof maxTimeMS === "number") {
+        cmd.maxTimeMS = maxTimeMS;
+    }
+    if (hint) {
+        options.hint = hint;
+    }
 
     options = shallowClone(options);
     // Ensure we have the right read preference inheritance
@@ -2045,8 +2380,10 @@ const count = function (self, query, options, callback) {
     decorateWithCollation(cmd, self, options);
 
     // Execute command
-    self.s.db.command(cmd, options, function (err, result) {
-        if (err) return handleCallback(callback, err);
+    self.s.db.command(cmd, options, (err, result) => {
+        if (err) {
+            return handleCallback(callback, err);
+        }
         handleCallback(callback, null, result.n);
     });
 };
@@ -2068,21 +2405,27 @@ Collection.prototype.distinct = function (key, query, options, callback) {
     const self = this;
     const args = Array.prototype.slice.call(arguments, 1);
     callback = args.pop();
-    if (typeof callback != "function") args.push(callback);
+    if (typeof callback !== "function") {
+        args.push(callback);
+    }
     const queryOption = args.length ? args.shift() || {} : {};
     const optionsOption = args.length ? args.shift() || {} : {};
 
     // Execute using callback
-    if (typeof callback == "function") return distinct(self, key, queryOption, optionsOption, callback);
+    if (typeof callback === "function") {
+        return distinct(self, key, queryOption, optionsOption, callback);
+    }
 
     // Ensure the query and options are set
     query = query || {};
     options = options || {};
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        distinct(self, key, query, options, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        distinct(self, key, query, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -2094,7 +2437,7 @@ const distinct = function (self, key, query, options, callback) {
 
     // Distinct command
     const cmd = {
-        "distinct": self.s.name, key, query
+        distinct: self.s.name, key, query
     };
 
     options = shallowClone(options);
@@ -2102,8 +2445,9 @@ const distinct = function (self, key, query, options, callback) {
     options = getReadPreference(self, options, self.s.db, self);
 
     // Add maxTimeMS if defined
-    if (typeof maxTimeMS == "number")
+    if (typeof maxTimeMS === "number") {
         cmd.maxTimeMS = maxTimeMS;
+    }
 
     // Do we have a readConcern specified
     if (self.s.readConcern) {
@@ -2114,8 +2458,10 @@ const distinct = function (self, key, query, options, callback) {
     decorateWithCollation(cmd, self, options);
 
     // Execute the command
-    self.s.db.command(cmd, options, function (err, result) {
-        if (err) return handleCallback(callback, err);
+    self.s.db.command(cmd, options, (err, result) => {
+        if (err) {
+            return handleCallback(callback, err);
+        }
         handleCallback(callback, null, result.values);
     });
 };
@@ -2131,12 +2477,16 @@ define.classMethod("distinct", { callback: true, promise: true });
 Collection.prototype.indexes = function (callback) {
     const self = this;
     // Execute using callback
-    if (typeof callback == "function") return indexes(self, callback);
+    if (typeof callback === "function") {
+        return indexes(self, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        indexes(self, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        indexes(self, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -2161,17 +2511,23 @@ Collection.prototype.stats = function (options, callback) {
     const self = this;
     const args = Array.prototype.slice.call(arguments, 0);
     callback = args.pop();
-    if (typeof callback != "function") args.push(callback);
+    if (typeof callback !== "function") {
+        args.push(callback);
+    }
     // Fetch all commands
     options = args.length ? args.shift() || {} : {};
 
     // Execute using callback
-    if (typeof callback == "function") return stats(self, options, callback);
+    if (typeof callback === "function") {
+        return stats(self, options, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        stats(self, options, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        stats(self, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -2184,7 +2540,9 @@ const stats = function (self, options, callback) {
     };
 
     // Check if we have the scale value
-    if (options["scale"] != null) commandObject["scale"] = options["scale"];
+    if (options.scale != null) {
+        commandObject.scale = options.scale;
+    }
 
     options = shallowClone(options);
     // Ensure we have the right read preference inheritance
@@ -2224,21 +2582,29 @@ define.classMethod("stats", { callback: true, promise: true });
  */
 Collection.prototype.findOneAndDelete = function (filter, options, callback) {
     const self = this;
-    if (typeof options == "function") callback = options, options = {};
+    if (typeof options === "function") {
+        callback = options, options = {};
+    }
     options = options || {};
 
     // Basic validation
-    if (filter == null || typeof filter != "object") throw toError("filter parameter must be an object");
+    if (filter == null || typeof filter !== "object") {
+        throw toError("filter parameter must be an object");
+    }
 
     // Execute using callback
-    if (typeof callback == "function") return findOneAndDelete(self, filter, options, callback);
+    if (typeof callback === "function") {
+        return findOneAndDelete(self, filter, options, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
+    return new this.s.promiseLibrary((resolve, reject) => {
         options = options || {};
 
-        findOneAndDelete(self, filter, options, function (err, r) {
-            if (err) return reject(err);
+        findOneAndDelete(self, filter, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -2247,8 +2613,8 @@ Collection.prototype.findOneAndDelete = function (filter, options, callback) {
 const findOneAndDelete = function (self, filter, options, callback) {
     // Final options
     const finalOptions = shallowClone(options);
-    finalOptions["fields"] = options.projection;
-    finalOptions["remove"] = true;
+    finalOptions.fields = options.projection;
+    finalOptions.remove = true;
     // Execute find and Modify
     self.findAndModify(
         filter
@@ -2278,22 +2644,32 @@ define.classMethod("findOneAndDelete", { callback: true, promise: true });
  */
 Collection.prototype.findOneAndReplace = function (filter, replacement, options, callback) {
     const self = this;
-    if (typeof options == "function") callback = options, options = {};
+    if (typeof options === "function") {
+        callback = options, options = {};
+    }
     options = options || {};
 
     // Basic validation
-    if (filter == null || typeof filter != "object") throw toError("filter parameter must be an object");
-    if (replacement == null || typeof replacement != "object") throw toError("replacement parameter must be an object");
+    if (filter == null || typeof filter !== "object") {
+        throw toError("filter parameter must be an object");
+    }
+    if (replacement == null || typeof replacement !== "object") {
+        throw toError("replacement parameter must be an object");
+    }
 
     // Execute using callback
-    if (typeof callback == "function") return findOneAndReplace(self, filter, replacement, options, callback);
+    if (typeof callback === "function") {
+        return findOneAndReplace(self, filter, replacement, options, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
+    return new this.s.promiseLibrary((resolve, reject) => {
         options = options || {};
 
-        findOneAndReplace(self, filter, replacement, options, function (err, r) {
-            if (err) return reject(err);
+        findOneAndReplace(self, filter, replacement, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -2302,10 +2678,10 @@ Collection.prototype.findOneAndReplace = function (filter, replacement, options,
 const findOneAndReplace = function (self, filter, replacement, options, callback) {
     // Final options
     const finalOptions = shallowClone(options);
-    finalOptions["fields"] = options.projection;
-    finalOptions["update"] = true;
-    finalOptions["new"] = typeof options.returnOriginal == "boolean" ? !options.returnOriginal : false;
-    finalOptions["upsert"] = typeof options.upsert == "boolean" ? options.upsert : false;
+    finalOptions.fields = options.projection;
+    finalOptions.update = true;
+    finalOptions.new = typeof options.returnOriginal === "boolean" ? !options.returnOriginal : false;
+    finalOptions.upsert = typeof options.upsert === "boolean" ? options.upsert : false;
 
     // Execute findAndModify
     self.findAndModify(
@@ -2336,22 +2712,32 @@ define.classMethod("findOneAndReplace", { callback: true, promise: true });
  */
 Collection.prototype.findOneAndUpdate = function (filter, update, options, callback) {
     const self = this;
-    if (typeof options == "function") callback = options, options = {};
+    if (typeof options === "function") {
+        callback = options, options = {};
+    }
     options = options || {};
 
     // Basic validation
-    if (filter == null || typeof filter != "object") throw toError("filter parameter must be an object");
-    if (update == null || typeof update != "object") throw toError("update parameter must be an object");
+    if (filter == null || typeof filter !== "object") {
+        throw toError("filter parameter must be an object");
+    }
+    if (update == null || typeof update !== "object") {
+        throw toError("update parameter must be an object");
+    }
 
     // Execute using callback
-    if (typeof callback == "function") return findOneAndUpdate(self, filter, update, options, callback);
+    if (typeof callback === "function") {
+        return findOneAndUpdate(self, filter, update, options, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
+    return new this.s.promiseLibrary((resolve, reject) => {
         options = options || {};
 
-        findOneAndUpdate(self, filter, update, options, function (err, r) {
-            if (err) return reject(err);
+        findOneAndUpdate(self, filter, update, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -2360,10 +2746,10 @@ Collection.prototype.findOneAndUpdate = function (filter, update, options, callb
 const findOneAndUpdate = function (self, filter, update, options, callback) {
     // Final options
     const finalOptions = shallowClone(options);
-    finalOptions["fields"] = options.projection;
-    finalOptions["update"] = true;
-    finalOptions["new"] = typeof options.returnOriginal == "boolean" ? !options.returnOriginal : false;
-    finalOptions["upsert"] = typeof options.upsert == "boolean" ? options.upsert : false;
+    finalOptions.fields = options.projection;
+    finalOptions.update = true;
+    finalOptions.new = typeof options.returnOriginal === "boolean" ? !options.returnOriginal : false;
+    finalOptions.upsert = typeof options.upsert === "boolean" ? options.upsert : false;
 
     // Execute findAndModify
     self.findAndModify(
@@ -2399,7 +2785,9 @@ Collection.prototype.findAndModify = function (query, sort, doc, options, callba
     const self = this;
     const args = Array.prototype.slice.call(arguments, 1);
     callback = args.pop();
-    if (typeof callback != "function") args.push(callback);
+    if (typeof callback !== "function") {
+        args.push(callback);
+    }
     sort = args.length ? args.shift() || [] : [];
     doc = args.length ? args.shift() : null;
     options = args.length ? args.shift() || {} : {};
@@ -2410,14 +2798,18 @@ Collection.prototype.findAndModify = function (query, sort, doc, options, callba
     options.readPreference = ReadPreference.PRIMARY;
 
     // Execute using callback
-    if (typeof callback == "function") return findAndModify(self, query, sort, doc, options, callback);
+    if (typeof callback === "function") {
+        return findAndModify(self, query, sort, doc, options, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
+    return new this.s.promiseLibrary((resolve, reject) => {
         options = options || {};
 
-        findAndModify(self, query, sort, doc, options, function (err, r) {
-            if (err) return reject(err);
+        findAndModify(self, query, sort, doc, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -2426,8 +2818,8 @@ Collection.prototype.findAndModify = function (query, sort, doc, options, callba
 const findAndModify = function (self, query, sort, doc, options, callback) {
     // Create findAndModify command object
     const queryObject = {
-        "findandmodify": self.s.name
-        , query
+        findandmodify: self.s.name,
+        query
     };
 
     sort = formattedOrderClause(sort);
@@ -2447,15 +2839,16 @@ const findAndModify = function (self, query, sort, doc, options, callback) {
         queryObject.update = doc;
     }
 
-    if (options.maxTimeMS)
+    if (options.maxTimeMS) {
         queryObject.maxTimeMS = options.maxTimeMS;
+    }
 
     // Either use override on the function, or go back to default on either the collection
     // level or db
-    if (options["serializeFunctions"] != null) {
-        options["serializeFunctions"] = options["serializeFunctions"];
+    if (options.serializeFunctions != null) {
+        options.serializeFunctions = options.serializeFunctions;
     } else {
-        options["serializeFunctions"] = self.s.serializeFunctions;
+        options.serializeFunctions = self.s.serializeFunctions;
     }
 
     // No check on the documents
@@ -2470,7 +2863,7 @@ const findAndModify = function (self, query, sort, doc, options, callback) {
     }
 
     // Have we specified bypassDocumentValidation
-    if (typeof finalOptions.bypassDocumentValidation == "boolean") {
+    if (typeof finalOptions.bypassDocumentValidation === "boolean") {
         queryObject.bypassDocumentValidation = finalOptions.bypassDocumentValidation;
     }
 
@@ -2479,8 +2872,10 @@ const findAndModify = function (self, query, sort, doc, options, callback) {
 
     // Execute the command
     self.s.db.command(queryObject
-        , options, function (err, result) {
-            if (err) return handleCallback(callback, err, null);
+        , options, (err, result) => {
+            if (err) {
+                return handleCallback(callback, err, null);
+            }
             return handleCallback(callback, null, result);
         });
 };
@@ -2504,17 +2899,23 @@ Collection.prototype.findAndRemove = function (query, sort, options, callback) {
     const self = this;
     const args = Array.prototype.slice.call(arguments, 1);
     callback = args.pop();
-    if (typeof callback != "function") args.push(callback);
+    if (typeof callback !== "function") {
+        args.push(callback);
+    }
     sort = args.length ? args.shift() || [] : [];
     options = args.length ? args.shift() || {} : {};
 
     // Execute using callback
-    if (typeof callback == "function") return findAndRemove(self, query, sort, options, callback);
+    if (typeof callback === "function") {
+        return findAndRemove(self, query, sort, options, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        findAndRemove(self, query, sort, options, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        findAndRemove(self, query, sort, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -2522,7 +2923,7 @@ Collection.prototype.findAndRemove = function (query, sort, options, callback) {
 
 const findAndRemove = function (self, query, sort, options, callback) {
     // Add the remove option
-    options["remove"] = true;
+    options.remove = true;
     // Execute the callback
     self.findAndModify(query, sort, null, options, callback);
 };
@@ -2548,7 +2949,7 @@ function decorateWithCollation(command, self, options) {
     const capabilities = self.s.topology.capabilities();
     // Do we support write concerns 3.4 and higher
     if (capabilities && capabilities.commandsTakeCollation) {
-        if (options.collation && typeof options.collation == "object") {
+        if (options.collation && typeof options.collation === "object") {
             command.collation = options.collation;
         }
     }
@@ -2579,7 +2980,7 @@ Collection.prototype.aggregate = function (pipeline, options, callback) {
 
     if (Array.isArray(pipeline)) {
         // Set up callback if one is provided
-        if (typeof options == "function") {
+        if (typeof options === "function") {
             callback = options;
             options = {};
         }
@@ -2611,16 +3012,16 @@ Collection.prototype.aggregate = function (pipeline, options, callback) {
     const command = { aggregate: this.s.name, pipeline };
 
     // If out was specified
-    if (typeof options.out == "string") {
+    if (typeof options.out === "string") {
         pipeline.push({ $out: options.out });
         // Ignore read concern
         ignoreReadConcern = true;
-    } else if (pipeline.length > 0 && pipeline[pipeline.length - 1]["$out"]) {
+    } else if (pipeline.length > 0 && pipeline[pipeline.length - 1].$out) {
         ignoreReadConcern = true;
     }
 
     // Decorate command with writeConcern if out has been specified
-    if (pipeline.length > 0 && pipeline[pipeline.length - 1]["$out"]) {
+    if (pipeline.length > 0 && pipeline[pipeline.length - 1].$out) {
         decorateWithWriteConcern(command, self, options);
     }
 
@@ -2628,7 +3029,7 @@ Collection.prototype.aggregate = function (pipeline, options, callback) {
     decorateWithCollation(command, self, options);
 
     // If we have bypassDocumentValidation set
-    if (typeof options.bypassDocumentValidation == "boolean") {
+    if (typeof options.bypassDocumentValidation === "boolean") {
         command.bypassDocumentValidation = options.bypassDocumentValidation;
     }
 
@@ -2638,18 +3039,24 @@ Collection.prototype.aggregate = function (pipeline, options, callback) {
     }
 
     // If we have allowDiskUse defined
-    if (options.allowDiskUse) command.allowDiskUse = options.allowDiskUse;
-    if (typeof options.maxTimeMS == "number") command.maxTimeMS = options.maxTimeMS;
+    if (options.allowDiskUse) {
+        command.allowDiskUse = options.allowDiskUse;
+    }
+    if (typeof options.maxTimeMS === "number") {
+        command.maxTimeMS = options.maxTimeMS;
+    }
 
     options = shallowClone(options);
     // Ensure we have the right read preference inheritance
     options = getReadPreference(this, options, this.s.db, this);
 
     // If explain has been specified add it
-    if (options.explain) command.explain = options.explain;
+    if (options.explain) {
+        command.explain = options.explain;
+    }
 
     // Validate that cursor options is valid
-    if (options.cursor != null && typeof options.cursor != "object") {
+    if (options.cursor != null && typeof options.cursor !== "object") {
         throw toError("cursor options must be an object");
     }
 
@@ -2658,7 +3065,7 @@ Collection.prototype.aggregate = function (pipeline, options, callback) {
 
     // Set the AggregationCursor constructor
     options.cursorFactory = AggregationCursor;
-    if (typeof callback != "function") {
+    if (typeof callback !== "function") {
         if (!this.s.topology.capabilities()) {
             throw new MongoError("cannot connect to server");
         }
@@ -2669,8 +3076,12 @@ Collection.prototype.aggregate = function (pipeline, options, callback) {
         }
 
         // Allow disk usage command
-        if (typeof options.allowDiskUse == "boolean") command.allowDiskUse = options.allowDiskUse;
-        if (typeof options.maxTimeMS == "number") command.maxTimeMS = options.maxTimeMS;
+        if (typeof options.allowDiskUse === "boolean") {
+            command.allowDiskUse = options.allowDiskUse;
+        }
+        if (typeof options.maxTimeMS === "number") {
+            command.maxTimeMS = options.maxTimeMS;
+        }
 
         // Execute the cursor
         return this.s.topology.cursor(this.s.namespace, command, options);
@@ -2682,15 +3093,15 @@ Collection.prototype.aggregate = function (pipeline, options, callback) {
     }
 
     // Execute the command
-    this.s.db.command(command, options, function (err, result) {
+    this.s.db.command(command, options, (err, result) => {
         if (err) {
             handleCallback(callback, err);
-        } else if (result["err"] || result["errmsg"]) {
+        } else if (result.err || result.errmsg) {
             handleCallback(callback, toError(result));
-        } else if (typeof result == "object" && result["serverPipeline"]) {
-            handleCallback(callback, null, result["serverPipeline"]);
-        } else if (typeof result == "object" && result["stages"]) {
-            handleCallback(callback, null, result["stages"]);
+        } else if (typeof result === "object" && result.serverPipeline) {
+            handleCallback(callback, null, result.serverPipeline);
+        } else if (typeof result === "object" && result.stages) {
+            handleCallback(callback, null, result.stages);
         } else {
             handleCallback(callback, null, result.result);
         }
@@ -2720,7 +3131,9 @@ define.classMethod("aggregate", { callback: true, promise: false });
  */
 Collection.prototype.parallelCollectionScan = function (options, callback) {
     const self = this;
-    if (typeof options == "function") callback = options, options = { numCursors: 1 };
+    if (typeof options === "function") {
+        callback = options, options = { numCursors: 1 };
+    }
     // Set number of cursors to 1
     options.numCursors = options.numCursors || 1;
     options.batchSize = options.batchSize || 1000;
@@ -2733,12 +3146,16 @@ Collection.prototype.parallelCollectionScan = function (options, callback) {
     options.promiseLibrary = this.s.promiseLibrary;
 
     // Execute using callback
-    if (typeof callback == "function") return parallelCollectionScan(self, options, callback);
+    if (typeof callback === "function") {
+        return parallelCollectionScan(self, options, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        parallelCollectionScan(self, options, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        parallelCollectionScan(self, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -2747,8 +3164,8 @@ Collection.prototype.parallelCollectionScan = function (options, callback) {
 const parallelCollectionScan = function (self, options, callback) {
     // Create command object
     const commandObject = {
-        parallelCollectionScan: self.s.name
-        , numCursors: options.numCursors
+        parallelCollectionScan: self.s.name,
+        numCursors: options.numCursors
     };
 
     // Do we have a readConcern specified
@@ -2758,21 +3175,27 @@ const parallelCollectionScan = function (self, options, callback) {
 
     // Store the raw value
     const raw = options.raw;
-    delete options["raw"];
+    delete options.raw;
 
     // Execute the command
-    self.s.db.command(commandObject, options, function (err, result) {
-        if (err) return handleCallback(callback, err, null);
-        if (result == null) return handleCallback(callback, new Error("no result returned for parallelCollectionScan"), null);
+    self.s.db.command(commandObject, options, (err, result) => {
+        if (err) {
+            return handleCallback(callback, err, null);
+        }
+        if (result == null) {
+            return handleCallback(callback, new Error("no result returned for parallelCollectionScan"), null);
+        }
 
         const cursors = [];
         // Add the raw back to the option
-        if (raw) options.raw = raw;
+        if (raw) {
+            options.raw = raw;
+        }
         // Create command cursors for each item
         for (let i = 0; i < result.cursors.length; i++) {
             const rawId = result.cursors[i].cursor.id;
             // Convert cursorId to Long if needed
-            const cursorId = typeof rawId == "number" ? Long.fromNumber(rawId) : rawId;
+            const cursorId = typeof rawId === "number" ? Long.fromNumber(rawId) : rawId;
             // Add a command cursor
             cursors.push(self.s.topology.cursor(self.s.namespace, cursorId, options));
         }
@@ -2804,21 +3227,27 @@ define.classMethod("parallelCollectionScan", { callback: true, promise: true });
  */
 Collection.prototype.geoNear = function (x, y, options, callback) {
     const self = this;
-    let point = typeof (x) == "object" && x
-        , args = Array.prototype.slice.call(arguments, point ? 1 : 2);
+    let point = typeof (x) === "object" && x,
+        args = Array.prototype.slice.call(arguments, point ? 1 : 2);
 
     callback = args.pop();
-    if (typeof callback != "function") args.push(callback);
+    if (typeof callback !== "function") {
+        args.push(callback);
+    }
     // Fetch all commands
     options = args.length ? args.shift() || {} : {};
 
     // Execute using callback
-    if (typeof callback == "function") return geoNear(self, x, y, point, options, callback);
+    if (typeof callback === "function") {
+        return geoNear(self, x, y, point, options, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        geoNear(self, x, y, point, options, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        geoNear(self, x, y, point, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -2855,9 +3284,13 @@ const geoNear = function (self, x, y, point, options, callback) {
     decorateWithCollation(commandObject, self, options);
 
     // Execute the command
-    self.s.db.command(commandObject, options, function (err, res) {
-        if (err) return handleCallback(callback, err);
-        if (res.err || res.errmsg) return handleCallback(callback, toError(res));
+    self.s.db.command(commandObject, options, (err, res) => {
+        if (err) {
+            return handleCallback(callback, err);
+        }
+        if (res.err || res.errmsg) {
+            return handleCallback(callback, toError(res));
+        }
         // should we only be returning res.results here? Not sure if the user
         // should see the other return information
         handleCallback(callback, null, res);
@@ -2884,17 +3317,23 @@ Collection.prototype.geoHaystackSearch = function (x, y, options, callback) {
     const self = this;
     const args = Array.prototype.slice.call(arguments, 2);
     callback = args.pop();
-    if (typeof callback != "function") args.push(callback);
+    if (typeof callback !== "function") {
+        args.push(callback);
+    }
     // Fetch all commands
     options = args.length ? args.shift() || {} : {};
 
     // Execute using callback
-    if (typeof callback == "function") return geoHaystackSearch(self, x, y, options, callback);
+    if (typeof callback === "function") {
+        return geoHaystackSearch(self, x, y, options, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        geoHaystackSearch(self, x, y, options, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        geoHaystackSearch(self, x, y, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -2920,9 +3359,13 @@ const geoHaystackSearch = function (self, x, y, options, callback) {
     }
 
     // Execute the command
-    self.s.db.command(commandObject, options, function (err, res) {
-        if (err) return handleCallback(callback, err);
-        if (res.err || res.errmsg) handleCallback(callback, toError(res));
+    self.s.db.command(commandObject, options, (err, res) => {
+        if (err) {
+            return handleCallback(callback, err);
+        }
+        if (res.err || res.errmsg) {
+            handleCallback(callback, toError(res));
+        }
         // should we only be returning res.results here? Not sure if the user
         // should see the other return information
         handleCallback(callback, null, res);
@@ -2983,7 +3426,9 @@ Collection.prototype.group = function (keys, condition, initial, reduce, finaliz
     const self = this;
     const args = Array.prototype.slice.call(arguments, 3);
     callback = args.pop();
-    if (typeof callback != "function") args.push(callback);
+    if (typeof callback !== "function") {
+        args.push(callback);
+    }
     // Fetch all commands
     reduce = args.length ? args.shift() : null;
     finalize = args.length ? args.shift() : null;
@@ -2991,7 +3436,7 @@ Collection.prototype.group = function (keys, condition, initial, reduce, finaliz
     options = args.length ? args.shift() || {} : {};
 
     // Make sure we are backward compatible
-    if (!(typeof finalize == "function")) {
+    if (!(typeof finalize === "function")) {
         command = finalize;
         finalize = null;
     }
@@ -3012,11 +3457,15 @@ Collection.prototype.group = function (keys, condition, initial, reduce, finaliz
     command = command == null ? true : command;
 
     // Execute using callback
-    if (typeof callback == "function") return group(self, keys, condition, initial, reduce, finalize, command, options, callback);
+    if (typeof callback === "function") {
+        return group(self, keys, condition, initial, reduce, finalize, command, options, callback);
+    }
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        group(self, keys, condition, initial, reduce, finalize, command, options, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        group(self, keys, condition, initial, reduce, finalize, command, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -3031,24 +3480,26 @@ const group = function (self, keys, condition, initial, reduce, finalize, comman
 
         const selector = {
             group: {
-                "ns": self.s.name
-                , "$reduce": reduceFunction
-                , "cond": condition
-                , initial
-                , "out": "inline"
+                ns: self.s.name,
+                $reduce: reduceFunction,
+                cond: condition,
+                initial,
+                out: "inline"
             }
         };
 
         // if finalize is defined
-        if (finalize != null) selector.group["finalize"] = finalize;
+        if (finalize != null) {
+            selector.group.finalize = finalize;
+        }
         // Set up group selector
-        if ("function" === typeof keys || (keys && keys._bsontype == "Code")) {
+        if (typeof keys === "function" || (keys && keys._bsontype == "Code")) {
             selector.group.$keyf = keys && keys._bsontype == "Code"
                 ? keys
                 : new Code(keys);
         } else {
             const hash = {};
-            keys.forEach(function (key) {
+            keys.forEach((key) => {
                 hash[key] = 1;
             });
             selector.group.key = hash;
@@ -3067,8 +3518,10 @@ const group = function (self, keys, condition, initial, reduce, finalize, comman
         decorateWithCollation(selector, self, options);
 
         // Execute command
-        self.s.db.command(selector, options, function (err, result) {
-            if (err) return handleCallback(callback, err, null);
+        self.s.db.command(selector, options, (err, result) => {
+            if (err) {
+                return handleCallback(callback, err, null);
+            }
             handleCallback(callback, null, result.retval);
         });
     } else {
@@ -3083,10 +3536,12 @@ const group = function (self, keys, condition, initial, reduce, finalize, comman
         scope.initial = initial;
 
         // Pass in the function text to execute within mongodb.
-        const groupfn = groupFunction.replace(/ reduce;/, reduce.toString() + ";");
+        const groupfn = groupFunction.replace(/ reduce;/, `${reduce.toString()};`);
 
-        self.s.db.eval(new Code(groupfn, scope), function (err, results) {
-            if (err) return handleCallback(callback, err, null);
+        self.s.db.eval(new Code(groupfn, scope), (err, results) => {
+            if (err) {
+                return handleCallback(callback, err, null);
+            }
             handleCallback(callback, null, results.result || results);
         });
     }
@@ -3111,7 +3566,7 @@ function processScope(scope) {
 
     while (i--) {
         key = keys[i];
-        if ("function" == typeof scope[key]) {
+        if (typeof scope[key] === "function") {
             new_scope[key] = new Code(String(scope[key]));
         } else {
             new_scope[key] = processScope(scope[key]);
@@ -3145,32 +3600,40 @@ function processScope(scope) {
  */
 Collection.prototype.mapReduce = function (map, reduce, options, callback) {
     const self = this;
-    if ("function" === typeof options) callback = options, options = {};
+    if (typeof options === "function") {
+        callback = options, options = {};
+    }
     // Out must allways be defined (make sure we don't break weirdly on pre 1.8+ servers)
-    if (null == options.out) {
+    if (options.out == null) {
         throw new Error("the out option parameter must be defined, see mongodb docs for possible values");
     }
 
-    if ("function" === typeof map) {
+    if (typeof map === "function") {
         map = map.toString();
     }
 
-    if ("function" === typeof reduce) {
+    if (typeof reduce === "function") {
         reduce = reduce.toString();
     }
 
-    if ("function" === typeof options.finalize) {
+    if (typeof options.finalize === "function") {
         options.finalize = options.finalize.toString();
     }
 
     // Execute using callback
-    if (typeof callback == "function") return mapReduce(self, map, reduce, options, callback);
+    if (typeof callback === "function") {
+        return mapReduce(self, map, reduce, options, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        mapReduce(self, map, reduce, options, function (err, r, r1) {
-            if (err) return reject(err);
-            if (!r1) return resolve(r);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        mapReduce(self, map, reduce, options, (err, r, r1) => {
+            if (err) {
+                return reject(err);
+            }
+            if (!r1) {
+                return resolve(r);
+            }
             resolve({ results: r, stats: r1 });
         });
     });
@@ -3178,17 +3641,24 @@ Collection.prototype.mapReduce = function (map, reduce, options, callback) {
 
 const mapReduce = function (self, map, reduce, options, callback) {
     const mapCommandHash = {
-        mapreduce: self.s.name
-        , map
-        , reduce
+        mapreduce: self.s.name,
+        map,
+        reduce
     };
+
+
+    // Exclusion list
+    const exclusionList = ["readPreference"];
 
     // Add any other options passed in
     for (const n in options) {
-        if ("scope" == n) {
+        if (n == "scope") {
             mapCommandHash[n] = processScope(options[n]);
         } else {
-            mapCommandHash[n] = options[n];
+            // Only include if not in exclusion list
+            if (exclusionList.indexOf(n) == -1) {
+                mapCommandHash[n] = options[n];
+            }
         }
     }
 
@@ -3198,7 +3668,7 @@ const mapReduce = function (self, map, reduce, options, callback) {
 
     // If we have a read preference and inline is not set as output fail hard
     if ((options.readPreference != false && options.readPreference != "primary")
-        && options["out"] && (options["out"].inline != 1 && options["out"] != "inline")) {
+        && options.out && (options.out.inline != 1 && options.out != "inline")) {
         // Force readPreference to primary
         options.readPreference = "primary";
         // Decorate command with writeConcern if supported
@@ -3208,7 +3678,7 @@ const mapReduce = function (self, map, reduce, options, callback) {
     }
 
     // Is bypassDocumentValidation specified
-    if (typeof options.bypassDocumentValidation == "boolean") {
+    if (typeof options.bypassDocumentValidation === "boolean") {
         mapCommandHash.bypassDocumentValidation = options.bypassDocumentValidation;
     }
 
@@ -3216,23 +3686,31 @@ const mapReduce = function (self, map, reduce, options, callback) {
     decorateWithCollation(mapCommandHash, self, options);
 
     // Execute command
-    self.s.db.command(mapCommandHash, { readPreference: options.readPreference }, function (err, result) {
-        if (err) return handleCallback(callback, err);
+    self.s.db.command(mapCommandHash, { readPreference: options.readPreference }, (err, result) => {
+        if (err) {
+            return handleCallback(callback, err);
+        }
         // Check if we have an error
-        if (1 != result.ok || result.err || result.errmsg) {
+        if (result.ok != 1 || result.err || result.errmsg) {
             return handleCallback(callback, toError(result));
         }
 
         // Create statistics value
         const stats = {};
-        if (result.timeMillis) stats["processtime"] = result.timeMillis;
-        if (result.counts) stats["counts"] = result.counts;
-        if (result.timing) stats["timing"] = result.timing;
+        if (result.timeMillis) {
+            stats.processtime = result.timeMillis;
+        }
+        if (result.counts) {
+            stats.counts = result.counts;
+        }
+        if (result.timing) {
+            stats.timing = result.timing;
+        }
 
         // invoked with inline?
         if (result.results) {
             // If we wish for no verbosity
-            if (options["verbose"] == null || !options["verbose"]) {
+            if (options.verbose == null || !options.verbose) {
                 return handleCallback(callback, null, result.results);
             }
 
@@ -3243,7 +3721,7 @@ const mapReduce = function (self, map, reduce, options, callback) {
         let collection = null;
 
         // If we have an object it's a different db
-        if (result.result != null && typeof result.result == "object") {
+        if (result.result != null && typeof result.result === "object") {
             const doc = result.result;
             collection = self.s.db.db(doc.db).collection(doc.collection);
         } else {
@@ -3252,7 +3730,7 @@ const mapReduce = function (self, map, reduce, options, callback) {
         }
 
         // If we wish for no verbosity
-        if (options["verbose"] == null || !options["verbose"]) {
+        if (options.verbose == null || !options.verbose) {
             return handleCallback(callback, err, collection);
         }
 
@@ -3304,10 +3782,18 @@ define.classMethod("initializeOrderedBulkOp", { callback: false, promise: false,
 const writeConcern = function (target, db, col, options) {
     if (options.w != null || options.j != null || options.fsync != null) {
         const opts = {};
-        if (options.w != null) opts.w = options.w;
-        if (options.wtimeout != null) opts.wtimeout = options.wtimeout;
-        if (options.j != null) opts.j = options.j;
-        if (options.fsync != null) opts.fsync = options.fsync;
+        if (options.w != null) {
+            opts.w = options.w;
+        }
+        if (options.wtimeout != null) {
+            opts.wtimeout = options.wtimeout;
+        }
+        if (options.j != null) {
+            opts.j = options.j;
+        }
+        if (options.fsync != null) {
+            opts.fsync = options.fsync;
+        }
         target.writeConcern = opts;
     } else if (col.writeConcern.w != null || col.writeConcern.j != null || col.writeConcern.fsync != null) {
         target.writeConcern = col.writeConcern;
@@ -3331,11 +3817,11 @@ const getReadPreference = function (self, options, db) {
 
     if (r instanceof ReadPreference) {
         options.readPreference = new CoreReadPreference(r.mode, r.tags, { maxStalenessSeconds: r.maxStalenessSeconds });
-    } else if (typeof r == "string") {
+    } else if (typeof r === "string") {
         options.readPreference = new CoreReadPreference(r);
-    } else if (r && !(r instanceof ReadPreference) && typeof r == "object") {
+    } else if (r && !(r instanceof ReadPreference) && typeof r === "object") {
         const mode = r.mode || r.preference;
-        if (mode && typeof mode == "string") {
+        if (mode && typeof mode === "string") {
             options.readPreference = new CoreReadPreference(mode, r.tags, { maxStalenessSeconds: r.maxStalenessSeconds });
         }
     }
@@ -3344,10 +3830,10 @@ const getReadPreference = function (self, options, db) {
 };
 
 const testForFields = {
-    limit: 1, sort: 1, fields: 1, skip: 1, hint: 1, explain: 1, snapshot: 1, timeout: 1, tailable: 1, tailableRetryInterval: 1
-    , numberOfRetries: 1, awaitdata: 1, awaitData: 1, exhaust: 1, batchSize: 1, returnKey: 1, maxScan: 1, min: 1, max: 1, showDiskLoc: 1
-    , comment: 1, raw: 1, readPreference: 1, partial: 1, read: 1, dbName: 1, oplogReplay: 1, connection: 1, maxTimeMS: 1, transforms: 1
-    , collation: 1
+    limit: 1, sort: 1, fields: 1, skip: 1, hint: 1, explain: 1, snapshot: 1, timeout: 1, tailable: 1, tailableRetryInterval: 1,
+    numberOfRetries: 1, awaitdata: 1, awaitData: 1, exhaust: 1, batchSize: 1, returnKey: 1, maxScan: 1, min: 1, max: 1, showDiskLoc: 1,
+    comment: 1, raw: 1, readPreference: 1, partial: 1, read: 1, dbName: 1, oplogReplay: 1, connection: 1, maxTimeMS: 1, transforms: 1,
+    collation: 1
 };
 
 module.exports = Collection;

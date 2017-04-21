@@ -32,14 +32,14 @@ const FindOperatorsUnordered = function (self) {
  */
 FindOperatorsUnordered.prototype.update = function (updateDocument) {
     // Perform upsert
-    const upsert = typeof this.s.currentOp.upsert == "boolean" ? this.s.currentOp.upsert : false;
+    const upsert = typeof this.s.currentOp.upsert === "boolean" ? this.s.currentOp.upsert : false;
 
     // Establish the update command
     const document = {
-        q: this.s.currentOp.selector
-        , u: updateDocument
-        , multi: true
-        , upsert
+        q: this.s.currentOp.selector,
+        u: updateDocument,
+        multi: true,
+        upsert
     };
 
     // Clear out current Op
@@ -58,14 +58,14 @@ FindOperatorsUnordered.prototype.update = function (updateDocument) {
  */
 FindOperatorsUnordered.prototype.updateOne = function (updateDocument) {
     // Perform upsert
-    const upsert = typeof this.s.currentOp.upsert == "boolean" ? this.s.currentOp.upsert : false;
+    const upsert = typeof this.s.currentOp.upsert === "boolean" ? this.s.currentOp.upsert : false;
 
     // Establish the update command
     const document = {
-        q: this.s.currentOp.selector
-        , u: updateDocument
-        , multi: false
-        , upsert
+        q: this.s.currentOp.selector,
+        u: updateDocument,
+        multi: false,
+        upsert
     };
 
     // Clear out current Op
@@ -108,8 +108,8 @@ FindOperatorsUnordered.prototype.upsert = function () {
 FindOperatorsUnordered.prototype.removeOne = function () {
     // Establish the update command
     const document = {
-        q: this.s.currentOp.selector
-        , limit: 1
+        q: this.s.currentOp.selector,
+        limit: 1
     };
 
     // Clear out current Op
@@ -128,8 +128,8 @@ FindOperatorsUnordered.prototype.removeOne = function () {
 FindOperatorsUnordered.prototype.remove = function () {
     // Establish the update command
     const document = {
-        q: this.s.currentOp.selector
-        , limit: 0
+        q: this.s.currentOp.selector,
+        limit: 0
     };
 
     // Clear out current Op
@@ -147,7 +147,9 @@ const addToOperationsList = function (_self, docType, document) {
         checkKeys: false
     });
     // Throw error if the doc is bigger than the max BSON size
-    if (bsonSize >= _self.s.maxBatchSizeBytes) throw toError("document is larger than the maximum size " + _self.s.maxBatchSizeBytes);
+    if (bsonSize >= _self.s.maxBatchSizeBytes) {
+        throw toError(`document is larger than the maximum size ${_self.s.maxBatchSizeBytes}`);
+    }
     // Holds the current batch
     _self.s.currentBatch = null;
     // Get the right type of batch
@@ -160,7 +162,9 @@ const addToOperationsList = function (_self, docType, document) {
     }
 
     // Create a new batch object if we don't have a current one
-    if (_self.s.currentBatch == null) _self.s.currentBatch = new Batch(docType, _self.s.currentIndex);
+    if (_self.s.currentBatch == null) {
+        _self.s.currentBatch = new Batch(docType, _self.s.currentIndex);
+    }
 
     // Check if we need to create a new batch
     if (((_self.s.currentBatch.size + 1) >= _self.s.maxWriteBatchSize)
@@ -185,7 +189,7 @@ const addToOperationsList = function (_self, docType, document) {
     // Save back the current Batch to the right type
     if (docType == common.INSERT) {
         _self.s.currentInsertBatch = _self.s.currentBatch;
-        _self.s.bulkResult.insertedIds.push({ index: _self.s.currentIndex, _id: document._id });
+        _self.s.bulkResult.insertedIds.push({ index: _self.s.bulkResult.insertedIds.length, _id: document._id });
     } else if (docType == common.UPDATE) {
         _self.s.currentUpdateBatch = _self.s.currentBatch;
     } else if (docType == common.REMOVE) {
@@ -235,58 +239,58 @@ const UnorderedBulkOperation = function (topology, collection, options) {
 
     // No promise library selected fall back
     if (!promiseLibrary) {
-        promiseLibrary = typeof global.Promise == "function" ?
+        promiseLibrary = typeof global.Promise === "function" ?
             global.Promise : require("es6-promise").Promise;
     }
 
     // Final results
     const bulkResult = {
-        ok: 1
-        , writeErrors: []
-        , writeConcernErrors: []
-        , insertedIds: []
-        , nInserted: 0
-        , nUpserted: 0
-        , nMatched: 0
-        , nModified: 0
-        , nRemoved: 0
-        , upserted: []
+        ok: 1,
+        writeErrors: [],
+        writeConcernErrors: [],
+        insertedIds: [],
+        nInserted: 0,
+        nUpserted: 0,
+        nMatched: 0,
+        nModified: 0,
+        nRemoved: 0,
+        upserted: []
     };
 
     // Internal state
     this.s = {
         // Final result
-        bulkResult
+        bulkResult,
         // Current batch state
-        , currentInsertBatch: null
-        , currentUpdateBatch: null
-        , currentRemoveBatch: null
-        , currentBatch: null
-        , currentIndex: 0
-        , batches: []
+        currentInsertBatch: null,
+        currentUpdateBatch: null,
+        currentRemoveBatch: null,
+        currentBatch: null,
+        currentIndex: 0,
+        batches: [],
         // Write concern
-        , writeConcern
+        writeConcern,
         // Max batch size options
-        , maxBatchSizeBytes
-        , maxWriteBatchSize
+        maxBatchSizeBytes,
+        maxWriteBatchSize,
         // Namespace
-        , namespace
+        namespace,
         // BSON
-        , bson
+        bson,
         // Topology
-        , topology
+        topology,
         // Options
-        , options
+        options,
         // Current operation
-        , currentOp
+        currentOp,
         // Executed
-        , executed
+        executed,
         // Collection
-        , collection
+        collection,
         // Promise Library
-        , promiseLibrary
+        promiseLibrary,
         // Bypass validation
-        , bypassDocumentValidation: typeof options.bypassDocumentValidation == "boolean" ? options.bypassDocumentValidation : false
+        bypassDocumentValidation: typeof options.bypassDocumentValidation === "boolean" ? options.bypassDocumentValidation : false
     };
 };
 
@@ -300,7 +304,9 @@ const define = UnorderedBulkOperation.define = new Define("UnorderedBulkOperatio
  * @return {UnorderedBulkOperation}
  */
 UnorderedBulkOperation.prototype.insert = function (document) {
-    if (this.s.collection.s.db.options.forceServerObjectID !== true && document._id == null) document._id = new ObjectID();
+    if (this.s.collection.s.db.options.forceServerObjectID !== true && document._id == null) {
+        document._id = new ObjectID();
+    }
     return addToOperationsList(this, common.INSERT, document);
 };
 
@@ -336,7 +342,7 @@ UnorderedBulkOperation.prototype.raw = function (op) {
     const key = Object.keys(op)[0];
 
     // Set up the force server object id
-    const forceServerObjectID = typeof this.s.options.forceServerObjectID == "boolean"
+    const forceServerObjectID = typeof this.s.options.forceServerObjectID === "boolean"
         ? this.s.options.forceServerObjectID : this.s.collection.s.db.options.forceServerObjectID;
 
     // Update operations
@@ -351,7 +357,9 @@ UnorderedBulkOperation.prototype.raw = function (op) {
     if (op.updateOne || op.updateMany || op.replaceOne) {
         const multi = op.updateOne || op.replaceOne ? false : true;
         var operation = { q: op[key].filter, u: op[key].update || op[key].replacement, multi };
-        if (op[key].upsert) operation.upsert = true;
+        if (op[key].upsert) {
+            operation.upsert = true;
+        }
         return addToOperationsList(this, common.UPDATE, operation);
     }
 
@@ -370,16 +378,22 @@ UnorderedBulkOperation.prototype.raw = function (op) {
 
     // Insert operations
     if (op.insertOne && op.insertOne.document == null) {
-        if (forceServerObjectID !== true && op.insertOne._id == null) op.insertOne._id = new ObjectID();
+        if (forceServerObjectID !== true && op.insertOne._id == null) {
+            op.insertOne._id = new ObjectID();
+        }
         return addToOperationsList(this, common.INSERT, op.insertOne);
     } else if (op.insertOne && op.insertOne.document) {
-        if (forceServerObjectID !== true && op.insertOne.document._id == null) op.insertOne.document._id = new ObjectID();
+        if (forceServerObjectID !== true && op.insertOne.document._id == null) {
+            op.insertOne.document._id = new ObjectID();
+        }
         return addToOperationsList(this, common.INSERT, op.insertOne.document);
     }
 
     if (op.insertMany) {
         for (let i = 0; i < op.insertMany.length; i++) {
-            if (forceServerObjectID !== true && op.insertMany[i]._id == null) op.insertMany[i]._id = new ObjectID();
+            if (forceServerObjectID !== true && op.insertMany[i]._id == null) {
+                op.insertMany[i]._id = new ObjectID();
+            }
             addToOperationsList(this, common.INSERT, op.insertMany[i]);
         }
 
@@ -405,7 +419,9 @@ const executeBatch = function (self, batch, callback) {
         }
 
         // If we have and error
-        if (err) err.ok = 0;
+        if (err) {
+            err.ok = 0;
+        }
         handleCallback(callback, null, mergeBatchResults(false, batch, self.s.bulkResult, err, result));
     };
 
@@ -446,16 +462,20 @@ const executeBatches = function (self, callback) {
     let numberOfCommandsToExecute = self.s.batches.length;
     // Execute over all the batches
     for (let i = 0; i < self.s.batches.length; i++) {
-        executeBatch(self, self.s.batches[i], function (err) {
+        executeBatch(self, self.s.batches[i], (err) => {
             // Driver layer error capture it
-            if (err) error = err;
+            if (err) {
+                error = err;
+            }
             // Count down the number of commands left to execute
             numberOfCommandsToExecute = numberOfCommandsToExecute - 1;
 
             // Execute
             if (numberOfCommandsToExecute == 0) {
                 // Driver level error
-                if (error) return handleCallback(callback, error);
+                if (error) {
+                    return handleCallback(callback, error);
+                }
                 // Treat write errors
                 var error = self.s.bulkResult.writeErrors.length > 0 ? toError(self.s.bulkResult.writeErrors[0]) : null;
                 handleCallback(callback, error, new BulkWriteResult(self.s.bulkResult));
@@ -486,17 +506,25 @@ const executeBatches = function (self, callback) {
  */
 UnorderedBulkOperation.prototype.execute = function (_writeConcern, callback) {
     const self = this;
-    if (this.s.executed) throw toError("batch cannot be re-executed");
-    if (typeof _writeConcern == "function") {
+    if (this.s.executed) {
+        throw toError("batch cannot be re-executed");
+    }
+    if (typeof _writeConcern === "function") {
         callback = _writeConcern;
-    } else if (_writeConcern && typeof _writeConcern == "object") {
+    } else if (_writeConcern && typeof _writeConcern === "object") {
         this.s.writeConcern = _writeConcern;
     }
 
     // If we have current batch
-    if (this.s.currentInsertBatch) this.s.batches.push(this.s.currentInsertBatch);
-    if (this.s.currentUpdateBatch) this.s.batches.push(this.s.currentUpdateBatch);
-    if (this.s.currentRemoveBatch) this.s.batches.push(this.s.currentRemoveBatch);
+    if (this.s.currentInsertBatch) {
+        this.s.batches.push(this.s.currentInsertBatch);
+    }
+    if (this.s.currentUpdateBatch) {
+        this.s.batches.push(this.s.currentUpdateBatch);
+    }
+    if (this.s.currentRemoveBatch) {
+        this.s.batches.push(this.s.currentRemoveBatch);
+    }
 
     // If we have no operations in the bulk raise an error
     if (this.s.batches.length == 0) {
@@ -504,12 +532,16 @@ UnorderedBulkOperation.prototype.execute = function (_writeConcern, callback) {
     }
 
     // Execute using callback
-    if (typeof callback == "function") return executeBatches(this, callback);
+    if (typeof callback === "function") {
+        return executeBatches(this, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        executeBatches(self, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        executeBatches(self, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });

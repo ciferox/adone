@@ -1,6 +1,8 @@
 const toError = require("./utils").toError;
 const Define = require("./metadata");
 const shallowClone = require("./utils").shallowClone;
+const assign = require("./utils").assign;
+const authenticate = require("./authenticate");
 
 /**
  * @fileOverview The **Admin** class is an internal class that allows convenient access to
@@ -32,13 +34,15 @@ const shallowClone = require("./utils").shallowClone;
  * @return {Admin} a collection instance.
  */
 const Admin = function (db, topology, promiseLibrary) {
-    if (!(this instanceof Admin)) return new Admin(db, topology);
+    if (!(this instanceof Admin)) {
+        return new Admin(db, topology);
+    }
 
     // Internal state
     this.s = {
-        db
-        , topology
-        , promiseLibrary
+        db,
+        topology,
+        promiseLibrary
     };
 };
 
@@ -65,18 +69,24 @@ Admin.prototype.command = function (command, options, callback) {
     const self = this;
     const args = Array.prototype.slice.call(arguments, 1);
     callback = args.pop();
-    if (typeof callback != "function") args.push(callback);
+    if (typeof callback !== "function") {
+        args.push(callback);
+    }
     options = args.length ? args.shift() : {};
 
     // Execute using callback
-    if (typeof callback == "function") return this.s.db.executeDbAdminCommand(command, options, function (err, doc) {
-        return callback != null ? callback(err, doc) : null;
-    });
+    if (typeof callback === "function") {
+        return this.s.db.executeDbAdminCommand(command, options, (err, doc) => {
+            return callback != null ? callback(err, doc) : null;
+        });
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        self.s.db.executeDbAdminCommand(command, options, function (err, doc) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        self.s.db.executeDbAdminCommand(command, options, (err, doc) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(doc);
         });
     });
@@ -94,12 +104,16 @@ define.classMethod("command", { callback: true, promise: true });
 Admin.prototype.buildInfo = function (callback) {
     const self = this;
     // Execute using callback
-    if (typeof callback == "function") return this.serverInfo(callback);
+    if (typeof callback === "function") {
+        return this.serverInfo(callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        self.serverInfo(function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        self.serverInfo((err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -117,15 +131,21 @@ define.classMethod("buildInfo", { callback: true, promise: true });
 Admin.prototype.serverInfo = function (callback) {
     const self = this;
     // Execute using callback
-    if (typeof callback == "function") return this.s.db.executeDbAdminCommand({ buildinfo: 1 }, function (err, doc) {
-        if (err != null) return callback(err, null);
-        callback(null, doc);
-    });
+    if (typeof callback === "function") {
+        return this.s.db.executeDbAdminCommand({ buildinfo: 1 }, (err, doc) => {
+            if (err != null) {
+                return callback(err, null);
+            }
+            callback(null, doc);
+        });
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        self.s.db.executeDbAdminCommand({ buildinfo: 1 }, function (err, doc) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        self.s.db.executeDbAdminCommand({ buildinfo: 1 }, (err, doc) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(doc);
         });
     });
@@ -143,23 +163,29 @@ Admin.prototype.serverStatus = function (callback) {
     const self = this;
 
     // Execute using callback
-    if (typeof callback == "function") return serverStatus(self, callback);
+    if (typeof callback === "function") {
+        return serverStatus(self, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        serverStatus(self, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        serverStatus(self, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
 };
 
 const serverStatus = function (self, callback) {
-    self.s.db.executeDbAdminCommand({ serverStatus: 1 }, function (err, doc) {
+    self.s.db.executeDbAdminCommand({ serverStatus: 1 }, (err, doc) => {
         if (err == null && doc.ok === 1) {
             callback(null, doc);
         } else {
-            if (err) return callback(err, false);
+            if (err) {
+                return callback(err, false);
+            }
             return callback(toError(doc), false);
         }
     });
@@ -177,25 +203,35 @@ Admin.prototype.profilingLevel = function (callback) {
     const self = this;
 
     // Execute using callback
-    if (typeof callback == "function") return profilingLevel(self, callback);
+    if (typeof callback === "function") {
+        return profilingLevel(self, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        profilingLevel(self, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        profilingLevel(self, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
 };
 
 const profilingLevel = function (self, callback) {
-    self.s.db.executeDbAdminCommand({ profile: -1 }, function (err, doc) {
+    self.s.db.executeDbAdminCommand({ profile: -1 }, (err, doc) => {
         if (err == null && doc.ok === 1) {
             const was = doc.was;
-            if (was == 0) return callback(null, "off");
-            if (was == 1) return callback(null, "slow_only");
-            if (was == 2) return callback(null, "all");
-            return callback(new Error("Error: illegal profiling level value " + was), null);
+            if (was == 0) {
+                return callback(null, "off");
+            }
+            if (was == 1) {
+                return callback(null, "slow_only");
+            }
+            if (was == 2) {
+                return callback(null, "all");
+            }
+            return callback(new Error(`Error: illegal profiling level value ${was}`), null);
         } else {
             err != null ? callback(err, null) : callback(new Error("Error with profile command"), null);
         }
@@ -214,15 +250,21 @@ Admin.prototype.ping = function (options, callback) {
     const self = this;
     const args = Array.prototype.slice.call(arguments, 0);
     callback = args.pop();
-    if (typeof callback != "function") args.push(callback);
+    if (typeof callback !== "function") {
+        args.push(callback);
+    }
 
     // Execute using callback
-    if (typeof callback == "function") return this.s.db.executeDbAdminCommand({ ping: 1 }, callback);
+    if (typeof callback === "function") {
+        return this.s.db.executeDbAdminCommand({ ping: 1 }, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        self.s.db.executeDbAdminCommand({ ping: 1 }, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        self.s.db.executeDbAdminCommand({ ping: 1 }, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -239,21 +281,26 @@ define.classMethod("ping", { callback: true, promise: true });
  * @return {Promise} returns Promise if no callback passed
  */
 Admin.prototype.authenticate = function (username, password, options, callback) {
-    const self = this;
-    if (typeof options == "function") callback = options, options = {};
-    options = shallowClone(options);
-    options.authdb = "admin";
+    console.warn("Admin.prototype.authenticate method will no longer be available in the next major release 3.x as MongoDB 3.6 will only allow auth against users in the admin db and will no longer allow multiple credentials on a socket. Please authenticate using MongoClient.connect with auth credentials.");
+    const finalArguments = [this.s.db];
+    if (typeof username === "string") {
+        finalArguments.push(username);
+    }
+    if (typeof password === "string") {
+        finalArguments.push(password);
+    }
+    if (typeof options === "function") {
+        finalArguments.push({ authdb: "admin" });
+        finalArguments.push(options);
+    } else {
+        finalArguments.push(assign({}, options, { authdb: "admin" }));
+    }
 
-    // Execute using callback
-    if (typeof callback == "function") return this.s.db.authenticate(username, password, options, callback);
-
-    // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        self.s.db.authenticate(username, password, options, function (err, r) {
-            if (err) return reject(err);
-            resolve(r);
-        });
-    });
+    if (typeof callback === "function") {
+        finalArguments.push(callback);
+    }
+  // Excute authenticate method
+    return authenticate.apply(this.s.db, finalArguments);
 };
 
 define.classMethod("authenticate", { callback: true, promise: true });
@@ -267,12 +314,16 @@ define.classMethod("authenticate", { callback: true, promise: true });
 Admin.prototype.logout = function (callback) {
     const self = this;
     // Execute using callback
-    if (typeof callback == "function") return this.s.db.logout({ dbName: "admin" }, callback);
+    if (typeof callback === "function") {
+        return this.s.db.logout({ dbName: "admin" }, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        self.s.db.logout({ dbName: "admin" }, function (err) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        self.s.db.logout({ dbName: "admin" }, (err) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(true);
         });
     });
@@ -291,10 +342,18 @@ const writeConcern = function (options, db) {
 
     // Set db write concern if available
     if (db.writeConcern) {
-        if (options.w) options.w = db.writeConcern.w;
-        if (options.wtimeout) options.wtimeout = db.writeConcern.wtimeout;
-        if (options.j) options.j = db.writeConcern.j;
-        if (options.fsync) options.fsync = db.writeConcern.fsync;
+        if (options.w) {
+            options.w = db.writeConcern.w;
+        }
+        if (options.wtimeout) {
+            options.wtimeout = db.writeConcern.wtimeout;
+        }
+        if (options.j) {
+            options.j = db.writeConcern.j;
+        }
+        if (options.fsync) {
+            options.fsync = db.writeConcern.fsync;
+        }
     }
 
     // Return modified options
@@ -320,7 +379,9 @@ Admin.prototype.addUser = function (username, password, options, callback) {
     const self = this;
     const args = Array.prototype.slice.call(arguments, 2);
     callback = args.pop();
-    if (typeof callback != "function") args.push(callback);
+    if (typeof callback !== "function") {
+        args.push(callback);
+    }
     options = args.length ? args.shift() : {};
     options = options || {};
     // Get the options
@@ -329,13 +390,16 @@ Admin.prototype.addUser = function (username, password, options, callback) {
     options.dbName = "admin";
 
     // Execute using callback
-    if (typeof callback == "function")
+    if (typeof callback === "function")        {
         return self.s.db.addUser(username, password, options, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        self.s.db.addUser(username, password, options, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        self.s.db.addUser(username, password, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -359,7 +423,9 @@ Admin.prototype.removeUser = function (username, options, callback) {
     const self = this;
     const args = Array.prototype.slice.call(arguments, 1);
     callback = args.pop();
-    if (typeof callback != "function") args.push(callback);
+    if (typeof callback !== "function") {
+        args.push(callback);
+    }
     options = args.length ? args.shift() : {};
     options = options || {};
     // Get the options
@@ -368,13 +434,16 @@ Admin.prototype.removeUser = function (username, options, callback) {
     options.dbName = "admin";
 
     // Execute using callback
-    if (typeof callback == "function")
+    if (typeof callback === "function")        {
         return self.s.db.removeUser(username, options, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        self.s.db.removeUser(username, options, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        self.s.db.removeUser(username, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -393,12 +462,16 @@ Admin.prototype.setProfilingLevel = function (level, callback) {
     const self = this;
 
     // Execute using callback
-    if (typeof callback == "function") return setProfilingLevel(self, level, callback);
+    if (typeof callback === "function") {
+        return setProfilingLevel(self, level, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        setProfilingLevel(self, level, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        setProfilingLevel(self, level, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -415,15 +488,16 @@ const setProfilingLevel = function (self, level, callback) {
     } else if (level == "all") {
         profile = 2;
     } else {
-        return callback(new Error("Error: illegal profiling level value " + level));
+        return callback(new Error(`Error: illegal profiling level value ${level}`));
     }
 
     // Set up the profile number
-    command["profile"] = profile;
+    command.profile = profile;
 
-    self.s.db.executeDbAdminCommand(command, function (err, doc) {
-        if (err == null && doc.ok === 1)
+    self.s.db.executeDbAdminCommand(command, (err, doc) => {
+        if (err == null && doc.ok === 1)            {
             return callback(null, level);
+        }
         return err != null ? callback(err, null) : callback(new Error("Error with profile command"), null);
     });
 };
@@ -440,12 +514,16 @@ Admin.prototype.profilingInfo = function (callback) {
     const self = this;
 
     // Execute using callback
-    if (typeof callback == "function") return profilingInfo(self, callback);
+    if (typeof callback === "function") {
+        return profilingInfo(self, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        profilingInfo(self, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        profilingInfo(self, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -473,18 +551,23 @@ Admin.prototype.validateCollection = function (collectionName, options, callback
     const self = this;
     const args = Array.prototype.slice.call(arguments, 1);
     callback = args.pop();
-    if (typeof callback != "function") args.push(callback);
+    if (typeof callback !== "function") {
+        args.push(callback);
+    }
     options = args.length ? args.shift() : {};
     options = options || {};
 
     // Execute using callback
-    if (typeof callback == "function")
+    if (typeof callback === "function")        {
         return validateCollection(self, collectionName, options, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        validateCollection(self, collectionName, options, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        validateCollection(self, collectionName, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -501,17 +584,23 @@ const validateCollection = function (self, collectionName, options, callback) {
         }
     }
 
-    self.s.db.command(command, function (err, doc) {
-        if (err != null) return callback(err, null);
+    self.s.db.command(command, (err, doc) => {
+        if (err != null) {
+            return callback(err, null);
+        }
 
-        if (doc.ok === 0)
+        if (doc.ok === 0)            {
             return callback(new Error("Error with validate command"), null);
-        if (doc.result != null && doc.result.constructor != String)
+        }
+        if (doc.result != null && doc.result.constructor != String)            {
             return callback(new Error("Error with validation data"), null);
-        if (doc.result != null && doc.result.match(/exception|corrupt/) != null)
-            return callback(new Error("Error: invalid collection " + collectionName), null);
-        if (doc.valid != null && !doc.valid)
-            return callback(new Error("Error: invalid collection " + collectionName), null);
+        }
+        if (doc.result != null && doc.result.match(/exception|corrupt/) != null)            {
+            return callback(new Error(`Error: invalid collection ${collectionName}`), null);
+        }
+        if (doc.valid != null && !doc.valid)            {
+            return callback(new Error(`Error: invalid collection ${collectionName}`), null);
+        }
 
         return callback(null, doc);
     });
@@ -528,12 +617,16 @@ define.classMethod("validateCollection", { callback: true, promise: true });
 Admin.prototype.listDatabases = function (callback) {
     const self = this;
     // Execute using callback
-    if (typeof callback == "function") return self.s.db.executeDbAdminCommand({ listDatabases: 1 }, {}, callback);
+    if (typeof callback === "function") {
+        return self.s.db.executeDbAdminCommand({ listDatabases: 1 }, {}, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        self.s.db.executeDbAdminCommand({ listDatabases: 1 }, {}, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        self.s.db.executeDbAdminCommand({ listDatabases: 1 }, {}, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -550,21 +643,28 @@ define.classMethod("listDatabases", { callback: true, promise: true });
 Admin.prototype.replSetGetStatus = function (callback) {
     const self = this;
     // Execute using callback
-    if (typeof callback == "function") return replSetGetStatus(self, callback);
+    if (typeof callback === "function") {
+        return replSetGetStatus(self, callback);
+    }
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        replSetGetStatus(self, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        replSetGetStatus(self, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
 };
 
 const replSetGetStatus = function (self, callback) {
-    self.s.db.executeDbAdminCommand({ replSetGetStatus: 1 }, function (err, doc) {
-        if (err == null && doc.ok === 1)
+    self.s.db.executeDbAdminCommand({ replSetGetStatus: 1 }, (err, doc) => {
+        if (err == null && doc.ok === 1)            {
             return callback(null, doc);
-        if (err) return callback(err, false);
+        }
+        if (err) {
+            return callback(err, false);
+        }
         callback(toError(doc), false);
     });
 };

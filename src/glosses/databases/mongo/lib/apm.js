@@ -70,7 +70,7 @@ const Instrumentation = function (core, options, callback) {
     };
 
     // Did the user want to instrument the prototype
-    if (typeof callback == "function") {
+    if (typeof callback === "function") {
         instrumentPrototype(callback);
     }
 
@@ -87,7 +87,7 @@ const Instrumentation = function (core, options, callback) {
     // Prototype
     const proto = core.Server.prototype;
     // Core server method we are going to wrap
-    methods.forEach(function (x) {
+    methods.forEach((x) => {
         const func = proto[x];
 
         // Add to overloaded methods
@@ -193,7 +193,7 @@ const Instrumentation = function (core, options, callback) {
             const startTime = timestampGenerator.current();
 
             // Push our handler callback
-            args.push(function (err, r) {
+            args.push((err, r) => {
                 const endTime = timestampGenerator.current();
                 const command = {
                     duration: timestampGenerator.duration(startTime, endTime),
@@ -251,9 +251,9 @@ const Instrumentation = function (core, options, callback) {
         require("./bulk/unordered").Bulk.prototype
     ];
 
-    prototypes.forEach(function (proto) {
+    prototypes.forEach((proto) => {
         // Core server method we are going to wrap
-        methods.forEach(function (x) {
+        methods.forEach((x) => {
             const func = proto[x];
 
             // Add to overloaded methods
@@ -269,8 +269,8 @@ const Instrumentation = function (core, options, callback) {
                 // Get the callback
                 const callback = args.pop();
                 // If we have a callback use this
-                if (typeof callback == "function") {
-                    args.push(function (err, r) {
+                if (typeof callback === "function") {
+                    args.push((err, r) => {
                         // Return to caller
                         callback(err, r);
                     });
@@ -300,13 +300,13 @@ const Instrumentation = function (core, options, callback) {
 
     // Command name translation
     const commandTranslation = {
-        "_find": "find", "_getmore": "getMore", "_killcursor": "killCursors", "_explain": "explain"
+        _find: "find", _getmore: "getMore", _killcursor: "killCursors", _explain: "explain"
     };
 
-    prototypes.forEach(function (proto) {
+    prototypes.forEach((proto) => {
 
         // Core server method we are going to wrap
-        methods.forEach(function (x) {
+        methods.forEach((x) => {
             const func = proto[x];
 
             // Add to overloaded methods
@@ -341,7 +341,9 @@ const Instrumentation = function (core, options, callback) {
                         batchSize: cmd.batchSize
                     };
 
-                    if (cmd.maxTimeMS) command.maxTimeMS = cmd.maxTimeMS;
+                    if (cmd.maxTimeMS) {
+                        command.maxTimeMS = cmd.maxTimeMS;
+                    }
                 } else if (x == "_killcursor") {
                     command = {
                         killCursors: collection,
@@ -352,8 +354,12 @@ const Instrumentation = function (core, options, callback) {
                         find: collection, filter: cmd.query
                     };
 
-                    if (cmd.sort) command.sort = cmd.sort;
-                    if (cmd.fields) command.projection = cmd.fields;
+                    if (cmd.sort) {
+                        command.sort = cmd.sort;
+                    }
+                    if (cmd.fields) {
+                        command.projection = cmd.fields;
+                    }
                     if (cmd.limit && cmd.limit < 0) {
                         command.limit = Math.abs(cmd.limit);
                         command.singleBatch = true;
@@ -362,31 +368,69 @@ const Instrumentation = function (core, options, callback) {
                     }
 
                     // Options
-                    if (cmd.skip) command.skip = cmd.skip;
-                    if (cmd.hint) command.hint = cmd.hint;
-                    if (cmd.batchSize) command.batchSize = cmd.batchSize;
-                    if (typeof cmd.returnKey == "boolean") command.returnKey = cmd.returnKey;
-                    if (cmd.comment) command.comment = cmd.comment;
-                    if (cmd.min) command.min = cmd.min;
-                    if (cmd.max) command.max = cmd.max;
-                    if (cmd.maxScan) command.maxScan = cmd.maxScan;
-                    if (cmd.maxTimeMS) command.maxTimeMS = cmd.maxTimeMS;
+                    if (cmd.skip) {
+                        command.skip = cmd.skip;
+                    }
+                    if (cmd.hint) {
+                        command.hint = cmd.hint;
+                    }
+                    if (cmd.batchSize) {
+                        command.batchSize = cmd.batchSize;
+                    }
+                    if (typeof cmd.returnKey === "boolean") {
+                        command.returnKey = cmd.returnKey;
+                    }
+                    if (cmd.comment) {
+                        command.comment = cmd.comment;
+                    }
+                    if (cmd.min) {
+                        command.min = cmd.min;
+                    }
+                    if (cmd.max) {
+                        command.max = cmd.max;
+                    }
+                    if (cmd.maxScan) {
+                        command.maxScan = cmd.maxScan;
+                    }
+                    if (cmd.maxTimeMS) {
+                        command.maxTimeMS = cmd.maxTimeMS;
+                    }
 
                     // Flags
-                    if (typeof cmd.awaitData == "boolean") command.awaitData = cmd.awaitData;
-                    if (typeof cmd.snapshot == "boolean") command.snapshot = cmd.snapshot;
-                    if (typeof cmd.tailable == "boolean") command.tailable = cmd.tailable;
-                    if (typeof cmd.oplogReplay == "boolean") command.oplogReplay = cmd.oplogReplay;
-                    if (typeof cmd.noCursorTimeout == "boolean") command.noCursorTimeout = cmd.noCursorTimeout;
-                    if (typeof cmd.partial == "boolean") command.partial = cmd.partial;
-                    if (typeof cmd.showDiskLoc == "boolean") command.showRecordId = cmd.showDiskLoc;
+                    if (typeof cmd.awaitData === "boolean") {
+                        command.awaitData = cmd.awaitData;
+                    }
+                    if (typeof cmd.snapshot === "boolean") {
+                        command.snapshot = cmd.snapshot;
+                    }
+                    if (typeof cmd.tailable === "boolean") {
+                        command.tailable = cmd.tailable;
+                    }
+                    if (typeof cmd.oplogReplay === "boolean") {
+                        command.oplogReplay = cmd.oplogReplay;
+                    }
+                    if (typeof cmd.noCursorTimeout === "boolean") {
+                        command.noCursorTimeout = cmd.noCursorTimeout;
+                    }
+                    if (typeof cmd.partial === "boolean") {
+                        command.partial = cmd.partial;
+                    }
+                    if (typeof cmd.showDiskLoc === "boolean") {
+                        command.showRecordId = cmd.showDiskLoc;
+                    }
 
                     // Read Concern
-                    if (cmd.readConcern) command.readConcern = cmd.readConcern;
+                    if (cmd.readConcern) {
+                        command.readConcern = cmd.readConcern;
+                    }
 
                     // Override method
-                    if (cmd.explain) command.explain = cmd.explain;
-                    if (cmd.exhaust) command.exhaust = cmd.exhaust;
+                    if (cmd.explain) {
+                        command.explain = cmd.explain;
+                    }
+                    if (cmd.exhaust) {
+                        command.exhaust = cmd.exhaust;
+                    }
 
                     // If we have a explain flag
                     if (cmd.explain) {
@@ -397,7 +441,9 @@ const Instrumentation = function (core, options, callback) {
                         };
 
                         // Set readConcern on the command if available
-                        if (cmd.readConcern) command.readConcern = cmd.readConcern;
+                        if (cmd.readConcern) {
+                            command.readConcern = cmd.readConcern;
+                        }
 
                         // Set up the _explain name for the command
                         x = "_explain";
@@ -410,8 +456,12 @@ const Instrumentation = function (core, options, callback) {
                 let connectionId = null;
 
                 // Set local connection
-                if (this.connection) connectionId = this.connection;
-                if (!connectionId && this.server && this.server.getConnection) connectionId = this.server.getConnection();
+                if (this.connection) {
+                    connectionId = this.connection;
+                }
+                if (!connectionId && this.server && this.server.getConnection) {
+                    connectionId = this.server.getConnection();
+                }
 
                 // Get the command Name
                 const commandName = x == "_find" ? Object.keys(command)[0] : commandTranslation[x];
@@ -442,7 +492,7 @@ const Instrumentation = function (core, options, callback) {
                 const callback = args.pop();
 
                 // We do not have a callback but a Promise
-                if (typeof callback == "function" || command.commandName == "killCursors") {
+                if (typeof callback === "function" || command.commandName == "killCursors") {
                     const startTime = timestampGenerator.current();
                     // Emit the started event
                     self.emit("started", command);
@@ -470,7 +520,7 @@ const Instrumentation = function (core, options, callback) {
                     }
 
                     // Add our callback handler
-                    args.push(function (err, r) {
+                    args.push((err, r) => {
                         if (err) {
                             // Command
                             var command = {
@@ -494,7 +544,9 @@ const Instrumentation = function (core, options, callback) {
                                         nextBatch: cursor.cursorState.documents
                                     }, ok: 1
                                 };
-                            } else if (commandName.toLowerCase() == "find" && r == null) {
+                            } else if ((commandName.toLowerCase() == "find"
+                                        || commandName.toLowerCase() == "aggregate"
+                                        || commandName.toLowerCase() == "listcollections") && r == null) {
                                 r = {
                                     cursor: {
                                         id: cursor.cursorState.cursorId,
@@ -524,7 +576,9 @@ const Instrumentation = function (core, options, callback) {
                         }
 
                         // Return
-                        if (!callback) return;
+                        if (!callback) {
+                            return;
+                        }
 
                         // Return to caller
                         callback(err, r);
@@ -538,12 +592,12 @@ const Instrumentation = function (core, options, callback) {
                     // Get the promise
                     const promise = func.apply(this, args);
                     // Return a new promise
-                    return new cursor.s.promiseLibrary(function (resolve, reject) {
+                    return new cursor.s.promiseLibrary((resolve, reject) => {
                         const startTime = timestampGenerator.current();
                         // Emit the started event
                         self.emit("started", command);
                         // Execute the function
-                        promise.then(function () {
+                        promise.then(() => {
                             // cursor id is zero, we can issue success command
                             const command = {
                                 duration: timestampGenerator.duration(startTime, timestampGenerator.current()),
@@ -556,7 +610,7 @@ const Instrumentation = function (core, options, callback) {
 
                             // Emit the command
                             self.emit("succeeded", command);
-                        }).catch(function (err) {
+                        }).catch((err) => {
                             // Command
                             const command = {
                                 duration: timestampGenerator.duration(startTime, timestampGenerator.current()),

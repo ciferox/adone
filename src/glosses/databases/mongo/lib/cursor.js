@@ -111,7 +111,7 @@ const Cursor = function (bson, ns, cmd, options, topology, topologyOptions) {
 
     // No promise library selected fall back
     if (!promiseLibrary) {
-        promiseLibrary = typeof global.Promise == "function" ?
+        promiseLibrary = typeof global.Promise === "function" ?
             global.Promise : require("es6-promise").Promise;
     }
 
@@ -121,29 +121,29 @@ const Cursor = function (bson, ns, cmd, options, topology, topologyOptions) {
     // Internal cursor state
     this.s = {
         // Tailable cursor options
-        numberOfRetries
-        , tailableRetryInterval
-        , currentNumberOfRetries
+        numberOfRetries,
+        tailableRetryInterval,
+        currentNumberOfRetries,
         // State
-        , state
+        state,
         // Stream options
-        , streamOptions
+        streamOptions,
         // BSON
-        , bson
+        bson,
         // Namespace
-        , ns
+        ns,
         // Command
-        , cmd
+        cmd,
         // Options
-        , options
+        options,
         // Topology
-        , topology
+        topology,
         // Topology options
-        , topologyOptions
+        topologyOptions,
         // Promise library
-        , promiseLibrary
+        promiseLibrary,
         // Current doc
-        , currentDoc: null
+        currentDoc: null
     };
 
     // Translate correctly
@@ -153,6 +153,14 @@ const Cursor = function (bson, ns, cmd, options, topology, topologyOptions) {
 
     // Set the sort value
     this.sortValue = self.s.cmd.sort;
+
+    // Get the batchSize
+    const batchSize = cmd.cursor && cmd.cursor.batchSize
+        ? cmd.cursor && cmd.cursor.batchSize
+        : (options.cursor && options.cursor.batchSize ? options.cursor.batchSize : 1000);
+
+    // Set the batchSize
+    this.setCursorBatchSize(batchSize);
 };
 
 /**
@@ -206,12 +214,14 @@ Cursor.prototype.hasNext = function (callback) {
     const self = this;
 
     // Execute using callback
-    if (typeof callback == "function") {
+    if (typeof callback === "function") {
         if (self.s.currentDoc) {
             return callback(null, true);
         } else {
-            return nextObject(self, function (err, doc) {
-                if (!doc) return callback(null, false);
+            return nextObject(self, (err, doc) => {
+                if (!doc) {
+                    return callback(null, false);
+                }
                 self.s.currentDoc = doc;
                 callback(null, true);
             });
@@ -219,14 +229,20 @@ Cursor.prototype.hasNext = function (callback) {
     }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
+    return new this.s.promiseLibrary((resolve, reject) => {
         if (self.s.currentDoc) {
             resolve(true);
         } else {
-            nextObject(self, function (err, doc) {
-                if (self.s.state == Cursor.CLOSED || self.isDead()) return resolve(false);
-                if (err) return reject(err);
-                if (!doc) return resolve(false);
+            nextObject(self, (err, doc) => {
+                if (self.s.state == Cursor.CLOSED || self.isDead()) {
+                    return resolve(false);
+                }
+                if (err) {
+                    return reject(err);
+                }
+                if (!doc) {
+                    return resolve(false);
+                }
                 self.s.currentDoc = doc;
                 resolve(true);
             });
@@ -247,7 +263,7 @@ Cursor.prototype.next = function (callback) {
     const self = this;
 
     // Execute using callback
-    if (typeof callback == "function") {
+    if (typeof callback === "function") {
         // Return the currentDoc if someone called hasNext first
         if (self.s.currentDoc) {
             const doc = self.s.currentDoc;
@@ -260,7 +276,7 @@ Cursor.prototype.next = function (callback) {
     }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
+    return new this.s.promiseLibrary((resolve, reject) => {
         // Return the currentDoc if someone called hasNext first
         if (self.s.currentDoc) {
             const doc = self.s.currentDoc;
@@ -268,8 +284,10 @@ Cursor.prototype.next = function (callback) {
             return resolve(doc);
         }
 
-        nextObject(self, function (err, r) {
-            if (err) return reject(err);
+        nextObject(self, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -284,7 +302,9 @@ define.classMethod("next", { callback: true, promise: true });
  * @return {Cursor}
  */
 Cursor.prototype.filter = function (filter) {
-    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) throw MongoError.create({ message: "Cursor is closed", driver: true });
+    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) {
+        throw MongoError.create({ message: "Cursor is closed", driver: true });
+    }
     this.s.cmd.query = filter;
     return this;
 };
@@ -298,7 +318,9 @@ define.classMethod("filter", { callback: false, promise: false, returns: [Cursor
  * @return {Cursor}
  */
 Cursor.prototype.maxScan = function (maxScan) {
-    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) throw MongoError.create({ message: "Cursor is closed", driver: true });
+    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) {
+        throw MongoError.create({ message: "Cursor is closed", driver: true });
+    }
     this.s.cmd.maxScan = maxScan;
     return this;
 };
@@ -312,7 +334,9 @@ define.classMethod("maxScan", { callback: false, promise: false, returns: [Curso
  * @return {Cursor}
  */
 Cursor.prototype.hint = function (hint) {
-    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) throw MongoError.create({ message: "Cursor is closed", driver: true });
+    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) {
+        throw MongoError.create({ message: "Cursor is closed", driver: true });
+    }
     this.s.cmd.hint = hint;
     return this;
 };
@@ -326,7 +350,9 @@ define.classMethod("hint", { callback: false, promise: false, returns: [Cursor] 
  * @return {Cursor}
  */
 Cursor.prototype.min = function (min) {
-    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) throw MongoError.create({ message: "Cursor is closed", driver: true });
+    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) {
+        throw MongoError.create({ message: "Cursor is closed", driver: true });
+    }
     this.s.cmd.min = min;
     return this;
 };
@@ -340,7 +366,9 @@ define.classMethod("min", { callback: false, promise: false, returns: [Cursor] }
  * @return {Cursor}
  */
 Cursor.prototype.max = function (max) {
-    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) throw MongoError.create({ message: "Cursor is closed", driver: true });
+    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) {
+        throw MongoError.create({ message: "Cursor is closed", driver: true });
+    }
     this.s.cmd.max = max;
     return this;
 };
@@ -354,7 +382,9 @@ define.classMethod("max", { callback: false, promise: false, returns: [Cursor] }
  * @return {Cursor}
  */
 Cursor.prototype.returnKey = function (value) {
-    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) throw MongoError.create({ message: "Cursor is closed", driver: true });
+    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) {
+        throw MongoError.create({ message: "Cursor is closed", driver: true });
+    }
     this.s.cmd.returnKey = value;
     return this;
 };
@@ -368,7 +398,9 @@ define.classMethod("returnKey", { callback: false, promise: false, returns: [Cur
  * @return {Cursor}
  */
 Cursor.prototype.showRecordId = function (value) {
-    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) throw MongoError.create({ message: "Cursor is closed", driver: true });
+    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) {
+        throw MongoError.create({ message: "Cursor is closed", driver: true });
+    }
     this.s.cmd.showDiskLoc = value;
     return this;
 };
@@ -382,7 +414,9 @@ define.classMethod("showRecordId", { callback: false, promise: false, returns: [
  * @return {Cursor}
  */
 Cursor.prototype.snapshot = function (value) {
-    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) throw MongoError.create({ message: "Cursor is closed", driver: true });
+    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) {
+        throw MongoError.create({ message: "Cursor is closed", driver: true });
+    }
     this.s.cmd.snapshot = value;
     return this;
 };
@@ -398,11 +432,16 @@ define.classMethod("snapshot", { callback: false, promise: false, returns: [Curs
  * @return {Cursor}
  */
 Cursor.prototype.setCursorOption = function (field, value) {
-    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) throw MongoError.create({ message: "Cursor is closed", driver: true });
-    if (fields.indexOf(field) == -1) throw MongoError.create({ message: f("option %s not a supported option %s", field, fields), driver: true });
+    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) {
+        throw MongoError.create({ message: "Cursor is closed", driver: true });
+    }
+    if (fields.indexOf(field) == -1) {
+        throw MongoError.create({ message: f("option %s not a supported option %s", field, fields), driver: true });
+    }
     this.s[field] = value;
-    if (field == "numberOfRetries")
+    if (field == "numberOfRetries") {
         this.s.currentNumberOfRetries = value;
+    }
     return this;
 };
 
@@ -417,9 +456,15 @@ define.classMethod("setCursorOption", { callback: false, promise: false, returns
  * @return {Cursor}
  */
 Cursor.prototype.addCursorFlag = function (flag, value) {
-    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) throw MongoError.create({ message: "Cursor is closed", driver: true });
-    if (flags.indexOf(flag) == -1) throw MongoError.create({ message: f("flag %s not a supported flag %s", flag, flags), driver: true });
-    if (typeof value != "boolean") throw MongoError.create({ message: f("flag %s must be a boolean value", flag), driver: true });
+    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) {
+        throw MongoError.create({ message: "Cursor is closed", driver: true });
+    }
+    if (flags.indexOf(flag) == -1) {
+        throw MongoError.create({ message: f("flag %s not a supported flag %s", flag, flags), driver: true });
+    }
+    if (typeof value !== "boolean") {
+        throw MongoError.create({ message: f("flag %s must be a boolean value", flag), driver: true });
+    }
     this.s.cmd[flag] = value;
     return this;
 };
@@ -435,14 +480,20 @@ define.classMethod("addCursorFlag", { callback: false, promise: false, returns: 
  * @return {Cursor}
  */
 Cursor.prototype.addQueryModifier = function (name, value) {
-    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) throw MongoError.create({ message: "Cursor is closed", driver: true });
-    if (name[0] != "$") throw MongoError.create({ message: f("%s is not a valid query modifier"), driver: true });
+    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) {
+        throw MongoError.create({ message: "Cursor is closed", driver: true });
+    }
+    if (name[0] != "$") {
+        throw MongoError.create({ message: f("%s is not a valid query modifier"), driver: true });
+    }
     // Strip of the $
     const field = name.substr(1);
     // Set on the command
     this.s.cmd[field] = value;
     // Deal with the special case for sort
-    if (field == "orderby") this.s.cmd.sort = this.s.cmd[field];
+    if (field == "orderby") {
+        this.s.cmd.sort = this.s.cmd[field];
+    }
     return this;
 };
 
@@ -456,7 +507,9 @@ define.classMethod("addQueryModifier", { callback: false, promise: false, return
  * @return {Cursor}
  */
 Cursor.prototype.comment = function (value) {
-    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) throw MongoError.create({ message: "Cursor is closed", driver: true });
+    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) {
+        throw MongoError.create({ message: "Cursor is closed", driver: true });
+    }
     this.s.cmd.comment = value;
     return this;
 };
@@ -471,8 +524,12 @@ define.classMethod("comment", { callback: false, promise: false, returns: [Curso
  * @return {Cursor}
  */
 Cursor.prototype.maxAwaitTimeMS = function (value) {
-    if (typeof value != "number") throw MongoError.create({ message: "maxAwaitTimeMS must be a number", driver: true });
-    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) throw MongoError.create({ message: "Cursor is closed", driver: true });
+    if (typeof value !== "number") {
+        throw MongoError.create({ message: "maxAwaitTimeMS must be a number", driver: true });
+    }
+    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) {
+        throw MongoError.create({ message: "Cursor is closed", driver: true });
+    }
     this.s.cmd.maxAwaitTimeMS = value;
     return this;
 };
@@ -487,8 +544,12 @@ define.classMethod("maxAwaitTimeMS", { callback: false, promise: false, returns:
  * @return {Cursor}
  */
 Cursor.prototype.maxTimeMS = function (value) {
-    if (typeof value != "number") throw MongoError.create({ message: "maxTimeMS must be a number", driver: true });
-    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) throw MongoError.create({ message: "Cursor is closed", driver: true });
+    if (typeof value !== "number") {
+        throw MongoError.create({ message: "maxTimeMS must be a number", driver: true });
+    }
+    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) {
+        throw MongoError.create({ message: "Cursor is closed", driver: true });
+    }
     this.s.cmd.maxTimeMS = value;
     return this;
 };
@@ -507,7 +568,9 @@ define.classMethod("maxTimeMs", { callback: false, promise: false, returns: [Cur
  * @return {Cursor}
  */
 Cursor.prototype.project = function (value) {
-    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) throw MongoError.create({ message: "Cursor is closed", driver: true });
+    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) {
+        throw MongoError.create({ message: "Cursor is closed", driver: true });
+    }
     this.s.cmd.fields = value;
     return this;
 };
@@ -523,14 +586,18 @@ define.classMethod("project", { callback: false, promise: false, returns: [Curso
  * @return {Cursor}
  */
 Cursor.prototype.sort = function (keyOrList, direction) {
-    if (this.s.options.tailable) throw MongoError.create({ message: "Tailable cursor doesn't support sorting", driver: true });
-    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) throw MongoError.create({ message: "Cursor is closed", driver: true });
+    if (this.s.options.tailable) {
+        throw MongoError.create({ message: "Tailable cursor doesn't support sorting", driver: true });
+    }
+    if (this.s.state == Cursor.CLOSED || this.s.state == Cursor.OPEN || this.isDead()) {
+        throw MongoError.create({ message: "Cursor is closed", driver: true });
+    }
     let order = keyOrList;
 
     // We have an array of arrays, we need to preserve the order of the sort
     // so we will us a Map
     if (Array.isArray(order) && Array.isArray(order[0])) {
-        order = new Map(order.map(function (x) {
+        order = new Map(order.map((x) => {
             const value = [x[0], null];
             if (x[1] == "asc") {
                 value[1] = 1;
@@ -565,9 +632,15 @@ define.classMethod("sort", { callback: false, promise: false, returns: [Cursor] 
  * @return {Cursor}
  */
 Cursor.prototype.batchSize = function (value) {
-    if (this.s.options.tailable) throw MongoError.create({ message: "Tailable cursor doesn't support batchSize", driver: true });
-    if (this.s.state == Cursor.CLOSED || this.isDead()) throw MongoError.create({ message: "Cursor is closed", driver: true });
-    if (typeof value != "number") throw MongoError.create({ message: "batchSize requires an integer", driver: true });
+    if (this.s.options.tailable) {
+        throw MongoError.create({ message: "Tailable cursor doesn't support batchSize", driver: true });
+    }
+    if (this.s.state == Cursor.CLOSED || this.isDead()) {
+        throw MongoError.create({ message: "Cursor is closed", driver: true });
+    }
+    if (typeof value !== "number") {
+        throw MongoError.create({ message: "batchSize requires an integer", driver: true });
+    }
     this.s.cmd.batchSize = value;
     this.setCursorBatchSize(value);
     return this;
@@ -597,9 +670,15 @@ define.classMethod("collation", { callback: false, promise: false, returns: [Cur
  * @return {Cursor}
  */
 Cursor.prototype.limit = function (value) {
-    if (this.s.options.tailable) throw MongoError.create({ message: "Tailable cursor doesn't support limit", driver: true });
-    if (this.s.state == Cursor.OPEN || this.s.state == Cursor.CLOSED || this.isDead()) throw MongoError.create({ message: "Cursor is closed", driver: true });
-    if (typeof value != "number") throw MongoError.create({ message: "limit requires an integer", driver: true });
+    if (this.s.options.tailable) {
+        throw MongoError.create({ message: "Tailable cursor doesn't support limit", driver: true });
+    }
+    if (this.s.state == Cursor.OPEN || this.s.state == Cursor.CLOSED || this.isDead()) {
+        throw MongoError.create({ message: "Cursor is closed", driver: true });
+    }
+    if (typeof value !== "number") {
+        throw MongoError.create({ message: "limit requires an integer", driver: true });
+    }
     this.s.cmd.limit = value;
     // this.cursorLimit = value;
     this.setCursorLimit(value);
@@ -616,9 +695,15 @@ define.classMethod("limit", { callback: false, promise: false, returns: [Cursor]
  * @return {Cursor}
  */
 Cursor.prototype.skip = function (value) {
-    if (this.s.options.tailable) throw MongoError.create({ message: "Tailable cursor doesn't support skip", driver: true });
-    if (this.s.state == Cursor.OPEN || this.s.state == Cursor.CLOSED || this.isDead()) throw MongoError.create({ message: "Cursor is closed", driver: true });
-    if (typeof value != "number") throw MongoError.create({ message: "skip requires an integer", driver: true });
+    if (this.s.options.tailable) {
+        throw MongoError.create({ message: "Tailable cursor doesn't support skip", driver: true });
+    }
+    if (this.s.state == Cursor.OPEN || this.s.state == Cursor.CLOSED || this.isDead()) {
+        throw MongoError.create({ message: "Cursor is closed", driver: true });
+    }
+    if (typeof value !== "number") {
+        throw MongoError.create({ message: "skip requires an integer", driver: true });
+    }
     this.s.cmd.skip = value;
     this.setCursorSkip(value);
     return this;
@@ -656,7 +741,9 @@ define.classMethod("skip", { callback: false, promise: false, returns: [Cursor] 
 Cursor.prototype.nextObject = Cursor.prototype.next;
 
 const nextObject = function (self, callback) {
-    if (self.s.state == Cursor.CLOSED || self.isDead && self.isDead()) return handleCallback(callback, MongoError.create({ message: "Cursor is closed", driver: true }));
+    if (self.s.state == Cursor.CLOSED || self.isDead && self.isDead()) {
+        return handleCallback(callback, MongoError.create({ message: "Cursor is closed", driver: true }));
+    }
     if (self.s.state == Cursor.INIT && self.s.cmd.sort) {
         try {
             self.s.cmd.sort = formattedOrderClause(self.s.cmd.sort);
@@ -666,9 +753,11 @@ const nextObject = function (self, callback) {
     }
 
     // Get the next object
-    self._next(function (err, doc) {
+    self._next((err, doc) => {
         self.s.state = Cursor.OPEN;
-        if (err) return handleCallback(callback, err);
+        if (err) {
+            return handleCallback(callback, err);
+        }
         handleCallback(callback, null, doc);
     });
 };
@@ -679,7 +768,9 @@ define.classMethod("nextObject", { callback: true, promise: true });
 // without incurring a nextTick operation
 const loop = function (self, callback) {
     // No more items we are done
-    if (self.bufferedCount() == 0) return;
+    if (self.bufferedCount() == 0) {
+        return;
+    }
     // Get the next document
     self._next(callback);
     // Loop
@@ -716,29 +807,41 @@ define.classMethod("each", { callback: true, promise: false });
 
 // Run the each loop
 const _each = function (self, callback) {
-    if (!callback) throw MongoError.create({ message: "callback is mandatory", driver: true });
-    if (self.isNotified()) return;
+    if (!callback) {
+        throw MongoError.create({ message: "callback is mandatory", driver: true });
+    }
+    if (self.isNotified()) {
+        return;
+    }
     if (self.s.state == Cursor.CLOSED || self.isDead()) {
         return handleCallback(callback, MongoError.create({ message: "Cursor is closed", driver: true }));
     }
 
-    if (self.s.state == Cursor.INIT) self.s.state = Cursor.OPEN;
+    if (self.s.state == Cursor.INIT) {
+        self.s.state = Cursor.OPEN;
+    }
 
     // Define function to avoid global scope escape
     let fn = null;
     // Trampoline all the entries
     if (self.bufferedCount() > 0) {
-        while (fn = loop(self, callback)) fn(self, callback);
+        while (fn = loop(self, callback)) {
+            fn(self, callback);
+        }
         _each(self, callback);
     } else {
-        self.next(function (err, item) {
-            if (err) return handleCallback(callback, err);
+        self.next((err, item) => {
+            if (err) {
+                return handleCallback(callback, err);
+            }
             if (item == null) {
                 self.s.state = Cursor.CLOSED;
                 return handleCallback(callback, null, null);
             }
 
-            if (handleCallback(callback, null, item) == false) return;
+            if (handleCallback(callback, null, item) == false) {
+                return;
+            }
             _each(self, callback);
         });
     }
@@ -765,9 +868,13 @@ const _each = function (self, callback) {
  * @return {null}
  */
 Cursor.prototype.forEach = function (iterator, callback) {
-    this.each(function (err, doc) {
-        if (err) { callback(err); return false; }
-        if (doc != null) { iterator(doc); return true; }
+    this.each((err, doc) => {
+        if (err) {
+            callback(err); return false;
+        }
+        if (doc != null) {
+            iterator(doc); return true;
+        }
         if (doc == null && callback) {
             const internalCallback = callback;
             callback = null;
@@ -787,10 +894,12 @@ define.classMethod("forEach", { callback: true, promise: false });
  * @return {Cursor}
  */
 Cursor.prototype.setReadPreference = function (r) {
-    if (this.s.state != Cursor.INIT) throw MongoError.create({ message: "cannot change cursor readPreference after cursor has been accessed", driver: true });
+    if (this.s.state != Cursor.INIT) {
+        throw MongoError.create({ message: "cannot change cursor readPreference after cursor has been accessed", driver: true });
+    }
     if (r instanceof ReadPreference) {
         this.s.options.readPreference = new CoreReadPreference(r.mode, r.tags, { maxStalenessSeconds: r.maxStalenessSeconds });
-    } else if (typeof r == "string") {
+    } else if (typeof r === "string") {
         this.s.options.readPreference = new CoreReadPreference(r);
     } else if (r instanceof CoreReadPreference) {
         this.s.options.readPreference = r;
@@ -820,15 +929,21 @@ define.classMethod("setReadPreference", { callback: false, promise: false, retur
  */
 Cursor.prototype.toArray = function (callback) {
     const self = this;
-    if (self.s.options.tailable) throw MongoError.create({ message: "Tailable cursor cannot be converted to array", driver: true });
+    if (self.s.options.tailable) {
+        throw MongoError.create({ message: "Tailable cursor cannot be converted to array", driver: true });
+    }
 
     // Execute using callback
-    if (typeof callback == "function") return toArray(self, callback);
+    if (typeof callback === "function") {
+        return toArray(self, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        toArray(self, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        toArray(self, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -843,8 +958,10 @@ const toArray = function (self, callback) {
 
     // Fetch all the documents
     const fetchDocs = function () {
-        self._next(function (err, doc) {
-            if (err) return handleCallback(callback, err);
+        self._next((err, doc) => {
+            if (err) {
+                return handleCallback(callback, err);
+            }
             if (doc == null) {
                 self.s.state = Cursor.CLOSED;
                 return handleCallback(callback, null, items);
@@ -858,7 +975,7 @@ const toArray = function (self, callback) {
                 let docs = self.readBufferedDocuments(self.bufferedCount());
 
                 // Transform the doc if transform method added
-                if (self.s.transforms && typeof self.s.transforms.doc == "function") {
+                if (self.s.transforms && typeof self.s.transforms.doc === "function") {
                     docs = docs.map(self.s.transforms.doc);
                 }
 
@@ -897,56 +1014,77 @@ define.classMethod("toArray", { callback: true, promise: true });
  */
 Cursor.prototype.count = function (applySkipLimit, opts, callback) {
     const self = this;
-    if (self.s.cmd.query == null) throw MongoError.create({ message: "count can only be used with find command", driver: true });
-    if (typeof opts == "function") callback = opts, opts = {};
+    if (self.s.cmd.query == null) {
+        throw MongoError.create({ message: "count can only be used with find command", driver: true });
+    }
+    if (typeof opts === "function") {
+        callback = opts, opts = {};
+    }
     opts = opts || {};
 
     // Execute using callback
-    if (typeof callback == "function") return count(self, applySkipLimit, opts, callback);
+    if (typeof callback === "function") {
+        return count(self, applySkipLimit, opts, callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        count(self, applySkipLimit, opts, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        count(self, applySkipLimit, opts, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
 };
 
 const count = function (self, applySkipLimit, opts, callback) {
-    if (typeof applySkipLimit == "function") {
+    if (typeof applySkipLimit === "function") {
         callback = applySkipLimit;
         applySkipLimit = true;
     }
 
     if (applySkipLimit) {
-        if (typeof self.cursorSkip() == "number") opts.skip = self.cursorSkip();
-        if (typeof self.cursorLimit() == "number") opts.limit = self.cursorLimit();
+        if (typeof self.cursorSkip() === "number") {
+            opts.skip = self.cursorSkip();
+        }
+        if (typeof self.cursorLimit() === "number") {
+            opts.limit = self.cursorLimit();
+        }
     }
 
     // Command
     const delimiter = self.s.ns.indexOf(".");
 
     const command = {
-        "count": self.s.ns.substr(delimiter + 1), "query": self.s.cmd.query
+        count: self.s.ns.substr(delimiter + 1), query: self.s.cmd.query
     };
 
-    if (typeof opts.maxTimeMS == "number") {
+    if (typeof opts.maxTimeMS === "number") {
         command.maxTimeMS = opts.maxTimeMS;
-    } else if (self.s.cmd && typeof self.s.cmd.maxTimeMS == "number") {
+    } else if (self.s.cmd && typeof self.s.cmd.maxTimeMS === "number") {
         command.maxTimeMS = self.s.cmd.maxTimeMS;
     }
 
     // Merge in any options
-    if (opts.skip) command.skip = opts.skip;
-    if (opts.limit) command.limit = opts.limit;
-    if (self.s.options.hint) command.hint = self.s.options.hint;
+    if (opts.skip) {
+        command.skip = opts.skip;
+    }
+    if (opts.limit) {
+        command.limit = opts.limit;
+    }
+    if (self.s.options.hint) {
+        command.hint = self.s.options.hint;
+    }
+
+    // Set cursor server to the same as the topology
+    self.server = self.topology;
 
     // Execute the command
     self.topology.command(f("%s.$cmd", self.s.ns.substr(0, delimiter))
-        , command, function (err, result) {
+        , command, (err, result) => {
             callback(err, result ? result.result.n : null);
-        });
+        }, self.options);
 };
 
 define.classMethod("count", { callback: true, promise: true });
@@ -964,9 +1102,11 @@ Cursor.prototype.close = function (callback) {
     // Emit the close event for the cursor
     this.emit("close");
     // Callback if provided
-    if (typeof callback == "function") return handleCallback(callback, null, this);
+    if (typeof callback === "function") {
+        return handleCallback(callback, null, this);
+    }
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve) {
+    return new this.s.promiseLibrary((resolve) => {
         resolve();
     });
 };
@@ -998,7 +1138,9 @@ Cursor.prototype.isClosed = function () {
 define.classMethod("isClosed", { callback: false, promise: false, returns: [Boolean] });
 
 Cursor.prototype.destroy = function (err) {
-    if (err) this.emit("error", err);
+    if (err) {
+        this.emit("error", err);
+    }
     this.pause();
     this.close();
 };
@@ -1031,16 +1173,20 @@ Cursor.prototype.explain = function (callback) {
 
     // Do we have a readConcern
     if (this.s.cmd.readConcern) {
-        delete this.s.cmd["readConcern"];
+        delete this.s.cmd.readConcern;
     }
 
     // Execute using callback
-    if (typeof callback == "function") return this._next(callback);
+    if (typeof callback === "function") {
+        return this._next(callback);
+    }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        self._next(function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        self._next((err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -1055,12 +1201,14 @@ Cursor.prototype._read = function () {
     }
 
     // Get the next item
-    self.nextObject(function (err, result) {
+    self.nextObject((err, result) => {
         if (err) {
             if (self.listeners("error") && self.listeners("error").length > 0) {
                 self.emit("error", err);
             }
-            if (!self.isDead()) self.close();
+            if (!self.isDead()) {
+                self.close();
+            }
 
             // Emit end event
             self.emit("end");
@@ -1068,12 +1216,12 @@ Cursor.prototype._read = function () {
         }
 
         // If we provided a transformation method
-        if (typeof self.s.streamOptions.transform == "function" && result != null) {
+        if (typeof self.s.streamOptions.transform === "function" && result != null) {
             return self.push(self.s.streamOptions.transform(result));
         }
 
         // If we provided a map function
-        if (self.cursorState.transforms && typeof self.cursorState.transforms.doc == "function" && result != null) {
+        if (self.cursorState.transforms && typeof self.cursorState.transforms.doc === "function" && result != null) {
             return self.push(self.cursorState.transforms.doc(result));
         }
 
@@ -1084,7 +1232,7 @@ Cursor.prototype._read = function () {
 
 Object.defineProperty(Cursor.prototype, "readPreference", {
     enumerable: true,
-    get () {
+    get() {
         if (!this || !this.s) {
             return null;
         }
@@ -1095,7 +1243,7 @@ Object.defineProperty(Cursor.prototype, "readPreference", {
 
 Object.defineProperty(Cursor.prototype, "namespace", {
     enumerable: true,
-    get () {
+    get() {
         if (!this || !this.s) {
             return null;
         }

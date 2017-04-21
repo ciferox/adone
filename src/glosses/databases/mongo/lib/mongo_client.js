@@ -11,6 +11,7 @@ const MongoError = require("../core").MongoError;
 const Db = require("./db");
 const f = require("util").format;
 const shallowClone = require("./utils").shallowClone;
+const authenticate = require("./authenticate");
 
 /**
  * @fileOverview The **MongoClient** class is a class that allows for making Connections to MongoDB.
@@ -27,7 +28,7 @@ const shallowClone = require("./utils").shallowClone;
  * });
  */
 const validOptionNames = ["poolSize", "ssl", "sslValidate", "sslCA", "sslCert",
-    "sslKey", "sslPass", "autoReconnect", "noDelay", "keepAlive", "connectTimeoutMS",
+    "sslKey", "sslPass", "sslCRL", "autoReconnect", "noDelay", "keepAlive", "connectTimeoutMS",
     "socketTimeoutMS", "reconnectTries", "reconnectInterval", "ha", "haInterval",
     "replicaSet", "secondaryAcceptableLatencyMS", "acceptableLatencyMS",
     "connectWithNoPrimary", "authSource", "w", "wtimeout", "j", "forceServerObjectID",
@@ -86,6 +87,7 @@ function MongoClient() {
      * @param {number} [options.poolSize=5] poolSize The maximum size of the individual server pool.
      * @param {boolean} [options.ssl=false] Enable SSL connection.
      * @param {Buffer} [options.sslCA=undefined] SSL Certificate store binary buffer
+     * @param {Buffer} [options.sslCRL=undefined] SSL Certificate revocation list binary buffer
      * @param {Buffer} [options.sslCert=undefined] SSL Certificate binary buffer
      * @param {Buffer} [options.sslKey=undefined] SSL Key file binary buffer
      * @param {string} [options.sslPass=undefined] SSL Certificate pass phrase
@@ -147,6 +149,7 @@ const define = MongoClient.define = new Define("MongoClient", MongoClient, false
  * @param {number} [options.poolSize=5] poolSize The maximum size of the individual server pool.
  * @param {boolean} [options.ssl=false] Enable SSL connection.
  * @param {Buffer} [options.sslCA=undefined] SSL Certificate store binary buffer
+ * @param {Buffer} [options.sslCRL=undefined] SSL Certificate revocation list binary buffer
  * @param {Buffer} [options.sslCert=undefined] SSL Certificate binary buffer
  * @param {Buffer} [options.sslKey=undefined] SSL Key file binary buffer
  * @param {string} [options.sslPass=undefined] SSL Certificate pass phrase
@@ -191,7 +194,7 @@ const define = MongoClient.define = new Define("MongoClient", MongoClient, false
  */
 MongoClient.connect = function (url, options, callback) {
     const args = Array.prototype.slice.call(arguments, 1);
-    callback = typeof args[args.length - 1] == "function" ? args.pop() : null;
+    callback = typeof args[args.length - 1] === "function" ? args.pop() : null;
     options = args.length ? args.shift() : null;
     options = options || {};
 
@@ -203,25 +206,31 @@ MongoClient.connect = function (url, options, callback) {
 
     // No promise library selected fall back
     if (!promiseLibrary) {
-        promiseLibrary = typeof global.Promise == "function" ?
+        promiseLibrary = typeof global.Promise === "function" ?
             global.Promise : require("es6-promise").Promise;
     }
 
     // Return a promise
-    if (typeof callback != "function") {
-        return new promiseLibrary(function (resolve, reject) {
+    if (typeof callback !== "function") {
+        return new promiseLibrary((resolve, reject) => {
             // Did we have a validation error
-            if (err) return reject(err);
+            if (err) {
+                return reject(err);
+            }
             // Attempt to connect
-            connect(url, options, function (err, db) {
-                if (err) return reject(err);
+            connect(url, options, (err, db) => {
+                if (err) {
+                    return reject(err);
+                }
                 resolve(db);
             });
         });
     }
 
     // Did we have a validation error
-    if (err) return callback(err);
+    if (err) {
+        return callback(err);
+    }
     // Fallback to callback based connect
     connect(url, options, callback);
 };
@@ -230,7 +239,7 @@ define.staticMethod("connect", { callback: true, promise: true });
 
 const mergeOptions = function (target, source, flatten) {
     for (const name in source) {
-        if (source[name] && typeof source[name] == "object" && flatten) {
+        if (source[name] && typeof source[name] === "object" && flatten) {
             target = mergeOptions(target, source[name], flatten);
         } else {
             target[name] = source[name];
@@ -241,8 +250,8 @@ const mergeOptions = function (target, source, flatten) {
 };
 
 const createUnifiedOptions = function (finalOptions, options) {
-    const childOptions = ["mongos", "server", "db"
-        , "replset", "db_options", "server_options", "rs_options", "mongos_options"];
+    const childOptions = ["mongos", "server", "db",
+        "replset", "db_options", "server_options", "rs_options", "mongos_options"];
     const noMerge = [];
 
     for (const name in options) {
@@ -251,7 +260,7 @@ const createUnifiedOptions = function (finalOptions, options) {
         } else if (childOptions.indexOf(name.toLowerCase()) != -1) {
             finalOptions = mergeOptions(finalOptions, options[name], false);
         } else {
-            if (options[name] && typeof options[name] == "object" && !Buffer.isBuffer(options[name]) && !Array.isArray(options[name])) {
+            if (options[name] && typeof options[name] === "object" && !Buffer.isBuffer(options[name]) && !Array.isArray(options[name])) {
                 finalOptions = mergeOptions(finalOptions, options[name], true);
             } else {
                 finalOptions[name] = options[name];
@@ -264,7 +273,7 @@ const createUnifiedOptions = function (finalOptions, options) {
 
 function translateOptions(options) {
     // If we have a readPreference passed in by the db options
-    if (typeof options.readPreference == "string" || typeof options.read_preference == "string") {
+    if (typeof options.readPreference === "string" || typeof options.read_preference === "string") {
         options.readPreference = new ReadPreference(options.readPreference || options.read_preference);
     }
 
@@ -279,11 +288,15 @@ function translateOptions(options) {
     }
 
     // Set the socket and connection timeouts
-    if (options.socketTimeoutMS == null) options.socketTimeoutMS = 30000;
-    if (options.connectTimeoutMS == null) options.connectTimeoutMS = 30000;
+    if (options.socketTimeoutMS == null) {
+        options.socketTimeoutMS = 30000;
+    }
+    if (options.connectTimeoutMS == null) {
+        options.connectTimeoutMS = 30000;
+    }
 
     // Create server instances
-    return options.servers.map(function (serverObj) {
+    return options.servers.map((serverObj) => {
         return serverObj.domain_socket ?
             new Server(serverObj.domain_socket, 27017, options)
             : new Server(serverObj.host, serverObj.port, options);
@@ -308,8 +321,10 @@ function createServer(options, callback) {
     // Set default options
     const servers = translateOptions(options);
     // Create Db instance
-    new Db(options.dbName, servers[0], options).open(function (err, db) {
-        if (err) return callback(err);
+    new Db(options.dbName, servers[0], options).open((err, db) => {
+        if (err) {
+            return callback(err);
+        }
         // Check if we are really speaking to a mongos
         const ismaster = db.serverConfig.lastIsMaster();
 
@@ -329,11 +344,13 @@ function createServer(options, callback) {
 function connectHandler(options, callback) {
     return function (err, db) {
         if (err) {
-            return process.nextTick(function () {
+            return process.nextTick(() => {
                 try {
                     callback(err, null);
                 } catch (err) {
-                    if (db) db.close();
+                    if (db) {
+                        db.close();
+                    }
                     throw err;
                 }
             });
@@ -341,11 +358,13 @@ function connectHandler(options, callback) {
 
         // No authentication just reconnect
         if (!options.auth) {
-            return process.nextTick(function () {
+            return process.nextTick(() => {
                 try {
                     callback(err, db);
                 } catch (err) {
-                    if (db) db.close();
+                    if (db) {
+                        db.close();
+                    }
                     throw err;
                 }
             });
@@ -358,23 +377,29 @@ function connectHandler(options, callback) {
         }
 
         // Authenticate
-        authentication_db.authenticate(options.user, options.password, options, function (err, success) {
+        authenticate(authentication_db, options.user, options.password, options, (err, success) => {
             if (success) {
-                process.nextTick(function () {
+                process.nextTick(() => {
                     try {
                         callback(null, db);
                     } catch (err) {
-                        if (db) db.close();
+                        if (db) {
+                            db.close();
+                        }
                         throw err;
                     }
                 });
             } else {
-                if (db) db.close();
-                process.nextTick(function () {
+                if (db) {
+                    db.close();
+                }
+                process.nextTick(() => {
                     try {
-                        callback(err ? err : new Error("Could not authenticate user " + options.auth[0]), null);
+                        callback(err ? err : new Error(`Could not authenticate user ${options.auth[0]}`), null);
                     } catch (err) {
-                        if (db) db.close();
+                        if (db) {
+                            db.close();
+                        }
                         throw err;
                     }
                 });
@@ -405,8 +430,12 @@ const connect = function (url, options, callback) {
     _finalOptions = createUnifiedOptions(_finalOptions, options);
 
     // Check if we have connection and socket timeout set
-    if (_finalOptions.socketTimeoutMS == null) _finalOptions.socketTimeoutMS = 30000;
-    if (_finalOptions.connectTimeoutMS == null) _finalOptions.connectTimeoutMS = 30000;
+    if (_finalOptions.socketTimeoutMS == null) {
+        _finalOptions.socketTimeoutMS = 30000;
+    }
+    if (_finalOptions.connectTimeoutMS == null) {
+        _finalOptions.connectTimeoutMS = 30000;
+    }
 
     // Failure modes
     if (object.servers.length == 0) {

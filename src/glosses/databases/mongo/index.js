@@ -42,6 +42,7 @@ connect.ObjectID = adone.data.bson.ObjectID;
 connect.Symbol = adone.data.bson.Symbol;
 connect.Timestamp = adone.data.bson.Timestamp;
 connect.Decimal128 = adone.data.bson.Decimal128;
+connect.BSONRegExp = adone.data.bson.BSONRegExp;
 
 // Add connect method
 connect.connect = connect;

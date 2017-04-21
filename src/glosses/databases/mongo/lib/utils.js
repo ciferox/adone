@@ -1,13 +1,41 @@
 const MongoError = require("../core").MongoError;
+const ReadPreference = require("./read_preference");
+const CoreReadPreference = require("../core").ReadPreference;
 
-const shallowClone = function(obj) {
+const shallowClone = function (obj) {
     const copy = {};
-    for (const name in obj) copy[name] = obj[name];
+    for (const name in obj) {
+        copy[name] = obj[name];
+    }
     return copy;
 };
 
+// Figure out the read preference
+const getReadPreference = function (options) {
+    let r = null;
+    if (options.readPreference) {
+        r = options.readPreference;
+    } else {
+        return options;
+    }
+
+    if (r instanceof ReadPreference) {
+        options.readPreference = new CoreReadPreference(r.mode, r.tags, { maxStalenessSeconds: r.maxStalenessSeconds });
+    } else if (typeof r === "string") {
+        options.readPreference = new CoreReadPreference(r);
+    } else if (r && !(r instanceof ReadPreference) && typeof r === "object") {
+        const mode = r.mode || r.preference;
+        if (mode && typeof mode === "string") {
+            options.readPreference = new CoreReadPreference(mode, r.tags, { maxStalenessSeconds: r.maxStalenessSeconds });
+        }
+    }
+
+    return options;
+};
+
+
 // Set simple property
-const getSingleProperty = function(obj, name, value) {
+const getSingleProperty = function (obj, name, value) {
     Object.defineProperty(obj, name, {
         enumerable: true,
         get() {
@@ -16,8 +44,8 @@ const getSingleProperty = function(obj, name, value) {
     });
 };
 
-const formatSortValue = exports.formatSortValue = function(sortDirection) {
-    const value = ("" + sortDirection).toLowerCase();
+const formatSortValue = exports.formatSortValue = function (sortDirection) {
+    const value = (`${sortDirection}`).toLowerCase();
 
     switch (value) {
         case "ascending":
@@ -35,9 +63,11 @@ const formatSortValue = exports.formatSortValue = function(sortDirection) {
     }
 };
 
-const formattedOrderClause = exports.formattedOrderClause = function(sortValue) {
+const formattedOrderClause = exports.formattedOrderClause = function (sortValue) {
     let orderBy = {};
-    if (sortValue == null) return null;
+    if (sortValue == null) {
+        return null;
+    }
     if (Array.isArray(sortValue)) {
         if (sortValue.length === 0) {
             return null;
@@ -50,9 +80,9 @@ const formattedOrderClause = exports.formattedOrderClause = function(sortValue) 
                 orderBy[sortValue[i][0]] = formatSortValue(sortValue[i][1]);
             }
         }
-    } else if (sortValue != null && typeof sortValue == "object") {
+    } else if (sortValue != null && typeof sortValue === "object") {
         orderBy = sortValue;
-    } else if (typeof sortValue == "string") {
+    } else if (typeof sortValue === "string") {
         orderBy[sortValue] = 1;
     } else {
         throw new Error("Illegal sort clause, must be of the form " +
@@ -62,8 +92,8 @@ const formattedOrderClause = exports.formattedOrderClause = function(sortValue) 
     return orderBy;
 };
 
-const checkCollectionName = function checkCollectionName (collectionName) {
-    if ("string" !== typeof collectionName) {
+const checkCollectionName = function checkCollectionName(collectionName) {
+    if (typeof collectionName !== "string") {
         throw Error("collection name must be a String");
     }
 
@@ -81,19 +111,23 @@ const checkCollectionName = function checkCollectionName (collectionName) {
     }
 
   // Validate that we are not passing 0x00 in the colletion name
-    if (!!~collectionName.indexOf("\x00")) {
+    if ((~collectionName.indexOf("\x00"))) {
         throw new Error("collection names cannot contain a null character");
     }
 };
 
-const handleCallback = function(callback, err, value1, value2) {
+const handleCallback = function (callback, err, value1, value2) {
     try {
-        if (callback == null) return;
+        if (callback == null) {
+            return;
+        }
         if (callback) {
             return value2 ? callback(err, value1, value2) :  callback(err, value1);
         }
     } catch (err) {
-        process.nextTick(function() { throw err; });
+        process.nextTick(() => {
+            throw err;
+        });
         return false;
     }
 
@@ -105,14 +139,16 @@ const handleCallback = function(callback, err, value1, value2) {
  * @ignore
  * @api private
  */
-const toError = function(error) {
-    if (error instanceof Error) return error;
+const toError = function (error) {
+    if (error instanceof Error) {
+        return error;
+    }
 
     const msg = error.err || error.errmsg || error.errMessage || error;
-    const e = MongoError.create({message: msg, driver: true});
+    const e = MongoError.create({ message: msg, driver: true });
 
   // Get all object keys
-    const keys = typeof error == "object"
+    const keys = typeof error === "object"
     ? Object.keys(error)
     : [];
 
@@ -133,15 +169,15 @@ const toError = function(error) {
 const normalizeHintField = function normalizeHintField(hint) {
     let finalHint = null;
 
-    if (typeof hint == "string") {
+    if (typeof hint === "string") {
         finalHint = hint;
     } else if (Array.isArray(hint)) {
         finalHint = {};
 
-        hint.forEach(function(param) {
+        hint.forEach((param) => {
             finalHint[param] = 1;
         });
-    } else if (hint != null && typeof hint == "object") {
+    } else if (hint != null && typeof hint === "object") {
         finalHint = {};
         for (const name in hint) {
             finalHint[name] = hint[name];
@@ -157,31 +193,31 @@ const normalizeHintField = function normalizeHintField(hint) {
  * @ignore
  * @api private
  */
-const parseIndexOptions = function(fieldOrSpec) {
+const parseIndexOptions = function (fieldOrSpec) {
     const fieldHash = {};
     const indexes = [];
     let keys;
 
   // Get all the fields accordingly
-    if ("string" == typeof fieldOrSpec) {
+    if (typeof fieldOrSpec === "string") {
     // 'type'
-        indexes.push(fieldOrSpec + "_" + 1);
+        indexes.push(`${fieldOrSpec}_${1}`);
         fieldHash[fieldOrSpec] = 1;
     } else if (Array.isArray(fieldOrSpec)) {
-        fieldOrSpec.forEach(function(f) {
-            if ("string" == typeof f) {
+        fieldOrSpec.forEach((f) => {
+            if (typeof f === "string") {
         // [{location:'2d'}, 'type']
-                indexes.push(f + "_" + 1);
+                indexes.push(`${f}_${1}`);
                 fieldHash[f] = 1;
             } else if (Array.isArray(f)) {
         // [['location', '2d'],['type', 1]]
-                indexes.push(f[0] + "_" + (f[1] || 1));
+                indexes.push(`${f[0]}_${f[1] || 1}`);
                 fieldHash[f[0]] = f[1] || 1;
             } else if (isObject(f)) {
         // [{location:'2d'}, {type:1}]
                 keys = Object.keys(f);
-                keys.forEach(function(k) {
-                    indexes.push(k + "_" + f[k]);
+                keys.forEach((k) => {
+                    indexes.push(`${k}_${f[k]}`);
                     fieldHash[k] = f[k];
                 });
             } else {
@@ -191,8 +227,8 @@ const parseIndexOptions = function(fieldOrSpec) {
     } else if (isObject(fieldOrSpec)) {
     // {location:'2d', type:1}
         keys = Object.keys(fieldOrSpec);
-        keys.forEach(function(key) {
-            indexes.push(key + "_" + fieldOrSpec[key]);
+        keys.forEach((key) => {
+            indexes.push(`${key}_${fieldOrSpec[key]}`);
             fieldHash[key] = fieldOrSpec[key];
         });
     }
@@ -203,27 +239,29 @@ const parseIndexOptions = function(fieldOrSpec) {
 };
 
 const isObject = exports.isObject = function (arg) {
-    return "[object Object]" == toString.call(arg);
+    return Object.prototype.toString.call(arg) == "[object Object]";
 };
 
-const debugOptions = function(debugFields, options) {
+const debugOptions = function (debugFields, options) {
     const finaloptions = {};
-    debugFields.forEach(function(n) {
+    debugFields.forEach((n) => {
         finaloptions[n] = options[n];
     });
 
     return finaloptions;
 };
 
-const decorateCommand = function(command, options, exclude) {
+const decorateCommand = function (command, options, exclude) {
     for (const name in options) {
-        if (exclude[name] == null) command[name] = options[name];
+        if (exclude[name] == null) {
+            command[name] = options[name];
+        }
     }
 
     return command;
 };
 
-const mergeOptions = function(target, source) {
+const mergeOptions = function (target, source) {
     for (const name in source) {
         target[name] = source[name];
     }
@@ -232,17 +270,18 @@ const mergeOptions = function(target, source) {
 };
 
 // Merge options with translation
-const translateOptions = function(target, source) {
+const translateOptions = function (target, source) {
     const translations = {
     // SSL translation options
-        "sslCA": "ca", "sslValidate": "rejectUnauthorized", "sslKey": "key", "sslCert": "cert", "sslPass": "passphrase",
+        sslCA: "ca", sslCRL: "crl", sslValidate: "rejectUnauthorized", sslKey: "key",
+        sslCert: "cert", sslPass: "passphrase",
     // SocketTimeout translation options
-        "socketTimeoutMS": "socketTimeout", "connectTimeoutMS": "connectionTimeout",
+        socketTimeoutMS: "socketTimeout", connectTimeoutMS: "connectionTimeout",
     // Replicaset options
-        "replicaSet": "setName", "rs_name": "setName", "secondaryAcceptableLatencyMS": "acceptableLatency",
-        "connectWithNoPrimary": "secondaryOnlyConnectionAllowed",
+        replicaSet: "setName", rs_name: "setName", secondaryAcceptableLatencyMS: "acceptableLatency",
+        connectWithNoPrimary: "secondaryOnlyConnectionAllowed",
     // Mongos options
-        "acceptableLatencyMS": "localThresholdMS"
+        acceptableLatencyMS: "localThresholdMS"
     };
 
     for (const name in source) {
@@ -256,11 +295,13 @@ const translateOptions = function(target, source) {
     return target;
 };
 
-const filterOptions = function(options, names) {
+const filterOptions = function (options, names) {
     const filterOptions =  {};
 
     for (const name in options) {
-        if (names.indexOf(name) != -1) filterOptions[name] = options[name];
+        if (names.indexOf(name) != -1) {
+            filterOptions[name] = options[name];
+        }
     }
 
   // Filtered options
@@ -292,6 +333,44 @@ const assign = Object.assign ? Object.assign : function assign(target) {
     return to;
 };
 
+
+// Write concern keys
+const writeConcernKeys = ["w", "j", "wtimeout", "fsync"];
+
+// Merge the write concern options
+const mergeOptionsAndWriteConcern = function (targetOptions, sourceOptions, keys, mergeWriteConcern) {
+  // Mix in any allowed options
+    for (var i = 0; i < keys.length; i++) {
+        if (!targetOptions[keys[i]] && sourceOptions[keys[i]] != undefined) {
+            targetOptions[keys[i]] = sourceOptions[keys[i]];
+        }
+    }
+
+  // No merging of write concern
+    if (!mergeWriteConcern) {
+        return targetOptions;
+    }
+
+  // Found no write Concern options
+    let found = false;
+    for (var i = 0; i < writeConcernKeys.length; i++) {
+        if (targetOptions[writeConcernKeys[i]]) {
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) {
+        for (var i = 0; i < writeConcernKeys.length; i++) {
+            if (sourceOptions[writeConcernKeys[i]]) {
+                targetOptions[writeConcernKeys[i]] = sourceOptions[writeConcernKeys[i]];
+            }
+        }
+    }
+
+    return targetOptions;
+};
+
 exports.filterOptions = filterOptions;
 exports.mergeOptions = mergeOptions;
 exports.translateOptions = translateOptions;
@@ -308,3 +387,5 @@ exports.isObject = isObject;
 exports.debugOptions = debugOptions;
 exports.MAX_JS_INT = 0x20000000000000;
 exports.assign = assign;
+exports.mergeOptionsAndWriteConcern = mergeOptionsAndWriteConcern;
+exports.getReadPreference = getReadPreference;

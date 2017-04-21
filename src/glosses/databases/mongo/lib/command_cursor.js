@@ -65,7 +65,7 @@ const CommandCursor = function (bson, ns, cmd, options, topology, topologyOption
 
     // No promise library selected fall back
     if (!promiseLibrary) {
-        promiseLibrary = typeof global.Promise == "function" ?
+        promiseLibrary = typeof global.Promise === "function" ?
             global.Promise : require("es6-promise").Promise;
     }
 
@@ -75,25 +75,25 @@ const CommandCursor = function (bson, ns, cmd, options, topology, topologyOption
     // Internal state
     this.s = {
         // MaxTimeMS
-        maxTimeMS
+        maxTimeMS,
         // State
-        , state
+        state,
         // Stream options
-        , streamOptions
+        streamOptions,
         // BSON
-        , bson
+        bson,
         // Namespace
-        , ns
+        ns,
         // Command
-        , cmd
+        cmd,
         // Options
-        , options
+        options,
         // Topology
-        , topology
+        topology,
         // Topology Options
-        , topologyOptions
+        topologyOptions,
         // Promise library
-        , promiseLibrary
+        promiseLibrary
     };
 };
 
@@ -129,9 +129,9 @@ const CommandCursor = function (bson, ns, cmd, options, topology, topologyOption
 inherits(CommandCursor, Readable);
 
 // Set the methods to inherit from prototype
-const methodsToInherit = ["_next", "next", "each", "forEach", "toArray"
-    , "rewind", "bufferedCount", "readBufferedDocuments", "close", "isClosed", "kill"
-    , "_find", "_getmore", "_killcursor", "isDead", "explain", "isNotified", "isKilled"];
+const methodsToInherit = ["_next", "next", "each", "forEach", "toArray",
+    "rewind", "bufferedCount", "readBufferedDocuments", "close", "isClosed", "kill", "setCursorBatchSize",
+    "_find", "_getmore", "_killcursor", "isDead", "explain", "isNotified", "isKilled"];
 
 // Only inherit the types we need
 for (let i = 0; i < methodsToInherit.length; i++) {
@@ -148,12 +148,16 @@ const define = CommandCursor.define = new Define("CommandCursor", CommandCursor,
  * @return {Cursor}
  */
 CommandCursor.prototype.setReadPreference = function (r) {
-    if (this.s.state == CommandCursor.CLOSED || this.isDead()) throw MongoError.create({ message: "Cursor is closed", driver: true });
-    if (this.s.state != CommandCursor.INIT) throw MongoError.create({ message: "cannot change cursor readPreference after cursor has been accessed", driver: true });
+    if (this.s.state == CommandCursor.CLOSED || this.isDead()) {
+        throw MongoError.create({ message: "Cursor is closed", driver: true });
+    }
+    if (this.s.state != CommandCursor.INIT) {
+        throw MongoError.create({ message: "cannot change cursor readPreference after cursor has been accessed", driver: true });
+    }
 
     if (r instanceof ReadPreference) {
         this.s.options.readPreference = new CoreReadPreference(r.mode, r.tags, { maxStalenessSeconds: r.maxStalenessSeconds });
-    } else if (typeof r == "string") {
+    } else if (typeof r === "string") {
         this.s.options.readPreference = new CoreReadPreference(r);
     } else if (r instanceof CoreReadPreference) {
         this.s.options.readPreference = r;
@@ -172,9 +176,15 @@ define.classMethod("setReadPreference", { callback: false, promise: false, retur
  * @return {CommandCursor}
  */
 CommandCursor.prototype.batchSize = function (value) {
-    if (this.s.state == CommandCursor.CLOSED || this.isDead()) throw MongoError.create({ message: "Cursor is closed", driver: true });
-    if (typeof value != "number") throw MongoError.create({ message: "batchSize requires an integer", driver: true });
-    if (this.s.cmd.cursor) this.s.cmd.cursor.batchSize = value;
+    if (this.s.state == CommandCursor.CLOSED || this.isDead()) {
+        throw MongoError.create({ message: "Cursor is closed", driver: true });
+    }
+    if (typeof value !== "number") {
+        throw MongoError.create({ message: "batchSize requires an integer", driver: true });
+    }
+    if (this.s.cmd.cursor) {
+        this.s.cmd.cursor.batchSize = value;
+    }
     this.setCursorBatchSize(value);
     return this;
 };

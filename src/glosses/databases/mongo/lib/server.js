@@ -13,6 +13,7 @@ const MAX_JS_INT = require("./utils").MAX_JS_INT;
 const translateOptions = require("./utils").translateOptions;
 const filterOptions = require("./utils").filterOptions;
 const mergeOptions = require("./utils").mergeOptions;
+const getReadPreference = require("./utils").getReadPreference;
 const os = require("os");
 
 // Get package.json variable
@@ -41,14 +42,14 @@ const release = os.release();
  */
 
 // Allowed parameters
-const legalOptionNames = ["ha", "haInterval", "acceptableLatencyMS"
-    , "poolSize", "ssl", "checkServerIdentity", "sslValidate"
-    , "sslCA", "sslCert", "sslKey", "sslPass", "socketOptions", "bufferMaxEntries"
-    , "store", "auto_reconnect", "autoReconnect", "emitError"
-    , "keepAlive", "noDelay", "connectTimeoutMS", "socketTimeoutMS"
-    , "loggerLevel", "logger", "reconnectTries", "reconnectInterval", "monitoring"
-    , "appname", "domainsEnabled"
-    , "servername", "promoteLongs", "promoteValues", "promoteBuffers"];
+const legalOptionNames = ["ha", "haInterval", "acceptableLatencyMS",
+    "poolSize", "ssl", "checkServerIdentity", "sslValidate",
+    "sslCA", "sslCRL", "sslCert", "sslKey", "sslPass", "socketOptions", "bufferMaxEntries",
+    "store", "auto_reconnect", "autoReconnect", "emitError",
+    "keepAlive", "noDelay", "connectTimeoutMS", "socketTimeoutMS",
+    "loggerLevel", "logger", "reconnectTries", "reconnectInterval", "monitoring",
+    "appname", "domainsEnabled",
+    "servername", "promoteLongs", "promoteValues", "promoteBuffers"];
 
 /**
  * Creates a new Server instance
@@ -63,6 +64,7 @@ const legalOptionNames = ["ha", "haInterval", "acceptableLatencyMS"
  * @param {boolean|function} [options.checkServerIdentity=true] Ensure we check server identify during SSL, set to false to disable checking. Only works for Node 0.12.x or higher. You can pass in a boolean or your own checkServerIdentity override function.
  * @param {array} [options.sslCA=null] Array of valid certificates either as Buffers or Strings (needs to have a mongod server with ssl support, 2.4 or higher)
  * @param {(Buffer|string)} [options.sslCert=null] String or buffer containing the certificate we wish to present (needs to have a mongod server with ssl support, 2.4 or higher)
+ * @param {array} [options.sslCRL=null] Array of revocation certificates either as Buffers or Strings (needs to have a mongod server with ssl support, 2.4 or higher)
  * @param {(Buffer|string)} [options.sslKey=null] String or buffer containing the certificate private key we wish to present (needs to have a mongod server with ssl support, 2.4 or higher)
  * @param {(Buffer|string)} [options.sslPass=null] String or buffer containing the certificate password (needs to have a mongod server with ssl support, 2.4 or higher)
  * @param {string} [options.servername=null] String containing the server name requested via TLS SNI.
@@ -88,7 +90,9 @@ const legalOptionNames = ["ha", "haInterval", "acceptableLatencyMS"
  */
 const Server = function (host, port, options) {
     options = options || {};
-    if (!(this instanceof Server)) return new Server(host, port, options);
+    if (!(this instanceof Server)) {
+        return new Server(host, port, options);
+    }
     EventEmitter.call(this);
     const self = this;
 
@@ -97,8 +101,8 @@ const Server = function (host, port, options) {
 
     // Stored options
     const storeOptions = {
-        force: false
-        , bufferMaxEntries: typeof options.bufferMaxEntries == "number" ? options.bufferMaxEntries : MAX_JS_INT
+        force: false,
+        bufferMaxEntries: typeof options.bufferMaxEntries === "number" ? options.bufferMaxEntries : MAX_JS_INT
     };
 
     // Shared global store
@@ -106,7 +110,7 @@ const Server = function (host, port, options) {
 
     // Detect if we have a socket connection
     if (host.indexOf("\/") != -1) {
-        if (port != null && typeof port == "object") {
+        if (port != null && typeof port === "object") {
             options = port;
             port = null;
         }
@@ -115,16 +119,16 @@ const Server = function (host, port, options) {
     }
 
     // Get the reconnect option
-    let reconnect = typeof options.auto_reconnect == "boolean" ? options.auto_reconnect : true;
-    reconnect = typeof options.autoReconnect == "boolean" ? options.autoReconnect : reconnect;
+    let reconnect = typeof options.auto_reconnect === "boolean" ? options.auto_reconnect : true;
+    reconnect = typeof options.autoReconnect === "boolean" ? options.autoReconnect : reconnect;
 
     // Clone options
     let clonedOptions = mergeOptions({}, {
         host, port, disconnectHandler: store,
         cursorFactory: Cursor,
         reconnect,
-        emitError: typeof options.emitError == "boolean" ? options.emitError : true,
-        size: typeof options.poolSize == "number" ? options.poolSize : 5
+        emitError: typeof options.emitError === "boolean" ? options.emitError : true,
+        size: typeof options.poolSize === "number" ? options.poolSize : 5
     });
 
     // Translate any SSL options and other connectivity options
@@ -136,7 +140,7 @@ const Server = function (host, port, options) {
 
     // Translate all the options to the mongodb-core ones
     clonedOptions = translateOptions(clonedOptions, socketOptions);
-    if (typeof clonedOptions.keepAlive == "number") {
+    if (typeof clonedOptions.keepAlive === "number") {
         clonedOptions.keepAliveInitialDelay = clonedOptions.keepAlive;
         clonedOptions.keepAlive = clonedOptions.keepAlive > 0;
     }
@@ -169,27 +173,27 @@ const Server = function (host, port, options) {
     // Define the internal properties
     this.s = {
         // Create an instance of a server instance from mongodb-core
-        server
+        server,
         // Server capabilities
-        , sCapabilities: null
+        sCapabilities: null,
         // Cloned options
-        , clonedOptions
+        clonedOptions,
         // Reconnect
-        , reconnect: clonedOptions.reconnect
+        reconnect: clonedOptions.reconnect,
         // Emit error
-        , emitError: clonedOptions.emitError
+        emitError: clonedOptions.emitError,
         // Pool size
-        , poolSize: clonedOptions.size
+        poolSize: clonedOptions.size,
         // Store Options
-        , storeOptions
+        storeOptions,
         // Store
-        , store
+        store,
         // Host
-        , host
+        host,
         // Port
-        , port
+        port,
         // Options
-        , options
+        options
     };
 };
 
@@ -199,47 +203,61 @@ const define = Server.define = new Define("Server", Server, false);
 
 // BSON property
 Object.defineProperty(Server.prototype, "bson", {
-    enumerable: true, get () {
+    enumerable: true, get() {
         return this.s.server.s.bson;
     }
 });
 
 // Last ismaster
 Object.defineProperty(Server.prototype, "isMasterDoc", {
-    enumerable: true, get () {
+    enumerable: true, get() {
         return this.s.server.lastIsMaster();
     }
 });
 
 Object.defineProperty(Server.prototype, "parserType", {
-    enumerable: true, get () {
+    enumerable: true, get() {
         return this.s.server.parserType;
     }
 });
 
 // Last ismaster
 Object.defineProperty(Server.prototype, "poolSize", {
-    enumerable: true, get () { return this.s.server.connections().length; }
+    enumerable: true, get() {
+        return this.s.server.connections().length;
+    }
 });
 
 Object.defineProperty(Server.prototype, "autoReconnect", {
-    enumerable: true, get () { return this.s.reconnect; }
+    enumerable: true, get() {
+        return this.s.reconnect;
+    }
 });
 
 Object.defineProperty(Server.prototype, "host", {
-    enumerable: true, get () { return this.s.host; }
+    enumerable: true, get() {
+        return this.s.host;
+    }
 });
 
 Object.defineProperty(Server.prototype, "port", {
-    enumerable: true, get () { return this.s.port; }
+    enumerable: true, get() {
+        return this.s.port;
+    }
 });
 
 // Connect
 Server.prototype.connect = function (db, _options, callback) {
     const self = this;
-    if ("function" === typeof _options) callback = _options, _options = {};
-    if (_options == null) _options = {};
-    if (!("function" === typeof callback)) callback = null;
+    if (typeof _options === "function") {
+        callback = _options, _options = {};
+    }
+    if (_options == null) {
+        _options = {};
+    }
+    if (!(typeof callback === "function")) {
+        callback = null;
+    }
     self.s.options = _options;
 
     // Update bufferMaxEntries
@@ -250,7 +268,7 @@ Server.prototype.connect = function (db, _options, callback) {
         return function (err) {
             // Remove all event handlers
             const events = ["timeout", "error", "close"];
-            events.forEach(function (e) {
+            events.forEach((e) => {
                 self.s.server.removeListener(e, connectHandlers[e]);
             });
 
@@ -260,7 +278,9 @@ Server.prototype.connect = function (db, _options, callback) {
             try {
                 callback(err);
             } catch (err) {
-                process.nextTick(function () { throw err; });
+                process.nextTick(() => {
+                    throw err;
+                });
             }
         };
     };
@@ -296,7 +316,7 @@ Server.prototype.connect = function (db, _options, callback) {
         // Clear out all the current handlers left over
         ["timeout", "error", "close", "serverOpening", "serverDescriptionChanged", "serverHeartbeatStarted",
             "serverHeartbeatSucceeded", "serverHeartbeatFailed", "serverClosed", "topologyOpening",
-            "topologyClosed", "topologyDescriptionChanged"].forEach(function (e) {
+            "topologyClosed", "topologyDescriptionChanged"].forEach((e) => {
                 self.s.server.removeAllListeners(e);
             });
 
@@ -335,7 +355,9 @@ Server.prototype.connect = function (db, _options, callback) {
             callback(null, self);
         } catch (err) {
             console.log(err.stack);
-            process.nextTick(function () { throw err; });
+            process.nextTick(() => {
+                throw err;
+            });
         }
     };
 
@@ -361,8 +383,12 @@ Server.prototype.connect = function (db, _options, callback) {
 
 // Server capabilities
 Server.prototype.capabilities = function () {
-    if (this.s.sCapabilities) return this.s.sCapabilities;
-    if (this.s.server.lastIsMaster() == null) return null;
+    if (this.s.sCapabilities) {
+        return this.s.sCapabilities;
+    }
+    if (this.s.server.lastIsMaster() == null) {
+        return null;
+    }
     this.s.sCapabilities = new ServerCapabilities(this.s.server.lastIsMaster());
     return this.s.sCapabilities;
 };
@@ -371,7 +397,7 @@ define.classMethod("capabilities", { callback: false, promise: false, returns: [
 
 // Command
 Server.prototype.command = function (ns, cmd, options, callback) {
-    this.s.server.command(ns, cmd, options, callback);
+    this.s.server.command(ns, cmd, getReadPreference(options), callback);
 };
 
 define.classMethod("command", { callback: true, promise: false });

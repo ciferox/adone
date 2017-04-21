@@ -18,6 +18,7 @@ const MAX_JS_INT = require("./utils").MAX_JS_INT;
 const translateOptions = require("./utils").translateOptions;
 const filterOptions = require("./utils").filterOptions;
 const mergeOptions = require("./utils").mergeOptions;
+const getReadPreference = require("./utils").getReadPreference;
 const os = require("os");
 /**
  * @fileOverview The **ReplSet** class is a class that represents a Replicaset topology and is
@@ -39,13 +40,13 @@ const os = require("os");
  */
 
 // Allowed parameters
-const legalOptionNames = ["ha", "haInterval", "replicaSet", "rs_name", "secondaryAcceptableLatencyMS"
-  , "connectWithNoPrimary", "poolSize", "ssl", "checkServerIdentity", "sslValidate"
-  , "sslCA", "sslCert", "sslKey", "sslPass", "socketOptions", "bufferMaxEntries"
-  , "store", "auto_reconnect", "autoReconnect", "emitError"
-  , "keepAlive", "noDelay", "connectTimeoutMS", "socketTimeoutMS", "strategy", "debug"
-  , "loggerLevel", "logger", "reconnectTries", "appname", "domainsEnabled"
-  , "servername", "promoteLongs", "promoteValues", "promoteBuffers", "maxStalenessSeconds"];
+const legalOptionNames = ["ha", "haInterval", "replicaSet", "rs_name", "secondaryAcceptableLatencyMS",
+    "connectWithNoPrimary", "poolSize", "ssl", "checkServerIdentity", "sslValidate",
+    "sslCA", "sslCert", "sslCRL", "sslKey", "sslPass", "socketOptions", "bufferMaxEntries",
+    "store", "auto_reconnect", "autoReconnect", "emitError",
+    "keepAlive", "noDelay", "connectTimeoutMS", "socketTimeoutMS", "strategy", "debug",
+    "loggerLevel", "logger", "reconnectTries", "appname", "domainsEnabled",
+    "servername", "promoteLongs", "promoteValues", "promoteBuffers", "maxStalenessSeconds"];
 
 // Get package.json variable
 const driverVersion = "2.2.22";
@@ -71,6 +72,7 @@ const release = os.release();
  * @param {boolean|function} [options.checkServerIdentity=true] Ensure we check server identify during SSL, set to false to disable checking. Only works for Node 0.12.x or higher. You can pass in a boolean or your own checkServerIdentity override function.
  * @param {object} [options.sslValidate=true] Validate mongod server certificate against ca (needs to have a mongod server with ssl support, 2.4 or higher)
  * @param {array} [options.sslCA=null] Array of valid certificates either as Buffers or Strings (needs to have a mongod server with ssl support, 2.4 or higher)
+ * @param {array} [options.sslCRL=null] Array of revocation certificates either as Buffers or Strings (needs to have a mongod server with ssl support, 2.4 or higher)
  * @param {(Buffer|string)} [options.sslCert=null] String or buffer containing the certificate we wish to present (needs to have a mongod server with ssl support, 2.4 or higher)
  * @param {(Buffer|string)} [options.sslKey=null] String or buffer containing the certificate private key we wish to present (needs to have a mongod server with ssl support, 2.4 or higher)
  * @param {(Buffer|string)} [options.sslPass=null] String or buffer containing the certificate password (needs to have a mongod server with ssl support, 2.4 or higher)
@@ -96,7 +98,9 @@ const release = os.release();
  * @return {ReplSet} a ReplSet instance.
  */
 const ReplSet = function (servers, options) {
-    if (!(this instanceof ReplSet)) return new ReplSet(servers, options);
+    if (!(this instanceof ReplSet)) {
+        return new ReplSet(servers, options);
+    }
     options = options || {};
     const self = this;
     // Set up event emitter
@@ -114,15 +118,15 @@ const ReplSet = function (servers, options) {
 
     // Stored options
     const storeOptions = {
-        force: false
-        , bufferMaxEntries: typeof options.bufferMaxEntries == "number" ? options.bufferMaxEntries : MAX_JS_INT
+        force: false,
+        bufferMaxEntries: typeof options.bufferMaxEntries === "number" ? options.bufferMaxEntries : MAX_JS_INT
     };
 
     // Shared global store
     const store = options.store || new Store(self, storeOptions);
 
     // Build seed list
-    const seedlist = servers.map(function (x) {
+    const seedlist = servers.map((x) => {
         return { host: x.host, port: x.port };
     });
 
@@ -131,8 +135,8 @@ const ReplSet = function (servers, options) {
         disconnectHandler: store,
         cursorFactory: Cursor,
         reconnect: false,
-        emitError: typeof options.emitError == "boolean" ? options.emitError : true,
-        size: typeof options.poolSize == "number" ? options.poolSize : 5
+        emitError: typeof options.emitError === "boolean" ? options.emitError : true,
+        size: typeof options.poolSize === "number" ? options.poolSize : 5
     });
 
     // Translate any SSL options and other connectivity options
@@ -144,7 +148,7 @@ const ReplSet = function (servers, options) {
 
     // Translate all the options to the mongodb-core ones
     clonedOptions = translateOptions(clonedOptions, socketOptions);
-    if (typeof clonedOptions.keepAlive == "number") {
+    if (typeof clonedOptions.keepAlive === "number") {
         clonedOptions.keepAliveInitialDelay = clonedOptions.keepAlive;
         clonedOptions.keepAlive = clonedOptions.keepAlive > 0;
     }
@@ -175,7 +179,7 @@ const ReplSet = function (servers, options) {
     const replset = new CReplSet(seedlist, clonedOptions);
 
     // Listen to reconnect event
-    replset.on("reconnect", function () {
+    replset.on("reconnect", () => {
         self.emit("reconnect");
         store.execute();
     });
@@ -183,26 +187,28 @@ const ReplSet = function (servers, options) {
     // Internal state
     this.s = {
         // Replicaset
-        replset
+        replset,
         // Server capabilities
-        , sCapabilities: null
+        sCapabilities: null,
         // Debug tag
-        , tag: options.tag
+        tag: options.tag,
         // Store options
-        , storeOptions
+        storeOptions,
         // Cloned options
-        , clonedOptions
+        clonedOptions,
         // Store
-        , store
+        store,
         // Options
-        , options
+        options
     };
 
     // Debug
     if (clonedOptions.debug) {
         // Last ismaster
         Object.defineProperty(this, "replset", {
-            enumerable: true, get() { return replset; }
+            enumerable: true, get() {
+                return replset;
+            }
         });
     }
 };
@@ -214,7 +220,9 @@ inherits(ReplSet, EventEmitter);
 
 // Last ismaster
 Object.defineProperty(ReplSet.prototype, "isMasterDoc", {
-    enumerable: true, get() { return this.s.replset.lastIsMaster(); }
+    enumerable: true, get() {
+        return this.s.replset.lastIsMaster();
+    }
 });
 
 Object.defineProperty(ReplSet.prototype, "parserType", {
@@ -231,14 +239,16 @@ Object.defineProperty(ReplSet.prototype, "bson", {
 });
 
 Object.defineProperty(ReplSet.prototype, "haInterval", {
-    enumerable: true, get() { return this.s.replset.s.haInterval; }
+    enumerable: true, get() {
+        return this.s.replset.s.haInterval;
+    }
 });
 
 const define = ReplSet.define = new Define("ReplSet", ReplSet, false);
 
 // Ensure the right read Preference object
 const translateReadPreference = function (options) {
-    if (typeof options.readPreference == "string") {
+    if (typeof options.readPreference === "string") {
         options.readPreference = new CoreReadPreference(options.readPreference);
     } else if (options.readPreference instanceof ReadPreference) {
         options.readPreference = new CoreReadPreference(options.readPreference.mode
@@ -251,9 +261,15 @@ const translateReadPreference = function (options) {
 // Connect method
 ReplSet.prototype.connect = function (db, _options, callback) {
     const self = this;
-    if ("function" === typeof _options) callback = _options, _options = {};
-    if (_options == null) _options = {};
-    if (!("function" === typeof callback)) callback = null;
+    if (typeof _options === "function") {
+        callback = _options, _options = {};
+    }
+    if (_options == null) {
+        _options = {};
+    }
+    if (!(typeof callback === "function")) {
+        callback = null;
+    }
     self.s.options = _options;
 
     // Update bufferMaxEntries
@@ -273,7 +289,7 @@ ReplSet.prototype.connect = function (db, _options, callback) {
         // Clear out all the current handlers left over
         ["timeout", "error", "close", "serverOpening", "serverDescriptionChanged", "serverHeartbeatStarted",
             "serverHeartbeatSucceeded", "serverHeartbeatFailed", "serverClosed", "topologyOpening",
-            "topologyClosed", "topologyDescriptionChanged"].forEach(function (e) {
+            "topologyClosed", "topologyDescriptionChanged"].forEach((e) => {
                 self.s.replset.removeAllListeners(e);
             });
 
@@ -324,11 +340,11 @@ ReplSet.prototype.connect = function (db, _options, callback) {
         self.s.replset.on("topologyClosed", relay("topologyClosed"));
         self.s.replset.on("topologyDescriptionChanged", relay("topologyDescriptionChanged"));
 
-        self.s.replset.on("fullsetup", function () {
+        self.s.replset.on("fullsetup", () => {
             self.emit("fullsetup", null, self);
         });
 
-        self.s.replset.on("all", function () {
+        self.s.replset.on("all", () => {
             self.emit("all", null, self);
         });
 
@@ -339,14 +355,16 @@ ReplSet.prototype.connect = function (db, _options, callback) {
         try {
             callback(null, self);
         } catch (err) {
-            process.nextTick(function () { throw err; });
+            process.nextTick(() => {
+                throw err;
+            });
         }
     };
 
     // Error handler
     const connectErrorHandler = function () {
         return function (err) {
-            ["timeout", "error", "close"].forEach(function (e) {
+            ["timeout", "error", "close"].forEach((e) => {
                 self.s.replset.removeListener(e, connectErrorHandler);
             });
 
@@ -358,8 +376,11 @@ ReplSet.prototype.connect = function (db, _options, callback) {
             try {
                 callback(err);
             } catch (err) {
-                if (!self.s.replset.isConnected())
-                    process.nextTick(function () { throw err; });
+                if (!self.s.replset.isConnected())                    {
+                    process.nextTick(() => {
+                        throw err;
+                    });
+                }
             }
         };
     };
@@ -376,8 +397,12 @@ ReplSet.prototype.connect = function (db, _options, callback) {
 
 // Server capabilities
 ReplSet.prototype.capabilities = function () {
-    if (this.s.sCapabilities) return this.s.sCapabilities;
-    if (this.s.replset.lastIsMaster() == null) return null;
+    if (this.s.sCapabilities) {
+        return this.s.sCapabilities;
+    }
+    if (this.s.replset.lastIsMaster() == null) {
+        return null;
+    }
     this.s.sCapabilities = new ServerCapabilities(this.s.replset.lastIsMaster());
     return this.s.sCapabilities;
 };
@@ -386,8 +411,7 @@ define.classMethod("capabilities", { callback: false, promise: false, returns: [
 
 // Command
 ReplSet.prototype.command = function (ns, cmd, options, callback) {
-    options = translateReadPreference(options);
-    this.s.replset.command(ns, cmd, options, callback);
+    this.s.replset.command(ns, cmd, getReadPreference(options), callback);
 };
 
 define.classMethod("command", { callback: true, promise: false });
@@ -458,7 +482,7 @@ ReplSet.prototype.close = function (forceClosed) {
     const self = this;
     // Call destroy on the topology
     this.s.replset.destroy({
-        force: typeof forceClosed == "boolean" ? forceClosed : false
+        force: typeof forceClosed === "boolean" ? forceClosed : false
     });
     // We need to wash out all stored processes
     if (forceClosed == true) {
@@ -467,7 +491,7 @@ ReplSet.prototype.close = function (forceClosed) {
     }
 
     const events = ["timeout", "error", "close", "joined", "left"];
-    events.forEach(function (e) {
+    events.forEach((e) => {
         self.removeAllListeners(e);
     });
 };

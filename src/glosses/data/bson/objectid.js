@@ -160,7 +160,7 @@ export default class ObjectID {
         return timestamp;
     }
 
-    createPk() {
+    static createPk() {
         return new ObjectID();
     }
 
