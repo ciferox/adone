@@ -860,7 +860,6 @@ adone.lazify({
     Mode: "./mode",
     typeOf: "./typeof",
     deepEqual: "./deep_equal",
-    diff: "./diff",
     memcpy: "./memcpy",
     microtime: "./microtime",
     uuid: "./uuid",

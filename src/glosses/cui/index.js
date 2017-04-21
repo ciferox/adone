@@ -1,5 +1,5 @@
 adone.lazify({
-    style: "./styles",
+    EventEmitter: "./events",
     Node: "./node",
     Screen: "./screen",
     GridLayout: "./layout/grid",

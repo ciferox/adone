@@ -1,5 +1,3 @@
-
-
 export default class extends adone.Transform {
     constructor(func, opts) {
         super(opts);

@@ -2,14 +2,14 @@ const { is } = adone;
 const { Table, Cell, ColSpanCell, RowSpanCell, util: { strlen, repeat, pad, truncate, wordWrap, colorizeLines } } = adone.text.table;
 // var colors = require('colors/safe');
 
-describe("Table", function () {
-    describe("utils", function () {
-        describe("strlen", function () {
-            it('length of "hello" is 5', function () {
+describe("Table", () => {
+    describe("utils", () => {
+        describe("strlen", () => {
+            it('length of "hello" is 5', () => {
                 expect(strlen("hello")).to.equal(5);
             });
 
-            it('length of "hi" is 2', function () {
+            it('length of "hi" is 2', () => {
                 expect(strlen("hi")).to.equal(2);
             });
 
@@ -21,55 +21,55 @@ describe("Table", function () {
             //     expect(strlen(colors.zebra("hello"))).to.equal(5);
             // });
 
-            it('length of "hello\\nhi\\nheynow" is 6', function () {
+            it('length of "hello\\nhi\\nheynow" is 6', () => {
                 expect(strlen("hello\nhi\nheynow")).to.equal(6);
             });
 
-            it('length of "中文字符" is 8', function () {
+            it('length of "中文字符" is 8', () => {
                 expect(strlen("中文字符")).to.equal(8);
             });
 
-            it('length of "日本語の文字" is 12', function () {
+            it('length of "日本語の文字" is 12', () => {
                 expect(strlen("日本語の文字")).to.equal(12);
             });
 
-            it('length of "한글" is 4', function () {
+            it('length of "한글" is 4', () => {
                 expect(strlen("한글")).to.equal(4);
             });
         });
 
-        describe("repeat", function () {
-            it('"-" x 3', function () {
+        describe("repeat", () => {
+            it('"-" x 3', () => {
                 expect(repeat("-", 3)).to.equal("---");
             });
 
-            it('"-" x 4', function () {
+            it('"-" x 4', () => {
                 expect(repeat("-", 4)).to.equal("----");
             });
 
-            it('"=" x 4', function () {
+            it('"=" x 4', () => {
                 expect(repeat("=", 4)).to.equal("====");
             });
         });
 
-        describe("pad", function () {
-            it("pad('hello',6,' ', right) == ' hello'", function () {
+        describe("pad", () => {
+            it("pad('hello',6,' ', right) == ' hello'", () => {
                 expect(pad("hello", 6, " ", "right")).to.equal(" hello");
             });
 
-            it("pad('hello',7,' ', left) == 'hello  '", function () {
+            it("pad('hello',7,' ', left) == 'hello  '", () => {
                 expect(pad("hello", 7, " ", "left")).to.equal("hello  ");
             });
 
-            it("pad('hello',8,' ', center) == ' hello  '", function () {
+            it("pad('hello',8,' ', center) == ' hello  '", () => {
                 expect(pad("hello", 8, " ", "center")).to.equal(" hello  ");
             });
 
-            it("pad('hello',9,' ', center) == '  hello  '", function () {
+            it("pad('hello',9,' ', center) == '  hello  '", () => {
                 expect(pad("hello", 9, " ", "center")).to.equal("  hello  ");
             });
 
-            it("pad('yo',4,' ', center) == ' yo '", function () {
+            it("pad('yo',4,' ', center) == ' yo '", () => {
                 expect(pad("yo", 4, " ", "center")).to.equal(" yo ");
             });
 
@@ -77,25 +77,25 @@ describe("Table", function () {
             //     expect(pad(colors.red("hello"), 7, " ", "right")).to.equal("  " + colors.red("hello"));
             // });
 
-            it("pad('hello', 2, ' ', right) == 'hello'", function () {
+            it("pad('hello', 2, ' ', right) == 'hello'", () => {
                 expect(pad("hello", 2, " ", "right")).to.equal("hello");
             });
         });
 
-        describe("truncate", function () {
-            it('truncate("hello", 5) === "hello"', function () {
+        describe("truncate", () => {
+            it('truncate("hello", 5) === "hello"', () => {
                 expect(truncate("hello", 5)).to.equal("hello");
             });
 
-            it('truncate("hello sir", 7, "…") == "hello …"', function () {
+            it('truncate("hello sir", 7, "…") == "hello …"', () => {
                 expect(truncate("hello sir", 7, "…")).to.equal("hello …");
             });
 
-            it('truncate("hello sir", 6, "…") == "hello…"', function () {
+            it('truncate("hello sir", 6, "…") == "hello…"', () => {
                 expect(truncate("hello sir", 6, "…")).to.equal("hello…");
             });
 
-            it('truncate("goodnight moon", 8, "…") == "goodnig…"', function () {
+            it('truncate("goodnight moon", 8, "…") == "goodnig…"', () => {
                 expect(truncate("goodnight moon", 8, "…")).to.equal("goodnig…");
             });
 
@@ -146,75 +146,75 @@ describe("Table", function () {
             //     expect(truncate(original, 10)).to.equal(expected);
             // });
 
-            it("handles reset code", function () {
+            it("handles reset code", () => {
                 const original = "\x1b[31mhello\x1b[0m world";
                 const expected = "\x1b[31mhello\x1b[0m wor…";
                 expect(truncate(original, 10)).to.equal(expected);
             });
 
-            it("handles reset code (EMPTY VERSION)", function () {
+            it("handles reset code (EMPTY VERSION)", () => {
                 const original = "\x1b[31mhello\x1b[0m world";
                 const expected = "\x1b[31mhello\x1b[0m wor…";
                 expect(truncate(original, 10)).to.equal(expected);
             });
 
-            it('truncateWidth("漢字テスト", 15) === "漢字テスト"', function () {
+            it('truncateWidth("漢字テスト", 15) === "漢字テスト"', () => {
                 expect(truncate("漢字テスト", 15)).to.equal("漢字テスト");
             });
 
-            it('truncateWidth("漢字テスト", 6) === "漢字…"', function () {
+            it('truncateWidth("漢字テスト", 6) === "漢字…"', () => {
                 expect(truncate("漢字テスト", 6)).to.equal("漢字…");
             });
 
-            it('truncateWidth("漢字テスト", 5) === "漢字…"', function () {
+            it('truncateWidth("漢字テスト", 5) === "漢字…"', () => {
                 expect(truncate("漢字テスト", 5)).to.equal("漢字…");
             });
 
-            it('truncateWidth("漢字testてすと", 12) === "漢字testて…"', function () {
+            it('truncateWidth("漢字testてすと", 12) === "漢字testて…"', () => {
                 expect(truncate("漢字testてすと", 12)).to.equal("漢字testて…");
             });
 
-            it("handles color code with CJK chars", function () {
+            it("handles color code with CJK chars", () => {
                 const original = "漢字\x1b[31m漢字\x1b[0m漢字";
                 const expected = "漢字\x1b[31m漢字\x1b[0m漢…";
                 expect(truncate(original, 11)).to.equal(expected);
             });
         });
 
-        describe("Table.applyOptions", function () {
-            it("allows you to override chars", function () {
+        describe("Table.applyOptions", () => {
+            it("allows you to override chars", () => {
                 expect(Table.applyOptions()).to.eql(Table.defaultOptions);
             });
 
-            it("chars will be merged deeply", function () {
+            it("chars will be merged deeply", () => {
                 const expected = Table.defaultOptions;
                 expected.chars.left = "L";
                 expect(Table.applyOptions({ chars: { left: "L" } })).to.eql(expected);
             });
 
-            it("style will be merged deeply", function () {
+            it("style will be merged deeply", () => {
                 const expected = Table.defaultOptions;
                 expected.style["padding-left"] = 2;
                 expect(Table.applyOptions({ style: { "padding-left": 2 } })).to.eql(expected);
             });
 
-            it("head will be overwritten", function () {
+            it("head will be overwritten", () => {
                 const expected = Table.defaultOptions;
                 expected.style.head = [];
                 //we can't use lodash's `merge()` in implementation because it would deeply copy array.
-                expect(Table.applyOptions({ style: { "head": [] } })).to.eql(expected);
+                expect(Table.applyOptions({ style: { head: [] } })).to.eql(expected);
             });
 
-            it("border will be overwritten", function () {
+            it("border will be overwritten", () => {
                 const expected = Table.defaultOptions;
                 expected.style.border = [];
                 //we can't use lodash's `merge()` in implementation because it would deeply copy array.
-                expect(Table.applyOptions({ style: { "border": [] } })).to.eql(expected);
+                expect(Table.applyOptions({ style: { border: [] } })).to.eql(expected);
             });
         });
 
-        describe("wordWrap", function () {
-            it("length", function () {
+        describe("wordWrap", () => {
+            it("length", () => {
                 const input = "Hello, how are you today? I am fine, thank you!";
 
                 const expected = "Hello, how\nare you\ntoday? I\nam fine,\nthank you!";
@@ -230,7 +230,7 @@ describe("Table", function () {
             //     expect(wordWrap(10, input).join("\n")).to.equal(expected);
             // });
 
-            it("will not create an empty last line", function () {
+            it("will not create an empty last line", () => {
                 const input = "Hello Hello ";
 
                 const expected = "Hello\nHello";
@@ -238,7 +238,7 @@ describe("Table", function () {
                 expect(wordWrap(5, input).join("\n")).to.equal(expected);
             });
 
-            it("will handle color reset code", function () {
+            it("will handle color reset code", () => {
                 const input = "\x1b[31mHello\x1b[0m Hello ";
 
                 const expected = "\x1b[31mHello\x1b[0m\nHello";
@@ -246,7 +246,7 @@ describe("Table", function () {
                 expect(wordWrap(5, input).join("\n")).to.equal(expected);
             });
 
-            it("will handle color reset code (EMPTY version)", function () {
+            it("will handle color reset code (EMPTY version)", () => {
                 const input = "\x1b[31mHello\x1b[m Hello ";
 
                 const expected = "\x1b[31mHello\x1b[m\nHello";
@@ -254,7 +254,7 @@ describe("Table", function () {
                 expect(wordWrap(5, input).join("\n")).to.equal(expected);
             });
 
-            it("words longer than limit will not create extra newlines", function () {
+            it("words longer than limit will not create extra newlines", () => {
                 const input = "disestablishment is a multiplicity someotherlongword";
 
                 const expected = "disestablishment\nis a\nmultiplicity\nsomeotherlongword";
@@ -262,33 +262,33 @@ describe("Table", function () {
                 expect(wordWrap(7, input).join("\n")).to.equal(expected);
             });
 
-            it("multiple line input", function () {
+            it("multiple line input", () => {
                 const input = "a\nb\nc d e d b duck\nm\nn\nr";
                 const expected = ["a", "b", "c d", "e d", "b", "duck", "m", "n", "r"];
 
                 expect(wordWrap(4, input)).to.eql(expected);
             });
 
-            it("will not start a line with whitespace", function () {
+            it("will not start a line with whitespace", () => {
                 const input = "ab cd  ef gh  ij kl";
                 const expected = ["ab cd", "ef gh", "ij kl"];
                 expect(wordWrap(7, input)).to.eql(expected);
             });
 
-            it("wraps CJK chars", function () {
+            it("wraps CJK chars", () => {
                 const input = "漢字 漢\n字 漢字";
                 const expected = ["漢字 漢", "字 漢字"];
                 expect(wordWrap(7, input)).to.eql(expected);
             });
 
-            it("wraps CJK chars with colors", function () {
+            it("wraps CJK chars with colors", () => {
                 const input = "\x1b[31m漢字\x1b[0m\n 漢字";
                 const expected = ["\x1b[31m漢字\x1b[0m", " 漢字"];
                 expect(wordWrap(5, input)).to.eql(expected);
             });
         });
 
-        describe("colorizeLines", function () {
+        describe("colorizeLines", () => {
             // it("foreground colors continue on each line", function () {
             //     const input = colors.red("Hello\nHi").split("\n");
 
@@ -325,7 +325,7 @@ describe("Table", function () {
             //     ]);
             // });
 
-            it("the reset code can be used to drop styles", function () {
+            it("the reset code can be used to drop styles", () => {
                 const input = "\x1b[31mHello\x1b[0m\nHi".split("\n");
                 expect(colorizeLines(input)).to.eql([
                     "\x1b[31mHello\x1b[0m",
@@ -333,7 +333,7 @@ describe("Table", function () {
                 ]);
             });
 
-            it("handles aixterm 16-color foreground", function () {
+            it("handles aixterm 16-color foreground", () => {
                 const input = "\x1b[90mHello\nHi\x1b[0m".split("\n");
                 expect(colorizeLines(input)).to.eql([
                     "\x1b[90mHello\x1b[39m",
@@ -341,7 +341,7 @@ describe("Table", function () {
                 ]);
             });
 
-            it("handles aixterm 16-color background", function () {
+            it("handles aixterm 16-color background", () => {
                 const input = "\x1b[100mHello\nHi\x1b[m\nHowdy".split("\n");
                 expect(colorizeLines(input)).to.eql([
                     "\x1b[100mHello\x1b[49m",
@@ -350,7 +350,7 @@ describe("Table", function () {
                 ]);
             });
 
-            it("handles aixterm 256-color foreground", function () {
+            it("handles aixterm 256-color foreground", () => {
                 const input = "\x1b[48;5;8mHello\nHi\x1b[0m\nHowdy".split("\n");
                 expect(colorizeLines(input)).to.eql([
                     "\x1b[48;5;8mHello\x1b[49m",
@@ -370,8 +370,8 @@ describe("Table", function () {
         });
     });
 
-    describe("Common", function () {
-        it("test complete table", function () {
+    describe("Common", () => {
+        it("test complete table", () => {
             const table = new Table({
                 head: ["Rel", "Change", "By", "When"],
                 style: {
@@ -401,7 +401,7 @@ describe("Table", function () {
             expect(table.toString()).to.equal(expected.join("\n"));
         });
 
-        it("test width property", function () {
+        it("test width property", () => {
             const table = new Table({
                 head: ["Cool"],
                 style: {
@@ -413,7 +413,7 @@ describe("Table", function () {
             expect(table.width).to.equal(8);
         });
 
-        it("test vertical table output", function () {
+        it("test vertical table output", () => {
             const table = new Table({ style: { "padding-left": 0, "padding-right": 0, head: [], border: [] } }); // clear styles to prevent color output
 
             table.push(
@@ -432,7 +432,7 @@ describe("Table", function () {
             expect(table.toString()).to.equal(expected.join("\n"));
         });
 
-        it("test cross table output", function () {
+        it("test cross table output", () => {
             const table = new Table({ head: ["", "Header 1", "Header 2"], style: { "padding-left": 0, "padding-right": 0, head: [], border: [] } }); // clear styles to prevent color output
 
             table.push(
@@ -453,7 +453,7 @@ describe("Table", function () {
             expect(table.toString()).to.equal(expected.join("\n"));
         });
 
-        it("test table colors", function () {
+        it("test table colors", () => {
             if (!process.stdout.isTTY) {
                 // no colors support
                 this.skip();
@@ -468,42 +468,42 @@ describe("Table", function () {
             const red = "\u001b[31m";
             const orange = "\u001b[38;5;221m";
             const grey = "\u001b[90m";
-            const c256s = orange + "v0.1" + off;
+            const c256s = `${orange}v0.1${off}`;
 
             table.push(
-                [c256s, "rauchg@gmail.com"]
+                [c256s, "adone"]
             );
 
             const expected = [
-                grey + "┌──────" + off + grey + "┬──────────────────┐" + off,
-                grey + "│" + off + red + " Rel  " + off + grey + "│" + off + red + " By               " + off + grey + "│" + off,
-                grey + "├──────" + off + grey + "┼──────────────────┤" + off,
-                grey + "│" + off + " " + c256s + " " + grey + "│" + off + " rauchg@gmail.com " + grey + "│" + off,
-                grey + "└──────" + off + grey + "┴──────────────────┘" + off
+                `${grey}┌──────${off}${grey}┬───────┐${off}`,
+                `${grey}│${off}${red} Rel  ${off}${grey}│${off}${red} By    ${off}${grey}│${off}`,
+                `${grey}├──────${off}${grey}┼───────┤${off}`,
+                `${grey}│${off} ${c256s} ${grey}│${off} adone ${grey}│${off}`,
+                `${grey}└──────${off}${grey}┴───────┘${off}`
             ];
 
             expect(table.toString()).to.equal(expected.join("\n"));
         });
 
-        it("test custom chars", function () {
+        it("test custom chars", () => {
             const table = new Table({
                 chars: {
-                    "top": "═",
+                    top: "═",
                     "top-mid": "╤",
                     "top-left": "╔",
                     "top-right": "╗",
-                    "bottom": "═",
+                    bottom: "═",
                     "bottom-mid": "╧",
                     "bottom-left": "╚",
                     "bottom-right": "╝",
-                    "left": "║",
+                    left: "║",
                     "left-mid": "╟",
-                    "right": "║",
+                    right: "║",
                     "right-mid": "╢"
                 },
                 style: {
-                    head: []
-                    , border: []
+                    head: [],
+                    border: []
                 }
             });
 
@@ -523,7 +523,7 @@ describe("Table", function () {
             expect(table.toString()).to.equal(expected.join("\n"));
         });
 
-        it("test compact shortand", function () {
+        it("test compact shortand", () => {
             const table = new Table({
                 style: {
                     head: [],
@@ -547,10 +547,10 @@ describe("Table", function () {
             expect(table.toString()).to.equal(expected.join("\n"));
         });
 
-        it("test compact empty mid line", function () {
+        it("test compact empty mid line", () => {
             const table = new Table({
                 chars: {
-                    "mid": "",
+                    mid: "",
                     "left-mid": "",
                     "mid-mid": "",
                     "right-mid": ""
@@ -576,24 +576,24 @@ describe("Table", function () {
             expect(table.toString()).to.equal(expected.join("\n"));
         });
 
-        it("test decoration lines disabled", function () {
+        it("test decoration lines disabled", () => {
             const table = new Table({
                 chars: {
-                    "top": "",
+                    top: "",
                     "top-mid": "",
                     "top-left": "",
                     "top-right": "",
-                    "bottom": "",
+                    bottom: "",
                     "bottom-mid": "",
                     "bottom-left": "",
                     "bottom-right": "",
-                    "left": "",
+                    left: "",
                     "left-mid": "",
-                    "mid": "",
+                    mid: "",
                     "mid-mid": "",
-                    "right": "",
+                    right: "",
                     "right-mid": "",
-                    "middle": " " // a single space
+                    middle: " " // a single space
                 },
                 style: {
                     head: [],
@@ -616,7 +616,7 @@ describe("Table", function () {
             expect(table.toString()).to.equal(expected.join("\n"));
         });
 
-        it("test with null/undefined as values or column names", function () {
+        it("test with null/undefined as values or column names", () => {
             const table = new Table({
                 style: {
                     head: [],
@@ -654,7 +654,7 @@ describe("Table", function () {
         //     expect(table.toString()).to.equal(expected.join("\n"));
         // });
 
-        it("allows numbers as `content` property of cells defined using object notation", function () {
+        it("allows numbers as `content` property of cells defined using object notation", () => {
             const table = new Table({ style: { border: [], head: [] } });
 
             table.push([{ content: 12 }]);
@@ -668,17 +668,17 @@ describe("Table", function () {
             expect(table.toString()).to.equal(expected.join("\n"));
         });
 
-        it("throws if content is not a string or number", function () {
+        it("throws if content is not a string or number", () => {
             const table = new Table({ style: { border: [], head: [] } });
 
-            expect(function () {
+            expect(() => {
                 table.push([{ content: { a: "b" } }]);
                 table.toString();
             }).to.throw();
 
         });
 
-        it("works with CJK values", function () {
+        it("works with CJK values", () => {
             const table = new Table({ style: { border: [], head: [] }, colWidths: [5, 10, 5] });
 
             table.push(
@@ -704,8 +704,8 @@ describe("Table", function () {
         });
     });
 
-    describe("New lines", function () {
-        it("test table with newlines in headers", function () {
+    describe("New lines", () => {
+        it("test table with newlines in headers", () => {
             const table = new Table({
                 head: ["Test", "1\n2\n3"],
                 style: {
@@ -727,12 +727,12 @@ describe("Table", function () {
             expect(table.toString()).to.equal(expected.join("\n"));
         });
 
-        it("test column width is accurately reflected when newlines are present", function () {
+        it("test column width is accurately reflected when newlines are present", () => {
             const table = new Table({ head: ["Test\nWidth"], style: { head: [], border: [] } });
             expect(table.width).to.equal(9);
         });
 
-        it("test newlines in body cells", function () {
+        it("test newlines in body cells", () => {
             const table = new Table({ style: { head: [], border: [] } });
 
             table.push(["something\nwith\nnewlines"]);
@@ -748,7 +748,7 @@ describe("Table", function () {
             expect(table.toString()).to.equal(expected.join("\n"));
         });
 
-        it("test newlines in vertical cell header and body", function () {
+        it("test newlines in vertical cell header and body", () => {
             const table = new Table({ style: { "padding-left": 0, "padding-right": 0, head: [], border: [] } });
 
             table.push(
@@ -765,7 +765,7 @@ describe("Table", function () {
             expect(table.toString()).to.equal(expected.join("\n"));
         });
 
-        it("test newlines in cross table header and body", function () {
+        it("test newlines in cross table header and body", () => {
             const table = new Table({ head: ["", "Header\n1"], style: { "padding-left": 0, "padding-right": 0, head: [], border: [] } });
 
             table.push({ "Header\n2": ["Testing\nsomething\ncool"] });
@@ -785,7 +785,7 @@ describe("Table", function () {
         });
     });
 
-    describe("Layout", function () {
+    describe("Layout", () => {
         /**
          * Provides a shorthand for validating a table of cells.
          * To pass, both arrays must have the same dimensions, and each cell in `actualRows` must
@@ -822,23 +822,23 @@ describe("Table", function () {
             if (is.string(expectedCell)) {
                 expectedCell = { content: expectedCell };
             }
-            const address = "(" + y + "," + x + ")";
+            const address = `(${y},${x})`;
             if (expectedCell.hasOwnProperty("content")) {
                 expect(actualCell, address).to.be.instanceOf(Cell);
-                expect(actualCell.content, "content of " + address).to.equal(expectedCell.content);
+                expect(actualCell.content, `content of ${address}`).to.equal(expectedCell.content);
             }
             if (expectedCell.hasOwnProperty("rowSpan")) {
                 expect(actualCell, address).to.be.instanceOf(Cell);
-                expect(actualCell.rowSpan, "rowSpan of " + address).to.equal(expectedCell.rowSpan);
+                expect(actualCell.rowSpan, `rowSpan of ${address}`).to.equal(expectedCell.rowSpan);
             }
             if (expectedCell.hasOwnProperty("colSpan")) {
                 expect(actualCell, address).to.be.instanceOf(Cell);
-                expect(actualCell.colSpan, "colSpan of " + address).to.equal(expectedCell.colSpan);
+                expect(actualCell.colSpan, `colSpan of ${address}`).to.equal(expectedCell.colSpan);
             }
             if (expectedCell.hasOwnProperty("spannerFor")) {
                 expect(actualCell, address).to.be.instanceOf(RowSpanCell);
-                expect(actualCell.originalCell, address + "originalCell should be a cell").to.be.instanceOf(Cell);
-                expect(actualCell.originalCell, address + "originalCell not right").to.equal(findCell(actualTable,
+                expect(actualCell.originalCell, `${address}originalCell should be a cell`).to.be.instanceOf(Cell);
+                expect(actualCell.originalCell, `${address}originalCell not right`).to.equal(findCell(actualTable,
                     expectedCell.spannerFor[1],
                     expectedCell.spannerFor[0]
                 ));
@@ -857,7 +857,7 @@ describe("Table", function () {
             });
         };
 
-        it("simple 2x2 layout", function () {
+        it("simple 2x2 layout", () => {
             const actual = Table.makeLayout([
                 ["hello", "goodbye"],
                 ["hola", "adios"]
@@ -871,7 +871,7 @@ describe("Table", function () {
             checkLayout(actual, expected);
         });
 
-        it("cross table", function () {
+        it("cross table", () => {
             const actual = Table.makeLayout([
                 { "1.0": ["yes", "no"] },
                 { "2.0": ["hello", "goodbye"] }
@@ -885,7 +885,7 @@ describe("Table", function () {
             checkLayout(actual, expected);
         });
 
-        it("vertical table", function () {
+        it("vertical table", () => {
             const actual = Table.makeLayout([
                 { "1.0": "yes" },
                 { "2.0": "hello" }
@@ -899,7 +899,7 @@ describe("Table", function () {
             checkLayout(actual, expected);
         });
 
-        it("colSpan adds RowSpanCells to the right", function () {
+        it("colSpan adds RowSpanCells to the right", () => {
             const actual = Table.makeLayout([
                 [{ content: "hello", colSpan: 2 }],
                 ["hola", "adios"]
@@ -913,7 +913,7 @@ describe("Table", function () {
             checkLayout(actual, expected);
         });
 
-        it("rowSpan adds RowSpanCell below", function () {
+        it("rowSpan adds RowSpanCell below", () => {
             const actual = Table.makeLayout([
                 [{ content: "hello", rowSpan: 2 }, "goodbye"],
                 ["adios"]
@@ -927,7 +927,7 @@ describe("Table", function () {
             checkLayout(actual, expected);
         });
 
-        it("rowSpan and cellSpan together", function () {
+        it("rowSpan and cellSpan together", () => {
             const actual = Table.makeLayout([
                 [{ content: "hello", rowSpan: 2, colSpan: 2 }, "goodbye"],
                 ["adios"]
@@ -941,7 +941,7 @@ describe("Table", function () {
             checkLayout(actual, expected);
         });
 
-        it("complex layout", function () {
+        it("complex layout", () => {
             const actual = Table.makeLayout([
                 [{ content: "hello", rowSpan: 2, colSpan: 2 }, { content: "yo", rowSpan: 2, colSpan: 2 }, "goodbye"],
                 ["adios"]
@@ -955,7 +955,7 @@ describe("Table", function () {
             checkLayout(actual, expected);
         });
 
-        it("complex layout2", function () {
+        it("complex layout2", () => {
             const actual = Table.makeLayout([
                 ["a", "b", { content: "c", rowSpan: 3, colSpan: 2 }, "d"],
                 [{ content: "e", rowSpan: 2, colSpan: 2 }, "f"],
@@ -971,7 +971,7 @@ describe("Table", function () {
             checkLayout(actual, expected);
         });
 
-        it("stairstep spans", function () {
+        it("stairstep spans", () => {
             const actual = Table.makeLayout([
                 [{ content: "", rowSpan: 2 }, ""],
                 [{ content: "", rowSpan: 2 }],
@@ -987,7 +987,7 @@ describe("Table", function () {
             checkLayout(actual, expected);
         });
 
-        describe("fillInTable", function () {
+        describe("fillInTable", () => {
             const mc = (opts, y, x) => {
                 const cell = new Cell(opts);
                 cell.x = x;
@@ -995,7 +995,7 @@ describe("Table", function () {
                 return cell;
             };
 
-            it("will blank out individual cells", function () {
+            it("will blank out individual cells", () => {
                 const cells = [
                     [mc("a", 0, 1)],
                     [mc("b", 1, 0)]
@@ -1008,7 +1008,7 @@ describe("Table", function () {
                 ]);
             });
 
-            it("will autospan to the right", function () {
+            it("will autospan to the right", () => {
                 const cells = [
                     [],
                     [mc("a", 1, 1)]
@@ -1021,7 +1021,7 @@ describe("Table", function () {
                 ]);
             });
 
-            it("will autospan down", function () {
+            it("will autospan down", () => {
                 const cells = [
                     [mc("a", 0, 1)],
                     []
@@ -1035,7 +1035,7 @@ describe("Table", function () {
                 ]);
             });
 
-            it("will autospan right and down", function () {
+            it("will autospan right and down", () => {
                 const cells = [
                     [mc("a", 0, 2)],
                     [],
@@ -1052,12 +1052,12 @@ describe("Table", function () {
             });
         });
 
-        describe("computeWidths", function () {
+        describe("computeWidths", () => {
             const mc = (y, x, desiredWidth, colSpan) => {
                 return { x, y, desiredWidth, colSpan };
             };
 
-            it("finds the maximum desired width of each column", function () {
+            it("finds the maximum desired width of each column", () => {
                 const widths = [];
                 const cells = [
                     [mc(0, 0, 7), mc(0, 1, 3), mc(0, 2, 5)],
@@ -1070,7 +1070,7 @@ describe("Table", function () {
                 expect(widths).to.eql([8, 9, 5]);
             });
 
-            it("won't touch hard coded values", function () {
+            it("won't touch hard coded values", () => {
                 const widths = [null, 3];
                 const cells = [
                     [mc(0, 0, 7), mc(0, 1, 3), mc(0, 2, 5)],
@@ -1083,14 +1083,14 @@ describe("Table", function () {
                 expect(widths).to.eql([8, 3, 5]);
             });
 
-            it("assumes undefined desiredWidth is 1", function () {
+            it("assumes undefined desiredWidth is 1", () => {
                 const widths = [];
                 const cells = [[{ x: 0, y: 0 }], [{ x: 0, y: 1 }], [{ x: 0, y: 2 }]];
                 Table.computeWidths(widths, cells);
                 expect(widths).to.eql([1]);
             });
 
-            it("takes into account colSpan and wont over expand", function () {
+            it("takes into account colSpan and wont over expand", () => {
                 const widths = [];
                 const cells = [
                     [mc(0, 0, 10, 2), mc(0, 2, 5)],
@@ -1101,7 +1101,7 @@ describe("Table", function () {
                 expect(widths).to.eql([5, 5, 5]);
             });
 
-            it("will expand rows involved in colSpan in a balanced way", function () {
+            it("will expand rows involved in colSpan in a balanced way", () => {
                 const widths = [];
                 const cells = [
                     [mc(0, 0, 13, 2), mc(0, 2, 5)],
@@ -1112,7 +1112,7 @@ describe("Table", function () {
                 expect(widths).to.eql([6, 6, 5]);
             });
 
-            it("expands across 3 cols", function () {
+            it("expands across 3 cols", () => {
                 const widths = [];
                 const cells = [
                     [mc(0, 0, 25, 3)],
@@ -1123,7 +1123,7 @@ describe("Table", function () {
                 expect(widths).to.eql([9, 9, 5]);
             });
 
-            it("multiple spans in same table", function () {
+            it("multiple spans in same table", () => {
                 const widths = [];
                 const cells = [
                     [mc(0, 0, 25, 3)],
@@ -1134,7 +1134,7 @@ describe("Table", function () {
                 expect(widths).to.eql([11, 9, 8]);
             });
 
-            it("spans will only edit uneditable tables", function () {
+            it("spans will only edit uneditable tables", () => {
                 const widths = [null, 3];
                 const cells = [
                     [mc(0, 0, 20, 3)],
@@ -1144,7 +1144,7 @@ describe("Table", function () {
                 expect(widths).to.eql([7, 3, 8]);
             });
 
-            it("spans will only edit uneditable tables - first column uneditable", function () {
+            it("spans will only edit uneditable tables - first column uneditable", () => {
                 const widths = [3];
                 const cells = [
                     [mc(0, 0, 20, 3)],
@@ -1155,12 +1155,12 @@ describe("Table", function () {
             });
         });
 
-        describe("computeHeights", function () {
+        describe("computeHeights", () => {
             const mc = (y, x, desiredHeight, colSpan) => {
                 return { x, y, desiredHeight, rowSpan: colSpan };
             };
 
-            it("finds the maximum desired height of each row", function () {
+            it("finds the maximum desired height of each row", () => {
                 const heights = [];
                 const cells = [
                     [mc(0, 0, 7), mc(0, 1, 3), mc(0, 2, 5)],
@@ -1173,7 +1173,7 @@ describe("Table", function () {
                 expect(heights).to.eql([7, 8, 9]);
             });
 
-            it("won't touch hard coded values", function () {
+            it("won't touch hard coded values", () => {
                 const heights = [null, 3];
                 const cells = [
                     [mc(0, 0, 7), mc(0, 1, 3), mc(0, 2, 5)],
@@ -1186,14 +1186,14 @@ describe("Table", function () {
                 expect(heights).to.eql([7, 3, 9]);
             });
 
-            it("assumes undefined desiredHeight is 1", function () {
+            it("assumes undefined desiredHeight is 1", () => {
                 const heights = [];
                 const cells = [[{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }]];
                 Table.computeHeights(heights, cells);
                 expect(heights).to.eql([1]);
             });
 
-            it("takes into account rowSpan and wont over expand", function () {
+            it("takes into account rowSpan and wont over expand", () => {
                 const heights = [];
                 const cells = [
                     [mc(0, 0, 10, 2), mc(0, 1, 5), mc(0, 2, 2)],
@@ -1204,7 +1204,7 @@ describe("Table", function () {
                 expect(heights).to.eql([5, 5, 4]);
             });
 
-            it("will expand rows involved in rowSpan in a balanced way", function () {
+            it("will expand rows involved in rowSpan in a balanced way", () => {
                 const heights = [];
                 const cells = [
                     [mc(0, 0, 13, 2), mc(0, 1, 5), mc(0, 2, 5)],
@@ -1215,7 +1215,7 @@ describe("Table", function () {
                 expect(heights).to.eql([6, 6, 4]);
             });
 
-            it("expands across 3 rows", function () {
+            it("expands across 3 rows", () => {
                 const heights = [];
                 const cells = [
                     [mc(0, 0, 25, 3), mc(0, 1, 5), mc(0, 2, 4)],
@@ -1226,7 +1226,7 @@ describe("Table", function () {
                 expect(heights).to.eql([9, 9, 5]);
             });
 
-            it("multiple spans in same table", function () {
+            it("multiple spans in same table", () => {
                 const heights = [];
                 const cells = [
                     [mc(0, 0, 25, 3), mc(0, 1, 30, 3), mc(0, 2, 4)],
@@ -1239,8 +1239,8 @@ describe("Table", function () {
         });
 
 
-        describe("layoutTable", function () {
-            it("sets x and y", function () {
+        describe("layoutTable", () => {
+            it("sets x and y", () => {
                 const table = [
                     [{}, {}],
                     [{}, {}]
@@ -1257,7 +1257,7 @@ describe("Table", function () {
                 expect(w).to.equal(2);
             });
 
-            it("colSpan will push x values to the right", function () {
+            it("colSpan will push x values to the right", () => {
                 const table = [
                     [{ colSpan: 2 }, {}],
                     [{}, { colSpan: 2 }]
@@ -1273,7 +1273,7 @@ describe("Table", function () {
                 expect(Table.maxWidth(table)).to.equal(3);
             });
 
-            it("rowSpan will push x values on cells below", function () {
+            it("rowSpan will push x values on cells below", () => {
                 const table = [
                     [{ rowSpan: 2 }, {}],
                     [{}]
@@ -1289,7 +1289,7 @@ describe("Table", function () {
                 expect(Table.maxWidth(table)).to.equal(2);
             });
 
-            it("colSpan and rowSpan together", function () {
+            it("colSpan and rowSpan together", () => {
                 const table = [
                     [{ rowSpan: 2, colSpan: 2 }, {}],
                     [{}]
@@ -1305,7 +1305,7 @@ describe("Table", function () {
                 expect(Table.maxWidth(table)).to.equal(3);
             });
 
-            it("complex layout", function () {
+            it("complex layout", () => {
 
                 const table = [
                     [{ c: "a" }, { c: "b" }, { c: "c", rowSpan: 3, colSpan: 2 }, { c: "d" }],
@@ -1323,15 +1323,15 @@ describe("Table", function () {
 
             });
 
-            it("maxWidth of single element", function () {
+            it("maxWidth of single element", () => {
                 const table = [[{}]];
                 Table.layout(table);
                 expect(Table.maxWidth(table)).to.equal(1);
             });
         });
 
-        describe("addRowSpanCells", function () {
-            it("will insert a rowSpan cell - beginning of line", function () {
+        describe("addRowSpanCells", () => {
+            it("will insert a rowSpan cell - beginning of line", () => {
                 const table = [
                     [{ x: 0, y: 0, rowSpan: 2 }, { x: 1, y: 0 }],
                     [{ x: 1, y: 1 }]
@@ -1345,7 +1345,7 @@ describe("Table", function () {
                 expect(table[1][1]).to.eql({ x: 1, y: 1 });
             });
 
-            it("will insert a rowSpan cell - end of line", function () {
+            it("will insert a rowSpan cell - end of line", () => {
                 const table = [
                     [{ x: 0, y: 0 }, { x: 1, y: 0, rowSpan: 2 }],
                     [{ x: 0, y: 1 }]
@@ -1359,7 +1359,7 @@ describe("Table", function () {
                 expect(table[1][1]).to.be.instanceOf(RowSpanCell);
             });
 
-            it("will insert a rowSpan cell - middle of line", function () {
+            it("will insert a rowSpan cell - middle of line", () => {
                 const table = [
                     [{ x: 0, y: 0 }, { x: 1, y: 0, rowSpan: 2 }, { x: 2, y: 0 }],
                     [{ x: 0, y: 1 }, { x: 2, y: 1 }]
@@ -1374,7 +1374,7 @@ describe("Table", function () {
                 expect(table[1][2]).to.eql({ x: 2, y: 1 });
             });
 
-            it("will insert a rowSpan cell - multiple on the same line", function () {
+            it("will insert a rowSpan cell - multiple on the same line", () => {
                 const table = [
                     [{ x: 0, y: 0 }, { x: 1, y: 0, rowSpan: 2 }, { x: 2, y: 0, rowSpan: 2 }, { x: 3, y: 0 }],
                     [{ x: 0, y: 1 }, { x: 3, y: 1 }]
@@ -1392,7 +1392,7 @@ describe("Table", function () {
         });
     });
 
-    describe("Cell", function () {
+    describe("Cell", () => {
         const defaultOptions = () => {
             //overwrite coloring of head and border by default for easier testing.
             return Table.applyOptions({ style: { head: [], border: [] } });
@@ -1400,93 +1400,93 @@ describe("Table", function () {
 
         const defaultChars = () => {
             return {
-                "top": "─",
-                "topMid": "┬",
-                "topLeft": "┌",
-                "topRight": "┐",
-                "bottom": "─",
-                "bottomMid": "┴",
-                "bottomLeft": "└",
-                "bottomRight": "┘",
-                "left": "│",
-                "leftMid": "├",
-                "mid": "─",
-                "midMid": "┼",
-                "right": "│",
-                "rightMid": "┤",
-                "middle": "│"
+                top: "─",
+                topMid: "┬",
+                topLeft: "┌",
+                topRight: "┐",
+                bottom: "─",
+                bottomMid: "┴",
+                bottomLeft: "└",
+                bottomRight: "┘",
+                left: "│",
+                leftMid: "├",
+                mid: "─",
+                midMid: "┼",
+                right: "│",
+                rightMid: "┤",
+                middle: "│"
             };
         };
 
-        describe("constructor", function () {
-            it("colSpan and rowSpan default to 1", function () {
+        describe("constructor", () => {
+            it("colSpan and rowSpan default to 1", () => {
                 const cell = new Cell();
                 expect(cell.colSpan).to.equal(1);
                 expect(cell.rowSpan).to.equal(1);
             });
 
-            it("colSpan and rowSpan can be set via constructor", function () {
+            it("colSpan and rowSpan can be set via constructor", () => {
                 const cell = new Cell({ rowSpan: 2, colSpan: 3 });
                 expect(cell.rowSpan).to.equal(2);
                 expect(cell.colSpan).to.equal(3);
             });
 
-            it("content can be set as a string", function () {
+            it("content can be set as a string", () => {
                 const cell = new Cell("hello\nworld");
                 expect(cell.content).to.equal("hello\nworld");
             });
 
-            it("content can be set as a options property", function () {
+            it("content can be set as a options property", () => {
                 const cell = new Cell({ content: "hello\nworld" });
                 expect(cell.content).to.equal("hello\nworld");
             });
 
-            it("default content is an empty string", function () {
+            it("default content is an empty string", () => {
                 const cell = new Cell();
                 expect(cell.content).to.equal("");
             });
 
-            it("new Cell(null) will have empty string content", function () {
+            it("new Cell(null) will have empty string content", () => {
                 const cell = new Cell(null);
                 expect(cell.content).to.equal("");
             });
 
-            it("new Cell({content: null}) will have empty string content", function () {
+            it("new Cell({content: null}) will have empty string content", () => {
                 const cell = new Cell({ content: null });
                 expect(cell.content).to.equal("");
             });
 
-            it('new Cell(0) will have "0" as content', function () {
+            it('new Cell(0) will have "0" as content', () => {
                 const cell = new Cell(0);
                 expect(cell.content).to.equal("0");
             });
 
-            it('new Cell({content: 0}) will have "0" as content', function () {
+            it('new Cell({content: 0}) will have "0" as content', () => {
                 const cell = new Cell({ content: 0 });
                 expect(cell.content).to.equal("0");
             });
 
-            it('new Cell(false) will have "false" as content', function () {
+            it('new Cell(false) will have "false" as content', () => {
                 const cell = new Cell(false);
                 expect(cell.content).to.equal("false");
             });
 
-            it('new Cell({content: false}) will have "false" as content', function () {
+            it('new Cell({content: false}) will have "false" as content', () => {
                 const cell = new Cell({ content: false });
                 expect(cell.content).to.equal("false");
             });
         });
 
-        describe("mergeTableOptions", function () {
-            describe("chars", function () {
-                it("unset chars take on value of table", function () {
+        describe("mergeTableOptions", () => {
+            describe("chars", () => {
+                it("unset chars take on value of table", () => {
                     const cell = new Cell();
                     const tableOptions = defaultOptions();
                     cell.mergeTableOptions(tableOptions);
                     expect(cell.chars).to.eql(defaultChars());
                 });
 
-                it("set chars override the value of table", function () {
+                it("set chars override the value of table", () => {
                     const cell = new Cell({ chars: { bottomRight: "=" } });
                     cell.mergeTableOptions(defaultOptions());
                     const chars = defaultChars();
@@ -1494,7 +1494,7 @@ describe("Table", function () {
                     expect(cell.chars).to.eql(chars);
                 });
 
-                it("hyphenated names will be converted to camel-case", function () {
+                it("hyphenated names will be converted to camel-case", () => {
                     const cell = new Cell({ chars: { "bottom-left": "=" } });
                     cell.mergeTableOptions(defaultOptions());
                     const chars = defaultChars();
@@ -1503,22 +1503,22 @@ describe("Table", function () {
                 });
             });
 
-            describe("truncate", function () {
-                it("if unset takes on value of table", function () {
+            describe("truncate", () => {
+                it("if unset takes on value of table", () => {
                     const cell = new Cell();
                     cell.mergeTableOptions(defaultOptions());
                     expect(cell.truncate).to.equal("…");
                 });
 
-                it("if set overrides value of table", function () {
+                it("if set overrides value of table", () => {
                     const cell = new Cell({ truncate: "..." });
                     cell.mergeTableOptions(defaultOptions());
                     expect(cell.truncate).to.equal("...");
                 });
             });
 
-            describe("style.padding-left", function () {
-                it("if unset will be copied from tableOptions.style", function () {
+            describe("style.padding-left", () => {
+                it("if unset will be copied from tableOptions.style", () => {
                     let cell = new Cell();
                     cell.mergeTableOptions(defaultOptions());
                     expect(cell.paddingLeft).to.equal(1);
@@ -1536,7 +1536,7 @@ describe("Table", function () {
                     expect(cell.paddingLeft).to.equal(3);
                 });
 
-                it("if set will override tableOptions.style", function () {
+                it("if set will override tableOptions.style", () => {
                     let cell = new Cell({ style: { "padding-left": 2 } });
                     cell.mergeTableOptions(defaultOptions());
                     expect(cell.paddingLeft).to.equal(2);
@@ -1547,8 +1547,8 @@ describe("Table", function () {
                 });
             });
 
-            describe("style.padding-right", function () {
-                it("if unset will be copied from tableOptions.style", function () {
+            describe("style.padding-right", () => {
+                it("if unset will be copied from tableOptions.style", () => {
                     let cell = new Cell();
                     cell.mergeTableOptions(defaultOptions());
                     expect(cell.paddingRight).to.equal(1);
@@ -1566,7 +1566,7 @@ describe("Table", function () {
                     expect(cell.paddingRight).to.equal(3);
                 });
 
-                it("if set will override tableOptions.style", function () {
+                it("if set will override tableOptions.style", () => {
                     let cell = new Cell({ style: { "padding-right": 2 } });
                     cell.mergeTableOptions(defaultOptions());
                     expect(cell.paddingRight).to.equal(2);
@@ -1577,21 +1577,21 @@ describe("Table", function () {
                 });
             });
 
-            describe("desiredWidth", function () {
-                it("content(hello) padding(1,1) == 7", function () {
+            describe("desiredWidth", () => {
+                it("content(hello) padding(1,1) == 7", () => {
                     const cell = new Cell("hello");
                     cell.mergeTableOptions(defaultOptions());
                     expect(cell.desiredWidth).to.equal(7);
                 });
 
-                it("content(hi) padding(1,2) == 5", function () {
+                it("content(hi) padding(1,2) == 5", () => {
                     const cell = new Cell({ content: "hi", style: { paddingRight: 2 } });
                     const tableOptions = defaultOptions();
                     cell.mergeTableOptions(tableOptions);
                     expect(cell.desiredWidth).to.equal(5);
                 });
 
-                it("content(hi) padding(3,2) == 7", function () {
+                it("content(hi) padding(3,2) == 7", () => {
                     const cell = new Cell({ content: "hi", style: { paddingLeft: 3, paddingRight: 2 } });
                     const tableOptions = defaultOptions();
                     cell.mergeTableOptions(tableOptions);
@@ -1599,20 +1599,20 @@ describe("Table", function () {
                 });
             });
 
-            describe("desiredHeight", function () {
-                it("1 lines of text", function () {
+            describe("desiredHeight", () => {
+                it("1 lines of text", () => {
                     const cell = new Cell("hi");
                     cell.mergeTableOptions(defaultOptions());
                     expect(cell.desiredHeight).to.equal(1);
                 });
 
-                it("2 lines of text", function () {
+                it("2 lines of text", () => {
                     const cell = new Cell("hi\nbye");
                     cell.mergeTableOptions(defaultOptions());
                     expect(cell.desiredHeight).to.equal(2);
                 });
 
-                it("2 lines of text", function () {
+                it("2 lines of text", () => {
                     const cell = new Cell("hi\nbye\nyo");
                     cell.mergeTableOptions(defaultOptions());
                     expect(cell.desiredHeight).to.equal(3);
@@ -1620,9 +1620,9 @@ describe("Table", function () {
             });
         });
 
-        describe("init", function () {
-            describe("hAlign", function () {
-                it("if unset takes colAlign value from tableOptions", function () {
+        describe("init", () => {
+            describe("hAlign", () => {
+                it("if unset takes colAlign value from tableOptions", () => {
                     const tableOptions = defaultOptions();
                     tableOptions.colAligns = ["left", "right", "both"];
                     let cell = new Cell();
@@ -1642,7 +1642,7 @@ describe("Table", function () {
                     expect(cell.hAlign).to.equal("both");
                 });
 
-                it("if set overrides tableOptions", function () {
+                it("if set overrides tableOptions", () => {
                     const tableOptions = defaultOptions();
                     tableOptions.colAligns = ["left", "right", "both"];
                     let cell = new Cell({ hAlign: "right" });
@@ -1663,8 +1663,8 @@ describe("Table", function () {
                 });
             });
 
-            describe("vAlign", function () {
-                it("if unset takes rowAlign value from tableOptions", function () {
+            describe("vAlign", () => {
+                it("if unset takes rowAlign value from tableOptions", () => {
                     const tableOptions = defaultOptions();
                     tableOptions.rowAligns = ["top", "bottom", "center"];
                     let cell = new Cell();
@@ -1684,7 +1684,7 @@ describe("Table", function () {
                     expect(cell.vAlign).to.equal("center");
                 });
 
-                it("if set overrides tableOptions", function () {
+                it("if set overrides tableOptions", () => {
                     const tableOptions = defaultOptions();
                     tableOptions.rowAligns = ["top", "bottom", "center"];
 
@@ -1708,8 +1708,8 @@ describe("Table", function () {
                 });
             });
 
-            describe("width", function () {
-                it("will match colWidth of x", function () {
+            describe("width", () => {
+                it("will match colWidth of x", () => {
                     const tableOptions = defaultOptions();
                     tableOptions.colWidths = [5, 10, 15];
 
@@ -1732,7 +1732,7 @@ describe("Table", function () {
                     expect(cell.width).to.equal(15);
                 });
 
-                it("will add colWidths if colSpan > 1", function () {
+                it("will add colWidths if colSpan > 1", () => {
                     const tableOptions = defaultOptions();
                     tableOptions.colWidths = [5, 10, 15];
 
@@ -1756,8 +1756,8 @@ describe("Table", function () {
                 });
             });
 
-            describe("height", function () {
-                it("will match rowHeight of x", function () {
+            describe("height", () => {
+                it("will match rowHeight of x", () => {
                     const tableOptions = defaultOptions();
                     tableOptions.rowHeights = [5, 10, 15];
 
@@ -1780,7 +1780,7 @@ describe("Table", function () {
                     expect(cell.height).to.equal(15);
                 });
 
-                it("will add rowHeights if rowSpan > 1", function () {
+                it("will add rowHeights if rowSpan > 1", () => {
                     const tableOptions = defaultOptions();
                     tableOptions.rowHeights = [5, 10, 15];
 
@@ -1804,15 +1804,15 @@ describe("Table", function () {
                 });
             });
 
-            describe("drawRight", function () {
+            describe("drawRight", () => {
                 let tableOptions;
 
-                beforeEach(function () {
+                beforeEach(() => {
                     tableOptions = defaultOptions();
                     tableOptions.colWidths = [20, 20, 20];
                 });
 
-                it("col 1 of 3, with default colspan", function () {
+                it("col 1 of 3, with default colspan", () => {
                     const cell = new Cell();
                     cell.x = 0;
                     cell.mergeTableOptions(tableOptions);
@@ -1820,7 +1820,7 @@ describe("Table", function () {
                     expect(cell.drawRight).to.equal(false);
                 });
 
-                it("col 2 of 3, with default colspan", function () {
+                it("col 2 of 3, with default colspan", () => {
                     const cell = new Cell();
                     cell.x = 1;
                     cell.mergeTableOptions(tableOptions);
@@ -1828,7 +1828,7 @@ describe("Table", function () {
                     expect(cell.drawRight).to.equal(false);
                 });
 
-                it("col 3 of 3, with default colspan", function () {
+                it("col 3 of 3, with default colspan", () => {
                     const cell = new Cell();
                     cell.x = 2;
                     cell.mergeTableOptions(tableOptions);
@@ -1836,7 +1836,7 @@ describe("Table", function () {
                     expect(cell.drawRight).to.equal(true);
                 });
 
-                it("col 3 of 4, with default colspan", function () {
+                it("col 3 of 4, with default colspan", () => {
                     const cell = new Cell();
                     cell.x = 2;
                     tableOptions.colWidths = [20, 20, 20, 20];
@@ -1845,7 +1845,7 @@ describe("Table", function () {
                     expect(cell.drawRight).to.equal(false);
                 });
 
-                it("col 2 of 3, with colspan of 2", function () {
+                it("col 2 of 3, with colspan of 2", () => {
                     const cell = new Cell({ colSpan: 2 });
                     cell.x = 1;
                     cell.mergeTableOptions(tableOptions);
@@ -1853,7 +1853,7 @@ describe("Table", function () {
                     expect(cell.drawRight).to.equal(true);
                 });
 
-                it("col 1 of 3, with colspan of 3", function () {
+                it("col 1 of 3, with colspan of 3", () => {
                     const cell = new Cell({ colSpan: 3 });
                     cell.x = 0;
                     cell.mergeTableOptions(tableOptions);
@@ -1861,7 +1861,7 @@ describe("Table", function () {
                     expect(cell.drawRight).to.equal(true);
                 });
 
-                it("col 1 of 3, with colspan of 2", function () {
+                it("col 1 of 3, with colspan of 2", () => {
                     const cell = new Cell({ colSpan: 2 });
                     cell.x = 0;
                     cell.mergeTableOptions(tableOptions);
@@ -1871,10 +1871,10 @@ describe("Table", function () {
             });
         });
 
-        describe("drawLine", function () {
+        describe("drawLine", () => {
             let cell;
 
-            beforeEach(function () {
+            beforeEach(() => {
                 cell = new Cell();
 
                 //manually init
@@ -1892,15 +1892,15 @@ describe("Table", function () {
                 cell.x = cell.y = 0;
             });
 
-            describe("top line", function () {
-                it("will draw the top left corner when x=0,y=0", function () {
+            describe("top line", () => {
+                it("will draw the top left corner when x=0,y=0", () => {
                     cell.x = cell.y = 0;
                     expect(cell.draw("top")).to.equal("┌───────");
                     cell.drawRight = true;
                     expect(cell.draw("top")).to.equal("┌───────┐");
                 });
 
-                it("will draw the top mid corner when x=1,y=0", function () {
+                it("will draw the top mid corner when x=1,y=0", () => {
                     cell.x = 1;
                     cell.y = 0;
                     expect(cell.draw("top")).to.equal("┬───────");
@@ -1908,7 +1908,7 @@ describe("Table", function () {
                     expect(cell.draw("top")).to.equal("┬───────┐");
                 });
 
-                it("will draw the left mid corner when x=0,y=1", function () {
+                it("will draw the left mid corner when x=0,y=1", () => {
                     cell.x = 0;
                     cell.y = 1;
                     expect(cell.draw("top")).to.equal("├───────");
@@ -1916,7 +1916,7 @@ describe("Table", function () {
                     expect(cell.draw("top")).to.equal("├───────┤");
                 });
 
-                it("will draw the mid mid corner when x=1,y=1", function () {
+                it("will draw the mid mid corner when x=1,y=1", () => {
                     cell.x = 1;
                     cell.y = 1;
                     expect(cell.draw("top")).to.equal("┼───────");
@@ -1930,8 +1930,8 @@ describe("Table", function () {
                 // });
             });
 
-            describe("bottom line", function () {
-                it("will draw the bottom left corner if x=0", function () {
+            describe("bottom line", () => {
+                it("will draw the bottom left corner if x=0", () => {
                     cell.x = 0;
                     cell.y = 1;
                     expect(cell.draw("bottom")).to.equal("└───────");
@@ -1939,7 +1939,7 @@ describe("Table", function () {
                     expect(cell.draw("bottom")).to.equal("└───────┘");
                 });
 
-                it("will draw the bottom left corner if x=1", function () {
+                it("will draw the bottom left corner if x=1", () => {
                     cell.x = 1;
                     cell.y = 1;
                     expect(cell.draw("bottom")).to.equal("┴───────");
@@ -1953,8 +1953,8 @@ describe("Table", function () {
                 // });
             });
 
-            describe("drawBottom", function () {
-                it("draws an empty line", function () {
+            describe("drawBottom", () => {
+                it("draws an empty line", () => {
                     expect(cell.drawEmpty()).to.equal("L       ");
                     expect(cell.drawEmpty(true)).to.equal("L       R");
                 });
@@ -1967,26 +1967,26 @@ describe("Table", function () {
                 // });
             });
 
-            describe("first line of text", function () {
-                beforeEach(function () {
+            describe("first line of text", () => {
+                beforeEach(() => {
                     cell.width = 9;
                 });
 
-                it("will draw left side if x=0", function () {
+                it("will draw left side if x=0", () => {
                     cell.x = 0;
                     expect(cell.draw(0)).to.equal("L  hello  ");
                     cell.drawRight = true;
                     expect(cell.draw(0)).to.equal("L  hello  R");
                 });
 
-                it("will draw mid side if x=1", function () {
+                it("will draw mid side if x=1", () => {
                     cell.x = 1;
                     expect(cell.draw(0)).to.equal("M  hello  ");
                     cell.drawRight = true;
                     expect(cell.draw(0)).to.equal("M  hello  R");
                 });
 
-                it("will align left", function () {
+                it("will align left", () => {
                     cell.x = 1;
                     cell.hAlign = "left";
                     expect(cell.draw(0)).to.equal("M hello   ");
@@ -1994,7 +1994,7 @@ describe("Table", function () {
                     expect(cell.draw(0)).to.equal("M hello   R");
                 });
 
-                it("will align right", function () {
+                it("will align right", () => {
                     cell.x = 1;
                     cell.hAlign = "right";
                     expect(cell.draw(0)).to.equal("M   hello ");
@@ -2018,7 +2018,7 @@ describe("Table", function () {
                 //     expect(cell.draw(0)).to.equal("L" + colors.red("  hello  ") + "R");
                 // });
 
-                it("text will NOT be drawn in color of head style if y == 1", function () {
+                it("text will NOT be drawn in color of head style if y == 1", () => {
                     cell.head = ["red"];
                     cell.x = cell.y = 1;
                     expect(cell.draw(0)).to.equal("M  hello  ");
@@ -2036,26 +2036,26 @@ describe("Table", function () {
                 // });
             });
 
-            describe("second line of text", function () {
-                beforeEach(function () {
+            describe("second line of text", () => {
+                beforeEach(() => {
                     cell.width = 9;
                 });
 
-                it("will draw left side if x=0", function () {
+                it("will draw left side if x=0", () => {
                     cell.x = 0;
                     expect(cell.draw(1)).to.equal("L  howdy  ");
                     cell.drawRight = true;
                     expect(cell.draw(1)).to.equal("L  howdy  R");
                 });
 
-                it("will draw mid side if x=1", function () {
+                it("will draw mid side if x=1", () => {
                     cell.x = 1;
                     expect(cell.draw(1)).to.equal("M  howdy  ");
                     cell.drawRight = true;
                     expect(cell.draw(1)).to.equal("M  howdy  R");
                 });
 
-                it("will align left", function () {
+                it("will align left", () => {
                     cell.x = 1;
                     cell.hAlign = "left";
                     expect(cell.draw(1)).to.equal("M howdy   ");
@@ -2063,7 +2063,7 @@ describe("Table", function () {
                     expect(cell.draw(1)).to.equal("M howdy   R");
                 });
 
-                it("will align right", function () {
+                it("will align right", () => {
                     cell.x = 1;
                     cell.hAlign = "right";
                     expect(cell.draw(1)).to.equal("M   howdy ");
@@ -2072,26 +2072,26 @@ describe("Table", function () {
                 });
             });
 
-            describe("truncated line of text", function () {
-                beforeEach(function () {
+            describe("truncated line of text", () => {
+                beforeEach(() => {
                     cell.width = 9;
                 });
 
-                it("will draw left side if x=0", function () {
+                it("will draw left side if x=0", () => {
                     cell.x = 0;
                     expect(cell.draw(2)).to.equal("L goodni… ");
                     cell.drawRight = true;
                     expect(cell.draw(2)).to.equal("L goodni… R");
                 });
 
-                it("will draw mid side if x=1", function () {
+                it("will draw mid side if x=1", () => {
                     cell.x = 1;
                     expect(cell.draw(2)).to.equal("M goodni… ");
                     cell.drawRight = true;
                     expect(cell.draw(2)).to.equal("M goodni… R");
                 });
 
-                it("will not change when aligned left", function () {
+                it("will not change when aligned left", () => {
                     cell.x = 1;
                     cell.hAlign = "left";
                     expect(cell.draw(2)).to.equal("M goodni… ");
@@ -2099,7 +2099,7 @@ describe("Table", function () {
                     expect(cell.draw(2)).to.equal("M goodni… R");
                 });
 
-                it("will not change when aligned right", function () {
+                it("will not change when aligned right", () => {
                     cell.x = 1;
                     cell.hAlign = "right";
                     expect(cell.draw(2)).to.equal("M goodni… ");
@@ -2108,12 +2108,12 @@ describe("Table", function () {
                 });
             });
 
-            describe("vAlign", function () {
-                beforeEach(function () {
+            describe("vAlign", () => {
+                beforeEach(() => {
                     cell.height = "5";
                 });
 
-                it("center", function () {
+                it("center", () => {
                     cell.vAlign = "center";
                     expect(cell.draw(0)).to.equal("L       ");
                     expect(cell.draw(1)).to.equal("L hello ");
@@ -2137,7 +2137,7 @@ describe("Table", function () {
                     expect(cell.draw(4)).to.equal("M       ");
                 });
 
-                it("top", function () {
+                it("top", () => {
                     cell.vAlign = "top";
                     expect(cell.draw(0)).to.equal("L hello ");
                     expect(cell.draw(1)).to.equal("L howdy ");
@@ -2162,7 +2162,7 @@ describe("Table", function () {
                     expect(cell.draw(4)).to.equal("M       ");
                 });
 
-                it("center", function () {
+                it("center", () => {
                     cell.vAlign = "bottom";
                     expect(cell.draw(0)).to.equal("L       ");
                     expect(cell.draw(1)).to.equal("L       ");
@@ -2187,13 +2187,13 @@ describe("Table", function () {
                 });
             });
 
-            it("vertically truncated will show truncation on last visible line", function () {
+            it("vertically truncated will show truncation on last visible line", () => {
                 cell.height = 2;
                 expect(cell.draw(0)).to.equal("L hello ");
                 expect(cell.draw(1)).to.equal("L howd… ");
             });
 
-            it("won't vertically truncate if the lines just fit", function () {
+            it("won't vertically truncate if the lines just fit", () => {
                 cell.height = 2;
                 cell.content = "hello\nhowdy";
                 cell.lines = cell.content.split("\n");
@@ -2201,7 +2201,7 @@ describe("Table", function () {
                 expect(cell.draw(1)).to.equal("L howdy ");
             });
 
-            it("will vertically truncate even if last line is short", function () {
+            it("will vertically truncate even if last line is short", () => {
                 cell.height = 2;
                 cell.content = "hello\nhi\nhowdy";
                 cell.lines = cell.content.split("\n");
@@ -2209,7 +2209,7 @@ describe("Table", function () {
                 expect(cell.draw(1)).to.equal("L  hi…  ");
             });
 
-            it("allows custom truncation", function () {
+            it("allows custom truncation", () => {
                 cell.height = 2;
                 cell.truncate = "...";
                 cell.content = "hello\nhi\nhowdy";
@@ -2224,24 +2224,24 @@ describe("Table", function () {
             });
         });
 
-        describe("ColSpanCell", function () {
-            it("has an init function", function () {
+        describe("ColSpanCell", () => {
+            it("has an init function", () => {
                 expect(new ColSpanCell()).to.respondTo("init");
                 new ColSpanCell().init(); // nothing happens.
             });
 
-            it("draw returns an empty string", function () {
+            it("draw returns an empty string", () => {
                 expect(new ColSpanCell().draw("top")).to.equal("");
                 expect(new ColSpanCell().draw("bottom")).to.equal("");
                 expect(new ColSpanCell().draw(1)).to.equal("");
             });
         });
 
-        describe("RowSpanCell", function () {
+        describe("RowSpanCell", () => {
             let original;
             let tableOptions;
 
-            beforeEach(function () {
+            beforeEach(() => {
                 original = {
                     rowSpan: 3,
                     y: 0,
@@ -2252,7 +2252,7 @@ describe("Table", function () {
                 };
             });
 
-            it("drawing top of the next row", function () {
+            it("drawing top of the next row", () => {
                 const spanner = new RowSpanCell(original);
                 spanner.x = 0;
                 spanner.y = 1;
@@ -2261,7 +2261,7 @@ describe("Table", function () {
                 expect(original.draw).to.have.been.calledOnce.and.calledWith(2);
             });
 
-            it("drawing line 0 of the next row", function () {
+            it("drawing line 0 of the next row", () => {
                 const spanner = new RowSpanCell(original);
                 spanner.x = 0;
                 spanner.y = 1;
@@ -2270,7 +2270,7 @@ describe("Table", function () {
                 expect(original.draw).to.have.been.calledOnce.and.calledWith(3);
             });
 
-            it("drawing line 1 of the next row", function () {
+            it("drawing line 1 of the next row", () => {
                 const spanner = new RowSpanCell(original);
                 spanner.x = 0;
                 spanner.y = 1;
@@ -2279,7 +2279,7 @@ describe("Table", function () {
                 expect(original.draw).to.have.been.calledOnce.and.calledWith(4);
             });
 
-            it("drawing top of two rows below", function () {
+            it("drawing top of two rows below", () => {
                 const spanner = new RowSpanCell(original);
                 spanner.x = 0;
                 spanner.y = 2;
@@ -2288,7 +2288,7 @@ describe("Table", function () {
                 expect(original.draw).to.have.been.calledOnce.and.calledWith(6);
             });
 
-            it("drawing line 0 of two rows below", function () {
+            it("drawing line 0 of two rows below", () => {
                 const spanner = new RowSpanCell(original);
                 spanner.x = 0;
                 spanner.y = 2;
@@ -2297,7 +2297,7 @@ describe("Table", function () {
                 expect(original.draw).to.have.been.calledOnce.and.calledWith(7);
             });
 
-            it("drawing line 1 of two rows below", function () {
+            it("drawing line 1 of two rows below", () => {
                 const spanner = new RowSpanCell(original);
                 spanner.x = 0;
                 spanner.y = 2;
@@ -2306,7 +2306,7 @@ describe("Table", function () {
                 expect(original.draw).to.have.been.calledOnce.and.calledWith(8);
             });
 
-            it("drawing bottom", function () {
+            it("drawing bottom", () => {
                 const spanner = new RowSpanCell(original);
                 spanner.x = 0;
                 spanner.y = 1;

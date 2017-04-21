@@ -1,7 +1,4 @@
-
-import EventEmitter from "./events";
-
-export default class Node extends EventEmitter {
+export default class Node extends adone.cui.EventEmitter {
     constructor(options = {}) {
         super();
         const Screen = adone.cui.Screen;

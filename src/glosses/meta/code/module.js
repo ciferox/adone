@@ -49,6 +49,7 @@ export default class XModule extends adone.meta.code.Base {
                             const { namespace, objectName } = adone.meta.parseName(fullName);
                             if (namespace === this.nsName) {
                                 if (prop.value.type === "StringLiteral") {
+                                    adone.log(namespace, objectName);
                                     lazies.push({ name: objectName, path: adone.std.path.join(basePath, prop.value.value) });
                                 }
                             }
@@ -131,10 +132,13 @@ export default class XModule extends adone.meta.code.Base {
             this._lazyModules = new Map();
             for (const { name, path } of lazies) {
                 const filePath = await fs.lookup(path);
+                // adone.log(filePath);
                 const lazyModule = new adone.meta.code.Module({ nsName: this.nsName, filePath });
                 await lazyModule.load();
                 this._lazyModules.set(name, lazyModule);
             }
+
+            // adone.log([...this._lazyModules.keys()]);
         }
         // adone.log(Object.keys(this.exports()));
     }
@@ -144,7 +148,7 @@ export default class XModule extends adone.meta.code.Base {
         Object.assign(result, this._exports);
         if (!is.null(this._lazyModules)) {
             for (const lazyModule of this._lazyModules.values()) {
-                Object.assign(result, XModule.lazyExports(lazyModule.exports()));
+                Object.assign(result, XModule.lazyExports(lazyModule));
             }
         }
         return result;
@@ -266,7 +270,8 @@ export default class XModule extends adone.meta.code.Base {
         }
     }
 
-    static lazyExports(rawExports) {
+    static lazyExports(xModule) {
+        const rawExports = xModule.exports();
         const result = {};
         if (adone.meta.code.is.object(rawExports.default)) {
             for (const [key, val] of rawExports.default.entries()) {
@@ -276,6 +281,8 @@ export default class XModule extends adone.meta.code.Base {
             result[rawExports.default.name] = rawExports.default;
         } else if (is.undefined(rawExports.default)) {
             return rawExports;
+        } else {
+            throw new adone.x.NotSupported(`Unsupported type '${rawExports.default.ast.type}' of exports: ${xModule.filePath}`);
         }
         return result;
     }

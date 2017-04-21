@@ -11,7 +11,7 @@ export default class XNamespace {
     }
 
     static async inspect(name, pathPrefix) {
-        const mapExportsToNamespace = (ns, nsModule) => Object.assign(ns.exports, adone.meta.code.Module.lazyExports(nsModule.exports()));
+        const mapExportsToNamespace = (ns, nsModule) => Object.assign(ns.exports, adone.meta.code.Module.lazyExports(nsModule));
 
         const info = adone.meta.getNamespaceInfo(name);
         const ns = new XNamespace(info);
@@ -20,7 +20,7 @@ export default class XNamespace {
         for (const filePath of sources) {
             const relIndexPath = adone.std.path.normalize("/adone/src/index.js");
             let sourceModule;
-            // adone.log(filePath);
+            adone.log(filePath);
             if (filePath.endsWith(relIndexPath)) {
                 sourceModule = new adone.meta.code.AdoneModule({ nsName: name, filePath });
             } else {
@@ -36,7 +36,7 @@ export default class XNamespace {
         if (ns.modules.length === 1) {
             const nsModule = ns.modules[0].module;
             const moduleExports = nsModule.exports();
-            if (nsModule.numberOfExports() === 1 && adone.meta.code.is.object(moduleExports.default)) { // #1
+            if (nsModule.numberOfExports() === 1) { // #1
                 mapExportsToNamespace(ns, nsModule);
                 return ns;
             } else if (nsModule.numberOfExports() >= 1 && !adone.meta.code.is.object(moduleExports.default)) { // #2

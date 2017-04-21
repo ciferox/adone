@@ -1,5 +1,3 @@
-
-
 export default class extends adone.Transform {
     _transform(x) {
         // В самом начале длина пакета без учёта этих 4-х байт.

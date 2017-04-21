@@ -1,5 +1,3 @@
-
-
 export function concat() {
     const buffers = [];
     const t = new adone.Transform({

@@ -1,7 +1,6 @@
-
 const { is, vendor: { lodash: _ }, terminal } = adone;
 
-export default class {
+export default class Prompt {
     constructor(prompts) {
         this.rl = terminal.readline;
         this.rl.resume();

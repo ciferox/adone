@@ -10,8 +10,8 @@ export class Inspector {
     async attachNamespace(nsName) {
         if (!this.namespaces.has(nsName)) {
             const ns = await adone.meta.code.Namespace.inspect(nsName, this.path);
-            adone.log(ns.name);
-            adone.log(adone.meta.inspect(Object.keys(ns.exports), { style: "color" }));
+            // adone.log(ns.name);
+            // adone.log(adone.meta.inspect(Object.keys(ns.exports), { style: "color" }));
             this.namespaces.set(nsName, ns/*await adone.meta.code.Namespace.inspect(nsName, this.path)*/);
         }
     }
