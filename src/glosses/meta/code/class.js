@@ -4,7 +4,7 @@ export default class XClass extends adone.meta.code.Base {
     constructor(options) {
         super(options);
         this.superClassName = null;
-        if (!is.null(this.ast)) {
+        if (!is.null(this.ast) && !is.null(this.ast.id)) {
             this.name = this.ast.id.name;
         } else {
             this.name = null;            

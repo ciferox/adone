@@ -1,5 +1,3 @@
-
-
 const empty = Symbol.for("linkedlist:empty");
 
 class Node {
@@ -17,7 +15,7 @@ export default class LinkedList {
             this.autoresize = true;
         }
 
-        this.head = new Node;
+        this.head = new Node();
 
         let cursor = this.head;
         for (let i = 0; i < size - 1; ++i) {

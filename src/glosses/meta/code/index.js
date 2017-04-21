@@ -9,7 +9,10 @@ export class Inspector {
 
     async attachNamespace(nsName) {
         if (!this.namespaces.has(nsName)) {
-            this.namespaces.set(nsName, await adone.meta.code.Namespace.inspect(nsName, this.path));
+            const ns = await adone.meta.code.Namespace.inspect(nsName, this.path);
+            adone.log(ns.name);
+            adone.log(adone.meta.inspect(Object.keys(ns.exports), { style: "color" }));
+            this.namespaces.set(nsName, ns/*await adone.meta.code.Namespace.inspect(nsName, this.path)*/);
         }
     }
 
@@ -58,6 +61,8 @@ adone.lazify({
     Function: "./function",
     ArrowFunction: "./arrow_function",
     Object: "./object",
+    ObjectProperty: "./object_property",
+    ObjectMethod: "./object_method",
     Variable: "./variable",
     Expression: "./expression",
     Constant: "./constant",

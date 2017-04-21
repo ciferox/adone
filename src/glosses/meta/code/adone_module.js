@@ -102,6 +102,19 @@ export default class XAdoneModule extends adone.meta.code.Module {
                             if (namespace === "adone") {
                                 if (node.value.type === "StringLiteral") {
                                     lazies.push({ name: objectName, path: adone.std.path.join(basePath, node.value.value) });
+                                } else if (node.value.type === "ArrowFunctionExpression") {
+                                    let arrowFuncPath;
+                                    path.traverse({
+                                        enter: (subPath) => {
+                                            if (subPath.node.type !== "ArrowFunctionExpression") {
+                                                subPath.skip();
+                                                return;
+                                            }
+                                            arrowFuncPath = subPath;
+                                            subPath.stop();
+                                        }
+                                    });
+                                    this._exports[name] = this.createXObject({ path: arrowFuncPath, ast: arrowFuncPath.node, kind: "const", xModule: this.xModule });
                                 }
                             }
                             path.skip();

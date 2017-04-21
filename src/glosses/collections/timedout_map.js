@@ -1,4 +1,3 @@
-
 const { is } = adone;
 
 export default class TimedoutMap extends Map {

@@ -84,9 +84,13 @@ export default class XBase {
                     const parts = name.split(".");
                     const globalObject = this.xModule.getGlobal(parts[0]);
                     if (!is.undefined(globalObject)) {
-                        const fullName = `${globalObject.full}.${parts.slice(1).join(".")}`;
-                        const { namespace, objectName } = adone.meta.parseName(fullName);
-                        this._addReference(`${namespace}.${objectName.split(".")[0]}`);
+                        if (parts.length > 1) {
+                            const fullName = `${globalObject.full}.${parts.slice(1).join(".")}`;
+                            const { namespace, objectName } = adone.meta.parseName(fullName);
+                            this._addReference(`${namespace}.${objectName.split(".")[0]}`);
+                        } else {
+                            this._addReference(name);
+                        }
                     }
                     path.skip();
                 }
@@ -128,15 +132,13 @@ export default class XBase {
             case "ConditionalExpression":
             case "CallExpression":
             case "LogicalExpression":
-            case "UpdateExpression":
-                xObj = new adone.meta.code.Expression({ parent, ast, path, xModule });
-                break;
+            case "UpdateExpression": xObj = new adone.meta.code.Expression({ parent, ast, path, xModule }); break;
             case "StringLiteral":
             case "NumericLiteral":
             case "RegExpLiteral":
             case "TemplateLiteral":
-                xObj = new adone.meta.code.Constant({ parent, ast, path, xModule });
-                break;
+            case "NullLiteral":
+            case "BooleanLiteral": xObj = new adone.meta.code.Constant({ parent, ast, path, xModule }); break;
             case "ExpressionStatement":
             case "BlockStatement":
             case "EmptyStatement":
@@ -157,17 +159,14 @@ export default class XBase {
             case "ForStatement":
             case "ForInStatement":
             case "ForOfStatement":
-            case "ForAwaitStatement":
-                xObj = new adone.meta.code.Statement({ parent, ast, path, xModule });
-                break;
+            case "ForAwaitStatement": xObj = new adone.meta.code.Statement({ parent, ast, path, xModule }); break;
             case "ClassDeclaration": xObj = new adone.meta.code.Class({ parent, ast, path, xModule }); break;
-            case "FunctionDeclaration": {
-                xObj = new adone.meta.code.Function({ parent, ast, path, xModule }); break;
-                break;
-            }
+            case "FunctionDeclaration": xObj = new adone.meta.code.Function({ parent, ast, path, xModule }); break;
             case "FunctionExpression": xObj = new adone.meta.code.Function({ parent, ast, path, xModule }); break;
             case "ArrowFunctionExpression": xObj = new adone.meta.code.ArrowFunction({ parent, ast, path, xModule }); break;
             case "ObjectExpression": xObj = new adone.meta.code.Object({ parent, ast, path, xModule }); break;
+            case "ObjectProperty": xObj = new adone.meta.code.ObjectProperty({ parent, ast, path, xModule }); break;
+            case "ObjectMethod": xObj = new adone.meta.code.ObjectMethod({ parent, ast, path, xModule }); break;
             case "Identifier": {
                 if (ast.name === "adone") {
                     xObj = new adone.meta.code.Adone({ ast, path, xModule });

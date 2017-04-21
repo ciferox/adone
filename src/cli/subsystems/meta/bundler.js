@@ -44,7 +44,7 @@ export default class Bundler {
         // adone.log(adone.meta.inspect(x.references(), { style: "color" }));
 
         // adone.log(x.name, x.ast.type, adone.meta.inspect(x.xModule.globals, { style: "color" }));
-    
+
         // adone.log(this._refExprs);
     }
 
@@ -69,7 +69,10 @@ export default class Bundler {
         adone.log(adone.text.pretty.json(refs));
 
         for (const ref of refs) {
-            await this._lookupRefs(ref);
+            // Ignore in-module refs
+            if (ref.indexOf(".") >= 0) {
+                await this._lookupRefs(ref);
+            }
         }
     }
 

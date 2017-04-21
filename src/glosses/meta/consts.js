@@ -22,14 +22,14 @@ export const namespaces = [
         name: "adone.application",
         description: "Complete application framework",
         paths: [
-            "glosses/application"
+            "glosses/application/index"
         ]
     },
     {
         name: "adone.collection",
         description: "Implementations of common collections",
         paths: [
-            "glosses/collections"
+            "glosses/collections/index"
         ]
     },
     {
@@ -336,15 +336,14 @@ export const namespaces = [
         name: "adone.terminal",
         description: "Terminal implementation and common cli utilites",
         paths: [
-            "glosses/terminal"
+            "glosses/terminal/index"
         ]
     },
     {
         name: "adone.text",
         description: "Text utilites",
         paths: [
-            "glosses/text/index",
-            "glosses/text/fuzzy"
+            "glosses/text/index"
         ]
     },
     {

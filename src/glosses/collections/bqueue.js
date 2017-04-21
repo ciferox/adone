@@ -4,7 +4,7 @@
  * Тот же список, но shift возвращает промис, если элементов в списке нет
  * и разрешает их при push'е элементов
  */
-export default class extends adone.collection.LinkedList {
+export default class BQueue extends adone.collection.LinkedList {
     constructor() {
         super();
         this.awaiters = new adone.collection.LinkedList();

@@ -1,6 +1,4 @@
-
-
-export default class {
+export default class Stack {
     constructor(iterable) {
         this.head = null;
         this.length = 0;
