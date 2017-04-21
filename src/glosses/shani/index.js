@@ -758,7 +758,8 @@ export class Engine {
                     mock: () => util.mock.mock,
                     match: () => util.mock.match,
                     request: () => util.request,
-                    FS: () => util.FS
+                    FS: () => util.FS,
+                    include: () => (p) => m.require(p)
                 }, global.$, m.require.bind(m), { configurable: true });
 
                 adone.lazify({
@@ -769,6 +770,7 @@ export class Engine {
                     mock: () => global.$.mock,
                     match: () => global.$.match,
                     request: () => global.$.request,
+                    include: () => global.$.include,
                     FS: () => global.$.FS
                 }, global, null, { configurable: true });
 
