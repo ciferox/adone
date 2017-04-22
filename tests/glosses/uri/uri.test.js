@@ -1,11 +1,5 @@
-/* global describe it */
-
-
-
-
-describe("URI", function()  {
-
-    describe("Components", function()  {
+describe("URI", () => {
+    describe("Components", () => {
         it("default protocol", () => {
             let u = new adone.URI("http://example.org/foo.html");
             assert.equal(u.protocol(), "http");
@@ -21,8 +15,8 @@ describe("URI", function()  {
             assert.equal(u.toString(), "file:///path/to/a/file");
         });
 
-        it("protocol", function() {
-            let u = new adone.URI("http://example.org/foo.html", { defaultProtocol: "file" });
+        it("protocol", () => {
+            const u = new adone.URI("http://example.org/foo.html", { defaultProtocol: "file" });
             assert.equal(u.protocol(), "http", "protocol parsing");
 
             u.protocol("ftp");
@@ -39,7 +33,7 @@ describe("URI", function()  {
             try {
                 u.protocol("f:t");
                 assert.ok(false, "do not accept invalid protocol");
-            } catch(e) {
+            } catch (e) {
                 // 
             }
 
@@ -48,8 +42,8 @@ describe("URI", function()  {
             assert.equal(u.toString(), "file://example.org/foo.html", "missing-scheme url");
         });
 
-        it("port", function() {
-            let u = new adone.URI("http://example.com:8104/file.txt");
+        it("port", () => {
+            const u = new adone.URI("http://example.com:8104/file.txt");
             assert.equal(u.port(), "8104", "port parsing");
             u.port(8080);
             assert.equal(u.port(), "8080", "simple port change");
@@ -61,8 +55,8 @@ describe("URI", function()  {
             assert.equal(u.port(), "", "port wiping with zero");
         });
 
-        it("hostname", function() {
-            let u = new adone.URI("http://example.com/file.txt");
+        it("hostname", () => {
+            const u = new adone.URI("http://example.com/file.txt");
             assert.equal(u.hostname(), "example.com", "hostname parsing");
             u.hostname("example2.net");
             assert.equal(u.hostname(), "example2.net", "simple hostname change");
@@ -72,7 +66,7 @@ describe("URI", function()  {
             assert.equal(u.hostname(), "", "hostname wiping");
         });
 
-        it("username and passwords", function() {
+        it("username and passwords", () => {
             let u = new adone.URI("http://user:pass@example.com/");
             assert.equal(u.username(), "user", "username parsing");
             assert.equal(u.password(), "pass", "password parsing");
@@ -98,8 +92,8 @@ describe("URI", function()  {
             assert.equal(u.password(), "password", "empty username parsing");
         });
 
-        it("origin", function() {
-            let u = new adone.URI("http://user:pass@example.com/dir/file.txt");
+        it("origin", () => {
+            const u = new adone.URI("http://user:pass@example.com/dir/file.txt");
             assert.equal(u.origin(), "http://user:pass@example.com", "parsing");
 
             u.origin("https://hello:world@www.example.com:8080");
@@ -109,16 +103,16 @@ describe("URI", function()  {
             assert.equal(u.toString(), "ssh://www.example.net/dir/file.txt", "chained change");
         });
 
-        it("host", function() {
-            let u = new adone.URI("http://example.com:8080/dir/file.txt");
+        it("host", () => {
+            const u = new adone.URI("http://example.com:8080/dir/file.txt");
             assert.equal(u.host(), "example.com:8080");
 
             u.host("www.example.net:1055");
             assert.equal(u.toString(), "http://www.example.net:1055/dir/file.txt");
         });
 
-        it("authority", function() {
-            let u = new adone.URI("http://admin:sobaka@example.com:8080/file.txt#here");
+        it("authority", () => {
+            const u = new adone.URI("http://admin:sobaka@example.com:8080/file.txt#here");
             assert.equal(u.authority(), "admin:sobaka@example.com:8080", "authority parsing");
 
             u.authority("user:pass@example.org:80");
@@ -131,8 +125,8 @@ describe("URI", function()  {
             assert.equal(u.authority(), "hello.com", "chained change");
         });
 
-        it("userinfo", function() {
-            let u = new adone.URI("http://user:pass@example.com");
+        it("userinfo", () => {
+            const u = new adone.URI("http://user:pass@example.com");
             assert.equal(u.userinfo(), "user:pass", "parsing");
 
             u.userinfo("user");
@@ -148,8 +142,8 @@ describe("URI", function()  {
             assert.equal(u.userinfo(), "", "chained + wiping");
         });
 
-        it("resource", function() {
-            let u = new adone.URI("http://example.com/foo.html?hello#world");
+        it("resource", () => {
+            const u = new adone.URI("http://example.com/foo.html?hello#world");
 
             assert.equal(u.resource(), "/foo.html?hello#world", "get resource");
 
@@ -180,8 +174,8 @@ describe("URI", function()  {
             assert.equal(u.href(), "http://example.com/neptune.txt#foo", "set resource path+fragment");
         });
 
-        it("subdomain", function() {
-            let u = new adone.URI("http://www.example.org/foo.html");
+        it("subdomain", () => {
+            const u = new adone.URI("http://www.example.org/foo.html");
             u.subdomain("foo.bar");
             assert.equal(u.hostname(), "foo.bar.example.org", "changed subdomain foo.bar");
             assert.equal(u.toString(), "http://foo.bar.example.org/foo.html", "changed url foo.bar");
@@ -195,8 +189,8 @@ describe("URI", function()  {
             assert.equal(u.toString(), "http://foo.example.org/foo.html", "changed url foo.");
         });
 
-        it("domain", function() {
-            let u = new adone.URI("http://www.example.org/foo.html");
+        it("domain", () => {
+            const u = new adone.URI("http://www.example.org/foo.html");
             u.domain("foo.bar");
             assert.equal(u.hostname(), "www.foo.bar", "changed hostname foo.bar");
             assert.equal(u.toString(), "http://www.foo.bar/foo.html", "changed url foo.bar");
@@ -222,18 +216,18 @@ describe("URI", function()  {
             assert.equal(u.href(), "http://foo.test/", "subdomain set on (dot-less)");
         });
 
-        it("tld", function() {
-            let u = new adone.URI("http://www.example.org/foo.html");
+        it("tld", () => {
+            const u = new adone.URI("http://www.example.org/foo.html");
             assert.equal(u.tld(), "org", "tld changed");
             u.tld("mine");
             assert.equal(u.tld(), "mine", "tld changed");
             assert.equal(u.toString(), "http://www.example.mine/foo.html", "changed url mine");
 
-            assert.throws(function() {
+            assert.throws(() => {
                 u.tld("");
             });
 
-            assert.throws(function() {
+            assert.throws(() => {
                 u.tld("foo.bar");
             });
 
@@ -250,13 +244,13 @@ describe("URI", function()  {
             assert.equal(u.tld(), "se", "se tld");
         });
 
-        it("directory", function() {
+        it("directory", () => {
             let u = new adone.URI("http://www.example.org/some/directory/foo.html");
             assert.equal(u.directory(), "/some/directory", "directory parsing");
 
             u.directory("/");
-            assert.equal(u.path(), "/foo.html", "changed path "/"");
-            assert.equal(u.toString(), "http://www.example.org/foo.html", "changed url "/"");
+            assert.equal(u.path(), "/foo.html", "changed path " / "");
+            assert.equal(u.toString(), "http://www.example.org/foo.html", "changed url " / "");
 
             u.directory("");
             assert.equal(u.path(), "/foo.html", "changed path \"\"");
@@ -304,8 +298,8 @@ describe("URI", function()  {
             assert.equal(u.path(), "/foo/bar/foo.html", "adone.URI as argument");
         });
 
-        it("filename", function() {
-            let u = new adone.URI("http://www.example.org/some/directory/foo.html");
+        it("filename", () => {
+            const u = new adone.URI("http://www.example.org/some/directory/foo.html");
             assert.equal(u.filename(), "foo.html", "filename parsing");
 
             u.filename("hello.world");
@@ -332,8 +326,8 @@ describe("URI", function()  {
             assert.equal(u.filename(true), "hällo wörld.html", "filename decoded");
         });
 
-        it("suffix", function() {
-            let u = new adone.URI("http://www.example.org/some/directory/foo.html");
+        it("suffix", () => {
+            const u = new adone.URI("http://www.example.org/some/directory/foo.html");
             u.suffix("xml");
             assert.equal(u.path(), "/some/directory/foo.xml", "changed path \"xml\"");
             assert.equal(u.toString(), "http://www.example.org/some/directory/foo.xml", "changed url \"xml\"");
@@ -353,9 +347,9 @@ describe("URI", function()  {
             assert.equal(u.suffix(true), "cört", "suffix decoded"); // suffix is expected to be alnum!
         });
 
-        it("segment", function() {
+        it("segment", () => {
             let u = new adone.URI("http://www.example.org/some/directory/foo.html");
-            let s = u.segment();
+            const s = u.segment();
             assert.equal(s.join("||"), "some||directory||foo.html", "segment get array");
 
             u.segment(["hello", "world", "foo.html"]);
@@ -415,9 +409,9 @@ describe("URI", function()  {
             assert.equal(u.path(), "/hello/mars/foo.html", "segment set index trimming slashes");
         });
 
-        it("segmentCoded", function() {
-            let u = new adone.URI("http://www.example.org/some%20thing/directory/foo.html");
-            let s = u.segmentCoded();
+        it("segmentCoded", () => {
+            const u = new adone.URI("http://www.example.org/some%20thing/directory/foo.html");
+            const s = u.segmentCoded();
             assert.equal(s.join("||"), "some thing||directory||foo.html", "segmentCoded get array");
 
             u.segmentCoded(["hello/world"]);
@@ -447,8 +441,8 @@ describe("URI", function()  {
             assert.equal(u.path(), "/hello%20world/mars/", "segmentCoded append empty trailing unchanged");
         });
 
-        it("fragment", function() {
-            let u = new adone.URI("http://example.com/file.txt#here");
+        it("fragment", () => {
+            const u = new adone.URI("http://example.com/file.txt#here");
             assert.equal(u.fragment(), "here", "fragment parsing");
 
             u.fragment("a");
@@ -461,8 +455,8 @@ describe("URI", function()  {
             assert.equal(u.fragment(), "", "fragment wiping");
         });
 
-        it("query", function() {
-            let u = new adone.URI("http://example.com/file.txt?hello=world");
+        it("query", () => {
+            const u = new adone.URI("http://example.com/file.txt?hello=world");
             assert.equal(u.query(), "hello=world", "query parsing");
 
             u.query("a=b");
@@ -481,8 +475,8 @@ describe("URI", function()  {
             assert.equal(u.query(), "", "query wiping");
         });
 
-        it("setQuery", function() {
-            let u = new adone.URI("?foo=bar");
+        it("setQuery", () => {
+            const u = new adone.URI("?foo=bar");
             u.setQuery("foo", "bam");
             assert.equal(u.query(), "foo=bam", "set name, value");
 
@@ -490,14 +484,14 @@ describe("URI", function()  {
             assert.equal(u.query(), "foo=bam&array=one&array=two", "set name, array");
 
             u.query("?foo=bar");
-            u.setQuery({"obj": "bam", foo: "baz"});
+            u.setQuery({ obj: "bam", foo: "baz" });
             assert.equal(u.query(), "foo=baz&obj=bam", "set {name: value}");
 
-            u.setQuery({"foo": "foo", bar: ["1", "2"]});
+            u.setQuery({ foo: "foo", bar: ["1", "2"] });
             assert.equal(u.query(), "foo=foo&obj=bam&bar=1&bar=2", "set {name: array}");
 
             u.query("?foo=bar");
-            u.setQuery({"bam": null, "baz": ""});
+            u.setQuery({ bam: null, baz: "" });
             assert.equal(u.query(), "foo=bar&bam&baz=", "set {name: null}");
 
             u.query("?foo=bar");
@@ -514,8 +508,8 @@ describe("URI", function()  {
             assert.equal(u.query(true)["some value"], "must be encoded because of = and ? and #", "decoding");
         });
 
-        it("addQuery", function() {
-            let u = new adone.URI("?foo=bar");
+        it("addQuery", () => {
+            const u = new adone.URI("?foo=bar");
             u.addQuery("baz", "bam");
             assert.equal(u.query(), "foo=bar&baz=bam", "add name, value");
 
@@ -523,14 +517,14 @@ describe("URI", function()  {
             assert.equal(u.query(), "foo=bar&baz=bam&array=one&array=two", "add name, array");
 
             u.query("?foo=bar");
-            u.addQuery({"obj": "bam", foo: "baz"});
+            u.addQuery({ obj: "bam", foo: "baz" });
             assert.equal(u.query(), "foo=bar&foo=baz&obj=bam", "add {name: value}");
 
-            u.addQuery({"foo": "bam", bar: ["1", "2"]});
+            u.addQuery({ foo: "bam", bar: ["1", "2"] });
             assert.equal(u.query(), "foo=bar&foo=baz&foo=bam&obj=bam&bar=1&bar=2", "add {name: array}");
 
             u.query("?foo=bar");
-            u.addQuery({"bam": null, "baz": ""});
+            u.addQuery({ bam: null, baz: "" });
             assert.equal(u.query(), "foo=bar&bam&baz=", "add {name: null}");
 
             u.query("?foo=bar");
@@ -551,8 +545,8 @@ describe("URI", function()  {
             assert.equal(u.query(true)["some value"], "must be encoded because of = and ? and #", "decoding");
         });
 
-        it("removeQuery", function() {
-            let u = new adone.URI("?foo=bar&foo=baz&foo=bam&obj=bam&bar=1&bar=2&bar=3");
+        it("removeQuery", () => {
+            const u = new adone.URI("?foo=bar&foo=baz&foo=bam&obj=bam&bar=1&bar=2&bar=3");
 
             u.removeQuery("foo", "bar");
             assert.equal(u.query(), "foo=baz&foo=bam&obj=bam&bar=1&bar=2&bar=3", "removing name, value");
@@ -591,7 +585,7 @@ describe("URI", function()  {
             assert.equal(u.query(), "", "removing a non-string value");
 
             u.query("?foo=bar&foo=baz&foo=bam&obj=bam&bar=1&bar=2&bar=3");
-            u.removeQuery({foo: "bar", obj: undefined, bar: ["1", "2"]});
+            u.removeQuery({ foo: "bar", obj: undefined, bar: ["1", "2"] });
             assert.equal(u.query(), "foo=baz&foo=bam&bar=3", "removing object");
 
             u.query("?foo=bar&foo=baz&foo=bam&obj=bam&bar=1&bar=2&bar=3");
@@ -603,7 +597,7 @@ describe("URI", function()  {
             assert.equal(u.query(), "foo=bam&obj=bam&bar=bar&bar=baz&bar=bam", "removing by value RegExp");
         });
 
-        it("duplicateQueryParameters", function() {
+        it("duplicateQueryParameters", () => {
             let u = new adone.URI("?bar=1&bar=1&bar=1");
 
             u.normalizeQuery();
@@ -635,7 +629,7 @@ describe("URI", function()  {
             assert.equal(u.toString(), "?bar=1&bar=1&bar=1&bar=1", "parameters NOT de-duplicated after addQuery()");
         });
 
-        it("escapeQuerySpace", function() {
+        it("escapeQuerySpace", () => {
             let u = new adone.URI("?bar=foo+bar&bam+baz=foo");
             let data = u.query(true);
 
@@ -668,8 +662,8 @@ describe("URI", function()  {
             adone.URI.escapeQuerySpace = true;
         });
 
-        it("hasQuery", function() {
-            let u = new adone.URI("?string=bar&list=one&list=two&number=123&null&empty=&nested[one]=1&nested[two]=2");
+        it("hasQuery", () => {
+            const u = new adone.URI("?string=bar&list=one&list=two&number=123&null&empty=&nested[one]=1&nested[two]=2");
 
             // exists
             assert.equal(u.hasQuery("string"), true, "simple exists check - passing");
@@ -727,18 +721,18 @@ describe("URI", function()  {
             assert.equal(u.hasQuery("list", [/ne$/], true), true, "in array check - passing RegExp list");
 
             // comparison function
-            assert.equal(u.hasQuery("string", function(value, name, data) {
+            assert.equal(u.hasQuery("string", (value, name, data) => {
                 assert.equal(value, "bar", "Function check - param value");
                 assert.equal(name, "string", "Function check - param name");
                 assert.equal(typeof data, "object", "Function check - param data");
                 return true;
             }), true, "Function check - passing true");
-            assert.equal(u.hasQuery("string", function() {
+            assert.equal(u.hasQuery("string", () => {
                 return false;
             }), false, "Function check - passing false");
         });
 
-        it("path", function() {
+        it("path", () => {
             let u = new adone.URI("http://example.org/foobar.html?query=string");
             u.path("/some/path/file.suffix");
             assert.equal(u.path(), "/some/path/file.suffix", "changing path \"/some/path/file.suffix\"");
@@ -765,8 +759,8 @@ describe("URI", function()  {
             assert.equal(u.toString(), "/foo/bar.html", "adone.URI as argument");
         });
 
-        it("URN paths", function() {
-            let u = new adone.URI("urn:uuid:6e8bc430-9c3a-11d9-9669-0800200c9a66?foo=bar");
+        it("URN paths", () => {
+            const u = new adone.URI("urn:uuid:6e8bc430-9c3a-11d9-9669-0800200c9a66?foo=bar");
             u.path("uuid:de305d54-75b4-431b-adb2-eb6b9e546013");
             assert.equal(u.path(), "uuid:de305d54-75b4-431b-adb2-eb6b9e546013");
             assert.equal(u.toString(), "urn:uuid:de305d54-75b4-431b-adb2-eb6b9e546013?foo=bar");
@@ -780,8 +774,8 @@ describe("URI", function()  {
             assert.equal(u.path(true), "music:classical:Béla Bártok%3A Concerto for Orchestra", "path decoded");
         });
 
-        it("href", function() {
-            let u = new adone.URI("http://foo.bar/foo.html", { defaultProtocol: "file" });
+        it("href", () => {
+            const u = new adone.URI("http://foo.bar/foo.html", { defaultProtocol: "file" });
 
             u.href("ftp://u:p@example.org:123/directory/file.suffix?query=string#fragment");
             assert.equal(u.protocol(), "ftp", "href changed protocol");
@@ -807,20 +801,20 @@ describe("URI", function()  {
         });
     });
 
-    describe("Normalizing", function()  {
-        it("normalize", function() {
-            let u = new adone.URI("http://www.exämple.org:80/food/woo/.././../baz.html?&foo=bar&&baz=bam&&baz=bau&#");
+    describe("Normalizing", () => {
+        it("normalize", () => {
+            const u = new adone.URI("http://www.exämple.org:80/food/woo/.././../baz.html?&foo=bar&&baz=bam&&baz=bau&#");
             u.normalize();
             assert.equal(u.toString(), "http://www.xn--exmple-cua.org/baz.html?foo=bar&baz=bam&baz=bau", "fully normalized URL");
         });
 
-        it("normalizeProtocol", function() {
-            let u = new adone.URI("hTTp://example.org/foobar.html");
+        it("normalizeProtocol", () => {
+            const u = new adone.URI("hTTp://example.org/foobar.html");
             u.normalizeProtocol();
             assert.equal(u.toString(), "http://example.org/foobar.html", "lowercase http");
         });
 
-        it("normalizeHost", function() {
+        it("normalizeHost", () => {
             let u;
 
             u = new adone.URI("http://exämple.org/foobar.html");
@@ -840,7 +834,7 @@ describe("URI", function()  {
             assert.equal(u.toString(), "http://www.example.org/foobar.html", "lower case hostname");
         });
 
-        it("normalizePort", function() {
+        it("normalizePort", () => {
             let u = new adone.URI("http://example.org:80/foobar.html");
             u.normalizePort();
             assert.equal(u.toString(), "http://example.org/foobar.html", "dropping port 80 for http");
@@ -851,7 +845,7 @@ describe("URI", function()  {
 
         });
 
-        it("normalizePath", function() {
+        it("normalizePath", () => {
             // relative URL
             let u = new adone.URI("/food/bar/baz.html");
 
@@ -965,8 +959,8 @@ describe("URI", function()  {
             assert.equal(u.path(), "games:cards:Magic%3A%20the%20Gathering");
         });
 
-        it("normalizeQuery", function() {
-            let u = new adone.URI("http://example.org/foobar.html?");
+        it("normalizeQuery", () => {
+            const u = new adone.URI("http://example.org/foobar.html?");
             u.normalizeQuery();
             assert.equal(u.toString(), "http://example.org/foobar.html", "dropping empty query sign");
 
@@ -980,24 +974,24 @@ describe("URI", function()  {
             assert.equal(u.query(), "foo=bar", "duplicate key=value resolution");
         });
 
-        it("normalizeFragment", function() {
-            let u = new adone.URI("http://example.org/foobar.html#");
+        it("normalizeFragment", () => {
+            const u = new adone.URI("http://example.org/foobar.html#");
             u.normalizeFragment();
             assert.equal(u.toString(), "http://example.org/foobar.html", "dropping empty fragment sign");
         });
 
-        it("readable", function() {
-            let u = new adone.URI("http://foo:bar@www.xn--exmple-cua.org/hello%20world/ä.html?foo%5B%5D=b+är#fragment");
+        it("readable", () => {
+            const u = new adone.URI("http://foo:bar@www.xn--exmple-cua.org/hello%20world/ä.html?foo%5B%5D=b+är#fragment");
             assert.equal(u.readable(), "http://www.exämple.org/hello world/ä.html?foo[]=b är#fragment", "readable URL");
         });
     });
 
-    describe("Resolving URLs", function()  {
-        it("absoluteTo", function() {
+    describe("Resolving URLs", () => {
+        it("absoluteTo", () => {
             // this being '../bar/baz.html?foo=bar'
             // base being 'http://example.org/foo/other/file.html'
             // return being http://example.org/foo/bar/baz.html?foo=bar'
-            let its = [{
+            const its = [{
                 name: "relative resolve",
                 url: "relative/path?blubber=1#hash1",
                 base: "http://www.example.org/path/to/file?some=query#hash",
@@ -1095,19 +1089,19 @@ describe("URI", function()  {
             }];
 
             for (let i = 0, t; (t = its[i]); i++) {
-                let u = new adone.URI(t.url);
-                let r = u.absoluteTo(t.base);
+                const u = new adone.URI(t.url);
+                const r = u.absoluteTo(t.base);
 
                 assert.equal(r.toString(), t.result, t.name);
             }
         });
-        it("absoluteTo - RFC3986 reference resolution", function() {
+        it("absoluteTo - RFC3986 reference resolution", () => {
             // http://tools.ietf.org/html/rfc3986#section-5.4
-            let base = "http://a/b/c/d;p?q";
-            let map = {
+            const base = "http://a/b/c/d;p?q";
+            const map = {
                 // normal
                 // 'g:h'             :    'g:h', // identified as URN
-                "g": "http://a/b/c/g",
+                g: "http://a/b/c/g",
                 "./g": "http://a/b/c/g",
                 "g/": "http://a/b/c/g/",
                 "/g": "http://a/g",
@@ -1134,15 +1128,15 @@ describe("URI", function()  {
                 "../../../../g": "http://a/g"
             };
 
-            for (let key in map) {
-                let u = new adone.URI(key);
-                let r = u.absoluteTo(base);
+            for (const key in map) {
+                const u = new adone.URI(key);
+                const r = u.absoluteTo(base);
 
-                assert.equal(r.toString(), map[key], "resolution \"" + key + "\"");
+                assert.equal(r.toString(), map[key], `resolution "${key}"`);
             }
         });
-        it("relativeTo", function() {
-            let its = [{
+        it("relativeTo", () => {
+            const its = [{
                 name: "same parent",
                 url: "/relative/path?blubber=1#hash1",
                 base: "/relative/file?some=query#hash",
@@ -1271,17 +1265,17 @@ describe("URI", function()  {
                 name: "already relative",
                 url: "foo/bar",
                 base: "/foo/",
-                "throws": true
+                throws: true
             }, {
                 name: "relative base",
                 url: "/foo/bar",
                 base: "foo/",
-                "throws": true
+                throws: true
             }];
 
             for (let i = 0, t; (t = its[i]); i++) {
-                let u = new adone.URI(t.url);
-                let b = new adone.URI(t.base);
+                const u = new adone.URI(t.url);
+                const b = new adone.URI(t.base);
                 let caught = false;
                 let r;
 
@@ -1291,16 +1285,16 @@ describe("URI", function()  {
                     caught = true;
                 }
                 /*jshint sub:true */
-                if (t["throws"]) {
-                /*jshint sub:false */
-                    assert.ok(caught, t.name + " should throw exception");
+                if (t.throws) {
+                    /*jshint sub:false */
+                    assert.ok(caught, `${t.name} should throw exception`);
                 } else {
-                    assert.ok(!caught, t.name + " should not throw exception");
+                    assert.ok(!caught, `${t.name} should not throw exception`);
                     assert.equal(r.toString(), t.result, t.name);
 
-                    let a = r.absoluteTo(t.base);
-                    let n = u.clone().normalize();
-                    assert.equal(a.toString(), n.toString(), t.name + " reversed");
+                    const a = r.absoluteTo(t.base);
+                    const n = u.clone().normalize();
+                    assert.equal(a.toString(), n.toString(), `${t.name} reversed`);
                 }
             }
 
@@ -1321,8 +1315,8 @@ describe("URI", function()  {
         });
     });
 
-    describe("Path functional", function()  {
-        it("join", function() {
+    describe("Path functional", () => {
+        it("join", () => {
             let result;
 
             result = adone.URI.join("/a/b", "/c", "d", "/e").toString();
@@ -1359,8 +1353,8 @@ describe("URI", function()  {
             assert.equal(result, "a/b/", "trailing empty adone.URI segment");
         });
 
-        it("delimiter and sep", function() {
-            if (process.platform == "win32"){
+        it("delimiter and sep", () => {
+            if (process.platform == "win32") {
                 assert.equal(adone.URI.delimiter, ";");
                 assert.equal(adone.URI.sep, "\\");
             } else {
@@ -1369,18 +1363,18 @@ describe("URI", function()  {
             }
         });
 
-        it("relative", function(){
-            let result = adone.URI.relative("/data/orandea/test/aaa/", "/data/orandea/impl/bbb/").toString();
+        it("relative", () => {
+            const result = adone.URI.relative("/data/orandea/test/aaa/", "/data/orandea/impl/bbb/").toString();
             assert.equal(result, "../../impl/bbb/");
         });
 
-        it("isAbsolute", function(){
+        it("isAbsolute", () => {
             assert.equal(adone.URI.isAbsolute("/a/b"), true);
             assert.equal(adone.URI.isAbsolute("a/b"), false);
             assert.equal(adone.URI.isAbsolute(new adone.URI("/a/b")), true, "accept adone.URI");
         });
 
-        it("resolve", function(){
+        it("resolve", () => {
             let result;
 
             result = adone.URI.resolve();
@@ -1393,23 +1387,23 @@ describe("URI", function()  {
             assert.equal(result, "/tmp/dir/");
 
             result = adone.URI.resolve("wwwroot", "static_files/png/", "../gif/image.gif");
-            assert.equal(result, process.cwd()+adone.URI.sep+"wwwroot/static_files/gif/image.gif");
+            assert.equal(result, `${process.cwd() + adone.URI.sep}wwwroot/static_files/gif/image.gif`);
 
             result = adone.URI.resolve("/a", new adone.URI("b"));
             assert.equal(result, "/a/b");
         });
     });
 
-    it("URL compare", function() {
-        let u = new adone.URI("http://example.org/foo/bar.html?foo=bar&hello=world&hello=mars#fragment");
-        let e = [
+    it("URL compare", () => {
+        const u = new adone.URI("http://example.org/foo/bar.html?foo=bar&hello=world&hello=mars#fragment");
+        const e = [
             "http://example.org/foo/../foo/bar.html?foo=bar&hello=world&hello=mars#fragment",
             "http://exAmple.org/foo/bar.html?foo=bar&hello=world&hello=mars#fragment",
             "http://exAmple.org:80/foo/bar.html?foo=bar&hello=world&hello=mars#fragment",
             "http://example.org/foo/bar.html?foo=bar&hello=mars&hello=world#fragment",
             "http://example.org/foo/bar.html?hello=mars&hello=world&foo=bar&#fragment"
         ];
-        let d = [
+        const d = [
             "http://example.org/foo/../bar.html?foo=bar&hello=world&hello=mars#fragment",
             "http://example.org/foo/bar.html?foo=bar&hello=world&hello=mars#frAgment",
             "http://example.org/foo/bar.html?foo=bar&hello=world&hello=mArs#fragment",
@@ -1423,38 +1417,38 @@ describe("URI", function()  {
         let c;
 
         for (i = 0; (c = e[i]); i++) {
-            assert.equal(u.equals(c), true, "assert.equality " + i);
+            assert.equal(u.equals(c), true, `assert.equality ${i}`);
         }
 
         for (i = 0; (c = d[i]); i++) {
-            assert.equal(u.equals(c), false, "different " + i);
+            assert.equal(u.equals(c), false, `different ${i}`);
         }
     });
 
-    it("Empty URI", function() {
-        let u = new adone.URI("://:@:0");
+    it("Empty URI", () => {
+        const u = new adone.URI("://:@:0");
         assert.equal(u.username(), "");
         assert.equal(u.password(), "");
         assert.equal(u.hostname(), "");
         assert.equal(u.port(), "");
     });
 
-    it("Asterisks", function() {
-        let u = new adone.URI("http://***wild:***wild@example.com");
+    it("Asterisks", () => {
+        const u = new adone.URI("http://***wild:***wild@example.com");
         assert.equal(u.username(), "***wild");
         assert.equal(u.password(), "***wild");
         assert.equal(u.hostname(), "example.com");
     });
 
-    it("Email in username", function() {
-        let u = new adone.URI("http://email@example.com:195{saoj   @hostname.com");
+    it("Email in username", () => {
+        const u = new adone.URI("http://email@example.com:195{saoj   @hostname.com");
         assert.equal(u.username(), "email@example.com");
         assert.equal(u.password(), "195{saoj   ");
         assert.equal(u.hostname(), "hostname.com");
     });
 
-    it("Simple HTTP parse", function() {
-        let u = new adone.URI("http://user:pass@sub.example.com:8080/path/to/file.txt?hello=world#fragment");
+    it("Simple HTTP parse", () => {
+        const u = new adone.URI("http://user:pass@sub.example.com:8080/path/to/file.txt?hello=world#fragment");
         assert.equal(u.protocol(), "http");
         assert.equal(u.subdomain(), "sub");
         assert.equal(u.hostname(), "sub.example.com");
@@ -1465,8 +1459,8 @@ describe("URI", function()  {
         assert.equal(u.query(), "hello=world");
     });
 
-    it("Filesystem path", function() {
-        let u = new adone.URI("/home/user/file.txt", { defaultProtocol: "file" });
+    it("Filesystem path", () => {
+        const u = new adone.URI("/home/user/file.txt", { defaultProtocol: "file" });
         assert.equal(u.protocol(), "file");
         assert.equal(u.path(), "/home/user/file.txt");
         assert.equal(u.toString(), "file:///home/user/file.txt", "do not modify filesystem path");

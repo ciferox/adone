@@ -1,4 +1,4 @@
-import { Buffer } from "../../../../src/polyfills/std/buffer";
+import { Buffer } from "..";
 
 const { is } = adone;
 

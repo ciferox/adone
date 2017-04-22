@@ -1278,7 +1278,7 @@ export default class URI {
     normalizeHostname() {
         if (this._parts.hostname) {
             if (this.is("IDN")) {
-                this._parts.hostname = adone.std.punycode.toASCII(this._parts.hostname);
+                this._parts.hostname = adone.punycode.toASCII(this._parts.hostname);
             } else if (this.is("IPv6")) {
                 this._parts.hostname = URI._normalizeIPv6Address(this._parts.hostname);
             }
@@ -1436,7 +1436,7 @@ export default class URI {
 
         if (uri._parts.hostname) {
             if (uri.is("punycode")) {
-                t += adone.std.punycode.toUnicode(uri._parts.hostname);
+                t += adone.punycode.toUnicode(uri._parts.hostname);
                 if (uri._parts.port) {
                     t += `:${uri._parts.port}`;
                 }
@@ -1600,7 +1600,7 @@ export default class URI {
         const invalidHostnameCharacters = /[^a-zA-Z0-9.-]/;
 
         if (value.match(invalidHostnameCharacters)) {
-            if (adone.std.punycode.toASCII(value).match(invalidHostnameCharacters)) {
+            if (adone.punycode.toASCII(value).match(invalidHostnameCharacters)) {
                 throw new x.InvalidArgument(`Hostname "${value}" contains characters other than [A-Z0-9.-]`);
             }
         }

@@ -1084,7 +1084,7 @@ MimeNode.prototype._normalizeAddress = function (address) {
     // 'jõgeva.ee' will be converted to 'xn--jgeva-dua.ee'
     // non-unicode domains are left as is
 
-    return user + "@" + adone.std.punycode.toASCII(domain.toLowerCase());
+    return user + "@" + adone.punycode.toASCII(domain.toLowerCase());
 };
 
 /**

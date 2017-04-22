@@ -132,12 +132,12 @@ export const approx = (str) => {
 };
 
 // Get the length of an unicode string
-export const length = (str) => adone.std.punycode.ucs2.decode(str).length;
+export const length = (str) => adone.punycode.ucs2decode(str).length;
 
 // Return an array of chars
 export const toArray = (str) => {
-    return adone.std.punycode.ucs2.decode(str).map((code) => {
-        return adone.std.punycode.ucs2.encode([code]);
+    return adone.punycode.ucs2decode(str).map((code) => {
+        return adone.punycode.ucs2encode([code]);
     });
 };
 
@@ -197,8 +197,8 @@ export const isFullWidth = (char) => {
 
 // Convert normal ASCII chars to their full-width counterpart
 export const toFullWidth = (str) => {
-    return adone.std.punycode.ucs2.encode(
-        adone.std.punycode.ucs2.decode(str).map((code) => {
+    return adone.punycode.ucs2encode(
+        adone.punycode.ucs2decode(str).map((code) => {
             if (code >= 33 && code <= 126) {
                 return 0xff00 + code - 0x20;
             }

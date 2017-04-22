@@ -228,6 +228,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         date: "./glosses/dates/exdate",
         fs: "./glosses/fs",
         js: "./glosses/js",
+        punycode: "./glosses/punycode",
         sourcemap: "./glosses/sourcemap",
         ExBuffer: "./glosses/common/exbuffer",
         x: "./glosses/common/x",

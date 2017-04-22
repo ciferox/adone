@@ -390,7 +390,6 @@ class Terminfo {
         return `\x1b]0;${title}\x07`;
     }
 
-
     /*
         getPath( [stdin] )
             * stdin: a stream that is the current STDIN of the terminal
