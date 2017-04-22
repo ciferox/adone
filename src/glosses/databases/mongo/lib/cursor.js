@@ -1012,7 +1012,7 @@ define.classMethod("toArray", { callback: true, promise: true });
  * @param {Cursor~countResultCallback} [callback] The result callback.
  * @return {Promise} returns Promise if no callback passed
  */
-Cursor.prototype.count = function (applySkipLimit, opts, callback) {
+Cursor.prototype.count = function (applySkipLimit = true, opts, callback) {
     const self = this;
     if (self.s.cmd.query == null) {
         throw MongoError.create({ message: "count can only be used with find command", driver: true });

@@ -34,7 +34,8 @@ function stateTransition(self, newState) {
         disconnected: [CONNECTING, DESTROYED, DISCONNECTED],
         connecting: [CONNECTING, DESTROYED, CONNECTED, DISCONNECTED],
         connected: [CONNECTED, DISCONNECTED, DESTROYED, UNREFERENCED],
-        unreferenced: [UNREFERENCED, DESTROYED]
+        unreferenced: [UNREFERENCED, DESTROYED],
+        destroyed: [DESTROYED]
     };
 
     // Get current state
@@ -335,8 +336,8 @@ function connectNewServers(self, servers, callback) {
             }, {
                 authProviders: self.authProviders, reconnect: false, monitoring: false, inTopology: true
             }, {
-                    clientInfo: clone(self.s.clientInfo)
-                }));
+                clientInfo: clone(self.s.clientInfo)
+            }));
 
             // Add temp handlers
             server.once("connect", _handleEvent(self, "connect"));
@@ -382,37 +383,37 @@ const pingServer = function (self, server, cb) {
         monitoring: true,
         socketTimeout: self.s.options.connectionTimeout || 2000
     }, (err, r) => {
-            if (self.state == DESTROYED || self.state === UNREFERENCED) {
-                server.destroy();
-                return cb(err, r);
-            }
+        if (self.state == DESTROYED || self.state === UNREFERENCED) {
+            server.destroy();
+            return cb(err, r);
+        }
 
             // Calculate latency
-            const latencyMS = new Date().getTime() - start;
+        const latencyMS = new Date().getTime() - start;
             // Set the last updatedTime
-            const hrTime = process.hrtime();
+        const hrTime = process.hrtime();
             // Calculate the last update time
-            server.lastUpdateTime = hrTime[0] * 1000 + Math.round(hrTime[1] / 1000);
+        server.lastUpdateTime = hrTime[0] * 1000 + Math.round(hrTime[1] / 1000);
 
             // We had an error, remove it from the state
-            if (err) {
+        if (err) {
                 // Emit the server heartbeat failure
-                emitSDAMEvent(self, "serverHeartbeatFailed", { durationMS: latencyMS, failure: err, connectionId: server.name });
+            emitSDAMEvent(self, "serverHeartbeatFailed", { durationMS: latencyMS, failure: err, connectionId: server.name });
 
                 // Remove server from the state
-                self.s.replicaSetState.remove(server);
-            } else {
+            self.s.replicaSetState.remove(server);
+        } else {
                 // Update the server ismaster
-                server.ismaster = r.result;
+            server.ismaster = r.result;
 
                 // Check if we have a lastWriteDate convert it to MS
                 // and store on the server instance for later use
-                if (server.ismaster.lastWrite && server.ismaster.lastWrite.lastWriteDate) {
+            if (server.ismaster.lastWrite && server.ismaster.lastWrite.lastWriteDate) {
                     server.lastWriteDate = server.ismaster.lastWrite.lastWriteDate.getTime();
                 }
 
                 // Do we have a brand new server
-                if (server.lastIsMasterMS == -1) {
+            if (server.lastIsMasterMS == -1) {
                     server.lastIsMasterMS = latencyMS;
                 } else if (server.lastIsMasterMS) {
                     // After the first measurement, average RTT MUST be computed using an
@@ -424,7 +425,7 @@ const pingServer = function (self, server, cb) {
                     server.lastIsMasterMS = 0.2 * latencyMS + (1 - 0.2) * server.lastIsMasterMS;
                 }
 
-                if (self.s.replicaSetState.update(server)) {
+            if (self.s.replicaSetState.update(server)) {
                     // Primary lastIsMaster store it
                     if (server.lastIsMaster() && server.lastIsMaster().ismaster) {
                         self.ismaster = server.lastIsMaster();
@@ -432,15 +433,15 @@ const pingServer = function (self, server, cb) {
                 }
 
                 // Server heart beat event
-                emitSDAMEvent(self, "serverHeartbeatSucceeded", { durationMS: latencyMS, reply: r.result, connectionId: server.name });
-            }
+            emitSDAMEvent(self, "serverHeartbeatSucceeded", { durationMS: latencyMS, reply: r.result, connectionId: server.name });
+        }
 
             // Calculate the stalness for this server
-            self.s.replicaSetState.updateServerMaxStaleness(server, self.s.haInterval);
+        self.s.replicaSetState.updateServerMaxStaleness(server, self.s.haInterval);
 
             // Callback
-            cb(err, r);
-        });
+        cb(err, r);
+    });
 };
 
 function topologyMonitor(self, options) {
@@ -558,11 +559,11 @@ function topologyMonitor(self, options) {
                 monitorServer(servers[i], self, options);
             }
         });
-    } else {
-        for (let i = 0; i < servers.length; i++) {
+    }
+    for (let i = 0; i < servers.length; i++) {
             monitorServer(servers[i], self, options);
         }
-    }
+
 
     // Run the reconnect process
     function executeReconnect(self) {

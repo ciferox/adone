@@ -889,14 +889,14 @@ export const consoleReporter = ({
                 return ({ block, hook, test }) => {
                     if (ticks) {
                         const padding = "    ".repeat(Math.max(block.level() + (test ? 1 : 0), 0));
-                        log(`${padding} \u2026 executing ${type} hook{escape}${hook.description ? ` ${hook.description}` : ""}{/escape}`);
+                        log(`${padding} \u2026 executing ${type} hook{escape}${hook.description ? `: ${hook.description}` : ""}{/escape}`);
                         const start = new Date();
                         if (timers) {
                             timer = setInterval(() => {
                                 if (ticks) {
                                     log("\x1b[F\x1b[K", { newline: false });
                                 }
-                                log(`${padding} \u2026 executing ${type} hook{escape}${hook.description ? ` ${hook.description}` : ""}{/escape} (${elapsedToString(new Date() - start, hook.timeout(), true)})`);
+                                log(`${padding} \u2026 executing ${type} hook{escape}${hook.description ? `: ${hook.description}` : ""}{/escape} (${elapsedToString(new Date() - start, hook.timeout(), true)})`);
                             }, 50);
                         }
                     }

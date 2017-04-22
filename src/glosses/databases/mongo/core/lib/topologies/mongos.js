@@ -8,6 +8,7 @@ const MongoError = require("../error");
 const Server = require("./server");
 const assign = require("./shared").assign;
 const clone = require("./shared").clone;
+const cloneOptions = require("./shared").cloneOptions;
 const createClientInfo = require("./shared").createClientInfo;
 
 const BSON = retrieveBSON();
@@ -31,12 +32,12 @@ const BSON = retrieveBSON();
  * server.connect();
  */
 
-let MongoCR = require("../auth/mongocr")
-    , X509 = require("../auth/x509")
-    , Plain = require("../auth/plain")
-    , GSSAPI = require("../auth/gssapi")
-    , SSPI = require("../auth/sspi")
-    , ScramSHA1 = require("../auth/scram");
+let MongoCR = require("../auth/mongocr"),
+    X509 = require("../auth/x509"),
+    Plain = require("../auth/plain"),
+    GSSAPI = require("../auth/gssapi"),
+    SSPI = require("../auth/sspi"),
+    ScramSHA1 = require("../auth/scram");
 
 //
 // States
@@ -48,10 +49,11 @@ const DESTROYED = "destroyed";
 
 function stateTransition(self, newState) {
     const legalTransitions = {
-        "disconnected": [CONNECTING, DESTROYED, DISCONNECTED],
-        "connecting": [CONNECTING, DESTROYED, CONNECTED, DISCONNECTED],
-        "connected": [CONNECTED, DISCONNECTED, DESTROYED, UNREFERENCED],
-        "unreferenced": [UNREFERENCED, DESTROYED]
+        disconnected: [CONNECTING, DESTROYED, DISCONNECTED],
+        connecting: [CONNECTING, DESTROYED, CONNECTED, DISCONNECTED],
+        connected: [CONNECTED, DISCONNECTED, DESTROYED, UNREFERENCED],
+        unreferenced: [UNREFERENCED, DESTROYED],
+        destroyed: [DESTROYED]
     };
 
     // Get current state
@@ -138,7 +140,7 @@ const Mongos = function (seedlist, options) {
         // Connect function options passed in
         connectOptions: {},
         // Are we running in debug mode
-        debug: typeof options.debug == "boolean" ? options.debug : false,
+        debug: typeof options.debug === "boolean" ? options.debug : false,
         // localThresholdMS
         localThresholdMS: options.localThresholdMS || 15,
         // Client info
@@ -161,9 +163,9 @@ const Mongos = function (seedlist, options) {
 
     // All the authProviders
     this.authProviders = options.authProviders || {
-        "mongocr": new MongoCR(this.s.bson), "x509": new X509(this.s.bson)
-        , "plain": new Plain(this.s.bson), "gssapi": new GSSAPI(this.s.bson)
-        , "sspi": new SSPI(this.s.bson), "scram-sha-1": new ScramSHA1(this.s.bson)
+        mongocr: new MongoCR(this.s.bson), x509: new X509(this.s.bson),
+        plain: new Plain(this.s.bson), gssapi: new GSSAPI(this.s.bson),
+        sspi: new SSPI(this.s.bson), "scram-sha-1": new ScramSHA1(this.s.bson)
     };
 
     // Disconnected state
@@ -191,11 +193,13 @@ const Mongos = function (seedlist, options) {
 inherits(Mongos, EventEmitter);
 
 Object.defineProperty(Mongos.prototype, "type", {
-    enumerable: true, get () { return "mongos"; }
+    enumerable: true, get() {
+        return "mongos";
+    }
 });
 
 Object.defineProperty(Mongos.prototype, "parserType", {
-    enumerable: true, get () {
+    enumerable: true, get() {
         return BSON.native ? "c++" : "js";
     }
 });
@@ -222,7 +226,7 @@ Mongos.prototype.connect = function (options) {
     // Set connecting state
     stateTransition(this, CONNECTING);
     // Create server instances
-    const servers = this.s.seedlist.map(function (x) {
+    const servers = this.s.seedlist.map((x) => {
         return new Server(assign({}, self.s.options, x, {
             authProviders: self.authProviders, reconnect: false, monitoring: false, inTopology: true
         }, {
@@ -239,7 +243,9 @@ Mongos.prototype.connect = function (options) {
 
 function handleEvent(self) {
     return function () {
-        if (self.state == DESTROYED) return;
+        if (self.state == DESTROYED) {
+            return;
+        }
         // Move to list of disconnectedProxies
         moveServerFrom(self.connectedProxies, self.disconnectedProxies, this);
         // Emit the left signal
@@ -261,7 +267,7 @@ function handleInitialConnectEvent(self, event) {
         // Check the type of server
         if (event == "connect") {
             // Do we have authentication contexts that need to be applied
-            applyAuthenticationContexts(self, _this, function () {
+            applyAuthenticationContexts(self, _this, () => {
                 // Get last known ismaster
                 self.ismaster = _this.lastIsMaster();
 
@@ -356,7 +362,7 @@ function connectProxies(self, servers) {
     let timeoutInterval = 0;
 
     function connect(server, timeoutInterval) {
-        setTimeout(function () {
+        setTimeout(() => {
             // Add event handlers
             server.once("close", handleInitialConnectEvent(self, "close"));
             server.once("timeout", handleInitialConnectEvent(self, "timeout"));
@@ -364,9 +370,15 @@ function connectProxies(self, servers) {
             server.once("error", handleInitialConnectEvent(self, "error"));
             server.once("connect", handleInitialConnectEvent(self, "connect"));
             // SDAM Monitoring events
-            server.on("serverOpening", function (e) { self.emit("serverOpening", e); });
-            server.on("serverDescriptionChanged", function (e) { self.emit("serverDescriptionChanged", e); });
-            server.on("serverClosed", function (e) { self.emit("serverClosed", e); });
+            server.on("serverOpening", (e) => {
+                self.emit("serverOpening", e);
+            });
+            server.on("serverDescriptionChanged", (e) => {
+                self.emit("serverDescriptionChanged", e);
+            });
+            server.on("serverClosed", (e) => {
+                self.emit("serverClosed", e);
+            });
             // Start connection
             server.connect(self.s.connectOptions);
         }, timeoutInterval);
@@ -392,7 +404,7 @@ function pickProxy(self) {
     }
 
     // Filter out the possible servers
-    connectedProxies = connectedProxies.filter(function (server) {
+    connectedProxies = connectedProxies.filter((server) => {
         if ((server.lastIsMasterMS <= (lowerBoundLatency + self.s.localThresholdMS))
             && server.isConnected()) {
             return true;
@@ -454,7 +466,7 @@ function reconnectProxies(self, proxies, callback) {
 
             if (event == "connect" && !self.authenticating) {
                 // Do we have authentication contexts that need to be applied
-                applyAuthenticationContexts(self, _self, function () {
+                applyAuthenticationContexts(self, _self, () => {
                     // Destroyed
                     if (self.state == DESTROYED || self.state == UNREFERENCED) {
                         moveServerFrom(self.connectingProxies, self.disconnectedProxies, _self);
@@ -497,7 +509,7 @@ function reconnectProxies(self, proxies, callback) {
 
     // Execute method
     function execute(_server, i) {
-        setTimeout(function () {
+        setTimeout(() => {
             // Destroyed
             if (self.state == DESTROYED || self.state == UNREFERENCED) {
                 return;
@@ -521,9 +533,15 @@ function reconnectProxies(self, proxies, callback) {
             server.once("parseError", _handleEvent(self, "parseError"));
 
             // SDAM Monitoring events
-            server.on("serverOpening", function (e) { self.emit("serverOpening", e); });
-            server.on("serverDescriptionChanged", function (e) { self.emit("serverDescriptionChanged", e); });
-            server.on("serverClosed", function (e) { self.emit("serverClosed", e); });
+            server.on("serverOpening", (e) => {
+                self.emit("serverOpening", e);
+            });
+            server.on("serverDescriptionChanged", (e) => {
+                self.emit("serverDescriptionChanged", e);
+            });
+            server.on("serverClosed", (e) => {
+                self.emit("serverClosed", e);
+            });
             server.connect(self.s.connectOptions);
         }, i);
     }
@@ -545,13 +563,15 @@ function applyAuthenticationContexts(self, server, callback) {
 
     // Apply one of the contexts
     function applyAuth(authContexts, server, callback) {
-        if (authContexts.length == 0) return callback();
+        if (authContexts.length == 0) {
+            return callback();
+        }
         // Get the first auth context
         const authContext = authContexts.shift();
         // Copy the params
         const customAuthContext = authContext.slice(0);
         // Push our callback handler
-        customAuthContext.push(function (err) {
+        customAuthContext.push((err) => {
             applyAuth(authContexts, server, callback);
         });
 
@@ -567,8 +587,10 @@ function topologyMonitor(self, options) {
     options = options || {};
 
     // Set momitoring timeout
-    self.haTimeoutId = setTimeout(function () {
-        if (self.state == DESTROYED || self.state == UNREFERENCED) return;
+    self.haTimeoutId = setTimeout(() => {
+        if (self.state == DESTROYED || self.state == UNREFERENCED) {
+            return;
+        }
         // If we have a primary and a disconnect handler, execute
         // buffered operations
         if (self.isConnected() && self.s.disconnectHandler) {
@@ -594,7 +616,7 @@ function topologyMonitor(self, options) {
             }, {
                 monitoring: true,
                 socketTimeout: self.s.options.connectionTimeout || 2000
-            }, function (err, r) {
+            }, (err, r) => {
                 if (self.state == DESTROYED || self.state == UNREFERENCED) {
                         // Move from connectingProxies
                     moveServerFrom(self.connectedProxies, self.disconnectedProxies, _server);
@@ -634,8 +656,10 @@ function topologyMonitor(self, options) {
             }
 
             // Attempt to connect to any unknown servers
-            return reconnectProxies(self, self.disconnectedProxies, function () {
-                if (self.state == DESTROYED || self.state == UNREFERENCED) return;
+            return reconnectProxies(self, self.disconnectedProxies, () => {
+                if (self.state == DESTROYED || self.state == UNREFERENCED) {
+                    return;
+                }
 
                 // Are we connected ? emit connect event
                 if (self.state == CONNECTING && options.firstConnect) {
@@ -655,15 +679,19 @@ function topologyMonitor(self, options) {
 
         // Ping all servers
         for (let i = 0; i < proxies.length; i++) {
-            pingServer(self, proxies[i], function () {
+            pingServer(self, proxies[i], () => {
                 count = count - 1;
 
                 if (count == 0) {
-                    if (self.state == DESTROYED || self.state == UNREFERENCED) return;
+                    if (self.state == DESTROYED || self.state == UNREFERENCED) {
+                        return;
+                    }
 
                     // Attempt to connect to any unknown servers
-                    reconnectProxies(self, self.disconnectedProxies, function () {
-                        if (self.state == DESTROYED || self.state == UNREFERENCED) return;
+                    reconnectProxies(self, self.disconnectedProxies, () => {
+                        if (self.state == DESTROYED || self.state == UNREFERENCED) {
+                            return;
+                        }
                         // Perform topology monitor
                         topologyMonitor(self);
                     });
@@ -691,7 +719,7 @@ Mongos.prototype.unref = function () {
     stateTransition(this, UNREFERENCED);
     // Get all proxies
     const proxies = this.connectedProxies.concat(this.connectingProxies);
-    proxies.forEach(function (x) {
+    proxies.forEach((x) => {
         x.unref();
     });
 
@@ -709,12 +737,14 @@ Mongos.prototype.destroy = function (options) {
     // Get all proxies
     const proxies = this.connectedProxies.concat(this.connectingProxies);
     // Clear out any monitoring process
-    if (this.haTimeoutId) clearTimeout(this.haTimeoutId);
+    if (this.haTimeoutId) {
+        clearTimeout(this.haTimeoutId);
+    }
     // Clear out authentication contexts
     this.s.authenticationContexts = [];
 
     // Destroy all connecting servers
-    proxies.forEach(function (x) {
+    proxies.forEach((x) => {
         x.destroy(options);
     });
 
@@ -746,13 +776,17 @@ Mongos.prototype.isDestroyed = function () {
 
 // Execute write operation
 const executeWriteOperation = function (self, op, ns, ops, options, callback) {
-    if (typeof options == "function") callback = options, options = {}, options = options || {};
+    if (typeof options === "function") {
+        callback = options, options = {}, options = options || {};
+    }
     // Ensure we have no options
     options = options || {};
     // Pick a server
     const server = pickProxy(self);
     // No server found error out
-    if (!server) return callback(new MongoError("no mongos proxy available"));
+    if (!server) {
+        return callback(new MongoError("no mongos proxy available"));
+    }
     // Execute the command
     server[op](ns, ops, options, callback);
 };
@@ -769,8 +803,12 @@ const executeWriteOperation = function (self, op, ns, ops, options, callback) {
  * @param {opResultCallback} callback A callback function
  */
 Mongos.prototype.insert = function (ns, ops, options, callback) {
-    if (typeof options == "function") callback = options, options = {}, options = options || {};
-    if (this.state == DESTROYED) return callback(new MongoError(f("topology was destroyed")));
+    if (typeof options === "function") {
+        callback = options, options = {}, options = options || {};
+    }
+    if (this.state == DESTROYED) {
+        return callback(new MongoError(f("topology was destroyed")));
+    }
 
     // Not connected but we have a disconnecthandler
     if (!this.isConnected() && this.s.disconnectHandler != null) {
@@ -798,8 +836,12 @@ Mongos.prototype.insert = function (ns, ops, options, callback) {
  * @param {opResultCallback} callback A callback function
  */
 Mongos.prototype.update = function (ns, ops, options, callback) {
-    if (typeof options == "function") callback = options, options = {}, options = options || {};
-    if (this.state == DESTROYED) return callback(new MongoError(f("topology was destroyed")));
+    if (typeof options === "function") {
+        callback = options, options = {}, options = options || {};
+    }
+    if (this.state == DESTROYED) {
+        return callback(new MongoError(f("topology was destroyed")));
+    }
 
     // Not connected but we have a disconnecthandler
     if (!this.isConnected() && this.s.disconnectHandler != null) {
@@ -827,8 +869,12 @@ Mongos.prototype.update = function (ns, ops, options, callback) {
  * @param {opResultCallback} callback A callback function
  */
 Mongos.prototype.remove = function (ns, ops, options, callback) {
-    if (typeof options == "function") callback = options, options = {}, options = options || {};
-    if (this.state == DESTROYED) return callback(new MongoError(f("topology was destroyed")));
+    if (typeof options === "function") {
+        callback = options, options = {}, options = options || {};
+    }
+    if (this.state == DESTROYED) {
+        return callback(new MongoError(f("topology was destroyed")));
+    }
 
     // Not connected but we have a disconnecthandler
     if (!this.isConnected() && this.s.disconnectHandler != null) {
@@ -856,8 +902,12 @@ Mongos.prototype.remove = function (ns, ops, options, callback) {
  * @param {opResultCallback} callback A callback function
  */
 Mongos.prototype.command = function (ns, cmd, options, callback) {
-    if (typeof options == "function") callback = options, options = {}, options = options || {};
-    if (this.state == DESTROYED) return callback(new MongoError(f("topology was destroyed")));
+    if (typeof options === "function") {
+        callback = options, options = {}, options = options || {};
+    }
+    if (this.state == DESTROYED) {
+        return callback(new MongoError(f("topology was destroyed")));
+    }
     const self = this;
 
     // Pick a proxy
@@ -874,8 +924,12 @@ Mongos.prototype.command = function (ns, cmd, options, callback) {
         return callback(new MongoError("no mongos proxy available"));
     }
 
+    // Cloned options
+    const clonedOptions = cloneOptions(options);
+    clonedOptions.topology = self;
+
     // Execute the command
-    server.command(ns, cmd, options, callback);
+    server.command(ns, cmd, clonedOptions, callback);
 };
 
 /**
@@ -948,7 +1002,9 @@ Mongos.prototype.auth = function (mechanism, db) {
         const finalArguments = argsWithoutCallback.concat([function (err) {
             count = count - 1;
             // Save all the errors
-            if (err) errors.push({ name: server.name, err });
+            if (err) {
+                errors.push({ name: server.name, err });
+            }
             // We are done
             if (count == 0) {
                 // Auth is done
@@ -1013,28 +1069,34 @@ Mongos.prototype.logout = function (dbName, callback) {
     // Now logout all the servers
     const servers = this.connectedProxies.slice(0);
     let count = servers.length;
-    if (count == 0) return callback();
+    if (count == 0) {
+        return callback();
+    }
     const errors = [];
 
     function logoutServer(_server, cb) {
-        _server.logout(dbName, function (err) {
-            if (err) errors.push({ name: _server.name, err });
+        _server.logout(dbName, (err) => {
+            if (err) {
+                errors.push({ name: _server.name, err });
+            }
             cb();
         });
     }
 
     // Execute logout on all server instances
     for (i = 0; i < servers.length; i++) {
-        logoutServer(servers[i], function () {
+        logoutServer(servers[i], () => {
             count = count - 1;
 
             if (count == 0) {
                 // Do not block new operations
                 self.authenticating = false;
                 // If we have one or more errors
-                if (errors.length) return callback(MongoError.create({
-                    message: f("logout failed against db %s", dbName), errors
-                }), false);
+                if (errors.length) {
+                    return callback(MongoError.create({
+                        message: f("logout failed against db %s", dbName), errors
+                    }), false);
+                }
 
                 // No errors
                 callback();
@@ -1046,13 +1108,26 @@ Mongos.prototype.logout = function (dbName, callback) {
 /**
  * Get server
  * @method
- * @param {ReadPreference} [options.readPreference] Specify read preference if command supports it
  * @return {Server}
  */
 Mongos.prototype.getServer = function () {
     const server = pickProxy(this);
-    if (this.s.debug) this.emit("pickedServer", null, server);
+    if (this.s.debug) {
+        this.emit("pickedServer", null, server);
+    }
     return server;
+};
+
+/**
+ * Get a direct connection
+ * @method
+ * @return {Connection}
+ */
+Mongos.prototype.getConnection = function () {
+    const server = this.getServer();
+    if (server) {
+        return server.getConnection();
+    }
 };
 
 /**
