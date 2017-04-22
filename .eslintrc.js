@@ -96,7 +96,7 @@ module.exports = {
         "prefer-rest-params": "error",
         "prefer-arrow-callback": ["warn", {
             "allowNamedFunctions": true,
-            "allowUnboundThis": false
+            "allowUnboundThis": true
         }],
         "arrow-spacing": "error",
         "no-useless-constructor": "error",
@@ -157,6 +157,7 @@ module.exports = {
         "skip": true,
         "$": true,  // only for tests...
         "request": true,
-        "specter": true
+        "specter": true,
+        "include": true
     }
 };

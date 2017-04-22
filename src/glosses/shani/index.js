@@ -9,12 +9,13 @@ export const util = lazify({
 const SET_TIMEOUT_MAX = 2 ** 31 - 1;
 
 class Hook {
-    constructor(description, callback) {
+    constructor(description, callback, runtimeContext) {
         this.description = description;
         this.callback = callback;
         this._timeout = 5000;  // global hook timeout
         this._fired = false;
         this._failed = null;
+        this.runtimeContext = runtimeContext;
     }
 
     fired() {
@@ -49,12 +50,13 @@ class Hook {
             let p = new Promise((resolve, reject) => {
                 uncaught = reject;
                 process.once("uncaughtException", uncaught);
+                this.runtimeContext.timeout = this.timeout.bind(this);
                 if (this.callback.length) {
-                    this.callback((err) => {
+                    this.callback.call(this.runtimeContext, (err) => {
                         err ? reject(err) : resolve();
                     });
                 } else {
-                    Promise.resolve(this.callback()).then(resolve, reject);
+                    Promise.resolve(this.callback.call(this.runtimeContext)).then(resolve, reject);
                 }
             });
             const timeout = this.timeout();
@@ -68,6 +70,7 @@ class Hook {
             }
             err = _err;
         } finally {
+            delete this.runtimeContext.timeout;
             process.removeListener("uncaughtException", uncaught);
             s = process.hrtime(s);
         }
@@ -223,10 +226,11 @@ class Block {
 }
 
 class Test {
-    constructor(description, callback, block) {
+    constructor(description, callback, block, runtimeContext) {
         this.description = description;
         this.callback = callback;
         this.block = block;
+        this.runtimeContext = runtimeContext;
         this._skip = false;
         this._only = false;
         this._timeout = adone.null;
@@ -244,12 +248,14 @@ class Test {
             let p = new Promise((resolve, reject) => {
                 uncaught = reject;
                 process.once("uncaughtException", uncaught);
+                this.runtimeContext.skip = this.skip.bind(this);
+                this.runtimeContext.timeout = this.timeout.bind(this);
                 if (this.callback.length) {
-                    this.callback((err) => {
+                    this.callback.call(this.runtimeContext, (err) => {
                         err ? reject(err) : resolve();
                     });
                 } else {
-                    Promise.resolve(this.callback()).then(resolve, reject);
+                    Promise.resolve(this.callback.call(this.runtimeContext)).then(resolve, reject);
                 }
             });
             const timeout = this.timeout();
@@ -263,6 +269,9 @@ class Test {
             }
             err = _err;
         } finally {
+            delete this.runtimeContext.skip;
+            delete this.runtimeContext.timeout;
+
             process.removeListener("uncaughtException", uncaught);
             s = process.hrtime(s);
         }
@@ -381,6 +390,8 @@ export class Engine {
         root.retries(1);
         const stack = new adone.collection.Stack([root]);
 
+        const runtimeContext = {};
+
         const describe = function (...args) {
             const callback = args.pop();
             if (!is.function(callback)) {
@@ -396,9 +407,16 @@ export class Engine {
                 stack.push(block);
             }
 
-            if (adone.is.promise(callback.call(block))) {
+            runtimeContext.skip = block.skip.bind(block);
+            runtimeContext.timeout = block.timeout.bind(block);
+
+            if (adone.is.promise(callback.call(runtimeContext))) {
                 throw new Error("It is not allowed to use asynchronous functions as a describe callback");
             }
+
+            delete runtimeContext.skip;
+            delete runtimeContext.timeout;
+
             for (let i = 0; i < args.length; ++i) {
                 stack.pop();
             }
@@ -409,7 +427,7 @@ export class Engine {
         describe.only = (...args) => describe(...args).only();
 
         const it = function (description, callback) {
-            const test = new Test(description, callback, stack.top);
+            const test = new Test(description, callback, stack.top, runtimeContext);
             stack.top.addChild(test);
             return test;
         };
@@ -421,28 +439,28 @@ export class Engine {
             if (adone.is.function(description)) {
                 [description, callback] = ["", description];
             }
-            stack.top.hooks.before.push(new Hook(description, callback));
+            stack.top.hooks.before.push(new Hook(description, callback, runtimeContext));
         };
 
         const after = function (description, callback) {
             if (adone.is.function(description)) {
                 [description, callback] = ["", description];
             }
-            stack.top.hooks.after.push(new Hook(description, callback));
+            stack.top.hooks.after.push(new Hook(description, callback, runtimeContext));
         };
 
         const beforeEach = function (description, callback) {
             if (adone.is.function(description)) {
                 [description, callback] = ["", description];
             }
-            stack.top.hooks.beforeEach.push(new Hook(description, callback));
+            stack.top.hooks.beforeEach.push(new Hook(description, callback, runtimeContext));
         };
 
         const afterEach = function (description, callback) {
             if (adone.is.function(description)) {
                 [description, callback] = ["", description];
             }
-            stack.top.hooks.afterEach.push(new Hook(description, callback));
+            stack.top.hooks.afterEach.push(new Hook(description, callback, runtimeContext));
         };
 
         const skip = function (callback) {
@@ -759,7 +777,7 @@ export class Engine {
                     match: () => util.mock.match,
                     request: () => util.request,
                     FS: () => util.FS,
-                    include: () => (p) => m.require(p)
+                    include: () => (p) => m.require(p, { cache: false })
                 }, global.$, m.require.bind(m), { configurable: true });
 
                 adone.lazify({

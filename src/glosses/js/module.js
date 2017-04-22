@@ -15,9 +15,8 @@ export default class Module extends NodeModule {
     _compile(content, filename) {
         if (this.transform) {
             return super._compile(this.transform(content, filename), filename);
-        } else {
-            return super._compile(content, filename);
         }
+        return super._compile(content, filename);
     }
 
     load(filename) {
@@ -45,11 +44,11 @@ export default class Module extends NodeModule {
         return this.exports;
     }
 
-    require(path) {
+    require(path, { cache = true } = {}) {
         if (!adone.is.string(path)) {
             throw new adone.x.InvalidArgument("`path` should be a string");
         }
-        return this.constructor._load(path, this);
+        return this.constructor._load(path, this, cache);
     }
 
     static _createNewModule(filename, parent) {
@@ -60,7 +59,7 @@ export default class Module extends NodeModule {
         });
     }
 
-    static _load(request, parent/*, isMain */) {  // isMain is always false
+    static _load(request, parent, cache = true) {
         const filename = NodeModule._resolveFilename(request, parent, false);
 
         const cachedModule = parent.cache.get(filename);
@@ -74,14 +73,16 @@ export default class Module extends NodeModule {
 
         const module = this._createNewModule(filename, parent);
 
-        parent.cache.set(filename, module);
+        if (cache) {
+            parent.cache.set(filename, module);
+        }
 
         let threw = true;
         try {
             module.load(filename);
             threw = false;
         } finally {
-            if (threw) {
+            if (threw && cache) {
                 parent.cache.delete(filename);
             }
         }

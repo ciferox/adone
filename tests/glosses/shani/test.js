@@ -2633,7 +2633,7 @@ describe("Engine", () => {
 
                 describe("/", function () {
 
-                    it("test", async function() {
+                    it("test", async function () {
                         this.timeout(val);
                         await new Promise((resolve) => setTimeout(resolve, 250));
                     });
@@ -3419,6 +3419,129 @@ describe("Engine", () => {
             const c = describe("a", "b", "c", () => { });
 
             assert.equal(c.name, "c");
+        });
+    });
+
+    describe("runtime context", () => {
+        it("should have same context", async () => {
+            const engine = new Engine();
+            const { describe, it, start } = engine.context();
+
+            let context = null;
+            describe("/", function () {
+                context = this;
+
+                before(function () {
+                    assert.equal(this, context, "before");
+                });
+
+                beforeEach(function () {
+                    assert.equal(this, context, "beforeEach");
+                });
+
+                after(function () {
+                    assert.equal(this, context, "after");
+                });
+
+                afterEach(function () {
+                    assert.equal(this, context, "afterEach");
+                });
+
+                it("", function () {
+                    assert.equal(this, context, "it");
+                });
+
+                before(function (done) {
+                    assert.equal(this, context, "cb before");
+                    done();
+                });
+
+                beforeEach(function (done) {
+                    assert.equal(this, context, "cb beforeEach");
+                    done();
+                });
+
+                after(function (done) {
+                    assert.equal(this, context, "cb after");
+                    done();
+                });
+
+                afterEach(function (done) {
+                    assert.equal(this, context, "cb afterEach");
+                    done();
+                });
+
+                it("", function (done) {
+                    assert.equal(this, context, "cb it");
+                    done();
+                });
+
+                describe("a", function () {
+                    assert.equal(this, context, "nested describe");
+
+                    before(function () {
+                        assert.equal(this, context, "nested before");
+                    });
+
+                    beforeEach(function () {
+                        assert.equal(this, context, "nested beforeEach");
+                    });
+
+                    after(function () {
+                        assert.equal(this, context, "nested after");
+                    });
+
+                    afterEach(function () {
+                        assert.equal(this, context, "nested afterEach");
+                    });
+
+                    it("", function () {
+                        assert.equal(this, context, "nested it");
+                    });
+
+                    before(function (done) {
+                        assert.equal(this, context, "nested cb before");
+                        done();
+                    });
+
+                    beforeEach(function (done) {
+                        assert.equal(this, context, "nested cb beforeEach");
+                        done();
+                    });
+
+                    after(function (done) {
+                        assert.equal(this, context, "nested cb after");
+                        done();
+                    });
+
+                    afterEach(function (done) {
+                        assert.equal(this, context, "nested cb afterEach");
+                        done();
+                    });
+
+                    it("", function (done) {
+                        assert.equal(this, context, "nested cb it");
+                        done();
+                    });
+                });
+            });
+            const emitter = start();
+            const errs = [];
+            const cb = ({ meta }) => {
+                if (meta.err) {
+                    errs.push(meta.err);
+                }
+            };
+            emitter
+                .on("end test", cb)
+                .on("end before hook", cb)
+                .on("end before each hook", cb)
+                .on("end after hook", cb)
+                .on("end after each hook", cb);
+
+            await waitFor(emitter, "done");
+            assert.equal(errs.length, 0);
+
         });
     });
 });
