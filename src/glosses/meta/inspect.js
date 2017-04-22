@@ -1,4 +1,4 @@
-const { is, identity, cui: { style: { styles } } } = adone;
+const { is, identity, terminal: { styles } } = adone;
 
 /*    
     * style:

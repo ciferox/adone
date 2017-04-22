@@ -235,7 +235,6 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         semver: "./glosses/semver",
         EventEmitter: "./glosses/common/event_emitter",
         AsyncEmitter: "./glosses/common/async_emitter",
-        format: "./glosses/text/format",
         sprintf: ["./glosses/text/sprintf", (mod) => mod.sprintf],
         vsprintf: ["./glosses/text/sprintf", (mod) => mod.vsprintf],
         core: "./glosses/core",

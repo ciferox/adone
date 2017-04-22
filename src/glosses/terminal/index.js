@@ -1,4 +1,4 @@
-const { is, std: { fs, util, string_decoder }, vendor: { lodash: _ } } = adone;
+const { is, std: { fs, string_decoder } } = adone;
 
 // Resources:
 //   $ man term
@@ -37,12 +37,16 @@ function write(data) {
 function tryRead(file) {
     if (Array.isArray(file)) {
         for (let i = 0; i < file.length; i++) {
-            let data = tryRead(file[i]);
-            if (data) { return data; }
+            const data = tryRead(file[i]);
+            if (data) {
+                return data;
+            }
         }
         return "";
     }
-    if (!file) { return ""; }
+    if (!file) {
+        return "";
+    }
     file = adone.std.path.resolve.apply(adone.std.path, arguments);
     try {
         return adone.std.fs.readFileSync(file, "utf8");
@@ -50,8 +54,6 @@ function tryRead(file) {
         return "";
     }
 }
-
-/* Escape sequences */
 
 // Mini-doc:
 
@@ -71,366 +73,6 @@ function tryRead(file) {
 // man 5 terminfo
 // For tput tcap name, see: http://pubs.opengroup.org/onlinepubs/7990989799/xcurses/terminfo.html
 // useful command: infocmp -l $TERM
-
-const esc = {
-    /* Common sequences */
-
-    // Reset the terminal
-    reset: { on: "\x1bc" },
-
-    /* Cursor sequences */
-    cursorLeft: { on: "\x1b[1000D" },
-    saveCursor: { on: "\x1b7" },	// also '\x1b[s'
-    restoreCursor: { on: "\x1b8" },	// also '\x1b[u'
-
-    up: { on: "\x1b[%UA" },
-    down: { on: "\x1b[%UB" },
-    right: { on: "\x1b[%UC" },
-    left: { on: "\x1b[%UD" },
-    nextLine: { on: "\x1b[%UE" },
-    previousLine: { on: "\x1b[%UF" },
-    column: { on: "\x1b[%UG" },
-    row: { on: "\x1b[%Ud" },
-    scrollUp: { on: "\x1b[%US" },
-    scrollDown: { on: "\x1b[%UT" },
-    moveTo: { on: "\x1b[%U;%UH" },
-    // cursorPos: {
-    //     on: "%[cursorPos:%a%a]F",
-    //     handler(y, x) {
-    //         return `\x1b[${++y};${++x}H`;
-    //     }
-    // },
-    hideCursor: { on: "\x1b[?25l", off: "\x1b[?25h" },
-
-    // Cursor styles
-    blockCursor: { on: "\x1b[2 q" },
-    blinkingBlockCursor: { on: "\x1b[0 q" },
-    underlineCursor: { on: "\x1b[4 q" },
-    blinkingUnderlineCursor: { on: "\x1b[3 q" },
-    beamCursor: { on: "\x1b[6 q" },
-    blinkingBeamCursor: { on: "\x1b[5 q" },
-
-    /* Editing sequences */
-
-    clear: { on: "\x1b[H\x1b[2J" },
-    eraseDisplayBelow: { on: "\x1b[0J" },
-    eraseDisplayAbove: { on: "\x1b[1J" },
-    eraseDisplay: { on: "\x1b[2J" },
-    eraseLineAfter: { on: "\x1b[0K" },
-    eraseLineBefore: { on: "\x1b[1K" },
-    eraseEndLine: { on: "\x1b[K" },
-    eraseStartLine: { on: "\x1b[1K" },
-    eraseLine: { on: "\x1b[2K" },
-    insertLine: { on: "\x1b[%UL" },
-    deleteLine: { on: "\x1b[%UM" },
-    insert: { on: "\x1b[%U@" },	// insert char
-    delete: { on: "\x1b[%UP" },	// delete char
-    backDelete: { on: "\x1b[1D\x1b[1P" },	// Backspace-like, left(1) followed by delete(1)
-
-    // This set the alternate screen buffer, do not work on many term, due to this titeInhibit shit...
-    alternateScreenBuffer: { on: "\x1b[?1049h", off: "\x1b[?1049l" },
-
-    alternateCharsetMode: { on: "\x1b(0", off: "\x1b(B" },
-
-    /* Misc sequences */
-
-    bell: { on: "\x07" },	// Emit an audible bell
-
-    /* Input / Output sequences */
-
-    // Terminal will send event on button pressed with mouse position
-    mouseButton: { on: "\x1b[?1000h", off: "\x1b[?1000l" },
-
-    // Terminal will send position of the column hilighted
-    mouseHilight: { on: "\x1b[?1001h", off: "\x1b[?1001l" },
-
-    // Terminal will send event on button pressed and mouse motion as long as a button is down, with mouse position
-    mouseDrag: { on: "\x1b[?1002h", off: "\x1b[?1002l" },
-
-    // Terminal will send event on button pressed and motion
-    mouseMotion: { on: "\x1b[?1003h", off: "\x1b[?1003l" },
-
-    // Another mouse protocol that extend coordinate mapping (without it, it supports only 223 rows and columns)
-    mouseSGR: { on: "\x1b[?1006h", off: "\x1b[?1006l" },
-
-    // Terminal will send event when it gains and loses focus
-    focusEvent: { on: "\x1b[?1004h", off: "\x1b[?1004l" },
-
-    // Should allow keypad to send different code than 0..9 keys but it does not works on some setup
-    applicationKeypad: { on: "\x1b[?1h\x1b=", off: "\x1b[?1l\x1b>" },
-
-    setScrollRegion: {
-        on: "%[setScrollRegion:%a%a]F",
-        handler(top, bottom) {
-            return `\x1b[${++top};${++bottom}r`;
-        }
-    },
-
-    /* OSC - OS Control sequences: may be unavailable on some context */
-
-    // Set the title of an xterm-compatible window
-    windowTitle: { on: "\x1b]0;%s\x07" }
-};
-
-const defaultConfig = {
-    esc,
-    support: {
-        deltaEscapeSequence: true
-    },
-    bools: {
-        back_color_erase: true
-    }
-};
-
-function configuration(terminal) {
-    let config;
-    if (terminal === "xterm") {
-        config = _.extend(adone.o(), defaultConfig);
-    } else if (terminal === "xterm-256color") {
-        config = _.merge(configuration("xterm"), {});
-    } else if (terminal === "xterm-256color.generic") {
-        const xtermGeneric = configuration("xterm.generic");
-        config = _.merge(configuration("xterm-256color"), {
-            esc: xtermGeneric.esc,
-            handler: xtermGeneric.handler
-        });
-    } else if (terminal === "xterm.generic") { // generic xterm configuration
-        config = _.merge(configuration("xterm"), {
-            esc: {
-                // KDE Konsole does not support that. This workaround use up()/down() & column(1)
-                nextLine: { on: "\x1b[%UB\x1b[1G" },
-                previousLine: { on: "\x1b[%UA\x1b[1G" },
-
-                // Try that sequences for instance, if it fails gracefully, it will be kept Xterm sequences fail and write garbage
-                blockCursor: { on: "\x1b]50;CursorShape=0\x07" },
-                blinkingBlockCursor: { on: "\x1b]50;CursorShape=0\x07" },
-                underlineCursor: { on: "\x1b]50;CursorShape=2\x07" },
-                blinkingUnderlineCursor: { on: "\x1b]50;CursorShape=2\x07" },
-                beamCursor: { on: "\x1b]50;CursorShape=1\x07" },
-                blinkingBeamCursor: { on: "\x1b]50;CursorShape=1\x07" }
-            }
-        });
-    } else if (terminal === "xfce") {
-        config = _.merge(configuration("xterm-256color"), {
-            esc: {
-                // Cursor styles not supported
-                blockCursor: { on: "", na: true },
-                blinkingBlockCursor: { on: "", na: true },
-                underlineCursor: { on: "", na: true },
-                blinkingUnderlineCursor: { on: "", na: true },
-                beamCursor: { on: "", na: true },
-                blinkingBeamCursor: { on: "", na: true }
-            }
-        });
-    } else if (terminal === "gnome") {
-        config = _.merge(configuration("xterm"), {
-            esc: {
-                // Looks like a no go, gnome-terminal is too stubborn to let the application decide about that
-                blockCursor: { on: "", na: true },
-                blinkingBlockCursor: { on: "", na: true },
-                underlineCursor: { on: "", na: true },
-                blinkingUnderlineCursor: { on: "", na: true },
-                beamCursor: { on: "", na: true },
-                blinkingBeamCursor: { on: "", na: true }
-
-                /*
-                blockCursor: { on: '\x1b]50;CursorShape=0\x07' } ,
-                blinkingBlockCursor: { on: '\x1b]50;CursorShape=0\x07' } ,
-                underlineCursor: { on: '\x1b]50;CursorShape=2\x07' } ,
-                blinkingUnderlineCursor: { on: '\x1b]50;CursorShape=2\x07' } ,
-                beamCursor: { on: '\x1b]50;CursorShape=1\x07' } ,
-                blinkingBeamCursor: { on: '\x1b]50;CursorShape=1\x07' }
-                */
-            }
-        });
-    } else if (terminal === "gnome-256color") {
-        const gnome = configuration("gnome");
-        config = _.merge(configuration("xterm-256color"), {
-            esc: _.extend(gnome.esc, {}),
-            handler: gnome.handler
-        });
-    } else if (terminal === "konsole") {
-        config = _.merge(configuration("xterm"), {
-            esc: {
-                // Amazingly, those uber-standard and uber-common sequences are *NOT* supported by Konsole...
-                // SHAME on you KDE! Even the Linux Console support it!
-                // This workaround use up()/down() & column(1)
-                nextLine: { on: "\x1b[%UB\x1b[1G" },
-                previousLine: { on: "\x1b[%UA\x1b[1G" },
-
-                // Cursor styles
-                blockCursor: { on: "\x1b]50;CursorShape=0\x07" },
-                blinkingBlockCursor: { on: "\x1b]50;CursorShape=0\x07" },
-                underlineCursor: { on: "\x1b]50;CursorShape=2\x07" },
-                blinkingUnderlineCursor: { on: "\x1b]50;CursorShape=2\x07" },
-                beamCursor: { on: "\x1b]50;CursorShape=1\x07" },
-                blinkingBeamCursor: { on: "\x1b]50;CursorShape=1\x07" }
-            },
-        });
-    } else if (terminal === "konsole-256color") {
-        const xterm256 = configuration("xterm-256color");
-        const konsole = configuration("konsole");
-
-        config = _.merge(xterm256, {
-            esc: _.extend(konsole.esc, {}),
-            handler: konsole.handler
-        });
-    } else if (terminal === "eterm") {
-        config = _.merge(configuration("xterm"), {
-            esc: {
-                // Cursor styles not supported
-                blockCursor: { on: "", na: true },
-                blinkingBlockCursor: { on: "", na: true },
-                underlineCursor: { on: "", na: true },
-                blinkingUnderlineCursor: { on: "", na: true },
-                beamCursor: { on: "", na: true },
-                blinkingBeamCursor: { on: "", na: true },
-
-                // Not capable, fallback to mouseButton
-                mouseDrag: { on: "\x1b[?1000h", off: "\x1b[?1000l", fb: true },
-                mouseMotion: { on: "\x1b[?1000h", off: "\x1b[?1000l", fb: true }
-            },
-        });
-    } else if (terminal === "eterm-256color") {
-        const eterm = configuration("eterm");
-
-        config = _.merge(configuration("xterm-256color"), {
-            esc: _.extend(eterm.esc, {}),
-            handler: eterm.handler,
-        });
-    } else if (terminal === "rxvt") {
-        config = _.merge(configuration("xterm"), {
-            esc: {
-                // Cursor styles not supported
-                blockCursor: { on: "", na: true },
-                blinkingBlockCursor: { on: "", na: true },
-                underlineCursor: { on: "", na: true },
-                blinkingUnderlineCursor: { on: "", na: true },
-                beamCursor: { on: "", na: true },
-                blinkingBeamCursor: { on: "", na: true },
-
-                // Not capable, fallback to mouseButton
-                mouseDrag: { on: "\x1b[?1000h", off: "\x1b[?1000l", fb: true },
-                mouseMotion: { on: "\x1b[?1000h", off: "\x1b[?1000l", fb: true }
-            },
-        });
-    } else if (terminal === "rxvt-256color") {
-        const rxvt = configuration("rxvt");
-
-        config = _.merge(configuration("xterm-256color"), {
-            esc: _.extend(rxvt.esc, {}),
-            handler: rxvt.handler,
-        });
-    } else if (terminal === "linux") {
-        const xterm = configuration("xterm");
-
-        config = _.merge(xterm, {
-            esc: {
-                // Clear screen
-                clear: { on: "\x1b[H\x1b[J" },
-
-                // Cursor styles
-                hideCursor: { on: "\x1b[?1c", off: "\x1b[?0c" },
-                blockCursor: { on: "\x1b[?16;0;16c" },
-                blinkingBlockCursor: { on: "\x1b[?6c" },
-                underlineCursor: { on: "\x1b[?2c" },	// it's blinking anyway
-                blinkingUnderlineCursor: { on: "\x1b[?2c" },
-                beamCursor: { on: "" },	// do not exists
-                blinkingBeamCursor: { on: "" },	// do not exists
-
-                /* OSC */
-
-                // Does not exist, silently drop it...
-                windowTitle: { on: "%D" },
-
-                mouseHilight: { on: "", off: "" },
-                mouseSGR: { on: "", off: "" },
-                focusEvent: { on: "", off: "" }
-            },
-            support: {
-                deltaEscapeSequence: false
-            },
-        });
-    } else if (terminal === "windows-ansi.generic") {
-        config = _.merge(configuration("xterm.generic"), {
-            esc: {
-                reset: { on: "" },
-                saveCursor: { on: "" },
-                restoreCursor: { on: "" }
-            }
-        });
-    }
-    return config;
-}
-
-const pseudoEsc = {
-    // It just set attr:true so it will not write anything, but return an attribute object
-    attr: { attr: true },
-
-    // It just set noFormat:true so it will not call string.format() on user input,
-    // only useful for ScreenBuffer, so blit-like redraw() can perform slightly faster
-    noFormat: { noFormat: true },
-    markupOnly: { markupOnly: true },
-
-    move: {
-        on: "%[move:%a%a]F",
-        handler: function move(x, y) {
-            let sequence = "";
-
-            if (x) {
-                if (x > 0) {
-                    sequence += this.root.format(this.root.esc.right.on, x);
-                } else {
-                    sequence += this.root.format(this.root.esc.left.on, -x);
-                }
-            }
-            if (y) {
-                if (y > 0) {
-                    sequence += this.root.format(this.root.esc.down.on, y);
-                } else {
-                    sequence += this.root.format(this.root.esc.up.on, -y);
-                }
-            }
-
-            return sequence;
-        }
-    }
-};
-
-function applyEscape(options) {
-    let onFormat = [options.on];
-    let on;
-    let off;
-    let action = arguments[1 + options.params];
-
-    if (options.params) {
-        onFormat = onFormat.concat(Array.prototype.slice.call(arguments, 1, 1 + options.params));
-    }
-
-    if (is.undefined(action) || action === true) {
-        on = options.onHasFormatting ? options.root.format.apply(undefined, onFormat) : options.on;
-        return on;
-    }
-
-    if (is.null(action) || action === false) {
-        off = options.offHasFormatting ? options.root.format(options.off) : options.off;
-        return off;
-    }
-
-    if (typeof action !== "string") {
-        if (is.function(action.toString)) {
-            action = action.toString();
-        } else {
-            action = "";
-        }
-    }
-
-    on = options.onHasFormatting ? options.root.format.apply(undefined, onFormat) : options.on;
-    action = options.root.format.apply(undefined, Array.prototype.slice.call(arguments, 1 + options.params));
-    off = options.offHasFormatting ? options.root.format(options.off) : options.off;
-
-    return [on, action, off].join("");
-}
 
 class Terminfo {
     constructor() {
@@ -509,18 +151,7 @@ class Terminfo {
         this._cachedGetPath = "";
         this._input = null;
         this._output = null;
-        this.state = {
-            fullscreen: false,
-            button: {
-                left: false,
-                middle: false,
-                right: false,
-                other: false
-            }
-        };
 
-        // const input = Terminfo.getTTYInput();
-        // const output = Terminfo.getTTYOutput();
         this.generic = (process.env.COLORTERM === "truecolor" ? "xterm-256color" : ((process.env.TERM && process.env.TERM) || (process.platform === "win32" ? "windows-ansi" : "xterm")).toLowerCase());
 
         if (this.generic === "screen") {
@@ -535,107 +166,230 @@ class Terminfo {
             this.getTTYPath();
         }
 
-        let termConfig;
-        if (this.terminal) {
-            try {
-                termConfig = configuration(this.terminal);
-            } catch (error) { }
-        }
-        if (!termConfig) {
-            try {
-                termConfig = configuration(`${this.generic}.generic`);
-            } catch (error) {
-                try {
-                    termConfig = configuration(this.generic);
-                } catch (error) {
-                    termConfig = configuration("xterm.generic");
-                }
-            }
-        }
-
-        _.extend(termConfig.esc, pseudoEsc);
-        _.extend(this, termConfig);
-
-        const fnOptions = {
-            on: "",
-            off: "",
-            params: 0//,
-            //            out: this.getTTYOutput()
-        };
-
-        this.escHandler = {};
-        this.escOffHandler = {};
-
-        Object.keys(this.esc).forEach((key) => {
-            // build-time resolution
-            if (is.function(this.esc[key].on)) {
-                this.esc[key].on = this.esc[key].on.call(this);
-            }
-            if (is.function(this.esc[key].off)) {
-                this.esc[key].off = this.esc[key].off.call(this);
-            }
-
-            // dynamic handler
-            if (this.esc[key].handler) {
-                if (is.function(this.esc[key].handler)) {
-                    this.escHandler[key] = this.esc[key].handler;
-                } else {
-                    this.escHandler[key] = this.handler[this.esc[key].handler];
-                }
-            }
-
-            // dynamic off handler
-            if (this.esc[key].offHandler) {
-                if (is.function(this.esc[key].offHandler)) {
-                    this.escOffHandler[key] = this.esc[key].offHandler;
-                } else {
-                    this.escOffHandler[key] = this.handler[this.esc[key].offHandler];
-                }
-            }
-
-            Object.defineProperty(this, key, {
-                configurable: true,
-                get() {
-                    const options = _.extend({}, fnOptions);
-                    options.on += this.root.esc[key].on || "";
-                    options.off = (this.root.esc[key].off || "") + options.off;
-                    options.params += adone.format.count(this.root.esc[key].on);
-
-                    if (!options.onHasFormatting && (options.params || (is.string(this.root.esc[key].on) && adone.format.hasFormatting(this.root.esc[key].on)))) {
-                        options.onHasFormatting = true;
-                    }
-
-                    if (!options.offHasFormatting && (is.string(this.root.esc[key].off) && adone.format.hasFormatting(this.root.esc[key].off))) {
-                        options.offHasFormatting = true;
-                    }
-
-                    const fn = applyEscape.bind(undefined, options);
-
-                    Object.defineProperty(this, key, { value: fn });
-
-                    return fn;
-                }
-            });
-        });
-
-        fnOptions.root = this;
-        const formatFn = {};
-        for (const k in this.escHandler) {
-            formatFn[k] = this.escHandler[k] = this.escHandler[k].bind(this);
-        }
-        for (const k in this.escOffHandler) {
-            formatFn[`${k}_off`] = this.escOffHandler[k] = this.escOffHandler[k].bind(this);
-        }
-
-        this.format = adone.format.formatMethod.bind({ fn: formatFn });
-        this.escHandler.root = this;
-        this.escOffHandler.root = this;
-        this.root = this;
-
-        this.extended = true;
-        this.error = null;
         this.setup();
     }
+
+    // Reset the terminal
+    reset() {
+        return "\x1bc";
+    }
+
+    /* Cursor sequences */
+    cursorLeft() {
+        return "\x1b[1000D";
+    }
+
+    saveCursor() {
+        return "\x1b7"; // also '\x1b[s'
+    }
+    restoreCursor() {
+        return "\x1b8"; // also '\x1b[u'
+    }
+
+    up(count) {
+        return `\x1b[${count}A`;
+    }
+
+    down(count) {
+        return `\x1b[${count}B`;
+    }
+
+    right(count) {
+        return `\x1b[${count}C`;
+    }
+
+    left(count) {
+        return `\x1b[${count}D`;
+    }
+
+    nextLine(count) {
+        return `\x1b[${count}E`;
+    }
+
+    previousLine(count) {
+        return `\x1b[${count}F`;
+    }
+
+    column(c) {
+        return `\x1b[${c}G`;
+    }
+
+    row(r) {
+        return `\x1b[${r}d`;
+    }
+
+    scrollUp(rows) {
+        return `\x1b[${rows}S`;
+    }
+
+    scrollDown(rows) {
+        return `\x1b[${rows}T`;
+    }
+
+    moveTo(row, col) {
+        return `\x1b[${row};${col}H`;
+    }
+
+    // cursorPos: {
+    //     on: "%[cursorPos:%a%a]F",
+    //     handler(y, x) {
+    //         return `\x1b[${++y};${++x}H`;
+    //     }
+    // },
+
+    hideCursor(isHidden) {
+        return isHidden ? "\x1b[?25l" : "\x1b[?25h";
+    }
+
+    // Cursor styles
+    blockCursor() {
+        return "\x1b[2 q";
+    }
+
+    blinkingBlockCursor() {
+        return "\x1b[0 q";
+    }
+    underlineCursor() {
+        return "\x1b[4 q";
+    }
+
+    blinkingUnderlineCursor() {
+        return "\x1b[3 q";
+    }
+
+    beamCursor() {
+        return "\x1b[6 q";
+    }
+
+    blinkingBeamCursor() {
+        return "\x1b[5 q";
+    }
+
+    /* Editing sequences */
+
+    clear() {
+        return "\x1b[H\x1b[2J";
+    }
+
+    eraseDisplayBelow() {
+        return "\x1b[0J";
+    }
+
+    eraseDisplayAbove() {
+        return "\x1b[1J";
+    }
+
+    eraseDisplay() {
+        return "\x1b[2J";
+    }
+
+    eraseLineAfter() {
+        return "\x1b[0K";
+    }
+
+    eraseLineBefore() {
+        return "\x1b[1K";
+    }
+
+    eraseEndLine() {
+        return "\x1b[K";
+    }
+
+    eraseStartLine() {
+        return "\x1b[1K";
+    }
+
+    eraseLine() {
+        return "\x1b[2K";
+    }
+
+    insertLine(n) {
+        return `\x1b[${n}L`;
+    }
+
+    deleteLine(n) {
+        return `\x1b[${n}M`;
+    }
+
+    // insert char
+    insert(c) {
+        return `\x1b[${c}@`;
+    }
+
+    // delete char
+    delete(c) {
+        return `\x1b[${c}P`;
+    }
+
+    // Backspace-like, left(1) followed by delete(1)
+    backDelete() {
+        return "\x1b[1D\x1b[1P";
+    }
+
+    // This set the alternate screen buffer, do not work on many term, due to this titeInhibit shit...
+    alternateScreenBuffer(on) {
+        return on ? "\x1b[?1049h" : "\x1b[?1049l";
+    }
+
+    alternateCharsetMode(on) {
+        return on ? "\x1b(0" : "\x1b(B";
+    }
+
+    /* Misc sequences */
+
+    // Emit an audible bell
+    bell() {
+        return "\x07";
+    }
+
+    /* Input / Output sequences */
+
+    // Terminal will send event on button pressed with mouse position
+    mouseButton(on) {
+        return on ? "\x1b[?1000h" : "\x1b[?1000l";
+    }
+
+    // Terminal will send position of the column hilighted
+    mouseHilight(on) {
+        return on ? "\x1b[?1001h" : "\x1b[?1001l";
+    }
+
+    // Terminal will send event on button pressed and mouse motion as long as a button is down, with mouse position
+    mouseDrag(on) {
+        return on ? "\x1b[?1002h" : "\x1b[?1002l";
+    }
+
+    // Terminal will send event on button pressed and motion
+    mouseMotion(on) {
+        return on ? "\x1b[?1003h" : "\x1b[?1003l";
+    }
+
+    // Another mouse protocol that extend coordinate mapping (without it, it supports only 223 rows and columns)
+    mouseSGR(on) {
+        return on ? "\x1b[?1006h" : "\x1b[?1006l";
+    }
+
+    // Terminal will send event when it gains and loses focus
+    focusEvent(on) {
+        return on ? "\x1b[?1004h" : "\x1b[?1004l";
+    }
+
+    // Should allow keypad to send different code than 0..9 keys but it does not works on some setup
+    applicationKeypad(on) {
+        return on ? "\x1b[?1h\x1b=" : "\x1b[?1l\x1b>";
+    }
+
+    setScrollRegion(top, bottom) {
+        return `\x1b[${++top};${++bottom}r`;
+    }
+
+    /* OSC - OS Control sequences: may be unavailable on some context */
+
+    // Set the title of an xterm-compatible window
+    windowTitle(title) {
+        return `\x1b]0;${title}\x07`;
+    }
+
 
     /*
         getPath( [stdin] )
@@ -657,7 +411,9 @@ class Terminfo {
         }
 
         if (stdin === 0 || stdin === process.stdin) {
-            if (this._cachedGetPath) { return this._cachedGetPath; }
+            if (this._cachedGetPath) {
+                return this._cachedGetPath;
+            }
             cacheIt = true;
         }
 
@@ -678,7 +434,9 @@ class Terminfo {
             index: ttyIndex
         };
 
-        if (cacheIt) { this._cachedGetPath = result; }
+        if (cacheIt) {
+            this._cachedGetPath = result;
+        }
         return result;
     }
 
@@ -769,7 +527,7 @@ class Terminfo {
     }
 
     term(is) {
-        return this.terminal.indexOf(is) === 0;
+        return this._terminal.indexOf(is) === 0;
     }
 
     _debug(...args) {
@@ -804,15 +562,11 @@ class Terminfo {
     }
 
     readTerminfo(term) {
-        let data;
-        let file;
-        let info;
-
         term = term || this.generic;
 
-        file = adone.std.path.normalize(this._prefix(term));
-        data = adone.std.fs.readFileSync(file);
-        info = this.parseTerminfo(data, file);
+        const file = adone.std.path.normalize(this._prefix(term));
+        const data = adone.std.fs.readFileSync(file);
+        const info = this.parseTerminfo(data, file);
 
         if (this.debug) {
             this._terminfo = info;
@@ -861,32 +615,34 @@ class Terminfo {
             return;
         }
 
-        let file
-            , dir
-            , i
-            , sdiff
-            , sfile
-            , list;
+        let file,
+            dir,
+            i,
+            sdiff,
+            sfile,
+            list;
 
         if (Array.isArray(prefix)) {
             for (i = 0; i < prefix.length; i++) {
                 file = this._tprefix(prefix[i], term, soft);
-                if (file) { return file; }
+                if (file) {
+                    return file;
+                }
             }
             return;
         }
 
-        let find = function (word) {
-            let file, ch;
-
-            file = adone.std.path.resolve(prefix, word[0]);
+        const find = function (word) {
+            let file = adone.std.path.resolve(prefix, word[0]);
             try {
                 adone.std.fs.statSync(file);
                 return file;
             } catch (e) { }
 
-            ch = word[0].charCodeAt(0).toString(16);
-            if (ch.length < 2) { ch = "0" + ch; }
+            let ch = word[0].charCodeAt(0).toString(16);
+            if (ch.length < 2) {
+                ch = `0${ch}`;
+            }
 
             file = adone.std.path.resolve(prefix, ch);
             try {
@@ -917,7 +673,9 @@ class Terminfo {
         term = adone.std.path.basename(term);
         dir = find(term);
 
-        if (!dir) { return; }
+        if (!dir) {
+            return;
+        }
 
         if (soft) {
             try {
@@ -928,7 +686,7 @@ class Terminfo {
 
             list.forEach((file) => {
                 if (file.indexOf(term) === 0) {
-                    let diff = file.length - term.length;
+                    const diff = file.length - term.length;
                     if (!sfile || diff < sdiff) {
                         sdiff = diff;
                         sfile = file;
@@ -953,14 +711,14 @@ class Terminfo {
      * All shorts are little-endian
      */
     parseTerminfo(data, file) {
-        let info = {}
-            , extended
-            , l = data.length
-            , i = 0
-            , v
-            , o;
+        let info = {},
+            extended,
+            l = data.length,
+            i = 0,
+            v,
+            o;
 
-        let h = info.header = {
+        const h = info.header = {
             dataSize: data.length,
             headerSize: 12,
             magicNumber: (data[1] << 8) | data[0],
@@ -981,10 +739,10 @@ class Terminfo {
         i += h.headerSize;
 
         // Names Section
-        let names = data.toString("ascii", i, i + h.namesSize - 1)
-            , parts = names.split("|")
-            , name = parts[0]
-            , desc = parts.pop();
+        let names = data.toString("ascii", i, i + h.namesSize - 1),
+            parts = names.split("|"),
+            name = parts[0],
+            desc = parts.pop();
 
         info.name = name;
         info.names = parts;
@@ -1056,10 +814,12 @@ class Terminfo {
                 return;
             }
 
-            let s = i + info.strings[key]
-                , j = s;
+            let s = i + info.strings[key],
+                j = s;
 
-            while (data[j]) { j++; }
+            while (data[j]) {
+                j++;
+            }
 
             info.strings[key] = data.toString("ascii", s, j);
         });
@@ -1142,11 +902,11 @@ class Terminfo {
     //   h.symOffsetSize = (h.strTableSize - h.strCount) * 2;
 
     parseExtended(data) {
-        let info = {}
-            , l = data.length
-            , i = 0;
+        let info = {},
+            l = data.length,
+            i = 0;
 
-        let h = info.header = {
+        const h = info.header = {
             dataSize: data.length,
             headerSize: 10,
             boolCount: (data[i + 1] << 8) | data[i + 0],
@@ -1168,7 +928,7 @@ class Terminfo {
 
         // Booleans Section
         // One byte for each flag
-        let _bools = [];
+        const _bools = [];
         l = i + h.boolCount;
         for (; i < l; i++) {
             _bools.push(data[i] === 1);
@@ -1180,7 +940,7 @@ class Terminfo {
         }
 
         // Numbers Section
-        let _numbers = [];
+        const _numbers = [];
         l = i + h.numCount * 2;
         for (; i < l; i += 2) {
             if (data[i + 1] === 0xff && data[i] === 0xff) {
@@ -1191,7 +951,7 @@ class Terminfo {
         }
 
         // Strings Section
-        let _strings = [];
+        const _strings = [];
         l = i + h.strCount * 2;
         for (; i < l; i += 2) {
             if (data[i + 1] === 0xff && data[i] === 0xff) {
@@ -1214,10 +974,12 @@ class Terminfo {
                 return;
             }
 
-            let s = i + offset
-                , j = s;
+            let s = i + offset,
+                j = s;
 
-            while (data[j]) { j++; }
+            while (data[j]) {
+                j++;
+            }
 
             // Find out where the string table ends by
             // getting the highest string length.
@@ -1233,12 +995,14 @@ class Terminfo {
         i += high + 1;
         l = data.length;
 
-        let sym = []
-            , j;
+        let sym = [],
+            j;
 
         for (; i < l; i++) {
             j = i;
-            while (data[j]) { j++; }
+            while (data[j]) {
+                j++;
+            }
             sym.push(data.toString("ascii", i, j));
             i = j;
         }
@@ -1279,7 +1043,7 @@ class Terminfo {
      */
 
     compile(info) {
-        let self = this;
+        const self = this;
 
         if (!info) {
             throw new Error("Terminal not found.");
@@ -1326,7 +1090,7 @@ class Terminfo {
     }
 
     inject(info) {
-        let self = this;
+        const self = this;
         // let methods = info.methods || info;
 
         // Object.keys(methods).forEach(function (key) {
@@ -1407,25 +1171,29 @@ class Terminfo {
             }
         }
 
-        let tkey = `${info.name}.${key}`
-            , header = "var v, dyn = {}, stat = {}, stack = [], out = [];"
-            , footer = ";return out.join(\"\");"
-            , code = header
-            , val = str
-            , buff = ""
-            , cap
-            , ch
-            , fi
-            , then
-            , els
-            , end;
+        let tkey = `${info.name}.${key}`,
+            header = "var v, dyn = {}, stat = {}, stack = [], out = [];",
+            footer = ";return out.join(\"\");",
+            code = header,
+            val = str,
+            buff = "",
+            cap,
+            ch,
+            fi,
+            then,
+            els,
+            end;
 
         function read(regex, no) {
             cap = regex.exec(val);
-            if (!cap) { return; }
+            if (!cap) {
+                return;
+            }
             val = val.substring(cap[0].length);
             ch = cap[1];
-            if (!no) { clear(); }
+            if (!no) {
+                clear();
+            }
             return cap;
         }
 
@@ -1441,7 +1209,9 @@ class Terminfo {
         }
 
         function echo(c) {
-            if (c === "\"\"") { return; }
+            if (c === "\"\"") {
+                return;
+            }
             expr(`out.push(${c})`);
         }
 
@@ -1476,7 +1246,9 @@ class Terminfo {
                     ch = "\x7f";
                 } else {
                     ch = ch.charCodeAt(0) & 31;
-                    if (ch === 0) { ch = 128; }
+                    if (ch === 0) {
+                        ch = 128;
+                    }
                     ch = String.fromCharCode(ch);
                 }
                 print(ch);
@@ -1550,7 +1322,9 @@ class Terminfo {
             // $<5> -> padding
             // e.g. flash_screen: '\u001b[?5h$<100/>\u001b[?5l',
             if (read(/^\$<(\d+)([*\/]{0,2})>/, true)) {
-                if (this.padding) { print(cap[0]); }
+                if (this.padding) {
+                    print(cap[0]);
+                }
                 continue;
             }
 
@@ -1650,11 +1424,15 @@ class Terminfo {
             // %= %> %<
             //   logical operations: push(pop() op pop())
             if (read(/^%([+\-*\/m&|\^=><])/)) {
-                if (ch === "=") { ch = "==="; }
-                else if (ch === "m") { ch = "%"; }
+                if (ch === "=") {
+                    ch = "===";
+                }
+                else if (ch === "m") {
+                    ch = "%";
+                }
                 expr(`${"(v = stack.pop(),"
                     + " stack.push(v = (stack.pop() "}${ch} v) || 0),`
-                    + ` v)`);
+                    + " v)");
                 continue;
             }
 
@@ -1721,7 +1499,9 @@ class Terminfo {
                 then = val.indexOf("%t");
                 els = val.indexOf("%e");
                 end = val.indexOf("%;");
-                if (end === -1) { end = Infinity; }
+                if (end === -1) {
+                    end = Infinity;
+                }
                 if (then !== -1 && then < end
                     && (fi === -1 || then < fi)
                     && (els === -1 || then < els)) {
@@ -1770,10 +1550,18 @@ class Terminfo {
 
             // Remove unnecessary variable initializations.
             v = code.slice(header.length, -footer.length);
-            if (!~v.indexOf("v = ")) { code = code.replace("v, ", ""); }
-            if (!~v.indexOf("dyn")) { code = code.replace("dyn = {}, ", ""); }
-            if (!~v.indexOf("stat")) { code = code.replace("stat = {}, ", ""); }
-            if (!~v.indexOf("stack")) { code = code.replace("stack = [], ", ""); }
+            if (!~v.indexOf("v = ")) {
+                code = code.replace("v, ", "");
+            }
+            if (!~v.indexOf("dyn")) {
+                code = code.replace("dyn = {}, ", "");
+            }
+            if (!~v.indexOf("stat")) {
+                code = code.replace("stat = {}, ", "");
+            }
+            if (!~v.indexOf("stack")) {
+                code = code.replace("stack = [], ", "");
+            }
 
             // Turn `var out = [];out.push("foo"),` into `var out = ["foo"];`.
             code = code.replace(
@@ -1813,7 +1601,7 @@ class Terminfo {
 
     // See: ~/ncurses/ncurses/tinfo/lib_tputs.c
     _print(code, print, done) {
-        let xon = !this.bools.needs_xon_xoff || this.bools.xon_xoff;
+        const xon = !this.bools.needs_xon_xoff || this.bools.xon_xoff;
 
         print = print || write;
         done = done || noop;
@@ -1823,18 +1611,18 @@ class Terminfo {
             return done();
         }
 
-        let parts = code.split(/(?=\$<[\d.]+[*\/]{0,2}>)/)
-            , i = 0;
+        let parts = code.split(/(?=\$<[\d.]+[*\/]{0,2}>)/),
+            i = 0;
 
         (function next() {
             if (i === parts.length) {
                 return done();
             }
 
-            let part = parts[i++]
-                , padding = /^\$<([\d.]+)([*\/]{0,2})>/.exec(part)
-                , amount
-                , suffix;
+            let part = parts[i++],
+                padding = /^\$<([\d.]+)([*\/]{0,2})>/.exec(part),
+                amount,
+                suffix;
             // , affect;
 
             if (!padding) {
@@ -1885,11 +1673,11 @@ class Terminfo {
     }
 
     readTermcap(term) {
-        let self = this
-            , terms
-            , term_
-            , root
-            , paths;
+        let self = this,
+            terms,
+            term_,
+            root,
+            paths;
 
         term = term || this.generic;
 
@@ -1931,14 +1719,14 @@ class Terminfo {
                 root.inherits = root.inherits || [];
                 root.inherits.push(term.strings.tc);
 
-                let names = terms[term.strings.tc]
+                const names = terms[term.strings.tc]
                     ? terms[term.strings.tc].names
                     : [term.strings.tc];
 
                 self._debug("%s inherits from %s.",
                     term.names.join("/"), names.join("/"));
 
-                let inherit = tc(terms[term.strings.tc]);
+                const inherit = tc(terms[term.strings.tc]);
                 if (inherit) {
                     ["bools", "numbers", "strings"].forEach((type) => {
                         merge(term[type], inherit[type]);
@@ -1955,16 +1743,20 @@ class Terminfo {
     }
 
     _tryCap(file, term) {
-        if (!file) { return; }
+        if (!file) {
+            return;
+        }
 
-        let terms
-            , data
-            , i;
+        let terms,
+            data,
+            i;
 
         if (Array.isArray(file)) {
             for (i = 0; i < file.length; i++) {
                 data = this._tryCap(file[i], term);
-                if (data) { return data; }
+                if (data) {
+                    return data;
+                }
             }
             return;
         }
@@ -1975,7 +1767,9 @@ class Terminfo {
             ? tryRead(file)
             : file;
 
-        if (!data) { return; }
+        if (!data) {
+            return;
+        }
 
         terms = this.parseTermcap(data, file);
 
@@ -2010,16 +1804,16 @@ class Terminfo {
     //  :mi:al=\E[L:dc=\E[P:dl=\E[M:ei=\E[4l:im=\E[4h:
 
     parseTermcap(data, file) {
-        let terms = {}
-            , parts
-            , term
-            , entries
-            , fields
-            , field
-            , names
-            , i
-            , j
-            , k;
+        let terms = {},
+            parts,
+            term,
+            entries,
+            fields,
+            field,
+            names,
+            i,
+            j,
+            k;
 
         // remove escaped newlines
         data = data.replace(/\\\n[ \t]*/g, "");
@@ -2034,7 +1828,9 @@ class Terminfo {
             fields = entries[i].split(/:+/);
             for (j = 0; j < fields.length; j++) {
                 field = fields[j].trim();
-                if (!field) { continue; }
+                if (!field) {
+                    continue;
+                }
 
                 if (j === 0) {
                     names = field.split("|");
@@ -2077,10 +1873,12 @@ class Terminfo {
      *  man termcap
      */
     translateTermcap(info) {
-        let self = this
-            , out = {};
+        let self = this,
+            out = {};
 
-        if (!info) { return; }
+        if (!info) {
+            return;
+        }
 
         this._debug(info);
 
@@ -2089,11 +1887,11 @@ class Terminfo {
         });
 
         // Separate aliases for termcap
-        let map = (function () {
-            let out = {};
+        const map = (function () {
+            const out = {};
 
             Object.keys(Terminfo.alias).forEach((key) => {
-                let aliases = Terminfo.alias[key];
+                const aliases = Terminfo.alias[key];
                 out[aliases.termcap] = key;
             });
 
@@ -2146,7 +1944,7 @@ class Terminfo {
      */
 
     _captoinfo(cap, s, parameterized) {
-        let self = this;
+        const self = this;
 
         let capstart;
 
@@ -2154,20 +1952,20 @@ class Terminfo {
             parameterized = 0;
         }
 
-        let MAX_PUSHED = 16
-            , stack = [];
+        let MAX_PUSHED = 16,
+            stack = [];
 
-        let stackptr = 0
-            , onstack = 0
-            , seenm = 0
-            , seenn = 0
-            , seenr = 0
-            , param = 1
-            , i = 0
-            , out = "";
+        let stackptr = 0,
+            onstack = 0,
+            seenm = 0,
+            seenn = 0,
+            seenr = 0,
+            param = 1,
+            i = 0,
+            out = "";
 
         function warn() {
-            let args = Array.prototype.slice.call(arguments);
+            const args = Array.prototype.slice.call(arguments);
             args[0] = `captoinfo: ${args[0] || ""}`;
             return self._debug.apply(self, args);
         }
@@ -2182,8 +1980,8 @@ class Terminfo {
 
         // convert a character to a terminfo push
         function cvtchar(sp) {
-            let c = "\0"
-                , len;
+            let c = "\0",
+                len;
 
             let j = i;
 
@@ -2327,7 +2125,9 @@ class Terminfo {
 
         // skip the initial padding (if we haven't been told not to)
         capstart = null;
-        if (s == null) { s = ""; }
+        if (s == null) {
+            s = "";
+        }
 
         if (parameterized >= 0 && isdigit(s[i])) {
             for (capstart = i; ; i++) {
@@ -2607,12 +2407,12 @@ class Terminfo {
      */
 
     getAll() {
-        let dir = this._prefix()
-            , list = asort(adone.std.fs.readdirSync(dir))
-            , infos = [];
+        let dir = this._prefix(),
+            list = asort(adone.std.fs.readdirSync(dir)),
+            infos = [];
 
         list.forEach((letter) => {
-            let terms = asort(adone.std.fs.readdirSync(adone.std.path.resolve(dir, letter)));
+            const terms = asort(adone.std.fs.readdirSync(adone.std.path.resolve(dir, letter)));
             infos.push.apply(infos, terms);
         });
 
@@ -2628,15 +2428,15 @@ class Terminfo {
     }
 
     compileAll(start) {
-        let self = this
-            , all = {};
+        let self = this,
+            all = {};
 
         this.getAll().forEach((name) => {
             if (start && name !== start) {
                 return;
-            } else {
-                start = null;
             }
+            start = null;
+
             all[name] = self.compileTerminfo(name);
         });
 
@@ -2647,7 +2447,7 @@ class Terminfo {
      * Detect Features / Quirks
      */
     detectFeatures(info) {
-        let data = this.parseACS(info);
+        const data = this.parseACS(info);
         info.features = {
             unicode: this.detectUnicode(info),
             brokenACS: this.detectBrokenACS(info),
@@ -2663,10 +2463,10 @@ class Terminfo {
 
     detectUnicode() {
         if (process.env.NCURSES_FORCE_UNICODE != null) {
-            return Boolean(+process.env.NCURSES_FORCE_UNICODE);
+            return Boolean(Number(process.env.NCURSES_FORCE_UNICODE));
         }
 
-        let LANG = `${process.env.LANG
+        const LANG = `${process.env.LANG
             }:${process.env.LANGUAGE
             }:${process.env.LC_ALL
             }:${process.env.LC_CTYPE}`;
@@ -2688,7 +2488,7 @@ class Terminfo {
     detectBrokenACS(info) {
         // ncurses-compatible env variable.
         if (process.env.NCURSES_NO_UTF8_ACS != null) {
-            return Boolean(+process.env.NCURSES_NO_UTF8_ACS);
+            return Boolean(Number(process.env.NCURSES_NO_UTF8_ACS));
         }
 
         // If the terminal supports unicode, we don't need ACS.
@@ -2730,7 +2530,7 @@ class Terminfo {
     // the terminal does not support SCLD as ACS.
     // See: ~/ncurses/ncurses/tinfo/lib_acs.c
     detectPCRomSet(info) {
-        let s = info.strings;
+        const s = info.strings;
         if (s.enter_pc_charset_mode && s.enter_alt_charset_mode
             && s.enter_pc_charset_mode === s.enter_alt_charset_mode
             && s.exit_pc_charset_mode === s.exit_alt_charset_mode) {
@@ -2752,7 +2552,7 @@ class Terminfo {
     }
 
     parseACS(info) {
-        let data = {};
+        const data = {};
 
         data.acsc = {};
         data.acscr = {};
@@ -2766,9 +2566,9 @@ class Terminfo {
 
         // See: ~/ncurses/ncurses/tinfo/lib_acs.c: L208
         Object.keys(Terminfo.acsc).forEach((ch) => {
-            let acs_chars = info.strings.acs_chars || ""
-                , i = acs_chars.indexOf(ch)
-                , next = acs_chars[i + 1];
+            let acs_chars = info.strings.acs_chars || "",
+                i = acs_chars.indexOf(ch),
+                next = acs_chars[i + 1];
 
             if (!next || i === -1 || !Terminfo.acsc[next]) {
                 return;
@@ -2825,9 +2625,11 @@ class Terminfo {
     has(name) {
         name = Terminfo.aliasMap[name];
 
-        let val = this.all[name];
+        const val = this.all[name];
 
-        if (!name) { return false; }
+        if (!name) {
+            return false;
+        }
 
         if (typeof val === "number") {
             return val !== -1;
@@ -2855,7 +2657,7 @@ Terminfo.ipaths = [
 
 // A small helper function if we want to easily output text with setTimeouts.
 Terminfo.print = function () {
-    let fake = {
+    const fake = {
         padding: true,
         bools: { needs_xon_xoff: true, xon_xoff: false }
     };
@@ -5002,12 +4804,12 @@ export default class Terminal extends adone.EventEmitter {
     }
 
     log(...args) {
-        return this._log("LOG", util.format.apply(util, args));
+        return this._log("LOG", adone.sprintf.apply(null, args));
     }
 
     debug(...args) {
         if (this.debug) {
-            return this._log("DEBUG", util.format.apply(util, args));
+            return this._log("DEBUG", adone.sprintf.apply(null, args));
         }
     }
 
@@ -5022,7 +4824,7 @@ export default class Terminal extends adone.EventEmitter {
     }
 
     term(is) {
-        return this.terminal.indexOf(is) === 0;
+        return this._terminal.indexOf(is) === 0;
     }
 
     destroy() {
@@ -5472,7 +5274,9 @@ export default class Terminal extends adone.EventEmitter {
         const self = this;
         const gpmclient = require("./gpmclient");
 
-        if (this.gpm) { return; }
+        if (this.gpm) {
+            return;
+        }
 
         this.gpm = gpmclient();
 
@@ -6542,7 +6346,7 @@ export default class Terminal extends adone.EventEmitter {
     }
 
     print(...args) {
-        this.write(this.parse(this.terminfo.format.apply(this, args)));
+        this.write(this.parse(adone.sprintf.apply(null, args)));
         return this;
     }
 

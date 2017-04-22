@@ -1,3 +1,5 @@
+// import adone from "adone";
+
 const screen = new adone.cui.Screen({
     dump: `${__dirname}/logs/widget.log`,
     title: "widget test",
