@@ -1,7 +1,7 @@
-const { sprintf, vsprintf } = adone;
+const { sprintf } = adone;
 
-const shouldThrow = (format, args, err) => assert.throws(() => vsprintf(format, args), err);
-const shouldNotThrow = (format, args) => assert.doesNotThrow(() => vsprintf(format, args));
+const shouldThrow = (format, args, err) => assert.throws(() => sprintf(format, ...args), err);
+const shouldNotThrow = (format, args) => assert.doesNotThrow(() => sprintf(format, ...args));
 
 describe("sprintf", () => {
     const pi = 3.141592653589793;

@@ -16,7 +16,7 @@ export default class XBase {
         this.scope = [];
         this._references = [];
         this._scopedReferences = [];
-        
+
         this.init();
     }
 
@@ -38,7 +38,6 @@ export default class XBase {
                 return xObj;
             }
         }
-        return;
     }
 
     parse() {
@@ -202,9 +201,6 @@ export default class XBase {
         for (const xObj of this.xModule.scope) {
             const node = xObj.ast;
             switch (node.type) {
-                case "ExportNamedDeclaration": {
-                    return this.lookupInExportsByDeclaration(name);
-                }
                 case "VariableDeclarator": {
                     if (xObj.name === name) {
                         return xObj;
@@ -222,10 +218,6 @@ export default class XBase {
         return null;
     }
 
-    lookupInExportsByDeclaration(node) {
-        return null;
-    }
-
     _getMemberExpressionName(node) {
         let prefix;
         const type = node.object.type;
@@ -237,9 +229,9 @@ export default class XBase {
 
         if (is.undefined(prefix)) {
             return node.property.name;
-        } else {
-            return `${prefix}.${node.property.name}`;
         }
+        return `${prefix}.${node.property.name}`;
+
     }
 
     _tryJsNative({ ast, path, xModule }) {
@@ -250,7 +242,8 @@ export default class XBase {
     }
 
     _addReference(name) {
-        if (name.length > 0 && !this._references.includes(name)) {
+        const { objectName } = adone.meta.parseName(name);
+        if (objectName.length > 0 && !this._references.includes(name)) {
             this._references.push(name);
         }
     }

@@ -159,11 +159,11 @@ const fixDoubleBlack = (stack) => {
                     p._color = BLACK;
                     p.right = repaint(RED, s);
                     return;
-                } else {
-                    //console.log("case 2: black sibling, black parent", p.right.value)
-                    p.right = repaint(RED, s);
-                    continue;
                 }
+                //console.log("case 2: black sibling, black parent", p.right.value)
+                p.right = repaint(RED, s);
+                continue;
+
             } else {
                 //console.log("case 3: red sibling")
                 s = cloneNode(s);
@@ -248,11 +248,11 @@ const fixDoubleBlack = (stack) => {
                     p._color = BLACK;
                     p.left = repaint(RED, s);
                     return;
-                } else {
-                    //console.log("case 2: black sibling, black parent")
-                    p.left = repaint(RED, s);
-                    continue;
                 }
+                //console.log("case 2: black sibling, black parent")
+                p.left = repaint(RED, s);
+                continue;
+
             } else {
                 //console.log("case 3: red sibling")
                 s = cloneNode(s);
@@ -309,7 +309,7 @@ class RedBlackTreeIterator {
         if (this._stack.length > 0) {
             return this._stack[this._stack.length - 1].key;
         }
-        return;
+
     }
 
     // Returns value
@@ -317,7 +317,7 @@ class RedBlackTreeIterator {
         if (this._stack.length > 0) {
             return this._stack[this._stack.length - 1].value;
         }
-        return;
+
     }
 
     // Returns the position of this iterator in the sorted list
@@ -448,41 +448,41 @@ class RedBlackTreeIterator {
                 cstack[i]._count--;
             }
             return new RedBlackTreeRef(this.tree._compare, cstack[0]);
-        } else {
-            if (n.left || n.right) {
-                //Second easy case:  Single child black parent
-                //console.log("BLACK single child")
-                if (n.left) {
-                    swapNode(n, n.left);
-                } else if (n.right) {
-                    swapNode(n, n.right);
-                }
-                //Child must be red, so repaint it black to balance color
-                n._color = BLACK;
-                for (let i = 0; i < cstack.length - 1; ++i) {
-                    cstack[i]._count--;
-                }
-                return new RedBlackTreeRef(this.tree._compare, cstack[0]);
-            } else if (cstack.length === 1) {
-                //Third easy case: root
-                //console.log("ROOT")
-                return new RedBlackTreeRef(this.tree._compare, null);
-            } else {
-                //Hard case: Repaint n, and then do some nasty stuff
-                //console.log("BLACK leaf no children")
-                for (let i = 0; i < cstack.length; ++i) {
-                    cstack[i]._count--;
-                }
-                const parent = cstack[cstack.length - 2];
-                fixDoubleBlack(cstack);
-                //Fix up links
-                if (parent.left === n) {
-                    parent.left = null;
-                } else {
-                    parent.right = null;
-                }
-            }
         }
+        if (n.left || n.right) {
+            //Second easy case:  Single child black parent
+            //console.log("BLACK single child")
+            if (n.left) {
+                swapNode(n, n.left);
+            } else if (n.right) {
+                swapNode(n, n.right);
+            }
+            //Child must be red, so repaint it black to balance color
+            n._color = BLACK;
+            for (let i = 0; i < cstack.length - 1; ++i) {
+                cstack[i]._count--;
+            }
+            return new RedBlackTreeRef(this.tree._compare, cstack[0]);
+        } else if (cstack.length === 1) {
+            //Third easy case: root
+            //console.log("ROOT")
+            return new RedBlackTreeRef(this.tree._compare, null);
+        }
+        //Hard case: Repaint n, and then do some nasty stuff
+        //console.log("BLACK leaf no children")
+        for (let i = 0; i < cstack.length; ++i) {
+            cstack[i]._count--;
+        }
+        const parent = cstack[cstack.length - 2];
+        fixDoubleBlack(cstack);
+        //Fix up links
+        if (parent.left === n) {
+            parent.left = null;
+        } else {
+            parent.right = null;
+        }
+
+
         return new RedBlackTreeRef(this.tree._compare, cstack[0]);
     }
 
@@ -945,7 +945,7 @@ export default class RedBlackTree {
                 n = n.right;
             }
         }
-        return;
+
     }
 }
 

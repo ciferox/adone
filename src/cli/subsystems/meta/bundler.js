@@ -62,19 +62,21 @@ export default class Bundler {
             return;
         }
 
-        await this.inspector.attachNamespace(namespace);
+        if (!this.inspector.namespaces.has(namespace)) {
+            await this.inspector.attachNamespace(namespace);
 
-        const x = this.inspector.get(name);
-        const refs = x.references();
-        this._collectRefExprs(refs);
+            const x = this.inspector.get(name);
+            const refs = x.references();
+            this._collectRefExprs(refs);
 
-        adone.info("Referenced namespaces:");
-        adone.log(adone.text.pretty.json(refs));
+            adone.info("Referenced namespaces:");
+            adone.log(adone.text.pretty.json(refs));
 
-        for (const ref of refs) {
-            // Ignore in-module refs
-            if (ref.indexOf(".") >= 0) {
-                await this._lookupRefs(ref);
+            for (const ref of refs) {
+                // Ignore in-module refs
+                if (ref.indexOf(".") >= 0) {
+                    await this._lookupRefs(ref);
+                }
             }
         }
     }

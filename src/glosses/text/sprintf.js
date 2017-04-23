@@ -24,9 +24,9 @@ const getType = (variable) => {
         return "number";
     } else if (typeof variable === "string") {
         return "string";
-    } else {
-        return Object.prototype.toString.call(variable).slice(8, -1).toLowerCase();
     }
+    return Object.prototype.toString.call(variable).slice(8, -1).toLowerCase();
+
 };
 
 const preformattedPadding = {
@@ -42,7 +42,7 @@ const strRepeat = (input, multiplier) => {
 };
 
 
-export const sprintf = (...args) => {
+const sprintf = (...args) => {
     const key = args[0];
     const cache = sprintf.cache;
     if (!(cache[key] && cache.hasOwnProperty(key))) {
@@ -216,8 +216,4 @@ sprintf.parse = function (fmt) {
     return parseTree;
 };
 
-export const vsprintf = (fmt, argv, _argv) => {
-    _argv = (argv || []).slice(0);
-    _argv.splice(0, 0, fmt);
-    return sprintf.apply(null, _argv);
-};
+export default sprintf;
