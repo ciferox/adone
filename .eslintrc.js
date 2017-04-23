@@ -131,7 +131,16 @@ module.exports = {
         "no-extra-label": "error",
         "no-fallthrough": "error",
         "no-floating-decimal": "error",
-        "no-implied-eval": "error"
+        "no-implied-eval": "error",
+        "no-multi-spaces": "error",
+        "no-multi-str": "error",
+        "no-return-await": "error",
+        "no-self-assign": "error",
+        "no-unmodified-loop-condition": "warn",
+        "no-useless-call": "error",
+        "no-useless-return": "error",
+        "no-warning-comments": "warn",
+        "prefer-promise-reject-errors": "error"
     },
     "plugins": [
         "babel",

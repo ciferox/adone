@@ -1,6 +1,19 @@
 // Description of supported double byte encodings and aliases.
 
-module.exports = {
+const { lazify } = adone;
+
+const tables = lazify({
+    shiftjis: "./tables/shiftjis",
+    eucjp: "./tables/eucjp",
+    cp936: "./tables/cp936",
+    gbkAdded: "./tables/gbk_added",
+    gb18030ranges: "./tables/gb18030_ranges",
+    cp949: "./tables/cp949",
+    cp950: "./tables/cp950",
+    big5added: "./tables/big5_added"
+}, null, require);
+
+export default {
 
     // == Japanese/ShiftJIS ====================================================
     // All japanese encodings are based on JIS X set of standards:
@@ -36,9 +49,7 @@ module.exports = {
 
     shiftjis: {
         type: "_dbcs",
-        table() {
-            return require("./tables/shiftjis.json");
-        },
+        table: () => tables.shiftjis,
         encodeAdd: { "\u00a5": 0x5C, "\u203E": 0x7E },
         encodeSkipVals: [{ from: 0xED40, to: 0xF940 }]
     },
@@ -55,9 +66,7 @@ module.exports = {
 
     eucjp: {
         type: "_dbcs",
-        table() {
-            return require("./tables/eucjp.json");
-        },
+        table: () => tables.eucjp,
         encodeAdd: { "\u00a5": 0x5C, "\u203E": 0x7E }
     },
 
@@ -84,17 +93,13 @@ module.exports = {
     936: "cp936",
     cp936: {
         type: "_dbcs",
-        table() {
-            return require("./tables/cp936.json");
-        }
+        table: () => tables.cp936
     },
 
     // GBK (~22000 chars) is an extension of CP936 that added user-mapped chars and some other.
     gbk: {
         type: "_dbcs",
-        table() {
-            return require("./tables/cp936.json").concat(require("./tables/gbk-added.json"));
-        }
+        table: () => tables.cp936.concat(tables.gbkAdded)
     },
     xgbk: "gbk",
     isoir58: "gbk",
@@ -106,12 +111,8 @@ module.exports = {
     // http://www.khngai.com/chinese/charmap/tblgbk.php?page=0
     gb18030: {
         type: "_dbcs",
-        table() {
-            return require("./tables/cp936.json").concat(require("./tables/gbk-added.json"));
-        },
-        gb18030() {
-            return require("./tables/gb18030-ranges.json");
-        },
+        table: () => tables.cp936.concat(tables.gbkAdded),
+        gb18030: () => tables.gb18030ranges,
         encodeSkipVals: [0x80],
         encodeAdd: { "€": 0xA2E3 }
     },
@@ -126,9 +127,7 @@ module.exports = {
     949: "cp949",
     cp949: {
         type: "_dbcs",
-        table() {
-            return require("./tables/cp949.json");
-        }
+        table: () => tables.cp949
     },
 
     cseuckr: "cp949",
@@ -169,18 +168,14 @@ module.exports = {
     950: "cp950",
     cp950: {
         type: "_dbcs",
-        table() {
-            return require("./tables/cp950.json");
-        }
+        table: () => tables.cp950
     },
 
     // Big5 has many variations and is an extension of cp950. We use Encoding Standard's as a consensus.
     big5: "big5hkscs",
     big5hkscs: {
         type: "_dbcs",
-        table() {
-            return require("./tables/cp950.json").concat(require("./tables/big5-added.json"));
-        },
+        table: () => tables.cp950.concat(tables.big5added),
         encodeSkipVals: [0xa2cc]
     },
 

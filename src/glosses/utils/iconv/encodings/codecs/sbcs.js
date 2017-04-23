@@ -1,4 +1,3 @@
-
 const { x } = adone;
 
 // Single-byte codec. Needs a 'chars' string parameter that contains 256 or 128 chars that
@@ -46,7 +45,7 @@ class SBCSDecoder {
     }
 }
 
-class SBCSCodec {
+export default class SBCSCodec {
     constructor(codecOptions, iconv) {
         if (!codecOptions) {
             throw new x.InvalidArgument("SBCS codec is called without the data.");
@@ -81,6 +80,3 @@ class SBCSCodec {
 
 SBCSCodec.prototype.encoder = SBCSEncoder;
 SBCSCodec.prototype.decoder = SBCSDecoder;
-
-
-export { SBCSCodec as _sbcs };

@@ -1,20 +1,32 @@
-const { util } = adone;
+const { util, lazify } = adone;
 
-const modules = [
-    require("./internal"),
-    require("./utf16"),
-    require("./utf7"),
-    require("./sbcs_codec"),
-    require("./sbcs_data"),
-    require("./sbcs_data_generated"),
-    require("./dbcs_codec"),
-    require("./dbcs_data")
-];
+const encodings = lazify({
+    _internal: "./codecs/internal",
+    _dbcs: "./codecs/dbcs",
+    _sbcs: "./codecs/sbcs",
+    utf7: "./codecs/utf7",
+    utf7imap: "./codecs/utf7imap",
+    utf16be: "./codecs/utf16be",
+    utf16: "./codecs/utf16"
+}, exports, require);
 
-// Put all encoding/alias/codec definitions to single object and export it.
-for (let i = 0; i < modules.length; i++) {
-    const module = modules[i];
-    for (const enc of util.keys(module)) {
-        exports[enc] = module[enc];
+// internal
+export const utf8 = { type: "_internal", bomAware: true };
+export const cesu8 = { type: "_internal", bomAware: true };
+export const unicode11utf8 = "utf8";
+export const ucs2 = { type: "_internal", bomAware: true };
+export const utf16le = "ucs2";
+export const binary = { type: "_internal" };
+export const base64 = { type: "_internal" };
+export const hex = { type: "_internal" };
+
+const data = lazify({
+    dbcs: "./data/dbcs",
+    sbcs: "./data/sbcs"
+}, null, require);
+
+for (const type of ["dbcs", "sbcs"]) {
+    for (const [k, v] of util.entries(data[type])) {
+        encodings[k] = v;
     }
 }

@@ -2,7 +2,7 @@ import mongodbTopologyManager from "mongodb-topology-manager";
 
 const { database: { mongo } } = adone;
 
-export const single = async () => {
+export const single = () => {
     before("start mongod", async function () {
         this.server = new mongodbTopologyManager.Server("mongod", {
             dbpath: (await this.tmpdir.addDirectory("27017")).path(),
@@ -28,7 +28,7 @@ export const single = async () => {
     });
 };
 
-export const sharded = async () => {
+export const sharded = () => {
     before("start mongos", async function () {
         this.timeout(120000);
 
@@ -155,7 +155,7 @@ export const sharded = async () => {
     });
 };
 
-export const replicaset = async () => {
+export const replicaset = () => {
     before("start mongod", async function () {
         this.timeout(120000);
         this.server = new mongodbTopologyManager.ReplSet("mongod", [{

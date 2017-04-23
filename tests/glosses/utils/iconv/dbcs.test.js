@@ -111,7 +111,7 @@ describe("glosses", "utils", "iconv", "Full DBCS encoding tests", function () {
     };
 
     const strToHex = (str) => {
-        return spacify4(swapBytes(new Buffer(str, "ucs2")).toString("hex"));
+        return spacify4(swapBytes(Buffer.from(str, "ucs2")).toString("hex"));
     };
 
     // Generate tests for all DBCS encodings.
@@ -177,9 +177,9 @@ describe("glosses", "utils", "iconv", "Full DBCS encoding tests", function () {
                     if (errors.length > 0) {
                         assert.fail(null, null, `Decoding mismatch: <input> | <expected> | <actual> | <expected char> | <actual char>\n${
                             errors.map((err) => {
-                                return `          ${spacify2(err.input)} | ${strToHex(err.strExpected)} | ${strToHex(err.strActual)} | ${
+                                return `${spacify2(err.input)} | ${strToHex(err.strExpected)} | ${strToHex(err.strActual)} | ${
                                     err.strExpected} | ${err.strActual}`;
-                            }).join("\n")}\n       `);
+                            }).join("\n")}\n`);
                     }
                 });
 
@@ -234,8 +234,8 @@ describe("glosses", "utils", "iconv", "Full DBCS encoding tests", function () {
                     if (errors.length > 0) {
                         assert.fail(null, null, `Encoding mismatch: <input> | <input char> | <expected> | <actual>\n${
                             errors.map((err) => {
-                                return `          ${err.input} | ${err.inputChar} | ${spacify2(err.strExpected)} | ${spacify2(err.strActual)}`;
-                            }).join("\n")}\n       `);
+                                return `${err.input} | ${err.inputChar} | ${spacify2(err.strExpected)} | ${spacify2(err.strActual)}`;
+                            }).join("\n")}\n`);
                     }
                 });
             })(enc);

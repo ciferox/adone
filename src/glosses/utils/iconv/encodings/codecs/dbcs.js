@@ -1,7 +1,5 @@
 // Multibyte codec. In this scheme, a character is represented by 1 or more bytes.
 // Our codec supports UTF-16 surrogates, extensions for GB18030 and unicode sequences.
-
-
 const { is, x } = adone;
 
 const UNASSIGNED = -1;
@@ -235,8 +233,13 @@ class DBCSDecoder {
                 i = seqStart;  // Try to parse again, after skipping first byte of the sequence ('i' will be incremented by 'for' cycle).
                 uCode = this.defaultCharUnicode.charCodeAt(0);
             } else if (uCode === GB18030_CODE) {
-                const curSeq = (seqStart >= 0) ? buf.slice(seqStart, i + 1) : prevBuf.slice(seqStart + prevBufOffset, i + 1 + prevBufOffset);
-                const ptr = (curSeq[0] - 0x81) * 12600 + (curSeq[1] - 0x30) * 1260 + (curSeq[2] - 0x81) * 10 + (curSeq[3] - 0x30);
+                const curSeq = (seqStart >= 0) ?
+                    buf.slice(seqStart, i + 1) :
+                    prevBuf.slice(seqStart + prevBufOffset, i + 1 + prevBufOffset);
+                const ptr = (curSeq[0] - 0x81) * 12600 +
+                    (curSeq[1] - 0x30) * 1260 +
+                    (curSeq[2] - 0x81) * 10 +
+                    (curSeq[3] - 0x30);
                 const idx = findIdx(this.gb18030.gbChars, ptr);
                 uCode = this.gb18030.uChars[idx] + ptr - this.gb18030.gbChars[idx];
             } else if (uCode <= NODE_START) {  // Go to next trie node.
@@ -299,7 +302,7 @@ class DBCSDecoder {
 }
 
 // Class DBCSCodec reads and initializes mapping tables.
-class DBCSCodec {
+export default class DBCSCodec {
     constructor(codecOptions, iconv) {
         this.encodingName = codecOptions.encodingName;
         if (!codecOptions) {
@@ -566,5 +569,3 @@ class DBCSCodec {
 
 DBCSCodec.prototype.encoder = DBCSEncoder;
 DBCSCodec.prototype.decoder = DBCSDecoder;
-
-export { DBCSCodec as _dbcs };

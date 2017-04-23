@@ -9,34 +9,34 @@ describe("glosses", "utils", "iconv", "Generic UTF8-UCS2 tests", () => {
     it("Return values are of correct types", () => {
         assert.ok(iconv.encode(testString, "utf8") instanceof Buffer);
 
-        const s = iconv.decode(new Buffer(testString), "utf8");
+        const s = iconv.decode(Buffer.from(testString), "utf8");
         assert.strictEqual(Object.prototype.toString.call(s), "[object String]");
     });
 
     it("Internal encodings all correctly encoded/decoded", () => {
         ["utf8", "UTF-8", "UCS2", "binary"].forEach((enc) => {
             assert.strictEqual(iconv.encode(testStringLatin1, enc).toString(enc), testStringLatin1);
-            assert.strictEqual(iconv.decode(new Buffer(testStringLatin1, enc), enc), testStringLatin1);
+            assert.strictEqual(iconv.decode(Buffer.from(testStringLatin1, enc), enc), testStringLatin1);
         });
     });
 
     it("Base64 correctly encoded/decoded", () => {
         assert.strictEqual(iconv.encode(testStringBase64, "base64").toString("binary"), testString);
-        assert.strictEqual(iconv.decode(new Buffer(testString, "binary"), "base64"), testStringBase64);
+        assert.strictEqual(iconv.decode(Buffer.from(testString, "binary"), "base64"), testStringBase64);
     });
 
     it("Hex correctly encoded/decoded", () => {
         assert.strictEqual(iconv.encode(testStringHex, "hex").toString("binary"), testString);
-        assert.strictEqual(iconv.decode(new Buffer(testString, "binary"), "hex"), testStringHex);
+        assert.strictEqual(iconv.decode(Buffer.from(testString, "binary"), "hex"), testStringHex);
     });
 
     it("Latin1 correctly encoded/decoded", () => {
         assert.strictEqual(iconv.encode(testStringLatin1, "latin1").toString("binary"), testStringLatin1);
-        assert.strictEqual(iconv.decode(new Buffer(testStringLatin1, "binary"), "latin1"), testStringLatin1);
+        assert.strictEqual(iconv.decode(Buffer.from(testStringLatin1, "binary"), "latin1"), testStringLatin1);
     });
 
     it("Convert to string, not buffer (utf8 used)", () => {
-        const res = iconv.encode(new Buffer(testStringLatin1, "utf8"), "utf8");
+        const res = iconv.encode(Buffer.from(testStringLatin1, "utf8"), "utf8");
         assert.ok(res instanceof Buffer);
         assert.strictEqual(res.toString("utf8"), testStringLatin1);
     });
@@ -46,7 +46,7 @@ describe("glosses", "utils", "iconv", "Generic UTF8-UCS2 tests", () => {
             iconv.encode("a", "xxx");
         });
         assert.throws(() => {
-            iconv.decode(new Buffer("a"), "xxx");
+            iconv.decode(Buffer.from("a"), "xxx");
         });
     });
 
@@ -57,16 +57,18 @@ describe("glosses", "utils", "iconv", "Generic UTF8-UCS2 tests", () => {
     });
 
     it("handles Object & Array prototypes monkey patching", () => {
+        // eslint-disable-next-line no-extend-native
         Object.prototype.permits = function () {};
+        // eslint-disable-next-line no-extend-native
         Array.prototype.sample2 = function () {};
 
         iconv._codecDataCache = {}; // Clean up cache so that all encodings are loaded.
 
         try {
-            assert.strictEqual(iconv.decode(new Buffer("abc"), "gbk"), "abc");
-            assert.strictEqual(iconv.decode(new Buffer("abc"), "win1251"), "abc");
-            assert.strictEqual(iconv.decode(new Buffer("abc"), "utf7"), "abc");
-            assert.strictEqual(iconv.decode(new Buffer("abc"), "utf8"), "abc");
+            assert.strictEqual(iconv.decode(Buffer.from("abc"), "gbk"), "abc");
+            assert.strictEqual(iconv.decode(Buffer.from("abc"), "win1251"), "abc");
+            assert.strictEqual(iconv.decode(Buffer.from("abc"), "utf7"), "abc");
+            assert.strictEqual(iconv.decode(Buffer.from("abc"), "utf8"), "abc");
 
             assert.strictEqual(iconv.encode("abc", "gbk").toString(), "abc");
             assert.strictEqual(iconv.encode("abc", "win1251").toString(), "abc");

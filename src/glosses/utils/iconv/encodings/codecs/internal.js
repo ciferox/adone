@@ -1,16 +1,5 @@
 // Node.js internal encodings.
-
-
 const { std: { string_decoder: { StringDecoder } } } = adone;
-
-export const utf8 = { type: "_internal", bomAware: true };
-export const cesu8 = { type: "_internal", bomAware: true };
-export const unicode11utf8 = "utf8";
-export const ucs2 = { type: "_internal", bomAware: true };
-export const utf16le = "ucs2";
-export const binary = { type: "_internal" };
-export const base64 = { type: "_internal" };
-export const hex = { type: "_internal" };
 
 class InternalDecoderCesu8 {
     constructor(options, codec) {
@@ -142,7 +131,7 @@ class InternalEncoder {
     }
 }
 
-class InternalCodec {
+export default class InternalCodec {
     constructor(codecOptions, iconv) {
         this.enc = codecOptions.encodingName;
         this.bomAware = codecOptions.bomAware;
@@ -164,5 +153,3 @@ class InternalCodec {
 
 InternalCodec.prototype.encoder = InternalEncoder;
 InternalCodec.prototype.decoder = InternalDecoder;
-
-export { InternalCodec as _internal };

@@ -60,7 +60,7 @@ describe("glosses", "utils", "iconv", "Full SBCS encoding tests", function () {
     };
 
     const strToHex = (str) => {
-        return spacify4(swapBytes(new Buffer(str, "ucs2")).toString("hex"));
+        return spacify4(swapBytes(Buffer.from(str, "ucs2")).toString("hex"));
     };
 
     // Generate tests for all SBCS encodings.
@@ -82,7 +82,7 @@ describe("glosses", "utils", "iconv", "Full SBCS encoding tests", function () {
                     const errors = [];
                     const buffer = ExBuffer.wrap(await expectedFile.content(null));
                     for (let i = 0; i < 0x100; i++) {
-                        const buf = new Buffer([i]);
+                        const buf = Buffer.from([i]);
                         const strActual = iconv.decode(buf, enc);
 
 
@@ -103,9 +103,9 @@ describe("glosses", "utils", "iconv", "Full SBCS encoding tests", function () {
                     if (errors.length > 0) {
                         assert.fail(null, null, `Decoding mismatch: <input> | <expected> | <actual> | <expected char> | <actual char>\n${
                             errors.map((err) => {
-                                return `          ${spacify2(err.input)} | ${strToHex(err.strExpected)} | ${strToHex(err.strActual)} | ${
+                                return `${spacify2(err.input)} | ${strToHex(err.strExpected)} | ${strToHex(err.strActual)} | ${
                                     err.strExpected} | ${err.strActual}`;
-                            }).join("\n")}\n       `);
+                            }).join("\n")}\n`);
                     }
                 });
 
@@ -128,7 +128,7 @@ describe("glosses", "utils", "iconv", "Full SBCS encoding tests", function () {
                         let strExpected = buffer.read(len).toBuffer();
 
                         if (strExpected.length === 0) {
-                            strExpected = new Buffer(iconv.defaultCharSingleByte);
+                            strExpected = Buffer.from(iconv.defaultCharSingleByte);
                         }
 
                         strExpected = strExpected.toString("hex");
@@ -189,8 +189,8 @@ describe("glosses", "utils", "iconv", "Full SBCS encoding tests", function () {
                     if (errors.length > 0) {
                         assert.fail(null, null, `Encoding mismatch: <input> | <input char> | <expected> | <actual>\n${
                             errors.map((err) => {
-                                return `          ${err.input} | ${err.inputChar} | ${spacify2(err.strExpected)} | ${spacify2(err.strActual)}`;
-                            }).join("\n")}\n       `);
+                                return `${err.input} | ${err.inputChar} | ${spacify2(err.strExpected)} | ${spacify2(err.strActual)}`;
+                            }).join("\n")}\n`);
                     }
                 });
 
@@ -198,13 +198,13 @@ describe("glosses", "utils", "iconv", "Full SBCS encoding tests", function () {
                 // TODO: Implement unicode composition. After that, this test will be meaningful.
 
                 // Create a large random text.
-                var buf2 = new Buffer(100);
+                var buf2 = Buffer.from(100);
                 for (var i = 0; i < buf2.length; i++)
                     buf2[i] = buf[(Math.random()*buf.length) | 0];
 
                 // Check both encoding and decoding.
                 assert.strictEqual(JSON.stringify(iconv.decode(buf2, enc)), JSON.stringify(str = conv.convert(buf2).toString()));
-                assert.strictEqual(iconv.encode(str, enc).toString('hex'), convBack.convert(new Buffer(str)).toString('hex'));
+                assert.strictEqual(iconv.encode(str, enc).toString('hex'), convBack.convert(Buffer.from(str)).toString('hex'));
                 */
             })(enc);
         }

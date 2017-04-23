@@ -3,7 +3,7 @@ import { sharded, replicaset, single } from "./topology";
 
 const { promise: { promisify } } = adone;
 
-describe("glosses", "databases", "mongo", "CRUD API", () => {
+describe("glosses", "databases", "mongo", () => {
     before("mondodb check", async () => {
         const version = await promisify(mongodbVersionManager.current)();
         adone.info(`Running tests against MongoDB version ${version}`);
