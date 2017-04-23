@@ -9,13 +9,13 @@ export default class Diff {
 
         function done(value) {
             if (callback) {
-                setTimeout(function () {
+                setTimeout(() => {
                     callback(undefined, value);
                 }, 0);
                 return true;
-            } else {
-                return value;
             }
+                return value;
+
         }
 
         // Allow subclasses to massage the input prior to running
@@ -53,7 +53,7 @@ export default class Diff {
                 }
 
                 const canAdd = addPath && addPath.newPos + 1 < newLen;
-                const canRemove = removePath && 0 <= oldPos && oldPos < oldLen;
+                const canRemove = removePath && oldPos >= 0 && oldPos < oldLen;
 
                 if (!canAdd && !canRemove) {
                     // If this path is a terminal then prune
@@ -78,10 +78,10 @@ export default class Diff {
                 // If we have hit the end of both strings, then we are done
                 if (basePath.newPos + 1 >= newLen && oldPos + 1 >= oldLen) {
                     return done(buildValues(this, basePath.components, newString, oldString, this.useLongestToken));
-                } else {
+                }
                     // Otherwise track this path as a potential candidate and continue.
                     bestPath[diagonalPath] = basePath;
-                }
+
             }
 
             editLength++;
@@ -92,7 +92,7 @@ export default class Diff {
         // is produced.
         if (callback) {
             (function exec() {
-                setTimeout(function () {
+                setTimeout(() => {
                     // This should not happen, but we want to be safe.
                     /* istanbul ignore next */
                     if (editLength > maxEditLength) {
@@ -147,7 +147,7 @@ export default class Diff {
     }
 
     equals(left, right) {
-        return left === right;
+        return left === right || (this.options.ignoreCase && left.toLowerCase() === right.toLowerCase());
     }
 
     removeEmpty(array) {
@@ -184,7 +184,7 @@ function buildValues(diff, components, newString, oldString, useLongestToken) {
         if (!component.removed) {
             if (!component.added && useLongestToken) {
                 let value = newString.slice(newPos, newPos + component.count);
-                value = value.map(function (value, i) {
+                value = value.map((value, i) => {
                     const oldValue = oldString[oldPos + i];
                     return oldValue.length > value.length ? oldValue : value;
                 });

@@ -19,7 +19,7 @@ objectDiff.castInput = function (value) {
     }, "  ");
 };
 objectDiff.equals = function (left, right) {
-    return Diff.prototype.equals(left.replace(/,([\r\n])/g, "$1"), right.replace(/,([\r\n])/g, "$1"));
+    return Diff.prototype.equals.call(objectDiff, left.replace(/,([\r\n])/g, '$1'), right.replace(/,([\r\n])/g, '$1'));
 };
 
 export function diffObject(oldObj, newObj, options) {
