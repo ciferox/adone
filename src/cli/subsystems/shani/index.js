@@ -1,4 +1,4 @@
-const { shani: { Engine, consoleReporter }, is, std: { path } } = adone;
+const { shani: { Engine, consoleReporter, futureConsoleReporter }, is, std: { path } } = adone;
 
 export default class ShaniCLI extends adone.application.Subsystem {
     initialize() {
@@ -29,7 +29,8 @@ export default class ShaniCLI extends adone.application.Subsystem {
                 { name: "--show-hooks", help: "show hook executing info", group: "output" },
                 { name: "--dont-keep-hooks", help: "Dont keep hook info on the screen", group: "output" },
                 { name: "--show-handles", help: "show handles holding the event loop", group: "output" },
-                { name: "--no-ticks", help: "Don't show the test/hook/timers ticks.\nForced to be true if there is no TTY", group: "output" }
+                { name: "--no-ticks", help: "Don't show the test/hook/timers ticks.\nForced to be true if there is no TTY", group: "output" },
+                { name: "--future", help: "Use new console reporter", group: "output" }
             ],
             handler: this.main,
             commands: [
@@ -101,25 +102,29 @@ export default class ShaniCLI extends adone.application.Subsystem {
 
         const emitter = engine.start();
 
-        // if (adone.terminal.input.isTTY) {
-        //     adone.terminal.listen();
-        //     adone.terminal.on("keypress", (ch, key) => {
-        //         switch (key.full) {
-        //             case "C-q": {
-        //                 // stop testing
-        //                 emitter.stop();
-        //                 break;
-        //             }
-        //             case "C-c": {
-        //                 // immediate exit
-        //                 process.exit(1);
-        //                 break;
-        //             }
-        //         }
-        //     });
-        // }
+        const future = opts.get("future");
 
-        consoleReporter({
+        if (!future && adone.terminal.input.isTTY) {
+            adone.terminal.listen();
+            adone.terminal.on("keypress", (ch, key) => {
+                switch (key.full) {
+                    case "C-q": {
+                        // stop testing
+                        emitter.stop();
+                        break;
+                    }
+                    case "C-c": {
+                        // immediate exit
+                        process.exit(1);
+                        break;
+                    }
+                }
+            });
+        }
+
+        const reporter = future ? futureConsoleReporter : consoleReporter;
+
+        reporter({
             allTimings: config.options.allTimings,
             timers: config.options.timers,
             showHooks: config.options.showHooks,
@@ -161,9 +166,9 @@ export default class ShaniCLI extends adone.application.Subsystem {
             return 1;
         }
         this.success = true;
-        // if (adone.terminal.input.isTTY) {
-        //     adone.terminal.destroy();
-        // }
+        if (!future && adone.terminal.input.isTTY) {
+            adone.terminal.destroy();
+        }
         return 0;
     }
 

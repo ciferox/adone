@@ -836,7 +836,7 @@ export class Engine {
     }
 }
 
-export const consoleReporter = ({
+export const futureConsoleReporter = ({
     allTimings = false,
     timers = false,
     showHooks = false,
@@ -1026,6 +1026,300 @@ export const consoleReporter = ({
                 const msg = `{cyan-fg}${symbol.minus} {escape}${test.description}{/escape}{/}`;
                 // log(`${(runtime && ticks) ? "\x1b[F\x1b[K" : ""}${"    ".repeat(test.block.level() + 1)} ${msg}`);
                 log(`${"    ".repeat(test.block.level() + 1)} ${msg}`);
+                ++pending;
+            })
+            .on("done", () => {
+                const printColorDiff = (diff) => {
+                    log("{red-fg}- actual{/red-fg} {green-fg}+ expected{/green-fg}\n");
+                    let msg = "";
+                    for (let i = 0; i < diff.length; i++) {
+                        let value = adone.text.splitLines(diff[i].value);
+
+                        if (value[value.length - 1]) {
+                            if (i < diff.length - 1) {
+                                value[value.length - 1] += "\n";
+                            }
+                        } else {
+                            value = value.slice(0, -1);
+                        }
+
+                        if (diff[i].added) {
+                            msg += `{green-fg}{escape}+${value.join("+")}{/escape}{/green-fg}`;
+                        } else if (diff[i].removed) {
+                            msg += `{red-fg}{escape}-${value.join("-")}{/escape}{/red-fg}`;
+                        } else {
+                            msg += `{escape} ${value.join(" ")}{/escape}`;
+                        }
+                    }
+
+                    log(msg);
+                };
+
+                if (errors.length) {
+                    log();
+                    log("Errors:\n");
+                    for (const [idx, [failed, err]] of adone.util.enumerate(errors, 1)) {
+                        // print block chain
+                        const stack = new adone.collection.Stack();
+                        let block = failed.block;
+                        do {
+                            stack.push(block.name);
+                            block = block.parent;
+                        } while (block && block.level() >= 0);
+                        log(`${idx}) {escape}${[...stack].join(" \u279c ")} : ${failed.description}{/escape}`);
+                        log();
+
+                        if (err.name && err.message) {
+                            log(`{red-fg}{escape}${err.name}: ${err.message}{/escape}{/}`);
+                        } else {
+                            log(`{red-fg}{escape}${err}{/escape}{/}`);
+                        }
+
+                        if (err.expected && err.actual) {
+                            if (
+                                adone.is.string(err.expected) &&
+                                adone.is.string(err.actual) &&
+                                (
+                                    adone.text.splitLines(err.expected).length > 1 ||
+                                    adone.text.splitLines(err.actual).length > 1
+                                )
+                            ) {
+                                printColorDiff(adone.diff.lines(err.actual, err.expected));
+                            } else if (adone.is.sameType(err.expected, err.actual)) {
+                                printColorDiff(adone.diff.objects(err.actual, err.expected));
+                            }
+                        }
+                        if (adone.is.string(err.stack)) {
+                            const stackMsg = err.stack.split("\n").slice(1).map((x) => `    ${x.trim()}`).join("\n");
+                            log(`{grey-fg}{escape}${stackMsg}{/escape}{/}`);
+                        }
+                        log();
+                    }
+                }
+
+                if (globalErrors.length) {
+                    log();
+                    log("Global errors:\n");
+                    for (const [idx, err] of adone.util.enumerate(globalErrors, 1)) {
+                        if (err.name && err.message) {
+                            log(`{#ff9500-fg}${idx}) {escape}${err.name}: ${err.message}{/escape}{/}`);
+                        } else {
+                            log(`{#ff9500-fg}${idx}) {escape}${err}{/escape}{/}`);
+                        }
+
+                        if (adone.is.string(err.stack)) {
+                            const stackMsg = err.stack.split("\n").slice(1).map((x) => `    ${x.trim()}`).join("\n");
+                            log(`{grey-fg}{escape}${stackMsg}{/escape}{/}`);
+                        }
+                        log();
+                    }
+                }
+
+                log();
+                totalElapsed = process.hrtime(totalElapsed);
+                testsElapsed = adone.util.humanizeTime(testsElapsed);
+                totalElapsed = adone.util.humanizeTime(
+                    totalElapsed[0] * 1e3 + totalElapsed[1] / 1e6
+                );
+                log(`    {green-fg}${passed} passing{/} {grey-fg}(${testsElapsed}){/}`);
+                if (pending) {
+                    log(`{cyan-fg}    ${pending} pending{/}`);
+                }
+                if (failed) {
+                    log(`{red-fg}    ${failed} failing{/}`);
+                }
+                if (globalErrors.length) {
+                    log(`{#ff9500-fg}    ${globalErrors.length} error${globalErrors.length > 1 ? "s" : ""}{/}`);
+                }
+                log();
+                log(`{grey-fg}    Total elapsed: ${totalElapsed}{/}`);
+                log();
+            })
+            .on("error", (err) => {
+                globalErrors.push(err);
+            });
+    };
+};
+
+export const consoleReporter = ({
+    allTimings = false,
+    timers = false,
+    showHooks = false,
+    keepHooks = false,
+    ticks = true
+} = {}) => {
+    const term = adone.terminal;
+
+    const { isTTY } = process.stdout;
+    const ansiRegexp = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-PRZcf-nqry=><]/g;
+    const parse = (str) => {
+        str = term.parse(str);
+        if (!isTTY) {
+            str = str.replace(ansiRegexp, "");
+        }
+        return str;
+    };
+
+    const log = (message = "", { newline = true } = {}) => {
+        process.stdout.write(parse(message));
+        if (newline) {
+            process.stdout.write("\n");
+        }
+    };
+
+    if (!isTTY) {
+        ticks = false;
+    }
+
+    return (emitter) => {
+        let pending = 0;
+        let failed = 0;
+        let passed = 0;
+        let testsElapsed = 0;
+        let totalElapsed = process.hrtime();
+        const errors = [];
+        const globalErrors = [];
+        let timer = null;
+
+        const elapsedToString = (elapsed, timeout, little = true) => {
+            let elapsedString = adone.util.humanizeTime(elapsed);  // ms
+
+            const k = elapsed / timeout;
+            if (k < 0.25) {
+                if (little) {
+                    elapsedString = `{green-fg}${elapsedString}{/}`;
+                } else {
+                    elapsedString = "";
+                }
+            } else if (k < 0.75) {
+                elapsedString = `{yellow-fg}${elapsedString}{/}`;
+            } else {
+                elapsedString = `{red-fg}${elapsedString}{/}`;
+            }
+            return elapsedString;
+        };
+
+        if (showHooks) {
+            const colorizeHook = (type) => {
+                return type
+                    .replace("before", "{#d9534f-fg}before{/}")
+                    .replace("after", "{#0275d8-fg}after{/}")
+                    .replace("each", "{#5cb85c-fg}each{/}");
+            };
+
+            const startHookHandler = (type) => {
+                type = colorizeHook(type);
+                return ({ block, hook, test }) => {
+                    if (ticks) {
+                        const padding = "    ".repeat(Math.max(block.level() + (test ? 1 : 0), 0));
+                        log(`${padding} \u2026 executing ${type} hook{escape}${hook.description ? `: ${hook.description}` : ""}{/escape}`);
+                        const start = new Date();
+                        if (timers) {
+                            timer = setInterval(() => {
+                                if (ticks) {
+                                    log("\x1b[F\x1b[K", { newline: false });
+                                }
+                                log(`${padding} \u2026 executing ${type} hook{escape}${hook.description ? `: ${hook.description}` : ""}{/escape} (${elapsedToString(new Date() - start, hook.timeout(), true)})`);
+                            }, 50);
+                        }
+                    }
+                };
+            };
+
+            const endHookHandler = (type) => {
+                type = colorizeHook(type);
+                return ({ hook, block, test, meta }) => {
+                    if (ticks && timers) {
+                        clearInterval(timer);
+                    }
+                    if (keepHooks) {
+                        const padding = "    ".repeat(Math.max(block.level() + (test ? 1 : 0), 0));
+                        let msg = `${ticks ? "\x1b[F\x1b[K" : ""}${padding} ${meta.err ? "{red-fg}\u2717" : "{green-fg}\u2713"}{/} ${type} hook{escape}${hook.description ? `: ${hook.description}` : ""}{/escape}`;
+                        const elapsedString = elapsedToString(
+                            meta.elapsed,
+                            hook.timeout(),
+                            allTimings
+                        );
+                        if (elapsedString) {
+                            msg = `${msg} (${elapsedString})`;
+                        }
+                        log(msg);
+                    } else if (ticks) {
+                        log("\x1b[F\x1b[K\x1b[F");
+                    }
+                };
+            };
+            emitter
+                .on("start before hook", startHookHandler("before"))
+                .on("start before each hook", startHookHandler("before each"))
+                .on("start after hook", startHookHandler("after"))
+                .on("start after each hook", startHookHandler("after each"))
+                .on("end before hook", endHookHandler("before"))
+                .on("end before each hook", endHookHandler("before each"))
+                .on("end after hook", endHookHandler("after"))
+                .on("end after each hook", endHookHandler("after each"));
+        }
+
+        let enteredBlocks = [];
+        let blockLevel = 0;
+        emitter
+            .on("enter block", ({ block }) => {
+                if (enteredBlocks[blockLevel] !== block.name) {
+                    enteredBlocks = enteredBlocks.slice(0, blockLevel);
+                    enteredBlocks.push(block.name);
+                    log(`${"    ".repeat(blockLevel)} {escape}${block.name}{/escape}`);
+                }
+                ++blockLevel;
+            })
+            .on("exit block", () => {
+                --blockLevel;
+            })
+            .on("start test", ({ test }) => {
+                if (ticks) {
+                    log(`${"    ".repeat(test.block.level() + 1)} \u2026 {grey-fg}{escape}${test.description}{/escape}{/}`);
+                    if (timers) {
+                        const start = new Date();
+                        timer = setInterval(() => {
+                            log(`\x1b[F\x1b[K${"    ".repeat(test.block.level() + 1)} \u2026 {grey-fg}{escape}${test.description}{/escape}{/} (${elapsedToString(new Date() - start, test.timeout())})`);
+                        }, 50);
+                    }
+                }
+            })
+            .on("end test", ({ test, meta: { err, elapsed, skipped } }) => {
+                if (ticks && timers) {
+                    clearInterval(timer);
+                }
+                if (skipped) {
+                    // shouldn't be handled here
+                    return;
+                }
+                const timeout = test.timeout();
+
+                const elapsedString = elapsedToString(elapsed, timeout, allTimings);
+                let msg;
+                if (err) {
+                    msg = `{red-fg}\u2717 ${failed + 1}) {escape}${test.description}{/escape}{/}`;
+                } else {
+                    msg = `{green-fg}\u2713 {grey-fg}{escape}${test.description}{/escape}{/}`;
+                }
+                if (elapsedString) {
+                    msg = `${msg} (${elapsedString})`;
+                }
+                if (ticks) {
+                    log("\x1b[F\x1b[K", { newline: false });
+                }
+                log(`${"    ".repeat(test.block.level() + 1)} ${msg} ${" ".repeat(10)}`);
+                testsElapsed += elapsed;
+                if (err) {
+                    ++failed;
+                    errors.push([test, err]);
+                } else {
+                    ++passed;
+                }
+            })
+            .on("skip test", ({ test, runtime }) => {
+                const msg = `{cyan-fg}\u2212 {escape}${test.description}{/escape}{/}`;
+                log(`${(runtime && ticks) ? "\x1b[F\x1b[K" : ""}${"    ".repeat(test.block.level() + 1)} ${msg}`);
                 ++pending;
             })
             .on("done", () => {
