@@ -1,5 +1,4 @@
-const progressFormat = "%s:spinner {gray-fg}%s{/}";
-const completeFormat = "%s{green-fg}:spinner{/} {gray-fg}%s{/}";
+const progressFormat = "%s:spinner {gray-fg}%s{/} (:elapsed)";
 
 (async () => {
     for (let i = 0; i < 300; i++) {
@@ -25,7 +24,6 @@ const completeFormat = "%s{green-fg}:spinner{/} {gray-fg}%s{/}";
             adone.error(err);
         }
         await adone.promise.delay(tm);
-        bar.update(1);
-        bar.setSchema(adone.sprintf(completeFormat, tabs, message), true);    
+        bar.complete(adone.math.random(0, 2) === 1);
     }
 })();

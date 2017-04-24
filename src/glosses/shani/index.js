@@ -999,13 +999,14 @@ export const futureConsoleReporter = ({
 
 
                 // const elapsedString = elapsedToString(elapsed, timeout, allTimings);
-                let msg;
-                if (err) {
-                    msg = `{red-fg}${symbol.cross} ${failed + 1}) {escape}${test.description}{/escape}{/}`;
-                } else {
-                    msg = `{green-fg}${symbol.tick} {grey-fg}{escape}${test.description}{/escape}{/}`;
-                }
-                bar.setSchema(`${"    ".repeat(test.block.level() + 1)}${msg}`, true);
+                // let msg;
+                // if (err) {
+                //     msg = `:spinner {red-fg}${failed + 1}) {escape}${test.description}{/escape}{/}`;
+                // } else {
+                //     msg = `:spinner {grey-fg}{escape}${test.description}{/escape}{/}`;
+                // }
+                bar.setSchema(`${"    ".repeat(test.block.level() + 1)}:spinner ${err ? "{red-fg}${failed + 1}) " : "{grey-fg}"}{escape}${test.description}{/escape}{/}`, true);
+                bar.complete(!err);
                 // if (elapsedString) {
                 //     msg = `${msg} (${elapsedString})`;
                 // }

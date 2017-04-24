@@ -90,7 +90,23 @@ const bareLength = (output) => {
 };
 
 export default class ProgressBar {
-    constructor({ total = 100, current = 0, width = 60, tough = false, clean = false, spinner = "dots", spinnerComplete = approx(symbol.tick), blank = "—", filled = approx(symbol.square), callback, schema } = {}) {
+    constructor({
+        total = 100,
+        current = 0,
+        width = 60,
+        tough = false,
+        clean = false,
+        spinner = {
+            active: "dots",
+            completeOk: `{green-fg}${approx(symbol.tick)}{/}`,
+            completeBad: `{red-fg}${approx(symbol.cross)}{/}`
+        },
+        timeFormatter = adone.util.humanizeTime,
+        blank = "—",
+        filled = approx(symbol.square),
+        callback,
+        schema
+    } = {}) {
         this.total = total;
         this.current = current;
         this.width = width;
@@ -107,10 +123,14 @@ export default class ProgressBar {
 
         this.tough = Boolean(tough);
         this.clean = Boolean(clean);
-        this.spinner = adone.text.spinner[spinner] || adone.text.spinner.dots;
-        this.spinnerComplete = spinnerComplete;
-        this.spinnerFrame = 0;
-        this.spinnerTimer = null;
+        this.spinner = {
+            active: adone.text.spinner[spinner.active] || adone.text.spinner.dots,
+            ok: spinner.completeOk,
+            bad: spinner.completeBad,
+            frame: 0,
+            timer: null
+        };
+        this.timeFormatter = timeFormatter;
         this.chars = {
             blank,
             filled
@@ -130,16 +150,16 @@ export default class ProgressBar {
     setSchema(schema = " [:bar] :current/:total :percent :elapsed :eta", refresh = false) {
         this.schema = schema;
 
-        if (!is.null(this.spinnerTimer)) {
-            clearInterval(this.spinnerTimer);
-            this.spinnerTimer = null;
+        if (!is.null(this.spinner.timer)) {
+            clearInterval(this.spinner.timer);
+            this.spinner.timer = null;
         }
 
         if (!this.completed && schema.indexOf(":spinner") >= 0) {
-            this.spinnerTimer = setInterval(() => {
-                this.spinnerFrame++;
+            this.spinner.timer = setInterval(() => {
+                this.spinner.frame++;
                 this.update(this.current / this.total);
-            }, this.spinner.interval);
+            }, this.spinner.active.interval);
         }
 
         if (refresh) {
@@ -183,6 +203,15 @@ export default class ProgressBar {
         this.tick(delta, tokens);
     }
 
+    complete(spinnerComplete = true) {
+        if (is.string(spinnerComplete)) {
+            this.spinner.complete = spinnerComplete;
+        } else {
+            this.spinner.complete = Boolean(spinnerComplete) === true ? this.spinner.ok : this.spinner.bad;
+        }
+        this.update(1);
+    }
+
     compile(tokens) {
         const ratio = Math.min(Math.max(this.current / this.total, 0), 1);
         const chars = this.chars;
@@ -193,13 +222,13 @@ export default class ProgressBar {
         if (this.current <= 0) {
             eta = "-";
         } else {
-            eta = adone.util.humanizeTime(percent === 100 ? 0 : elapsed * this.total / this.current);
+            eta = this.timeFormatter(percent === 100 ? 0 : elapsed * this.total / this.current);
         }
 
         let output = this.schema
             .replace(/:total/g, this.total)
             .replace(/:current/g, this.current)
-            .replace(/:elapsed/g, adone.util.humanizeTime(elapsed))
+            .replace(/:elapsed/g, this.timeFormatter(elapsed))
             .replace(/:eta/g, eta)
             .replace(/:percent/g, `${toFixed(percent, 0)}%`);
 
@@ -221,9 +250,9 @@ export default class ProgressBar {
         const length = Math.round(width * ratio);
         let spinner;
         if (!this.completed) {
-            spinner = this.spinner.frames[this.spinnerFrame % this.spinner.frames.length];
+            spinner = this.spinner.active.frames[this.spinner.frame % this.spinner.active.frames.length];
         } else {
-            spinner = this.spinnerComplete;
+            spinner = this.spinner.complete;
         }
         const filled = chars.filled.repeat(length);
         const blank = chars.blank.repeat(width - length);
@@ -301,8 +330,8 @@ export default class ProgressBar {
 
     snoop() {
         if (this.completed) {
-            if (!is.null(this.spinnerTimer)) {
-                clearInterval(this.spinnerTimer);
+            if (!is.null(this.spinner.timer)) {
+                clearInterval(this.spinner.timer);
             }
             this.destroy();
         }
