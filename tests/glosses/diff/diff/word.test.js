@@ -1,9 +1,7 @@
-"use string";
+describe("glosses", "diff", () => {
+    const { diff: { _: { wordDiff }, words, wordsWithSpace, util: { convertChangesToXML } } } = adone;
 
-const { wordDiff, words, wordsWithSpace, convertChangesToXML } = adone.diff;
-
-describe("WordDiff", () => {
-    describe("#words", () => {
+    describe("words", () => {
         it("should diff whitespace", () => {
             const diffResult = words("New Value", "New  ValueMoreData");
             expect(convertChangesToXML(diffResult)).to.equal("New  <del>Value</del><ins>ValueMoreData</ins>");
@@ -99,10 +97,10 @@ describe("WordDiff", () => {
         });
     });
 
-    describe("#words - async", () => {
+    describe("words - async", () => {
         it("should diff whitespace", (done) => {
             words("New Value", "New  ValueMoreData", (err, diffResult) => {
-                expect(err).to.be.undefined;
+                expect(err).to.be.null;
                 expect(convertChangesToXML(diffResult)).to.equal("New  <del>Value</del><ins>ValueMoreData</ins>");
                 done();
             });
@@ -110,7 +108,7 @@ describe("WordDiff", () => {
 
         it("should diff multiple whitespace values", (done) => {
             words("New Value  ", "New  ValueMoreData ", (err, diffResult) => {
-                expect(err).to.be.undefined;
+                expect(err).to.be.null;
                 expect(convertChangesToXML(diffResult)).to.equal("New  <del>Value</del><ins>ValueMoreData</ins> ");
                 done();
             });
@@ -119,7 +117,7 @@ describe("WordDiff", () => {
         // Diff on word boundary
         it("should diff on word boundaries", (done) => {
             words("New :Value:Test", "New  ValueMoreData ", (err, diffResult) => {
-                expect(err).to.be.undefined;
+                expect(err).to.be.null;
                 expect(convertChangesToXML(diffResult)).to.equal("New  <del>:Value:Test</del><ins>ValueMoreData </ins>");
                 done();
             });
@@ -128,21 +126,21 @@ describe("WordDiff", () => {
         // Diff without changes
         it("should handle identity", (done) => {
             words("New Value", "New Value", (err, diffResult) => {
-                expect(err).to.be.undefined;
+                expect(err).to.be.null;
                 expect(convertChangesToXML(diffResult)).to.equal("New Value");
                 done();
             });
         });
         it("should handle empty", (done) => {
             words("", "", (err, diffResult) => {
-                expect(err).to.be.undefined;
+                expect(err).to.be.null;
                 expect(convertChangesToXML(diffResult)).to.equal("");
                 done();
             });
         });
         it("should diff has identical content", (done) => {
             words("New Value", "New  Value", (err, diffResult) => {
-                expect(err).to.be.undefined;
+                expect(err).to.be.null;
                 expect(convertChangesToXML(diffResult)).to.equal("New  Value");
                 done();
             });
@@ -172,7 +170,7 @@ describe("WordDiff", () => {
         });
     });
 
-    describe("#wordsWithSpace", () => {
+    describe("wordsWithSpace", () => {
         it("should diff whitespace", () => {
             const diffResult = wordsWithSpace("New Value", "New  ValueMoreData");
             expect(convertChangesToXML(diffResult)).to.equal("New<del> Value</del><ins>  ValueMoreData</ins>");

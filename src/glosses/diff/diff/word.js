@@ -1,5 +1,4 @@
-import Diff from "./base";
-import { generateOptions } from "../utils";
+const { diff: { _: { Diff, helper: { generateOptions } } } } = adone;
 
 // Based on https://en.wikipedia.org/wiki/Latin_script_in_Unicode
 //
@@ -37,21 +36,26 @@ wordDiff.tokenize = function (value) {
     // Join the boundary splits that we do not consider to be boundaries. This is primarily the extended Latin character set.
     for (let i = 0; i < tokens.length - 1; i++) {
         // If we have an empty string in the next field and we have only word chars before and after, merge
-        if (!tokens[i + 1] && tokens[i + 2] && extendedWordChars.test(tokens[i]) && extendedWordChars.test(tokens[i + 2])) {
+        if (
+            !tokens[i + 1] &&
+            tokens[i + 2] &&
+            extendedWordChars.test(tokens[i]) &&
+            extendedWordChars.test(tokens[i + 2]
+        )) {
             tokens[i] += tokens[i + 2];
             tokens.splice(i + 1, 2);
-            i--;
+            --i;
         }
     }
 
     return tokens;
 };
 
-export function diffWords(oldStr, newStr, options) {
+export const diffWords = (oldStr, newStr, options) => {
     options = generateOptions(options, { ignoreWhitespace: true });
     return wordDiff.diff(oldStr, newStr, options);
-}
+};
 
-export function diffWordsWithSpace(oldStr, newStr, options) {
+export const diffWordsWithSpace = (oldStr, newStr, options) => {
     return wordDiff.diff(oldStr, newStr, options);
-}
+};

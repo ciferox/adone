@@ -1,11 +1,6 @@
+const { is, diff: { lines: diffLines } } = adone;
 
-import { diffLines } from "../diff/line";
-const { is } = adone;
-
-export function structuredPatch(oldFileName, newFileName, oldStr, newStr, oldHeader, newHeader, options) {
-    if (!options) {
-        options = {};
-    }
+export const structuredPatch = (oldFileName, newFileName, oldStr, newStr, oldHeader, newHeader, options = {}) => {
     if (is.undefined(options.context)) {
         options.context = 4;
     }
@@ -13,11 +8,7 @@ export function structuredPatch(oldFileName, newFileName, oldStr, newStr, oldHea
     const diff = diffLines(oldStr, newStr, options);
     diff.push({ value: "", lines: [] }); // Append an empty value to make cleanup easier
 
-    function contextLines(lines) {
-        return lines.map(function (entry) {
-            return " " + entry;
-        });
-    }
+    const contextLines = (lines) => lines.map((entry) => ` ${entry}`);
 
     const hunks = [];
     let oldRangeStart = 0;
@@ -47,7 +38,7 @@ export function structuredPatch(oldFileName, newFileName, oldStr, newStr, oldHea
             }
 
             // Output our changes
-            curRange.push(...lines.map(function (entry) {
+            curRange.push(...lines.map((entry) => {
                 return (current.added ? "+" : "-") + entry;
             }));
 
@@ -106,28 +97,27 @@ export function structuredPatch(oldFileName, newFileName, oldStr, newStr, oldHea
         newHeader,
         hunks
     };
-}
+};
 
-export function createTwoFilesPatch(oldFileName, newFileName, oldStr, newStr, oldHeader, newHeader, options) {
+export const createTwoFilesPatch = (oldFileName, newFileName, oldStr, newStr, oldHeader, newHeader, options) => {
     const diff = structuredPatch(oldFileName, newFileName, oldStr, newStr, oldHeader, newHeader, options);
 
     const ret = [];
     if (oldFileName === newFileName) {
-        ret.push("Index: " + oldFileName);
+        ret.push(`Index: ${oldFileName}`);
     }
     ret.push("===================================================================");
-    ret.push("--- " + diff.oldFileName + (is.undefined(diff.oldHeader) ? "" : "\t" + diff.oldHeader));
-    ret.push("+++ " + diff.newFileName + (is.undefined(diff.newHeader) ? "" : "\t" + diff.newHeader));
+    ret.push(`--- ${diff.oldFileName}${is.undefined(diff.oldHeader) ? "" : `\t${diff.oldHeader}`}`);
+    ret.push(`+++ ${diff.newFileName}${is.undefined(diff.newHeader) ? "" : `\t${diff.newHeader}`}`);
 
-    for (let i = 0; i < diff.hunks.length; i++) {
-        const hunk = diff.hunks[i];
-        ret.push("@@ -" + hunk.oldStart + "," + hunk.oldLines + " +" + hunk.newStart + "," + hunk.newLines + " @@");
+    for (const hunk of diff.hunks) {
+        ret.push(`@@ -${hunk.oldStart},${hunk.oldLines} +${hunk.newStart},${hunk.newLines} @@`);
         ret.push.apply(ret, hunk.lines);
     }
 
-    return ret.join("\n") + "\n";
-}
+    return `${ret.join("\n")}\n`;
+};
 
-export function createPatch(fileName, oldStr, newStr, oldHeader, newHeader, options) {
+export const createPatch = (fileName, oldStr, newStr, oldHeader, newHeader, options) => {
     return createTwoFilesPatch(fileName, fileName, oldStr, newStr, oldHeader, newHeader, options);
-}
+};

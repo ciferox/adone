@@ -1,11 +1,7 @@
-
-
-// See: http://code.google.com/p/google-diff-match-patch/wiki/API
-export function convertChangesToDMP(changes) {
+export const convertChangesToDMP = (changes) => {
     const ret = [];
     let operation;
-    for (let i = 0; i < changes.length; i++) {
-        const change = changes[i];
+    for (const change of changes) {
         if (change.added) {
             operation = 1;
         } else if (change.removed) {
@@ -17,12 +13,11 @@ export function convertChangesToDMP(changes) {
         ret.push([operation, change.value]);
     }
     return ret;
-}
+};
 
-export function convertChangesToXML(changes) {
+export const convertChangesToXML = (changes) => {
     const ret = [];
-    for (let i = 0; i < changes.length; i++) {
-        const change = changes[i];
+    for (const change of changes) {
         if (change.added) {
             ret.push("<ins>");
         } else if (change.removed) {
@@ -38,4 +33,4 @@ export function convertChangesToXML(changes) {
         }
     }
     return ret.join("");
-}
+};

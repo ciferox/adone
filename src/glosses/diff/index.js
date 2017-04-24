@@ -1,41 +1,38 @@
-import Diff from "./diff/base";
-import { diffChars } from "./diff/character";
-import { diffWords, diffWordsWithSpace, wordDiff } from "./diff/word";
-import { diffLines, diffTrimmedLines } from "./diff/line";
-import { diffSentences } from "./diff/sentence";
+const { lazify } = adone;
 
-import { diffCSS } from "./diff/css";
-import { diffObject, canonicalizeObject } from "./diff/object";
+const diff = lazify({
+    chars: ["./diff/character", (x) => x.diffChars],
+    words: ["./diff/word", (x) => x.diffWords],
+    wordsWithSpace: ["./diff/word", (x) => x.diffWordsWithSpace],
+    lines: ["./diff/line", (x) => x.diffLines],
+    trimmedLines: ["./diff/line", (x) => x.diffTrimmedLines],
+    sentences: ["./diff/sentence", (x) => x.diffSentences],
+    css: ["./diff/css", (x) => x.diffCSS],
+    json: ["./diff/object", (x) => x.diffObject],
+    arrays: ["./diff/array", (x) => x.diffArrays]
+}, exports, require);
 
-import { diffArrays } from "./diff/array";
+diff._ = lazify({
+    Diff: "./diff/base",
+    arrayDiff: ["./diff/array", (x) => x.arrayDiff],
+    characterDiff: ["./diff/chars", (x) => x.characterDiff],
+    cssDiff: ["./diff/css", (x) => x.cssDiff],
+    lineDiff: ["./diff/line", (x) => x.lineDiff],
+    jsonDiff: ["./diff/json", (x) => x.jsonDiff],
+    sentenceDiff: ["./diff/sentence", (x) => x.sentenceDiff],
+    wordDiff: ["./diff/word", (x) => x.wordDiff],
+    helper: "./helpers"
+}, null, require);
 
-import { applyPatch, applyPatches } from "./patch/apply";
-import { mergePatches } from "./patch/merge";
-import { parsePatch } from "./patch/parse";
-import { structuredPatch, createTwoFilesPatch, createPatch } from "./patch/create";
-
-import { convertChangesToDMP, convertChangesToXML } from "./convert";
-
-export {
-    Diff,
-    diffChars as chars,
-    diffWords as words,
-    diffWordsWithSpace as wordsWithSpace,
-    diffLines as lines,
-    diffTrimmedLines as trimmedLines,
-    diffSentences as sentences,
-    diffCSS as css,
-    diffObject as objects,
-    diffArrays as arrays,
-    structuredPatch as createStructuredPatch,
-    createTwoFilesPatch,
-    createPatch,
-    applyPatch,
-    applyPatches,
-    parsePatch,
-    mergePatches,
-    convertChangesToDMP,
-    convertChangesToXML,
-    canonicalizeObject,
-    wordDiff // For tests
-};
+diff.util = lazify({
+    canonicalizeObject: ["./diff/json", (x) => x.canonicalizeObject],
+    structuredPatch: ["./patch/create", (x) => x.structuredPatch],
+    createTwoFilesPatch: ["./patch/create", (x) => x.createTwoFilesPatch],
+    createPatch: ["./patch/create", (x) => x.createPatch],
+    applyPatch: ["./patch/apply", (x) => x.applyPatch],
+    applyPatches: ["./patch/apply", (x) => x.applyPatches],
+    parsePatch: ["./patch/parse", (x) => x.parsePatch],
+    mergePatches: ["./patch/merge", (x) => x.mergePatches],
+    convertChangesToDMP: ["./convert", (x) => x.convertChangesToDMP],
+    convertChangesToXML: ["./convert", (x) => x.convertChangesToXML]
+}, null, require);

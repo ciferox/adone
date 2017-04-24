@@ -1,22 +1,78 @@
+const { is } = adone;
+
+const buildValues = (diff, components, newString, oldString, useLongestToken) => {
+    let componentPos = 0;
+    const { length: componentLen } = components;
+    let newPos = 0;
+    let oldPos = 0;
+
+    const valueMapper = (value, i) => {
+        const oldValue = oldString[oldPos + i];
+        return oldValue.length > value.length ? oldValue : value;
+    };
+
+    for (; componentPos < componentLen; componentPos++) {
+        const component = components[componentPos];
+        if (!component.removed) {
+            if (!component.added && useLongestToken) {
+                const value = newString.slice(newPos, newPos + component.count).map(valueMapper);
+                component.value = diff.join(value);
+            } else {
+                component.value = diff.join(newString.slice(newPos, newPos + component.count));
+            }
+            newPos += component.count;
+
+            // Common case
+            if (!component.added) {
+                oldPos += component.count;
+            }
+        } else {
+            component.value = diff.join(oldString.slice(oldPos, oldPos + component.count));
+            oldPos += component.count;
+
+            // Reverse add and remove so removes are output first to match common convention
+            // The diffing algorithm is tied to add then remove output and this is the simplest
+            // route to get the desired output with minimal overhead.
+            if (componentPos && components[componentPos - 1].added) {
+                const tmp = components[componentPos - 1];
+                components[componentPos - 1] = components[componentPos];
+                components[componentPos] = tmp;
+            }
+        }
+    }
+
+    // Special case handle for when one terminal is ignored. For this case we merge the
+    // terminal into the prior string and drop the change.
+    const lastComponent = components[componentLen - 1];
+    if (componentLen > 1 && (lastComponent.added || lastComponent.removed) && diff.equals("", lastComponent.value)) {
+        components[componentLen - 2].value += lastComponent.value;
+        components.pop();
+    }
+
+    return components;
+};
+
+const clonePath = (path) => ({ newPos: path.newPos, components: path.components.slice(0) });
+
 export default class Diff {
     diff(oldString, newString, options = {}) {
-        let callback = options.callback;
-        if (adone.is.function(options)) {
-            callback = options;
-            options = {};
+        let callback;
+        if (is.function(options)) {
+            [callback, options] = [options, {}];
+        } else {
+            ({ callback = null } = options);
         }
         this.options = options;
 
-        function done(value) {
+        const done = (value) => {
             if (callback) {
                 setTimeout(() => {
-                    callback(undefined, value);
+                    callback(null, value);
                 }, 0);
                 return true;
             }
-                return value;
-
-        }
+            return value;
+        };
 
         // Allow subclasses to massage the input prior to running
         oldString = this.castInput(oldString);
@@ -25,8 +81,8 @@ export default class Diff {
         oldString = this.removeEmpty(this.tokenize(oldString));
         newString = this.removeEmpty(this.tokenize(newString));
 
-        const newLen = newString.length;
-        const oldLen = oldString.length;
+        const { length: newLen } = newString;
+        const { length: oldLen } = oldString;
 
         let editLength = 1;
         const maxEditLength = newLen + oldLen;
@@ -79,8 +135,8 @@ export default class Diff {
                 if (basePath.newPos + 1 >= newLen && oldPos + 1 >= oldLen) {
                     return done(buildValues(this, basePath.components, newString, oldString, this.useLongestToken));
                 }
-                    // Otherwise track this path as a potential candidate and continue.
-                    bestPath[diagonalPath] = basePath;
+                // Otherwise track this path as a potential candidate and continue.
+                bestPath[diagonalPath] = basePath;
 
             }
 
@@ -126,13 +182,18 @@ export default class Diff {
     }
 
     extractCommon(basePath, newString, oldString, diagonalPath) {
-        const newLen = newString.length;
-        const oldLen = oldString.length;
-        let newPos = basePath.newPos;
+        const { length: newLen } = newString;
+        const { length: oldLen } = oldString;
+        let { newPos } = basePath;
+
         let oldPos = newPos - diagonalPath;
         let commonCount = 0;
 
-        while (newPos + 1 < newLen && oldPos + 1 < oldLen && this.equals(newString[newPos + 1], oldString[oldPos + 1])) {
+        while (
+            newPos + 1 < newLen &&
+            oldPos + 1 < oldLen &&
+            this.equals(newString[newPos + 1], oldString[oldPos + 1])
+        ) {
             newPos++;
             oldPos++;
             commonCount++;
@@ -151,13 +212,7 @@ export default class Diff {
     }
 
     removeEmpty(array) {
-        const ret = [];
-        for (let i = 0; i < array.length; i++) {
-            if (array[i]) {
-                ret.push(array[i]);
-            }
-        }
-        return ret;
+        return array.filter(adone.identity);
     }
 
     castInput(value) {
@@ -171,60 +226,4 @@ export default class Diff {
     join(chars) {
         return chars.join("");
     }
-}
-
-function buildValues(diff, components, newString, oldString, useLongestToken) {
-    let componentPos = 0;
-    const componentLen = components.length;
-    let newPos = 0;
-    let oldPos = 0;
-
-    for (; componentPos < componentLen; componentPos++) {
-        const component = components[componentPos];
-        if (!component.removed) {
-            if (!component.added && useLongestToken) {
-                let value = newString.slice(newPos, newPos + component.count);
-                value = value.map((value, i) => {
-                    const oldValue = oldString[oldPos + i];
-                    return oldValue.length > value.length ? oldValue : value;
-                });
-
-                component.value = diff.join(value);
-            } else {
-                component.value = diff.join(newString.slice(newPos, newPos + component.count));
-            }
-            newPos += component.count;
-
-            // Common case
-            if (!component.added) {
-                oldPos += component.count;
-            }
-        } else {
-            component.value = diff.join(oldString.slice(oldPos, oldPos + component.count));
-            oldPos += component.count;
-
-            // Reverse add and remove so removes are output first to match common convention
-            // The diffing algorithm is tied to add then remove output and this is the simplest
-            // route to get the desired output with minimal overhead.
-            if (componentPos && components[componentPos - 1].added) {
-                const tmp = components[componentPos - 1];
-                components[componentPos - 1] = components[componentPos];
-                components[componentPos] = tmp;
-            }
-        }
-    }
-
-    // Special case handle for when one terminal is ignored. For this case we merge the
-    // terminal into the prior string and drop the change.
-    const lastComponent = components[componentLen - 1];
-    if (componentLen > 1 && (lastComponent.added || lastComponent.removed) && diff.equals("", lastComponent.value)) {
-        components[componentLen - 2].value += lastComponent.value;
-        components.pop();
-    }
-
-    return components;
-}
-
-function clonePath(path) {
-    return { newPos: path.newPos, components: path.components.slice(0) };
 }

@@ -1,10 +1,8 @@
-import Diff from "./base";
+const { diff: { _: { Diff } } } = adone;
 
 export const sentenceDiff = new Diff();
-sentenceDiff.tokenize = function (value) {
-    return value.split(/(\S.+?[.!?])(?=\s+|$)/);
-};
 
-export function diffSentences(oldStr, newStr, callback) {
-    return sentenceDiff.diff(oldStr, newStr, callback);
-}
+sentenceDiff.tokenize = (value) => value.split(/(\S.+?[.!?])(?=\s+|$)/);
+
+export const diffSentences = (oldStr, newStr, callback) => sentenceDiff.diff(oldStr, newStr, callback);
+

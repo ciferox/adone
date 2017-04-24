@@ -1,10 +1,20 @@
-"use string";
+describe("glosses", "diff", "patch", "mergePatches", () => {
+    const { diff: { util: { mergePatches, parsePatch } } } = adone;
 
-const { mergePatches, parsePatch } = adone.diff;
+    const swapConflicts = (expected) => {
+        expected.hunks.forEach((hunk) => {
+            hunk.lines.forEach((line) => {
+                if (line.conflict) {
+                    const tmp = line.mine;
+                    line.mine = line.theirs;
+                    line.theirs = tmp;
+                }
+            });
+        });
+    };
 
-describe("patch/mergePatches", function () {
-    describe("#mergePatches", function () {
-        it("should update line numbers for no conflicts", function () {
+    describe("mergePatches", () => {
+        it("should update line numbers for no conflicts", () => {
             const mine = "Index: test\n" + "===================================================================\n" + "--- test\theader1\n" + "+++ test\theader2\n" + "@@ -1,3 +1,4 @@\n" + " line2\n" + " line3\n" + "+line4\n" + " line5\n";
             const theirs = "Index: test\n" + "===================================================================\n" + "--- test\theader1\n" + "+++ test\theader2\n" + "@@ -25,3 +25,4 @@\n" + " foo2\n" + " foo3\n" + "+foo4\n" + " foo5\n";
 
@@ -32,7 +42,7 @@ describe("patch/mergePatches", function () {
             expect(mergePatches(mine, theirs)).to.eql(expected);
             expect(mergePatches(theirs, mine)).to.eql(expected);
         });
-        it("should remove identical hunks", function () {
+        it("should remove identical hunks", () => {
             const mine = "Index: test\n" + "===================================================================\n" + "--- test\theader1\n" + "+++ test\theader2\n" + "@@ -1,3 +1,4 @@\n" + " line2\n" + " line3\n" + "+line4\n" + " line5\n";
             const theirs = "Index: test\n" + "===================================================================\n" + "--- test\theader1\n" + "+++ test\theader2\n" + "@@ -1,3 +1,4 @@\n" + " line2\n" + " line3\n" + "+line4\n" + " line5\n";
 
@@ -54,8 +64,8 @@ describe("patch/mergePatches", function () {
             expect(mergePatches(mine, theirs)).to.eql(expected);
             expect(mergePatches(theirs, mine)).to.eql(expected);
         });
-        describe("hunk mergePatches", function () {
-            it("should mergePatches adjacent additions", function () {
+        describe("hunk mergePatches", () => {
+            it("should mergePatches adjacent additions", () => {
                 const mine = "Index: test\n" + "===================================================================\n" + "--- test\theader1\n" + "+++ test\theader2\n" + "@@ -1,3 +1,4 @@\n" + " line2\n" + " line3\n" + "+line4-1\n" + "+line4-2\n" + "+line4-3\n" + " line5\n";
                 const theirs = "Index: test\n" + "===================================================================\n" + "--- test\theader1\n" + "+++ test\theader2\n" + "@@ -2,2 +2,3 @@\n" + " line3\n" + " line5\n" + "+line4-4\n";
 
@@ -77,7 +87,7 @@ describe("patch/mergePatches", function () {
                 expect(mergePatches(mine, theirs)).to.eql(expected);
                 expect(mergePatches(theirs, mine)).to.eql(expected);
             });
-            it("should mergePatches leading additions", function () {
+            it("should mergePatches leading additions", () => {
                 const mine = "Index: test\n" + "===================================================================\n" + "--- test\theader1\n" + "+++ test\theader2\n" + "@@ -1,3 +1,4 @@\n" + "+line2\n" + " line3\n" + "+line4\n" + " line5\n";
                 const theirs = "Index: test\n" + "===================================================================\n" + "--- test\theader1\n" + "+++ test\theader2\n" + "@@ -3,1 +3,2 @@\n" + " line5\n" + "+line4\n";
 
@@ -100,7 +110,7 @@ describe("patch/mergePatches", function () {
                 expect(mergePatches(theirs, mine)).to.eql(expected);
             });
 
-            it("should mergePatches adjacent removals", function () {
+            it("should mergePatches adjacent removals", () => {
                 const mine = "Index: test\n" + "===================================================================\n" + "--- test\theader1\n" + "+++ test\theader2\n" + "@@ -1,3 +1,4 @@\n" + "-line2\n" + "-line3\n" + "+line4\n" + " line5\n";
                 const theirs = "Index: test\n" + "===================================================================\n" + "--- test\theader1\n" + "+++ test\theader2\n" + "@@ -2,2 +2,3 @@\n" + " line3\n" + " line5\n" + "+line4\n";
 
@@ -123,7 +133,7 @@ describe("patch/mergePatches", function () {
                 expect(mergePatches(theirs, mine)).to.eql(expected);
             });
 
-            it("should mergePatches adjacent additions with context removal", function () {
+            it("should mergePatches adjacent additions with context removal", () => {
                 const mine = "Index: test\n" + "===================================================================\n" + "--- test\theader1\n" + "+++ test\theader2\n" + "@@ -1,3 +1,4 @@\n" + " line2\n" + " line3\n" + "+line4-1\n" + "+line4-2\n" + "+line4-3\n" + "-line5\n";
                 const theirs = "Index: test\n" + "===================================================================\n" + "--- test\theader1\n" + "+++ test\theader2\n" + "@@ -2,2 +2,3 @@\n" + " line3\n" + " line5\n" + "+line4-4\n";
 
@@ -146,7 +156,7 @@ describe("patch/mergePatches", function () {
                 expect(mergePatches(theirs, mine)).to.eql(expected);
             });
 
-            it("should mergePatches removal supersets", function () {
+            it("should mergePatches removal supersets", () => {
                 const mine = "@@ -1,3 +1,4 @@\n" + " line2\n" + " line3\n" + "-line4\n" + "-line4\n" + " line5\n";
                 const theirs = "@@ -1,3 +1,4 @@\n" + " line2\n" + " line3\n" + "-line4\n" + " line4\n" + " line5\n";
 
@@ -163,7 +173,7 @@ describe("patch/mergePatches", function () {
                 expect(mergePatches(mine, theirs)).to.eql(expected);
                 expect(mergePatches(theirs, mine)).to.eql(expected);
             });
-            it("should conflict removal disjoint sets", function () {
+            it("should conflict removal disjoint sets", () => {
                 const mine = "@@ -1,3 +1,4 @@\n" + " line2\n" + " line3\n" + "-line4\n" + "-line4\n" + "-line4\n" + " line5\n";
                 const theirs = "@@ -1,3 +1,4 @@\n" + " line2\n" + " line3\n" + "-line4\n" + "-line4\n" + "-line5\n" + " line5\n";
 
@@ -186,7 +196,7 @@ describe("patch/mergePatches", function () {
                 expect(mergePatches(theirs, mine)).to.eql(expected);
             });
 
-            it("should conflict removal disjoint context", function () {
+            it("should conflict removal disjoint context", () => {
                 const mine = "@@ -1,3 +1,4 @@\n" + " line2\n" + " line3\n" + "-line4\n" + "-line4\n" + "-line4\n" + " line5\n";
                 const theirs = "@@ -1,3 +1,4 @@\n" + " line2\n" + " line3\n" + "-line4\n" + "-line4\n" + " line5\n" + " line5\n";
 
@@ -210,7 +220,7 @@ describe("patch/mergePatches", function () {
             });
 
             // These are all conflicts. A conflict is anything that is on the same desired line that is not identical
-            it("should conflict two additions at the same line", function () {
+            it("should conflict two additions at the same line", () => {
                 const mine = "@@ -1,3 +1,4 @@\n" + " line2\n" + " line3\n" + "+line4-1\n" + "+line4-2\n" + "+line4-3\n" + " line5\n";
                 const theirs = "@@ -2 +2,2 @@\n" + " line3\n" + "+line4-4\n";
                 const expected = {
@@ -231,7 +241,7 @@ describe("patch/mergePatches", function () {
                 swapConflicts(expected);
                 expect(mergePatches(theirs, mine)).to.eql(expected);
             });
-            it("should conflict addition supersets", function () {
+            it("should conflict addition supersets", () => {
                 const mine = "@@ -1,3 +1,4 @@\n" + " line2\n" + " line3\n" + "+line4\n" + "+line4\n" + " line5\n";
                 const theirs = "@@ -1,3 +1,4 @@\n" + " line2\n" + " line3\n" + "+line4\n" + " line5\n";
                 const expected = {
@@ -252,7 +262,7 @@ describe("patch/mergePatches", function () {
                 swapConflicts(expected);
                 expect(mergePatches(theirs, mine)).to.eql(expected);
             });
-            it("should handle removal and edit (add+remove) at the same line", function () {
+            it("should handle removal and edit (add+remove) at the same line", () => {
                 const mine = "@@ -1,3 +1,4 @@\n" + " line2\n" + "-line3\n";
                 const theirs = "@@ -2 +2,2 @@\n" + "-line3\n" + "+line4\n";
                 const expected = {
@@ -273,7 +283,7 @@ describe("patch/mergePatches", function () {
                 swapConflicts(expected);
                 expect(mergePatches(theirs, mine)).to.eql(expected);
             });
-            it("should handle edit (add+remove) on multiple lines", function () {
+            it("should handle edit (add+remove) on multiple lines", () => {
                 const mine = "@@ -1,3 +1,4 @@\n" + "-line2\n" + " line3\n" + " line3\n" + " line5\n";
                 const theirs = "@@ -2 +2,2 @@\n" + "-line3\n" + "-line3\n" + "+line4\n" + "+line4\n";
 
@@ -292,7 +302,7 @@ describe("patch/mergePatches", function () {
                 swapConflicts(expected);
                 expect(mergePatches(theirs, mine)).to.eql(expected);
             });
-            it("should handle edit (add+remove) past extents", function () {
+            it("should handle edit (add+remove) past extents", () => {
                 const mine = "@@ -1,3 +1,4 @@\n" + "-line2\n" + " line3\n" + " line3\n";
                 const theirs = "@@ -2 +2,2 @@\n" + "-line3\n" + "-line3\n" + "-line5\n" + "+line4\n" + "+line4\n";
 
@@ -311,7 +321,7 @@ describe("patch/mergePatches", function () {
                 swapConflicts(expected);
                 expect(mergePatches(theirs, mine)).to.eql(expected);
             });
-            it("should handle edit (add+remove) past extents", function () {
+            it("should handle edit (add+remove) past extents", () => {
                 const mine = "@@ -1,3 +1,4 @@\n" + "-line2\n" + " line3\n" + " line3\n";
                 const theirs = "@@ -2 +2,2 @@\n" + "-line3\n" + "-line3\n" + "-line5\n" + "+line4\n" + "+line4\n";
 
@@ -330,7 +340,7 @@ describe("patch/mergePatches", function () {
                 swapConflicts(expected);
                 expect(mergePatches(theirs, mine)).to.eql(expected);
             });
-            it("should handle edit (add+remove) context mismatch", function () {
+            it("should handle edit (add+remove) context mismatch", () => {
                 const mine = "@@ -1,3 +1,4 @@\n" + "-line2\n" + " line3\n" + " line4\n";
                 const theirs = "@@ -2 +2,2 @@\n" + "-line3\n" + "-line3\n" + "-line5\n" + "+line4\n" + "+line4\n";
 
@@ -352,7 +362,7 @@ describe("patch/mergePatches", function () {
                 swapConflicts(expected);
                 expect(mergePatches(theirs, mine)).to.eql(expected);
             });
-            it("should handle edit (add+remove) addition", function () {
+            it("should handle edit (add+remove) addition", () => {
                 const mine = "@@ -1,3 +1,4 @@\n" + "-line2\n" + " line3\n" + "+line6\n" + " line3\n";
                 const theirs = "@@ -2 +2,2 @@\n" + "-line3\n" + "-line3\n" + "-line5\n" + "+line4\n" + "+line4\n";
 
@@ -374,7 +384,7 @@ describe("patch/mergePatches", function () {
                 swapConflicts(expected);
                 expect(mergePatches(theirs, mine)).to.eql(expected);
             });
-            it("should handle edit (add+remove) on multiple lines with context", function () {
+            it("should handle edit (add+remove) on multiple lines with context", () => {
                 const mine = "@@ -1,3 +1,4 @@\n" + " line2\n" + "-line3\n" + " line3\n" + " line5\n";
                 const theirs = "@@ -2 +2,2 @@\n" + "-line3\n" + "-line3\n" + "+line4\n" + "+line4\n";
 
@@ -388,7 +398,7 @@ describe("patch/mergePatches", function () {
                             mine: ["-line3"],
                             theirs: ["-line3", "-line3", "+line4", "+line4"]
                         }, " line3", // TODO: Fix
-                        " line5"]
+                            " line5"]
                     }]
                 };
 
@@ -397,7 +407,7 @@ describe("patch/mergePatches", function () {
                 swapConflicts(expected);
                 expect(mergePatches(theirs, mine)).to.eql(expected);
             });
-            it("should conflict edit with remove in middle", function () {
+            it("should conflict edit with remove in middle", () => {
                 const mine = "@@ -1,3 +1,4 @@\n" + "-line2\n" + " line3\n" + "-line3\n" + " line5\n";
                 const theirs = "@@ -1,3 +1,2 @@\n" + " line2\n" + "-line3\n" + "-line3\n" + "+line4\n" + "+line4\n";
 
@@ -419,7 +429,7 @@ describe("patch/mergePatches", function () {
                 swapConflicts(expected);
                 expect(mergePatches(theirs, mine)).to.eql(expected);
             });
-            it("should handle edit and addition with context connextion", function () {
+            it("should handle edit and addition with context connextion", () => {
                 const mine = "@@ -1,3 +1,4 @@\n" + " line2\n" + "-line3\n" + "-line4\n";
                 const theirs = "@@ -2 +2,2 @@\n" + " line3\n" + " line4\n" + "+line4\n";
 
@@ -437,7 +447,7 @@ describe("patch/mergePatches", function () {
                 expect(mergePatches(theirs, mine)).to.eql(expected);
             });
 
-            it("should mergePatches removals that start in the leading section", function () {
+            it("should mergePatches removals that start in the leading section", () => {
                 const mine = "@@ -1,3 +1,4 @@\n" + "-line2\n" + "-line3\n";
                 const theirs = "@@ -2 +2,2 @@\n" + "-line3\n" + " line4\n";
                 const expected = {
@@ -455,7 +465,7 @@ describe("patch/mergePatches", function () {
                 swapConflicts(expected);
                 expect(mergePatches(theirs, mine)).to.eql(expected);
             });
-            it("should conflict edits that start in the leading section", function () {
+            it("should conflict edits that start in the leading section", () => {
                 const mine = "@@ -1,3 +1,4 @@\n" + "-line2\n" + "-line3\n" + "-line3\n" + "-line3\n" + "-line3\n" + "+line4\n";
                 const theirs = "@@ -2 +2,2 @@\n" + " line3\n" + " line3\n" + "-line3\n" + "-line3\n" + " line5\n";
                 const expected = {
@@ -476,7 +486,7 @@ describe("patch/mergePatches", function () {
                 swapConflicts(expected);
                 expect(mergePatches(theirs, mine)).to.eql(expected);
             });
-            it("should conflict adds that start in the leading section", function () {
+            it("should conflict adds that start in the leading section", () => {
                 const mine = "@@ -1,3 +1,4 @@\n" + "+line2\n" + "+line3\n";
                 const theirs = "@@ -2 +2,2 @@\n" + "-line3\n" + " line4\n";
                 const expected = {
@@ -497,7 +507,7 @@ describe("patch/mergePatches", function () {
                 swapConflicts(expected);
                 expect(mergePatches(theirs, mine)).to.eql(expected);
             });
-            it("should conflict context mismatch", function () {
+            it("should conflict context mismatch", () => {
                 const mine = "@@ -1,3 +1,4 @@\n" + " line2\n" + " line3\n";
                 const theirs = "@@ -1 +1,2 @@\n" + " line3\n" + " line4\n";
                 const expected = {
@@ -520,7 +530,7 @@ describe("patch/mergePatches", function () {
             });
         });
 
-        it("should handle file name updates", function () {
+        it("should handle file name updates", () => {
             const mine = "Index: test\n" + "===================================================================\n" + "--- test\theader1\n" + "+++ test2\theader2\n";
             const theirs = "Index: test\n" + "===================================================================\n" + "--- test\theader1\n" + "+++ test\theader2\n";
             const expected = {
@@ -534,7 +544,7 @@ describe("patch/mergePatches", function () {
             expect(mergePatches(mine, theirs)).to.eql(expected);
             expect(mergePatches(theirs, mine)).to.eql(expected);
         });
-        it("should handle file name conflicts", function () {
+        it("should handle file name conflicts", () => {
             const mine = "Index: test\n" + "===================================================================\n" + "--- test-a\theader-a\n" + "+++ test2\theader2\n";
             const theirs = "Index: test\n" + "===================================================================\n" + "--- test-b\theader-b\n" + "+++ test3\theader3\n";
             const partialMatch = "Index: test\n" + "===================================================================\n" + "--- test-b\theader-a\n" + "+++ test3\theader3\n";
@@ -579,7 +589,7 @@ describe("patch/mergePatches", function () {
                 hunks: []
             });
         });
-        it("should select available headers", function () {
+        it("should select available headers", () => {
             const mine = "Index: test\n" + "===================================================================\n" + "--- test\theader1\n" + "+++ test\theader2\n" + "@@ -1,3 +1,4 @@\n" + " line2\n" + " line3\n" + "+line4\n" + " line5\n";
             const theirs = "@@ -25,3 +25,4 @@\n" + " foo2\n" + " foo3\n" + "+foo4\n" + " foo5\n";
 
@@ -610,7 +620,7 @@ describe("patch/mergePatches", function () {
             expect(mergePatches(theirs, parsePatch(mine)[0])).to.eql(expected);
         });
 
-        it("should diff from base", function () {
+        it("should diff from base", () => {
             expect(mergePatches("foo\nbar\nbaz\n", "foo\nbaz\nbat\n", "foo\nbaz\n")).to.eql({
                 hunks: [{
                     oldStart: 1,
@@ -621,22 +631,10 @@ describe("patch/mergePatches", function () {
                 }]
             });
         });
-        it("should error if not passed base", function () {
-            expect(function () {
+        it("should error if not passed base", () => {
+            expect(() => {
                 mergePatches("foo", "foo");
-            }).to["throw"]("Must provide a base reference or pass in a patch");
+            }).to.throw("Must provide a base reference or pass in a patch");
         });
     });
 });
-
-function swapConflicts(expected) {
-    expected.hunks.forEach(function (hunk) {
-        hunk.lines.forEach(function (line) {
-            if (line.conflict) {
-                const tmp = line.mine;
-                line.mine = line.theirs;
-                line.theirs = tmp;
-            }
-        });
-    });
-}

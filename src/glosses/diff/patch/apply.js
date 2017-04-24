@@ -1,18 +1,16 @@
+const { is, x, diff: { util: { parsePatch }, _: { helper: { distanceIterator } } } } = adone;
 
-import { parsePatch } from "./parse";
-import distanceIterator from "../utils";
-
-export function applyPatch(source, uniDiff, options = {}) {
-    if (adone.is.string(uniDiff)) {
+export const applyPatch = (source, uniDiff, options = {}) => {
+    if (is.string(uniDiff)) {
         uniDiff = parsePatch(uniDiff);
     }
 
-    if (Array.isArray(uniDiff)) {
+    if (is.array(uniDiff)) {
         if (uniDiff.length > 1) {
-            throw new Error("applyPatch only works with a single input.");
+            throw new x.InvalidArgument("applyPatch only works with a single input.");
         }
 
-        uniDiff = uniDiff[0];
+        [uniDiff] = uniDiff;
     }
 
     // Apply the diff to the input
@@ -32,10 +30,9 @@ export function applyPatch(source, uniDiff, options = {}) {
     /**
      * Checks if the hunk exactly fits on the provided location
      */
-    function hunkFits(hunk, toPos) {
-        for (let j = 0; j < hunk.lines.length; j++) {
-            const line = hunk.lines[j];
-            const operation = line[0];
+    const hunkFits = (hunk, toPos) => {
+        for (const line of hunk.lines) {
+            const [operation] = line;
             const content = line.substr(1);
 
             if (operation === " " || operation === "-") {
@@ -52,25 +49,24 @@ export function applyPatch(source, uniDiff, options = {}) {
         }
 
         return true;
-    }
+    };
 
     // Search best fit offsets for each hunk based on the previous ones
-    for (let i = 0; i < hunks.length; i++) {
-        const hunk = hunks[i];
+    for (const hunk of hunks) {
         const maxLine = lines.length - hunk.oldLines;
         let localOffset = 0;
         const toPos = offset + hunk.oldStart - 1;
 
         const iterator = distanceIterator(toPos, minLine, maxLine);
 
-        for (; localOffset !== undefined; localOffset = iterator()) {
+        for (; !is.undefined(localOffset); localOffset = iterator()) {
             if (hunkFits(hunk, toPos + localOffset)) {
                 hunk.offset = offset += localOffset;
                 break;
             }
         }
 
-        if (localOffset === undefined) {
+        if (is.undefined(localOffset)) {
             return false;
         }
 
@@ -80,8 +76,7 @@ export function applyPatch(source, uniDiff, options = {}) {
     }
 
     // Apply patch hunks
-    for (let i = 0; i < hunks.length; i++) {
-        const hunk = hunks[i];
+    for (const hunk of hunks) {
         let toPos = hunk.offset + hunk.newStart - 1;
 
         if (hunk.newLines === 0) {
@@ -129,29 +124,29 @@ export function applyPatch(source, uniDiff, options = {}) {
         lines[_k] = lines[_k] + delimiters[_k];
     }
     return lines.join("");
-}
+};
 
 // Wrapper that supports multiple file patches via callbacks.
-export function applyPatches(uniDiff, options) {
-    if (adone.is.string(uniDiff)) {
+export const applyPatches = (uniDiff, options) => {
+    if (is.string(uniDiff)) {
         uniDiff = parsePatch(uniDiff);
     }
 
     let currentIndex = 0;
 
-    function processIndex() {
+    const processIndex = () => {
         const index = uniDiff[currentIndex++];
         if (!index) {
             return options.complete();
         }
 
-        options.loadFile(index, function(err, data) {
+        options.loadFile(index, (err, data) => {
             if (err) {
                 return options.complete(err);
             }
 
             const updatedContent = applyPatch(data, index, options);
-            options.patched(index, updatedContent, function(err) {
+            options.patched(index, updatedContent, (err) => {
                 if (err) {
                     return options.complete(err);
                 }
@@ -159,6 +154,6 @@ export function applyPatches(uniDiff, options) {
                 processIndex();
             });
         });
-    }
+    };
     processIndex();
-}
+};
