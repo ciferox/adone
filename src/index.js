@@ -27,7 +27,6 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
                     get() {
                         const value = modules[key];
 
-
                         let mod;
                         if (typeof value === "function") {
                             mod = value(key);

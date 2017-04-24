@@ -304,18 +304,22 @@ export default class ProgressBar {
             if (!is.null(this.spinnerTimer)) {
                 clearInterval(this.spinnerTimer);
             }
-            this.terminate();
+            this.destroy();
         }
 
         return this.completed;
     }
 
-    terminate() {
+    destroy() {
         if (this.clean && this.rendered) {
             this.clear();
         }
 
         this.callback && this.callback(this);
         terminal.moveTo(this.savedPos.row - 1, this.savedPos.col - 1);
+        const index = instances.indexOf(this);
+        if (index >= 0) {
+            instances.splice(index, 1);
+        }
     }
 }
