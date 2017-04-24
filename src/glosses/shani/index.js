@@ -986,6 +986,7 @@ export const futureConsoleReporter = ({
                 bar = new adone.terminal.Progress({
                     schema: `${"    ".repeat(test.block.level() + 1)}:spinner {gray-fg}${test.description}{/}`
                 });
+                bar.update(0);
             })
             .on("end test", ({ test, meta: { err, elapsed, skipped } }) => {
                 if (ticks && timers) {
@@ -1087,7 +1088,7 @@ export const futureConsoleReporter = ({
                             ) {
                                 printColorDiff(adone.diff.lines(err.actual, err.expected));
                             } else if (adone.is.sameType(err.expected, err.actual)) {
-                                printColorDiff(adone.diff.objects(err.actual, err.expected));
+                                printColorDiff(adone.diff.json(err.actual, err.expected));
                             }
                         }
                         if (adone.is.string(err.stack)) {
@@ -1381,7 +1382,7 @@ export const consoleReporter = ({
                             ) {
                                 printColorDiff(adone.diff.lines(err.actual, err.expected));
                             } else if (adone.is.sameType(err.expected, err.actual)) {
-                                printColorDiff(adone.diff.objects(err.actual, err.expected));
+                                printColorDiff(adone.diff.json(err.actual, err.expected));
                             }
                         }
                         if (adone.is.string(err.stack)) {
