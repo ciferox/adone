@@ -54,7 +54,8 @@ export const symbol = {
     fourFifths: "⅘",
     fiveSixths: "⅚",
     fiveEighths: "⅝",
-    sevenEighths: "⅞"
+    sevenEighths: "⅞",
+    minus: "−"
 };
 
 const symbolFallback = {
@@ -113,7 +114,8 @@ const symbolFallback = {
     fourFifths: "4/5",
     fiveSixths: "5/6",
     fiveEighths: "5/8",
-    sevenEighths: "7/8"
+    sevenEighths: "7/8",
+    minus: "-"
 };
 
 export const approx = (str) => {

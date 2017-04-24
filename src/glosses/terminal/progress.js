@@ -129,16 +129,16 @@ export default class ProgressBar {
 
     setSchema(schema = " [:bar] :current/:total :percent :elapsed :eta", refresh = false) {
         this.schema = schema;
-        
+
         if (!is.null(this.spinnerTimer)) {
             clearInterval(this.spinnerTimer);
             this.spinnerTimer = null;
         }
 
-        if (!this.completed && schema.indexOf(":spinner") >= 0) {    
+        if (!this.completed && schema.indexOf(":spinner") >= 0) {
             this.spinnerTimer = setInterval(() => {
                 this.spinnerFrame++;
-                this.update(this.current / this.total);    
+                this.update(this.current / this.total);
             }, this.spinner.interval);
         }
 

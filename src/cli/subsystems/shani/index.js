@@ -101,23 +101,23 @@ export default class ShaniCLI extends adone.application.Subsystem {
 
         const emitter = engine.start();
 
-        if (adone.terminal.input.isTTY) {
-            adone.terminal.listen();
-            adone.terminal.on("keypress", (ch, key) => {
-                switch (key.full) {
-                    case "C-q": {
-                        // stop testing
-                        emitter.stop();
-                        break;
-                    }
-                    case "C-c": {
-                        // immediate exit
-                        process.exit(1);
-                        break;
-                    }
-                }
-            });
-        }
+        // if (adone.terminal.input.isTTY) {
+        //     adone.terminal.listen();
+        //     adone.terminal.on("keypress", (ch, key) => {
+        //         switch (key.full) {
+        //             case "C-q": {
+        //                 // stop testing
+        //                 emitter.stop();
+        //                 break;
+        //             }
+        //             case "C-c": {
+        //                 // immediate exit
+        //                 process.exit(1);
+        //                 break;
+        //             }
+        //         }
+        //     });
+        // }
 
         consoleReporter({
             allTimings: config.options.allTimings,
@@ -161,9 +161,9 @@ export default class ShaniCLI extends adone.application.Subsystem {
             return 1;
         }
         this.success = true;
-        if (adone.terminal.input.isTTY) {
-            adone.terminal.destroy();
-        }
+        // if (adone.terminal.input.isTTY) {
+        //     adone.terminal.destroy();
+        // }
         return 0;
     }
 

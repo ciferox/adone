@@ -846,6 +846,9 @@ export const consoleReporter = ({
     const term = adone.terminal;
 
     const { isTTY } = process.stdout;
+
+    const { text: { unicode: { symbol } } } = adone;
+
     const ansiRegexp = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-PRZcf-nqry=><]/g;
     const parse = (str) => {
         str = term.parse(str);
@@ -875,6 +878,7 @@ export const consoleReporter = ({
         const errors = [];
         const globalErrors = [];
         let timer = null;
+        let bar = null;
 
         const elapsedToString = (elapsed, timeout, little = true) => {
             let elapsedString = adone.util.humanizeTime(elapsed);  // ms
@@ -905,43 +909,43 @@ export const consoleReporter = ({
             const startHookHandler = (type) => {
                 type = colorizeHook(type);
                 return ({ block, hook, test }) => {
-                    if (ticks) {
-                        const padding = "    ".repeat(Math.max(block.level() + (test ? 1 : 0), 0));
-                        log(`${padding} \u2026 executing ${type} hook{escape}${hook.description ? `: ${hook.description}` : ""}{/escape}`);
-                        const start = new Date();
-                        if (timers) {
-                            timer = setInterval(() => {
-                                if (ticks) {
-                                    log("\x1b[F\x1b[K", { newline: false });
-                                }
-                                log(`${padding} \u2026 executing ${type} hook{escape}${hook.description ? `: ${hook.description}` : ""}{/escape} (${elapsedToString(new Date() - start, hook.timeout(), true)})`);
-                            }, 50);
-                        }
-                    }
+                    // if (ticks) {
+                    //     const padding = "    ".repeat(Math.max(block.level() + (test ? 1 : 0), 0));
+                    //     log(`${padding} ${symbol.ellipsis} executing ${type} hook{escape}${hook.description ? ` ${hook.description}` : ""}{/escape}`);
+                    //     const start = new Date();
+                    //     if (timers) {
+                    //         timer = setInterval(() => {
+                    //             if (ticks) {
+                    //                 log("\x1b[F\x1b[K", { newline: false });
+                    //             }
+                    //             log(`${padding} ${symbol.ellipsis} executing ${type} hook{escape}${hook.description ? ` ${hook.description}` : ""}{/escape} (${elapsedToString(new Date() - start, hook.timeout(), true)})`);
+                    //         }, 50);
+                    //     }
+                    // }
                 };
             };
 
             const endHookHandler = (type) => {
                 type = colorizeHook(type);
                 return ({ hook, block, test, meta }) => {
-                    if (ticks && timers) {
-                        clearInterval(timer);
-                    }
-                    if (keepHooks) {
-                        const padding = "    ".repeat(Math.max(block.level() + (test ? 1 : 0), 0));
-                        let msg = `${ticks ? "\x1b[F\x1b[K" : ""}${padding} ${meta.err ? "{red-fg}\u2717" : "{green-fg}\u2713"}{/} ${type} hook{escape}${hook.description ? `: ${hook.description}` : ""}{/escape}`;
-                        const elapsedString = elapsedToString(
-                            meta.elapsed,
-                            hook.timeout(),
-                            allTimings
-                        );
-                        if (elapsedString) {
-                            msg = `${msg} (${elapsedString})`;
-                        }
-                        log(msg);
-                    } else if (ticks) {
-                        log("\x1b[F\x1b[K\x1b[F");
-                    }
+                    // if (ticks && timers) {
+                    //     clearInterval(timer);
+                    // }
+                    // if (keepHooks) {
+                    //     const padding = "    ".repeat(Math.max(block.level() + (test ? 1 : 0), 0));
+                    //     let msg = `${ticks ? "\x1b[F\x1b[K" : ""}${padding} ${meta.err ? `{red-fg}${symbol.cross}` : `{green-fg}${symbol.tick}`}{/} ${type} hook{escape}${hook.description ? `: ${hook.description}` : ""}{/escape}`;
+                    //     const elapsedString = elapsedToString(
+                    //         meta.elapsed,
+                    //         hook.timeout(),
+                    //         allTimings
+                    //     );
+                    //     if (elapsedString) {
+                    //         msg = `${msg} (${elapsedString})`;
+                    //     }
+                    //     log(msg);
+                    // } else if (ticks) {
+                    //     log("\x1b[F\x1b[K\x1b[F");
+                    // }
                 };
             };
             emitter
@@ -970,15 +974,18 @@ export const consoleReporter = ({
                 --blockLevel;
             })
             .on("start test", ({ test }) => {
-                if (ticks) {
-                    log(`${"    ".repeat(test.block.level() + 1)} \u2026 {grey-fg}{escape}${test.description}{/escape}{/}`);
-                    if (timers) {
-                        const start = new Date();
-                        timer = setInterval(() => {
-                            log(`\x1b[F\x1b[K${"    ".repeat(test.block.level() + 1)} \u2026 {grey-fg}{escape}${test.description}{/escape}{/} (${elapsedToString(new Date() - start, test.timeout())})`);
-                        }, 50);
-                    }
-                }
+                // if (ticks) {
+                    // if (timers) {
+                    //     const start = new Date();
+                    //     timer = setInterval(() => {
+                    //         log(`\x1b[F\x1b[K${"    ".repeat(test.block.level() + 1)} ${symbol.ellipsis} {grey-fg}{escape}${test.description}{/escape}{/} (${elapsedToString(new Date() - start, test.timeout())})`);
+                    //     }, 50);
+                    // }
+
+                // }
+                bar = new adone.terminal.Progress({
+                    schema: `${"    ".repeat(test.block.level() + 1)}:spinner {gray-fg}${test.description}{/}`
+                });
             })
             .on("end test", ({ test, meta: { err, elapsed, skipped } }) => {
                 if (ticks && timers) {
@@ -988,22 +995,25 @@ export const consoleReporter = ({
                     // shouldn't be handled here
                     return;
                 }
-                const timeout = test.timeout();
+                // const timeout = test.timeout();
 
-                const elapsedString = elapsedToString(elapsed, timeout, allTimings);
+
+                // const elapsedString = elapsedToString(elapsed, timeout, allTimings);
                 let msg;
                 if (err) {
-                    msg = `{red-fg}\u2717 ${failed + 1}) {escape}${test.description}{/escape}{/}`;
+                    msg = `{red-fg}${symbol.cross} ${failed + 1}) {escape}${test.description}{/escape}{/}`;
                 } else {
-                    msg = `{green-fg}\u2713 {grey-fg}{escape}${test.description}{/escape}{/}`;
+                    msg = `{green-fg}${symbol.tick} {grey-fg}{escape}${test.description}{/escape}{/}`;
                 }
-                if (elapsedString) {
-                    msg = `${msg} (${elapsedString})`;
-                }
-                if (ticks) {
-                    log("\x1b[F\x1b[K", { newline: false });
-                }
-                log(`${"    ".repeat(test.block.level() + 1)} ${msg} ${" ".repeat(10)}`);
+                bar.setSchema(`${"    ".repeat(test.block.level() + 1)}${msg}`, true);
+                // if (elapsedString) {
+                //     msg = `${msg} (${elapsedString})`;
+                // }
+                // if (ticks) {
+                //     log("\x1b[F\x1b[K", { newline: false });
+                // }
+                // log(`${"    ".repeat(test.block.level() + 1)} ${msg} ${" ".repeat(10)}`);
+
                 testsElapsed += elapsed;
                 if (err) {
                     ++failed;
@@ -1013,8 +1023,9 @@ export const consoleReporter = ({
                 }
             })
             .on("skip test", ({ test, runtime }) => {
-                const msg = `{cyan-fg}\u2212 {escape}${test.description}{/escape}{/}`;
-                log(`${(runtime && ticks) ? "\x1b[F\x1b[K" : ""}${"    ".repeat(test.block.level() + 1)} ${msg}`);
+                const msg = `{cyan-fg}${symbol.minus} {escape}${test.description}{/escape}{/}`;
+                // log(`${(runtime && ticks) ? "\x1b[F\x1b[K" : ""}${"    ".repeat(test.block.level() + 1)} ${msg}`);
+                log(`${"    ".repeat(test.block.level() + 1)} ${msg}`);
                 ++pending;
             })
             .on("done", () => {
