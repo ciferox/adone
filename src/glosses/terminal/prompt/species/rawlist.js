@@ -1,6 +1,3 @@
-
-import BasePrompt from "./base";
-import Paginator from "../paginator";
 const { vendor: { lodash: _ }, terminal } = adone;
 const observe = require("../events");
 
@@ -25,7 +22,7 @@ const renderChoices = (choices, pointer) => {
         const index = i - separatorOffset;
         let display = `${index + 1}) ${choice.name}`;
         if (index === pointer) {
-            display = terminal.style.cyan(display);
+            display = terminal.cyan(display);
         }
         output += display;
     });
@@ -33,7 +30,7 @@ const renderChoices = (choices, pointer) => {
     return output;
 };
 
-export default class RawlistPrompt extends BasePrompt {
+export default class RawlistPrompt extends terminal.BasePrompt {
     constructor(question, answers) {
         super(question, answers);
         if (!this.opt.choices) {
@@ -59,7 +56,7 @@ export default class RawlistPrompt extends BasePrompt {
     // Make sure no default is set (so it won't be printed)
         this.opt.default = null;
 
-        this.paginator = new Paginator();
+        this.paginator = new terminal.Paginator();
     }
 
     /**
@@ -96,7 +93,7 @@ export default class RawlistPrompt extends BasePrompt {
         let bottomContent = "";
 
         if (this.status === "answered") {
-            message += terminal.style.cyan(this.answer);
+            message += terminal.cyan(this.answer);
         } else {
             const choicesStr = renderChoices(this.opt.choices, this.selected);
             message += this.paginator.paginate(choicesStr, this.selected, this.opt.pageSize);
@@ -106,7 +103,7 @@ export default class RawlistPrompt extends BasePrompt {
         message += terminal.readline.line;
 
         if (error) {
-            bottomContent = `\n${terminal.style.red(">> ")}${error}`;
+            bottomContent = `\n${terminal.red(">> ")}${error}`;
         }
 
         this.screen.render(message, bottomContent);

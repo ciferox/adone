@@ -38,9 +38,9 @@ export default class Bundler {
     async prepare(name) {
         adone.info(`Preparing bundle for '${name}'`);
         await this._lookupRefs(name);
-        // const x = this.inspector.get(name);
+        const x = this.inspector.get(name);
 
-        // adone.log(x.name, x.ast.type, x.code);
+        // adone.log(/*x.name, x.ast.type, */x.code);
         // adone.log(adone.meta.inspect(x.references(), { style: "color" }));
 
         // adone.log(x.name, x.ast.type, adone.meta.inspect(x.xModule.globals, { style: "color" }));
@@ -64,10 +64,12 @@ export default class Bundler {
 
         if (!this.inspector.namespaces.has(namespace)) {
             await this.inspector.attachNamespace(namespace);
-
+        }
+        if (!this._refExprs.includes(name)) {
+            this._addRefExpr(name);
             const x = this.inspector.get(name);
             const refs = x.references();
-            this._collectRefExprs(refs);
+            // this._collectRefExprs(refs);
 
             adone.info("Referenced namespaces:");
             adone.log(adone.text.pretty.json(refs));
@@ -83,9 +85,13 @@ export default class Bundler {
 
     _collectRefExprs(refs) {
         for (const ref of refs) {
-            if (!this._refExprs.includes(ref)) {
-                this._refExprs.push(ref);
-            }
+            this._addRefExpr(ref);
+        }
+    }
+
+    _addRefExpr(name) {
+        if (!this._refExprs.includes(name)) {
+            this._refExprs.push(name);
         }
     }
 }

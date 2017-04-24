@@ -1,4 +1,3 @@
-
 const { terminal } = adone;
 
 /**
@@ -10,7 +9,7 @@ const { terminal } = adone;
 export default class Separator {
     constructor(line) {
         this.type = "separator";
-        this.line = terminal.style.dim(line || new Array(15).join(adone.text.figure.line));
+        this.line = terminal.dim(line || new Array(15).join(adone.text.unicode.symbol.line));
     }
 
     /**

@@ -1,31 +1,28 @@
-const ProgressBar = adone.cui.Progress;
-
-const bar0 = new ProgressBar({
+const bar0 = adone.terminal.progress({
     current: 0
 });
 
-const bar1 = new ProgressBar({
+const bar1 = adone.terminal.progress({
     current: 10
 });
 
-const bar2 = new ProgressBar({
+const bar2 = adone.terminal.progress({
     current: 20
 });
 
-const bar3 = new ProgressBar({
+const bar3 = adone.terminal.progress({
     current: 30
 });
 
-const bar4 = new ProgressBar({
+const bar4 = adone.terminal.progress({
     current: 40
 });
 
-const bar5 = new ProgressBar({
+const bar5 = adone.terminal.progress({
     current: 50
 });
 
-var timer = setInterval(() => {
-
+const timer = setInterval(() => {
     bar0.tick();
     bar1.tick();
     bar2.tick();
@@ -40,5 +37,4 @@ var timer = setInterval(() => {
         && bar5.completed) {
         clearInterval(timer);
     }
-
 }, 100);

@@ -65,40 +65,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
 
             return obj;
         },
-        getAssetAbsolutePath: (relPath) => adone.std.path.resolve(__dirname, "..", "etc", adone.std.path.normalize(relPath)),
-        loadAsset: (relPath) => {
-            const extName = adone.std.path.extname(relPath);
-            const buf = adone.std.fs.readFileSync(adone.getAssetAbsolutePath(relPath));
-            switch (extName) {
-                case ".json": {
-                    return JSON.parse(buf.toString("utf8"));
-                }
-                default:
-                    return buf;
-            }
-        }
-    });
-
-    exports.default = adone;
-
-    Object.defineProperty(global, "adone", {
-        enumerable: true,
-        value: adone
-    });
-
-    Object.defineProperties(adone, {
-        adone: {
-            enumerable: true,
-            value: adone
-        },
-        global: {
-            enumerable: true,
-            value: global
-        }
-    });
-
-    adone.lazify({
-        tag: () => ({
+        tag: {
             set(Class, tag) {
                 Class.prototype[tag] = 1;
             },
@@ -147,7 +114,42 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             FAST_STREAM: Symbol(),
             FAST_FS_STREAM: Symbol(),
             FAST_FS_MAP_STREAM: Symbol()
-        }),
+        },
+        run: (App) => (new App()).run(),
+        bind: (libName) => require(adone.std.path.resolve(__dirname, "./native", libName)),
+        getAssetAbsolutePath: (relPath) => adone.std.path.resolve(__dirname, "..", "etc", adone.std.path.normalize(relPath)),
+        loadAsset: (relPath) => {
+            const extName = adone.std.path.extname(relPath);
+            const buf = adone.std.fs.readFileSync(adone.getAssetAbsolutePath(relPath));
+            switch (extName) {
+                case ".json": {
+                    return JSON.parse(buf.toString("utf8"));
+                }
+                default:
+                    return buf;
+            }
+        }
+    });
+
+    exports.default = adone;
+
+    Object.defineProperty(global, "adone", {
+        enumerable: true,
+        value: adone
+    });
+
+    Object.defineProperties(adone, {
+        adone: {
+            enumerable: true,
+            value: adone
+        },
+        global: {
+            enumerable: true,
+            value: global
+        }
+    });
+
+    adone.lazify({
         std: () => adone.lazify({
             assert: "assert",
             fs: "fs",
@@ -206,8 +208,6 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             $require.resolve = (request) => adone.js.Module._resolveFilename(request, module);
             return $require;
         },
-        run: () => (App) => (new App()).run(),
-        bind: () => (libName) => require(adone.std.path.resolve(__dirname, "./native", libName)),
         package: "../package.json",
         assertion: "./glosses/assertion",
         assert: () => adone.assertion.loadAssertInterface().assert,

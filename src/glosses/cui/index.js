@@ -4,21 +4,6 @@ adone.lazify({
     Screen: "./screen",
     GridLayout: "./layout/grid",
     CarouselLayout: "./layout/carousel",
-    Separator: "./prompt/separator",
-    Prompt: "./prompt",
-    prompt: () => adone.lazify({
-        list: "./prompt/species/list",
-        input: "./prompt/species/input",
-        confirm: "./prompt/species/confirm",
-        rawlist: "./prompt/species/rawlist",
-        expand: "./prompt/species/expand",
-        checkbox: "./prompt/species/checkbox",
-        password: "./prompt/species/password",
-        editor: "./prompt/species/editor",
-        autocomplete: "./prompt/species/autocomplete",
-        directory: "./prompt/species/directory"
-    }, null, require),
-    Progress: "./progress",
     layout: () => adone.lazify({
         Grid: "./layout/grid",
         Carousel: "./layout/carousel"

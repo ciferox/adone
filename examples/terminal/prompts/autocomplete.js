@@ -1,5 +1,4 @@
-const { vendor: { lodash: _ } } = adone;
-const fuzzy = require("fuzzy");
+// const fuzzy = require("fuzzy");
 
 const states = [
     "Alabama",
@@ -67,7 +66,9 @@ const searchStates = (answers, input) => {
     input = input || "";
     return new Promise((resolve) => {
         setTimeout(() => {
-            const fuzzyResult = fuzzy.filter(input, states);
+            const fuzzy = new adone.text.Fuzzy(states);
+            const fuzzyResult = fuzzy.search(input);
+            // const fuzzyResult = fuzzy.filter(input, states);
             resolve(fuzzyResult.map((el) => {
                 return el.original;
             }));
@@ -84,9 +85,7 @@ adone.terminal.prompt([
         source: searchStates,
         pageSize: 4,
         validate(val) {
-            return val
-                ? true
-                : "Type something!";
+            return val ? true : "Type something!";
         }
     }, {
         type: "autocomplete",

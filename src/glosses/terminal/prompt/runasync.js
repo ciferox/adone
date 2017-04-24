@@ -1,5 +1,3 @@
-
-
 /**
  * Return a function that will run a function asynchronously or synchronously
  *

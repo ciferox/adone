@@ -1,14 +1,9 @@
-const ProgressBar = adone.cui.Progress;
+const bar = adone.terminal.progress();
 
-const bar = new ProgressBar();
-
-
-var iv = setInterval(() => {
-
+const iv = setInterval(() => {
     bar.tick();
 
     if (bar.completed) {
         clearInterval(iv);
     }
-
 }, 100);

@@ -1,7 +1,7 @@
 const { is, vendor: { lodash: _ }, terminal } = adone;
 
 export default class Prompt {
-    constructor(prompts) {
+    constructor() {
         this.rl = terminal.readline;
         this.rl.resume();
 
@@ -10,7 +10,18 @@ export default class Prompt {
         // Make sure new prompt start on a newline when closing
         this.rl.on("SIGINT", this.onForceClose);
         process.on("exit", this.onForceClose);
-        this.prompts = prompts;
+        this.prompts = adone.lazify({
+            list: "./species/list",
+            input: "./species/input",
+            confirm: "./species/confirm",
+            rawlist: "./species/rawlist",
+            expand: "./species/expand",
+            checkbox: "./species/checkbox",
+            password: "./species/password",
+            editor: "./species/editor",
+            autocomplete: "./species/autocomplete",
+            directory: "./species/directory"
+        }, null, require);
         this.answers = {};
     }
 
@@ -32,7 +43,7 @@ export default class Prompt {
             if (question.when === false) {
                 continue;
             }
-            
+
             if (is.function(question.when)) {
                 if (!(await question.when(answers))) {
                     continue;

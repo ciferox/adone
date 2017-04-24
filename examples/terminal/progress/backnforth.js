@@ -1,6 +1,4 @@
-const ProgressBar = adone.cui.Progress;
-
-const bar = new ProgressBar({
+const bar = adone.terminal.progress({
     schema: " :title [:bar] :percent"
 });
 

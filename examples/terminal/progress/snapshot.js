@@ -1,5 +1,3 @@
-const ProgressBar = adone.cui.Progress;
-
 console.log();
 console.log();
 console.log();
@@ -8,37 +6,37 @@ console.log();
 
 const tokens = "{underline}{magenta-fg}:current{/}/{italic}{green-fg}:total{/} {bold}{yellow-fg}:percent{/} {italic}{blue-fg}:elapsed{/} {italic}{cyan-fg}:eta{/}";
 
-const bar0 = new ProgressBar({
+const bar0 = adone.terminal.progress({
     schema: "    [:bar] :current/:total :percent :elapsed :eta",
     width: 70,
     current: 0
 });
 
-const bar1 = new ProgressBar({
+const bar1 = adone.terminal.progress({
     schema: "    [:bar] :current/:total :percent :elapsed :eta",
     width: 70,
     current: 10
 });
 
-const bar2 = new ProgressBar({
+const bar2 = adone.terminal.progress({
     schema: "    {white-fg}[{/}{brightgreen-fg}:filled{/}{brightyellow-fg}:blank{/}{white-fg}]{/} {red-fg}:current{/}/{gray-fg}:total{/} {green-fg}:percent{/} :elapsed :eta",
     width: 70,
     current: 20
 });
 
-const bar3 = new ProgressBar({
+const bar3 = adone.terminal.progress({
     schema: "    [:bar] :current/:total :percent :elapsed :eta",
     width: 70,
     current: 30
 });
 
-const bar4 = new ProgressBar({
+const bar4 = adone.terminal.progress({
     schema: "    [:bar] :current/:total :percent :elapsed :eta",
     width: 70,
     current: 40
 });
 
-const bar5 = new ProgressBar({
+const bar5 = adone.terminal.progress({
     schema: "    {white-fg}[{/}:filled:blank] :current/:total :percent :elapsed :eta",
     width: 70,
     current: 50

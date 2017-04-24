@@ -14,16 +14,16 @@ export default function throat(size, fn) {
     function run(fn, self, args) {
         if (size) {
             size--;
-            const result = new Promise(function (resolve) {
+            const result = new Promise((resolve) => {
                 resolve(fn.apply(self, args));
             });
             result.then(release, release);
             return result;
-        } else {
-            return new Promise(function (resolve) {
-                queue.push(new Delayed(resolve, fn, self, args));
-            });
         }
+        return new Promise((resolve) => {
+            queue.push(new Delayed(resolve, fn, self, args));
+        });
+
     }
     function release() {
         size++;
@@ -39,11 +39,11 @@ export default function throat(size, fn) {
     }
     if (!is.number(size)) {
         throw new TypeError(
-            "Expected throat size to be a number but got " + typeof size
+            `Expected throat size to be a number but got ${typeof size}`
         );
     }
     if (!is.undefined(fn) && !is.function(fn)) {
-        throw new TypeError("Expected throat fn to be a function but got " + typeof (fn));
+        throw new TypeError(`Expected throat fn to be a function but got ${typeof (fn)}`);
     }
     if (is.function(fn)) {
         return function () {
@@ -53,16 +53,15 @@ export default function throat(size, fn) {
             }
             return run(fn, this, args);
         };
-    } else {
-        return function (fn) {
-            if (!is.function(fn)) {
-                throw new TypeError("Expected throat fn to be a function but got " + typeof (fn));
-            }
-            const args = [];
-            for (let i = 1; i < arguments.length; i++) {
-                args.push(arguments[i]);
-            }
-            return run(fn, this, args);
-        };
     }
+    return function (fn) {
+        if (!is.function(fn)) {
+            throw new TypeError(`Expected throat fn to be a function but got ${typeof (fn)}`);
+        }
+        const args = [];
+        for (let i = 1; i < arguments.length; i++) {
+            args.push(arguments[i]);
+        }
+        return run(fn, this, args);
+    };
 }

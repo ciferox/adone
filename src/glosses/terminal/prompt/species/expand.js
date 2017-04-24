@@ -1,9 +1,5 @@
-
-import BasePrompt from "./base";
-import Paginator from "../paginator";
-const { vendor: { lodash: _ }, terminal } = adone;
+const { is, vendor: { lodash: _ }, terminal } = adone;
 const observe = require("../events");
-
 
 /**
  * Function for rendering checkbox choices
@@ -23,7 +19,7 @@ const renderChoices = (choices, pointer) => {
 
         let choiceStr = `${choice.key}) ${choice.name}`;
         if (pointer === choice.key) {
-            choiceStr = terminal.style.cyan(choiceStr);
+            choiceStr = terminal.cyan(choiceStr);
         }
         output += choiceStr;
     });
@@ -31,7 +27,7 @@ const renderChoices = (choices, pointer) => {
     return output;
 };
 
-export default class ExpandPrompt extends BasePrompt {
+export default class ExpandPrompt extends terminal.BasePrompt {
     constructor(question, answers) {
         super(question, answers);
         if (!this.opt.choices) {
@@ -47,7 +43,7 @@ export default class ExpandPrompt extends BasePrompt {
             value: "help"
         });
 
-        this.opt.validate = function (choice) {
+        this.opt.validate = (choice) => {
             if (choice == null) {
                 return "Please enter a valid command";
             }
@@ -58,7 +54,7 @@ export default class ExpandPrompt extends BasePrompt {
         // Setup the default string (capitalize the default key)
         this.opt.default = this.generateChoicesString(this.opt.choices, this.opt.default);
 
-        this.paginator = new Paginator();
+        this.paginator = new terminal.Paginator();
     }
 
     /**
@@ -94,7 +90,7 @@ export default class ExpandPrompt extends BasePrompt {
         let bottomContent = "";
 
         if (this.status === "answered") {
-            message += terminal.style.cyan(this.answer);
+            message += terminal.cyan(this.answer);
         } else if (this.status === "expanded") {
             const choicesStr = renderChoices(this.opt.choices, this.selectedKey);
             message += this.paginator.paginate(choicesStr, this.selectedKey, this.opt.pageSize);
@@ -104,11 +100,11 @@ export default class ExpandPrompt extends BasePrompt {
         message += terminal.readline.line;
 
         if (error) {
-            bottomContent = terminal.style.red(">> ") + error;
+            bottomContent = terminal.red(">> ") + error;
         }
 
         if (hint) {
-            bottomContent = terminal.style.cyan(">> ") + hint;
+            bottomContent = terminal.cyan(">> ") + hint;
         }
 
         this.screen.render(message, bottomContent);
@@ -137,13 +133,13 @@ export default class ExpandPrompt extends BasePrompt {
             output += "\n  ";
 
             if (choice.type === "separator") {
-                output += " " + choice;
+                output += ` ${choice}`;
                 return;
             }
 
             let choiceStr = `${choice.key}) ${choice.name}`;
             if (this.selectedKey === choice.key) {
-                choiceStr = terminal.style.cyan(choiceStr);
+                choiceStr = terminal.cyan(choiceStr);
             }
             output += choiceStr;
         });
@@ -227,7 +223,7 @@ export default class ExpandPrompt extends BasePrompt {
      */
     generateChoicesString(choices, defaultIndex) {
         let defIndex = choices.realLength - 1;
-        if (_.isNumber(defaultIndex) && this.opt.choices.getChoice(defaultIndex)) {
+        if (is.number(defaultIndex) && this.opt.choices.getChoice(defaultIndex)) {
             defIndex = defaultIndex;
         }
         const defStr = this.opt.choices.pluck("key");

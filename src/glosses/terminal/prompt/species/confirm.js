@@ -1,9 +1,7 @@
-
-import BasePrompt from "./base";
 const { vendor: { lodash: _ }, terminal } = adone;
 const observe = require("../events");
 
-export default class ConfirmPrompt extends BasePrompt {
+export default class ConfirmPrompt extends terminal.BasePrompt {
     constructor(question, answers) {
         super(question, answers);
         let rawDefault = true;
@@ -55,7 +53,7 @@ export default class ConfirmPrompt extends BasePrompt {
         let message = this.getQuestion();
 
         if (typeof answer === "boolean") {
-            message += terminal.style.cyan(answer ? "Yes" : "No");
+            message += terminal.cyan(answer ? "Yes" : "No");
         } else {
             message += terminal.readline.line;
         }

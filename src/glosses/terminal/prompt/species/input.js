@@ -1,18 +1,7 @@
-
-import BasePrompt from "./base";
 const { terminal } = adone;
 const observe = require("../events");
 
-const mask = (input) => {
-    input = String(input);
-    if (input.length === 0) {
-        return "";
-    }
-
-    return new Array(input.length + 1).join("*");
-};
-
-export default class PasswordPrompt extends BasePrompt {
+export default class InputPrompt extends terminal.BasePrompt {
     /**
      * Start the Inquiry session
      * @param  {Function} cb      Callback when prompt is done
@@ -21,9 +10,8 @@ export default class PasswordPrompt extends BasePrompt {
     _run(cb) {
         this.done = cb;
 
+    // Once user confirm (enter key)
         const events = observe();
-
-        // Once user confirm (enter key)
         const submit = events.line.map(this.filterInput.bind(this));
 
         const validation = this.handleSubmitEvents(submit);
@@ -32,7 +20,7 @@ export default class PasswordPrompt extends BasePrompt {
 
         events.keypress.takeUntil(validation.success).forEach(this.onKeypress.bind(this));
 
-        // Init
+    // Init
         this.render();
 
         return this;
@@ -43,17 +31,17 @@ export default class PasswordPrompt extends BasePrompt {
      * @return {Prompt} self
      */
     render(error) {
-        let message = this.getQuestion();
         let bottomContent = "";
+        let message = this.getQuestion();
 
         if (this.status === "answered") {
-            message += terminal.style.cyan(mask(this.answer));
+            message += terminal.cyan(this.answer);
         } else {
-            message += mask(terminal.readline.line || "");
+            message += terminal.readline.line;
         }
 
         if (error) {
-            bottomContent = `\n${terminal.style.red(">> ")}${error}`;
+            bottomContent = terminal.red(">> ") + error;
         }
 
         this.screen.render(message, bottomContent);
@@ -70,10 +58,10 @@ export default class PasswordPrompt extends BasePrompt {
     }
 
     onEnd(state) {
-        this.status = "answered";
         this.answer = state.value;
+        this.status = "answered";
 
-        // Re-render prompt
+    // Re-render prompt
         this.render();
 
         this.screen.done();
@@ -82,11 +70,10 @@ export default class PasswordPrompt extends BasePrompt {
 
     onError(state) {
         this.render(state.isValid);
-        terminal.readline.output.unmute();
     }
 
     /**
-     * When user type
+     * When user press a key
      */
     onKeypress() {
         this.render();

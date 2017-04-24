@@ -6345,7 +6345,13 @@ export default class Terminal extends adone.EventEmitter {
     }
 
     print(...args) {
-        this.write(this.parse(adone.sprintf.apply(null, args)));
+        switch (args.length) {
+            case 1:
+                this.write(this.parse(args[0]));
+                break;
+            default:
+                this.write(this.parse(adone.sprintf.apply(null, args)));
+        } 
         return this;
     }
 
@@ -6695,13 +6701,27 @@ export default class Terminal extends adone.EventEmitter {
     }
 
     prompt(questions) {
-        const ui = new adone.cui.Prompt(adone.cui.prompt);
+        const ui = new this.Prompt();
         const promise = ui.run(questions);
         promise.ui = ui;
         return promise;
     }
+
+    progress(options) {
+        return new this.Progress(options);
+    }
 }
 Terminal.prototype.type = "program";
+
+adone.lazify({
+    Prompt: "./prompt",
+    BasePrompt: "./prompt/base_prompt",
+    Separator: "./prompt/separator",
+    Paginator: "./prompt/paginator",
+    Choices: "./prompt/choices",
+    Progress: "./progress"
+}, Terminal.prototype, require);
+
 
 const cssKeywords = {
     aliceblue: [240, 248, 255],

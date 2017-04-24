@@ -1,8 +1,5 @@
-
-import BasePrompt from "./base";
-import Paginator from "../paginator";
 import runAsync from "../runasync";
-const { vendor: { lodash: _ }, terminal } = adone;
+const { is, terminal } = adone;
 const observe = require("../events");
 
 /**
@@ -24,15 +21,15 @@ const listRender = (choices, pointer) => {
         if (choice.disabled) {
             separatorOffset++;
             output += `  - ${choice.name}`;
-            output += ` (${_.isString(choice.disabled) ? choice.disabled : "Disabled"})`;
+            output += ` (${is.string(choice.disabled) ? choice.disabled : "Disabled"})`;
             output += "\n";
             return;
         }
 
         const isSelected = (i - separatorOffset === pointer);
-        let line = (isSelected ? `${adone.text.figure.pointer} ` : "  ") + choice.name;
+        let line = (isSelected ? `${adone.text.unicode.symbol.pointer} ` : "  ") + choice.name;
         if (isSelected) {
-            line = terminal.style.cyan(line);
+            line = terminal.cyan(line);
         }
         output += `${line} \n`;
     });
@@ -40,7 +37,7 @@ const listRender = (choices, pointer) => {
     return output.replace(/\n$/, "");
 };
 
-export default class ListPrompt extends BasePrompt {
+export default class ListPrompt extends terminal.BasePrompt {
     constructor(question, answers) {
         super(question, answers);
         if (!this.opt.choices) {
@@ -53,19 +50,19 @@ export default class ListPrompt extends BasePrompt {
         const def = this.opt.default;
 
         // Default being a Number
-        if (_.isNumber(def) && def >= 0 && def < this.opt.choices.realLength) {
+        if (is.number(def) && def >= 0 && def < this.opt.choices.realLength) {
             this.selected = def;
         }
 
         // Default being a String
-        if (_.isString(def)) {
+        if (is.string(def)) {
             this.selected = this.opt.choices.pluck("value").indexOf(def);
         }
 
         // Make sure no default is set (so it won't be printed)
         this.opt.default = null;
 
-        this.paginator = new Paginator();
+        this.paginator = new terminal.Paginator();
     }
 
     /**
@@ -104,12 +101,12 @@ export default class ListPrompt extends BasePrompt {
         let message = this.getQuestion();
 
         if (this.firstRender) {
-            message += terminal.style.dim("(Use arrow keys)");
+            message += terminal.dim("(Use arrow keys)");
         }
 
         // Render choices or answer depending on the state
         if (this.status === "answered") {
-            message += terminal.style.cyan(this.opt.choices.getChoice(this.selected).short);
+            message += terminal.cyan(this.opt.choices.getChoice(this.selected).short);
         } else {
             const choicesStr = listRender(this.opt.choices, this.selected);
             const indexPosition = this.opt.choices.indexOf(this.opt.choices.getChoice(this.selected));

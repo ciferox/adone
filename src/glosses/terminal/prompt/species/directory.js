@@ -1,13 +1,6 @@
-
-import BasePrompt from "./base";
-import Choices from "../choices";
-import Paginator from "../paginator";
+const { terminal } = adone;
 const rx = require("rx");
 const observe = require("../events");
-const { terminal } = adone;
-
-const path = require("path");
-const fs = require("fs");
 
 /**
  * Constants
@@ -43,9 +36,9 @@ const listRender = (choices, pointer) => {
         }
 
         const isSelected = (i - separatorOffset === pointer);
-        let line = (isSelected ? `${adone.text.figure.pointer} ` : "  ") + choice.name;
+        let line = (isSelected ? `${adone.text.unicode.symbol.pointer} ` : "  ") + choice.name;
         if (isSelected) {
-            line = terminal.style.cyan(line);
+            line = terminal.cyan(line);
         }
         output += `${line} \n`;
     });
@@ -59,21 +52,21 @@ const listRender = (choices, pointer) => {
  * @return {Array}           array of folder names inside of basePath
  */
 const getDirectories = (basePath) => {
-    return fs
+    return adone.std.fs
         .readdirSync(basePath)
         .filter((file) => {
-            const stats = fs.lstatSync(path.join(basePath, file));
+            const stats = adone.std.fs.lstatSync(adone.std.path.join(basePath, file));
             if (stats.isSymbolicLink()) {
                 return false;
             }
             const isDir = stats.isDirectory();
-            const isNotDotFile = path.basename(file).indexOf(".") !== 0;
+            const isNotDotFile = adone.std.path.basename(file).indexOf(".") !== 0;
             return isDir && isNotDotFile;
         })
         .sort();
 };
 
-export default class Prompt extends BasePrompt {
+export default class Prompt extends terminal.BasePrompt {
     constructor(question, answers) {
         super(question, answers);
 
@@ -82,8 +75,8 @@ export default class Prompt extends BasePrompt {
         }
 
         this.depth = 0;
-        this.currentPath = path.isAbsolute(this.opt.basePath) ? path.resolve(this.opt.basePath) : path.resolve(process.cwd(), this.opt.basePath);
-        this.opt.choices = new Choices(this.createChoices(this.currentPath), this.answers);
+        this.currentPath = adone.std.path.isAbsolute(this.opt.basePath) ? adone.std.path.resolve(this.opt.basePath) : adone.std.path.resolve(process.cwd(), this.opt.basePath);
+        this.opt.choices = new terminal.Choices(this.createChoices(this.currentPath), this.answers);
         this.selected = 0;
 
         this.firstRender = true;
@@ -93,7 +86,7 @@ export default class Prompt extends BasePrompt {
 
         this.searchTerm = "";
 
-        this.paginator = new Paginator();
+        this.paginator = new terminal.Paginator();
     }
 
     /**
@@ -179,15 +172,15 @@ export default class Prompt extends BasePrompt {
         let message = this.getQuestion();
 
         if (this.firstRender) {
-            message += terminal.style.dim("(Use arrow keys)");
+            message += terminal.dim("(Use arrow keys)");
         }
 
 
         // Render choices or answer depending on the state
         if (this.status === "answered") {
-            message += terminal.style.cyan(path.relative(this.opt.basePath, this.currentPath));
+            message += terminal.cyan(adone.std.path.relative(this.opt.basePath, this.currentPath));
         } else {
-            message += `${terminal.style.bold("\n Current directory: ") + this.opt.basePath}/${terminal.style.cyan(path.relative(this.opt.basePath, this.currentPath))}`;
+            message += `${terminal.bold("\n Current directory: ") + this.opt.basePath}/${terminal.cyan(adone.std.path.relative(this.opt.basePath, this.currentPath))}`;
             const choicesStr = listRender(this.opt.choices, this.selected);
             message += `\n${this.paginator.paginate(choicesStr, this.selected, this.opt.pageSize)}`;
         }
@@ -236,8 +229,8 @@ export default class Prompt extends BasePrompt {
     handleDrill() {
         const choice = this.opt.choices.getChoice(this.selected);
         this.depth++;
-        this.currentPath = path.join(this.currentPath, choice.value);
-        this.opt.choices = new Choices(this.createChoices(this.currentPath), this.answers);
+        this.currentPath = adone.std.path.join(this.currentPath, choice.value);
+        this.opt.choices = new terminal.Choices(this.createChoices(this.currentPath), this.answers);
         this.selected = 0;
         this.render();
     }
@@ -249,8 +242,8 @@ export default class Prompt extends BasePrompt {
         if (this.depth > 0) {
             const choice = this.opt.choices.getChoice(this.selected);
             this.depth--;
-            this.currentPath = path.dirname(this.currentPath);
-            this.opt.choices = new Choices(this.createChoices(this.currentPath), this.answers);
+            this.currentPath = adone.std.path.dirname(this.currentPath);
+            this.opt.choices = new terminal.Choices(this.createChoices(this.currentPath), this.answers);
             this.selected = 0;
             this.render();
         }
@@ -267,7 +260,7 @@ export default class Prompt extends BasePrompt {
 
         this.screen.done();
         terminal.showCursor();
-        this.done(path.relative(this.opt.basePath, this.currentPath));
+        this.done(adone.std.path.relative(this.opt.basePath, this.currentPath));
     }
 
     /**

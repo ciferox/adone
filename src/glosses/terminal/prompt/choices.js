@@ -1,5 +1,4 @@
-
-const { is, vendor: { lodash: _ }, terminal: { Separator } } = adone;
+const { is, vendor: { lodash: _ }, terminal } = adone;
 const assert = require("assert");
 
 /**
@@ -46,15 +45,15 @@ export default class Choices {
     constructor(choices, answers) {
         this.choices = choices.map((val) => {
             if (val.type === "separator") {
-                if (!(val instanceof Separator)) {
-                    val = new Separator(val.line);
+                if (!(val instanceof terminal.Separator)) {
+                    val = new terminal.Separator(val.line);
                 }
                 return val;
             }
             return new Choice(val, answers);
         });
 
-        this.realChoices = this.choices.filter(Separator.exclude).filter((item) => {
+        this.realChoices = this.choices.filter(terminal.Separator.exclude).filter((item) => {
             return !item.disabled;
         });
     }
@@ -81,7 +80,7 @@ export default class Choices {
      * @return {Choice|Undefined} Return the matched choice or undefined
      */
     getChoice(selector) {
-        assert(_.isNumber(selector));
+        assert(is.number(selector));
         return this.realChoices[selector];
     }
 
@@ -91,7 +90,7 @@ export default class Choices {
      * @return {Choice|Undefined} Return the matched choice or undefined
      */
     get(selector) {
-        assert(_.isNumber(selector));
+        assert(is.number(selector));
         return this.choices[selector];
     }
 
@@ -135,7 +134,7 @@ export default class Choices {
             return new Choice(val);
         });
         this.choices.push.apply(this.choices, objs);
-        this.realChoices = this.choices.filter(Separator.exclude);
+        this.realChoices = this.choices.filter(terminal.Separator.exclude);
         return this.choices;
     }
 }

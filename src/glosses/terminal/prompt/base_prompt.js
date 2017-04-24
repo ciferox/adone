@@ -1,7 +1,5 @@
-
-import Choices from "../choices";
 const { is, vendor: { lodash: _ }, terminal } = adone;
-import runAsync from "../runasync";
+import runAsync from "./runasync";
 
 const height = (content) => content.split("\n").length;
 const lastLine = (content) => _.last(content.split("\n"));
@@ -153,7 +151,7 @@ export default class BasePrompt {
 
         // Normalize choices
         if (is.array(this.opt.choices)) {
-            this.opt.choices = new Choices(this.opt.choices, answers);
+            this.opt.choices = new terminal.Choices(this.opt.choices, answers);
         }
 
         this.screen = new ScreenManager();
@@ -236,11 +234,11 @@ export default class BasePrompt {
      * @return {String} prompt question string
      */
     getQuestion() {
-        let message = `${terminal.style.green("?")} ${terminal.style.bold(this.opt.message)} `;
+        let message = `${terminal.green("?")} ${terminal.bold(this.opt.message)} `;
 
         // Append the default if available, and if question isn't answered
         if (this.opt.default != null && this.status !== "answered") {
-            message += terminal.style.dim(`(${this.opt.default}) `);
+            message += terminal.dim(`(${this.opt.default}) `);
         }
 
         return message;

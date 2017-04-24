@@ -1,6 +1,4 @@
-const ProgressBar = adone.cui.Progress;
-
-const bar = new ProgressBar({
+const bar = adone.terminal.progress({
     clean: true,
     schema: " [:bar] \n:current/:total \n:percent \n:elapsed :eta",
     callback() {
@@ -8,8 +6,7 @@ const bar = new ProgressBar({
     }
 });
 
-var iv = setInterval(() => {
-
+const iv = setInterval(() => {
     bar.tick();
     console.log(new Date());
 

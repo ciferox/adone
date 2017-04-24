@@ -1,13 +1,10 @@
-const ProgressBar = adone.cui.Progress;
-
-const bar = new ProgressBar({
+const bar = adone.terminal.progress({
     total: 100
 });
 
 const tokens = "{underline}{magenta-fg}:current{/}/{italic}{green-fg}:total{/} {bold}{yellow-fg}:percent{/} {italic}{blue-fg}:elapsed{/} {italic}{cyan-fg}:eta{/}";
 
-var iv = setInterval(() => {
-
+const iv = setInterval(() => {
     let completedColor = "";
     const current = bar.current;
     if (current < 20) {
@@ -30,5 +27,4 @@ var iv = setInterval(() => {
     if (bar.completed) {
         clearInterval(iv);
     }
-
 }, 30);

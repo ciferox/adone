@@ -1,7 +1,3 @@
-
-import BasePrompt from "./base";
-import Choices from "../choices";
-import Paginator from "../paginator";
 const { terminal } = adone;
 const observe = require("../events");
 const ansiEscapes = require("ansi-escapes");
@@ -23,10 +19,10 @@ const listRender = (choices, pointer) => {
         }
 
         const isSelected = (i - separatorOffset === pointer);
-        let line = (isSelected ? `${adone.text.figure.pointer} ` : "  ") + choice.name;
+        let line = (isSelected ? `${adone.text.unicode.symbol.pointer} ` : "  ") + choice.name;
 
         if (isSelected) {
-            line = terminal.style.cyan(line);
+            line = terminal.cyan(line);
         }
         output += `${line} \n`;
     });
@@ -34,7 +30,7 @@ const listRender = (choices, pointer) => {
     return output.replace(/\n$/, "");
 };
 
-export default class AutocompletePrompt extends BasePrompt {
+export default class AutocompletePrompt extends terminal.BasePrompt {
     constructor(question, answers) {
         super(question, answers);
 
@@ -50,7 +46,7 @@ export default class AutocompletePrompt extends BasePrompt {
         // Make sure no default is set (so it won't be printed)
         this.opt.default = null;
 
-        this.paginator = new Paginator();
+        this.paginator = new terminal.Paginator();
         this.rl = terminal.readline;
     }
 
@@ -89,25 +85,25 @@ export default class AutocompletePrompt extends BasePrompt {
 
         if (this.firstRender) {
             const suggestText = this.opt.suggestOnly ? ", tab to autocomplete" : "";
-            content += terminal.style.dim(`(Use arrow keys or type to search${suggestText})`);
+            content += terminal.dim(`(Use arrow keys or type to search${suggestText})`);
         }
         // Render choices or answer depending on the state
         if (this.status === "answered") {
-            content += terminal.style.cyan(this.shortAnswer || this.answerName || this.answer);
+            content += terminal.cyan(this.shortAnswer || this.answerName || this.answer);
         } else if (this.searching) {
             content += this.rl.line;
-            bottomContent += `  ${terminal.style.dim("Searching...")}`;
+            bottomContent += `  ${terminal.dim("Searching...")}`;
         } else if (this.currentChoices.length) {
             const choicesStr = listRender(this.currentChoices, this.selected);
             content += this.rl.line;
             bottomContent += this.paginator.paginate(choicesStr, this.selected, this.opt.pageSize);
         } else {
             content += this.rl.line;
-            bottomContent += `  ${terminal.style.yellow("No results...")}`;
+            bottomContent += `  ${terminal.yellow("No results...")}`;
         }
 
         if (error) {
-            bottomContent += `\n${terminal.style.red(">> ")}${error}`;
+            bottomContent += `\n${terminal.red(">> ")}${error}`;
         }
 
         this.firstRender = false;
@@ -165,7 +161,7 @@ export default class AutocompletePrompt extends BasePrompt {
         //only render searching state after first time
         if (self.searchedOnce) {
             self.searching = true;
-            self.currentChoices = new Choices([]);
+            self.currentChoices = new terminal.Choices([]);
             self.render(); //now render current searching state
         } else {
             self.searchedOnce = true;
@@ -183,7 +179,7 @@ export default class AutocompletePrompt extends BasePrompt {
                 return;
             }
 
-            choices = new Choices(choices.filter((choice) => {
+            choices = new terminal.Choices(choices.filter((choice) => {
                 return choice.type !== "separator";
             }));
 

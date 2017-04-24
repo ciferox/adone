@@ -1,8 +1,6 @@
-const ProgressBar = adone.cui.Progress;
-
 // simulated download, passing the chunk lengths to tick()
 
-const bar = new ProgressBar({
+const bar = adone.terminal.progress({
     schema: " downloading [:bar] :percent :etas",
     completed: "=",
     blank: " ",
