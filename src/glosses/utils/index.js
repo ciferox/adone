@@ -857,7 +857,6 @@ adone.lazify({
     throat: "./throat",
     toposort: "./toposort",
     jsesc: "./jsesc",
-    Mode: "./mode",
     typeOf: "./typeof",
     deepEqual: "./deep_equal",
     memcpy: "./memcpy",

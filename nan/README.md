@@ -1,9 +1,9 @@
 Native Abstractions for Node.js
 ===============================
 
-**A header file filled with macro and utility goodness for making add-on development for Node.js easier across versions 0.8, 0.10, 0.12, 1, 4, 5, 6 and 7.**
+**A header file filled with macro and utility goodness for making add-on development for Node.js easier across versions 0.8, 0.10, 0.12, 1, 2, 3, 4, 5, 6 and 7.**
 
-***Current version: 2.5.1***
+***Current version: 2.6.2***
 
 *(See [CHANGELOG.md](https://github.com/nodejs/nan/blob/master/CHANGELOG.md) for complete ChangeLog)*
 
@@ -209,6 +209,15 @@ NAN provides a `v8::Script` helpers as the API has changed over the supported ve
  - <a href="doc/script.md#api_nan_compile_script"><b><code>Nan::CompileScript()</code></b></a>
  - <a href="doc/script.md#api_nan_run_script"><b><code>Nan::RunScript()</code></b></a>
 
+
+### JSON
+
+The _JSON_ object provides the c++ versions of the methods offered by the `JSON` object in javascript. V8 exposes these methods via the `v8::JSON` object.
+
+ - <a href="doc/json.md#api_nan_json_parse"><b><code>Nan::JSON.Parse</code></b></a>
+ - <a href="doc/json.md#api_nan_json_stringify"><b><code>Nan::JSON.Stringify</code></b></a>
+
+Refer to the V8 JSON object in the [V8 documentation](https://v8docs.nodesource.com/node-7.4/da/d6f/classv8_1_1_j_s_o_n.html) for more information about these methods and their arguments.
 
 ### Errors
 

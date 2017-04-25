@@ -114,7 +114,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             FAST_FS_STREAM: Symbol(),
             FAST_FS_MAP_STREAM: Symbol()
         },
-        run: (App) => (new App()).run(),
+        run: (App, ignoreArgs = false) => (new App()).run({ ignoreArgs }),
         bind: (libName) => require(adone.std.path.resolve(__dirname, "./native", libName)),
         getAssetAbsolutePath: (relPath) => adone.std.path.resolve(__dirname, "..", "etc", adone.std.path.normalize(relPath)),
         loadAsset: (relPath) => {
@@ -264,6 +264,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         virt: "./glosses/virt",
         vault: "./glosses/vault",
         specter: "./glosses/specter",
+        netscan: "./glosses/netscan",
         omnitron: () => adone.lazify({
             const: "./omnitron/consts",
             GateManager: "./omnitron/gate_manager",

@@ -91,7 +91,7 @@ export default class AdoneCLI extends adone.application.Application {
     uninitialize() {
     }
 
-    main(args) {
+    async main(args) {
         let expr = args.get("expr");
         if (!std.path.isAbsolute(expr)) {
             expr = std.path.resolve(process.cwd(), expr);

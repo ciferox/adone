@@ -89,21 +89,21 @@ export default class XModule extends adone.meta.code.Base {
 
                 const realPath = expandDeclaration(path);
                 const node = realPath.node;
+                
                 if (is.null(xObj)) {
                     const xObjData = {
                         ast: node,
                         path: realPath,
                         xModule: this
                     };
-                    if (nodeType.endsWith("Declaration")) {
+                    if (nodeType === "VariableDeclaration") {
                         xObjData.kind = path.node.kind;
                     }
 
                     xObj = this.createXObject(xObjData);
-
                     // Add to scope only declarations. 
                     if (node.type !== "Identifier") {
-                        if (node.type.endsWith("Declarator") || node.type.endsWith("Declaration")) {
+                        if (node.type.endsWith("Declarator") || ["VariableDeclaration", "ClassDeclaration", "FunctionDeclaration"].includes(node.type)) {
                             this.addToScope(xObj);
                         }
                     }
@@ -116,6 +116,10 @@ export default class XModule extends adone.meta.code.Base {
                                 throw new adone.x.NotValid("Anonymous class");
                             }
                             this._exports[isDefault ? "default" : node.id.name] = xObj;
+                            break;
+                        }
+                        case "FunctionDeclaration": {
+                            this._exports[isDefault ? "default" : xObj.name] = xObj;
                             break;
                         }
                         case "VariableDeclarator": {

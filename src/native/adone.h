@@ -35,13 +35,13 @@
 #include <node_version.h>
 #include <node_buffer.h>
 #include <node_object_wrap.h>
-#include <stdlib.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/types.h>
-#include <string.h>
 #include <wchar.h>
-#include <stdio.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <nan.h>
 
 using namespace v8;
@@ -73,16 +73,5 @@ inline T Unmaybe(Nan::Maybe<T> h) {
 #else
 #include <unistd.h>
 #endif // ADONE_OS_WINDOWS
-
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <wchar.h>
-#include <v8.h>
-#include <node.h>
-#include <node_version.h>
-#include <node_buffer.h>
-#include <node_object_wrap.h>
-#include <nan.h>
 
 #endif // __ADONE_H_
