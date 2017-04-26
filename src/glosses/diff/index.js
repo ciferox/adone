@@ -8,7 +8,7 @@ const diff = lazify({
     trimmedLines: ["./diff/line", (x) => x.diffTrimmedLines],
     sentences: ["./diff/sentence", (x) => x.diffSentences],
     css: ["./diff/css", (x) => x.diffCSS],
-    json: ["./diff/object", (x) => x.diffObject],
+    json: ["./diff/json", (x) => x.diffJson],
     arrays: ["./diff/array", (x) => x.diffArrays]
 }, exports, require);
 

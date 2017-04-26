@@ -1,9 +1,3 @@
-import Server from "adone/glosses/databases/mongo/core/lib/topologies/server";
-import ReplSet from "adone/glosses/databases/mongo/core/lib/topologies/replset";
-import Connection from "adone/glosses/databases/mongo/core/lib/connection/connection";
-import ReplSetState from "adone/glosses/databases/mongo/core/lib/topologies/replset_state";
-import MongoError from "adone/glosses/databases/mongo/core/lib/error";
-import ReadPreference from "adone/glosses/databases/mongo/core/lib/topologies/read_preference";
 import {
     Server as ServerManager
 } from "mongodb-topology-manager";
@@ -14,6 +8,8 @@ const promisify = adone.promise.promisify;
 
 describe("mongodb", function () {
     this.timeout(120000);
+
+    const { database: { mongo: { core: { Server, ReplSetState, MongoError, ReadPreference, Connection, ReplSet } } } } = adone;
 
     before(async function () {
         this.timeout(999999999); // long enough

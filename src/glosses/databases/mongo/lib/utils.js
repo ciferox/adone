@@ -122,7 +122,7 @@ const handleCallback = function (callback, err, value1, value2) {
             return;
         }
         if (callback) {
-            return value2 ? callback(err, value1, value2) :  callback(err, value1);
+            return value2 ? callback(err, value1, value2) : callback(err, value1);
         }
     } catch (err) {
         process.nextTick(() => {
@@ -296,7 +296,7 @@ const translateOptions = function (target, source) {
 };
 
 const filterOptions = function (options, names) {
-    const filterOptions =  {};
+    const filterOptions = {};
 
     for (const name in options) {
         if (names.indexOf(name) != -1) {

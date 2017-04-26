@@ -42,7 +42,7 @@ module.exports = function (url) {
             }
 
             if (result.query[name] == "") {
-                throw new Error("query parameter " + name + " is an incomplete value pair");
+                throw new Error(`query parameter ${name} is an incomplete value pair`);
             }
         }
     }
@@ -141,7 +141,9 @@ module.exports = function (url) {
     }
 
     // Add auth to final object if we have 2 elements
-    if (auth.length == 2) object.auth = { user: auth[0], password: auth[1] };
+    if (auth.length == 2) {
+        object.auth = { user: auth[0], password: auth[1] };
+    }
 
     // Variables used for temporary storage
     let hostPart;
@@ -164,7 +166,9 @@ module.exports = function (url) {
             url.indexOf("mongodb://") + "mongodb://".length
             , url.lastIndexOf(".sock") + ".sock".length);
         // Clean out any auth stuff if any
-        if (domainSocket.indexOf("@") != -1) domainSocket = domainSocket.split("@")[1];
+        if (domainSocket.indexOf("@") != -1) {
+            domainSocket = domainSocket.split("@")[1];
+        }
         servers = [{ domain_socket: domainSocket }];
     } else {
         // Split up the db
@@ -173,7 +177,7 @@ module.exports = function (url) {
         const deduplicatedServers = {};
 
         // Parse all server results
-        servers = hostPart.split(",").map(function (h) {
+        servers = hostPart.split(",").map((h) => {
             let _host, _port, ipv6match;
             //check if it matches [IPv6]:port, where the port number is optional
             if ((ipv6match = /\[([^\]]+)\](?:\:(.+))?/.exec(h))) {
@@ -185,16 +189,20 @@ module.exports = function (url) {
                 _host = hostPort[0] || "localhost";
                 _port = hostPort[1] != null ? parseInt(hostPort[1], 10) : 27017;
                 // Check for localhost?safe=true style case
-                if (_host.indexOf("?") != -1) _host = _host.split(/\?/)[0];
+                if (_host.indexOf("?") != -1) {
+                    _host = _host.split(/\?/)[0];
+                }
             }
 
             // No entry returned for duplicate servr
-            if (deduplicatedServers[_host + "_" + _port]) return null;
-            deduplicatedServers[_host + "_" + _port] = 1;
+            if (deduplicatedServers[`${_host}_${_port}`]) {
+                return null;
+            }
+            deduplicatedServers[`${_host}_${_port}`] = 1;
 
             // Return the mapped object
             return { host: _host, port: _port };
-        }).filter(function (x) {
+        }).filter((x) => {
             return x != null;
         });
     }
@@ -204,8 +212,10 @@ module.exports = function (url) {
     // Split up all the options
     urlOptions = (query_string_part || "").split(/[&;]/);
     // Ugh, we have to figure out which options go to which constructor manually.
-    urlOptions.forEach(function (opt) {
-        if (!opt) return;
+    urlOptions.forEach((opt) => {
+        if (!opt) {
+            return;
+        }
         let splitOpt = opt.split("="), name = splitOpt[0], value = splitOpt[1];
         // Options implementations
         switch (name) {
@@ -294,7 +304,9 @@ module.exports = function (url) {
                 break;
             case "w":
                 dbOptions.w = parseInt(value, 10);
-                if (isNaN(dbOptions.w)) dbOptions.w = value;
+                if (isNaN(dbOptions.w)) {
+                    dbOptions.w = value;
+                }
                 break;
             case "authSource":
                 dbOptions.authSource = value;
@@ -307,7 +319,9 @@ module.exports = function (url) {
                     // If no password provided decode only the principal
                     if (object.auth == null) {
                         const urlDecodeAuthPart = decodeURIComponent(authPart);
-                        if (urlDecodeAuthPart.indexOf("@") == -1) throw new Error("GSSAPI requires a provided principal");
+                        if (urlDecodeAuthPart.indexOf("@") == -1) {
+                            throw new Error("GSSAPI requires a provided principal");
+                        }
                         object.auth = { user: urlDecodeAuthPart, password: null };
                     } else {
                         object.auth.user = decodeURIComponent(object.auth.user);
@@ -322,8 +336,9 @@ module.exports = function (url) {
                     && value != "MONGODB-CR"
                     && value != "DEFAULT"
                     && value != "SCRAM-SHA-1"
-                    && value != "PLAIN")
+                    && value != "PLAIN") {
                     throw new Error("only DEFAULT, GSSAPI, PLAIN, MONGODB-X509, SCRAM-SHA-1 or MONGODB-CR is supported by authMechanism");
+                }
 
                 // Authentication mechanism
                 dbOptions.authMechanism = value;
@@ -333,7 +348,7 @@ module.exports = function (url) {
                 var values = value.split(",");
                 var o = {};
                 // For each value split into key, value
-                values.forEach(function (x) {
+                values.forEach((x) => {
                     const v = x.split(":");
                     o[v[0]] = v[1];
                 });
@@ -341,15 +356,23 @@ module.exports = function (url) {
                 // Set all authMechanismProperties
                 dbOptions.authMechanismProperties = o;
                 // Set the service name value
-                if (typeof o.SERVICE_NAME == "string") dbOptions.gssapiServiceName = o.SERVICE_NAME;
-                if (typeof o.SERVICE_REALM == "string") dbOptions.gssapiServiceRealm = o.SERVICE_REALM;
-                if (typeof o.CANONICALIZE_HOST_NAME == "string") dbOptions.gssapiCanonicalizeHostName = o.CANONICALIZE_HOST_NAME == "true" ? true : false;
+                if (typeof o.SERVICE_NAME === "string") {
+                    dbOptions.gssapiServiceName = o.SERVICE_NAME;
+                }
+                if (typeof o.SERVICE_REALM === "string") {
+                    dbOptions.gssapiServiceRealm = o.SERVICE_REALM;
+                }
+                if (typeof o.CANONICALIZE_HOST_NAME === "string") {
+                    dbOptions.gssapiCanonicalizeHostName = o.CANONICALIZE_HOST_NAME == "true" ? true : false;
+                }
                 break;
             case "wtimeoutMS":
                 dbOptions.wtimeout = parseInt(value, 10);
                 break;
             case "readPreference":
-                if (!ReadPreference.isValid(value)) throw new Error("readPreference must be either primary/primaryPreferred/secondary/secondaryPreferred/nearest");
+                if (!ReadPreference.isValid(value)) {
+                    throw new Error("readPreference must be either primary/primaryPreferred/secondary/secondaryPreferred/nearest");
+                }
                 dbOptions.readPreference = value;
                 break;
             case "maxStalenessSeconds":
@@ -389,7 +412,9 @@ module.exports = function (url) {
     if ((dbOptions.w == -1 || dbOptions.w == 0) && (
         dbOptions.journal == true
         || dbOptions.fsync == true
-        || dbOptions.safe == true)) throw new Error("w set to -1 or 0 cannot be combined with safe/w/journal/fsync");
+        || dbOptions.safe == true)) {
+        throw new Error("w set to -1 or 0 cannot be combined with safe/w/journal/fsync");
+    }
 
     // If no read preference set it to primary
     if (!dbOptions.readPreference) {

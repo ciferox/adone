@@ -17,7 +17,9 @@ const ObjectID = adone.data.bson.ObjectID;
  * @see Chunk#buildMongoObject
  */
 const Chunk = function (file, mongoObject, writeConcern) {
-    if (!(this instanceof Chunk)) return new Chunk(file, mongoObject);
+    if (!(this instanceof Chunk)) {
+        return new Chunk(file, mongoObject);
+    }
 
     this.file = file;
     const mongoObjectFinal = mongoObject == null ? {} : mongoObject;
@@ -26,7 +28,7 @@ const Chunk = function (file, mongoObject, writeConcern) {
     this.chunkNumber = mongoObjectFinal.n == null ? 0 : mongoObjectFinal.n;
     this.data = new Binary();
 
-    if (typeof mongoObjectFinal.data == "string") {
+    if (typeof mongoObjectFinal.data === "string") {
         var buffer = new Buffer(mongoObjectFinal.data.length);
         buffer.write(mongoObjectFinal.data, 0, mongoObjectFinal.data.length, "binary");
         this.data = new Binary(buffer);
@@ -56,7 +58,9 @@ const Chunk = function (file, mongoObject, writeConcern) {
 Chunk.prototype.write = function (data, callback) {
     this.data.write(data, this.internalPosition, data.length, "binary");
     this.internalPosition = this.data.length();
-    if (callback != null) return callback(null, this);
+    if (callback != null) {
+        return callback(null, this);
+    }
     return this;
 };
 
@@ -76,9 +80,9 @@ Chunk.prototype.read = function (length) {
         const data = this.data.read(this.internalPosition, length);
         this.internalPosition = this.internalPosition + length;
         return data;
-    } else {
-        return "";
     }
+    return "";
+
 };
 
 Chunk.prototype.readSlice = function (length) {
@@ -92,9 +96,9 @@ Chunk.prototype.readSlice = function (length) {
         }
         this.internalPosition = this.internalPosition + length;
         return data;
-    } else {
-        return null;
     }
+    return null;
+
 };
 
 /**
@@ -137,27 +141,33 @@ Chunk.prototype.rewind = function () {
  */
 Chunk.prototype.save = function (options, callback) {
     const self = this;
-    if (typeof options == "function") {
+    if (typeof options === "function") {
         callback = options;
         options = {};
     }
 
-    self.file.chunkCollection(function (err, collection) {
-        if (err) return callback(err);
+    self.file.chunkCollection((err, collection) => {
+        if (err) {
+            return callback(err);
+        }
 
         // Merge the options
         const writeOptions = { upsert: true };
-        for (var name in options) writeOptions[name] = options[name];
-        for (name in self.writeConcern) writeOptions[name] = self.writeConcern[name];
+        for (var name in options) {
+            writeOptions[name] = options[name];
+        }
+        for (name in self.writeConcern) {
+            writeOptions[name] = self.writeConcern[name];
+        }
 
         if (self.data.length() > 0) {
-            self.buildMongoObject(function (mongoObject) {
+            self.buildMongoObject((mongoObject) => {
                 const options = { forceServerObjectID: true };
                 for (const name in self.writeConcern) {
                     options[name] = self.writeConcern[name];
                 }
 
-                collection.replaceOne({ "_id": self.objectId }, mongoObject, writeOptions, function (err) {
+                collection.replaceOne({ _id: self.objectId }, mongoObject, writeOptions, (err) => {
                     callback(err, self);
                 });
             });
@@ -188,12 +198,14 @@ Chunk.prototype.save = function (options, callback) {
  */
 Chunk.prototype.buildMongoObject = function (callback) {
     const mongoObject = {
-        "files_id": this.file.fileId,
-        "n": this.chunkNumber,
-        "data": this.data
+        files_id: this.file.fileId,
+        n: this.chunkNumber,
+        data: this.data
     };
     // If we are saving using a specific ObjectID
-    if (this.objectId != null) mongoObject._id = this.objectId;
+    if (this.objectId != null) {
+        mongoObject._id = this.objectId;
+    }
 
     callback(mongoObject);
 };
@@ -212,11 +224,11 @@ Chunk.prototype.length = function () {
  * @field
  */
 Object.defineProperty(Chunk.prototype, "position", {
-    enumerable: true
-    , get() {
+    enumerable: true,
+    get() {
         return this.internalPosition;
-    }
-    , set(value) {
+    },
+    set(value) {
         this.internalPosition = value;
     }
 });

@@ -51,7 +51,7 @@ const illegalCommandFields = ["w", "wtimeout", "j", "fsync", "autoIndexId",
 const legalOptionNames = ["w", "wtimeout", "fsync", "j", "readPreference", "readPreferenceTags", "native_parser",
     "forceServerObjectID", "pkFactory", "serializeFunctions", "raw", "bufferMaxEntries", "authSource",
     "ignoreUndefined", "promoteLongs", "promiseLibrary", "readConcern", "retryMiliSeconds", "numberOfRetries",
-    "parentDb", "noListener", "loggerLevel", "logger", "promoteBuffers", "promoteLongs", "promoteValues"];
+    "parentDb", "noListener", "promoteBuffers", "promoteLongs", "promoteValues"];
 
 /**
  * Creates a new Db instance
@@ -128,8 +128,6 @@ const Db = function (databaseName, topology, options) {
         topology,
         // Options
         options,
-        // Logger instance
-        logger: Logger("Db", options),
         // Get the bson parser
         bson: topology ? topology.bson : null,
         // Authsource if any
@@ -326,12 +324,6 @@ const executeCommand = function (self, command, options, callback) {
         options.readPreference = convertReadPreference(options.readPreference);
     } else {
         options.readPreference = CoreReadPreference.primary;
-    }
-
-    // Debug information
-    if (self.s.logger.isDebug()) {
-        self.s.logger.debug(f("executing command %s against %s with options [%s]"
-        , JSON.stringify(command), f("%s.$cmd", dbName), JSON.stringify(debugOptions(debugFields, options))));
     }
 
     // Execute command
@@ -577,7 +569,7 @@ const createCollection = function (self, name, options, callback) {
             } else if (collections.length > 0) {
                 try {
                     return handleCallback(callback, null, new Collection(self, self.s.topology, self.s.databaseName, name, self.s.pkFactory, options));
-                }                catch (err) {
+                } catch (err) {
                     return handleCallback(callback, err);
                 }
             }

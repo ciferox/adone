@@ -51,7 +51,7 @@ const ReadPreference = function (mode, tags, options) {
     this.options = options;
 
     // If no tags were passed in
-    if (tags && typeof tags == "object" && !Array.isArray(tags)) {
+    if (tags && typeof tags === "object" && !Array.isArray(tags)) {
         if (tags.maxStalenessSeconds) {
             this.options = tags;
             this.tags = null;
@@ -86,7 +86,7 @@ ReadPreference.isValid = function (_mode) {
  * @return {boolean}
  */
 ReadPreference.prototype.isValid = function (mode) {
-    const _mode = typeof mode == "string" ? mode : this.mode;
+    const _mode = typeof mode === "string" ? mode : this.mode;
     return ReadPreference.isValid(_mode);
 };
 
@@ -97,11 +97,11 @@ ReadPreference.prototype.toObject = function () {
     const object = { mode: this.mode };
 
     if (this.tags != null) {
-        object["tags"] = this.tags;
+        object.tags = this.tags;
     }
 
     if (this.maxStalenessSeconds) {
-        object["maxStalenessSeconds"] = this.maxStalenessSeconds;
+        object.maxStalenessSeconds = this.maxStalenessSeconds;
     }
 
     return object;

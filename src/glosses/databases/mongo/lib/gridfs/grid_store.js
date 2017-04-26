@@ -84,16 +84,20 @@ const REFERENCE_BY_ID = 1;
  * @deprecated Use GridFSBucket API instead
  */
 const GridStore = function GridStore(db, id, filename, mode, options) {
-    if (!(this instanceof GridStore)) return new GridStore(db, id, filename, mode, options);
+    if (!(this instanceof GridStore)) {
+        return new GridStore(db, id, filename, mode, options);
+    }
     this.db = db;
 
     // Handle options
-    if (typeof options === "undefined") options = {};
+    if (typeof options === "undefined") {
+        options = {};
+    }
     // Handle mode
     if (typeof mode === "undefined") {
         mode = filename;
         filename = undefined;
-    } else if (typeof mode == "object") {
+    } else if (typeof mode === "object") {
         options = mode;
         mode = filename;
         filename = undefined;
@@ -103,7 +107,7 @@ const GridStore = function GridStore(db, id, filename, mode, options) {
         this.referenceBy = REFERENCE_BY_ID;
         this.fileId = id;
         this.filename = filename;
-    } else if (typeof filename == "undefined") {
+    } else if (typeof filename === "undefined") {
         this.referenceBy = REFERENCE_BY_FILENAME;
         this.filename = id;
         if (mode.indexOf("w") != null) {
@@ -123,19 +127,19 @@ const GridStore = function GridStore(db, id, filename, mode, options) {
     this.isOpen = false;
 
     // Set the root if overridden
-    this.root = this.options["root"] == null ? GridStore.DEFAULT_ROOT_COLLECTION : this.options["root"];
+    this.root = this.options.root == null ? GridStore.DEFAULT_ROOT_COLLECTION : this.options.root;
     this.position = 0;
     this.readPreference = this.options.readPreference || db.options.readPreference || ReadPreference.PRIMARY;
     this.writeConcern = _getWriteConcern(db, this.options);
     // Set default chunk size
-    this.internalChunkSize = this.options["chunkSize"] == null ? Chunk.DEFAULT_CHUNK_SIZE : this.options["chunkSize"];
+    this.internalChunkSize = this.options.chunkSize == null ? Chunk.DEFAULT_CHUNK_SIZE : this.options.chunkSize;
 
     // Get the promiseLibrary
     let promiseLibrary = this.options.promiseLibrary;
 
     // No promise library selected fall back
     if (!promiseLibrary) {
-        promiseLibrary = typeof global.Promise == "function" ?
+        promiseLibrary = typeof global.Promise === "function" ?
             global.Promise : require("es6-promise").Promise;
     }
 
@@ -143,11 +147,11 @@ const GridStore = function GridStore(db, id, filename, mode, options) {
     this.promiseLibrary = promiseLibrary;
 
     Object.defineProperty(this, "chunkSize", {
-        enumerable: true
-        , get () {
+        enumerable: true,
+        get() {
             return this.internalChunkSize;
-        }
-        , set (value) {
+        },
+        set(value) {
             if (!(this.mode[0] == "w" && this.position == 0 && this.uploadDate == null)) {
                 this.internalChunkSize = this.internalChunkSize;
             } else {
@@ -157,15 +161,15 @@ const GridStore = function GridStore(db, id, filename, mode, options) {
     });
 
     Object.defineProperty(this, "md5", {
-        enumerable: true
-        , get () {
+        enumerable: true,
+        get() {
             return this.internalMd5;
         }
     });
 
     Object.defineProperty(this, "chunkNumber", {
-        enumerable: true
-        , get () {
+        enumerable: true,
+        get() {
             return this.currentChunk && this.currentChunk.chunkNumber ? this.currentChunk.chunkNumber : null;
         }
     });
@@ -192,15 +196,19 @@ const define = GridStore.define = new Define("Gridstore", GridStore, true);
 GridStore.prototype.open = function (callback) {
     const self = this;
     if (this.mode != "w" && this.mode != "w+" && this.mode != "r") {
-        throw MongoError.create({ message: "Illegal mode " + this.mode, driver: true });
+        throw MongoError.create({ message: `Illegal mode ${this.mode}`, driver: true });
     }
 
     // We provided a callback leg
-    if (typeof callback == "function") return open(self, callback);
+    if (typeof callback === "function") {
+        return open(self, callback);
+    }
     // Return promise
-    return new self.promiseLibrary(function (resolve, reject) {
-        open(self, function (err, store) {
-            if (err) return reject(err);
+    return new self.promiseLibrary((resolve, reject) => {
+        open(self, (err, store) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(store);
         });
     });
@@ -215,17 +223,19 @@ const open = function (self, callback) {
         // Get files collection
         const collection = self.collection();
         // Put index on filename
-        collection.ensureIndex([["filename", 1]], writeConcern, function () {
+        collection.ensureIndex([["filename", 1]], writeConcern, () => {
             // Get chunk collection
             const chunkCollection = self.chunkCollection();
             // Make an unique index for compatibility with mongo-cxx-driver:legacy
             const chunkIndexOptions = shallowClone(writeConcern);
             chunkIndexOptions.unique = true;
             // Ensure index on chunk collection
-            chunkCollection.ensureIndex([["files_id", 1], ["n", 1]], chunkIndexOptions, function () {
+            chunkCollection.ensureIndex([["files_id", 1], ["n", 1]], chunkIndexOptions, () => {
                 // Open the connection
-                _open(self, writeConcern, function (err, r) {
-                    if (err) return callback(err);
+                _open(self, writeConcern, (err, r) => {
+                    if (err) {
+                        return callback(err);
+                    }
                     self.isOpen = true;
                     callback(err, r);
                 });
@@ -233,8 +243,10 @@ const open = function (self, callback) {
         });
     } else {
         // Open the gridstore
-        _open(self, writeConcern, function (err, r) {
-            if (err) return callback(err);
+        _open(self, writeConcern, (err, r) => {
+            if (err) {
+                return callback(err);
+            }
             self.isOpen = true;
             callback(err, r);
         });
@@ -275,11 +287,15 @@ define.classMethod("eof", { callback: false, promise: false, returns: [Boolean] 
 GridStore.prototype.getc = function (callback) {
     const self = this;
     // We provided a callback leg
-    if (typeof callback == "function") return eof(self, callback);
+    if (typeof callback === "function") {
+        return eof(self, callback);
+    }
     // Return promise
-    return new self.promiseLibrary(function (resolve, reject) {
-        eof(self, function (err, r) {
-            if (err) return reject(err);
+    return new self.promiseLibrary((resolve, reject) => {
+        eof(self, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -289,7 +305,7 @@ const eof = function (self, callback) {
     if (self.eof()) {
         callback(null, null);
     } else if (self.currentChunk.eof()) {
-        nthChunk(self, self.currentChunk.chunkNumber + 1, function (err, chunk) {
+        nthChunk(self, self.currentChunk.chunkNumber + 1, (err, chunk) => {
             self.currentChunk = chunk;
             self.position = self.position + 1;
             callback(err, self.currentChunk.getc());
@@ -314,13 +330,17 @@ define.classMethod("getc", { callback: true, promise: true });
  */
 GridStore.prototype.puts = function (string, callback) {
     const self = this;
-    const finalString = string.match(/\n$/) == null ? string + "\n" : string;
+    const finalString = string.match(/\n$/) == null ? `${string}\n` : string;
     // We provided a callback leg
-    if (typeof callback == "function") return this.write(finalString, callback);
+    if (typeof callback === "function") {
+        return this.write(finalString, callback);
+    }
     // Return promise
-    return new self.promiseLibrary(function (resolve, reject) {
-        self.write(finalString, function (err, r) {
-            if (err) return reject(err);
+    return new self.promiseLibrary((resolve, reject) => {
+        self.write(finalString, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -352,11 +372,15 @@ GridStore.prototype.stream = function () {
 GridStore.prototype.write = function write(data, close, callback) {
     const self = this;
     // We provided a callback leg
-    if (typeof callback == "function") return _writeNormal(this, data, close, callback);
+    if (typeof callback === "function") {
+        return _writeNormal(this, data, close, callback);
+    }
     // Return promise
-    return new self.promiseLibrary(function (resolve, reject) {
-        _writeNormal(self, data, close, function (err, r) {
-            if (err) return reject(err);
+    return new self.promiseLibrary((resolve, reject) => {
+        _writeNormal(self, data, close, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -373,7 +397,9 @@ define.classMethod("write", { callback: true, promise: true });
  */
 GridStore.prototype.destroy = function destroy() {
     // close and do not emit any more events. queued data is not sent.
-    if (!this.writable) return;
+    if (!this.writable) {
+        return;
+    }
     this.readable = false;
     if (this.writable) {
         this.writable = false;
@@ -396,11 +422,15 @@ define.classMethod("destroy", { callback: false, promise: false });
 GridStore.prototype.writeFile = function (file, callback) {
     const self = this;
     // We provided a callback leg
-    if (typeof callback == "function") return writeFile(self, file, callback);
+    if (typeof callback === "function") {
+        return writeFile(self, file, callback);
+    }
     // Return promise
-    return new self.promiseLibrary(function (resolve, reject) {
-        writeFile(self, file, function (err, r) {
-            if (err) return reject(err);
+    return new self.promiseLibrary((resolve, reject) => {
+        writeFile(self, file, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -408,36 +438,48 @@ GridStore.prototype.writeFile = function (file, callback) {
 
 const writeFile = function (self, file, callback) {
     if (typeof file === "string") {
-        fs.open(file, "r", function (err, fd) {
-            if (err) return callback(err);
+        fs.open(file, "r", (err, fd) => {
+            if (err) {
+                return callback(err);
+            }
             self.writeFile(fd, callback);
         });
         return;
     }
 
-    self.open(function (err, self) {
-        if (err) return callback(err, self);
+    self.open((err, self) => {
+        if (err) {
+            return callback(err, self);
+        }
 
-        fs.fstat(file, function (err, stats) {
-            if (err) return callback(err, self);
+        fs.fstat(file, (err, stats) => {
+            if (err) {
+                return callback(err, self);
+            }
 
             let offset = 0;
             let index = 0;
 
             // Write a chunk
             const writeChunk = function () {
-                fs.read(file, self.chunkSize, offset, "binary", function (err, data, bytesRead) {
-                    if (err) return callback(err, self);
+                fs.read(file, self.chunkSize, offset, "binary", (err, data, bytesRead) => {
+                    if (err) {
+                        return callback(err, self);
+                    }
 
                     offset = offset + bytesRead;
 
                     // Create a new chunk for the data
                     const chunk = new Chunk(self, { n: index++ }, self.writeConcern);
-                    chunk.write(data, function (err, chunk) {
-                        if (err) return callback(err, self);
+                    chunk.write(data, (err, chunk) => {
+                        if (err) {
+                            return callback(err, self);
+                        }
 
-                        chunk.save({}, function (err) {
-                            if (err) return callback(err, self);
+                        chunk.save({}, (err) => {
+                            if (err) {
+                                return callback(err, self);
+                            }
 
                             self.position = self.position + data.length;
 
@@ -446,8 +488,10 @@ const writeFile = function (self, file, callback) {
 
                             if (offset >= stats.size) {
                                 fs.close(file);
-                                self.close(function (err) {
-                                    if (err) return callback(err, self);
+                                self.close((err) => {
+                                    if (err) {
+                                        return callback(err, self);
+                                    }
                                     return callback(null, self);
                                 });
                             } else {
@@ -479,11 +523,15 @@ define.classMethod("writeFile", { callback: true, promise: true });
 GridStore.prototype.close = function (callback) {
     const self = this;
     // We provided a callback leg
-    if (typeof callback == "function") return close(self, callback);
+    if (typeof callback === "function") {
+        return close(self, callback);
+    }
     // Return promise
-    return new self.promiseLibrary(function (resolve, reject) {
-        close(self, function (err, r) {
-            if (err) return reject(err);
+    return new self.promiseLibrary((resolve, reject) => {
+        close(self, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -495,62 +543,79 @@ const close = function (self, callback) {
         const options = self.writeConcern;
 
         if (self.currentChunk != null && self.currentChunk.position > 0) {
-            self.currentChunk.save({}, function (err) {
-                if (err && typeof callback == "function") return callback(err);
+            self.currentChunk.save({}, (err) => {
+                if (err && typeof callback === "function") {
+                    return callback(err);
+                }
 
-                self.collection(function (err, files) {
-                    if (err && typeof callback == "function") return callback(err);
+                self.collection((err, files) => {
+                    if (err && typeof callback === "function") {
+                        return callback(err);
+                    }
 
                     // Build the mongo object
                     if (self.uploadDate != null) {
-                        buildMongoObject(self, function (err, mongoObject) {
+                        buildMongoObject(self, (err, mongoObject) => {
                             if (err) {
-                                if (typeof callback == "function") return callback(err); else throw err;
+                                if (typeof callback === "function") {
+                                    return callback(err);
+                                } throw err;
                             }
 
-                            files.save(mongoObject, options, function (err) {
-                                if (typeof callback == "function")
+                            files.save(mongoObject, options, (err) => {
+                                if (typeof callback === "function") {
                                     callback(err, mongoObject);
+                                }
                             });
                         });
                     } else {
                         self.uploadDate = new Date();
-                        buildMongoObject(self, function (err, mongoObject) {
+                        buildMongoObject(self, (err, mongoObject) => {
                             if (err) {
-                                if (typeof callback == "function") return callback(err); else throw err;
+                                if (typeof callback === "function") {
+                                    return callback(err);
+                                } throw err;
                             }
 
-                            files.save(mongoObject, options, function (err) {
-                                if (typeof callback == "function")
+                            files.save(mongoObject, options, (err) => {
+                                if (typeof callback === "function") {
                                     callback(err, mongoObject);
+                                }
                             });
                         });
                     }
                 });
             });
         } else {
-            self.collection(function (err, files) {
-                if (err && typeof callback == "function") return callback(err);
+            self.collection((err, files) => {
+                if (err && typeof callback === "function") {
+                    return callback(err);
+                }
 
                 self.uploadDate = new Date();
-                buildMongoObject(self, function (err, mongoObject) {
+                buildMongoObject(self, (err, mongoObject) => {
                     if (err) {
-                        if (typeof callback == "function") return callback(err); else throw err;
+                        if (typeof callback === "function") {
+                            return callback(err);
+                        } throw err;
                     }
 
-                    files.save(mongoObject, options, function (err) {
-                        if (typeof callback == "function")
+                    files.save(mongoObject, options, (err) => {
+                        if (typeof callback === "function") {
                             callback(err, mongoObject);
+                        }
                     });
                 });
             });
         }
     } else if (self.mode[0] == "r") {
-        if (typeof callback == "function")
+        if (typeof callback === "function") {
             callback(null, null);
+        }
     } else {
-        if (typeof callback == "function")
+        if (typeof callback === "function") {
             callback(MongoError.create({ message: f("Illegal mode %s", self.mode), driver: true }));
+        }
     }
 };
 
@@ -572,9 +637,10 @@ define.classMethod("close", { callback: true, promise: true });
  * @deprecated Use GridFSBucket API instead
  */
 GridStore.prototype.chunkCollection = function (callback) {
-    if (typeof callback == "function")
-        return this.db.collection((this.root + ".chunks"), callback);
-    return this.db.collection((this.root + ".chunks"));
+    if (typeof callback === "function") {
+        return this.db.collection((`${this.root}.chunks`), callback);
+    }
+    return this.db.collection((`${this.root}.chunks`));
 };
 
 define.classMethod("chunkCollection", { callback: true, promise: false, returns: [Collection] });
@@ -590,30 +656,34 @@ define.classMethod("chunkCollection", { callback: true, promise: false, returns:
 GridStore.prototype.unlink = function (callback) {
     const self = this;
     // We provided a callback leg
-    if (typeof callback == "function") return unlink(self, callback);
+    if (typeof callback === "function") {
+        return unlink(self, callback);
+    }
     // Return promise
-    return new self.promiseLibrary(function (resolve, reject) {
-        unlink(self, function (err, r) {
-            if (err) return reject(err);
+    return new self.promiseLibrary((resolve, reject) => {
+        unlink(self, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
 };
 
 const unlink = function (self, callback) {
-    deleteChunks(self, function (err) {
+    deleteChunks(self, (err) => {
         if (err !== null) {
-            err.message = "at deleteChunks: " + err.message;
+            err.message = `at deleteChunks: ${err.message}`;
             return callback(err);
         }
 
-        self.collection(function (err, collection) {
+        self.collection((err, collection) => {
             if (err !== null) {
-                err.message = "at collection: " + err.message;
+                err.message = `at collection: ${err.message}`;
                 return callback(err);
             }
 
-            collection.remove({ "_id": self.fileId }, self.writeConcern, function (err) {
+            collection.remove({ _id: self.fileId }, self.writeConcern, (err) => {
                 callback(err, self);
             });
         });
@@ -631,9 +701,10 @@ define.classMethod("unlink", { callback: true, promise: true });
  * @deprecated Use GridFSBucket API instead
  */
 GridStore.prototype.collection = function (callback) {
-    if (typeof callback == "function")
-        this.db.collection(this.root + ".files", callback);
-    return this.db.collection(this.root + ".files");
+    if (typeof callback === "function") {
+        this.db.collection(`${this.root}.files`, callback);
+    }
+    return this.db.collection(`${this.root}.files`);
 };
 
 define.classMethod("collection", { callback: true, promise: false, returns: [Collection] });
@@ -658,25 +729,33 @@ GridStore.prototype.readlines = function (separator, callback) {
     const self = this;
     const args = Array.prototype.slice.call(arguments, 0);
     callback = args.pop();
-    if (typeof callback != "function") args.push(callback);
+    if (typeof callback !== "function") {
+        args.push(callback);
+    }
     separator = args.length ? args.shift() : "\n";
     separator = separator || "\n";
 
     // We provided a callback leg
-    if (typeof callback == "function") return readlines(self, separator, callback);
+    if (typeof callback === "function") {
+        return readlines(self, separator, callback);
+    }
 
     // Return promise
-    return new self.promiseLibrary(function (resolve, reject) {
-        readlines(self, separator, function (err, r) {
-            if (err) return reject(err);
+    return new self.promiseLibrary((resolve, reject) => {
+        readlines(self, separator, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
 };
 
 const readlines = function (self, separator, callback) {
-    self.read(function (err, data) {
-        if (err) return callback(err);
+    self.read((err, data) => {
+        if (err) {
+            return callback(err);
+        }
 
         let items = data.toString().split(separator);
         items = items.length > 0 ? items.splice(0, items.length - 1) : [];
@@ -702,11 +781,15 @@ define.classMethod("readlines", { callback: true, promise: true });
 GridStore.prototype.rewind = function (callback) {
     const self = this;
     // We provided a callback leg
-    if (typeof callback == "function") return rewind(self, callback);
+    if (typeof callback === "function") {
+        return rewind(self, callback);
+    }
     // Return promise
-    return new self.promiseLibrary(function (resolve, reject) {
-        rewind(self, function (err, r) {
-            if (err) return reject(err);
+    return new self.promiseLibrary((resolve, reject) => {
+        rewind(self, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -715,15 +798,19 @@ GridStore.prototype.rewind = function (callback) {
 const rewind = function (self, callback) {
     if (self.currentChunk.chunkNumber != 0) {
         if (self.mode[0] == "w") {
-            deleteChunks(self, function (err) {
-                if (err) return callback(err);
-                self.currentChunk = new Chunk(self, { "n": 0 }, self.writeConcern);
+            deleteChunks(self, (err) => {
+                if (err) {
+                    return callback(err);
+                }
+                self.currentChunk = new Chunk(self, { n: 0 }, self.writeConcern);
                 self.position = 0;
                 callback(null, self);
             });
         } else {
-            self.currentChunk(0, function (err, chunk) {
-                if (err) return callback(err);
+            self.currentChunk(0, (err, chunk) => {
+                if (err) {
+                    return callback(err);
+                }
                 self.currentChunk = chunk;
                 self.currentChunk.rewind();
                 self.position = 0;
@@ -767,15 +854,21 @@ GridStore.prototype.read = function (length, buffer, callback) {
 
     const args = Array.prototype.slice.call(arguments, 0);
     callback = args.pop();
-    if (typeof callback != "function") args.push(callback);
+    if (typeof callback !== "function") {
+        args.push(callback);
+    }
     length = args.length ? args.shift() : null;
     buffer = args.length ? args.shift() : null;
     // We provided a callback leg
-    if (typeof callback == "function") return read(self, length, buffer, callback);
+    if (typeof callback === "function") {
+        return read(self, length, buffer, callback);
+    }
     // Return promise
-    return new self.promiseLibrary(function (resolve, reject) {
-        read(self, length, buffer, function (err, r) {
-            if (err) return reject(err);
+    return new self.promiseLibrary((resolve, reject) => {
+        read(self, length, buffer, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -795,7 +888,9 @@ const read = function (self, length, buffer, callback) {
         // Update internal position
         self.position = self.position + finalBuffer.length;
         // Check if we don't have a file at all
-        if (finalLength == 0 && finalBuffer.length == 0) return callback(MongoError.create({ message: "File does not exist", driver: true }), null);
+        if (finalLength == 0 && finalBuffer.length == 0) {
+            return callback(MongoError.create({ message: "File does not exist", driver: true }), null);
+        }
         // Else return data
         return callback(null, finalBuffer);
     }
@@ -808,8 +903,10 @@ const read = function (self, length, buffer, callback) {
     finalBuffer._index += slice.length;
 
     // Load next chunk and read more
-    nthChunk(self, self.currentChunk.chunkNumber + 1, function (err, chunk) {
-        if (err) return callback(err);
+    nthChunk(self, self.currentChunk.chunkNumber + 1, (err, chunk) => {
+        if (err) {
+            return callback(err);
+        }
 
         if (chunk.length() > 0) {
             self.currentChunk = chunk;
@@ -846,9 +943,11 @@ define.classMethod("read", { callback: true, promise: true });
 GridStore.prototype.tell = function (callback) {
     const self = this;
     // We provided a callback leg
-    if (typeof callback == "function") return callback(null, this.position);
+    if (typeof callback === "function") {
+        return callback(null, this.position);
+    }
     // Return promise
-    return new self.promiseLibrary(function (resolve) {
+    return new self.promiseLibrary((resolve) => {
         resolve(self.position);
     });
 };
@@ -884,15 +983,21 @@ GridStore.prototype.seek = function (position, seekLocation, callback) {
 
     const args = Array.prototype.slice.call(arguments, 1);
     callback = args.pop();
-    if (typeof callback != "function") args.push(callback);
+    if (typeof callback !== "function") {
+        args.push(callback);
+    }
     seekLocation = args.length ? args.shift() : null;
 
     // We provided a callback leg
-    if (typeof callback == "function") return seek(self, position, seekLocation, callback);
+    if (typeof callback === "function") {
+        return seek(self, position, seekLocation, callback);
+    }
     // Return promise
-    return new self.promiseLibrary(function (resolve, reject) {
-        seek(self, position, seekLocation, function (err, r) {
-            if (err) return reject(err);
+    return new self.promiseLibrary((resolve, reject) => {
+        seek(self, position, seekLocation, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -920,9 +1025,13 @@ const seek = function (self, position, seekLocation, callback) {
     // Get the chunk
     const newChunkNumber = Math.floor(targetPosition / self.chunkSize);
     const seekChunk = function () {
-        nthChunk(self, newChunkNumber, function (err, chunk) {
-            if (err) return callback(err, null);
-            if (chunk == null) return callback(new Error("no chunk found"));
+        nthChunk(self, newChunkNumber, (err, chunk) => {
+            if (err) {
+                return callback(err, null);
+            }
+            if (chunk == null) {
+                return callback(new Error("no chunk found"));
+            }
 
             // Set the current chunk
             self.currentChunk = chunk;
@@ -944,13 +1053,15 @@ const _open = function (self, options, callback) {
     const collection = self.collection();
     // Create the query
     let query = self.referenceBy == REFERENCE_BY_ID ? { _id: self.fileId } : { filename: self.filename };
-    query = null == self.fileId && self.filename == null ? null : query;
+    query = self.fileId == null && self.filename == null ? null : query;
     options.readPreference = self.readPreference;
 
     // Fetch the chunks
     if (query != null) {
-        collection.findOne(query, options, function (err, doc) {
-            if (err) return error(err);
+        collection.findOne(query, options, (err, doc) => {
+            if (err) {
+                return error(err);
+            }
 
             // Check if the collection for the files exists otherwise prepare the new one
             if (doc != null) {
@@ -977,40 +1088,46 @@ const _open = function (self, options, callback) {
 
             // Process the mode of the object
             if (self.mode == "r") {
-                nthChunk(self, 0, options, function (err, chunk) {
-                    if (err) return error(err);
+                nthChunk(self, 0, options, (err, chunk) => {
+                    if (err) {
+                        return error(err);
+                    }
                     self.currentChunk = chunk;
                     self.position = 0;
                     callback(null, self);
                 });
             } else if (self.mode == "w" && doc) {
                 // Delete any existing chunks
-                deleteChunks(self, options, function (err) {
-                    if (err) return error(err);
-                    self.currentChunk = new Chunk(self, { "n": 0 }, self.writeConcern);
-                    self.contentType = self.options["content_type"] == null ? self.contentType : self.options["content_type"];
-                    self.internalChunkSize = self.options["chunk_size"] == null ? self.internalChunkSize : self.options["chunk_size"];
-                    self.metadata = self.options["metadata"] == null ? self.metadata : self.options["metadata"];
-                    self.aliases = self.options["aliases"] == null ? self.aliases : self.options["aliases"];
+                deleteChunks(self, options, (err) => {
+                    if (err) {
+                        return error(err);
+                    }
+                    self.currentChunk = new Chunk(self, { n: 0 }, self.writeConcern);
+                    self.contentType = self.options.content_type == null ? self.contentType : self.options.content_type;
+                    self.internalChunkSize = self.options.chunk_size == null ? self.internalChunkSize : self.options.chunk_size;
+                    self.metadata = self.options.metadata == null ? self.metadata : self.options.metadata;
+                    self.aliases = self.options.aliases == null ? self.aliases : self.options.aliases;
                     self.position = 0;
                     callback(null, self);
                 });
             } else if (self.mode == "w") {
-                self.currentChunk = new Chunk(self, { "n": 0 }, self.writeConcern);
-                self.contentType = self.options["content_type"] == null ? self.contentType : self.options["content_type"];
-                self.internalChunkSize = self.options["chunk_size"] == null ? self.internalChunkSize : self.options["chunk_size"];
-                self.metadata = self.options["metadata"] == null ? self.metadata : self.options["metadata"];
-                self.aliases = self.options["aliases"] == null ? self.aliases : self.options["aliases"];
+                self.currentChunk = new Chunk(self, { n: 0 }, self.writeConcern);
+                self.contentType = self.options.content_type == null ? self.contentType : self.options.content_type;
+                self.internalChunkSize = self.options.chunk_size == null ? self.internalChunkSize : self.options.chunk_size;
+                self.metadata = self.options.metadata == null ? self.metadata : self.options.metadata;
+                self.aliases = self.options.aliases == null ? self.aliases : self.options.aliases;
                 self.position = 0;
                 callback(null, self);
             } else if (self.mode == "w+") {
-                nthChunk(self, lastChunkNumber(self), options, function (err, chunk) {
-                    if (err) return error(err);
+                nthChunk(self, lastChunkNumber(self), options, (err, chunk) => {
+                    if (err) {
+                        return error(err);
+                    }
                     // Set the current chunk
-                    self.currentChunk = chunk == null ? new Chunk(self, { "n": 0 }, self.writeConcern) : chunk;
+                    self.currentChunk = chunk == null ? new Chunk(self, { n: 0 }, self.writeConcern) : chunk;
                     self.currentChunk.position = self.currentChunk.data.length();
-                    self.metadata = self.options["metadata"] == null ? self.metadata : self.options["metadata"];
-                    self.aliases = self.options["aliases"] == null ? self.aliases : self.options["aliases"];
+                    self.metadata = self.options.metadata == null ? self.metadata : self.options.metadata;
+                    self.aliases = self.options.aliases == null ? self.aliases : self.options.aliases;
                     self.position = self.length;
                     callback(null, self);
                 });
@@ -1018,7 +1135,7 @@ const _open = function (self, options, callback) {
         });
     } else {
         // Write only mode
-        self.fileId = null == self.fileId ? new ObjectID() : self.fileId;
+        self.fileId = self.fileId == null ? new ObjectID() : self.fileId;
         self.contentType = GridStore.DEFAULT_CONTENT_TYPE;
         self.internalChunkSize = self.internalChunkSize == null ? Chunk.DEFAULT_CHUNK_SIZE : self.internalChunkSize;
         self.length = 0;
@@ -1026,24 +1143,28 @@ const _open = function (self, options, callback) {
         // No file exists set up write mode
         if (self.mode == "w") {
             // Delete any existing chunks
-            deleteChunks(self, options, function (err) {
-                if (err) return error(err);
-                self.currentChunk = new Chunk(self, { "n": 0 }, self.writeConcern);
-                self.contentType = self.options["content_type"] == null ? self.contentType : self.options["content_type"];
-                self.internalChunkSize = self.options["chunk_size"] == null ? self.internalChunkSize : self.options["chunk_size"];
-                self.metadata = self.options["metadata"] == null ? self.metadata : self.options["metadata"];
-                self.aliases = self.options["aliases"] == null ? self.aliases : self.options["aliases"];
+            deleteChunks(self, options, (err) => {
+                if (err) {
+                    return error(err);
+                }
+                self.currentChunk = new Chunk(self, { n: 0 }, self.writeConcern);
+                self.contentType = self.options.content_type == null ? self.contentType : self.options.content_type;
+                self.internalChunkSize = self.options.chunk_size == null ? self.internalChunkSize : self.options.chunk_size;
+                self.metadata = self.options.metadata == null ? self.metadata : self.options.metadata;
+                self.aliases = self.options.aliases == null ? self.aliases : self.options.aliases;
                 self.position = 0;
                 callback(null, self);
             });
         } else if (self.mode == "w+") {
-            nthChunk(self, lastChunkNumber(self), options, function (err, chunk) {
-                if (err) return error(err);
+            nthChunk(self, lastChunkNumber(self), options, (err, chunk) => {
+                if (err) {
+                    return error(err);
+                }
                 // Set the current chunk
-                self.currentChunk = chunk == null ? new Chunk(self, { "n": 0 }, self.writeConcern) : chunk;
+                self.currentChunk = chunk == null ? new Chunk(self, { n: 0 }, self.writeConcern) : chunk;
                 self.currentChunk.position = self.currentChunk.data.length();
-                self.metadata = self.options["metadata"] == null ? self.metadata : self.options["metadata"];
-                self.aliases = self.options["aliases"] == null ? self.aliases : self.options["aliases"];
+                self.metadata = self.options.metadata == null ? self.metadata : self.options.metadata;
+                self.aliases = self.options.aliases == null ? self.aliases : self.options.aliases;
                 self.position = self.length;
                 callback(null, self);
             });
@@ -1052,7 +1173,9 @@ const _open = function (self, options, callback) {
 
     // only pass error to callback once
     function error(err) {
-        if (error.err) return;
+        if (error.err) {
+            return;
+        }
         callback(error.err = err);
     }
 };
@@ -1061,8 +1184,10 @@ const _open = function (self, options, callback) {
  * @ignore
  */
 const writeBuffer = function (self, buffer, close, callback) {
-    if (typeof close === "function") { callback = close; close = null; }
-    const finalClose = typeof close == "boolean" ? close : false;
+    if (typeof close === "function") {
+        callback = close; close = null;
+    }
+    const finalClose = typeof close === "boolean" ? close : false;
 
     if (self.mode != "w") {
         callback(MongoError.create({ message: f("file with id %s not opened for writing", (self.referenceBy == REFERENCE_BY_ID ? self.referenceBy : self.filename)), driver: true }), null);
@@ -1079,7 +1204,7 @@ const writeBuffer = function (self, buffer, close, callback) {
             // If we have more data left than the chunk size let's keep writing new chunks
             while (leftOverData.length >= self.chunkSize) {
                 // Create a new chunk and write to it
-                const newChunk = new Chunk(self, { "n": (previousChunkNumber + 1) }, self.writeConcern);
+                const newChunk = new Chunk(self, { n: (previousChunkNumber + 1) }, self.writeConcern);
                 firstChunkData = leftOverData.slice(0, self.chunkSize);
                 leftOverData = leftOverData.slice(self.chunkSize);
                 // Update chunk number
@@ -1091,9 +1216,11 @@ const writeBuffer = function (self, buffer, close, callback) {
             }
 
             // Set current chunk with remaining data
-            self.currentChunk = new Chunk(self, { "n": (previousChunkNumber + 1) }, self.writeConcern);
+            self.currentChunk = new Chunk(self, { n: (previousChunkNumber + 1) }, self.writeConcern);
             // If we have left over data write it
-            if (leftOverData.length > 0) self.currentChunk.write(leftOverData);
+            if (leftOverData.length > 0) {
+                self.currentChunk.write(leftOverData);
+            }
 
             // Update the position for the gridstore
             self.position = self.position + buffer.length;
@@ -1101,15 +1228,17 @@ const writeBuffer = function (self, buffer, close, callback) {
             let numberOfChunksToWrite = chunksToWrite.length;
 
             for (let i = 0; i < chunksToWrite.length; i++) {
-                chunksToWrite[i].save({}, function (err) {
-                    if (err) return callback(err);
+                chunksToWrite[i].save({}, (err) => {
+                    if (err) {
+                        return callback(err);
+                    }
 
                     numberOfChunksToWrite = numberOfChunksToWrite - 1;
 
                     if (numberOfChunksToWrite <= 0) {
                         // We care closing the file before returning
                         if (finalClose) {
-                            return self.close(function (err) {
+                            return self.close((err) => {
                                 callback(err, self);
                             });
                         }
@@ -1126,7 +1255,7 @@ const writeBuffer = function (self, buffer, close, callback) {
             self.currentChunk.write(buffer);
             // We care closing the file before returning
             if (finalClose) {
-                return self.close(function (err) {
+                return self.close((err) => {
                     callback(err, self);
                 });
             }
@@ -1157,19 +1286,21 @@ const writeBuffer = function (self, buffer, close, callback) {
 const buildMongoObject = function (self, callback) {
     // Calcuate the length
     const mongoObject = {
-        "_id": self.fileId,
-        "filename": self.filename,
-        "contentType": self.contentType,
-        "length": self.position ? self.position : 0,
-        "chunkSize": self.chunkSize,
-        "uploadDate": self.uploadDate,
-        "aliases": self.aliases,
-        "metadata": self.metadata
+        _id: self.fileId,
+        filename: self.filename,
+        contentType: self.contentType,
+        length: self.position ? self.position : 0,
+        chunkSize: self.chunkSize,
+        uploadDate: self.uploadDate,
+        aliases: self.aliases,
+        metadata: self.metadata
     };
 
     const md5Command = { filemd5: self.fileId, root: self.root };
-    self.db.command(md5Command, function (err, results) {
-        if (err) return callback(err);
+    self.db.command(md5Command, (err, results) => {
+        if (err) {
+            return callback(err);
+        }
 
         mongoObject.md5 = results.md5;
         callback(null, mongoObject);
@@ -1181,7 +1312,7 @@ const buildMongoObject = function (self, callback) {
  * @ignore
  */
 const nthChunk = function (self, chunkNumber, options, callback) {
-    if (typeof options == "function") {
+    if (typeof options === "function") {
         callback = options;
         options = {};
     }
@@ -1189,8 +1320,10 @@ const nthChunk = function (self, chunkNumber, options, callback) {
     options = options || self.writeConcern;
     options.readPreference = self.readPreference;
     // Get the nth chunk
-    self.chunkCollection().findOne({ "files_id": self.fileId, "n": chunkNumber }, options, function (err, chunk) {
-        if (err) return callback(err);
+    self.chunkCollection().findOne({ files_id: self.fileId, n: chunkNumber }, options, (err, chunk) => {
+        if (err) {
+            return callback(err);
+        }
 
         const finalChunk = chunk == null ? {} : chunk;
         callback(null, new Chunk(self, finalChunk, self.writeConcern));
@@ -1210,7 +1343,7 @@ const lastChunkNumber = function (self) {
  * @ignore
  */
 const deleteChunks = function (self, options, callback) {
-    if (typeof options == "function") {
+    if (typeof options === "function") {
         callback = options;
         options = {};
     }
@@ -1218,8 +1351,10 @@ const deleteChunks = function (self, options, callback) {
     options = options || self.writeConcern;
 
     if (self.fileId != null) {
-        self.chunkCollection().remove({ "files_id": self.fileId }, options, function (err) {
-            if (err) return callback(err, false);
+        self.chunkCollection().remove({ files_id: self.fileId }, options, (err) => {
+            if (err) {
+                return callback(err, false);
+            }
             callback(null, true);
         });
     } else {
@@ -1280,7 +1415,9 @@ GridStore.IO_SEEK_END = 2;
 GridStore.exist = function (db, fileIdObject, rootCollection, options, callback) {
     const args = Array.prototype.slice.call(arguments, 2);
     callback = args.pop();
-    if (typeof callback != "function") args.push(callback);
+    if (typeof callback !== "function") {
+        args.push(callback);
+    }
     rootCollection = args.length ? args.shift() : null;
     options = args.length ? args.shift() : {};
     options = options || {};
@@ -1290,16 +1427,20 @@ GridStore.exist = function (db, fileIdObject, rootCollection, options, callback)
 
     // No promise library selected fall back
     if (!promiseLibrary) {
-        promiseLibrary = typeof global.Promise == "function" ?
+        promiseLibrary = typeof global.Promise === "function" ?
             global.Promise : require("es6-promise").Promise;
     }
 
     // We provided a callback leg
-    if (typeof callback == "function") return exists(db, fileIdObject, rootCollection, options, callback);
+    if (typeof callback === "function") {
+        return exists(db, fileIdObject, rootCollection, options, callback);
+    }
     // Return promise
-    return new promiseLibrary(function (resolve, reject) {
-        exists(db, fileIdObject, rootCollection, options, function (err, r) {
-            if (err) return reject(err);
+    return new promiseLibrary((resolve, reject) => {
+        exists(db, fileIdObject, rootCollection, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -1310,24 +1451,28 @@ const exists = function (db, fileIdObject, rootCollection, options, callback) {
     const readPreference = options.readPreference || ReadPreference.PRIMARY;
     // Fetch collection
     const rootCollectionFinal = rootCollection != null ? rootCollection : GridStore.DEFAULT_ROOT_COLLECTION;
-    db.collection(rootCollectionFinal + ".files", function (err, collection) {
-        if (err) return callback(err);
+    db.collection(`${rootCollectionFinal}.files`, (err, collection) => {
+        if (err) {
+            return callback(err);
+        }
 
         // Build query
-        let query = (typeof fileIdObject == "string" || Object.prototype.toString.call(fileIdObject) == "[object RegExp]")
-            ? { "filename": fileIdObject }
-            : { "_id": fileIdObject };    // Attempt to locate file
+        let query = (typeof fileIdObject === "string" || Object.prototype.toString.call(fileIdObject) == "[object RegExp]")
+            ? { filename: fileIdObject }
+            : { _id: fileIdObject };    // Attempt to locate file
 
         // We have a specific query
         if (fileIdObject != null
-            && typeof fileIdObject == "object"
+            && typeof fileIdObject === "object"
             && Object.prototype.toString.call(fileIdObject) != "[object RegExp]") {
             query = fileIdObject;
         }
 
         // Check if the entry exists
-        collection.findOne(query, { readPreference }, function (err, item) {
-            if (err) return callback(err);
+        collection.findOne(query, { readPreference }, (err, item) => {
+            if (err) {
+                return callback(err);
+            }
             callback(null, item == null ? false : true);
         });
     });
@@ -1352,7 +1497,9 @@ define.staticMethod("exist", { callback: true, promise: true });
 GridStore.list = function (db, rootCollection, options, callback) {
     const args = Array.prototype.slice.call(arguments, 1);
     callback = args.pop();
-    if (typeof callback != "function") args.push(callback);
+    if (typeof callback !== "function") {
+        args.push(callback);
+    }
     rootCollection = args.length ? args.shift() : null;
     options = args.length ? args.shift() : {};
     options = options || {};
@@ -1362,16 +1509,20 @@ GridStore.list = function (db, rootCollection, options, callback) {
 
     // No promise library selected fall back
     if (!promiseLibrary) {
-        promiseLibrary = typeof global.Promise == "function" ?
+        promiseLibrary = typeof global.Promise === "function" ?
             global.Promise : require("es6-promise").Promise;
     }
 
     // We provided a callback leg
-    if (typeof callback == "function") return list(db, rootCollection, options, callback);
+    if (typeof callback === "function") {
+        return list(db, rootCollection, options, callback);
+    }
     // Return promise
-    return new promiseLibrary(function (resolve, reject) {
-        list(db, rootCollection, options, function (err, r) {
-            if (err) return reject(err);
+    return new promiseLibrary((resolve, reject) => {
+        list(db, rootCollection, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -1379,7 +1530,7 @@ GridStore.list = function (db, rootCollection, options, callback) {
 
 const list = function (db, rootCollection, options, callback) {
     // Ensure we have correct values
-    if (rootCollection != null && typeof rootCollection == "object") {
+    if (rootCollection != null && typeof rootCollection === "object") {
         options = rootCollection;
         rootCollection = null;
     }
@@ -1387,17 +1538,21 @@ const list = function (db, rootCollection, options, callback) {
     // Establish read preference
     const readPreference = options.readPreference || ReadPreference.PRIMARY;
     // Check if we are returning by id not filename
-    const byId = options["id"] != null ? options["id"] : false;
+    const byId = options.id != null ? options.id : false;
     // Fetch item
     const rootCollectionFinal = rootCollection != null ? rootCollection : GridStore.DEFAULT_ROOT_COLLECTION;
     const items = [];
-    db.collection((rootCollectionFinal + ".files"), function (err, collection) {
-        if (err) return callback(err);
+    db.collection((`${rootCollectionFinal}.files`), (err, collection) => {
+        if (err) {
+            return callback(err);
+        }
 
-        collection.find({}, { readPreference }, function (err, cursor) {
-            if (err) return callback(err);
+        collection.find({}, { readPreference }, (err, cursor) => {
+            if (err) {
+                return callback(err);
+            }
 
-            cursor.each(function (err, item) {
+            cursor.each((err, item) => {
                 if (item != null) {
                     items.push(byId ? item._id : item.filename);
                 } else {
@@ -1436,7 +1591,9 @@ define.staticMethod("list", { callback: true, promise: true });
 GridStore.read = function (db, name, length, offset, options, callback) {
     const args = Array.prototype.slice.call(arguments, 2);
     callback = args.pop();
-    if (typeof callback != "function") args.push(callback);
+    if (typeof callback !== "function") {
+        args.push(callback);
+    }
     length = args.length ? args.shift() : null;
     offset = args.length ? args.shift() : null;
     options = args.length ? args.shift() : null;
@@ -1447,32 +1604,46 @@ GridStore.read = function (db, name, length, offset, options, callback) {
 
     // No promise library selected fall back
     if (!promiseLibrary) {
-        promiseLibrary = typeof global.Promise == "function" ?
+        promiseLibrary = typeof global.Promise === "function" ?
             global.Promise : require("es6-promise").Promise;
     }
 
     // We provided a callback leg
-    if (typeof callback == "function") return readStatic(db, name, length, offset, options, callback);
+    if (typeof callback === "function") {
+        return readStatic(db, name, length, offset, options, callback);
+    }
     // Return promise
-    return new promiseLibrary(function (resolve, reject) {
-        readStatic(db, name, length, offset, options, function (err, r) {
-            if (err) return reject(err);
+    return new promiseLibrary((resolve, reject) => {
+        readStatic(db, name, length, offset, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
 };
 
 const readStatic = function (db, name, length, offset, options, callback) {
-    new GridStore(db, name, "r", options).open(function (err, gridStore) {
-        if (err) return callback(err);
+    new GridStore(db, name, "r", options).open((err, gridStore) => {
+        if (err) {
+            return callback(err);
+        }
         // Make sure we are not reading out of bounds
-        if (offset && offset >= gridStore.length) return callback("offset larger than size of file", null);
-        if (length && length > gridStore.length) return callback("length is larger than the size of the file", null);
-        if (offset && length && (offset + length) > gridStore.length) return callback("offset and length is larger than the size of the file", null);
+        if (offset && offset >= gridStore.length) {
+            return callback("offset larger than size of file", null);
+        }
+        if (length && length > gridStore.length) {
+            return callback("length is larger than the size of the file", null);
+        }
+        if (offset && length && (offset + length) > gridStore.length) {
+            return callback("offset and length is larger than the size of the file", null);
+        }
 
         if (offset != null) {
-            gridStore.seek(offset, function (err, gridStore) {
-                if (err) return callback(err);
+            gridStore.seek(offset, (err, gridStore) => {
+                if (err) {
+                    return callback(err);
+                }
                 gridStore.read(length, callback);
             });
         } else {
@@ -1501,7 +1672,9 @@ define.staticMethod("read", { callback: true, promise: true });
 GridStore.readlines = function (db, name, separator, options, callback) {
     const args = Array.prototype.slice.call(arguments, 2);
     callback = args.pop();
-    if (typeof callback != "function") args.push(callback);
+    if (typeof callback !== "function") {
+        args.push(callback);
+    }
     separator = args.length ? args.shift() : null;
     options = args.length ? args.shift() : null;
     options = options || {};
@@ -1511,16 +1684,20 @@ GridStore.readlines = function (db, name, separator, options, callback) {
 
     // No promise library selected fall back
     if (!promiseLibrary) {
-        promiseLibrary = typeof global.Promise == "function" ?
+        promiseLibrary = typeof global.Promise === "function" ?
             global.Promise : require("es6-promise").Promise;
     }
 
     // We provided a callback leg
-    if (typeof callback == "function") return readlinesStatic(db, name, separator, options, callback);
+    if (typeof callback === "function") {
+        return readlinesStatic(db, name, separator, options, callback);
+    }
     // Return promise
-    return new promiseLibrary(function (resolve, reject) {
-        readlinesStatic(db, name, separator, options, function (err, r) {
-            if (err) return reject(err);
+    return new promiseLibrary((resolve, reject) => {
+        readlinesStatic(db, name, separator, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -1528,8 +1705,10 @@ GridStore.readlines = function (db, name, separator, options, callback) {
 
 const readlinesStatic = function (db, name, separator, options, callback) {
     const finalSeperator = separator == null ? "\n" : separator;
-    new GridStore(db, name, "r", options).open(function (err, gridStore) {
-        if (err) return callback(err);
+    new GridStore(db, name, "r", options).open((err, gridStore) => {
+        if (err) {
+            return callback(err);
+        }
         gridStore.readlines(finalSeperator, callback);
     });
 };
@@ -1553,7 +1732,9 @@ GridStore.unlink = function (db, names, options, callback) {
     const self = this;
     const args = Array.prototype.slice.call(arguments, 2);
     callback = args.pop();
-    if (typeof callback != "function") args.push(callback);
+    if (typeof callback !== "function") {
+        args.push(callback);
+    }
     options = args.length ? args.shift() : {};
     options = options || {};
 
@@ -1562,17 +1743,21 @@ GridStore.unlink = function (db, names, options, callback) {
 
     // No promise library selected fall back
     if (!promiseLibrary) {
-        promiseLibrary = typeof global.Promise == "function" ?
+        promiseLibrary = typeof global.Promise === "function" ?
             global.Promise : require("es6-promise").Promise;
     }
 
     // We provided a callback leg
-    if (typeof callback == "function") return unlinkStatic(self, db, names, options, callback);
+    if (typeof callback === "function") {
+        return unlinkStatic(self, db, names, options, callback);
+    }
 
     // Return promise
-    return new promiseLibrary(function (resolve, reject) {
-        unlinkStatic(self, db, names, options, function (err, r) {
-            if (err) return reject(err);
+    return new promiseLibrary((resolve, reject) => {
+        unlinkStatic(self, db, names, options, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });
@@ -1587,20 +1772,26 @@ const unlinkStatic = function (self, db, names, options, callback) {
         let tc = 0;
         for (let i = 0; i < names.length; i++) {
             ++tc;
-            GridStore.unlink(db, names[i], options, function () {
+            GridStore.unlink(db, names[i], options, () => {
                 if (--tc == 0) {
                     callback(null, self);
                 }
             });
         }
     } else {
-        new GridStore(db, names, "w", options).open(function (err, gridStore) {
-            if (err) return callback(err);
-            deleteChunks(gridStore, function (err) {
-                if (err) return callback(err);
-                gridStore.collection(function (err, collection) {
-                    if (err) return callback(err);
-                    collection.remove({ "_id": gridStore.fileId }, writeConcern, function (err) {
+        new GridStore(db, names, "w", options).open((err, gridStore) => {
+            if (err) {
+                return callback(err);
+            }
+            deleteChunks(gridStore, (err) => {
+                if (err) {
+                    return callback(err);
+                }
+                gridStore.collection((err, collection) => {
+                    if (err) {
+                        return callback(err);
+                    }
+                    collection.remove({ _id: gridStore.fileId }, writeConcern, (err) => {
                         callback(err, self);
                     });
                 });
@@ -1618,9 +1809,9 @@ const _writeNormal = function (self, data, close, callback) {
     // If we have a buffer write it using the writeBuffer method
     if (Buffer.isBuffer(data)) {
         return writeBuffer(self, data, close, callback);
-    } else {
-        return writeBuffer(self, new Buffer(data, "binary"), close, callback);
     }
+    return writeBuffer(self, new Buffer(data, "binary"), close, callback);
+
 };
 
 /**
@@ -1628,11 +1819,21 @@ const _writeNormal = function (self, data, close, callback) {
  */
 const _setWriteConcernHash = function (options) {
     const finalOptions = {};
-    if (options.w != null) finalOptions.w = options.w;
-    if (options.journal == true) finalOptions.j = options.journal;
-    if (options.j == true) finalOptions.j = options.j;
-    if (options.fsync == true) finalOptions.fsync = options.fsync;
-    if (options.wtimeout != null) finalOptions.wtimeout = options.wtimeout;
+    if (options.w != null) {
+        finalOptions.w = options.w;
+    }
+    if (options.journal == true) {
+        finalOptions.j = options.journal;
+    }
+    if (options.j == true) {
+        finalOptions.j = options.j;
+    }
+    if (options.fsync == true) {
+        finalOptions.fsync = options.fsync;
+    }
+    if (options.wtimeout != null) {
+        finalOptions.wtimeout = options.wtimeout;
+    }
     return finalOptions;
 };
 
@@ -1645,23 +1846,25 @@ const _getWriteConcern = function (self, options) {
     options = options || {};
 
     // Local options verification
-    if (options.w != null || typeof options.j == "boolean" || typeof options.journal == "boolean" || typeof options.fsync == "boolean") {
+    if (options.w != null || typeof options.j === "boolean" || typeof options.journal === "boolean" || typeof options.fsync === "boolean") {
         finalOptions = _setWriteConcernHash(options);
-    } else if (options.safe != null && typeof options.safe == "object") {
+    } else if (options.safe != null && typeof options.safe === "object") {
         finalOptions = _setWriteConcernHash(options.safe);
-    } else if (typeof options.safe == "boolean") {
+    } else if (typeof options.safe === "boolean") {
         finalOptions = { w: (options.safe ? 1 : 0) };
-    } else if (self.options.w != null || typeof self.options.j == "boolean" || typeof self.options.journal == "boolean" || typeof self.options.fsync == "boolean") {
+    } else if (self.options.w != null || typeof self.options.j === "boolean" || typeof self.options.journal === "boolean" || typeof self.options.fsync === "boolean") {
         finalOptions = _setWriteConcernHash(self.options);
-    } else if (self.safe && (self.safe.w != null || typeof self.safe.j == "boolean" || typeof self.safe.journal == "boolean" || typeof self.safe.fsync == "boolean")) {
+    } else if (self.safe && (self.safe.w != null || typeof self.safe.j === "boolean" || typeof self.safe.journal === "boolean" || typeof self.safe.fsync === "boolean")) {
         finalOptions = _setWriteConcernHash(self.safe);
-    } else if (typeof self.safe == "boolean") {
+    } else if (typeof self.safe === "boolean") {
         finalOptions = { w: (self.safe ? 1 : 0) };
     }
 
     // Ensure we don't have an invalid combination of write concerns
     if (finalOptions.w < 1
-        && (finalOptions.journal == true || finalOptions.j == true || finalOptions.fsync == true)) throw MongoError.create({ message: "No acknowledgement using w < 1 cannot be combined with journal:true or fsync:true", driver: true });
+        && (finalOptions.journal == true || finalOptions.j == true || finalOptions.fsync == true)) {
+        throw MongoError.create({ message: "No acknowledgement using w < 1 cannot be combined with journal:true or fsync:true", driver: true });
+    }
 
     // Return the options
     return finalOptions;
@@ -1702,8 +1905,10 @@ GridStoreStream.prototype.pipe = function (destination) {
 
     // Only open gridstore if not already open
     if (!self.gs.isOpen) {
-        self.gs.open(function (err) {
-            if (err) return self.emit("error", err);
+        self.gs.open((err) => {
+            if (err) {
+                return self.emit("error", err);
+            }
             self.totalBytesToRead = self.gs.length - self.gs.position;
             self._pipe.apply(self, [destination]);
         });
@@ -1721,11 +1926,15 @@ GridStoreStream.prototype._read = function () {
 
     const read = function () {
         // Read data
-        self.gs.read(length, function (err, buffer) {
-            if (err && !self.endCalled) return self.emit("error", err);
+        self.gs.read(length, (err, buffer) => {
+            if (err && !self.endCalled) {
+                return self.emit("error", err);
+            }
 
             // Stream is closed
-            if (self.endCalled || buffer == null) return self.push(null);
+            if (self.endCalled || buffer == null) {
+                return self.push(null);
+            }
             // Remove bytes read
             if (buffer.length <= self.totalBytesToRead) {
                 self.totalBytesToRead = self.totalBytesToRead - buffer.length;
@@ -1745,9 +1954,11 @@ GridStoreStream.prototype._read = function () {
     // Set read length
     const length = self.gs.length < self.gs.chunkSize ? self.gs.length - self.seekPosition : self.gs.chunkSize;
     if (!self.gs.isOpen) {
-        self.gs.open(function (err) {
+        self.gs.open((err) => {
             self.totalBytesToRead = self.gs.length - self.gs.position;
-            if (err) return self.emit("error", err);
+            if (err) {
+                return self.emit("error", err);
+            }
             read();
         });
     } else {
@@ -1764,46 +1975,54 @@ GridStoreStream.prototype.destroy = function () {
 
 GridStoreStream.prototype.write = function (chunk) {
     const self = this;
-    if (self.endCalled) return self.emit("error", MongoError.create({ message: "attempting to write to stream after end called", driver: true }));
+    if (self.endCalled) {
+        return self.emit("error", MongoError.create({ message: "attempting to write to stream after end called", driver: true }));
+    }
     // Do we have to open the gridstore
     if (!self.gs.isOpen) {
-        self.gs.open(function () {
+        self.gs.open(() => {
             self.gs.isOpen = true;
-            self.gs.write(chunk, function () {
-                process.nextTick(function () {
+            self.gs.write(chunk, () => {
+                process.nextTick(() => {
                     self.emit("drain");
                 });
             });
         });
         return false;
-    } else {
-        self.gs.write(chunk, function () {
-            self.emit("drain");
-        });
-        return true;
     }
+    self.gs.write(chunk, () => {
+        self.emit("drain");
+    });
+    return true;
+
 };
 
 GridStoreStream.prototype.end = function (chunk, encoding, callback) {
     const self = this;
     const args = Array.prototype.slice.call(arguments, 0);
     callback = args.pop();
-    if (typeof callback != "function") args.push(callback);
+    if (typeof callback !== "function") {
+        args.push(callback);
+    }
     chunk = args.length ? args.shift() : null;
     encoding = args.length ? args.shift() : null;
     self.endCalled = true;
 
     if (chunk) {
-        self.gs.write(chunk, function () {
-            self.gs.close(function () {
-                if (typeof callback == "function") callback();
+        self.gs.write(chunk, () => {
+            self.gs.close(() => {
+                if (typeof callback === "function") {
+                    callback();
+                }
                 self.emit("end");
             });
         });
     }
 
-    self.gs.close(function () {
-        if (typeof callback == "function") callback();
+    self.gs.close(() => {
+        if (typeof callback === "function") {
+            callback();
+        }
         self.emit("end");
     });
 };

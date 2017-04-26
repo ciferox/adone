@@ -52,50 +52,52 @@ const CoreReadPreference = require("../core").ReadPreference;
  * @fires CommandCursor#readable
  * @return {CommandCursor} an CommandCursor instance.
  */
-const CommandCursor = function (bson, ns, cmd, options, topology, topologyOptions) {
-    CoreCursor.apply(this, Array.prototype.slice.call(arguments, 0));
-    const state = CommandCursor.INIT;
-    const streamOptions = {};
+class CommandCursor extends CoreCursor {
+    constructor(bson, ns, cmd, options, topology, topologyOptions) {
+        super(bson, ns, cmd, options, topology, topologyOptions);
+        const state = CommandCursor.INIT;
+        const streamOptions = {};
 
-    // MaxTimeMS
-    const maxTimeMS = null;
-
-    // Get the promiseLibrary
-    let promiseLibrary = options.promiseLibrary;
-
-    // No promise library selected fall back
-    if (!promiseLibrary) {
-        promiseLibrary = typeof global.Promise === "function" ?
-            global.Promise : require("es6-promise").Promise;
-    }
-
-    // Set up
-    Readable.call(this, { objectMode: true });
-
-    // Internal state
-    this.s = {
         // MaxTimeMS
-        maxTimeMS,
-        // State
-        state,
-        // Stream options
-        streamOptions,
-        // BSON
-        bson,
-        // Namespace
-        ns,
-        // Command
-        cmd,
-        // Options
-        options,
-        // Topology
-        topology,
-        // Topology Options
-        topologyOptions,
-        // Promise library
-        promiseLibrary
-    };
-};
+        const maxTimeMS = null;
+
+        // Get the promiseLibrary
+        let promiseLibrary = options.promiseLibrary;
+
+        // No promise library selected fall back
+        if (!promiseLibrary) {
+            promiseLibrary = typeof global.Promise === "function" ?
+                global.Promise : require("es6-promise").Promise;
+        }
+
+        // Set up
+        // Readable.call(this, { objectMode: true });
+
+        // Internal state
+        this.s = {
+            // MaxTimeMS
+            maxTimeMS,
+            // State
+            state,
+            // Stream options
+            streamOptions,
+            // BSON
+            bson,
+            // Namespace
+            ns,
+            // Command
+            cmd,
+            // Options
+            options,
+            // Topology
+            topology,
+            // Topology Options
+            topologyOptions,
+            // Promise library
+            promiseLibrary
+        };
+    }
+}
 
 /**
  * CommandCursor stream data event, fired for each document in the cursor.

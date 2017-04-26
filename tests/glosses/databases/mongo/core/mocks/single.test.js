@@ -1,4 +1,3 @@
-import Server from "adone/glosses/databases/mongo/core/lib/topologies/server";
 import mongodbVersionManager from "mongodb-version-manager";
 import mockupdb from "../mock";
 import configuration from "../configuration";
@@ -17,6 +16,8 @@ const waitFor = (emitter, event) => new Promise((resolve) => emitter.once(event,
 
 describe("mongodb", function () {
     this.timeout(120000);
+
+    const { database: { mongo: { core: { Server } } } } = adone;
 
     before(async function () {
         this.timeout(999999999); // long enough

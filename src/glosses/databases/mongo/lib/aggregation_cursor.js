@@ -50,50 +50,54 @@ const CoreCursor = require("./cursor");
  * @fires AggregationCursor#readable
  * @return {AggregationCursor} an AggregationCursor instance.
  */
-const AggregationCursor = function (bson, ns, cmd, options, topology, topologyOptions) {
-    CoreCursor.apply(this, Array.prototype.slice.call(arguments, 0));
-    const state = AggregationCursor.INIT;
-    const streamOptions = {};
 
-    // MaxTimeMS
-    const maxTimeMS = null;
+class AggregationCursor extends CoreCursor {
+    constructor(bson, ns, cmd, options, topology, topologyOptions) {
+        super(bson, ns, cmd, options, topology, topologyOptions);
 
-    // Get the promiseLibrary
-    let promiseLibrary = options.promiseLibrary;
+        const state = AggregationCursor.INIT;
+        const streamOptions = {};
 
-    // No promise library selected fall back
-    if (!promiseLibrary) {
-        promiseLibrary = typeof global.Promise == "function" ?
-            global.Promise : require("es6-promise").Promise;
-    }
-
-    // Set up
-    Readable.call(this, { objectMode: true });
-
-    // Internal state
-    this.s = {
         // MaxTimeMS
-        maxTimeMS
-        // State
-        , state
-        // Stream options
-        , streamOptions
-        // BSON
-        , bson
-        // Namespace
-        , ns
-        // Command
-        , cmd
-        // Options
-        , options
-        // Topology
-        , topology
-        // Topology Options
-        , topologyOptions
-        // Promise library
-        , promiseLibrary
-    };
-};
+        const maxTimeMS = null;
+
+        // Get the promiseLibrary
+        let promiseLibrary = options.promiseLibrary;
+
+        // No promise library selected fall back
+        if (!promiseLibrary) {
+            promiseLibrary = typeof global.Promise === "function" ?
+                global.Promise : require("es6-promise").Promise;
+        }
+
+        // Set up
+        // Readable.call(this, { objectMode: true });
+
+        // Internal state
+        this.s = {
+            // MaxTimeMS
+            maxTimeMS,
+            // State
+            state,
+            // Stream options
+            streamOptions,
+            // BSON
+            bson,
+            // Namespace
+            ns,
+            // Command
+            cmd,
+            // Options
+            options,
+            // Topology
+            topology,
+            // Topology Options
+            topologyOptions,
+            // Promise library
+            promiseLibrary
+        };
+    }
+}
 
 /**
  * AggregationCursor stream data event, fired for each document in the cursor.
@@ -124,12 +128,12 @@ const AggregationCursor = function (bson, ns, cmd, options, topology, topologyOp
  */
 
 // Inherit from Readable
-inherits(AggregationCursor, Readable);
+// inherits(AggregationCursor, Readable);
 
 // Extend the Cursor
-for (const name in CoreCursor.prototype) {
-    AggregationCursor.prototype[name] = CoreCursor.prototype[name];
-}
+// for (const name in CoreCursor.prototype) {
+//     AggregationCursor.prototype[name] = CoreCursor.prototype[name];
+// }
 
 const define = AggregationCursor.define = new Define("AggregationCursor", AggregationCursor, true);
 
@@ -141,9 +145,15 @@ const define = AggregationCursor.define = new Define("AggregationCursor", Aggreg
  * @return {AggregationCursor}
  */
 AggregationCursor.prototype.batchSize = function (value) {
-    if (this.s.state == AggregationCursor.CLOSED || this.isDead()) throw MongoError.create({ message: "Cursor is closed", driver: true });
-    if (typeof value != "number") throw MongoError.create({ message: "batchSize requires an integer", drvier: true });
-    if (this.s.cmd.cursor) this.s.cmd.cursor.batchSize = value;
+    if (this.s.state == AggregationCursor.CLOSED || this.isDead()) {
+        throw MongoError.create({ message: "Cursor is closed", driver: true });
+    }
+    if (typeof value !== "number") {
+        throw MongoError.create({ message: "batchSize requires an integer", drvier: true });
+    }
+    if (this.s.cmd.cursor) {
+        this.s.cmd.cursor.batchSize = value;
+    }
     this.setCursorBatchSize(value);
     return this;
 };

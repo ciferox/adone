@@ -45,7 +45,7 @@ const legalOptionNames = ["ha", "haInterval", "replicaSet", "rs_name", "secondar
     "sslCA", "sslCert", "sslCRL", "sslKey", "sslPass", "socketOptions", "bufferMaxEntries",
     "store", "auto_reconnect", "autoReconnect", "emitError",
     "keepAlive", "noDelay", "connectTimeoutMS", "socketTimeoutMS", "strategy", "debug",
-    "loggerLevel", "logger", "reconnectTries", "appname", "domainsEnabled",
+    "reconnectTries", "appname", "domainsEnabled",
     "servername", "promoteLongs", "promoteValues", "promoteBuffers", "maxStalenessSeconds"];
 
 // Get package.json variable
@@ -376,7 +376,7 @@ ReplSet.prototype.connect = function (db, _options, callback) {
             try {
                 callback(err);
             } catch (err) {
-                if (!self.s.replset.isConnected())                    {
+                if (!self.s.replset.isConnected()) {
                     process.nextTick(() => {
                         throw err;
                     });

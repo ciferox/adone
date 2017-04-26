@@ -3,8 +3,6 @@ import {
     executeCommand
 } from "../shared";
 
-import Server from "adone/glosses/databases/mongo/core/lib/topologies/server";
-import Connection from "adone/glosses/databases/mongo/core/lib/connection/connection";
 import mongodbVersionManager from "mongodb-version-manager";
 import configuration from "../configuration";
 
@@ -15,6 +13,8 @@ const promisify = adone.promise.promisify;
 
 describe("mongodb", function () {
     this.timeout(120000);
+
+    const { database: { mongo: { core: { Server, Connection } } } } = adone;
 
     before(async function () {
         this.timeout(999999999); // long enough

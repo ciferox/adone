@@ -9,13 +9,15 @@ const Store = function (topology, storeOptions) {
 
     // Internal state
     this.s = {
-        storedOps
-        , storeOptions
-        , topology
+        storedOps,
+        storeOptions,
+        topology
     };
 
     Object.defineProperty(this, "length", {
-        enumerable: true, get() { return self.s.storedOps.length; }
+        enumerable: true, get() {
+            return self.s.storedOps.length;
+        }
     });
 };
 
@@ -123,8 +125,10 @@ Store.prototype.all = function () {
 const ServerCapabilities = function (ismaster) {
     const setup_get_property = function (object, name, value) {
         Object.defineProperty(object, name, {
-            enumerable: true
-            , get() { return value; }
+            enumerable: true,
+            get() {
+                return value;
+            }
         });
     };
 

@@ -47,7 +47,7 @@ const legalOptionNames = ["ha", "haInterval", "acceptableLatencyMS",
     "sslCA", "sslCRL", "sslCert", "sslKey", "sslPass", "socketOptions", "bufferMaxEntries",
     "store", "auto_reconnect", "autoReconnect", "emitError",
     "keepAlive", "noDelay", "connectTimeoutMS", "socketTimeoutMS",
-    "loggerLevel", "logger", "reconnectTries", "reconnectInterval", "monitoring",
+    "reconnectTries", "reconnectInterval", "monitoring",
     "appname", "domainsEnabled",
     "servername", "promoteLongs", "promoteValues", "promoteBuffers"];
 

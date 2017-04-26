@@ -2,11 +2,6 @@ import {
     locateAuthMethod,
     executeCommand
 } from "./shared";
-import {
-    Query
-} from "adone/glosses/databases/mongo/core/lib/connection/commands";
-import Connection from "adone/glosses/databases/mongo/core/lib/connection/connection";
-import Pool from "adone/glosses/databases/mongo/core/lib/connection/pool";
 import mongodbVersionManager from "mongodb-version-manager";
 import configuration from "./configuration";
 
@@ -24,6 +19,8 @@ const waitFor = (emitter, event) => new Promise((resolve) => emitter.once(event,
 
 describe("mongodb", function () {
     this.timeout(120000);
+
+    const { database: { mongo: { core: { Connection, Pool, Query } } } } = adone;
 
     before(async function () {
         this.timeout(999999999); // long enough

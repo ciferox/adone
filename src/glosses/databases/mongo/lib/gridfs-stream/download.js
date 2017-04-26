@@ -90,7 +90,7 @@ GridFSBucketReadStream.prototype._read = function () {
         return;
     }
 
-    waitForFile(_this, function () {
+    waitForFile(_this, () => {
         doRead(_this);
     });
 };
@@ -141,7 +141,7 @@ GridFSBucketReadStream.prototype.abort = function (callback) {
     this.push(null);
     this.destroyed = true;
     if (this.s.cursor) {
-        this.s.cursor.close(function (error) {
+        this.s.cursor.close((error) => {
             _this.emit("close");
             callback && callback(error);
         });
@@ -175,7 +175,7 @@ function doRead(_this) {
         return;
     }
 
-    _this.s.cursor.next(function (error, doc) {
+    _this.s.cursor.next((error, doc) => {
         if (_this.destroyed) {
             return;
         }
@@ -184,7 +184,7 @@ function doRead(_this) {
         }
         if (!doc) {
             _this.push(null);
-            return _this.s.cursor.close(function (error) {
+            return _this.s.cursor.close((error) => {
                 if (error) {
                     return __handleError(_this, error);
                 }
@@ -198,25 +198,25 @@ function doRead(_this) {
             bytesRemaining);
 
         if (doc.n > expectedN) {
-            var errmsg = "ChunkIsMissing: Got unexpected n: " + doc.n +
-                ", expected: " + expectedN;
+            var errmsg = `ChunkIsMissing: Got unexpected n: ${doc.n
+                }, expected: ${expectedN}`;
             return __handleError(_this, new Error(errmsg));
         }
 
         if (doc.n < expectedN) {
-            errmsg = "ExtraChunk: Got unexpected n: " + doc.n +
-                ", expected: " + expectedN;
+            errmsg = `ExtraChunk: Got unexpected n: ${doc.n
+                }, expected: ${expectedN}`;
             return __handleError(_this, new Error(errmsg));
         }
 
         if (doc.data.length() !== expectedLength) {
             if (bytesRemaining <= 0) {
-                errmsg = "ExtraChunk: Got unexpected n: " + doc.n;
+                errmsg = `ExtraChunk: Got unexpected n: ${doc.n}`;
                 return __handleError(_this, new Error(errmsg));
             }
 
-            errmsg = "ChunkIsWrongSize: Got unexpected length: " +
-                doc.data.length() + ", expected: " + expectedLength;
+            errmsg = `ChunkIsWrongSize: Got unexpected length: ${
+                doc.data.length()}, expected: ${expectedLength}`;
             return __handleError(_this, new Error(errmsg));
         }
 
@@ -270,14 +270,14 @@ function init(self) {
         findOneOptions.skip = self.s.options.skip;
     }
 
-    self.s.files.findOne(self.s.filter, findOneOptions, function (error, doc) {
+    self.s.files.findOne(self.s.filter, findOneOptions, (error, doc) => {
         if (error) {
             return __handleError(self, error);
         }
         if (!doc) {
             const identifier = self.s.filter._id ?
                 self.s.filter._id.toString() : self.s.filter.filename;
-            const errmsg = "FileNotFound: file " + identifier + " was not found";
+            const errmsg = `FileNotFound: file ${identifier} was not found`;
             const err = new Error(errmsg);
             err.code = "ENOENT";
             return __handleError(self, err);
@@ -327,7 +327,7 @@ function waitForFile(_this, callback) {
         _this.s.init = true;
     }
 
-    _this.once("file", function () {
+    _this.once("file", () => {
         callback();
     });
 }
@@ -339,16 +339,16 @@ function waitForFile(_this, callback) {
 function handleStartOption(stream, doc, cursor, options) {
     if (options && options.start != null) {
         if (options.start > doc.length) {
-            throw new Error("Stream start (" + options.start + ") must not be " +
-                "more than the length of the file (" + doc.length + ")");
+            throw new Error(`Stream start (${options.start}) must not be ` +
+                `more than the length of the file (${doc.length})`);
         }
         if (options.start < 0) {
-            throw new Error("Stream start (" + options.start + ") must not be " +
+            throw new Error(`Stream start (${options.start}) must not be ` +
                 "negative");
         }
         if (options.end != null && options.end < options.start) {
-            throw new Error("Stream start (" + options.start + ") must not be " +
-                "greater than stream end (" + options.end + ")");
+            throw new Error(`Stream start (${options.start}) must not be ` +
+                `greater than stream end (${options.end})`);
         }
 
         cursor.skip(Math.floor(options.start / doc.chunkSize));
@@ -368,11 +368,11 @@ function handleStartOption(stream, doc, cursor, options) {
 function handleEndOption(stream, doc, cursor, options) {
     if (options && options.end != null) {
         if (options.end > doc.length) {
-            throw new Error("Stream end (" + options.end + ") must not be " +
-                "more than the length of the file (" + doc.length + ")");
+            throw new Error(`Stream end (${options.end}) must not be ` +
+                `more than the length of the file (${doc.length})`);
         }
         if (options.start < 0) {
-            throw new Error("Stream end (" + options.end + ") must not be " +
+            throw new Error(`Stream end (${options.end}) must not be ` +
                 "negative");
         }
 

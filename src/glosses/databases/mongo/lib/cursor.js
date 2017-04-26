@@ -95,73 +95,76 @@ const push = Array.prototype.push;
  *
  * collection.find({}).maxTimeMS(1000).maxScan(100).skip(1).toArray(..)
  */
-const Cursor = function (bson, ns, cmd, options, topology, topologyOptions) {
-    CoreCursor.apply(this, Array.prototype.slice.call(arguments, 0));
-    const self = this;
-    const state = Cursor.INIT;
-    const streamOptions = {};
 
-    // Tailable cursor options
-    const numberOfRetries = options.numberOfRetries || 5;
-    const tailableRetryInterval = options.tailableRetryInterval || 500;
-    const currentNumberOfRetries = numberOfRetries;
+class Cursor extends CoreCursor {
+    constructor(bson, ns, cmd, options, topology, topologyOptions) {
+        super(bson, ns, cmd, options, topology, topologyOptions);
+        const self = this;
+        const state = Cursor.INIT;
+        const streamOptions = {};
 
-    // Get the promiseLibrary
-    let promiseLibrary = options.promiseLibrary;
-
-    // No promise library selected fall back
-    if (!promiseLibrary) {
-        promiseLibrary = typeof global.Promise === "function" ?
-            global.Promise : require("es6-promise").Promise;
-    }
-
-    // Set up
-    Readable.call(this, { objectMode: true });
-
-    // Internal cursor state
-    this.s = {
         // Tailable cursor options
-        numberOfRetries,
-        tailableRetryInterval,
-        currentNumberOfRetries,
-        // State
-        state,
-        // Stream options
-        streamOptions,
-        // BSON
-        bson,
-        // Namespace
-        ns,
-        // Command
-        cmd,
-        // Options
-        options,
-        // Topology
-        topology,
-        // Topology options
-        topologyOptions,
-        // Promise library
-        promiseLibrary,
-        // Current doc
-        currentDoc: null
-    };
+        const numberOfRetries = options.numberOfRetries || 5;
+        const tailableRetryInterval = options.tailableRetryInterval || 500;
+        const currentNumberOfRetries = numberOfRetries;
 
-    // Translate correctly
-    if (self.s.options.noCursorTimeout == true) {
-        self.addCursorFlag("noCursorTimeout", true);
+        // Get the promiseLibrary
+        let promiseLibrary = options.promiseLibrary;
+
+        // No promise library selected fall back
+        if (!promiseLibrary) {
+            promiseLibrary = typeof global.Promise === "function" ?
+                global.Promise : require("es6-promise").Promise;
+        }
+
+        // Set up
+        // Readable.call(this, { objectMode: true });
+
+        // Internal cursor state
+        this.s = {
+            // Tailable cursor options
+            numberOfRetries,
+            tailableRetryInterval,
+            currentNumberOfRetries,
+            // State
+            state,
+            // Stream options
+            streamOptions,
+            // BSON
+            bson,
+            // Namespace
+            ns,
+            // Command
+            cmd,
+            // Options
+            options,
+            // Topology
+            topology,
+            // Topology options
+            topologyOptions,
+            // Promise library
+            promiseLibrary,
+            // Current doc
+            currentDoc: null
+        };
+
+        // Translate correctly
+        if (self.s.options.noCursorTimeout == true) {
+            self.addCursorFlag("noCursorTimeout", true);
+        }
+
+        // Set the sort value
+        this.sortValue = self.s.cmd.sort;
+
+        // Get the batchSize
+        const batchSize = cmd.cursor && cmd.cursor.batchSize
+            ? cmd.cursor && cmd.cursor.batchSize
+            : (options.cursor && options.cursor.batchSize ? options.cursor.batchSize : 1000);
+
+        // Set the batchSize
+        this.setCursorBatchSize(batchSize);
     }
-
-    // Set the sort value
-    this.sortValue = self.s.cmd.sort;
-
-    // Get the batchSize
-    const batchSize = cmd.cursor && cmd.cursor.batchSize
-        ? cmd.cursor && cmd.cursor.batchSize
-        : (options.cursor && options.cursor.batchSize ? options.cursor.batchSize : 1000);
-
-    // Set the batchSize
-    this.setCursorBatchSize(batchSize);
-};
+}
 
 /**
  * Cursor stream data event, fired for each document in the cursor.
@@ -192,14 +195,14 @@ const Cursor = function (bson, ns, cmd, options, topology, topologyOptions) {
  */
 
 // Inherit from Readable
-inherits(Cursor, Readable);
+// inherits(Cursor, Readable);
 
 // Map core cursor _next method so we can apply mapping
 CoreCursor.prototype._next = CoreCursor.prototype.next;
 
-for (const name in CoreCursor.prototype) {
-    Cursor.prototype[name] = CoreCursor.prototype[name];
-}
+// for (const name in CoreCursor.prototype) {
+//     Cursor.prototype[name] = CoreCursor.prototype[name];
+// }
 
 const define = Cursor.define = new Define("Cursor", Cursor, true);
 
@@ -217,15 +220,15 @@ Cursor.prototype.hasNext = function (callback) {
     if (typeof callback === "function") {
         if (self.s.currentDoc) {
             return callback(null, true);
-        } else {
-            return nextObject(self, (err, doc) => {
-                if (!doc) {
-                    return callback(null, false);
-                }
-                self.s.currentDoc = doc;
-                callback(null, true);
-            });
         }
+        return nextObject(self, (err, doc) => {
+            if (!doc) {
+                return callback(null, false);
+            }
+            self.s.currentDoc = doc;
+            callback(null, true);
+        });
+
     }
 
     // Return a Promise
@@ -1154,12 +1157,13 @@ define.classMethod("destroy", { callback: false, promise: false });
  * @param {function} [options.transform=null] A transformation method applied to each document emitted by the stream.
  * @return {Cursor}
  */
-Cursor.prototype.stream = function (options) {
-    this.s.streamOptions = options || {};
-    return this;
-};
+// TODO, wrapper?
+// Cursor.prototype.stream = function (options) {
+//     this.s.streamOptions = options || {};
+//     return this;
+// };
 
-define.classMethod("stream", { callback: false, promise: false, returns: [Cursor] });
+// define.classMethod("stream", { callback: false, promise: false, returns: [Cursor] });
 
 /**
  * Execute the explain for the cursor

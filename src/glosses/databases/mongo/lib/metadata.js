@@ -3,7 +3,7 @@ const f = require("util").format;
 const Define = function (name, object, stream) {
     this.name = name;
     this.object = object;
-    this.stream = typeof stream == "boolean" ? stream : false;
+    this.stream = typeof stream === "boolean" ? stream : false;
     this.instrumentations = {};
 };
 

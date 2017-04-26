@@ -79,4 +79,4 @@ jsonDiff.equals = (left, right) => {
     );
 };
 
-export const diffObject = (oldObj, newObj, options) => jsonDiff.diff(oldObj, newObj, options);
+export const diffJson = (oldObj, newObj, options) => jsonDiff.diff(oldObj, newObj, options);

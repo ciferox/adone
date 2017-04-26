@@ -232,9 +232,9 @@ const profilingLevel = function (self, callback) {
                 return callback(null, "all");
             }
             return callback(new Error(`Error: illegal profiling level value ${was}`), null);
-        } else {
-            err != null ? callback(err, null) : callback(new Error("Error with profile command"), null);
         }
+        err != null ? callback(err, null) : callback(new Error("Error with profile command"), null);
+
     });
 };
 
@@ -390,7 +390,7 @@ Admin.prototype.addUser = function (username, password, options, callback) {
     options.dbName = "admin";
 
     // Execute using callback
-    if (typeof callback === "function")        {
+    if (typeof callback === "function") {
         return self.s.db.addUser(username, password, options, callback);
     }
 
@@ -434,7 +434,7 @@ Admin.prototype.removeUser = function (username, options, callback) {
     options.dbName = "admin";
 
     // Execute using callback
-    if (typeof callback === "function")        {
+    if (typeof callback === "function") {
         return self.s.db.removeUser(username, options, callback);
     }
 
@@ -495,7 +495,7 @@ const setProfilingLevel = function (self, level, callback) {
     command.profile = profile;
 
     self.s.db.executeDbAdminCommand(command, (err, doc) => {
-        if (err == null && doc.ok === 1)            {
+        if (err == null && doc.ok === 1) {
             return callback(null, level);
         }
         return err != null ? callback(err, null) : callback(new Error("Error with profile command"), null);
@@ -558,7 +558,7 @@ Admin.prototype.validateCollection = function (collectionName, options, callback
     options = options || {};
 
     // Execute using callback
-    if (typeof callback === "function")        {
+    if (typeof callback === "function") {
         return validateCollection(self, collectionName, options, callback);
     }
 
@@ -589,16 +589,16 @@ const validateCollection = function (self, collectionName, options, callback) {
             return callback(err, null);
         }
 
-        if (doc.ok === 0)            {
+        if (doc.ok === 0) {
             return callback(new Error("Error with validate command"), null);
         }
-        if (doc.result != null && doc.result.constructor != String)            {
+        if (doc.result != null && doc.result.constructor != String) {
             return callback(new Error("Error with validation data"), null);
         }
-        if (doc.result != null && doc.result.match(/exception|corrupt/) != null)            {
+        if (doc.result != null && doc.result.match(/exception|corrupt/) != null) {
             return callback(new Error(`Error: invalid collection ${collectionName}`), null);
         }
-        if (doc.valid != null && !doc.valid)            {
+        if (doc.valid != null && !doc.valid) {
             return callback(new Error(`Error: invalid collection ${collectionName}`), null);
         }
 
@@ -659,7 +659,7 @@ Admin.prototype.replSetGetStatus = function (callback) {
 
 const replSetGetStatus = function (self, callback) {
     self.s.db.executeDbAdminCommand({ replSetGetStatus: 1 }, (err, doc) => {
-        if (err == null && doc.ok === 1)            {
+        if (err == null && doc.ok === 1) {
             return callback(null, doc);
         }
         if (err) {

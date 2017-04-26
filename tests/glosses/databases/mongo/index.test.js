@@ -1,62 +1,132 @@
-import mongodbVersionManager from "mongodb-version-manager";
-import { sharded, replicaset, single } from "./topology";
+import Dispatcher from "./dispatcher";
 
-const { promise: { promisify } } = adone;
+describe("glosses", "databases", "mongo", function () {
+    const { x, database: { mongo } } = adone;
 
-describe("glosses", "databases", "mongo", () => {
-    before("mondodb check", async () => {
-        const version = await promisify(mongodbVersionManager.current)();
-        adone.info(`Running tests against MongoDB version ${version}`);
+    this.tmpdir = null;
+    this.dispatcher = null;
+    this.db = null;
+    this.DB = null;
+    this.database = "tests";
+    this.host = null;
+    this.port = null;
+
+    before("create tmpdir", async () => {
+        this.tmpdir = await adone.fs.Directory.createTmp();
     });
 
-    for (const topology of [
-        "single",
-        "sharded",
-        "replicaset"
-    ]) {
-        describe(topology, function () {
-            this.topology = topology;
-            this.tmpdir = null;
-            this.server = null;
-            this.DB = null;
-            this.db = null;
+    after("unlink tmpdir", async () => {
+        if (this.tmpdir) {
+            await this.tmpdir.unlink();
+        }
+    });
 
-            before("create tmpdir", async () => {
-                this.tmpdir = await adone.fs.Directory.createTmp();
-            });
+    before("create dispatcher", () => {
+        this.dispatcher = new Dispatcher(this.tmpdir);
+    });
 
-            after("unlink tmpdir", async () => {
-                await this.tmpdir.unlink();
-            });
+    after("destroy dispatcher", async function () {
+        this.timeout(120000);
 
-            switch (topology) {
-                case "single": {
-                    single();
-                    break;
-                }
-                case "sharded": {
-                    sharded();
-                    break;
-                }
-                case "replicaset": {
-                    replicaset();
-                    break;
-                }
+        await this.dispatcher.destroy();
+    });
+
+    before("mondodb check", async () => {
+        adone.info(`Running tests against MongoDB version ${await this.dispatcher.getVersion()}`);
+    });
+
+    const initConnection = () => {
+        beforeEach("open connection", async () => {
+            if (!this.DB) {
+                throw new x.IllegalState("There is no DB instance");
             }
-
-            beforeEach("open connection", async () => {
-                this.db = await this.DB.open();
-            });
-
-            afterEach("close connection", async () => {
-                if (this.db) {
-                    await this.db.close();
-                    this.db = null;
-                }
-            });
-
-            include("./crud_api");
-            include("./crud");
+            this.db = await this.DB.open();
         });
-    }
+
+        afterEach("close connection", async () => {
+            if (this.db) {
+                await this.db.close();
+                this.db = null;
+            }
+        });
+    };
+
+    this.init = {
+        single: async () => {
+            beforeEach("create DB instance", async function () {
+                this.timeout(120000);
+
+                [this.host, this.port] = await this.dispatcher.getSingleServer();
+
+                this.DB = new mongo.Db(this.database, new mongo.Server("localhost", 27017, {
+                    poolSize: 1,
+                    autoReconnect: false
+                }), {
+                    w: 1
+                });
+            });
+            initConnection();
+        },
+        sharded: async () => {
+            beforeEach("create DB instance", async function () {
+                this.timeout(120000);
+
+                [this.host, this.port] = await this.dispatcher.getShardedServer();
+
+                this.DB = new mongo.Db(this.database, new mongo.Mongos([
+                    new mongo.Server("localhost", 51000, {
+                        poolSize: 1,
+                        autoReconnect: false
+                    })
+                ], {
+                    w: "majority",
+                    wtimeout: 30000
+                }), {
+                    w: 1
+                });
+            });
+            initConnection();
+        },
+        replicaset: async () => {
+            beforeEach("create DB instance", async function () {
+                this.timeout(120000);
+
+                [this.host, this.port] = await this.dispatcher.getReplicasetServer();
+
+                this.DB = new mongo.Db(this.database, new mongo.ReplSet([
+                    new mongo.Server("localhost", 31000, {
+                        poolSize: 1,
+                        autoReconnect: false
+                    })
+                ], {
+                    poolSize: 1,
+                    autoReconnect: false,
+                    rs_name: "rs"
+                }), {
+                    w: 1
+                });
+            });
+            initConnection();
+        }
+    };
+
+    describe("core", () => {
+
+    });
+
+    describe("driver", () => {
+        for (const topology of [
+            "single",
+            "sharded",
+            "replicaset"
+        ]) {
+            describe(topology, () => {
+
+                this.init[topology]();
+
+                include("./crud_api");
+                include("./crud");
+            });
+        }
+    });
 });

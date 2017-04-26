@@ -1,57 +1,43 @@
-// Core module
-const core = require("./core");
-const Instrumentation = require("./lib/apm");
+const { lazify } = adone;
 
-// Set up the connect function
-const connect = require("./lib/mongo_client").connect;
-
-connect.core = core;
-// Expose error class
-connect.MongoError = core.MongoError;
-
-// Actual driver classes exported
-connect.Admin = require("./lib/admin");
-connect.MongoClient = require("./lib/mongo_client");
-connect.Db = require("./lib/db");
-connect.Collection = require("./lib/collection");
-connect.Server = require("./lib/server");
-connect.ReplSet = require("./lib/replset");
-connect.Mongos = require("./lib/mongos");
-connect.ReadPreference = require("./lib/read_preference");
-connect.GridStore = require("./lib/gridfs/grid_store");
-connect.Chunk = require("./lib/gridfs/chunk");
-connect.Logger = core.Logger;
-connect.Cursor = require("./lib/cursor");
-connect.GridFSBucket = require("./lib/gridfs-stream");
-// Exported to be used in tests not to be used anywhere else
-connect.CoreServer = core.Server;
-connect.CoreConnection = core.Connection;
-
-// BSON types exported
-connect.Binary = adone.data.bson.Binary;
-connect.Code = adone.data.bson.Code;
-connect.Map = adone.data.bson.Map;
-connect.DBRef = adone.data.bson.DBRef;
-connect.Double = adone.data.bson.Double;
-connect.Int32 = adone.data.bson.Int32;
-connect.Long = adone.data.bson.Long;
-connect.MinKey = adone.data.bson.MinKey;
-connect.MaxKey = adone.data.bson.MaxKey;
-connect.ObjectID = adone.data.bson.ObjectID;
-connect.ObjectID = adone.data.bson.ObjectID;
-connect.Symbol = adone.data.bson.Symbol;
-connect.Timestamp = adone.data.bson.Timestamp;
-connect.Decimal128 = adone.data.bson.Decimal128;
-connect.BSONRegExp = adone.data.bson.BSONRegExp;
-
-// Add connect method
-connect.connect = connect;
-
-// Set up the instrumentation method
-connect.instrument = function(options, callback) {
-    if (typeof options == "function") callback = options, options = {};
-    return new Instrumentation(core, options, callback);
-};
-
-// Set our exports to be the connect function
-module.exports = connect;
+const mongo = lazify({
+    core: "./core",
+    Instrumentation: "./lib/apm",
+    connect: ["./lib/mongo_client", (x) => x.connect],
+    MongoClient: "./lib/mongo_client",
+    MongoError: () => mongo.core.MongoError,
+    Admin: "./lib/admin",
+    Db: "./lib/db",
+    Collection: "./lib/collection",
+    Server: "./lib/server",
+    ReplSet: "./lib/replset",
+    Mongos: "./lib/mongos",
+    ReadPreference: "./lib/read_preference",
+    GridStore: "./lib/gridfs/grid_store",
+    Chunk: "./lib/gridfs/chunk",
+    Logger: () => mongo.core.Logger,
+    Cursor: "./lib/cursor",
+    GridFSBucket: "./lib/gridfs-stream",
+    CoreServer: () => mongo.core.Server,
+    CoreConnection: () => mongo.core.Connection,
+    Binary: () => adone.data.bson.Binary,
+    Code: () => adone.data.bson.Code,
+    Map: () => adone.data.bson.Map,
+    DBRef: () => adone.data.bson.DBRef,
+    Double: () => adone.data.bson.Double,
+    Int32: () => adone.data.bson.Int32,
+    Long: () => adone.data.bson.Long,
+    MinKey: () => adone.data.bson.MinKey,
+    MaxKey: () => adone.data.bson.MaxKey,
+    ObjectID: () => adone.data.bson.ObjectID,
+    Symbol: () => adone.data.bson.Symbol,
+    Timestamp: () => adone.data.bson.Timestamp,
+    Decimal128: () => adone.data.bson.Decimal128,
+    BSONRegExp: () => adone.data.bson.BSONRegExp,
+    instrument: () => function (options, callback) {
+        if (typeof options === "function") {
+            callback = options, options = {};
+        }
+        return new mongo.Instrumentation(mongo.core, options, callback);
+    }
+}, exports, require);

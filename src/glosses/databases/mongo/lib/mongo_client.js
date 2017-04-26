@@ -34,7 +34,7 @@ const validOptionNames = ["poolSize", "ssl", "sslValidate", "sslCA", "sslCert",
     "connectWithNoPrimary", "authSource", "w", "wtimeout", "j", "forceServerObjectID",
     "serializeFunctions", "ignoreUndefined", "raw", "promoteLongs", "bufferMaxEntries",
     "readPreference", "pkFactory", "promiseLibrary", "readConcern", "maxStalenessSeconds",
-    "loggerLevel", "logger", "promoteValues", "promoteBuffers", "promoteLongs",
+    "promoteValues", "promoteBuffers", "promoteLongs",
     "domainsEnabled", "keepAliveInitialDelay", "checkServerIdentity", "validateOptions"];
 const ignoreOptionNames = ["native_parser"];
 const legacyOptionNames = ["server", "replset", "replSet", "mongos", "db"];
@@ -124,8 +124,6 @@ function MongoClient() {
      * @param {object} [options.readConcern=null] Specify a read concern for the collection. (only MongoDB 3.2 or higher supported)
      * @param {object} [options.readConcern.level='local'] Specify a read concern level for the collection operations, one of [local|majority]. (only MongoDB 3.2 or higher supported)
      * @param {number} [options.maxStalenessSeconds=undefined] The max staleness to secondary reads (values under 10 seconds cannot be guaranteed);
-     * @param {string} [options.loggerLevel=undefined] The logging level (error/warn/info/debug)
-     * @param {object} [options.logger=undefined] Custom logger object
      * @param {object} [options.validateOptions=false] Validate MongoClient passed in options for correctness.
      * @param {MongoClient~connectCallback} [callback] The command result callback
      * @return {Promise} returns Promise if no callback passed
@@ -186,8 +184,6 @@ const define = MongoClient.define = new Define("MongoClient", MongoClient, false
  * @param {object} [options.readConcern=null] Specify a read concern for the collection. (only MongoDB 3.2 or higher supported)
  * @param {object} [options.readConcern.level='local'] Specify a read concern level for the collection operations, one of [local|majority]. (only MongoDB 3.2 or higher supported)
  * @param {number} [options.maxStalenessSeconds=undefined] The max staleness to secondary reads (values under 10 seconds cannot be guaranteed);
- * @param {string} [options.loggerLevel=undefined] The logging level (error/warn/info/debug)
- * @param {object} [options.logger=undefined] Custom logger object
  * @param {object} [options.validateOptions=false] Validate MongoClient passed in options for correctness.
  * @param {MongoClient~connectCallback} [callback] The command result callback
  * @return {Promise} returns Promise if no callback passed
@@ -420,9 +416,6 @@ const connect = function (url, options, callback) {
         throw new Error("no callback function provided");
     }
 
-    // Get a logger for MongoClient
-    const logger = Logger("MongoClient", options);
-
     // Parse the string
     const object = parse(url, options);
     let _finalOptions = createUnifiedOptions({}, object);
@@ -444,10 +437,6 @@ const connect = function (url, options, callback) {
 
     function connectCallback(err, db) {
         if (err && err.message == "no mongos proxies found in seed list") {
-            if (logger.isWarn()) {
-                logger.warn(f("seed list contains no mongos proxies, replicaset connections requires the parameter replicaSet to be supplied in the URI or options object, mongodb://server:port/db?replicaSet=name"));
-            }
-
             // Return a more specific error message for MongoClient.connect
             return callback(new MongoError("seed list contains no mongos proxies, replicaset connections requires the parameter replicaSet to be supplied in the URI or options object, mongodb://server:port/db?replicaSet=name"));
         }
@@ -461,9 +450,9 @@ const connect = function (url, options, callback) {
         return createReplicaset(_finalOptions, connectHandler(_finalOptions, connectCallback));
     } else if (object.servers.length > 1) {
         return createMongos(_finalOptions, connectHandler(_finalOptions, connectCallback));
-    } else {
-        return createServer(_finalOptions, connectHandler(_finalOptions, connectCallback));
     }
+    return createServer(_finalOptions, connectHandler(_finalOptions, connectCallback));
+
 };
 
 module.exports = MongoClient;

@@ -1,6 +1,3 @@
-import Server from "adone/glosses/databases/mongo/core/lib/topologies/server";
-import ReplSet from "adone/glosses/databases/mongo/core/lib/topologies/replset";
-import Mongos from "adone/glosses/databases/mongo/core/lib/topologies/mongos";
 import mongodbVersionManager from "mongodb-version-manager";
 import configuration from "./configuration";
 
@@ -8,6 +5,8 @@ const promisify = adone.promise.promisify;
 
 describe("mongodb", function () {
     this.timeout(120000);
+
+    const { database: { mongo: { core: { Server, ReplSet, Mongos } } } } = adone;
 
     before(async function () {
         this.timeout(999999999); // long enough

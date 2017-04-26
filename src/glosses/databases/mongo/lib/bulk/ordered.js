@@ -6,7 +6,7 @@ const shallowClone = utils.shallowClone;
 const BulkWriteResult = common.BulkWriteResult;
 const ObjectID = adone.data.bson.ObjectID;
 const Define = require("../metadata");
-const BSON = require("../../core").BSON;
+const BSON = adone.data.bson.BSON;
 const Batch = common.Batch;
 const mergeBatchResults = common.mergeBatchResults;
 
@@ -31,14 +31,14 @@ const FindOperatorsOrdered = function (self) {
  */
 FindOperatorsOrdered.prototype.update = function (updateDocument) {
     // Perform upsert
-    const upsert = typeof this.s.currentOp.upsert == "boolean" ? this.s.currentOp.upsert : false;
+    const upsert = typeof this.s.currentOp.upsert === "boolean" ? this.s.currentOp.upsert : false;
 
     // Establish the update command
     const document = {
-        q: this.s.currentOp.selector
-        , u: updateDocument
-        , multi: true
-        , upsert
+        q: this.s.currentOp.selector,
+        u: updateDocument,
+        multi: true,
+        upsert
     };
 
     // Clear out current Op
@@ -57,14 +57,14 @@ FindOperatorsOrdered.prototype.update = function (updateDocument) {
  */
 FindOperatorsOrdered.prototype.updateOne = function (updateDocument) {
     // Perform upsert
-    const upsert = typeof this.s.currentOp.upsert == "boolean" ? this.s.currentOp.upsert : false;
+    const upsert = typeof this.s.currentOp.upsert === "boolean" ? this.s.currentOp.upsert : false;
 
     // Establish the update command
     const document = {
-        q: this.s.currentOp.selector
-        , u: updateDocument
-        , multi: false
-        , upsert
+        q: this.s.currentOp.selector,
+        u: updateDocument,
+        multi: false,
+        upsert
     };
 
     // Clear out current Op
@@ -107,8 +107,8 @@ FindOperatorsOrdered.prototype.upsert = function () {
 FindOperatorsOrdered.prototype.deleteOne = function () {
     // Establish the update command
     const document = {
-        q: this.s.currentOp.selector
-        , limit: 1
+        q: this.s.currentOp.selector,
+        limit: 1
     };
 
     // Clear out current Op
@@ -130,8 +130,8 @@ FindOperatorsOrdered.prototype.removeOne = FindOperatorsOrdered.prototype.delete
 FindOperatorsOrdered.prototype.delete = function () {
     // Establish the update command
     const document = {
-        q: this.s.currentOp.selector
-        , limit: 0
+        q: this.s.currentOp.selector,
+        limit: 0
     };
 
     // Clear out current Op
@@ -152,11 +152,13 @@ const addToOperationsList = function (_self, docType, document) {
 
     // Throw error if the doc is bigger than the max BSON size
     if (bsonSize >= _self.s.maxBatchSizeBytes) {
-        throw toError("document is larger than the maximum size " + _self.s.maxBatchSizeBytes);
+        throw toError(`document is larger than the maximum size ${_self.s.maxBatchSizeBytes}`);
     }
 
     // Create a new batch object if we don't have a current one
-    if (_self.s.currentBatch == null) _self.s.currentBatch = new Batch(docType, _self.s.currentIndex);
+    if (_self.s.currentBatch == null) {
+        _self.s.currentBatch = new Batch(docType, _self.s.currentIndex);
+    }
 
     // Check if we need to create a new batch
     if (((_self.s.currentBatchSize + 1) >= _self.s.maxWriteBatchSize)
@@ -229,59 +231,59 @@ function OrderedBulkOperation(topology, collection, options) {
 
     // No promise library selected fall back
     if (!promiseLibrary) {
-        promiseLibrary = typeof global.Promise == "function" ?
+        promiseLibrary = typeof global.Promise === "function" ?
             global.Promise : require("es6-promise").Promise;
     }
 
     // Final results
     const bulkResult = {
-        ok: 1
-        , writeErrors: []
-        , writeConcernErrors: []
-        , insertedIds: []
-        , nInserted: 0
-        , nUpserted: 0
-        , nMatched: 0
-        , nModified: 0
-        , nRemoved: 0
-        , upserted: []
+        ok: 1,
+        writeErrors: [],
+        writeConcernErrors: [],
+        insertedIds: [],
+        nInserted: 0,
+        nUpserted: 0,
+        nMatched: 0,
+        nModified: 0,
+        nRemoved: 0,
+        upserted: []
     };
 
     // Internal state
     this.s = {
         // Final result
-        bulkResult
+        bulkResult,
         // Current batch state
-        , currentBatch: null
-        , currentIndex: 0
-        , currentBatchSize: 0
-        , currentBatchSizeBytes: 0
-        , batches: []
+        currentBatch: null,
+        currentIndex: 0,
+        currentBatchSize: 0,
+        currentBatchSizeBytes: 0,
+        batches: [],
         // Write concern
-        , writeConcern
+        writeConcern,
         // Max batch size options
-        , maxBatchSizeBytes
-        , maxWriteBatchSize
+        maxBatchSizeBytes,
+        maxWriteBatchSize,
         // Namespace
-        , namespace
+        namespace,
         // BSON
-        , bson
+        bson,
         // Topology
-        , topology
+        topology,
         // Options
-        , options
+        options,
         // Current operation
-        , currentOp
+        currentOp,
         // Executed
-        , executed
+        executed,
         // Collection
-        , collection
+        collection,
         // Promise Library
-        , promiseLibrary
+        promiseLibrary,
         // Fundamental error
-        , err: null
+        err: null,
         // Bypass validation
-        , bypassDocumentValidation: typeof options.bypassDocumentValidation == "boolean" ? options.bypassDocumentValidation : false
+        bypassDocumentValidation: typeof options.bypassDocumentValidation === "boolean" ? options.bypassDocumentValidation : false
     };
 }
 
@@ -291,7 +293,7 @@ OrderedBulkOperation.prototype.raw = function (op) {
     const key = Object.keys(op)[0];
 
     // Set up the force server object id
-    const forceServerObjectID = typeof this.s.options.forceServerObjectID == "boolean"
+    const forceServerObjectID = typeof this.s.options.forceServerObjectID === "boolean"
         ? this.s.options.forceServerObjectID : this.s.collection.s.db.options.forceServerObjectID;
 
     // Update operations
@@ -307,7 +309,9 @@ OrderedBulkOperation.prototype.raw = function (op) {
         const multi = op.updateOne || op.replaceOne ? false : true;
         var operation = { q: op[key].filter, u: op[key].update || op[key].replacement, multi };
         operation.upsert = op[key].upsert ? true : false;
-        if (op.collation) operation.collation = op.collation;
+        if (op.collation) {
+            operation.collation = op.collation;
+        }
         return addToOperationsList(this, common.UPDATE, operation);
     }
 
@@ -321,22 +325,30 @@ OrderedBulkOperation.prototype.raw = function (op) {
     if (op.deleteOne || op.deleteMany) {
         const limit = op.deleteOne ? 1 : 0;
         operation = { q: op[key].filter, limit };
-        if (op.collation) operation.collation = op.collation;
+        if (op.collation) {
+            operation.collation = op.collation;
+        }
         return addToOperationsList(this, common.REMOVE, operation);
     }
 
     // Insert operations
     if (op.insertOne && op.insertOne.document == null) {
-        if (forceServerObjectID !== true && op.insertOne._id == null) op.insertOne._id = new ObjectID();
+        if (forceServerObjectID !== true && op.insertOne._id == null) {
+            op.insertOne._id = new ObjectID();
+        }
         return addToOperationsList(this, common.INSERT, op.insertOne);
     } else if (op.insertOne && op.insertOne.document) {
-        if (forceServerObjectID !== true && op.insertOne.document._id == null) op.insertOne.document._id = new ObjectID();
+        if (forceServerObjectID !== true && op.insertOne.document._id == null) {
+            op.insertOne.document._id = new ObjectID();
+        }
         return addToOperationsList(this, common.INSERT, op.insertOne.document);
     }
 
     if (op.insertMany) {
         for (let i = 0; i < op.insertMany.length; i++) {
-            if (forceServerObjectID !== true && op.insertMany[i]._id == null) op.insertMany[i]._id = new ObjectID();
+            if (forceServerObjectID !== true && op.insertMany[i]._id == null) {
+                op.insertMany[i]._id = new ObjectID();
+            }
             addToOperationsList(this, common.INSERT, op.insertMany[i]);
         }
 
@@ -355,7 +367,9 @@ OrderedBulkOperation.prototype.raw = function (op) {
  * @return {OrderedBulkOperation}
  */
 OrderedBulkOperation.prototype.insert = function (document) {
-    if (this.s.collection.s.db.options.forceServerObjectID !== true && document._id == null) document._id = new ObjectID();
+    if (this.s.collection.s.db.options.forceServerObjectID !== true && document._id == null) {
+        document._id = new ObjectID();
+    }
     return addToOperationsList(this, common.INSERT, document);
 };
 
@@ -404,7 +418,9 @@ const executeCommands = function (self, callback) {
         }
 
         // If we have and error
-        if (err) err.ok = 0;
+        if (err) {
+            err.ok = 0;
+        }
         // Merge the results together
         const mergeResult = mergeBatchResults(true, batch, self.s.bulkResult, err, result);
         if (mergeResult != null) {
@@ -484,15 +500,19 @@ const executeCommands = function (self, callback) {
  */
 OrderedBulkOperation.prototype.execute = function (_writeConcern, callback) {
     const self = this;
-    if (this.s.executed) throw new toError("batch cannot be re-executed");
-    if (typeof _writeConcern == "function") {
+    if (this.s.executed) {
+        throw new toError("batch cannot be re-executed");
+    }
+    if (typeof _writeConcern === "function") {
         callback = _writeConcern;
-    } else if (_writeConcern && typeof _writeConcern == "object") {
+    } else if (_writeConcern && typeof _writeConcern === "object") {
         this.s.writeConcern = _writeConcern;
     }
 
     // If we have current batch
-    if (this.s.currentBatch) this.s.batches.push(this.s.currentBatch);
+    if (this.s.currentBatch) {
+        this.s.batches.push(this.s.currentBatch);
+    }
 
     // If we have no operations in the bulk raise an error
     if (this.s.batches.length == 0) {
@@ -500,14 +520,16 @@ OrderedBulkOperation.prototype.execute = function (_writeConcern, callback) {
     }
 
     // Execute using callback
-    if (typeof callback == "function") {
+    if (typeof callback === "function") {
         return executeCommands(this, callback);
     }
 
     // Return a Promise
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        executeCommands(self, function (err, r) {
-            if (err) return reject(err);
+    return new this.s.promiseLibrary((resolve, reject) => {
+        executeCommands(self, (err, r) => {
+            if (err) {
+                return reject(err);
+            }
             resolve(r);
         });
     });

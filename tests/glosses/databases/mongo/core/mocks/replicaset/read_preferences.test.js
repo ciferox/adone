@@ -1,7 +1,3 @@
-import ReplSet from "adone/glosses/databases/mongo/core/lib/topologies/replset";
-import Connection from "adone/glosses/databases/mongo/core/lib/connection/connection";
-import MongoError from "adone/glosses/databases/mongo/core/lib/error";
-import ReadPreference from "adone/glosses/databases/mongo/core/lib/topologies/read_preference";
 import mongodbVersionManager from "mongodb-version-manager";
 import mockupdb from "../../mock";
 import configuration from "../../configuration";
@@ -20,6 +16,8 @@ const waitFor = (emitter, event) => new Promise((resolve) => emitter.once(event,
 
 describe("mongodb", function () {
     this.timeout(120000);
+
+    const { database: { mongo: { core: { ReplSet, Connection, MongoError, ReadPreference } } } } = adone;
 
     before(async function () {
         this.timeout(999999999); // long enough

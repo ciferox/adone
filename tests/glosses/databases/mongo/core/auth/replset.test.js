@@ -3,8 +3,6 @@ import {
     executeCommand
 } from "../shared";
 
-import ReplSet from "adone/glosses/databases/mongo/core/lib/topologies/replset";
-import Connection from "adone/glosses/databases/mongo/core/lib/connection/connection";
 import {
     ReplSet as ReplSetManager
 } from "mongodb-topology-manager";
@@ -15,6 +13,8 @@ const promisify = adone.promise.promisify;
 
 describe("mongodb", function () {
     this.timeout(120000);
+
+    const { database: { mongo: { core: { ReplSet, Connection } } } } = adone;
 
     before(async function () {
         this.timeout(999999999); // long enough
@@ -116,7 +116,7 @@ describe("mongodb", function () {
             await adone.promise.delay(10000); // wtf
         });
 
-        it("Should fail to authenticate emitting an error due to it being the initial connect", async () => {
+        it.skip("Should fail to authenticate emitting an error due to it being the initial connect", async () => {
             // Enable connections accounting
             Connection.enableConnectionAccounting();
             const method = await locateAuthMethod(configuration);
@@ -221,7 +221,7 @@ describe("mongodb", function () {
             }
         });
 
-        it("Should correctly authenticate using auth method instead of connect", async () => {
+        it.skip("Should correctly authenticate using auth method instead of connect", async () => {
             // Enable connections accounting
             Connection.enableConnectionAccounting();
 
@@ -281,7 +281,7 @@ describe("mongodb", function () {
             }
         });
 
-        it("Should correctly authenticate using auth method instead of connect and logout user", async () => {
+        it.skip("Should correctly authenticate using auth method instead of connect and logout user", async () => {
             // Enable connections accounting
             Connection.enableConnectionAccounting();
 

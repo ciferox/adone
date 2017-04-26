@@ -18,16 +18,32 @@ const writeConcern = function (target, col, options) {
     const writeConcern = {};
 
     // Collection level write concern
-    if (col.writeConcern && col.writeConcern.w != null) writeConcern.w = col.writeConcern.w;
-    if (col.writeConcern && col.writeConcern.j != null) writeConcern.j = col.writeConcern.j;
-    if (col.writeConcern && col.writeConcern.fsync != null) writeConcern.fsync = col.writeConcern.fsync;
-    if (col.writeConcern && col.writeConcern.wtimeout != null) writeConcern.wtimeout = col.writeConcern.wtimeout;
+    if (col.writeConcern && col.writeConcern.w != null) {
+        writeConcern.w = col.writeConcern.w;
+    }
+    if (col.writeConcern && col.writeConcern.j != null) {
+        writeConcern.j = col.writeConcern.j;
+    }
+    if (col.writeConcern && col.writeConcern.fsync != null) {
+        writeConcern.fsync = col.writeConcern.fsync;
+    }
+    if (col.writeConcern && col.writeConcern.wtimeout != null) {
+        writeConcern.wtimeout = col.writeConcern.wtimeout;
+    }
 
     // Options level write concern
-    if (options && options.w != null) writeConcern.w = options.w;
-    if (options && options.wtimeout != null) writeConcern.wtimeout = options.wtimeout;
-    if (options && options.j != null) writeConcern.j = options.j;
-    if (options && options.fsync != null) writeConcern.fsync = options.fsync;
+    if (options && options.w != null) {
+        writeConcern.w = options.w;
+    }
+    if (options && options.wtimeout != null) {
+        writeConcern.wtimeout = options.wtimeout;
+    }
+    if (options && options.j != null) {
+        writeConcern.j = options.j;
+    }
+    if (options && options.fsync != null) {
+        writeConcern.fsync = options.fsync;
+    }
 
     // Return write concern
     return writeConcern;
@@ -39,8 +55,8 @@ const writeConcern = function (target, col, options) {
  */
 const defineReadOnlyProperty = function (self, name, value) {
     Object.defineProperty(self, name, {
-        enumerable: true
-        , get () {
+        enumerable: true,
+        get() {
             return value;
         }
     });
@@ -187,20 +203,22 @@ const BulkWriteResult = function (bulkResult) {
         } else if (bulkResult.writeConcernErrors.length == 1) {
             // Return the error
             return bulkResult.writeConcernErrors[0];
-        } else {
+        }
 
             // Combine the errors
-            let errmsg = "";
-            for (let i = 0; i < bulkResult.writeConcernErrors.length; i++) {
-                const err = bulkResult.writeConcernErrors[i];
-                errmsg = errmsg + err.errmsg;
+        let errmsg = "";
+        for (let i = 0; i < bulkResult.writeConcernErrors.length; i++) {
+            const err = bulkResult.writeConcernErrors[i];
+            errmsg = errmsg + err.errmsg;
 
                 // TODO: Something better
-                if (i == 0) errmsg = errmsg + " and ";
+            if (i == 0) {
+                errmsg = `${errmsg} and `;
             }
-
-            return new WriteConcernError({ errmsg, code: WRITE_CONCERN_ERROR });
         }
+
+        return new WriteConcernError({ errmsg, code: WRITE_CONCERN_ERROR });
+
     };
 
     this.toJSON = function () {
@@ -208,7 +226,7 @@ const BulkWriteResult = function (bulkResult) {
     };
 
     this.toString = function () {
-        return "BulkWriteResult(" + this.toJSON(bulkResult) + ")";
+        return `BulkWriteResult(${this.toJSON(bulkResult)})`;
     };
 
     this.isOk = function () {
@@ -225,7 +243,9 @@ const BulkWriteResult = function (bulkResult) {
  * @return {WriteConcernError} a WriteConcernError instance
  */
 const WriteConcernError = function (err) {
-    if (!(this instanceof WriteConcernError)) return new WriteConcernError(err);
+    if (!(this instanceof WriteConcernError)) {
+        return new WriteConcernError(err);
+    }
 
     // Define properties
     defineReadOnlyProperty(this, "code", err.code);
@@ -236,7 +256,7 @@ const WriteConcernError = function (err) {
     };
 
     this.toString = function () {
-        return "WriteConcernError(" + err.errmsg + ")";
+        return `WriteConcernError(${err.errmsg})`;
     };
 };
 
@@ -250,7 +270,9 @@ const WriteConcernError = function (err) {
  * @return {WriteConcernError} a WriteConcernError instance
  */
 const WriteError = function (err) {
-    if (!(this instanceof WriteError)) return new WriteError(err);
+    if (!(this instanceof WriteError)) {
+        return new WriteError(err);
+    }
 
     // Define properties
     defineReadOnlyProperty(this, "code", err.code);
@@ -268,7 +290,7 @@ const WriteError = function (err) {
     };
 
     this.toString = function () {
-        return "WriteError(" + JSON.stringify(this.toJSON()) + ")";
+        return `WriteError(${JSON.stringify(this.toJSON())})`;
     };
 };
 
@@ -291,10 +313,10 @@ const mergeBatchResults = function (ordered, batch, bulkResult, err, result) {
         bulkResult.ok = 0;
 
         var writeError = {
-            index: 0
-            , code: result.code || 0
-            , errmsg: result.message
-            , op: batch.operations[0]
+            index: 0,
+            code: result.code || 0,
+            errmsg: result.message,
+            op: batch.operations[0]
         };
 
         bulkResult.writeErrors.push(new WriteError(writeError));
@@ -319,16 +341,16 @@ const mergeBatchResults = function (ordered, batch, bulkResult, err, result) {
         } else {
             // Existing TS
             if (bulkResult.lastOp) {
-                lastOpTS = typeof bulkResult.lastOp.ts == "number"
+                lastOpTS = typeof bulkResult.lastOp.ts === "number"
                     ? Long.fromNumber(bulkResult.lastOp.ts) : bulkResult.lastOp.ts;
-                lastOpT = typeof bulkResult.lastOp.t == "number"
+                lastOpT = typeof bulkResult.lastOp.t === "number"
                     ? Long.fromNumber(bulkResult.lastOp.t) : bulkResult.lastOp.t;
             }
 
             // Current OpTime TS
-            const opTimeTS = typeof opTime.ts == "number"
+            const opTimeTS = typeof opTime.ts === "number"
                 ? Long.fromNumber(opTime.ts) : opTime.ts;
-            const opTimeT = typeof opTime.t == "number"
+            const opTimeT = typeof opTime.t === "number"
                 ? Long.fromNumber(opTime.t) : opTime.t;
 
             // Compare the opTime's
@@ -362,8 +384,8 @@ const mergeBatchResults = function (ordered, batch, bulkResult, err, result) {
 
         for (var i = 0; i < result.upserted.length; i++) {
             bulkResult.upserted.push({
-                index: result.upserted[i].index + batch.originalZeroIndex
-                , _id: result.upserted[i]._id
+                index: result.upserted[i].index + batch.originalZeroIndex,
+                _id: result.upserted[i]._id
             });
         }
     } else if (result.upserted) {
@@ -371,8 +393,8 @@ const mergeBatchResults = function (ordered, batch, bulkResult, err, result) {
         nUpserted = 1;
 
         bulkResult.upserted.push({
-            index: batch.originalZeroIndex
-            , _id: result.upserted
+            index: batch.originalZeroIndex,
+            _id: result.upserted
         });
     }
 
@@ -382,7 +404,7 @@ const mergeBatchResults = function (ordered, batch, bulkResult, err, result) {
         bulkResult.nUpserted = bulkResult.nUpserted + nUpserted;
         bulkResult.nMatched = bulkResult.nMatched + (result.n - nUpserted);
 
-        if (typeof nModified == "number") {
+        if (typeof nModified === "number") {
             bulkResult.nModified = bulkResult.nModified + nModified;
         } else {
             bulkResult.nModified = null;
@@ -393,10 +415,10 @@ const mergeBatchResults = function (ordered, batch, bulkResult, err, result) {
         for (i = 0; i < result.writeErrors.length; i++) {
 
             writeError = {
-                index: batch.originalZeroIndex + result.writeErrors[i].index
-                , code: result.writeErrors[i].code
-                , errmsg: result.writeErrors[i].errmsg
-                , op: batch.operations[result.writeErrors[i].index]
+                index: batch.originalZeroIndex + result.writeErrors[i].index,
+                code: result.writeErrors[i].code,
+                errmsg: result.writeErrors[i].errmsg,
+                op: batch.operations[result.writeErrors[i].index]
             };
 
             bulkResult.writeErrors.push(new WriteError(writeError));
