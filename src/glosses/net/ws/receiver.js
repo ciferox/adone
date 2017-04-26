@@ -1,328 +1,83 @@
+const { is } = adone;
 
-import ErrorCodes from "./errorCodes";
-import PerMessageDeflate from "./perMessageDeflate";
-import bufferUtil from "./bufferutil";
+const GET_INFO = 0;
+const GET_PAYLOAD_LENGTH_16 = 1;
+const GET_PAYLOAD_LENGTH_64 = 2;
+const GET_MASK = 3;
+const GET_DATA = 4;
+const INFLATING = 5;
 
-const noop = () => { };
-
-//
-// Opcode handlers.
-//
-const opcodes = {
-    // text
-    1: {
-        start: (receiver, data) => {
-            // decode length
-            const firstLength = data[1] & 0x7f;
-            if (firstLength < 126) {
-                if (receiver.maxPayloadExceeded(firstLength)) {
-                    return;
-                }
-                opcodes["1"].getData(receiver, firstLength);
-            } else if (firstLength === 126) {
-                receiver.expectData(2, (data) => {
-                    const length = data.readUInt16BE(0, true);
-                    if (receiver.maxPayloadExceeded(length)) {
-                        return;
-                    }
-                    opcodes["1"].getData(receiver, length);
-                });
-            } else if (firstLength === 127) {
-                receiver.expectData(8, (data) => {
-                    if (data.readUInt32BE(0, true) !== 0) {
-                        receiver.error(new Error("packets with length spanning more than 32 bit is currently not supported"), 1008);
-                        return;
-                    }
-                    const length = data.readUInt32BE(4, true);
-                    if (receiver.maxPayloadExceeded(length)) {
-                        return;
-                    }
-                    opcodes["1"].getData(receiver, length);
-                });
-            }
-        },
-        getData: (receiver, length) => {
-            if (receiver.state.masked) {
-                receiver.expectData(4, (mask) => {
-                    receiver.expectData(length, (data) => opcodes["1"].finish(receiver, mask, data));
-                });
-            } else {
-                receiver.expectData(length, (data) => opcodes["1"].finish(receiver, null, data));
-            }
-        },
-        finish: (receiver, mask, data) => {
-            const packet = receiver.unmask(mask, data) || new Buffer(0);
-            if (receiver.state.compressed) {
-                receiver.handleDataCompressed(packet);
-            } else {
-                receiver.handleData(packet);
-                receiver.endPacket();
-            }
-        }
-    },
-    // binary
-    2: {
-        start: (receiver, data) => {
-            // decode length
-            const firstLength = data[1] & 0x7f;
-            if (firstLength < 126) {
-                if (receiver.maxPayloadExceeded(firstLength)) {
-                    return;
-                }
-                opcodes["2"].getData(receiver, firstLength);
-            } else if (firstLength === 126) {
-                receiver.expectData(2, (data) => {
-                    const length = data.readUInt16BE(0, true);
-                    if (receiver.maxPayloadExceeded(length)) {
-                        return;
-                    }
-                    opcodes["2"].getData(receiver, length);
-                });
-            } else if (firstLength === 127) {
-                receiver.expectData(8, (data) => {
-                    if (data.readUInt32BE(0, true) !== 0) {
-                        receiver.error(new Error("packets with length spanning more than 32 bit is currently not supported"), 1008);
-                        return;
-                    }
-                    const length = data.readUInt32BE(4, true);
-                    if (receiver.maxPayloadExceeded(length)) {
-                        return;
-                    }
-                    opcodes["2"].getData(receiver, length);
-                });
-            }
-        },
-        getData: (receiver, length) => {
-            if (receiver.state.masked) {
-                receiver.expectData(4, (mask) => {
-                    receiver.expectData(length, (data) => opcodes["2"].finish(receiver, mask, data));
-                });
-            } else {
-                receiver.expectData(length, (data) => opcodes["2"].finish(receiver, null, data));
-            }
-        },
-        finish: (receiver, mask, data) => {
-            const packet = receiver.unmask(mask, data) || new Buffer(0);
-            if (receiver.state.compressed) {
-                receiver.handleDataCompressed(packet);
-            } else {
-                receiver.handleData(packet);
-                receiver.endPacket();
-            }
-        }
-    },
-    // close
-    8: {
-        start: (receiver, data) => {
-            if (receiver.state.lastFragment === false) {
-                receiver.error("fragmented close is not supported", 1002);
-                return;
-            }
-
-            // decode length
-            const firstLength = data[1] & 0x7f;
-            if (firstLength < 126) {
-                opcodes["8"].getData(receiver, firstLength);
-            } else {
-                receiver.error("control frames cannot have more than 125 bytes of data", 1002);
-            }
-        },
-        getData: (receiver, length) => {
-            if (receiver.state.masked) {
-                receiver.expectData(4, (mask) => {
-                    receiver.expectData(length, (data) => opcodes["8"].finish(receiver, mask, data));
-                });
-            } else {
-                receiver.expectData(length, (data) => opcodes["8"].finish(receiver, null, data));
-            }
-        },
-        finish: (receiver, mask, data) => {
-            const packet = receiver.unmask(mask, data);
-            if (packet && packet.length === 1) {
-                receiver.error("close packets with data must be at least two bytes long", 1002);
-                return;
-            }
-            const code = packet && packet.length > 1 ? packet.readUInt16BE(0, true) : 1000;
-            if (!ErrorCodes.isValidErrorCode(code)) {
-                receiver.error("invalid error code", 1002);
-                return;
-            }
-            let message = "";
-            if (packet && packet.length > 2) {
-                const messageBuffer = packet.slice(2);
-                if (!adone.is.validUTF8(messageBuffer)) {
-                    receiver.error("invalid utf8 sequence", 1007);
-                    return;
-                }
-                message = messageBuffer.toString();
-            }
-            receiver.onclose(code, message, { masked: receiver.state.masked });
-            receiver.reset();
-        }
-    },
-    // ping
-    9: {
-        start: (receiver, data) => {
-            if (receiver.state.lastFragment === false) {
-                receiver.error("fragmented ping is not supported", 1002);
-                return;
-            }
-
-            // decode length
-            const firstLength = data[1] & 0x7f;
-            if (firstLength < 126) {
-                opcodes["9"].getData(receiver, firstLength);
-            } else {
-                receiver.error("control frames cannot have more than 125 bytes of data", 1002);
-            }
-        },
-        getData: (receiver, length) => {
-            if (receiver.state.masked) {
-                receiver.expectData(4, (mask) => {
-                    receiver.expectData(length, (data) => opcodes["9"].finish(receiver, mask, data));
-                });
-            } else {
-                receiver.expectData(length, (data) => opcodes["9"].finish(receiver, null, data));
-            }
-        },
-        finish: (receiver, mask, data) => {
-            const packet = receiver.unmask(mask, data);
-            const flags = { masked: receiver.state.masked, binary: true };
-            receiver.onping(packet, flags);
-            receiver.endPacket();
-        }
-    },
-    // pong
-    10: {
-        start: (receiver, data) => {
-            if (receiver.state.lastFragment === false) {
-                receiver.error("fragmented pong is not supported", 1002);
-                return;
-            }
-
-            // decode length
-            const firstLength = data[1] & 0x7f;
-            if (firstLength < 126) {
-                opcodes["10"].getData(receiver, firstLength);
-            } else {
-                receiver.error("control frames cannot have more than 125 bytes of data", 1002);
-            }
-        },
-        getData: (receiver, length) => {
-            if (receiver.state.masked) {
-                receiver.expectData(4, (mask) => {
-                    receiver.expectData(length, (data) => opcodes["10"].finish(receiver, mask, data));
-                });
-            } else {
-                receiver.expectData(length, (data) => opcodes["10"].finish(receiver, null, data));
-            }
-        },
-        finish: (receiver, mask, data) => {
-            const packet = receiver.unmask(mask, data);
-            const flags = { masked: receiver.state.masked, binary: true };
-            receiver.onpong(packet, flags);
-            receiver.endPacket();
-        }
-    }
-};
-
-/**
- * HyBi Receiver implementation.
- */
 export default class Receiver {
-    constructor(extensions, maxPayload) {
+    constructor(extensions, maxPayload, binaryType) {
+        this.binaryType = binaryType || adone.net.ws.constants.BINARY_TYPES[0];
         this.extensions = extensions || {};
         this.maxPayload = maxPayload | 0;
-        this.state = {
-            activeFragmentedOperation: null,
-            lastFragment: false,
-            masked: false,
-            opcode: 0
-        };
-        this.expectBytes = 0;
-        this.expectHandler = null;
-        this.currentMessage = [];
-        this.currentMessageLength = 0;
-        this.currentPayloadLength = 0;
-        this.expectData(2, this.processPacket);
-        this.dead = false;
 
-        this.onerror = noop;
-        this.ontext = noop;
-        this.onbinary = noop;
-        this.onclose = noop;
-        this.onping = noop;
-        this.onpong = noop;
-
-        this.buffers = [];
         this.bufferedBytes = 0;
+        this.buffers = [];
+
+        this.compressed = false;
+        this.payloadLength = 0;
+        this.fragmented = 0;
+        this.masked = false;
+        this.fin = false;
+        this.mask = null;
+        this.opcode = 0;
+
+        this.totalPayloadLength = 0;
+        this.messageLength = 0;
+        this.fragments = [];
+
+        this.cleanupCallback = null;
+        this.hadError = false;
+        this.dead = false;
+        this.loop = false;
+
+        this.onmessage = null;
+        this.onclose = null;
+        this.onerror = null;
+        this.onping = null;
+        this.onpong = null;
+
+        this.state = GET_INFO;
     }
 
     /**
-     * Add new data to the parser.
+     * Consumes bytes from the available buffered data.
      *
-     * @api public
-     */
-    add(data) {
-        if (this.dead) {
-            return;
-        }
-
-        this.buffers.push(data);
-        this.bufferedBytes += data.length;
-
-        this.process();
-    }
-
-    /**
-     * Check buffer for data.
-     *
-     * @api private
-     */
-    process() {
-        if (this.expectBytes && this.expectBytes <= this.bufferedBytes) {
-            const bufferForHandler = this.readBuffer(this.expectBytes);
-            this.expectBytes = 0;
-            this.expectHandler(bufferForHandler);
-        }
-    }
-
-    /**
-     * Consume bytes from the available buffered data.
-     *
-     * @api private
+     * @param {Number} bytes The number of bytes to consume
+     * @return {Buffer} Consumed bytes
+     * @private
      */
     readBuffer(bytes) {
+        let offset = 0;
         let dst;
         let l;
-        let bufoff = 0;
+
+        this.bufferedBytes -= bytes;
 
         if (bytes === this.buffers[0].length) {
-            this.bufferedBytes -= bytes;
             return this.buffers.shift();
         }
 
         if (bytes < this.buffers[0].length) {
             dst = this.buffers[0].slice(0, bytes);
             this.buffers[0] = this.buffers[0].slice(bytes);
-            this.bufferedBytes -= bytes;
             return dst;
         }
 
-        dst = new Buffer(bytes);
+        dst = Buffer.allocUnsafe(bytes);
 
         while (bytes > 0) {
             l = this.buffers[0].length;
 
-            if (bytes > l) {
-                this.buffers[0].copy(dst, bufoff);
-                bufoff += l;
+            if (bytes >= l) {
+                this.buffers[0].copy(dst, offset);
+                offset += l;
                 this.buffers.shift();
-                this.bufferedBytes -= l;
             } else {
-                this.buffers[0].copy(dst, bufoff, 0, bytes);
+                this.buffers[0].copy(dst, offset, 0, bytes);
                 this.buffers[0] = this.buffers[0].slice(bytes);
-                this.bufferedBytes -= bytes;
             }
 
             bytes -= l;
@@ -332,238 +87,485 @@ export default class Receiver {
     }
 
     /**
-     * Releases all resources used by the receiver.
+     * Checks if the number of buffered bytes is bigger or equal than `n` and
+     * calls `cleanup` if necessary.
      *
-     * @api public
+     * @param {Number} n The number of bytes to check against
+     * @return {Boolean} `true` if `bufferedBytes >= n`, else `false`
+     * @private
      */
-    cleanup() {
-        this.dead = true;
-        this.expectBytes = 0;
-        this.expectHandler = null;
-        this.buffers = [];
-        this.bufferedBytes = 0;
-        this.state = null;
-        this.currentMessage = null;
-        this.onerror = null;
-        this.ontext = null;
-        this.onbinary = null;
-        this.onclose = null;
-        this.onping = null;
-        this.onpong = null;
+    hasBufferedBytes(n) {
+        if (this.bufferedBytes >= n) {
+            return true;
+        }
+
+        this.loop = false;
+        if (this.dead) {
+            this.cleanup(this.cleanupCallback);
+        }
+        return false;
     }
 
     /**
-     * Waits for a certain amount of data bytes to be available, then fires a callback.
+     * Adds new data to the parser.
      *
-     * @api private
+     * @public
      */
-    expectData(length, handler) {
-        if (length === 0) {
-            handler(null);
-            return;
-        }
-        this.expectBytes = length;
-        this.expectHandler = handler;
-
-        this.process();
-    }
-
-    /**
-     * Start processing a new packet.
-     *
-     * @api private
-     */
-    processPacket(data) {
-        if (this.extensions[PerMessageDeflate.extensionName]) {
-            if ((data[0] & 0x30) !== 0) {
-                this.error(new Error("reserved fields (2, 3) must be empty"), 1002);
-                return;
-            }
-        } else {
-            if ((data[0] & 0x70) !== 0) {
-                this.error(new Error("reserved fields must be empty"), 1002);
-                return;
-            }
-        }
-        this.state.lastFragment = (data[0] & 0x80) === 0x80;
-        this.state.masked = (data[1] & 0x80) === 0x80;
-        const compressed = (data[0] & 0x40) === 0x40;
-        const opcode = data[0] & 0xf;
-        if (opcode === 0) {
-            if (compressed) {
-                this.error(new Error("continuation frame cannot have the Per-message Compressed bits"), 1002);
-                return;
-            }
-            // continuation frame
-            this.state.opcode = this.state.activeFragmentedOperation;
-            if (!(this.state.opcode === 1 || this.state.opcode === 2)) {
-                this.error(new Error("continuation frame cannot follow current opcode"), 1002);
-                return;
-            }
-        } else {
-            if (opcode < 3 && this.state.activeFragmentedOperation != null) {
-                this.error(new Error("data frames after the initial data frame must have opcode 0"), 1002);
-                return;
-            }
-            if (opcode >= 8 && compressed) {
-                this.error(new Error("control frames cannot have the Per-message Compressed bits"), 1002);
-                return;
-            }
-            this.state.compressed = compressed;
-            this.state.opcode = opcode;
-            if (this.state.lastFragment === false) {
-                this.state.activeFragmentedOperation = opcode;
-            }
-        }
-        const handler = opcodes[this.state.opcode];
-        if (handler === undefined) {
-            this.error(new Error(`no handler for opcode ${this.state.opcode}`), 1002);
-        } else {
-            handler.start(this, data);
-        }
-    }
-
-    /**
-     * Endprocessing a packet.
-     *
-     * @api private
-     */
-    endPacket() {
+    add(data) {
         if (this.dead) {
             return;
         }
-        if (this.state.lastFragment && this.state.opcode === this.state.activeFragmentedOperation) {
-            // end current fragmented operation
-            this.state.activeFragmentedOperation = null;
-        }
-        if (this.state.activeFragmentedOperation !== null) {
-            this.state.opcode = this.state.activeFragmentedOperation;
-        } else {
-            this.currentPayloadLength = this.state.opcode = 0;
-        }
-        this.state.lastFragment = false;
-        this.state.masked = false;
-        this.expectData(2, this.processPacket);
+
+        this.bufferedBytes += data.length;
+        this.buffers.push(data);
+        this.startLoop();
     }
 
     /**
-     * Reset the parser state.
+     * Starts the parsing loop.
      *
-     * @api private
+     * @private
      */
-    reset() {
-        if (this.dead) { return; }
-        this.state = {
-            activeFragmentedOperation: null,
-            lastFragment: false,
-            masked: false,
-            opcode: 0
-        };
-        this.expectBytes = 0;
-        this.expectHandler = null;
-        this.buffers = [];
-        this.bufferedBytes = 0;
-        this.currentMessage = [];
-        this.currentMessageLength = 0;
-        this.currentPayloadLength = 0;
-    }
+    startLoop() {
+        this.loop = true;
 
-    /**
-     * Unmask received data.
-     *
-     * @api private
-     */
-    unmask(mask, buf) {
-        if (mask != null && buf != null) {
-            bufferUtil.unmask(buf, mask);
+        while (this.loop) {
+            switch (this.state) {
+                case GET_INFO:
+                    this.getInfo();
+                    break;
+                case GET_PAYLOAD_LENGTH_16:
+                    this.getPayloadLength16();
+                    break;
+                case GET_PAYLOAD_LENGTH_64:
+                    this.getPayloadLength64();
+                    break;
+                case GET_MASK:
+                    this.getMask();
+                    break;
+                case GET_DATA:
+                    this.getData();
+                    break;
+                default: // `INFLATING`
+                    this.loop = false;
+            }
         }
-        return buf;
     }
 
     /**
-     * Handles an error.
+     * Reads the first two bytes of a frame.
      *
-     * @api private
+     * @private
      */
-    error(err, protocolErrorCode) {
-        this.reset();
-        this.onerror(err, protocolErrorCode);
-        return this;
-    }
-
-    /**
-     * Checks payload size, disconnects socket when it exceeds `maxPayload`.
-     *
-     * @api private
-     */
-    maxPayloadExceeded(length) {
-        if (this.maxPayload < 1) {
-            return false;
+    getInfo() {
+        if (!this.hasBufferedBytes(2)) {
+            return;
         }
 
-        const fullLength = this.currentPayloadLength + length;
-        if (fullLength <= this.maxPayload) {
-            this.currentPayloadLength = fullLength;
-            return false;
+        const buf = this.readBuffer(2);
+
+        if ((buf[0] & 0x30) !== 0x00) {
+            this.error(new Error("RSV2 and RSV3 must be clear"), 1002);
+            return;
         }
-        this.error(new Error(`payload cannot exceed ${this.maxPayload} bytes`), 1009);
-        this.cleanup();
 
-        return true;
-    }
+        const compressed = (buf[0] & 0x40) === 0x40;
 
-    /**
-     * Handles compressed data.
-     *
-     * @api private
-     */
-    handleDataCompressed(packet) {
-        const extension = this.extensions[PerMessageDeflate.extensionName];
-        extension.decompress(packet, this.state.lastFragment, (err, buffer) => {
-            if (this.dead) {
+        if (compressed && !this.extensions[adone.net.ws.PerMessageDeflate.extensionName]) {
+            this.error(new Error("RSV1 must be clear"), 1002);
+            return;
+        }
+
+        this.fin = (buf[0] & 0x80) === 0x80;
+        this.opcode = buf[0] & 0x0f;
+        this.payloadLength = buf[1] & 0x7f;
+
+        if (this.opcode === 0x00) {
+            if (compressed) {
+                this.error(new Error("RSV1 must be clear"), 1002);
                 return;
             }
+
+            if (!this.fragmented) {
+                this.error(new Error(`invalid opcode: ${this.opcode}`), 1002);
+                return;
+            }
+            this.opcode = this.fragmented;
+
+        } else if (this.opcode === 0x01 || this.opcode === 0x02) {
+            if (this.fragmented) {
+                this.error(new Error(`invalid opcode: ${this.opcode}`), 1002);
+                return;
+            }
+
+            this.compressed = compressed;
+        } else if (this.opcode > 0x07 && this.opcode < 0x0b) {
+            if (!this.fin) {
+                this.error(new Error("FIN must be set"), 1002);
+                return;
+            }
+
+            if (compressed) {
+                this.error(new Error("RSV1 must be clear"), 1002);
+                return;
+            }
+
+            if (this.payloadLength > 0x7d) {
+                this.error(new Error("invalid payload length"), 1002);
+                return;
+            }
+        } else {
+            this.error(new Error(`invalid opcode: ${this.opcode}`), 1002);
+            return;
+        }
+
+        if (!this.fin && !this.fragmented) {
+            this.fragmented = this.opcode;
+        }
+
+        this.masked = (buf[1] & 0x80) === 0x80;
+
+        if (this.payloadLength === 126) {
+            this.state = GET_PAYLOAD_LENGTH_16;
+        } else if (this.payloadLength === 127) {
+            this.state = GET_PAYLOAD_LENGTH_64;
+        } else {
+            this.haveLength();
+        }
+    }
+
+    /**
+     * Gets extended payload length (7+16).
+     *
+     * @private
+     */
+    getPayloadLength16() {
+        if (!this.hasBufferedBytes(2)) {
+            return;
+        }
+
+        this.payloadLength = this.readBuffer(2).readUInt16BE(0, true);
+        this.haveLength();
+    }
+
+    /**
+     * Gets extended payload length (7+64).
+     *
+     * @private
+     */
+    getPayloadLength64() {
+        if (!this.hasBufferedBytes(8)) {
+            return;
+        }
+
+        const buf = this.readBuffer(8);
+        const num = buf.readUInt32BE(0, true);
+
+        //
+        // The maximum safe integer in JavaScript is 2^53 - 1. An error is returned
+        // if payload length is greater than this number.
+        //
+        if (num > Math.pow(2, 53 - 32) - 1) {
+            this.error(new Error("max payload size exceeded"), 1009);
+            return;
+        }
+
+        this.payloadLength = (num * Math.pow(2, 32)) + buf.readUInt32BE(4, true);
+        this.haveLength();
+    }
+
+    /**
+     * Payload length has been read.
+     *
+     * @private
+     */
+    haveLength() {
+        if (this.opcode < 0x08 && this.maxPayloadExceeded(this.payloadLength)) {
+            return;
+        }
+
+        if (this.masked) {
+            this.state = GET_MASK;
+        } else {
+            this.state = GET_DATA;
+        }
+    }
+
+    /**
+     * Reads mask bytes.
+     *
+     * @private
+     */
+    getMask() {
+        if (!this.hasBufferedBytes(4)) {
+            return;
+        }
+
+        this.mask = this.readBuffer(4);
+        this.state = GET_DATA;
+    }
+
+    /**
+     * Reads data bytes.
+     *
+     * @private
+     */
+    getData() {
+        let data = adone.emptyBuffer;
+
+        if (this.payloadLength) {
+            if (!this.hasBufferedBytes(this.payloadLength)) {
+                return;
+            }
+
+            data = this.readBuffer(this.payloadLength);
+            if (this.masked) {
+                adone.net.ws.bufferutil.unmask(data, this.mask);
+            }
+        }
+
+        if (this.opcode > 0x07) {
+            this.controlMessage(data);
+        } else if (this.compressed) {
+            this.state = INFLATING;
+            this.decompress(data);
+        } else if (this.pushFragment(data)) {
+            this.dataMessage();
+        }
+    }
+
+    /**
+     * Decompresses data.
+     *
+     * @param {Buffer} data Compressed data
+     * @private
+     */
+    decompress(data) {
+        const extension = this.extensions[adone.net.ws.PerMessageDeflate.extensionName];
+
+        extension.decompress(data, this.fin, (err, buf) => {
             if (err) {
                 this.error(err, err.closeCode === 1009 ? 1009 : 1007);
                 return;
             }
 
-            this.handleData(buffer);
-            this.endPacket();
+            if (this.pushFragment(buf)) {
+                this.dataMessage();
+            }
+            this.startLoop();
         });
     }
 
     /**
-     * Handles uncompressed data.
+     * Handles a data message.
      *
-     * @api private
+     * @private
      */
-    handleData(buffer) {
-        if (buffer != null) {
-            if (this.maxPayload < 1 || this.currentMessageLength + buffer.length <= this.maxPayload) {
-                this.currentMessageLength += buffer.length;
-                this.currentMessage.push(buffer);
-            } else {
-                this.error(new Error(`payload cannot exceed ${this.maxPayload} bytes`), 1009);
-                return;
-            }
-        }
-        if (this.state.lastFragment) {
-            const messageBuffer = this.currentMessage.length === 1
-                ? this.currentMessage[0]
-                : Buffer.concat(this.currentMessage, this.currentMessageLength);
-            this.currentMessage = [];
-            this.currentMessageLength = 0;
+    dataMessage() {
+        if (this.fin) {
+            const messageLength = this.messageLength;
+            const fragments = this.fragments;
 
-            if (this.state.opcode === 2) {
-                this.onbinary(messageBuffer, { masked: this.state.masked });
+            this.totalPayloadLength = 0;
+            this.messageLength = 0;
+            this.fragmented = 0;
+            this.fragments = [];
+
+            if (this.opcode === 2) {
+                let data;
+
+                if (this.binaryType === "nodebuffer") {
+                    data = toBuffer(fragments, messageLength);
+                } else if (this.binaryType === "arraybuffer") {
+                    data = toArrayBuffer(toBuffer(fragments, messageLength));
+                } else {
+                    data = fragments;
+                }
+
+                this.onmessage(data, { masked: this.masked, binary: true });
             } else {
-                if (!adone.is.validUTF8(messageBuffer)) {
+                const buf = toBuffer(fragments, messageLength);
+
+                if (!is.validUTF8(buf)) {
                     this.error(new Error("invalid utf8 sequence"), 1007);
                     return;
                 }
-                this.ontext(messageBuffer.toString(), { masked: this.state.masked });
+
+                this.onmessage(buf.toString(), { masked: this.masked });
+            }
+        }
+
+        this.state = GET_INFO;
+    }
+
+    /**
+     * Handles a control message.
+     *
+     * @param {Buffer} data Data to handle
+     * @private
+     */
+    controlMessage(data) {
+        if (this.opcode === 0x08) {
+            if (data.length === 0) {
+                this.onclose(1000, "", { masked: this.masked });
+                this.loop = false;
+                this.cleanup(this.cleanupCallback);
+            } else if (data.length === 1) {
+                this.error(new Error("invalid payload length"), 1002);
+            } else {
+                const code = data.readUInt16BE(0, true);
+
+                if (!adone.net.ws.errorCodes.isValidErrorCode(code)) {
+                    this.error(new Error(`invalid status code: ${code}`), 1002);
+                    return;
+                }
+
+                const buf = data.slice(2);
+
+                if (!is.validUTF8(buf)) {
+                    this.error(new Error("invalid utf8 sequence"), 1007);
+                    return;
+                }
+
+                this.onclose(code, buf.toString(), { masked: this.masked });
+                this.loop = false;
+                this.cleanup(this.cleanupCallback);
+            }
+
+            return;
+        }
+
+        const flags = { masked: this.masked, binary: true };
+
+        if (this.opcode === 0x09) {
+            this.onping(data, flags);
+        } else {
+            this.onpong(data, flags);
+        }
+
+        this.state = GET_INFO;
+    }
+
+    /**
+     * Handles an error.
+     *
+     * @param {Error} err The error
+     * @param {Number} code Close code
+     * @private
+     */
+    error(err, code) {
+        this.onerror(err, code);
+        this.hadError = true;
+        this.loop = false;
+        this.cleanup(this.cleanupCallback);
+    }
+
+    /**
+     * Checks payload size, disconnects socket when it exceeds `maxPayload`.
+     *
+     * @param {Number} length Payload length
+     * @private
+     */
+    maxPayloadExceeded(length) {
+        if (length === 0 || this.maxPayload < 1) {
+            return false;
+        }
+
+        const fullLength = this.totalPayloadLength + length;
+
+        if (fullLength <= this.maxPayload) {
+            this.totalPayloadLength = fullLength;
+            return false;
+        }
+
+        this.error(new Error("max payload size exceeded"), 1009);
+        return true;
+    }
+
+    /**
+     * Appends a fragment in the fragments array after checking that the sum of
+     * fragment lengths does not exceed `maxPayload`.
+     *
+     * @param {Buffer} fragment The fragment to add
+     * @return {Boolean} `true` if `maxPayload` is not exceeded, else `false`
+     * @private
+     */
+    pushFragment(fragment) {
+        if (fragment.length === 0) {
+            return true;
+        }
+
+        const totalLength = this.messageLength + fragment.length;
+
+        if (this.maxPayload < 1 || totalLength <= this.maxPayload) {
+            this.messageLength = totalLength;
+            this.fragments.push(fragment);
+            return true;
+        }
+
+        this.error(new Error("max payload size exceeded"), 1009);
+        return false;
+    }
+
+    /**
+     * Releases resources used by the receiver.
+     *
+     * @param {Function} cb Callback
+     * @public
+     */
+    cleanup(cb) {
+        this.dead = true;
+
+        if (!this.hadError && (this.loop || this.state === INFLATING)) {
+            this.cleanupCallback = cb;
+        } else {
+            this.extensions = null;
+            this.fragments = null;
+            this.buffers = null;
+            this.mask = null;
+
+            this.cleanupCallback = null;
+            this.onmessage = null;
+            this.onclose = null;
+            this.onerror = null;
+            this.onping = null;
+            this.onpong = null;
+
+            if (cb) {
+                cb();
             }
         }
     }
+}
+
+/**
+ * Makes a buffer from a list of fragments.
+ *
+ * @param {Buffer[]} fragments The list of fragments composing the message
+ * @param {Number} messageLength The length of the message
+ * @return {Buffer}
+ * @private
+ */
+function toBuffer(fragments, messageLength) {
+    if (fragments.length === 1) {
+        return fragments[0];
+    }
+    if (fragments.length > 1) {
+        return adone.net.ws.bufferutil.concat(fragments, messageLength);
+    }
+    return adone.emptyBuffer;
+}
+
+/**
+ * Converts a buffer to an `ArrayBuffer`.
+ *
+ * @param {Buffer} The buffer to convert
+ * @return {ArrayBuffer} Converted buffer
+ */
+function toArrayBuffer(buf) {
+    if (buf.byteOffset === 0 && buf.byteLength === buf.buffer.byteLength) {
+        return buf.buffer;
+    }
+
+    return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
 }

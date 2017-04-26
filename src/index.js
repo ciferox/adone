@@ -212,6 +212,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         assert: () => adone.assertion.loadAssertInterface().assert,
         expect: () => adone.assertion.loadExpectInterface().expect,
         defaultLogger: () => adone.application.Logger.default(),
+        emptyBuffer: () => Buffer.alloc(0),
         is: "./glosses/common/is",
         cui: "./glosses/cui",
         application: "./glosses/application",

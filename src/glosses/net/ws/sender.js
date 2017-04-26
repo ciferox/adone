@@ -1,304 +1,390 @@
-import ErrorCodes from "./errorCodes";
-import PerMessageDeflate from "./perMessageDeflate";
-import bufferUtil from "./bufferutil";
-
-function getBufferFromNative(data) {
-    // data is either an ArrayBuffer or ArrayBufferView.
-    return !data.buffer
-        ? new Buffer(data)
-        : new Buffer(data.buffer).slice(data.byteOffset, data.byteOffset + data.byteLength);
-}
-
-function getRandomMask() {
-    return new Buffer([
-        ~~(Math.random() * 255),
-        ~~(Math.random() * 255),
-        ~~(Math.random() * 255),
-        ~~(Math.random() * 255)
-    ]);
-}
-
-function sendFramedData(sender, outputBuffer, data, cb) {
-    try {
-        if (data) {
-            sender._socket.write(outputBuffer, "binary");
-            sender._socket.write(data, "binary", cb);
-        } else {
-            sender._socket.write(outputBuffer, "binary", cb);
-        }
-    } catch (e) {
-        if (cb) cb(e);
-        else sender.onerror(e);
-    }
-}
-
-/**
- * HyBi Sender implementation, Inherits from EventEmitter.
- */
 export default class Sender {
+    /**
+     * Creates a Sender instance.
+     *
+     * @param {net.Socket} socket The connection socket
+     * @param {Object} extensions An object containing the negotiated extensions
+     */
     constructor(socket, extensions) {
+        this.perMessageDeflate = (extensions || {})[adone.net.ws.PerMessageDeflate.extensionName];
         this._socket = socket;
-        this.extensions = extensions || {};
+
         this.firstFragment = true;
         this.compress = false;
-        this.messageHandlers = [];
-        this.processing = false;
+
+        this.bufferedBytes = 0;
+        this.deflating = false;
+        this.queue = [];
+
         this.onerror = null;
     }
 
     /**
-     * Sends a close instruction to the remote party.
+     * Frames a piece of data according to the HyBi WebSocket protocol.
      *
-     * @api public
+     * @param {Buffer} data The data to frame
+     * @param {Object} options Options object
+     * @param {Number} options.opcode The opcode
+     * @param {Boolean} options.readOnly Specifies whether `data` can be modified
+     * @param {Boolean} options.fin Specifies whether or not to set the FIN bit
+     * @param {Boolean} options.mask Specifies whether or not to mask `data`
+     * @param {Boolean} options.rsv1 Specifies whether or not to set the RSV1 bit
+     * @return {Buffer[]} The framed data as a list of `Buffer` instances
+     * @public
+     */
+    static frame(data, options) {
+        const merge = data.length < 1024 || (options.mask && options.readOnly);
+        let offset = options.mask ? 6 : 2;
+        let payloadLength = data.length;
+
+        if (data.length >= 65536) {
+            offset += 8;
+            payloadLength = 127;
+        } else if (data.length > 125) {
+            offset += 2;
+            payloadLength = 126;
+        }
+
+        const target = Buffer.allocUnsafe(merge ? data.length + offset : offset);
+
+        target[0] = options.fin ? options.opcode | 0x80 : options.opcode;
+        if (options.rsv1) {
+            target[0] |= 0x40;
+        }
+
+        if (payloadLength === 126) {
+            target.writeUInt16BE(data.length, 2, true);
+        } else if (payloadLength === 127) {
+            target.writeUInt32BE(0, 2, true);
+            target.writeUInt32BE(data.length, 6, true);
+        }
+
+        if (!options.mask) {
+            target[1] = payloadLength;
+            if (merge) {
+                data.copy(target, offset);
+                return [target];
+            }
+
+            return [target, data];
+        }
+
+        const mask = adone.std.crypto.randomBytes(4);
+
+        target[1] = payloadLength | 0x80;
+        target[offset - 4] = mask[0];
+        target[offset - 3] = mask[1];
+        target[offset - 2] = mask[2];
+        target[offset - 1] = mask[3];
+
+        if (merge) {
+            adone.net.ws.bufferutil.mask(data, mask, target, offset, data.length);
+            return [target];
+        }
+
+        adone.net.ws.bufferutil.mask(data, mask, data, 0, data.length);
+        return [target, data];
+    }
+
+    /**
+     * Sends a close message to the other peer.
+     *
+     * @param {(Number|undefined)} code The status code component of the body
+     * @param {String} data The message component of the body
+     * @param {Boolean} mask Specifies whether or not to mask the message
+     * @param {Function} cb Callback
+     * @public
      */
     close(code, data, mask, cb) {
-        if (code !== undefined && (typeof code !== "number" || !ErrorCodes.isValidErrorCode(code))) {
+        if (code !== undefined && (typeof code !== "number" || !adone.net.ws.errorCodes.isValidErrorCode(code))) {
             throw new Error("first argument must be a valid error code number");
         }
-        code = code || 1000;
-        const dataBuffer = new Buffer(2 + (data ? Buffer.byteLength(data) : 0));
-        dataBuffer.writeUInt16BE(code, 0);
-        if (dataBuffer.length > 2) dataBuffer.write(data, 2);
 
-        if (this.extensions[PerMessageDeflate.extensionName]) {
-            this.enqueue([this.doClose, [dataBuffer, mask, cb]]);
+        const buf = Buffer.allocUnsafe(2 + (data ? Buffer.byteLength(data) : 0));
+
+        buf.writeUInt16BE(code || 1000, 0, true);
+        if (buf.length > 2) {
+            buf.write(data, 2);
+        }
+
+        if (this.deflating) {
+            this.enqueue([this.doClose, buf, mask, cb]);
         } else {
-            this.doClose(dataBuffer, mask, cb);
+            this.doClose(buf, mask, cb);
         }
     }
 
     /**
-     * Sends a close frame.
+     * Frames and sends a close message.
      *
-     * @api private
+     * @param {Buffer} data The message to send
+     * @param {Boolean} mask Specifies whether or not to mask `data`
+     * @param {Function} cb Callback
+     * @private
      */
     doClose(data, mask, cb) {
-        this.frameAndSend(0x8, data, true, mask);
-        if (this.extensions[PerMessageDeflate.extensionName]) {
-            this.messageHandlerCallback();
-        }
-        if (cb) cb();
+        this.sendFrame(Sender.frame(data, {
+            fin: true,
+            rsv1: false,
+            opcode: 0x08,
+            mask,
+            readOnly: false
+        }), cb);
     }
 
     /**
-     * Sends a ping message to the remote party.
+     * Sends a ping message to the other peer.
      *
-     * @api public
+     * @param {*} data The message to send
+     * @param {Boolean} mask Specifies whether or not to mask `data`
+     * @public
      */
-    ping(data, options) {
-        if (this.extensions[PerMessageDeflate.extensionName]) {
-            this.enqueue([this.doPing, [data, options]]);
+    ping(data, mask) {
+        let readOnly = true;
+
+        if (!Buffer.isBuffer(data)) {
+            if (data instanceof ArrayBuffer) {
+                data = Buffer.from(data);
+            } else if (ArrayBuffer.isView(data)) {
+                data = viewToBuffer(data);
+            } else {
+                data = Buffer.from(data);
+                readOnly = false;
+            }
+        }
+
+        if (this.deflating) {
+            this.enqueue([this.doPing, data, mask, readOnly]);
         } else {
-            this.doPing(data, options);
+            this.doPing(data, mask, readOnly);
         }
     }
 
     /**
-     * Sends a ping frame.
+     * Frames and sends a ping message.
      *
-     * @api private
+     * @param {*} data The message to send
+     * @param {Boolean} mask Specifies whether or not to mask `data`
+     * @param {Boolean} readOnly Specifies whether `data` can be modified
+     * @private
      */
-    doPing(data, options) {
-        const mask = options && options.mask;
-        this.frameAndSend(0x9, data ? Buffer.from(data.toString()) : null, true, mask);
-        if (this.extensions[PerMessageDeflate.extensionName]) {
-            this.messageHandlerCallback();
-        }
+    doPing(data, mask, readOnly) {
+        this.sendFrame(Sender.frame(data, {
+            fin: true,
+            rsv1: false,
+            opcode: 0x09,
+            mask,
+            readOnly
+        }));
     }
 
     /**
-     * Sends a pong message to the remote party.
+     * Sends a pong message to the other peer.
      *
-     * @api public
+     * @param {*} data The message to send
+     * @param {Boolean} mask Specifies whether or not to mask `data`
+     * @public
      */
-    pong(data, options) {
-        if (this.extensions[PerMessageDeflate.extensionName]) {
-            this.enqueue([this.doPong, [data, options]]);
+    pong(data, mask) {
+        let readOnly = true;
+
+        if (!Buffer.isBuffer(data)) {
+            if (data instanceof ArrayBuffer) {
+                data = Buffer.from(data);
+            } else if (ArrayBuffer.isView(data)) {
+                data = viewToBuffer(data);
+            } else {
+                data = Buffer.from(data);
+                readOnly = false;
+            }
+        }
+
+        if (this.deflating) {
+            this.enqueue([this.doPong, data, mask, readOnly]);
         } else {
-            this.doPong(data, options);
+            this.doPong(data, mask, readOnly);
         }
     }
 
     /**
-     * Sends a pong frame.
+     * Frames and sends a pong message.
      *
-     * @api private
+     * @param {*} data The message to send
+     * @param {Boolean} mask Specifies whether or not to mask `data`
+     * @param {Boolean} readOnly Specifies whether `data` can be modified
+     * @private
      */
-    doPong(data, options) {
-        const mask = options && options.mask;
-        this.frameAndSend(0xa, data ? Buffer.from(data.toString()) : null, true, mask);
-        if (this.extensions[PerMessageDeflate.extensionName]) {
-            this.messageHandlerCallback();
-        }
+    doPong(data, mask, readOnly) {
+        this.sendFrame(Sender.frame(data, {
+            fin: true,
+            rsv1: false,
+            opcode: 0x0a,
+            mask,
+            readOnly
+        }));
     }
 
     /**
-     * Sends text or binary data to the remote party.
+     * Sends a data message to the other peer.
      *
-     * @api public
+     * @param {*} data The message to send
+     * @param {Object} options Options object
+     * @param {Boolean} options.compress Specifies whether or not to compress `data`
+     * @param {Boolean} options.binary Specifies whether `data` is binary or text
+     * @param {Boolean} options.fin Specifies whether the fragment is the last one
+     * @param {Boolean} options.mask Specifies whether or not to mask `data`
+     * @param {Function} cb Callback
+     * @public
      */
     send(data, options, cb) {
-        const finalFragment = !options || options.fin !== false;
-        const mask = options && options.mask;
-        let compress = options && options.compress;
-        let opcode = options && options.binary ? 2 : 1;
-        if (this.firstFragment === false) {
-            opcode = 0;
-            compress = false;
-        } else {
-            this.firstFragment = false;
-            this.compress = compress;
-        }
-        if (finalFragment) this.firstFragment = true;
+        let opcode = options.binary ? 2 : 1;
+        let rsv1 = options.compress;
+        let readOnly = true;
 
-        if (data && !Buffer.isBuffer(data)) {
-            if ((data.buffer || data) instanceof ArrayBuffer) {
-                data = getBufferFromNative(data);
-            } else {
-                if (typeof data === "number") {
-                    data = data.toString();
-                }
+        if (!Buffer.isBuffer(data)) {
+            if (data instanceof ArrayBuffer) {
                 data = Buffer.from(data);
+            } else if (ArrayBuffer.isView(data)) {
+                data = viewToBuffer(data);
+            } else {
+                data = Buffer.from(data);
+                readOnly = false;
             }
         }
 
-        if (this.extensions[PerMessageDeflate.extensionName]) {
-            this.enqueue([this.sendCompressed, [opcode, data, finalFragment, mask, compress, cb]]);
+        if (this.firstFragment) {
+            this.firstFragment = false;
+            if (rsv1 && this.perMessageDeflate) {
+                rsv1 = data.length >= this.perMessageDeflate.threshold;
+            }
+            this.compress = rsv1;
         } else {
-            this.frameAndSend(opcode, data, finalFragment, mask, false, cb);
+            rsv1 = false;
+            opcode = 0;
+        }
+
+        if (options.fin) {
+            this.firstFragment = true;
+        }
+
+        if (this.perMessageDeflate) {
+            const opts = {
+                fin: options.fin,
+                rsv1,
+                opcode,
+                mask: options.mask,
+                readOnly
+            };
+
+            if (this.deflating) {
+                this.enqueue([this.dispatch, data, this.compress, opts, cb]);
+            } else {
+                this.dispatch(data, this.compress, opts, cb);
+            }
+        } else {
+            this.sendFrame(Sender.frame(data, {
+                fin: options.fin,
+                rsv1: false,
+                opcode,
+                mask: options.mask,
+                readOnly
+            }), cb);
         }
     }
 
     /**
-     * Sends compressed data.
+     * Dispatches a data message.
      *
-     * @api private
+     * @param {Buffer} data The message to send
+     * @param {Boolean} compress Specifies whether or not to compress `data`
+     * @param {Object} options Options object
+     * @param {Number} options.opcode The opcode
+     * @param {Boolean} options.readOnly Specifies whether `data` can be modified
+     * @param {Boolean} options.fin Specifies whether or not to set the FIN bit
+     * @param {Boolean} options.mask Specifies whether or not to mask `data`
+     * @param {Boolean} options.rsv1 Specifies whether or not to set the RSV1 bit
+     * @param {Function} cb Callback
+     * @private
      */
-    sendCompressed(opcode, data, finalFragment, mask, compress, cb) {
-        if (data && data.length < this.extensions[PerMessageDeflate.extensionName].threshold) {
-            this.frameAndSend(opcode, data, finalFragment, mask, false, cb);
-            this.messageHandlerCallback();
+    dispatch(data, compress, options, cb) {
+        if (!compress) {
+            this.sendFrame(Sender.frame(data, options), cb);
             return;
         }
-        this.applyExtensions(data, finalFragment, this.compress, (err, data) => {
+
+        this.deflating = true;
+        this.perMessageDeflate.compress(data, options.fin, (err, buf) => {
             if (err) {
-                if (cb) cb(err);
-                else this.onerror(err);
+                if (cb) {
+                    cb(err);
+                } else {
+                    this.onerror(err);
+                }
                 return;
             }
-            this.frameAndSend(opcode, data, finalFragment, mask, compress, cb);
-            this.messageHandlerCallback();
+
+            options.readOnly = false;
+            this.sendFrame(Sender.frame(buf, options), cb);
+            this.deflating = false;
+            this.dequeue();
         });
     }
 
     /**
-     * Frames and sends a piece of data according to the HyBi WebSocket protocol.
+     * Executes queued send operations.
      *
-     * @api private
+     * @private
      */
-    frameAndSend(opcode, data, finalFragment, maskData, compressed, cb) {
-        if (!data) {
-            const buff = [opcode | (finalFragment ? 0x80 : 0), 0 | (maskData ? 0x80 : 0)]
-                .concat(maskData ? [0, 0, 0, 0] : []);
-            sendFramedData(this, new Buffer(buff), null, cb);
-            return;
+    dequeue() {
+        while (!this.deflating && this.queue.length) {
+            const params = this.queue.shift();
+
+            this.bufferedBytes -= params[1].length;
+            params[0].apply(this, params.slice(1));
         }
-
-        const dataLength = data.length;
-        let dataOffset = maskData ? 6 : 2;
-        let secondByte = dataLength;
-
-        if (dataLength >= 65536) {
-            dataOffset += 8;
-            secondByte = 127;
-        } else if (dataLength > 125) {
-            dataOffset += 2;
-            secondByte = 126;
-        }
-
-        const canModifyData = compressed;
-        const mergeBuffers = dataLength < 32768 || (maskData && !canModifyData);
-        const totalLength = mergeBuffers ? dataLength + dataOffset : dataOffset;
-        const outputBuffer = new Buffer(totalLength);
-        outputBuffer[0] = finalFragment ? opcode | 0x80 : opcode;
-        if (compressed) outputBuffer[0] |= 0x40;
-
-        switch (secondByte) {
-            case 126:
-                outputBuffer.writeUInt16BE(dataLength, 2);
-                break;
-            case 127:
-                outputBuffer.writeUInt32BE(0, 2);
-                outputBuffer.writeUInt32BE(dataLength, 6);
-        }
-
-        if (maskData) {
-            outputBuffer[1] = secondByte | 0x80;
-            const mask = getRandomMask();
-            outputBuffer[dataOffset - 4] = mask[0];
-            outputBuffer[dataOffset - 3] = mask[1];
-            outputBuffer[dataOffset - 2] = mask[2];
-            outputBuffer[dataOffset - 1] = mask[3];
-            if (mergeBuffers) {
-                bufferUtil.mask(data, mask, outputBuffer, dataOffset, dataLength);
-            } else {
-                bufferUtil.mask(data, mask, data, 0, dataLength);
-            }
-        } else {
-            outputBuffer[1] = secondByte;
-            if (mergeBuffers) {
-                data.copy(outputBuffer, dataOffset);
-            }
-        }
-        sendFramedData(this, outputBuffer, mergeBuffers ? null : data, cb);
     }
 
     /**
-     * Execute message handler buffers
+     * Enqueues a send operation.
      *
-     * @api private
-     */
-    flush() {
-        if (this.processing) return;
-
-        const handler = this.messageHandlers.shift();
-        if (!handler) return;
-
-        this.processing = true;
-
-        handler[0].apply(this, handler[1]);
-    }
-
-    /**
-     * Callback to indicate message handler completion.
-     *
-     * @api private
-     */
-    messageHandlerCallback() {
-        this.processing = false;
-        process.nextTick(() => this.flush());
-    }
-
-    /**
-     * Enqueues a send frame operation.
-     *
-     * @api private
+     * @param {Array} params Send operation parameters.
+     * @private
      */
     enqueue(params) {
-        this.messageHandlers.push(params);
-        this.flush();
+        this.bufferedBytes += params[1].length;
+        this.queue.push(params);
     }
 
     /**
-     * Apply extensions to message
+     * Sends a frame.
      *
-     * @api private
+     * @param {Buffer[]} list The frame to send
+     * @param {Function} cb Callback
+     * @private
      */
-    applyExtensions(data, fin, compress, callback) {
-        if (compress && data) {
-            this.extensions[PerMessageDeflate.extensionName].compress(data, fin, callback);
+    sendFrame(list, cb) {
+        if (list.length === 2) {
+            this._socket.write(list[0]);
+            this._socket.write(list[1], cb);
         } else {
-            callback(null, data);
+            this._socket.write(list[0], cb);
         }
     }
+}
+
+/**
+ * Converts an `ArrayBuffer` view into a buffer.
+ *
+ * @param {(DataView|TypedArray)} view The view to convert
+ * @return {Buffer} Converted view
+ * @private
+ */
+function viewToBuffer(view) {
+    const buf = Buffer.from(view.buffer);
+
+    if (view.byteLength !== view.buffer.byteLength) {
+        return buf.slice(view.byteOffset, view.byteOffset + view.byteLength);
+    }
+
+    return buf;
 }

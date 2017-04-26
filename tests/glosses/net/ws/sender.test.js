@@ -1,53 +1,57 @@
-const Sender = adone.net.ws.Sender;
-const PerMessageDeflate = adone.net.ws.PerMessageDeflate;
+const { net: { ws: { Sender, PerMessageDeflate } } } = adone;
 
-describe("Sender", () => {
-    describe("#frameAndSend", () => {
-        it("does not modify a masked binary buffer", () => {
-            const sender = new Sender({ write: () => { } });
+describe("net", "ws", "Sender", () => {
+    describe(".frame", () => {
+        it("does not mutate the input buffer if data is `readOnly`", () => {
             const buf = Buffer.from([1, 2, 3, 4, 5]);
 
-            sender.frameAndSend(2, buf, true, true);
+            Sender.frame(buf, {
+                readOnly: true,
+                rsv1: false,
+                mask: true,
+                opcode: 2,
+                fin: true
+            });
 
             assert.ok(buf.equals(Buffer.from([1, 2, 3, 4, 5])));
         });
 
-        it("does not modify a masked text buffer", () => {
-            const sender = new Sender({ write: () => { } });
-            const text = Buffer.from("hi there");
-
-            sender.frameAndSend(1, text, true, true);
-
-            assert.ok(text.equals(Buffer.from("hi there")));
-        });
-
-        it("sets rsv1 flag if compressed", (done) => {
-            const sender = new Sender({
-                write: (data) => {
-                    assert.strictEqual(data[0] & 0x40, 0x40);
-                    done();
-                }
+        it("sets RSV1 bit if compressed", () => {
+            const list = Sender.frame(Buffer.from("hi"), {
+                readOnly: false,
+                mask: false,
+                rsv1: true,
+                opcode: 1,
+                fin: true
             });
 
-            sender.frameAndSend(1, Buffer.from("hi"), true, false, true);
+            assert.strictEqual(list[0][0] & 0x40, 0x40);
         });
     });
 
     describe("#send", () => {
         it("compresses data if compress option is enabled", (done) => {
             const perMessageDeflate = new PerMessageDeflate({ threshold: 0 });
+            let count = 0;
             const sender = new Sender({
                 write: (data) => {
                     assert.strictEqual(data[0] & 0x40, 0x40);
-                    done();
+                    if (++count === 3) {
+                        done();
+                    }
                 }
             }, {
-                "permessage-deflate": perMessageDeflate
-            });
+                    "permessage-deflate": perMessageDeflate
+                });
 
             perMessageDeflate.accept([{}]);
 
-            sender.send("hi", { compress: true });
+            const options = { compress: true, fin: true };
+            const array = new Uint8Array([0x68, 0x69]);
+
+            sender.send(array.buffer, options);
+            sender.send(array, options);
+            sender.send("hi", options);
         });
 
         it("does not compress data for small payloads", (done) => {
@@ -58,34 +62,200 @@ describe("Sender", () => {
                     done();
                 }
             }, {
-                "permessage-deflate": perMessageDeflate
-            });
+                    "permessage-deflate": perMessageDeflate
+                });
 
             perMessageDeflate.accept([{}]);
 
-            sender.send("hi", { compress: true });
+            sender.send("hi", { compress: true, fin: true });
         });
 
-        it("Should be able to handle many send calls while processing without crashing on flush", (done) => {
-            const maxMessages = 5000;
-            let messageCount = 0;
+        it("compresses all frames in a fragmented message", (done) => {
+            const fragments = [];
+            const perMessageDeflate = new PerMessageDeflate({ threshold: 3 });
+            const sender = new Sender({
+                write: (data) => {
+                    fragments.push(data);
+                    if (fragments.length !== 2) {
+                        return;
+                    }
 
+                    assert.strictEqual(fragments[0][0] & 0x40, 0x40);
+                    assert.strictEqual(fragments[0].length, 11);
+                    assert.strictEqual(fragments[1][0] & 0x40, 0x00);
+                    assert.strictEqual(fragments[1].length, 6);
+                    done();
+                }
+            }, {
+                    "permessage-deflate": perMessageDeflate
+                });
+
+            perMessageDeflate.accept([{}]);
+
+            sender.send("123", { compress: true, fin: false });
+            sender.send("12", { compress: true, fin: true });
+        });
+
+        it("compresses no frames in a fragmented message", (done) => {
+            const fragments = [];
+            const perMessageDeflate = new PerMessageDeflate({ threshold: 3 });
+            const sender = new Sender({
+                write: (data) => {
+                    fragments.push(data);
+                    if (fragments.length !== 2) {
+                        return;
+                    }
+
+                    assert.strictEqual(fragments[0][0] & 0x40, 0x00);
+                    assert.strictEqual(fragments[0].length, 4);
+                    assert.strictEqual(fragments[1][0] & 0x40, 0x00);
+                    assert.strictEqual(fragments[1].length, 5);
+                    done();
+                }
+            }, {
+                    "permessage-deflate": perMessageDeflate
+                });
+
+            perMessageDeflate.accept([{}]);
+
+            sender.send("12", { compress: true, fin: false });
+            sender.send("123", { compress: true, fin: true });
+        });
+
+        it("compresses empty buffer as first fragment", (done) => {
+            const fragments = [];
+            const perMessageDeflate = new PerMessageDeflate({ threshold: 0 });
+            const sender = new Sender({
+                write: (data) => {
+                    fragments.push(data);
+                    if (fragments.length !== 2) {
+                        return;
+                    }
+
+                    assert.strictEqual(fragments[0][0] & 0x40, 0x40);
+                    assert.strictEqual(fragments[0].length, 3);
+                    assert.strictEqual(fragments[1][0] & 0x40, 0x00);
+                    assert.strictEqual(fragments[1].length, 8);
+                    done();
+                }
+            }, {
+                    "permessage-deflate": perMessageDeflate
+                });
+
+            perMessageDeflate.accept([{}]);
+
+            sender.send(Buffer.alloc(0), { compress: true, fin: false });
+            sender.send("data", { compress: true, fin: true });
+        });
+
+        it("compresses empty buffer as last fragment", (done) => {
+            const fragments = [];
+            const perMessageDeflate = new PerMessageDeflate({ threshold: 0 });
+            const sender = new Sender({
+                write: (data) => {
+                    fragments.push(data);
+                    if (fragments.length !== 2) {
+                        return;
+                    }
+
+                    assert.strictEqual(fragments[0][0] & 0x40, 0x40);
+                    assert.strictEqual(fragments[0].length, 12);
+                    assert.strictEqual(fragments[1][0] & 0x40, 0x00);
+                    assert.strictEqual(fragments[1].length, 3);
+                    done();
+                }
+            }, {
+                    "permessage-deflate": perMessageDeflate
+                });
+
+            perMessageDeflate.accept([{}]);
+
+            sender.send("data", { compress: true, fin: false });
+            sender.send(Buffer.alloc(0), { compress: true, fin: true });
+        });
+
+        it("handles many send calls while processing without crashing on flush", (done) => {
+            let count = 0;
+            const perMessageDeflate = new PerMessageDeflate();
             const sender = new Sender({
                 write: () => {
-                    messageCount++;
-                    if (messageCount > maxMessages) {
-                        return done();
+                    if (++count > 1e4) {
+                        done();
                     }
                 }
-            });
+            }, {
+                    "permessage-deflate": perMessageDeflate
+                });
 
-            for (let i = 0; i < maxMessages; i++) {
+            perMessageDeflate.accept([{}]);
+
+            for (let i = 0; i < 1e4; i++) {
                 sender.processing = true;
-                sender.send("hi", { compress: false, fin: true, binary: false, mask: false });
+                sender.send("hi", { compress: false, fin: true });
             }
 
             sender.processing = false;
-            sender.send("hi", { compress: false, fin: true, binary: false, mask: false });
+            sender.send("hi", { compress: false, fin: true });
+        });
+    });
+
+    describe("#ping", () => {
+        it("works with multiple types of data", (done) => {
+            const perMessageDeflate = new PerMessageDeflate({ threshold: 0 });
+            let count = 0;
+            const sender = new Sender({
+                write: (data) => {
+                    if (++count === 1) {
+                        return;
+                    }
+
+                    assert.ok(data.equals(Buffer.from([0x89, 0x02, 0x68, 0x69])));
+                    if (count === 4) {
+                        done();
+                    }
+                }
+            }, {
+                    "permessage-deflate": perMessageDeflate
+                });
+
+            perMessageDeflate.accept([{}]);
+
+            const array = new Uint8Array([0x68, 0x69]);
+
+            sender.send("foo", { compress: true, fin: true });
+            sender.ping(array.buffer, false);
+            sender.ping(array, false);
+            sender.ping("hi", false);
+        });
+    });
+
+    describe("#pong", () => {
+        it("works with multiple types of data", (done) => {
+            const perMessageDeflate = new PerMessageDeflate({ threshold: 0 });
+            let count = 0;
+            const sender = new Sender({
+                write: (data) => {
+                    if (++count === 1) {
+                        return;
+                    }
+
+                    assert.ok(data.equals(Buffer.from([0x8a, 0x02, 0x68, 0x69])));
+                    if (count === 4) {
+                        done();
+                    }
+                }
+            }, {
+                    "permessage-deflate": perMessageDeflate
+                });
+
+            perMessageDeflate.accept([{}]);
+
+            const array = new Uint8Array([0x68, 0x69]);
+
+            sender.send("foo", { compress: true, fin: true });
+            sender.pong(array.buffer, false);
+            sender.pong(array, false);
+            sender.pong("hi", false);
         });
     });
 
@@ -95,21 +265,25 @@ describe("Sender", () => {
 
             let count = 0;
             const sender = new Sender({
-                write: () => count++
-            },
-                {
+                write: (data, cb) => {
+                    count++;
+                    if (cb) {
+                        cb();
+                    }
+                }
+            }, {
                     "permessage-deflate": perMessageDeflate
                 });
 
             perMessageDeflate.accept([{}]);
 
-            sender.send("foo", { compress: true });
-            sender.send("bar", { compress: true });
-            sender.send("baz", { compress: true });
+            sender.send("foo", { compress: true, fin: true });
+            sender.send("bar", { compress: true, fin: true });
+            sender.send("baz", { compress: true, fin: true });
 
-            sender.close(1000, null, false, (err) => {
+            sender.close(1000, null, false, () => {
                 assert.strictEqual(count, 4);
-                done(err);
+                done();
             });
         });
     });

@@ -1,34 +1,34 @@
-const Extensions = adone.net.ws.exts;
+const { net: { ws: { exts } } } = adone;
 
-describe("Extensions", () => {
+describe("net", "ws", "Extensions", () => {
     describe("parse", () => {
         it("should parse", () => {
-            const extensions = Extensions.parse("foo");
+            const extensions = exts.parse("foo");
 
-            assert.deepEqual(extensions, { foo: [{}] });
+            assert.deepStrictEqual(extensions, { foo: [{}] });
         });
 
         it("should parse params", () => {
-            const extensions = Extensions.parse("foo; bar; baz=1; bar=2");
+            const extensions = exts.parse("foo; bar; baz=1; bar=2");
 
-            assert.deepEqual(extensions, {
+            assert.deepStrictEqual(extensions, {
                 foo: [{ bar: [true, "2"], baz: ["1"] }]
             });
         });
 
         it("should parse multiple extensions", () => {
-            const extensions = Extensions.parse("foo, bar; baz, foo; baz");
+            const extensions = exts.parse("foo, bar; baz, foo; baz");
 
-            assert.deepEqual(extensions, {
+            assert.deepStrictEqual(extensions, {
                 foo: [{}, { baz: [true] }],
                 bar: [{ baz: [true] }]
             });
         });
 
         it("should parse quoted params", () => {
-            const extensions = Extensions.parse("foo; bar=\"hi\"");
+            const extensions = exts.parse('foo; bar="hi"');
 
-            assert.deepEqual(extensions, {
+            assert.deepStrictEqual(extensions, {
                 foo: [{ bar: ["hi"] }]
             });
         });
@@ -36,19 +36,19 @@ describe("Extensions", () => {
 
     describe("format", () => {
         it("should format", () => {
-            const extensions = Extensions.format({ foo: {} });
+            const extensions = exts.format({ foo: {} });
 
             assert.strictEqual(extensions, "foo");
         });
 
         it("should format params", () => {
-            const extensions = Extensions.format({ foo: { bar: [true, 2], baz: 1 } });
+            const extensions = exts.format({ foo: { bar: [true, 2], baz: 1 } });
 
             assert.strictEqual(extensions, "foo; bar; bar=2; baz=1");
         });
 
         it("should format multiple extensions", () => {
-            const extensions = Extensions.format({
+            const extensions = exts.format({
                 foo: [{}, { baz: true }],
                 bar: { baz: true }
             });

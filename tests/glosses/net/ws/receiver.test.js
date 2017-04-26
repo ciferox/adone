@@ -1,13 +1,11 @@
-const crypto = adone.std.crypto;
-const PerMessageDeflate = adone.net.ws.PerMessageDeflate;
-const Receiver = adone.net.ws.Receiver;
+const { net: { ws: { Sender, Receiver, PerMessageDeflate } }, std: { crypto } } = adone;
 const util = require("./hybi-util");
 
-describe("Receiver", () => {
+describe("net", "ws", "Receiver", () => {
     it("can parse unmasked text message", (done) => {
         const p = new Receiver();
 
-        p.ontext = function (data) {
+        p.onmessage = function (data) {
             assert.strictEqual(data, "Hello");
             done();
         };
@@ -30,8 +28,8 @@ describe("Receiver", () => {
     it("can parse masked text message", (done) => {
         const p = new Receiver();
 
-        p.ontext = function (data) {
-            assert.strictEqual(data, "5:::{\"name\":\"echo\"}");
+        p.onmessage = function (data) {
+            assert.strictEqual(data, '5:::{"name":"echo"}');
             done();
         };
 
@@ -43,15 +41,16 @@ describe("Receiver", () => {
         const msg = "A".repeat(200);
 
         const mask = "3483a868";
-        const frame = `81FE${util.pack(4, msg.length)}${mask
-            }${util.mask(msg, mask).toString("hex")}`;
+        const frame = Buffer.from(`81FE${util.pack(4, msg.length)}${mask
+            }${util.mask(msg, mask).toString("hex")}`, "hex");
 
-        p.ontext = function (data) {
+        p.onmessage = function (data) {
             assert.strictEqual(data, msg);
             done();
         };
 
-        p.add(Buffer.from(frame, "hex"));
+        p.add(frame.slice(0, 2));
+        setImmediate(() => p.add(frame.slice(2)));
     });
 
     it("can parse a really long masked text message", (done) => {
@@ -62,7 +61,7 @@ describe("Receiver", () => {
         const frame = `81FF${util.pack(16, msg.length)}${mask
             }${util.mask(msg, mask).toString("hex")}`;
 
-        p.ontext = function (data) {
+        p.onmessage = function (data) {
             assert.strictEqual(data, msg);
             done();
         };
@@ -83,7 +82,7 @@ describe("Receiver", () => {
         const frame2 = `80FE${util.pack(4, fragment2.length)}${mask
             }${util.mask(fragment2, mask).toString("hex")}`;
 
-        p.ontext = function (data) {
+        p.onmessage = function (data) {
             assert.strictEqual(data, msg);
             done();
         };
@@ -112,7 +111,7 @@ describe("Receiver", () => {
         const p = new Receiver();
 
         p.onping = function (data) {
-            assert.strictEqual(data, null);
+            assert.ok(data.equals(Buffer.alloc(0)));
             done();
         };
 
@@ -137,7 +136,7 @@ describe("Receiver", () => {
 
         let gotPing = false;
 
-        p.ontext = function (data) {
+        p.onmessage = function (data) {
             assert.strictEqual(data, msg);
             assert.ok(gotPing);
             done();
@@ -176,7 +175,7 @@ describe("Receiver", () => {
 
         let gotPing = false;
 
-        p.ontext = function (data) {
+        p.onmessage = function (data) {
             assert.strictEqual(data, msg);
             assert.ok(gotPing);
             done();
@@ -199,8 +198,8 @@ describe("Receiver", () => {
         const frame = `82${util.getHybiLengthAsHexString(msg.length, true)}${mask
             }${util.mask(msg, mask).toString("hex")}`;
 
-        p.onbinary = function (data) {
-            assert.deepEqual(data.toString("hex"), msg.toString("hex"));
+        p.onmessage = function (data) {
+            assert.ok(data.equals(msg));
             done();
         };
 
@@ -215,8 +214,8 @@ describe("Receiver", () => {
         const frame = `82${util.getHybiLengthAsHexString(msg.length, true)}${mask
             }${util.mask(msg, mask).toString("hex")}`;
 
-        p.onbinary = function (data) {
-            assert.deepEqual(data, msg);
+        p.onmessage = function (data) {
+            assert.ok(data.equals(msg));
             done();
         };
 
@@ -231,8 +230,8 @@ describe("Receiver", () => {
         const frame = `82${util.getHybiLengthAsHexString(msg.length, true)}${mask
             }${util.mask(msg, mask).toString("hex")}`;
 
-        p.onbinary = function (data) {
-            assert.deepEqual(data, msg);
+        p.onmessage = function (data) {
+            assert.ok(data.equals(msg));
             done();
         };
 
@@ -246,8 +245,8 @@ describe("Receiver", () => {
         const frame = `82${util.getHybiLengthAsHexString(msg.length, false)
             }${msg.toString("hex")}`;
 
-        p.onbinary = function (data) {
-            assert.deepEqual(data, msg);
+        p.onmessage = function (data) {
+            assert.ok(data.equals(msg));
             done();
         };
 
@@ -261,7 +260,7 @@ describe("Receiver", () => {
         const p = new Receiver({ "permessage-deflate": perMessageDeflate });
         const buf = Buffer.from("Hello");
 
-        p.ontext = function (data) {
+        p.onmessage = function (data) {
             assert.strictEqual(data, "Hello");
             done();
         };
@@ -284,7 +283,7 @@ describe("Receiver", () => {
         const buf1 = Buffer.from("foo");
         const buf2 = Buffer.from("bar");
 
-        p.ontext = function (data) {
+        p.onmessage = function (data) {
             assert.strictEqual(data, "foobar");
             done();
         };
@@ -308,44 +307,296 @@ describe("Receiver", () => {
         });
     });
 
-    it("resets `currentPayloadLength` only on final frame (unfragmented)", () => {
-        const p = new Receiver({}, 10);
+    it("can parse a buffer with thousands of frames", (done) => {
+        const buf = Buffer.allocUnsafe(40000);
 
-        assert.strictEqual(p.currentPayloadLength, 0);
+        for (let i = 0; i < buf.length; i += 2) {
+            buf[i] = 0x81;
+            buf[i + 1] = 0x00;
+        }
+
+        const p = new Receiver();
+        let counter = 0;
+
+        p.onmessage = function (data) {
+            assert.strictEqual(data, "");
+            if (++counter === 20000) {
+                done();
+            }
+        };
+
+        p.add(buf);
+    });
+
+    it("resets `totalPayloadLength` only on final frame (unfragmented)", () => {
+        const p = new Receiver({}, 10);
+        let message;
+
+        p.onmessage = function (msg) {
+            message = msg;
+        };
+
+        assert.strictEqual(p.totalPayloadLength, 0);
         p.add(Buffer.from("810548656c6c6f", "hex"));
-        assert.strictEqual(p.currentPayloadLength, 0);
+        assert.strictEqual(p.totalPayloadLength, 0);
+        assert.strictEqual(message, "Hello");
     });
 
-    it("resets `currentPayloadLength` only on final frame (fragmented)", () => {
+    it("resets `totalPayloadLength` only on final frame (fragmented)", () => {
         const p = new Receiver({}, 10);
+        let message;
 
-        const frame1 = "01024865";
-        const frame2 = "80036c6c6f";
+        p.onmessage = function (msg) {
+            message = msg;
+        };
 
-        assert.strictEqual(p.currentPayloadLength, 0);
-        p.add(Buffer.from(frame1, "hex"));
-        assert.strictEqual(p.currentPayloadLength, 2);
-        p.add(Buffer.from(frame2, "hex"));
-        assert.strictEqual(p.currentPayloadLength, 0);
+        assert.strictEqual(p.totalPayloadLength, 0);
+        p.add(Buffer.from("01024865", "hex"));
+        assert.strictEqual(p.totalPayloadLength, 2);
+        p.add(Buffer.from("80036c6c6f", "hex"));
+        assert.strictEqual(p.totalPayloadLength, 0);
+        assert.strictEqual(message, "Hello");
     });
 
-    it("resets `currentPayloadLength` only on final frame (fragmented + ping)", () => {
+    it("resets `totalPayloadLength` only on final frame (fragmented + ping)", () => {
         const p = new Receiver({}, 10);
+        const data = [];
 
-        const frame1 = "01024865";
-        const frame2 = "8900";
-        const frame3 = "80036c6c6f";
+        p.onmessage = p.onping = function (buf) {
+            data.push(buf.toString());
+        };
 
-        assert.strictEqual(p.currentPayloadLength, 0);
-        p.add(Buffer.from(frame1, "hex"));
-        assert.strictEqual(p.currentPayloadLength, 2);
-        p.add(Buffer.from(frame2, "hex"));
-        assert.strictEqual(p.currentPayloadLength, 2);
-        p.add(Buffer.from(frame3, "hex"));
-        assert.strictEqual(p.currentPayloadLength, 0);
+        assert.strictEqual(p.totalPayloadLength, 0);
+        p.add(Buffer.from("02024865", "hex"));
+        assert.strictEqual(p.totalPayloadLength, 2);
+        p.add(Buffer.from("8900", "hex"));
+        assert.strictEqual(p.totalPayloadLength, 2);
+        p.add(Buffer.from("80036c6c6f", "hex"));
+        assert.strictEqual(p.totalPayloadLength, 0);
+        assert.deepStrictEqual(data, ["", "Hello"]);
     });
 
-    it("will raise an error on a 200 KiB long masked binary message when maxpayload is 20 KiB", (done) => {
+    it("raises an error when RSV1 is on and permessage-deflate is disabled", (done) => {
+        const p = new Receiver();
+
+        p.onerror = function (err, code) {
+            assert.ok(err instanceof Error);
+            assert.strictEqual(err.message, "RSV1 must be clear");
+            assert.strictEqual(code, 1002);
+            done();
+        };
+
+        p.add(Buffer.from([0xc2, 0x80, 0x00, 0x00, 0x00, 0x00]));
+    });
+
+    it("raises an error when RSV1 is on and opcode is 0", (done) => {
+        const perMessageDeflate = new PerMessageDeflate();
+        perMessageDeflate.accept([{}]);
+
+        const p = new Receiver({ "permessage-deflate": perMessageDeflate });
+
+        p.onerror = function (err, code) {
+            assert.ok(err instanceof Error);
+            assert.strictEqual(err.message, "RSV1 must be clear");
+            assert.strictEqual(code, 1002);
+            done();
+        };
+
+        p.add(Buffer.from([0x40, 0x00]));
+    });
+
+    it("raises an error when RSV2 is on", (done) => {
+        const p = new Receiver();
+
+        p.onerror = function (err, code) {
+            assert.ok(err instanceof Error);
+            assert.strictEqual(err.message, "RSV2 and RSV3 must be clear");
+            assert.strictEqual(code, 1002);
+            done();
+        };
+
+        p.add(Buffer.from([0xa2, 0x00]));
+    });
+
+    it("raises an error when RSV3 is on", (done) => {
+        const p = new Receiver();
+
+        p.onerror = function (err, code) {
+            assert.ok(err instanceof Error);
+            assert.strictEqual(err.message, "RSV2 and RSV3 must be clear");
+            assert.strictEqual(code, 1002);
+            done();
+        };
+
+        p.add(Buffer.from([0x92, 0x00]));
+    });
+
+    it("raises an error if the first frame in a fragmented message has opcode 0", (done) => {
+        const p = new Receiver();
+
+        p.onerror = function (err, code) {
+            assert.ok(err instanceof Error);
+            assert.strictEqual(err.message, "invalid opcode: 0");
+            assert.strictEqual(code, 1002);
+            done();
+        };
+
+        p.add(Buffer.from([0x00, 0x00]));
+    });
+
+    it("raises an error if a frame has opcode 1 in the middle of a fragmented message", (done) => {
+        const p = new Receiver();
+
+        p.onerror = function (err, code) {
+            assert.ok(err instanceof Error);
+            assert.strictEqual(err.message, "invalid opcode: 1");
+            assert.strictEqual(code, 1002);
+            done();
+        };
+
+        p.add(Buffer.from([0x01, 0x00]));
+        p.add(Buffer.from([0x01, 0x00]));
+    });
+
+    it("raises an error if a frame has opcode 2 in the middle of a fragmented message", (done) => {
+        const p = new Receiver();
+
+        p.onerror = function (err, code) {
+            assert.ok(err instanceof Error);
+            assert.strictEqual(err.message, "invalid opcode: 2");
+            assert.strictEqual(code, 1002);
+            done();
+        };
+
+        p.add(Buffer.from([0x01, 0x00]));
+        p.add(Buffer.from([0x02, 0x00]));
+    });
+
+    it("raises an error when a control frame has the FIN bit off", (done) => {
+        const p = new Receiver();
+
+        p.onerror = function (err, code) {
+            assert.ok(err instanceof Error);
+            assert.strictEqual(err.message, "FIN must be set");
+            assert.strictEqual(code, 1002);
+            done();
+        };
+
+        p.add(Buffer.from([0x09, 0x00]));
+    });
+
+    it("raises an error when a control frame has the RSV1 bit on", (done) => {
+        const perMessageDeflate = new PerMessageDeflate();
+        perMessageDeflate.accept([{}]);
+
+        const p = new Receiver({ "permessage-deflate": perMessageDeflate });
+
+        p.onerror = function (err, code) {
+            assert.ok(err instanceof Error);
+            assert.strictEqual(err.message, "RSV1 must be clear");
+            assert.strictEqual(code, 1002);
+            done();
+        };
+
+        p.add(Buffer.from([0xc9, 0x00]));
+    });
+
+    it("raises an error when a control frame has the FIN bit off", (done) => {
+        const p = new Receiver();
+
+        p.onerror = function (err, code) {
+            assert.ok(err instanceof Error);
+            assert.strictEqual(err.message, "FIN must be set");
+            assert.strictEqual(code, 1002);
+            done();
+        };
+
+        p.add(Buffer.from([0x09, 0x00]));
+    });
+
+    it("raises an error when a control frame has a payload bigger than 125 B", (done) => {
+        const p = new Receiver();
+
+        p.onerror = function (err, code) {
+            assert.ok(err instanceof Error);
+            assert.strictEqual(err.message, "invalid payload length");
+            assert.strictEqual(code, 1002);
+            done();
+        };
+
+        p.add(Buffer.from([0x89, 0x7e]));
+    });
+
+    it("raises an error when a data frame has a payload bigger than 2^53 - 1 B", (done) => {
+        const p = new Receiver();
+
+        p.onerror = function (err, code) {
+            assert.ok(err instanceof Error);
+            assert.strictEqual(err.message, "max payload size exceeded");
+            assert.strictEqual(code, 1009);
+            done();
+        };
+
+        p.add(Buffer.from([0x82, 0x7f]));
+        setImmediate(() => p.add(Buffer.from([
+            0x00, 0x20, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00
+        ])));
+    });
+
+    it("raises an error if a text frame contains invalid UTF-8 data", (done) => {
+        const p = new Receiver();
+
+        p.onerror = function (err, code) {
+            assert.ok(err instanceof Error);
+            assert.strictEqual(err.message, "invalid utf8 sequence");
+            assert.strictEqual(code, 1007);
+            done();
+        };
+
+        p.add(Buffer.from([0x81, 0x04, 0xce, 0xba, 0xe1, 0xbd]));
+    });
+
+    it("raises an error if a close frame has a payload of 1 B", (done) => {
+        const p = new Receiver();
+
+        p.onerror = function (err, code) {
+            assert.ok(err instanceof Error);
+            assert.strictEqual(err.message, "invalid payload length");
+            assert.strictEqual(code, 1002);
+            done();
+        };
+
+        p.add(Buffer.from([0x88, 0x01, 0x00]));
+    });
+
+    it("raises an error if a close frame contains an invalid close code", (done) => {
+        const p = new Receiver();
+
+        p.onerror = function (err, code) {
+            assert.ok(err instanceof Error);
+            assert.strictEqual(err.message, "invalid status code: 0");
+            assert.strictEqual(code, 1002);
+            done();
+        };
+
+        p.add(Buffer.from([0x88, 0x02, 0x00, 0x00]));
+    });
+
+    it("raises an error if a close frame contains invalid UTF-8 data", (done) => {
+        const p = new Receiver();
+
+        p.onerror = function (err, code) {
+            assert.ok(err instanceof Error);
+            assert.strictEqual(err.message, "invalid utf8 sequence");
+            assert.strictEqual(code, 1007);
+            done();
+        };
+
+        p.add(Buffer.from([0x88, 0x06, 0x03, 0xef, 0xce, 0xba, 0xe1, 0xbd]));
+    });
+
+    it("raises an error on a 200 KiB long masked binary message when `maxPayload` is 20 KiB", (done) => {
         const p = new Receiver({}, 20 * 1024);
         const msg = crypto.randomBytes(200 * 1024);
 
@@ -353,7 +604,9 @@ describe("Receiver", () => {
         const frame = `82${util.getHybiLengthAsHexString(msg.length, true)}${mask
             }${util.mask(msg, mask).toString("hex")}`;
 
-        p.error = function (reason, code) {
+        p.onerror = function (err, code) {
+            assert.ok(err instanceof Error);
+            assert.strictEqual(err.message, "max payload size exceeded");
             assert.strictEqual(code, 1009);
             done();
         };
@@ -361,14 +614,16 @@ describe("Receiver", () => {
         p.add(Buffer.from(frame, "hex"));
     });
 
-    it("will raise an error on a 200 KiB long unmasked binary message when maxpayload is 20 KiB", (done) => {
+    it("raises an error on a 200 KiB long unmasked binary message when `maxPayload` is 20 KiB", (done) => {
         const p = new Receiver({}, 20 * 1024);
         const msg = crypto.randomBytes(200 * 1024);
 
         const frame = `82${util.getHybiLengthAsHexString(msg.length, false)
             }${msg.toString("hex")}`;
 
-        p.error = function (reason, code) {
+        p.onerror = function (err, code) {
+            assert.ok(err instanceof Error);
+            assert.strictEqual(err.message, "max payload size exceeded");
             assert.strictEqual(code, 1009);
             done();
         };
@@ -376,67 +631,66 @@ describe("Receiver", () => {
         p.add(Buffer.from(frame, "hex"));
     });
 
-    it("will raise an error on a compressed message that exceeds maxpayload of 3 B", (done) => {
-        const perMessageDeflate = new PerMessageDeflate({}, false, 3);
+    it("raises an error on a compressed message that exceeds `maxPayload`", (done) => {
+        const perMessageDeflate = new PerMessageDeflate({}, false, 25);
         perMessageDeflate.accept([{}]);
 
-        const p = new Receiver({ "permessage-deflate": perMessageDeflate }, 3);
-        const buf = Buffer.from("Hellooooooooooooooooooooooooooooooooooooooo");
+        const p = new Receiver({ "permessage-deflate": perMessageDeflate }, 25);
+        const buf = Buffer.from("A".repeat(50));
 
-        p.onerror = function (reason, code) {
+        p.onerror = function (err, code) {
+            assert.ok(err instanceof Error);
+            assert.strictEqual(err.message, "max payload size exceeded");
             assert.strictEqual(code, 1009);
             done();
         };
 
-        perMessageDeflate.compress(buf, true, (err, compressed) => {
+        perMessageDeflate.compress(buf, true, (err, data) => {
             if (err) {
                 return done(err);
             }
 
-            p.add(Buffer.from([0xc1, compressed.length]));
-            p.add(compressed);
+            p.add(Buffer.from([0xc1, data.length]));
+            p.add(data);
         });
     });
 
-    it("will raise an error on a compressed fragment that exceeds maxpayload of 2 B", (done) => {
-        const perMessageDeflate = new PerMessageDeflate({}, false, 2);
+    it("raises an error if the sum of fragment lengths exceeds `maxPayload`", (done) => {
+        const perMessageDeflate = new PerMessageDeflate({}, false, 25);
         perMessageDeflate.accept([{}]);
 
-        const p = new Receiver({ "permessage-deflate": perMessageDeflate }, 2);
-        const buf1 = Buffer.from("foooooooooooooooooooooooooooooooooooooooooooooo");
-        const buf2 = Buffer.from("baaaarrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr");
+        const p = new Receiver({ "permessage-deflate": perMessageDeflate }, 25);
+        const buf = Buffer.from("A".repeat(15));
 
-        p.onerror = function (reason, code) {
+        p.onerror = function (err, code) {
+            assert.ok(err instanceof Error);
+            assert.strictEqual(err.message, "max payload size exceeded");
             assert.strictEqual(code, 1009);
             done();
         };
 
-        perMessageDeflate.compress(buf1, false, (err, compressed1) => {
+        perMessageDeflate.compress(buf, false, (err, fragment1) => {
             if (err) {
                 return done(err);
             }
 
-            p.add(Buffer.from([0x41, compressed1.length]));
-            p.add(compressed1);
+            p.add(Buffer.from([0x41, fragment1.length]));
+            p.add(fragment1);
 
-            perMessageDeflate.compress(buf2, true, (err, compressed2) => {
+            perMessageDeflate.compress(buf, true, (err, fragment2) => {
                 if (err) {
                     return done(err);
                 }
 
-                p.add(Buffer.from([0x80, compressed2.length]));
-                p.add(compressed2);
+                p.add(Buffer.from([0x80, fragment2.length]));
+                p.add(fragment2);
             });
         });
     });
 
-    it("will not crash if another message is received after receiving a message that exceeds maxpayload", (done) => {
-        const perMessageDeflate = new PerMessageDeflate({}, false, 2);
-        perMessageDeflate.accept([{}]);
-
-        const p = new Receiver({ "permessage-deflate": perMessageDeflate }, 2);
-        const buf1 = Buffer.from("foooooooooooooooooooooooooooooooooooooooooooooo");
-        const buf2 = Buffer.from("baaaarrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr");
+    it("doesn't crash if data is received after `maxPayload` is exceeded", (done) => {
+        const p = new Receiver({}, 5);
+        const buf = crypto.randomBytes(10);
 
         let gotError = false;
 
@@ -445,47 +699,228 @@ describe("Receiver", () => {
             assert.strictEqual(code, 1009);
         };
 
-        perMessageDeflate.compress(buf1, false, (err, compressed1) => {
-            if (err) {
-                return done(err);
-            }
+        p.add(Buffer.from([0x82, buf.length]));
 
-            p.add(Buffer.from([0x41, compressed1.length]));
-            p.add(compressed1);
+        assert.ok(gotError);
+        assert.strictEqual(p.onerror, null);
 
-            assert.ok(gotError);
-            assert.strictEqual(p.onerror, null);
-
-            perMessageDeflate.compress(buf2, true, (err, compressed2) => {
-                if (err) {
-                    return done(err);
-                }
-
-                p.add(Buffer.from([0x80, compressed2.length]));
-                p.add(compressed2);
-                done();
-            });
-        });
+        p.add(buf);
+        done();
     });
 
-    it("can cleanup when consuming data", (done) => {
+    it("consumes all data before calling `cleanup` callback (1/4)", (done) => {
         const perMessageDeflate = new PerMessageDeflate();
         perMessageDeflate.accept([{}]);
 
         const p = new Receiver({ "permessage-deflate": perMessageDeflate });
         const buf = Buffer.from("Hello");
+        const results = [];
 
-        perMessageDeflate.compress(buf, true, (err, compressed) => {
+        p.onmessage = (message) => results.push(message);
+
+        perMessageDeflate.compress(buf, true, (err, data) => {
             if (err) {
                 return done(err);
             }
 
-            const data = Buffer.concat([Buffer.from([0xc1, compressed.length]), compressed]);
-            p.add(data);
-            p.add(data);
-            p.add(data);
-            p.cleanup();
-            setTimeout(done, 1000);
+            const frame = Buffer.concat([Buffer.from([0xc1, data.length]), data]);
+
+            p.add(frame);
+            p.add(frame);
+
+            assert.strictEqual(p.state, 5);
+            assert.strictEqual(p.bufferedBytes, frame.length);
+
+            p.cleanup(() => {
+                assert.deepStrictEqual(results, ["Hello", "Hello"]);
+                assert.strictEqual(p.onmessage, null);
+                done();
+            });
+        });
+    });
+
+    it("consumes all data before calling `cleanup` callback (2/4)", (done) => {
+        const perMessageDeflate = new PerMessageDeflate();
+        perMessageDeflate.accept([{}]);
+
+        const p = new Receiver({ "permessage-deflate": perMessageDeflate });
+        const buf = Buffer.from("Hello");
+        const results = [];
+
+        p.onclose = (code, reason) => results.push(code, reason);
+        p.onmessage = (message) => results.push(message);
+
+        perMessageDeflate.compress(buf, true, (err, data) => {
+            if (err) {
+                return done(err);
+            }
+
+            const textFrame = Buffer.concat([Buffer.from([0xc1, data.length]), data]);
+            const closeFrame = Buffer.from([0x88, 0x00]);
+
+            p.add(textFrame);
+            p.add(textFrame);
+            p.add(closeFrame);
+
+            assert.strictEqual(p.state, 5);
+            assert.strictEqual(p.bufferedBytes, textFrame.length + closeFrame.length);
+
+            p.cleanup(() => {
+                assert.deepStrictEqual(results, ["Hello", "Hello", 1000, ""]);
+                assert.strictEqual(p.onmessage, null);
+                done();
+            });
+        });
+    });
+
+    it("consumes all data before calling `cleanup` callback (3/4)", (done) => {
+        const perMessageDeflate = new PerMessageDeflate();
+        perMessageDeflate.accept([{}]);
+
+        const p = new Receiver({ "permessage-deflate": perMessageDeflate });
+        const buf = Buffer.from("Hello");
+        const results = [];
+
+        p.onerror = (err, code) => results.push(err.message, code);
+        p.onmessage = (message) => results.push(message);
+
+        perMessageDeflate.compress(buf, true, (err, data) => {
+            if (err) {
+                return done(err);
+            }
+
+            const textFrame = Buffer.concat([Buffer.from([0xc1, data.length]), data]);
+            const invalidFrame = Buffer.from([0xa0, 0x00]);
+
+            p.add(textFrame);
+            p.add(textFrame);
+            p.add(invalidFrame);
+
+            assert.strictEqual(p.state, 5);
+            assert.strictEqual(p.bufferedBytes, textFrame.length + invalidFrame.length);
+
+            p.cleanup(() => {
+                assert.deepStrictEqual(results, [
+                    "Hello",
+                    "Hello",
+                    "RSV2 and RSV3 must be clear",
+                    1002
+                ]);
+                assert.strictEqual(p.onmessage, null);
+                done();
+            });
+        });
+    });
+
+    it("consumes all data before calling `cleanup` callback (4/4)", (done) => {
+        const perMessageDeflate = new PerMessageDeflate();
+        perMessageDeflate.accept([{}]);
+
+        const p = new Receiver({ "permessage-deflate": perMessageDeflate });
+        const buf = Buffer.from("Hello");
+        const results = [];
+
+        p.onmessage = (message) => results.push(message);
+
+        perMessageDeflate.compress(buf, true, (err, data) => {
+            if (err) {
+                return done(err);
+            }
+
+            const textFrame = Buffer.concat([Buffer.from([0xc1, data.length]), data]);
+            const incompleteFrame = Buffer.from([0x82, 0x0a, 0x00, 0x00]);
+
+            p.add(textFrame);
+            p.add(incompleteFrame);
+
+            assert.strictEqual(p.state, 5);
+            assert.strictEqual(p.bufferedBytes, incompleteFrame.length);
+
+            p.cleanup(() => {
+                assert.deepStrictEqual(results, ["Hello"]);
+                assert.strictEqual(p.onmessage, null);
+                done();
+            });
+        });
+    });
+
+    it("can emit nodebuffer of fragmented binary message", (done) => {
+        const p = new Receiver();
+        const frags = [
+            crypto.randomBytes(7321),
+            crypto.randomBytes(137),
+            crypto.randomBytes(285787),
+            crypto.randomBytes(3)
+        ];
+
+        p.binaryType = "nodebuffer";
+        p.onmessage = (data) => {
+            assert.ok(Buffer.isBuffer(data));
+            assert.ok(data.equals(Buffer.concat(frags)));
+            done();
+        };
+
+        frags.forEach((frag, i) => {
+            Sender.frame(frag, {
+                fin: i === frags.length - 1,
+                opcode: i === 0 ? 2 : 0,
+                readOnly: true,
+                mask: false,
+                rsv1: false
+            }).forEach((buf) => p.add(buf));
+        });
+    });
+
+    it("can emit arraybuffer of fragmented binary message", (done) => {
+        const p = new Receiver();
+        const frags = [
+            crypto.randomBytes(19221),
+            crypto.randomBytes(954),
+            crypto.randomBytes(623987)
+        ];
+
+        p.binaryType = "arraybuffer";
+        p.onmessage = (data) => {
+            assert.ok(data instanceof ArrayBuffer);
+            assert.ok(Buffer.from(data).equals(Buffer.concat(frags)));
+            done();
+        };
+
+        frags.forEach((frag, i) => {
+            Sender.frame(frag, {
+                fin: i === frags.length - 1,
+                opcode: i === 0 ? 2 : 0,
+                readOnly: true,
+                mask: false,
+                rsv1: false
+            }).forEach((buf) => p.add(buf));
+        });
+    });
+
+    it("can emit fragments of fragmented binary message", (done) => {
+        const p = new Receiver();
+        const frags = [
+            crypto.randomBytes(17),
+            crypto.randomBytes(419872),
+            crypto.randomBytes(83),
+            crypto.randomBytes(9928),
+            crypto.randomBytes(1)
+        ];
+
+        p.binaryType = "fragments";
+        p.onmessage = (data) => {
+            assert.deepStrictEqual(data, frags);
+            done();
+        };
+
+        frags.forEach((frag, i) => {
+            Sender.frame(frag, {
+                fin: i === frags.length - 1,
+                opcode: i === 0 ? 2 : 0,
+                readOnly: true,
+                mask: false,
+                rsv1: false
+            }).forEach((buf) => p.add(buf));
         });
     });
 });

@@ -1,6 +1,6 @@
 const { is } = adone;
 
-describe("Validation", () => {
+describe("net", "ws", "Validation", () => {
     describe("isValidUTF8", () => {
         it("should return true for a valid utf8 string", () => {
             const validBuffer = Buffer.from(
