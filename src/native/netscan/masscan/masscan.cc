@@ -973,7 +973,6 @@ void MasscanWorker::initialize()
     masscan->output.is_show_open = 1; /* default: show syn-ack, not rst */
     masscan->seed = get_entropy();    /* entropy for randomness */
     masscan->wait = 10;               /* how long to wait for responses when done */
-    masscan->max_rate = 100.0;        /* max rate = hundred packets-per-second */
     masscan->nic_count = 1;
     masscan->shard.one = 1;
     masscan->shard.of = 1;
@@ -1004,6 +1003,24 @@ void MasscanWorker::initialize()
         }
 
         memcpy(masscan->nic[0].router_mac, mac, 6);
+    }
+
+    // max rate param
+
+    v8::Local<v8::String> maxRateStr = NanStr("maxRate");
+
+    if (opt->Has(maxRateStr))
+    {
+        v8::Local<v8::Value> value = opt->Get(maxRateStr);
+        if (!value->IsNumber()) {
+            Nan::ThrowTypeError("Number expected for maxRate param");
+            this->Destroy();
+            return;
+        }
+        masscan->max_rate = value->NumberValue();
+    } else {
+        // 100 packets per second by default
+        masscan->max_rate = 100;
     }
 
     // port ranges

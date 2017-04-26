@@ -20,7 +20,8 @@ class ScanApp extends adone.application.Application {
                 "240.0.0.0/4", // RFC1112: Reserved
                 "255.255.255.255/32", // RFC0919: Limited Broadcast
                 "224.0.0.0/4" // RFC5771: Multicast/Reserved
-            ]
+            ],
+            maxRate: 10
         });
         scanner.on("stats", (stats) => {
             // adone.log(stats);
