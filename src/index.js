@@ -126,7 +126,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
                     app.main = adone.application.Application.prototype.main;
                     app.initialize = adone.application.Application.prototype.initialize;
                     app.uninitialize = adone.application.Application.prototype.uninitialize;
-                    app.exception = adone.noop;
+                    app.exception = null;
 
                     // redefine methods
                     for (const [name, method] of Object.entries(App)) {
