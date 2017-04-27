@@ -52,7 +52,7 @@ export {
     pathval
 };
 export const type = adone.util.typeOf;
-export const eql = adone.util.deepEqual;
+export const eql = adone.is.deepEqual;
 export const getPathInfo = pathval.getPathInfo;
 export const hasProperty = pathval.hasProperty;
 export const getName = adone.util.functionName;

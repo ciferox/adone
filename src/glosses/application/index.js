@@ -9,11 +9,9 @@ export class Subsystem extends adone.EventEmitter {
     }
 
     initialize() {
-
     }
 
     uninitialize() {
-
     }
 
     defineCommand(...args) {
@@ -1064,12 +1062,12 @@ export class Application extends Subsystem {
         this._name = name;
         this._commandRequired = commandRequired;
 
-        this._awaiters = {};
         this._exiting = false;
         this._main = main;
         this._mainCommand = null;
         this._errorScope = false;
         this._version = null;
+        this.config = null;
 
         this._subsystems = [];
         this.adoneRootPath = adone.std.path.resolve(__dirname, "../../..");
@@ -1083,6 +1081,8 @@ export class Application extends Subsystem {
         this.setMaxListeners(Infinity);
         this.defineMainCommand();
     }
+    
+    
 
     _setupMain() {
         // setup the main application
@@ -1113,7 +1113,6 @@ export class Application extends Subsystem {
     }
 
     main() {
-
     }
 
     async run({ ignoreArgs = false } = {}) {
@@ -1121,9 +1120,12 @@ export class Application extends Subsystem {
             if (is.nil(adone.appinstance) && this._main !== false) {
                 this._setupMain();
             }
-            // Load adone configuration.
-            this.config = new adone.configuration.FileConfiguration({ base: this.adoneRootPath });
-            await this.loadConfig("adone", { ext: "js", defaults: true });
+
+            if (is.null(this.config)) {
+                // Load adone configuration.
+                this.config = new adone.configuration.FileConfiguration({ base: this.adoneRootPath });
+                await this.loadConfig("adone", { ext: "js", defaults: true });
+            }
 
             this._errorScope = true;
             await this.initialize();
@@ -1162,7 +1164,6 @@ export class Application extends Subsystem {
             }
             adone.error(err.stack || err.message || err);
             return this.exit(Application.ERROR);
-
         }
     }
 
@@ -1215,11 +1216,7 @@ export class Application extends Subsystem {
         this._exiting = true;
 
         // Uninitialize subsystems
-        for (let i = 0; i < this._subsystems.length; i++) {
-            const ss = this._subsystems[i];
-            // eslint-disable-next-line no-await-in-loop
-            await ss.uninitialize();
-        }
+        await this.uninitializeSubsystems();
 
         await Promise.resolve(this.uninitialize());
 
@@ -1227,15 +1224,9 @@ export class Application extends Subsystem {
         if (this !== adone.appinstance) {
             return;
         }
-        process.removeListener("uncaughtExectption", this._handlers.uncaughtException);
-        process.removeListener("unhandledRejection", this._handlers.unhandledRejection);
-        process.removeListener("rejectionHandled", this._handlers.rejectionHandled);
-        process.removeListener("beforeExit", this._handlers.beforeExit);
-        if (is.array(this._exitSignals)) {
-            for (const sigName of this._exitSignals) {
-                process.removeListener(sigName, this._handlers.signalExit);
-            }
-        }
+
+        this.removeProcessHandlers();
+
         await new Promise((resolve) => {
             let fds = 0;
             code = code || Application.SUCCESS;
@@ -1265,6 +1256,27 @@ export class Application extends Subsystem {
             });
         });
         process.exit(code);
+    }
+
+    removeProcessHandlers() {
+        process.removeListener("uncaughtExectption", this._handlers.uncaughtException);
+        process.removeListener("unhandledRejection", this._handlers.unhandledRejection);
+        process.removeListener("rejectionHandled", this._handlers.rejectionHandled);
+        process.removeListener("beforeExit", this._handlers.beforeExit);
+        if (is.array(this._exitSignals)) {
+            for (const sigName of this._exitSignals) {
+                process.removeListener(sigName, this._handlers.signalExit);
+            }
+        }
+    }
+
+    async uninitializeSubsystems() {
+        for (let i = 0; i < this._subsystems.length; i++) {
+            const ss = this._subsystems[i];
+            // eslint-disable-next-line no-await-in-loop
+            await ss.uninitialize();
+        }
+        this._subsystems.length = 0;
     }
 
     customizeLogger() {
@@ -1929,7 +1941,6 @@ export class Application extends Subsystem {
     }
 }
 adone.tag.set(Application, adone.tag.APPLICATION);
-Application.prototype[adone.tag.APPLICATION] = true;
 Application.SUCCESS = 0;
 Application.ERROR = 1;
 Application.Argument = Argument;

@@ -130,7 +130,7 @@ class Request extends EventEmitter {
                 assert(Buffer.compare(responseBody, body) === 0);
             } else if (is.object(body)) {
                 // check if the content type is json?
-                assert(util.deepEqual(body, JSON.parse(responseBody)));
+                assert(is.deepEqual(body, JSON.parse(responseBody)));
             }
         });
     }

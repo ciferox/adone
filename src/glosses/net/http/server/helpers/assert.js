@@ -1,4 +1,4 @@
-const { util, net: { http: { x } } } = adone;
+const { is, net: { http: { x } } } = adone;
 
 // use shani.util.assert ?
 
@@ -26,11 +26,11 @@ assert.notStrictEqual = (a, b, status, msg, opts) => {
 };
 
 assert.deepEqual = (a, b, status, msg, opts) => {
-    assert(util.deepEqual(a, b), status, msg, opts);
+    assert(is.deepEqual(a, b), status, msg, opts);
 };
 
 assert.notDeepEqual = (a, b, status, msg, opts) => {
-    assert(!util.deepEqual(a, b), status, msg, opts);
+    assert(!is.deepEqual(a, b), status, msg, opts);
 };
 
 export default assert;
