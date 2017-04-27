@@ -36,7 +36,7 @@ class Argument {
         this.names = options.name;
         this.action = options.action;
         this.nargs = options.nargs;
-        this.default = options.default;
+        this._default = options.default;
         this.type = options.type;
         this.help = options.help;
         this.required = options.required;
@@ -50,17 +50,24 @@ class Argument {
         this.appendChoicesHelpMessage = options.appendChoicesHelpMessage;
     }
 
+    get default() {
+        if (this._default !== EMPTY_VALUE) {
+            return this._default;
+        }
+        if (this.action === "store_true") {
+            return false;
+        }
+        if (this.action === "store_false") {
+            return true;
+        }
+        if (this.nargs === "*") {
+            return [];
+        }
+        return this._default;
+    }
+
     get value() {
         if (!this.hasValue()) {
-            if (this.action === "store_true") {
-                return false;
-            }
-            if (this.action === "store_false") {
-                return true;
-            }
-            if (this.nargs === "*") {
-                return [];
-            }
             return this.default;
         }
         return this._value;
@@ -242,6 +249,12 @@ class Argument {
     }
 
     _formatValue(x) {
+        if (x === "") {
+            return "empty string";
+        }
+        if (is.array(x) && x.length === 0) {
+            return "empty array";
+        }
         return JSON.stringify(x);
     }
 
@@ -257,7 +270,7 @@ class Argument {
         }
 
         if (this.appendDefaultHelpMessage && this.action === "store" && this.hasDefaultValue()) {
-            const value = this.default === "" ? "empty string" : this._formatValue(this.default);
+            const value = this._formatValue(this.default);
             if (msg) {
                 msg = `${msg}\n`;
             }
@@ -542,9 +555,9 @@ class ArgumentsMap {
             }
 
             return result;
-        } else {
-            return this._allRaw;
         }
+        return this._allRaw;
+
     }
 
     get(key, defaultValue = EMPTY_VALUE) {
@@ -910,16 +923,16 @@ class Command {
                         message: arg.getShortHelpMessage()
                     };
                 }), {
-                        model: [
+                    model: [
                             { id: "left-spacing", width: 4 },
                             { id: "names", maxWidth: 40, wordwrap: true },
                             { id: "between-cells", width: 2 },
                             { id: "message", wordwrap: true }
-                        ],
-                        width: "100%",
-                        borderless: true,
-                        noHeader: true
-                    }));
+                    ],
+                    width: "100%",
+                    borderless: true,
+                    noHeader: true
+                }));
             }
             if (options.length) {
                 if (this.arguments.length) {
@@ -950,16 +963,16 @@ class Command {
                             message: opt.getShortHelpMessage()
                         };
                     }), {
-                            model: [
+                        model: [
                                 { id: "left-spacing", width: 4 },
                                 { id: "names", maxWidth: 40, wordwrap: true },
                                 { id: "between-cells", width: 2 },
                                 { id: "message", wordwrap: true }
-                            ],
-                            width: "100%",
-                            borderless: true,
-                            noHeader: true
-                        }));
+                        ],
+                        width: "100%",
+                        borderless: true,
+                        noHeader: true
+                    }));
                 }
             }
             if (commands.length) {
@@ -991,16 +1004,16 @@ class Command {
                             message: cmd.getShortHelpMessage()
                         };
                     }), {
-                            model: [
+                        model: [
                                 { id: "left-spacing", width: 4 },
                                 { id: "names", maxWidth: 40, wordwrap: true },
                                 { id: "between-cells", width: 2 },
                                 { id: "message", wordwrap: true }
-                            ],
-                            width: "100%",
-                            borderless: true,
-                            noHeader: true
-                        }));
+                        ],
+                        width: "100%",
+                        borderless: true,
+                        noHeader: true
+                    }));
                 }
             }
         }
@@ -1146,10 +1159,10 @@ export class Application extends Subsystem {
         } catch (err) {
             if (this._errorScope) {
                 return this._fireException(err);
-            } else {
-                adone.error(err.stack || err.message || err);
-                return this.exit(Application.ERROR);
             }
+            adone.error(err.stack || err.message || err);
+            return this.exit(Application.ERROR);
+
         }
     }
 

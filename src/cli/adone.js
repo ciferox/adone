@@ -27,7 +27,8 @@ export default class AdoneCLI extends adone.application.Application {
                 }
             ],
             arguments: [
-                { name: "expr", help: "run script or inspect adone-object", default: "index.js" }
+                { name: "expr", help: "run script or inspect adone-object", default: "index.js" },
+                { name: "argv", help: "the script arguments", nargs: "*" }
             ],
             commands: [
                 {
@@ -91,12 +92,14 @@ export default class AdoneCLI extends adone.application.Application {
     uninitialize() {
     }
 
-    async main(args) {
+    async main(args, opts, { rest }) {
         let expr = args.get("expr");
         if (!std.path.isAbsolute(expr)) {
             expr = std.path.resolve(process.cwd(), expr);
         }
 
+        const argv = args.get("argv");
+        process.argv = [process.argv[0], expr, ...argv, ...rest];
         return adone.require(expr);
     }
 
