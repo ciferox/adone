@@ -1,5 +1,3 @@
-const { is } = adone;
-
 const GET_INFO = 0;
 const GET_PAYLOAD_LENGTH_16 = 1;
 const GET_PAYLOAD_LENGTH_64 = 2;
@@ -386,7 +384,7 @@ export default class Receiver {
             } else {
                 const buf = toBuffer(fragments, messageLength);
 
-                if (!is.validUTF8(buf)) {
+                if (!adone.net.ws.is.validUTF8(buf)) {
                     this.error(new Error("invalid utf8 sequence"), 1007);
                     return;
                 }
@@ -422,7 +420,7 @@ export default class Receiver {
 
                 const buf = data.slice(2);
 
-                if (!is.validUTF8(buf)) {
+                if (!adone.net.ws.is.validUTF8(buf)) {
                     this.error(new Error("invalid utf8 sequence"), 1007);
                     return;
                 }

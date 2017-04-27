@@ -106,16 +106,11 @@
 	  ]
     },
     {
-      'target_name': 'utf8validation',
+      'target_name': 'ws',
       'include_dirs': ["nan"],
       'cflags!': [ '-O3' ],
       'cflags': [ '-O2' ],
-      'sources': [ 'src/native/utf8validation.cc' ]
-    },
-    {
-      'target_name': 'wsbufferutil',
-      'include_dirs': ["nan"],
-      'sources': [ 'src/native/wsbufferutil.cc' ],
+      'sources': [ 'src/native/net/ws.cc' ],
       'xcode_settings': {
         'MACOSX_DEPLOYMENT_TARGET': '10.8',
         'CLANG_CXX_LANGUAGE_STANDARD': 'c++11',
@@ -521,7 +516,7 @@
       "variables": {
         "srcpath%": "<(module_root_dir)/build/Release",
       },
-      "dependencies" : [ "bignumber", "brotli_decode", "brotli_encode", "lzma", "bson", "hiredis", "memcpy", "metrics", "microtime", "userid", "terminal", "leveldown", "utf8validation", "wsbufferutil", "masscan" ],
+      "dependencies" : [ "bignumber", "brotli_decode", "brotli_encode", "lzma", "bson", "hiredis", "memcpy", "metrics", "microtime", "userid", "terminal", "leveldown", "ws", "masscan" ],
       "copies": [
         {
           "files": [ 
@@ -536,8 +531,7 @@
             "<(srcpath)/userid.node",
             "<(srcpath)/terminal.node",
             "<(srcpath)/leveldown.node",
-            "<(srcpath)/utf8validation.node",
-            "<(srcpath)/wsbufferutil.node",
+            "<(srcpath)/ws.node",
             "<(srcpath)/lzma.node",
             "<(srcpath)/masscan.node"
           ],

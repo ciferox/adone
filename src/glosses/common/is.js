@@ -563,16 +563,4 @@ const is = {
     symbol: (value) => (getTag(value) === "symbol")
 };
 
-Object.defineProperty(is, "validUTF8", {
-    configurable: true,
-    get: () => {
-        const Validation = adone.bind("utf8validation.node").Validation;
-        Object.defineProperty(is, "validUTF8", {
-            configurable: false,
-            value: Validation.isValidUTF8
-        });
-        return Validation.isValidUTF8;
-    }
-});
-
 export default is;

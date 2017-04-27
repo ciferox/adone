@@ -1,4 +1,4 @@
-const { is } = adone;
+const { is } = adone.net.ws;
 
 describe("net", "ws", "Validation", () => {
     describe("isValidUTF8", () => {

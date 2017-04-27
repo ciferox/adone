@@ -199,6 +199,13 @@ export const namespaces = [
         ]
     },
     {
+        name: "adone.net.ws",
+        description: "Implementation of websocket client/server",
+        paths: [
+            "glosses/net/ws/index"
+        ]
+    },
+    {
         name: "adone.netron",
         description: "Implementation of Netron",
         paths: [
