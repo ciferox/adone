@@ -1022,9 +1022,9 @@ void MasscanWorker::initialize()
             this->Destroy();
             return;
         }
-        masscan->nic[index].src.ip.first = range.begin;
-        masscan->nic[index].src.ip.last = range.end;
-        masscan->nic[index].src.ip.range = (uint64_t)range.end - range.begin + 1;
+        masscan->nic[0].src.ip.first = range.begin;
+        masscan->nic[0].src.ip.last = range.end;
+        masscan->nic[0].src.ip.range = (uint64_t)range.end - range.begin + 1;
     }
 
     // max rate param
