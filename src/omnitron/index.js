@@ -10,7 +10,7 @@ const { DISABLED, ENABLED, INITIALIZING, ACTIVE, UNINITIALIZING, STATUSES } = ad
 
 @Contextable
 @Private
-export class Omnitron extends adone.application.Application {
+export default class Omnitron extends adone.application.Application {
     async initialize() {
         this._.netron = null;
 
@@ -519,27 +519,9 @@ export class Omnitron extends adone.application.Application {
     }
 
     @Public
-    @Description("Returns instance of system metrics observer")
-    system() {
-        return this._.contexts.get("system");
-    }
-
-    @Public
-    @Description("Returns instance of hardware metrics observer")
-    hardware() {
-        return this._.contexts.get("hardware");
-    }
-
-    @Public
-    @Description("Returns instance of vault manager")
-    vaults() {
-        return this._.contexts.get("vaults");
-    }
-
-    @Public
-    @Description("Returns instance of hosts")
-    hosts() {
-        return this._.contexts.get("hosts");
+    @Description("Returns interface of context with supplied name")
+    context(name) {
+        return this._.contexts.get(name);
     }
 }
 

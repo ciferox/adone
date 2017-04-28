@@ -47,7 +47,7 @@ export default class LinuxProcess extends Process {
         let youngestJiffies = 0;
         let youngestPid = null;
         for (const pid of pids) {
-            const parts = adone.fs.readWordsSync(adone.format("/proc/%s/stat", pid));
+            const parts = adone.fs.readWordsSync(adone.sprintf("/proc/%s/stat", pid));
             if (is.nil(parts) || parts.length < 22) continue;
             const jiffies = Number.parseInt(parts[21]);
             if (jiffies > youngestJiffies) {
@@ -66,7 +66,7 @@ export default class LinuxProcess extends Process {
         // BOOT|<------------uptime------------->|NOW
 
         // // This takes advantage of the fact that ps does all the heavy lifting of sorting out HZ internally.
-        let etime = adone.std.child_process.execSync(adone.format("ps -p %d -o etimes=", youngestPid));
+        let etime = adone.std.child_process.execSync(adone.sprintf("ps -p %d -o etimes=", youngestPid));
         if (is.buffer(etime)) {
             etime = etime.toString();
         }

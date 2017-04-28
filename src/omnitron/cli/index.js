@@ -143,6 +143,33 @@ export default class extends adone.application.Subsystem {
                     handler: this.gatesCommand
                 },
                 {
+                    name: "pm",
+                    help: "process manager",
+                    commands: [
+                        {
+                            name: "list",
+                            handler: this.pmList,
+                            options: [
+                                { name: "--sum" }
+                            ]
+                        },
+                        {
+                            name: "start",
+                            handler: this.pmStart,
+                            arguments: [
+                                "id"
+                            ]
+                        },
+                        {
+                            name: "stop",
+                            handler: this.pmStop,
+                            arguments: [
+                                "id"
+                            ]
+                        }
+                    ]
+                },
+                {
                     name: "sys",
                     help: "system metrics",
                     commands: [
@@ -769,14 +796,124 @@ export default class extends adone.application.Subsystem {
         return 0;
     }
 
+    async pmStart(args, opts) {
+        const id = args.get("id");
+        const pm = await this.dispatcher.context("pm");
+        if (await pm.hasApplication(id)) {
+            await pm.start(id);
+        } else {
+            await pm.start({ path: id });
+        }
+        return 0;
+    }
+
+    async pmStop(args) {
+        const pm = await this.dispatcher.context("pm");
+        const id = args.get("id");
+        await pm.stop(id);
+        return 0;
+    }
+
+    async pmList(args, opts) {
+        const pm = await this.dispatcher.context("pm");
+        const apps = await pm.list();
+        if (!apps.length) {
+            adone.info("No applications");
+            return 0;
+        }
+        apps.sort((a, b) => a.id - b.id);
+        const table = new adone.text.table.Table({
+            head: ["ID", "Name", "Mode", "State", "PID", "CPU", "Memory", "Uptime", "Restarts"],
+            style: {
+                head: ["cyan"]
+            }
+        });
+        const colorizeState = (x) => {
+            let color = {
+                running: "green",
+                restarting: "blue",
+                scaling: "blue",
+                stopped: "red",
+                started: "yellow",
+                starting: "blue",
+                failed: "red",
+                waiting_for_restart: "blue"
+            }[x];
+            if (!color) {
+                color = "white";
+            }
+            return adone.terminal.parse(`{${color}-fg}${x}{/${color}-fg}`);
+        };
+        const sum = opts.get("sum");
+        for (const app of apps) {
+            if (!app.workers || !sum) {
+                table.push([
+                    app.id,
+                    app.name,
+                    app.mode,
+                    colorizeState(app.state),
+                    app.pid,
+                    app.alive ? `${app.usage.main.cpu.toFixed(2)}%` : null,
+                    app.alive ? adone.util.humanizeSize(app.usage.main.memory) : null,
+                    app.alive ? adone.util.humanizeTime(app.uptime.main) : null,
+                    app.alive ? app.restarts : null
+                ]);
+            } else {
+                const cpu = app.workers.reduce((x, y, i) => {
+                    return x + app.usage.workers[i].cpu;
+                }, app.usage.workers[0].cpu);
+                const memory = app.workers.reduce((x, y, i) => {
+                    return x + app.usage.workers[i].memory;
+                }, app.usage.workers[0].memory);
+                const states = new adone.DefaultMap(() => 0);
+                for (const w of app.workers) {
+                    states.set(w.state, states.get(w.state) + 1);
+                }
+                let state = [colorizeState(app.state)];
+                for (const [s, n] of states.entries()) {
+                    state.push(`${colorizeState(s)} ${n}/${app.workers.length}`);
+                }
+                state = state.join("\n");
+                table.push([
+                    app.id,
+                    app.name,
+                    app.mode,
+                    state,
+                    app.pid,
+                    `${cpu.toFixed(2)}%`,
+                    adone.util.humanizeSize(memory),
+                    adone.util.humanizeTime(app.uptime.main)
+                ]);
+            }
+            if (app.workers && !sum) {
+                for (let i = 0, n = app.workers.length; i < n; ++i) {
+                    const worker = app.workers[i];
+                    table.push([
+                        `${app.id}:${worker.id}`,
+                        app.name,
+                        "worker",
+                        colorizeState(worker.state),
+                        worker.pid,
+                        worker.alive ? `${app.usage.workers[i].cpu.toFixed(2)}%` : null,
+                        worker.alive ? adone.util.humanizeSize(app.usage.workers[i].memory) : null,
+                        worker.alive ? adone.util.humanizeTime(app.uptime.workers[i]) : null,
+                        worker.alive ? worker.restarts : null
+                    ]);
+                }
+            }
+        }
+        adone.log(table.toString());
+        return 0;
+    }
+
     async systemInfoCommand() {
-        const system = await this.dispatcher.system();
+        const system = await this.dispatcher.context("system");
         adone.log((await system.info()).full);
         return 0;
     }
 
     async systemVolumesCommand(args, opts) {
-        const system = await this.dispatcher.system();
+        const system = await this.dispatcher.context("system");
         adone.log(pretty.table(await system.volumes(), {
             style: {
                 head: ["gray"],
@@ -809,7 +946,7 @@ export default class extends adone.application.Subsystem {
     }
 
     async systemPsCommand() {
-        const system = await this.dispatcher.system();
+        const system = await this.dispatcher.context("system");
         adone.log(pretty.table(await system.processes(), {
             style: {
                 head: ["gray"],
@@ -857,7 +994,7 @@ export default class extends adone.application.Subsystem {
 
     async vaultOpenCommand(args, opts) {
         try {
-            await (await this.dispatcher.vaults()).open(args.get("name"));
+            await (await this.dispatcher.context("vaults")).open(args.get("name"));
             adone.log(adone.ok);
         } catch (err) {
             adone.error(err.message);
@@ -868,7 +1005,7 @@ export default class extends adone.application.Subsystem {
 
     async vaultCloseCommand(args, opts) {
         try {
-            await (await this.dispatcher.vaults()).close(args.get("name"));
+            await (await this.dispatcher.context("vaults")).close(args.get("name"));
             adone.log(adone.ok);
         } catch (err) {
             adone.error(err.message);
@@ -879,7 +1016,7 @@ export default class extends adone.application.Subsystem {
 
     async vaultSetCommand(args, opts) {
         try {
-            const iVault = await (await this.dispatcher.vaults()).get(args.get("vault"));
+            const iVault = await (await this.dispatcher.context("vaults")).get(args.get("vault"));
             const iValuable = await iVault.get(args.get("valuable"));
             await iValuable.set(args.get("key"), args.get("value"));
             adone.log(adone.ok);
@@ -892,7 +1029,7 @@ export default class extends adone.application.Subsystem {
 
     async vaultGetCommand(args, opts) {
         try {
-            const iVault = await (await this.dispatcher.vaults()).get(args.get("vault"));
+            const iVault = await (await this.dispatcher.context("vaults")).get(args.get("vault"));
             const iValuable = await iVault.getOrCreate(args.get("valuable"));
             adone.log(await iValuable.get(args.get("key")));
         } catch (err) {
@@ -904,7 +1041,7 @@ export default class extends adone.application.Subsystem {
 
     async vaultTypeCommand(args, opts) {
         try {
-            const iVault = await (await this.dispatcher.vaults()).get(args.get("vault"));
+            const iVault = await (await this.dispatcher.context("vaults")).get(args.get("vault"));
             const iValuable = await iVault.get(args.get("valuable"));
             adone.log(await iValuable.type(args.get("key")));
         } catch (err) {
@@ -916,7 +1053,7 @@ export default class extends adone.application.Subsystem {
 
     async vaultDeleteCommand(args, opts) {
         try {
-            const iVault = await (await this.dispatcher.vaults()).get(args.get("vault"));
+            const iVault = await (await this.dispatcher.context("vaults")).get(args.get("vault"));
             const key = args.get("key");
             const valuable = args.get("valuable");
             if (key === "") {
@@ -935,7 +1072,7 @@ export default class extends adone.application.Subsystem {
 
     async vaultKeysCommand(args, opts) {
         try {
-            const iVault = await (await this.dispatcher.vaults()).get(args.get("vault"));
+            const iVault = await (await this.dispatcher.context("vaults")).get(args.get("vault"));
             const iValuable = await iVault.get(args.get("valuable"));
             adone.log(adone.text.pretty.json(await iValuable.keys()));
         } catch (err) {
@@ -947,7 +1084,7 @@ export default class extends adone.application.Subsystem {
 
     async vaultTagsCommand(args, opts) {
         try {
-            const iVault = await (await this.dispatcher.vaults()).get(args.get("vault"));
+            const iVault = await (await this.dispatcher.context("vaults")).get(args.get("vault"));
             const iValuable = await iVault.get(args.get("valuable"));
             adone.log(adone.text.pretty.json(await iValuable.tags()));
         } catch (err) {
@@ -960,7 +1097,7 @@ export default class extends adone.application.Subsystem {
 
     async vaultClearCommand(args, opts) {
         try {
-            const iVault = await (await this.dispatcher.vaults()).get(args.get("vault"));
+            const iVault = await (await this.dispatcher.context("vaults")).get(args.get("vault"));
             const iValuable = await iVault.get(args.get("valuable"));
             await iValuable.clear();
             adone.log(adone.ok);
@@ -973,7 +1110,7 @@ export default class extends adone.application.Subsystem {
 
     async hostsListCommand(args, opts) {
         try {
-            const iHosts = await this.dispatcher.hosts();
+            const iHosts = await this.dispatcher.context("hosts");
             adone.log(adone.text.pretty.json(await iHosts.list()));
         } catch (err) {
             adone.error(err.message);
@@ -984,7 +1121,7 @@ export default class extends adone.application.Subsystem {
 
     async hostsAddCommand(args, opts) {
         try {
-            const iHosts = await this.dispatcher.hosts();
+            const iHosts = await this.dispatcher.context("hosts");
             const iHost = await iHosts.add(args.get("host"));
             await iHost.setMulti(opts.getAll(true));
             adone.log(adone.ok);
@@ -1002,9 +1139,9 @@ export default class extends adone.application.Subsystem {
                 adone.log("Nothing to set");
                 return 0;
             }
-            
-            const iHosts = await this.dispatcher.hosts();
-            
+
+            const iHosts = await this.dispatcher.context("hosts");
+
             // Checking aliases
             let isOk = true;
             let alias;
@@ -1022,7 +1159,7 @@ export default class extends adone.application.Subsystem {
             if (!isOk) {
                 throw new adone.x.Exists(`Host '${alias}' already exists. Use another alias`);
             }
-            
+
             const host = args.get("host");
             let iHost;
             try {
@@ -1046,7 +1183,7 @@ export default class extends adone.application.Subsystem {
 
     async hostsGetCommand(args) {
         try {
-            const iHosts = await this.dispatcher.hosts();
+            const iHosts = await this.dispatcher.context("hosts");
             const host = args.get("host");
             const iHost = await iHosts.get(host);
             const entries = await iHost.entries();
@@ -1073,7 +1210,7 @@ export default class extends adone.application.Subsystem {
 
     async hostsDelCommand(args) {
         try {
-            const iHosts = await this.dispatcher.hosts();
+            const iHosts = await this.dispatcher.context("hosts");
             await iHosts.delete(args.get("host"));
             adone.log(adone.ok);
         } catch (err) {
@@ -1089,7 +1226,7 @@ export default class extends adone.application.Subsystem {
             if (key === "aliases") {
                 throw new adone.x.NotAllowed("Deletion of 'aliases' key is not allowed");
             }
-            const iHosts = await this.dispatcher.hosts();
+            const iHosts = await this.dispatcher.context("hosts");
             const iHost = await iHosts.get(args.get("host"));
             await iHost.delete(args.get("key"));
             adone.log(adone.ok);
@@ -1102,7 +1239,7 @@ export default class extends adone.application.Subsystem {
 
     async hostsGroupsCommand() {
         try {
-            const iHosts = await this.dispatcher.hosts();
+            const iHosts = await this.dispatcher.context("hosts");
             adone.log(adone.text.pretty.json(await iHosts.listGroups()));
         } catch (err) {
             adone.error(err.message);
@@ -1113,7 +1250,7 @@ export default class extends adone.application.Subsystem {
 
     async hostsGroupAppCommand(args) {
         try {
-            const iHosts = await this.dispatcher.hosts();
+            const iHosts = await this.dispatcher.context("hosts");
             const iHost = await iHosts.get(args.get("host"));
             await iHost.addTag(args.get("group"));
             adone.log(adone.ok);
@@ -1126,7 +1263,7 @@ export default class extends adone.application.Subsystem {
 
     async hostsGroupDelCommand(args) {
         try {
-            const iHosts = await this.dispatcher.hosts();
+            const iHosts = await this.dispatcher.context("hosts");
             const iHost = await iHosts.get(args.get("host"));
             await iHost.deleteTag(args.get("group"));
             adone.log(adone.ok);

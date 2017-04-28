@@ -1,4 +1,4 @@
-import * as stuff from "omnitron/services/process_manager";
+import * as stuff from "omnitron/contexts/pm";
 import { fixture } from "./util";
 
 const { std: { child_process: cp }, netron: { Netron }, is, fs } = adone;

@@ -1,7 +1,7 @@
-import { TaskManager } from "omnitron/services/task_manager";
-import TwinTmInterface from "omnitron/services/task_manager/twin";
+import TaskManager from "omnitron/contexts/tm";
+import TwinTmInterface from "omnitron/contexts/tm/twin";
 import OmnitronRunner from "../runner";
-const { is, x  } = adone;
+const { is, x } = adone;
 const { traverse } = adone.js.compiler;
 
 let taskId = 0;
@@ -37,9 +37,9 @@ describe("Task Manager", () => {
 
     async function prepareInterfaces() {
         omnitronRunner.dispatcher.netron.setInterfaceTwin("TaskManager", TwinTmInterface);
-        iTm = omnitronRunner.getInterface("tm");
-        const iDatastore = omnitronRunner.getInterface("db");
-        iDs = await iDatastore.getDatastore({ filename: "taskmanager" });
+        iTm = await omnitronRunner.context("tm");
+        const iDatastore = await omnitronRunner.context("db");
+        iDs = await iDatastore.getDatastore({ filename: "tm" });
     }
 
     async function restartOmnitron() {
@@ -50,20 +50,21 @@ describe("Task Manager", () => {
     before(async function () {
         this.timeout(10000);
 
-        taskManager = new TaskManager({});
+        omnitronRunner = null;
+
         omnitronRunner = new OmnitronRunner();
         await omnitronRunner.run();
         omnitronRunner.createDispatcher();
         await omnitronRunner.startOmnitron();
-        await omnitronRunner.dispatcher.enable("database");
-        await omnitronRunner.dispatcher.enable("task_manager");
-        await omnitronRunner.dispatcher.start("task_manager");
         await adone.promise.delay(100);
+        taskManager = new TaskManager(omnitronRunner.dispatcher.getInterface("omnitron"));
         return prepareInterfaces();
     });
 
     after(async () => {
-        await omnitronRunner.stopOmnitron({ clean: false });
+        if (!is.null(omnitronRunner)) {
+            await omnitronRunner.stopOmnitron({ clean: false });
+        }
     });
 
     describe("Validating task and worker definitions", () => {
@@ -367,7 +368,8 @@ describe("Task Manager", () => {
                     const infos = [];
                     for (let i = 0; i < 7; i++) {
                         const name = getTaskName();
-                        infos.push({ name, code: `class ${name} extends Task {
+                        infos.push({
+                            name, code: `class ${name} extends Task {
                             run(...args) {
                             }
                         }` });
@@ -389,7 +391,8 @@ describe("Task Manager", () => {
                     const infos = [];
                     for (let i = 0; i < 7; i++) {
                         const name = getTaskName();
-                        infos.push({ name, code: `class ${name} extends Worker {
+                        infos.push({
+                            name, code: `class ${name} extends Worker {
                             run(job) {
                             }
                         }` });
@@ -647,7 +650,7 @@ describe("Task Manager", () => {
                 });
 
                 for (let i = 0; i < 21; i++) {
-                    if (i >= 3 && modeId === 1) {continue;}
+                    if (i >= 3 && modeId === 1) { continue; }
                     it(`execute task with ${i + 1} arguments`, async () => {
                         const args = [];
                         for (let n = 0; n < i; n++) {
@@ -968,7 +971,7 @@ describe("Task Manager", () => {
                     assert.equal(result, 16);
                 }
 
-                const jobs = await iTm.listJobs( { state: "complete" });
+                const jobs = await iTm.listJobs({ state: "complete" });
 
                 assert.equal(jobs.length, sums.length);
 
@@ -1522,7 +1525,7 @@ describe("Task Manager", () => {
                 assert.deepEqual(result, { a: 1, b: 2 });
 
                 result = await iContainer.run(task2Name);
-                assert.deepEqual(result, { name: "greatness", vibration: 7  });
+                assert.deepEqual(result, { name: "greatness", vibration: 7 });
 
                 for (let i = 1; i <= 7; i++) {
                     result = await iContainer.run(task3Name);

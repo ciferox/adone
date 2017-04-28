@@ -264,20 +264,8 @@ export default class Dispatcher {
         return (await this.getService("omnitron")).gates();
     }
 
-    async system() {
-        return (await this.getService("omnitron")).system();
-    }
-
-    async hardware() {
-        return (await this.getService("omnitron")).hardware();
-    }
-
-    async vaults() {
-        return (await this.getService("omnitron")).vaults();
-    }
-
-    async hosts() {
-        return (await this.getService("omnitron")).hosts();
+    async context(name) {
+        return (await this.getService("omnitron")).context(name);
     }
 
     async _isAlive(pid, timeout = 0) {

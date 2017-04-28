@@ -14,12 +14,26 @@ const JOB_ID_LENGTH = 64;
 @Contextable
 @Private
 @Description("Task manager service")
-export class TaskManager {
-    constructor(options) {
-        this.netron = options.netron;
-        this.omnitron = options.omnitron;
-        this.options = options;
-
+export default class TaskManager {
+    constructor(omnitron) {
+        this.options = {
+            datastore: {
+                filename: "tm"
+            },
+            transpiler: {
+                plugins: [
+                    "transform.flowStripTypes",
+                    "transform.classProperties",
+                    "transform.ESModules",
+                    "transform.functionBind"
+                ],
+                compact: false
+            }
+        };
+        this.omnitron = omnitron;
+        if (!is.nil(omnitron._)) {
+            this.netron = omnitron._.netron;
+        }
         this._containers = new Map();
         this._tasks = new Map();
         this._jobs = new Set((j) => j.meta.id);
@@ -28,7 +42,7 @@ export class TaskManager {
     }
 
     async initialize() {
-        const iDatabase = this.omnitron.getInterface("database");
+        const iDatabase = await this.omnitron.context("db");
         this.iDs = await iDatabase.getDatastore(this.options.datastore);
 
         // Load tasks and workers metadata.
@@ -57,16 +71,16 @@ export class TaskManager {
 
     @Public
     @Description("Creates container and returns its interface")
-    async createContainer({ id, type = "context", returnInterface = true, returnIfExists = false } = { }) {
+    async createContainer({ id, type = "context", returnInterface = true, returnIfExists = false } = {}) {
         if (is.nil(id)) {
             id = adone.text.random(64);
         } else {
             if (this._containers.has(id)) {
                 if (returnIfExists) {
                     return this.getContainer(id);
-                } else {
-                    throw new x.Exists("Container already exists");
                 }
+                throw new x.Exists("Container already exists");
+
             }
         }
 
@@ -153,7 +167,7 @@ export class TaskManager {
 
     @Public
     @Description("Enqueues job")
-    async enqueueJob(taskName, data, { priority = 0, ttl = 0, delay = 0, attempts = 1, backoff = false } = { }, emitter) {
+    async enqueueJob(taskName, data, { priority = 0, ttl = 0, delay = 0, attempts = 1, backoff = false } = {}, emitter) {
         const taskInfo = this._getTask(taskName);
 
         let meta = adone.o({
@@ -235,7 +249,7 @@ export class TaskManager {
         }
     }
 
-    async _install(code, { force = false, volatile = true, singleton = false, concurrency = 1, description = "" } = { }, namePrefix = "") {
+    async _install(code, { force = false, volatile = true, singleton = false, concurrency = 1, description = "" } = {}, namePrefix = "") {
         const installed = [];
         const ast = this._parseCode(code);
 
@@ -256,8 +270,8 @@ export class TaskManager {
                 if (is.undefined(taskInfo)) {
                     taskInfo = this._initTaskInfo({ name: className, _type: superClassName.toLowerCase(), concurrency, description });
                     if (superClassName === "Task") {
-                        taskInfo.meta.singleton = !!singleton;
-                        taskInfo.meta.volatile = !!volatile;
+                        taskInfo.meta.singleton = Boolean(singleton);
+                        taskInfo.meta.volatile = Boolean(volatile);
                     }
                     taskInfo.isNew = true;
                 } else {
@@ -303,7 +317,7 @@ export class TaskManager {
 
                 taskInfo.meta = await this.iDs.insert(taskInfo.meta);
             } else {
-                await this.iDs.update( { _type: taskInfo.meta._type, name: taskInfo.meta.name }, taskInfo.meta);
+                await this.iDs.update({ _type: taskInfo.meta._type, name: taskInfo.meta.name }, taskInfo.meta);
             }
         }
 
@@ -313,7 +327,7 @@ export class TaskManager {
     async _uninstall(taskNames, cntainerId = "") {
         let uninstallCount = 0;
         for (const name of taskNames) {
-            if (!this._isCompatibleName(name, cntainerId)) continue;
+            if (!this._isCompatibleName(name, cntainerId)) { continue; }
             const taskInfo = this._tasks.get(name);
             if (!is.undefined(taskInfo)) {
                 if (taskInfo.instances.size > 0) {
@@ -328,7 +342,7 @@ export class TaskManager {
         return uninstallCount;
     }
 
-    _initTaskInfo({ _id, name, _type, concurrency = 1, volatile = true, singleton = false, description = "" } = { }) {
+    _initTaskInfo({ _id, name, _type, concurrency = 1, volatile = true, singleton = false, description = "" } = {}) {
         const meta = adone.o({
             _type,
             name,
@@ -342,7 +356,7 @@ export class TaskManager {
 
         const taskInfo = adone.o({
             meta,
-            instances: new Set(),
+            instances: new Set()
         });
 
         if (_type === "task") {
@@ -441,7 +455,7 @@ export class TaskManager {
 
     async _updateJobStatus(jobInfo, state) {
         jobInfo.meta.state = state;
-        const update = { $set: { state: state } };
+        const update = { $set: { state } };
         if (state === jobState.complete) {
             update.$set.result = jobInfo.meta.result;
         }
@@ -496,7 +510,7 @@ export class TaskManager {
         let taskName;
         let taskCode;
         if (taskInfo.meta.name.includes(".")) {
-            taskName = taskInfo.meta.name.split('.')[1];
+            taskName = taskInfo.meta.name.split(".")[1];
             taskCode = "";
         } else {
             taskName = taskInfo.meta.name;

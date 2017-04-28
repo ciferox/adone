@@ -13,7 +13,7 @@ module.exports = {
     servicesPath: join(home, "services"),
     getServicePath(serviceName, dirName) {
         let fullPath;
-        if (typeof(dirType) === "string") {            
+        if (typeof (dirType) === "string") {
             fullPath = join(this.servicesPath, serviceName, dirName);
         } else {
             fullPath = join(this.servicesPath, serviceName);

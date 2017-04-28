@@ -1,5 +1,5 @@
 import OmnitronRunner from "../runner";
-import { schemas, userGroup, adminGroup } from "omnitron/services/auth/defaults";
+import { schemas, userGroup, adminGroup } from "omnitron/contexts/auth/defaults";
 const { is } = adone;
 const srandom = adone.text.random;
 
@@ -125,12 +125,9 @@ describe("Auth service", () => {
         await omnitronRunner.run();
         omnitronRunner.createDispatcher();
         await omnitronRunner.startOmnitron();
-        await omnitronRunner.dispatcher.enable("database");
-        await omnitronRunner.dispatcher.enable("auth");
-        await omnitronRunner.dispatcher.start("auth");
         await adone.promise.delay(100);
-        iSystemAuth = omnitronRunner.getInterface("auth.system");
-        iAuth = omnitronRunner.getInterface("auth");
+        iSystemAuth = await omnitronRunner.context("auth.system");
+        iAuth = await omnitronRunner.context("auth");
         userSchema = schemas.user;
         groupSchema = schemas.group;
     });

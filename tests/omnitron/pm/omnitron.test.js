@@ -1,14 +1,12 @@
 const { path } = adone.std;
 import OmnitronRunner, { WeakOmnitron } from "../runner";
 import {
-    ProcessManager,
     netronOptions,
     RemoteProcess,
     logger,
     IProcess,
     IMainProcess
-} from "omnitron/services/process_manager";
-import { Database } from "omnitron/services/database";
+} from "omnitron/contexts/pm";
 import { fixture, waitFor } from "./util";
 
 const { vendor: { lodash: _ }, x, is } = adone;
@@ -24,8 +22,6 @@ describe("Process manager", function () {
 
     describe("omnitron", () => {
         let omnitronRunner;
-        let appConfig;
-        let pmConfig;
 
         describe("Process management", () => {
             const db = { applications: null, runtime: null };
@@ -36,22 +32,21 @@ describe("Process manager", function () {
                 omnitronRunner = new OmnitronRunner();
                 omnitronRunner.createDispatcher();
                 await omnitronRunner.run();
-                appConfig = omnitronRunner.config;
             });
 
             beforeEach(async function () {
                 this.timeout(60000);
                 await omnitronRunner.startOmnitron();
-                await omnitronRunner.dispatcher.enable("database");
-                await omnitronRunner.dispatcher.enable("process_manager");
-                await omnitronRunner.dispatcher.start("process_manager");
                 await adone.promise.delay(100);
                 // await omnitronRunner.connectOmnitron();
-                pm = omnitronRunner.getInterface("pm");
-                idb = omnitronRunner.getInterface("db");
-                pmConfig = appConfig.omnitron.services.process_manager;
-                db.applications = await idb.getDatastore(pmConfig.contexts[0].options.datastore.applications);
-                db.runtime = await idb.getDatastore(pmConfig.contexts[0].options.datastore.runtime);
+                pm = await omnitronRunner.context("pm");
+                idb = await omnitronRunner.context("db");
+                db.applications = await idb.getDatastore({
+                    filename: "pm-applications"
+                });
+                db.runtime = await idb.getDatastore({
+                    filename: "pm-runtime"
+                });
             });
 
             afterEach(async function () {
@@ -61,11 +56,14 @@ describe("Process manager", function () {
 
             async function restartOmnitron() {
                 await omnitronRunner.restartOmnitron({ clean: false, killChildren: false });
-                pm = omnitronRunner.getInterface("pm");
-                idb = omnitronRunner.getInterface("db");
-                pmConfig = appConfig.omnitron.services.process_manager;
-                db.applications = await idb.getDatastore(pmConfig.contexts[0].options.datastore.applications);
-                db.runtime = await idb.getDatastore(pmConfig.contexts[0].options.datastore.runtime);
+                pm = await omnitronRunner.context("pm");
+                idb = await omnitronRunner.context("db");
+                db.applications = await idb.getDatastore({
+                    filename: "pm-applications"
+                });
+                db.runtime = await idb.getDatastore({
+                    filename: "pm-runtime"
+                });
             }
 
             for (const mode of ["single", "cluster"]) {
@@ -1883,103 +1881,29 @@ describe("Process manager", function () {
 
                 await omnitronRunner.dispatcher.spawn(false);
 
-                const pmconfig = {
-                    description: "Process manager service",
-                    status: "enabled",
-                    dependencies: [
-                        "database"
-                    ],
-                    contexts: [
-                        {
-                            id: "pm",
-                            class: "ProcessManager",
-                            default: true,
-                            options: {
-                                datastore: {
-                                    applications: {
-                                        filename: "pm-applications"
-                                    },
-                                    runtime: {
-                                        filename: "pm-runtime"
-                                    }
-                                },
-                                defaultProcessConfig: {
-                                    args: [],
-                                    env: {},
-                                    mode: "single",
-                                    startup: false,
-                                    autorestart: false,
-                                    maxRestarts: 3,
-                                    restartDelay: 0,
-                                    killTimeout: 1600,
-                                    normalStart: 1000
-                                }
-                            }
-                        }
-                    ]
-                };
-
-                const dbconfig = {
-                    description: "Object-database service",
-                    status: "enabled",
-                    contexts: [
-                        {
-                            id: "db",
-                            class: "Database",
-                            default: true
-                        }
-                    ]
-                };
-
-                omnitron.addServiceConfig("database", dbconfig);
-
-                odb = new Database({
-                    serviceName: "database",
-                    netron: omnitron._.netron,
-                    omnitron
-                });
-
-                await omnitron.attachService("database", dbconfig, odb);
-
-                await odb.initialize();
-
-                omnitron.addServiceConfig("process_manager", pmconfig);
-
-                pm = new ProcessManager({
-                    serviceName: "process_manager",
-                    netron: omnitron._.netron,
-                    omnitron,
-                    datastore: {
-                        applications: {
-                            filename: "pm-applications"
-                        },
-                        runtime: {
-                            filename: "pm-runtime"
-                        }
-                    },
-                    defaultProcessConfig: {
-                        args: [],
-                        env: {},
-                        mode: "single",
-                        startup: false,
-                        autorestart: false,
-                        maxRestarts: 3,
-                        restartDelay: 0,
-                        killTimeout: 1600,
-                        normalStart: 1000
-                    }
-                });
-
-                await omnitron.attachService("process_manager", pmconfig, pm);
-
-                await pm.initialize();
-
+                basePath = await this.omnitron.config.omnitron.getServicePath("pm", "apps");
+                odb = await omnitronRunner.context("db");
+                pm = await omnitronRunner.context("pm");
                 basePath = pm.basePath;
 
-                defaultProcessConfig = pm.options.defaultProcessConfig;
+                defaultProcessConfig = {
+                    args: [],
+                    env: {},
+                    mode: "single",
+                    startup: false,
+                    autorestart: false,
+                    maxRestarts: 3,
+                    restartDelay: 0,
+                    killTimeout: 1600,
+                    normalStart: 1000
+                };
 
-                db.applications = await odb.getDatastore(pm.options.datastore.applications);
-                db.runtime = await odb.getDatastore(pm.options.datastore.runtime);
+                db.applications = await odb.getDatastore({
+                    filename: "pm-applications"
+                });
+                db.runtime = await odb.getDatastore({
+                    filename: "pm-runtime"
+                });
             });
 
             afterEach(() => {

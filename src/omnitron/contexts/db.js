@@ -36,14 +36,14 @@ class Datastore extends adone.database.local.Datastore {
 @Contextable
 @Private
 @Description("Database context")
-export class Database {
-    constructor(options) {
-        this.options = options;
+export default class Database {
+    constructor(omnitron) {
+        this.omnitron = omnitron;
         this._datastores = new Map();
     }
 
     async initialize() {
-        this.dataPath = await this.options.omnitron.config.omnitron.getServicePath(this.options.serviceName, "stores");
+        this.dataPath = await this.omnitron.config.omnitron.getServicePath("db", "stores");
     }
 
     uninitialize() {
@@ -77,7 +77,7 @@ export class Database {
         const ds = this._datastores.get(path);
         if (!is.undefined(ds)) {
             this._datastores.delete(path);
-            this.options.netron.releaseContext(ds);
+            this.omnitron._.netron.releaseContext(ds);
             return adone.fs.rm(path);
         }
     }

@@ -20,8 +20,6 @@ export default class Contexts {
             }
         }
 
-        adone.log(lazies);
-
         this._lazy = adone.lazify(lazies, null, require);
     }
 

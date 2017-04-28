@@ -13,10 +13,8 @@ describe("Database service", () => {
         appConfig = omnitronRunner.config;
         omnitronRunner.createDispatcher();
         await omnitronRunner.startOmnitron();
-        await omnitronRunner.dispatcher.enable("database");
-        await omnitronRunner.dispatcher.start("database");
         await adone.promise.delay(100);
-        iDatabase = omnitronRunner.getInterface("db");
+        iDatabase = await omnitronRunner.context("db");
     });
 
     after(async () => {

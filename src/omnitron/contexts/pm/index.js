@@ -105,7 +105,7 @@ export class RemoteProcess extends AsyncEmitter {
      */
     async _waitForExit() {
         const pollingInteval = 250;
-        for ( ; ; ) {
+        for (; ;) {
             await adone.promise.delay(pollingInteval);
             if (!this.alive) {
                 break;
@@ -233,7 +233,7 @@ export class Process extends AsyncEmitter {
         const container = this.constructor.containerPath;
         const { port } = config;
 
-        await adone.fs.rm(port).catch(() => {});
+        await adone.fs.rm(port).catch(() => { });
         this.process = std.child_process.spawn(config.interpreter, [container, port], {
             detached: true,
             stdio: ["ignore", this.fd.stdout, this.fd.stderr]
@@ -390,7 +390,7 @@ export class MainProcess extends Process {
     async createNewWorker(id = this._workers.size) {
         const pid = await this.container.setNewWorker(id);
         this._workers.set(id, { pid, alive: true, appeared: new Date().getTime(), disappeared: null });
-        this.emitParallel("newWorker", id, pid).catch(() => {});
+        this.emitParallel("newWorker", id, pid).catch(() => { });
         return [id, pid];
     }
 
@@ -400,7 +400,7 @@ export class MainProcess extends Process {
         }
         await this.container.deleteWorker(id);
         this._workers.delete(id);
-        this.emitParallel("deleteWorker", id).catch(() => {});
+        this.emitParallel("deleteWorker", id).catch(() => { });
     }
 
     killWorker(id, { graceful = false, timeout = 2000 } = {}) {
@@ -648,10 +648,30 @@ function humanizeState(s) {
 
 @Contextable
 @Private
-export class ProcessManager {
-    constructor(options) {
-        this.options = options;
-        this.omnitron = options.omnitron;
+export default class ProcessManager {
+    constructor(omnitron) {
+        this.options = {
+            datastore: {
+                applications: {
+                    filename: "pm-applications"
+                },
+                runtime: {
+                    filename: "pm-runtime"
+                }
+            },
+            defaultProcessConfig: {
+                args: [],
+                env: {},
+                mode: "single",
+                startup: false,
+                autorestart: false,
+                maxRestarts: 3,
+                restartDelay: 0,
+                killTimeout: 1600,
+                normalStart: 1000
+            }
+        };
+        this.omnitron = omnitron;
         this.processes = new Map();
         this.appmeta = new DefaultMap(() => new DefaultMap((key) => {
             switch (key) {
@@ -683,7 +703,7 @@ export class ProcessManager {
         this.state = STATES.STARTING;
         logger.log("Initialization");
         const { options: { datastore }, db } = this;
-        const iDatabase = this.omnitron.getInterface("database");
+        const iDatabase = await this.omnitron.context("db");
         db.applications = await iDatabase.getDatastore(datastore.applications);
         db.runtime = await iDatabase.getDatastore(datastore.runtime);
         const [last] = await db.applications.execFind({}, "sort", { id: - 1 }, "limit", 1);
@@ -698,7 +718,7 @@ export class ProcessManager {
         this.usageProvider = new UsageProvider(this.os);
         logger.log("Initialized");
         this.state = STATES.RUNNING;
-        this.basePath = await this.omnitron.config.omnitron.getServicePath(this.options.serviceName, "apps");
+        this.basePath = await this.omnitron.config.omnitron.getServicePath("pm", "apps");
         await this.resurrect();
     }
 

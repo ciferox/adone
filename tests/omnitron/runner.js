@@ -1,3 +1,5 @@
+import Contexts from "adone/omnitron/contexts";
+
 let home;
 const dirName = ".adone_test";
 
@@ -17,13 +19,14 @@ process.env.ADONE_HOME = home;
 process.env.ADONE_ENV = "test";
 process.env.ADONE_DIRNAME = dirName;
 
-export class WeakOmnitron extends adone.omnitron.Omnitron.Omnitron {
+export class WeakOmnitron extends adone.omnitron.Omnitron {
     constructor(options) {
         super(options);
         this._.configurator = new adone.omnitron.Configurator(this, { inMemory: true });
     }
 
     async initialize() {
+        await this._.configurator.loadAll();
         this.config.omnitron = {
             servicesPath: adone.std.path.join(process.env.ADONE_HOME, "services"),
             gates: [
@@ -63,8 +66,11 @@ export class WeakOmnitron extends adone.omnitron.Omnitron.Omnitron {
 
         // await adone.fs.mkdir(this.config.omnitron.servicesPath);
 
-        this.createNetron({ isSuper: true });
-        await this.bindNetron();
+        await this.initializeNetron({ isSuper: true });
+
+        this._.contexts = new Contexts(this);
+        await this._.contexts.initialize();
+        
         await this.attachServices();
 
         // await this._.configurator.saveServicesConfig();
@@ -79,7 +85,7 @@ export class WeakOmnitron extends adone.omnitron.Omnitron.Omnitron {
         // Let netron gracefully complete all disconnects
         await adone.promise.delay(500);
 
-        await this.unbindNetron();
+        await this.uninitializeNetron();
 
         // return this.deletePidFile();
     }
@@ -132,5 +138,9 @@ export default class OmnitronRunner extends adone.application.Application {
 
     getInterface(name) {
         return this.dispatcher.getInterface(name);
+    }
+
+    context(name) {
+        return this.dispatcher.context(name);
     }
 }
