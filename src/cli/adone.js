@@ -28,6 +28,9 @@ export default class AdoneCLI extends adone.application.Application {
             arguments: [
                 { name: "expr", help: "run script or inspect adone-object", default: "index.js" },
             ],
+            options: [
+                { name: "--sourcemaps", help: "force enable sourcemaps support" }
+            ],
             commands: [
                 {
                     name: "config",
@@ -97,6 +100,11 @@ export default class AdoneCLI extends adone.application.Application {
         }
 
         adone.__argv__ = [process.argv[0], expr, ...rest];
+
+        if (opts.get("sourcemaps")) {
+            adone.sourcemap.support(Error).install();
+        }
+
         adone.require(expr);
     }
 
