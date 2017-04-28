@@ -1005,6 +1005,28 @@ void MasscanWorker::initialize()
         memcpy(masscan->nic[0].router_mac, mac, 6);
     }
 
+    // adapter ip
+
+    v8::Local<v8::String> sourceIPStr = NanStr("adapterIP");
+
+    if (opt->Has(sourceIPStr)) {
+        v8::Local<v8::Value> v8value = opt->Get(sourceIPStr);
+        if (!v8value->IsString()) {
+            Nan::ThrowTypeError("String expected for adapterIP param");
+            this->Destroy();
+            return;
+        }
+        Range range = range_parse_ipv4(*v8::String::Utf8Value(v8value->ToString()), 0, 0);
+        if (range.begin > range.end) {
+            Nan::ThrowTypeError("Range end cannot be greater than range begin");
+            this->Destroy();
+            return;
+        }
+        masscan->nic[index].src.ip.first = range.begin;
+        masscan->nic[index].src.ip.last = range.end;
+        masscan->nic[index].src.ip.range = (uint64_t)range.end - range.begin + 1;
+    }
+
     // max rate param
 
     v8::Local<v8::String> maxRateStr = NanStr("maxRate");
