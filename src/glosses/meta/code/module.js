@@ -19,7 +19,7 @@ export default class XModule extends adone.meta.code.Base {
                 isNamespace: true
             }
         ];
-        this._lazyModules = null;
+        this._lazies = null;
     }
 
     async load() {
@@ -50,6 +50,10 @@ export default class XModule extends adone.meta.code.Base {
                             if (namespace === this.nsName) {
                                 if (prop.value.type === "StringLiteral") {
                                     lazies.push({ name: objectName, path: adone.std.path.join(basePath, prop.value.value) });
+                                } else if (prop.value.type === "ArrowFunctionExpression") {
+                                    const lazyPath = this.getPathFor(path, prop.value);
+                                    const xObj = new adone.meta.code.LazyFunction({ parent: this, ast: prop.value, path: lazyPath, xModule: this });
+                                    this.lazies.set(objectName, xObj);
                                 }
                             }
                         }
@@ -137,25 +141,36 @@ export default class XModule extends adone.meta.code.Base {
         });
 
         if (lazies.length > 0) {
-            this._lazyModules = new Map();
             for (const { name, path } of lazies) {
                 const filePath = await fs.lookup(path);
-                // adone.log(filePath);
                 const lazyModule = new adone.meta.code.Module({ nsName: this.nsName, filePath });
                 await lazyModule.load();
-                this._lazyModules.set(name, lazyModule);
+                this.lazies.set(name, lazyModule);
             }
-
-            // adone.log([...this._lazyModules.keys()]);
         }
+    }
+
+    get lazies() {
+        if (is.null(this._lazies)) {
+            this._lazies = new Map();
+        }
+        return this._lazies;
     }
 
     exports() {
         const result = {};
         Object.assign(result, this._exports);
-        if (!is.null(this._lazyModules)) {
-            for (const lazyModule of this._lazyModules.values()) {
-                Object.assign(result, XModule.lazyExports(lazyModule));
+        if (!is.null(this.lazies)) {
+            for (const [name, lazy] of this.lazies.entries()) {
+                if (adone.meta.code.is.module(lazy)) {
+                    if (is.undefined(lazy.exports().default)) { // special case
+                        result[name] = lazy;
+                    } else {
+                        Object.assign(result, XModule.lazyExports(lazy));
+                    }
+                } else if (adone.meta.code.is.lazyFunction(lazy)) {
+                    result[name] = lazy;
+                }
             }
         }
         return result;

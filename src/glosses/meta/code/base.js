@@ -87,7 +87,11 @@ export default class XBase {
                         if (parts.length > 1) {
                             const fullName = `${globalObject.full}.${parts.slice(1).join(".")}`;
                             const { namespace, objectName } = adone.meta.parseName(fullName);
-                            this._addReference(`${namespace}.${objectName.split(".")[0]}`);
+                            if (namespace === "") {
+                                this._addReference(parts[0]);
+                            } else {
+                                this._addReference(`${namespace}.${objectName.split(".")[0]}`);
+                            }
                         } else {
                             this._addReference(name);
                         }
@@ -216,6 +220,21 @@ export default class XBase {
             }
         }
         return null;
+    }
+
+    getPathFor(path, node) {
+        let foundPath = null;
+
+        path.traverse({
+            enter: (subPath) => {
+                if (subPath.node === node) {
+                    foundPath = subPath;
+                    path.stop();
+                }
+            }
+        });
+
+        return foundPath;
     }
 
     _getMemberExpressionName(node) {

@@ -98,7 +98,7 @@ export default class AdoneCLI extends adone.application.Application {
         }
 
         adone.__argv__ = [process.argv[0], expr, ...rest];
-        return adone.require(expr);
+        adone.require(expr);
     }
 
     async configCommand(args, opts) {

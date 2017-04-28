@@ -858,7 +858,6 @@ adone.lazify({
     toposort: "./toposort",
     jsesc: "./jsesc",
     typeOf: "./typeof",
-    deepEqual: "./deep_equal",
     memcpy: "./memcpy",
     microtime: "./microtime",
     uuid: "./uuid",

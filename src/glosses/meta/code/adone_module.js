@@ -148,13 +148,12 @@ export default class XAdoneModule extends adone.meta.code.Module {
         });
 
         if (lazies.length > 0) {
-            this._lazyModules = new Map();
             for (const { name, path } of lazies) {
                 const filePath = await fs.lookup(path);
                 // adone.log(filePath);
                 const lazyModule = new adone.meta.code.Module({ nsName: this.nsName, filePath });
                 await lazyModule.load();
-                this._lazyModules.set(name, lazyModule);
+                this.lazies.set(name, lazyModule);
             }
         }
     }
