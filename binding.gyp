@@ -385,7 +385,7 @@
       "<(path)/src",
     ],
     "conditions": [
-      ['OS=="linux"', {
+      ['OS!="win"', {
         "cflags": [
           "-ggdb",
           "-fPIC",
@@ -402,7 +402,21 @@
             "-lm"
           ]
         },
-      }]
+      }, {
+          'include_dirs': [
+            "<(module_root_dir)\\src\\native\\netscan\\masscan\\deps\\win\\include"
+          ],
+          "link_settings": {
+            "conditions" : [
+              [ 'target_arch=="x64"', {
+                "library_dirs" : ["<(module_root_dir)\\src\\native\\netscan\\masscan\\deps\\win\\lib\\x64"]
+              }, {
+                "library_dirs" : ["<(module_root_dir)\\src\\native\\netscan\\masscan\\deps\\win\\lib\\x32"]
+              } ]
+            ]
+          }
+        }
+      ]
     ],
     "sources": [
       "<(path)/crypto-base64.c",
