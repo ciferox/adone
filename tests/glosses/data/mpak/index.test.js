@@ -691,7 +691,7 @@ describe("Serializer", () => {
         it("decoding an incomplete array", () => {
             const array = ["a", "b", "c"];
             const buf = new adone.ExBuffer();
-            buf.writeUInt8( 0x90 | (array.length + 2) ); // set bigger size
+            buf.writeUInt8(0x90 | (array.length + 2)); // set bigger size
             buf.offset = 1;
             for (let i = 0; i < array.length; i++) {
                 const obj = serializer.encode(array[i]);
@@ -732,12 +732,12 @@ describe("Serializer", () => {
             });
         });
 
-        it("do not encode undefined in a map", () => {
-            const expected = { hello: "world" };
+        it("should encode 'undefined' in a map", () => {
+            const expected = { a: undefined, hello: "world" };
             const toEncode = { a: undefined, hello: "world" };
             const buf = serializer.encode(toEncode);
 
-            assert.deepEqual(expected, serializer.decode(buf.flip()), "must ignore undefined");
+            assert.deepEqual(expected, serializer.decode(buf.flip()));
         });
 
         it("encode/decode map with buf, ints and strings", () => {
@@ -946,40 +946,7 @@ describe("Serializer", () => {
         });
     });
 
-    it("encode/decode ext with a custom object check", () => {
-        const all = [];
-        const serializer = new Serializer();
-
-        const MyType = function (data) {
-            this.data = data;
-        };
-
-        const mytypeEncode = function (obj) {
-            const buf = new adone.ExBuffer(2);
-            buf.writeUInt8(0x42);
-            buf.writeUInt8(obj.data);
-        };
-
-        const mytypeDecode = function (data) {
-            return new MyType(data.readUInt8(0));
-        };
-
-        // Следует обратить внимание на то, что в случае "ручной" регистрации енкодера и декодера,
-        // енкодер должен сам позабоиться о создании буфера
-        serializer.registerEncoder(0x42, mytypeEncode);
-        serializer.registerDecoder(0x42, mytypeDecode);
-
-        all.push(new MyType(0));
-        all.push(new MyType(1));
-        all.push(new MyType(42));
-
-        all.forEach((orig) => {
-            assert.deepEqual(serializer.decode(serializer.encode(orig).flip()), orig, `custom obj containing ${orig.data}`);
-        });
-    });
-
     describe("fixexts", () => {
-
         it("encode/decode 1 byte fixext data", () => {
             const serializer = new Serializer();
             const all = [];
@@ -1236,18 +1203,15 @@ describe("Serializer", () => {
         });
     });
 
-    it("encode a function inside a map", () => {
-        const noop = function () {};
+    it("should not encode a function inside a map", () => {
+        const noop = function () { };
 
-        const expected = {
-            hello: "world"
-        };
         const toEncode = {
             hello: "world",
             func: noop
         };
 
-        assert.deepEqual(serializer.decode(serializer.encode(toEncode).flip()), expected, "remove the function from the map");
+        assert.throws(() => serializer.decode(serializer.encode(toEncode).flip()), adone.x.NotSupported);
     });
 
     it("encode/decode undefined", () => {

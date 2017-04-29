@@ -50,7 +50,7 @@ export default class Decoder {
 
     decode(buf) {
         if (!is.exbuffer(buf)) {
-            buf = adone.ExBuffer.wrap(buf);
+            buf = adone.ExBuffer.wrap(buf, undefined, true);
         }
 
         const result = this.tryDecode(buf);

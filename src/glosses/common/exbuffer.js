@@ -1,7 +1,5 @@
 const { is, math: { Long }, util: { memcpy: { utoa, atou } }, x } = adone;
 
-const EMPTY_BUFFER = Buffer.alloc(0);
-
 const stringSource = (s) => {
     let i = 0;
     return () => i < s.length ? s.charCodeAt(i++) : null;
@@ -200,7 +198,7 @@ export default class ExBuffer {
             noAssert = Boolean(noAssert);
         }
 
-        this.buffer = capacity === 0 ? EMPTY_BUFFER : Buffer.alloc(capacity);
+        this.buffer = capacity === 0 ? adone.emptyBuffer : Buffer.allocUnsafe(capacity);
         this.offset = 0;
         this.markedOffset = -1;
         this.limit = capacity;
@@ -972,9 +970,9 @@ export default class ExBuffer {
         if (relative) {
             this.offset += size;
             return this;
-        } else {
-            return size;
         }
+        return size;
+
     }
 
     writeVarint64ZigZag(value, offset) {
@@ -1206,9 +1204,9 @@ export default class ExBuffer {
             if (relative) {
                 this.offset = offset;
                 return sd();
-            } else {
-                return { string: sd(), length: offset - start };
             }
+            return { string: sd(), length: offset - start };
+
         } else if (metrics === ExBuffer.METRICS_BYTES) {
             if (!this.noAssert) {
                 if (!is.number(offset) || offset % 1 !== 0) {
@@ -1223,12 +1221,12 @@ export default class ExBuffer {
             if (relative) {
                 this.offset += length;
                 return temp;
-            } else {
-                return { string: temp, length };
             }
-        } else {
-            throw new x.Unsupported(`Unsupported metrics: ${metrics}`);
+            return { string: temp, length };
+
         }
+        throw new x.Unsupported(`Unsupported metrics: ${metrics}`);
+
     }
 
     writeVString(str, offset) {
@@ -1348,7 +1346,7 @@ export default class ExBuffer {
         }
         const len = end - begin;
         if (len === 0) {
-            this.buffer = EMPTY_BUFFER;
+            this.buffer = adone.emptyBuffer;
             if (this.markedOffset >= 0) {
                 this.markedOffset -= begin;
             }
@@ -1585,7 +1583,7 @@ export default class ExBuffer {
             }
         }
         if (this.buffer.length < capacity) {
-            const buffer = Buffer.alloc(capacity);
+            const buffer = Buffer.allocUnsafe(capacity);
             this.buffer.copy(buffer);
             this.buffer = buffer;
         }
@@ -1674,12 +1672,12 @@ export default class ExBuffer {
             const buffer = new Buffer(end - begin);
             this.buffer.copy(buffer, 0, begin, end);
             return buffer;
-        } else {
-            if (begin === 0 && end === this.buffer.length) {
-                return this.buffer;
-            }
-            return this.buffer.slice(begin, end);
         }
+        if (begin === 0 && end === this.buffer.length) {
+            return this.buffer;
+        }
+        return this.buffer.slice(begin, end);
+
     }
 
     toArrayBuffer() {
@@ -1925,11 +1923,11 @@ export default class ExBuffer {
         let b;
 
         if (buffer instanceof Uint8Array) { // Extract bytes from Uint8Array
-            b = Buffer.alloc(buffer.length);
+            b = Buffer.allocUnsafe(buffer.length);
             atou(b, 0, buffer.buffer, buffer.byteOffset, buffer.byteOffset + buffer.length);
             buffer = b;
         } else if (buffer instanceof ArrayBuffer) { // Convert ArrayBuffer to Buffer
-            b = Buffer.alloc(buffer.byteLength);
+            b = Buffer.allocUnsafe(buffer.byteLength);
             atou(b, 0, buffer, 0, buffer.byteLength);
             buffer = b;
         } else if (!(buffer instanceof Buffer)) { // Create from octets if it is an error, otherwise fail
@@ -1985,19 +1983,17 @@ export default class ExBuffer {
             if (part1 === 0) {
                 if (part0 < 1 << 14) {
                     return part0 < 1 << 7 ? 1 : 2;
-                } else {
-                    return part0 < 1 << 21 ? 3 : 4;
                 }
-            } else {
-                if (part1 < 1 << 14) {
-                    return part1 < 1 << 7 ? 5 : 6;
-                } else {
-                    return part1 < 1 << 21 ? 7 : 8;
-                }
+                return part0 < 1 << 21 ? 3 : 4;
+
             }
-        } else {
-            return part2 < 1 << 7 ? 9 : 10;
+            if (part1 < 1 << 14) {
+                return part1 < 1 << 7 ? 5 : 6;
+            }
+            return part1 < 1 << 21 ? 7 : 8;
         }
+        return part2 < 1 << 7 ? 9 : 10;
+
     }
 
     // Zigzag encodes a signed 64bit integer so that it can be effectively used with varint encoding.
@@ -2215,7 +2211,7 @@ export default class ExBuffer {
     }
 }
 adone.tag.set(ExBuffer, adone.tag.EXBUFFER);
-ExBuffer.DEFAULT_CAPACITY = 16;
+ExBuffer.DEFAULT_CAPACITY = 64;
 ExBuffer.DEFAULT_NOASSERT = false;
 ExBuffer.MAX_VARINT32_BYTES = 5; // Maximum number of bytes required to store a 32bit base 128 variable-length integer
 ExBuffer.MAX_VARINT64_BYTES = 10; // Maximum number of bytes required to store a 64bit base 128 variable-length integer

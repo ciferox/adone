@@ -1,8 +1,5 @@
-
-
 export default class Serializer {
-    constructor(options) {
-        this.options = Object.assign({ forceFloat64: false }, options);
+    constructor() {
         this._encodingTypes = [];
         this._decodingTypes = [];
         this._encoder = null;
@@ -26,7 +23,7 @@ export default class Serializer {
         this.registerEncoder(type, (obj) => {
             return (obj instanceof constructor);
         }, (obj) => {
-            const extBuf = new adone.ExBuffer();
+            const extBuf = new adone.ExBuffer(1024, true);
             encode(obj, extBuf);
             return extBuf;
         });
@@ -37,7 +34,7 @@ export default class Serializer {
 
     get encoder() {
         if (adone.is.null(this._encoder)) {
-            this._encoder = new adone.data.mpak.Encoder(this._encodingTypes, this.options.forceFloat64);
+            this._encoder = new adone.data.mpak.Encoder(this._encodingTypes);
         }
         return this._encoder;
     }

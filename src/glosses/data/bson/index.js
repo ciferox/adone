@@ -2,7 +2,7 @@ const { lazify, bind } = adone;
 
 const bson = lazify({
     native: () => bind("bson.node").BSON,
-    serializer: () =>  new bson.BSON(),
+    serializer: () => new bson.BSON(),
     Binary: "./binary",
     Code: "./code",
     DBRef: "./db_ref",

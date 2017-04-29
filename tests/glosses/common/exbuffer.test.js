@@ -330,7 +330,7 @@ describe("common", "exbuffer", () => {
             prevBuffer = bb.buffer;
             bb.compact();
             assert.notStrictEqual(bb.buffer, prevBuffer);
-            assert.strictEqual(bb.buffer, new ExBuffer(0).buffer); // EMPTY_BUFFER
+            assert.strictEqual(bb.buffer, new adone.ExBuffer(0).buffer); // EMPTY_BUFFER
             if (type === ArrayBuffer) {
                 assert.strictEqual(bb.view, null);
             }
