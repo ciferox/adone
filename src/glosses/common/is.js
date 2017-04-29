@@ -687,6 +687,7 @@ const is = {
     uint8Array: (value) => value instanceof Uint8Array,
     configuration: (obj) => adone.tag.has(obj, adone.tag.CONFIGURATION),
     long: (obj) => adone.tag.has(obj, adone.tag.LONG),
+    bigNumber: (obj) => adone.tag.has(obj, adone.tag.BIGNUMBER),
     exbuffer: (obj) => adone.tag.has(obj, adone.tag.EXBUFFER),
     exdate: (obj) => adone.tag.has(obj, adone.tag.EXDATE),
     transform: (obj) => adone.tag.has(obj, adone.tag.TRANSFORM),

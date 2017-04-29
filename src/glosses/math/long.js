@@ -242,9 +242,8 @@ export default class Long {
         if (this.isNegative()) {
             if (multiplier.isNegative()) {
                 return this.negate().mul(multiplier.negate());
-            } else {
-                return this.negate().mul(multiplier).negate();
             }
+            return this.negate().mul(multiplier).negate();
         } else if (multiplier.isNegative()) {
             return this.mul(multiplier.negate()).negate();
         }

@@ -1,12 +1,10 @@
-
-
-const bin = adone.bind("bignumber.node");
-const { BigNum: BigNumber } = bin;
+const { is } = adone;
+const { BigNumber, setJSConditioner } = adone.bind("bignumber.node");
 
 export default BigNumber;
 
 BigNumber.conditionArgs = function (num, base) {
-    if (!adone.is.string(num)) {
+    if (!is.string(num)) {
         num = num.toString(base || 10);
 
     }
@@ -14,38 +12,26 @@ BigNumber.conditionArgs = function (num, base) {
     if (num.match(/e\+/)) { // positive exponent
         if (!Number(num).toString().match(/e+/)) {
             return { num: Math.floor(Number(num)).toString(), base: 10 };
-        } else {
-            const pow = Math.ceil(Math.log(num) / Math.log(2));
-            let n = (num / Math.pow(2, pow)).toString(2).replace(/^0/, "");
-            let i = n.length - n.indexOf(".");
-            n = n.replace(/\./, "");
-
-            for (; i <= pow; i++) {
-                n += "0";
-            }
-            return { num: n, base: 2 };
         }
+        const pow = Math.ceil(Math.log(num) / Math.log(2));
+        let n = (num / Math.pow(2, pow)).toString(2).replace(/^0/, "");
+        let i = n.length - n.indexOf(".");
+        n = n.replace(/\./, "");
+
+        for (; i <= pow; i++) {
+            n += "0";
+        }
+        return { num: n, base: 2 };
+
     } else if (num.match(/e\-/)) { // negative exponent
         return { num: Math.floor(Number(num)).toString(), base: base || 10 };
     }
     return { num, base: base || 10 };
 };
 
-bin.setJSConditioner(BigNumber.conditionArgs);
+setJSConditioner(BigNumber.conditionArgs);
 
-BigNumber.isBigNumber = (num) => {
-    if (!num) {
-        return false;
-    }
-    for (const key in BigNumber.prototype) {
-        if (!num[key]) {
-            return false;
-        }
-    }
-    return true;
-};
-
-BigNumber.prototype.inspect = function() {
+BigNumber.prototype.inspect = function () {
     return `<BigNumber ${this.toString(10)}>`;
 };
 
@@ -56,7 +42,7 @@ BigNumber.prototype.toString = function (base) {
     } else {
         value = this.tostring();
     }
-    if (base > 10 && adone.is.string(value)) {
+    if (base > 10 && is.string(value)) {
         value = value.toLowerCase();
     }
     return value;
@@ -71,25 +57,24 @@ for (const op of ["add", "sub", "mul", "div", "mod"]) {
     const u = `u${op}`;
     BigNumber.prototype[op] = function (num) {
         let x;
-        if (BigNumber.isBigNumber(num)) {
+        if (is.bigNumber(num)) {
             return this[b](num);
-        } else if (adone.is.number(num)) {
+        } else if (is.number(num)) {
             if (num >= 0) {
                 return this[u](num);
             } else if (op === "add") {
                 return this.usub(-num);
             } else if (op === "sub") {
                 return this.uadd(-num);
-            } else {
-                x = new BigNumber(num);
-                return this[b](x);
             }
-        } else if (adone.is.string(num)) {
             x = new BigNumber(num);
             return this[b](x);
-        } else {
-            throw new adone.x.Exception(`Unspecified operation for type ${typeof num} for ${op}`);
+
+        } else if (is.string(num)) {
+            x = new BigNumber(num);
+            return this[b](x);
         }
+        throw new adone.x.Exception(`Unspecified operation for type ${typeof num} for ${op}`);
     };
 }
 
@@ -104,18 +89,18 @@ BigNumber.prototype.neg = function () {
 BigNumber.prototype.powm = function (num, mod) {
     let m;
 
-    if (adone.is.number(mod) || adone.is.string(mod)) {
+    if (is.number(mod) || is.string(mod)) {
         m = new BigNumber(mod);
-    } else if (BigNumber.isBigNumber(mod)) {
+    } else if (is.bigNumber(mod)) {
         m = mod;
     }
 
-    if (adone.is.number(num)) {
+    if (is.number(num)) {
         return this.upowm(num, m);
-    } else if (adone.is.string(num)) {
+    } else if (is.string(num)) {
         const n = new BigNumber(num);
         return this.bpowm(n, m);
-    } else if (BigNumber.isBigNumber(num)) {
+    } else if (is.bigNumber(num)) {
         return this.bpowm(num, m);
     }
 };
@@ -123,74 +108,73 @@ BigNumber.prototype.powm = function (num, mod) {
 BigNumber.prototype.mod = function (num, mod) {
     let m;
 
-    if (adone.is.number(mod) || adone.is.string(mod)) {
+    if (is.number(mod) || is.string(mod)) {
         m = new BigNumber(mod);
-    } else if (BigNumber.isBigNumber(mod)) {
+    } else if (is.bigNumber(mod)) {
         m = mod;
     }
 
-    if (adone.is.number(num)) {
+    if (is.number(num)) {
         return this.umod(num, m);
-    } else if (adone.is.string(num)) {
+    } else if (is.string(num)) {
         const n = new BigNumber(num);
         return this.bmod(n, m);
-    } else if (BigNumber.isBigNumber(num)) {
+    } else if (is.bigNumber(num)) {
         return this.bmod(num, m);
     }
 };
 
 BigNumber.prototype.pow = function (num) {
-    if (adone.is.number(num)) {
+    if (is.number(num)) {
         if (num >= 0) {
             return this.upow(num);
-        } else {
-            return BigNumber.prototype.powm.call(this, num, this);
         }
-    } else {
-        const x = parseInt(num.toString(), 10);
-        return BigNumber.prototype.pow.call(this, x);
+        return BigNumber.prototype.powm.call(this, num, this);
+
     }
+    const x = parseInt(num.toString(), 10);
+    return BigNumber.prototype.pow.call(this, x);
+
 };
 
 BigNumber.prototype.shiftLeft = function (num) {
-    if (adone.is.number(num)) {
+    if (is.number(num)) {
         if (num >= 0) {
             return this.umul2exp(num);
-        } else {
-            return this.shiftRight(-num);
         }
-    } else {
-        const x = parseInt(num.toString(), 10);
-        return BigNumber.prototype.shiftLeft.call(this, x);
+        return this.shiftRight(-num);
+
     }
+    const x = parseInt(num.toString(), 10);
+    return BigNumber.prototype.shiftLeft.call(this, x);
+
 };
 
 BigNumber.prototype.shiftRight = function (num) {
-    if (adone.is.number(num)) {
+    if (is.number(num)) {
         if (num >= 0) {
             return this.udiv2exp(num);
-        } else {
-            return this.shiftLeft(-num);
         }
-    } else {
-        const x = parseInt(num.toString(), 10);
-        return BigNumber.prototype.shiftRight.call(this, x);
+        return this.shiftLeft(-num);
+
     }
+    const x = parseInt(num.toString(), 10);
+    return BigNumber.prototype.shiftRight.call(this, x);
+
 };
 
 BigNumber.prototype.cmp = function (num) {
-    if (BigNumber.isBigNumber(num)) {
+    if (is.bigNumber(num)) {
         return this.bcompare(num);
-    } else if (adone.is.number(num)) {
+    } else if (is.number(num)) {
         if (num < 0) {
             return this.scompare(num);
-        } else {
-            return this.ucompare(num);
         }
-    } else {
-        const x = new BigNumber(num);
-        return this.bcompare(x);
+        return this.ucompare(num);
     }
+    const x = new BigNumber(num);
+    return this.bcompare(x);
+
 };
 
 BigNumber.prototype.gt = function (num) {
@@ -220,12 +204,12 @@ BigNumber.prototype.le = function (num) {
 for (const name of ["and", "or", "xor"]) {
     const b = `b${name}`;
     BigNumber.prototype[name] = function (num) {
-        if (BigNumber.isBigNumber(num)) {
+        if (is.bigNumber(num)) {
             return this[b](num);
-        } else {
-            const x = new BigNumber(num);
-            return this[b](x);
         }
+        const x = new BigNumber(num);
+        return this[b](x);
+
     };
 }
 
@@ -234,40 +218,40 @@ BigNumber.prototype.sqrt = function () {
 };
 
 BigNumber.prototype.root = function (num) {
-    if (BigNumber.isBigNumber(num)) {
-        return this.broot(num);
-    } else {
+    if (is.bigNumber(num)) {
         return this.broot(num);
     }
+    return this.broot(num);
+
 };
 
 BigNumber.prototype.rand = function (to) {
     if (to === undefined) {
         if (this.toString() === "1") {
             return new BigNumber(0);
-        } else {
-            return this.brand0();
         }
-    } else {
-        const x = BigNumber.isBigNumber(to) ? to.sub(this) : new BigNumber(to).sub(this);
-        return x.brand0().add(this);
+        return this.brand0();
+
     }
+    const x = is.bigNumber(to) ? to.sub(this) : new BigNumber(to).sub(this);
+    return x.brand0().add(this);
+
 };
 
 BigNumber.prototype.invertm = function (mod) {
-    if (BigNumber.isBigNumber(mod)) {
+    if (is.bigNumber(mod)) {
         return this.binvertm(mod);
-    } else {
-        const x = new BigNumber(mod);
-        return this.binvertm(x);
     }
+    const x = new BigNumber(mod);
+    return this.binvertm(x);
+
 };
 
 BigNumber.prime = function (bits, safe = true) {
     // Force uint32
     bits >>>= 0;
 
-    return BigNumber.uprime0(bits, !!safe);
+    return BigNumber.uprime0(bits, Boolean(safe));
 };
 
 BigNumber.prototype.probPrime = function (reps) {
@@ -310,7 +294,7 @@ BigNumber.fromBuffer = function (buf, opts = {}) {
 };
 
 BigNumber.prototype.toBuffer = function (opts = {}) {
-    if (adone.is.string(opts)) {
+    if (is.string(opts)) {
         if (opts !== "mpint") {
             return "Unsupported Buffer representation";
         }
@@ -322,7 +306,9 @@ BigNumber.prototype.toBuffer = function (opts = {}) {
         }
 
         const ret = new Buffer(4 + len);
-        if (len > 0) buf.copy(ret, 4 + (buf[0] & 0x80 ? 1 : 0));
+        if (len > 0) {
+            buf.copy(ret, 4 + (buf[0] & 0x80 ? 1 : 0));
+        }
         if (buf[0] & 0x80) {
             ret[4] = 0;
         }
@@ -361,7 +347,7 @@ BigNumber.prototype.toBuffer = function (opts = {}) {
 
     // zero-pad the hex string so the chunks are all `size` long
     while (hex.length < 2 * len) {
-        hex = "0" + hex;  // omg
+        hex = `0${hex}`;  // omg
     }
 
     const hx = hex.split(new RegExp(`(.{${2 * size}})`)).filter((s) => s.length > 0);
@@ -382,11 +368,13 @@ Object.keys(BigNumber.prototype).forEach((name) => {
     }
 
     BigNumber[name] = (num, ...args) => {
-        if (BigNumber.isBigNumber(num)) {
+        if (is.bigNumber(num)) {
             return num[name].apply(num, args);
-        } else {
-            const bigi = new BigNumber(num);
-            return bigi[name].apply(bigi, args);
         }
+        const bigi = new BigNumber(num);
+        return bigi[name].apply(bigi, args);
+
     };
 });
+
+adone.tag.set(BigNumber, adone.tag.BIGNUMBER);

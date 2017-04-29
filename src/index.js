@@ -93,6 +93,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             CORE_STREAM: Symbol(),
             LOGGER: Symbol(),
             LONG: Symbol(),
+            BIGNUMBER: Symbol(),
             EXBUFFER: Symbol(),
             EXDATE: Symbol(),
             CONFIGURATION: Symbol(),

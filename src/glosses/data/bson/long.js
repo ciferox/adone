@@ -16,4 +16,3 @@ Long.UZERO = Long.fromInt(0, true);  // Unsigned zero
 Long.ONE = Long.fromInt(1);  // Signed one
 Long.UONE = Long.fromInt(1, true);  // Unsigned one
 Long.NEG_ONE = Long.fromInt(-1);  // Signed negative one
-
