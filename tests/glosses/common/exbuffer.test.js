@@ -19,9 +19,9 @@ describe("common", "exbuffer", () => {
             assert.strictEqual(bb.offset, 0);
             assert.strictEqual(bb.limit, ExBuffer.DEFAULT_CAPACITY);
             assert.strictEqual(bb.noAssert, ExBuffer.DEFAULT_NOASSERT);
-            if (type === Buffer)                {
+            if (type === Buffer) {
                 assert.strictEqual(bb.buffer.length, bb.capacity());
-            }            else                {
+            } else {
                 assert.strictEqual(bb.buffer.byteLength, bb.capacity());
             }
             assert.strictEqual(bb.capacity(), ExBuffer.DEFAULT_CAPACITY);
@@ -30,8 +30,8 @@ describe("common", "exbuffer", () => {
             assert.strictEqual(bb.noAssert, !ExBuffer.DEFAULT_NOASSERT);
 
             // Fixed set of properties
-            for (const i in bb)                {
-                if (bb.hasOwnProperty(i) && ["offset", "markedOffset", "limit", "noAssert", "buffer", "view", "adone_tag"].indexOf(i) < 0)                    {
+            for (const i in bb) {
+                if (bb.hasOwnProperty(i) && ["offset", "markedOffset", "limit", "noAssert", "buffer", "view", "adone_tag"].indexOf(i) < 0) {
                     assert.fail(0, 1, `Illegal enumerable property: ${i}`);
                 }
             }
@@ -75,9 +75,9 @@ describe("common", "exbuffer", () => {
             const buf = new ArrayBuffer(1);
             const bb = ExBuffer.wrap(buf);
             assert.strictEqual(bb.capacity(), 1);
-            if (type === ArrayBuffer)                {
+            if (type === ArrayBuffer) {
                 assert.strictEqual(bb.buffer, buf);
-            }            else                {
+            } else {
                 assert.ok(bb.buffer instanceof Buffer);
             }
             assert.equal(bb.offset, 0);
@@ -90,9 +90,9 @@ describe("common", "exbuffer", () => {
             buf[0] = 0x01;
             let bb = ExBuffer.wrap(buf);
             assert.strictEqual(bb.capacity(), 1);
-            if (type === ArrayBuffer)                {
+            if (type === ArrayBuffer) {
                 assert.strictEqual(bb.buffer, buf.buffer);
-            }            else                {
+            } else {
                 assert.ok(bb.buffer instanceof Buffer);
             }
             assert.strictEqual(bb.toDebug(), "<01>");
@@ -526,22 +526,22 @@ describe("common", "exbuffer", () => {
                 assert.strictEqual(bb.capacity(), size * 2);
                 // Absolute
                 bb.clear();
-                if (!varint)                    {
+                if (!varint) {
                     assert.strictEqual(bb[writeLE](input, 1), bb);
-                }                else                    {
+                } else {
                     assert.strictEqual(bb[writeLE](input, 1), size);
                 }
                 val = bb[readLE](1);
                 if (output instanceof Long) {
-                    if (!varint)                        {
+                    if (!varint) {
                         assert.deepEqual(val, output);
-                    }                    else                        {
+                    } else {
                         assert.deepEqual(val, { value: output, length: size });
                     }
                 } else {
-                    if (!varint)                        {
+                    if (!varint) {
                         assert.strictEqual(val, output);
-                    }                    else                        {
+                    } else {
                         assert.deepEqual(val, { value: output, length: size });
                     }
                 }

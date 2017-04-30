@@ -453,16 +453,12 @@ export default class ExBuffer {
     }
 
     // Appends some data to this ExBuffer. This will overwrite any contents behind the specified offset up to the appended data's length.
-    write(source, encoding, offset) {
-        if (is.number(encoding) || !is.string(encoding)) {
-            offset = encoding;
-            encoding = undefined;
-        }
+    write(source, offset, length, encoding) {
         const relative = is.undefined(offset);
         if (relative) {
             offset = this.offset;
         }
-        offset >>>= 0;
+        const result = offset >>>= 0;
         if (!this.noAssert) {
             if (!is.number(offset) || offset % 1 !== 0) {
                 throw new x.InvalidArgument(`Illegal offset: ${offset} (not an integer)`);
@@ -471,10 +467,17 @@ export default class ExBuffer {
                 throw new x.IllegalState(`Illegal offset: 0 <= ${offset} (0) <= ${this.buffer.length}`);
             }
         }
-        if (!is.exbuffer(source)) {
-            source = ExBuffer.wrap(source, encoding);
+        // let length;
+        const isString = is.string(source); 
+        if (isString) {
+            length = length || Buffer.byteLength(source);
+        } else {
+            if (!is.exbuffer(source)) {
+                source = ExBuffer.wrap(source, encoding);
+            }
+            length = source.limit - source.offset;
         }
-        const length = source.limit - source.offset;
+        
         if (length <= 0) {
             return this; // Nothing to append
         }
@@ -483,9 +486,12 @@ export default class ExBuffer {
         if (offset > capacity) {
             this.resize((capacity *= 2) > offset ? capacity : offset);
         }
-        offset -= length;
-        source.buffer.copy(this.buffer, offset, source.offset, source.limit);
-        source.offset += length;
+        if (isString) {
+            this.buffer.write(source, result);
+        } else {
+            source.buffer.copy(this.buffer, result, source.offset, source.limit);
+            source.offset += length;
+        }
         if (relative) {
             this.offset += length;
         }
@@ -563,27 +569,24 @@ export default class ExBuffer {
     writeInt16LE(value, offset) {
         value |= 0;
         offset = this._checkWrite(value, offset, 2);
-
-        this.buffer[offset + 1] = (value & 0xFF00) >>> 8;
-        this.buffer[offset] = value & 0x00FF;
+        this.buffer[offset + 1] = value >>> 8;
+        this.buffer[offset] = value;
         return this;
     }
 
     writeInt16BE(value, offset) {
         value |= 0;
         offset = this._checkWrite(value, offset, 2);
-
-        this.buffer[offset] = (value & 0xFF00) >>> 8;
-        this.buffer[offset + 1] = value & 0x00FF;
+        this.buffer[offset] = value >>> 8;
+        this.buffer[offset + 1] = value;
         return this;
     }
 
     writeUInt16LE(value, offset) {
         value >>>= 0;
         offset = this._checkWrite(value, offset, 2);
-
-        this.buffer[offset + 1] = (value & 0xFF00) >>> 8;
-        this.buffer[offset] = value & 0x00FF;
+        this.buffer[offset + 1] = value >>> 8;
+        this.buffer[offset] = value;
         return this;
     }
 
@@ -591,50 +594,48 @@ export default class ExBuffer {
         value >>>= 0;
         offset = this._checkWrite(value, offset, 2);
 
-        this.buffer[offset] = (value & 0xFF00) >>> 8;
-        this.buffer[offset + 1] = value & 0x00FF;
+        this.buffer[offset] = value >>> 8;
+        this.buffer[offset + 1] = value;
         return this;
     }
 
     writeInt32LE(value, offset) {
         value |= 0;
         offset = this._checkWrite(value, offset, 4);
-        this.buffer[offset + 3] = (value >>> 24) & 0xFF;
-        this.buffer[offset + 2] = (value >>> 16) & 0xFF;
-        this.buffer[offset + 1] = (value >>> 8) & 0xFF;
-        this.buffer[offset] = value & 0xFF;
+        this.buffer[offset + 3] = value >>> 24;
+        this.buffer[offset + 2] = value >>> 16;
+        this.buffer[offset + 1] = value >>> 8;
+        this.buffer[offset] = value;
         return this;
     }
 
     writeInt32BE(value, offset) {
         value |= 0;
         offset = this._checkWrite(value, offset, 4);
-        this.buffer[offset] = (value >>> 24) & 0xFF;
-        this.buffer[offset + 1] = (value >>> 16) & 0xFF;
-        this.buffer[offset + 2] = (value >>> 8) & 0xFF;
-        this.buffer[offset + 3] = value & 0xFF;
+        this.buffer[offset] = value >>> 24;
+        this.buffer[offset + 1] = value >>> 16;
+        this.buffer[offset + 2] = value >>> 8;
+        this.buffer[offset + 3] = value;
         return this;
     }
 
     writeUInt32LE(value, offset) {
         value >>>= 0;
         offset = this._checkWrite(value, offset, 4);
-
-        this.buffer[offset + 3] = (value >>> 24) & 0xFF;
-        this.buffer[offset + 2] = (value >>> 16) & 0xFF;
-        this.buffer[offset + 1] = (value >>> 8) & 0xFF;
-        this.buffer[offset] = value & 0xFF;
+        this.buffer[offset + 3] = value >>> 24;
+        this.buffer[offset + 2] = value >>> 16;
+        this.buffer[offset + 1] = value >>> 8;
+        this.buffer[offset] = value;
         return this;
     }
 
     writeUInt32BE(value, offset) {
         value >>>= 0;
         offset = this._checkWrite(value, offset, 4);
-
-        this.buffer[offset] = (value >>> 24) & 0xFF;
-        this.buffer[offset + 1] = (value >>> 16) & 0xFF;
-        this.buffer[offset + 2] = (value >>> 8) & 0xFF;
-        this.buffer[offset + 3] = value & 0xFF;
+        this.buffer[offset] = value >>> 24;
+        this.buffer[offset + 1] = value >>> 16;
+        this.buffer[offset + 2] = value >>> 8;
+        this.buffer[offset + 3] = value;
         return this;
     }
 
@@ -642,15 +643,15 @@ export default class ExBuffer {
         [value, offset] = this._checkWriteLong(value, offset);
         const lo = value.low;
         const hi = value.high;
-        this.buffer[offset + 3] = (lo >>> 24) & 0xFF;
-        this.buffer[offset + 2] = (lo >>> 16) & 0xFF;
-        this.buffer[offset + 1] = (lo >>> 8) & 0xFF;
-        this.buffer[offset] = lo & 0xFF;
+        this.buffer[offset + 3] = lo >>> 24;
+        this.buffer[offset + 2] = lo >>> 16;
+        this.buffer[offset + 1] = lo >>> 8;
+        this.buffer[offset] = lo;
         offset += 4;
-        this.buffer[offset + 3] = (hi >>> 24) & 0xFF;
-        this.buffer[offset + 2] = (hi >>> 16) & 0xFF;
-        this.buffer[offset + 1] = (hi >>> 8) & 0xFF;
-        this.buffer[offset] = hi & 0xFF;
+        this.buffer[offset + 3] = hi >>> 24;
+        this.buffer[offset + 2] = hi >>> 16;
+        this.buffer[offset + 1] = hi >>> 8;
+        this.buffer[offset] = hi;
         return this;
     }
 
@@ -658,15 +659,15 @@ export default class ExBuffer {
         [value, offset] = this._checkWriteLong(value, offset);
         const lo = value.low;
         const hi = value.high;
-        this.buffer[offset] = (hi >>> 24) & 0xFF;
-        this.buffer[offset + 1] = (hi >>> 16) & 0xFF;
-        this.buffer[offset + 2] = (hi >>> 8) & 0xFF;
-        this.buffer[offset + 3] = hi & 0xFF;
+        this.buffer[offset] = hi >>> 24;
+        this.buffer[offset + 1] = hi >>> 16;
+        this.buffer[offset + 2] = hi >>> 8;
+        this.buffer[offset + 3] = hi;
         offset += 4;
-        this.buffer[offset] = (lo >>> 24) & 0xFF;
-        this.buffer[offset + 1] = (lo >>> 16) & 0xFF;
-        this.buffer[offset + 2] = (lo >>> 8) & 0xFF;
-        this.buffer[offset + 3] = lo & 0xFF;
+        this.buffer[offset] = lo >>> 24;
+        this.buffer[offset + 1] = lo >>> 16;
+        this.buffer[offset + 2] = lo >>> 8;
+        this.buffer[offset + 3] = lo;
         return this;
     }
 
@@ -674,15 +675,15 @@ export default class ExBuffer {
         [value, offset] = this._checkWriteLong(value, offset);
         const lo = value.low;
         const hi = value.high;
-        this.buffer[offset + 3] = (lo >>> 24) & 0xFF;
-        this.buffer[offset + 2] = (lo >>> 16) & 0xFF;
-        this.buffer[offset + 1] = (lo >>> 8) & 0xFF;
-        this.buffer[offset] = lo & 0xFF;
+        this.buffer[offset + 3] = lo >>> 24;
+        this.buffer[offset + 2] = lo >>> 16;
+        this.buffer[offset + 1] = lo >>> 8;
+        this.buffer[offset] = lo;
         offset += 4;
-        this.buffer[offset + 3] = (hi >>> 24) & 0xFF;
-        this.buffer[offset + 2] = (hi >>> 16) & 0xFF;
-        this.buffer[offset + 1] = (hi >>> 8) & 0xFF;
-        this.buffer[offset] = hi & 0xFF;
+        this.buffer[offset + 3] = hi >>> 24;
+        this.buffer[offset + 2] = hi >>> 16;
+        this.buffer[offset + 1] = hi >>> 8;
+        this.buffer[offset] = hi;
         return this;
     }
 
@@ -690,15 +691,15 @@ export default class ExBuffer {
         [value, offset] = this._checkWriteLong(value, offset);
         const lo = value.low;
         const hi = value.high;
-        this.buffer[offset] = (hi >>> 24) & 0xFF;
-        this.buffer[offset + 1] = (hi >>> 16) & 0xFF;
-        this.buffer[offset + 2] = (hi >>> 8) & 0xFF;
-        this.buffer[offset + 3] = hi & 0xFF;
+        this.buffer[offset] = hi >>> 24;
+        this.buffer[offset + 1] = hi >>> 16;
+        this.buffer[offset + 2] = hi >>> 8;
+        this.buffer[offset + 3] = hi;
         offset += 4;
-        this.buffer[offset] = (lo >>> 24) & 0xFF;
-        this.buffer[offset + 1] = (lo >>> 16) & 0xFF;
-        this.buffer[offset + 2] = (lo >>> 8) & 0xFF;
-        this.buffer[offset + 3] = lo & 0xFF;
+        this.buffer[offset] = lo >>> 24;
+        this.buffer[offset + 1] = lo >>> 16;
+        this.buffer[offset + 2] = lo >>> 8;
+        this.buffer[offset + 3] = lo;
         return this;
     }
 
@@ -749,7 +750,7 @@ export default class ExBuffer {
             offset = this.offset;
             this.offset += bytes;
         }
-        offset >>>= 0;
+        const result = offset >>>= 0;
         if (!this.noAssert) {
             if (!is.number(value) || (!isFloat && value % 1 !== 0)) {
                 throw new x.InvalidArgument(`Illegal value: ${value} (not an integer)`);
@@ -766,8 +767,7 @@ export default class ExBuffer {
         if (offset > capacity) {
             this.resize((capacity *= 2) > offset ? capacity : offset);
         }
-        offset -= bytes;
-        return offset;
+        return result;
     }
 
     _checkWriteLong(value, offset) {
@@ -776,7 +776,7 @@ export default class ExBuffer {
             offset = this.offset;
             this.offset += 8;
         }
-        offset >>>= 0;
+        const result = offset >>>= 0;
         if (!this.noAssert) {
             if (is.number(value)) {
                 value = Long.fromNumber(value);
@@ -803,8 +803,7 @@ export default class ExBuffer {
         if (offset > capacity) {
             this.resize((capacity *= 2) > offset ? capacity : offset);
         }
-        offset -= 8;
-        return [value, offset];
+        return [value, result];
     }
 
     writeVarint32(value, offset) {
@@ -1705,11 +1704,6 @@ export default class ExBuffer {
         if (is.undefined(encoding)) {
             return `ByteBufferNB(offset=${this.offset},markedOffset=${this.markedOffset},limit=${this.limit},capacity=${this.capacity()})`;
         }
-        if (is.number(encoding)) {
-            encoding = "utf8";
-            begin = encoding;
-            end = begin;
-        }
 
         switch (encoding) {
             case "utf8":
@@ -1887,10 +1881,6 @@ export default class ExBuffer {
     }
 
     static wrap(buffer, encoding, noAssert) {
-        if (!is.string(encoding)) {
-            noAssert = encoding;
-            encoding = undefined;
-        }
         if (is.string(buffer)) {
             if (is.undefined(encoding)) {
                 encoding = "utf8";
@@ -1910,9 +1900,7 @@ export default class ExBuffer {
                     throw new x.Unsupported(`Unsupported encoding: ${encoding}`);
             }
         }
-        if (buffer === null || !is.object(buffer)) {
-            throw new x.InvalidArgument("Illegal buffer");
-        }
+
         let bb;
         if (is.exbuffer(buffer)) {
             bb = buffer.clone();

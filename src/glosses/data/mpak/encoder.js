@@ -15,9 +15,8 @@ export default class Encoder {
         const type = typeof (x);
         switch (type) {
             case "undefined": {
-                buf.writeInt8(0xd4);
-                buf.writeInt8(0x00); // fixext special type/value
-                buf.writeInt8(0x00);
+                buf.writeUInt32BE(0xD4000000); // fixext special type/value
+                buf.offset--;
                 break;
             }
             case "boolean": {
@@ -36,8 +35,7 @@ export default class Encoder {
                     if (x < 128) {
                         buf.writeInt8(x);
                     } else if (x < 256) {
-                        buf.writeInt8(0xCC);
-                        buf.writeInt8(x);
+                        buf.writeInt16BE(0xCC00 | x);
                     } else if (x < 65536) {
                         buf.writeInt8(0xCD);
                         buf.writeUInt16BE(x);
@@ -78,7 +76,7 @@ export default class Encoder {
                     buf.writeInt8(0xC0);
                 } else if (is.buffer(x)) {
                     if (x.length <= 0xFF) {
-                        buf.write([0xC4, x.length]);
+                        buf.writeInt16BE(0xC400 | x.length);
                     } else if (x.length <= 0xFFFF) {
                         buf.writeInt8(0xC5);
                         buf.writeUInt16BE(x.length);
@@ -97,9 +95,9 @@ export default class Encoder {
                         buf.writeInt8(0xDD);
                         buf.writeUInt32BE(x.length);
                     }
-                    x.forEach((obj) => {
+                    for (const obj of x) {
                         this._encode(obj, buf);
-                    });
+                    }
                 } else if (is.plainObject(x)) {
                     const keys = Object.keys(x);
 
@@ -134,18 +132,13 @@ export default class Encoder {
                             } else if (length === 16) {
                                 buf.writeUInt8(0xD8);
                             } else if (length < 256) {
-                                buf.writeUInt8(0xC7);
-                                buf.writeUInt8(length);
+                                buf.writeUInt16BE(0xC700 | length);
                             } else if (length < 0x10000) {
-                                buf.writeUInt8(0xC8);
-                                buf.writeUInt8(length >> 8);
-                                buf.writeUInt8(length & 0x00FF);
+                                buf.writeUInt32BE(0xC8000000 | (length << 8));
+                                buf.offset -= 1;
                             } else {
                                 buf.writeUInt8(0xC9);
-                                buf.writeUInt8(length >> 24);
-                                buf.writeUInt8((length >> 16) & 0x000000FF);
-                                buf.writeUInt8((length >> 8) & 0x000000FF);
-                                buf.writeUInt8(length & 0x000000FF);
+                                buf.writeUInt32BE(length);
                             }
                             buf.writeInt8(extType.type);
                             buf.write(encoded);
@@ -166,7 +159,7 @@ export default class Encoder {
                 return;
             }
         } else if (len <= 0xFF) {
-            buf.write([0xD9, len]);
+            buf.writeUInt16BE(0xD900 | len);
         } else if (len <= 0xFFFF) {
             buf.writeInt8(0xDA);
             buf.writeUInt16BE(len);
@@ -174,6 +167,6 @@ export default class Encoder {
             buf.writeInt8(0xDB);
             buf.writeUInt32BE(len);
         }
-        buf.write(x);
+        buf.write(x, undefined, len);
     }
 }

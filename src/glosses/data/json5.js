@@ -1,7 +1,6 @@
 // This file is based directly off of Douglas Crockford's json_parse.js:
 // https://github.com/douglascrockford/JSON-js/blob/master/json_parse.js
 
-
 const { is } = adone;
 
 let at;           // The index of the current character
@@ -34,14 +33,14 @@ const ws = [
 let text;
 
 const renderChar = (chr) => {
-    return chr === "" ? "EOF" : "'" + chr + "'";
+    return chr === "" ? "EOF" : `'${chr}'`;
 };
 
 const error = (m) => {
     // Call error when something is wrong.
     const error = new SyntaxError();
     // beginning of message suffix to agree with that provided by Gecko - see https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse
-    error.message = m + " at line " + lineNumber + " column " + columnNumber + " of the JSON5 data. Still to read: " + JSON.stringify(text.substring(at - 1, at + 19));
+    error.message = `${m} at line ${lineNumber} column ${columnNumber} of the JSON5 data. Still to read: ${JSON.stringify(text.substring(at - 1, at + 19))}`;
     error.at = at;
     // These two property names have been chosen to agree with the ones in Gecko, the only popular
     // environment which seems to supply this info on JSON.parse
@@ -50,11 +49,16 @@ const error = (m) => {
     throw error;
 };
 
+const peek = () => {
+    // Get the next character without consuming it or assigning it to the ch varaible.
+    return text.charAt(at);
+};
+
 const next = (c) => {
     // If a c parameter is provided, verify that it matches the current character.
 
     if (c && c !== ch) {
-        error("Expected " + renderChar(c) + " instead of " + renderChar(ch));
+        error(`Expected ${renderChar(c)} instead of ${renderChar(ch)}`);
     }
 
     // Get the next character. When there are no more characters,
@@ -68,11 +72,6 @@ const next = (c) => {
         columnNumber = 0;
     }
     return ch;
-};
-
-const peek = () => {
-    // Get the next character without consuming it or assigning it to the ch varaible.
-    return text.charAt(at);
 };
 
 const decodeIdentifier = () => {
@@ -103,6 +102,48 @@ const decodeIdentifier = () => {
     }
 
     return key;
+};
+
+const decodeWord = () => {
+    // true, false, or null.
+
+    switch (ch) {
+        case "t":
+            next("t");
+            next("r");
+            next("u");
+            next("e");
+            return true;
+        case "f":
+            next("f");
+            next("a");
+            next("l");
+            next("s");
+            next("e");
+            return false;
+        case "n":
+            next("n");
+            next("u");
+            next("l");
+            next("l");
+            return null;
+        case "I":
+            next("I");
+            next("n");
+            next("f");
+            next("i");
+            next("n");
+            next("i");
+            next("t");
+            next("y");
+            return Infinity;
+        case "N":
+            next("N");
+            next("a");
+            next("N");
+            return NaN;
+    }
+    error(`Unexpected ${renderChar(ch)}`);
 };
 
 const decodeNumber = () => {
@@ -184,7 +225,7 @@ const decodeNumber = () => {
     if (sign === "-") {
         number = -string;
     } else {
-        number = +string;
+        number = Number(string);
     }
 
     if (!isFinite(number)) {
@@ -325,49 +366,7 @@ const decodeWhitespace = () => {
     }
 };
 
-const decodeWord = () => {
-    // true, false, or null.
-
-    switch (ch) {
-        case "t":
-            next("t");
-            next("r");
-            next("u");
-            next("e");
-            return true;
-        case "f":
-            next("f");
-            next("a");
-            next("l");
-            next("s");
-            next("e");
-            return false;
-        case "n":
-            next("n");
-            next("u");
-            next("l");
-            next("l");
-            return null;
-        case "I":
-            next("I");
-            next("n");
-            next("f");
-            next("i");
-            next("n");
-            next("i");
-            next("t");
-            next("y");
-            return Infinity;
-        case "N":
-            next("N");
-            next("a");
-            next("N");
-            return NaN;
-    }
-    error("Unexpected " + renderChar(ch));
-};
-
-let decodeValue;
+let decodeValue = null;
 
 const decodeArray = () => {
     // Parse an array value.
@@ -513,12 +512,11 @@ export default class JSON5 {
             } else if (replacer) {
                 if (isTopLevel || is.array(holder) || replacer.indexOf(key) >= 0) {
                     return value;
-                } else {
-                    return undefined;
                 }
-            } else {
-                return value;
+                return undefined;
+
             }
+            return value;
         };
 
         const objStack = [];
@@ -577,10 +575,10 @@ export default class JSON5 {
             // Otherwise we must also replace the offending characters with safe escape
             // sequences.
             escapable.lastIndex = 0;
-            return escapable.test(string) ? "\"" + string.replace(escapable, (a) => {
+            return escapable.test(string) ? `"${string.replace(escapable, (a) => {
                 const c = meta[a];
-                return is.string(c) ? c : "\\u" + ("0000" + a.charCodeAt(0).toString(16)).slice(-4);
-            }) + "\"" : "\"" + string + "\"";
+                return is.string(c) ? c : `\\u${("0000" + a.charCodeAt(0).toString(16)).slice(-4)}`;
+            })}"` : `"${string}"`;
         };
 
         const internalStringify = (holder, key, isTopLevel) => {
@@ -645,13 +643,13 @@ export default class JSON5 {
                                     buffer += makeIndent(indentStr, objStack.length);
                                     nonEmpty = true;
                                     key = JSON5.isWord(prop) ? prop : escapeString(prop);
-                                    buffer += key + ":" + (indentStr ? " " : "") + value + ",";
+                                    buffer += `${key}:${indentStr ? " " : ""}${value},`;
                                 }
                             }
                         }
                         objStack.pop();
                         if (nonEmpty) {
-                            buffer = buffer.substring(0, buffer.length - 1) + makeIndent(indentStr, objStack.length) + "}";
+                            buffer = `${buffer.substring(0, buffer.length - 1) + makeIndent(indentStr, objStack.length)}}`;
                         } else {
                             buffer = "{}";
                         }

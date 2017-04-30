@@ -1,7 +1,6 @@
-
 const { is } = adone;
 
-function getSize(first) {
+const getSize = (first) => {
     switch (first) {
         case 0xc4: return 2;
         case 0xc5: return 3;
@@ -30,18 +29,14 @@ function getSize(first) {
         case 0xde: return 3;
         default: return -1;
     }
-}
+};
 
-function buildDecodeResult(value, bytesConsumed) {
-    return {
-        value,
-        bytesConsumed
-    };
-}
+const buildDecodeResult = (value, bytesConsumed) => ({
+    value,
+    bytesConsumed
+});
 
-function isValidDataSize(dataLength, bufLength, headerLength) {
-    return bufLength >= headerLength + dataLength;
-}
+const isValidDataSize = (dataLength, bufLength, headerLength) => bufLength >= headerLength + dataLength;
 
 export default class Decoder {
     constructor(decodingTypes) {
@@ -56,9 +51,8 @@ export default class Decoder {
         const result = this.tryDecode(buf);
         if (result) {
             return result.value;
-        } else {
-            throw new adone.x.IncompleteBufferError();
         }
+        throw new adone.x.IncompleteBufferError();
     }
 
     tryDecode(buf) {
@@ -250,9 +244,9 @@ export default class Decoder {
                 result = buf.toString("utf8", buf.offset, buf.offset + length);
                 buf.skip(length);
                 return buildDecodeResult(result, length + 1);
-            } else {
-                return null;
             }
+            return null;
+
         } else if (first >= 0xe0) {
             // 5 bits negative ints
             result = first - 0x100;
@@ -260,9 +254,8 @@ export default class Decoder {
         } else if (first < 0x80) {
             // 7-bits positive ints
             return buildDecodeResult(first, 1);
-        } else {
-            throw new Error("not implemented yet");
         }
+        throw new Error("not implemented yet");
     }
 
     _decodeMap(buf, length, headerLength) {
@@ -324,6 +317,6 @@ export default class Decoder {
                 return buildDecodeResult(undefined, headerSize + size);
             }
         }
-        throw new Error("unable to find ext type " + type);
+        throw new Error(`unable to find ext type ${type}`);
     }
 }
