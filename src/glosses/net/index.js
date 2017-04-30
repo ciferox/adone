@@ -11,7 +11,8 @@ adone.lazify({
         lookup: () => adone.promise.promisify(adone.std.dns.lookup)
     }, null, require),
     proxy: () => adone.lazify({
-        socks: "./proxies/socks"
+        socks: "./proxies/socks",
+        http: "./proxies/http"
     }, null, require),
     ws: "./ws",
     mail: () => adone.lazify({
