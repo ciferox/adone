@@ -1,3 +1,4 @@
 adone.lazify({
-    Server: "./server"
+    Server: "./server",
+    tunnel: "./tunnel"
 }, exports, require);

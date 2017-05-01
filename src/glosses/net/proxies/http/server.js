@@ -1,4 +1,4 @@
-const { is, x, net: { http: { server: { helper } } } } = adone;
+const { is, x, net: { proxy: { http: { tunnel } }, http: { server: { helper } } } } = adone;
 
 const hopByHopHeaders = new Set([
     "connection",
@@ -229,6 +229,15 @@ class HTTPContext {
         this.remoteResponse = null;
         this._clientAddress = req.socket.remoteAddress;
         this._clientPort = req.socket.remotePort;
+        this._proxy = null;
+    }
+
+    get proxy() {
+        return this._proxy;
+    }
+
+    set proxy(value) {
+        this._proxy = value;
     }
 
     get clientAddress() {
@@ -251,14 +260,36 @@ class HTTPContext {
         if (deleteHopByHopHeaders) {
             this.localRequest.deleteHopByHopHeaders();
         }
+        const { proxy } = this;
         const options = {
-            host: this.localRequest.hostname,
-            port: this.localRequest.port,
+            host: proxy ? proxy.host : this.localRequest.hostname,
+            port: proxy ? proxy.port : this.localRequest.port,
             path: this.localRequest.path,
             method: this.localRequest.method,
             headers: this.localRequest.headers,
-            rejectUnauthorized: true // optional?
+            rejectUnauthorized: false // optional?
         };
+
+        if (proxy && this.localRequest.secure) {
+            options.host = this.localRequest.hostname;
+            options.port = this.localRequest.port;
+            options.path = this.localRequest.path;
+            const tunnelOptions = {
+                proxy: {
+                    host: proxy.host,
+                    port: proxy.port,
+                    headers: {
+                        host: `${this.localRequest.hostname}:${this.localRequest.port}`
+                    }
+                },
+                protocol: this.localRequest.protocol,
+                method: this.localRequest.method,
+                headers: this.localRequest.headers,
+                rejectUnauthorized: false
+            };
+            options.agent = tunnel[this.localRequest.protocol][proxy.protocol](tunnelOptions);
+        }
+
         const _module = this.localRequest.secure ? adone.std.https : adone.std.http;
         const localBody = this.localRequest.body;
         const response = await new Promise((resolve, reject) => {
@@ -582,6 +613,15 @@ class HTTPUpgradeContext {
         this.__handleWebsocket = false;
         this._clientAddress = this.parent.clientAddress;
         this._clientPort = this.parent.clientAddress;
+        this._proxy = null;
+    }
+
+    get proxy() {
+        return this._proxy;
+    }
+
+    set proxy(value) {
+        this._proxy = value;
     }
 
     get clientAddress() {
@@ -695,6 +735,23 @@ class HTTPUpgradeContext {
                     const options = {
                         perMessageDeflate: "permessage-deflate" in extensionsOffer
                     };
+                    const { proxy } = this;
+                    if (proxy) {
+                        const tunnelOptions = {
+                            proxy: {
+                                host: proxy.host,
+                                port: proxy.port,
+                                headers: {
+                                    host: `${this.localRequest.hostname}:${this.localRequest.port}`
+                                }
+                            },
+                            protocol: this.localRequest.protocol,
+                            method: this.localRequest.method,
+                            headers: this.localRequest.headers,
+                            rejectUnauthorized: false  // ?
+                        };
+                        options.agent = tunnel[this.localRequest.protocol][proxy.protocol](tunnelOptions);
+                    }
                     const socket = new adone.net.ws.WebSocket(url, options);
                     socket.on("error", reject);
                     socket.on("open", () => {
@@ -715,10 +772,7 @@ class HTTPUpgradeContext {
         await finishPromise;
     }
 
-    async connect() {
-        if (this.handleWebsocket && this.protocol === "websocket") {
-            return this._handleWebsocket();
-        }
+    async _handleStreaming() {
         await new Promise((resolveUpgrade, rejectUpgrade) => {
             const context = new StreamingContext(this, this.localSocket, async () => {
                 // no hop-by-hop ?
@@ -730,6 +784,23 @@ class HTTPUpgradeContext {
                     headers: this.localRequest.headers,
                     rejectUnauthorized: true // optional?
                 };
+                const { proxy } = this;
+                if (proxy) {
+                    const tunnelOptions = {
+                        proxy: {
+                            host: proxy.host,
+                            port: proxy.port,
+                            headers: {
+                                host: `${this.localRequest.hostname}:${this.localRequest.port}`
+                            }
+                        },
+                        protocol: this.localRequest.protocol,
+                        method: this.localRequest.method,
+                        headers: this.localRequest.headers,
+                        rejectUnauthorized: false // ?
+                    };
+                    options.agent = tunnel[this.localRequest.protocol][proxy.protocol](tunnelOptions);
+                }
                 const _module = this.localRequest.secure ? adone.std.https : adone.std.http;
                 try {
                     const [res, socket] = await new Promise((resolve, reject) => {
@@ -762,6 +833,13 @@ class HTTPUpgradeContext {
             this.processContext(context);
         });
     }
+
+    async connect() {
+        if (this.handleWebsocket && this.protocol === "websocket") {
+            return this._handleWebsocket();
+        }
+        return this._handleStreaming();
+    }
 }
 
 HTTPUpgradeContext.prototype.type = "upgrade";
@@ -780,6 +858,15 @@ class HTTPConnectContext {
         this._established = false;
         this._clientAddress = socket.remoteAddress;
         this._clientPort = socket.remotePort;
+        this._proxy = null;
+    }
+
+    get proxy() {
+        return this._proxy;
+    }
+
+    set proxy(value) {
+        this._proxy = value;
     }
 
     get clientAddress() {
@@ -825,16 +912,44 @@ class HTTPConnectContext {
     _handleStreaming() {
         return new Promise((resolveConnect, rejectConnect) => {
             const context = new StreamingContext(this, this.localSocket, async () => {
-                const [host, port] = this.localRequest.url.split(":");
-                const remoteSocket = adone.std.net.connect(port, host);
-                await new Promise((resolve, reject) => {
-                    remoteSocket
-                        .on("connect", resolve)
-                        .on("error", reject);
-                }).then(resolveConnect, (err) => {
-                    rejectConnect(err);
-                    return Promise.reject(err);
-                });
+                const { proxy } = this;
+                let remoteSocket;
+                if (proxy) {
+                    remoteSocket = await new Promise((resolve, reject) => {
+                        adone.std.http.request({
+                            host: proxy.host,
+                            port: proxy.port,
+                            method: "CONNECT",
+                            path: this.localRequest.url
+                        })
+                            .once("connect", (res, socket) => {
+                                if (res.statusCode !== 200) {
+                                    reject(new x.IllegalState(`Cannot establish a connection with the proxy, statusCode = ${res.statusCode}`));
+                                } else {
+                                    resolve(socket);
+                                }
+                            })
+                            .once("aborted", reject)
+                            .end();
+                    }).then((socket) => {
+                        resolveConnect();
+                        return socket;
+                    }, (err) => {
+                        rejectConnect(err);
+                        return Promise.reject(err);
+                    });
+                } else {
+                    const [host, port] = this.localRequest.url.split(":");
+                    remoteSocket = adone.std.net.connect(port, host);
+                    await new Promise((resolve, reject) => {
+                        remoteSocket
+                            .on("connect", resolve)
+                            .on("error", reject);
+                    }).then(resolveConnect, (err) => {
+                        rejectConnect(err);
+                        return Promise.reject(err);
+                    });
+                }
                 await this.sendEstablished();
                 return remoteSocket;
             }, this._head);
@@ -968,7 +1083,10 @@ class HTTPConnectContext {
                 return this._handleUpgrade();
             }
         }
-        await this._handleHTTPS();
+        if (this.decryptHTTPS) {
+            return this._handleHTTPS();
+        }
+        return this._handleStreaming();
     }
 }
 

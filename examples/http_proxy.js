@@ -97,8 +97,25 @@ const httpsHandler = () => {
 };
 
 adone.run({
-    async main() {
+    async initialize() {
+        this.defineArguments({
+            options: [
+                { name: "--port", type: Number, default: 31337 },
+                { name: "--proxy", type: String }
+            ]
+        });
+    },
+    async main(args, opts) {
         const { net: { proxy: { http: { Server: HTTPProxyServer } } }, util } = adone;
+        let proxy = null;
+        if (opts.has("proxy")) {
+            const t = opts.get("proxy").split(":");
+            proxy = {
+                protocol: "http",
+                host: t[0],
+                port: t[1]
+            };
+        }
         const server = new HTTPProxyServer({
             https: httpsHandler(),
             getInternalPort: async () => 0  // random port
@@ -124,6 +141,9 @@ adone.run({
                         adone.info("[WS] [%s] <- %s", s, ctx.data.toString());
                         return next();
                     });
+                }
+                if (proxy) {
+                    ctx.proxy = proxy;
                 }
                 const err = await next().then(adone.noop, adone.identity);
                 if (ctx.type === "http") {
@@ -188,7 +208,7 @@ adone.run({
                 }
                 await ctx.connect();
             });
-        await server.listen(31337, "0.0.0.0");
+        await server.listen(opts.get("port"), "0.0.0.0");
         const address = server.address();
         adone.info("listening on %s:%s", address.address, address.port);
     }
