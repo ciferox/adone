@@ -16,6 +16,7 @@ class LocalRequest {
         this.context = context;
         this.req = req;
         this._body = req;
+        this._bodySinks = [];
     }
 
     get(field) {
@@ -132,6 +133,29 @@ class LocalRequest {
     get httpVersion() {
         return this.req.httpVersion;
     }
+
+    addBodySink(sink, opts = {}) {
+        this._bodySinks.push([sink, opts]);
+    }
+
+    writeBody() {
+        const { body } = this;
+        if (is.buffer(body) || is.string(body)) {
+            for (const [sink, opts] of this._bodySinks) {
+                opts.end !== false ? sink.end(body) : sink.write(body);
+            }
+        } else if (is.readableStream(body)) {
+            for (const [sink, opts] of this._bodySinks) {
+                body.pipe(sink, opts);
+            }
+        } else {
+            for (const [sink, opts] of this._bodySinks) {
+                if (opts.end !== false) {
+                    sink.end();
+                }
+            }
+        }
+    }
 }
 
 class LocalResponse {
@@ -153,6 +177,7 @@ class RemoteResponse {
         this._status = res.statusCode;
         this._headers = res.headers;
         this._body = res;
+        this._bodySinks = [];
     }
 
     get status() {
@@ -179,44 +204,36 @@ class RemoteResponse {
         this._body = value;
     }
 
-    pipe(dest, { end = true } = {}) {
+    writeBody() {
         const { body } = this;
         if (is.buffer(body) || is.string(body)) {
-            if (end) {
-                dest.end(body);
-            } else {
-                dest.write(body);
+            for (const [sink, opts] of this._bodySinks) {
+                opts.end !== false ? sink.end(body) : sink.write(body);
             }
         } else if (is.readableStream(body)) {
-            body.pipe(dest, { end });
-        } else if (end) {
-            dest.end();
+            for (const [sink, opts] of this._bodySinks) {
+                body.pipe(sink, opts);
+            }
+        } else {
+            for (const [sink, opts] of this._bodySinks) {
+                if (opts.end !== false) {
+                    sink.end();
+                }
+            }
         }
-        return dest;
+    }
+
+    addBodySink(sink, opts = {}) {
+        this._bodySinks.push([sink, opts]);
     }
 }
 
-class FakeHTTPResponse {
-    constructor(status, headers, body) {
-        this.status = status;
-        this.headers = headers;
-        this.body = body;
-    }
-
-    pipe(dest, { end = true } = {}) {
-        const { body } = this;
-        if (is.buffer(body) || is.string(body)) {
-            if (end) {
-                dest.end(body);
-            } else {
-                dest.write(body);
-            }
-        } else if (is.readableStream(body)) {
-            body.pipe(dest, { end });
-        } else if (end) {
-            dest.end();
-        }
-        return dest;
+class FakeHTTPResponse extends RemoteResponse {
+    constructor(context, status, headers, body) {
+        super(context, {});
+        this._status = status;
+        this._headers = headers;
+        this._body = body;
     }
 }
 
@@ -230,6 +247,8 @@ class HTTPContext {
         this._clientAddress = req.socket.remoteAddress;
         this._clientPort = req.socket.remotePort;
         this._proxy = null;
+        this._requestBodySinks = [];
+        this._responseBodySinks = [];
     }
 
     get proxy() {
@@ -291,22 +310,24 @@ class HTTPContext {
         }
 
         const _module = this.localRequest.secure ? adone.std.https : adone.std.http;
-        const localBody = this.localRequest.body;
         const response = await new Promise((resolve, reject) => {
             const request = _module.request(options)
                 .on("response", resolve)
                 .on("aborted", reject)
                 .on("error", reject);
 
-            if (is.readableStream(localBody)) {
-                localBody.pipe(request);
-            } else if (is.buffer(localBody) || is.string(localBody)) {
-                request.end(localBody);
-            } else {
-                request.end();
+            this.localRequest.addBodySink(request);
+            for (const [sink, opts] of this._requestBodySinks) {
+                this.localRequest.addBodySink(sink, opts);
             }
+            this.localRequest.writeBody();
         });
-        return this.remoteResponse = new RemoteResponse(this, response);
+        this.remoteResponse = new RemoteResponse(this, response);
+        for (const [sink, opts] of this._responseBodySinks) {
+            this.remoteResponse.addBodySink(sink, opts);
+        }
+        this._responseBodySinks.length = 0;
+        return this.remoteResponse;
     }
 
     writeLocalResponseHead() {
@@ -316,9 +337,14 @@ class HTTPContext {
     async writeLocalResponseBody() {
         const { remoteResponse } = this;
         await new Promise((resolve, reject) => {
-            remoteResponse.pipe(this.localResponse.res)
+            this.localResponse.res
                 .once("finish", resolve)
                 .once("error", reject);
+            for (const [sink, opts] of this._responseBodySinks) {
+                remoteResponse.addBodySink(sink, opts);
+            }
+            remoteResponse.addBodySink(this.localResponse.res);
+            remoteResponse.writeBody();
         });
     }
 
@@ -334,7 +360,15 @@ class HTTPContext {
     }
 
     fakeResponse({ status = 200, headers = {}, body = "OK" } = {}) {
-        this.remoteResponse = new FakeHTTPResponse(status, headers, body);
+        this.remoteResponse = new FakeHTTPResponse(this, status, headers, body);
+    }
+
+    saveRequestBody(sink, opts = {}) {
+        this._requestBodySinks.push([sink, opts]);
+    }
+
+    saveResponseBody(sink, opts = {}) {
+        this._responseBodySinks.push([sink, opts]);
     }
 }
 
@@ -357,6 +391,8 @@ class StreamingContext {
         this._localPort = localSocket.localPort;
         this._remoteAddress = null;
         this._remotePort = null;
+        this._incomingSinks = [];
+        this._outgoingSinks = [];
     }
 
     get clientAddress() {
@@ -447,6 +483,12 @@ class StreamingContext {
             this.remoteSocket.write(this._head);
         }
         this.localSocket.pipe(this.remoteSocket).pipe(this.localSocket);
+        for (const [sink, opts] of this._incomingSinks) {
+            this.remoteSocket.pipe(sink, opts);
+        }
+        for (const [sink, opts] of this._outgoingSinks) {
+            this.localSocket.pipe(sink, opts);
+        }
         const [localSocketError, remoteSocketError] = await done;
         if (localSocketError) {
             throw localSocketError;
@@ -454,6 +496,14 @@ class StreamingContext {
         if (remoteSocketError) {
             throw remoteSocketError;
         }
+    }
+
+    saveIncoming(sink, opts = {}) {
+        this._incomingSinks.push([sink, opts]);
+    }
+
+    saveOutgoing(sink, opts = {}) {
+        this._outgoingSinks.push([sink, opts]);
     }
 }
 
@@ -714,7 +764,7 @@ class HTTPUpgradeContext {
                 // what if write fails?
                 localSocket.write(headers.concat("", "").join("\r\n"));
                 finishUpgrade();
-                this.remoteResponse = new FakeHTTPResponse();
+                this.remoteResponse = new FakeHTTPResponse(this);
                 this.remoteResponse.status = 101;
                 this.remoteResponse.headers = {
                     upgrade: "websocket",

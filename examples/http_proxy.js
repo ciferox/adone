@@ -145,6 +145,22 @@ adone.run({
                 if (proxy) {
                     ctx.proxy = proxy;
                 }
+                let requestBody = null;
+                let responseBody = null;
+                if (ctx.type === "http") {
+                    requestBody = new adone.collection.BufferList();
+                    responseBody = new adone.collection.BufferList();
+                    ctx.saveRequestBody(requestBody);
+                    ctx.saveResponseBody(responseBody);
+                }
+                let incoming = null;
+                let outgoing = null;
+                if (ctx.type === "stream") {
+                    incoming = new adone.collection.BufferList();
+                    outgoing = new adone.collection.BufferList();
+                    ctx.saveIncoming(incoming);
+                    ctx.saveOutgoing(outgoing);
+                }
                 const err = await next().then(adone.noop, adone.identity);
                 if (ctx.type === "http") {
                     adone.info(
@@ -154,6 +170,12 @@ adone.run({
                         ctx.localRequest.href,
                         util.humanizeTime(new Date() - start)
                     );
+                    adone.info("request body");
+                    requestBody = requestBody.slice();
+                    adone.log(requestBody.length, requestBody.toString("hex"));
+                    adone.info("response body");
+                    responseBody = responseBody.slice();
+                    adone.log(responseBody.length, responseBody.toString("hex"));
                 } else if (ctx.type === "connect") {
                     adone.info(
                         "%s %s %s",
@@ -177,6 +199,12 @@ adone.run({
                         ctx.remotePort,
                         util.humanizeTime(new Date() - start)
                     );
+                    adone.info("incoming");
+                    incoming = incoming.slice();
+                    adone.log(incoming.length, incoming.toString("hex"));
+                    adone.info("outgoing");
+                    outgoing = outgoing.slice();
+                    adone.log(outgoing.length, outgoing.toString("hex"));
                 } else if (ctx.type === "websocket") {
                     const s = adone.sprintf("%s <-> %s:%s", ctx.localRequest.href, ctx.clientAddress, ctx.clientPort);
                     adone.info("end websocket session %s", s);
