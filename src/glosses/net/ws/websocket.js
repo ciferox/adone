@@ -187,7 +187,7 @@ export default class WebSocket extends adone.EventEmitter {
 
         if (is.array(address)) {
             this.protocolVersion = options.protocolVersion;
-            this.extensions = options.extensions;
+            this.extensions = options.extensions || {};
             this.maxPayload = options.maxPayload;
             this.protocol = options.protocol;
 
@@ -793,7 +793,6 @@ export default class WebSocket extends adone.EventEmitter {
         if (!this.extensions[adone.net.ws.PerMessageDeflate.extensionName]) {
             opts.compress = false;
         }
-
         this._sender.send(data || adone.emptyBuffer, opts, cb);
     }
 

@@ -110,6 +110,21 @@ adone.run({
                     ctx.decryptHTTPS = true;
                     ctx.handleUpgrade = true;
                 }
+                if (ctx.type === "upgrade") {
+                    ctx.handleWebsocket = true;
+                }
+                if (ctx.type === "websocket") {
+                    const s = adone.sprintf("%s <-> %s:%s", ctx.localRequest.href, ctx.clientAddress, ctx.clientPort);
+                    adone.info("start websocket session %s", s);
+                    ctx.incoming(async (ctx, next) => {
+                        adone.info("[WS] [%s] -> %s", s, ctx.data.toString());
+                        return next();
+                    });
+                    ctx.outgoing(async (ctx, next) => {
+                        adone.info("[WS] [%s] <- %s", s, ctx.data.toString());
+                        return next();
+                    });
+                }
                 const err = await next().then(adone.noop, adone.identity);
                 if (ctx.type === "http") {
                     adone.info(
@@ -142,6 +157,9 @@ adone.run({
                         ctx.remotePort,
                         util.humanizeTime(new Date() - start)
                     );
+                } else if (ctx.type === "websocket") {
+                    const s = adone.sprintf("%s <-> %s:%s", ctx.localRequest.href, ctx.clientAddress, ctx.clientPort);
+                    adone.info("end websocket session %s", s);
                 }
                 if (err) {
                     adone.error(err.stack);

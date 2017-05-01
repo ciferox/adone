@@ -227,6 +227,24 @@ class HTTPContext {
         this.localResponse = new LocalResponse(this, res);
         this.remoteRequest = null;
         this.remoteResponse = null;
+        this._clientAddress = req.socket.remoteAddress;
+        this._clientPort = req.socket.remotePort;
+    }
+
+    get clientAddress() {
+        return this._clientAddress;
+    }
+
+    set clientAddress(value) {
+        this._clientAddress = value;
+    }
+
+    get clientPort() {
+        return this._clientPort;
+    }
+
+    set clientPort(value) {
+        return this._clientPort = value;
     }
 
     async makeRemoteRequest({ deleteHopByHopHeaders = true } = {}) {
@@ -410,6 +428,149 @@ class StreamingContext {
 
 StreamingContext.prototype.type = "stream";
 
+class WSSessionContext {
+    constructor(parent, localRequest, getSockets) {
+        this.parent = parent;
+        this.localRequest = localRequest;
+        this.getSockets = getSockets;
+
+        this.local = null;
+        this.remote = null;
+
+        this.incomingTransforms = [(context, next) => {
+            const { data, flags } = context;
+            context.data = flags.binary ? Buffer.from(data) : data;
+            context.flags = {
+                mask: flags.masked,
+                binary: flags.binary
+            };
+            if ("fin" in flags) {
+                context.flags.fin = flags.fin;
+            }
+            return next();
+        }, ({ data, flags }) => {
+            // send the message to the local socket
+            return new Promise((resolve, reject) => {
+                this.local.send(data, flags, (err) => {
+                    err ? reject(err) : resolve();
+                });
+            });
+        }];
+        this.outgoingTransforms = [(context, next) => {
+            const { data, flags } = context;
+            context.data = flags.binary ? Buffer.from(data) : data;
+            context.flags = {
+                mask: flags.masked,
+                binary: flags.binary
+            };
+            if ("fin" in flags) {
+                context.flags.fin = flags.fin;
+            }
+            return next();
+        }, ({ data, flags }) => {
+            return new Promise((resolve, reject) => {
+                this.remote.send(data, flags, (err) => {
+                    err ? reject(err) : resolve();
+                });
+            });
+        }];
+
+        this._incomingComposed = adone.net.http.server.helper.compose(this.incomingTransforms);
+        this._incoming = (data, flags) => {
+            this._incomingComposed({ data, flags }).catch(() => { });
+        };
+
+        this._outgoingComposed = adone.net.http.server.helper.compose(this.outgoingTransforms);
+        this._outgoing = (data, flags) => {
+            this._outgoingComposed({ data, flags }).catch(() => { });  // swallow all the errors
+        };
+
+        this.localCloseCode = null;
+        this.remoteCloseCode = null;
+        this._clientAddress = null;
+        this._clientPort = null;
+    }
+
+    get clientAddress() {
+        return this._clientAddress;
+    }
+
+    set clientAddress(value) {
+        this._clientAddress = value;
+    }
+
+    get clientPort() {
+        return this._clientPort;
+    }
+
+    set clientPort(value) {
+        return this._clientPort = value;
+    }
+
+    incoming(callback) {
+        const a = this.incomingTransforms;
+        a.push(callback);
+        const l = a.length;
+        [a[l - 1], a[l - 2]] = [a[l - 2], a[l - 1]];  // keep the sending mw at the end
+        return this;
+    }
+
+    outgoing(callback) {
+        const a = this.outgoingTransforms;
+        a.push(callback);
+        const l = a.length;
+        [a[l - 1], a[l - 2]] = [a[l - 2], a[l - 1]];  // keep the sending mw at the end
+        return this;
+    }
+
+    async connect() {
+        const [local, remote] = await this.getSockets();
+        this.local = local;
+        this.remote = remote;
+        remote.on("message", this._incoming);
+        local.on("message", this._outgoing);
+
+        remote.on("close", () => {
+            local.close();
+        });
+        local.on("close", () => {
+            remote.close();
+        });
+        let remoteRes = new Promise((resolve) => {
+            remote
+                .on("close", resolve)
+                .on("error", (err) => {
+                    err.message = `Local: ${err.message}`;
+                    resolve(err);
+                });
+        });
+        let localRes = new Promise((resolve) => {
+            local
+                .on("close", resolve)
+                .on("error", (err) => {
+                    err.message = `Remote: ${err.message}`;
+                    resolve(err);
+                });
+        });
+        [localRes, remoteRes] = await Promise.all([localRes, remoteRes]);
+        if (!adone.is.number(localRes)) {
+            remote.close();
+            throw localRes;
+        } else {
+            this.localCloseCode = localRes;
+        }
+
+        if (!adone.is.number(remoteRes)) {
+            local.close();
+            throw remoteRes;
+        } else {
+            this.remoteCloseCode = remoteRes;
+        }
+    }
+}
+
+WSSessionContext.prototype.type = "websocket";
+
 class HTTPUpgradeContext {
     constructor(parent, req, localSocket, head, processContext) {
         this.parent = parent;
@@ -418,13 +579,146 @@ class HTTPUpgradeContext {
         this._head = head;
         this.localRequest = new LocalRequest(this, req);
         this.processContext = processContext;
+        this.__handleWebsocket = false;
+        this._clientAddress = this.parent.clientAddress;
+        this._clientPort = this.parent.clientAddress;
+    }
+
+    get clientAddress() {
+        return this._clientAddress;
+    }
+
+    set clientAddress(value) {
+        this._clientAddress = value;
+    }
+
+    get clientPort() {
+        return this._clientPort;
+    }
+
+    set clientPort(value) {
+        return this._clientPort = value;
+    }
+
+    get handleWebsocket() {
+        return this.__handleWebsocket;
+    }
+
+    set handleWebsocket(value) {
+        this.__handleWebsocket = value;
     }
 
     get protocol() {
         return this.localRequest.headers.upgrade.toLowerCase();
     }
 
+    async _handleWebsocket() {
+        let finishUpgrade;
+        const finishPromise = new Promise((resolve, reject) => {
+            finishUpgrade = (err) => {
+                err ? reject(err) : resolve(err);
+            };
+        });
+        const context = new WSSessionContext(this, this.localRequest, async () => {
+            // if this part fails then finish the upgrade and re-throw the error
+            try {
+                const { localSocket, localRequest } = this;
+                const abortConnection = (code, message) => {
+                    if (localSocket.writable) {
+                        message = message || adone.std.http.STATUS_CODES[code];
+                        localSocket.write([
+                            `HTTP/1.1 ${code} ${adone.std.http.STATUS_CODES[code]}`,
+                            "Connection: close",
+                            "Content-type: text/html",
+                            `Content-Length: ${Buffer.byteLength(message)}`,
+                            "",
+                            message
+                        ].join("\r\n"));
+                        this.response.status = code;
+                        this.response.headers = {
+                            connection: "close",
+                            "content-type": "text/html",
+                            "content-length": Buffer.byteLength(message)
+                        };
+                        this.response.body = message;
+                    }
+                    localSocket.destroy();
+                    throw new Error("Aborted: ${code} ${message}");
+                };
+                if (!localRequest.headers["sec-websocket-key"]) {
+                    abortConnection(400);
+                }
+                const version = Number(localRequest.headers["sec-websocket-version"]);
+                if (version !== 8 && version !== 13) {
+                    abortConnection(400);
+                }
+                const protocols = localRequest.headers["sec-websocket-protocol"];
+                const protocol = protocols && protocols.split(/, */)[0];
+                // const origin = version !== 13 ? request.headers["sec-websocket-origin"] : request.headers["origin"];
+                const extensionsOffer = adone.net.ws.exts.parse(localRequest.headers["sec-websocket-extensions"]);
+                const key = adone.std.crypto.createHash("sha1")
+                    .update(`${localRequest.headers["sec-websocket-key"]}258EAFA5-E914-47DA-95CA-C5AB0DC85B11`, "binary")
+                    .digest("base64");
+                const headers = [
+                    "HTTP/1.1 101 Switching Protocols",
+                    "Upgrade: websocket",
+                    "Connection: Upgrade",
+                    `Sec-WebSocket-Accept: ${key}`
+                ];
+                if (protocol) {
+                    headers.push(`Sec-WebSocket-Protocol: ${protocol}`);
+                }
+                // per-message-deflate?
+                localSocket.setTimeout(0);
+                localSocket.setNoDelay(true);
+                // what if write fails?
+                localSocket.write(headers.concat("", "").join("\r\n"));
+                finishUpgrade();
+                this.remoteResponse = new FakeHTTPResponse();
+                this.remoteResponse.status = 101;
+                this.remoteResponse.headers = {
+                    upgrade: "websocket",
+                    connection: "Upgrade",
+                    "sec-websocket-accept": key
+                };
+                if (protocol) {
+                    this.remoteResponse.headers["sec-websocket-protocol"] = protocol;
+                }
+                const local = new adone.net.ws.WebSocket([localRequest.req, localSocket], {
+                    protocolVersion: version,
+                    protocol,
+                    perMessageDeflate: "permessage-deflate" in extensionsOffer
+                });
+                const remote = await new Promise((resolve, reject) => {
+                    const { host } = this.localRequest.headers;
+                    const url = `${this.localRequest.secure ? "wss" : "ws"}://${host}${this.localRequest.url}`;
+                    const options = {
+                        perMessageDeflate: "permessage-deflate" in extensionsOffer
+                    };
+                    const socket = new adone.net.ws.WebSocket(url, options);
+                    socket.on("error", reject);
+                    socket.on("open", () => {
+                        socket.removeListener("error", reject);
+                        resolve(socket);
+                    });
+                });
+                finishUpgrade();
+                return [local, remote];
+            } catch (err) {
+                finishUpgrade(err);
+                throw err;
+            }
+        });
+        context.clientAddress = this.clientAddress;
+        context.clientPort = this.clientPort;
+        this.processContext(context);
+        await finishPromise;
+    }
+
     async connect() {
+        if (this.handleWebsocket && this.protocol === "websocket") {
+            return this._handleWebsocket();
+        }
         await new Promise((resolveUpgrade, rejectUpgrade) => {
             const context = new StreamingContext(this, this.localSocket, async () => {
                 // no hop-by-hop ?
@@ -463,8 +757,8 @@ class HTTPUpgradeContext {
             }, this._head);
             context.localSocketTimeout = null;
             context.remoteSocketTimeout = null;
-            context.clientAddress = this.parent.localSocket.remoteAddress;
-            context.clientPort = this.parent.localSocket.remotePort;
+            context.clientAddress = this.clientAddress;
+            context.clientPort = this.clientPort;
             this.processContext(context);
         });
     }
@@ -484,6 +778,24 @@ class HTTPConnectContext {
         this.https = https;
         this.getInternalPort = getInternalPort;
         this._established = false;
+        this._clientAddress = socket.remoteAddress;
+        this._clientPort = socket.remotePort;
+    }
+
+    get clientAddress() {
+        return this._clientAddress;
+    }
+
+    set clientAddress(value) {
+        this._clientAddress = value;
+    }
+
+    get clientPort() {
+        return this._clientPort;
+    }
+
+    set clientPort(value) {
+        return this._clientPort = value;
     }
 
     get decryptHTTPS() {
@@ -526,6 +838,8 @@ class HTTPConnectContext {
                 await this.sendEstablished();
                 return remoteSocket;
             }, this._head);
+            context.clientAddress = this.clientAddress;
+            context.clientPort = this.clientPort;
             this.processContext(context);
         });
     }
@@ -556,6 +870,8 @@ class HTTPConnectContext {
                 intercepter.removeListener("clientError", reject);
                 intercepter.removeListener("error", reject);
                 const context = new HTTPContext(request, response, this);
+                context.clientAddress = this.clientAddress;
+                context.clientPort = this.clientPort;
                 resolve();   // it calls multiple times, does it matter?
                 this.processContext(context);
             };
@@ -566,6 +882,8 @@ class HTTPConnectContext {
             if (this.handleUpgrade) {
                 intercepter.on("upgrade", (request, socket, head) => {
                     const context = new HTTPUpgradeContext(this, request, socket, head, this.processContext);
+                    context.clientAddress = this.clientAddress;
+                    context.clientPort = this.clientPort;
                     this.processContext(context);
                 });
             }
@@ -573,19 +891,19 @@ class HTTPConnectContext {
             if (is.object(port)) {
                 port = port.port;
             }
-            const localSocket = adone.std.net.connect(port, () => {
+            const internalSocket = adone.std.net.connect(port, () => {
                 this.sendEstablished();
-                localSocket.pipe(this.localSocket).pipe(localSocket);
+                internalSocket.pipe(this.localSocket).pipe(internalSocket);
             });
-            localSocket.once("error", () => {
-                localSocket.destroy();
+            internalSocket.once("error", () => {
+                internalSocket.destroy();
                 this.localSocket.destroy();
             });
             this.localSocket.once("error", () => {
-                localSocket.destroy();
+                internalSocket.destroy();
                 this.localSocket.destroy();
             });
-            localSocket.on("close", () => {
+            internalSocket.on("close", () => {
                 intercepter.close();
             });
         });
@@ -607,21 +925,24 @@ class HTTPConnectContext {
         await new Promise((resolve, reject) => {
             intercepter.once("upgrade", (request, socket, head) => {
                 intercepter.removeListener("clientError", reject);
-                this.processContext(new HTTPUpgradeContext(this, request, socket, head, this.processContext));
+                const context = new HTTPUpgradeContext(this, request, socket, head, this.processContext);
+                context.clientAddress = this.clientAddress;
+                context.clientPort = this.clientPort;
+                this.processContext(context);
             }).once("clientError", reject);
             //
-            const localSocket = adone.std.net.connect(port, () => {
-                localSocket.pipe(this.localSocket).pipe(localSocket);
+            const internalSocket = adone.std.net.connect(port, () => {
+                internalSocket.pipe(this.localSocket).pipe(internalSocket);
             });
-            localSocket.once("error", () => {
-                localSocket.destroy();
+            internalSocket.once("error", () => {
+                internalSocket.destroy();
                 this.localSocket.destroy();
             });
             this.localSocket.once("error", () => {
-                localSocket.destroy();
+                internalSocket.destroy();
                 this.localSocket.destroy();
             });
-            localSocket.on("close", () => {
+            internalSocket.on("close", () => {
                 intercepter.close();
             });
         });
