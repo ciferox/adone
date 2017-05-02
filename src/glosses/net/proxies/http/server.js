@@ -102,7 +102,6 @@ class LocalRequest {
         return port;
     }
 
-
     // koa's request returns pathname, hm
     get path() {
         return helper.parseURL(this.req).path;
@@ -225,6 +224,14 @@ class RemoteResponse {
 
     addBodySink(sink, opts = {}) {
         this._bodySinks.push([sink, opts]);
+    }
+
+    get mime() {
+        const contentType = this.headers["content-type"];
+        if (!contentType) {
+            return null;
+        }
+        return contentType.split(";")[0];
     }
 }
 
@@ -1010,7 +1017,7 @@ class HTTPConnectContext {
     }
 
     async _handleHTTPS() {
-        const { key, cert } = this.https.rootCA;
+        const { key, cert } = await this.https.getInternalCert();
         const intercepter = new adone.std.https.Server({
             key,
             cert,

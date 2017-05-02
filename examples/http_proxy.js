@@ -38,9 +38,8 @@ const generateRootCA = () => {
     cert.sign(keys.privateKey, forge.md.sha256.create());
 
     return {
-        privateKey: forge.pki.privateKeyToPem(keys.privateKey),
-        publicKey: forge.pki.publicKeyToPem(keys.publicKey),
-        certificate: forge.pki.certificateToPem(cert)
+        key: forge.pki.privateKeyToPem(keys.privateKey),
+        cert: forge.pki.certificateToPem(cert)
     };
 };
 
@@ -93,7 +92,8 @@ const httpsHandler = () => {
         }
         return certCache.get(serverName);
     };
-    return { rootCA, getCertificate };
+    const getInternalCert = () => getCertificate(":internal_cert:");
+    return { getCertificate, getInternalCert };
 };
 
 adone.run({
@@ -207,7 +207,7 @@ adone.run({
                     adone.log(outgoing.length, outgoing.toString("hex"));
                 } else if (ctx.type === "websocket") {
                     const s = adone.sprintf("%s <-> %s:%s", ctx.localRequest.href, ctx.clientAddress, ctx.clientPort);
-                    adone.info("end websocket session %s", s);
+                    adone.info("end websocket session %s %s %s", s, ctx.localCloseCode, ctx.remoteCloseCode);
                 }
                 if (err) {
                     adone.error(err.stack);
