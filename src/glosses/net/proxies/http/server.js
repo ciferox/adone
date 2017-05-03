@@ -3,6 +3,7 @@ const { is, x, net: { proxy: { http: { tunnel } }, http: { server: { helper } } 
 const hopByHopHeaders = new Set([
     "connection",
     "keep-alive",
+    "proxy-connection",  // hm
     "proxy-authenticate",
     "proxy-authorization",
     "te",
@@ -315,7 +316,6 @@ class HTTPContext {
             };
             options.agent = tunnel[this.localRequest.protocol][proxy.protocol](tunnelOptions);
         }
-
         const _module = this.localRequest.secure ? adone.std.https : adone.std.http;
         const response = await new Promise((resolve, reject) => {
             const request = _module.request(options)

@@ -852,6 +852,18 @@ export const xrange = function* (start = null, stop = null, step = 1) {
 
 export const range = (start, stop, step) => [...xrange(start, stop, step)];
 
+export const reFindAll = (regexp, str) => {
+    const res = [];
+    let match;
+    do {
+        match = regexp.exec(str);
+        if (match) {
+            res.push(match);
+        }
+    } while (match);
+    return res;
+};
+
 adone.lazify({
     match: "./match",
     throat: "./throat",

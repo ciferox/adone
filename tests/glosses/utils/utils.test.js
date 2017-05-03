@@ -1192,4 +1192,28 @@ describe("glosses", "utils", () => {
             });
         });
     }
+
+    describe("reFindAll", () => {
+        it("should find all matches", () => {
+            const re = /(ab|cd|ef)/g;
+            const s = "abcdef";
+            const matches = util.reFindAll(re, s);
+            expect(matches).to.be.an("array");
+            expect(matches).to.have.lengthOf(3);
+            expect(matches[0]).to.be.an("array");
+            expect(matches[0][1]).to.be.equal("ab");
+            expect(matches[1]).to.be.an("array");
+            expect(matches[1][1]).to.be.equal("cd");
+            expect(matches[2]).to.be.an("array");
+            expect(matches[2][1]).to.be.equal("ef");
+        });
+
+        it("should return empty array if there is no matches", () => {
+            const re = /(ab|cd|ef)/g;
+            const s = "012345677";
+            const matches = util.reFindAll(re, s);
+            expect(matches).to.be.an("array");
+            expect(matches).to.be.empty;
+        });
+    });
 });
