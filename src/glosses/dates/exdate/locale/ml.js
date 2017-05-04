@@ -42,7 +42,7 @@ export default ExDate.defineLocale("ml", {
         yy: "%d വർഷം"
     },
     meridiemParse: /രാത്രി|രാവിലെ|ഉച്ച കഴിഞ്ഞ്|വൈകുന്നേരം|രാത്രി/i,
-    meridiemHour (hour, meridiem) {
+    meridiemHour(hour, meridiem) {
         if (hour === 12) {
             hour = 0;
         }
@@ -50,12 +50,12 @@ export default ExDate.defineLocale("ml", {
                 meridiem === "ഉച്ച കഴിഞ്ഞ്" ||
                 meridiem === "വൈകുന്നേരം") {
             return hour + 12;
-        } else {
-            return hour;
-        }
+        } 
+        return hour;
+        
     },
     // eslint-disable-next-line no-unused-vars
-    meridiem (hour, minute, isLower) {
+    meridiem(hour, minute, isLower) {
         if (hour < 4) {
             return "രാത്രി";
         } else if (hour < 12) {
@@ -64,8 +64,8 @@ export default ExDate.defineLocale("ml", {
             return "ഉച്ച കഴിഞ്ഞ്";
         } else if (hour < 20) {
             return "വൈകുന്നേരം";
-        } else {
-            return "രാത്രി";
-        }
+        } 
+        return "രാത്രി";
+        
     }
 });

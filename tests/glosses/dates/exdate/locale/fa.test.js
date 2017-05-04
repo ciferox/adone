@@ -11,7 +11,7 @@ describe("fa", () => {
         let i;
 
         function equalTest(input, mmm, i) {
-            assert.equal(adone.date(input, mmm).month(), i, input + " should be month " + (i + 1) + " instead is month " + adone.date(input, mmm).month());
+            assert.equal(adone.date(input, mmm).month(), i, `${input} should be month ${i + 1} instead is month ${adone.date(input, mmm).month()}`);
         }
         for (i = 0; i < 12; i++) {
             equalTest(tests[i], "MMM", i);
@@ -49,7 +49,7 @@ describe("fa", () => {
         let i;
 
         for (i = 0; i < a.length; i++) {
-            assert.equal(b.format(a[i][0]), a[i][1], a[i][0] + " ---> " + a[i][1]);
+            assert.equal(b.format(a[i][0]), a[i][1], `${a[i][0]} ---> ${a[i][1]}`);
         }
     });
 
@@ -110,9 +110,7 @@ describe("fa", () => {
 
     it("from", () => {
         const start = adone.date([2007, 1, 28]);
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            s: 44
-        }), true), "چندین ثانیه", "44 seconds = a few seconds");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ s: 44 }), true), "چند ثانیه", "44 seconds = a few seconds");
         assert.equal(start.from(adone.date([2007, 1, 28]).add({
             s: 45
         }), true), "یک دقیقه", "45 seconds = a minute");
@@ -197,18 +195,16 @@ describe("fa", () => {
     });
 
     it("suffix", () => {
-        assert.equal(adone.date(30000).from(0), "در چندین ثانیه", "prefix");
-        assert.equal(adone.date(0).from(30000), "چندین ثانیه پیش", "suffix");
+        assert.equal(adone.date(30000).from(0), "در چند ثانیه", "prefix");
+        assert.equal(adone.date(0).from(30000), "چند ثانیه پیش", "suffix");
     });
 
     it("now from now", () => {
-        assert.equal(adone.date().fromNow(), "چندین ثانیه پیش", "now from now should display as in the past");
+        assert.equal(adone.date().fromNow(), "چند ثانیه پیش", "now from now should display as in the past");
     });
 
     it("fromNow", () => {
-        assert.equal(adone.date().add({
-            s: 30
-        }).fromNow(), "در چندین ثانیه", "in a few seconds");
+        assert.equal(adone.date().add({ s: 30 }).fromNow(), "در چند ثانیه", "in a few seconds");
         assert.equal(adone.date().add({
             d: 5
         }).fromNow(), "در ۵ روز", "in 5 days");
@@ -243,11 +239,11 @@ describe("fa", () => {
             m = adone.date().add({
                 d: i
             });
-            assert.equal(m.calendar(), m.format("dddd [ساعت] LT"), "Today + " + i + " days current time");
+            assert.equal(m.calendar(), m.format("dddd [ساعت] LT"), `Today + ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("dddd [ساعت] LT"), "Today + " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format("dddd [ساعت] LT"), `Today + ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("dddd [ساعت] LT"), "Today + " + i + " days end of day");
+            assert.equal(m.calendar(), m.format("dddd [ساعت] LT"), `Today + ${i} days end of day`);
         }
     });
 
@@ -259,11 +255,11 @@ describe("fa", () => {
             m = adone.date().subtract({
                 d: i
             });
-            assert.equal(m.calendar(), m.format("dddd [پیش ساعت] LT"), "Today - " + i + " days current time");
+            assert.equal(m.calendar(), m.format("dddd [پیش ساعت] LT"), `Today - ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("dddd [پیش ساعت] LT"), "Today - " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format("dddd [پیش ساعت] LT"), `Today - ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("dddd [پیش ساعت] LT"), "Today - " + i + " days end of day");
+            assert.equal(m.calendar(), m.format("dddd [پیش ساعت] LT"), `Today - ${i} days end of day`);
         }
     });
 

@@ -56,27 +56,27 @@ describe("now", () => {
 
     it("empty object, empty array", () => {
         function assertIsNow(gen, msg) {
-            const before = +(new Date());
+            const before = Number(new Date());
             const mid = gen();
-            const after = +(new Date());
-            assert.ok(before <= +mid && +mid <= after, "should be now : " + msg);
+            const after = Number(new Date());
+            assert.ok(before <= Number(mid) && Number(mid) <= after, `should be now : ${msg}`);
         }
-        assertIsNow(function () {
+        assertIsNow(() => {
             return adone.date();
         }, "adone.date()");
-        assertIsNow(function () {
+        assertIsNow(() => {
             return adone.date([]);
         }, "adone.date([])");
-        assertIsNow(function () {
+        assertIsNow(() => {
             return adone.date({});
         }, "adone.date({})");
-        assertIsNow(function () {
+        assertIsNow(() => {
             return adone.date.utc();
         }, "adone.date.utc()");
-        assertIsNow(function () {
+        assertIsNow(() => {
             return adone.date.utc([]);
         }, "adone.date.utc([])");
-        assertIsNow(function () {
+        assertIsNow(() => {
             return adone.date.utc({});
         }, "adone.date.utc({})");
     });

@@ -10,14 +10,14 @@ function plural(n) {
     return (n % 10 < 5) && (n % 10 > 1) && ((~~(n / 10) % 10) !== 1);
 }
 function translate(number, withoutSuffix, key) {
-    const result = number + " ";
+    const result = `${number} `;
     switch (key) {
         case "m":
             return withoutSuffix ? "minuta" : "minutę";
         case "mm":
             return result + (plural(number) ? "minuty" : "minut");
         case "h":
-            return withoutSuffix  ? "godzina"  : "godzinę";
+            return withoutSuffix ? "godzina" : "godzinę";
         case "hh":
             return result + (plural(number) ? "godziny" : "godzin");
         case "MM":
@@ -28,17 +28,19 @@ function translate(number, withoutSuffix, key) {
 }
 
 export default ExDate.defineLocale("pl", {
-    months (momentToFormat, format) {
-        if (format === "") {
+    months(momentToFormat, format) {
+        if (!momentToFormat) {
+            return monthsNominative;
+        } else if (format === "") {
             // Hack: if format empty we know this is used to generate
             // RegExp by ExDate. Give then back both valid forms of months
             // in RegExp ready format.
-            return "(" + monthsSubjective[momentToFormat.month()] + "|" + monthsNominative[momentToFormat.month()] + ")";
+            return `(${monthsSubjective[momentToFormat.month()]}|${monthsNominative[momentToFormat.month()]})`;
         } else if (/D MMMM/.test(format)) {
             return monthsSubjective[momentToFormat.month()];
-        } else {
-            return monthsNominative[momentToFormat.month()];
         }
+        return monthsNominative[momentToFormat.month()];
+
     },
     monthsShort: "sty_lut_mar_kwi_maj_cze_lip_sie_wrz_paź_lis_gru".split("_"),
     weekdays: "niedziela_poniedziałek_wtorek_środa_czwartek_piątek_sobota".split("_"),
@@ -57,7 +59,7 @@ export default ExDate.defineLocale("pl", {
         nextDay: "[Jutro o] LT",
         nextWeek: "[W] dddd [o] LT",
         lastDay: "[Wczoraj o] LT",
-        lastWeek () {
+        lastWeek() {
             switch (this.day()) {
                 case 0:
                     return "[W zeszłą niedzielę o] LT";
@@ -86,7 +88,7 @@ export default ExDate.defineLocale("pl", {
         y: "rok",
         yy: translate
     },
-    ordinalParse: /\d{1,2}\./,
+    dayOfMonthOrdinalParse: /\d{1,2}\./,
     ordinal: "%d.",
     week: {
         dow: 1, // Monday is the first day of the week.

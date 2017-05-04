@@ -6,26 +6,28 @@ import ExDate from "..";
 export default ExDate.defineLocale("el", {
     monthsNominativeEl: "Ιανουάριος_Φεβρουάριος_Μάρτιος_Απρίλιος_Μάιος_Ιούνιος_Ιούλιος_Αύγουστος_Σεπτέμβριος_Οκτώβριος_Νοέμβριος_Δεκέμβριος".split("_"),
     monthsGenitiveEl: "Ιανουαρίου_Φεβρουαρίου_Μαρτίου_Απριλίου_Μαΐου_Ιουνίου_Ιουλίου_Αυγούστου_Σεπτεμβρίου_Οκτωβρίου_Νοεμβρίου_Δεκεμβρίου".split("_"),
-    months (momentToFormat, format) {
-        if (/D/.test(format.substring(0, format.indexOf("MMMM")))) { // if there is a day number before 'MMMM'
+    months(momentToFormat, format) {
+        if (!momentToFormat) {
+            return this._monthsNominativeEl;
+        } else if (/D/.test(format.substring(0, format.indexOf("MMMM")))) { // if there is a day number before 'MMMM'
             return this._monthsGenitiveEl[momentToFormat.month()];
-        } else {
-            return this._monthsNominativeEl[momentToFormat.month()];
         }
+        return this._monthsNominativeEl[momentToFormat.month()];
+
     },
     monthsShort: "Ιαν_Φεβ_Μαρ_Απρ_Μαϊ_Ιουν_Ιουλ_Αυγ_Σεπ_Οκτ_Νοε_Δεκ".split("_"),
     weekdays: "Κυριακή_Δευτέρα_Τρίτη_Τετάρτη_Πέμπτη_Παρασκευή_Σάββατο".split("_"),
     weekdaysShort: "Κυρ_Δευ_Τρι_Τετ_Πεμ_Παρ_Σαβ".split("_"),
     weekdaysMin: "Κυ_Δε_Τρ_Τε_Πε_Πα_Σα".split("_"),
-    meridiem (hours, minutes, isLower) {
+    meridiem(hours, minutes, isLower) {
         if (hours > 11) {
             return isLower ? "μμ" : "ΜΜ";
-        } else {
-            return isLower ? "πμ" : "ΠΜ";
         }
+        return isLower ? "πμ" : "ΠΜ";
+
     },
-    isPM (input) {
-        return ((input + "").toLowerCase()[0] === "μ");
+    isPM(input) {
+        return ((`${input}`).toLowerCase()[0] === "μ");
     },
     meridiemParse: /[ΠΜ]\.?Μ?\.?/i,
     longDateFormat: {
@@ -41,7 +43,7 @@ export default ExDate.defineLocale("el", {
         nextDay: "[Αύριο {}] LT",
         nextWeek: "dddd [{}] LT",
         lastDay: "[Χθες {}] LT",
-        lastWeek () {
+        lastWeek() {
             switch (this.day()) {
                 case 6:
                     return "[το προηγούμενο] dddd [{}] LT";
@@ -51,7 +53,7 @@ export default ExDate.defineLocale("el", {
         },
         sameElse: "L"
     },
-    calendar (key, mom) {
+    calendar(key, mom) {
         const hours = mom && mom.hours();
         let output = this._calendarEl[key];
         if (adone.is.function(output)) {
@@ -74,7 +76,7 @@ export default ExDate.defineLocale("el", {
         y: "ένας χρόνος",
         yy: "%d χρόνια"
     },
-    ordinalParse: /\d{1,2}η/,
+    dayOfMonthOrdinalParse: /\d{1,2}η/,
     ordinal: "%dη",
     week: {
         dow: 1, // Monday is the first day of the week.

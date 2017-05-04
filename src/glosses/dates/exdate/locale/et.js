@@ -6,16 +6,16 @@ import ExDate from "..";
 
 function processRelativeTime(number, withoutSuffix, key, isFuture) {
     const format = {
-        "s": ["mõne sekundi", "mõni sekund", "paar sekundit"],
-        "m": ["ühe minuti", "üks minut"],
-        "mm": [number + " minuti", number + " minutit"],
-        "h": ["ühe tunni", "tund aega", "üks tund"],
-        "hh": [number + " tunni", number + " tundi"],
-        "d": ["ühe päeva", "üks päev"],
-        "M": ["kuu aja", "kuu aega", "üks kuu"],
-        "MM": [number + " kuu", number + " kuud"],
-        "y": ["ühe aasta", "aasta", "üks aasta"],
-        "yy": [number + " aasta", number + " aastat"]
+        s: ["mõne sekundi", "mõni sekund", "paar sekundit"],
+        m: ["ühe minuti", "üks minut"],
+        mm: [`${number} minuti`, `${number} minutit`],
+        h: ["ühe tunni", "tund aega", "üks tund"],
+        hh: [`${number} tunni`, `${number} tundi`],
+        d: ["ühe päeva", "üks päev"],
+        M: ["kuu aja", "kuu aega", "üks kuu"],
+        MM: [`${number} kuu`, `${number} kuud`],
+        y: ["ühe aasta", "aasta", "üks aasta"],
+        yy: [`${number} aasta`, `${number} aastat`]
     };
     if (withoutSuffix) {
         return format[key][2] ? format[key][2] : format[key][1];
@@ -60,7 +60,7 @@ export default ExDate.defineLocale("et", {
         y: processRelativeTime,
         yy: processRelativeTime
     },
-    ordinalParse: /\d{1,2}\./,
+    dayOfMonthOrdinalParse: /\d{1,2}\./,
     ordinal: "%d.",
     week: {
         dow: 1, // Monday is the first day of the week.

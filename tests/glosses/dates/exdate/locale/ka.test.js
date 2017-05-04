@@ -11,7 +11,7 @@ describe("ka", () => {
         const tests = "იანვარი იან_თებერვალი თებ_მარტი მარ_აპრილი აპრ_მაისი მაი_ივნისი ივნ_ივლისი ივლ_აგვისტო აგვ_სექტემბერი სექ_ოქტომბერი ოქტ_ნოემბერი ნოე_დეკემბერი დეკ".split("_");
 
         function equalTest(input, mmm, i) {
-            assert.equal(adone.date(input, mmm).month(), i, input + " უნდა იყოს თვე " + (i + 1));
+            assert.equal(adone.date(input, mmm).month(), i, `${input} უნდა იყოს თვე ${i + 1}`);
         }
 
         for (i = 0; i < 12; i++) {
@@ -57,7 +57,7 @@ describe("ka", () => {
         let i;
 
         for (i = 0; i < a.length; i++) {
-            assert.equal(b.format(a[i][0]), a[i][1], a[i][0] + " ---> " + a[i][1]);
+            assert.equal(b.format(a[i][0]), a[i][1], `${a[i][0]} ---> ${a[i][1]}`);
         }
     });
 
@@ -211,11 +211,11 @@ describe("ka", () => {
 
     it("suffix", () => {
         assert.equal(adone.date(30000).from(0), "რამდენიმე წამში", "ში სუფიქსი");
-        assert.equal(adone.date(0).from(30000), "რამდენიმე წამის წინ", "წინ სუფიქსი");
+        assert.equal(adone.date(0).from(30000), "რამდენიმე წამის უკან", "უკან სუფიქსი");
     });
 
     it("now from now", () => {
-        assert.equal(adone.date().fromNow(), "რამდენიმე წამის წინ", "უნდა აჩვენოს როგორც წარსული");
+        assert.equal(adone.date().fromNow(), "რამდენიმე წამის უკან", "უნდა აჩვენოს როგორც წარსული");
     });
 
     it("fromNow", () => {
@@ -256,11 +256,11 @@ describe("ka", () => {
             m = adone.date().add({
                 d: i
             });
-            assert.equal(m.calendar(), m.format("[შემდეგ] dddd LT[-ზე]"), "დღეს + " + i + " დღე ახლანდელ დროს");
+            assert.equal(m.calendar(), m.format("[შემდეგ] dddd LT[-ზე]"), `დღეს + ${i} დღე ახლანდელ დროს`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("[შემდეგ] dddd LT[-ზე]"), "დღეს + " + i + " დღე დღის დასაწყისში");
+            assert.equal(m.calendar(), m.format("[შემდეგ] dddd LT[-ზე]"), `დღეს + ${i} დღე დღის დასაწყისში`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("[შემდეგ] dddd LT[-ზე]"), "დღეს + " + i + " დღე დღის დასასრულს");
+            assert.equal(m.calendar(), m.format("[შემდეგ] dddd LT[-ზე]"), `დღეს + ${i} დღე დღის დასასრულს`);
         }
     });
 
@@ -272,11 +272,11 @@ describe("ka", () => {
             m = adone.date().subtract({
                 d: i
             });
-            assert.equal(m.calendar(), m.format("[წინა] dddd LT[-ზე]"), "დღეს - " + i + " დღე ახლანდელ დროს");
+            assert.equal(m.calendar(), m.format("[წინა] dddd LT[-ზე]"), `დღეს - ${i} დღე ახლანდელ დროს`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("[წინა] dddd LT[-ზე]"), "დღეს - " + i + " დღე დღის დასაწყისში");
+            assert.equal(m.calendar(), m.format("[წინა] dddd LT[-ზე]"), `დღეს - ${i} დღე დღის დასაწყისში`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("[წინა] dddd LT[-ზე]"), "დღეს - " + i + " დღე დღის დასასრულს");
+            assert.equal(m.calendar(), m.format("[წინა] dddd LT[-ზე]"), `დღეს - ${i} დღე დღის დასასრულს`);
         }
     });
 
@@ -288,7 +288,7 @@ describe("ka", () => {
             w: 1
         });
 
-        assert.equal(weeksAgo.calendar(), weeksAgo.format("L"), "1 კვირის წინ");
+        assert.equal(weeksAgo.calendar(), weeksAgo.format("L"), "1 კვირის უკან");
         assert.equal(weeksFromNow.calendar(), weeksFromNow.format("L"), "1 კვირაში");
 
         weeksAgo = adone.date().subtract({

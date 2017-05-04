@@ -11,7 +11,7 @@ describe("pt-br", () => {
         let i;
 
         function equalTest(input, mmm, i) {
-            assert.equal(adone.date(input, mmm).month(), i, input + " should be month " + (i + 1));
+            assert.equal(adone.date(input, mmm).month(), i, `${input} should be month ${i + 1}`);
         }
 
         for (i = 0; i < 12; i++) {
@@ -57,7 +57,7 @@ describe("pt-br", () => {
         let i;
 
         for (i = 0; i < a.length; i++) {
-            assert.equal(b.format(a[i][0]), a[i][1], a[i][0] + " ---> " + a[i][1]);
+            assert.equal(b.format(a[i][0]), a[i][1], `${a[i][0]} ---> ${a[i][1]}`);
         }
     });
 
@@ -108,11 +108,11 @@ describe("pt-br", () => {
     });
 
     it("format week", () => {
-        const expected = "Domingo Dom_Segunda-feira Seg_Terça-feira Ter_Quarta-feira Qua_Quinta-feira Qui_Sexta-feira Sex_Sábado Sáb".split("_");
+        const expected = "Domingo Dom Do_Segunda-feira Seg 2ª_Terça-feira Ter 3ª_Quarta-feira Qua 4ª_Quinta-feira Qui 5ª_Sexta-feira Sex 6ª_Sábado Sáb Sá".split("_");
         let i;
 
         for (i = 0; i < expected.length; i++) {
-            assert.equal(adone.date([2011, 0, 2 + i]).format("dddd ddd"), expected[i], expected[i]);
+            assert.equal(adone.date([2011, 0, 2 + i]).format("dddd ddd dd"), expected[i], expected[i]);
         }
     });
 
@@ -247,11 +247,11 @@ describe("pt-br", () => {
             m = adone.date().add({
                 d: i
             });
-            assert.equal(m.calendar(), m.format("dddd [às] LT"), "Today + " + i + " days current time");
+            assert.equal(m.calendar(), m.format("dddd [às] LT"), `Today + ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("dddd [às] LT"), "Today + " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format("dddd [às] LT"), `Today + ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("dddd [às] LT"), "Today + " + i + " days end of day");
+            assert.equal(m.calendar(), m.format("dddd [às] LT"), `Today + ${i} days end of day`);
         }
     });
 
@@ -263,11 +263,11 @@ describe("pt-br", () => {
             m = adone.date().subtract({
                 d: i
             });
-            assert.equal(m.calendar(), m.format(m.day() === 0 || m.day() === 6 ? "[Último] dddd [às] LT" : "[Última] dddd [às] LT"), "Today - " + i + " days current time");
+            assert.equal(m.calendar(), m.format(m.day() === 0 || m.day() === 6 ? "[Último] dddd [às] LT" : "[Última] dddd [às] LT"), `Today - ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format(m.day() === 0 || m.day() === 6 ? "[Último] dddd [às] LT" : "[Última] dddd [às] LT"), "Today - " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format(m.day() === 0 || m.day() === 6 ? "[Último] dddd [às] LT" : "[Última] dddd [às] LT"), `Today - ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format(m.day() === 0 || m.day() === 6 ? "[Último] dddd [às] LT" : "[Última] dddd [às] LT"), "Today - " + i + " days end of day");
+            assert.equal(m.calendar(), m.format(m.day() === 0 || m.day() === 6 ? "[Último] dddd [às] LT" : "[Última] dddd [às] LT"), `Today - ${i} days end of day`);
         }
     });
 

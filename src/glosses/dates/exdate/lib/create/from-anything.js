@@ -8,13 +8,13 @@ import { isValid } from "./valid";
 
 const { is } = adone;
 
-import { configFromStringAndArray }  from "./from-string-and-array";
+import { configFromStringAndArray } from "./from-string-and-array";
 import { configFromStringAndFormat } from "./from-string-and-format";
-import { configFromString }          from "./from-string";
-import { configFromArray }           from "./from-array";
-import { configFromObject }          from "./from-object";
+import { configFromString } from "./from-string";
+import { configFromArray } from "./from-array";
+import { configFromObject } from "./from-object";
 
-function createFromConfig (config) {
+const createFromConfig = (config) => {
     const res = new ExDate(checkOverflow(prepareConfig(config)));
     if (res._nextDay) {
         // Adding is smart enough around DST
@@ -23,16 +23,16 @@ function createFromConfig (config) {
     }
 
     return res;
-}
+};
 
-export function prepareConfig (config) {
+export const prepareConfig = (config) => {
     config._locale = config._locale || getLocale(config._l);
 
     const format = config._f;
     let input = config._i;
 
     if (input === null || (format === undefined && input === "")) {
-        return createInvalid({nullInput: true});
+        return createInvalid({ nullInput: true });
     }
 
     if (is.string(input)) {
@@ -47,7 +47,7 @@ export function prepareConfig (config) {
         configFromStringAndArray(config);
     } else if (format) {
         configFromStringAndFormat(config);
-    }  else {
+    } else {
         configFromInput(config);
     }
 
@@ -56,11 +56,11 @@ export function prepareConfig (config) {
     }
 
     return config;
-}
+};
 
-function configFromInput(config) {
+const configFromInput = (config) => {
     const input = config._i;
-    if (input === undefined) {
+    if (is.undefined(input)) {
         config._d = new Date(hooks.now());
     } else if (is.date(input)) {
         config._d = new Date(input.valueOf());
@@ -71,7 +71,7 @@ function configFromInput(config) {
             return parseInt(obj, 10);
         });
         configFromArray(config);
-    } else if (typeof(input) === "object") {
+    } else if (is.object(input)) {
         configFromObject(config);
     } else if (is.number(input)) {
         // from milliseconds
@@ -79,9 +79,9 @@ function configFromInput(config) {
     } else {
         hooks.createFromInputFallback(config);
     }
-}
+};
 
-export function createLocalOrUTC (input, format, locale, strict, isUTC) {
+export const createLocalOrUTC = (input, format, locale, strict, isUTC) => {
     const c = {};
 
     if (locale === true || locale === false) {
@@ -102,4 +102,4 @@ export function createLocalOrUTC (input, format, locale, strict, isUTC) {
     c._strict = strict;
 
     return createFromConfig(c);
-}
+};

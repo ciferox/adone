@@ -6,11 +6,11 @@ import ExDate from "..";
 
 function relativeTimeWithPlural(number, withoutSuffix, key) {
     const format = {
-        "mm": "minute",
-        "hh": "ore",
-        "dd": "zile",
-        "MM": "luni",
-        "yy": "ani"
+        mm: "minute",
+        hh: "ore",
+        dd: "zile",
+        MM: "luni",
+        yy: "ani"
     };
     let separator = " ";
     if (number % 100 >= 20 || (number >= 100 && number % 100 === 0)) {

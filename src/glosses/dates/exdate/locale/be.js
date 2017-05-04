@@ -11,19 +11,19 @@ function plural(word, num) {
 }
 function relativeTimeWithPlural(number, withoutSuffix, key) {
     const format = {
-        "mm": withoutSuffix ? "хвіліна_хвіліны_хвілін" : "хвіліну_хвіліны_хвілін",
-        "hh": withoutSuffix ? "гадзіна_гадзіны_гадзін" : "гадзіну_гадзіны_гадзін",
-        "dd": "дзень_дні_дзён",
-        "MM": "месяц_месяцы_месяцаў",
-        "yy": "год_гады_гадоў"
+        mm: withoutSuffix ? "хвіліна_хвіліны_хвілін" : "хвіліну_хвіліны_хвілін",
+        hh: withoutSuffix ? "гадзіна_гадзіны_гадзін" : "гадзіну_гадзіны_гадзін",
+        dd: "дзень_дні_дзён",
+        MM: "месяц_месяцы_месяцаў",
+        yy: "год_гады_гадоў"
     };
     if (key === "m") {
         return withoutSuffix ? "хвіліна" : "хвіліну";
-    }    else if (key === "h") {
+    } else if (key === "h") {
         return withoutSuffix ? "гадзіна" : "гадзіну";
-    }    else {
-        return number + " " + plural(format[key], +number);
     }
+    return `${number} ${plural(format[key], Number(number))}`;
+
 }
 
 export default ExDate.defineLocale("be", {
@@ -51,10 +51,10 @@ export default ExDate.defineLocale("be", {
         sameDay: "[Сёння ў] LT",
         nextDay: "[Заўтра ў] LT",
         lastDay: "[Учора ў] LT",
-        nextWeek () {
+        nextWeek() {
             return "[У] dddd [ў] LT";
         },
-        lastWeek () {
+        lastWeek() {
             switch (this.day()) {
                 case 0:
                 case 3:
@@ -85,32 +85,32 @@ export default ExDate.defineLocale("be", {
         yy: relativeTimeWithPlural
     },
     meridiemParse: /ночы|раніцы|дня|вечара/,
-    isPM (input) {
+    isPM(input) {
         return /^(дня|вечара)$/.test(input);
     },
     // eslint-disable-next-line no-unused-vars
-    meridiem (hour, minute, isLower) {
+    meridiem(hour, minute, isLower) {
         if (hour < 4) {
             return "ночы";
         } else if (hour < 12) {
             return "раніцы";
         } else if (hour < 17) {
             return "дня";
-        } else {
-            return "вечара";
         }
+        return "вечара";
+
     },
-    ordinalParse: /\d{1,2}-(і|ы|га)/,
-    ordinal (number, period) {
+    dayOfMonthOrdinalParse: /\d{1,2}-(і|ы|га)/,
+    ordinal(number, period) {
         switch (period) {
             case "M":
             case "d":
             case "DDD":
             case "w":
             case "W":
-                return (number % 10 === 2 || number % 10 === 3) && (number % 100 !== 12 && number % 100 !== 13) ? number + "-і" : number + "-ы";
+                return (number % 10 === 2 || number % 10 === 3) && (number % 100 !== 12 && number % 100 !== 13) ? `${number}-і` : `${number}-ы`;
             case "D":
-                return number + "-га";
+                return `${number}-га`;
             default:
                 return number;
         }

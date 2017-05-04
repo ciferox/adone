@@ -14,22 +14,22 @@ export default ExDate.defineLocale("th", {
     longDateFormat: {
         LT: "H:mm",
         LTS: "H:mm:ss",
-        L: "YYYY/MM/DD",
+        L: "DD/MM/YYYY",
         LL: "D MMMM YYYY",
         LLL: "D MMMM YYYY เวลา H:mm",
         LLLL: "วันddddที่ D MMMM YYYY เวลา H:mm"
     },
     meridiemParse: /ก่อนเที่ยง|หลังเที่ยง/,
-    isPM (input) {
+    isPM(input) {
         return input === "หลังเที่ยง";
     },
     // eslint-disable-next-line no-unused-vars
-    meridiem (hour, minute, isLower) {
+    meridiem(hour, minute, isLower) {
         if (hour < 12) {
             return "ก่อนเที่ยง";
-        } else {
-            return "หลังเที่ยง";
         }
+        return "หลังเที่ยง";
+
     },
     calendar: {
         sameDay: "[วันนี้ เวลา] LT",

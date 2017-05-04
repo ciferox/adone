@@ -4,16 +4,16 @@
 import ExDate from "..";
 
 const symbolMap = {
-    "1": "௧",
-    "2": "௨",
-    "3": "௩",
-    "4": "௪",
-    "5": "௫",
-    "6": "௬",
-    "7": "௭",
-    "8": "௮",
-    "9": "௯",
-    "0": "௦"
+    1: "௧",
+    2: "௨",
+    3: "௩",
+    4: "௪",
+    5: "௫",
+    6: "௬",
+    7: "௭",
+    8: "௮",
+    9: "௯",
+    0: "௦"
 };
 
 const numberMap = {
@@ -66,24 +66,24 @@ export default ExDate.defineLocale("ta", {
         y: "ஒரு வருடம்",
         yy: "%d ஆண்டுகள்"
     },
-    ordinalParse: /\d{1,2}வது/,
-    ordinal (number) {
-        return number + "வது";
+    dayOfMonthOrdinalParse: /\d{1,2}வது/,
+    ordinal(number) {
+        return `${number}வது`;
     },
-    preparse (string) {
-        return string.replace(/[௧௨௩௪௫௬௭௮௯௦]/g, function (match) {
+    preparse(string) {
+        return string.replace(/[௧௨௩௪௫௬௭௮௯௦]/g, (match) => {
             return numberMap[match];
         });
     },
-    postformat (string) {
-        return string.replace(/\d/g, function (match) {
+    postformat(string) {
+        return string.replace(/\d/g, (match) => {
             return symbolMap[match];
         });
     },
     // refer http://ta.wikipedia.org/s/1er1
     meridiemParse: /யாமம்|வைகறை|காலை|நண்பகல்|எற்பாடு|மாலை/,
     // eslint-disable-next-line no-unused-vars
-    meridiem (hour, minute, isLower) {
+    meridiem(hour, minute, isLower) {
         if (hour < 2) {
             return " யாமம்";
         } else if (hour < 6) {
@@ -96,11 +96,11 @@ export default ExDate.defineLocale("ta", {
             return " எற்பாடு"; // எற்பாடு
         } else if (hour < 22) {
             return " மாலை"; // மாலை
-        } else {
-            return " யாமம்";
-        }
+        } 
+        return " யாமம்";
+        
     },
-    meridiemHour (hour, meridiem) {
+    meridiemHour(hour, meridiem) {
         if (hour === 12) {
             hour = 0;
         }
@@ -110,9 +110,9 @@ export default ExDate.defineLocale("ta", {
             return hour;
         } else if (meridiem === "நண்பகல்") {
             return hour >= 10 ? hour : hour + 12;
-        } else {
-            return hour + 12;
-        }
+        } 
+        return hour + 12;
+        
     },
     week: {
         dow: 0, // Sunday is the first day of the week.

@@ -41,10 +41,10 @@ export default ExDate.defineLocale("te", {
         y: "ఒక సంవత్సరం",
         yy: "%d సంవత్సరాలు"
     },
-    ordinalParse: /\d{1,2}వ/,
+    dayOfMonthOrdinalParse: /\d{1,2}వ/,
     ordinal: "%dవ",
     meridiemParse: /రాత్రి|ఉదయం|మధ్యాహ్నం|సాయంత్రం/,
-    meridiemHour (hour, meridiem) {
+    meridiemHour(hour, meridiem) {
         if (hour === 12) {
             hour = 0;
         }
@@ -59,7 +59,7 @@ export default ExDate.defineLocale("te", {
         }
     },
     // eslint-disable-next-line no-unused-vars
-    meridiem (hour, minute, isLower) {
+    meridiem(hour, minute, isLower) {
         if (hour < 4) {
             return "రాత్రి";
         } else if (hour < 10) {
@@ -68,9 +68,9 @@ export default ExDate.defineLocale("te", {
             return "మధ్యాహ్నం";
         } else if (hour < 20) {
             return "సాయంత్రం";
-        } else {
-            return "రాత్రి";
-        }
+        } 
+        return "రాత్రి";
+        
     },
     week: {
         dow: 0, // Sunday is the first day of the week.

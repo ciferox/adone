@@ -3,8 +3,8 @@ describe("parsing flags", () => {
         adone.date.locale("en");
     });
 
-    function flags () {
-        return adone.date.apply(null, arguments).parsingFlags();
+    function flags(...args) {
+        return adone.date(...args).parsingFlags();
     }
 
     it("overflow with array", () => {
@@ -62,7 +62,7 @@ describe("parsing flags", () => {
 
         //days
         assert.equal(flags("2010-01-16", "YYYY-MM-DD").overflow, -1, "date 16 valid");
-        assert.equal(flags("2010-01-0",  "YYYY-MM-DD").overflow, 2, "date 0 invalid");
+        assert.equal(flags("2010-01-0", "YYYY-MM-DD").overflow, 2, "date 0 invalid");
         assert.equal(flags("2010-01-32", "YYYY-MM-DD").overflow, 2, "date 32 invalid");
         assert.equal(flags("2012-02-29", "YYYY-MM-DD").overflow, -1, "date leap year valid");
         assert.equal(flags("2010-02-29", "YYYY-MM-DD").overflow, 2, "date leap year invalid");

@@ -13,16 +13,16 @@ const translator = {
         MM: ["месец", "месеца", "месеци"],
         yy: ["година", "године", "година"]
     },
-    correctGrammaticalCase (number, wordKey) {
+    correctGrammaticalCase(number, wordKey) {
         return number === 1 ? wordKey[0] : (number >= 2 && number <= 4 ? wordKey[1] : wordKey[2]);
     },
-    translate (number, withoutSuffix, key) {
+    translate(number, withoutSuffix, key) {
         const wordKey = translator.words[key];
         if (key.length === 1) {
             return withoutSuffix ? wordKey[0] : wordKey[1];
-        } else {
-            return number + " " + translator.correctGrammaticalCase(number, wordKey);
-        }
+        } 
+        return `${number} ${translator.correctGrammaticalCase(number, wordKey)}`;
+        
     }
 };
 
@@ -45,7 +45,7 @@ export default ExDate.defineLocale("sr-cyrl", {
     calendar: {
         sameDay: "[данас у] LT",
         nextDay: "[сутра у] LT",
-        nextWeek () {
+        nextWeek() {
             switch (this.day()) {
                 case 0:
                     return "[у] [недељу] [у] LT";
@@ -61,7 +61,7 @@ export default ExDate.defineLocale("sr-cyrl", {
             }
         },
         lastDay: "[јуче у] LT",
-        lastWeek () {
+        lastWeek() {
             const lastWeekDays = [
                 "[прошле] [недеље] [у] LT",
                 "[прошлог] [понедељка] [у] LT",
@@ -90,7 +90,7 @@ export default ExDate.defineLocale("sr-cyrl", {
         y: "годину",
         yy: translator.translate
     },
-    ordinalParse: /\d{1,2}\./,
+    dayOfMonthOrdinalParse: /\d{1,2}\./,
     ordinal: "%d.",
     week: {
         dow: 1, // Monday is the first day of the week.

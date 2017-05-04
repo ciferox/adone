@@ -9,7 +9,7 @@ function plural(n) {
     return (n > 1) && (n < 5) && (~~(n / 10) !== 1);
 }
 function translate(number, withoutSuffix, key, isFuture) {
-    const result = number + " ";
+    const result = `${number} `;
     switch (key) {
         case "s":  // a few seconds / in a few seconds / a few seconds ago
             return (withoutSuffix || isFuture) ? "pár sekund" : "pár sekundami";
@@ -18,41 +18,41 @@ function translate(number, withoutSuffix, key, isFuture) {
         case "mm": // 9 minutes / in 9 minutes / 9 minutes ago
             if (withoutSuffix || isFuture) {
                 return result + (plural(number) ? "minuty" : "minut");
-            } else {
-                return result + "minutami";
             }
+            return `${result}minutami`;
+
         case "h":  // an hour / in an hour / an hour ago
             return withoutSuffix ? "hodina" : (isFuture ? "hodinu" : "hodinou");
         case "hh": // 9 hours / in 9 hours / 9 hours ago
             if (withoutSuffix || isFuture) {
                 return result + (plural(number) ? "hodiny" : "hodin");
-            } else {
-                return result + "hodinami";
             }
+            return `${result}hodinami`;
+
         case "d":  // a day / in a day / a day ago
             return (withoutSuffix || isFuture) ? "den" : "dnem";
         case "dd": // 9 days / in 9 days / 9 days ago
             if (withoutSuffix || isFuture) {
                 return result + (plural(number) ? "dny" : "dní");
-            } else {
-                return result + "dny";
             }
+            return `${result}dny`;
+
         case "M":  // a month / in a month / a month ago
             return (withoutSuffix || isFuture) ? "měsíc" : "měsícem";
         case "MM": // 9 months / in 9 months / 9 months ago
             if (withoutSuffix || isFuture) {
                 return result + (plural(number) ? "měsíce" : "měsíců");
-            } else {
-                return result + "měsíci";
             }
+            return `${result}měsíci`;
+
         case "y":  // a year / in a year / a year ago
             return (withoutSuffix || isFuture) ? "rok" : "rokem";
         case "yy": // 9 years / in 9 years / 9 years ago
             if (withoutSuffix || isFuture) {
                 return result + (plural(number) ? "roky" : "let");
-            } else {
-                return result + "lety";
             }
+            return `${result}lety`;
+
     }
 }
 
@@ -63,21 +63,21 @@ export default ExDate.defineLocale("cs", {
         const _monthsParse = [];
         for (let i = 0; i < 12; i++) {
             // use custom parser to solve problem with July (červenec)
-            _monthsParse[i] = new RegExp("^" + months[i] + "$|^" + monthsShort[i] + "$", "i");
+            _monthsParse[i] = new RegExp(`^${months[i]}$|^${monthsShort[i]}$`, "i");
         }
         return _monthsParse;
     }(months, monthsShort)),
     shortMonthsParse: (function (monthsShort) {
         const _shortMonthsParse = [];
         for (let i = 0; i < 12; i++) {
-            _shortMonthsParse[i] = new RegExp("^" + monthsShort[i] + "$", "i");
+            _shortMonthsParse[i] = new RegExp(`^${monthsShort[i]}$`, "i");
         }
         return _shortMonthsParse;
     }(monthsShort)),
     longMonthsParse: (function (months) {
         const _longMonthsParse = [];
         for (let i = 0; i < 12; i++) {
-            _longMonthsParse[i] = new RegExp("^" + months[i] + "$", "i");
+            _longMonthsParse[i] = new RegExp(`^${months[i]}$`, "i");
         }
         return _longMonthsParse;
     }(months)),
@@ -96,7 +96,7 @@ export default ExDate.defineLocale("cs", {
     calendar: {
         sameDay: "[dnes v] LT",
         nextDay: "[zítra v] LT",
-        nextWeek () {
+        nextWeek() {
             switch (this.day()) {
                 case 0:
                     return "[v neděli v] LT";
@@ -114,7 +114,7 @@ export default ExDate.defineLocale("cs", {
             }
         },
         lastDay: "[včera v] LT",
-        lastWeek () {
+        lastWeek() {
             switch (this.day()) {
                 case 0:
                     return "[minulou neděli v] LT";
@@ -147,7 +147,7 @@ export default ExDate.defineLocale("cs", {
         y: translate,
         yy: translate
     },
-    ordinalParse: /\d{1,2}\./,
+    dayOfMonthOrdinalParse: /\d{1,2}\./,
     ordinal: "%d.",
     week: {
         dow: 1, // Monday is the first day of the week.

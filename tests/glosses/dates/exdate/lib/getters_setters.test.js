@@ -34,7 +34,7 @@ describe("getters and setters", () => {
         assert.equal(a.get("dayOfYear"), a.dayOfYear(), "dayOfYear");
 
         //getter no longer sets values when passed an object
-        assert.equal(adone.date([2016, 0, 1]).get({year: 2015}).year(), 2016, "getter no longer sets values when passed an object");
+        assert.equal(adone.date([2016, 0, 1]).get({ year: 2015 }).year(), 2016, "getter no longer sets values when passed an object");
     });
 
     it("setters plural", () => {
@@ -200,8 +200,8 @@ describe("getters and setters", () => {
         assert.equal(a.milliseconds(), 9, "milliseconds");
 
         const c = adone.date([2016, 0, 1]);
-        assert.equal(c.set({weekYear: 2016}).weekYear(), 2016, "week year correctly sets with object syntax");
-        assert.equal(c.set({quarter: 3}).quarter(), 3, "quarter sets correctly with object syntax");
+        assert.equal(c.set({ weekYear: 2016 }).weekYear(), 2016, "week year correctly sets with object syntax");
+        assert.equal(c.set({ quarter: 3 }).quarter(), 3, "quarter sets correctly with object syntax");
     });
 
     it("day setter", () => {
@@ -235,9 +235,9 @@ describe("getters and setters", () => {
 
     it("object set ordering", () => {
         const a = adone.date([2016, 3, 30]);
-        assert.equal(a.set({date: 31, month: 4}).date(), 31, "setter order automatically arranged by size");
+        assert.equal(a.set({ date: 31, month: 4 }).date(), 31, "setter order automatically arranged by size");
         const b = adone.date([2015, 1, 28]);
-        assert.equal(b.set({date: 29, year: 2016}).format("YYYY-MM-DD"), "2016-02-29", "year is prioritized over date");
+        assert.equal(b.set({ date: 29, year: 2016 }).format("YYYY-MM-DD"), "2016-02-29", "year is prioritized over date");
         //check a nonexistent time in US isn't set
         const c = adone.date([2016, 2, 13]);
         c.set({

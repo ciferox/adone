@@ -42,19 +42,19 @@ export default ExDate.defineLocale("si", {
         y: "වසර",
         yy: "වසර %d"
     },
-    ordinalParse: /\d{1,2} වැනි/,
-    ordinal (number) {
-        return number + " වැනි";
+    dayOfMonthOrdinalParse: /\d{1,2} වැනි/,
+    ordinal(number) {
+        return `${number} වැනි`;
     },
     meridiemParse: /පෙර වරු|පස් වරු|පෙ.ව|ප.ව./,
-    isPM (input) {
+    isPM(input) {
         return input === "ප.ව." || input === "පස් වරු";
     },
-    meridiem (hours, minutes, isLower) {
+    meridiem(hours, minutes, isLower) {
         if (hours > 11) {
             return isLower ? "ප.ව." : "පස් වරු";
-        } else {
-            return isLower ? "පෙ.ව." : "පෙර වරු";
-        }
+        } 
+        return isLower ? "පෙ.ව." : "පෙර වරු";
+        
     }
 });

@@ -5,7 +5,7 @@
 import ExDate from "..";
 
 function translate(number, withoutSuffix, key) {
-    let result = number + " ";
+    let result = `${number} `;
     switch (key) {
         case "m":
             return withoutSuffix ? "jedna minuta" : "jedne minute";
@@ -76,7 +76,7 @@ export default ExDate.defineLocale("bs", {
     calendar: {
         sameDay: "[danas u] LT",
         nextDay: "[sutra u] LT",
-        nextWeek () {
+        nextWeek() {
             switch (this.day()) {
                 case 0:
                     return "[u] [nedjelju] [u] LT";
@@ -92,7 +92,7 @@ export default ExDate.defineLocale("bs", {
             }
         },
         lastDay: "[jučer u] LT",
-        lastWeek () {
+        lastWeek() {
             switch (this.day()) {
                 case 0:
                 case 3:
@@ -123,7 +123,7 @@ export default ExDate.defineLocale("bs", {
         y: "godinu",
         yy: translate
     },
-    ordinalParse: /\d{1,2}\./,
+    dayOfMonthOrdinalParse: /\d{1,2}\./,
     ordinal: "%d.",
     week: {
         dow: 1, // Monday is the first day of the week.

@@ -22,7 +22,7 @@ export default ExDate.defineLocale("mk", {
         nextDay: "[Утре во] LT",
         nextWeek: "[Во] dddd [во] LT",
         lastDay: "[Вчера во] LT",
-        lastWeek () {
+        lastWeek() {
             switch (this.day()) {
                 case 0:
                 case 3:
@@ -52,25 +52,25 @@ export default ExDate.defineLocale("mk", {
         y: "година",
         yy: "%d години"
     },
-    ordinalParse: /\d{1,2}-(ев|ен|ти|ви|ри|ми)/,
-    ordinal (number) {
+    dayOfMonthOrdinalParse: /\d{1,2}-(ев|ен|ти|ви|ри|ми)/,
+    ordinal(number) {
         const lastDigit = number % 10;
         const last2Digits = number % 100;
         if (number === 0) {
-            return number + "-ев";
+            return `${number}-ев`;
         } else if (last2Digits === 0) {
-            return number + "-ен";
+            return `${number}-ен`;
         } else if (last2Digits > 10 && last2Digits < 20) {
-            return number + "-ти";
+            return `${number}-ти`;
         } else if (lastDigit === 1) {
-            return number + "-ви";
+            return `${number}-ви`;
         } else if (lastDigit === 2) {
-            return number + "-ри";
+            return `${number}-ри`;
         } else if (lastDigit === 7 || lastDigit === 8) {
-            return number + "-ми";
-        } else {
-            return number + "-ти";
-        }
+            return `${number}-ми`;
+        } 
+        return `${number}-ти`;
+        
     },
     week: {
         dow: 1, // Monday is the first day of the week.

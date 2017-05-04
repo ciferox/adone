@@ -13,19 +13,19 @@ describe("add and subtract", () => {
         a.seconds(8);
         a.milliseconds(500);
 
-        assert.equal(a.add({ms: 50}).milliseconds(), 550, "Add milliseconds");
-        assert.equal(a.add({s: 1}).seconds(), 9, "Add seconds");
-        assert.equal(a.add({m: 1}).minutes(), 8, "Add minutes");
-        assert.equal(a.add({h: 1}).hours(), 7, "Add hours");
-        assert.equal(a.add({d: 1}).date(), 13, "Add date");
-        assert.equal(a.add({w: 1}).date(), 20, "Add week");
-        assert.equal(a.add({M: 1}).month(), 10, "Add month");
-        assert.equal(a.add({y: 1}).year(), 2012, "Add year");
-        assert.equal(a.add({Q: 1}).month(), 1, "Add quarter");
+        assert.equal(a.add({ ms: 50 }).milliseconds(), 550, "Add milliseconds");
+        assert.equal(a.add({ s: 1 }).seconds(), 9, "Add seconds");
+        assert.equal(a.add({ m: 1 }).minutes(), 8, "Add minutes");
+        assert.equal(a.add({ h: 1 }).hours(), 7, "Add hours");
+        assert.equal(a.add({ d: 1 }).date(), 13, "Add date");
+        assert.equal(a.add({ w: 1 }).date(), 20, "Add week");
+        assert.equal(a.add({ M: 1 }).month(), 10, "Add month");
+        assert.equal(a.add({ y: 1 }).year(), 2012, "Add year");
+        assert.equal(a.add({ Q: 1 }).month(), 1, "Add quarter");
 
-        const b = adone.date([2010, 0, 31]).add({M: 1});
-        const c = adone.date([2010, 1, 28]).subtract({M: 1});
-        const d = adone.date([2010, 1, 28]).subtract({Q: 1});
+        const b = adone.date([2010, 0, 31]).add({ M: 1 });
+        const c = adone.date([2010, 1, 28]).subtract({ M: 1 });
+        const d = adone.date([2010, 1, 28]).subtract({ Q: 1 });
 
         assert.equal(b.month(), 1, "add month, jan 31st to feb 28th");
         assert.equal(b.date(), 28, "add month, jan 31st to feb 28th");
@@ -46,15 +46,15 @@ describe("add and subtract", () => {
         a.seconds(8);
         a.milliseconds(500);
 
-        assert.equal(a.add({milliseconds: 50}).milliseconds(), 550, "Add milliseconds");
-        assert.equal(a.add({seconds: 1}).seconds(), 9, "Add seconds");
-        assert.equal(a.add({minutes: 1}).minutes(), 8, "Add minutes");
-        assert.equal(a.add({hours: 1}).hours(), 7, "Add hours");
-        assert.equal(a.add({days: 1}).date(), 13, "Add date");
-        assert.equal(a.add({weeks: 1}).date(), 20, "Add week");
-        assert.equal(a.add({months: 1}).month(), 10, "Add month");
-        assert.equal(a.add({years: 1}).year(), 2012, "Add year");
-        assert.equal(a.add({quarters: 1}).month(), 1, "Add quarter");
+        assert.equal(a.add({ milliseconds: 50 }).milliseconds(), 550, "Add milliseconds");
+        assert.equal(a.add({ seconds: 1 }).seconds(), 9, "Add seconds");
+        assert.equal(a.add({ minutes: 1 }).minutes(), 8, "Add minutes");
+        assert.equal(a.add({ hours: 1 }).hours(), 7, "Add hours");
+        assert.equal(a.add({ days: 1 }).date(), 13, "Add date");
+        assert.equal(a.add({ weeks: 1 }).date(), 20, "Add week");
+        assert.equal(a.add({ months: 1 }).month(), 10, "Add month");
+        assert.equal(a.add({ years: 1 }).year(), 2012, "Add year");
+        assert.equal(a.add({ quarters: 1 }).month(), 1, "Add quarter");
     });
 
     it("add long singular reverse args", () => {
@@ -67,15 +67,15 @@ describe("add and subtract", () => {
         a.seconds(8);
         a.milliseconds(500);
 
-        assert.equal(a.add({millisecond: 50}).milliseconds(), 550, "Add milliseconds");
-        assert.equal(a.add({second: 1}).seconds(), 9, "Add seconds");
-        assert.equal(a.add({minute: 1}).minutes(), 8, "Add minutes");
-        assert.equal(a.add({hour: 1}).hours(), 7, "Add hours");
-        assert.equal(a.add({day: 1}).date(), 13, "Add date");
-        assert.equal(a.add({week: 1}).date(), 20, "Add week");
-        assert.equal(a.add({month: 1}).month(), 10, "Add month");
-        assert.equal(a.add({year: 1}).year(), 2012, "Add year");
-        assert.equal(a.add({quarter: 1}).month(), 1, "Add quarter");
+        assert.equal(a.add({ millisecond: 50 }).milliseconds(), 550, "Add milliseconds");
+        assert.equal(a.add({ second: 1 }).seconds(), 9, "Add seconds");
+        assert.equal(a.add({ minute: 1 }).minutes(), 8, "Add minutes");
+        assert.equal(a.add({ hour: 1 }).hours(), 7, "Add hours");
+        assert.equal(a.add({ day: 1 }).date(), 13, "Add date");
+        assert.equal(a.add({ week: 1 }).date(), 20, "Add week");
+        assert.equal(a.add({ month: 1 }).month(), 10, "Add month");
+        assert.equal(a.add({ year: 1 }).year(), 2012, "Add year");
+        assert.equal(a.add({ quarter: 1 }).month(), 1, "Add quarter");
     });
 
     it("add string long", () => {

@@ -11,11 +11,11 @@ describe("ca", () => {
     });
 
     it("parse", () => {
-        const tests = "gener gen._febrer febr._març mar._abril abr._maig mai._juny jun._juliol jul._agost ag._setembre set._octubre oct._novembre nov._desembre des.".split("_");
+        const tests = "gener gen._febrer febr._març març_abril abr._maig maig_juny juny_juliol jul._agost ag._setembre set._octubre oct._novembre nov._desembre des.".split("_");
         let i;
 
         function equalTest(input, mmm, i) {
-            assert.equal(adone.date(input, mmm).month(), i, input + " should be month " + (i + 1));
+            assert.equal(adone.date(input, mmm).month(), i, `${input} should be month ${i + 1}`);
         }
         for (i = 0; i < 12; i++) {
             tests[i] = tests[i].split(" ");
@@ -32,7 +32,7 @@ describe("ca", () => {
 
     it("format", () => {
         const a = [
-            ["dddd, Do MMMM YYYY, h:mm:ss a", "diumenge, 14è febrer 2010, 3:25:50 pm"],
+            ["dddd, Do MMMM YYYY, h:mm:ss a", "diumenge, 14è de febrer 2010, 3:25:50 pm"],
             ["ddd, hA", "dg., 3PM"],
             ["M Mo MM MMMM MMM", "2 2n 02 febrer febr."],
             ["YYYY YY", "2010 10"],
@@ -48,19 +48,19 @@ describe("ca", () => {
             ["[the] DDDo [day of the year]", "the 45è day of the year"],
             ["LTS", "15:25:50"],
             ["L", "14/02/2010"],
-            ["LL", "14 febrer 2010"],
-            ["LLL", "14 febrer 2010 15:25"],
-            ["LLLL", "diumenge 14 febrer 2010 15:25"],
+            ["LL", "el 14 de febrer de 2010"],
+            ["LLL", "el 14 de febrer de 2010 a les 15:25"],
+            ["LLLL", "el diumenge 14 de febrer de 2010 a les 15:25"],
             ["l", "14/2/2010"],
             ["ll", "14 febr. 2010"],
-            ["lll", "14 febr. 2010 15:25"],
-            ["llll", "dg. 14 febr. 2010 15:25"]
+            ["lll", "14 febr. 2010, 15:25"],
+            ["llll", "dg. 14 febr. 2010, 15:25"]
         ];
         const b = adone.date(new Date(2010, 1, 14, 15, 25, 50, 125));
         let i;
 
         for (i = 0; i < a.length; i++) {
-            assert.equal(b.format(a[i][0]), a[i][1], a[i][0] + " ---> " + a[i][1]);
+            assert.equal(b.format(a[i][0]), a[i][1], `${a[i][0]} ---> ${a[i][1]}`);
         }
     });
 
@@ -102,7 +102,7 @@ describe("ca", () => {
     });
 
     it("format month", () => {
-        const expected = "gener gen._febrer febr._març mar._abril abr._maig mai._juny jun._juliol jul._agost ag._setembre set._octubre oct._novembre nov._desembre des.".split("_");
+        const expected = "gener gen._febrer febr._març març_abril abr._maig maig_juny juny_juliol jul._agost ag._setembre set._octubre oct._novembre nov._desembre des.".split("_");
         let i;
 
         for (i = 0; i < expected.length; i++) {
@@ -258,11 +258,11 @@ describe("ca", () => {
             m = adone.date().add({
                 d: i
             });
-            assert.equal(m.calendar(), m.format("dddd [a " + (m.hours() !== 1 ? "les" : "la") + "] LT"), "Today + " + i + " days current time");
+            assert.equal(m.calendar(), m.format(`dddd [a ${m.hours() !== 1 ? "les" : "la"}] LT`), `Today + ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("dddd [a " + (m.hours() !== 1 ? "les" : "la") + "] LT"), "Today + " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format(`dddd [a ${m.hours() !== 1 ? "les" : "la"}] LT`), `Today + ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("dddd [a " + (m.hours() !== 1 ? "les" : "la") + "] LT"), "Today + " + i + " days end of day");
+            assert.equal(m.calendar(), m.format(`dddd [a ${m.hours() !== 1 ? "les" : "la"}] LT`), `Today + ${i} days end of day`);
         }
     });
 
@@ -274,11 +274,11 @@ describe("ca", () => {
             m = adone.date().subtract({
                 d: i
             });
-            assert.equal(m.calendar(), m.format("[el] dddd [passat a " + (m.hours() !== 1 ? "les" : "la") + "] LT"), "Today - " + i + " days current time");
+            assert.equal(m.calendar(), m.format(`[el] dddd [passat a ${m.hours() !== 1 ? "les" : "la"}] LT`), `Today - ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("[el] dddd [passat a " + (m.hours() !== 1 ? "les" : "la") + "] LT"), "Today - " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format(`[el] dddd [passat a ${m.hours() !== 1 ? "les" : "la"}] LT`), `Today - ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("[el] dddd [passat a " + (m.hours() !== 1 ? "les" : "la") + "] LT"), "Today - " + i + " days end of day");
+            assert.equal(m.calendar(), m.format(`[el] dddd [passat a ${m.hours() !== 1 ? "les" : "la"}] LT`), `Today - ${i} days end of day`);
         }
     });
 
@@ -310,5 +310,11 @@ describe("ca", () => {
         assert.equal(adone.date([2012, 0, 8]).format("w ww wo"), "1 01 1a", "Jan  8 2012 should be week 1");
         assert.equal(adone.date([2012, 0, 9]).format("w ww wo"), "2 02 2a", "Jan  9 2012 should be week 2");
         assert.equal(adone.date([2012, 0, 15]).format("w ww wo"), "2 02 2a", "Jan 15 2012 should be week 2");
+    });
+
+    it("day and month", () => {
+        assert.equal(adone.date([2012, 1, 15]).format("D MMMM"), "15 de febrer");
+        assert.equal(adone.date([2012, 9, 15]).format("D MMMM"), "15 d'octubre");
+        assert.equal(adone.date([2012, 9, 15]).format("MMMM, D"), "octubre, 15");
     });
 });

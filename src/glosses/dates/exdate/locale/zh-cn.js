@@ -11,19 +11,19 @@ export default ExDate.defineLocale("zh-cn", {
     weekdaysShort: "周日_周一_周二_周三_周四_周五_周六".split("_"),
     weekdaysMin: "日_一_二_三_四_五_六".split("_"),
     longDateFormat: {
-        LT: "Ah点mm分",
-        LTS: "Ah点m分s秒",
-        L: "YYYY-MM-DD",
+        LT: "HH:mm",
+        LTS: "HH:mm:ss",
+        L: "YYYY年MMMD日",
         LL: "YYYY年MMMD日",
         LLL: "YYYY年MMMD日Ah点mm分",
         LLLL: "YYYY年MMMD日ddddAh点mm分",
-        l: "YYYY-MM-DD",
+        l: "YYYY年MMMD日",
         ll: "YYYY年MMMD日",
-        lll: "YYYY年MMMD日Ah点mm分",
-        llll: "YYYY年MMMD日ddddAh点mm分"
+        lll: "YYYY年MMMD日 HH:mm",
+        llll: "YYYY年MMMD日dddd HH:mm"
     },
     meridiemParse: /凌晨|早上|上午|中午|下午|晚上/,
-    meridiemHour (hour, meridiem) {
+    meridiemHour(hour, meridiem) {
         if (hour === 12) {
             hour = 0;
         }
@@ -32,13 +32,13 @@ export default ExDate.defineLocale("zh-cn", {
             return hour;
         } else if (meridiem === "下午" || meridiem === "晚上") {
             return hour + 12;
-        } else {
-            // '中午'
-            return hour >= 11 ? hour : hour + 12;
         }
+            // '中午'
+        return hour >= 11 ? hour : hour + 12;
+
     },
     // eslint-disable-next-line no-unused-vars
-    meridiem (hour, minute, isLower) {
+    meridiem(hour, minute, isLower) {
         const hm = hour * 100 + minute;
         if (hm < 600) {
             return "凌晨";
@@ -50,44 +50,30 @@ export default ExDate.defineLocale("zh-cn", {
             return "中午";
         } else if (hm < 1800) {
             return "下午";
-        } else {
-            return "晚上";
         }
+        return "晚上";
+
     },
     calendar: {
-        sameDay () {
-            return this.minutes() === 0 ? "[今天]Ah[点整]" : "[今天]LT";
-        },
-        nextDay () {
-            return this.minutes() === 0 ? "[明天]Ah[点整]" : "[明天]LT";
-        },
-        lastDay () {
-            return this.minutes() === 0 ? "[昨天]Ah[点整]" : "[昨天]LT";
-        },
-        nextWeek () {
-            const startOfWeek = new ExDate().startOf("week");
-            const prefix = this.diff(startOfWeek, "days") >= 7 ? "[下]" : "[本]";
-            return this.minutes() === 0 ? prefix + "dddAh点整" : prefix + "dddAh点mm";
-        },
-        lastWeek () {
-            const startOfWeek = new ExDate().startOf("week");
-            const prefix = this.unix() < startOfWeek.unix()  ? "[上]" : "[本]";
-            return this.minutes() === 0 ? prefix + "dddAh点整" : prefix + "dddAh点mm";
-        },
-        sameElse: "LL"
+        sameDay: "[今天]LT",
+        nextDay: "[明天]LT",
+        nextWeek: "[下]ddddLT",
+        lastDay: "[昨天]LT",
+        lastWeek: "[上]ddddLT",
+        sameElse: "L"
     },
-    ordinalParse: /\d{1,2}(日|月|周)/,
-    ordinal (number, period) {
+    dayOfMonthOrdinalParse: /\d{1,2}(日|月|周)/,
+    ordinal(number, period) {
         switch (period) {
             case "d":
             case "D":
             case "DDD":
-                return number + "日";
+                return `${number}日`;
             case "M":
-                return number + "月";
+                return `${number}月`;
             case "w":
             case "W":
-                return number + "周";
+                return `${number}周`;
             default:
                 return number;
         }

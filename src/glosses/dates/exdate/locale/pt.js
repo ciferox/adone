@@ -8,7 +8,7 @@ export default ExDate.defineLocale("pt", {
     monthsShort: "Jan_Fev_Mar_Abr_Mai_Jun_Jul_Ago_Set_Out_Nov_Dez".split("_"),
     weekdays: "Domingo_Segunda-Feira_Terça-Feira_Quarta-Feira_Quinta-Feira_Sexta-Feira_Sábado".split("_"),
     weekdaysShort: "Dom_Seg_Ter_Qua_Qui_Sex_Sáb".split("_"),
-    weekdaysMin: "Dom_2ª_3ª_4ª_5ª_6ª_Sáb".split("_"),
+    weekdaysMin: "Do_2ª_3ª_4ª_5ª_6ª_Sá".split("_"),
     weekdaysParseExact: true,
     longDateFormat: {
         LT: "HH:mm",
@@ -23,7 +23,7 @@ export default ExDate.defineLocale("pt", {
         nextDay: "[Amanhã às] LT",
         nextWeek: "dddd [às] LT",
         lastDay: "[Ontem às] LT",
-        lastWeek () {
+        lastWeek() {
             return (this.day() === 0 || this.day() === 6) ?
                 "[Último] dddd [às] LT" : // Saturday + Sunday
                 "[Última] dddd [às] LT"; // Monday - Friday
@@ -45,7 +45,7 @@ export default ExDate.defineLocale("pt", {
         y: "um ano",
         yy: "%d anos"
     },
-    ordinalParse: /\d{1,2}º/,
+    dayOfMonthOrdinalParse: /\d{1,2}º/,
     ordinal: "%dº",
     week: {
         dow: 1, // Monday is the first day of the week.

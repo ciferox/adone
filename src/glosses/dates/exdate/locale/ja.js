@@ -10,24 +10,28 @@ export default ExDate.defineLocale("ja", {
     weekdaysShort: "日_月_火_水_木_金_土".split("_"),
     weekdaysMin: "日_月_火_水_木_金_土".split("_"),
     longDateFormat: {
-        LT: "Ah時m分",
-        LTS: "Ah時m分s秒",
+        LT: "HH:mm",
+        LTS: "HH:mm:ss",
         L: "YYYY/MM/DD",
         LL: "YYYY年M月D日",
-        LLL: "YYYY年M月D日Ah時m分",
-        LLLL: "YYYY年M月D日Ah時m分 dddd"
+        LLL: "YYYY年M月D日 HH:mm",
+        LLLL: "YYYY年M月D日 HH:mm dddd",
+        l: "YYYY/MM/DD",
+        ll: "YYYY年M月D日",
+        lll: "YYYY年M月D日 HH:mm",
+        llll: "YYYY年M月D日 HH:mm dddd"
     },
     meridiemParse: /午前|午後/i,
-    isPM (input) {
+    isPM(input) {
         return input === "午後";
     },
     // eslint-disable-next-line no-unused-vars
-    meridiem (hour, minute, isLower) {
+    meridiem(hour, minute, isLower) {
         if (hour < 12) {
             return "午前";
-        } else {
-            return "午後";
         }
+        return "午後";
+
     },
     calendar: {
         sameDay: "[今日] LT",
@@ -37,13 +41,13 @@ export default ExDate.defineLocale("ja", {
         lastWeek: "[前週]dddd LT",
         sameElse: "L"
     },
-    ordinalParse: /\d{1,2}日/,
-    ordinal (number, period) {
+    dayOfMonthOrdinalParse: /\d{1,2}日/,
+    ordinal(number, period) {
         switch (period) {
             case "d":
             case "D":
             case "DDD":
-                return number + "日";
+                return `${number}日`;
             default:
                 return number;
         }

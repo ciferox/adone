@@ -62,10 +62,10 @@ export default ExDate.defineLocale("tr", {
         y: "bir yıl",
         yy: "%d yıl"
     },
-    ordinalParse: /\d{1,2}'(inci|nci|üncü|ncı|uncu|ıncı)/,
-    ordinal (number) {
+    dayOfMonthOrdinalParse: /\d{1,2}'(inci|nci|üncü|ncı|uncu|ıncı)/,
+    ordinal(number) {
         if (number === 0) {  // special case for zero
-            return number + "'ıncı";
+            return `${number}'ıncı`;
         }
         const a = number % 10;
         const b = number % 100 - a;

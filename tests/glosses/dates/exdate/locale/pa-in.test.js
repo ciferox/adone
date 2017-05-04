@@ -11,7 +11,7 @@ describe("pa-in", () => {
         let i;
 
         function equalTest(input, mmm, i) {
-            assert.equal(adone.date(input, mmm).month(), i, input + " should be month " + (i + 1));
+            assert.equal(adone.date(input, mmm).month(), i, `${input} should be month ${i + 1}`);
         }
         for (i = 0; i < 12; i++) {
             tests[i] = tests[i].split(" ");
@@ -55,7 +55,7 @@ describe("pa-in", () => {
         let i;
 
         for (i = 0; i < a.length; i++) {
-            assert.equal(b.format(a[i][0]), a[i][1], a[i][0] + " ---> " + a[i][1]);
+            assert.equal(b.format(a[i][0]), a[i][1], `${a[i][0]} ---> ${a[i][1]}`);
         }
     });
 
@@ -249,11 +249,11 @@ describe("pa-in", () => {
             m = adone.date().add({
                 d: i
             });
-            assert.equal(m.calendar(), m.format("dddd[,] LT"), "Today + " + i + " days current time");
+            assert.equal(m.calendar(), m.format("dddd[,] LT"), `Today + ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("dddd[,] LT"), "Today + " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format("dddd[,] LT"), `Today + ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("dddd[,] LT"), "Today + " + i + " days end of day");
+            assert.equal(m.calendar(), m.format("dddd[,] LT"), `Today + ${i} days end of day`);
         }
     });
 
@@ -265,11 +265,11 @@ describe("pa-in", () => {
             m = adone.date().subtract({
                 d: i
             });
-            assert.equal(m.calendar(), m.format("[ਪਿਛਲੇ] dddd[,] LT"), "Today - " + i + " days current time");
+            assert.equal(m.calendar(), m.format("[ਪਿਛਲੇ] dddd[,] LT"), `Today - ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("[ਪਿਛਲੇ] dddd[,] LT"), "Today - " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format("[ਪਿਛਲੇ] dddd[,] LT"), `Today - ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("[ਪਿਛਲੇ] dddd[,] LT"), "Today - " + i + " days end of day");
+            assert.equal(m.calendar(), m.format("[ਪਿਛਲੇ] dddd[,] LT"), `Today - ${i} days end of day`);
         }
     });
 
@@ -380,7 +380,7 @@ describe("pa-in", () => {
         assert.equal(adone.date([2012, 0, 15]).format("w ww wo"), "੩ ੦੩ ੩", "Jan 15 2012 should be week 3");
     });
 
-    it("lenient ordinal parsing", () => {
+    it("lenient day of month ordinal parsing", () => {
         let i;
         let ordinalStr;
         let testMoment;
@@ -388,25 +388,25 @@ describe("pa-in", () => {
         for (i = 1; i <= 31; ++i) {
             ordinalStr = adone.date([2014, 0, i]).format("YYYY MM Do");
             testMoment = adone.date(ordinalStr, "YYYY MM Do");
-            assert.equal(testMoment.year(), 2014, "lenient ordinal parsing " + i + " year check");
-            assert.equal(testMoment.month(), 0, "lenient ordinal parsing " + i + " month check");
-            assert.equal(testMoment.date(), i, "lenient ordinal parsing " + i + " date check");
+            assert.equal(testMoment.year(), 2014, `lenient day of month ordinal parsing ${i} year check`);
+            assert.equal(testMoment.month(), 0, `lenient day of month ordinal parsing ${i} month check`);
+            assert.equal(testMoment.date(), i, `lenient day of month ordinal parsing ${i} date check`);
         }
     });
 
-    it("lenient ordinal parsing of number", () => {
+    it("lenient day of month ordinal parsing of number", () => {
         let i;
         let testMoment;
 
         for (i = 1; i <= 31; ++i) {
-            testMoment = adone.date("2014 01 " + i, "YYYY MM Do");
-            assert.equal(testMoment.year(), 2014, "lenient ordinal parsing of number " + i + " year check");
-            assert.equal(testMoment.month(), 0, "lenient ordinal parsing of number " + i + " month check");
-            assert.equal(testMoment.date(), i, "lenient ordinal parsing of number " + i + " date check");
+            testMoment = adone.date(`2014 01 ${i}`, "YYYY MM Do");
+            assert.equal(testMoment.year(), 2014, `lenient day of month ordinal parsing of number ${i} year check`);
+            assert.equal(testMoment.month(), 0, `lenient day of month ordinal parsing of number ${i} month check`);
+            assert.equal(testMoment.date(), i, `lenient day of month ordinal parsing of number ${i} date check`);
         }
     });
 
-    it("strict ordinal parsing", () => {
+    it("strict day of month ordinal parsing", () => {
         let i;
         let ordinalStr;
         let testMoment;
@@ -414,7 +414,7 @@ describe("pa-in", () => {
         for (i = 1; i <= 31; ++i) {
             ordinalStr = adone.date([2014, 0, i]).format("YYYY MM Do");
             testMoment = adone.date(ordinalStr, "YYYY MM Do", true);
-            assert.ok(testMoment.isValid(), "strict ordinal parsing " + i);
+            assert.ok(testMoment.isValid(), `strict day of month ordinal parsing ${i}`);
         }
     });
 });

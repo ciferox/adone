@@ -64,8 +64,8 @@ export default ExDate.defineLocale("ky", {
         y: "бир жыл",
         yy: "%d жыл"
     },
-    ordinalParse: /\d{1,2}-(чи|чы|чү|чу)/,
-    ordinal (number) {
+    dayOfMonthOrdinalParse: /\d{1,2}-(чи|чы|чү|чу)/,
+    ordinal(number) {
         const a = number % 10;
         const b = number >= 100 ? 100 : null;
         return number + (suffixes[number] || suffixes[a] || suffixes[b]);

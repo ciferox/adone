@@ -6,16 +6,16 @@
 import ExDate from "..";
 
 const symbolMap = {
-    "1": "၁",
-    "2": "၂",
-    "3": "၃",
-    "4": "၄",
-    "5": "၅",
-    "6": "၆",
-    "7": "၇",
-    "8": "၈",
-    "9": "၉",
-    "0": "၀"
+    1: "၁",
+    2: "၂",
+    3: "၃",
+    4: "၄",
+    5: "၅",
+    6: "၆",
+    7: "၇",
+    8: "၈",
+    9: "၉",
+    0: "၀"
 };
 
 const numberMap = {
@@ -69,13 +69,13 @@ export default ExDate.defineLocale("my", {
         y: "တစ်နှစ်",
         yy: "%d နှစ်"
     },
-    preparse (string) {
-        return string.replace(/[၁၂၃၄၅၆၇၈၉၀]/g, function (match) {
+    preparse(string) {
+        return string.replace(/[၁၂၃၄၅၆၇၈၉၀]/g, (match) => {
             return numberMap[match];
         });
     },
-    postformat (string) {
-        return string.replace(/\d/g, function (match) {
+    postformat(string) {
+        return string.replace(/\d/g, (match) => {
             return symbolMap[match];
         });
     },

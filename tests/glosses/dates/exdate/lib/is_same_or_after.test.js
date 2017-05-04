@@ -22,7 +22,7 @@ describe("is same or after", () => {
         assert.equal(m.isSameOrAfter(adone.date(new Date(2011, 3, 2, 3, 4, 5, 11))), false, "millisecond is later");
         assert.equal(m.isSameOrAfter(adone.date(new Date(2011, 3, 2, 3, 4, 5, 9))), true, "millisecond is earlier");
         assert.equal(m.isSameOrAfter(m), true, "moments are the same as themselves");
-        assert.equal(+m, +mCopy, "isSameOrAfter second should not change adone.date");
+        assert.equal(Number(m), Number(mCopy), "isSameOrAfter second should not change adone.date");
     });
 
     it("is same or after year", () => {
@@ -37,7 +37,7 @@ describe("is same or after", () => {
         assert.equal(m.isSameOrAfter(adone.date(new Date(2012, 0, 1, 0, 0, 0, 0)), "year"), false, "start of next year");
         assert.equal(m.isSameOrAfter(adone.date(new Date(2010, 11, 31, 23, 59, 59, 999)), "year"), true, "end of previous year");
         assert.equal(m.isSameOrAfter(m, "year"), true, "same moments are in the same year");
-        assert.equal(+m, +mCopy, "isSameOrAfter year should not change adone.date");
+        assert.equal(Number(m), Number(mCopy), "isSameOrAfter year should not change adone.date");
     });
 
     it("is same or after month", () => {
@@ -54,7 +54,7 @@ describe("is same or after", () => {
         assert.equal(m.isSameOrAfter(adone.date(new Date(2011, 3, 1, 0, 0, 0, 0)), "month"), false, "start of next month");
         assert.equal(m.isSameOrAfter(adone.date(new Date(2011, 1, 27, 23, 59, 59, 999)), "month"), true, "end of previous month");
         assert.equal(m.isSameOrAfter(m, "month"), true, "same moments are in the same month");
-        assert.equal(+m, +mCopy, "isSameOrAfter month should not change adone.date");
+        assert.equal(Number(m), Number(mCopy), "isSameOrAfter month should not change adone.date");
     });
 
     it("is same or after day", () => {
@@ -73,7 +73,7 @@ describe("is same or after", () => {
         assert.equal(m.isSameOrAfter(adone.date(new Date(2011, 1, 3, 0, 0, 0, 0)), "day"), false, "start of next day");
         assert.equal(m.isSameOrAfter(adone.date(new Date(2011, 1, 1, 23, 59, 59, 999)), "day"), true, "end of previous day");
         assert.equal(m.isSameOrAfter(m, "day"), true, "same moments are in the same day");
-        assert.equal(+m, +mCopy, "isSameOrAfter day should not change adone.date");
+        assert.equal(Number(m), Number(mCopy), "isSameOrAfter day should not change adone.date");
     });
 
     it("is same or after hour", () => {
@@ -94,7 +94,7 @@ describe("is same or after", () => {
         assert.equal(m.isSameOrAfter(adone.date(new Date(2011, 1, 2, 4, 0, 0, 0)), "hour"), false, "start of next hour");
         assert.equal(m.isSameOrAfter(adone.date(new Date(2011, 1, 2, 2, 59, 59, 999)), "hour"), true, "end of previous hour");
         assert.equal(m.isSameOrAfter(m, "hour"), true, "same moments are in the same hour");
-        assert.equal(+m, +mCopy, "isSameOrAfter hour should not change adone.date");
+        assert.equal(Number(m), Number(mCopy), "isSameOrAfter hour should not change adone.date");
     });
 
     it("is same or after minute", () => {
@@ -117,7 +117,7 @@ describe("is same or after", () => {
         assert.equal(m.isSameOrAfter(adone.date(new Date(2011, 1, 2, 3, 5, 0, 0)), "minute"), false, "start of next minute");
         assert.equal(m.isSameOrAfter(adone.date(new Date(2011, 1, 2, 3, 3, 59, 999)), "minute"), true, "end of previous minute");
         assert.equal(m.isSameOrAfter(m, "minute"), true, "same moments are in the same minute");
-        assert.equal(+m, +mCopy, "isSameOrAfter minute should not change adone.date");
+        assert.equal(Number(m), Number(mCopy), "isSameOrAfter minute should not change adone.date");
     });
 
     it("is same or after second", () => {
@@ -142,7 +142,7 @@ describe("is same or after", () => {
         assert.equal(m.isSameOrAfter(adone.date(new Date(2011, 1, 2, 3, 4, 6, 0)), "second"), false, "start of next second");
         assert.equal(m.isSameOrAfter(adone.date(new Date(2011, 1, 2, 3, 4, 4, 999)), "second"), true, "end of previous second");
         assert.equal(m.isSameOrAfter(m, "second"), true, "same moments are in the same second");
-        assert.equal(+m, +mCopy, "isSameOrAfter second should not change adone.date");
+        assert.equal(Number(m), Number(mCopy), "isSameOrAfter second should not change adone.date");
     });
 
     it("is same or after millisecond", () => {
@@ -165,7 +165,7 @@ describe("is same or after", () => {
         assert.equal(m.isSameOrAfter(adone.date(new Date(2011, 3, 2, 3, 4, 6, 11)), "millisecond"), false, "millisecond is later");
         assert.equal(m.isSameOrAfter(adone.date(new Date(2011, 3, 2, 3, 4, 4, 9)), "millisecond"), true, "millisecond is earlier");
         assert.equal(m.isSameOrAfter(m, "millisecond"), true, "same moments are in the same millisecond");
-        assert.equal(+m, +mCopy, "isSameOrAfter millisecond should not change adone.date");
+        assert.equal(Number(m), Number(mCopy), "isSameOrAfter millisecond should not change adone.date");
     });
 
     it("is same or after with utc offset moments", () => {

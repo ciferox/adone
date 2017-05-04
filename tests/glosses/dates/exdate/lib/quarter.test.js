@@ -2,15 +2,15 @@ describe("quarter", () => {
     before(() => {
         adone.date.locale("en");
     });
-    
+
     it("library quarter getter", () => {
-        assert.equal(adone.date([1985,  1,  4]).quarter(), 1, "Feb  4 1985 is Q1");
-        assert.equal(adone.date([2029,  8, 18]).quarter(), 3, "Sep 18 2029 is Q3");
-        assert.equal(adone.date([2013,  3, 24]).quarter(), 2, "Apr 24 2013 is Q2");
-        assert.equal(adone.date([2015,  2,  5]).quarter(), 1, "Mar  5 2015 is Q1");
-        assert.equal(adone.date([1970,  0,  2]).quarter(), 1, "Jan  2 1970 is Q1");
+        assert.equal(adone.date([1985, 1, 4]).quarter(), 1, "Feb  4 1985 is Q1");
+        assert.equal(adone.date([2029, 8, 18]).quarter(), 3, "Sep 18 2029 is Q3");
+        assert.equal(adone.date([2013, 3, 24]).quarter(), 2, "Apr 24 2013 is Q2");
+        assert.equal(adone.date([2015, 2, 5]).quarter(), 1, "Mar  5 2015 is Q1");
+        assert.equal(adone.date([1970, 0, 2]).quarter(), 1, "Jan  2 1970 is Q1");
         assert.equal(adone.date([2001, 11, 12]).quarter(), 4, "Dec 12 2001 is Q4");
-        assert.equal(adone.date([2000,  0,  2]).quarter(), 1, "Jan  2 2000 is Q1");
+        assert.equal(adone.date([2000, 0, 2]).quarter(), 1, "Jan  2 2000 is Q1");
     });
 
     it("quarter setter singular", () => {

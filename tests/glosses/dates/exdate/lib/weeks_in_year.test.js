@@ -19,7 +19,7 @@ describe("weeks in year", () => {
     });
 
     it("weeksInYear doy/dow = 1/4", () => {
-        adone.date.locale("1/4", {week: {dow: 1, doy: 4}});
+        adone.date.locale("1/4", { week: { dow: 1, doy: 4 } });
 
         assert.equal(adone.date([2004]).weeksInYear(), 53, "2004 has 53 weeks");
         assert.equal(adone.date([2005]).weeksInYear(), 52, "2005 has 53 weeks");
@@ -36,7 +36,7 @@ describe("weeks in year", () => {
     });
 
     it("weeksInYear doy/dow = 6/12", () => {
-        adone.date.locale("6/12", {week: {dow: 6, doy: 12}});
+        adone.date.locale("6/12", { week: { dow: 6, doy: 12 } });
 
         assert.equal(adone.date([2004]).weeksInYear(), 53, "2004 has 53 weeks");
         assert.equal(adone.date([2005]).weeksInYear(), 52, "2005 has 53 weeks");
@@ -53,7 +53,7 @@ describe("weeks in year", () => {
     });
 
     it("weeksInYear doy/dow = 1/7", () => {
-        adone.date.locale("1/7", {week: {dow: 1, doy: 7}});
+        adone.date.locale("1/7", { week: { dow: 1, doy: 7 } });
 
         assert.equal(adone.date([2004]).weeksInYear(), 52, "2004 has 53 weeks");
         assert.equal(adone.date([2005]).weeksInYear(), 52, "2005 has 53 weeks");
@@ -70,7 +70,7 @@ describe("weeks in year", () => {
     });
 
     it("weeksInYear doy/dow = 0/6", () => {
-        adone.date.locale("0/6", {week: {dow: 0, doy: 6}});
+        adone.date.locale("0/6", { week: { dow: 0, doy: 6 } });
 
         assert.equal(adone.date([2004]).weeksInYear(), 52, "2004 has 53 weeks");
         assert.equal(adone.date([2005]).weeksInYear(), 53, "2005 has 53 weeks");

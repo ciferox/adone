@@ -7,27 +7,27 @@ import ExDate from "..";
 // eslint-disable-next-line no-unused-vars
 function processRelativeTime(number, withoutSuffix, key, isFuture) {
     const format = {
-        "m": ["eng Minutt", "enger Minutt"],
-        "h": ["eng Stonn", "enger Stonn"],
-        "d": ["een Dag", "engem Dag"],
-        "M": ["ee Mount", "engem Mount"],
-        "y": ["ee Joer", "engem Joer"]
+        m: ["eng Minutt", "enger Minutt"],
+        h: ["eng Stonn", "enger Stonn"],
+        d: ["een Dag", "engem Dag"],
+        M: ["ee Mount", "engem Mount"],
+        y: ["ee Joer", "engem Joer"]
     };
     return withoutSuffix ? format[key][0] : format[key][1];
 }
 function processFutureTime(string) {
     const number = string.substr(0, string.indexOf(" "));
     if (eifelerRegelAppliesToNumber(number)) {
-        return "a " + string;
+        return `a ${string}`;
     }
-    return "an " + string;
+    return `an ${string}`;
 }
 function processPastTime(string) {
     const number = string.substr(0, string.indexOf(" "));
     if (eifelerRegelAppliesToNumber(number)) {
-        return "viru " + string;
+        return `viru ${string}`;
     }
-    return "virun " + string;
+    return `virun ${string}`;
 }
 /**
  * Returns true if the word before the given number loses the '-n' ending.
@@ -46,7 +46,7 @@ function eifelerRegelAppliesToNumber(number) {
         return true;
     } else if (number < 10) {
         // Only 1 digit
-        if (4 <= number && number <= 7) {
+        if (number >= 4 && number <= 7) {
             return true;
         }
         return false;
@@ -64,11 +64,11 @@ function eifelerRegelAppliesToNumber(number) {
             number = number / 10;
         }
         return eifelerRegelAppliesToNumber(number);
-    } else {
+    } 
         // Anything larger than 4 digits: recursively check first n-3 digits
-        number = number / 1000;
-        return eifelerRegelAppliesToNumber(number);
-    }
+    number = number / 1000;
+    return eifelerRegelAppliesToNumber(number);
+    
 }
 
 export default ExDate.defineLocale("lb", {
@@ -93,7 +93,7 @@ export default ExDate.defineLocale("lb", {
         nextDay: "[Muer um] LT",
         nextWeek: "dddd [um] LT",
         lastDay: "[Gëschter um] LT",
-        lastWeek () {
+        lastWeek() {
             // Different date string for 'Dënschdeg' (Tuesday) and 'Donneschdeg' (Thursday) due to phonological rule
             switch (this.day()) {
                 case 2:
@@ -119,7 +119,7 @@ export default ExDate.defineLocale("lb", {
         y: processRelativeTime,
         yy: "%d Joer"
     },
-    ordinalParse: /\d{1,2}\./,
+    dayOfMonthOrdinalParse: /\d{1,2}\./,
     ordinal: "%d.",
     week: {
         dow: 1, // Monday is the first day of the week.

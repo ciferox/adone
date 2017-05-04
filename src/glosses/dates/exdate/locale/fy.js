@@ -8,12 +8,14 @@ const monthsShortWithoutDots = "jan_feb_mrt_apr_mai_jun_jul_aug_sep_okt_nov_des"
 
 export default ExDate.defineLocale("fy", {
     months: "jannewaris_febrewaris_maart_april_maaie_juny_july_augustus_septimber_oktober_novimber_desimber".split("_"),
-    monthsShort (m, format) {
-        if (/-MMM-/.test(format)) {
+    monthsShort(m, format) {
+        if (!m) {
+            return monthsShortWithDots;
+        } else if (/-MMM-/.test(format)) {
             return monthsShortWithoutDots[m.month()];
-        } else {
-            return monthsShortWithDots[m.month()];
         }
+        return monthsShortWithDots[m.month()];
+
     },
     monthsParseExact: true,
     weekdays: "snein_moandei_tiisdei_woansdei_tongersdei_freed_sneon".split("_"),
@@ -51,8 +53,8 @@ export default ExDate.defineLocale("fy", {
         y: "ien jier",
         yy: "%d jierren"
     },
-    ordinalParse: /\d{1,2}(ste|de)/,
-    ordinal (number) {
+    dayOfMonthOrdinalParse: /\d{1,2}(ste|de)/,
+    ordinal(number) {
         return number + ((number === 1 || number === 8 || number >= 20) ? "ste" : "de");
     },
     week: {

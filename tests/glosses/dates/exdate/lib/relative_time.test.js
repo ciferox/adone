@@ -102,6 +102,17 @@ describe("relative time", () => {
 
         adone.date.relativeTimeThreshold("s", 45);
 
+        // A few seconds to seconds threshold
+        adone.date.relativeTimeThreshold("ss", 3);
+
+        a = adone.date();
+        a.subtract(3, "seconds");
+        assert.equal(a.fromNow(), "a few seconds ago", "Below custom a few seconds to seconds threshold");
+        a.subtract(1, "seconds");
+        assert.equal(a.fromNow(), "4 seconds ago", "Above custom a few seconds to seconds threshold");
+
+        adone.date.relativeTimeThreshold("ss", 44);
+
         // Minutes to hours threshold
         adone.date.relativeTimeThreshold("m", 55);
         a = adone.date();
@@ -153,7 +164,7 @@ describe("relative time", () => {
             adone.date.relativeTimeThreshold("s", 60);
             adone.date.relativeTimeThreshold("m", 60);
             adone.date.relativeTimeThreshold("h", 24);
-            adone.date.relativeTimeThreshold("d", 31);
+            adone.date.relativeTimeThreshold("d", 27);
             adone.date.relativeTimeThreshold("M", 12);
 
             let a = adone.date.utc();
@@ -165,8 +176,12 @@ describe("relative time", () => {
             assert.equal(a.toNow(), "in 23 hours", "Round down towards the nearest hour");
 
             a = adone.date.utc();
-            a.subtract({ days: 15, hours: 23, minutes: 59 });
-            assert.equal(a.toNow(), "in 15 days", "Round down towards the nearest day");
+            a.subtract({ days: 26, hours: 23, minutes: 59 });
+            assert.equal(a.toNow(), "in 26 days", "Round down towards the nearest day (just under)");
+
+            a = adone.date.utc();
+            a.subtract({ days: 27 });
+            assert.equal(a.toNow(), "in a month", "Round down towards the nearest day (just over)");
 
             a = adone.date.utc();
             a.subtract({ days: 364 });
@@ -195,14 +210,14 @@ describe("relative time", () => {
         }
     });
 
-    it("retrive rounding settings", () => {
+    it("retrieve rounding settings", () => {
         adone.date.relativeTimeRounding(Math.round);
         const roundingFunction = adone.date.relativeTimeRounding();
 
         assert.equal(roundingFunction, Math.round, "Can retrieve rounding setting");
     });
 
-    it("retrive threshold settings", () => {
+    it("retrieve threshold settings", () => {
         adone.date.relativeTimeThreshold("m", 45);
         const minuteThreshold = adone.date.relativeTimeThreshold("m");
 

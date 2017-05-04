@@ -18,7 +18,7 @@ export default ExDate.defineLocale("ms", {
         LLLL: "dddd, D MMMM YYYY [pukul] HH.mm"
     },
     meridiemParse: /pagi|tengahari|petang|malam/,
-    meridiemHour (hour, meridiem) {
+    meridiemHour(hour, meridiem) {
         if (hour === 12) {
             hour = 0;
         }
@@ -31,16 +31,16 @@ export default ExDate.defineLocale("ms", {
         }
     },
     // eslint-disable-next-line no-unused-vars
-    meridiem (hours, minutes, isLower) {
+    meridiem(hours, minutes, isLower) {
         if (hours < 11) {
             return "pagi";
         } else if (hours < 15) {
             return "tengahari";
         } else if (hours < 19) {
             return "petang";
-        } else {
-            return "malam";
-        }
+        } 
+        return "malam";
+        
     },
     calendar: {
         sameDay: "[Hari ini pukul] LT",

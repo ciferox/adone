@@ -19,7 +19,7 @@ export default ExDate.defineLocale("jv", {
         LLLL: "dddd, D MMMM YYYY [pukul] HH.mm"
     },
     meridiemParse: /enjing|siyang|sonten|ndalu/,
-    meridiemHour (hour, meridiem) {
+    meridiemHour(hour, meridiem) {
         if (hour === 12) {
             hour = 0;
         }
@@ -32,16 +32,16 @@ export default ExDate.defineLocale("jv", {
         }
     },
     // eslint-disable-next-line no-unused-vars
-    meridiem (hours, minutes, isLower) {
+    meridiem(hours, minutes, isLower) {
         if (hours < 11) {
             return "enjing";
         } else if (hours < 15) {
             return "siyang";
         } else if (hours < 19) {
             return "sonten";
-        } else {
-            return "ndalu";
-        }
+        } 
+        return "ndalu";
+        
     },
     calendar: {
         sameDay: "[Dinten puniko pukul] LT",

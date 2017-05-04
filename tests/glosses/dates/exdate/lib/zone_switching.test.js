@@ -27,7 +27,7 @@ describe("zone switching", () => {
         // http://en.wikipedia.org/wiki/UTC-12:00
         for (z = -12; z <= 14; ++z) {
             assert.equal(m.clone().utcOffset(z * 60, true).format(fmt), m.format(fmt),
-                    "local to utcOffset(" + z + ":00) failed to keep local time");
+                    `local to utcOffset(${z}:00) failed to keep local time`);
         }
     });
 
@@ -40,9 +40,9 @@ describe("zone switching", () => {
         // http://en.wikipedia.org/wiki/UTC-12:00
         for (z = -12; z <= 14; ++z) {
             assert.equal(m.clone().utcOffset(z * 60).valueOf(), m.valueOf(),
-                    "local to utcOffset(" + z + ":00) failed to keep utc time (implicit)");
+                    `local to utcOffset(${z}:00) failed to keep utc time (implicit)`);
             assert.equal(m.clone().utcOffset(z * 60, false).valueOf(), m.valueOf(),
-                    "local to utcOffset(" + z + ":00) failed to keep utc time (explicit)");
+                    `local to utcOffset(${z}:00) failed to keep utc time (explicit)`);
         }
     });
 
@@ -83,7 +83,7 @@ describe("zone switching", () => {
             m.utcOffset(z * 60);
 
             assert.equal(m.clone().local(true).format(fmt), m.format(fmt),
-                    "utcOffset(" + z + ":00) to local failed to keep local time");
+                    `utcOffset(${z}:00) to local failed to keep local time`);
         }
     });
 
@@ -98,9 +98,9 @@ describe("zone switching", () => {
             m.utcOffset(z * 60);
 
             assert.equal(m.clone().local(false).valueOf(), m.valueOf(),
-                    "utcOffset(" + z + ":00) to local failed to keep utc time (explicit)");
+                    `utcOffset(${z}:00) to local failed to keep utc time (explicit)`);
             assert.equal(m.clone().local().valueOf(), m.valueOf(),
-                    "utcOffset(" + z + ":00) to local failed to keep utc time (implicit)");
+                    `utcOffset(${z}:00) to local failed to keep utc time (implicit)`);
         }
     });
 });

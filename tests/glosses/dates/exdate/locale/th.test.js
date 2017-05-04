@@ -11,7 +11,7 @@ describe("th", () => {
         let i;
 
         function equalTest(input, mmm, i) {
-            assert.equal(adone.date(input, mmm).month(), i, input + " should be month " + (i + 1));
+            assert.equal(adone.date(input, mmm).month(), i, `${input} should be month ${i + 1}`);
         }
         for (i = 0; i < 12; i++) {
             tests[i] = tests[i].split(" ");
@@ -43,11 +43,11 @@ describe("th", () => {
             ["a A", "หลังเที่ยง หลังเที่ยง"],
             ["[the] DDDo [day of the year]", "the 45 day of the year"],
             ["LTS", "15:25:50"],
-            ["L", "2010/02/14"],
+            ["L", "14/02/2010"],
             ["LL", "14 กุมภาพันธ์ 2010"],
             ["LLL", "14 กุมภาพันธ์ 2010 เวลา 15:25"],
             ["LLLL", "วันอาทิตย์ที่ 14 กุมภาพันธ์ 2010 เวลา 15:25"],
-            ["l", "2010/2/14"],
+            ["l", "14/2/2010"],
             ["ll", "14 ก.พ. 2010"],
             ["lll", "14 ก.พ. 2010 เวลา 15:25"],
             ["llll", "วันอาทิตย์ที่ 14 ก.พ. 2010 เวลา 15:25"]
@@ -56,7 +56,7 @@ describe("th", () => {
         let i;
 
         for (i = 0; i < a.length; i++) {
-            assert.equal(b.format(a[i][0]), a[i][1], a[i][0] + " ---> " + a[i][1]);
+            assert.equal(b.format(a[i][0]), a[i][1], `${a[i][0]} ---> ${a[i][1]}`);
         }
     });
 
@@ -213,11 +213,11 @@ describe("th", () => {
             m = adone.date().add({
                 d: i
             });
-            assert.equal(m.calendar(), m.format("dddd[หน้า เวลา] LT"), "Today + " + i + " days current time");
+            assert.equal(m.calendar(), m.format("dddd[หน้า เวลา] LT"), `Today + ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("dddd[หน้า เวลา] LT"), "Today + " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format("dddd[หน้า เวลา] LT"), `Today + ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("dddd[หน้า เวลา] LT"), "Today + " + i + " days end of day");
+            assert.equal(m.calendar(), m.format("dddd[หน้า เวลา] LT"), `Today + ${i} days end of day`);
         }
     });
 
@@ -229,11 +229,11 @@ describe("th", () => {
             m = adone.date().subtract({
                 d: i
             });
-            assert.equal(m.calendar(), m.format("[วัน]dddd[ที่แล้ว เวลา] LT"), "Today - " + i + " days current time");
+            assert.equal(m.calendar(), m.format("[วัน]dddd[ที่แล้ว เวลา] LT"), `Today - ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("[วัน]dddd[ที่แล้ว เวลา] LT"), "Today - " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format("[วัน]dddd[ที่แล้ว เวลา] LT"), `Today - ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("[วัน]dddd[ที่แล้ว เวลา] LT"), "Today - " + i + " days end of day");
+            assert.equal(m.calendar(), m.format("[วัน]dddd[ที่แล้ว เวลา] LT"), `Today - ${i} days end of day`);
         }
     });
 

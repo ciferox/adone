@@ -11,17 +11,17 @@ function plural(word, num) {
 }
 function relativeTimeWithPlural(number, withoutSuffix, key) {
     const format = {
-        "mm": withoutSuffix ? "минута_минуты_минут" : "минуту_минуты_минут",
-        "hh": "час_часа_часов",
-        "dd": "день_дня_дней",
-        "MM": "месяц_месяца_месяцев",
-        "yy": "год_года_лет"
+        mm: withoutSuffix ? "минута_минуты_минут" : "минуту_минуты_минут",
+        hh: "час_часа_часов",
+        dd: "день_дня_дней",
+        MM: "месяц_месяца_месяцев",
+        yy: "год_года_лет"
     };
     if (key === "m") {
         return withoutSuffix ? "минута" : "минуту";
-    }    else {
-        return number + " " + plural(format[key], +number);
-    }
+    }    
+    return `${number} ${plural(format[key], Number(number))}`;
+    
 }
 const monthsParse = [/^янв/i, /^фев/i, /^мар/i, /^апр/i, /^ма[йя]/i, /^июн/i, /^июл/i, /^авг/i, /^сен/i, /^окт/i, /^ноя/i, /^дек/i];
 
@@ -72,7 +72,7 @@ export default ExDate.defineLocale("ru", {
         sameDay: "[Сегодня в] LT",
         nextDay: "[Завтра в] LT",
         lastDay: "[Вчера в] LT",
-        nextWeek (now) {
+        nextWeek(now) {
             if (now.week() !== this.week()) {
                 switch (this.day()) {
                     case 0:
@@ -89,12 +89,12 @@ export default ExDate.defineLocale("ru", {
             } else {
                 if (this.day() === 2) {
                     return "[Во] dddd [в] LT";
-                } else {
-                    return "[В] dddd [в] LT";
-                }
+                } 
+                return "[В] dddd [в] LT";
+                
             }
         },
-        lastWeek (now) {
+        lastWeek(now) {
             if (now.week() !== this.week()) {
                 switch (this.day()) {
                     case 0:
@@ -111,9 +111,9 @@ export default ExDate.defineLocale("ru", {
             } else {
                 if (this.day() === 2) {
                     return "[Во] dddd [в] LT";
-                } else {
-                    return "[В] dddd [в] LT";
-                }
+                } 
+                return "[В] dddd [в] LT";
+                
             }
         },
         sameElse: "L"
@@ -134,33 +134,33 @@ export default ExDate.defineLocale("ru", {
         yy: relativeTimeWithPlural
     },
     meridiemParse: /ночи|утра|дня|вечера/i,
-    isPM (input) {
+    isPM(input) {
         return /^(дня|вечера)$/.test(input);
     },
     // eslint-disable-next-line no-unused-vars
-    meridiem (hour, minute, isLower) {
+    meridiem(hour, minute, isLower) {
         if (hour < 4) {
             return "ночи";
         } else if (hour < 12) {
             return "утра";
         } else if (hour < 17) {
             return "дня";
-        } else {
-            return "вечера";
-        }
+        } 
+        return "вечера";
+        
     },
-    ordinalParse: /\d{1,2}-(й|го|я)/,
-    ordinal (number, period) {
+    dayOfMonthOrdinalParse: /\d{1,2}-(й|го|я)/,
+    ordinal(number, period) {
         switch (period) {
             case "M":
             case "d":
             case "DDD":
-                return number + "-й";
+                return `${number}-й`;
             case "D":
-                return number + "-го";
+                return `${number}-го`;
             case "w":
             case "W":
-                return number + "-я";
+                return `${number}-я`;
             default:
                 return number;
         }

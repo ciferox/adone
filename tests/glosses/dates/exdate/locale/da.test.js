@@ -15,7 +15,7 @@ describe("da", () => {
         let i;
 
         function equalTest(input, mmm, i) {
-            assert.equal(adone.date(input, mmm).month(), i, input + " should be month " + (i + 1));
+            assert.equal(adone.date(input, mmm).month(), i, `${input} should be month ${i + 1}`);
         }
         for (i = 0; i < 12; i++) {
             tests[i] = tests[i].split(" ");
@@ -50,17 +50,17 @@ describe("da", () => {
             ["L", "14/02/2010"],
             ["LL", "14. februar 2010"],
             ["LLL", "14. februar 2010 15:25"],
-            ["LLLL", "søndag d. 14. februar 2010 15:25"],
+            ["LLLL", "søndag d. 14. februar 2010 kl. 15:25"],
             ["l", "14/2/2010"],
             ["ll", "14. feb 2010"],
             ["lll", "14. feb 2010 15:25"],
-            ["llll", "søn d. 14. feb 2010 15:25"]
+            ["llll", "søn d. 14. feb 2010 kl. 15:25"]
         ];
         const b = adone.date(new Date(2010, 1, 14, 15, 25, 50, 125));
         let i;
 
         for (i = 0; i < a.length; i++) {
-            assert.equal(b.format(a[i][0]), a[i][1], a[i][0] + " ---> " + a[i][1]);
+            assert.equal(b.format(a[i][0]), a[i][1], `${a[i][0]} ---> ${a[i][1]}`);
         }
     });
 
@@ -228,22 +228,12 @@ describe("da", () => {
     it("calendar day", () => {
         const a = adone.date().hours(12).minutes(0).seconds(0);
 
-        assert.equal(adone.date(a).calendar(), "I dag kl. 12:00", "today at the same time");
-        assert.equal(adone.date(a).add({
-            m: 25
-        }).calendar(), "I dag kl. 12:25", "Now plus 25 min");
-        assert.equal(adone.date(a).add({
-            h: 1
-        }).calendar(), "I dag kl. 13:00", "Now plus 1 hour");
-        assert.equal(adone.date(a).add({
-            d: 1
-        }).calendar(), "I morgen kl. 12:00", "tomorrow at the same time");
-        assert.equal(adone.date(a).subtract({
-            h: 1
-        }).calendar(), "I dag kl. 11:00", "Now minus 1 hour");
-        assert.equal(adone.date(a).subtract({
-            d: 1
-        }).calendar(), "I går kl. 12:00", "yesterday at the same time");
+        assert.equal(adone.date(a).calendar(), "i dag kl. 12:00", "today at the same time");
+        assert.equal(adone.date(a).add({ m: 25 }).calendar(), "i dag kl. 12:25", "Now plus 25 min");
+        assert.equal(adone.date(a).add({ h: 1 }).calendar(), "i dag kl. 13:00", "Now plus 1 hour");
+        assert.equal(adone.date(a).add({ d: 1 }).calendar(), "i morgen kl. 12:00", "tomorrow at the same time");
+        assert.equal(adone.date(a).subtract({ h: 1 }).calendar(), "i dag kl. 11:00", "Now minus 1 hour");
+        assert.equal(adone.date(a).subtract({ d: 1 }).calendar(), "i går kl. 12:00", "yesterday at the same time");
     });
 
     it("calendar next week", () => {
@@ -251,14 +241,12 @@ describe("da", () => {
         let m;
 
         for (i = 2; i < 7; i++) {
-            m = adone.date().add({
-                d: i
-            });
-            assert.equal(m.calendar(), m.format("dddd [kl.] LT"), "Today + " + i + " days current time");
+            m = adone.date().add({ d: i });
+            assert.equal(m.calendar(), m.format("på dddd [kl.] LT"), `Today + ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("dddd [kl.] LT"), "Today + " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format("på dddd [kl.] LT"), `Today + ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("dddd [kl.] LT"), "Today + " + i + " days end of day");
+            assert.equal(m.calendar(), m.format("på dddd [kl.] LT"), `Today + ${i} days end of day`);
         }
     });
 
@@ -267,14 +255,12 @@ describe("da", () => {
         let m;
 
         for (i = 2; i < 7; i++) {
-            m = adone.date().subtract({
-                d: i
-            });
-            assert.equal(m.calendar(), m.format("[sidste] dddd [kl] LT"), "Today - " + i + " days current time");
+            m = adone.date().subtract({ d: i });
+            assert.equal(m.calendar(), m.format("[i] dddd[s kl.] LT"), `Today - ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("[sidste] dddd [kl] LT"), "Today - " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format("[i] dddd[s kl.] LT"), `Today - ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("[sidste] dddd [kl] LT"), "Today - " + i + " days end of day");
+            assert.equal(m.calendar(), m.format("[i] dddd[s kl.] LT"), `Today - ${i} days end of day`);
         }
     });
 

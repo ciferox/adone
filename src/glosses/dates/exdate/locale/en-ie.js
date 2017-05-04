@@ -40,8 +40,8 @@ export default ExDate.defineLocale("en-ie", {
         y: "a year",
         yy: "%d years"
     },
-    ordinalParse: /\d{1,2}(st|nd|rd|th)/,
-    ordinal (number) {
+    dayOfMonthOrdinalParse: /\d{1,2}(st|nd|rd|th)/,
+    ordinal(number) {
         const b = number % 10;
         const output = (~~(number % 100 / 10) === 1) ? "th" :
             (b === 1) ? "st" :

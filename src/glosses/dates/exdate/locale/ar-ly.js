@@ -4,16 +4,16 @@
 import ExDate from "..";
 
 const symbolMap = {
-    "1": "1",
-    "2": "2",
-    "3": "3",
-    "4": "4",
-    "5": "5",
-    "6": "6",
-    "7": "7",
-    "8": "8",
-    "9": "9",
-    "0": "0"
+    1: "1",
+    2: "2",
+    3: "3",
+    4: "4",
+    5: "5",
+    6: "6",
+    7: "7",
+    8: "8",
+    9: "9",
+    0: "0"
 };
 
 const pluralForm = function (n) {
@@ -72,16 +72,16 @@ export default ExDate.defineLocale("ar-ly", {
         LLLL: "dddd D MMMM YYYY HH:mm"
     },
     meridiemParse: /ص|م/,
-    isPM (input) {
-        return "م" === input;
+    isPM(input) {
+        return input === "م";
     },
     // eslint-disable-next-line no-unused-vars
-    meridiem (hour, minute, isLower) {
+    meridiem(hour, minute, isLower) {
         if (hour < 12) {
             return "ص";
-        } else {
-            return "م";
         }
+        return "م";
+
     },
     calendar: {
         sameDay: "[اليوم عند الساعة] LT",
@@ -106,11 +106,11 @@ export default ExDate.defineLocale("ar-ly", {
         y: pluralize("y"),
         yy: pluralize("y")
     },
-    preparse (string) {
+    preparse(string) {
         return string.replace(/\u200f/g, "").replace(/،/g, ",");
     },
-    postformat (string) {
-        return string.replace(/\d/g, function (match) {
+    postformat(string) {
+        return string.replace(/\d/g, (match) => {
             return symbolMap[match];
         }).replace(/,/g, "،");
     },

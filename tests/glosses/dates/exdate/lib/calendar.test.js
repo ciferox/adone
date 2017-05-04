@@ -2,9 +2,9 @@
 // locale dependent tests would be in locale test folder
 describe("calendar", () => {
     it("passing a function", () => {
-        const a  = adone.date().hours(13).minutes(0).seconds(0);
+        const a = adone.date().hours(13).minutes(0).seconds(0);
         assert.equal(adone.date(a).calendar(null, {
-            "sameDay" () {
+            "sameDay"() {
                 return "h:mmA";
             }
         }), "1:00PM", "should equate");
@@ -17,7 +17,7 @@ describe("calendar", () => {
             const diff = myMoment.diff(now, "days", true);
             const nextMonth = now.clone().add(1, "month");
 
-            const retVal =  diff < -6 ? "sameElse" :
+            const retVal = diff < -6 ? "sameElse" :
                 diff < -1 ? "lastWeek" :
                 diff < 0 ? "lastDay" :
                 diff < 1 ? "sameDay" :

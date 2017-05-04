@@ -10,15 +10,15 @@ export default ExDate.defineLocale("af", {
     weekdaysShort: "Son_Maa_Din_Woe_Don_Vry_Sat".split("_"),
     weekdaysMin: "So_Ma_Di_Wo_Do_Vr_Sa".split("_"),
     meridiemParse: /vm|nm/i,
-    isPM (input) {
+    isPM(input) {
         return /^nm$/i.test(input);
     },
-    meridiem (hours, minutes, isLower) {
+    meridiem(hours, minutes, isLower) {
         if (hours < 12) {
             return isLower ? "vm" : "VM";
-        } else {
-            return isLower ? "nm" : "NM";
         }
+        return isLower ? "nm" : "NM";
+
     },
     longDateFormat: {
         LT: "HH:mm",
@@ -51,8 +51,8 @@ export default ExDate.defineLocale("af", {
         y: "'n jaar",
         yy: "%d jaar"
     },
-    ordinalParse: /\d{1,2}(ste|de)/,
-    ordinal (number) {
+    dayOfMonthOrdinalParse: /\d{1,2}(ste|de)/,
+    ordinal(number) {
         return number + ((number === 1 || number === 8 || number >= 20) ? "ste" : "de"); // Thanks to Joris Röling : https://github.com/jjupiter
     },
     week: {

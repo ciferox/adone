@@ -4,7 +4,7 @@ describe("diff", () => {
     });
 
     function equal(assert, a, b, message) {
-        assert.ok(Math.abs(a - b) < 0.00000001, "(" + a + " === " + b + ") " + message);
+        assert.ok(Math.abs(a - b) < 0.00000001, `(${a} === ${b}) ${message}`);
     }
 
     function dstForYear(year) {
@@ -41,7 +41,7 @@ describe("diff", () => {
         assert.equal(adone.date(0).diff(1000), -1000, "0 - 1 second = -1000");
         assert.equal(adone.date(new Date(1000)).diff(1000), 0, "1 second - 1 second = 0");
         const oneHourDate = new Date(2015, 5, 21);
-        const nowDate = new Date(+oneHourDate);
+        const nowDate = new Date(Number(oneHourDate));
         oneHourDate.setHours(oneHourDate.getHours() + 1);
         assert.equal(adone.date(oneHourDate).diff(nowDate), 60 * 60 * 1000, "1 hour from now = 3600000");
     });
@@ -123,7 +123,7 @@ describe("diff", () => {
                 "hour diff across DST");
         assert.equal(b.diff(a, "days", true), (12 - dst.diff) / 24,
                 "day diff across DST");
-        equal(assert, b.diff(a, "weeks", true),  (12 - dst.diff) / 24 / 7,
+        equal(assert, b.diff(a, "weeks", true), (12 - dst.diff) / 24 / 7,
                 "week diff across DST");
         assert.ok(0.95 / (2 * 31) < b.diff(a, "months", true),
                 "month diff across DST, lower bound");
@@ -140,14 +140,14 @@ describe("diff", () => {
         assert.equal(b.diff(a, "milliseconds", true),
                 (12 + dst.diff) * 60 * 60 * 1000,
                 "ms diff across DST");
-        assert.equal(b.diff(a, "seconds", true),  (12 + dst.diff) * 60 * 60,
+        assert.equal(b.diff(a, "seconds", true), (12 + dst.diff) * 60 * 60,
                 "second diff across DST");
-        assert.equal(b.diff(a, "minutes", true),  (12 + dst.diff) * 60,
+        assert.equal(b.diff(a, "minutes", true), (12 + dst.diff) * 60,
                 "minute diff across DST");
-        assert.equal(b.diff(a, "hours", true),  (12 + dst.diff),
+        assert.equal(b.diff(a, "hours", true), (12 + dst.diff),
                 "hour diff across DST");
-        assert.equal(b.diff(a, "days", true),  12 / 24, "day diff across DST");
-        equal(assert, b.diff(a, "weeks", true),  12 / 24 / 7,
+        assert.equal(b.diff(a, "days", true), 12 / 24, "day diff across DST");
+        equal(assert, b.diff(a, "weeks", true), 12 / 24 / 7,
                 "week diff across DST");
         assert.ok(0.95 / (2 * 31) < b.diff(a, "months", true),
                 "month diff across DST, lower bound");
@@ -200,10 +200,10 @@ describe("diff", () => {
         assert.equal(adone.date([2012, 0, 15]).diff([2012, 1, 15], "months", true), -1, "Jan 15 to Feb 15 should be 1 month");
         assert.equal(adone.date([2012, 0, 28]).diff([2012, 1, 28], "months", true), -1, "Jan 28 to Feb 28 should be 1 month");
         assert.ok(adone.date([2012, 0, 31]).diff([2012, 1, 29], "months", true), -1, "Jan 31 to Feb 29 should be 1 month");
-        assert.ok(-1 > adone.date([2012, 0, 31]).diff([2012, 2, 1], "months", true), "Jan 31 to Mar 1 should be more than 1 month");
+        assert.ok(adone.date([2012, 0, 31]).diff([2012, 2, 1], "months", true) < -1, "Jan 31 to Mar 1 should be more than 1 month");
         assert.ok(-30 / 28 < adone.date([2012, 0, 31]).diff([2012, 2, 1], "months", true), "Jan 31 to Mar 1 should be less than 1 month and 1 day");
         equal(assert, adone.date([2012, 0, 1]).diff([2012, 0, 31], "months", true), -(30 / 31), "Jan 1 to Jan 31 should be 30 / 31 months");
-        assert.ok(0 < adone.date("2014-02-01").diff(adone.date("2014-01-31"), "months", true), "jan-31 to feb-1 diff is positive");
+        assert.ok(adone.date("2014-02-01").diff(adone.date("2014-01-31"), "months", true) > 0, "jan-31 to feb-1 diff is positive");
     });
 
     it("exact month diffs", () => {
@@ -213,7 +213,7 @@ describe("diff", () => {
         for (let m1 = 0; m1 < 12; ++m1) {
             for (let m2 = m1; m2 < 12; ++m2) {
                 assert.equal(adone.date([2013, m2, 15]).diff(adone.date([2013, m1, 15]), "months", true), m2 - m1,
-                             "month diff from 2013-" + m1 + "-15 to 2013-" + m2 + "-15");
+                             `month diff from 2013-${m1}-15 to 2013-${m2}-15`);
             }
         }
     });
@@ -233,7 +233,7 @@ describe("diff", () => {
     });
 
     it("negative zero", () => {
-        function isNegative (n) {
+        function isNegative(n) {
             return (1 / n) < 0;
         }
         assert.ok(!isNegative(adone.date([2012, 0, 1]).diff(adone.date([2012, 0, 1]), "months")), "month diff on same date is zero, not -0");

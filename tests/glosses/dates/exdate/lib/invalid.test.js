@@ -11,7 +11,7 @@ describe("invalid", () => {
     });
 
     it("invalid with existing flag", () => {
-        const m = adone.date.invalid({invalidMonth: "whatchamacallit"});
+        const m = adone.date.invalid({ invalidMonth: "whatchamacallit" });
         assert.equal(m.isValid(), false);
         assert.equal(m.parsingFlags().userInvalidated, false);
         assert.equal(m.parsingFlags().invalidMonth, "whatchamacallit");
@@ -19,7 +19,7 @@ describe("invalid", () => {
     });
 
     it("invalid with custom flag", () => {
-        const m = adone.date.invalid({tooBusyWith: "reiculating splines"});
+        const m = adone.date.invalid({ tooBusyWith: "reiculating splines" });
         assert.equal(m.isValid(), false);
         assert.equal(m.parsingFlags().userInvalidated, false);
         assert.equal(m.parsingFlags().tooBusyWith, "reiculating splines");
@@ -163,9 +163,9 @@ describe("invalid", () => {
 
             assert.ok(!invalid.isLeapYear());
 
-            assert.equal(adone.date.duration({from: invalid, to: valid}).asMilliseconds(), 0);
-            assert.equal(adone.date.duration({from: valid, to: invalid}).asMilliseconds(), 0);
-            assert.equal(adone.date.duration({from: invalid, to: invalid}).asMilliseconds(), 0);
+            assert.equal(adone.date.duration({ from: invalid, to: valid }).asMilliseconds(), 0);
+            assert.equal(adone.date.duration({ from: valid, to: invalid }).asMilliseconds(), 0);
+            assert.equal(adone.date.duration({ from: invalid, to: invalid }).asMilliseconds(), 0);
         }
     });
 });

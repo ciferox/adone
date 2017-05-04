@@ -22,7 +22,7 @@ describe("utc", () => {
         }
         const offset = Math.floor(m.utcOffset() / 60);
         const expected = (24 + 3 + offset) % 24;
-        assert.equal(m.hours(), expected, "the hours (" + m.hours() + ") should be correct for local");
+        assert.equal(m.hours(), expected, `the hours (${m.hours()}) should be correct for local`);
         assert.equal(adone.date().utc().utcOffset(), 0, "timezone in utc should always be zero");
     });
 

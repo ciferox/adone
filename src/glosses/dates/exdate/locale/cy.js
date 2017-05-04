@@ -43,9 +43,9 @@ export default ExDate.defineLocale("cy", {
         y: "blwyddyn",
         yy: "%d flynedd"
     },
-    ordinalParse: /\d{1,2}(fed|ain|af|il|ydd|ed|eg)/,
+    dayOfMonthOrdinalParse: /\d{1,2}(fed|ain|af|il|ydd|ed|eg)/,
     // traditional ordinal numbers above 31 are not commonly used in colloquial Welsh
-    ordinal (number) {
+    ordinal(number) {
         const b = number;
         const lookup = [
             "", "af", "il", "ydd", "ydd", "ed", "ed", "ed", "fed", "fed", "fed", // 1af to 10fed

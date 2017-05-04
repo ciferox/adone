@@ -9,30 +9,30 @@ function translate(number, withoutSuffix, key, isFuture) {
         case "s":
             return (isFuture || withoutSuffix) ? "néhány másodperc" : "néhány másodperce";
         case "m":
-            return "egy" + (isFuture || withoutSuffix ? " perc" : " perce");
+            return `egy${isFuture || withoutSuffix ? " perc" : " perce"}`;
         case "mm":
             return number + (isFuture || withoutSuffix ? " perc" : " perce");
         case "h":
-            return "egy" + (isFuture || withoutSuffix ? " óra" : " órája");
+            return `egy${isFuture || withoutSuffix ? " óra" : " órája"}`;
         case "hh":
             return number + (isFuture || withoutSuffix ? " óra" : " órája");
         case "d":
-            return "egy" + (isFuture || withoutSuffix ? " nap" : " napja");
+            return `egy${isFuture || withoutSuffix ? " nap" : " napja"}`;
         case "dd":
             return number + (isFuture || withoutSuffix ? " nap" : " napja");
         case "M":
-            return "egy" + (isFuture || withoutSuffix ? " hónap" : " hónapja");
+            return `egy${isFuture || withoutSuffix ? " hónap" : " hónapja"}`;
         case "MM":
             return number + (isFuture || withoutSuffix ? " hónap" : " hónapja");
         case "y":
-            return "egy" + (isFuture || withoutSuffix ? " év" : " éve");
+            return `egy${isFuture || withoutSuffix ? " év" : " éve"}`;
         case "yy":
             return number + (isFuture || withoutSuffix ? " év" : " éve");
     }
     return "";
 }
 function week(isFuture) {
-    return (isFuture ? "" : "[múlt] ") + "[" + weekEndings[this.day()] + "] LT[-kor]";
+    return `${isFuture ? "" : "[múlt] "}[${weekEndings[this.day()]}] LT[-kor]`;
 }
 
 export default ExDate.defineLocale("hu", {
@@ -50,24 +50,24 @@ export default ExDate.defineLocale("hu", {
         LLLL: "YYYY. MMMM D., dddd H:mm"
     },
     meridiemParse: /de|du/i,
-    isPM (input) {
+    isPM(input) {
         return input.charAt(1).toLowerCase() === "u";
     },
-    meridiem (hours, minutes, isLower) {
+    meridiem(hours, minutes, isLower) {
         if (hours < 12) {
             return isLower === true ? "de" : "DE";
-        } else {
-            return isLower === true ? "du" : "DU";
-        }
+        } 
+        return isLower === true ? "du" : "DU";
+        
     },
     calendar: {
         sameDay: "[ma] LT[-kor]",
         nextDay: "[holnap] LT[-kor]",
-        nextWeek () {
+        nextWeek() {
             return week.call(this, true);
         },
         lastDay: "[tegnap] LT[-kor]",
-        lastWeek () {
+        lastWeek() {
             return week.call(this, false);
         },
         sameElse: "L"
@@ -87,7 +87,7 @@ export default ExDate.defineLocale("hu", {
         y: translate,
         yy: translate
     },
-    ordinalParse: /\d{1,2}\./,
+    dayOfMonthOrdinalParse: /\d{1,2}\./,
     ordinal: "%d.",
     week: {
         dow: 1, // Monday is the first day of the week.

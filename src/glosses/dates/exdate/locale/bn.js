@@ -4,16 +4,16 @@
 import ExDate from "..";
 
 const symbolMap = {
-    "1": "১",
-    "2": "২",
-    "3": "৩",
-    "4": "৪",
-    "5": "৫",
-    "6": "৬",
-    "7": "৭",
-    "8": "৮",
-    "9": "৯",
-    "0": "০"
+    1: "১",
+    2: "২",
+    3: "৩",
+    4: "৪",
+    5: "৫",
+    6: "৬",
+    7: "৭",
+    8: "৮",
+    9: "৯",
+    0: "০"
 };
 
 const numberMap = {
@@ -66,18 +66,18 @@ export default ExDate.defineLocale("bn", {
         y: "এক বছর",
         yy: "%d বছর"
     },
-    preparse (string) {
-        return string.replace(/[১২৩৪৫৬৭৮৯০]/g, function (match) {
+    preparse(string) {
+        return string.replace(/[১২৩৪৫৬৭৮৯০]/g, (match) => {
             return numberMap[match];
         });
     },
-    postformat (string) {
-        return string.replace(/\d/g, function (match) {
+    postformat(string) {
+        return string.replace(/\d/g, (match) => {
             return symbolMap[match];
         });
     },
     meridiemParse: /রাত|সকাল|দুপুর|বিকাল|রাত/,
-    meridiemHour (hour, meridiem) {
+    meridiemHour(hour, meridiem) {
         if (hour === 12) {
             hour = 0;
         }
@@ -85,12 +85,12 @@ export default ExDate.defineLocale("bn", {
                 (meridiem === "দুপুর" && hour < 5) ||
                 meridiem === "বিকাল") {
             return hour + 12;
-        } else {
-            return hour;
         }
+        return hour;
+
     },
     // eslint-disable-next-line no-unused-vars
-    meridiem (hour, minute, isLower) {
+    meridiem(hour, minute, isLower) {
         if (hour < 4) {
             return "রাত";
         } else if (hour < 10) {
@@ -99,9 +99,9 @@ export default ExDate.defineLocale("bn", {
             return "দুপুর";
         } else if (hour < 20) {
             return "বিকাল";
-        } else {
-            return "রাত";
         }
+        return "রাত";
+
     },
     week: {
         dow: 0, // Sunday is the first day of the week.

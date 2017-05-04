@@ -38,41 +38,41 @@ export default ExDate.defineLocale("he", {
         m: "דקה",
         mm: "%d דקות",
         h: "שעה",
-        hh (number) {
+        hh(number) {
             if (number === 2) {
                 return "שעתיים";
             }
-            return number + " שעות";
+            return `${number} שעות`;
         },
         d: "יום",
-        dd (number) {
+        dd(number) {
             if (number === 2) {
                 return "יומיים";
             }
-            return number + " ימים";
+            return `${number} ימים`;
         },
         M: "חודש",
-        MM (number) {
+        MM(number) {
             if (number === 2) {
                 return "חודשיים";
             }
-            return number + " חודשים";
+            return `${number} חודשים`;
         },
         y: "שנה",
-        yy (number) {
+        yy(number) {
             if (number === 2) {
                 return "שנתיים";
             } else if (number % 10 === 0 && number !== 10) {
-                return number + " שנה";
+                return `${number} שנה`;
             }
-            return number + " שנים";
+            return `${number} שנים`;
         }
     },
     meridiemParse: /אחה"צ|לפנה"צ|אחרי הצהריים|לפני הצהריים|לפנות בוקר|בבוקר|בערב/i,
-    isPM (input) {
+    isPM(input) {
         return /^(אחה"צ|אחרי הצהריים|בערב)$/.test(input);
     },
-    meridiem (hour, minute, isLower) {
+    meridiem(hour, minute, isLower) {
         if (hour < 5) {
             return "לפנות בוקר";
         } else if (hour < 10) {
@@ -81,9 +81,9 @@ export default ExDate.defineLocale("he", {
             return isLower ? "לפנה\"צ" : "לפני הצהריים";
         } else if (hour < 18) {
             return isLower ? "אחה\"צ" : "אחרי הצהריים";
-        } else {
-            return "בערב";
-        }
+        } 
+        return "בערב";
+        
     }
 });
 

@@ -9,7 +9,7 @@ const { padStart } = adone.vendor.lodash;
 
 // FORMATTING
 
-function offset (token, separator) {
+function offset(token, separator) {
     addFormatToken(token, 0, 0, function () {
         let offset = this.utcOffset();
         let sign = "+";
@@ -26,9 +26,9 @@ offset("ZZ", "");
 
 // PARSING
 
-addRegexToken("Z",  matchShortOffset);
+addRegexToken("Z", matchShortOffset);
 addRegexToken("ZZ", matchShortOffset);
-addParseToken(["Z", "ZZ"], function (input, array, config) {
+addParseToken(["Z", "ZZ"], (input, array, config) => {
     config._useUTC = true;
     config._tzm = offsetFromString(matchShortOffset, input);
 });
@@ -47,9 +47,9 @@ export function offsetFromString(matcher, string) {
         return null;
     }
 
-    const chunk   = matches[matches.length - 1] || [];
-    const parts   = (chunk + "").match(chunkOffset) || ["-", 0, 0];
-    const minutes = +(parts[1] * 60) + toInt(parts[2]);
+    const chunk = matches[matches.length - 1] || [];
+    const parts = (`${chunk}`).match(chunkOffset) || ["-", 0, 0];
+    const minutes = Number(parts[1] * 60) + toInt(parts[2]);
 
     return minutes === 0 ?
       0 :
@@ -67,9 +67,9 @@ export function cloneWithOffset(input, model) {
         res._d.setTime(res._d.valueOf() + diff);
         hooks.updateOffset(res, false);
         return res;
-    } else {
-        return createLocal(input).local();
     }
+    return createLocal(input).local();
+
 }
 
 // HOOKS

@@ -4,7 +4,7 @@
 import ExDate from "..";
 
 function processRelativeTime(number, withoutSuffix, key, isFuture) {
-    let result = number + " ";
+    let result = `${number} `;
     switch (key) {
         case "s":
             return withoutSuffix || isFuture ? "nekaj sekund" : "nekaj sekundami";
@@ -94,7 +94,7 @@ export default ExDate.defineLocale("sl", {
         sameDay: "[danes ob] LT",
         nextDay: "[jutri ob] LT",
 
-        nextWeek () {
+        nextWeek() {
             switch (this.day()) {
                 case 0:
                     return "[v] [nedeljo] [ob] LT";
@@ -110,7 +110,7 @@ export default ExDate.defineLocale("sl", {
             }
         },
         lastDay: "[včeraj ob] LT",
-        lastWeek () {
+        lastWeek() {
             switch (this.day()) {
                 case 0:
                     return "[prejšnjo] [nedeljo] [ob] LT";
@@ -142,7 +142,7 @@ export default ExDate.defineLocale("sl", {
         y: processRelativeTime,
         yy: processRelativeTime
     },
-    ordinalParse: /\d{1,2}\./,
+    dayOfMonthOrdinalParse: /\d{1,2}\./,
     ordinal: "%d.",
     week: {
         dow: 1, // Monday is the first day of the week.

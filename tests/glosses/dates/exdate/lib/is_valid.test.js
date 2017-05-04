@@ -10,8 +10,8 @@ describe("is valid", () => {
 
     it("array good month", () => {
         for (let i = 0; i < 12; i++) {
-            assert.equal(adone.date([2010, i]).isValid(), true, "month " + i);
-            assert.equal(adone.date.utc([2010, i]).isValid(), true, "month " + i);
+            assert.equal(adone.date([2010, i]).isValid(), true, `month ${i}`);
+            assert.equal(adone.date.utc([2010, i]).isValid(), true, `month ${i}`);
         }
     });
 
@@ -89,8 +89,8 @@ describe("is valid", () => {
         ];
 
         for (let i = 0; i < tests.length; i++) {
-            assert.equal(adone.date(tests[i], adone.date.ISO_8601).isValid(), false, tests[i] + " should be invalid");
-            assert.equal(adone.date.utc(tests[i], adone.date.ISO_8601).isValid(), false, tests[i] + " should be invalid");
+            assert.equal(adone.date(tests[i], adone.date.ISO_8601).isValid(), false, `${tests[i]} should be invalid`);
+            assert.equal(adone.date.utc(tests[i], adone.date.ISO_8601).isValid(), false, `${tests[i]} should be invalid`);
         }
     });
 
@@ -107,8 +107,8 @@ describe("is valid", () => {
         ];
 
         for (let i = 0; i < tests.length; i++) {
-            assert.equal(adone.date(tests[i], adone.date.ISO_8601).isValid(), false, tests[i] + " should be invalid");
-            assert.equal(adone.date.utc(tests[i], adone.date.ISO_8601).isValid(), false, tests[i] + " should be invalid");
+            assert.equal(adone.date(tests[i], adone.date.ISO_8601).isValid(), false, `${tests[i]} should be invalid`);
+            assert.equal(adone.date.utc(tests[i], adone.date.ISO_8601).isValid(), false, `${tests[i]} should be invalid`);
         }
     });
 
@@ -127,8 +127,8 @@ describe("is valid", () => {
         ];
 
         for (let i = 0; i < tests.length; i++) {
-            assert.equal(adone.date(tests[i]).isValid(), true, tests[i] + " should be valid in normal");
-            assert.equal(adone.date.utc(tests[i]).isValid(), true, tests[i] + " should be valid in normal");
+            assert.equal(adone.date(tests[i]).isValid(), true, `${tests[i]} should be valid in normal`);
+            assert.equal(adone.date.utc(tests[i]).isValid(), true, `${tests[i]} should be valid in normal`);
         }
     });
 
@@ -148,10 +148,10 @@ describe("is valid", () => {
         ];
 
         for (let i = 0; i < tests.length; i++) {
-            assert.equal(adone.date(tests[i]).isValid(), true, tests[i] + " should be valid in normal");
-            assert.equal(adone.date.utc(tests[i]).isValid(), true, tests[i] + " should be valid in normal");
-            assert.equal(adone.date(tests[i], adone.date.ISO_8601, true).isValid(), true, tests[i] + " should be valid in strict");
-            assert.equal(adone.date.utc(tests[i], adone.date.ISO_8601, true).isValid(), true, tests[i] + " should be valid in strict");
+            assert.equal(adone.date(tests[i]).isValid(), true, `${tests[i]} should be valid in normal`);
+            assert.equal(adone.date.utc(tests[i]).isValid(), true, `${tests[i]} should be valid in normal`);
+            assert.equal(adone.date(tests[i], adone.date.ISO_8601, true).isValid(), true, `${tests[i]} should be valid in strict`);
+            assert.equal(adone.date.utc(tests[i], adone.date.ISO_8601, true).isValid(), true, `${tests[i]} should be valid in strict`);
         }
     });
 
@@ -159,7 +159,7 @@ describe("is valid", () => {
         assert.equal(adone.date([2000, 12]).invalidAt(), 1, "month 12 is invalid: 0-11");
         assert.equal(adone.date([2000, 1, 30]).invalidAt(), 2, "30 is not a valid february day");
         assert.equal(adone.date([2000, 1, 29, 25]).invalidAt(), 3, "25 is invalid hour");
-        assert.equal(adone.date([2000, 1, 29, 24,  1]).invalidAt(), 3, "24:01 is invalid hour");
+        assert.equal(adone.date([2000, 1, 29, 24, 1]).invalidAt(), 3, "24:01 is invalid hour");
         assert.equal(adone.date([2000, 1, 29, 23, 60]).invalidAt(), 4, "60 is invalid minute");
         assert.equal(adone.date([2000, 1, 29, 23, 59, 60]).invalidAt(), 5, "60 is invalid second");
         assert.equal(adone.date([2000, 1, 29, 23, 59, 59, 1000]).invalidAt(), 6, "1000 is invalid millisecond");

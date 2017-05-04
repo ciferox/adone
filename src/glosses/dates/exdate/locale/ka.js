@@ -33,17 +33,17 @@ export default ExDate.defineLocale("ka", {
         sameElse: "L"
     },
     relativeTime: {
-        future (s) {
+        future(s) {
             return (/(წამი|წუთი|საათი|წელი)/).test(s) ?
                 s.replace(/ი$/, "ში") :
-                s + "ში";
+                `${s}ში`;
         },
-        past (s) {
+        past(s) {
             if ((/(წამი|წუთი|საათი|დღე|თვე)/).test(s)) {
-                return s.replace(/(ი|ე)$/, "ის წინ");
+                return s.replace(/(ი|ე)$/, "ის უკან");
             }
             if ((/წელი/).test(s)) {
-                return s.replace(/წელი$/, "წლის წინ");
+                return s.replace(/წელი$/, "წლის უკან");
             }
         },
         s: "რამდენიმე წამი",
@@ -58,18 +58,18 @@ export default ExDate.defineLocale("ka", {
         y: "წელი",
         yy: "%d წელი"
     },
-    ordinalParse: /0|1-ლი|მე-\d{1,2}|\d{1,2}-ე/,
-    ordinal (number) {
+    dayOfMonthOrdinalParse: /0|1-ლი|მე-\d{1,2}|\d{1,2}-ე/,
+    ordinal(number) {
         if (number === 0) {
             return number;
         }
         if (number === 1) {
-            return number + "-ლი";
+            return `${number}-ლი`;
         }
         if ((number < 20) || (number <= 100 && (number % 20 === 0)) || (number % 100 === 0)) {
-            return "მე-" + number;
+            return `მე-${number}`;
         }
-        return number + "-ე";
+        return `${number}-ე`;
     },
     week: {
         dow: 1,

@@ -40,7 +40,7 @@ function translate(number, withoutSuffix, key, isFuture) {
             result = isFuture ? "vuoden" : "vuotta";
             break;
     }
-    result = verbalNumber(number, isFuture) + " " + result;
+    result = `${verbalNumber(number, isFuture)} ${result}`;
     return result;
 }
 function verbalNumber(number, isFuture) {
@@ -88,7 +88,7 @@ export default ExDate.defineLocale("fi", {
         y: translate,
         yy: translate
     },
-    ordinalParse: /\d{1,2}\./,
+    dayOfMonthOrdinalParse: /\d{1,2}\./,
     ordinal: "%d.",
     week: {
         dow: 1, // Monday is the first day of the week.

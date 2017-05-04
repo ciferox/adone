@@ -7,9 +7,9 @@ export function addUnitPriority(unit, priority) {
 export function getPrioritizedUnits(unitsObj) {
     const units = [];
     for (const u in unitsObj) {
-        units.push({unit: u, priority: priorities[u]});
+        units.push({ unit: u, priority: priorities[u] });
     }
-    units.sort(function (a, b) {
+    units.sort((a, b) => {
         return a.priority - b.priority;
     });
     return units;

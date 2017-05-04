@@ -17,8 +17,8 @@ addUnitPriority("dayOfYear", 4);
 
 // PARSING
 
-addRegexToken("DDD",  match1to3);
+addRegexToken("DDD", match1to3);
 addRegexToken("DDDD", match3);
-addParseToken(["DDD", "DDDD"], function (input, array, config) {
+addParseToken(["DDD", "DDDD"], (input, array, config) => {
     config._dayOfYear = toInt(input);
 });

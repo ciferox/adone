@@ -22,7 +22,7 @@ describe("is before", () => {
         assert.equal(m.isBefore(adone.date(new Date(2011, 3, 2, 3, 4, 5, 11))), true, "millisecond is later");
         assert.equal(m.isBefore(adone.date(new Date(2011, 3, 2, 3, 4, 5, 9))), false, "millisecond is earlier");
         assert.equal(m.isBefore(m), false, "moments are not before themselves");
-        assert.equal(+m, +mCopy, "isBefore second should not change adone.date");
+        assert.equal(Number(m), Number(mCopy), "isBefore second should not change adone.date");
     });
 
     it("is before year", () => {
@@ -38,7 +38,7 @@ describe("is before", () => {
         assert.equal(m.isBefore(adone.date(new Date(2010, 11, 31, 23, 59, 59, 999)), "year"), false, "end of previous year");
         assert.equal(m.isBefore(adone.date(new Date(1980, 11, 31, 23, 59, 59, 999)), "year"), false, "end of year far before");
         assert.equal(m.isBefore(m, "year"), false, "same moments are not before the same year");
-        assert.equal(+m, +mCopy, "isBefore year should not change adone.date");
+        assert.equal(Number(m), Number(mCopy), "isBefore year should not change adone.date");
     });
 
     it("is before month", () => {
@@ -56,7 +56,7 @@ describe("is before", () => {
         assert.equal(m.isBefore(adone.date(new Date(2011, 1, 27, 23, 59, 59, 999)), "month"), false, "end of previous month");
         assert.equal(m.isBefore(adone.date(new Date(2010, 12, 31, 23, 59, 59, 999)), "month"), false, "later month but earlier year");
         assert.equal(m.isBefore(m, "month"), false, "same moments are not before the same month");
-        assert.equal(+m, +mCopy, "isBefore month should not change adone.date");
+        assert.equal(Number(m), Number(mCopy), "isBefore month should not change adone.date");
     });
 
     it("is before day", () => {
@@ -76,7 +76,7 @@ describe("is before", () => {
         assert.equal(m.isBefore(adone.date(new Date(2011, 3, 1, 23, 59, 59, 999)), "day"), false, "end of previous day");
         assert.equal(m.isBefore(adone.date(new Date(2010, 3, 10, 0, 0, 0, 0)), "day"), false, "later day but earlier year");
         assert.equal(m.isBefore(m, "day"), false, "same moments are not before the same day");
-        assert.equal(+m, +mCopy, "isBefore day should not change adone.date");
+        assert.equal(Number(m), Number(mCopy), "isBefore day should not change adone.date");
     });
 
     it("is before hour", () => {
@@ -97,7 +97,7 @@ describe("is before", () => {
         assert.equal(m.isBefore(adone.date(new Date(2011, 3, 2, 4, 0, 0, 0)), "hour"), true, "start of next hour");
         assert.equal(m.isBefore(adone.date(new Date(2011, 3, 2, 2, 59, 59, 999)), "hour"), false, "end of previous hour");
         assert.equal(m.isBefore(m, "hour"), false, "same moments are not before the same hour");
-        assert.equal(+m, +mCopy, "isBefore hour should not change adone.date");
+        assert.equal(Number(m), Number(mCopy), "isBefore hour should not change adone.date");
     });
 
     it("is before minute", () => {
@@ -120,7 +120,7 @@ describe("is before", () => {
         assert.equal(m.isBefore(adone.date(new Date(2011, 3, 2, 3, 5, 0, 0)), "minute"), true, "start of next minute");
         assert.equal(m.isBefore(adone.date(new Date(2011, 3, 2, 3, 3, 59, 999)), "minute"), false, "end of previous minute");
         assert.equal(m.isBefore(m, "minute"), false, "same moments are not before the same minute");
-        assert.equal(+m, +mCopy, "isBefore minute should not change adone.date");
+        assert.equal(Number(m), Number(mCopy), "isBefore minute should not change adone.date");
     });
 
     it("is before second", () => {
@@ -145,7 +145,7 @@ describe("is before", () => {
         assert.equal(m.isBefore(adone.date(new Date(2011, 3, 2, 3, 4, 6, 0)), "second"), true, "start of next second");
         assert.equal(m.isBefore(adone.date(new Date(2011, 3, 2, 3, 4, 4, 999)), "second"), false, "end of previous second");
         assert.equal(m.isBefore(m, "second"), false, "same moments are not before the same second");
-        assert.equal(+m, +mCopy, "isBefore second should not change adone.date");
+        assert.equal(Number(m), Number(mCopy), "isBefore second should not change adone.date");
     });
 
     it("is before millisecond", () => {
@@ -168,7 +168,7 @@ describe("is before", () => {
         assert.equal(m.isBefore(adone.date(new Date(2011, 3, 2, 3, 4, 6, 11)), "millisecond"), true, "millisecond is later");
         assert.equal(m.isBefore(adone.date(new Date(2011, 3, 2, 3, 4, 4, 9)), "millisecond"), false, "millisecond is earlier");
         assert.equal(m.isBefore(m, "millisecond"), false, "same moments are not before the same millisecond");
-        assert.equal(+m, +mCopy, "isBefore millisecond should not change adone.date");
+        assert.equal(Number(m), Number(mCopy), "isBefore millisecond should not change adone.date");
     });
 
     it("is before invalid", () => {

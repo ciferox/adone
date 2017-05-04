@@ -4,16 +4,16 @@
 import ExDate from "..";
 
 const symbolMap = {
-    "1": "१",
-    "2": "२",
-    "3": "३",
-    "4": "४",
-    "5": "५",
-    "6": "६",
-    "7": "७",
-    "8": "८",
-    "9": "९",
-    "0": "०"
+    1: "१",
+    2: "२",
+    3: "३",
+    4: "४",
+    5: "५",
+    6: "६",
+    7: "७",
+    8: "८",
+    9: "९",
+    0: "०"
 };
 
 const numberMap = {
@@ -45,18 +45,18 @@ export default ExDate.defineLocale("ne", {
         LLL: "D MMMM YYYY, Aको h:mm बजे",
         LLLL: "dddd, D MMMM YYYY, Aको h:mm बजे"
     },
-    preparse (string) {
-        return string.replace(/[१२३४५६७८९०]/g, function (match) {
+    preparse(string) {
+        return string.replace(/[१२३४५६७८९०]/g, (match) => {
             return numberMap[match];
         });
     },
-    postformat (string) {
-        return string.replace(/\d/g, function (match) {
+    postformat(string) {
+        return string.replace(/\d/g, (match) => {
             return symbolMap[match];
         });
     },
     meridiemParse: /राति|बिहान|दिउँसो|साँझ/,
-    meridiemHour (hour, meridiem) {
+    meridiemHour(hour, meridiem) {
         if (hour === 12) {
             hour = 0;
         }
@@ -71,7 +71,7 @@ export default ExDate.defineLocale("ne", {
         }
     },
     // eslint-disable-next-line no-unused-vars
-    meridiem (hour, minute, isLower) {
+    meridiem(hour, minute, isLower) {
         if (hour < 3) {
             return "राति";
         } else if (hour < 12) {
@@ -80,9 +80,9 @@ export default ExDate.defineLocale("ne", {
             return "दिउँसो";
         } else if (hour < 20) {
             return "साँझ";
-        } else {
-            return "राति";
-        }
+        } 
+        return "राति";
+        
     },
     calendar: {
         sameDay: "[आज] LT",

@@ -20,6 +20,6 @@ addUnitPriority("quarter", 7);
 // PARSING
 
 addRegexToken("Q", match1);
-addParseToken("Q", function (input, array) {
+addParseToken("Q", (input, array) => {
     array[MONTH] = (toInt(input) - 1) * 3;
 });

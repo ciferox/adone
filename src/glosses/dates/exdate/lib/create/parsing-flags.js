@@ -1,4 +1,3 @@
-
 const { is } = adone;
 
 function defaultParsingFlags() {
@@ -15,7 +14,9 @@ function defaultParsingFlags() {
         userInvalidated: false,
         iso: false,
         parsedDateParts: [],
-        meridiem: null
+        meridiem: null,
+        rfc2822: false,
+        weekdayMismatch: false
     };
 }
 

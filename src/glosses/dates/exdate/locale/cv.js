@@ -26,7 +26,7 @@ export default ExDate.defineLocale("cv", {
         sameElse: "L"
     },
     relativeTime: {
-        future (output) {
+        future(output) {
             const affix = /сехет$/i.exec(output) ? "рен" : /ҫул$/i.exec(output) ? "тан" : "ран";
             return output + affix;
         },
@@ -43,7 +43,7 @@ export default ExDate.defineLocale("cv", {
         y: "пӗр ҫул",
         yy: "%d ҫул"
     },
-    ordinalParse: /\d{1,2}-мӗш/,
+    dayOfMonthOrdinalParse: /\d{1,2}-мӗш/,
     ordinal: "%d-мӗш",
     week: {
         dow: 1, // Monday is the first day of the week.

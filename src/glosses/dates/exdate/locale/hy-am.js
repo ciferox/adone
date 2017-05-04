@@ -24,10 +24,10 @@ export default ExDate.defineLocale("hy-am", {
         sameDay: "[այսօր] LT",
         nextDay: "[վաղը] LT",
         lastDay: "[երեկ] LT",
-        nextWeek () {
+        nextWeek() {
             return "dddd [օրը ժամը] LT";
         },
-        lastWeek () {
+        lastWeek() {
             return "[անցած] dddd [օրը ժամը] LT";
         },
         sameElse: "L"
@@ -48,31 +48,31 @@ export default ExDate.defineLocale("hy-am", {
         yy: "%d տարի"
     },
     meridiemParse: /գիշերվա|առավոտվա|ցերեկվա|երեկոյան/,
-    isPM (input) {
+    isPM(input) {
         return /^(ցերեկվա|երեկոյան)$/.test(input);
     },
-    meridiem (hour) {
+    meridiem(hour) {
         if (hour < 4) {
             return "գիշերվա";
         } else if (hour < 12) {
             return "առավոտվա";
         } else if (hour < 17) {
             return "ցերեկվա";
-        } else {
-            return "երեկոյան";
-        }
+        } 
+        return "երեկոյան";
+        
     },
-    ordinalParse: /\d{1,2}|\d{1,2}-(ին|րդ)/,
-    ordinal (number, period) {
+    dayOfMonthOrdinalParse: /\d{1,2}|\d{1,2}-(ին|րդ)/,
+    ordinal(number, period) {
         switch (period) {
             case "DDD":
             case "w":
             case "W":
             case "DDDo":
                 if (number === 1) {
-                    return number + "-ին";
+                    return `${number}-ին`;
                 }
-                return number + "-րդ";
+                return `${number}-րդ`;
             default:
                 return number;
         }

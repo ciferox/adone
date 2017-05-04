@@ -111,16 +111,16 @@ describe("locale inheritance", () => {
         });
         adone.date.defineLocale("child-ordinal-2", {
             parentLocale: "base-ordinal-2",
-            ordinal (num) {
-                return num + "y";
+            ordinal(num) {
+                return `${num}y`;
             }
         });
 
         assert.equal(adone.date.utc("2015-02-03", adone.date.ISO_8601).format("Do"), "3y", "ordinal uses child function");
 
         adone.date.defineLocale("base-ordinal-3", {
-            ordinal (num) {
-                return num + "x";
+            ordinal(num) {
+                return `${num}x`;
             }
         });
         adone.date.defineLocale("child-ordinal-3", {
@@ -133,21 +133,21 @@ describe("locale inheritance", () => {
 
     it("ordinal parse", () => {
         adone.date.defineLocale("base-ordinal-parse-1", {
-            ordinalParse: /\d{1,2}x/
+            dayOfMonthOrdinalParse: /\d{1,2}x/
         });
         adone.date.defineLocale("child-ordinal-parse-1", {
             parentLocale: "base-ordinal-parse-1",
-            ordinalParse: /\d{1,2}y/
+            dayOfMonthOrdinalParse: /\d{1,2}y/
         });
 
         assert.ok(adone.date.utc("2015-01-1y", "YYYY-MM-Do", true).isValid(), "ordinal parse uses child");
 
         adone.date.defineLocale("base-ordinal-parse-2", {
-            ordinalParse: /\d{1,2}x/
+            dayOfMonthOrdinalParse: /\d{1,2}x/
         });
         adone.date.defineLocale("child-ordinal-parse-2", {
             parentLocale: "base-ordinal-parse-2",
-            ordinalParse: /\d{1,2}/
+            dayOfMonthOrdinalParse: /\d{1,2}/
         });
 
         assert.ok(adone.date.utc("2015-01-1", "YYYY-MM-Do", true).isValid(), "ordinal parse uses child (default)");

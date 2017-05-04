@@ -63,25 +63,25 @@ export default ExDate.defineLocale("az", {
         yy: "%d il"
     },
     meridiemParse: /gecə|səhər|gündüz|axşam/,
-    isPM (input) {
+    isPM(input) {
         return /^(gündüz|axşam)$/.test(input);
     },
     // eslint-disable-next-line no-unused-vars
-    meridiem (hour, minute, isLower) {
+    meridiem(hour, minute, isLower) {
         if (hour < 4) {
             return "gecə";
         } else if (hour < 12) {
             return "səhər";
         } else if (hour < 17) {
             return "gündüz";
-        } else {
-            return "axşam";
         }
+        return "axşam";
+
     },
-    ordinalParse: /\d{1,2}-(ıncı|inci|nci|üncü|ncı|uncu)/,
-    ordinal (number) {
+    dayOfMonthOrdinalParse: /\d{1,2}-(ıncı|inci|nci|üncü|ncı|uncu)/,
+    ordinal(number) {
         if (number === 0) {  // special case for zero
-            return number + "-ıncı";
+            return `${number}-ıncı`;
         }
         const a = number % 10;
         const b = number % 100 - a;

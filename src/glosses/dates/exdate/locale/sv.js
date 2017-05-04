@@ -42,8 +42,8 @@ export default ExDate.defineLocale("sv", {
         y: "ett år",
         yy: "%d år"
     },
-    ordinalParse: /\d{1,2}(e|a)/,
-    ordinal (number) {
+    dayOfMonthOrdinalParse: /\d{1,2}(e|a)/,
+    ordinal(number) {
         const b = number % 10;
         const output = (~~(number % 100 / 10) === 1) ? "e" :
             (b === 1) ? "a" :

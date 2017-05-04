@@ -4,16 +4,16 @@
 import ExDate from "..";
 
 const symbolMap = {
-    "1": "١",
-    "2": "٢",
-    "3": "٣",
-    "4": "٤",
-    "5": "٥",
-    "6": "٦",
-    "7": "٧",
-    "8": "٨",
-    "9": "٩",
-    "0": "٠"
+    1: "١",
+    2: "٢",
+    3: "٣",
+    4: "٤",
+    5: "٥",
+    6: "٦",
+    7: "٧",
+    8: "٨",
+    9: "٩",
+    0: "٠"
 };
 
 const numberMap = {
@@ -45,16 +45,16 @@ export default ExDate.defineLocale("ar-sa", {
         LLLL: "dddd D MMMM YYYY HH:mm"
     },
     meridiemParse: /ص|م/,
-    isPM (input) {
-        return "م" === input;
+    isPM(input) {
+        return input === "م";
     },
     // eslint-disable-next-line no-unused-vars
-    meridiem (hour, minute, isLower) {
+    meridiem(hour, minute, isLower) {
         if (hour < 12) {
             return "ص";
-        } else {
-            return "م";
         }
+        return "م";
+
     },
     calendar: {
         sameDay: "[اليوم على الساعة] LT",
@@ -79,13 +79,13 @@ export default ExDate.defineLocale("ar-sa", {
         y: "سنة",
         yy: "%d سنوات"
     },
-    preparse (string) {
-        return string.replace(/[١٢٣٤٥٦٧٨٩٠]/g, function (match) {
+    preparse(string) {
+        return string.replace(/[١٢٣٤٥٦٧٨٩٠]/g, (match) => {
             return numberMap[match];
         }).replace(/،/g, ",");
     },
-    postformat (string) {
-        return string.replace(/\d/g, function (match) {
+    postformat(string) {
+        return string.replace(/\d/g, (match) => {
             return symbolMap[match];
         }).replace(/,/g, "،");
     },

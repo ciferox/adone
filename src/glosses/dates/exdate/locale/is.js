@@ -12,7 +12,7 @@ function plural(n) {
     return true;
 }
 function translate(number, withoutSuffix, key, isFuture) {
-    const result = number + " ";
+    const result = `${number} `;
     switch (key) {
         case "s":
             return withoutSuffix || isFuture ? "nokkrar sekúndur" : "nokkrum sekúndum";
@@ -22,14 +22,14 @@ function translate(number, withoutSuffix, key, isFuture) {
             if (plural(number)) {
                 return result + (withoutSuffix || isFuture ? "mínútur" : "mínútum");
             } else if (withoutSuffix) {
-                return result + "mínúta";
+                return `${result}mínúta`;
             }
-            return result + "mínútu";
+            return `${result}mínútu`;
         case "hh":
             if (plural(number)) {
                 return result + (withoutSuffix || isFuture ? "klukkustundir" : "klukkustundum");
             }
-            return result + "klukkustund";
+            return `${result}klukkustund`;
         case "d":
             if (withoutSuffix) {
                 return "dagur";
@@ -38,11 +38,11 @@ function translate(number, withoutSuffix, key, isFuture) {
         case "dd":
             if (plural(number)) {
                 if (withoutSuffix) {
-                    return result + "dagar";
+                    return `${result}dagar`;
                 }
                 return result + (isFuture ? "daga" : "dögum");
             } else if (withoutSuffix) {
-                return result + "dagur";
+                return `${result}dagur`;
             }
             return result + (isFuture ? "dag" : "degi");
         case "M":
@@ -53,11 +53,11 @@ function translate(number, withoutSuffix, key, isFuture) {
         case "MM":
             if (plural(number)) {
                 if (withoutSuffix) {
-                    return result + "mánuðir";
+                    return `${result}mánuðir`;
                 }
                 return result + (isFuture ? "mánuði" : "mánuðum");
             } else if (withoutSuffix) {
-                return result + "mánuður";
+                return `${result}mánuður`;
             }
             return result + (isFuture ? "mánuð" : "mánuði");
         case "y":
@@ -107,7 +107,7 @@ export default ExDate.defineLocale("is", {
         y: translate,
         yy: translate
     },
-    ordinalParse: /\d{1,2}\./,
+    dayOfMonthOrdinalParse: /\d{1,2}\./,
     ordinal: "%d.",
     week: {
         dow: 1, // Monday is the first day of the week.

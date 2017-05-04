@@ -44,16 +44,16 @@ export default ExDate.defineLocale("dv", {
         LLLL: "dddd D MMMM YYYY HH:mm"
     },
     meridiemParse: /މކ|މފ/,
-    isPM (input) {
-        return "މފ" === input;
+    isPM(input) {
+        return input === "މފ";
     },
     // eslint-disable-next-line no-unused-vars
-    meridiem (hour, minute, isLower) {
+    meridiem(hour, minute, isLower) {
         if (hour < 12) {
             return "މކ";
-        } else {
-            return "މފ";
-        }
+        } 
+        return "މފ";
+        
     },
     calendar: {
         sameDay: "[މިއަދު] LT",
@@ -78,10 +78,10 @@ export default ExDate.defineLocale("dv", {
         y: "އަހަރެއް",
         yy: "އަހަރު %d"
     },
-    preparse (string) {
+    preparse(string) {
         return string.replace(/،/g, ",");
     },
-    postformat (string) {
+    postformat(string) {
         return string.replace(/,/g, "،");
     },
     week: {

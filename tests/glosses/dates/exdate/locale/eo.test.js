@@ -15,7 +15,7 @@ describe("eo", () => {
         let i;
 
         function equalTest(input, mmm, i) {
-            assert.equal(adone.date(input, mmm).month(), i, input + " should be month " + (i + 1));
+            assert.equal(adone.date(input, mmm).month(), i, `${input} should be month ${i + 1}`);
         }
         for (i = 0; i < 12; i++) {
             tests[i] = tests[i].split(" ");
@@ -32,12 +32,12 @@ describe("eo", () => {
 
     it("format", () => {
         const a = [
-            ["dddd, MMMM Do YYYY, h:mm:ss a", "Dimanĉo, februaro 14a 2010, 3:25:50 p.t.m."],
-            ["ddd, hA", "Dim, 3P.T.M."],
+            ["dddd, MMMM Do YYYY, h:mm:ss a", "dimanĉo, februaro 14a 2010, 3:25:50 p.t.m."],
+            ["ddd, hA", "dim, 3P.T.M."],
             ["M Mo MM MMMM MMM", "2 2a 02 februaro feb"],
             ["YYYY YY", "2010 10"],
             ["D Do DD", "14 14a 14"],
-            ["d do dddd ddd dd", "0 0a Dimanĉo Dim Di"],
+            ["d do dddd ddd dd", "0 0a dimanĉo dim di"],
             ["DDD DDDo DDDD", "45 45a 045"],
             ["w wo ww", "7 7a 07"],
             ["h hh", "3 03"],
@@ -48,19 +48,19 @@ describe("eo", () => {
             ["[la] DDDo [tago] [de] [la] [jaro]", "la 45a tago de la jaro"],
             ["LTS", "15:25:50"],
             ["L", "2010-02-14"],
-            ["LL", "14-an de februaro, 2010"],
-            ["LLL", "14-an de februaro, 2010 15:25"],
-            ["LLLL", "Dimanĉo, la 14-an de februaro, 2010 15:25"],
+            ["LL", "14-a de februaro, 2010"],
+            ["LLL", "14-a de februaro, 2010 15:25"],
+            ["LLLL", "dimanĉo, la 14-a de februaro, 2010 15:25"],
             ["l", "2010-2-14"],
-            ["ll", "14-an de feb, 2010"],
-            ["lll", "14-an de feb, 2010 15:25"],
-            ["llll", "Dim, la 14-an de feb, 2010 15:25"]
+            ["ll", "14-a de feb, 2010"],
+            ["lll", "14-a de feb, 2010 15:25"],
+            ["llll", "dim, la 14-a de feb, 2010 15:25"]
         ];
         const b = adone.date(new Date(2010, 1, 14, 15, 25, 50, 125));
         let i;
 
         for (i = 0; i < a.length; i++) {
-            assert.equal(b.format(a[i][0]), a[i][1], a[i][0] + " ---> " + a[i][1]);
+            assert.equal(b.format(a[i][0]), a[i][1], `${a[i][0]} ---> ${a[i][1]}`);
         }
     });
 
@@ -111,7 +111,7 @@ describe("eo", () => {
     });
 
     it("format week", () => {
-        const expected = "Dimanĉo Dim Di_Lundo Lun Lu_Mardo Mard Ma_Merkredo Merk Me_Ĵaŭdo Ĵaŭ Ĵa_Vendredo Ven Ve_Sabato Sab Sa".split("_");
+        const expected = "dimanĉo dim di_lundo lun lu_mardo mard ma_merkredo merk me_ĵaŭdo ĵaŭ ĵa_vendredo ven ve_sabato sab sa".split("_");
         let i;
 
         for (i = 0; i < expected.length; i++) {
@@ -208,7 +208,7 @@ describe("eo", () => {
     });
 
     it("suffix", () => {
-        assert.equal(adone.date(30000).from(0), "je sekundoj", "je prefix");
+        assert.equal(adone.date(30000).from(0), "post sekundoj", "post prefix");
         assert.equal(adone.date(0).from(30000), "antaŭ sekundoj", "antaŭ prefix");
     });
 
@@ -217,12 +217,8 @@ describe("eo", () => {
     });
 
     it("fromNow", () => {
-        assert.equal(adone.date().add({
-            s: 30
-        }).fromNow(), "je sekundoj", "je sekundoj");
-        assert.equal(adone.date().add({
-            d: 5
-        }).fromNow(), "je 5 tagoj", "je 5 tagoj");
+        assert.equal(adone.date().add({ s: 30 }).fromNow(), "post sekundoj", "post sekundoj");
+        assert.equal(adone.date().add({ d: 5 }).fromNow(), "post 5 tagoj", "post 5 tagoj");
     });
 
     it("calendar day", () => {
@@ -254,11 +250,11 @@ describe("eo", () => {
             m = adone.date().add({
                 d: i
             });
-            assert.equal(m.calendar(), m.format("dddd [je] LT"), "Today + " + i + " days current time");
+            assert.equal(m.calendar(), m.format("dddd [je] LT"), `Today + ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("dddd [je] LT"), "Today + " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format("dddd [je] LT"), `Today + ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("dddd [je] LT"), "Today + " + i + " days end of day");
+            assert.equal(m.calendar(), m.format("dddd [je] LT"), `Today + ${i} days end of day`);
         }
     });
 
@@ -270,11 +266,11 @@ describe("eo", () => {
             m = adone.date().subtract({
                 d: i
             });
-            assert.equal(m.calendar(), m.format("[pasinta] dddd [je] LT"), "Today - " + i + " days current time");
+            assert.equal(m.calendar(), m.format("[pasinta] dddd [je] LT"), `Today - ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("[pasinta] dddd [je] LT"), "Today - " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format("[pasinta] dddd [je] LT"), `Today - ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("[pasinta] dddd [je] LT"), "Today - " + i + " days end of day");
+            assert.equal(m.calendar(), m.format("[pasinta] dddd [je] LT"), `Today - ${i} days end of day`);
         }
     });
 

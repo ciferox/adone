@@ -12,19 +12,19 @@ export default ExDate.defineLocale("zh-hk", {
     weekdaysShort: "週日_週一_週二_週三_週四_週五_週六".split("_"),
     weekdaysMin: "日_一_二_三_四_五_六".split("_"),
     longDateFormat: {
-        LT: "Ah點mm分",
-        LTS: "Ah點m分s秒",
+        LT: "HH:mm",
+        LTS: "HH:mm:ss",
         L: "YYYY年MMMD日",
         LL: "YYYY年MMMD日",
-        LLL: "YYYY年MMMD日Ah點mm分",
-        LLLL: "YYYY年MMMD日ddddAh點mm分",
+        LLL: "YYYY年MMMD日 HH:mm",
+        LLLL: "YYYY年MMMD日dddd HH:mm",
         l: "YYYY年MMMD日",
         ll: "YYYY年MMMD日",
-        lll: "YYYY年MMMD日Ah點mm分",
-        llll: "YYYY年MMMD日ddddAh點mm分"
+        lll: "YYYY年MMMD日 HH:mm",
+        llll: "YYYY年MMMD日dddd HH:mm"
     },
     meridiemParse: /凌晨|早上|上午|中午|下午|晚上/,
-    meridiemHour (hour, meridiem) {
+    meridiemHour(hour, meridiem) {
         if (hour === 12) {
             hour = 0;
         }
@@ -37,7 +37,7 @@ export default ExDate.defineLocale("zh-hk", {
         }
     },
     // eslint-disable-next-line no-unused-vars
-    meridiem (hour, minute, isLower) {
+    meridiem(hour, minute, isLower) {
         const hm = hour * 100 + minute;
         if (hm < 600) {
             return "凌晨";
@@ -49,9 +49,9 @@ export default ExDate.defineLocale("zh-hk", {
             return "中午";
         } else if (hm < 1800) {
             return "下午";
-        } else {
-            return "晚上";
         }
+        return "晚上";
+
     },
     calendar: {
         sameDay: "[今天]LT",
@@ -61,18 +61,18 @@ export default ExDate.defineLocale("zh-hk", {
         lastWeek: "[上]ddddLT",
         sameElse: "L"
     },
-    ordinalParse: /\d{1,2}(日|月|週)/,
-    ordinal (number, period) {
+    dayOfMonthOrdinalParse: /\d{1,2}(日|月|週)/,
+    ordinal(number, period) {
         switch (period) {
             case "d" :
             case "D" :
             case "DDD" :
-                return number + "日";
+                return `${number}日`;
             case "M" :
-                return number + "月";
+                return `${number}月`;
             case "w" :
             case "W" :
-                return number + "週";
+                return `${number}週`;
             default :
                 return number;
         }

@@ -4,16 +4,16 @@
 import ExDate from "..";
 
 const symbolMap = {
-    "1": "१",
-    "2": "२",
-    "3": "३",
-    "4": "४",
-    "5": "५",
-    "6": "६",
-    "7": "७",
-    "8": "८",
-    "9": "९",
-    "0": "०"
+    1: "१",
+    2: "२",
+    3: "३",
+    4: "४",
+    5: "५",
+    6: "६",
+    7: "७",
+    8: "८",
+    9: "९",
+    0: "०"
 };
 
 const numberMap = {
@@ -67,20 +67,20 @@ export default ExDate.defineLocale("hi", {
         y: "एक वर्ष",
         yy: "%d वर्ष"
     },
-    preparse (string) {
-        return string.replace(/[१२३४५६७८९०]/g, function (match) {
+    preparse(string) {
+        return string.replace(/[१२३४५६७८९०]/g, (match) => {
             return numberMap[match];
         });
     },
-    postformat (string) {
-        return string.replace(/\d/g, function (match) {
+    postformat(string) {
+        return string.replace(/\d/g, (match) => {
             return symbolMap[match];
         });
     },
     // Hindi notation for meridiems are quite fuzzy in practice. While there exists
     // a rigid notion of a 'Pahar' it is not used as rigidly in modern Hindi.
     meridiemParse: /रात|सुबह|दोपहर|शाम/,
-    meridiemHour (hour, meridiem) {
+    meridiemHour(hour, meridiem) {
         if (hour === 12) {
             hour = 0;
         }
@@ -95,7 +95,7 @@ export default ExDate.defineLocale("hi", {
         }
     },
     // eslint-disable-next-line no-unused-vars
-    meridiem (hour, minute, isLower) {
+    meridiem(hour, minute, isLower) {
         if (hour < 4) {
             return "रात";
         } else if (hour < 10) {
@@ -104,9 +104,9 @@ export default ExDate.defineLocale("hi", {
             return "दोपहर";
         } else if (hour < 20) {
             return "शाम";
-        } else {
-            return "रात";
-        }
+        } 
+        return "रात";
+        
     },
     week: {
         dow: 0, // Sunday is the first day of the week.

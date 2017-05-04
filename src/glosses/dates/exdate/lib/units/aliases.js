@@ -1,10 +1,8 @@
-
-
 const aliases = {};
 
-export function addUnitAlias (unit, shorthand) {
+export function addUnitAlias(unit, shorthand) {
     const lowerCase = unit.toLowerCase();
-    aliases[lowerCase] = aliases[lowerCase + "s"] = aliases[shorthand] = unit;
+    aliases[lowerCase] = aliases[`${lowerCase}s`] = aliases[shorthand] = unit;
 }
 
 export function normalizeUnits(units) {

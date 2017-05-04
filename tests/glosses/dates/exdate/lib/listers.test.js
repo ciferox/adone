@@ -84,7 +84,7 @@ describe("listers", () => {
 
         adone.date.locale("difficult", {
 
-            monthsShort (m, format) {
+            monthsShort(m, format) {
                 const arr = format.match(/-MMM-/) ? monthsShortWeird : monthsShort;
                 return arr[m.month()];
             }

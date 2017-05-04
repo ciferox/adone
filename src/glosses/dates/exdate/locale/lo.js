@@ -19,16 +19,16 @@ export default ExDate.defineLocale("lo", {
         LLLL: "ວັນdddd D MMMM YYYY HH:mm"
     },
     meridiemParse: /ຕອນເຊົ້າ|ຕອນແລງ/,
-    isPM (input) {
+    isPM(input) {
         return input === "ຕອນແລງ";
     },
     // eslint-disable-next-line no-unused-vars
-    meridiem (hour, minute, isLower) {
+    meridiem(hour, minute, isLower) {
         if (hour < 12) {
             return "ຕອນເຊົ້າ";
-        } else {
-            return "ຕອນແລງ";
-        }
+        } 
+        return "ຕອນແລງ";
+        
     },
     calendar: {
         sameDay: "[ມື້ນີ້ເວລາ] LT",
@@ -53,8 +53,8 @@ export default ExDate.defineLocale("lo", {
         y: "1 ປີ",
         yy: "%d ປີ"
     },
-    ordinalParse: /(ທີ່)\d{1,2}/,
-    ordinal (number) {
-        return "ທີ່" + number;
+    dayOfMonthOrdinalParse: /(ທີ່)\d{1,2}/,
+    ordinal(number) {
+        return `ທີ່${number}`;
     }
 });

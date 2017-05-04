@@ -10,26 +10,30 @@ function plural(word, num) {
 }
 function relativeTimeWithPlural(number, withoutSuffix, key) {
     const format = {
-        "mm": withoutSuffix ? "хвилина_хвилини_хвилин" : "хвилину_хвилини_хвилин",
-        "hh": withoutSuffix ? "година_години_годин" : "годину_години_годин",
-        "dd": "день_дні_днів",
-        "MM": "місяць_місяці_місяців",
-        "yy": "рік_роки_років"
+        mm: withoutSuffix ? "хвилина_хвилини_хвилин" : "хвилину_хвилини_хвилин",
+        hh: withoutSuffix ? "година_години_годин" : "годину_години_годин",
+        dd: "день_дні_днів",
+        MM: "місяць_місяці_місяців",
+        yy: "рік_роки_років"
     };
     if (key === "m") {
         return withoutSuffix ? "хвилина" : "хвилину";
-    }    else if (key === "h") {
+    } else if (key === "h") {
         return withoutSuffix ? "година" : "годину";
-    }    else {
-        return number + " " + plural(format[key], +number);
     }
+    return `${number} ${plural(format[key], Number(number))}`;
+
 }
 function weekdaysCaseReplace(m, format) {
     const weekdays = {
-        "nominative": "неділя_понеділок_вівторок_середа_четвер_п’ятниця_субота".split("_"),
-        "accusative": "неділю_понеділок_вівторок_середу_четвер_п’ятницю_суботу".split("_"),
-        "genitive": "неділі_понеділка_вівторка_середи_четверга_п’ятниці_суботи".split("_")
+        nominative: "неділя_понеділок_вівторок_середа_четвер_п’ятниця_субота".split("_"),
+        accusative: "неділю_понеділок_вівторок_середу_четвер_п’ятницю_суботу".split("_"),
+        genitive: "неділі_понеділка_вівторка_середи_четверга_п’ятниці_суботи".split("_")
     };
+
+    if (!m) {
+        return weekdays.nominative;
+    }
 
     const nounCase = (/(\[[ВвУу]\]) ?dddd/).test(format) ?
         "accusative" :
@@ -40,14 +44,14 @@ function weekdaysCaseReplace(m, format) {
 }
 function processHoursFunction(str) {
     return function () {
-        return str + "о" + (this.hours() === 11 ? "б" : "") + "] LT";
+        return `${str}о${this.hours() === 11 ? "б" : ""}] LT`;
     };
 }
 
 export default ExDate.defineLocale("uk", {
     months: {
-        "format": "січня_лютого_березня_квітня_травня_червня_липня_серпня_вересня_жовтня_листопада_грудня".split("_"),
-        "standalone": "січень_лютий_березень_квітень_травень_червень_липень_серпень_вересень_жовтень_листопад_грудень".split("_")
+        format: "січня_лютого_березня_квітня_травня_червня_липня_серпня_вересня_жовтня_листопада_грудня".split("_"),
+        standalone: "січень_лютий_березень_квітень_травень_червень_липень_серпень_вересень_жовтень_листопад_грудень".split("_")
     },
     monthsShort: "січ_лют_бер_квіт_трав_черв_лип_серп_вер_жовт_лист_груд".split("_"),
     weekdays: weekdaysCaseReplace,
@@ -66,7 +70,7 @@ export default ExDate.defineLocale("uk", {
         nextDay: processHoursFunction("[Завтра "),
         lastDay: processHoursFunction("[Вчора "),
         nextWeek: processHoursFunction("[У] dddd ["),
-        lastWeek () {
+        lastWeek() {
             switch (this.day()) {
                 case 0:
                 case 3:
@@ -98,32 +102,32 @@ export default ExDate.defineLocale("uk", {
     },
     // M. E.: those two are virtually unused but a user might want to implement them for his/her website for some reason
     meridiemParse: /ночі|ранку|дня|вечора/,
-    isPM (input) {
+    isPM(input) {
         return /^(дня|вечора)$/.test(input);
     },
     // eslint-disable-next-line no-unused-vars
-    meridiem (hour, minute, isLower) {
+    meridiem(hour, minute, isLower) {
         if (hour < 4) {
             return "ночі";
         } else if (hour < 12) {
             return "ранку";
         } else if (hour < 17) {
             return "дня";
-        } else {
-            return "вечора";
         }
+        return "вечора";
+
     },
-    ordinalParse: /\d{1,2}-(й|го)/,
-    ordinal (number, period) {
+    dayOfMonthOrdinalParse: /\d{1,2}-(й|го)/,
+    ordinal(number, period) {
         switch (period) {
             case "M":
             case "d":
             case "DDD":
             case "w":
             case "W":
-                return number + "-й";
+                return `${number}-й`;
             case "D":
-                return number + "-го";
+                return `${number}-го`;
             default:
                 return number;
         }

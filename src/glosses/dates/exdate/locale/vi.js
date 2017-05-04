@@ -12,15 +12,15 @@ export default ExDate.defineLocale("vi", {
     weekdaysMin: "CN_T2_T3_T4_T5_T6_T7".split("_"),
     weekdaysParseExact: true,
     meridiemParse: /sa|ch/i,
-    isPM (input) {
+    isPM(input) {
         return /^ch$/i.test(input);
     },
-    meridiem (hours, minutes, isLower) {
+    meridiem(hours, minutes, isLower) {
         if (hours < 12) {
             return isLower ? "sa" : "SA";
-        } else {
-            return isLower ? "ch" : "CH";
-        }
+        } 
+        return isLower ? "ch" : "CH";
+        
     },
     longDateFormat: {
         LT: "HH:mm",
@@ -57,8 +57,8 @@ export default ExDate.defineLocale("vi", {
         y: "một năm",
         yy: "%d năm"
     },
-    ordinalParse: /\d{1,2}/,
-    ordinal (number) {
+    dayOfMonthOrdinalParse: /\d{1,2}/,
+    ordinal(number) {
         return number;
     },
     week: {

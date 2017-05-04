@@ -12,15 +12,15 @@ describe("normalize units", () => {
             const fullKey = fullKeys[index];
             const fullKeyCaps = fullKey.toUpperCase();
             const fullKeyLower = fullKey.toLowerCase();
-            const fullKeyPlural = fullKey + "s";
-            const fullKeyCapsPlural = fullKeyCaps + "s";
+            const fullKeyPlural = `${fullKey}s`;
+            const fullKeyCapsPlural = `${fullKeyCaps}s`;
             const alias = aliases[index];
-            assert.equal(adone.date.normalizeUnits(fullKey), fullKey, "Testing full key " + fullKey);
-            assert.equal(adone.date.normalizeUnits(fullKeyCaps), fullKey, "Testing full key capitalised " + fullKey);
-            assert.equal(adone.date.normalizeUnits(fullKeyLower), fullKey, "Testing full key lowercased " + fullKey);
-            assert.equal(adone.date.normalizeUnits(fullKeyPlural), fullKey, "Testing full key plural " + fullKey);
-            assert.equal(adone.date.normalizeUnits(fullKeyCapsPlural), fullKey, "Testing full key capitalised and plural " + fullKey);
-            assert.equal(adone.date.normalizeUnits(alias), fullKey, "Testing alias " + fullKey);
+            assert.equal(adone.date.normalizeUnits(fullKey), fullKey, `Testing full key ${fullKey}`);
+            assert.equal(adone.date.normalizeUnits(fullKeyCaps), fullKey, `Testing full key capitalised ${fullKey}`);
+            assert.equal(adone.date.normalizeUnits(fullKeyLower), fullKey, `Testing full key lowercased ${fullKey}`);
+            assert.equal(adone.date.normalizeUnits(fullKeyPlural), fullKey, `Testing full key plural ${fullKey}`);
+            assert.equal(adone.date.normalizeUnits(fullKeyCapsPlural), fullKey, `Testing full key capitalised and plural ${fullKey}`);
+            assert.equal(adone.date.normalizeUnits(alias), fullKey, `Testing alias ${fullKey}`);
         }
     });
 });

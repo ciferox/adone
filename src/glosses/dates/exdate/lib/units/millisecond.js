@@ -55,9 +55,9 @@ addUnitPriority("millisecond", 16);
 
 // PARSING
 
-addRegexToken("S",    match1to3, match1);
-addRegexToken("SS",   match1to3, match2);
-addRegexToken("SSS",  match1to3, match3);
+addRegexToken("S", match1to3, match1);
+addRegexToken("SS", match1to3, match2);
+addRegexToken("SSS", match1to3, match3);
 
 let token;
 for (token = "SSSS"; token.length <= 9; token += "S") {
@@ -65,7 +65,7 @@ for (token = "SSSS"; token.length <= 9; token += "S") {
 }
 
 function parseMs(input, array) {
-    array[MILLISECOND] = toInt(("0." + input) * 1000);
+    array[MILLISECOND] = toInt((`0.${input}`) * 1000);
 }
 
 for (token = "S"; token.length <= 9; token += "S") {

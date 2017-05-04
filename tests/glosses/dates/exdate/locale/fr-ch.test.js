@@ -11,7 +11,7 @@ describe("fr-ch", () => {
         const tests = "janvier janv._février févr._mars mars_avril avr._mai mai_juin juin_juillet juil._août août_septembre sept._octobre oct._novembre nov._décembre déc.".split("_");
 
         function equalTest(input, mmm, i) {
-            assert.equal(adone.date(input, mmm).month(), i, input + " should be month " + (i + 1));
+            assert.equal(adone.date(input, mmm).month(), i, `${input} should be month ${i + 1}`);
         }
 
         for (i = 0; i < 12; i++) {
@@ -42,7 +42,8 @@ describe("fr-ch", () => {
             ["m mm", "25 25"],
             ["s ss", "50 50"],
             ["a A", "pm PM"],
-            ["[the] DDDo [day of the year]", "the 45e day of the year"],
+            ["[le] Do [jour du mois]", "le 14e jour du mois"],
+            ["[le] DDDo [jour de l’année]", "le 45e jour de l’année"],
             ["LTS", "15:25:50"],
             ["L", "14.02.2010"],
             ["LL", "14 février 2010"],
@@ -57,11 +58,20 @@ describe("fr-ch", () => {
         let i;
 
         for (i = 0; i < a.length; i++) {
-            assert.equal(b.format(a[i][0]), a[i][1], a[i][0] + " ---> " + a[i][1]);
+            assert.equal(b.format(a[i][0]), a[i][1], `${a[i][0]} ---> ${a[i][1]}`);
         }
     });
 
     it("format ordinal", () => {
+        assert.equal(adone.date([2017, 0, 1]).format("Mo"), "1er", "1er");
+        assert.equal(adone.date([2017, 1, 1]).format("Mo"), "2e", "2e");
+
+        assert.equal(adone.date([2017, 0, 1]).format("Qo"), "1er", "1er");
+        assert.equal(adone.date([2017, 3, 1]).format("Qo"), "2e", "2e");
+
+        assert.equal(adone.date([2017, 0, 1]).format("Do"), "1er", "1er");
+        assert.equal(adone.date([2017, 0, 2]).format("Do"), "2e", "2e");
+
         assert.equal(adone.date([2011, 0, 1]).format("DDDo"), "1er", "1er");
         assert.equal(adone.date([2011, 0, 2]).format("DDDo"), "2e", "2e");
         assert.equal(adone.date([2011, 0, 3]).format("DDDo"), "3e", "3e");
@@ -96,6 +106,12 @@ describe("fr-ch", () => {
         assert.equal(adone.date([2011, 0, 30]).format("DDDo"), "30e", "30e");
 
         assert.equal(adone.date([2011, 0, 31]).format("DDDo"), "31e", "31e");
+
+        assert.equal(adone.date([2017, 0, 1]).format("do"), "0e", "0e");
+        assert.equal(adone.date([2017, 0, 2]).format("do"), "1er", "1er");
+
+        assert.equal(adone.date([2017, 0, 4]).format("wo Wo"), "1re 1re", "1re 1re");
+        assert.equal(adone.date([2017, 0, 11]).format("wo Wo"), "2e 2e", "2e 2e");
     });
 
     it("format month", () => {
@@ -119,90 +135,34 @@ describe("fr-ch", () => {
     it("from", () => {
         const start = adone.date([2007, 1, 28]);
 
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            s: 44
-        }), true), "quelques secondes", "44 seconds = a few seconds");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            s: 45
-        }), true), "une minute", "45 seconds = a minute");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            s: 89
-        }), true), "une minute", "89 seconds = a minute");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            s: 90
-        }), true), "2 minutes", "90 seconds = 2 minutes");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            m: 44
-        }), true), "44 minutes", "44 minutes = 44 minutes");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            m: 45
-        }), true), "une heure", "45 minutes = an hour");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            m: 89
-        }), true), "une heure", "89 minutes = an hour");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            m: 90
-        }), true), "2 heures", "90 minutes = 2 hours");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            h: 5
-        }), true), "5 heures", "5 hours = 5 hours");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            h: 21
-        }), true), "21 heures", "21 hours = 21 hours");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            h: 22
-        }), true), "un jour", "22 hours = a day");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            h: 35
-        }), true), "un jour", "35 hours = a day");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            h: 36
-        }), true), "2 jours", "36 hours = 2 days");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            d: 1
-        }), true), "un jour", "1 day = a day");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            d: 5
-        }), true), "5 jours", "5 days = 5 days");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            d: 25
-        }), true), "25 jours", "25 days = 25 days");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            d: 26
-        }), true), "un mois", "26 days = a month");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            d: 30
-        }), true), "un mois", "30 days = a month");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            d: 43
-        }), true), "un mois", "43 days = a month");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            d: 46
-        }), true), "2 mois", "46 days = 2 months");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            d: 74
-        }), true), "2 mois", "75 days = 2 months");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            d: 76
-        }), true), "3 mois", "76 days = 3 months");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            M: 1
-        }), true), "un mois", "1 month = a month");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            M: 5
-        }), true), "5 mois", "5 months = 5 months");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            d: 345
-        }), true), "un an", "345 days = a year");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            d: 548
-        }), true), "2 ans", "548 days = 2 years");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            y: 1
-        }), true), "un an", "1 year = a year");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            y: 5
-        }), true), "5 ans", "5 years = 5 years");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ s: 44 }), true), "quelques secondes", "44 seconds = a few seconds");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ s: 45 }), true), "une minute", "45 seconds = a minute");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ s: 89 }), true), "une minute", "89 seconds = a minute");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ s: 90 }), true), "2 minutes", "90 seconds = 2 minutes");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ m: 44 }), true), "44 minutes", "44 minutes = 44 minutes");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ m: 45 }), true), "une heure", "45 minutes = an hour");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ m: 89 }), true), "une heure", "89 minutes = an hour");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ m: 90 }), true), "2 heures", "90 minutes = 2 hours");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ h: 5 }), true), "5 heures", "5 hours = 5 hours");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ h: 21 }), true), "21 heures", "21 hours = 21 hours");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ h: 22 }), true), "un jour", "22 hours = a day");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ h: 35 }), true), "un jour", "35 hours = a day");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ h: 36 }), true), "2 jours", "36 hours = 2 days");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ d: 1 }), true), "un jour", "1 day = a day");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ d: 5 }), true), "5 jours", "5 days = 5 days");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ d: 25 }), true), "25 jours", "25 days = 25 days");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ d: 26 }), true), "un mois", "26 days = a month");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ d: 30 }), true), "un mois", "30 days = a month");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ d: 43 }), true), "un mois", "43 days = a month");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ d: 46 }), true), "2 mois", "46 days = 2 months");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ d: 74 }), true), "2 mois", "75 days = 2 months");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ d: 76 }), true), "3 mois", "76 days = 3 months");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ M: 1 }), true), "un mois", "1 month = a month");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ M: 5 }), true), "5 mois", "5 months = 5 months");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ d: 345 }), true), "un an", "345 days = a year");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ d: 548 }), true), "2 ans", "548 days = 2 years");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ y: 1 }), true), "un an", "1 year = a year");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ y: 5 }), true), "5 ans", "5 years = 5 years");
     });
 
     it("suffix", () => {
@@ -214,81 +174,55 @@ describe("fr-ch", () => {
         assert.equal(adone.date().add({
             s: 30
         }).fromNow(), "dans quelques secondes", "in a few seconds");
-        assert.equal(adone.date().add({
-            d: 5
-        }).fromNow(), "dans 5 jours", "in 5 days");
+        assert.equal(adone.date().add({ d: 5 }).fromNow(), "dans 5 jours", "in 5 days");
     });
 
     it("same day", () => {
         const a = adone.date().hours(12).minutes(0).seconds(0);
 
-        assert.equal(adone.date(a).calendar(), "Aujourd'hui à 12:00", "today at the same time");
-        assert.equal(adone.date(a).add({
-            m: 25
-        }).calendar(), "Aujourd'hui à 12:25", "Now plus 25 min");
-        assert.equal(adone.date(a).add({
-            h: 1
-        }).calendar(), "Aujourd'hui à 13:00", "Now plus 1 hour");
-        assert.equal(adone.date(a).add({
-            d: 1
-        }).calendar(), "Demain à 12:00", "tomorrow at the same time");
-        assert.equal(adone.date(a).subtract({
-            h: 1
-        }).calendar(), "Aujourd'hui à 11:00", "Now minus 1 hour");
-        assert.equal(adone.date(a).subtract({
-            d: 1
-        }).calendar(), "Hier à 12:00", "yesterday at the same time");
+        assert.equal(adone.date(a).calendar(), "Aujourd’hui à 12:00", "Today at the same time");
+        assert.equal(adone.date(a).add({ m: 25 }).calendar(), "Aujourd’hui à 12:25", "Now plus 25 min");
+        assert.equal(adone.date(a).add({ h: 1 }).calendar(), "Aujourd’hui à 13:00", "Now plus 1 hour");
+        assert.equal(adone.date(a).add({ d: 1 }).calendar(), "Demain à 12:00", "Tomorrow at the same time");
+        assert.equal(adone.date(a).subtract({ h: 1 }).calendar(), "Aujourd’hui à 11:00", "Now minus 1 hour");
+        assert.equal(adone.date(a).subtract({ d: 1 }).calendar(), "Hier à 12:00", "Yesterday at the same time");
     });
 
     it("same next week", () => {
-        let i;
-        let m;
+        let i, m;
 
         for (i = 2; i < 7; i++) {
-            m = adone.date().add({
-                d: i
-            });
-            assert.equal(m.calendar(), m.format("dddd [à] LT"), "Today + " + i + " days current time");
+            m = adone.date().add({ d: i });
+            assert.equal(m.calendar(), m.format("dddd [à] LT"), `Today + ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("dddd [à] LT"), "Today + " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format("dddd [à] LT"), `Today + ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("dddd [à] LT"), "Today + " + i + " days end of day");
+            assert.equal(m.calendar(), m.format("dddd [à] LT"), `Today + ${i} days end of day`);
         }
     });
 
     it("same last week", () => {
-        let i;
-        let m;
+        let i, m;
 
         for (i = 2; i < 7; i++) {
-            m = adone.date().subtract({
-                d: i
-            });
-            assert.equal(m.calendar(), m.format("dddd [dernier à] LT"), "Today - " + i + " days current time");
+            m = adone.date().subtract({ d: i });
+            assert.equal(m.calendar(), m.format("dddd [dernier à] LT"), `Today - ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("dddd [dernier à] LT"), "Today - " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format("dddd [dernier à] LT"), `Today - ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("dddd [dernier à] LT"), "Today - " + i + " days end of day");
+            assert.equal(m.calendar(), m.format("dddd [dernier à] LT"), `Today - ${i} days end of day`);
         }
     });
 
     it("same all else", () => {
-        let weeksAgo = adone.date().subtract({
-            w: 1
-        });
-        let weeksFromNow = adone.date().add({
-            w: 1
-        });
+        let weeksAgo = adone.date().subtract({ w: 1 }),
+            weeksFromNow = adone.date().add({ w: 1 });
 
         assert.equal(weeksAgo.calendar(), weeksAgo.format("L"), "1 week ago");
         assert.equal(weeksFromNow.calendar(), weeksFromNow.format("L"), "in 1 week");
 
-        weeksAgo = adone.date().subtract({
-            w: 2
-        });
-        weeksFromNow = adone.date().add({
-            w: 2
-        });
+        weeksAgo = adone.date().subtract({ w: 2 });
+        weeksFromNow = adone.date().add({ w: 2 });
 
         assert.equal(weeksAgo.calendar(), weeksAgo.format("L"), "2 weeks ago");
         assert.equal(weeksFromNow.calendar(), weeksFromNow.format("L"), "in 2 weeks");
@@ -296,8 +230,8 @@ describe("fr-ch", () => {
 
     it("weeks year starting sunday formatted", () => {
         assert.equal(adone.date([2012, 0, 1]).format("w ww wo"), "52 52 52e", "Jan  1 2012 should be week 52");
-        assert.equal(adone.date([2012, 0, 2]).format("w ww wo"), "1 01 1er", "Jan  2 2012 should be week 1");
-        assert.equal(adone.date([2012, 0, 8]).format("w ww wo"), "1 01 1er", "Jan  8 2012 should be week 1");
+        assert.equal(adone.date([2012, 0, 2]).format("w ww wo"), "1 01 1re", "Jan  2 2012 should be week 1");
+        assert.equal(adone.date([2012, 0, 8]).format("w ww wo"), "1 01 1re", "Jan  8 2012 should be week 1");
         assert.equal(adone.date([2012, 0, 9]).format("w ww wo"), "2 02 2e", "Jan  9 2012 should be week 2");
         assert.equal(adone.date([2012, 0, 15]).format("w ww wo"), "2 02 2e", "Jan 15 2012 should be week 2");
     });

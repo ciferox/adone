@@ -4,11 +4,11 @@ describe("days in month", () => {
     });
 
     it("days in month", () => {
-        [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31].forEach(function (days, i) {
+        [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31].forEach((days, i) => {
             const firstDay = adone.date([2012, i]);
-            const lastDay  = adone.date([2012, i, days]);
-            assert.equal(firstDay.daysInMonth(), days, firstDay.format("L") + " should have " + days + " days.");
-            assert.equal(lastDay.daysInMonth(), days, lastDay.format("L") + " should have " + days + " days.");
+            const lastDay = adone.date([2012, i, days]);
+            assert.equal(firstDay.daysInMonth(), days, `${firstDay.format("L")} should have ${days} days.`);
+            assert.equal(lastDay.daysInMonth(), days, `${lastDay.format("L")} should have ${days} days.`);
         });
     });
 

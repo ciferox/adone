@@ -1,7 +1,6 @@
-
-import { configFromISO } from "./from-string";
+import { configFromISO, configFromRFC2822 } from "./from-string";
 import { configFromArray } from "./from-array";
-import { getParseRegexForToken, addTimeToArrayFromToken }   from "../parse";
+import { getParseRegexForToken, addTimeToArrayFromToken } from "../parse";
 import { expandFormat, formatTokenFunctions, formattingTokens } from "../format";
 import checkOverflow from "./check-overflow";
 import { HOUR } from "../units/constants";
@@ -12,6 +11,9 @@ const { is } = adone;
 // constant that refers to the ISO standard
 hooks.ISO_8601 = function () {};
 
+// constant that refers to the RFC 2822 form
+hooks.RFC_2822 = function () {};
+
 // date from string and format string
 export function configFromStringAndFormat(config) {
     // TODO: Move this to another part of the creation flow to prevent circular deps
@@ -19,12 +21,16 @@ export function configFromStringAndFormat(config) {
         configFromISO(config);
         return;
     }
+    if (config._f === hooks.RFC_2822) {
+        configFromRFC2822(config);
+        return;
+    }
 
     config._a = [];
     getParsingFlags(config).empty = true;
 
     // This array is used to make a Date, either with `new Date` or `Date.UTC`
-    let string = "" + config._i;
+    let string = `${config._i}`;
 
     const stringLength = string.length;
     const tokens = expandFormat(config._f, config._locale).match(formattingTokens) || [];
@@ -46,11 +52,11 @@ export function configFromStringAndFormat(config) {
         if (formatTokenFunctions[token]) {
             if (parsedInput) {
                 getParsingFlags(config).empty = false;
-            }            else {
+            } else {
                 getParsingFlags(config).unusedTokens.push(token);
             }
             addTimeToArrayFromToken(token, parsedInput, config);
-        }        else if (config._strict && !parsedInput) {
+        } else if (config._strict && !parsedInput) {
             getParsingFlags(config).unusedTokens.push(token);
         }
     }
@@ -78,7 +84,7 @@ export function configFromStringAndFormat(config) {
 }
 
 
-function meridiemFixWrap (locale, hour, meridiem) {
+function meridiemFixWrap(locale, hour, meridiem) {
     let isPm;
 
     if (is.nil(meridiem)) {
@@ -97,8 +103,8 @@ function meridiemFixWrap (locale, hour, meridiem) {
             hour = 0;
         }
         return hour;
-    } else {
-        // this is not supposed to happen
-        return hour;
     }
+        // this is not supposed to happen
+    return hour;
+
 }

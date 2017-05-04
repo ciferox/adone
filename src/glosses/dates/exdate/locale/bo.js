@@ -4,16 +4,16 @@
 import ExDate from "..";
 
 const symbolMap = {
-    "1": "༡",
-    "2": "༢",
-    "3": "༣",
-    "4": "༤",
-    "5": "༥",
-    "6": "༦",
-    "7": "༧",
-    "8": "༨",
-    "9": "༩",
-    "0": "༠"
+    1: "༡",
+    2: "༢",
+    3: "༣",
+    4: "༤",
+    5: "༥",
+    6: "༦",
+    7: "༧",
+    8: "༨",
+    9: "༩",
+    0: "༠"
 };
 
 const numberMap = {
@@ -66,18 +66,18 @@ export default ExDate.defineLocale("bo", {
         y: "ལོ་གཅིག",
         yy: "%d ལོ"
     },
-    preparse (string) {
-        return string.replace(/[༡༢༣༤༥༦༧༨༩༠]/g, function (match) {
+    preparse(string) {
+        return string.replace(/[༡༢༣༤༥༦༧༨༩༠]/g, (match) => {
             return numberMap[match];
         });
     },
-    postformat (string) {
-        return string.replace(/\d/g, function (match) {
+    postformat(string) {
+        return string.replace(/\d/g, (match) => {
             return symbolMap[match];
         });
     },
     meridiemParse: /མཚན་མོ|ཞོགས་ཀས|ཉིན་གུང|དགོང་དག|མཚན་མོ/,
-    meridiemHour (hour, meridiem) {
+    meridiemHour(hour, meridiem) {
         if (hour === 12) {
             hour = 0;
         }
@@ -85,12 +85,12 @@ export default ExDate.defineLocale("bo", {
                 (meridiem === "ཉིན་གུང" && hour < 5) ||
                 meridiem === "དགོང་དག") {
             return hour + 12;
-        } else {
-            return hour;
         }
+        return hour;
+
     },
     // eslint-disable-next-line no-unused-vars
-    meridiem (hour, minute, isLower) {
+    meridiem(hour, minute, isLower) {
         if (hour < 4) {
             return "མཚན་མོ";
         } else if (hour < 10) {
@@ -99,9 +99,9 @@ export default ExDate.defineLocale("bo", {
             return "ཉིན་གུང";
         } else if (hour < 20) {
             return "དགོང་དག";
-        } else {
-            return "མཚན་མོ";
         }
+        return "མཚན་མོ";
+
     },
     week: {
         dow: 0, // Sunday is the first day of the week.

@@ -70,7 +70,7 @@ describe("is between", () => {
             adone.date(new Date(2011, 3, 2, 3, 4, 5, 9)),
             adone.date(new Date(2011, 3, 2, 3, 4, 5, 11))), true, "millisecond is between");
         assert.equal(m.isBetween(m, m), false, "moments are not between themselves");
-        assert.equal(+m, +mCopy, "isBetween second should not change adone.date");
+        assert.equal(Number(m), Number(mCopy), "isBetween second should not change adone.date");
     });
 
     it("is between without units inclusivity", () => {
@@ -229,7 +229,7 @@ describe("is between", () => {
             adone.date(new Date(2010, 5, 6, 7, 8, 9, 10)),
             adone.date(new Date(2011, 5, 6, 7, 8, 9, 10)), "year"), false, "year is later");
         assert.equal(m.isBetween(m, "year"), false, "same moments are not between the same year");
-        assert.equal(+m, +mCopy, "isBetween year should not change adone.date");
+        assert.equal(Number(m), Number(mCopy), "isBetween year should not change adone.date");
     });
 
     it("is between month", () => {
@@ -251,7 +251,7 @@ describe("is between", () => {
             adone.date(new Date(2011, 11, 6, 7, 8, 9, 10)),
             adone.date(new Date(2011, 1, 6, 7, 8, 9, 10)), "month"), false, "month is later");
         assert.equal(m.isBetween(m, "month"), false, "same moments are not between the same month");
-        assert.equal(+m, +mCopy, "isBetween month should not change adone.date");
+        assert.equal(Number(m), Number(mCopy), "isBetween month should not change adone.date");
     });
 
     it("is between day", () => {
@@ -273,7 +273,7 @@ describe("is between", () => {
             adone.date(new Date(2011, 1, 1, 7, 8, 9, 10)),
             adone.date(new Date(2011, 1, 2, 7, 8, 9, 10)), "day"), false, "day is later");
         assert.equal(m.isBetween(m, "day"), false, "same moments are not between the same day");
-        assert.equal(+m, +mCopy, "isBetween day should not change adone.date");
+        assert.equal(Number(m), Number(mCopy), "isBetween day should not change adone.date");
     });
 
     it("is between hour", () => {
@@ -295,7 +295,7 @@ describe("is between", () => {
             adone.date(new Date(2011, 1, 2, 7, 8, 9, 10)),
             adone.date(new Date(2011, 1, 2, 7, 8, 9, 10)), "hour"), false, "hour is later");
         assert.equal(m.isBetween(m, "hour"), false, "same moments are not between the same hour");
-        assert.equal(+m, +mCopy, "isBetween hour should not change adone.date");
+        assert.equal(Number(m), Number(mCopy), "isBetween hour should not change adone.date");
     });
 
     it("is between minute", () => {
@@ -317,7 +317,7 @@ describe("is between", () => {
             adone.date(new Date(2011, 1, 2, 3, 2, 9, 10)),
             adone.date(new Date(2011, 1, 2, 3, 3, 59, 999)), "minute"), false, "minute is later");
         assert.equal(m.isBetween(m, "minute"), false, "same moments are not between the same minute");
-        assert.equal(+m, +mCopy, "isBetween minute should not change adone.date");
+        assert.equal(Number(m), Number(mCopy), "isBetween minute should not change adone.date");
     });
 
     it("is between second", () => {
@@ -339,7 +339,7 @@ describe("is between", () => {
             adone.date(new Date(2011, 1, 2, 3, 4, 3, 10)),
             adone.date(new Date(2011, 1, 2, 3, 4, 4, 999)), "second"), false, "second is later");
         assert.equal(m.isBetween(m, "second"), false, "same moments are not between the same second");
-        assert.equal(+m, +mCopy, "isBetween second should not change adone.date");
+        assert.equal(Number(m), Number(mCopy), "isBetween second should not change adone.date");
     });
 
     it("is between millisecond", () => {
@@ -361,6 +361,6 @@ describe("is between", () => {
             adone.date(new Date(2011, 1, 2, 3, 4, 5, 4)),
             adone.date(new Date(2011, 1, 2, 3, 4, 5, 6)), "millisecond"), false, "millisecond is later");
         assert.equal(m.isBetween(m, "millisecond"), false, "same moments are not between the same millisecond");
-        assert.equal(+m, +mCopy, "isBetween millisecond should not change adone.date");
+        assert.equal(Number(m), Number(mCopy), "isBetween millisecond should not change adone.date");
     });
 });

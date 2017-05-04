@@ -11,7 +11,7 @@ describe("zh-cn", () => {
         let i;
 
         function equalTest(input, mmm, i) {
-            assert.equal(adone.date(input, mmm).month(), i, input + " should be month " + (i + 1));
+            assert.equal(adone.date(input, mmm).month(), i, `${input} should be month ${i + 1}`);
         }
 
         for (i = 0; i < 12; i++) {
@@ -43,21 +43,21 @@ describe("zh-cn", () => {
             ["s ss", "50 50"],
             ["a A", "下午 下午"],
             ["[这年的第] DDDo", "这年的第 45日"],
-            ["LTS", "下午3点25分50秒"],
-            ["L", "2010-02-14"],
+            ["LTS", "15:25:50"],
+            ["L", "2010年2月14日"],
             ["LL", "2010年2月14日"],
             ["LLL", "2010年2月14日下午3点25分"],
             ["LLLL", "2010年2月14日星期日下午3点25分"],
-            ["l", "2010-02-14"],
+            ["l", "2010年2月14日"],
             ["ll", "2010年2月14日"],
-            ["lll", "2010年2月14日下午3点25分"],
-            ["llll", "2010年2月14日星期日下午3点25分"]
+            ["lll", "2010年2月14日 15:25"],
+            ["llll", "2010年2月14日星期日 15:25"]
         ];
         const b = adone.date(new Date(2010, 1, 14, 15, 25, 50, 125));
         let i;
 
         for (i = 0; i < a.length; i++) {
-            assert.equal(b.format(a[i][0]), a[i][1], a[i][0] + " ---> " + a[i][1]);
+            assert.equal(b.format(a[i][0]), a[i][1], `${a[i][0]} ---> ${a[i][1]}`);
         }
     });
 
@@ -188,97 +188,50 @@ describe("zh-cn", () => {
     it("calendar day", () => {
         const a = adone.date().hours(12).minutes(0).seconds(0);
 
-        assert.equal(adone.date(a).calendar(), "今天中午12点整", "today at the same time");
-        assert.equal(adone.date(a).add({
-            m: 25
-        }).calendar(), "今天中午12点25分", "Now plus 25 min");
-        assert.equal(adone.date(a).add({
-            h: 1
-        }).calendar(), "今天下午1点整", "Now plus 1 hour");
-        assert.equal(adone.date(a).add({
-            d: 1
-        }).calendar(), "明天中午12点整", "tomorrow at the same time");
-        assert.equal(adone.date(a).subtract({
-            h: 1
-        }).calendar(), "今天上午11点整", "Now minus 1 hour");
-        assert.equal(adone.date(a).subtract({
-            d: 1
-        }).calendar(), "昨天中午12点整", "yesterday at the same time");
-    });
-
-    it("calendar current week", () => {
-        let i;
-        let m;
-        const today = adone.date().startOf("day");
-
-        for (i = 0; i < 7; i++) {
-            m = adone.date().startOf("week").add({
-                d: i
-            });
-            if (Math.abs(m.diff(today, "days")) <= 1) {
-                continue; // skip today, yesterday, tomorrow
-            }
-            assert.equal(m.calendar(), m.format("[本]ddd凌晨12点整"), "Monday + " + i + " days current time");
-        }
+        assert.equal(adone.date(a).calendar(), "今天12:00", "today at the same time");
+        assert.equal(adone.date(a).add({ m: 25 }).calendar(), "今天12:25", "Now plus 25 min");
+        assert.equal(adone.date(a).add({ h: 1 }).calendar(), "今天13:00", "Now plus 1 hour");
+        assert.equal(adone.date(a).add({ d: 1 }).calendar(), "明天12:00", "tomorrow at the same time");
+        assert.equal(adone.date(a).subtract({ h: 1 }).calendar(), "今天11:00", "Now minus 1 hour");
+        assert.equal(adone.date(a).subtract({ d: 1 }).calendar(), "昨天12:00", "yesterday at the same time");
     });
 
     it("calendar next week", () => {
-        let i;
-        let m;
-        const today = adone.date().startOf("day");
-
-        for (i = 7; i < 14; i++) {
-            m = adone.date().startOf("week").add({
-                d: i
-            });
-            if (Math.abs(m.diff(today, "days")) >= 7) {
-                continue;
-            }
-            if (Math.abs(m.diff(today, "days")) <= 1) {
-                continue; // skip today, yesterday, tomorrow
-            }
-            assert.equal(m.calendar(), m.format("[下]ddd凌晨12点整"), "Today + " + i + " days beginning of day");
+        let i, m;
+        for (i = 2; i < 7; i++) {
+            m = adone.date().add({ d: i });
+            assert.equal(m.calendar(), m.format("[下]ddddLT"), `Today + ${i} days current time`);
+            m.hours(0).minutes(0).seconds(0).milliseconds(0);
+            assert.equal(m.calendar(), m.format("[下]ddddLT"), `Today + ${i} days beginning of day`);
+            m.hours(23).minutes(59).seconds(59).milliseconds(999);
+            assert.equal(m.calendar(), m.format("[下]ddddLT"), `Today + ${i} days end of day`);
         }
-        assert.equal(42, 42, "at least one assert");
     });
 
     it("calendar last week", () => {
-        let i;
-        let m;
-        const today = adone.date().startOf("day");
-
-        for (i = 1; i < 8; i++) {
-            m = adone.date().startOf("week").subtract({
-                d: i
-            });
-            if (Math.abs(m.diff(today, "days")) >= 7 || Math.abs(m.diff(today, "days")) <= 1) {
-                continue;
-            }
-            assert.equal(m.calendar(), m.format("[上]ddd凌晨12点整"), "Monday - " + i + " days next week");
+        let i, m;
+        for (i = 2; i < 7; i++) {
+            m = adone.date().subtract({ d: i });
+            assert.equal(m.calendar(), m.format("[上]ddddLT"), `Today - ${i} days current time`);
+            m.hours(0).minutes(0).seconds(0).milliseconds(0);
+            assert.equal(m.calendar(), m.format("[上]ddddLT"), `Today - ${i} days beginning of day`);
+            m.hours(23).minutes(59).seconds(59).milliseconds(999);
+            assert.equal(m.calendar(), m.format("[上]ddddLT"), `Today - ${i} days end of day`);
         }
-        assert.equal(42, 42, "at least one assert");
     });
 
     it("calendar all else", () => {
-        let weeksAgo = adone.date().subtract({
-            w: 1
-        });
-        let weeksFromNow = adone.date().add({
-            w: 1
-        });
+        let weeksAgo = adone.date().subtract({ w: 1 }),
+            weeksFromNow = adone.date().add({ w: 1 });
 
-        assert.equal(weeksAgo.calendar(), weeksAgo.format("LL"), "1 week ago");
-        assert.equal(weeksFromNow.calendar(), weeksFromNow.format("LL"), "in 1 week");
+        assert.equal(weeksAgo.calendar(), weeksAgo.format("L"), "1 week ago");
+        assert.equal(weeksFromNow.calendar(), weeksFromNow.format("L"), "in 1 week");
 
-        weeksAgo = adone.date().subtract({
-            w: 2
-        });
-        weeksFromNow = adone.date().add({
-            w: 2
-        });
+        weeksAgo = adone.date().subtract({ w: 2 });
+        weeksFromNow = adone.date().add({ w: 2 });
 
-        assert.equal(weeksAgo.calendar(), weeksAgo.format("LL"), "2 weeks ago");
-        assert.equal(weeksFromNow.calendar(), weeksFromNow.format("LL"), "in 2 weeks");
+        assert.equal(weeksAgo.calendar(), weeksAgo.format("L"), "2 weeks ago");
+        assert.equal(weeksFromNow.calendar(), weeksFromNow.format("L"), "in 2 weeks");
     });
 
     it("meridiem", () => {

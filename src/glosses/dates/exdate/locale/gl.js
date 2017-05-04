@@ -20,29 +20,29 @@ export default ExDate.defineLocale("gl", {
         LLLL: "dddd, D [de] MMMM [de] YYYY H:mm"
     },
     calendar: {
-        sameDay () {
-            return "[hoxe " + ((this.hours() !== 1) ? "ás" : "á") + "] LT";
+        sameDay() {
+            return `[hoxe ${(this.hours() !== 1) ? "ás" : "á"}] LT`;
         },
-        nextDay () {
-            return "[mañá " + ((this.hours() !== 1) ? "ás" : "á") + "] LT";
+        nextDay() {
+            return `[mañá ${(this.hours() !== 1) ? "ás" : "á"}] LT`;
         },
-        nextWeek () {
-            return "dddd [" + ((this.hours() !== 1) ? "ás" : "a") + "] LT";
+        nextWeek() {
+            return `dddd [${(this.hours() !== 1) ? "ás" : "a"}] LT`;
         },
-        lastDay () {
-            return "[onte " + ((this.hours() !== 1) ? "á" : "a") + "] LT";
+        lastDay() {
+            return `[onte ${(this.hours() !== 1) ? "á" : "a"}] LT`;
         },
-        lastWeek () {
-            return "[o] dddd [pasado " + ((this.hours() !== 1) ? "ás" : "a") + "] LT";
+        lastWeek() {
+            return `[o] dddd [pasado ${(this.hours() !== 1) ? "ás" : "a"}] LT`;
         },
         sameElse: "L"
     },
     relativeTime: {
-        future (str) {
+        future(str) {
             if (str.indexOf("un") === 0) {
-                return "n" + str;
+                return `n${str}`;
             }
-            return "en " + str;
+            return `en ${str}`;
         },
         past: "hai %s",
         s: "uns segundos",
@@ -57,7 +57,7 @@ export default ExDate.defineLocale("gl", {
         y: "un ano",
         yy: "%d anos"
     },
-    ordinalParse: /\d{1,2}º/,
+    dayOfMonthOrdinalParse: /\d{1,2}º/,
     ordinal: "%dº",
     week: {
         dow: 1, // Monday is the first day of the week.

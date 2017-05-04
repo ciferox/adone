@@ -12,12 +12,14 @@ const monthsRegex = /^(januari|februari|maart|april|mei|april|ju[nl]i|augustus|s
 
 export default ExDate.defineLocale("nl-be", {
     months: "januari_februari_maart_april_mei_juni_juli_augustus_september_oktober_november_december".split("_"),
-    monthsShort (m, format) {
-        if (/-MMM-/.test(format)) {
+    monthsShort(m, format) {
+        if (!m) {
+            return monthsShortWithDots;
+        } else if (/-MMM-/.test(format)) {
             return monthsShortWithoutDots[m.month()];
-        } else {
-            return monthsShortWithDots[m.month()];
         }
+        return monthsShortWithDots[m.month()];
+
     },
 
     monthsRegex,
@@ -64,8 +66,8 @@ export default ExDate.defineLocale("nl-be", {
         y: "één jaar",
         yy: "%d jaar"
     },
-    ordinalParse: /\d{1,2}(ste|de)/,
-    ordinal (number) {
+    dayOfMonthOrdinalParse: /\d{1,2}(ste|de)/,
+    ordinal(number) {
         return number + ((number === 1 || number === 8 || number >= 20) ? "ste" : "de");
     },
     week: {

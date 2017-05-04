@@ -11,7 +11,7 @@ describe("create", () => {
         assert.ok(adone.date([2010, 1, 12, 1, 1]).toDate() instanceof Date, "[2010, 1, 12, 1, 1]");
         assert.ok(adone.date([2010, 1, 12, 1, 1, 1]).toDate() instanceof Date, "[2010, 1, 12, 1, 1, 1]");
         assert.ok(adone.date([2010, 1, 12, 1, 1, 1, 1]).toDate() instanceof Date, "[2010, 1, 12, 1, 1, 1, 1]");
-        assert.equal(+adone.date(new Date(2010, 1, 14, 15, 25, 50, 125)), +adone.date([2010, 1, 14, 15, 25, 50, 125]), "constructing with array === constructing with new Date()");
+        assert.equal(Number(adone.date(new Date(2010, 1, 14, 15, 25, 50, 125))), Number(adone.date([2010, 1, 14, 15, 25, 50, 125])), "constructing with array === constructing with new Date()");
     });
 
     it("array with invalid arguments", () => {
@@ -28,19 +28,19 @@ describe("create", () => {
     it("object", () => {
         const fmt = "YYYY-MM-DD HH:mm:ss.SSS";
         const tests = [
-            [{year: 2010}, "2010-01-01 00:00:00.000"],
-            [{year: 2010, month: 1}, "2010-02-01 00:00:00.000"],
-            [{year: 2010, month: 1, day: 12}, "2010-02-12 00:00:00.000"],
-            [{year: 2010, month: 1, date: 12}, "2010-02-12 00:00:00.000"],
-            [{year: 2010, month: 1, day: 12, hours: 1}, "2010-02-12 01:00:00.000"],
-            [{year: 2010, month: 1, date: 12, hours: 1}, "2010-02-12 01:00:00.000"],
-            [{year: 2010, month: 1, day: 12, hours: 1, minutes: 1}, "2010-02-12 01:01:00.000"],
-            [{year: 2010, month: 1, date: 12, hours: 1, minutes: 1}, "2010-02-12 01:01:00.000"],
-            [{year: 2010, month: 1, day: 12, hours: 1, minutes: 1, seconds: 1}, "2010-02-12 01:01:01.000"],
-            [{year: 2010, month: 1, day: 12, hours: 1, minutes: 1, seconds: 1, milliseconds: 1}, "2010-02-12 01:01:01.001"],
-            [{years: 2010, months: 1, days: 14, hours: 15, minutes: 25, seconds: 50, milliseconds: 125}, "2010-02-14 15:25:50.125"],
-            [{year: 2010, month: 1, day: 14, hour: 15, minute: 25, second: 50, millisecond: 125}, "2010-02-14 15:25:50.125"],
-            [{y: 2010, M: 1, d: 14, h: 15, m: 25, s: 50, ms: 125}, "2010-02-14 15:25:50.125"]
+            [{ year: 2010 }, "2010-01-01 00:00:00.000"],
+            [{ year: 2010, month: 1 }, "2010-02-01 00:00:00.000"],
+            [{ year: 2010, month: 1, day: 12 }, "2010-02-12 00:00:00.000"],
+            [{ year: 2010, month: 1, date: 12 }, "2010-02-12 00:00:00.000"],
+            [{ year: 2010, month: 1, day: 12, hours: 1 }, "2010-02-12 01:00:00.000"],
+            [{ year: 2010, month: 1, date: 12, hours: 1 }, "2010-02-12 01:00:00.000"],
+            [{ year: 2010, month: 1, day: 12, hours: 1, minutes: 1 }, "2010-02-12 01:01:00.000"],
+            [{ year: 2010, month: 1, date: 12, hours: 1, minutes: 1 }, "2010-02-12 01:01:00.000"],
+            [{ year: 2010, month: 1, day: 12, hours: 1, minutes: 1, seconds: 1 }, "2010-02-12 01:01:01.000"],
+            [{ year: 2010, month: 1, day: 12, hours: 1, minutes: 1, seconds: 1, milliseconds: 1 }, "2010-02-12 01:01:01.001"],
+            [{ years: 2010, months: 1, days: 14, hours: 15, minutes: 25, seconds: 50, milliseconds: 125 }, "2010-02-14 15:25:50.125"],
+            [{ year: 2010, month: 1, day: 14, hour: 15, minute: 25, second: 50, millisecond: 125 }, "2010-02-14 15:25:50.125"],
+            [{ y: 2010, M: 1, d: 14, h: 15, m: 25, s: 50, ms: 125 }, "2010-02-14 15:25:50.125"]
         ];
         for (let i = 0; i < tests.length; ++i) {
             assert.equal(adone.date(tests[i][0]).format(fmt), tests[i][1]);
@@ -124,9 +124,9 @@ describe("create", () => {
 
     it("iso format 24hrs", () => {
         assert.equal(adone.date("2014-01-01T24:00:00.000").format("YYYY-MM-DD[T]HH:mm:ss.SSS"),
-                "2014-01-02T00:00:00.000", "iso format with 24:00 localtime");
+            "2014-01-02T00:00:00.000", "iso format with 24:00 localtime");
         assert.equal(adone.date.utc("2014-01-01T24:00:00.000").format("YYYY-MM-DD[T]HH:mm:ss.SSS"),
-                "2014-01-02T00:00:00.000", "iso format with 24:00 utc");
+            "2014-01-02T00:00:00.000", "iso format with 24:00 utc");
     });
 
     it("string without format - json", () => {
@@ -175,33 +175,33 @@ describe("create", () => {
     it("defaulting to current date", () => {
         const now = adone.date();
         assert.equal(adone.date("12:13:14", "hh:mm:ss").format("YYYY-MM-DD hh:mm:ss"),
-                     now.clone().hour(12).minute(13).second(14).format("YYYY-MM-DD hh:mm:ss"),
-                     "given only time default to current date");
+            now.clone().hour(12).minute(13).second(14).format("YYYY-MM-DD hh:mm:ss"),
+            "given only time default to current date");
         assert.equal(adone.date("05", "DD").format("YYYY-MM-DD"),
-                     now.clone().date(5).format("YYYY-MM-DD"),
-                     "given day of month default to current month, year");
+            now.clone().date(5).format("YYYY-MM-DD"),
+            "given day of month default to current month, year");
         assert.equal(adone.date("05", "MM").format("YYYY-MM-DD"),
-                     now.clone().month(4).date(1).format("YYYY-MM-DD"),
-                     "given month default to current year");
+            now.clone().month(4).date(1).format("YYYY-MM-DD"),
+            "given month default to current year");
         assert.equal(adone.date("1996", "YYYY").format("YYYY-MM-DD"),
-                     now.clone().year(1996).month(0).date(1).format("YYYY-MM-DD"),
-                     "given year do not default");
+            now.clone().year(1996).month(0).date(1).format("YYYY-MM-DD"),
+            "given year do not default");
     });
 
     it("matching am/pm", () => {
-        assert.equal(adone.date("2012-09-03T03:00PM",   "YYYY-MM-DDThh:mmA").format("YYYY-MM-DDThh:mmA"), "2012-09-03T03:00PM", "am/pm should parse correctly for PM");
+        assert.equal(adone.date("2012-09-03T03:00PM", "YYYY-MM-DDThh:mmA").format("YYYY-MM-DDThh:mmA"), "2012-09-03T03:00PM", "am/pm should parse correctly for PM");
         assert.equal(adone.date("2012-09-03T03:00P.M.", "YYYY-MM-DDThh:mmA").format("YYYY-MM-DDThh:mmA"), "2012-09-03T03:00PM", "am/pm should parse correctly for P.M.");
-        assert.equal(adone.date("2012-09-03T03:00P",    "YYYY-MM-DDThh:mmA").format("YYYY-MM-DDThh:mmA"), "2012-09-03T03:00PM", "am/pm should parse correctly for P");
-        assert.equal(adone.date("2012-09-03T03:00pm",   "YYYY-MM-DDThh:mmA").format("YYYY-MM-DDThh:mmA"), "2012-09-03T03:00PM", "am/pm should parse correctly for pm");
+        assert.equal(adone.date("2012-09-03T03:00P", "YYYY-MM-DDThh:mmA").format("YYYY-MM-DDThh:mmA"), "2012-09-03T03:00PM", "am/pm should parse correctly for P");
+        assert.equal(adone.date("2012-09-03T03:00pm", "YYYY-MM-DDThh:mmA").format("YYYY-MM-DDThh:mmA"), "2012-09-03T03:00PM", "am/pm should parse correctly for pm");
         assert.equal(adone.date("2012-09-03T03:00p.m.", "YYYY-MM-DDThh:mmA").format("YYYY-MM-DDThh:mmA"), "2012-09-03T03:00PM", "am/pm should parse correctly for p.m.");
-        assert.equal(adone.date("2012-09-03T03:00p",    "YYYY-MM-DDThh:mmA").format("YYYY-MM-DDThh:mmA"), "2012-09-03T03:00PM", "am/pm should parse correctly for p");
+        assert.equal(adone.date("2012-09-03T03:00p", "YYYY-MM-DDThh:mmA").format("YYYY-MM-DDThh:mmA"), "2012-09-03T03:00PM", "am/pm should parse correctly for p");
 
-        assert.equal(adone.date("2012-09-03T03:00AM",   "YYYY-MM-DDThh:mmA").format("YYYY-MM-DDThh:mmA"), "2012-09-03T03:00AM", "am/pm should parse correctly for AM");
+        assert.equal(adone.date("2012-09-03T03:00AM", "YYYY-MM-DDThh:mmA").format("YYYY-MM-DDThh:mmA"), "2012-09-03T03:00AM", "am/pm should parse correctly for AM");
         assert.equal(adone.date("2012-09-03T03:00A.M.", "YYYY-MM-DDThh:mmA").format("YYYY-MM-DDThh:mmA"), "2012-09-03T03:00AM", "am/pm should parse correctly for A.M.");
-        assert.equal(adone.date("2012-09-03T03:00A",    "YYYY-MM-DDThh:mmA").format("YYYY-MM-DDThh:mmA"), "2012-09-03T03:00AM", "am/pm should parse correctly for A");
-        assert.equal(adone.date("2012-09-03T03:00am",   "YYYY-MM-DDThh:mmA").format("YYYY-MM-DDThh:mmA"), "2012-09-03T03:00AM", "am/pm should parse correctly for am");
+        assert.equal(adone.date("2012-09-03T03:00A", "YYYY-MM-DDThh:mmA").format("YYYY-MM-DDThh:mmA"), "2012-09-03T03:00AM", "am/pm should parse correctly for A");
+        assert.equal(adone.date("2012-09-03T03:00am", "YYYY-MM-DDThh:mmA").format("YYYY-MM-DDThh:mmA"), "2012-09-03T03:00AM", "am/pm should parse correctly for am");
         assert.equal(adone.date("2012-09-03T03:00a.m.", "YYYY-MM-DDThh:mmA").format("YYYY-MM-DDThh:mmA"), "2012-09-03T03:00AM", "am/pm should parse correctly for a.m.");
-        assert.equal(adone.date("2012-09-03T03:00a",    "YYYY-MM-DDThh:mmA").format("YYYY-MM-DDThh:mmA"), "2012-09-03T03:00AM", "am/pm should parse correctly for a");
+        assert.equal(adone.date("2012-09-03T03:00a", "YYYY-MM-DDThh:mmA").format("YYYY-MM-DDThh:mmA"), "2012-09-03T03:00AM", "am/pm should parse correctly for a");
 
         assert.equal(adone.date("5:00p.m.March 4 2012", "h:mmAMMMM D YYYY").format("YYYY-MM-DDThh:mmA"), "2012-03-04T05:00PM", "am/pm should parse correctly before month names");
     });
@@ -209,53 +209,63 @@ describe("create", () => {
     it("string with format", () => {
         adone.date.locale("en");
         const a = [
-            ["YYYY-Q",              "2014-4"],
-            ["MM-DD-YYYY",          "12-02-1999"],
-            ["DD-MM-YYYY",          "12-02-1999"],
-            ["DD/MM/YYYY",          "12/02/1999"],
-            ["DD_MM_YYYY",          "12_02_1999"],
-            ["DD:MM:YYYY",          "12:02:1999"],
-            ["D-M-YY",              "2-2-99"],
-            ["YY",                  "99"],
-            ["DDD-YYYY",            "300-1999"],
-            ["DD-MM-YYYY h:m:s",    "12-02-1999 2:45:10"],
-            ["DD-MM-YYYY h:m:s a",  "12-02-1999 2:45:10 am"],
-            ["DD-MM-YYYY h:m:s a",  "12-02-1999 2:45:10 pm"],
-            ["h:mm a",              "12:00 pm"],
-            ["h:mm a",              "12:30 pm"],
-            ["h:mm a",              "12:00 am"],
-            ["h:mm a",              "12:30 am"],
-            ["HH:mm",               "12:00"],
+            ["YYYY-Q", "2014-4"],
+            ["MM-DD-YYYY", "12-02-1999"],
+            ["DD-MM-YYYY", "12-02-1999"],
+            ["DD/MM/YYYY", "12/02/1999"],
+            ["DD_MM_YYYY", "12_02_1999"],
+            ["DD:MM:YYYY", "12:02:1999"],
+            ["D-M-YY", "2-2-99"],
+            ["YY", "99"],
+            ["DDD-YYYY", "300-1999"],
+            ["DD-MM-YYYY h:m:s", "12-02-1999 2:45:10"],
+            ["DD-MM-YYYY h:m:s a", "12-02-1999 2:45:10 am"],
+            ["DD-MM-YYYY h:m:s a", "12-02-1999 2:45:10 pm"],
+            ["h:mm a", "12:00 pm"],
+            ["h:mm a", "12:30 pm"],
+            ["h:mm a", "12:00 am"],
+            ["h:mm a", "12:30 am"],
+            ["HH:mm", "12:00"],
+            ["kk:mm", "12:00"],
             ["YYYY-MM-DDTHH:mm:ss", "2011-11-11T11:11:11"],
-            ["MM-DD-YYYY [M]",      "12-02-1999 M"],
+            ["MM-DD-YYYY [M]", "12-02-1999 M"],
             ["ddd MMM DD HH:mm:ss YYYY", "Tue Apr 07 22:52:51 2009"],
-            ["HH:mm:ss",            "12:00:00"],
-            ["HH:mm:ss",            "12:30:00"],
-            ["HH:mm:ss",            "00:00:00"],
-            ["HH:mm:ss S",          "00:30:00 1"],
-            ["HH:mm:ss SS",         "00:30:00 12"],
-            ["HH:mm:ss SSS",        "00:30:00 123"],
-            ["HH:mm:ss S",          "00:30:00 7"],
-            ["HH:mm:ss SS",         "00:30:00 78"],
-            ["HH:mm:ss SSS",        "00:30:00 789"],
-            ["X",                   "1234567890"],
-            ["x",                   "1234567890123"],
-            ["LT",                  "12:30 AM"],
-            ["LTS",                 "12:30:29 AM"],
-            ["L",                   "09/02/1999"],
-            ["l",                   "9/2/1999"],
-            ["LL",                  "September 2, 1999"],
-            ["ll",                  "Sep 2, 1999"],
-            ["LLL",                 "September 2, 1999 12:30 AM"],
-            ["lll",                 "Sep 2, 1999 12:30 AM"],
-            ["LLLL",                "Thursday, September 2, 1999 12:30 AM"],
-            ["llll",                "Thu, Sep 2, 1999 12:30 AM"]
+            ["HH:mm:ss", "12:00:00"],
+            ["HH:mm:ss", "12:30:00"],
+            ["HH:mm:ss", "00:00:00"],
+            ["HH:mm:ss S", "00:30:00 1"],
+            ["HH:mm:ss SS", "00:30:00 12"],
+            ["HH:mm:ss SSS", "00:30:00 123"],
+            ["HH:mm:ss S", "00:30:00 7"],
+            ["HH:mm:ss SS", "00:30:00 78"],
+            ["HH:mm:ss SSS", "00:30:00 789"],
+            ["kk:mm:ss", "12:00:00"],
+            ["kk:mm:ss", "12:30:00"],
+            ["kk:mm:ss", "24:00:00"],
+            ["kk:mm:ss S", "24:30:00 1"],
+            ["kk:mm:ss SS", "24:30:00 12"],
+            ["kk:mm:ss SSS", "24:30:00 123"],
+            ["kk:mm:ss S", "24:30:00 7"],
+            ["kk:mm:ss SS", "24:30:00 78"],
+            ["kk:mm:ss SSS", "24:30:00 789"],
+            ["X", "1234567890"],
+            ["x", "1234567890123"],
+            ["LT", "12:30 AM"],
+            ["LTS", "12:30:29 AM"],
+            ["L", "09/02/1999"],
+            ["l", "9/2/1999"],
+            ["LL", "September 2, 1999"],
+            ["ll", "Sep 2, 1999"],
+            ["LLL", "September 2, 1999 12:30 AM"],
+            ["lll", "Sep 2, 1999 12:30 AM"],
+            ["LLLL", "Thursday, September 2, 1999 12:30 AM"],
+            ["llll", "Thu, Sep 2, 1999 12:30 AM"]
         ];
 
         for (let i = 0; i < a.length; i++) {
             const m = adone.date(a[i][1], a[i][0]);
             assert.ok(m.isValid());
-            assert.equal(m.format(a[i][0]), a[i][1], a[i][0] + " ---> " + a[i][1]);
+            assert.equal(m.format(a[i][0]), a[i][1], `${a[i][0]} ---> ${a[i][1]}`);
         }
     });
 
@@ -271,10 +281,10 @@ describe("create", () => {
 
         for (let i = 0; i < formats.length; i++) {
             const format = formats[i];
-            assert.equal(adone.date("1234567890",     format).valueOf(), 1234567890 * 1000,       format + " matches timestamp without milliseconds");
-            assert.equal(adone.date("1234567890.1",   format).valueOf(), 1234567890 * 1000 + 100, format + " matches timestamp with deciseconds");
-            assert.equal(adone.date("1234567890.12",  format).valueOf(), 1234567890 * 1000 + 120, format + " matches timestamp with centiseconds");
-            assert.equal(adone.date("1234567890.123", format).valueOf(), 1234567890 * 1000 + 123, format + " matches timestamp with milliseconds");
+            assert.equal(adone.date("1234567890", format).valueOf(), 1234567890 * 1000, `${format} matches timestamp without milliseconds`);
+            assert.equal(adone.date("1234567890.1", format).valueOf(), 1234567890 * 1000 + 100, `${format} matches timestamp with deciseconds`);
+            assert.equal(adone.date("1234567890.12", format).valueOf(), 1234567890 * 1000 + 120, `${format} matches timestamp with centiseconds`);
+            assert.equal(adone.date("1234567890.123", format).valueOf(), 1234567890 * 1000 + 123, `${format} matches timestamp with milliseconds`);
         }
     });
 
@@ -296,14 +306,14 @@ describe("create", () => {
     it("string with format no separators", () => {
         adone.date.locale("en");
         const a = [
-            ["MMDDYYYY",          "12021999"],
-            ["DDMMYYYY",          "12021999"],
-            ["YYYYMMDD",          "19991202"],
-            ["DDMMMYYYY",         "10Sep2001"]
+            ["MMDDYYYY", "12021999"],
+            ["DDMMYYYY", "12021999"],
+            ["YYYYMMDD", "19991202"],
+            ["DDMMMYYYY", "10Sep2001"]
         ];
 
         for (let i = 0; i < a.length; i++) {
-            assert.equal(adone.date(a[i][1], a[i][0]).format(a[i][0]), a[i][1], a[i][0] + " ---> " + a[i][1]);
+            assert.equal(adone.date(a[i][1], a[i][0]).format(a[i][0]), a[i][1], `${a[i][0]} ---> ${a[i][1]}`);
         }
     });
 
@@ -322,7 +332,7 @@ describe("create", () => {
         const a = new Date(Date.UTC(2011, 0, 1, 1));
         const b = adone.date("2011 1 1 0 -01:00", "YYYY MM DD HH Z");
         assert.equal(a.getHours(), b.hours(), "date created with utc == parsed string with timezone offset");
-        assert.equal(+a, +b, "date created with utc == parsed string with timezone offset");
+        assert.equal(Number(a), Number(b), "date created with utc == parsed string with timezone offset");
         const c = adone.date("2011 2 1 10 -05:00", "YYYY MM DD HH Z");
         const d = adone.date("2011 2 1 8 -07:00", "YYYY MM DD HH Z");
         assert.equal(c.hours(), d.hours(), "10 am central time == 8 am pacific time");
@@ -342,8 +352,8 @@ describe("create", () => {
 
     it("string with array of formats", () => {
         const thursdayForCurrentWeek = adone.date()
-          .day(4)
-          .format("YYYY MM DD");
+            .day(4)
+            .format("YYYY MM DD");
 
         assert.equal(adone.date("11-02-1999", ["MM-DD-YYYY", "DD-MM-YYYY"]).format("MM DD YYYY"), "11 02 1999", "switching month and day");
         assert.equal(adone.date("02-11-1999", ["MM/DD/YYYY", "YYYY MM DD", "MM-DD-YYYY"]).format("MM DD YYYY"), "02 11 1999", "year last");
@@ -361,7 +371,7 @@ describe("create", () => {
 
         assert.equal(adone.date("11-02-10", ["MM/DD/YY", "YY MM DD", "DD-MM-YY"]).format("MM DD YYYY"), "02 11 2010", "all unparsed substrings have influence on format penalty");
         assert.equal(adone.date("11-02-10", ["MM-DD-YY HH:mm", "YY MM DD"]).format("MM DD YYYY"), "02 10 2011", "prefer formats without extra tokens");
-        assert.equal(adone.date("11-02-10 junk", ["MM-DD-YY", "YY.MM.DD junk"]).format("MM DD YYYY"), "02 10 2011", "prefer formats that dont result in extra characters");
+        assert.equal(adone.date("11-02-10 junk", ["MM-DD-YY", "YY.MM.DD [junk]"]).format("MM DD YYYY"), "02 10 2011", "prefer formats that dont result in extra characters");
         assert.equal(adone.date("11-22-10", ["YY-MM-DD", "YY-DD-MM"]).format("MM DD YYYY"), "10 22 2011", "prefer valid results");
 
         assert.equal(adone.date("gibberish", ["YY-MM-DD", "YY-DD-MM"]).format("MM DD YYYY"), "Invalid date", "doest throw for invalid strings");
@@ -379,12 +389,13 @@ describe("create", () => {
 
         assert.equal(adone.date("01", ["MM", "DD"])._f, "MM", "Should use first valid format");
 
-        assert.equal(adone.date("Thursday 8:30pm", ["dddd h:mma"]).format("YYYY MM DD dddd h:mma"), thursdayForCurrentWeek + " Thursday 8:30pm", "Default to current week");
+        assert.equal(adone.date("Thursday 8:30pm", ["dddd h:mma"]).format("YYYY MM DD dddd h:mma"), `${thursdayForCurrentWeek} Thursday 8:30pm`, "Default to current week");
     });
 
     it("string with array of formats + ISO", () => {
         assert.equal(adone.date("1994", [adone.date.ISO_8601, "MM", "HH:mm", "YYYY"]).year(), 1994, "iso: assert parse YYYY");
         assert.equal(adone.date("17:15", [adone.date.ISO_8601, "MM", "HH:mm", "YYYY"]).hour(), 17, "iso: assert parse HH:mm (1)");
+        assert.equal(adone.date("24:15", [adone.date.ISO_8601, "MM", "kk:mm", "YYYY"]).hour(), 0, "iso: assert parse kk:mm");
         assert.equal(adone.date("17:15", [adone.date.ISO_8601, "MM", "HH:mm", "YYYY"]).minutes(), 15, "iso: assert parse HH:mm (2)");
         assert.equal(adone.date("06", [adone.date.ISO_8601, "MM", "HH:mm", "YYYY"]).month(), 6 - 1, "iso: assert parse MM");
         assert.equal(adone.date("2012-06-01", [adone.date.ISO_8601, "MM", "HH:mm", "YYYY"]).parsingFlags().iso, true, "iso: assert parse iso");
@@ -426,184 +437,217 @@ describe("create", () => {
         assert.equal(adone.date(adone.date.utc())._isUTC, true, "An implicit cloned utc adone.date should have _isUTC == true");
     });
 
+    it("parsing RFC 2822", () => {
+        const testCases = {
+            "clean RFC2822 datetime with all options": "Tue, 01 Nov 2016 01:23:45 UT",
+            "clean RFC2822 datetime without comma": "Tue 01 Nov 2016 02:23:45 GMT",
+            "clean RFC2822 datetime without seconds": "Tue, 01 Nov 2016 03:23 +0000",
+            "clean RFC2822 datetime without century": "Tue, 01 Nov 16 04:23:45 Z",
+            "clean RFC2822 datetime without day": "01 Nov 2016 05:23:45 z",
+            "clean RFC2822 datetime with single-digit day-of-month": "Tue, 1 Nov 2016 06:23:45 GMT",
+            "RFC2822 datetime with CFWSs": "(Init Comment) Tue,\n 1 Nov              2016 (Split\n Comment)  07:23:45 +0000 (GMT)"
+        };
+        let testCase;
+
+        for (testCase in testCases) {
+            const testResult = adone.date(testCases[testCase], adone.date.RFC_2822, true);
+            assert.ok(testResult.isValid(), testResult);
+            assert.ok(testResult.parsingFlags().rfc2822, `${testResult} - rfc2822 parsingFlag`);
+        }
+    });
+
+    it("non RFC 2822 strings", () => {
+        const testCases = {
+            "RFC2822 datetime with all options but invalid day delimiter": "Tue. 01 Nov 2016 01:23:45 GMT",
+            "RFC2822 datetime with mismatching Day (week v date)": "Mon, 01 Nov 2016 01:23:45 GMT"
+        };
+        let testCase;
+
+        for (testCase in testCases) {
+            const testResult = adone.date(testCases[testCase], adone.date.RFC_2822, true);
+            assert.ok(!testResult.isValid(), testResult);
+            assert.ok(!testResult.parsingFlags().rfc2822, `${testResult} - rfc2822 parsingFlag`);
+        }
+    });
+
     it("parsing iso", () => {
         const offset = adone.date([2011, 9, 8]).utcOffset();
         const pad = function (input) {
             if (input < 10) {
-                return "0" + input;
+                return `0${input}`;
             }
-            return "" + input;
+            return String(input);
         };
         const hourOffset = (offset > 0 ? Math.floor(offset / 60) : Math.ceil(offset / 60));
         const minOffset = offset - (hourOffset * 60);
         const tz = (offset >= 0) ?
-            "+" + pad(hourOffset) + ":" + pad(minOffset) :
-            "-" + pad(-hourOffset) + ":" + pad(-minOffset);
+            `+${pad(hourOffset)}:${pad(minOffset)}` :
+            `-${pad(-hourOffset)}:${pad(-minOffset)}`;
         const tz2 = tz.replace(":", "");
         const tz3 = tz2.slice(0, 3);
         //Tz3 removes minutes digit so will break the tests when parsed if they all use the same minutes digit
         const minutesForTz3 = pad((4 + minOffset) % 60);
 
         const formats = [
-            ["2011-10-08",                    "2011-10-08T00:00:00.000" + tz],
-            ["2011-10-08T18",                 "2011-10-08T18:00:00.000" + tz],
-            ["2011-10-08T18:04",              "2011-10-08T18:04:00.000" + tz],
-            ["2011-10-08T18:04:20",           "2011-10-08T18:04:20.000" + tz],
-            ["2011-10-08T18:04" + tz,         "2011-10-08T18:04:00.000" + tz],
-            ["2011-10-08T18:04:20" + tz,      "2011-10-08T18:04:20.000" + tz],
-            ["2011-10-08T18:04" + tz2,        "2011-10-08T18:04:00.000" + tz],
-            ["2011-10-08T18:04:20" + tz2,     "2011-10-08T18:04:20.000" + tz],
-            ["2011-10-08T18:04" + tz3,        "2011-10-08T18:" + minutesForTz3 + ":00.000" + tz],
-            ["2011-10-08T18:04:20" + tz3,     "2011-10-08T18:" + minutesForTz3 + ":20.000" + tz],
-            ["2011-10-08T18:04:20.1" + tz2,   "2011-10-08T18:04:20.100" + tz],
-            ["2011-10-08T18:04:20.11" + tz2,  "2011-10-08T18:04:20.110" + tz],
-            ["2011-10-08T18:04:20.111" + tz2, "2011-10-08T18:04:20.111" + tz],
-            ["2011-10-08 18",                 "2011-10-08T18:00:00.000" + tz],
-            ["2011-10-08 18:04",              "2011-10-08T18:04:00.000" + tz],
-            ["2011-10-08 18:04:20",           "2011-10-08T18:04:20.000" + tz],
-            ["2011-10-08 18:04" + tz,         "2011-10-08T18:04:00.000" + tz],
-            ["2011-10-08 18:04:20" + tz,      "2011-10-08T18:04:20.000" + tz],
-            ["2011-10-08 18:04" + tz2,        "2011-10-08T18:04:00.000" + tz],
-            ["2011-10-08 18:04:20" + tz2,     "2011-10-08T18:04:20.000" + tz],
-            ["2011-10-08 18:04" + tz3,        "2011-10-08T18:" + minutesForTz3 + ":00.000" + tz],
-            ["2011-10-08 18:04:20" + tz3,     "2011-10-08T18:" + minutesForTz3 + ":20.000" + tz],
-            ["2011-10-08 18:04:20.1" + tz2,   "2011-10-08T18:04:20.100" + tz],
-            ["2011-10-08 18:04:20.11" + tz2,  "2011-10-08T18:04:20.110" + tz],
-            ["2011-10-08 18:04:20.111" + tz2, "2011-10-08T18:04:20.111" + tz],
-            ["2011-W40",                      "2011-10-03T00:00:00.000" + tz],
-            ["2011-W40-6",                    "2011-10-08T00:00:00.000" + tz],
-            ["2011-W40-6T18",                 "2011-10-08T18:00:00.000" + tz],
-            ["2011-W40-6T18:04",              "2011-10-08T18:04:00.000" + tz],
-            ["2011-W40-6T18:04:20",           "2011-10-08T18:04:20.000" + tz],
-            ["2011-W40-6T18:04" + tz,         "2011-10-08T18:04:00.000" + tz],
-            ["2011-W40-6T18:04:20" + tz,      "2011-10-08T18:04:20.000" + tz],
-            ["2011-W40-6T18:04" + tz2,        "2011-10-08T18:04:00.000" + tz],
-            ["2011-W40-6T18:04:20" + tz2,     "2011-10-08T18:04:20.000" + tz],
-            ["2011-W40-6T18:04" + tz3,        "2011-10-08T18:" + minutesForTz3 + ":00.000" + tz],
-            ["2011-W40-6T18:04:20" + tz3,     "2011-10-08T18:" + minutesForTz3 + ":20.000" + tz],
-            ["2011-W40-6T18:04:20.1" + tz2,   "2011-10-08T18:04:20.100" + tz],
-            ["2011-W40-6T18:04:20.11" + tz2,  "2011-10-08T18:04:20.110" + tz],
-            ["2011-W40-6T18:04:20.111" + tz2, "2011-10-08T18:04:20.111" + tz],
-            ["2011-W40-6 18",                 "2011-10-08T18:00:00.000" + tz],
-            ["2011-W40-6 18:04",              "2011-10-08T18:04:00.000" + tz],
-            ["2011-W40-6 18:04:20",           "2011-10-08T18:04:20.000" + tz],
-            ["2011-W40-6 18:04" + tz,         "2011-10-08T18:04:00.000" + tz],
-            ["2011-W40-6 18:04:20" + tz,      "2011-10-08T18:04:20.000" + tz],
-            ["2011-W40-6 18:04" + tz2,        "2011-10-08T18:04:00.000" + tz],
-            ["2011-W40-6 18:04:20" + tz2,     "2011-10-08T18:04:20.000" + tz],
-            ["2011-W40-6 18:04" + tz3,        "2011-10-08T18:" + minutesForTz3 + ":00.000" + tz],
-            ["2011-W40-6 18:04:20" + tz3,     "2011-10-08T18:" + minutesForTz3 + ":20.000" + tz],
-            ["2011-W40-6 18:04:20.1" + tz2,   "2011-10-08T18:04:20.100" + tz],
-            ["2011-W40-6 18:04:20.11" + tz2,  "2011-10-08T18:04:20.110" + tz],
-            ["2011-W40-6 18:04:20.111" + tz2, "2011-10-08T18:04:20.111" + tz],
-            ["2011-281",                      "2011-10-08T00:00:00.000" + tz],
-            ["2011-281T18",                   "2011-10-08T18:00:00.000" + tz],
-            ["2011-281T18:04",                "2011-10-08T18:04:00.000" + tz],
-            ["2011-281T18:04:20",             "2011-10-08T18:04:20.000" + tz],
-            ["2011-281T18:04" + tz,           "2011-10-08T18:04:00.000" + tz],
-            ["2011-281T18:04:20" + tz,        "2011-10-08T18:04:20.000" + tz],
-            ["2011-281T18:04" + tz2,          "2011-10-08T18:04:00.000" + tz],
-            ["2011-281T18:04:20" + tz2,       "2011-10-08T18:04:20.000" + tz],
-            ["2011-281T18:04" + tz3,          "2011-10-08T18:" + minutesForTz3 + ":00.000" + tz],
-            ["2011-281T18:04:20" + tz3,       "2011-10-08T18:" + minutesForTz3 + ":20.000" + tz],
-            ["2011-281T18:04:20.1" + tz2,     "2011-10-08T18:04:20.100" + tz],
-            ["2011-281T18:04:20.11" + tz2,    "2011-10-08T18:04:20.110" + tz],
-            ["2011-281T18:04:20.111" + tz2,   "2011-10-08T18:04:20.111" + tz],
-            ["2011-281 18",                   "2011-10-08T18:00:00.000" + tz],
-            ["2011-281 18:04",                "2011-10-08T18:04:00.000" + tz],
-            ["2011-281 18:04:20",             "2011-10-08T18:04:20.000" + tz],
-            ["2011-281 18:04" + tz,           "2011-10-08T18:04:00.000" + tz],
-            ["2011-281 18:04:20" + tz,        "2011-10-08T18:04:20.000" + tz],
-            ["2011-281 18:04" + tz2,          "2011-10-08T18:04:00.000" + tz],
-            ["2011-281 18:04:20" + tz2,       "2011-10-08T18:04:20.000" + tz],
-            ["2011-281 18:04" + tz3,          "2011-10-08T18:" + minutesForTz3 + ":00.000" + tz],
-            ["2011-281 18:04:20" + tz3,       "2011-10-08T18:" + minutesForTz3 + ":20.000" + tz],
-            ["2011-281 18:04:20.1" + tz2,     "2011-10-08T18:04:20.100" + tz],
-            ["2011-281 18:04:20.11" + tz2,    "2011-10-08T18:04:20.110" + tz],
-            ["2011-281 18:04:20.111" + tz2,   "2011-10-08T18:04:20.111" + tz],
-            ["20111008T18",                   "2011-10-08T18:00:00.000" + tz],
-            ["20111008T1804",                 "2011-10-08T18:04:00.000" + tz],
-            ["20111008T180420",               "2011-10-08T18:04:20.000" + tz],
-            ["20111008T1804" + tz,            "2011-10-08T18:04:00.000" + tz],
-            ["20111008T180420" + tz,          "2011-10-08T18:04:20.000" + tz],
-            ["20111008T1804" + tz2,           "2011-10-08T18:04:00.000" + tz],
-            ["20111008T180420" + tz2,         "2011-10-08T18:04:20.000" + tz],
-            ["20111008T1804" + tz3,           "2011-10-08T18:" + minutesForTz3 + ":00.000" + tz],
-            ["20111008T180420" + tz3,         "2011-10-08T18:" + minutesForTz3 + ":20.000" + tz],
-            ["20111008T180420,1" + tz2,       "2011-10-08T18:04:20.100" + tz],
-            ["20111008T180420,11" + tz2,      "2011-10-08T18:04:20.110" + tz],
-            ["20111008T180420,111" + tz2,     "2011-10-08T18:04:20.111" + tz],
-            ["20111008 18",                   "2011-10-08T18:00:00.000" + tz],
-            ["20111008 1804",                 "2011-10-08T18:04:00.000" + tz],
-            ["20111008 180420",               "2011-10-08T18:04:20.000" + tz],
-            ["20111008 1804" + tz,            "2011-10-08T18:04:00.000" + tz],
-            ["20111008 180420" + tz,          "2011-10-08T18:04:20.000" + tz],
-            ["20111008 1804" + tz2,           "2011-10-08T18:04:00.000" + tz],
-            ["20111008 180420" + tz2,         "2011-10-08T18:04:20.000" + tz],
-            ["20111008 1804" + tz3,           "2011-10-08T18:" + minutesForTz3 + ":00.000" + tz],
-            ["20111008 180420" + tz3,         "2011-10-08T18:" + minutesForTz3 + ":20.000" + tz],
-            ["20111008 180420,1" + tz2,       "2011-10-08T18:04:20.100" + tz],
-            ["20111008 180420,11" + tz2,      "2011-10-08T18:04:20.110" + tz],
-            ["20111008 180420,111" + tz2,     "2011-10-08T18:04:20.111" + tz],
-            ["2011W40",                       "2011-10-03T00:00:00.000" + tz],
-            ["2011W406",                      "2011-10-08T00:00:00.000" + tz],
-            ["2011W406T18",                   "2011-10-08T18:00:00.000" + tz],
-            ["2011W406T1804",                 "2011-10-08T18:04:00.000" + tz],
-            ["2011W406T180420",               "2011-10-08T18:04:20.000" + tz],
-            ["2011W406 1804" + tz2,           "2011-10-08T18:04:00.000" + tz],
-            ["2011W406T1804" + tz,            "2011-10-08T18:04:00.000" + tz],
-            ["2011W406T180420" + tz,          "2011-10-08T18:04:20.000" + tz],
-            ["2011W406T1804" + tz2,           "2011-10-08T18:04:00.000" + tz],
-            ["2011W406T180420" + tz2,         "2011-10-08T18:04:20.000" + tz],
-            ["2011W406T1804" + tz3,           "2011-10-08T18:" + minutesForTz3 + ":00.000" + tz],
-            ["2011W406T180420" + tz3,         "2011-10-08T18:" + minutesForTz3 + ":20.000" + tz],
-            ["2011W406T180420,1" + tz2,       "2011-10-08T18:04:20.100" + tz],
-            ["2011W406T180420,11" + tz2,      "2011-10-08T18:04:20.110" + tz],
-            ["2011W406T180420,111" + tz2,     "2011-10-08T18:04:20.111" + tz],
-            ["2011W406 18",                   "2011-10-08T18:00:00.000" + tz],
-            ["2011W406 1804",                 "2011-10-08T18:04:00.000" + tz],
-            ["2011W406 180420",               "2011-10-08T18:04:20.000" + tz],
-            ["2011W406 1804" + tz,            "2011-10-08T18:04:00.000" + tz],
-            ["2011W406 180420" + tz,          "2011-10-08T18:04:20.000" + tz],
-            ["2011W406 180420" + tz2,         "2011-10-08T18:04:20.000" + tz],
-            ["2011W406 1804" + tz3,           "2011-10-08T18:" + minutesForTz3 + ":00.000" + tz],
-            ["2011W406 180420" + tz3,         "2011-10-08T18:" + minutesForTz3 + ":20.000" + tz],
-            ["2011W406 180420,1" + tz2,       "2011-10-08T18:04:20.100" + tz],
-            ["2011W406 180420,11" + tz2,      "2011-10-08T18:04:20.110" + tz],
-            ["2011W406 180420,111" + tz2,     "2011-10-08T18:04:20.111" + tz],
-            ["2011281",                       "2011-10-08T00:00:00.000" + tz],
-            ["2011281T18",                    "2011-10-08T18:00:00.000" + tz],
-            ["2011281T1804",                  "2011-10-08T18:04:00.000" + tz],
-            ["2011281T180420",                "2011-10-08T18:04:20.000" + tz],
-            ["2011281T1804" + tz,             "2011-10-08T18:04:00.000" + tz],
-            ["2011281T180420" + tz,           "2011-10-08T18:04:20.000" + tz],
-            ["2011281T1804" + tz2,            "2011-10-08T18:04:00.000" + tz],
-            ["2011281T180420" + tz2,          "2011-10-08T18:04:20.000" + tz],
-            ["2011281T1804" + tz3,            "2011-10-08T18:" + minutesForTz3 + ":00.000" + tz],
-            ["2011281T180420" + tz3,          "2011-10-08T18:" + minutesForTz3 + ":20.000" + tz],
-            ["2011281T180420,1" + tz2,        "2011-10-08T18:04:20.100" + tz],
-            ["2011281T180420,11" + tz2,       "2011-10-08T18:04:20.110" + tz],
-            ["2011281T180420,111" + tz2,      "2011-10-08T18:04:20.111" + tz],
-            ["2011281 18",                    "2011-10-08T18:00:00.000" + tz],
-            ["2011281 1804",                  "2011-10-08T18:04:00.000" + tz],
-            ["2011281 180420",                "2011-10-08T18:04:20.000" + tz],
-            ["2011281 1804" + tz,             "2011-10-08T18:04:00.000" + tz],
-            ["2011281 180420" + tz,           "2011-10-08T18:04:20.000" + tz],
-            ["2011281 1804" + tz2,            "2011-10-08T18:04:00.000" + tz],
-            ["2011281 180420" + tz2,          "2011-10-08T18:04:20.000" + tz],
-            ["2011281 1804" + tz3,            "2011-10-08T18:" + minutesForTz3 + ":00.000" + tz],
-            ["2011281 180420" + tz3,          "2011-10-08T18:" + minutesForTz3 + ":20.000" + tz],
-            ["2011281 180420,1" + tz2,        "2011-10-08T18:04:20.100" + tz],
-            ["2011281 180420,11" + tz2,       "2011-10-08T18:04:20.110" + tz],
-            ["2011281 180420,111" + tz2,      "2011-10-08T18:04:20.111" + tz]
+            ["2011-10-08", `2011-10-08T00:00:00.000${tz}`],
+            ["2011-10-08T18", `2011-10-08T18:00:00.000${tz}`],
+            ["2011-10-08T18:04", `2011-10-08T18:04:00.000${tz}`],
+            ["2011-10-08T18:04:20", `2011-10-08T18:04:20.000${tz}`],
+            [`2011-10-08T18:04${tz}`, `2011-10-08T18:04:00.000${tz}`],
+            [`2011-10-08T18:04:20${tz}`, `2011-10-08T18:04:20.000${tz}`],
+            [`2011-10-08T18:04${tz2}`, `2011-10-08T18:04:00.000${tz}`],
+            [`2011-10-08T18:04:20${tz2}`, `2011-10-08T18:04:20.000${tz}`],
+            [`2011-10-08T18:04${tz3}`, `2011-10-08T18:${minutesForTz3}:00.000${tz}`],
+            [`2011-10-08T18:04:20${tz3}`, `2011-10-08T18:${minutesForTz3}:20.000${tz}`],
+            [`2011-10-08T18:04:20.1${tz2}`, `2011-10-08T18:04:20.100${tz}`],
+            [`2011-10-08T18:04:20.11${tz2}`, `2011-10-08T18:04:20.110${tz}`],
+            [`2011-10-08T18:04:20.111${tz2}`, `2011-10-08T18:04:20.111${tz}`],
+            ["2011-10-08 18", `2011-10-08T18:00:00.000${tz}`],
+            ["2011-10-08 18:04", `2011-10-08T18:04:00.000${tz}`],
+            ["2011-10-08 18:04:20", `2011-10-08T18:04:20.000${tz}`],
+            [`2011-10-08 18:04${tz}`, `2011-10-08T18:04:00.000${tz}`],
+            [`2011-10-08 18:04:20${tz}`, `2011-10-08T18:04:20.000${tz}`],
+            [`2011-10-08 18:04${tz2}`, `2011-10-08T18:04:00.000${tz}`],
+            [`2011-10-08 18:04:20${tz2}`, `2011-10-08T18:04:20.000${tz}`],
+            [`2011-10-08 18:04${tz3}`, `2011-10-08T18:${minutesForTz3}:00.000${tz}`],
+            [`2011-10-08 18:04:20${tz3}`, `2011-10-08T18:${minutesForTz3}:20.000${tz}`],
+            [`2011-10-08 18:04:20.1${tz2}`, `2011-10-08T18:04:20.100${tz}`],
+            [`2011-10-08 18:04:20.11${tz2}`, `2011-10-08T18:04:20.110${tz}`],
+            [`2011-10-08 18:04:20.111${tz2}`, `2011-10-08T18:04:20.111${tz}`],
+            ["2011-W40", `2011-10-03T00:00:00.000${tz}`],
+            ["2011-W40-6", `2011-10-08T00:00:00.000${tz}`],
+            ["2011-W40-6T18", `2011-10-08T18:00:00.000${tz}`],
+            ["2011-W40-6T18:04", `2011-10-08T18:04:00.000${tz}`],
+            ["2011-W40-6T18:04:20", `2011-10-08T18:04:20.000${tz}`],
+            [`2011-W40-6T18:04${tz}`, `2011-10-08T18:04:00.000${tz}`],
+            [`2011-W40-6T18:04:20${tz}`, `2011-10-08T18:04:20.000${tz}`],
+            [`2011-W40-6T18:04${tz2}`, `2011-10-08T18:04:00.000${tz}`],
+            [`2011-W40-6T18:04:20${tz2}`, `2011-10-08T18:04:20.000${tz}`],
+            [`2011-W40-6T18:04${tz3}`, `2011-10-08T18:${minutesForTz3}:00.000${tz}`],
+            [`2011-W40-6T18:04:20${tz3}`, `2011-10-08T18:${minutesForTz3}:20.000${tz}`],
+            [`2011-W40-6T18:04:20.1${tz2}`, `2011-10-08T18:04:20.100${tz}`],
+            [`2011-W40-6T18:04:20.11${tz2}`, `2011-10-08T18:04:20.110${tz}`],
+            [`2011-W40-6T18:04:20.111${tz2}`, `2011-10-08T18:04:20.111${tz}`],
+            ["2011-W40-6 18", `2011-10-08T18:00:00.000${tz}`],
+            ["2011-W40-6 18:04", `2011-10-08T18:04:00.000${tz}`],
+            ["2011-W40-6 18:04:20", `2011-10-08T18:04:20.000${tz}`],
+            [`2011-W40-6 18:04${tz}`, `2011-10-08T18:04:00.000${tz}`],
+            [`2011-W40-6 18:04:20${tz}`, `2011-10-08T18:04:20.000${tz}`],
+            [`2011-W40-6 18:04${tz2}`, `2011-10-08T18:04:00.000${tz}`],
+            [`2011-W40-6 18:04:20${tz2}`, `2011-10-08T18:04:20.000${tz}`],
+            [`2011-W40-6 18:04${tz3}`, `2011-10-08T18:${minutesForTz3}:00.000${tz}`],
+            [`2011-W40-6 18:04:20${tz3}`, `2011-10-08T18:${minutesForTz3}:20.000${tz}`],
+            [`2011-W40-6 18:04:20.1${tz2}`, `2011-10-08T18:04:20.100${tz}`],
+            [`2011-W40-6 18:04:20.11${tz2}`, `2011-10-08T18:04:20.110${tz}`],
+            [`2011-W40-6 18:04:20.111${tz2}`, `2011-10-08T18:04:20.111${tz}`],
+            ["2011-281", `2011-10-08T00:00:00.000${tz}`],
+            ["2011-281T18", `2011-10-08T18:00:00.000${tz}`],
+            ["2011-281T18:04", `2011-10-08T18:04:00.000${tz}`],
+            ["2011-281T18:04:20", `2011-10-08T18:04:20.000${tz}`],
+            [`2011-281T18:04${tz}`, `2011-10-08T18:04:00.000${tz}`],
+            [`2011-281T18:04:20${tz}`, `2011-10-08T18:04:20.000${tz}`],
+            [`2011-281T18:04${tz2}`, `2011-10-08T18:04:00.000${tz}`],
+            [`2011-281T18:04:20${tz2}`, `2011-10-08T18:04:20.000${tz}`],
+            [`2011-281T18:04${tz3}`, `2011-10-08T18:${minutesForTz3}:00.000${tz}`],
+            [`2011-281T18:04:20${tz3}`, `2011-10-08T18:${minutesForTz3}:20.000${tz}`],
+            [`2011-281T18:04:20.1${tz2}`, `2011-10-08T18:04:20.100${tz}`],
+            [`2011-281T18:04:20.11${tz2}`, `2011-10-08T18:04:20.110${tz}`],
+            [`2011-281T18:04:20.111${tz2}`, `2011-10-08T18:04:20.111${tz}`],
+            ["2011-281 18", `2011-10-08T18:00:00.000${tz}`],
+            ["2011-281 18:04", `2011-10-08T18:04:00.000${tz}`],
+            ["2011-281 18:04:20", `2011-10-08T18:04:20.000${tz}`],
+            [`2011-281 18:04${tz}`, `2011-10-08T18:04:00.000${tz}`],
+            [`2011-281 18:04:20${tz}`, `2011-10-08T18:04:20.000${tz}`],
+            [`2011-281 18:04${tz2}`, `2011-10-08T18:04:00.000${tz}`],
+            [`2011-281 18:04:20${tz2}`, `2011-10-08T18:04:20.000${tz}`],
+            [`2011-281 18:04${tz3}`, `2011-10-08T18:${minutesForTz3}:00.000${tz}`],
+            [`2011-281 18:04:20${tz3}`, `2011-10-08T18:${minutesForTz3}:20.000${tz}`],
+            [`2011-281 18:04:20.1${tz2}`, `2011-10-08T18:04:20.100${tz}`],
+            [`2011-281 18:04:20.11${tz2}`, `2011-10-08T18:04:20.110${tz}`],
+            [`2011-281 18:04:20.111${tz2}`, `2011-10-08T18:04:20.111${tz}`],
+            ["20111008T18", `2011-10-08T18:00:00.000${tz}`],
+            ["20111008T1804", `2011-10-08T18:04:00.000${tz}`],
+            ["20111008T180420", `2011-10-08T18:04:20.000${tz}`],
+            [`20111008T1804${tz}`, `2011-10-08T18:04:00.000${tz}`],
+            [`20111008T180420${tz}`, `2011-10-08T18:04:20.000${tz}`],
+            [`20111008T1804${tz2}`, `2011-10-08T18:04:00.000${tz}`],
+            [`20111008T180420${tz2}`, `2011-10-08T18:04:20.000${tz}`],
+            [`20111008T1804${tz3}`, `2011-10-08T18:${minutesForTz3}:00.000${tz}`],
+            [`20111008T180420${tz3}`, `2011-10-08T18:${minutesForTz3}:20.000${tz}`],
+            [`20111008T180420,1${tz2}`, `2011-10-08T18:04:20.100${tz}`],
+            [`20111008T180420,11${tz2}`, `2011-10-08T18:04:20.110${tz}`],
+            [`20111008T180420,111${tz2}`, `2011-10-08T18:04:20.111${tz}`],
+            ["20111008 18", `2011-10-08T18:00:00.000${tz}`],
+            ["20111008 1804", `2011-10-08T18:04:00.000${tz}`],
+            ["20111008 180420", `2011-10-08T18:04:20.000${tz}`],
+            [`20111008 1804${tz}`, `2011-10-08T18:04:00.000${tz}`],
+            [`20111008 180420${tz}`, `2011-10-08T18:04:20.000${tz}`],
+            [`20111008 1804${tz2}`, `2011-10-08T18:04:00.000${tz}`],
+            [`20111008 180420${tz2}`, `2011-10-08T18:04:20.000${tz}`],
+            [`20111008 1804${tz3}`, `2011-10-08T18:${minutesForTz3}:00.000${tz}`],
+            [`20111008 180420${tz3}`, `2011-10-08T18:${minutesForTz3}:20.000${tz}`],
+            [`20111008 180420,1${tz2}`, `2011-10-08T18:04:20.100${tz}`],
+            [`20111008 180420,11${tz2}`, `2011-10-08T18:04:20.110${tz}`],
+            [`20111008 180420,111${tz2}`, `2011-10-08T18:04:20.111${tz}`],
+            ["2011W40", `2011-10-03T00:00:00.000${tz}`],
+            ["2011W406", `2011-10-08T00:00:00.000${tz}`],
+            ["2011W406T18", `2011-10-08T18:00:00.000${tz}`],
+            ["2011W406T1804", `2011-10-08T18:04:00.000${tz}`],
+            ["2011W406T180420", `2011-10-08T18:04:20.000${tz}`],
+            [`2011W406 1804${tz2}`, `2011-10-08T18:04:00.000${tz}`],
+            [`2011W406T1804${tz}`, `2011-10-08T18:04:00.000${tz}`],
+            [`2011W406T180420${tz}`, `2011-10-08T18:04:20.000${tz}`],
+            [`2011W406T1804${tz2}`, `2011-10-08T18:04:00.000${tz}`],
+            [`2011W406T180420${tz2}`, `2011-10-08T18:04:20.000${tz}`],
+            [`2011W406T1804${tz3}`, `2011-10-08T18:${minutesForTz3}:00.000${tz}`],
+            [`2011W406T180420${tz3}`, `2011-10-08T18:${minutesForTz3}:20.000${tz}`],
+            [`2011W406T180420,1${tz2}`, `2011-10-08T18:04:20.100${tz}`],
+            [`2011W406T180420,11${tz2}`, `2011-10-08T18:04:20.110${tz}`],
+            [`2011W406T180420,111${tz2}`, `2011-10-08T18:04:20.111${tz}`],
+            ["2011W406 18", `2011-10-08T18:00:00.000${tz}`],
+            ["2011W406 1804", `2011-10-08T18:04:00.000${tz}`],
+            ["2011W406 180420", `2011-10-08T18:04:20.000${tz}`],
+            [`2011W406 1804${tz}`, `2011-10-08T18:04:00.000${tz}`],
+            [`2011W406 180420${tz}`, `2011-10-08T18:04:20.000${tz}`],
+            [`2011W406 180420${tz2}`, `2011-10-08T18:04:20.000${tz}`],
+            [`2011W406 1804${tz3}`, `2011-10-08T18:${minutesForTz3}:00.000${tz}`],
+            [`2011W406 180420${tz3}`, `2011-10-08T18:${minutesForTz3}:20.000${tz}`],
+            [`2011W406 180420,1${tz2}`, `2011-10-08T18:04:20.100${tz}`],
+            [`2011W406 180420,11${tz2}`, `2011-10-08T18:04:20.110${tz}`],
+            [`2011W406 180420,111${tz2}`, `2011-10-08T18:04:20.111${tz}`],
+            ["2011281", `2011-10-08T00:00:00.000${tz}`],
+            ["2011281T18", `2011-10-08T18:00:00.000${tz}`],
+            ["2011281T1804", `2011-10-08T18:04:00.000${tz}`],
+            ["2011281T180420", `2011-10-08T18:04:20.000${tz}`],
+            [`2011281T1804${tz}`, `2011-10-08T18:04:00.000${tz}`],
+            [`2011281T180420${tz}`, `2011-10-08T18:04:20.000${tz}`],
+            [`2011281T1804${tz2}`, `2011-10-08T18:04:00.000${tz}`],
+            [`2011281T180420${tz2}`, `2011-10-08T18:04:20.000${tz}`],
+            [`2011281T1804${tz3}`, `2011-10-08T18:${minutesForTz3}:00.000${tz}`],
+            [`2011281T180420${tz3}`, `2011-10-08T18:${minutesForTz3}:20.000${tz}`],
+            [`2011281T180420,1${tz2}`, `2011-10-08T18:04:20.100${tz}`],
+            [`2011281T180420,11${tz2}`, `2011-10-08T18:04:20.110${tz}`],
+            [`2011281T180420,111${tz2}`, `2011-10-08T18:04:20.111${tz}`],
+            ["2011281 18", `2011-10-08T18:00:00.000${tz}`],
+            ["2011281 1804", `2011-10-08T18:04:00.000${tz}`],
+            ["2011281 180420", `2011-10-08T18:04:20.000${tz}`],
+            [`2011281 1804${tz}`, `2011-10-08T18:04:00.000${tz}`],
+            [`2011281 180420${tz}`, `2011-10-08T18:04:20.000${tz}`],
+            [`2011281 1804${tz2}`, `2011-10-08T18:04:00.000${tz}`],
+            [`2011281 180420${tz2}`, `2011-10-08T18:04:20.000${tz}`],
+            [`2011281 1804${tz3}`, `2011-10-08T18:${minutesForTz3}:00.000${tz}`],
+            [`2011281 180420${tz3}`, `2011-10-08T18:${minutesForTz3}:20.000${tz}`],
+            [`2011281 180420,1${tz2}`, `2011-10-08T18:04:20.100${tz}`],
+            [`2011281 180420,11${tz2}`, `2011-10-08T18:04:20.110${tz}`],
+            [`2011281 180420,111${tz2}`, `2011-10-08T18:04:20.111${tz}`]
         ];
         for (let i = 0; i < formats.length; i++) {
             assert.equal(adone.date(formats[i][0]).format("YYYY-MM-DDTHH:mm:ss.SSSZ"),
-                    formats[i][1], "adone.date should be able to parse ISO " + formats[i][0]);
+                formats[i][1], `adone.date should be able to parse ISO ${formats[i][0]}`);
             assert.equal(adone.date(formats[i][0], adone.date.ISO_8601).format("YYYY-MM-DDTHH:mm:ss.SSSZ"),
-                    formats[i][1], "adone.date should be able to parse specified ISO " + formats[i][0]);
+                formats[i][1], `adone.date should be able to parse specified ISO ${formats[i][0]}`);
             assert.equal(adone.date(formats[i][0], adone.date.ISO_8601, true).format("YYYY-MM-DDTHH:mm:ss.SSSZ"),
-                    formats[i][1], "adone.date should be able to parse specified strict ISO " + formats[i][0]);
+                formats[i][1], `adone.date should be able to parse specified strict ISO ${formats[i][0]}`);
         }
     });
 
@@ -628,7 +672,7 @@ describe("create", () => {
     });
 
     it("parsing week year/week/weekday (dow 1, doy 4)", () => {
-        adone.date.locale("dow:1,doy:4", {week: {dow: 1, doy: 4}});
+        adone.date.locale("dow:1,doy:4", { week: { dow: 1, doy: 4 } });
 
         assert.equal(adone.date.utc("2007-01", "gggg-ww").format(), "2007-01-01T00:00:00Z", "2007 week 1 (1st Jan Mon)");
         assert.equal(adone.date.utc("2008-01", "gggg-ww").format(), "2007-12-31T00:00:00Z", "2008 week 1 (1st Jan Tue)");
@@ -642,7 +686,7 @@ describe("create", () => {
     });
 
     it("parsing week year/week/weekday (dow 1, doy 7)", () => {
-        adone.date.locale("dow:1,doy:7", {week: {dow: 1, doy: 7}});
+        adone.date.locale("dow:1,doy:7", { week: { dow: 1, doy: 7 } });
 
         assert.equal(adone.date.utc("2007-01", "gggg-ww").format(), "2007-01-01T00:00:00Z", "2007 week 1 (1st Jan Mon)");
         assert.equal(adone.date.utc("2008-01", "gggg-ww").format(), "2007-12-31T00:00:00Z", "2008 week 1 (1st Jan Tue)");
@@ -655,7 +699,7 @@ describe("create", () => {
     });
 
     it("parsing week year/week/weekday (dow 0, doy 6)", () => {
-        adone.date.locale("dow:0,doy:6", {week: {dow: 0, doy: 6}});
+        adone.date.locale("dow:0,doy:6", { week: { dow: 0, doy: 6 } });
 
         assert.equal(adone.date.utc("2007-01", "gggg-ww").format(), "2006-12-31T00:00:00Z", "2007 week 1 (1st Jan Mon)");
         assert.equal(adone.date.utc("2008-01", "gggg-ww").format(), "2007-12-30T00:00:00Z", "2008 week 1 (1st Jan Tue)");
@@ -668,7 +712,7 @@ describe("create", () => {
     });
 
     it("parsing week year/week/weekday (dow 6, doy 12)", () => {
-        adone.date.locale("dow:6,doy:12", {week: {dow: 6, doy: 12}});
+        adone.date.locale("dow:6,doy:12", { week: { dow: 6, doy: 12 } });
 
         assert.equal(adone.date.utc("2007-01", "gggg-ww").format(), "2006-12-30T00:00:00Z", "2007 week 1 (1st Jan Mon)");
         assert.equal(adone.date.utc("2008-01", "gggg-ww").format(), "2007-12-29T00:00:00Z", "2008 week 1 (1st Jan Tue)");
@@ -682,32 +726,32 @@ describe("create", () => {
 
     it("parsing ISO with Z", () => {
         const formats = [
-            ["2011-10-08T18:04",             "2011-10-08T18:04:00.000"],
-            ["2011-10-08T18:04:20",          "2011-10-08T18:04:20.000"],
-            ["2011-10-08T18:04:20.1",        "2011-10-08T18:04:20.100"],
-            ["2011-10-08T18:04:20.11",       "2011-10-08T18:04:20.110"],
-            ["2011-10-08T18:04:20.111",      "2011-10-08T18:04:20.111"],
-            ["2011-W40-6T18",                "2011-10-08T18:00:00.000"],
-            ["2011-W40-6T18:04",             "2011-10-08T18:04:00.000"],
-            ["2011-W40-6T18:04:20",          "2011-10-08T18:04:20.000"],
-            ["2011-W40-6T18:04:20.1",        "2011-10-08T18:04:20.100"],
-            ["2011-W40-6T18:04:20.11",       "2011-10-08T18:04:20.110"],
-            ["2011-W40-6T18:04:20.111",      "2011-10-08T18:04:20.111"],
-            ["2011-281T18",                  "2011-10-08T18:00:00.000"],
-            ["2011-281T18:04",               "2011-10-08T18:04:00.000"],
-            ["2011-281T18:04:20",            "2011-10-08T18:04:20.000"],
-            ["2011-281T18:04:20",            "2011-10-08T18:04:20.000"],
-            ["2011-281T18:04:20.1",          "2011-10-08T18:04:20.100"],
-            ["2011-281T18:04:20.11",         "2011-10-08T18:04:20.110"],
-            ["2011-281T18:04:20.111",        "2011-10-08T18:04:20.111"]
+            ["2011-10-08T18:04", "2011-10-08T18:04:00.000"],
+            ["2011-10-08T18:04:20", "2011-10-08T18:04:20.000"],
+            ["2011-10-08T18:04:20.1", "2011-10-08T18:04:20.100"],
+            ["2011-10-08T18:04:20.11", "2011-10-08T18:04:20.110"],
+            ["2011-10-08T18:04:20.111", "2011-10-08T18:04:20.111"],
+            ["2011-W40-6T18", "2011-10-08T18:00:00.000"],
+            ["2011-W40-6T18:04", "2011-10-08T18:04:00.000"],
+            ["2011-W40-6T18:04:20", "2011-10-08T18:04:20.000"],
+            ["2011-W40-6T18:04:20.1", "2011-10-08T18:04:20.100"],
+            ["2011-W40-6T18:04:20.11", "2011-10-08T18:04:20.110"],
+            ["2011-W40-6T18:04:20.111", "2011-10-08T18:04:20.111"],
+            ["2011-281T18", "2011-10-08T18:00:00.000"],
+            ["2011-281T18:04", "2011-10-08T18:04:00.000"],
+            ["2011-281T18:04:20", "2011-10-08T18:04:20.000"],
+            ["2011-281T18:04:20", "2011-10-08T18:04:20.000"],
+            ["2011-281T18:04:20.1", "2011-10-08T18:04:20.100"],
+            ["2011-281T18:04:20.11", "2011-10-08T18:04:20.110"],
+            ["2011-281T18:04:20.111", "2011-10-08T18:04:20.111"]
         ];
 
         for (let i = 0; i < formats.length; i++) {
-            let mom = adone.date(formats[i][0] + "Z").utc();
-            assert.equal(mom.format("YYYY-MM-DDTHH:mm:ss.SSS"), formats[i][1], "adone.date should be able to parse ISO in UTC " + formats[i][0] + "Z");
+            let mom = adone.date(`${formats[i][0]}Z`).utc();
+            assert.equal(mom.format("YYYY-MM-DDTHH:mm:ss.SSS"), formats[i][1], `adone.date should be able to parse ISO in UTC ${formats[i][0]}Z`);
 
-            mom = adone.date(formats[i][0] + " Z").utc();
-            assert.equal(mom.format("YYYY-MM-DDTHH:mm:ss.SSS"), formats[i][1], "adone.date should be able to parse ISO in UTC " + formats[i][0] + " Z");
+            mom = adone.date(`${formats[i][0]} Z`).utc();
+            assert.equal(mom.format("YYYY-MM-DDTHH:mm:ss.SSS"), formats[i][1], `adone.date should be able to parse ISO in UTC ${formats[i][0]} Z`);
         }
     });
 
@@ -725,12 +769,12 @@ describe("create", () => {
 
     it("parsing iso Z timezone", () => {
         const formats = [
-            ["2011-10-08T18:04Z",             "2011-10-08T18:04:00.000+00:00"],
-            ["2011-10-08T18:04:20Z",          "2011-10-08T18:04:20.000+00:00"],
-            ["2011-10-08T18:04:20.111Z",      "2011-10-08T18:04:20.111+00:00"]
+            ["2011-10-08T18:04Z", "2011-10-08T18:04:00.000+00:00"],
+            ["2011-10-08T18:04:20Z", "2011-10-08T18:04:20.000+00:00"],
+            ["2011-10-08T18:04:20.111Z", "2011-10-08T18:04:20.111+00:00"]
         ];
         for (let i = 0; i < formats.length; i++) {
-            assert.equal(adone.date.utc(formats[i][0]).format("YYYY-MM-DDTHH:mm:ss.SSSZ"), formats[i][1], "adone.date should be able to parse ISO " + formats[i][0]);
+            assert.equal(adone.date.utc(formats[i][0]).format("YYYY-MM-DDTHH:mm:ss.SSSZ"), formats[i][1], `adone.date should be able to parse ISO ${formats[i][0]}`);
         }
     });
 
@@ -770,10 +814,10 @@ describe("create", () => {
         assert.equal(adone.date([-270000, 0, 1]).format("YYYYY-MM-DD"), "-270000-01-01", "format BC 270,001");
         assert.equal(adone.date([270000, 0, 1]).format("YYYYY-MM-DD"), "270000-01-01", "format AD 270,000");
         assert.equal(adone.date("-270000-01-01", "YYYYY-MM-DD").toDate().getFullYear(), -270000, "parse BC 270,001");
-        assert.equal(adone.date("270000-01-01",  "YYYYY-MM-DD").toDate().getFullYear(), 270000, "parse AD 270,000");
+        assert.equal(adone.date("270000-01-01", "YYYYY-MM-DD").toDate().getFullYear(), 270000, "parse AD 270,000");
         assert.equal(adone.date("+270000-01-01", "YYYYY-MM-DD").toDate().getFullYear(), 270000, "parse AD +270,000");
         assert.equal(adone.date.utc("-270000-01-01", "YYYYY-MM-DD").toDate().getUTCFullYear(), -270000, "parse utc BC 270,001");
-        assert.equal(adone.date.utc("270000-01-01",  "YYYYY-MM-DD").toDate().getUTCFullYear(), 270000, "parse utc AD 270,000");
+        assert.equal(adone.date.utc("270000-01-01", "YYYYY-MM-DD").toDate().getUTCFullYear(), 270000, "parse utc AD 270,000");
         assert.equal(adone.date.utc("+270000-01-01", "YYYYY-MM-DD").toDate().getUTCFullYear(), 270000, "parse utc AD +270,000");
     });
 
@@ -872,11 +916,11 @@ describe("create", () => {
     function getVerifier(test) {
         return function (input, format, expected, description, asymetrical) {
             const m = adone.date(input, format);
-            test.equal(m.format("YYYY MM DD"), expected, "compare: " + description);
+            test.equal(m.format("YYYY MM DD"), expected, `compare: ${description}`);
 
             //test round trip
             if (!asymetrical) {
-                test.equal(m.format(format), input, "round trip: " + description);
+                test.equal(m.format(format), input, `round trip: ${description}`);
             }
         };
     }
@@ -885,13 +929,13 @@ describe("create", () => {
         const ver = getVerifier(assert);
         const currentWeekOfYear = adone.date().weeks();
         const expectedDate2012 = adone.date([2012, 0, 1])
-          .day(0)
-          .add((currentWeekOfYear - 1), "weeks")
-          .format("YYYY MM DD");
+            .day(0)
+            .add((currentWeekOfYear - 1), "weeks")
+            .format("YYYY MM DD");
         const expectedDate1999 = adone.date([1999, 0, 1])
-          .day(0)
-          .add((currentWeekOfYear - 1), "weeks")
-          .format("YYYY MM DD");
+            .day(0)
+            .add((currentWeekOfYear - 1), "weeks")
+            .format("YYYY MM DD");
 
         // year
         ver("12", "gg", expectedDate2012, "week-year two digits");
@@ -954,7 +998,7 @@ describe("create", () => {
                 weekdays: "dimanche_lundi_mardi_mercredi_jeudi_vendredi_samedi".split("_"),
                 weekdaysShort: "dim._lun._mar._mer._jeu._ven._sam.".split("_"),
                 weekdaysMin: "Di_Lu_Ma_Me_Je_Ve_Sa".split("_"),
-                week: {dow: 1, doy: 4}
+                week: { dow: 1, doy: 4 }
             });
             ver("1999 37 4", "GGGG WW E", "1999 09 16", "iso ignores locale");
             ver("1999 37 7", "GGGG WW E", "1999 09 19", "iso ignores locale");
@@ -971,7 +1015,7 @@ describe("create", () => {
             //sunday goes at the end of the week
             ver("1999 37 0", "gggg ww d", "1999 09 19", "localized d uses 0-indexed days: 0 = sund");
             ver("1999 37 Di", "gggg ww dd", "1999 09 19", "localized d uses 0-indexed days: 0 = sund");
-        }        finally {
+        } finally {
             adone.date.defineLocale("dow:1,doy:4", null);
             adone.date.locale("en");
         }
@@ -983,13 +1027,13 @@ describe("create", () => {
             assert.equal(adone.date("68", "YY").year(), 2068);
             assert.equal(adone.date("69", "YY").year(), 1969);
             adone.date.parseTwoDigitYear = function (input) {
-                return +input + (+input > 30 ? 1900 : 2000);
+                return Number(input) + (Number(input) > 30 ? 1900 : 2000);
             };
             assert.equal(adone.date("68", "YY").year(), 1968);
             assert.equal(adone.date("67", "YY").year(), 1967);
             assert.equal(adone.date("31", "YY").year(), 1931);
             assert.equal(adone.date("30", "YY").year(), 2030);
-        }        finally {
+        } finally {
             adone.date.parseTwoDigitYear = original;
         }
     });
@@ -999,7 +1043,7 @@ describe("create", () => {
     });
 
     it("object with strings", () => {
-        assert.equal(adone.date({year: "2014", month: "7", day: "31"}).isValid(), true, "string object + isValid");
+        assert.equal(adone.date({ year: "2014", month: "7", day: "31" }).isValid(), true, "string object + isValid");
     });
 
     it("utc with array of formats", () => {
@@ -1008,17 +1052,17 @@ describe("create", () => {
 
     it("parsing invalid string weekdays", () => {
         assert.equal(false, adone.date("a", "dd").isValid(),
-                "dd with invalid weekday, non-strict");
+            "dd with invalid weekday, non-strict");
         assert.equal(false, adone.date("a", "dd", true).isValid(),
-                "dd with invalid weekday, strict");
+            "dd with invalid weekday, strict");
         assert.equal(false, adone.date("a", "ddd").isValid(),
-                "ddd with invalid weekday, non-strict");
+            "ddd with invalid weekday, non-strict");
         assert.equal(false, adone.date("a", "ddd", true).isValid(),
-                "ddd with invalid weekday, strict");
+            "ddd with invalid weekday, strict");
         assert.equal(false, adone.date("a", "dddd").isValid(),
-                "dddd with invalid weekday, non-strict");
+            "dddd with invalid weekday, non-strict");
         assert.equal(false, adone.date("a", "dddd", true).isValid(),
-                "dddd with invalid weekday, strict");
+            "dddd with invalid weekday, strict");
     });
 
     it("milliseconds", () => {
@@ -1082,5 +1126,19 @@ describe("create", () => {
         const momentAsDate = adone.date(["2015", "12", "1"]).toDate();
         assert.ok(momentAsDate instanceof Date, "toDate returns a Date object");
         assert.ok(isNaN(momentAsDate.getTime()), "toDate returns an invalid Date invalid");
+    });
+
+    it("k, kk", () => {
+        for (let i = -1; i <= 24; i++) {
+            const kVal = `${i}:15:59`;
+            const kkVal = `${(i < 10 ? "0" : "") + i}:15:59`;
+            if (i !== 24) {
+                assert.ok(adone.date(kVal, "k:mm:ss").isSame(adone.date(kVal, "H:mm:ss")), `${kVal} k parsing`);
+                assert.ok(adone.date(kkVal, "kk:mm:ss").isSame(adone.date(kkVal, "HH:mm:ss")), `${kkVal} kk parsing`);
+            } else {
+                assert.equal(adone.date(kVal, "k:mm:ss").format("k:mm:ss"), kVal, `${kVal} k parsing`);
+                assert.equal(adone.date(kkVal, "kk:mm:ss").format("kk:mm:ss"), kkVal, `${kkVal} skk parsing`);
+            }
+        }
     });
 });

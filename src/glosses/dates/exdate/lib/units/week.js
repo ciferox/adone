@@ -22,18 +22,18 @@ addUnitPriority("isoWeek", 5);
 
 // PARSING
 
-addRegexToken("w",  match1to2);
+addRegexToken("w", match1to2);
 addRegexToken("ww", match1to2, match2);
-addRegexToken("W",  match1to2);
+addRegexToken("W", match1to2);
 addRegexToken("WW", match1to2, match2);
 
-addWeekParseToken(["w", "ww", "W", "WW"], function (input, week, config, token) {
+addWeekParseToken(["w", "ww", "W", "WW"], (input, week, config, token) => {
     week[token.substr(0, 1)] = toInt(input);
 });
 
 // LOCALES
 
-export function localeWeek (mom) {
+export function localeWeek(mom) {
     return weekOfYear(mom, this._week.dow, this._week.doy).week;
 }
 
@@ -42,10 +42,10 @@ export const defaultLocaleWeek = {
     doy: 6  // The week that contains Jan 1st is the first week of the year.
 };
 
-export function localeFirstDayOfWeek () {
+export function localeFirstDayOfWeek() {
     return this._week.dow;
 }
 
-export function localeFirstDayOfYear () {
+export function localeFirstDayOfYear() {
     return this._week.doy;
 }

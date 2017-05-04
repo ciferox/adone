@@ -8,12 +8,14 @@ const monthsShort = "ene_feb_mar_abr_may_jun_jul_ago_sep_oct_nov_dic".split("_")
 
 export default ExDate.defineLocale("es", {
     months: "enero_febrero_marzo_abril_mayo_junio_julio_agosto_septiembre_octubre_noviembre_diciembre".split("_"),
-    monthsShort (m, format) {
-        if (/-MMM-/.test(format)) {
+    monthsShort(m, format) {
+        if (!m) {
+            return monthsShortDot;
+        } else if (/-MMM-/.test(format)) {
             return monthsShort[m.month()];
-        } else {
-            return monthsShortDot[m.month()];
         }
+        return monthsShortDot[m.month()];
+
     },
     monthsParseExact: true,
     weekdays: "domingo_lunes_martes_miércoles_jueves_viernes_sábado".split("_"),
@@ -29,20 +31,20 @@ export default ExDate.defineLocale("es", {
         LLLL: "dddd, D [de] MMMM [de] YYYY H:mm"
     },
     calendar: {
-        sameDay () {
-            return "[hoy a la" + ((this.hours() !== 1) ? "s" : "") + "] LT";
+        sameDay() {
+            return `[hoy a la${(this.hours() !== 1) ? "s" : ""}] LT`;
         },
-        nextDay () {
-            return "[mañana a la" + ((this.hours() !== 1) ? "s" : "") + "] LT";
+        nextDay() {
+            return `[mañana a la${(this.hours() !== 1) ? "s" : ""}] LT`;
         },
-        nextWeek () {
-            return "dddd [a la" + ((this.hours() !== 1) ? "s" : "") + "] LT";
+        nextWeek() {
+            return `dddd [a la${(this.hours() !== 1) ? "s" : ""}] LT`;
         },
-        lastDay () {
-            return "[ayer a la" + ((this.hours() !== 1) ? "s" : "") + "] LT";
+        lastDay() {
+            return `[ayer a la${(this.hours() !== 1) ? "s" : ""}] LT`;
         },
-        lastWeek () {
-            return "[el] dddd [pasado a la" + ((this.hours() !== 1) ? "s" : "") + "] LT";
+        lastWeek() {
+            return `[el] dddd [pasado a la${(this.hours() !== 1) ? "s" : ""}] LT`;
         },
         sameElse: "L"
     },
@@ -61,7 +63,7 @@ export default ExDate.defineLocale("es", {
         y: "un año",
         yy: "%d años"
     },
-    ordinalParse: /\d{1,2}º/,
+    dayOfMonthOrdinalParse: /\d{1,2}º/,
     ordinal: "%dº",
     week: {
         dow: 1, // Monday is the first day of the week.

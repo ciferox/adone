@@ -8,14 +8,14 @@ import ExDate from "..";
 // eslint-disable-next-line no-unused-vars
 function processRelativeTime(number, withoutSuffix, key, isFuture) {
     const format = {
-        "m": ["eine Minute", "einer Minute"],
-        "h": ["eine Stunde", "einer Stunde"],
-        "d": ["ein Tag", "einem Tag"],
-        "dd": [number + " Tage", number + " Tagen"],
-        "M": ["ein Monat", "einem Monat"],
-        "MM": [number + " Monate", number + " Monaten"],
-        "y": ["ein Jahr", "einem Jahr"],
-        "yy": [number + " Jahre", number + " Jahren"]
+        m: ["eine Minute", "einer Minute"],
+        h: ["eine Stunde", "einer Stunde"],
+        d: ["ein Tag", "einem Tag"],
+        dd: [`${number} Tage`, `${number} Tagen`],
+        M: ["ein Monat", "einem Monat"],
+        MM: [`${number} Monate`, `${number} Monaten`],
+        y: ["ein Jahr", "einem Jahr"],
+        yy: [`${number} Jahre`, `${number} Jahren`]
     };
     return withoutSuffix ? format[key][0] : format[key][1];
 }
@@ -59,7 +59,7 @@ export default ExDate.defineLocale("de", {
         y: processRelativeTime,
         yy: processRelativeTime
     },
-    ordinalParse: /\d{1,2}\./,
+    dayOfMonthOrdinalParse: /\d{1,2}\./,
     ordinal: "%d.",
     week: {
         dow: 1, // Monday is the first day of the week.

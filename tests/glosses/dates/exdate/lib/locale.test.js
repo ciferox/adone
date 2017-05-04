@@ -11,7 +11,7 @@ describe("locale", () => {
         }, {
             name: "es",
             data: {
-                relativeTime: {past: "hace %s", s: "unos segundos", d: "un día"},
+                relativeTime: { past: "hace %s", s: "unos segundos", d: "un día" },
                 months: "enero_febrero_marzo_abril_mayo_junio_julio_agosto_septiembre_octubre_noviembre_diciembre".split("_")
             }
         }, {
@@ -28,7 +28,7 @@ describe("locale", () => {
             data: {
                 months: "一月_二月_三月_四月_五月_六月_七月_八月_九月_十月_十一月_十二月".split("_")
             }
-        }].forEach(function (locale) {
+        }].forEach((locale) => {
             if (adone.date.locale(locale.name) !== locale.name) {
                 adone.date.defineLocale(locale.name, locale.data);
             }
@@ -137,28 +137,28 @@ describe("locale", () => {
 
     it("defineLocale", () => {
         adone.date.locale("en");
-        adone.date.defineLocale("dude", {months: ["Movember"]});
+        adone.date.defineLocale("dude", { months: ["Movember"] });
         assert.equal(adone.date().locale(), "dude", "defineLocale also sets it");
         assert.equal(adone.date().locale("dude").locale(), "dude", "defineLocale defines a locale");
         adone.date.defineLocale("dude", null);
     });
 
     it("locales", () => {
-        adone.date.defineLocale("dude", {months: ["Movember"]});
-        assert.equal(true, !!~indexOf.call(adone.date.locales(), "dude"), "locales returns an array of defined locales");
-        assert.equal(true, !!~indexOf.call(adone.date.locales(), "en"), "locales should always include english");
+        adone.date.defineLocale("dude", { months: ["Movember"] });
+        assert.equal(true, Boolean(~indexOf.call(adone.date.locales(), "dude")), "locales returns an array of defined locales");
+        assert.equal(true, Boolean(~indexOf.call(adone.date.locales(), "en")), "locales should always include english");
         adone.date.defineLocale("dude", null);
     });
 
     it("library convenience", () => {
-        adone.date.locale("something", {week: {dow: 3}});
+        adone.date.locale("something", { week: { dow: 3 } });
         adone.date.locale("something");
         assert.equal(adone.date.locale(), "something", "locale can be used to create the locale too");
         adone.date.defineLocale("something", null);
     });
 
     it("firstDayOfWeek firstDayOfYear locale getters", () => {
-        adone.date.locale("something", {week: {dow: 3, doy: 4}});
+        adone.date.locale("something", { week: { dow: 3, doy: 4 } });
         adone.date.locale("something");
         assert.equal(adone.date.localeData().firstDayOfWeek(), 3, "firstDayOfWeek");
         assert.equal(adone.date.localeData().firstDayOfYear(), 4, "firstDayOfYear");
@@ -193,7 +193,7 @@ describe("locale", () => {
     it("instance locale persists with manipulation", () => {
         adone.date.locale("en");
 
-        assert.equal(adone.date([2012, 5, 6]).locale("es").add({days: 1}).format("MMMM"), "junio", "With addition");
+        assert.equal(adone.date([2012, 5, 6]).locale("es").add({ days: 1 }).format("MMMM"), "junio", "With addition");
         assert.equal(adone.date([2012, 5, 6]).locale("es").day(0).format("MMMM"), "junio", "With day getter");
         assert.equal(adone.date([2012, 5, 6]).locale("es").endOf("day").format("MMMM"), "junio", "With endOf");
     });
@@ -211,15 +211,15 @@ describe("locale", () => {
     it("duration locale method", () => {
         adone.date.locale("en");
 
-        assert.equal(adone.date.duration({seconds: 44}).humanize(), "a few seconds", "Normally default to global");
-        assert.equal(adone.date.duration({seconds: 44}).locale("es").humanize(), "unos segundos", "Use the instance specific locale");
-        assert.equal(adone.date.duration({seconds: 44}).humanize(), "a few seconds", "Using an instance specific locale does not affect other durations");
+        assert.equal(adone.date.duration({ seconds: 44 }).humanize(), "a few seconds", "Normally default to global");
+        assert.equal(adone.date.duration({ seconds: 44 }).locale("es").humanize(), "unos segundos", "Use the instance specific locale");
+        assert.equal(adone.date.duration({ seconds: 44 }).humanize(), "a few seconds", "Using an instance specific locale does not affect other durations");
     });
 
     it("duration locale persists with cloning", () => {
         adone.date.locale("en");
 
-        const a = adone.date.duration({seconds: 44}).locale("es");
+        const a = adone.date.duration({ seconds: 44 }).locale("es");
         const b = adone.date.duration(a);
 
         assert.equal(b.humanize(), "unos segundos", "using adone.date.duration()");
@@ -239,71 +239,71 @@ describe("locale", () => {
     it("from relative time future", () => {
         const start = adone.date([2007, 1, 28]);
 
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({s: 44})),  "in a few seconds", "44 seconds = a few seconds");
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({s: 45})),  "in a minute",      "45 seconds = a minute");
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({s: 89})),  "in a minute",      "89 seconds = a minute");
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({s: 90})),  "in 2 minutes",     "90 seconds = 2 minutes");
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({m: 44})),  "in 44 minutes",    "44 minutes = 44 minutes");
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({m: 45})),  "in an hour",       "45 minutes = an hour");
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({m: 89})),  "in an hour",       "89 minutes = an hour");
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({m: 90})),  "in 2 hours",       "90 minutes = 2 hours");
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({h: 5})),   "in 5 hours",       "5 hours = 5 hours");
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({h: 21})),  "in 21 hours",      "21 hours = 21 hours");
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({h: 22})),  "in a day",         "22 hours = a day");
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({h: 35})),  "in a day",         "35 hours = a day");
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({h: 36})),  "in 2 days",        "36 hours = 2 days");
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({d: 1})),   "in a day",         "1 day = a day");
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({d: 5})),   "in 5 days",        "5 days = 5 days");
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({d: 25})),  "in 25 days",       "25 days = 25 days");
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({d: 26})),  "in a month",       "26 days = a month");
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({d: 30})),  "in a month",       "30 days = a month");
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({d: 45})),  "in a month",       "45 days = a month");
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({d: 47})),  "in 2 months",      "47 days = 2 months");
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({d: 74})),  "in 2 months",      "74 days = 2 months");
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({d: 78})),  "in 3 months",      "78 days = 3 months");
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({M: 1})),   "in a month",       "1 month = a month");
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({M: 5})),   "in 5 months",      "5 months = 5 months");
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({d: 315})), "in 10 months",     "315 days = 10 months");
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({d: 344})), "in a year",        "344 days = a year");
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({d: 345})), "in a year",        "345 days = a year");
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({d: 548})), "in 2 years",       "548 days = in 2 years");
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({y: 1})),   "in a year",        "1 year = a year");
-        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({y: 5})),   "in 5 years",       "5 years = 5 years");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ s: 44 })), "in a few seconds", "44 seconds = a few seconds");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ s: 45 })), "in a minute", "45 seconds = a minute");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ s: 89 })), "in a minute", "89 seconds = a minute");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ s: 90 })), "in 2 minutes", "90 seconds = 2 minutes");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ m: 44 })), "in 44 minutes", "44 minutes = 44 minutes");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ m: 45 })), "in an hour", "45 minutes = an hour");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ m: 89 })), "in an hour", "89 minutes = an hour");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ m: 90 })), "in 2 hours", "90 minutes = 2 hours");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ h: 5 })), "in 5 hours", "5 hours = 5 hours");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ h: 21 })), "in 21 hours", "21 hours = 21 hours");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ h: 22 })), "in a day", "22 hours = a day");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ h: 35 })), "in a day", "35 hours = a day");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ h: 36 })), "in 2 days", "36 hours = 2 days");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ d: 1 })), "in a day", "1 day = a day");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ d: 5 })), "in 5 days", "5 days = 5 days");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ d: 25 })), "in 25 days", "25 days = 25 days");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ d: 26 })), "in a month", "26 days = a month");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ d: 30 })), "in a month", "30 days = a month");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ d: 45 })), "in a month", "45 days = a month");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ d: 47 })), "in 2 months", "47 days = 2 months");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ d: 74 })), "in 2 months", "74 days = 2 months");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ d: 78 })), "in 3 months", "78 days = 3 months");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ M: 1 })), "in a month", "1 month = a month");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ M: 5 })), "in 5 months", "5 months = 5 months");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ d: 315 })), "in 10 months", "315 days = 10 months");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ d: 344 })), "in a year", "344 days = a year");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ d: 345 })), "in a year", "345 days = a year");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ d: 548 })), "in 2 years", "548 days = in 2 years");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ y: 1 })), "in a year", "1 year = a year");
+        assert.equal(start.from(adone.date([2007, 1, 28]).subtract({ y: 5 })), "in 5 years", "5 years = 5 years");
     });
 
     it("from relative time past", () => {
         const start = adone.date([2007, 1, 28]);
 
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({s: 44})),  "a few seconds ago", "44 seconds = a few seconds");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({s: 45})),  "a minute ago",      "45 seconds = a minute");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({s: 89})),  "a minute ago",      "89 seconds = a minute");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({s: 90})),  "2 minutes ago",     "90 seconds = 2 minutes");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({m: 44})),  "44 minutes ago",    "44 minutes = 44 minutes");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({m: 45})),  "an hour ago",       "45 minutes = an hour");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({m: 89})),  "an hour ago",       "89 minutes = an hour");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({m: 90})),  "2 hours ago",       "90 minutes = 2 hours");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({h: 5})),   "5 hours ago",       "5 hours = 5 hours");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({h: 21})),  "21 hours ago",      "21 hours = 21 hours");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({h: 22})),  "a day ago",         "22 hours = a day");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({h: 35})),  "a day ago",         "35 hours = a day");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({h: 36})),  "2 days ago",        "36 hours = 2 days");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({d: 1})),   "a day ago",         "1 day = a day");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({d: 5})),   "5 days ago",        "5 days = 5 days");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({d: 25})),  "25 days ago",       "25 days = 25 days");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({d: 26})),  "a month ago",       "26 days = a month");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({d: 30})),  "a month ago",       "30 days = a month");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({d: 43})),  "a month ago",       "43 days = a month");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({d: 46})),  "2 months ago",      "46 days = 2 months");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({d: 74})),  "2 months ago",      "75 days = 2 months");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({d: 76})),  "3 months ago",      "76 days = 3 months");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({M: 1})),   "a month ago",       "1 month = a month");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({M: 5})),   "5 months ago",      "5 months = 5 months");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({d: 315})), "10 months ago",     "315 days = 10 months");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({d: 344})), "a year ago",        "344 days = a year");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({d: 345})), "a year ago",        "345 days = a year");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({d: 548})), "2 years ago",       "548 days = 2 years");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({y: 1})),   "a year ago",        "1 year = a year");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({y: 5})),   "5 years ago",       "5 years = 5 years");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ s: 44 })), "a few seconds ago", "44 seconds = a few seconds");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ s: 45 })), "a minute ago", "45 seconds = a minute");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ s: 89 })), "a minute ago", "89 seconds = a minute");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ s: 90 })), "2 minutes ago", "90 seconds = 2 minutes");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ m: 44 })), "44 minutes ago", "44 minutes = 44 minutes");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ m: 45 })), "an hour ago", "45 minutes = an hour");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ m: 89 })), "an hour ago", "89 minutes = an hour");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ m: 90 })), "2 hours ago", "90 minutes = 2 hours");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ h: 5 })), "5 hours ago", "5 hours = 5 hours");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ h: 21 })), "21 hours ago", "21 hours = 21 hours");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ h: 22 })), "a day ago", "22 hours = a day");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ h: 35 })), "a day ago", "35 hours = a day");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ h: 36 })), "2 days ago", "36 hours = 2 days");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ d: 1 })), "a day ago", "1 day = a day");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ d: 5 })), "5 days ago", "5 days = 5 days");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ d: 25 })), "25 days ago", "25 days = 25 days");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ d: 26 })), "a month ago", "26 days = a month");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ d: 30 })), "a month ago", "30 days = a month");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ d: 43 })), "a month ago", "43 days = a month");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ d: 46 })), "2 months ago", "46 days = 2 months");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ d: 74 })), "2 months ago", "75 days = 2 months");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ d: 76 })), "3 months ago", "76 days = 3 months");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ M: 1 })), "a month ago", "1 month = a month");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ M: 5 })), "5 months ago", "5 months = 5 months");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ d: 315 })), "10 months ago", "315 days = 10 months");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ d: 344 })), "a year ago", "344 days = a year");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ d: 345 })), "a year ago", "345 days = a year");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ d: 548 })), "2 years ago", "548 days = 2 years");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ y: 1 })), "a year ago", "1 year = a year");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ y: 5 })), "5 years ago", "5 years = 5 years");
     });
 
     it("instance locale used with from", () => {
@@ -317,7 +317,7 @@ describe("locale", () => {
     });
 
     it("instance localeData", () => {
-        adone.date.defineLocale("dude", {week: {dow: 3}});
+        adone.date.defineLocale("dude", { week: { dow: 3 } });
         assert.equal(adone.date().locale("dude").localeData()._week.dow, 3);
         adone.date.defineLocale("dude", null);
     });
@@ -378,7 +378,7 @@ describe("locale", () => {
     it("meridiem parsing", () => {
         adone.date.locale("meridiem-parsing", {
             meridiemParse: /[bd]/i,
-            isPM (input) {
+            isPM(input) {
                 return input === "b";
             }
         });

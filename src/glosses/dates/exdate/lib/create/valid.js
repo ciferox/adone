@@ -8,7 +8,7 @@ const { extend } = adone.vendor.lodash;
 export function isValid(m) {
     if (is.nil(m._isValid)) {
         const flags = getParsingFlags(m);
-        const parsedParts = Array.prototype.some.call(flags.parsedDateParts, function (i) {
+        const parsedParts = Array.prototype.some.call(flags.parsedDateParts, (i) => {
             return is.exist(i);
         });
         let isNowValid = !isNaN(m._d.getTime()) &&
@@ -30,18 +30,18 @@ export function isValid(m) {
 
         if (is.nil(Object.isFrozen) || !Object.isFrozen(m)) {
             m._isValid = isNowValid;
-        }        else {
+        } else {
             return isNowValid;
         }
     }
     return m._isValid;
 }
 
-export function createInvalid (flags) {
+export function createInvalid(flags) {
     const m = createUTC(NaN);
     if (is.exist(flags)) {
         extend(getParsingFlags(m), flags);
-    }    else {
+    } else {
         getParsingFlags(m).userInvalidated = true;
     }
 

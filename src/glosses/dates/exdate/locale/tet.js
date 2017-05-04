@@ -41,8 +41,8 @@ export default ExDate.defineLocale("tet", {
         y: "tinan ida",
         yy: "tinan %d"
     },
-    ordinalParse: /\d{1,2}(st|nd|rd|th)/,
-    ordinal (number) {
+    dayOfMonthOrdinalParse: /\d{1,2}(st|nd|rd|th)/,
+    ordinal(number) {
         const b = number % 10;
         const output = (~~(number % 100 / 10) === 1) ? "th" :
             (b === 1) ? "st" :

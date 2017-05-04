@@ -44,18 +44,18 @@ export default ExDate.defineLocale("ss", {
     },
     meridiemParse: /ekuseni|emini|entsambama|ebusuku/,
     // eslint-disable-next-line no-unused-vars
-    meridiem (hours, minutes, isLower) {
+    meridiem(hours, minutes, isLower) {
         if (hours < 11) {
             return "ekuseni";
         } else if (hours < 15) {
             return "emini";
         } else if (hours < 19) {
             return "entsambama";
-        } else {
-            return "ebusuku";
-        }
+        } 
+        return "ebusuku";
+        
     },
-    meridiemHour (hour, meridiem) {
+    meridiemHour(hour, meridiem) {
         if (hour === 12) {
             hour = 0;
         }
@@ -70,7 +70,7 @@ export default ExDate.defineLocale("ss", {
             return hour + 12;
         }
     },
-    ordinalParse: /\d{1,2}/,
+    dayOfMonthOrdinalParse: /\d{1,2}/,
     ordinal: "%d",
     week: {
         dow: 1, // Monday is the first day of the week.

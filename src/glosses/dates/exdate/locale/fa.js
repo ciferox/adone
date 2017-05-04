@@ -4,16 +4,16 @@
 import ExDate from "..";
 
 const symbolMap = {
-    "1": "۱",
-    "2": "۲",
-    "3": "۳",
-    "4": "۴",
-    "5": "۵",
-    "6": "۶",
-    "7": "۷",
-    "8": "۸",
-    "9": "۹",
-    "0": "۰"
+    1: "۱",
+    2: "۲",
+    3: "۳",
+    4: "۴",
+    5: "۵",
+    6: "۶",
+    7: "۷",
+    8: "۸",
+    9: "۹",
+    0: "۰"
 };
 
 const numberMap = {
@@ -45,16 +45,16 @@ export default ExDate.defineLocale("fa", {
         LLLL: "dddd, D MMMM YYYY HH:mm"
     },
     meridiemParse: /قبل از ظهر|بعد از ظهر/,
-    isPM (input) {
+    isPM(input) {
         return /بعد از ظهر/.test(input);
     },
     // eslint-disable-next-line no-unused-vars
-    meridiem (hour, minute, isLower) {
+    meridiem(hour, minute, isLower) {
         if (hour < 12) {
             return "قبل از ظهر";
-        } else {
-            return "بعد از ظهر";
         }
+        return "بعد از ظهر";
+
     },
     calendar: {
         sameDay: "[امروز ساعت] LT",
@@ -67,7 +67,7 @@ export default ExDate.defineLocale("fa", {
     relativeTime: {
         future: "در %s",
         past: "%s پیش",
-        s: "چندین ثانیه",
+        s: "چند ثانیه",
         m: "یک دقیقه",
         mm: "%d دقیقه",
         h: "یک ساعت",
@@ -79,17 +79,17 @@ export default ExDate.defineLocale("fa", {
         y: "یک سال",
         yy: "%d سال"
     },
-    preparse (string) {
-        return string.replace(/[۰-۹]/g, function (match) {
+    preparse(string) {
+        return string.replace(/[۰-۹]/g, (match) => {
             return numberMap[match];
         }).replace(/،/g, ",");
     },
-    postformat (string) {
-        return string.replace(/\d/g, function (match) {
+    postformat(string) {
+        return string.replace(/\d/g, (match) => {
             return symbolMap[match];
         }).replace(/,/g, "،");
     },
-    ordinalParse: /\d{1,2}م/,
+    dayOfMonthOrdinalParse: /\d{1,2}م/,
     ordinal: "%dم",
     week: {
         dow: 6, // Saturday is the first day of the week.

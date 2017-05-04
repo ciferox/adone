@@ -21,15 +21,15 @@ export default ExDate.defineLocale("tzl", {
         LLLL: "dddd, [li] D. MMMM [dallas] YYYY HH.mm"
     },
     meridiemParse: /d\'o|d\'a/i,
-    isPM (input) {
-        return "d'o" === input.toLowerCase();
+    isPM(input) {
+        return input.toLowerCase() === "d'o";
     },
-    meridiem (hours, minutes, isLower) {
+    meridiem(hours, minutes, isLower) {
         if (hours > 11) {
             return isLower ? "d'o" : "D'O";
-        } else {
-            return isLower ? "d'a" : "D'A";
-        }
+        } 
+        return isLower ? "d'a" : "D'A";
+        
     },
     calendar: {
         sameDay: "[oxhi à] LT",
@@ -54,7 +54,7 @@ export default ExDate.defineLocale("tzl", {
         y: processRelativeTime,
         yy: processRelativeTime
     },
-    ordinalParse: /\d{1,2}\./,
+    dayOfMonthOrdinalParse: /\d{1,2}\./,
     ordinal: "%d.",
     week: {
         dow: 1, // Monday is the first day of the week.
@@ -64,17 +64,17 @@ export default ExDate.defineLocale("tzl", {
 
 function processRelativeTime(number, withoutSuffix, key, isFuture) {
     const format = {
-        "s": ["viensas secunds", "'iensas secunds"],
-        "m": ["'n míut", "'iens míut"],
-        "mm": [number + " míuts", "" + number + " míuts"],
-        "h": ["'n þora", "'iensa þora"],
-        "hh": [number + " þoras", "" + number + " þoras"],
-        "d": ["'n ziua", "'iensa ziua"],
-        "dd": [number + " ziuas", "" + number + " ziuas"],
-        "M": ["'n mes", "'iens mes"],
-        "MM": [number + " mesen", "" + number + " mesen"],
-        "y": ["'n ar", "'iens ar"],
-        "yy": [number + " ars", "" + number + " ars"]
+        s: ["viensas secunds", "'iensas secunds"],
+        m: ["'n míut", "'iens míut"],
+        mm: [`${number} míuts`, `${String(number)} míuts`],
+        h: ["'n þora", "'iensa þora"],
+        hh: [`${number} þoras`, `${String(number)} þoras`],
+        d: ["'n ziua", "'iensa ziua"],
+        dd: [`${number} ziuas`, `${String(number)} ziuas`],
+        M: ["'n mes", "'iens mes"],
+        MM: [`${number} mesen`, `${String(number)} mesen`],
+        y: ["'n ar", "'iens ar"],
+        yy: [`${number} ars`, `${String(number)} ars`]
     };
     return isFuture ? format[key][0] : (withoutSuffix ? format[key][0] : format[key][1]);
 }

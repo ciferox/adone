@@ -40,8 +40,8 @@ export default ExDate.defineLocale("tl-ph", {
         y: "isang taon",
         yy: "%d taon"
     },
-    ordinalParse: /\d{1,2}/,
-    ordinal (number) {
+    dayOfMonthOrdinalParse: /\d{1,2}/,
+    ordinal(number) {
         return number;
     },
     week: {

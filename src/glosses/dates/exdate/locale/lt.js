@@ -4,23 +4,23 @@
 import ExDate from "..";
 
 const units = {
-    "m": "minutė_minutės_minutę",
-    "mm": "minutės_minučių_minutes",
-    "h": "valanda_valandos_valandą",
-    "hh": "valandos_valandų_valandas",
-    "d": "diena_dienos_dieną",
-    "dd": "dienos_dienų_dienas",
-    "M": "mėnuo_mėnesio_mėnesį",
-    "MM": "mėnesiai_mėnesių_mėnesius",
-    "y": "metai_metų_metus",
-    "yy": "metai_metų_metus"
+    m: "minutė_minutės_minutę",
+    mm: "minutės_minučių_minutes",
+    h: "valanda_valandos_valandą",
+    hh: "valandos_valandų_valandas",
+    d: "diena_dienos_dieną",
+    dd: "dienos_dienų_dienas",
+    M: "mėnuo_mėnesio_mėnesį",
+    MM: "mėnesiai_mėnesių_mėnesius",
+    y: "metai_metų_metus",
+    yy: "metai_metų_metus"
 };
 function translateSeconds(number, withoutSuffix, key, isFuture) {
     if (withoutSuffix) {
         return "kelios sekundės";
-    } else {
-        return isFuture ? "kelių sekundžių" : "kelias sekundes";
-    }
+    } 
+    return isFuture ? "kelių sekundžių" : "kelias sekundes";
+    
 }
 function translateSingular(number, withoutSuffix, key, isFuture) {
     return withoutSuffix ? forms(key)[0] : (isFuture ? forms(key)[1] : forms(key)[2]);
@@ -32,18 +32,18 @@ function forms(key) {
     return units[key].split("_");
 }
 function translate(number, withoutSuffix, key, isFuture) {
-    const result = number + " ";
+    const result = `${number} `;
     if (number === 1) {
         return result + translateSingular(number, withoutSuffix, key[0], isFuture);
     } else if (withoutSuffix) {
         return result + (special(number) ? forms(key)[1] : forms(key)[0]);
-    } else {
-        if (isFuture) {
-            return result + forms(key)[1];
-        } else {
-            return result + (special(number) ? forms(key)[1] : forms(key)[2]);
-        }
-    }
+    } 
+    if (isFuture) {
+        return result + forms(key)[1];
+    } 
+    return result + (special(number) ? forms(key)[1] : forms(key)[2]);
+        
+    
 }
 export default ExDate.defineLocale("lt", {
     months: {
@@ -95,9 +95,9 @@ export default ExDate.defineLocale("lt", {
         y: translateSingular,
         yy: translate
     },
-    ordinalParse: /\d{1,2}-oji/,
-    ordinal (number) {
-        return number + "-oji";
+    dayOfMonthOrdinalParse: /\d{1,2}-oji/,
+    ordinal(number) {
+        return `${number}-oji`;
     },
     week: {
         dow: 1, // Monday is the first day of the week.

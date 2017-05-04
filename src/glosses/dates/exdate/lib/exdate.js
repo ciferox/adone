@@ -32,26 +32,26 @@ function makeGetSet(unit, keepTime) {
             set(this, unit, value);
             hooks.updateOffset(this, keepTime);
             return this;
-        } else {
-            return get(this, unit);
         }
+        return get(this, unit);
+
     };
 }
 
 function get(mom, unit) {
     return mom.isValid() ?
-        mom._d["get" + (mom._isUTC ? "UTC" : "") + unit]() : NaN;
+        mom._d[`get${mom._isUTC ? "UTC" : ""}${unit}`]() : NaN;
 }
 
 function set(mom, unit, value) {
     if (mom.isValid()) {
-        mom._d["set" + (mom._isUTC ? "UTC" : "") + unit](value);
+        mom._d[`set${mom._isUTC ? "UTC" : ""}${unit}`](value);
     }
 }
 
 function createAdder(direction) {
     return function (val, period) {
-        val = is.string(val) ? +val : val;
+        val = is.string(val) ? Number(val) : val;
         const dur = new Duration(val, period);
         addSubtract(this, dur, direction);
         return this;
@@ -181,7 +181,7 @@ function setMonth(mom, value) {
     }
 
     const dayOfMonth = Math.min(mom.date(), daysInMonth(mom.year(), value));
-    mom._d["set" + (mom._isUTC ? "UTC" : "") + "Month"](value, dayOfMonth);
+    mom._d[`set${mom._isUTC ? "UTC" : ""}Month`](value, dayOfMonth);
     return mom;
 }
 
@@ -214,7 +214,7 @@ function getDateOffset(m) {
 }
 
 export const now = function () {
-    return Date.now ? Date.now() : +(new Date());
+    return Date.now ? Date.now() : Number(new Date());
 };
 
 // Pick a exdate m from exdates so that m[fn](other) is true for all
@@ -407,17 +407,18 @@ class ExDate {
     }
 
     toISOString() {
+        if (!this.isValid()) {
+            return null;
+        }
         const m = this.clone().utc();
-        if (0 < m.year() && m.year() <= 9999) {
-            if (adone.is.function(Date.prototype.toISOString)) {
-                // native implementation is ~50x faster, use it when we can
-                return this.toDate().toISOString();
-            } else {
-                return formatExDate(m, "YYYY-MM-DD[T]HH:mm:ss.SSS[Z]");
-            }
-        } else {
+        if (m.year() < 0 || m.year() > 9999) {
             return formatExDate(m, "YYYYYY-MM-DD[T]HH:mm:ss.SSS[Z]");
         }
+        if (adone.is.function(Date.prototype.toISOString)) {
+            // native implementation is ~50x faster, use it when we can
+            return this.toDate().toISOString();
+        }
+        return formatExDate(m, "YYYY-MM-DD[T]HH:mm:ss.SSS[Z]");
     }
 
     /**
@@ -428,7 +429,7 @@ class ExDate {
      */
     inspect() {
         if (!this.isValid()) {
-            return "adone.date.invalid(/* " + this._i + " */)";
+            return `adone.date.invalid(/* ${this._i} */)`;
         }
         let func = "adone.date";
         let zone = "";
@@ -436,10 +437,10 @@ class ExDate {
             func = this.utcOffset() === 0 ? "adone.date.utc" : "adone.date.parseZone";
             zone = "Z";
         }
-        const prefix = "[" + func + "(\"]";
-        const year = (0 < this.year() && this.year() <= 9999) ? "YYYY" : "YYYYYY";
+        const prefix = `[${func}("]`;
+        const year = (this.year() >= 0 && this.year() <= 9999) ? "YYYY" : "YYYYYY";
         const datetime = "-MM-DD[T]HH:mm:ss.SSS";
-        const suffix = zone + "[\")]";
+        const suffix = `${zone}[")]`;
 
         return this.format(prefix + year + datetime + suffix);
     }
@@ -457,9 +458,9 @@ class ExDate {
                 ((is.exdate(time) && time.isValid()) ||
                  createLocal(time).isValid())) {
             return new Duration({ to: this, from: time }).locale(this.locale()).humanize(!withoutSuffix);
-        } else {
-            return this.localeData().invalidDate();
         }
+        return this.localeData().invalidDate();
+
     }
 
     fromNow(withoutSuffix) {
@@ -471,9 +472,9 @@ class ExDate {
                 ((is.exdate(time) && time.isValid()) ||
                  createLocal(time).isValid())) {
             return new Duration({ from: this, to: time }).locale(this.locale()).humanize(!withoutSuffix);
-        } else {
-            return this.localeData().invalidDate();
         }
+        return this.localeData().invalidDate();
+
     }
 
     toNow(withoutSuffix) {
@@ -500,9 +501,9 @@ class ExDate {
         units = normalizeUnits(!is.undefined(units) ? units : "millisecond");
         if (units === "millisecond") {
             return this.valueOf() > localInput.valueOf();
-        } else {
-            return localInput.valueOf() < this.clone().startOf(units).valueOf();
         }
+        return localInput.valueOf() < this.clone().startOf(units).valueOf();
+
     }
 
     isBefore(input, units) {
@@ -513,9 +514,9 @@ class ExDate {
         units = normalizeUnits(!is.undefined(units) ? units : "millisecond");
         if (units === "millisecond") {
             return this.valueOf() < localInput.valueOf();
-        } else {
-            return this.clone().endOf(units).valueOf() < localInput.valueOf();
         }
+        return this.clone().endOf(units).valueOf() < localInput.valueOf();
+
     }
 
     isBetween(from, to, units, inclusivity) {
@@ -532,10 +533,10 @@ class ExDate {
         units = normalizeUnits(units || "millisecond");
         if (units === "millisecond") {
             return this.valueOf() === localInput.valueOf();
-        } else {
-            const inputMs = localInput.valueOf();
-            return this.clone().startOf(units).valueOf() <= inputMs && inputMs <= this.clone().endOf(units).valueOf();
         }
+        const inputMs = localInput.valueOf();
+        return this.clone().startOf(units).valueOf() <= inputMs && inputMs <= this.clone().endOf(units).valueOf();
+
     }
 
     isSameOrAfter(input, units) {
@@ -551,13 +552,13 @@ class ExDate {
 
         if (is.undefined(key)) {
             return this._locale._abbr;
-        } else {
-            newLocaleData = getLocale(key);
-            if (is.exist(newLocaleData)) {
-                this._locale = newLocaleData;
-            }
-            return this;
         }
+        newLocaleData = getLocale(key);
+        if (is.exist(newLocaleData)) {
+            this._locale = newLocaleData;
+        }
+        return this;
+
     }
 
     localeData() {
@@ -639,9 +640,9 @@ class ExDate {
     quarter(input) {
         if (is.nil(input)) {
             return Math.ceil((this.month() + 1) / 3);
-        } else {
-            return this.month((input - 1) * 3 + this.month() % 3);
         }
+        return this.month((input - 1) * 3 + this.month() % 3);
+
     }
 
     month(value) {
@@ -649,9 +650,9 @@ class ExDate {
             setMonth(this, value);
             hooks.updateOffset(this, true);
             return this;
-        } else {
-            return get(this, "Month");
         }
+        return get(this, "Month");
+
     }
 
     daysInMonth() {
@@ -676,9 +677,9 @@ class ExDate {
         if (is.exist(input)) {
             input = parseWeekday(input, this.localeData());
             return this.add(input - day, "d");
-        } else {
-            return day;
         }
+        return day;
+
     }
 
     weekday(input) {
@@ -701,9 +702,9 @@ class ExDate {
         if (is.exist(input)) {
             const weekday = parseIsoWeekday(input, this.localeData());
             return this.day(this.day() % 7 ? weekday : weekday - 7);
-        } else {
-            return this.day() || 7;
         }
+        return this.day() || 7;
+
     }
 
     dayOfYear(input) {
@@ -721,7 +722,7 @@ class ExDate {
     // a second time. In case it wants us to change the offset again
     // _changeInProgress == true case, then we have to adjust, because
     // there is no such time in the given timezone.
-    utcOffset(input, keepLocalTime) {
+    utcOffset(input, keepLocalTime, keepMinutes) {
         const offset = this._offset || 0;
         if (!this.isValid()) {
             return is.exist(input) ? this : NaN;
@@ -732,7 +733,7 @@ class ExDate {
                 if (input === null) {
                     return this;
                 }
-            } else if (Math.abs(input) < 16) {
+            } else if (Math.abs(input) < 16 && !keepMinutes) {
                 input = input * 60;
             }
             let localAdjust;
@@ -754,9 +755,9 @@ class ExDate {
                 }
             }
             return this;
-        } else {
-            return this._isUTC ? offset : getDateOffset(this);
         }
+        return this._isUTC ? offset : getDateOffset(this);
+
     }
 
     utc(keepLocalTime) {
@@ -777,12 +778,12 @@ class ExDate {
 
     parseZone() {
         if (is.exist(this._tzm)) {
-            this.utcOffset(this._tzm);
+            this.utcOffset(this._tzm, false, true);
         } else if (is.string(this._i)) {
             const tZone = offsetFromString(matchOffset, this._i);
             if (is.exist(tZone)) {
                 this.utcOffset(tZone);
-            }        else {
+            } else {
                 this.utcOffset(0, true);
             }
         }
@@ -849,20 +850,20 @@ class ExDate {
 
 adone.tag.set(ExDate, adone.tag.EXDATE);
 
-ExDate.prototype.isUTC    = ExDate.prototype.isUtc;
-ExDate.prototype.add      = createAdder(1, "add");
+ExDate.prototype.isUTC = ExDate.prototype.isUtc;
+ExDate.prototype.add = createAdder(1, "add");
 ExDate.prototype.subtract = createAdder(-1, "subtract");
 
 
 // Units
-ExDate.prototype.year        = makeGetSet("FullYear", true);
-ExDate.prototype.quarters    = ExDate.prototype.quarter;
-ExDate.prototype.date        = makeGetSet("Date", true);
-ExDate.prototype.days        = ExDate.prototype.day;
-ExDate.prototype.weeks       = ExDate.prototype.week;
-ExDate.prototype.isoWeeks    = ExDate.prototype.isoWeek;
-ExDate.prototype.minute      = ExDate.prototype.minutes = makeGetSet("Minutes", false);
-ExDate.prototype.second      = ExDate.prototype.seconds = makeGetSet("Seconds", false);
+ExDate.prototype.year = makeGetSet("FullYear", true);
+ExDate.prototype.quarters = ExDate.prototype.quarter;
+ExDate.prototype.date = makeGetSet("Date", true);
+ExDate.prototype.days = ExDate.prototype.day;
+ExDate.prototype.weeks = ExDate.prototype.week;
+ExDate.prototype.isoWeeks = ExDate.prototype.isoWeek;
+ExDate.prototype.minute = ExDate.prototype.minutes = makeGetSet("Minutes", false);
+ExDate.prototype.second = ExDate.prototype.seconds = makeGetSet("Seconds", false);
 ExDate.prototype.millisecond = ExDate.prototype.milliseconds = makeGetSet("Milliseconds", false);
 
 // Setting the hour should keep the time, because the user explicitly

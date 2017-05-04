@@ -53,8 +53,8 @@ export default ExDate.defineLocale("gd", {
         y: "bliadhna",
         yy: "%d bliadhna"
     },
-    ordinalParse: /\d{1,2}(d|na|mh)/,
-    ordinal (number) {
+    dayOfMonthOrdinalParse: /\d{1,2}(d|na|mh)/,
+    ordinal(number) {
         const output = number === 1 ? "d" : number % 10 === 2 ? "na" : "mh";
         return number + output;
     },

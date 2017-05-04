@@ -11,7 +11,7 @@ describe("ko", () => {
         let i;
 
         function equalTest(input, mmm, i) {
-            assert.equal(adone.date(input, mmm).month(), i, input + " should be month " + (i + 1));
+            assert.equal(adone.date(input, mmm).month(), i, `${input} should be month ${i + 1}`);
         }
         for (i = 0; i < 12; i++) {
             tests[i] = tests[i].split(" ");
@@ -57,7 +57,7 @@ describe("ko", () => {
             it = elements[i];
             actual = adone.date(it.expression, it.inputFormat).format(it.outputFormat);
 
-            assert.equal(actual, it.expected, "'" + it.outputFormat + "' of '" + it.expression + "' must be '" + it.expected + "' but was '" + actual + "'.");
+            assert.equal(actual, it.expected, `'${it.outputFormat}' of '${it.expression}' must be '${it.expected}' but was '${actual}'.`);
         }
     });
 
@@ -77,21 +77,21 @@ describe("ko", () => {
             ["s ss", "50 50"],
             ["a A", "오후 오후"],
             ["일년 중 DDDo째 되는 날", "일년 중 45일째 되는 날"],
-            ["LTS", "오후 3시 25분 50초"],
+            ["LTS", "오후 3:25:50"],
             ["L", "2010.02.14"],
             ["LL", "2010년 2월 14일"],
-            ["LLL", "2010년 2월 14일 오후 3시 25분"],
-            ["LLLL", "2010년 2월 14일 일요일 오후 3시 25분"],
-            ["l", "2010.2.14"],
+            ["LLL", "2010년 2월 14일 오후 3:25"],
+            ["LLLL", "2010년 2월 14일 일요일 오후 3:25"],
+            ["l", "2010.02.14"],
             ["ll", "2010년 2월 14일"],
-            ["lll", "2010년 2월 14일 오후 3시 25분"],
-            ["llll", "2010년 2월 14일 일 오후 3시 25분"]
+            ["lll", "2010년 2월 14일 오후 3:25"],
+            ["llll", "2010년 2월 14일 일요일 오후 3:25"]
         ];
         const b = adone.date(new Date(2010, 1, 14, 15, 25, 50, 125));
         let i;
 
         for (i = 0; i < a.length; i++) {
-            assert.equal(b.format(a[i][0]), a[i][1], a[i][0] + " ---> " + a[i][1]);
+            assert.equal(b.format(a[i][0]), a[i][1], `${a[i][0]} ---> ${a[i][1]}`);
         }
     });
 
@@ -155,12 +155,8 @@ describe("ko", () => {
         assert.equal(start.from(adone.date([2007, 1, 28]).add({
             s: 44
         }), true), "몇 초", "44초 = 몇 초");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            s: 45
-        }), true), "일분", "45초 = 일분");
-        assert.equal(start.from(adone.date([2007, 1, 28]).add({
-            s: 89
-        }), true), "일분", "89초 = 일분");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ s: 45 }), true), "1분", "45초 = 1분");
+        assert.equal(start.from(adone.date([2007, 1, 28]).add({ s: 89 }), true), "1분", "89초 = 1분");
         assert.equal(start.from(adone.date([2007, 1, 28]).add({
             s: 90
         }), true), "2분", "90초 = 2분");
@@ -259,22 +255,12 @@ describe("ko", () => {
     it("calendar day", () => {
         const a = adone.date().hours(12).minutes(0).seconds(0);
 
-        assert.equal(adone.date(a).calendar(), "오늘 오후 12시 0분", "today at the same time");
-        assert.equal(adone.date(a).add({
-            m: 25
-        }).calendar(), "오늘 오후 12시 25분", "Now plus 25 min");
-        assert.equal(adone.date(a).add({
-            h: 1
-        }).calendar(), "오늘 오후 1시 0분", "Now plus 1 hour");
-        assert.equal(adone.date(a).add({
-            d: 1
-        }).calendar(), "내일 오후 12시 0분", "tomorrow at the same time");
-        assert.equal(adone.date(a).subtract({
-            h: 1
-        }).calendar(), "오늘 오전 11시 0분", "Now minus 1 hour");
-        assert.equal(adone.date(a).subtract({
-            d: 1
-        }).calendar(), "어제 오후 12시 0분", "yesterday at the same time");
+        assert.equal(adone.date(a).calendar(), "오늘 오후 12:00", "today at the same time");
+        assert.equal(adone.date(a).add({ m: 25 }).calendar(), "오늘 오후 12:25", "Now plus 25 min");
+        assert.equal(adone.date(a).add({ h: 1 }).calendar(), "오늘 오후 1:00", "Now plus 1 hour");
+        assert.equal(adone.date(a).add({ d: 1 }).calendar(), "내일 오후 12:00", "tomorrow at the same time");
+        assert.equal(adone.date(a).subtract({ h: 1 }).calendar(), "오늘 오전 11:00", "Now minus 1 hour");
+        assert.equal(adone.date(a).subtract({ d: 1 }).calendar(), "어제 오후 12:00", "yesterday at the same time");
     });
 
     it("calendar next week", () => {
@@ -285,11 +271,11 @@ describe("ko", () => {
             m = adone.date().add({
                 d: i
             });
-            assert.equal(m.calendar(), m.format("dddd LT"), "Today + " + i + " days current time");
+            assert.equal(m.calendar(), m.format("dddd LT"), `Today + ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("dddd LT"), "Today + " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format("dddd LT"), `Today + ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("dddd LT"), "Today + " + i + " days end of day");
+            assert.equal(m.calendar(), m.format("dddd LT"), `Today + ${i} days end of day`);
         }
     });
 
@@ -301,11 +287,11 @@ describe("ko", () => {
             m = adone.date().subtract({
                 d: i
             });
-            assert.equal(m.calendar(), m.format("지난주 dddd LT"), "Today - " + i + " days current time");
+            assert.equal(m.calendar(), m.format("지난주 dddd LT"), `Today - ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("지난주 dddd LT"), "Today - " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format("지난주 dddd LT"), `Today - ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("지난주 dddd LT"), "Today - " + i + " days end of day");
+            assert.equal(m.calendar(), m.format("지난주 dddd LT"), `Today - ${i} days end of day`);
         }
     });
 

@@ -13,11 +13,11 @@ export default ExDate.defineLocale("sq", {
     weekdaysMin: "D_H_Ma_Më_E_P_Sh".split("_"),
     weekdaysParseExact: true,
     meridiemParse: /PD|MD/,
-    isPM (input) {
+    isPM(input) {
         return input.charAt(0) === "M";
     },
     // eslint-disable-next-line no-unused-vars
-    meridiem (hours, minutes, isLower) {
+    meridiem(hours, minutes, isLower) {
         return hours < 12 ? "PD" : "MD";
     },
     longDateFormat: {
@@ -51,7 +51,7 @@ export default ExDate.defineLocale("sq", {
         y: "një vit",
         yy: "%d vite"
     },
-    ordinalParse: /\d{1,2}\./,
+    dayOfMonthOrdinalParse: /\d{1,2}\./,
     ordinal: "%d.",
     week: {
         dow: 1, // Monday is the first day of the week.

@@ -37,7 +37,7 @@ describe("utc offset", () => {
         let i;
         for (i = -15; i <= 15; ++i) {
             assert.equal(adone.date().utcOffset(i).utcOffset(), i * 60,
-                    "" + i + " -> " + i * 60);
+                    `${String(i)} -> ${i * 60}`);
         }
         assert.equal(adone.date().utcOffset(-16).utcOffset(), -16, "-16 -> -16");
         assert.equal(adone.date().utcOffset(16).utcOffset(), 16, "16 -> 16");
@@ -105,17 +105,17 @@ describe("utc offset", () => {
         const zoneE = adone.date(zoneA);
 
         zoneB.utc();
-        assert.equal(+zoneA, +zoneB, "adone.date should equal adone.date.utc");
+        assert.equal(Number(zoneA), Number(zoneB), "adone.date should equal adone.date.utc");
 
         zoneC.utcOffset(60);
-        assert.equal(+zoneA, +zoneC, "adone.date should equal adone.date.utcOffset(60)");
+        assert.equal(Number(zoneA), Number(zoneC), "adone.date should equal adone.date.utcOffset(60)");
 
         zoneD.utcOffset(-480);
-        assert.equal(+zoneA, +zoneD,
+        assert.equal(Number(zoneA), Number(zoneD),
                 "adone.date should equal adone.date.utcOffset(-480)");
 
         zoneE.utcOffset(-1000);
-        assert.equal(+zoneA, +zoneE,
+        assert.equal(Number(zoneA), Number(zoneE),
                 "adone.date should equal adone.date.utcOffset(-1000)");
     });
 
@@ -125,7 +125,7 @@ describe("utc offset", () => {
 
         adone.date.updateOffset = function (mom, keepTime) {
             if (mom.__doChange) {
-                if (+mom > 962409600000) {
+                if (Number(mom) > 962409600000) {
                     mom.utcOffset(-120, keepTime);
                 } else {
                     mom.utcOffset(-60, keepTime);
@@ -165,23 +165,23 @@ describe("utc offset", () => {
     it("getters", () => {
         const a = adone.date.utc([2012, 0, 1, 0, 0, 0]);
 
-        assert.equal(a.clone().utcOffset(-120).year(),  2011, "should get year correctly");
-        assert.equal(a.clone().utcOffset(-120).month(),   11, "should get month correctly");
-        assert.equal(a.clone().utcOffset(-120).date(),    31, "should get date correctly");
-        assert.equal(a.clone().utcOffset(-120).hour(),    22, "should get hour correctly");
-        assert.equal(a.clone().utcOffset(-120).minute(),   0, "should get minute correctly");
+        assert.equal(a.clone().utcOffset(-120).year(), 2011, "should get year correctly");
+        assert.equal(a.clone().utcOffset(-120).month(), 11, "should get month correctly");
+        assert.equal(a.clone().utcOffset(-120).date(), 31, "should get date correctly");
+        assert.equal(a.clone().utcOffset(-120).hour(), 22, "should get hour correctly");
+        assert.equal(a.clone().utcOffset(-120).minute(), 0, "should get minute correctly");
 
-        assert.equal(a.clone().utcOffset(120).year(),  2012, "should get year correctly");
-        assert.equal(a.clone().utcOffset(120).month(),    0, "should get month correctly");
-        assert.equal(a.clone().utcOffset(120).date(),     1, "should get date correctly");
-        assert.equal(a.clone().utcOffset(120).hour(),     2, "should get hour correctly");
-        assert.equal(a.clone().utcOffset(120).minute(),   0, "should get minute correctly");
+        assert.equal(a.clone().utcOffset(120).year(), 2012, "should get year correctly");
+        assert.equal(a.clone().utcOffset(120).month(), 0, "should get month correctly");
+        assert.equal(a.clone().utcOffset(120).date(), 1, "should get date correctly");
+        assert.equal(a.clone().utcOffset(120).hour(), 2, "should get hour correctly");
+        assert.equal(a.clone().utcOffset(120).minute(), 0, "should get minute correctly");
 
-        assert.equal(a.clone().utcOffset(90).year(),  2012, "should get year correctly");
-        assert.equal(a.clone().utcOffset(90).month(),    0, "should get month correctly");
-        assert.equal(a.clone().utcOffset(90).date(),     1, "should get date correctly");
-        assert.equal(a.clone().utcOffset(90).hour(),     1, "should get hour correctly");
-        assert.equal(a.clone().utcOffset(90).minute(),  30, "should get minute correctly");
+        assert.equal(a.clone().utcOffset(90).year(), 2012, "should get year correctly");
+        assert.equal(a.clone().utcOffset(90).month(), 0, "should get month correctly");
+        assert.equal(a.clone().utcOffset(90).date(), 1, "should get date correctly");
+        assert.equal(a.clone().utcOffset(90).hour(), 1, "should get hour correctly");
+        assert.equal(a.clone().utcOffset(90).minute(), 30, "should get minute correctly");
     });
 
     it("from", () => {
@@ -226,9 +226,9 @@ describe("utc offset", () => {
         assert.equal(zoneA.unix(), zoneC.unix(), "adone.date#unix should be the same in all zones");
         assert.equal(zoneA.unix(), zoneD.unix(), "adone.date#unix should be the same in all zones");
 
-        assert.equal(+zoneA, +zoneB, "adone.date#valueOf should be the same in all zones");
-        assert.equal(+zoneA, +zoneC, "adone.date#valueOf should be the same in all zones");
-        assert.equal(+zoneA, +zoneD, "adone.date#valueOf should be the same in all zones");
+        assert.equal(Number(zoneA), Number(zoneB), "adone.date#valueOf should be the same in all zones");
+        assert.equal(Number(zoneA), Number(zoneC), "adone.date#valueOf should be the same in all zones");
+        assert.equal(Number(zoneA), Number(zoneD), "adone.date#valueOf should be the same in all zones");
     });
 
     it("cloning", () => {
@@ -263,7 +263,7 @@ describe("utc offset", () => {
     it("reset offset with adone.date#utc", () => {
         const a = adone.date.utc([2012]).utcOffset(-480);
 
-        assert.equal(a.clone().hour(),      16, "different utc offset should have different hour");
+        assert.equal(a.clone().hour(), 16, "different utc offset should have different hour");
         assert.equal(a.clone().utc().hour(), 0, "calling adone.date#utc should reset the offset");
     });
 
@@ -279,9 +279,9 @@ describe("utc offset", () => {
         const zoneC = adone.date(zoneA).utcOffset(-360).toDate();
         const zoneD = adone.date(zoneA).utcOffset(690).toDate();
 
-        assert.equal(+zoneA, +zoneB, "adone.date#toDate should output a date with the right unix timestamp");
-        assert.equal(+zoneA, +zoneC, "adone.date#toDate should output a date with the right unix timestamp");
-        assert.equal(+zoneA, +zoneD, "adone.date#toDate should output a date with the right unix timestamp");
+        assert.equal(Number(zoneA), Number(zoneB), "adone.date#toDate should output a date with the right unix timestamp");
+        assert.equal(Number(zoneA), Number(zoneC), "adone.date#toDate should output a date with the right unix timestamp");
+        assert.equal(Number(zoneA), Number(zoneD), "adone.date#toDate should output a date with the right unix timestamp");
     });
 
     it("same / before / after", () => {
@@ -364,8 +364,8 @@ describe("utc offset", () => {
             }
         };
 
-        assert.ok(!adone.date().month(0).isDST(),  "Jan should not be summer dst");
-        assert.ok(adone.date().month(6).isDST(),   "Jul should be summer dst");
+        assert.ok(!adone.date().month(0).isDST(), "Jan should not be summer dst");
+        assert.ok(adone.date().month(6).isDST(), "Jul should be summer dst");
         assert.ok(!adone.date().month(11).isDST(), "Dec should not be summer dst");
 
         adone.date.updateOffset = function (mom) {
@@ -376,7 +376,7 @@ describe("utc offset", () => {
             }
         };
 
-        assert.ok(adone.date().month(0).isDST(),  "Jan should be winter dst");
+        assert.ok(adone.date().month(0).isDST(), "Jan should be winter dst");
         assert.ok(!adone.date().month(6).isDST(), "Jul should not be winter dst");
         assert.ok(adone.date().month(11).isDST(), "Dec should be winter dst");
 
@@ -384,14 +384,14 @@ describe("utc offset", () => {
     });
 
     it("zone names", () => {
-        assert.equal(adone.date().zoneAbbr(),   "", "Local zone abbr should be empty");
-        assert.equal(adone.date().format("z"),  "", "Local zone formatted abbr should be empty");
-        assert.equal(adone.date().zoneName(),   "", "Local zone name should be empty");
+        assert.equal(adone.date().zoneAbbr(), "", "Local zone abbr should be empty");
+        assert.equal(adone.date().format("z"), "", "Local zone formatted abbr should be empty");
+        assert.equal(adone.date().zoneName(), "", "Local zone name should be empty");
         assert.equal(adone.date().format("zz"), "", "Local zone formatted name should be empty");
 
-        assert.equal(adone.date.utc().zoneAbbr(),   "UTC", "UTC zone abbr should be UTC");
-        assert.equal(adone.date.utc().format("z"),  "UTC", "UTC zone formatted abbr should be UTC");
-        assert.equal(adone.date.utc().zoneName(),   "Coordinated Universal Time", "UTC zone abbr should be Coordinated Universal Time");
+        assert.equal(adone.date.utc().zoneAbbr(), "UTC", "UTC zone abbr should be UTC");
+        assert.equal(adone.date.utc().format("z"), "UTC", "UTC zone formatted abbr should be UTC");
+        assert.equal(adone.date.utc().zoneName(), "Coordinated Universal Time", "UTC zone abbr should be Coordinated Universal Time");
         assert.equal(adone.date.utc().format("zz"), "Coordinated Universal Time", "UTC zone formatted abbr should be Coordinated Universal Time");
     });
 

@@ -5,16 +5,16 @@
 import ExDate from "..";
 
 const symbolMap = {
-    "1": "१",
-    "2": "२",
-    "3": "३",
-    "4": "४",
-    "5": "५",
-    "6": "६",
-    "7": "७",
-    "8": "८",
-    "9": "९",
-    "0": "०"
+    1: "१",
+    2: "२",
+    3: "३",
+    4: "४",
+    5: "५",
+    6: "६",
+    7: "७",
+    8: "८",
+    9: "९",
+    0: "०"
 };
 
 const numberMap = {
@@ -47,7 +47,7 @@ function relativeTimeMr(number, withoutSuffix, string, isFuture) {
             case "y": output = "एक वर्ष"; break;
             case "yy": output = "%d वर्षे"; break;
         }
-    }    else {
+    } else {
         switch (string) {
             case "s": output = "काही सेकंदां"; break;
             case "m": output = "एका मिनिटा"; break;
@@ -103,18 +103,18 @@ export default ExDate.defineLocale("mr", {
         y: relativeTimeMr,
         yy: relativeTimeMr
     },
-    preparse (string) {
-        return string.replace(/[१२३४५६७८९०]/g, function (match) {
+    preparse(string) {
+        return string.replace(/[१२३४५६७८९०]/g, (match) => {
             return numberMap[match];
         });
     },
-    postformat (string) {
-        return string.replace(/\d/g, function (match) {
+    postformat(string) {
+        return string.replace(/\d/g, (match) => {
             return symbolMap[match];
         });
     },
     meridiemParse: /रात्री|सकाळी|दुपारी|सायंकाळी/,
-    meridiemHour (hour, meridiem) {
+    meridiemHour(hour, meridiem) {
         if (hour === 12) {
             hour = 0;
         }
@@ -129,7 +129,7 @@ export default ExDate.defineLocale("mr", {
         }
     },
     // eslint-disable-next-line no-unused-vars
-    meridiem (hour, minute, isLower) {
+    meridiem(hour, minute, isLower) {
         if (hour < 4) {
             return "रात्री";
         } else if (hour < 10) {
@@ -138,9 +138,9 @@ export default ExDate.defineLocale("mr", {
             return "दुपारी";
         } else if (hour < 20) {
             return "सायंकाळी";
-        } else {
-            return "रात्री";
-        }
+        } 
+        return "रात्री";
+        
     },
     week: {
         dow: 0, // Sunday is the first day of the week.

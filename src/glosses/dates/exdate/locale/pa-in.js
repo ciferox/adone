@@ -4,16 +4,16 @@
 import ExDate from "..";
 
 const symbolMap = {
-    "1": "੧",
-    "2": "੨",
-    "3": "੩",
-    "4": "੪",
-    "5": "੫",
-    "6": "੬",
-    "7": "੭",
-    "8": "੮",
-    "9": "੯",
-    "0": "੦"
+    1: "੧",
+    2: "੨",
+    3: "੩",
+    4: "੪",
+    5: "੫",
+    6: "੬",
+    7: "੭",
+    8: "੮",
+    9: "੯",
+    0: "੦"
 };
 
 const numberMap = {
@@ -67,20 +67,20 @@ export default ExDate.defineLocale("pa-in", {
         y: "ਇੱਕ ਸਾਲ",
         yy: "%d ਸਾਲ"
     },
-    preparse (string) {
-        return string.replace(/[੧੨੩੪੫੬੭੮੯੦]/g, function (match) {
+    preparse(string) {
+        return string.replace(/[੧੨੩੪੫੬੭੮੯੦]/g, (match) => {
             return numberMap[match];
         });
     },
-    postformat (string) {
-        return string.replace(/\d/g, function (match) {
+    postformat(string) {
+        return string.replace(/\d/g, (match) => {
             return symbolMap[match];
         });
     },
     // Punjabi notation for meridiems are quite fuzzy in practice. While there exists
     // a rigid notion of a 'Pahar' it is not used as rigidly in modern Punjabi.
     meridiemParse: /ਰਾਤ|ਸਵੇਰ|ਦੁਪਹਿਰ|ਸ਼ਾਮ/,
-    meridiemHour (hour, meridiem) {
+    meridiemHour(hour, meridiem) {
         if (hour === 12) {
             hour = 0;
         }
@@ -95,7 +95,7 @@ export default ExDate.defineLocale("pa-in", {
         }
     },
     // eslint-disable-next-line no-unused-vars
-    meridiem (hour, minute, isLower) {
+    meridiem(hour, minute, isLower) {
         if (hour < 4) {
             return "ਰਾਤ";
         } else if (hour < 10) {
@@ -104,9 +104,9 @@ export default ExDate.defineLocale("pa-in", {
             return "ਦੁਪਹਿਰ";
         } else if (hour < 20) {
             return "ਸ਼ਾਮ";
-        } else {
-            return "ਰਾਤ";
-        }
+        } 
+        return "ਰਾਤ";
+        
     },
     week: {
         dow: 0, // Sunday is the first day of the week.
