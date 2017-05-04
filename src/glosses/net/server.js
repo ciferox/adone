@@ -1,7 +1,7 @@
 const { is, net: { Socket } } = adone;
 
 export default class Server extends adone.EventEmitter {
-    constructor(options = { }) {
+    constructor(options = {}) {
         super();
         this.option = new adone.configuration.Configuration();
         this.option.assign({
@@ -13,7 +13,7 @@ export default class Server extends adone.EventEmitter {
         this._sockets = [];
         this._peerFactory = this.option.peerFactory;
         if (!is.function(this._peerFactory)) {
-            this._peerFactory = (socket, param) => new Socket(Object.assign( { socket }, param));
+            this._peerFactory = (socket, param) => new Socket(Object.assign({ socket }, param));
         }
         const onNewConn = this.option.сonnectionHandler;
         if (is.function(onNewConn)) {
@@ -29,10 +29,10 @@ export default class Server extends adone.EventEmitter {
                 protocol += ":";
             }
             if (is.string(addr)) {
-                this._address = adone.o( { port: addr, address: null, family: null });
+                this._address = { port: addr, address: null, family: null };
                 this._address.full = adone.util.humanizeAddr(protocol, addr);
             } else {
-                this._address = adone.o( { port: addr.port, address: addr.address, family: addr.family });
+                this._address = { port: addr.port, address: addr.address, family: addr.family };
                 this._address.full = adone.util.humanizeAddr(protocol, addr.port, addr.address);
             }
             this._address.protocol = protocol;
@@ -40,7 +40,7 @@ export default class Server extends adone.EventEmitter {
         return this._address;
     }
 
-    bind(options = { }) {
+    bind(options = {}) {
         if (is.null(this.server)) {
             [options.port, options.host] = adone.net.util.normalizeAddr(options.port, options.host, this.option.defaultPort);
 
@@ -72,8 +72,8 @@ export default class Server extends adone.EventEmitter {
             };
 
             if (options.useTls) {
-                options.requestCert = !!options.requestCert;
-                options.rejectUnauthorized = !!options.rejectUnauthorized;
+                options.requestCert = Boolean(options.requestCert);
+                options.rejectUnauthorized = Boolean(options.rejectUnauthorized);
                 this.server = adone.std.tls.createServer(options, onConnect);
             } else {
                 this.server = adone.std.net.createServer(onConnect);
@@ -112,9 +112,8 @@ export default class Server extends adone.EventEmitter {
                 });
                 this.server.listen(options.port, options.host, backlog, resolve);
             });
-        } else {
-            throw new adone.x.Bind(`already bound on address ${this.address().full}`);
         }
+        throw new adone.x.Bind(`already bound on address ${this.address().full}`);
     }
 
     disconnect() {

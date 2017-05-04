@@ -31,8 +31,8 @@ const bundleTemplate = `
 `;
 
 export default class Bundler {
-    constructor({ dir }) {
-        this.inspector = new adone.meta.code.Inspector({ dir });
+    constructor() {
+        this.inspector = new adone.meta.code.Inspector();
         this._refExprs = [];
     }
     async prepare(name) {

@@ -17,11 +17,11 @@ adone.lazify({
     Server: "./server",
     ClientParser: ["./client", (mod) => mod.Parser],
     Client: "./client",
-    createServer: () => (opts, listener) => new adone.net.proxy.socks.Server(opts, listener),
-    createConnection: () => (options, cb) => {
+    createServer: () => (options, listener) => new adone.net.proxy.socks.Server(options, listener),
+    createConnection: () => (options, callback) => {
         const client = new adone.net.proxy.socks.Client(options);
         process.nextTick(() => {
-            client.connect(options, cb);
+            client.connect(options, callback);
         });
         return client;
     },

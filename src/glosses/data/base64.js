@@ -41,12 +41,12 @@ export const decodeCharCode = (charCode) => {
     }
 
     // 62: +
-    if (charCode == plus) {
+    if (charCode === plus) {
         return 62;
     }
 
     // 63: /
-    if (charCode == slash) {
+    if (charCode === slash) {
         return 63;
     }
 

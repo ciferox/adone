@@ -1,9 +1,8 @@
 const { is, std } = adone;
 
 export class Inspector {
-    constructor({ dir = "lib" }) {
-        this.dir = dir;
-        this.path = std.path.join(adone.appinstance.adoneRootPath, this.dir);
+    constructor() {
+        this.path = std.path.join(adone.appinstance.adoneRootPath, "src");
         this.namespaces = new Map();
     }
 

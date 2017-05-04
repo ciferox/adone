@@ -1,3 +1,4 @@
+const { is } = adone;
 const { REP, CMD, ATYP } = adone.net.proxy.socks.consts;
 
 const STATE_VERSION = 0;
@@ -328,16 +329,15 @@ const proxySocket = (socket, req) => {
 };
 
 export default class Server extends adone.EventEmitter {
-    constructor(options, listener) {
+    constructor(options = {}, listener) {
         super();
-        if (typeof options === "function") {
-            this.on("connection", options);
-            options = undefined;
-        } else if (typeof listener === "function") {
+        if (is.function(listener)) {
             this.on("connection", listener);
         }
 
-        this._srv = new adone.std.net.Server((socket) => {
+        this._sockets = [];
+
+        this.server = new adone.std.net.Server((socket) => {
             if (this._connections >= this.maxConnections) {
                 socket.destroy();
                 return;
@@ -355,7 +355,7 @@ export default class Server extends adone.EventEmitter {
             this.emit("close");
         });
         this._auths = [];
-        if (options && Array.isArray(options.auths)) {
+        if (is.array(options.auths)) {
             for (let i = 0, len = options.auths.length; i < len; ++i) {
                 this.useAuth(options.auths[i]);
             }
@@ -363,7 +363,7 @@ export default class Server extends adone.EventEmitter {
 
         this._connections = 0;
         this.maxConnections = Infinity;
-    }
+    } 
 
     _onConnection(socket) {
         const parser = new Parser(socket);
@@ -450,7 +450,7 @@ export default class Server extends adone.EventEmitter {
     }
 
     useAuth(auth) {
-        if (typeof auth !== "object" || typeof auth.server !== "function" || auth.server.length !== 2) {
+        if (!is.object(auth) || !is.function(auth.server) || auth.server.length !== 2) {
             throw new Error("Invalid authentication handler");
         } else if (this._auths.length >= 255) {
             throw new Error("Too many authentication handlers (limited to 255).");
@@ -462,28 +462,28 @@ export default class Server extends adone.EventEmitter {
     }
 
     listen(...args) {
-        this._srv.listen.apply(this._srv, args);
+        this.server.listen.apply(this.server, args);
         return this;
     }
 
     address() {
-        return this._srv.address();
+        return this.server.address();
     }
 
     getConnections(cb) {
-        this._srv.getConnections(cb);
+        this.server.getConnections(cb);
     }
 
     close(cb) {
-        this._srv.close(cb);
+        this.server.close(cb);
         return this;
     }
 
     ref() {
-        this._srv.ref();
+        this.server.ref();
     }
 
     unref() {
-        this._srv.unref();
+        this.server.unref();
     }
 }

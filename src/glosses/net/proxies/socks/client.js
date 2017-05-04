@@ -1,3 +1,4 @@
+const { is } = adone;
 const { REP, CMD, ATYP } = adone.net.proxy.socks.consts;
 
 const STATE_VERSION = 0;
@@ -233,7 +234,7 @@ export class Parser extends adone.EventEmitter {
 }
 
 export default class Client extends adone.EventEmitter {
-    constructor(options) {
+    constructor(options = {}) {
         super();
 
         this._hadError = false;
@@ -252,12 +253,12 @@ export default class Client extends adone.EventEmitter {
 
         this._parser = undefined;
 
-        this._proxyaddr = options && options.proxyHost;
-        this._proxyport = options && options.proxyPort;
+        this._proxyAddr = options.proxyHost;
+        this._proxyport = options.proxyPort;
 
-        if (typeof this._proxyaddr !== "string") {
-            this._proxyaddr = "localhost";
-        } else if (typeof this._proxyport !== "number") {
+        if (!is.string(this._proxyAddr)) {
+            this._proxyAddr = "localhost";
+        } else if (!is.number(this._proxyport)) {
             this._proxyport = 1080;
         }
 

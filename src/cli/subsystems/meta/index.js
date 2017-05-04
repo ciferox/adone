@@ -91,10 +91,6 @@ export default class extends adone.application.Subsystem {
                     ],
                     options: [
                         {
-                            name: "--src",
-                            help: "Use 'src' directory"
-                        },
-                        {
                             name: "--out",
                             type: String,
                             help: "Path where resulting code will be placed"
@@ -295,9 +291,9 @@ export default class extends adone.application.Subsystem {
         return 0;
     }
 
-    async bundleCommand(args, opts) {
+    async bundleCommand(args) {
         try {
-            const bundler = new Bundler({ dir: (opts.get("src") ? "src" : "lib") });
+            const bundler = new Bundler();
             await bundler.prepare(args.get("name"));
             return 0;
 
