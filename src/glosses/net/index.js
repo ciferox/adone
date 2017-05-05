@@ -12,7 +12,8 @@ adone.lazify({
     }, null, require),
     proxy: () => adone.lazify({
         socks: "./proxies/socks",
-        http: "./proxies/http"
+        http: "./proxies/http",
+        shadowsocks: "./proxies/shadowsocks"
     }, null, require),
     ws: "./ws",
     mail: () => adone.lazify({
