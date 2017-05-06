@@ -1,4 +1,4 @@
-const { EventEmitter, util: { memcpy }, x, is } = adone;
+const { EventEmitter, util: { memcpy }, x, is, net: { proxy: { shadowsocks } } } = adone;
 
 const STATE_IV = 0;
 const STATE_HEADER_TYPE = 1;
@@ -27,7 +27,7 @@ export class Parser extends EventEmitter {
 
     _onData(chunk) {
         let i = 0;
-        const len = chunk.length;
+        let len = chunk.length;
         if (this._decipher) {
             chunk = this._decipher.update(chunk);
         }
@@ -44,6 +44,7 @@ export class Parser extends EventEmitter {
                         this._decipher = this._getDecipher(this._iv);
                         if (i !== chunk.length) {
                             chunk = this._decipher.update(chunk.slice(i));
+                            len = chunk.length;
                             i = 0;
                         }
                         this._state = STATE_HEADER_TYPE;
@@ -153,20 +154,6 @@ export class Parser extends EventEmitter {
     }
 }
 
-const ciphers = {
-    "aes-128-cfb": { key: 16, iv: 16 },
-    "aes-192-cfb": { key: 24, iv: 16 },
-    "aes-256-cfb": { key: 32, iv: 16 },
-    "bf-cfb": { key: 16, iv: 8 },
-    "camellia-128-cfb": { key: 16, iv: 16 },
-    "camellia-192-cfb": { key: 24, iv: 16 },
-    "camellia-256-cfb": { key: 32, iv: 16 },
-    "cast5-cfb": { key: 16, iv: 8 },
-    "des-cfb": { key: 8, iv: 8 },
-    "rc2-cfb": { key: 16, iv: 8 },
-    "seed-cfb": { key: 16, iv: 16 }
-};
-
 export class Server extends EventEmitter {
     constructor({
         password = null,
@@ -177,7 +164,7 @@ export class Server extends EventEmitter {
         if (!(is.string(password) || is.buffer(password)) || password.length === 0) {
             throw new x.InvalidArgument("Password must be a non-empty string/buffer");
         }
-        if (!ciphers[cipher]) {
+        if (!shadowsocks.c.ciphers[cipher]) {
             throw new x.InvalidArgument("Unknown cipher");
         }
         if (!is.null(iv) && (!(is.string(iv) || is.buffer(iv)) || iv.lentgh === 0)) {
@@ -185,14 +172,14 @@ export class Server extends EventEmitter {
         }
         super();
 
-        this.cipher = cipher;
-        ({ key: this.keyLength, iv: this.ivLength } = ciphers[cipher]);
-        this.cipherKey = adone.crypto.EVPBytesToKey(password, this.keyLength, this.ivLength).key;
-        if (iv && iv.length !== this.ivLength) {
-            throw new x.InvalidArgument(`Invalid iv length (${iv.length} != ${this.ivLength})`);
+        this._cipher = cipher;
+        ({ key: this._keyLength, iv: this._ivLength } = shadowsocks.c.ciphers[cipher]);
+        this.cipherKey = adone.crypto.EVPBytesToKey(password, this._keyLength, this._ivLength).key;
+        if (iv && iv.length !== this._ivLength) {
+            throw new x.InvalidArgument(`Invalid iv length (${iv.length} != ${this._ivLength})`);
         }
-        this.iv = iv;
-        this.server = new adone.std.net.Server((socket) => {
+        this._iv = iv;
+        this._server = new adone.std.net.Server((socket) => {
             this._onConnection(socket);
         });
         this.timeout = timeout;
@@ -205,9 +192,9 @@ export class Server extends EventEmitter {
             socket.setTimeout(this.timeout, () => socket.end());
         }
         const parser = new Parser(socket, {
-            ivLength: this.ivLength,
-            getDecipher: (iv) => {
-                decipher = adone.std.crypto.createDecipheriv(this.cipher, this.cipherKey, iv);
+            ivLength: this._ivLength,
+            getDecipher: (decipherIV) => {
+                decipher = adone.std.crypto.createDecipheriv(this._cipher, this.cipherKey, decipherIV);
                 return decipher;
             }
         });
@@ -221,10 +208,10 @@ export class Server extends EventEmitter {
 
             const accept = (intercept) => {
                 if (intercept) {
-                    const iv = this.iv || adone.std.crypto.randomBytes(16);
-                    cipher = adone.std.crypto.createCipheriv(this.cipher, this.cipherKey, iv);
-                    socket.write(iv);
-                    return { socket, cipher, decipher, head, iv };
+                    const cipherIV = this._iv || adone.std.crypto.randomBytes(16);
+                    cipher = adone.std.crypto.createCipheriv(this._cipher, this.cipherKey, cipherIV);
+                    socket.write(cipherIV);
+                    return { socket, cipher, decipher, head };
                 }
                 const remoteSocket = adone.std.net.connect(request.dstPort, request.dstAddr);
                 if (this.timeout) {
@@ -239,9 +226,9 @@ export class Server extends EventEmitter {
                     })
                     .once("connect", () => {
                         if (socket.writable) {
-                            const iv = this.iv || adone.std.crypto.randomBytes(16);
-                            cipher = adone.std.crypto.createCipheriv(this.cipher, this.cipherKey, iv);
-                            socket.write(iv);
+                            const cipherIV = this._iv || adone.std.crypto.randomBytes(16);
+                            cipher = adone.std.crypto.createCipheriv(this._cipher, this.cipherKey, cipherIV);
+                            socket.write(cipherIV);
                             remoteSocket.pipe(cipher).pipe(socket).pipe(decipher).pipe(remoteSocket);
                             socket.resume();
                             remoteSocket.write(head);
@@ -272,6 +259,6 @@ export class Server extends EventEmitter {
     }
 
     listen(...args) {
-        return this.server.listen(...args);
+        return this._server.listen(...args);
     }
 }

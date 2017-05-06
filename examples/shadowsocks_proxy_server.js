@@ -11,7 +11,7 @@ adone.run({
             }
             const { socket, cipher, decipher, head } = accept(true);
             cipher.pipe(socket);
-            cipher.end("HTTP/1.1 200 OK\r\n\rnContent-Type: text/plain\r\n\r\n8.8.8.8");
+            cipher.end("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\n8.8.8.8");
         });
         server.listen(8388);
     }
