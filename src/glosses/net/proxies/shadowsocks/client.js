@@ -1,4 +1,104 @@
-const { is, x, EventEmitter, net: { proxy: { shadowsocks } }, util: { memcpy } } = adone;
+const { is, x, EventEmitter, net: { proxy: { shadowsocks } }, util: { memcpy }, std: { stream } } = adone;
+
+class SSocket extends stream.Duplex {
+    constructor(socket, writable) {
+        super();
+        this._realSocket = socket;
+        this._writableStream = writable;
+        this._readableStream = null;
+        this._needRead = false;
+        // omg
+        this.once("finish", () => {
+            this._writableStream.end();
+        });
+        this.once("end", () => {
+            this.emit("close", this._hadError);
+        });
+        this._hadError = false;
+        this._realSocket.once("error", (err) => {
+            this._hadError = true;
+            this.emit("error", err);
+            if (this._readableStream) {
+                this._readableStream.end();
+            } else {
+                this.push(null);
+            }
+            this.end();
+        });
+        this.destroyed = false;
+    }
+
+    setTimeout(ms, cb) {
+        return this._realSocket.setTimeout(ms, cb);
+    }
+
+    setNoDelay(enable) {
+        return this._realSocket.setNoDelay(enable);
+    }
+
+    setKeepAlive(setting, ms) {
+        return this._realSocket.setKeepAlive(setting, ms);
+    }
+
+    unref() {
+        this._realSocket.unref();
+    }
+
+    ref() {
+        this._realSocket.ref();
+    }
+
+    destroySoon() {
+        if (this.writable) {
+            this.end();
+        }
+
+        if (this._writableState.finished) {
+            this.destroy();
+        } else {
+            this.once("finish", this.destroy);
+        }
+        this._realSocket.destroySoon();
+    }
+
+    destroy() {
+        if (this.destroyed) {
+            return;
+        }
+        this.destroyed = true;
+        this._realSocket.destroy();
+        if (this._readableStream) {
+            this._readableStream.end();
+        } else {
+            this.push(null);
+        }
+        this.end();
+    }
+
+    _setReadable(readable) {
+        this._readableStream = readable;
+        this._readableStream.once("end", () => {
+            this.push(null);
+        });
+        if (this._needRead) {
+            this._read();
+        }
+    }
+
+    _write(chunk, encoding, callback) {
+        this._writableStream.write(chunk, encoding, callback);
+    }
+
+    _read() {
+        if (!this._readableStream) {
+            this._needRead = true;
+            return;
+        }
+        this._readableStream.once("readable", () => {
+            this.push(this._readableStream.read());
+        });
+    }
+}
 
 export class Parser extends EventEmitter {
     constructor(stream, { ivLength }) {
@@ -88,6 +188,10 @@ export class Client extends EventEmitter {
                 }
             })
             .once("close", (hadError) => {
+                if (!this._ready) {
+                    this.emit("error", new x.Exception("Connection reset by peer"));
+                    this._hadError = true;
+                }
                 this.emit("close", this._hadError || hadError);
             });
         this._dstaddr = null;
@@ -122,13 +226,12 @@ export class Client extends EventEmitter {
         header.writeUInt16BE(this._dstport);
         cipher.write(header.flip().toBuffer());
         this._ready = true;
-        // if the server send iv with the first chunk..
-        const readable = new adone.std.stream.PassThrough();
-        this.emit("connect", { readable, writable: cipher, socket });
+        const sssocket = new SSocket(socket, cipher);
+        this.emit("connect", sssocket);
         parser.once("iv", (decipherIV) => {
             const decipher = adone.std.crypto.createDecipheriv(this._cipher, this._cipherKey, decipherIV);
-            socket.pipe(decipher).pipe(readable);
-            socket.resume();
+            socket.pipe(decipher);
+            sssocket._setReadable(decipher);
         });
     }
 

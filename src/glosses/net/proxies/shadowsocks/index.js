@@ -1,4 +1,5 @@
 adone.lazify({
+    Agent: "./agent",
     ClientParser: ["./client", (x) => x.Parser],
     Client: ["./client", (x) => x.Client],
     ServerParser: ["./server", (x) => x.Parser],
