@@ -71,6 +71,7 @@ adone.lazify({
     JsNative: "./js_native",
     Adone: "./adone",
     Global: "./global",
+    Native: "./native",
     nodeInfo: () => (node) => {
         switch (node.type) {
             case "Identifier": return `Identifier:${node.name}`;
@@ -89,6 +90,7 @@ adone.lazify({
         object: (x) => adone.tag.has(x, adone.tag.CODEMOD_OBJECT),
         expression: (x) => adone.tag.has(x, adone.tag.CODEMOD_EXPRESSION),
         constant: (x) => adone.tag.has(x, adone.tag.CODEMOD_CONST),
-        statement: (x) => adone.tag.has(x, adone.tag.CODEMOD_STATEMENT)
+        statement: (x) => adone.tag.has(x, adone.tag.CODEMOD_STATEMENT),
+        native: (x) => adone.tag.has(x, adone.tag.CODEMOD_NATIVE)
     })
 }, exports, require);

@@ -20,7 +20,7 @@ export default function angularFilesort() {
             // Streams not supported
             if (file.isStream()) {
                 /* jshint validthis:true */
-                throw new x.Unsupported("Streaming is not supported");
+                throw new x.NotSupported("Streaming is not supported");
             }
 
             let deps;

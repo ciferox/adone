@@ -871,7 +871,7 @@ adone.lazify({
     jsesc: "./jsesc",
     typeOf: "./typeof",
     memcpy: "./memcpy",
-    microtime: "./microtime",
+    microtime: () => adone.bind("microtime.node"),
     uuid: "./uuid",
     userid: () => adone.bind("userid.node").UserId,
     StreamSearch: "./streamsearch",

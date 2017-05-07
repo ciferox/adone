@@ -1,11 +1,10 @@
-
 const { is } = adone;
 
 const DONT_TRANSPILE_COMMENT = Buffer.from("//adone-dont-transpile");
 const DONT_TRANSPILE_COMMENT_S = Buffer.from("// adone-dont-transpile");
 
 export default class FileConfiguration extends adone.configuration.Configuration {
-    constructor({ base  = process.cwd() } = {}) {
+    constructor({ base = process.cwd() } = {}) {
         super();
         this._.base = base;
         this._.serializer = {};
@@ -29,7 +28,7 @@ export default class FileConfiguration extends adone.configuration.Configuration
             if (confObj.__esModule) {
                 confObj = confObj.default;
             }
-            
+
             let hasFunctions = false;
 
             const bindFunctions = (nestedConfig) => {
@@ -58,10 +57,24 @@ export default class FileConfiguration extends adone.configuration.Configuration
             return confObj;
         });
 
-        this.registerFormat(".json", adone.data.json.decode, adone.data.json.encode);
-        this.registerFormat(".bson", adone.data.bson.decode, adone.data.bson.encode);
-        this.registerFormat(".json5", adone.data.json5.decode, adone.data.json5.encode);
-        this.registerFormat(".mpak", adone.data.mpak.decode, adone.data.mpak.encode);
+        adone.lazify({
+            ".json": () => ({
+                encode: adone.data.json.encode,
+                decode: adone.data.json.decode
+            }),
+            ".bson": () => ({
+                encode: adone.data.bson.encode,
+                decode: adone.data.bson.decode
+            }),
+            ".json5": () => ({
+                encode: adone.data.json5.encode,
+                decode: adone.data.json5.decode
+            }),
+            ".mpak": () => ({
+                encode: adone.data.mpak.encode,
+                decode: adone.data.mpak.decode
+            })
+        }, this._.serializer);
     }
 
     registerFormat(ext, decode, encode) {
@@ -69,6 +82,10 @@ export default class FileConfiguration extends adone.configuration.Configuration
             decode,
             encode
         };
+    }
+
+    supportedExts() {
+        return Object.keys(this._.serializer);
     }
 
     async load(confPath, name) {

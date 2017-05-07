@@ -1,6 +1,4 @@
-const { lazify } = adone;
-
-const yaml = lazify({
+const yaml = adone.lazify({
     loader: "./loader",
     dumper: "./dumper",
     type: "./type",
@@ -16,5 +14,5 @@ const yaml = lazify({
 }, exports, require);
 
 export const encode = (object, options) => yaml.safeDump(object, options);
-
 export const decode = (string, options) => yaml.safeLoad(string, options);
+export const any = false;

@@ -3,7 +3,6 @@ const crypto = std.crypto;
 const Socket = std.net.Socket;
 const dnsLookup = std.dns.lookup;
 const HASHES = crypto.getHashes();
-
 const { stream } = adone.net.ssh;
 const { SSH2Stream, SFTPStream, util } = stream;
 const BUGS = stream.const.BUGS;

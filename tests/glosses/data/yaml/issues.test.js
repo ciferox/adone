@@ -496,4 +496,75 @@ describe("glosses", "data", "yaml", "issues", () => {
             positive: 23000
         });
     });
+
+    specify("Don't throw on warning", async () => {
+        const src = fixtures.getVirtualFile("0335.yml");
+
+        expect(yaml.safeLoad(await src.content())).to.be.deep.equal({
+            not_num_1: "-_123",
+            not_num_2: "_123",
+            not_num_3: "123_",
+            not_num_4: "0b00_",
+            not_num_5: "0x00_",
+            not_num_6: "011_"
+        });
+    });
+
+    context("0342", () => {
+        const simpleArray = ["a", "b"];
+        const arrayOfSimpleObj = [{ a: 1 }, { b: 2 }];
+        const arrayOfObj = [{ a: 1, b: "abc" }, { c: "def", d: 2 }];
+
+        specify("space should be added for array, regardless of indent", () => {
+            assert.deepEqual(
+                yaml.dump(simpleArray, { indent: 1 }),
+                "- a\n- b\n"
+            );
+            assert.deepEqual(
+                yaml.dump(simpleArray, { indent: 2 }),
+                "- a\n- b\n"
+            );
+            assert.deepEqual(
+                yaml.dump(simpleArray, { indent: 3 }),
+                "- a\n- b\n"
+            );
+            assert.deepEqual(
+                yaml.dump(simpleArray, { indent: 4 }),
+                "- a\n- b\n"
+            );
+        });
+
+        specify("array of objects should not wrap at indentation of 2", () => {
+            assert.deepEqual(
+                yaml.dump(arrayOfSimpleObj, { indent: 2 }),
+                "- a: 1\n- b: 2\n"
+            );
+            assert.deepEqual(
+                yaml.dump(arrayOfObj, { indent: 2 }),
+                "- a: 1\n  b: abc\n- c: def\n  d: 2\n"
+            );
+        });
+
+        specify("EOL space should not be added on array of objects at indentation of 3", () => {
+            assert.deepEqual(
+                yaml.dump(arrayOfSimpleObj, { indent: 3 }),
+                "-\n   a: 1\n-\n   b: 2\n"
+            );
+            assert.deepEqual(
+                yaml.dump(arrayOfObj, { indent: 3 }),
+                "-\n   a: 1\n   b: abc\n-\n   c: def\n   d: 2\n"
+            );
+        });
+
+        specify("EOL space should not be added on array of objects at indentation of 4", () => {
+            assert.deepEqual(
+                yaml.dump(arrayOfSimpleObj, { indent: 4 }),
+                "-\n    a: 1\n-\n    b: 2\n"
+            );
+            assert.deepEqual(
+                yaml.dump(arrayOfObj, { indent: 4 }),
+                "-\n    a: 1\n    b: abc\n-\n    c: def\n    d: 2\n"
+            );
+        });
+    });
 });

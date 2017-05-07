@@ -144,9 +144,9 @@ export const namespaces = [
     },
     {
         name: "adone.math",
-        description: "",
+        description: "Implementation of common math classes and primitives",
         paths: [
-            "glosses/math"
+            "glosses/math/index"
         ]
     },
     {

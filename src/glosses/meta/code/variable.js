@@ -4,8 +4,10 @@ export default class XVariable extends adone.meta.code.Base {
 
         const node = this.ast; 
         this.name = node.id.name;
-        this.value = this.createXObject({ ast: node.init, xModule: this.xModule });
-        this.value.name = this.name;
+        if (!adone.is.null(node.init)) {
+            this.value = this.createXObject({ ast: node.init, xModule: this.xModule });
+            this.value.name = this.name;
+        }
         this.kind = null;
     }
 }

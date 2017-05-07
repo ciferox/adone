@@ -53,7 +53,7 @@ export default class Session {
 
     async putFile(localFile, remoteFile) {
         remoteFile = remoteFile.replace(/[\\]/g, "/"); // windows needs this
-        const remotePath = path.dirname(remoteFile);
+        const remotePath = adone.std.path.dirname(remoteFile);
         await this.mkdir(remotePath);
 
         return new Promise((resolve, reject) => {

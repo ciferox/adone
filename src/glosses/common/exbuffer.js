@@ -1224,7 +1224,7 @@ export default class ExBuffer {
             return { string: temp, length };
 
         }
-        throw new x.Unsupported(`Unsupported metrics: ${metrics}`);
+        throw new x.NotSupported(`Unsupported metrics: ${metrics}`);
 
     }
 
@@ -1719,7 +1719,7 @@ export default class ExBuffer {
             case "columns":
                 return this.toColumns();
             default:
-                throw new x.Unsupported(`Unsupported encoding: ${encoding}`);
+                throw new x.NotSupported(`Unsupported encoding: ${encoding}`);
         }
     }
 
@@ -1897,7 +1897,7 @@ export default class ExBuffer {
                 case "debug":
                     return ExBuffer.fromDebug(buffer);
                 default:
-                    throw new x.Unsupported(`Unsupported encoding: ${encoding}`);
+                    throw new x.NotSupported(`Unsupported encoding: ${encoding}`);
             }
         }
 

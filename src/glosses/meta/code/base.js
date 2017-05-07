@@ -204,18 +204,24 @@ export default class XBase {
     lookupInGlobalScope(name) {
         for (const xObj of this.xModule.scope) {
             const node = xObj.ast;
-            switch (node.type) {
-                case "VariableDeclarator": {
-                    if (xObj.name === name) {
-                        return xObj;
+            if (!is.null(node)) {
+                switch (node.type) {
+                    case "VariableDeclarator": {
+                        if (xObj.name === name) {
+                            return xObj;
+                        }
+                        break;
                     }
-                    break;
+                    case "ClassDeclaration": {
+                        if (node.id.name === name) {
+                            return xObj;
+                        }
+                        break;
+                    }
                 }
-                case "ClassDeclaration": {
-                    if (node.id.name === name) {
-                        return xObj;
-                    }
-                    break;
+            } else if (adone.meta.code.is.native(xObj)) {
+                if (xObj.name === name) {
+                    return xObj;
                 }
             }
         }

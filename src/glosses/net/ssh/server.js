@@ -229,9 +229,8 @@ class Session extends adone.EventEmitter {
                             channel.pipe(sftp).pipe(channel);
 
                             return sftp;
-                        } else {
-                            return channel;
                         }
+                        return channel;
                     };
 
                     if (info.subsystem === "sftp" && listenerCount(this, "sftp")) {
@@ -1145,8 +1144,7 @@ export default class Server extends adone.EventEmitter {
             socket.pipe(sshstream).pipe(socket);
 
             // silence pre-header errors
-            function onClientPreHeaderError() { }
-            client.on("error", onClientPreHeaderError);
+            client.on("error", adone.noop);
 
             sshstream.once("header", (header) => {
                 if (sshstream._readableState.ended) {
@@ -1158,7 +1156,7 @@ export default class Server extends adone.EventEmitter {
                     return sshstream.disconnect(DISCONNECT_REASON.BY_APPLICATION);
                 }
 
-                client.removeListener("error", onClientPreHeaderError);
+                client.removeListener("error", adone.noop);
 
                 this.emit("connection",
                     client, {

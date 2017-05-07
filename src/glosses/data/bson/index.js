@@ -1,7 +1,5 @@
-const { lazify, bind } = adone;
-
-const bson = lazify({
-    native: () => bind("bson.node").BSON,
+const bson = adone.lazify({
+    native: () => adone.bind("bson.node").BSON,
     serializer: () => new bson.BSON(),
     Binary: "./binary",
     Code: "./code",

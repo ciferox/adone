@@ -2,27 +2,29 @@ const { data: { yaml }, is } = adone;
 
 const isHexCode = (c) => {
     return (c/* 0 */ >= 0x30 && c <= 0x39/* 9 */) ||
-           (c/* A */ >= 0x41 && c <= 0x46/* F */) ||
-           (c/* a */ >= 0x61 && c <= 0x66/* f */);
+        (c/* A */ >= 0x41 && c <= 0x46/* F */) ||
+        (c/* a */ >= 0x61 && c <= 0x66/* f */);
 };
 
-const isOctCode = (c) =>  c/* 0 */ >= 0x30 && c <= 0x37/* 7 */;
+const isOctCode = (c) => c/* 0 */ >= 0x30 && c <= 0x37/* 7 */;
 
 const isDecCode = (c) => c/* 0 */ >= 0x30 && c <= 0x39/* 9 */;
 
 const resolveYamlInteger = (data) => {
-    if (is.null(data)) {
+    if (data === null) {
         return false;
     }
 
     const max = data.length;
+    let index = 0;
+    let hasDigits = false;
+    let ch;
 
     if (!max) {
         return false;
     }
 
-    let index = 0;
-    let ch = data[index];
+    ch = data[index];
 
     // sign
     if (ch === "-" || ch === "+") {
@@ -42,8 +44,6 @@ const resolveYamlInteger = (data) => {
             // base 2
             index++;
 
-            let hasDigits = false;
-
             for (; index < max; index++) {
                 ch = data[index];
                 if (ch === "_") {
@@ -54,15 +54,13 @@ const resolveYamlInteger = (data) => {
                 }
                 hasDigits = true;
             }
-            return hasDigits;
+            return hasDigits && ch !== "_";
         }
 
 
         if (ch === "x") {
             // base 16
             index++;
-
-            let hasDigits = false;
 
             for (; index < max; index++) {
                 ch = data[index];
@@ -74,10 +72,8 @@ const resolveYamlInteger = (data) => {
                 }
                 hasDigits = true;
             }
-            return hasDigits;
+            return hasDigits && ch !== "_";
         }
-
-        let hasDigits = false;
 
         // base 8
         for (; index < max; index++) {
@@ -90,12 +86,15 @@ const resolveYamlInteger = (data) => {
             }
             hasDigits = true;
         }
-        return hasDigits;
+        return hasDigits && ch !== "_";
     }
 
     // base 10 (except 0) or base 60
 
-    let hasDigits = false;
+    // value should not start with `_`;
+    if (ch === "_") {
+        return false;
+    }
 
     for (; index < max; index++) {
         ch = data[index];
@@ -111,7 +110,8 @@ const resolveYamlInteger = (data) => {
         hasDigits = true;
     }
 
-    if (!hasDigits) {
+    // Should have digits and should not end with `_`
+    if (!hasDigits || ch === "_") {
         return false;
     }
 

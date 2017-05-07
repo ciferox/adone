@@ -24,6 +24,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             Object.keys(modules).forEach((key) => {
                 Object.defineProperty(obj, key, {
                     configurable: true,
+                    enumerable: true,
                     get() {
                         const value = modules[key];
 
@@ -54,6 +55,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
 
                         Object.defineProperty(obj, key, {
                             configurable,
+                            enumerable: true,
                             value: mod
                         });
 

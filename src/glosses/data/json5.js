@@ -461,251 +461,246 @@ decodeValue = () => {
     }
 };
 
-export default class JSON5 {
-    static isWordChar(c) {
-        return (c >= "a" && c <= "z") ||
-            (c >= "A" && c <= "Z") ||
-            (c >= "0" && c <= "9") ||
-            c === "_" || c === "$";
-    }
+export const isWordChar = (c) => {
+    return (c >= "a" && c <= "z") || (c >= "A" && c <= "Z") || (c >= "0" && c <= "9") || c === "_" || c === "$";
+};
 
-    static isWordStart(c) {
-        return (c >= "a" && c <= "z") ||
-            (c >= "A" && c <= "Z") ||
-            c === "_" || c === "$";
-    }
+export const isWordStart = (c) => {
+    return (c >= "a" && c <= "z") || (c >= "A" && c <= "Z") || c === "_" || c === "$";
+};
 
-    static isWord(key) {
-        if (!is.string(key)) {
+export const isWord = (key) => {
+    if (!is.string(key)) {
+        return false;
+    }
+    if (!isWordStart(key[0])) {
+        return false;
+    }
+    let i = 1;
+    const length = key.length;
+    while (i < length) {
+        if (!isWordChar(key[i])) {
             return false;
         }
-        if (!JSON5.isWordStart(key[0])) {
-            return false;
+        i++;
+    }
+    return true;
+};
+
+export const encode = (obj, replacer, space) => {
+    if (replacer && (!is.function(replacer) && !is.array(replacer))) {
+        throw new Error("Replacer must be a function or an array");
+    }
+    const getReplacedValueOrUndefined = (holder, key, isTopLevel) => {
+        let value = holder[key];
+
+        // Replace the value with its toJSON value first, if possible
+        if (value && value.toJSON && is.function(value.toJSON)) {
+            value = value.toJSON();
         }
-        let i = 1;
-        const length = key.length;
-        while (i < length) {
-            if (!JSON5.isWordChar(key[i])) {
-                return false;
+
+        // If the user-supplied replacer if a function, call it. If it's an array, check objects' string keys for
+        // presence in the array (removing the key/value pair from the resulting JSON if the key is missing).
+        if (is.function(replacer)) {
+            return replacer.call(holder, key, value);
+        } else if (replacer) {
+            if (isTopLevel || is.array(holder) || replacer.indexOf(key) >= 0) {
+                return value;
             }
-            i++;
+            return undefined;
+
         }
-        return true;
+        return value;
+    };
+
+    const objStack = [];
+    const checkForCircular = (obj) => {
+        for (let i = 0; i < objStack.length; i++) {
+            if (objStack[i] === obj) {
+                throw new TypeError("Converting circular structure to JSON");
+            }
+        }
+    };
+
+    const makeIndent = (str, num, noNewLine) => {
+        if (!str) {
+            return "";
+        }
+        // indentation no more than 10 chars
+        if (str.length > 10) {
+            str = str.substring(0, 10);
+        }
+
+        let indent = noNewLine ? "" : "\n";
+        for (let i = 0; i < num; i++) {
+            indent += str;
+        }
+
+        return indent;
+    };
+
+    let indentStr;
+    if (space) {
+        if (is.string(space)) {
+            indentStr = space;
+        } else if (is.number(space) && space >= 0) {
+            indentStr = makeIndent(" ", space, true);
+        } else {
+            // ignore space parameter
+        }
     }
 
-    static encode(obj, replacer, space) {
-        if (replacer && (!is.function(replacer) && !is.array(replacer))) {
-            throw new Error("Replacer must be a function or an array");
+    // Copied from Crokford's implementation of JSON
+    // See https://github.com/douglascrockford/JSON-js/blob/e39db4b7e6249f04a195e7dd0840e610cc9e941e/json2.js#L195
+    const escapable = /[\\\"\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g;
+    const meta = { // table of character substitutions
+        "\b": "\\b",
+        "\t": "\\t",
+        "\n": "\\n",
+        "\f": "\\f",
+        "\r": "\\r",
+        "\"": "\\\"",
+        "\\": "\\\\"
+    };
+    const escapeString = (string) => {
+
+        // If the string contains no control characters, no quote characters, and no
+        // backslash characters, then we can safely slap some quotes around it.
+        // Otherwise we must also replace the offending characters with safe escape
+        // sequences.
+        escapable.lastIndex = 0;
+        return escapable.test(string) ? `"${string.replace(escapable, (a) => {
+            const c = meta[a];
+            return is.string(c) ? c : `\\u${("0000" + a.charCodeAt(0).toString(16)).slice(-4)}`;
+        })}"` : `"${string}"`;
+    };
+
+    const internalStringify = (holder, key, isTopLevel) => {
+        let buffer;
+        let res;
+
+        // Replace the value, if necessary
+        let objPart = getReplacedValueOrUndefined(holder, key, isTopLevel);
+
+        if (objPart && !is.date(objPart)) {
+            // unbox objects
+            // don't unbox dates, since will turn it into number
+            objPart = objPart.valueOf();
         }
-        const getReplacedValueOrUndefined = (holder, key, isTopLevel) => {
-            let value = holder[key];
-
-            // Replace the value with its toJSON value first, if possible
-            if (value && value.toJSON && is.function(value.toJSON)) {
-                value = value.toJSON();
-            }
-
-            // If the user-supplied replacer if a function, call it. If it's an array, check objects' string keys for
-            // presence in the array (removing the key/value pair from the resulting JSON if the key is missing).
-            if (is.function(replacer)) {
-                return replacer.call(holder, key, value);
-            } else if (replacer) {
-                if (isTopLevel || is.array(holder) || replacer.indexOf(key) >= 0) {
-                    return value;
+        switch (typeof objPart) {
+            case "boolean":
+                return objPart.toString();
+            case "number":
+                if (isNaN(objPart) || !isFinite(objPart)) {
+                    return "null";
                 }
-                return undefined;
+                return objPart.toString();
+            case "string":
+                return escapeString(objPart.toString());
+            case "object":
+                if (objPart === null) {
+                    return "null";
+                } else if (is.array(objPart)) {
+                    checkForCircular(objPart);
+                    buffer = "[";
+                    objStack.push(objPart);
 
-            }
-            return value;
-        };
-
-        const objStack = [];
-        const checkForCircular = (obj) => {
-            for (let i = 0; i < objStack.length; i++) {
-                if (objStack[i] === obj) {
-                    throw new TypeError("Converting circular structure to JSON");
-                }
-            }
-        };
-
-        const makeIndent = (str, num, noNewLine) => {
-            if (!str) {
-                return "";
-            }
-            // indentation no more than 10 chars
-            if (str.length > 10) {
-                str = str.substring(0, 10);
-            }
-
-            let indent = noNewLine ? "" : "\n";
-            for (let i = 0; i < num; i++) {
-                indent += str;
-            }
-
-            return indent;
-        };
-
-        let indentStr;
-        if (space) {
-            if (is.string(space)) {
-                indentStr = space;
-            } else if (is.number(space) && space >= 0) {
-                indentStr = makeIndent(" ", space, true);
-            } else {
-                // ignore space parameter
-            }
-        }
-
-        // Copied from Crokford's implementation of JSON
-        // See https://github.com/douglascrockford/JSON-js/blob/e39db4b7e6249f04a195e7dd0840e610cc9e941e/json2.js#L195
-        const escapable = /[\\\"\x00-\x1f\x7f-\x9f\u00ad\u0600-\u0604\u070f\u17b4\u17b5\u200c-\u200f\u2028-\u202f\u2060-\u206f\ufeff\ufff0-\uffff]/g;
-        const meta = { // table of character substitutions
-            "\b": "\\b",
-            "\t": "\\t",
-            "\n": "\\n",
-            "\f": "\\f",
-            "\r": "\\r",
-            "\"": "\\\"",
-            "\\": "\\\\"
-        };
-        const escapeString = (string) => {
-
-            // If the string contains no control characters, no quote characters, and no
-            // backslash characters, then we can safely slap some quotes around it.
-            // Otherwise we must also replace the offending characters with safe escape
-            // sequences.
-            escapable.lastIndex = 0;
-            return escapable.test(string) ? `"${string.replace(escapable, (a) => {
-                const c = meta[a];
-                return is.string(c) ? c : `\\u${("0000" + a.charCodeAt(0).toString(16)).slice(-4)}`;
-            })}"` : `"${string}"`;
-        };
-
-        const internalStringify = (holder, key, isTopLevel) => {
-            let buffer;
-            let res;
-
-            // Replace the value, if necessary
-            let objPart = getReplacedValueOrUndefined(holder, key, isTopLevel);
-
-            if (objPart && !is.date(objPart)) {
-                // unbox objects
-                // don't unbox dates, since will turn it into number
-                objPart = objPart.valueOf();
-            }
-            switch (typeof objPart) {
-                case "boolean":
-                    return objPart.toString();
-                case "number":
-                    if (isNaN(objPart) || !isFinite(objPart)) {
-                        return "null";
+                    for (let i = 0; i < objPart.length; i++) {
+                        res = internalStringify(objPart, i, false);
+                        buffer += makeIndent(indentStr, objStack.length);
+                        if (res === null || is.undefined(res)) {
+                            buffer += "null";
+                        } else {
+                            buffer += res;
+                        }
+                        if (i < objPart.length - 1) {
+                            buffer += ",";
+                        } else if (indentStr) {
+                            buffer += "\n";
+                        }
                     }
-                    return objPart.toString();
-                case "string":
-                    return escapeString(objPart.toString());
-                case "object":
-                    if (objPart === null) {
-                        return "null";
-                    } else if (is.array(objPart)) {
-                        checkForCircular(objPart);
-                        buffer = "[";
-                        objStack.push(objPart);
-
-                        for (let i = 0; i < objPart.length; i++) {
-                            res = internalStringify(objPart, i, false);
-                            buffer += makeIndent(indentStr, objStack.length);
-                            if (res === null || is.undefined(res)) {
-                                buffer += "null";
-                            } else {
-                                buffer += res;
-                            }
-                            if (i < objPart.length - 1) {
-                                buffer += ",";
-                            } else if (indentStr) {
-                                buffer += "\n";
+                    objStack.pop();
+                    if (objPart.length) {
+                        buffer += makeIndent(indentStr, objStack.length, true);
+                    }
+                    buffer += "]";
+                } else {
+                    checkForCircular(objPart);
+                    buffer = "{";
+                    let nonEmpty = false;
+                    objStack.push(objPart);
+                    for (const prop in objPart) {
+                        if (objPart.hasOwnProperty(prop)) {
+                            const value = internalStringify(objPart, prop, false);
+                            isTopLevel = false;
+                            if (!is.undefined(value) && value !== null) {
+                                buffer += makeIndent(indentStr, objStack.length);
+                                nonEmpty = true;
+                                key = isWord(prop) ? prop : escapeString(prop);
+                                buffer += `${key}:${indentStr ? " " : ""}${value},`;
                             }
                         }
-                        objStack.pop();
-                        if (objPart.length) {
-                            buffer += makeIndent(indentStr, objStack.length, true);
-                        }
-                        buffer += "]";
+                    }
+                    objStack.pop();
+                    if (nonEmpty) {
+                        buffer = `${buffer.substring(0, buffer.length - 1) + makeIndent(indentStr, objStack.length)}}`;
                     } else {
-                        checkForCircular(objPart);
-                        buffer = "{";
-                        let nonEmpty = false;
-                        objStack.push(objPart);
-                        for (const prop in objPart) {
-                            if (objPart.hasOwnProperty(prop)) {
-                                const value = internalStringify(objPart, prop, false);
-                                isTopLevel = false;
-                                if (!is.undefined(value) && value !== null) {
-                                    buffer += makeIndent(indentStr, objStack.length);
-                                    nonEmpty = true;
-                                    key = JSON5.isWord(prop) ? prop : escapeString(prop);
-                                    buffer += `${key}:${indentStr ? " " : ""}${value},`;
-                                }
-                            }
-                        }
-                        objStack.pop();
-                        if (nonEmpty) {
-                            buffer = `${buffer.substring(0, buffer.length - 1) + makeIndent(indentStr, objStack.length)}}`;
-                        } else {
-                            buffer = "{}";
-                        }
+                        buffer = "{}";
                     }
-                    return buffer;
-                default:
-                    // functions and undefined should be ignored
-                    return undefined;
-            }
-        };
-
-        // special case...when undefined is used inside of
-        // a compound object/array, return null.
-        // but when top-level, return undefined
-        const topLevelHolder = { "": obj };
-        if (is.undefined(obj)) {
-            return getReplacedValueOrUndefined(topLevelHolder, "", true);
+                }
+                return buffer;
+            default:
+                // functions and undefined should be ignored
+                return undefined;
         }
-        return internalStringify(topLevelHolder, "", true);
+    };
+
+    // special case...when undefined is used inside of
+    // a compound object/array, return null.
+    // but when top-level, return undefined
+    const topLevelHolder = { "": obj };
+    if (is.undefined(obj)) {
+        return getReplacedValueOrUndefined(topLevelHolder, "", true);
+    }
+    return internalStringify(topLevelHolder, "", true);
+};
+
+// Return the json_parse function. It will have access to all of the above functions and variables.
+export const decode = (source, reviver) => {
+    text = String(source);
+    at = 0;
+    lineNumber = 1;
+    columnNumber = 1;
+    ch = " ";
+    const result = decodeValue();
+    decodeWhitespace();
+    if (ch) {
+        error("Syntax error");
     }
 
-    // Return the json_parse function. It will have access to all of the above functions and variables.
-    static decode(source, reviver) {
-        text = String(source);
-        at = 0;
-        lineNumber = 1;
-        columnNumber = 1;
-        ch = " ";
-        const result = decodeValue();
-        decodeWhitespace();
-        if (ch) {
-            error("Syntax error");
-        }
-
-        // If there is a reviver function, we recursively walk the new structure,
-        // passing each name/value pair to the reviver function for possible
-        // transformation, starting with a temporary root object that holds the result
-        // in an empty key. If there is not a reviver function, we simply return the
-        // result.
-        return is.function(reviver) ? (function walk(holder, key) {
-            let k;
-            let v;
-            const value = holder[key];
-            if (value && typeof value === "object") {
-                for (k in value) {
-                    if (Object.prototype.hasOwnProperty.call(value, k)) {
-                        v = walk(value, k);
-                        if (!is.undefined(v)) {
-                            value[k] = v;
-                        } else {
-                            delete value[k];
-                        }
+    // If there is a reviver function, we recursively walk the new structure,
+    // passing each name/value pair to the reviver function for possible
+    // transformation, starting with a temporary root object that holds the result
+    // in an empty key. If there is not a reviver function, we simply return the
+    // result.
+    return is.function(reviver) ? (function walk(holder, key) {
+        let k;
+        let v;
+        const value = holder[key];
+        if (value && typeof value === "object") {
+            for (k in value) {
+                if (Object.prototype.hasOwnProperty.call(value, k)) {
+                    v = walk(value, k);
+                    if (!is.undefined(v)) {
+                        value[k] = v;
+                    } else {
+                        delete value[k];
                     }
                 }
             }
-            return reviver.call(holder, key, value);
-        }({ "": result }, "")) : result;
-    }
-}
+        }
+        return reviver.call(holder, key, value);
+    }({ "": result }, "")) : result;
+};
+
+export const any = false;

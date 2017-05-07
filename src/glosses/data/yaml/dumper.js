@@ -467,15 +467,24 @@ const writeFlowSequence = (state, level, object) => {
 const writeBlockSequence = (state, level, object, compact) => {
     let _result = "";
     const _tag = state.tag;
+    let index;
+    let length;
 
-    for (let i = 0; i < object.length; ++i) {
+    for (index = 0, length = object.length; index < length; index += 1) {
         // Write only valid elements.
         // eslint-disable-next-line no-use-before-define
-        if (writeNode(state, level + 1, object[i], true, true)) {
-            if (!compact || i !== 0) {
+        if (writeNode(state, level + 1, object[index], true, true)) {
+            if (!compact || index !== 0) {
                 _result += generateNextLine(state, level);
             }
-            _result += `- ${state.dump}`;
+
+            if (state.dump && CHAR_LINE_FEED === state.dump.charCodeAt(0)) {
+                _result += "-";
+            } else {
+                _result += "- ";
+            }
+
+            _result += state.dump;
         }
     }
 

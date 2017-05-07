@@ -96,7 +96,22 @@ export default class XModule extends adone.meta.code.Base {
                         if (node.declarations.length > 1) {
                             throw new SyntaxError("Detected unsupported declaration of multiple variables.");
                         }
-                        this._traverseVariableDeclarator(node.declarations[0], node.kind);
+                        const declrNode = node.declarations[0];
+                        if (!is.null(declrNode.init) && declrNode.init.type === "CallExpression" && declrNode.init.callee.type === "MemberExpression") {
+                            const exprName = this._getMemberExpressionName(declrNode.init.callee);
+                            if (exprName === "adone.bind") {
+                                shouldSkip = true;
+                                const natives = this._traverseObjectPattern(declrNode.id, node.kind);
+                                for (const name of natives) {
+                                    const xObj = new adone.meta.code.Native({ name, parent: this, ast: null, path: null, xModule: this });
+                                    this.addToScope(xObj);
+                                }
+                                return realPath;
+                            }
+                        }
+
+                        this._traverseVariableDeclarator(declrNode, node.kind);
+
                         realPath.traverse({
                             enter(subPath) {
                                 realPath = subPath;
@@ -213,7 +228,7 @@ export default class XModule extends adone.meta.code.Base {
     _traverseVariableDeclarator(node, kind) {
         let prefix = "";
         if (node.init === null) {
-            return;
+            return this._addGlobal(node.id.name, null, kind, false);
         }
         const initType = node.init.type;
         switch (initType) {
@@ -252,10 +267,9 @@ export default class XModule extends adone.meta.code.Base {
         if (key.type === value.type) {
             if (key.start === value.start && key.end === value.end) {
                 return [value.name];
-            } else {
-                this._addGlobal(value.name, null, kind, false);
-                return [key.name];
-            }
+            } 
+            this._addGlobal(value.name, null, kind, false);
+            return [key.name];
         } else if (value.type === "ObjectPattern") {
             const result = [];
             const prefix = `${key.name}.`;
