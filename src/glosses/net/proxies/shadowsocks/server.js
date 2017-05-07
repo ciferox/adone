@@ -1,16 +1,11 @@
 const { EventEmitter, util: { memcpy }, x, is, net: { proxy: { shadowsocks } } } = adone;
 
-const STATE_IV = 0;
-const STATE_HEADER_TYPE = 1;
-const STATE_HEADER_ADDRESS = 2;
-const STATE_HEADER_PORT = 3;
-
 export class Parser extends EventEmitter {
     constructor(stream, { ivLength, getDecipher }) {
         super();
         this._stream = stream;
         this._listening = false;
-        this._state = STATE_IV;
+        this._state = Parser.STATE_IV;
         this.__onData = (chunk) => this._onData(chunk);
         this._iv = Buffer.alloc(ivLength);
         this._ivLen = 0;
@@ -33,7 +28,7 @@ export class Parser extends EventEmitter {
         }
         while (i < len) {
             switch (this._state) {
-                case STATE_IV: {
+                case Parser.STATE_IV: {
                     const left = this._iv.length - this._ivLen;
                     const chunkLeft = chunk.length - i;
                     const minLength = Math.min(left, chunkLeft);
@@ -47,11 +42,11 @@ export class Parser extends EventEmitter {
                             len = chunk.length;
                             i = 0;
                         }
-                        this._state = STATE_HEADER_TYPE;
+                        this._state = Parser.STATE_HEADER_TYPE;
                     }
                     break;
                 }
-                case STATE_HEADER_TYPE: {
+                case Parser.STATE_HEADER_TYPE: {
                     const type = chunk[i++];
                     this._type = type & 0x0F;
                     switch (this._type) {
@@ -66,20 +61,21 @@ export class Parser extends EventEmitter {
                         }
                         case 0x04: {
                             // IPv6 address
-                            this._addressLen = Buffer.alloc(16);
+                            this._address = Buffer.alloc(16);
                             break;
                         }
                         default: {
                             // unknown address type
                             this.stop();
+                            this._state = Parser.STATE_ERROR;
                             this.emit("error", new x.IllegalState(`Unknown request type: ${type & 0x0F}`));
                             return;
                         }
                     }
-                    this._state = STATE_HEADER_ADDRESS;
+                    this._state = Parser.STATE_HEADER_ADDRESS;
                     break;
                 }
-                case STATE_HEADER_ADDRESS: {
+                case Parser.STATE_HEADER_ADDRESS: {
                     if (!this._address) {
                         // variable length string, the first byte is the length
                         const len = chunk[i++];
@@ -96,19 +92,22 @@ export class Parser extends EventEmitter {
                     this._addressLen += minLength;
                     i += minLength;
                     if (this._addressLen === this._address.length) {
-                        this._state = STATE_HEADER_PORT;
+                        this._state = Parser.STATE_HEADER_PORT;
                     }
                     break;
                 }
-                case STATE_HEADER_PORT: {
+                case Parser.STATE_HEADER_PORT: {
                     // 2 byte big-endian unsigned int
-                    this._port = chunk[i++] << 8;
-                    if (i === chunk.length) {
-                        // no more data
-                        break;
+                    if (is.null(this._port)) {
+                        this._port = chunk[i++] << 8;
+                        if (i === chunk.length) {
+                            // no more data
+                            break;
+                        }
                     }
                     this._port |= chunk[i++];
                     this.stop();
+                    this._state = Parser.STATE_DONE;
                     this.emit("request", {
                         dstAddr: this._addressFromBuffer(this._address),
                         dstPort: this._port,
@@ -130,7 +129,7 @@ export class Parser extends EventEmitter {
                 return address.toString();
             }
             case 0x04: {
-                return adone.net.address.IP6.fromHex(address.toString("hex")).toString();
+                return adone.net.address.IP6.fromUnsignedByteArray(address).address;
             }
         }
     }
@@ -153,6 +152,13 @@ export class Parser extends EventEmitter {
         this._stream.pause();
     }
 }
+
+Parser.STATE_IV = 0;
+Parser.STATE_HEADER_TYPE = 1;
+Parser.STATE_HEADER_ADDRESS = 2;
+Parser.STATE_HEADER_PORT = 3;
+Parser.STATE_DONE = 4;
+Parser.STATE_ERROR = 10;
 
 export class Server extends EventEmitter {
     constructor({
@@ -260,5 +266,13 @@ export class Server extends EventEmitter {
 
     listen(...args) {
         return this._server.listen(...args);
+    }
+
+    address() {
+        return this._server.address();
+    }
+
+    close(callback) {
+        return this._server.close(callback);
     }
 }
