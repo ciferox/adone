@@ -22,7 +22,7 @@ export default class File {
     }
 
     mode() {
-        return this.stat().then((stat) => new adone.util.Mode(stat));
+        return this.stat().then((stat) => new adone.fs.Mode(stat));
     }
 
     path() {

@@ -5,6 +5,39 @@ const GET_MASK = 3;
 const GET_DATA = 4;
 const INFLATING = 5;
 
+/**
+ * Makes a buffer from a list of fragments.
+ *
+ * @param {Buffer[]} fragments The list of fragments composing the message
+ * @param {Number} messageLength The length of the message
+ * @return {Buffer}
+ * @private
+ */
+const toBuffer = (fragments, messageLength) => {
+    if (fragments.length === 1) {
+        return fragments[0];
+    }
+    if (fragments.length > 1) {
+        return adone.net.ws.bufferutil.concat(fragments, messageLength);
+    }
+    return adone.emptyBuffer;
+};
+
+/**
+ * Converts a buffer to an `ArrayBuffer`.
+ *
+ * @param {Buffer} The buffer to convert
+ * @return {ArrayBuffer} Converted buffer
+ */
+const toArrayBuffer = (buf) => {
+    if (buf.byteOffset === 0 && buf.byteLength === buf.buffer.byteLength) {
+        return buf.buffer;
+    }
+
+    return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+};
+
+
 export default class Receiver {
     constructor(extensions, maxPayload, binaryType) {
         this.binaryType = binaryType || adone.net.ws.constants.BINARY_TYPES[0];
@@ -534,36 +567,4 @@ export default class Receiver {
             }
         }
     }
-}
-
-/**
- * Makes a buffer from a list of fragments.
- *
- * @param {Buffer[]} fragments The list of fragments composing the message
- * @param {Number} messageLength The length of the message
- * @return {Buffer}
- * @private
- */
-function toBuffer(fragments, messageLength) {
-    if (fragments.length === 1) {
-        return fragments[0];
-    }
-    if (fragments.length > 1) {
-        return adone.net.ws.bufferutil.concat(fragments, messageLength);
-    }
-    return adone.emptyBuffer;
-}
-
-/**
- * Converts a buffer to an `ArrayBuffer`.
- *
- * @param {Buffer} The buffer to convert
- * @return {ArrayBuffer} Converted buffer
- */
-function toArrayBuffer(buf) {
-    if (buf.byteOffset === 0 && buf.byteLength === buf.buffer.byteLength) {
-        return buf.buffer;
-    }
-
-    return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
 }

@@ -870,7 +870,7 @@ adone.lazify({
     toposort: "./toposort",
     jsesc: "./jsesc",
     typeOf: "./typeof",
-    memcpy: "./memcpy",
+    memcpy: () => adone.bind("memcpy.node").Memory,
     microtime: () => adone.bind("microtime.node"),
     uuid: "./uuid",
     userid: () => adone.bind("userid.node").UserId,

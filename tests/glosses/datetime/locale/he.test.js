@@ -1,0 +1,275 @@
+import commonLocaleTests from "../helpers/common-locale";
+describe("he", () => {
+    commonLocaleTests("he");
+
+    beforeEach(() => {
+        adone.datetime.locale("he");
+    });
+
+    it("parse", () => {
+        const tests = "ינואר ינו׳_פברואר פבר׳_מרץ מרץ_אפריל אפר׳_מאי מאי_יוני יוני_יולי יולי_אוגוסט אוג׳_ספטמבר ספט׳_אוקטובר אוק׳_נובמבר נוב׳_דצמבר דצמ׳".split("_");
+        let i;
+
+        function equalTest(input, mmm, i) {
+            assert.equal(adone.datetime(input, mmm).month(), i, input + " should be month " + (i + 1));
+        }
+        for (i = 0; i < 12; i++) {
+            tests[i] = tests[i].split(" ");
+            equalTest(tests[i][0], "MMM", i);
+            equalTest(tests[i][1], "MMM", i);
+            equalTest(tests[i][0], "MMMM", i);
+            equalTest(tests[i][1], "MMMM", i);
+            equalTest(tests[i][0].toLocaleLowerCase(), "MMMM", i);
+            equalTest(tests[i][1].toLocaleLowerCase(), "MMMM", i);
+            equalTest(tests[i][0].toLocaleUpperCase(), "MMMM", i);
+            equalTest(tests[i][1].toLocaleUpperCase(), "MMMM", i);
+        }
+    });
+
+    it("format", () => {
+        const a = [
+            ["dddd, MMMM Do YYYY, h:mm:ss a", "ראשון, פברואר 14 2010, 3:25:50 אחה\"צ"],
+            ["ddd, h A", "א׳, 3 אחרי הצהריים"],
+            ["M Mo MM MMMM MMM", "2 2 02 פברואר פבר׳"],
+            ["YYYY YY", "2010 10"],
+            ["D Do DD", "14 14 14"],
+            ["d do dddd ddd dd", "0 0 ראשון א׳ א"],
+            ["DDD DDDo DDDD", "45 45 045"],
+            ["w wo ww", "8 8 08"],
+            ["h hh", "3 03"],
+            ["H HH", "15 15"],
+            ["m mm", "25 25"],
+            ["s ss", "50 50"],
+            ["a A", "אחה\"צ אחרי הצהריים"],
+            ["[the] DDDo [day of the year]", "the 45 day of the year"],
+            ["LTS", "15:25:50"],
+            ["L", "14/02/2010"],
+            ["LL", "14 בפברואר 2010"],
+            ["LLL", "14 בפברואר 2010 15:25"],
+            ["LLLL", "ראשון, 14 בפברואר 2010 15:25"],
+            ["l", "14/2/2010"],
+            ["ll", "14 פבר׳ 2010"],
+            ["lll", "14 פבר׳ 2010 15:25"],
+            ["llll", "א׳, 14 פבר׳ 2010 15:25"]
+        ];
+        const b = adone.datetime(new Date(2010, 1, 14, 15, 25, 50, 125));
+        let i;
+
+        for (i = 0; i < a.length; i++) {
+            assert.equal(b.format(a[i][0]), a[i][1], a[i][0] + " ---> " + a[i][1]);
+        }
+    });
+
+    it("format month", () => {
+        const expected = "ינואר ינו׳_פברואר פבר׳_מרץ מרץ_אפריל אפר׳_מאי מאי_יוני יוני_יולי יולי_אוגוסט אוג׳_ספטמבר ספט׳_אוקטובר אוק׳_נובמבר נוב׳_דצמבר דצמ׳".split("_");
+        let i;
+
+        for (i = 0; i < expected.length; i++) {
+            assert.equal(adone.datetime([2011, i, 1]).format("MMMM MMM"), expected[i], expected[i]);
+        }
+    });
+
+    it("format week", () => {
+        const expected = "ראשון א׳ א|שני ב׳ ב|שלישי ג׳ ג|רביעי ד׳ ד|חמישי ה׳ ה|שישי ו׳ ו|שבת ש׳ ש".split("|");
+        let i;
+
+        for (i = 0; i < expected.length; i++) {
+            assert.equal(adone.datetime([2011, 0, 2 + i]).format("dddd ddd dd"), expected[i], expected[i]);
+        }
+    });
+
+    it("from", () => {
+        const start = adone.datetime([2007, 1, 28]);
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            s: 44
+        }), true), "מספר שניות", "44 seconds = a few seconds");
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            s: 45
+        }), true), "דקה", "45 seconds = a minute");
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            s: 89
+        }), true), "דקה", "89 seconds = a minute");
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            s: 90
+        }), true), "2 דקות", "90 seconds = 2 minutes");
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            m: 44
+        }), true), "44 דקות", "44 minutes = 44 minutes");
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            m: 45
+        }), true), "שעה", "45 minutes = an hour");
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            m: 89
+        }), true), "שעה", "89 minutes = an hour");
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            m: 90
+        }), true), "שעתיים", "90 minutes = 2 hours");
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            h: 5
+        }), true), "5 שעות", "5 hours = 5 hours");
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            h: 21
+        }), true), "21 שעות", "21 hours = 21 hours");
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            h: 22
+        }), true), "יום", "22 hours = a day");
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            h: 35
+        }), true), "יום", "35 hours = a day");
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            h: 36
+        }), true), "יומיים", "36 hours = 2 days");
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            d: 1
+        }), true), "יום", "1 day = a day");
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            d: 5
+        }), true), "5 ימים", "5 days = 5 days");
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            d: 25
+        }), true), "25 ימים", "25 days = 25 days");
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            d: 26
+        }), true), "חודש", "26 days = a month");
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            d: 30
+        }), true), "חודש", "30 days = a month");
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            d: 43
+        }), true), "חודש", "43 days = a month");
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            d: 46
+        }), true), "חודשיים", "46 days = 2 months");
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            d: 74
+        }), true), "חודשיים", "75 days = 2 months");
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            d: 76
+        }), true), "3 חודשים", "76 days = 3 months");
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            M: 1
+        }), true), "חודש", "1 month = a month");
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            M: 5
+        }), true), "5 חודשים", "5 months = 5 months");
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            d: 345
+        }), true), "שנה", "345 days = a year");
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            d: 548
+        }), true), "שנתיים", "548 days = 2 years");
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            d: 3699
+        }), true), "10 שנים", "345 days = 10 years");
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            d: 7340
+        }), true), "20 שנה", "548 days = 20 years");
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            y: 1
+        }), true), "שנה", "1 year = a year");
+        assert.equal(start.from(adone.datetime([2007, 1, 28]).add({
+            y: 5
+        }), true), "5 שנים", "5 years = 5 years");
+    });
+
+    it("suffix", () => {
+        assert.equal(adone.datetime(30000).from(0), "בעוד מספר שניות", "prefix");
+        assert.equal(adone.datetime(0).from(30000), "לפני מספר שניות", "suffix");
+    });
+
+    it("now from now", () => {
+        assert.equal(adone.datetime().fromNow(), "לפני מספר שניות", "now from now should display as in the past");
+    });
+
+    it("fromNow", () => {
+        assert.equal(adone.datetime().add({
+            s: 30
+        }).fromNow(), "בעוד מספר שניות", "in a few seconds");
+        assert.equal(adone.datetime().add({
+            d: 5
+        }).fromNow(), "בעוד 5 ימים", "in 5 days");
+    });
+
+    it("calendar day", () => {
+        const a = adone.datetime().hours(12).minutes(0).seconds(0);
+
+        assert.equal(adone.datetime(a).calendar(), "היום ב־12:00", "today at the same time");
+        assert.equal(adone.datetime(a).add({
+            m: 25
+        }).calendar(), "היום ב־12:25", "Now plus 25 min");
+        assert.equal(adone.datetime(a).add({
+            h: 1
+        }).calendar(), "היום ב־13:00", "Now plus 1 hour");
+        assert.equal(adone.datetime(a).add({
+            d: 1
+        }).calendar(), "מחר ב־12:00", "tomorrow at the same time");
+        assert.equal(adone.datetime(a).subtract({
+            h: 1
+        }).calendar(), "היום ב־11:00", "Now minus 1 hour");
+        assert.equal(adone.datetime(a).subtract({
+            d: 1
+        }).calendar(), "אתמול ב־12:00", "yesterday at the same time");
+    });
+
+    it("calendar next week", () => {
+        let i;
+        let m;
+
+        for (i = 2; i < 7; i++) {
+            m = adone.datetime().add({
+                d: i
+            });
+            assert.equal(m.calendar(), m.format("dddd [בשעה] LT"), "Today + " + i + " days current time");
+            m.hours(0).minutes(0).seconds(0).milliseconds(0);
+            assert.equal(m.calendar(), m.format("dddd [בשעה] LT"), "Today + " + i + " days beginning of day");
+            m.hours(23).minutes(59).seconds(59).milliseconds(999);
+            assert.equal(m.calendar(), m.format("dddd [בשעה] LT"), "Today + " + i + " days end of day");
+        }
+    });
+
+    it("calendar last week", () => {
+        let i;
+        let m;
+
+        for (i = 2; i < 7; i++) {
+            m = adone.datetime().subtract({
+                d: i
+            });
+            assert.equal(m.calendar(), m.format("[ביום] dddd [האחרון בשעה] LT"), "Today - " + i + " days current time");
+            m.hours(0).minutes(0).seconds(0).milliseconds(0);
+            assert.equal(m.calendar(), m.format("[ביום] dddd [האחרון בשעה] LT"), "Today - " + i + " days beginning of day");
+            m.hours(23).minutes(59).seconds(59).milliseconds(999);
+            assert.equal(m.calendar(), m.format("[ביום] dddd [האחרון בשעה] LT"), "Today - " + i + " days end of day");
+        }
+    });
+
+    it("calendar all else", () => {
+        let weeksAgo = adone.datetime().subtract({
+            w: 1
+        });
+        let weeksFromNow = adone.datetime().add({
+            w: 1
+        });
+
+        assert.equal(weeksAgo.calendar(), weeksAgo.format("L"), "1 week ago");
+        assert.equal(weeksFromNow.calendar(), weeksFromNow.format("L"), "in 1 week");
+
+        weeksAgo = adone.datetime().subtract({
+            w: 2
+        });
+        weeksFromNow = adone.datetime().add({
+            w: 2
+        });
+
+        assert.equal(weeksAgo.calendar(), weeksAgo.format("L"), "2 weeks ago");
+        assert.equal(weeksFromNow.calendar(), weeksFromNow.format("L"), "in 2 weeks");
+    });
+
+    it("weeks year starting sunday format", () => {
+        assert.equal(adone.datetime([2012, 0, 1]).format("w ww wo"), "1 01 1", "Jan  1 2012 should be week 1");
+        assert.equal(adone.datetime([2012, 0, 7]).format("w ww wo"), "1 01 1", "Jan  7 2012 should be week 1");
+        assert.equal(adone.datetime([2012, 0, 8]).format("w ww wo"), "2 02 2", "Jan  8 2012 should be week 2");
+        assert.equal(adone.datetime([2012, 0, 14]).format("w ww wo"), "2 02 2", "Jan 14 2012 should be week 2");
+        assert.equal(adone.datetime([2012, 0, 15]).format("w ww wo"), "3 03 3", "Jan 15 2012 should be week 3");
+    });
+});

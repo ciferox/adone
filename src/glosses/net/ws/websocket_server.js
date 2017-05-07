@@ -1,9 +1,64 @@
 /**
- * Class representing a WebSocket server.
+ * Handle premature socket errors.
  *
- * @extends EventEmitter
+ * @private
  */
-class WebSocketServer extends adone.EventEmitter {
+const socketError = () => {
+    this.destroy();
+};
+
+/**
+ * Accept WebSocket extensions.
+ *
+ * @param {Object} options The `WebSocketServer` configuration options
+ * @param {Object} offer The parsed value of the `sec-websocket-extensions` header
+ * @return {Object} Accepted extensions
+ * @private
+ */
+const acceptExtensions = (options, offer) => {
+    const pmd = options.perMessageDeflate;
+    const extensions = {};
+
+    if (pmd && offer[adone.net.ws.PerMessageDeflate.extensionName]) {
+        const perMessageDeflate = new adone.net.ws.PerMessageDeflate(
+            pmd !== true ? pmd : {},
+            true,
+            options.maxPayload
+        );
+
+        perMessageDeflate.accept(offer[adone.net.ws.PerMessageDeflate.extensionName]);
+        extensions[adone.net.ws.PerMessageDeflate.extensionName] = perMessageDeflate;
+    }
+
+    return extensions;
+};
+
+/**
+ * Close the connection when preconditions are not fulfilled.
+ *
+ * @param {net.Socket} socket The socket of the upgrade request
+ * @param {Number} code The HTTP response status code
+ * @param {String} [message] The HTTP response body
+ * @private
+ */
+const abortConnection = (socket, code, message) => {
+    if (socket.writable) {
+        message = message || adone.std.http.STATUS_CODES[code];
+        socket.write(
+            `${`HTTP/1.1 ${code} ${adone.std.http.STATUS_CODES[code]}\r\n` +
+            "Connection: close\r\n" +
+            "Content-type: text/html\r\n" +
+            `Content-Length: ${Buffer.byteLength(message)}\r\n` +
+            "\r\n"}${
+            message}`
+        );
+    }
+
+    socket.removeListener("error", socketError);
+    socket.destroy();
+};
+
+export default class WebSocketServer extends adone.EventEmitter {
     /**
      * Create a `WebSocketServer` instance.
      *
@@ -271,66 +326,4 @@ class WebSocketServer extends adone.EventEmitter {
         socket.removeListener("error", socketError);
         cb(client);
     }
-}
-
-module.exports = WebSocketServer;
-
-/**
- * Handle premature socket errors.
- *
- * @private
- */
-function socketError() {
-    this.destroy();
-}
-
-/**
- * Accept WebSocket extensions.
- *
- * @param {Object} options The `WebSocketServer` configuration options
- * @param {Object} offer The parsed value of the `sec-websocket-extensions` header
- * @return {Object} Accepted extensions
- * @private
- */
-function acceptExtensions(options, offer) {
-    const pmd = options.perMessageDeflate;
-    const extensions = {};
-
-    if (pmd && offer[adone.net.ws.PerMessageDeflate.extensionName]) {
-        const perMessageDeflate = new adone.net.ws.PerMessageDeflate(
-            pmd !== true ? pmd : {},
-            true,
-            options.maxPayload
-        );
-
-        perMessageDeflate.accept(offer[adone.net.ws.PerMessageDeflate.extensionName]);
-        extensions[adone.net.ws.PerMessageDeflate.extensionName] = perMessageDeflate;
-    }
-
-    return extensions;
-}
-
-/**
- * Close the connection when preconditions are not fulfilled.
- *
- * @param {net.Socket} socket The socket of the upgrade request
- * @param {Number} code The HTTP response status code
- * @param {String} [message] The HTTP response body
- * @private
- */
-function abortConnection(socket, code, message) {
-    if (socket.writable) {
-        message = message || adone.std.http.STATUS_CODES[code];
-        socket.write(
-            `${`HTTP/1.1 ${code} ${adone.std.http.STATUS_CODES[code]}\r\n` +
-            "Connection: close\r\n" +
-            "Content-type: text/html\r\n" +
-            `Content-Length: ${Buffer.byteLength(message)}\r\n` +
-            "\r\n"}${
-            message}`
-        );
-    }
-
-    socket.removeListener("error", socketError);
-    socket.destroy();
 }

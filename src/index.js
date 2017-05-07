@@ -272,7 +272,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         database: "./glosses/databases",
         diff: "./glosses/diff",
         util: "./glosses/utils",
-        date: "./glosses/dates/exdate",
+        datetime: "./glosses/datetime",
         fs: "./glosses/fs",
         js: "./glosses/js",
         punycode: "./glosses/punycode",

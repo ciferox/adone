@@ -89,6 +89,41 @@ export const namespaces = [
         ]
     },
     {
+        name: "adone.data.base64",
+        description: "Implementation of BASE64 serializer",
+        paths: [
+            "glosses/data/base64"
+        ]
+    },
+    {
+        name: "adone.data.json5",
+        description: "Implementation of JSON5 serializer",
+        paths: [
+            "glosses/data/json5"
+        ]
+    },  
+    {
+        name: "adone.data.mpak",
+        description: "Implementation of MessagePack serializer",
+        paths: [
+            "glosses/data/mpak"
+        ]
+    },
+    {
+        name: "adone.data.bson",
+        description: "Implementation of BSON serializer",
+        paths: [
+            "glosses/data/bson/index"
+        ]
+    },
+    {
+        name: "adone.data.yaml",
+        description: "Implementation of YAML serializer",
+        paths: [
+            "glosses/data/yaml/index"
+        ]
+    },
+    {
         name: "adone.database",
         description: "",
         paths: [
@@ -96,7 +131,7 @@ export const namespaces = [
         ]
     },
     {
-        name: "adone.date",
+        name: "adone.datetime",
         description: "",
         paths: [
             "glosses/date/exdate"

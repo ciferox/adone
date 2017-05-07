@@ -46,6 +46,6 @@ adone.lazify({
         unmask: adone.net.ws.native.unmask
     }),
     is: () => ({
-        validUTF8: () => adone.net.ws.native.isValidUTF8
+        validUTF8: adone.net.ws.native.isValidUTF8
     })
 }, exports, require);

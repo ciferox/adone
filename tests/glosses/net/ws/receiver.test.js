@@ -544,7 +544,7 @@ describe("net", "ws", "Receiver", () => {
         ])));
     });
 
-    it("raises an error if a text frame contains invalid UTF-8 data", (done) => {
+    it.only("raises an error if a text frame contains invalid UTF-8 data", (done) => {
         const p = new Receiver();
 
         p.onerror = function (err, code) {

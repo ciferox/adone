@@ -131,3 +131,5 @@ export const encode = (str) => {
 };
 
 export const decode = (str) => Buffer.from(str, "base64").toString();
+
+export const any = false;

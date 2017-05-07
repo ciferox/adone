@@ -84,8 +84,7 @@ describe("net", "ws", "WebSocket", () => {
                 const ws = new WebSocket(`ws://localhost:${port}`, { perMessageDeflate: false });
                 ws.on("message", () => {
                     assert.strictEqual(ws.bytesReceived, 8);
-                    wss.close();
-                    done();
+                    wss.close(done);
                 });
             });
             wss.on("connection", (ws) => ws.send("foobar"));
@@ -284,10 +283,7 @@ describe("net", "ws", "WebSocket", () => {
         it("emits a ping event", (done) => {
             const wss = new WebSocketServer({ port: ++port }, () => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
-                ws.on("ping", () => {
-                    wss.close();
-                    done();
-                });
+                ws.on("ping", () => wss.close(done));
             });
 
             wss.on("connection", (client) => client.ping());
@@ -296,10 +292,7 @@ describe("net", "ws", "WebSocket", () => {
         it("emits a pong event", (done) => {
             const wss = new WebSocketServer({ port: ++port }, () => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
-                ws.on("pong", () => {
-                    wss.close();
-                    done();
-                });
+                ws.on("pong", () => wss.close(done));
             });
 
             wss.on("connection", (client) => client.pong());
@@ -494,8 +487,7 @@ describe("net", "ws", "WebSocket", () => {
                 let paused = true;
                 serverClient.on("message", () => {
                     assert.ok(!paused);
-                    wss.close();
-                    done();
+                    wss.close(done);
                 });
                 serverClient.pause();
 
@@ -1407,8 +1399,7 @@ describe("net", "ws", "WebSocket", () => {
                     assert.ok(closeEvent.wasClean);
                     assert.strictEqual(closeEvent.code, 1000);
 
-                    wss.close();
-                    done();
+                    wss.close(done);
                 });
             });
 
@@ -1424,8 +1415,7 @@ describe("net", "ws", "WebSocket", () => {
                     assert.strictEqual(closeEvent.code, 1001);
                     assert.strictEqual(closeEvent.reason, "some daft reason");
 
-                    wss.close();
-                    done();
+                    wss.close(done);
                 });
             });
 

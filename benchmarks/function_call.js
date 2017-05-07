@@ -1,5 +1,3 @@
-"use strict";
-
 function sum1(a, b) {
     return a + b;
 }
@@ -55,4 +53,4 @@ export default {
     "obj.wrap2(...args)"() {
         return a.wrap2(1, 2);
     }
-}
+};

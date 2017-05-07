@@ -15,7 +15,7 @@ describe("glosses", "databases", "mysql", "functional", "connection", "date para
 
     it("should accept an exdate as the argument", async () => {
         await connection.query("set time_zone = '+00:00'");
-        const t = adone.date.utc();
+        const t = adone.datetime.utc();
         const [rows] = await connection.execute("SELECT UNIX_TIMESTAMP(?) t", [t]);
         expect(rows).to.be.deep.equal([{ t: t.unix() }]);
     });

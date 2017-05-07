@@ -230,12 +230,16 @@ export default class XBase {
 
     getPathFor(path, node) {
         let foundPath = null;
+        let isDone = false;
 
         path.traverse({
             enter: (subPath) => {
+                if (isDone) {
+                    return;
+                }
                 if (subPath.node === node) {
                     foundPath = subPath;
-                    path.stop();
+                    isDone = true;
                 }
             }
         });

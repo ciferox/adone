@@ -1,3 +1,20 @@
+/**
+ * Converts an `ArrayBuffer` view into a buffer.
+ *
+ * @param {(DataView|TypedArray)} view The view to convert
+ * @return {Buffer} Converted view
+ * @private
+ */
+const viewToBuffer = (view) => {
+    const buf = Buffer.from(view.buffer);
+
+    if (view.byteLength !== view.buffer.byteLength) {
+        return buf.slice(view.byteOffset, view.byteOffset + view.byteLength);
+    }
+
+    return buf;
+};
+
 export default class Sender {
     /**
      * Creates a Sender instance.
@@ -370,21 +387,4 @@ export default class Sender {
             this._socket.write(list[0], cb);
         }
     }
-}
-
-/**
- * Converts an `ArrayBuffer` view into a buffer.
- *
- * @param {(DataView|TypedArray)} view The view to convert
- * @return {Buffer} Converted view
- * @private
- */
-function viewToBuffer(view) {
-    const buf = Buffer.from(view.buffer);
-
-    if (view.byteLength !== view.buffer.byteLength) {
-        return buf.slice(view.byteOffset, view.byteOffset + view.byteLength);
-    }
-
-    return buf;
 }

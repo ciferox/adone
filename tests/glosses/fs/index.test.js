@@ -200,7 +200,7 @@ describe("fs", () => {
 
     describe("Stat", () => {
 
-        it("should return a `util.Mode` instance with `new`", () => {
+        it("should return a `fs.Mode` instance with `new`", () => {
             const m = new fs.Mode({});
             expect(m instanceof fs.Mode).to.be.true;
         });

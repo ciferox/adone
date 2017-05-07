@@ -1,8 +1,4 @@
-// @flow
-
-
-
-const { is, x, util, fast: { Fast } } = adone;
+const { is, x, fs, fast: { Fast } } = adone;
 
 const defaultMode = 0o777 & (~process.umask());
 
@@ -70,7 +66,7 @@ export default function chmod(mode, dirMode) {
             file.stat.mode = file.stat.mode || defaultMode;
 
             if (is.object(curMode)) {
-                const statMode = new util.Mode(file.stat);
+                const statMode = new fs.Mode(file.stat);
                 assign(statMode, ncurMode);
                 file.stat.mode = statMode.stat.mode;
             } else {

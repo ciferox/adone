@@ -57,6 +57,8 @@ export default class XModule extends adone.meta.code.Base {
                                 }
                             }
                         }
+                        path.skip();
+                        return;
                     }
                 }
 
@@ -123,8 +125,8 @@ export default class XModule extends adone.meta.code.Base {
                     return realPath;
                 };
 
+                const realPath = expandDeclaration(path);
                 if (!shouldSkip) {
-                    const realPath = expandDeclaration(path);
                     const node = realPath.node;
 
                     if (is.null(xObj)) {
@@ -325,6 +327,8 @@ export default class XModule extends adone.meta.code.Base {
                 this._exports[isDefault ? "default" : node.name] = xObj;
                 break;
             }
+            default:
+                throw new adone.x.NotSupported(`Unsupported export type: ${node.type}`);
         }
     }
 

@@ -6,8 +6,8 @@ describe("glosses", "databases", "mysql", "unit", "packets", "datetime", () => {
 
         const packet = new Packet(4, buf, 0, buf.length);
         packet.readInt16();
-        const d = adone.date(packet.readDateTime());
-        const e = adone.date.utc(1358816523000);
+        const d = adone.datetime(packet.readDateTime());
+        const e = adone.datetime.utc(1358816523000);
         d.add(d.utcOffset(), "minutes");
         assert.equal(d.unix(), e.unix());
     });
@@ -19,8 +19,8 @@ describe("glosses", "databases", "mysql", "unit", "packets", "datetime", () => {
         packet.readInt16();
         const s = packet.readLengthCodedString("cesu8");
         assert.equal(s, "foo1");
-        const d = adone.date(packet.readDateTime());
-        const e = adone.date.utc(1455030494821);
+        const d = adone.datetime(packet.readDateTime());
+        const e = adone.datetime.utc(1455030494821);
         d.add(d.utcOffset(), "minutes");
         assert.equal(d.unix(), e.unix());
 

@@ -262,7 +262,7 @@ export default class ListingTool {
             const stat = await this.stat(resolve(path, name));
             const res = {
                 filename: encodeURIComponent(name),
-                modificationDate: adone.date(stat.mtime),
+                modificationDate: adone.datetime(stat.mtime),
                 size: stat.size,
                 isDirectory: stat.isDirectory()
             };

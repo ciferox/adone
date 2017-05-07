@@ -1318,7 +1318,7 @@ describe("Task Manager", () => {
                     assert.equal(meta.type, "context");
                     assert.equal(meta.id.length, 64);
                     assert.equal(meta.tasks.length, 0);
-                    assert.isAtMost(meta.createTime, adone.date().unix());
+                    assert.isAtMost(meta.createTime, adone.datetime().unix());
                 });
             }
 
@@ -1336,7 +1336,7 @@ describe("Task Manager", () => {
                 assert.equal(meta.type, "process");
                 assert.equal(meta.id, id);
                 assert.equal(meta.tasks.length, 0);
-                assert.isAtMost(meta.createTime, adone.date().unix());
+                assert.isAtMost(meta.createTime, adone.datetime().unix());
             });
 
             it("create and get container by id", async () => {
@@ -1354,7 +1354,7 @@ describe("Task Manager", () => {
                 assert.equal(meta.type, "process");
                 assert.equal(meta.id, id);
                 assert.equal(meta.tasks.length, 0);
-                assert.isAtMost(meta.createTime, adone.date().unix());
+                assert.isAtMost(meta.createTime, adone.datetime().unix());
             });
 
             it("create container second time with 'returnIfExists' flag", async () => {
@@ -1373,7 +1373,7 @@ describe("Task Manager", () => {
                 assert.equal(meta.type, "process");
                 assert.equal(meta.id, id);
                 assert.equal(meta.tasks.length, 0);
-                assert.isAtMost(meta.createTime, adone.date().unix());
+                assert.isAtMost(meta.createTime, adone.datetime().unix());
             });
 
             async function checkContainerCodeSinglTask(code) {

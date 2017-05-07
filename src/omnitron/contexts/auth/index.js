@@ -134,7 +134,7 @@ export default class Auth {
             _type: "session",
             userId: userData._id,
             key: adone.text.random(64),
-            startTm: adone.date().unix()
+            startTm: adone.datetime().unix()
         };
 
         sessionData = await this.iDs.insert(sessionData);

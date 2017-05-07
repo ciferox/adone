@@ -84,7 +84,7 @@ export default class TaskManager {
             }
         }
 
-        const containerInfo = this._initContainerInfo({ id, type, createTime: adone.date().unix(), tasks: [] });
+        const containerInfo = this._initContainerInfo({ id, type, createTime: adone.datetime().unix(), tasks: [] });
         containerInfo.meta = await this.iDs.insert(containerInfo.meta);
         this._containers.set(id, containerInfo);
 

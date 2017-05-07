@@ -190,7 +190,7 @@ export class Process extends AsyncEmitter {
     }
 
     async _write(path, ...args) {
-        const timestamp = adone.date().format("DD.MM.YYYY hh:mm:ss");
+        const timestamp = adone.datetime().format("DD.MM.YYYY hh:mm:ss");
         const message = adone.std.util.format(...args);
         if (!(await adone.fs.exists(std.path.dirname(path)))) {
             await adone.fs.mkdir(std.path.dirname(path));

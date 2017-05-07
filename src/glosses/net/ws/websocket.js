@@ -101,23 +101,23 @@ const EventTarget = {
             return;
         }
 
-        function onMessage(data, flags) {
+        const onMessage = (data, flags) => {
             listener.call(this, new MessageEvent(data, Boolean(flags.binary), this));
-        }
+        };
 
-        function onClose(code, message) {
+        const onClose = (code, message) => {
             listener.call(this, new CloseEvent(code, message, this));
-        }
+        };
 
-        function onError(event) {
+        const onError = (event) => {
             event.type = "error";
             event.target = this;
             listener.call(this, event);
-        }
+        };
 
-        function onOpen() {
+        const onOpen = () => {
             listener.call(this, new OpenEvent(this));
-        }
+        };
 
         if (method === "message") {
             onMessage._listener = listener;

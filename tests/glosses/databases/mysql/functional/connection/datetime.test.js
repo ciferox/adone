@@ -11,7 +11,7 @@ describe("glosses", "databases", "mysql", "functional", "connection", "datetime"
 
     before(async () => {
         connection = await createConnection();
-        await connection.query(`set time_zone = '${adone.date().format("Z")}'`);
+        await connection.query(`set time_zone = '${adone.datetime().format("Z")}'`);
         await connection.query("CREATE TEMPORARY TABLE t (d1 DATE, d2 DATETIME)");
         await connection.query("INSERT INTO t set d1=?, d2=?", [date, date]);
 
@@ -30,7 +30,7 @@ describe("glosses", "databases", "mysql", "functional", "connection", "datetime"
     });
 
     it("should return a date", async () => {
-        const t = adone.date.unix(234125434);
+        const t = adone.datetime.unix(234125434);
         const [rows] = await connection.execute("select from_unixtime(?) t", [t.unix()]);
         expect(rows[0].t - t.toDate()).to.be.equal(0);
     });

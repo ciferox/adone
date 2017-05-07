@@ -24,7 +24,7 @@ export default function (options = {}) {
     if (options.timestamp) {
         const format = is.string(options.timestamp) ? options.timestamp : defaultTimestampFormat;
         loggerOpts.bindArgs = [
-            () => adone.date().format(format)
+            () => adone.datetime().format(format)
         ];
     }
     const logger = new Logger(loggerOpts);
