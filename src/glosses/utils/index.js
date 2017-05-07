@@ -282,14 +282,14 @@ export const shuffleArray = (array) => {
     return array;
 };
 
-export const enumerate = function*(iterable, start = 0) {
+export const enumerate = function* (iterable, start = 0) {
     let i = start;
     for (const a of iterable) {
         yield [i++, a];
     }
 };
 
-export const zip = function*(...iterables) {
+export const zip = function* (...iterables) {
     if (iterables.length === 0) {
         return;
     }
@@ -870,15 +870,31 @@ adone.lazify({
     toposort: "./toposort",
     jsesc: "./jsesc",
     typeOf: "./typeof",
-    memcpy: () => adone.bind("memcpy.node").Memory,
-    microtime: () => adone.bind("microtime.node"),
+    memcpy: () => adone.native.Memory,
+    microtime: () => adone.native.Timing,
     uuid: "./uuid",
-    userid: () => adone.bind("userid.node").UserId,
+    userid: () => adone.native.UserId,
     StreamSearch: "./streamsearch",
     delegate: "./delegate",
     GlobExp: "./globexp",
     iconv: "./iconv",
     sqlstring: "./sqlstring",
     Editor: "./editor",
-    binarySearch: "./binary_search"
+    binarySearch: "./binary_search",
+    buffer: () => ({
+        concat: (list, totalLength) => {
+            const target = Buffer.allocUnsafe(totalLength);
+            let offset = 0;
+
+            for (let i = 0; i < list.length; i++) {
+                const buf = list[i];
+                buf.copy(target, offset);
+                offset += buf.length;
+            }
+
+            return target;
+        },
+        mask: adone.native.Common.maskBuffer,
+        unmask: adone.native.Common.unmaskBuffer
+    })
 }, exports, require);

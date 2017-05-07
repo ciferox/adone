@@ -293,7 +293,7 @@ export default class PerMessageDeflate {
             if (err) {
                 callback(err);
             } else {
-                callback(null, adone.net.ws.bufferutil.concat(buffers, totalLength));
+                callback(null, adone.util.buffer.concat(buffers, totalLength));
             }
         });
     }
@@ -360,7 +360,7 @@ export default class PerMessageDeflate {
         this._deflate.write(data);
         this._deflate.flush(adone.std.zlib.Z_SYNC_FLUSH, () => {
             cleanup();
-            let data = adone.net.ws.bufferutil.concat(buffers, totalLength);
+            let data = adone.util.buffer.concat(buffers, totalLength);
             if (fin) {
                 data = data.slice(0, data.length - 4);
             }

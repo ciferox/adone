@@ -95,11 +95,11 @@ export default class Sender {
         target[offset - 1] = mask[3];
 
         if (merge) {
-            adone.net.ws.bufferutil.mask(data, mask, target, offset, data.length);
+            adone.util.buffer.mask(data, mask, target, offset, data.length);
             return [target];
         }
 
-        adone.net.ws.bufferutil.mask(data, mask, data, 0, data.length);
+        adone.util.buffer.mask(data, mask, data, 0, data.length);
         return [target, data];
     }
 

@@ -18,7 +18,7 @@ const toBuffer = (fragments, messageLength) => {
         return fragments[0];
     }
     if (fragments.length > 1) {
-        return adone.net.ws.bufferutil.concat(fragments, messageLength);
+        return adone.util.buffer.concat(fragments, messageLength);
     }
     return adone.emptyBuffer;
 };
@@ -351,7 +351,7 @@ export default class Receiver {
 
             data = this.readBuffer(this.payloadLength);
             if (this.masked) {
-                adone.net.ws.bufferutil.unmask(data, this.mask);
+                adone.util.buffer.unmask(data, this.mask);
             }
         }
 
@@ -417,7 +417,7 @@ export default class Receiver {
             } else {
                 const buf = toBuffer(fragments, messageLength);
 
-                if (!adone.net.ws.is.validUTF8(buf)) {
+                if (!adone.is.validUTF8(buf)) {
                     this.error(new Error("invalid utf8 sequence"), 1007);
                     return;
                 }
@@ -453,7 +453,7 @@ export default class Receiver {
 
                 const buf = data.slice(2);
 
-                if (!adone.net.ws.is.validUTF8(buf)) {
+                if (!adone.is.validUTF8(buf)) {
                     this.error(new Error("invalid utf8 sequence"), 1007);
                     return;
                 }

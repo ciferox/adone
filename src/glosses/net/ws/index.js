@@ -27,25 +27,5 @@ adone.lazify({
     constants: () => ({
         BINARY_TYPES: ["nodebuffer", "arraybuffer", "fragments"],
         GUID: "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
-    }),
-    native: () => adone.bind("ws.node").WebSocket,
-    bufferutil: () => ({
-        concat: (list, totalLength) => {
-            const target = Buffer.allocUnsafe(totalLength);
-            let offset = 0;
-
-            for (let i = 0; i < list.length; i++) {
-                const buf = list[i];
-                buf.copy(target, offset);
-                offset += buf.length;
-            }
-
-            return target;
-        },
-        mask: adone.net.ws.native.mask,
-        unmask: adone.net.ws.native.unmask
-    }),
-    is: () => ({
-        validUTF8: adone.net.ws.native.isValidUTF8
     })
 }, exports, require);

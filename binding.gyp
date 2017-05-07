@@ -1,15 +1,12 @@
 {
   'targets': [
     {
-      'target_name': 'microtime',
-      'sources': [ 'src/native/microtime.cc' ],
-      'include_dirs' : [
-        "nan"
-      ]
-    },
-    {
-      'target_name': 'memcpy',
-      'sources': [ 'src/native/memcpy.cc' ],
+      'target_name': 'common',
+      'sources': [
+        'src/native/common.cc'
+      ],
+      'cflags!': [ '-O3' ],
+      'cflags': [ '-O2' ],
       'include_dirs' : [
         "nan"
       ]
@@ -93,29 +90,6 @@
           }
         ]
       ]
-    },
-    {
-	  'target_name': 'userid',
-	  'conditions': [
-	    ['OS!="win"', {
-          'sources': [ 'src/native/userid.cc' ],
-          'include_dirs' : [
-            "nan"
-          ]
-		}]
-	  ]
-    },
-    {
-      'target_name': 'ws',
-      'include_dirs': ["nan"],
-      'cflags!': [ '-O3' ],
-      'cflags': [ '-O2' ],
-      'sources': [ 'src/native/net/ws.cc' ],
-      'xcode_settings': {
-        'MACOSX_DEPLOYMENT_TARGET': '10.8',
-        'CLANG_CXX_LANGUAGE_STANDARD': 'c++11',
-        'CLANG_CXX_LIBRARY': 'libc++'
-      }
     },
     {
       "target_name": "brotli_encode",
@@ -246,13 +220,6 @@
           ]
         }]
       ]
-    },
-    {
-      'target_name': 'terminal',
-      'include_dirs': ["nan"],
-      'cflags!': [ '-O3' ],
-      'cflags': [ '-O2' ],
-      'sources': [ 'src/native/terminal.cc' ]
     },
     {
       "target_name": "leveldown",
@@ -530,7 +497,7 @@
       "variables": {
         "srcpath%": "<(module_root_dir)/build/Release",
       },
-      "dependencies" : [ "bignumber", "brotli_decode", "brotli_encode", "lzma", "bson", "hiredis", "memcpy", "metrics", "microtime", "userid", "terminal", "leveldown", "ws", "masscan" ],
+      "dependencies" : [ "bignumber", "brotli_decode", "brotli_encode", "lzma", "bson", "hiredis", "common", "metrics", "leveldown", "masscan" ],
       "copies": [
         {
           "files": [ 
@@ -539,13 +506,9 @@
             "<(srcpath)/brotli_encode.node",
             "<(srcpath)/bson.node",
             "<(srcpath)/hiredis.node",
-            "<(srcpath)/memcpy.node",
+            "<(srcpath)/common.node",
             "<(srcpath)/metrics.node",
-            "<(srcpath)/microtime.node",
-            "<(srcpath)/userid.node",
-            "<(srcpath)/terminal.node",
             "<(srcpath)/leveldown.node",
-            "<(srcpath)/ws.node",
             "<(srcpath)/lzma.node",
             "<(srcpath)/masscan.node"
           ],

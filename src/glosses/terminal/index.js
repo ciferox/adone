@@ -4260,7 +4260,7 @@ export default class Terminal extends adone.EventEmitter {
 
     get native() {
         if (is.null(this._native)) {
-            this._native = adone.bind("terminal.node").Terminal;
+            this._native = adone.native.Terminal;
         }
         return this._native;
     }

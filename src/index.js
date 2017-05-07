@@ -255,6 +255,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             return $require;
         },
         package: "../package.json",
+        native: () => adone.bind("common.node"),
         assertion: "./glosses/assertion",
         assert: () => adone.assertion.loadAssertInterface().assert,
         expect: () => adone.assertion.loadExpectInterface().expect,

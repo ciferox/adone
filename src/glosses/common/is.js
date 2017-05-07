@@ -775,4 +775,8 @@ const is = {
     symbol: (value) => (getTag(value) === "symbol")
 };
 
+adone.lazify({
+    validUTF8: () => adone.native.Common.isValidUTF8
+}, is, require);
+
 export default is;
