@@ -51,7 +51,7 @@ module.exports = (sockPath, key, keyType, data, cb) => {
               uint32      flags
             */
             let p = 9;
-            buf = new Buffer(4 + 1 + 4 + keylen + 4 + datalen + 4);
+            buf = Buffer.allocUnsafe(4 + 1 + 4 + keylen + 4 + datalen + 4);
             buf.writeUInt32BE(buf.length - 4, 0, true);
             buf[4] = SIGN_REQUEST;
             buf.writeUInt32BE(keylen, 5, true);
@@ -64,13 +64,13 @@ module.exports = (sockPath, key, keyType, data, cb) => {
             /*
               byte        SSH2_AGENTC_REQUEST_IDENTITIES
             */
-            sock.write(new Buffer([0, 0, 0, 1, REQUEST_IDENTITIES]));
+            sock.write(Buffer.from([0, 0, 0, 1, REQUEST_IDENTITIES]));
         }
     };
 
     const ondata = (chunk) => {
         for (let i = 0, len = chunk.length; i < len; ++i) {
-            if (type === undefined) {
+            if (is.undefined(type)) {
                 // skip over packet length
                 if (++count === 5) {
                     type = chunk[i];
@@ -85,7 +85,7 @@ module.exports = (sockPath, key, keyType, data, cb) => {
                     siglen <<= 8;
                     siglen += chunk[i];
                     if (++count === 4) {
-                        sig = new Buffer(siglen);
+                        sig = Buffer.allocUnsafe(siglen);
                         count = 0;
                     }
                 } else {
@@ -105,7 +105,7 @@ module.exports = (sockPath, key, keyType, data, cb) => {
                   string      public key blob
                   string      public key comment
                 */
-                if (keys === undefined) {
+                if (is.undefined(keys)) {
                     nkeys <<= 8;
                     nkeys += chunk[i];
                     if (++count === 4) {
@@ -121,7 +121,7 @@ module.exports = (sockPath, key, keyType, data, cb) => {
                         keylen <<= 8;
                         keylen += chunk[i];
                         if (++count === 4) {
-                            key = new Buffer(keylen);
+                            key = Buffer.allocUnsafe(keylen);
                             count = 0;
                         }
                     } else if (comment === false) {
@@ -254,7 +254,7 @@ module.exports = (sockPath, key, keyType, data, cb) => {
                 }
 
                 write(buf) {
-                    if (this.buffer === null) {
+                    if (is.null(this.buffer)) {
                         this.buffer = buf;
                     } else {
                         this.buffer = Buffer.concat([this.buffer, buf], this.buffer.length + buf.length);
@@ -339,7 +339,7 @@ module.exports = (sockPath, key, keyType, data, cb) => {
                     let bc = 0;
                     let isRetrying = false;
                     const inbuf = [];
-                    let credsbuf = new Buffer(12);
+                    let credsbuf = Buffer.allocUnsafe(12);
                     let i;
                     let j;
 
@@ -351,7 +351,7 @@ module.exports = (sockPath, key, keyType, data, cb) => {
                     // parse cygwin unix socket file contents
                     const port = parseInt(m[1], 10);
                     const secret = m[2].replace(/\-/g, "");
-                    const secretbuf = new Buffer(16);
+                    const secretbuf = Buffer.allocUnsfae(16);
                     for (i = 0, j = 0; j < 32; ++i, j += 2) {
                         secretbuf[i] = parseInt(secret.substring(j, j + 2), 16);
                     }

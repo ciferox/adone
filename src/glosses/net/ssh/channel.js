@@ -82,7 +82,7 @@ class ServerStderr extends adone.std.stream.Writable {
             }
             if (p > 0) {
                 // partial
-                buf = new Buffer(len - p);
+                buf = Buffer.allocUnsafe(len - p);
                 data.copy(buf, 0, p);
                 channel._chunkErr = buf;
             } else {
@@ -211,7 +211,7 @@ export default class Channel extends adone.std.stream.Duplex {
                 // align more with node child processes, where the close event gets the
                 // same arguments as the exit event
                 if (!self.readable) {
-                    if (exitCode === null) {
+                    if (adone.is.null(exitCode)) {
                         self.emit("close", exitCode, exitSignal, exitDump, exitDesc,
                             exitLang);
                     } else {
@@ -219,7 +219,7 @@ export default class Channel extends adone.std.stream.Duplex {
                     }
                 } else {
                     self.once("end", () => {
-                        if (exitCode === null) {
+                        if (adone.is.null(exitCode)) {
                             self.emit("close", exitCode, exitSignal, exitDump, exitDesc,
                                 exitLang);
                         } else {
@@ -472,7 +472,7 @@ export default class Channel extends adone.std.stream.Duplex {
             }
             if (p > 0) {
                 // partial
-                buf = new Buffer(len - p);
+                buf = Buffer.allocUnsafe(len - p);
                 data.copy(buf, 0, p);
                 this._chunk = buf;
             } else {
@@ -529,11 +529,10 @@ export default class Channel extends adone.std.stream.Duplex {
         }
 
         if (this.type === "session" && this.writable && this.outgoing.state === "open") {
-            if (typeof name === "number") {
+            if (adone.is.number(name)) {
                 return this._client._sshstream.exitStatus(this.outgoing.id, name);
-            } else {
-                return this._client._sshstream.exitSignal(this.outgoing.id, name, coreDumped, msg);
             }
+            return this._client._sshstream.exitSignal(this.outgoing.id, name, coreDumped, msg);
         }
 
         return true;

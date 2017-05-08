@@ -211,7 +211,7 @@ if (adone.semver.gte(process.version, "0.11.14")) {
         "ecdh-sha2-nistp521"
     ].concat(DEFAULT_KEX);
 }
-const KEX_BUF = new Buffer(DEFAULT_KEX.join(","), "ascii");
+const KEX_BUF = Buffer.from(DEFAULT_KEX.join(","), "ascii");
 SUPPORTED_KEX = DEFAULT_KEX.concat(SUPPORTED_KEX);
 
 const DEFAULT_SERVER_HOST_KEY = [
@@ -230,7 +230,7 @@ if (adone.semver.gte(process.version, "5.2.0")) {
         "ecdsa-sha2-nistp521"
     );
 }
-const SERVER_HOST_KEY_BUF = new Buffer(DEFAULT_SERVER_HOST_KEY.join(","),
+const SERVER_HOST_KEY_BUF = Buffer.from(DEFAULT_SERVER_HOST_KEY.join(","),
     "ascii");
 SUPPORTED_SERVER_HOST_KEY = DEFAULT_SERVER_HOST_KEY.concat(
     SUPPORTED_SERVER_HOST_KEY
@@ -268,7 +268,7 @@ DEFAULT_CIPHER = [
     "aes192-ctr",
     "aes256-ctr"
 ].concat(DEFAULT_CIPHER);
-const CIPHER_BUF = new Buffer(DEFAULT_CIPHER.join(","), "ascii");
+const CIPHER_BUF = Buffer.from(DEFAULT_CIPHER.join(","), "ascii");
 SUPPORTED_CIPHER = DEFAULT_CIPHER.concat(SUPPORTED_CIPHER);
 
 const DEFAULT_HMAC = [
@@ -284,7 +284,7 @@ let SUPPORTED_HMAC = [
     "hmac-sha1-96", // first 96 bits of HMAC-SHA1
     "hmac-md5-96" // first 96 bits of HMAC-MD5
 ];
-const HMAC_BUF = new Buffer(DEFAULT_HMAC.join(","), "ascii");
+const HMAC_BUF = Buffer.from(DEFAULT_HMAC.join(","), "ascii");
 SUPPORTED_HMAC = DEFAULT_HMAC.concat(SUPPORTED_HMAC);
 
 const DEFAULT_COMPRESS = [
@@ -295,7 +295,7 @@ const DEFAULT_COMPRESS = [
     "zlib" // ZLIB (LZ77) compression
 ];
 let SUPPORTED_COMPRESS = [];
-const COMPRESS_BUF = new Buffer(DEFAULT_COMPRESS.join(","), "ascii");
+const COMPRESS_BUF = Buffer.from(DEFAULT_COMPRESS.join(","), "ascii");
 SUPPORTED_COMPRESS = DEFAULT_COMPRESS.concat(SUPPORTED_COMPRESS);
 
 exports.ALGORITHMS = {

@@ -124,7 +124,7 @@ const reqX11 = (chan, screen, cb) => {
 
     if (is.function(screen)) {
         cb = screen;
-    } else if (typeof screen === "object") {
+    } else if (is.object(screen)) {
         if (is.boolean(screen.single)) {
             cfg.single = screen.single;
         }
@@ -170,7 +170,7 @@ const reqPty = (chan, opts, cb) => {
 
     if (is.function(opts)) {
         cb = opts;
-    } else if (typeof opts === "object") {
+    } else if (is.object(opts)) {
         if (is.number(opts.rows)) {
             rows = opts.rows;
         }
@@ -337,7 +337,7 @@ function onCHANNEL_OPEN(self, info) {
     }
 
     function reject() {
-        if (reason === undefined) {
+        if (is.undefined(reason)) {
             if (localChan === false) {
                 reason = adone.net.ssh.c.CHANNEL_OPEN_FAILURE.RESOURCE_SHORTAGE;
             } else {
@@ -348,9 +348,7 @@ function onCHANNEL_OPEN(self, info) {
         self._sshstream.channelOpenFail(info.sender, reason, "", "");
     }
 
-    if (info.type === "forwarded-tcpip" ||
-        info.type === "x11" ||
-        info.type === "auth-agent@openssh.com") {
+    if (info.type === "forwarded-tcpip" || info.type === "x11" || info.type === "auth-agent@openssh.com") {
         // check for conditions for automatic rejection
         let rejectConn = ((info.type === "forwarded-tcpip" &&
             self._forwarding[`${info.data.destIP
@@ -532,7 +530,7 @@ export default class Client extends adone.EventEmitter {
                 algorithms.compress = algoList;
             }
         }
-        if (algorithms.compress === undefined) {
+        if (is.undefined(algorithms.compress)) {
             if (options.compress) {
                 algorithms.compress = ["zlib@openssh.com", "zlib"];
                 if (options.compress !== "force") {
@@ -582,7 +580,7 @@ export default class Client extends adone.EventEmitter {
                 throw new Error("privateKey value does not contain a (valid) private key");
             }
             if (privKeyInfo.encryption) {
-                if (!is.string(typeof options.passphrase)) {
+                if (!is.string(options.passphrase)) {
                     throw new Error("Encrypted private key detected, but no passphrase given");
                 }
                 decryptKey(privKeyInfo, options.passphrase);
@@ -1135,16 +1133,16 @@ export default class Client extends adone.EventEmitter {
                 });
             }
 
-            if (typeof opts === "object") {
-                if (typeof opts.env === "object") {
+            if (is.object(opts)) {
+                if (is.object(opts.env)) {
                     reqEnv(chan, opts.env);
                 }
-                if (typeof opts.pty === "object" || opts.pty === true) {
+                if (is.object(opts.pty) || opts.pty === true) {
                     todo.push(() => {
                         reqPty(chan, opts.pty, reqCb);
                     });
                 }
-                if (typeof opts.x11 === "object" || opts.x11 === "number" || opts.x11 === true) {
+                if (is.object(opts.x11) || is.number(opts.x11) || opts.x11 === true) {
                     todo.push(() => {
                         reqX11(chan, opts.x11, reqCb);
                     });
@@ -1210,8 +1208,8 @@ export default class Client extends adone.EventEmitter {
                 });
             }
 
-            if (typeof opts === "object") {
-                if (typeof opts.x11 === "object" || opts.x11 === "number" || opts.x11 === true) {
+            if (is.object(opts)) {
+                if (is.object(opts.x11) || is.number(opts.x11) || opts.x11 === true) {
                     todo.push(() => {
                         reqX11(chan, opts.x11, reqCb);
                     });

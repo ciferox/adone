@@ -5,7 +5,7 @@ export default class XObject extends adone.meta.code.Base {
         this._entries = new Map();
 
         for (const prop of this.ast.properties) {
-            this._entries.set(prop.key.name, this.createXObject({ ast: prop, xModule: this.xModule }));
+            this.set(prop.key.name, this.createXObject({ ast: prop, xModule: this.xModule }));
         }
     }
 
@@ -19,6 +19,10 @@ export default class XObject extends adone.meta.code.Base {
 
     values() {
         return [...this._entries.values()];
+    }
+
+    set(key, value) {
+        this._entries.set(key, value);
     }
 }
 adone.tag.define("CODEMOD_OBJECT");

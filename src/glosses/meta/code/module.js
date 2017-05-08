@@ -36,24 +36,43 @@ export default class XModule extends adone.meta.code.Base {
                 } else if (nodeType === "ExpressionStatement" && this._isLazifier(path.node.expression)) {
                     // Process adone lazyfier
                     const callExpr = path.node.expression;
+                    const targetInfo = adone.meta.code.nodeInfo(callExpr.arguments[1]);
                     if (adone.meta.code.nodeInfo(callExpr.arguments[0]) === "ObjectExpression" &&
-                        adone.meta.code.nodeInfo(callExpr.arguments[1]) === "Identifier:exports" &&
+                        targetInfo.startsWith("Identifier:") &&
                         adone.meta.code.nodeInfo(callExpr.arguments[2]) === "Identifier:require") {
 
                         const props = callExpr.arguments[0].properties;
                         const basePath = adone.std.path.dirname(this.filePath);
 
-                        for (const prop of props) {
-                            const name = prop.key.name;
-                            const fullName = `${this.nsName}.${name}`;
-                            const { namespace, objectName } = adone.meta.parseName(fullName);
-                            if (namespace === this.nsName) {
+                        if (targetInfo === "Identifier:exports") {
+                            for (const prop of props) {
+                                const name = prop.key.name;
+                                const fullName = `${this.nsName}.${name}`;
+                                const { namespace, objectName } = adone.meta.parseName(fullName);
+                                if (namespace === this.nsName) {
+                                    if (prop.value.type === "StringLiteral") {
+                                        lazies.push({ name: objectName, path: adone.std.path.join(basePath, prop.value.value) });
+                                    } else if (prop.value.type === "ArrowFunctionExpression") {
+                                        const lazyPath = this.getPathFor(path, prop.value);
+                                        const xObj = new adone.meta.code.LazyFunction({ parent: this, ast: prop.value, path: lazyPath, xModule: this });
+                                        this.lazies.set(objectName, xObj);
+                                    }
+                                }
+                            }
+                        } else {
+                            const xObj = this.lookupInGlobalScope(targetInfo.split(":")[1]);
+                            if (!adone.meta.code.is.object(xObj.value)) {
+                                throw new adone.x.NotValid(`Not valid attempt to lazify non-object: ${xObj.value.ast.type}`);
+                            }
+
+                            for (const prop of props) {
+                                const name = prop.key.name;
                                 if (prop.value.type === "StringLiteral") {
-                                    lazies.push({ name: objectName, path: adone.std.path.join(basePath, prop.value.value) });
+                                    throw new adone.x.NotImplemented("Not implemented yet");
+                                    // lazies.push({ name: objectName, path: adone.std.path.join(basePath, prop.value.value) });
                                 } else if (prop.value.type === "ArrowFunctionExpression") {
                                     const lazyPath = this.getPathFor(path, prop.value);
-                                    const xObj = new adone.meta.code.LazyFunction({ parent: this, ast: prop.value, path: lazyPath, xModule: this });
-                                    this.lazies.set(objectName, xObj);
+                                    xObj.value.set(name, new adone.meta.code.LazyFunction({ parent: this, ast: prop.value, path: lazyPath, xModule: this }));
                                 }
                             }
                         }

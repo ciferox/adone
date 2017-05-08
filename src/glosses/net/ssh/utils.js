@@ -2,7 +2,7 @@
 //    * handle multi-line header values (OpenSSH)?
 //    * more thorough validation?
 
-
+const { is } = adone;
 const crypto = adone.std.crypto;
 const asn1 = adone.crypto.asn1;
 
@@ -14,7 +14,7 @@ const RE_KEY_LEN = /(.{64})/g;
 // XXX the value of 2400 from dropbear is only for certain strings, not all
 // strings. for example the list strings used during handshakes
 const MAX_STRING_LEN = Infinity; //2400; // taken from dropbear
-const PPK_IV = new Buffer([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+const PPK_IV = Buffer.from([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
 let utils;
 
@@ -32,7 +32,7 @@ const RE_HEADER_RFC4716 = /^([^:]+): (.*)?$/i;
 module.exports.parseKey = (data) => {
     if (Buffer.isBuffer(data)) {
         data = data.toString("utf8");
-    } else if (typeof data !== "string") {
+    } else if (!is.string(data)) {
         return new Error("Key data must be a Buffer or string");
     }
 
@@ -79,7 +79,7 @@ module.exports.parseKey = (data) => {
 
         if (!RE_HEADER_OPENSSH.test(data[1])) {
             // unencrypted, no headers
-            const privData = new Buffer(data.slice(1, -1).join(""), "base64");
+            const privData = Buffer.from(data.slice(1, -1).join(""), "base64");
             if (keyType !== "ec") {
                 ret.fulltype = `ssh-${keyType}`;
             } else {
@@ -107,7 +107,7 @@ module.exports.parseKey = (data) => {
                             break;
                     }
                 }
-                if (ret.fulltype === undefined) {
+                if (is.undefined(ret.fulltype)) {
                     return new Error("Unsupported EC private key type");
                 }
             }
@@ -129,16 +129,16 @@ module.exports.parseKey = (data) => {
                     break;
                 }
             }
-            ret.private = new Buffer(data.slice(i, -1).join(""), "base64");
+            ret.private = Buffer.from(data.slice(i, -1).join(""), "base64");
         }
         ret.type = keyType;
-        ret.privateOrig = new Buffer(orig);
+        ret.privateOrig = Buffer.from(orig);
     } else if (m = RE_HEADER_OPENSSH_PUB.exec(data[0])) { // eslint-disable-line no-cond-assign
         // OpenSSH public key
         ret.fulltype = m[1];
         ret.type = (m[2] || "ec").toLowerCase();
-        ret.public = new Buffer(m[4], "base64");
-        ret.publicOrig = new Buffer(orig);
+        ret.public = Buffer.from(m[4], "base64");
+        ret.publicOrig = Buffer.from(orig);
         ret.comment = m[5];
         if (m[3]) { // ECDSA only
             ret.curve = `nistp${m[3]}`;
@@ -147,7 +147,7 @@ module.exports.parseKey = (data) => {
         RE_FOOTER_RFC4716_PUB.test(data.slice(-1))) {
         if (data[1].indexOf(": ") === -1) {
             // no headers
-            ret.public = new Buffer(data.slice(1, -1).join(""), "base64");
+            ret.public = Buffer.from(data.slice(1, -1).join(""), "base64");
         } else {
             // headers
             for (i = 1, len = data.length; i < len; ++i) {
@@ -180,7 +180,7 @@ module.exports.parseKey = (data) => {
                     return new Error("RFC4716 public key invalid header line");
                 }
             }
-            ret.public = new Buffer(data.slice(i, -1).join(""), "base64");
+            ret.public = Buffer.from(data.slice(i, -1).join(""), "base64");
         }
         len = ret.public.readUInt32BE(0, true);
         const fulltype = ret.public.toString("ascii", 4, 4 + len);
@@ -193,7 +193,7 @@ module.exports.parseKey = (data) => {
             return new Error(`Unsupported RFC4716 public key type: ${fulltype}`);
         }
         ret.public = ret.public.slice(11);
-        ret.publicOrig = new Buffer(orig);
+        ret.publicOrig = Buffer.from(orig);
     } else if (m = RE_PPK.exec(orig)) { // eslint-disable-line no-cond-assign
         // m[1] = short type
         // m[2] = encryption type
@@ -237,8 +237,8 @@ module.exports.parseKey = (data) => {
         }
         ret.comment = m[3];
 
-        ret.public = new Buffer(m[4].replace(/\r?\n/g, ""), "base64");
-        const privateKey = new Buffer(m[5].replace(/\r?\n/g, ""), "base64");
+        ret.public = Buffer.from(m[4].replace(/\r?\n/g, ""), "base64");
+        const privateKey = Buffer.from(m[5].replace(/\r?\n/g, ""), "base64");
 
         ret.privateMAC = m[6].replace(/\r?\n/g, "");
 
@@ -298,8 +298,8 @@ export const readInt = (buffer, start, stream, cb) => {
 };
 
 export const readString = (buffer, start, encoding, stream, cb, maxLen) => {
-    if (encoding && !Buffer.isBuffer(encoding) && typeof encoding !== "string") {
-        if (typeof cb === "number") {
+    if (encoding && !Buffer.isBuffer(encoding) && !is.string(encoding)) {
+        if (is.number(cb)) {
             maxLen = cb;
         }
         cb = stream;
@@ -434,7 +434,7 @@ export const convertPPKPrivate = (keyInfo) => {
         } PRIVATE KEY-----`;
 
     keyInfo.private = asnWriter.buffer;
-    keyInfo.privateOrig = new Buffer(fullkey);
+    keyInfo.privateOrig = Buffer.from(fullkey);
     keyInfo._converted = true;
     return true;
 };
@@ -448,7 +448,7 @@ export const verifyPPKMAC = (keyInfo, passphrase, privateKey) => {
         throw new Error("Missing MAC");
     } else if (!privateKey) {
         throw new Error("Missing raw private key data");
-    } else if (keyInfo.encryption && typeof passphrase !== "string") {
+    } else if (keyInfo.encryption && !is.string(passphrase)) {
         throw new Error("Missing passphrase for encrypted PPK");
     } else if (keyInfo.encryption && !keyInfo._decrypted) {
         throw new Error("PPK must be decrypted before verifying MAC");
@@ -465,7 +465,7 @@ export const verifyPPKMAC = (keyInfo, passphrase, privateKey) => {
     const pub = keyInfo.public;
     const publen = pub.length;
     const privlen = privateKey.length;
-    const macdata = new Buffer(4 + typelen +
+    const macdata = Buffer.allocUnsafe(4 + typelen +
         4 + enclen +
         4 + commlen +
         4 + publen +
@@ -483,7 +483,7 @@ export const verifyPPKMAC = (keyInfo, passphrase, privateKey) => {
     macdata.writeUInt32BE(privlen, p += publen, true);
     privateKey.copy(macdata, p += 4);
 
-    if (typeof passphrase !== "string") {
+    if (!is.string(passphrase)) {
         passphrase = "";
     }
 
@@ -513,13 +513,13 @@ export const DSASigBERToBare = (signature) => {
     let rOffset = 0;
     let sOffset = 0;
     if (r.length < 20) {
-        const rNew = new Buffer(20);
+        const rNew = Buffer.allocUnsafe(20);
         r.copy(rNew, 1);
         r = rNew;
         r[0] = 0;
     }
     if (s.length < 20) {
-        const sNew = new Buffer(20);
+        const sNew = Buffer.allocUnsafe(20);
         s.copy(sNew, 1);
         s = sNew;
         s[0] = 0;
@@ -530,7 +530,7 @@ export const DSASigBERToBare = (signature) => {
     if (s.length > 20 && s[0] === 0x00) {
         sOffset = 1;
     }
-    const newSig = new Buffer((r.length - rOffset) + (s.length - sOffset));
+    const newSig = Buffer.allocUnsafe((r.length - rOffset) + (s.length - sOffset));
     r.copy(newSig, 0, rOffset);
     s.copy(newSig, r.length - rOffset, sOffset);
     return newSig;
@@ -546,7 +546,7 @@ export const DSASigBareToBER = (signature) => {
     let r = signature.slice(0, 20);
     let s = signature.slice(20);
     if (r[0] & 0x80) {
-        const rNew = new Buffer(21);
+        const rNew = Buffer.allocUnsafe(21);
         rNew[0] = 0x00;
         r.copy(rNew, 1);
         r = rNew;
@@ -554,7 +554,7 @@ export const DSASigBareToBER = (signature) => {
         r = r.slice(1);
     }
     if (s[0] & 0x80) {
-        const sNew = new Buffer(21);
+        const sNew = Buffer.allocUnsafe(21);
         sNew[0] = 0x00;
         s.copy(sNew, 1);
         s = sNew;
@@ -576,10 +576,10 @@ export const ECDSASigASN1ToSSH = (signature) => {
     asnReader.readSequence();
     const r = asnReader.readString(asn1.type.Integer, true);
     const s = asnReader.readString(asn1.type.Integer, true);
-    if (r === null || s === null) {
+    if (is.null(r) || is.null(s)) {
         throw new Error("Invalid signature");
     }
-    const newSig = new Buffer(4 + r.length + 4 + s.length);
+    const newSig = Buffer.allocUnsafe(4 + r.length + 4 + s.length);
     newSig.writeUInt32BE(r.length, 0, true);
     r.copy(newSig, 4);
     newSig.writeUInt32BE(s.length, 4 + r.length, true);
@@ -775,7 +775,7 @@ export const decryptKey = (keyInfo, passphrase) => {
         ]);
         key = key.slice(0, keylen);
     } else {
-        iv = new Buffer(keyInfo.extra[0], "hex");
+        iv = Buffer.from(keyInfo.extra[0], "hex");
 
         key = crypto.createHash("md5")
             .update(passphrase, "utf8")
@@ -852,7 +852,7 @@ export const decryptKey = (keyInfo, passphrase) => {
                     break;
             }
         }
-        if (keyInfo.fulltype === undefined) {
+        if (is.undefined(keyInfo.fulltype)) {
             return new Error("Unsupported EC private key type");
         }
     }
@@ -884,7 +884,7 @@ export const genPublicKey = (keyInfo) => {
         const asnReader = new asn1.ber.Reader(privKey);
         let errMsg;
 
-        if (asnReader.readSequence() === null) {
+        if (is.null(asnReader.readSequence())) {
             errMsg = "Malformed private key (expected sequence)";
             if (keyInfo._decrypted) {
                 errMsg += ". Bad passphrase?";
@@ -893,7 +893,7 @@ export const genPublicKey = (keyInfo) => {
         }
 
         // version (ignored)
-        if (asnReader.readInt() === null) {
+        if (is.null(asnReader.readInt())) {
             errMsg = "Malformed private key (expected version)";
             if (keyInfo._decrypted) {
                 errMsg += ". Bad passphrase?";
@@ -904,7 +904,7 @@ export const genPublicKey = (keyInfo) => {
         if (keyInfo.type === "rsa") {
             // modulus (n) -- integer
             n = asnReader.readString(asn1.type.Integer, true);
-            if (n === null) {
+            if (is.null(n)) {
                 errMsg = "Malformed private key (expected RSA n value)";
                 if (keyInfo._decrypted) {
                     errMsg += ". Bad passphrase?";
@@ -914,7 +914,7 @@ export const genPublicKey = (keyInfo) => {
 
             // public exponent (e) -- integer
             e = asnReader.readString(asn1.type.Integer, true);
-            if (e === null) {
+            if (is.null(e)) {
                 errMsg = "Malformed private key (expected RSA e value)";
                 if (keyInfo._decrypted) {
                     errMsg += ". Bad passphrase?";
@@ -922,7 +922,7 @@ export const genPublicKey = (keyInfo) => {
                 throw new Error(errMsg);
             }
 
-            publicKey = new Buffer(4 + 7 // ssh-rsa
+            publicKey = Buffer.allocUnsafe(4 + 7 // ssh-rsa
                 +
                 4 + n.length +
                 4 + e.length);
@@ -939,7 +939,7 @@ export const genPublicKey = (keyInfo) => {
         } else if (keyInfo.type === "dss") { // DSA
             // prime (p) -- integer
             p = asnReader.readString(asn1.type.Integer, true);
-            if (p === null) {
+            if (is.null(p)) {
                 errMsg = "Malformed private key (expected DSA p value)";
                 if (keyInfo._decrypted) {
                     errMsg += ". Bad passphrase?";
@@ -949,7 +949,7 @@ export const genPublicKey = (keyInfo) => {
 
             // group order (q) -- integer
             q = asnReader.readString(asn1.type.Integer, true);
-            if (q === null) {
+            if (is.null(q)) {
                 errMsg = "Malformed private key (expected DSA q value)";
                 if (keyInfo._decrypted) {
                     errMsg += ". Bad passphrase?";
@@ -959,7 +959,7 @@ export const genPublicKey = (keyInfo) => {
 
             // group generator (g) -- integer
             g = asnReader.readString(asn1.type.Integer, true);
-            if (g === null) {
+            if (is.null(g)) {
                 errMsg = "Malformed private key (expected DSA g value)";
                 if (keyInfo._decrypted) {
                     errMsg += ". Bad passphrase?";
@@ -969,7 +969,7 @@ export const genPublicKey = (keyInfo) => {
 
             // public key value (y) -- integer
             y = asnReader.readString(asn1.type.Integer, true);
-            if (y === null) {
+            if (is.null(y)) {
                 errMsg = "Malformed private key (expected DSA y value)";
                 if (keyInfo._decrypted) {
                     errMsg += ". Bad passphrase?";
@@ -977,7 +977,7 @@ export const genPublicKey = (keyInfo) => {
                 throw new Error(errMsg);
             }
 
-            publicKey = new Buffer(4 + 7 // ssh-dss
+            publicKey = Buffer.allocUnsafe(4 + 7 // ssh-dss
                 +
                 4 + p.length +
                 4 + q.length +
@@ -1001,17 +1001,17 @@ export const genPublicKey = (keyInfo) => {
             y.copy(publicKey, i += 4);
         } else { // ECDSA
             d = asnReader.readString(asn1.type.OctetString, true);
-            if (d === null) {
+            if (is.null(d)) {
                 throw new Error("Malformed private key (expected ECDSA private key)");
             }
             asnReader.readByte(); // Skip "complex" context type byte
             const offset = asnReader.readLength(); // Skip context length
-            if (offset === null) {
+            if (is.null(offset)) {
                 throw new Error("Malformed private key (expected ECDSA context value)");
             }
             asnReader._offset = offset;
             ecCurveOID = asnReader.readOID();
-            if (ecCurveOID === null) {
+            if (is.null(ecCurveOID)) {
                 throw new Error("Malformed private key (expected ECDSA curve)");
             }
             let tempECDH;
@@ -1037,7 +1037,7 @@ export const genPublicKey = (keyInfo) => {
             tempECDH.setPrivateKey(d);
             Q = tempECDH.getPublicKey();
 
-            publicKey = new Buffer(4 + 19 // ecdsa-sha2-<curve name>
+            publicKey = Buffer.allocUnsafe(4 + 19 // ecdsa-sha2-<curve name>
                 +
                 4 + 8 // <curve name>
                 +
@@ -1073,7 +1073,7 @@ export const genPublicKey = (keyInfo) => {
                 ((publicKey[8] !== 100 ||
                     publicKey[9] !== 115 ||
                     publicKey[10] !== 115)))) {
-            const newPK = new Buffer(4 + 7 + publicKey.length);
+            const newPK = Buffer.allocUnsafe(4 + 7 + publicKey.length);
             publicKey.copy(newPK, 11);
             newPK.writeUInt32BE(7, 0, true);
             if (keyInfo.type === "rsa") {
@@ -1119,6 +1119,6 @@ export const genPublicKey = (keyInfo) => {
         fulltype,
         curve: ecCurveName,
         public: publicKey,
-        publicOrig: new Buffer(fullkey)
+        publicOrig: Buffer.from(fullkey)
     };
 };

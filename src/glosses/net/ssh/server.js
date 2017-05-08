@@ -691,7 +691,7 @@ class Client extends adone.EventEmitter {
                         replied = true;
                         let bufPort;
                         if (name === "tcpip-forward" && data.bindPort === 0 && is.number(chosenPort)) {
-                            bufPort = new Buffer(4);
+                            bufPort = Buffer.allocUnsafe(4);
                             bufPort.writeUInt32BE(chosenPort, 0, true);
                         }
                         setReply("SUCCESS", bufPort);
@@ -983,7 +983,7 @@ export default class Server extends adone.EventEmitter {
             compress: undefined,
             compressBuf: undefined
         };
-        if (typeof cfg.algorithms === "object" && cfg.algorithms !== null) {
+        if (is.plainObject(cfg.algorithms) && cfg.algorithms !== null) {
             let algosSupported;
             let algoList;
 
@@ -1056,7 +1056,7 @@ export default class Server extends adone.EventEmitter {
 
         // Make sure we at least have some kind of valid list of support key
         // formats
-        if (algorithms.serverHostKey === undefined) {
+        if (is.undefined(algorithms.serverHostKey)) {
             const hostKeyAlgos = Object.keys(hostKeys);
             for (i = hostKeyAlgos.length - 1; i >= 0; --i) {
                 if (!hostKeys[hostKeyAlgos[i]]) {
