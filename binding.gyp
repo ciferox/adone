@@ -92,54 +92,38 @@
       ]
     },
     {
-      "target_name": "brotli_encode",
+      "target_name": "brotli",
       "sources": [
-        "src/native/compressors/brotli/brotli/common/dictionary.c",
-        "src/native/compressors/brotli/brotli/enc/backward_references.c",
-        "src/native/compressors/brotli/brotli/enc/bit_cost.c",
-        "src/native/compressors/brotli/brotli/enc/block_splitter.c",
-        "src/native/compressors/brotli/brotli/enc/brotli_bit_stream.c",
-        "src/native/compressors/brotli/brotli/enc/cluster.c",
-        "src/native/compressors/brotli/brotli/enc/compress_fragment.c",
-        "src/native/compressors/brotli/brotli/enc/compress_fragment_two_pass.c",
-        "src/native/compressors/brotli/brotli/enc/encode.c",
-        "src/native/compressors/brotli/brotli/enc/entropy_encode.c",
-        "src/native/compressors/brotli/brotli/enc/histogram.c",
-        "src/native/compressors/brotli/brotli/enc/literal_cost.c",
-        "src/native/compressors/brotli/brotli/enc/memory.c",
-        "src/native/compressors/brotli/brotli/enc/metablock.c",
-        "src/native/compressors/brotli/brotli/enc/static_dict.c",
-        "src/native/compressors/brotli/brotli/enc/utf8_util.c",
-        "src/native/compressors/brotli/src/common/allocator.cc",
-        "src/native/compressors/brotli/src/common/stream_coder.cc",
-        "src/native/compressors/brotli/src/enc/encode_index.cc",
-        "src/native/compressors/brotli/src/enc/stream_encode.cc",
-        "src/native/compressors/brotli/src/enc/stream_encode_worker.cc"
-      ],
-      "include_dirs": [
-        "nan"
-      ],
-      "defines": ["NOMINMAX"],
-      "cflags" : ["-O2"],
-      "xcode_settings": {
-        "OTHER_CFLAGS" : ["-O2"]
-      }
-    },
-    {
-      "target_name": "brotli_decode",
-      "sources": [
-        "src/native/compressors/brotli/brotli/common/dictionary.c",
-        "src/native/compressors/brotli/brotli/dec/bit_reader.c",
-        "src/native/compressors/brotli/brotli/dec/decode.c",
-        "src/native/compressors/brotli/brotli/dec/huffman.c",
-        "src/native/compressors/brotli/brotli/dec/state.c",
-        "src/native/compressors/brotli/src/common/allocator.cc",
-        "src/native/compressors/brotli/src/common/stream_coder.cc",
-        "src/native/compressors/brotli/src/dec/decode_index.cc",
-        "src/native/compressors/brotli/src/dec/stream_decode.cc",
-        "src/native/compressors/brotli/src/dec/stream_decode_worker.cc"
+        "src/native/compressors/brotli/deps/common/dictionary.c",
+        "src/native/compressors/brotli/deps/enc/backward_references.c",
+        "src/native/compressors/brotli/deps/enc/bit_cost.c",
+        "src/native/compressors/brotli/deps/enc/block_splitter.c",
+        "src/native/compressors/brotli/deps/enc/brotli_bit_stream.c",
+        "src/native/compressors/brotli/deps/enc/cluster.c",
+        "src/native/compressors/brotli/deps/enc/compress_fragment.c",
+        "src/native/compressors/brotli/deps/enc/compress_fragment_two_pass.c",
+        "src/native/compressors/brotli/deps/enc/encode.c",
+        "src/native/compressors/brotli/deps/enc/entropy_encode.c",
+        "src/native/compressors/brotli/deps/enc/histogram.c",
+        "src/native/compressors/brotli/deps/enc/literal_cost.c",
+        "src/native/compressors/brotli/deps/enc/memory.c",
+        "src/native/compressors/brotli/deps/enc/metablock.c",
+        "src/native/compressors/brotli/deps/enc/static_dict.c",
+        "src/native/compressors/brotli/deps/enc/utf8_util.c",
+        "src/native/compressors/brotli/allocator.cc",
+        "src/native/compressors/brotli/stream_coder.cc",
+        "src/native/compressors/brotli/stream_encode.cc",
+        "src/native/compressors/brotli/stream_encode_worker.cc",
+        "src/native/compressors/brotli/deps/dec/bit_reader.c",
+        "src/native/compressors/brotli/deps/dec/decode.c",
+        "src/native/compressors/brotli/deps/dec/huffman.c",
+        "src/native/compressors/brotli/deps/dec/state.c",
+        "src/native/compressors/brotli/stream_decode.cc",
+        "src/native/compressors/brotli/stream_decode_worker.cc",
+        "src/native/compressors/brotli/index.cc",
       ],
       "include_dirs": [ "nan" ],
+      "defines": ["NOMINMAX"],
       "cflags" : ["-O2"],
       "xcode_settings": {
         "OTHER_CFLAGS" : ["-O2"]
@@ -501,13 +485,12 @@
       "variables": {
         "srcpath%": "<(module_root_dir)/build/Release",
       },
-      "dependencies" : [ "bignumber", "brotli_decode", "brotli_encode", "lzma", "bson", "hiredis", "common", "metrics", "snappy", "leveldown", "masscan" ],
+      "dependencies" : [ "bignumber", "brotli", "lzma", "bson", "hiredis", "common", "metrics", "snappy", "leveldown", "masscan" ],
       "copies": [
         {
           "files": [ 
             "<(srcpath)/bignumber.node",
-            "<(srcpath)/brotli_decode.node",
-            "<(srcpath)/brotli_encode.node",
+            "<(srcpath)/brotli.node",
             "<(srcpath)/bson.node",
             "<(srcpath)/hiredis.node",
             "<(srcpath)/common.node",

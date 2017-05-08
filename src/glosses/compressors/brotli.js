@@ -1,14 +1,13 @@
 const { is, std: { stream: { Transform } } } = adone;
 
-const encode = adone.bind("brotli_encode");
-const decode = adone.bind("brotli_decode");
+const { StreamEncode, StreamDecode } = adone.bind("brotli.node");
 
 class TransformStreamEncode extends Transform {
     constructor(params = {}, sync = false) {
         super(params);
         this.sync = sync;
         this.flushing = false;
-        this.encoder = new encode.StreamEncode(params);
+        this.encoder = new StreamEncode(params);
         const blockSize = this.encoder.getBlockSize();
         this.status = {
             blockSize,
@@ -94,7 +93,7 @@ class TransformStreamDecode extends Transform {
     constructor(params, sync) {
         super(params);
         this.sync = sync || false;
-        this.decoder = new decode.StreamDecode(params || {});
+        this.decoder = new StreamDecode(params || {});
     }
 
     _transform(chunk, encoding, next) {

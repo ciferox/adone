@@ -138,5 +138,26 @@ describe("Meta tests", () => {
             const ns = inspector.getNamespace("adone.compressor.deflate");
             assert.includeMembers(Object.keys(ns.exports), ["compress", "decompress"]);
         });
+
+        it("subnamespace 'brotli'", async () => {
+            const inspector = new adone.meta.code.Inspector();
+            await inspector.attachNamespace("adone.compressor.brotli");
+            const ns = inspector.getNamespace("adone.compressor.brotli");
+            assert.includeMembers(Object.keys(ns.exports), ["compress", "decompress"]);
+        });
+
+        it.skip("subnamespace 'lzma'", async () => {
+            const inspector = new adone.meta.code.Inspector();
+            await inspector.attachNamespace("adone.compressor.lzma");
+            const ns = inspector.getNamespace("adone.compressor.lzma");
+            assert.includeMembers(Object.keys(ns.exports), ["compress", "decompress"]);
+        });
+
+        it.skip("subnamespace 'xz'", async () => {
+            const inspector = new adone.meta.code.Inspector();
+            await inspector.attachNamespace("adone.compressor.xz");
+            const ns = inspector.getNamespace("adone.compressor.xz");
+            assert.includeMembers(Object.keys(ns.exports), ["compress", "decompress"]);
+        });
     });
 });

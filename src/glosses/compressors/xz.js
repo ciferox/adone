@@ -1,8 +1,8 @@
-const { assert, std: { stream } } = adone;
+const { is, assert, std: { stream } } = adone;
 
 export const native = adone.bind("lzma.node");
 
-const Stream = native.Stream;
+const { Stream } = native;
 
 Stream.curAsyncStreamsCount = 0;
 
@@ -39,7 +39,7 @@ class JSLzmaStream extends stream.Transform {
 
         this.nativeStream.bufferHandler = (buf, processedChunks, err, totalIn, totalOut) => {
             if (totalIn !== null) {
-                this.totalIn_  = totalIn;
+                this.totalIn_ = totalIn;
                 this.totalOut_ = totalOut;
             }
 
@@ -57,15 +57,15 @@ class JSLzmaStream extends stream.Transform {
                     });
                 }
 
-                if (typeof processedChunks === "number") {
+                if (is.number(processedChunks)) {
                     assert.ok(processedChunks <= this.chunkCallbacks.length);
 
                     const chunkCallbacks = this.chunkCallbacks.splice(0, processedChunks);
 
-                    while (chunkCallbacks.length > 0)              {
-                        chunkCallbacks.shift().call(this); 
+                    while (chunkCallbacks.length > 0) {
+                        chunkCallbacks.shift().call(this);
                     }
-                } else if (buf === null) {
+                } else if (is.null(buf)) {
                     if (this._writingLastChunk) {
                         this.push(null);
                     } else {
@@ -86,7 +86,7 @@ class JSLzmaStream extends stream.Transform {
             });
         };
 
-        if (typeof options.bufsize !== "undefined") {
+        if (!is.undefined(options.bufsize)) {
             this.bufsize = options.bufsize;
         }
     }
@@ -96,7 +96,7 @@ class JSLzmaStream extends stream.Transform {
     }
 
     set bufsize(n) {
-        if (typeof n !== "number" || n <= 0) {
+        if (!is.number(n) || n <= 0) {
             throw new TypeError("bufsize must be a positive number");
         }
 
@@ -171,23 +171,23 @@ class JSLzmaStream extends stream.Transform {
             return;
         }
 
-        this._transform(null, null, function () {
+        this._transform(null, null, function (...args) {
             this.cleanup();
-            callback.apply(this, arguments);
+            callback.apply(this, args);
         });
     }
 }
 
 // add all methods from the native Stream
-Object.keys(native.Stream.prototype).forEach((key) => {
-    JSLzmaStream.prototype[key] = function () {
-        return this.nativeStream[key].apply(this.nativeStream, arguments);
+Object.keys(Stream.prototype).forEach((key) => {
+    JSLzmaStream.prototype[key] = function (...args) {
+        return this.nativeStream[key].apply(this.nativeStream, args);
     };
 });
 
 Stream.prototype.getStream = function (options) {
     options = options || {};
-    
+
     return new JSLzmaStream(this, options);
 };
 
@@ -203,30 +203,28 @@ Stream.prototype.easyEncoder = function (options) {
     const preset = options.preset || native.PRESET_DEFAULT;
     const check = options.check || native.CHECK_CRC32;
 
-    if (typeof options.threads !== "undefined" && options.threads !== null) {
+    if (!is.undefined(options.threads) && options.threads !== null) {
         return this.mtEncoder_(Object.assign({
             preset,
             filters: null,
             check
         }, options));
-    } else {
-        return this.easyEncoder_(preset, check);
     }
+    return this.easyEncoder_(preset, check);
 };
 
 Stream.prototype.streamEncoder = function (options) {
     const filters = options.filters || [];
     const check = options.check || native.CHECK_CRC32;
 
-    if (typeof options.threads !== "undefined" && options.threads !== null) {
+    if (!is.undefined(options.threads) && options.threads !== null) {
         return this.mtEncoder_(Object.assign({
             preset: null,
             filters,
             check
         }, options));
-    } else {
-        return this.streamEncoder_(filters, check);
     }
+    return this.streamEncoder_(filters, check);
 };
 
 Stream.prototype.streamDecoder = function (options) {
@@ -285,7 +283,7 @@ export const singleStringCoding = (stream, string, onFinish, onProgress) => {
     // possibly our input is an array of byte integers
     // or a typed array
     if (!Buffer.isBuffer(string)) {
-        string = new Buffer(string);
+        string = Buffer.from(string);
     }
 
     let failed = false;

@@ -54,6 +54,27 @@ export const namespaces = [
         ]
     },
     {
+        name: "adone.compressor.brotli",
+        description: "Implementation of brotli compressor",
+        paths: [
+            "glosses/compressors/brotli"
+        ]
+    },
+    {
+        name: "adone.compressor.lzma",
+        description: "Implementation of lzma compressor",
+        paths: [
+            "glosses/compressors/lzma"
+        ]
+    },
+    {
+        name: "adone.compressor.xz",
+        description: "Implementation of xz compressor",
+        paths: [
+            "glosses/compressors/xz"
+        ]
+    },
+    {
         name: "adone.archive",
         description: "",
         paths: [

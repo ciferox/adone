@@ -2,8 +2,8 @@
 #define STREAM_DECODE_H
 
 #include <nan.h>
-#include "../common/stream_coder.h"
-#include "../../brotli/dec/decode.h"
+#include "stream_coder.h"
+#include "deps/dec/decode.h"
 
 class StreamDecode : public StreamCoder
 {

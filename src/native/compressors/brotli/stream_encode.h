@@ -2,8 +2,8 @@
 #define STREAM_ENCODE_H
 
 #include <nan.h>
-#include "../common/stream_coder.h"
-#include "../../brotli/enc/encode.h"
+#include "stream_coder.h"
+#include "deps/enc/encode.h"
 
 class StreamEncode : public StreamCoder
 {
