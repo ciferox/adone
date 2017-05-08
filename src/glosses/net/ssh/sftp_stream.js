@@ -167,8 +167,9 @@ function SFTPStream(cfg, remoteIdentRaw) {
         self._cleanup(false);
     }
 
-    if (!this.server)
-    { this.push(CLIENT_VERSION_BUFFER); }
+    if (!this.server) {
+        this.push(CLIENT_VERSION_BUFFER);
+    }
 }
 inherits(SFTPStream, TransformStream);
 

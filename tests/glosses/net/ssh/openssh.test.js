@@ -1,6 +1,6 @@
 const { semver, std: { fs, crypto, path } } = adone;
 const { Server } = adone.net.ssh;
-const { util } = adone.net.ssh.stream;
+const { util } = adone.net.ssh;
 
 const join = path.join;
 const { spawn, exec } = adone.std.child_process;

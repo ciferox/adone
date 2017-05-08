@@ -1,13 +1,11 @@
 adone.lazify({
+    c: "./constants",
     Channel: "./channel",
     Client: "./client",
-    Session: "./session",
     Server: "./server",
-    stream: () => adone.lazify({
-        util: "./streams/utils",
-        SFTPStream: "./streams/sftp",
-        SSH2Stream: "./streams/ssh",
-        const: "./streams/constants",
-        keyParser: "./streams/keyParser"
-    }, null, require)
+    util: "./utils",
+    SFTPStream: "./sftp_stream",
+    SSH2Stream: "./ssh_stream",
+    Session: "./session",
+    Shell: "./shell"
 }, exports, require);

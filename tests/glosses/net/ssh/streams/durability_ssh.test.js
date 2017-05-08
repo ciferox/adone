@@ -1,4 +1,4 @@
-const { SSH2Stream } = adone.net.ssh.stream;
+const { SSH2Stream } = adone.net.ssh;
 
 const fs = adone.std.fs;
 const path = adone.std.path;
@@ -79,7 +79,9 @@ describe("SSH-Streams", () => {
                 done();
             });
             let ident = "SSH-2.0-";
-            for (let i = 0; i < 30; ++i) { ident += "foobarbaz"; }
+            for (let i = 0; i < 30; ++i) {
+                ident += "foobarbaz";
+            }
             ident += "\r\n";
             client.push(ident);
         });

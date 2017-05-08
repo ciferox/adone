@@ -1,5 +1,4 @@
-const { Client, Server } = adone.net.ssh;
-const { SFTPStream, util } = adone.net.ssh.stream;
+const { SFTPStream, util, Client, Server } = adone.net.ssh;
 const OPEN_MODE = SFTPStream.OPEN_MODE;
 const STATUS_CODE = SFTPStream.STATUS_CODE;
 

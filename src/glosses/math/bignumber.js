@@ -377,4 +377,7 @@ Object.keys(BigNumber.prototype).forEach((name) => {
     };
 });
 
+BigNumber.ZERO = new BigNumber(0);
+BigNumber.ONE = new BigNumber(1);
+
 adone.tag.set(BigNumber, adone.tag.BIGNUMBER);

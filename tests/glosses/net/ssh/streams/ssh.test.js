@@ -1,4 +1,4 @@
-const { SSH2Stream, util } = adone.net.ssh.stream;
+const { SSH2Stream, util } = adone.net.ssh;
 const parseKey = util.parseKey;
 const genPubKey = util.genPublicKey;
 const fs = adone.std.fs;

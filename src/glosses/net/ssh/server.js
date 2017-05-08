@@ -4,14 +4,13 @@ const listenerCount = adone.EventEmitter.listenerCount;
 
 import KeepaliveManager from "./keepalivemgr";
 
-const { stream } = adone.net.ssh;
-const { SSH2Stream, SFTPStream, util } = stream;
+const { SSH2Stream, SFTPStream, util } = adone.net.ssh;
 const parseKey = util.parseKey;
 const genPublicKey = util.genPublicKey;
 const decryptKey = util.decryptKey;
-const DISCONNECT_REASON = stream.const.DISCONNECT_REASON;
-const CHANNEL_OPEN_FAILURE = stream.const.CHANNEL_OPEN_FAILURE;
-const ALGORITHMS = stream.const.ALGORITHMS;
+const DISCONNECT_REASON = adone.net.ssh.c.DISCONNECT_REASON;
+const CHANNEL_OPEN_FAILURE = adone.net.ssh.c.CHANNEL_OPEN_FAILURE;
+const ALGORITHMS = adone.net.ssh.c.ALGORITHMS;
 
 const MAX_CHANNEL = Math.pow(2, 32) - 1;
 const MAX_PENDING_AUTHS = 10;
@@ -1110,7 +1109,7 @@ export default class Server extends adone.EventEmitter {
                 return;
             }
             ++this._connections;
-            socket.once("close", (had_err) => {
+            socket.once("close", (hadErr) => {
                 --this._connections;
 
                 // since joyent/node#993bb93e0a, we have to "read past EOF" in order to

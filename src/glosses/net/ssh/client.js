@@ -1,12 +1,10 @@
-const { is, net: { ssh: { Channel } }, std } = adone;
+const { is, net: { ssh: { Channel, SSH2Stream, SFTPStream, util } }, std } = adone;
 const crypto = std.crypto;
 const Socket = std.net.Socket;
 const dnsLookup = std.dns.lookup;
 const HASHES = crypto.getHashes();
-const { stream } = adone.net.ssh;
-const { SSH2Stream, SFTPStream, util } = stream;
-const BUGS = stream.const.BUGS;
-const ALGORITHMS = stream.const.ALGORITHMS;
+const BUGS = adone.net.ssh.c.BUGS;
+const ALGORITHMS = adone.net.ssh.c.ALGORITHMS;
 const parseKey = util.parseKey;
 const decryptKey = util.decryptKey;
 const genPublicKey = util.genPublicKey;
@@ -341,9 +339,9 @@ function onCHANNEL_OPEN(self, info) {
     function reject() {
         if (reason === undefined) {
             if (localChan === false) {
-                reason = stream.const.CHANNEL_OPEN_FAILURE.RESOURCE_SHORTAGE;
+                reason = adone.net.ssh.c.CHANNEL_OPEN_FAILURE.RESOURCE_SHORTAGE;
             } else {
-                reason = stream.const.CHANNEL_OPEN_FAILURE.CONNECT_FAILED;
+                reason = adone.net.ssh.c.CHANNEL_OPEN_FAILURE.CONNECT_FAILED;
             }
         }
 
@@ -371,7 +369,7 @@ function onCHANNEL_OPEN(self, info) {
                 self._channels[localChan] = true;
             }
         } else {
-            reason = stream.const.CHANNEL_OPEN_FAILURE.ADMINISTRATIVELY_PROHIBITED;
+            reason = adone.net.ssh.c.CHANNEL_OPEN_FAILURE.ADMINISTRATIVELY_PROHIBITED;
             self.config.debug(`DEBUG: Client: Automatic rejection of incoming channel open: unexpected channel open for: ${info.type}`);
         }
 
@@ -398,7 +396,7 @@ function onCHANNEL_OPEN(self, info) {
     } else {
         // automatically reject any unsupported channel open requests
         self.config.debug(`DEBUG: Client: Automatic rejection of incoming channel open: unsupported type: ${info.type}`);
-        reason = stream.const.CHANNEL_OPEN_FAILURE.UNKNOWN_CHANNEL_TYPE;
+        reason = adone.net.ssh.c.CHANNEL_OPEN_FAILURE.UNKNOWN_CHANNEL_TYPE;
         reject();
     }
 }
@@ -965,9 +963,9 @@ export default class Client extends adone.EventEmitter {
             if (curAuth === "agent") {
                 debug(`DEBUG: Client: Agent key #${agentKeyPos + 1} failed`);
                 return tryNextAgentKey();
-            } else {
-                debug(`DEBUG: Client: ${curAuth} auth failed`);
             }
+            debug(`DEBUG: Client: ${curAuth} auth failed`);
+
 
             tryNextAuth();
         }
@@ -1507,11 +1505,10 @@ export default class Client extends adone.EventEmitter {
                 socketPath
             };
             return openChannel(this, "direct-streamlocal@openssh.com", cfg, cb);
-        } else {
-            process.nextTick(() => {
-                cb(new Error("strictVendor enabled and server is not OpenSSH or compatible version"));
-            });
         }
+        process.nextTick(() => {
+            cb(new Error("strictVendor enabled and server is not OpenSSH or compatible version"));
+        });
 
         return true;
     }
