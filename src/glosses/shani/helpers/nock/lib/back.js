@@ -1,27 +1,27 @@
-'use strict';
 
-var _ = require('lodash');
-var nock = require('./scope');
-var recorder = require('./recorder');
 
-var format = require('util').format;
-var path = require('path');
-var debug = require('debug')('nock.back');
+const _ = require("lodash");
+const nock = require("./scope");
+const recorder = require("./recorder");
 
-var _mode = null;
+const format = require("util").format;
+const path = require("path");
+const debug = require("debug")("nock.back");
 
-var fs;
+let _mode = null;
+
+let fs;
 
 try {
-  fs = require('fs');
-} catch(err) {
+    fs = require("fs");
+} catch (err) {
   // do nothing, probably in browser
 }
 
-var mkdirp;
+let mkdirp;
 try {
-  mkdirp = require('mkdirp');
-} catch(err) {
+    mkdirp = require("mkdirp");
+} catch (err) {
   // do nothing, probably in browser
 }
 
@@ -44,31 +44,31 @@ try {
  * @param {function} recorder     - custom options to pass to the recorder
  *
  */
-function Back (fixtureName, options, nockedFn) {
-  if(!Back.fixtures) {
-    throw new Error(  'Back requires nock.back.fixtures to be set\n' +
-                      'Ex:\n' +
-                      '\trequire(nock).back.fixtures = \'/path/to/fixures/\'');
-  }
+function Back(fixtureName, options, nockedFn) {
+    if (!Back.fixtures) {
+        throw new Error( "Back requires nock.back.fixtures to be set\n" +
+                      "Ex:\n" +
+                      "\trequire(nock).back.fixtures = '/path/to/fixures/'");
+    }
 
-  if( arguments.length === 2 ) {
-    nockedFn = options;
-    options = {};
-  }
+    if ( arguments.length === 2 ) {
+        nockedFn = options;
+        options = {};
+    }
 
-  _mode.setup();
+    _mode.setup();
 
-  var fixture = path.join(Back.fixtures, fixtureName)
-    , context = _mode.start(fixture, options);
+    let fixture = path.join(Back.fixtures, fixtureName),
+        context = _mode.start(fixture, options);
 
 
-  var nockDone = function () {
-    _mode.finish(fixture, options, context);
-  };
+    const nockDone = function () {
+        _mode.finish(fixture, options, context);
+    };
 
-  debug('context:', context);
+    debug("context:", context);
 
-  nockedFn.call(context, nockDone);
+    nockedFn.call(context, nockDone);
 }
 
 
@@ -79,25 +79,25 @@ function Back (fixtureName, options, nockedFn) {
 *******************************************************************************/
 
 
-var wild = {
+const wild = {
 
 
-  setup: function () {
-    nock.cleanAll();
-    recorder.restore();
-    nock.activate();
-    nock.enableNetConnect();
-  },
+    setup() {
+        nock.cleanAll();
+        recorder.restore();
+        nock.activate();
+        nock.enableNetConnect();
+    },
 
 
-  start: function () {
-    return load(); //don't load anything but get correct context
-  },
+    start() {
+        return load(); //don't load anything but get correct context
+    },
 
 
-  finish: function () {
+    finish() {
     //nothing to do
-  }
+    }
 
 
 };
@@ -105,29 +105,29 @@ var wild = {
 
 
 
-var dryrun = {
+const dryrun = {
 
 
-  setup: function () {
-    recorder.restore();
-    nock.cleanAll();
-    nock.activate();
+    setup() {
+        recorder.restore();
+        nock.cleanAll();
+        nock.activate();
     //  We have to explicitly enable net connectivity as by default it's off.
-    nock.enableNetConnect();
-  },
+        nock.enableNetConnect();
+    },
 
 
-  start: function (fixture, options) {
-    var contexts = load(fixture, options);
+    start(fixture, options) {
+        const contexts = load(fixture, options);
 
-    nock.enableNetConnect();
-    return contexts;
-  },
+        nock.enableNetConnect();
+        return contexts;
+    },
 
 
-  finish: function () {
+    finish() {
     //nothing to do
-  }
+    }
 
 
 };
@@ -135,160 +135,160 @@ var dryrun = {
 
 
 
-var record = {
+const record = {
 
 
-  setup: function () {
-    recorder.restore();
-    recorder.clear();
-    nock.cleanAll();
-    nock.activate();
-    nock.disableNetConnect();
-  },
+    setup() {
+        recorder.restore();
+        recorder.clear();
+        nock.cleanAll();
+        nock.activate();
+        nock.disableNetConnect();
+    },
 
 
-  start: function (fixture, options) {
-    if (! fs) {
-      throw new Error('no fs');
+    start(fixture, options) {
+        if (! fs) {
+            throw new Error("no fs");
+        }
+        const context = load(fixture, options);
+
+        if ( !context.isLoaded ) {
+            recorder.record(_.assign({
+                dont_print: true,
+                output_objects: true
+            }, options && options.recorder));
+
+            context.isRecording = true;
+        }
+
+        return context;
+    },
+
+
+    finish(fixture, options, context) {
+        if ( context.isRecording ) {
+            let outputs = recorder.outputs();
+
+            if ( typeof options.afterRecord === "function" ) {
+                outputs = options.afterRecord(outputs);
+            }
+
+            outputs = JSON.stringify(outputs, null, 4);
+            debug("recorder outputs:", outputs);
+
+            mkdirp.sync(path.dirname(fixture));
+            fs.writeFileSync(fixture, outputs);
+        }
     }
-    var context = load(fixture, options);
 
-    if( !context.isLoaded ) {
-      recorder.record(_.assign({
-        dont_print: true,
-        output_objects: true
-      }, options && options.recorder));
 
-      context.isRecording = true;
+};
+
+
+
+
+const lockdown = {
+
+
+    setup() {
+        recorder.restore();
+        recorder.clear();
+        nock.cleanAll();
+        nock.activate();
+        nock.disableNetConnect();
+    },
+
+
+    start(fixture, options) {
+        return load(fixture, options);
+    },
+
+
+    finish() {
+    //nothing to do
     }
+
+
+};
+
+
+
+
+function load(fixture, options) {
+    const context = {
+        scopes: [],
+        assertScopesFinished() {
+            assertScopes(this.scopes, fixture);
+        }
+    };
+
+    if ( fixture && fixtureExists(fixture) ) {
+        let scopes = nock.loadDefs(fixture);
+        applyHook(scopes, options.before);
+
+        scopes = nock.define(scopes);
+        applyHook(scopes, options.after);
+
+        context.scopes = scopes;
+        context.isLoaded = true;
+    }
+
 
     return context;
-  },
-
-
-  finish: function (fixture, options, context) {
-    if( context.isRecording ) {
-      var outputs = recorder.outputs();
-
-      if( typeof options.afterRecord === 'function' ) {
-        outputs = options.afterRecord(outputs);
-      }
-
-      outputs = JSON.stringify(outputs, null, 4);
-      debug('recorder outputs:', outputs);
-
-      mkdirp.sync(path.dirname(fixture));
-      fs.writeFileSync(fixture, outputs);
-    }
-  }
-
-
-};
-
-
-
-
-var lockdown = {
-
-
-  setup: function () {
-    recorder.restore();
-    recorder.clear();
-    nock.cleanAll();
-    nock.activate();
-    nock.disableNetConnect();
-  },
-
-
-  start: function (fixture, options) {
-    return load(fixture, options);
-  },
-
-
-  finish: function () {
-    //nothing to do
-  }
-
-
-};
-
-
-
-
-function load (fixture, options) {
-  var context = {
-    scopes : [],
-    assertScopesFinished: function () {
-      assertScopes(this.scopes, fixture);
-    }
-  };
-
-  if( fixture && fixtureExists(fixture) ) {
-    var scopes = nock.loadDefs(fixture);
-    applyHook(scopes, options.before);
-
-    scopes = nock.define(scopes);
-    applyHook(scopes, options.after);
-
-    context.scopes = scopes;
-    context.isLoaded = true;
-  }
-
-
-  return context;
 }
 
 
 
 
 function applyHook(scopes, fn) {
-  if( !fn ) {
-    return;
-  }
+    if ( !fn ) {
+        return;
+    }
 
-  if( typeof fn !== 'function' ) {
-    throw new Error ('processing hooks must be a function');
-  }
+    if ( typeof fn !== "function" ) {
+        throw new Error("processing hooks must be a function");
+    }
 
-  scopes.forEach(fn);
+    scopes.forEach(fn);
 }
 
 
 
 
 function fixtureExists(fixture) {
-  if (! fs) {
-    throw new Error('no fs');
-  }
+    if (! fs) {
+        throw new Error("no fs");
+    }
 
-  return fs.existsSync(fixture);
+    return fs.existsSync(fixture);
 }
 
 
 
 
-function assertScopes (scopes, fixture) {
-  scopes.forEach(function (scope) {
-    expect( scope.isDone() )
+function assertScopes(scopes, fixture) {
+    scopes.forEach((scope) => {
+        expect( scope.isDone() )
     .to.be.equal(
       true,
-      format('%j was not used, consider removing %s to rerecord fixture', scope.pendingMocks(), fixture)
+      format("%j was not used, consider removing %s to rerecord fixture", scope.pendingMocks(), fixture)
     );
-  });
+    });
 }
 
 
 
 
-var Modes = {
+const Modes = {
 
-  wild: wild, //all requests go out to the internet, dont replay anything, doesnt record anything
+    wild, //all requests go out to the internet, dont replay anything, doesnt record anything
 
-  dryrun: dryrun, //use recorded nocks, allow http calls, doesnt record anything, useful for writing new tests (default)
+    dryrun, //use recorded nocks, allow http calls, doesnt record anything, useful for writing new tests (default)
 
-  record: record, //use recorded nocks, record new nocks
+    record, //use recorded nocks, record new nocks
 
-  lockdown: lockdown, //use recorded nocks, disables all http calls even when not nocked, doesnt record
+    lockdown //use recorded nocks, disables all http calls even when not nocked, doesnt record
 
 };
 
@@ -296,16 +296,16 @@ var Modes = {
 
 
 
-Back.setMode = function(mode) {
-  if( !Modes.hasOwnProperty(mode) ) {
-    throw new Error ('some usage error');
-  }
+Back.setMode = function (mode) {
+    if ( !Modes.hasOwnProperty(mode) ) {
+        throw new Error("some usage error");
+    }
 
-  Back.currentMode = mode;
-  debug('New nock back mode:', Back.currentMode);
+    Back.currentMode = mode;
+    debug("New nock back mode:", Back.currentMode);
 
-  _mode = Modes[mode];
-  _mode.setup();
+    _mode = Modes[mode];
+    _mode.setup();
 };
 
 
@@ -313,6 +313,6 @@ Back.setMode = function(mode) {
 
 Back.fixtures = null;
 Back.currentMode = null;
-Back.setMode(process.env.NOCK_BACK_MODE || 'dryrun');
+Back.setMode(process.env.NOCK_BACK_MODE || "dryrun");
 
 module.exports = exports = Back;

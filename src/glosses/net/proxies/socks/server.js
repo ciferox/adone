@@ -117,9 +117,9 @@ export class Parser extends adone.EventEmitter {
                 +----+-----+-------+------+----------+----------+
                 | 1  |  1  | X'00' |  1   | Variable |    2     |
                 +----+-----+-------+------+----------+----------+
-        
+
                 Where:
-        
+
                         o  VER    protocol version: X'05'
                         o  CMD
                         o  CONNECT X'01'
@@ -331,7 +331,10 @@ const proxySocket = (socket, req) => {
 export default class Server extends adone.EventEmitter {
     constructor(options = {}, listener) {
         super();
-        if (is.function(listener)) {
+        if (is.function(options)) {
+            [options, listener] = [{}, options];
+            this.on("connection", listener);
+        } else if (is.functon(listener)) {
             this.on("connection", listener);
         }
 
@@ -363,7 +366,7 @@ export default class Server extends adone.EventEmitter {
 
         this._connections = 0;
         this.maxConnections = Infinity;
-    } 
+    }
 
     _onConnection(socket) {
         const parser = new Parser(socket);

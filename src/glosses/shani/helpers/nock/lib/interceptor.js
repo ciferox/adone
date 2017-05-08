@@ -1,19 +1,19 @@
-'use strict';
 
-var mixin           = require('./mixin')
-    , matchBody       = require('./match_body')
-    , common          = require('./common')
-    , _               = require('lodash')
-    , debug           = require('debug')('nock.scope')
-    , stringify       = require('json-stringify-safe')
-    , util            = require('util')
-    , qs              = require('qs');
 
-var fs;
+let mixin = require("./mixin"),
+    matchBody = require("./match_body"),
+    common = require("./common"),
+    _ = require("lodash"),
+    debug = require("debug")("nock.scope"),
+    stringify = require("json-stringify-safe"),
+    util = require("util"),
+    qs = require("qs");
+
+let fs;
 
 try {
-    fs = require('fs');
-} catch(err) {
+    fs = require("fs");
+} catch (err) {
     // do nothing, we're in the browser
 }
 
@@ -24,11 +24,11 @@ function Interceptor(scope, uri, method, requestBody, interceptorOptions) {
     this.interceptorMatchHeaders = [];
     this.method = method.toUpperCase();
     this.uri = uri;
-    this._key = this.method + ' ' + scope.basePath + scope.basePathname + (typeof uri === 'string' ? '' : '/') + uri;
+    this._key = `${this.method} ${scope.basePath}${scope.basePathname}${typeof uri === "string" ? "" : "/"}${uri}`;
     this.basePath = this.scope.basePath;
-    this.path = (typeof uri === 'string') ? scope.basePathname + uri : uri;
+    this.path = (typeof uri === "string") ? scope.basePathname + uri : uri;
 
-    this.baseUri = this.method + ' ' + scope.basePath + scope.basePathname;
+    this.baseUri = `${this.method} ${scope.basePath}${scope.basePathname}`;
     this.options = interceptorOptions || {};
     this.counter = 1;
     this._requestBody = requestBody;
@@ -47,7 +47,7 @@ function Interceptor(scope, uri, method, requestBody, interceptorOptions) {
 Interceptor.prototype.optionally = function optionally() {
     this.optional = true;
     return this;
-}
+};
 
 Interceptor.prototype.replyWithError = function replyWithError(errorMessage) {
     this.errorMessage = errorMessage;
@@ -69,7 +69,7 @@ Interceptor.prototype.reply = function reply(statusCode, body, rawHeaders) {
     _.defaults(this.options, this.scope.scopeOptions);
 
     // convert rawHeaders from Array to Object
-    var headers = common.headersArrayToObject(rawHeaders);
+    let headers = common.headersArrayToObject(rawHeaders);
 
     if (this.scope._defaultReplyHeaders) {
         headers = headers || {};
@@ -78,14 +78,14 @@ Interceptor.prototype.reply = function reply(statusCode, body, rawHeaders) {
 
     if (this.scope.date) {
         headers = headers || {};
-        headers['date'] = this.scope.date.toUTCString();
+        headers.date = this.scope.date.toUTCString();
     }
 
     if (headers !== undefined) {
         this.rawHeaders = [];
 
         // makes sure all keys in headers are in lower case
-        for (var key in headers) {
+        for (const key in headers) {
             if (headers.hasOwnProperty(key)) {
                 this.rawHeaders.push(key);
                 this.rawHeaders.push(headers[key]);
@@ -95,15 +95,15 @@ Interceptor.prototype.reply = function reply(statusCode, body, rawHeaders) {
         //  We use lower-case headers throughout Nock.
         this.headers = common.headersFieldNamesToLowerCase(headers);
 
-        debug('reply.headers:', this.headers);
-        debug('reply.rawHeaders:', this.rawHeaders);
+        debug("reply.headers:", this.headers);
+        debug("reply.rawHeaders:", this.rawHeaders);
     }
 
     //  If the content is not encoded we may need to transform the response body.
     //  Otherwise we leave it as it is.
     if (!common.isContentEncoded(this.headers)) {
-        if (body && typeof(body) !== 'string' &&
-            typeof(body) !== 'function' &&
+        if (body && typeof(body) !== "string" &&
+            typeof(body) !== "function" &&
             !Buffer.isBuffer(body) &&
             !common.isStream(body)) {
             try {
@@ -111,14 +111,14 @@ Interceptor.prototype.reply = function reply(statusCode, body, rawHeaders) {
                 if (!this.headers) {
                     this.headers = {};
                 }
-                if (!this.headers['content-type']) {
-                    this.headers['content-type'] = 'application/json';
+                if (!this.headers["content-type"]) {
+                    this.headers["content-type"] = "application/json";
                 }
                 if (this.scope.contentLen) {
-                    this.headers['content-length'] = body.length;
+                    this.headers["content-length"] = body.length;
                 }
-            } catch(err) {
-                throw new Error('Error encoding response body into JSON');
+            } catch (err) {
+                throw new Error("Error encoding response body into JSON");
             }
         }
     }
@@ -131,9 +131,9 @@ Interceptor.prototype.reply = function reply(statusCode, body, rawHeaders) {
 
 Interceptor.prototype.replyWithFile = function replyWithFile(statusCode, filePath, headers) {
     if (! fs) {
-        throw new Error('No fs');
+        throw new Error("No fs");
     }
-    var readStream = fs.createReadStream(filePath);
+    const readStream = fs.createReadStream(filePath);
     readStream.pause();
     this.filePath = filePath;
     return this.reply(statusCode, readStream, headers);
@@ -147,19 +147,18 @@ Interceptor.prototype.reqheaderMatches = function reqheaderMatches(options, key)
         return true;
     }
 
-    var reqHeader = this.reqheaders[key];
-    var header = options.headers[key];
-    if (header && (typeof header !== 'string') && header.toString) {
+    const reqHeader = this.reqheaders[key];
+    let header = options.headers[key];
+    if (header && (typeof header !== "string") && header.toString) {
         header = header.toString();
     }
 
     //  We skip 'host' header comparison unless it's available in both mock and actual request.
     //  This because 'host' may get inserted by Nock itself and then get recorder.
     //  NOTE: We use lower-case header field names throughout Nock.
-    if (key === 'host' &&
+    if (key === "host" &&
         (_.isUndefined(header) ||
-        _.isUndefined(reqHeader)))
-    {
+        _.isUndefined(reqHeader))) {
         return true;
     }
 
@@ -171,36 +170,36 @@ Interceptor.prototype.reqheaderMatches = function reqheaderMatches(options, key)
         }
     }
 
-    debug('request header field doesn\'t match:', key, header, reqHeader);
+    debug("request header field doesn't match:", key, header, reqHeader);
     return false;
 };
 
 Interceptor.prototype.match = function match(options, body, hostNameOnly) {
     if (debug.enabled) {
-        debug('match %s, body = %s', stringify(options), stringify(body));
+        debug("match %s, body = %s", stringify(options), stringify(body));
     }
 
     if (hostNameOnly) {
         return options.hostname === this.scope.urlParts.hostname;
     }
 
-    var method = (options.method || 'GET').toUpperCase()
-        , path = options.path
-        , matches
-        , matchKey
-        , proto = options.proto;
+    let method = (options.method || "GET").toUpperCase(),
+        path = options.path,
+        matches,
+        matchKey,
+        proto = options.proto;
 
     if (this.scope.transformPathFunction) {
         path = this.scope.transformPathFunction(path);
     }
-    if (typeof(body) !== 'string') {
+    if (typeof(body) !== "string") {
         body = body.toString();
     }
     if (this.scope.transformRequestBodyFunction) {
         body = this.scope.transformRequestBodyFunction(body, this._requestBody);
     }
 
-    var checkHeaders = function(header) {
+    const checkHeaders = function (header) {
         if (_.isFunction(header.value)) {
             return header.value(options.getHeader(header.name));
         }
@@ -209,11 +208,11 @@ Interceptor.prototype.match = function match(options, body, hostNameOnly) {
 
     if (!this.scope.matchHeaders.every(checkHeaders) ||
         !this.interceptorMatchHeaders.every(checkHeaders)) {
-        this.scope.logger('headers don\'t match');
+        this.scope.logger("headers don't match");
         return false;
     }
 
-    var reqHeadersMatch =
+    const reqHeadersMatch =
         ! this.reqheaders ||
         Object.keys(this.reqheaders).every(this.reqheaderMatches.bind(this, options));
 
@@ -225,7 +224,7 @@ Interceptor.prototype.match = function match(options, body, hostNameOnly) {
         return _.has(options.headers, header);
     }
 
-    var reqContainsBadHeaders =
+    const reqContainsBadHeaders =
         this.badheaders &&
         _.some(this.badheaders, reqheaderContains);
 
@@ -240,32 +239,32 @@ Interceptor.prototype.match = function match(options, body, hostNameOnly) {
     if (this.__nock_filteredScope) {
         matchKey = this.__nock_filteredScope;
     } else {
-        matchKey = proto + '://' + options.host;
+        matchKey = `${proto}://${options.host}`;
         if (
-            options.port && options.host.indexOf(':') < 0 &&
-            (options.port !== 80 || options.proto !== 'http') &&
-            (options.port !== 443 || options.proto !== 'https')
+            options.port && options.host.indexOf(":") < 0 &&
+            (options.port !== 80 || options.proto !== "http") &&
+            (options.port !== 443 || options.proto !== "https")
         ) {
-            matchKey += ":" + options.port;
+            matchKey += `:${options.port}`;
         }
     }
 
     // Match query strings when using query()
-    var matchQueries = true;
-    var queryIndex = -1;
-    var queryString;
-    var queries;
+    let matchQueries = true;
+    let queryIndex = -1;
+    let queryString;
+    let queries;
 
-    if (this.queries && (queryIndex = path.indexOf('?')) !== -1) {
+    if (this.queries && (queryIndex = path.indexOf("?")) !== -1) {
         queryString = path.slice(queryIndex + 1);
         queries = qs.parse(queryString);
 
         // Only check for query string matches if this.queries is an object
         if (_.isObject(this.queries)) {
 
-            if(_.isFunction(this.queries)){
+            if (_.isFunction(this.queries)) {
                 matchQueries = this.queries(queries);
-            }else {
+            } else {
                 // Make sure that you have an equal number of keys. We are
                 // looping through the passed query params and not the expected values
                 // if the user passes fewer query params than expected but all values
@@ -273,28 +272,28 @@ Interceptor.prototype.match = function match(options, body, hostNameOnly) {
                 // passed query params is equal to the length of expected keys will prevent
                 // us from doing any value checking BEFORE we know if they have all the proper
                 // params
-                debug('this.queries: %j', this.queries);
-                debug('queries: %j', queries);
+                debug("this.queries: %j", this.queries);
+                debug("queries: %j", queries);
                 if (_.size(this.queries) !== _.size(queries)) {
                     matchQueries = false;
                 } else {
-                    var self = this;
+                    const self = this;
                     _.forOwn(queries, function matchOneKeyVal(val, key) {
-                        var expVal = self.queries[key];
-                        var isMatch = true;
+                        const expVal = self.queries[key];
+                        let isMatch = true;
                         if (val === undefined || expVal === undefined) {
-                        isMatch = false;
-                    } else if (expVal instanceof RegExp) {
-                      isMatch = common.matchStringOrRegexp(val, expVal);
-                    } else if (_.isArray(expVal) || _.isObject(expVal)) {
-                      isMatch = _.isEqual(val, expVal);
-                    } else {
-                      isMatch = common.matchStringOrRegexp(val, expVal);
-                    }
-                matchQueries = matchQueries && !!isMatch;
-                });
+                            isMatch = false;
+                        } else if (expVal instanceof RegExp) {
+                            isMatch = common.matchStringOrRegexp(val, expVal);
+                        } else if (_.isArray(expVal) || _.isObject(expVal)) {
+                            isMatch = _.isEqual(val, expVal);
+                        } else {
+                            isMatch = common.matchStringOrRegexp(val, expVal);
+                        }
+                        matchQueries = matchQueries && Boolean(isMatch);
+                    });
                 }
-                debug('matchQueries: %j', matchQueries);
+                debug("matchQueries: %j", matchQueries);
             }
         }
 
@@ -302,9 +301,9 @@ Interceptor.prototype.match = function match(options, body, hostNameOnly) {
         path = path.substr(0, queryIndex);
     }
 
-    if (typeof this.uri === 'function') {
+    if (typeof this.uri === "function") {
         matches = matchQueries &&
-        method.toUpperCase() + ' ' + proto + '://' + options.host === this.baseUri &&
+        `${method.toUpperCase()} ${proto}://${options.host}` === this.baseUri &&
         this.uri.call(this, path);
     } else {
         matches = method === this.method &&
@@ -315,16 +314,16 @@ Interceptor.prototype.match = function match(options, body, hostNameOnly) {
 
     // special logger for query()
     if (queryIndex !== -1) {
-        this.scope.logger('matching ' + matchKey + '?' + queryString + ' to ' + this._key +
-        ' with query(' + stringify(this.queries) + '): ' + matches);
+        this.scope.logger(`matching ${matchKey}?${queryString} to ${this._key 
+        } with query(${stringify(this.queries)}): ${matches}`);
     } else {
-        this.scope.logger('matching ' + matchKey + ' to ' + this._key + ': ' + matches);
+        this.scope.logger(`matching ${matchKey} to ${this._key}: ${matches}`);
     }
 
     if (matches) {
         matches = (matchBody.call(options, this._requestBody, body));
         if (!matches) {
-            this.scope.logger('bodies don\'t match: \n', this._requestBody, '\n', body);
+            this.scope.logger("bodies don't match: \n", this._requestBody, "\n", body);
         }
     }
 
@@ -332,15 +331,15 @@ Interceptor.prototype.match = function match(options, body, hostNameOnly) {
 };
 
 Interceptor.prototype.matchIndependentOfBody = function matchIndependentOfBody(options) {
-    var method = (options.method || 'GET').toUpperCase()
-        , path = options.path
-        , proto = options.proto;
+    let method = (options.method || "GET").toUpperCase(),
+        path = options.path,
+        proto = options.proto;
 
     if (this.scope.transformPathFunction) {
         path = this.scope.transformPathFunction(path);
     }
 
-    var checkHeaders = function(header) {
+    const checkHeaders = function (header) {
         return options.getHeader && common.matchStringOrRegexp(options.getHeader(header.name), header.value);
     };
 
@@ -349,7 +348,7 @@ Interceptor.prototype.matchIndependentOfBody = function matchIndependentOfBody(o
         return false;
     }
 
-    var matchKey = method + ' ' + proto + '://' + options.host + path;
+    const matchKey = `${method} ${proto}://${options.host}${path}`;
     return this._key === matchKey;
 };
 
@@ -372,16 +371,16 @@ Interceptor.prototype.discard = function discard() {
 };
 
 Interceptor.prototype.matchHeader = function matchHeader(name, value) {
-    this.interceptorMatchHeaders.push({ name: name, value: value });
+    this.interceptorMatchHeaders.push({ name, value });
     return this;
 };
 
 Interceptor.prototype.basicAuth = function basicAuth(options) {
-    var username = options['user'];
-    var password = options['pass'] || '';
-    var name = 'authorization';
-    var value = 'Basic ' + new Buffer(username + ':' + password).toString('base64');
-    this.interceptorMatchHeaders.push({ name: name, value: value });
+    const username = options.user;
+    const password = options.pass || "";
+    const name = "authorization";
+    const value = `Basic ${new Buffer(`${username}:${password}`).toString("base64")}`;
+    this.interceptorMatchHeaders.push({ name, value });
     return this;
 };
 
@@ -401,15 +400,15 @@ Interceptor.prototype.query = function query(queries) {
         this.queries = queries;
     }
 
-    if(_.isFunction(queries)){
+    if (_.isFunction(queries)) {
         this.queries = queries;
         return this;
     }
 
-    for (var q in queries) {
+    for (const q in queries) {
         if (_.isUndefined(this.queries[q])) {
-            var value = queries[q];
-            var formatedPair = common.formatQueryValue(q, value, this.scope.scopeOptions);
+            const value = queries[q];
+            const formatedPair = common.formatQueryValue(q, value, this.scope.scopeOptions);
             this.queries[formatedPair[0]] = formatedPair[1];
         }
     }
@@ -481,15 +480,15 @@ Interceptor.prototype.thrice = function thrice() {
  * @return {interceptor} - the current interceptor for chaining
  */
 Interceptor.prototype.delay = function delay(opts) {
-    var headDelay = 0;
-    var bodyDelay = 0;
+    let headDelay = 0;
+    let bodyDelay = 0;
     if (_.isNumber(opts)) {
         headDelay = opts;
     } else if (_.isObject(opts)) {
         headDelay = opts.head || 0;
         bodyDelay = opts.body || 0;
     } else {
-        throw new Error("Unexpected input opts" + opts);
+        throw new Error(`Unexpected input opts${opts}`);
     }
 
     return this.delayConnection(headDelay)
@@ -518,7 +517,7 @@ Interceptor.prototype.delayConnection = function delayConnection(ms) {
     return this;
 };
 
-Interceptor.prototype.getTotalDelay =function getTotalDelay() {
+Interceptor.prototype.getTotalDelay = function getTotalDelay() {
     return this.delayInMs + this.delayConnectionInMs;
 };
 
