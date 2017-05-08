@@ -140,9 +140,14 @@ module.exports = {
         "no-useless-call": "error",
         "no-useless-return": "error",
         "no-warning-comments": "warn",
-        "prefer-promise-reject-errors": "error"
+        "prefer-promise-reject-errors": "error",
+        "adone/no-typeof": "error",
+        "adone/no-buffer-constructor": "error",
+        "adone/no-undefined-comp": "error",
+        "adone/no-null-comp": "error"
     },
     "plugins": [
+        "adone",
         "babel",
         "import"
     ],
