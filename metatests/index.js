@@ -66,4 +66,55 @@ describe("Meta tests", () => {
             "Encoding"
         ]);
     });
+
+    describe("data", () => {
+        it("root namespace", async () => {
+            const inspector = new adone.meta.code.Inspector();
+            await inspector.attachNamespace("adone.data");
+            const ns = inspector.getNamespace("adone.data");
+            assert.sameMembers(Object.keys(ns.exports), ["json"]);
+
+            try {
+                await inspector.attachNamespace("adone.data.json");
+            } catch (err) {
+                return;
+            }
+            assert.fail("Should have thrown");
+        });
+
+        it("subnamespace 'json5'", async () => {
+            const inspector = new adone.meta.code.Inspector();
+            await inspector.attachNamespace("adone.data.json5");
+            const ns = inspector.getNamespace("adone.data.json5");
+            assert.includeMembers(Object.keys(ns.exports), ["encode", "decode"]);
+        });
+
+        it("subnamespace 'bson'", async () => {
+            const inspector = new adone.meta.code.Inspector();
+            await inspector.attachNamespace("adone.data.bson");
+            const ns = inspector.getNamespace("adone.data.bson");
+            assert.includeMembers(Object.keys(ns.exports), ["encode", "decode"]);
+        });
+
+        it("subnamespace 'yaml'", async () => {
+            const inspector = new adone.meta.code.Inspector();
+            await inspector.attachNamespace("adone.data.yaml");
+            const ns = inspector.getNamespace("adone.data.yaml");
+            assert.includeMembers(Object.keys(ns.exports), ["encode", "decode"]);
+        });
+
+        it("subnamespace 'mpak'", async () => {
+            const inspector = new adone.meta.code.Inspector();
+            await inspector.attachNamespace("adone.data.mpak");
+            const ns = inspector.getNamespace("adone.data.mpak");
+            assert.includeMembers(Object.keys(ns.exports), ["encode", "decode"]);
+        });
+
+        it("subnamespace 'base64'", async () => {
+            const inspector = new adone.meta.code.Inspector();
+            await inspector.attachNamespace("adone.data.base64");
+            const ns = inspector.getNamespace("adone.data.base64");
+            assert.includeMembers(Object.keys(ns.exports), ["encode", "decode"]);
+        });
+    });
 });
