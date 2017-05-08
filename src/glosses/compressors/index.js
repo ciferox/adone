@@ -3,5 +3,6 @@ adone.lazify({
     deflate: "./deflate",
     brotli: "./brotli",
     lzma: "./lzma",
-    xz: "./xz"
+    xz: "./xz",
+    snappy: "./snappy"
 }, exports, require);

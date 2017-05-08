@@ -139,13 +139,17 @@
         "src/native/compressors/brotli/src/dec/stream_decode.cc",
         "src/native/compressors/brotli/src/dec/stream_decode_worker.cc"
       ],
-      "include_dirs": [
-        "nan"
-      ],
+      "include_dirs": [ "nan" ],
       "cflags" : ["-O2"],
       "xcode_settings": {
         "OTHER_CFLAGS" : ["-O2"]
       }
+    },
+    {
+      'target_name': 'snappy',
+      'include_dirs': [ "nan" ],
+      'dependencies': [ 'src/native/compressors/snappy/deps/snappy.gyp:snappy' ],
+      'sources': [ 'src/native/compressors/snappy/snappy.cc' ]
     },
     {
         "target_name": "metrics", 
@@ -497,7 +501,7 @@
       "variables": {
         "srcpath%": "<(module_root_dir)/build/Release",
       },
-      "dependencies" : [ "bignumber", "brotli_decode", "brotli_encode", "lzma", "bson", "hiredis", "common", "metrics", "leveldown", "masscan" ],
+      "dependencies" : [ "bignumber", "brotli_decode", "brotli_encode", "lzma", "bson", "hiredis", "common", "metrics", "snappy", "leveldown", "masscan" ],
       "copies": [
         {
           "files": [ 
@@ -508,6 +512,7 @@
             "<(srcpath)/hiredis.node",
             "<(srcpath)/common.node",
             "<(srcpath)/metrics.node",
+            "<(srcpath)/snappy.node",
             "<(srcpath)/leveldown.node",
             "<(srcpath)/lzma.node",
             "<(srcpath)/masscan.node"
