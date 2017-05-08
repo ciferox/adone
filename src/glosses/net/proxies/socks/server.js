@@ -334,7 +334,7 @@ export default class Server extends adone.EventEmitter {
         if (is.function(options)) {
             [options, listener] = [{}, options];
             this.on("connection", listener);
-        } else if (is.functon(listener)) {
+        } else if (is.function(listener)) {
             this.on("connection", listener);
         }
 

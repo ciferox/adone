@@ -90,9 +90,9 @@ export class Parser extends adone.EventEmitter {
                 +----+-----+-------+------+----------+----------+
                 | 1  |  1  | X'00' |  1   | Variable |    2     |
                 +----+-----+-------+------+----------+----------+
-        
+
                 Where:
-        
+
                     o  VER    protocol version: X'05'
                     o  REP    Reply field:
                     o  X'00' succeeded
