@@ -161,12 +161,20 @@ Parser.STATE_DONE = 4;
 Parser.STATE_ERROR = 10;
 
 export class Server extends EventEmitter {
-    constructor({
-        password = null,
-        cipher = "aes-256-cfb",
-        iv = null,
-        timeout = 30000
-    } = {}) {
+    constructor(options, callback) {
+        super();
+        if (is.function(options)) {
+            [options, callback] = [{}, options];
+            this.on("connection", callback);
+        } else if (is.function(callback)) {
+            this.on("connection", callback);
+        }
+        const {
+            password = null,
+            cipher = "aes-256-cfb",
+            iv = null,
+            timeout = 30000
+        } = options;
         if (!(is.string(password) || is.buffer(password)) || password.length === 0) {
             throw new x.InvalidArgument("Password must be a non-empty string/buffer");
         }
@@ -176,7 +184,6 @@ export class Server extends EventEmitter {
         if (!is.null(iv) && (!(is.string(iv) || is.buffer(iv)) || iv.lentgh === 0)) {
             throw new x.InvalidArgument("IV must be a non-empty string/buffer");
         }
-        super();
 
         this._cipher = cipher;
         ({ key: this._keyLength, iv: this._ivLength } = shadowsocks.c.ciphers[cipher]);

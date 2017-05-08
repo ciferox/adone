@@ -11,5 +11,6 @@ adone.lazify({
             client.connect(options, callback);
         });
         return client;
-    }
+    },
+    createServer: () => (options, callback) => new adone.net.proxy.shadowsocks.Server(options, callback)
 }, exports, require);

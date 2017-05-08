@@ -413,9 +413,6 @@ export default class Server extends adone.EventEmitter {
                     if (intercept) {
                         socket.write(BUF_REP_INTR_SUCCESS);
                         socket.removeListener("error", adone.noop);
-                        process.nextTick(() => {
-                            socket.resume();
-                        });
                         return socket;
                     }
                     proxySocket(socket, reqInfo);

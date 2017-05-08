@@ -1,6 +1,6 @@
 namespace adone {
-    interface is {  // has to be an interface
-        function: (obj: any) => Boolean
+    const is = {
+        function: (obj: any) => Boolean,
         null: (obj: any) => Boolean,
         undefined: (obj: any) => Boolean,
         exist: (obj: any) => Boolean,
@@ -106,73 +106,91 @@ namespace adone {
         regexp: (obj: any) => Boolean,
         set: (obj: any) => Boolean,
         symbol: (obj: any) => Boolean,
-        validUTF8: (obj: any) => Boolean,
+        validUTF8: (obj: any) => Boolean
     }
-    const is: is;
 
     namespace x {
-        interface Exception extends Error { }
-        interface Runtime extends Exception { }
-        interface IncompleteBufferError extends Exception { }
-        interface NotImplemented extends Exception { }
-        interface IllegalState extends Exception { }
-        interface NotValid extends Exception { }
-        interface Unknown extends Exception { }
-        interface NotExists extends Exception { }
-        interface Exists extends Exception { }
-        interface Empty extends Exception { }
-        interface InvalidAccess extends Exception { }
-        interface NotSupported extends Exception { }
-        interface InvalidArgument extends Exception { }
-        interface InvalidNumberOfArguments extends Exception { }
-        interface NotFound extends Exception { }
-        interface Timeout extends Exception { }
-        interface Incorrect extends Exception { }
-        interface NotAllowed extends Exception { }
-        interface LimitExceeded extends Exception { }
-        interface Encoding extends Exception { }
-        interface Network extends Exception { }
-        interface Bind extends Exception { }
-        interface Connect extends Exception { }
-        interface Database extends Exception { }
-        interface DatabaseInitialization extends Exception { }
-        interface DatabaseOpen extends Exception { }
-        interface DatabaseRead extends Exception { }
-        interface DatabaseWrite extends Exception { }
-        interface NetronIllegalState extends Exception { }
-        interface NetronPeerDisconnected extends Exception { }
-        interface NetronTimeout extends Exception { }
+        class Exception extends Error { }
+        class Runtime extends Exception { }
+        class IncompleteBufferError extends Exception { }
+        class NotImplemented extends Exception { }
+        class IllegalState extends Exception { }
+        class NotValid extends Exception { }
+        class Unknown extends Exception { }
+        class NotExists extends Exception { }
+        class Exists extends Exception { }
+        class Empty extends Exception { }
+        class InvalidAccess extends Exception { }
+        class NotSupported extends Exception { }
+        class InvalidArgument extends Exception { }
+        class InvalidNumberOfArguments extends Exception { }
+        class NotFound extends Exception { }
+        class Timeout extends Exception { }
+        class Incorrect extends Exception { }
+        class NotAllowed extends Exception { }
+        class LimitExceeded extends Exception { }
+        class Encoding extends Exception { }
+        class Network extends Exception { }
+        class Bind extends Exception { }
+        class Connect extends Exception { }
+        class Database extends Exception { }
+        class DatabaseInitialization extends Exception { }
+        class DatabaseOpen extends Exception { }
+        class DatabaseRead extends Exception { }
+        class DatabaseWrite extends Exception { }
+        class NetronIllegalState extends Exception { }
+        class NetronPeerDisconnected extends Exception { }
+        class NetronTimeout extends Exception { }
+    }
 
-        const Exception: Exception;
-        const Runtime: Runtime;
-        const IncompleteBufferError: IncompleteBufferError;
-        const NotImplemented: NotImplemented;
-        const IllegalState: IllegalState;
-        const NotValid: NotValid;
-        const Unknown: Unknown;
-        const NotExists: NotExists;
-        const Exists: Exists;
-        const Empty: Empty;
-        const InvalidAccess: InvalidAccess;
-        const NotSupported: NotSupported;
-        const InvalidArgument: InvalidArgument;
-        const InvalidNumberOfArguments: InvalidNumberOfArguments;
-        const NotFound: NotFound;
-        const Timeout: Timeout;
-        const Incorrect: Incorrect;
-        const NotAllowed: NotAllowed;
-        const LimitExceeded: LimitExceeded;
-        const Encoding: Encoding;
-        const Network: Network;
-        const Bind: Bind;
-        const Connect: Connect;
-        const Database: Database;
-        const DatabaseInitialization: DatabaseInitialization;
-        const DatabaseOpen: DatabaseOpen;
-        const DatabaseRead: DatabaseRead;
-        const DatabaseWrite: DatabaseWrite;
-        const NetronIllegalState: NetronIllegalState;
-        const NetronPeerDisconnected: NetronPeerDisconnected;
-        const NetronTimeout: NetronTimeout;
+    namespace std {
+        import Assert from "assert";
+        const assert = Assert;
+
+        namespace fs { export * from "fs"; }
+        namespace path { export * from "path"; }
+        namespace util { export * from "util"; }
+
+        import EventEmitter from "events";
+        const events = EventEmitter;
+
+        import Stream from "stream";
+        const stream = Stream;
+
+        namespace url { export * from "url"; }
+        namespace net { export * from "net"; }
+        namespace http { export * from "http"; }
+        namespace https { export * from "https"; }
+        namespace child_process { export * from "child_process"; }
+        namespace os { export * from "os"; }
+
+        import Cluster from "cluster";
+        const cluster = Cluster;
+
+        namespace repl { export * from "repl"; }
+        namespace punycode { export * from "punycode"; }
+        namespace readline { export * from "readline"; }
+        namespace string_decoder { export * from "string_decoder"; }
+        namespace querystring { export * from "querystring"; }
+        namespace crypto { export * from "crypto"; }
+        namespace vm { export * from "vm"; }
+        namespace v8 { export * from "v8"; }
+        namespace domain { export * from "domain"; }
+
+        import Module from "module";
+        const module = Module;
+
+        namespace tty { export * from "tty"; }
+        namespace buffer { export * from "buffer"; }
+        namespace constants { export * from "constants"; }
+        namespace zlib { export * from "zlib"; }
+        namespace tls { export * from "tls"; }
+
+        import Console from "console";
+        const console = Console;
+
+        namespace dns { export * from "dns"; }
+        namespace timers { export * from "timers"; }
+        namespace dgram { export * from "dgram"; }
     }
 }
