@@ -6,6 +6,7 @@
           , ['OS=="solaris"', {'os_include': 'solaris'}]
           , ['OS=="win"',     {'os_include': 'win32'}]
           , ['OS=="freebsd"', {'os_include': 'freebsd'}]
+          , ['OS=="openbsd"', {'os_include': 'openbsd'}]
         ]
     }
   , 'target_name': 'snappy'
@@ -18,7 +19,8 @@
     ]
   , 'direct_dependent_settings': {
         'include_dirs': [
-            'snappy-1.1.4'
+        	'<(os_include)'
+          , 'snappy-1.1.4'
         ]
     }
   , 'defines': [
@@ -46,6 +48,12 @@
           , 'cflags!': [ '-fno-tree-vrp' ]
         }]
       , ['OS == "freebsd"', {
+            'cflags': [
+                '-Wno-sign-compare'
+              , '-Wno-unused-function'
+            ]
+        }]
+      , ['OS == "openbsd"', {
             'cflags': [
                 '-Wno-sign-compare'
               , '-Wno-unused-function'
