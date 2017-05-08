@@ -2,7 +2,7 @@ import adone from "adone";
 import Contexts from "./contexts";
 // import Services from "./services";
 
-const startedAt = adone.util.microtime.now();
+const startedAt = adone.timing.now();
 
 const { is, std } = adone;
 const { Contextable, Public, Private, Description, Type } = adone.netron.decorator;
@@ -350,7 +350,7 @@ export default class Omnitron extends adone.application.Application {
     @Description("Uptime of omnitron")
     @Type(String)
     uptime() {
-        const curr = adone.util.microtime.now();
+        const curr = adone.timing.now();
         const ms = ((curr - startedAt) / 1000) >>> 0;
         return adone.util.humanizeTime(ms);
     }

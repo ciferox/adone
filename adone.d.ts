@@ -194,3 +194,7 @@ namespace adone {
         namespace dgram { export * from "dgram"; }
     }
 }
+
+module "adone" {
+    export = adone;
+}

@@ -321,6 +321,11 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             Configurator: "./omnitron/configurator",
             Omnitron: "./omnitron",
             Dispatcher: "./omnitron/dispatcher"
+        }),
+        timing: () => ({
+            now: adone.native.Common.now,
+            nowDouble: adone.native.Common.nowDouble,
+            nowStruct: adone.native.Common.nowStruct
         })
     }, adone);
 } else {

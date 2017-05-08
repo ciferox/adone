@@ -871,7 +871,6 @@ adone.lazify({
     jsesc: "./jsesc",
     typeOf: "./typeof",
     memcpy: () => adone.native.Memory,
-    microtime: () => adone.native.Timing,
     uuid: "./uuid",
     userid: () => adone.native.UserId,
     StreamSearch: "./streamsearch",
