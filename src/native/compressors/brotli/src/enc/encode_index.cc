@@ -3,8 +3,9 @@
 
 using namespace v8;
 
-NAN_MODULE_INIT(Init) {
-  StreamEncode::Init(target);
+NAN_MODULE_INIT(Init)
+{
+    StreamEncode::Init(target);
 }
 
 NODE_MODULE(encode, Init)

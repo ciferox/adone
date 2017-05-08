@@ -5,11 +5,13 @@
 #include "../common/stream_coder.h"
 #include "../../brotli/enc/encode.h"
 
-class StreamEncode : public StreamCoder {
+class StreamEncode : public StreamCoder
+{
   public:
     static void Init(Nan::ADDON_REGISTER_FUNCTION_ARGS_TYPE target);
 
-    BrotliEncoderState* state;
+    BrotliEncoderState *state;
+
   private:
     explicit StreamEncode(Local<Object> params);
     ~StreamEncode();
@@ -18,6 +20,7 @@ class StreamEncode : public StreamCoder {
     static NAN_METHOD(GetBlockSize);
     static NAN_METHOD(Copy);
     static NAN_METHOD(Encode);
+    static NAN_METHOD(Flush);
     static Nan::Persistent<v8::Function> constructor;
 };
 

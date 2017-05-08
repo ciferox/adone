@@ -40,6 +40,20 @@ export const namespaces = [
         ]
     },
     {
+        name: "adone.compressor.gz",
+        description: "Implementation of gzip compressor",
+        paths: [
+            "glosses/compressors/gzip"
+        ]
+    },
+    {
+        name: "adone.compressor.deflate",
+        description: "Implementation of deflate compressor",
+        paths: [
+            "glosses/compressors/deflate"
+        ]
+    },
+    {
         name: "adone.archive",
         description: "",
         paths: [

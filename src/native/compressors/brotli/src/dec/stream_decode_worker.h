@@ -5,17 +5,18 @@
 #include "stream_decode.h"
 #include "../../brotli/dec/decode.h"
 
-class StreamDecodeWorker : public Nan::AsyncWorker {
- public:
-  StreamDecodeWorker(Nan::Callback *callback, StreamDecode* obj);
+class StreamDecodeWorker : public Nan::AsyncWorker
+{
+  public:
+    StreamDecodeWorker(Nan::Callback *callback, StreamDecode *obj);
 
-  void Execute();
-  void HandleOKCallback();
+    void Execute();
+    void HandleOKCallback();
 
   private:
     ~StreamDecodeWorker();
-    StreamDecode* obj;
-    BrotliResult res;
+    StreamDecode *obj;
+    BrotliDecoderResult res;
 };
 
 #endif

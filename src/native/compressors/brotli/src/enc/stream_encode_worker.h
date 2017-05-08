@@ -5,18 +5,20 @@
 #include "stream_encode.h"
 #include "../../brotli/enc/encode.h"
 
-class StreamEncodeWorker : public Nan::AsyncWorker {
+class StreamEncodeWorker : public Nan::AsyncWorker
+{
   public:
-    StreamEncodeWorker(Nan::Callback *callback, StreamEncode* obj, bool is_last);
+    StreamEncodeWorker(Nan::Callback *callback, StreamEncode *obj, bool is_last, bool force_flush);
 
     void Execute();
     void HandleOKCallback();
 
   private:
     ~StreamEncodeWorker();
-    StreamEncode* obj;
+    StreamEncode *obj;
 
     bool is_last;
+    bool force_flush;
     int res;
 };
 

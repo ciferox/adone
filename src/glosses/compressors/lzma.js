@@ -1,4 +1,3 @@
-
 import { createStream, singleStringCoding, native } from "./xz";
 
 const lzma = {

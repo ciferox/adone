@@ -5,16 +5,18 @@
 #include "../common/stream_coder.h"
 #include "../../brotli/dec/decode.h"
 
-class StreamDecode : public StreamCoder {
+class StreamDecode : public StreamCoder
+{
   public:
     static void Init(Nan::ADDON_REGISTER_FUNCTION_ARGS_TYPE target);
 
-    const uint8_t* next_in;
+    const uint8_t *next_in;
     size_t available_in;
 
-    BrotliState* state;
+    BrotliDecoderState *state;
+
   private:
-    explicit StreamDecode();
+    explicit StreamDecode(Local<Object> params);
     ~StreamDecode();
 
     static NAN_METHOD(New);
