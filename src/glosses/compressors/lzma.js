@@ -1,83 +1,76 @@
-import { createStream, singleStringCoding, native } from "./xz";
+const { xz } = adone.compressor;
 
 const lzma = {
-    asyncCodeAvailable: native.asyncCodeAvailable,
-    versionNumber: native.versionNumber,
-    versionString: native.versionString,
-    checkIsSupported: native.checkIsSupported,
-    checkSize: native.checkSize,
-    filterEncoderIsSupported: native.filterEncoderIsSupported,
-    filterDecoderIsSupported: native.filterDecoderIsSupported,
-    mfIsSupported: native.mfIsSupported,
-    modeIsSupported: native.modeIsSupported,
-    rawEncoderMemusage: native.rawEncoderMemusage,
-    rawDecoderMemusage: native.rawDecoderMemusage,
-    easyEncoderMemusage: native.easyEncoderMemusage,
-    easyDecoderMemusage: native.easyDecoderMemusage,
+    asyncCodeAvailable: xz.asyncCodeAvailable,
+    versionNumber: xz.versionNumber,
+    versionString: xz.versionString,
+    checkIsSupported: xz.checkIsSupported,
+    checkSize: xz.checkSize,
+    filterEncoderIsSupported: xz.filterEncoderIsSupported,
+    filterDecoderIsSupported: xz.filterDecoderIsSupported,
+    mfIsSupported: xz.mfIsSupported,
+    modeIsSupported: xz.modeIsSupported,
+    rawEncoderMemusage: xz.rawEncoderMemusage,
+    rawDecoderMemusage: xz.rawDecoderMemusage,
+    easyEncoderMemusage: xz.easyEncoderMemusage,
+    easyDecoderMemusage: xz.easyDecoderMemusage,
 
-    createStream,
+    createStream: xz.createStream,
 
-    CHECK_CRC32: native.CHECK_CRC32,
-    CHECK_CRC64: native.CHECK_CRC64,
-    CHECK_NONE: native.CHECK_NONE,
-    CHECK_SHA256: native.CHECK_SHA256,
+    CHECK_CRC32: xz.CHECK_CRC32,
+    CHECK_CRC64: xz.CHECK_CRC64,
+    CHECK_NONE: xz.CHECK_NONE,
+    CHECK_SHA256: xz.CHECK_SHA256,
 
-    LZMA_TELL_NO_CHECK: native.LZMA_TELL_NO_CHECK,
-    LZMA_TELL_UNSUPPORTED_CHECK: native.LZMA_TELL_UNSUPPORTED_CHECK,
-    LZMA_TELL_ANY_CHECK: native.LZMA_TELL_ANY_CHECK,
-    LZMA_CONCATENATED: native.LZMA_CONCATENATED,
+    LZMA_TELL_NO_CHECK: xz.LZMA_TELL_NO_CHECK,
+    LZMA_TELL_UNSUPPORTED_CHECK: xz.LZMA_TELL_UNSUPPORTED_CHECK,
+    LZMA_TELL_ANY_CHECK: xz.LZMA_TELL_ANY_CHECK,
+    LZMA_CONCATENATED: xz.LZMA_CONCATENATED,
 
-    FILTERS_MAX: native.FILTERS_MAX,
-    FILTER_ARM: native.FILTER_ARM,
-    FILTER_ARMTHUMB: native.FILTER_ARMTHUMB,
-    FILTER_IA64: native.FILTER_IA64,
-    FILTER_POWERPC: native.FILTER_POWERPC,
-    FILTER_SPARC: native.FILTER_SPARC,
-    FILTER_X86: native.FILTER_X86,
-    FILTER_DELTA: native.FILTER_DELTA,
-    FILTER_LZMA1: native.FILTER_LZMA1,
-    FILTER_LZMA2: native.FILTER_LZMA2,
+    FILTERS_MAX: xz.FILTERS_MAX,
+    FILTER_ARM: xz.FILTER_ARM,
+    FILTER_ARMTHUMB: xz.FILTER_ARMTHUMB,
+    FILTER_IA64: xz.FILTER_IA64,
+    FILTER_POWERPC: xz.FILTER_POWERPC,
+    FILTER_SPARC: xz.FILTER_SPARC,
+    FILTER_X86: xz.FILTER_X86,
+    FILTER_DELTA: xz.FILTER_DELTA,
+    FILTER_LZMA1: xz.FILTER_LZMA1,
+    FILTER_LZMA2: xz.FILTER_LZMA2,
 
-    PRESET_EXTREME: native.PRESET_EXTREME,
-    PRESET_DEFAULT: native.PRESET_DEFAULT,
-    PRESET_LEVEL_MASK: native.PRESET_LEVEL_MASK,
+    PRESET_EXTREME: xz.PRESET_EXTREME,
+    PRESET_DEFAULT: xz.PRESET_DEFAULT,
+    PRESET_LEVEL_MASK: xz.PRESET_LEVEL_MASK,
 
-    MF_HC3: native.MF_HC3,
-    MF_HC4: native.MF_HC4,
-    MF_BT2: native.MF_BT2,
-    MF_BT3: native.MF_BT3,
-    MF_BT4: native.MF_BT4,
+    MF_HC3: xz.MF_HC3,
+    MF_HC4: xz.MF_HC4,
+    MF_BT2: xz.MF_BT2,
+    MF_BT3: xz.MF_BT3,
+    MF_BT4: xz.MF_BT4,
 
-    MODE_FAST: native.MODE_FAST,
-    MODE_NORMAL: native.MODE_NORMAL,
+    MODE_FAST: xz.MODE_FAST,
+    MODE_NORMAL: xz.MODE_NORMAL,
 
-    STREAM_HEADER_SIZE: native.STREAM_HEADER_SIZE
-};
-
-lzma.compress = (buf, options = {}) => {
-    return singleStringCoding(lzma.compress.stream(options), buf);
-};
-
-lzma.compress.stream = (options = {}) => {
-    return createStream("aloneEncoder", options);
-};
-
-// eslint-disable-next-line no-unused-vars
-lzma.compress.sync = (buf, options = {}) => {
-    throw new adone.x.NotImplemented();
-};
-
-lzma.decompress = (buf, options = {}) => {
-    return singleStringCoding(lzma.decompress.stream(options), buf);
-};
-
-lzma.decompress.stream = (options = {}) => {
-    return createStream("aloneDecoder", options);
-};
-
-// eslint-disable-next-line no-unused-vars
-lzma.decompress.sync = (buf, options = {}) => {
-    throw new adone.x.NotImplemented();
+    STREAM_HEADER_SIZE: xz.STREAM_HEADER_SIZE,
+ 
+    compress: (buf, options = {}) => {
+        return xz.singleStringCoding(lzma.compressStream(options), buf);
+    },
+    compressStream: (options = {}) => {
+        return xz.createStream("aloneEncoder", options);
+    },
+    compressSync: (buf, options = {}) => {
+        throw new adone.x.NotImplemented();
+    },
+    decompress: (buf, options = {}) => {
+        return xz.singleStringCoding(lzma.decompressStream(options), buf);
+    },
+    decompressStream: (options = {}) => {
+        return xz.createStream("aloneDecoder", options);
+    },
+    decompressSync: (buf, options = {}) => {
+        throw new adone.x.NotImplemented();
+    }
 };
 
 export default lzma;

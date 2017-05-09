@@ -1,5 +1,3 @@
-
-
 const { is, std: { util: { format } } } = adone;
 
 const LOG_NOFORMAT = 255;

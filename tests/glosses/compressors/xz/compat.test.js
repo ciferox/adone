@@ -3,25 +3,21 @@ import * as helpers from "./helpers";
 const { std: { fs, path }, compressor: { xz } } = adone;
 
 describe("glosses", "compressors", "xz", () => {
-    function commonFixturePath(relPath) {
-        return path.resolve(__dirname, "../..", "fixtures", relPath);
-    }
+    const commonFixturePath = (relPath) => path.resolve(__dirname, "../..", "fixtures", relPath);
 
-    function fixturePath(relPath) {
-        return path.join(__dirname, "fixtures", relPath);
-    }
+    const fixturePath = (relPath) => path.join(__dirname, "fixtures", relPath);
 
     describe("compress()/decompress() streams", () => {
         it("can compress", (done) => {
-            const c = xz.compress.stream();
+            const c = xz.compressStream();
 
             c.on("finish", done);
             c.end("Hello!");
         });
 
         it("can round-trip", (done) => {
-            const enc = xz.compress.stream();
-            const dec = xz.decompress.stream();
+            const enc = xz.compressStream();
+            const dec = xz.decompressStream();
             const outfile = fixturePath("random.lzma.unlzma");
             const outstream = helpers.fsCreateWriteStream(outfile);
 

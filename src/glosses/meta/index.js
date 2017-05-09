@@ -28,7 +28,13 @@ export const parseName = (name) => {
     while (namespace.length > 0 && !adone.meta.nsNames.includes(namespace)) {
         namespace = namespace.split(".").slice(0, -1).join(".");
     }
-    const objectName = name.substring(namespace.length + 1);
+
+    let objectName;
+    if (namespace.length === 0) {
+        objectName = name;
+    } else {
+        objectName = name.substring(namespace.length + 1);
+    }
 
     return {
         namespace,

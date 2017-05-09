@@ -3,39 +3,35 @@ import * as helpers from "./helpers";
 const { std: { fs, path }, compressor: { lzma, xz }, collection: { BufferList } } = adone;
 
 describe("glosses", "compressors", "lzma", "stream", () => {
-    function commonFixturePath(relPath) {
-        return path.join(__dirname, "../..", "fixtures", relPath);
-    }
+    const commonFixturePath = (relPath) => path.join(__dirname, "../..", "fixtures", relPath);
 
-    function fixturePath(relPath) {
-        return path.join(__dirname, "fixtures", relPath);
-    }
-    
-    let random_data;
+    const fixturePath = (relPath) => path.join(__dirname, "fixtures", relPath);
+
+    let randomData;
     let hamlet;
 
-    function encodeAndDecode(enc, dec, done, data) {
-        data = data || random_data;
+    const encodeAndDecode = (enc, dec, done, data) => {
+        data = data || randomData;
 
-        data.duplicate().pipe(enc).pipe(dec).pipe(new BufferList(function (err, buf) {
+        data.duplicate().pipe(enc).pipe(dec).pipe(new BufferList((err, buf) => {
             assert.isOk(helpers.bufferEqual(data, buf));
             done(err);
         }));
-    }
+    };
 
     before("read random test data", (done) => {
-        random_data = new BufferList(done);
-        fs.createReadStream(commonFixturePath("small")).pipe(random_data);
+        randomData = new BufferList(done);
+        fs.createReadStream(commonFixturePath("small")).pipe(randomData);
     });
 
     before("read hamlet.txt test data", (done) => {
         hamlet = new BufferList(done);
-        fs.createReadStream(fixturePath("hamlet.txt.xz")).pipe(xz.decompress.stream()).pipe(hamlet);
+        fs.createReadStream(fixturePath("hamlet.txt.xz")).pipe(xz.decompressStream()).pipe(hamlet);
     });
 
     describe("#autoDecoder", () => {
         it("should be able to decode .lzma in async mode", (done) => {
-            const stream = lzma.decompress.stream();
+            const stream = lzma.decompressStream();
             stream.on("end", done);
             stream.on("data", () => { });
 
@@ -47,7 +43,7 @@ describe("glosses", "compressors", "lzma", "stream", () => {
         });
 
         it("should be able to decode .lzma in sync mode", (done) => {
-            const stream = lzma.decompress.stream({ sync: true });
+            const stream = lzma.decompressStream({ sync: true });
             stream.on("end", done);
             stream.on("data", () => { });
 
@@ -57,7 +53,7 @@ describe("glosses", "compressors", "lzma", "stream", () => {
         });
 
         it("should bark loudly when given non-decodable data in async mode", (done) => {
-            const stream = lzma.decompress.stream();
+            const stream = lzma.decompressStream();
             let sawError = false;
 
             stream.on("error", () => {
@@ -73,7 +69,7 @@ describe("glosses", "compressors", "lzma", "stream", () => {
         });
 
         it("should bark loudly when given non-decodable data in sync mode", (done) => {
-            const stream = lzma.decompress.stream({ sync: true });
+            const stream = lzma.decompressStream({ sync: true });
             let sawError = false;
 
             stream.on("error", () => {
@@ -91,14 +87,14 @@ describe("glosses", "compressors", "lzma", "stream", () => {
 
     describe("#aloneEncoder", () => {
         it("should be undone by aloneDecoder in async mode", (done) => {
-            const enc = lzma.compress.stream();
-            const dec = lzma.decompress.stream();
+            const enc = lzma.compressStream();
+            const dec = lzma.decompressStream();
             encodeAndDecode(enc, dec, done);
         });
 
         it("should be undone by aloneDecoder in sync mode", (done) => {
-            const enc = lzma.compress.stream({ sync: true });
-            const dec = lzma.decompress.stream({ sync: true });
+            const enc = lzma.compressStream({ sync: true });
+            const dec = lzma.decompressStream({ sync: true });
             encodeAndDecode(enc, dec, done);
         });
     });
@@ -111,7 +107,7 @@ describe("glosses", "compressors", "lzma", "stream", () => {
 
     describe("#memusage", () => {
         it("should return a meaningful value when decoding", (done) => {
-            const stream = lzma.decompress.stream({ sync: true });
+            const stream = lzma.decompressStream({ sync: true });
             stream.on("end", done);
             stream.on("data", () => { });
 
@@ -120,13 +116,13 @@ describe("glosses", "compressors", "lzma", "stream", () => {
         });
 
         it("should return null when encoding", () => {
-            const stream = lzma.compress.stream({ sync: true });
+            const stream = lzma.compressStream({ sync: true });
 
             assert.strictEqual(stream.memusage(), null);
         });
 
         it("should fail when called with null or {} as the this object", () => {
-            const stream = lzma.decompress.stream({ sync: true });
+            const stream = lzma.decompressStream({ sync: true });
             assert.throws(stream.nativeStream.memusage.bind(null));
             assert.throws(stream.nativeStream.memusage.bind({}));
         });
@@ -134,7 +130,7 @@ describe("glosses", "compressors", "lzma", "stream", () => {
 
     describe("#memlimitGet/#memlimitSet", () => {
         it("should set values of memory limits", (done) => {
-            const stream = lzma.decompress.stream({ sync: true });
+            const stream = lzma.decompressStream({ sync: true });
             stream.on("end", done);
             stream.on("data", () => { });
 
@@ -145,7 +141,7 @@ describe("glosses", "compressors", "lzma", "stream", () => {
         });
 
         it("should fail for invalid memory limit specifications", () => {
-            const stream = lzma.decompress.stream({ sync: true });
+            const stream = lzma.decompressStream({ sync: true });
 
             // use undefined because that’s never converted to Number
             assert.throws(() => {
@@ -156,7 +152,7 @@ describe("glosses", "compressors", "lzma", "stream", () => {
 
     describe("#totalIn/#totalOut", () => {
         it("should return meaningful values during the coding process", (done) => {
-            const stream = lzma.decompress.stream({ sync: true });
+            const stream = lzma.decompressStream({ sync: true });
             let valuesWereSet = false;
 
             stream.on("end", () => {
@@ -174,7 +170,7 @@ describe("glosses", "compressors", "lzma", "stream", () => {
 
     describe("bufsize", () => {
         it("Should only accept positive integers", () => {
-            const stream = lzma.compress.stream({ sync: true });
+            const stream = lzma.compressStream({ sync: true });
 
             assert.throws(() => {
                 stream.bufsize = "Not numeric";
@@ -190,19 +186,19 @@ describe("glosses", "compressors", "lzma", "stream", () => {
         });
 
         it("Should default to 64k", () => {
-            const stream = lzma.compress.stream({ sync: true });
+            const stream = lzma.compressStream({ sync: true });
 
             assert.strictEqual(stream.bufsize, 65536);
         });
 
         it("Should accept values from options", () => {
-            const stream = lzma.compress.stream({ sync: true, bufsize: 16384 });
+            const stream = lzma.compressStream({ sync: true, bufsize: 16384 });
 
             assert.strictEqual(stream.bufsize, 16384);
         });
 
         it("Should be overridable", () => {
-            const stream = lzma.decompress.stream({ sync: true });
+            const stream = lzma.decompressStream({ sync: true });
 
             stream.bufsize = 8192;
             assert.strictEqual(stream.bufsize, 8192);

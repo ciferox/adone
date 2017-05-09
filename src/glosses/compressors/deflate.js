@@ -5,31 +5,29 @@ export const compress = (buf, options) => new Promise((resolve, reject) => {
         err ? reject(err) : resolve(data);
     });
 });
-compress.sync = (buf, options) => zlib.deflateSync(buf, options);
-compress.stream = (options) => zlib.createDeflate(options);
+export const compressSync = (buf, options) => zlib.deflateSync(buf, options);
+export const compressStream = (options) => zlib.createDeflate(options);
 
 export const decompress = (buf, options) => new Promise((resolve, reject) => {
     zlib.inflate(buf, options, (err, data) => {
         err ? reject(err) : resolve(data);
     });
 });
-decompress.sync = (buf, options) => zlib.inflateSync(buf, options);
-decompress.stream = (options) => zlib.createInflate(options);
+export const decompressSync = (buf, options) => zlib.inflateSync(buf, options);
+export const decompressStream = (options) => zlib.createInflate(options);
 
-export const raw = {};
-
-raw.compress = (buf, options) => new Promise((resolve, reject) => {
+export const rawCompress = (buf, options) => new Promise((resolve, reject) => {
     zlib.deflateRaw(buf, options, (err, data) => {
         err ? reject(err) : resolve(data);
     });
 });
-raw.compress.sync = (buf, options) => zlib.deflateRawSync(buf, options);
-raw.compress.stream = (options) => zlib.createDeflateRaw(options);
+export const rawCompressSync = (buf, options) => zlib.deflateRawSync(buf, options);
+export const rawCompressStream = (options) => zlib.createDeflateRaw(options);
 
-raw.decompress = (buf, options) => new Promise((resolve, reject) => {
+export const rawDecompress = (buf, options) => new Promise((resolve, reject) => {
     zlib.inflateRaw(buf, options, (err, data) => {
         err ? reject(err) : resolve(data);
     });
 });
-raw.decompress.sync = (buf, options) => zlib.inflateRawSync(buf, options);
-raw.decompress.stream = (options) => zlib.createInflateRaw(options);
+export const rawDecompressSync = (buf, options) => zlib.inflateRawSync(buf, options);
+export const rawDecompressStream = (options) => zlib.createInflateRaw(options);

@@ -54,8 +54,7 @@ export default class XModule extends adone.meta.code.Base {
                                         lazies.push({ name: objectName, path: adone.std.path.join(basePath, prop.value.value) });
                                     } else if (prop.value.type === "ArrowFunctionExpression") {
                                         const lazyPath = this.getPathFor(path, prop.value);
-                                        const xObj = new adone.meta.code.LazyFunction({ parent: this, ast: prop.value, path: lazyPath, xModule: this });
-                                        this.lazies.set(objectName, xObj);
+                                        this.lazies.set(objectName, new adone.meta.code.LazyFunction({ parent: this, ast: prop.value, path: lazyPath, xModule: this }));
                                     }
                                 }
                             }
@@ -122,10 +121,16 @@ export default class XModule extends adone.meta.code.Base {
                             const exprName = this._getMemberExpressionName(declrNode.init.callee);
                             if (exprName === "adone.bind") {
                                 shouldSkip = true;
-                                const natives = this._traverseObjectPattern(declrNode.id, node.kind);
-                                for (const name of natives) {
-                                    const xObj = new adone.meta.code.Native({ name, parent: this, ast: null, path: null, xModule: this });
-                                    this.addToScope(xObj);
+                                if (declrNode.id.type === "Identifier") {
+                                    const name = declrNode.id.name;
+                                    this.addToScope(new adone.meta.code.Native({ name, parent: this, ast: null, path: null, xModule: this }));
+                                    this._addGlobal(name, null, node.kind, false);
+                                } else if (declrNode.id.type === "ObjectPattern") {
+                                    const natives = this._traverseObjectPattern(declrNode.id, node.kind);
+                                    for (const name of natives) {
+                                        this.addToScope(new adone.meta.code.Native({ name, parent: this, ast: null, path: null, xModule: this }));
+                                        this._addGlobal(name, null, node.kind, false);
+                                    }
                                 }
                                 return realPath;
                             }
@@ -133,12 +138,16 @@ export default class XModule extends adone.meta.code.Base {
 
                         this._traverseVariableDeclarator(declrNode, node.kind);
 
-                        realPath.traverse({
-                            enter(subPath) {
-                                realPath = subPath;
-                                subPath.stop();
-                            }
-                        });
+                        if (!is.null(declrNode.init) && declrNode.init.type === "Identifier") {
+                            shouldSkip = true;
+                        } else {
+                            realPath.traverse({
+                                enter(subPath) {
+                                    realPath = subPath;
+                                    subPath.stop();
+                                }
+                            });
+                        }
                     }
 
                     return realPath;
@@ -248,7 +257,7 @@ export default class XModule extends adone.meta.code.Base {
 
     _traverseVariableDeclarator(node, kind) {
         let prefix = "";
-        if (node.init === null) {
+        if (is.null(node.init)) {
             return this._addGlobal(node.id.name, null, kind, false);
         }
         const initType = node.init.type;
@@ -275,8 +284,13 @@ export default class XModule extends adone.meta.code.Base {
                     const parts = namespace.split(".");
                     this._addGlobal(parts[parts.length - 1], parts.slice(0, -1).join("."), kind, true);
                 } else {
-                    this._addReference(name);
-                    this._addGlobal(objectName, namespace, kind, false);
+                    if (namespace.length === 0 && objectName.indexOf(".") >= 0) {
+                        const parts = objectName.split(".");
+                        this._addGlobal(parts[parts.length - 1], parts.slice(0, -1).join("."), kind, false);
+                    } else {
+                        this._addReference(name);
+                        this._addGlobal(objectName, namespace, kind, false);
+                    }
                 }
             }
         }
@@ -288,7 +302,7 @@ export default class XModule extends adone.meta.code.Base {
         if (key.type === value.type) {
             if (key.start === value.start && key.end === value.end) {
                 return [value.name];
-            } 
+            }
             this._addGlobal(value.name, null, kind, false);
             return [key.name];
         } else if (value.type === "ObjectPattern") {

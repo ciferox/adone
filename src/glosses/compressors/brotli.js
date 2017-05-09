@@ -148,7 +148,7 @@ export const compress = (buf, options) => new Promise((resolve, reject) => {
         .end(buf);
 });
 
-compress.sync = (buf, options) => {
+export const compressSync = (buf, options) => {
     const isBuffer = is.buffer(buf);
     if (!isBuffer && !is.string(buf)) {
         throw new adone.x.InvalidArgument("The first agrument must be a buffer or a string");
@@ -171,8 +171,7 @@ compress.sync = (buf, options) => {
     return Buffer.concat(chunks, length);
 };
 
-compress.stream = (options = {}) => new TransformStreamEncode(options);
-
+export const compressStream = (options = {}) => new TransformStreamEncode(options);
 
 export const decompress = (buf, options) => new Promise((resolve, reject) => {
     const isBuffer = is.buffer(buf);
@@ -197,7 +196,7 @@ export const decompress = (buf, options) => new Promise((resolve, reject) => {
         .end(buf);
 });
 
-decompress.sync = (buf, options) => {
+export const decompressSync = (buf, options) => {
     const isBuffer = is.buffer(buf);
     if (!isBuffer && !is.string(buf)) {
         throw new adone.x.InvalidArgument("The first agrument must be a buffer or a string");
@@ -220,4 +219,4 @@ decompress.sync = (buf, options) => {
     return Buffer.concat(chunks, length);
 };
 
-decompress.stream = (options = {}) => new TransformStreamDecode(options);
+export const decompressStream = (options = {}) => new TransformStreamDecode(options);

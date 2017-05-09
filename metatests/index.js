@@ -119,45 +119,53 @@ describe("Meta tests", () => {
     });
 
     describe("compressors", () => {
-        it.skip("root namespace", async () => {
+        it("root namespace", async () => {
             const inspector = new adone.meta.code.Inspector();
             await inspector.attachNamespace("adone.compressor");
             const ns = inspector.getNamespace("adone.compressor");
+            assert.isTrue(Object.keys(ns.exports).length === 0);
         });
 
         it("subnamespace 'gz'", async () => {
             const inspector = new adone.meta.code.Inspector();
             await inspector.attachNamespace("adone.compressor.gz");
             const ns = inspector.getNamespace("adone.compressor.gz");
-            assert.includeMembers(Object.keys(ns.exports), ["compress", "decompress"]);
+            assert.includeMembers(Object.keys(ns.exports), ["compress", "decompress", "compressSync", "decompressSync", "compressStream", "decompressStream"]);
         });
 
         it("subnamespace 'deflate'", async () => {
             const inspector = new adone.meta.code.Inspector();
             await inspector.attachNamespace("adone.compressor.deflate");
             const ns = inspector.getNamespace("adone.compressor.deflate");
-            assert.includeMembers(Object.keys(ns.exports), ["compress", "decompress"]);
+            assert.includeMembers(Object.keys(ns.exports), ["compress", "decompress", "compressSync", "decompressSync", "compressStream", "decompressStream", "rawCompress", "rawCompressSync", "rawCompressStream", "rawDecompress", "rawDecompressSync", "rawDecompressStream"]);
         });
 
         it("subnamespace 'brotli'", async () => {
             const inspector = new adone.meta.code.Inspector();
             await inspector.attachNamespace("adone.compressor.brotli");
             const ns = inspector.getNamespace("adone.compressor.brotli");
-            assert.includeMembers(Object.keys(ns.exports), ["compress", "decompress"]);
+            assert.includeMembers(Object.keys(ns.exports), ["compress", "decompress", "compressSync", "decompressSync", "compressStream", "decompressStream"]);
         });
 
-        it.skip("subnamespace 'lzma'", async () => {
-            const inspector = new adone.meta.code.Inspector();
-            await inspector.attachNamespace("adone.compressor.lzma");
-            const ns = inspector.getNamespace("adone.compressor.lzma");
-            assert.includeMembers(Object.keys(ns.exports), ["compress", "decompress"]);
-        });
-
-        it.skip("subnamespace 'xz'", async () => {
+        it("subnamespace 'xz'", async () => {
             const inspector = new adone.meta.code.Inspector();
             await inspector.attachNamespace("adone.compressor.xz");
             const ns = inspector.getNamespace("adone.compressor.xz");
-            assert.includeMembers(Object.keys(ns.exports), ["compress", "decompress"]);
+            assert.includeMembers(Object.keys(ns.exports), ["compress", "decompress", "compressSync", "decompressSync", "compressStream", "decompressStream"]);
+        });
+
+        it("subnamespace 'lzma'", async () => {
+            const inspector = new adone.meta.code.Inspector();
+            await inspector.attachNamespace("adone.compressor.lzma");
+            const ns = inspector.getNamespace("adone.compressor.lzma");
+            assert.includeMembers(Object.keys(ns.exports), ["compress", "decompress", "compressSync", "decompressSync", "compressStream", "decompressStream"]);
+        });
+
+        it("subnamespace 'snappy'", async () => {
+            const inspector = new adone.meta.code.Inspector();
+            await inspector.attachNamespace("adone.compressor.snappy");
+            const ns = inspector.getNamespace("adone.compressor.snappy");
+            assert.includeMembers(Object.keys(ns.exports), ["compress", "decompress", "compressSync", "decompressSync", "isValidCompressed", "isValidCompressedSync"]);
         });
     });
 });

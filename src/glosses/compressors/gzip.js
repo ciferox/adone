@@ -6,8 +6,8 @@ export const compress = (buf, options) => new Promise((resolve, reject) => {
     });
 });
 
-compress.sync = (buf, options) => zlib.gzipSync(buf, options);
-compress.stream = (options) => zlib.createGzip(options);
+export const compressSync = (buf, options) => zlib.gzipSync(buf, options);
+export const compressStream = (options) => zlib.createGzip(options);
 
 export const decompress = (buf, options) => new Promise((resolve, reject) => {
     zlib.gunzip(buf, options, (err, data) => {
@@ -15,5 +15,5 @@ export const decompress = (buf, options) => new Promise((resolve, reject) => {
     });
 });
 
-decompress.sync = (buf, options) => zlib.gunzipSync(buf, options);
-decompress.stream = (options) => zlib.createGunzip(options);
+export const decompressSync = (buf, options) => zlib.gunzipSync(buf, options);
+export const decompressStream = (options) => zlib.createGunzip(options);

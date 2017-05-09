@@ -1,8 +1,38 @@
 const { is, assert, std: { stream } } = adone;
 
-export const native = adone.bind("lzma.node");
+const native = adone.bind("lzma.node");
 
 const { Stream } = native;
+
+const skipLeadingZeroes = (buffer) => {
+    let i;
+    for (i = 0; i < buffer.length; i++) {
+        if (buffer[i] !== 0x00) {
+            break;
+        }
+    }
+
+    return buffer.slice(i);
+};
+
+const bufferIndexOfYZ = (chunk) => {
+    if (!chunk) {
+        return -1;
+    }
+
+    if (chunk.indexOf) {
+        return chunk.indexOf("YZ");
+    }
+
+    let i;
+    for (i = 0; i < chunk.length - 1; i++) {
+        if (chunk[i] === 0x59 && chunk[i + 1] === 0x5a) {
+            return i;
+        }
+    }
+
+    return -1;
+};
 
 Stream.curAsyncStreamsCount = 0;
 
@@ -251,113 +281,6 @@ Stream.prototype.aloneDecoder = function (options) {
     return this.aloneDecoder_(options.memlimit || null);
 };
 
-/* helper functions for easy creation of streams */
-export const createStream = (coder, options) => {
-    if (["number", "object"].indexOf(typeof coder) !== -1 && !options) {
-        options = coder;
-        coder = null;
-    }
-
-    if (parseInt(options) === parseInt(options)) {
-        options = { preset: parseInt(options) };
-    }
-
-    coder = coder || "easyEncoder";
-    options = options || {};
-
-    const stream = new Stream();
-    stream[coder](options);
-
-    if (options.memlimit) {
-        stream.memlimitSet(options.memlimit);
-    }
-
-    return stream.getStream(options);
-};
-
-/* compatibility: LZMA-JS (https://github.com/nmrugg/LZMA-JS) */
-export const singleStringCoding = (stream, string, onFinish, onProgress) => {
-    onProgress = onProgress || adone.noop;
-    onFinish = onFinish || adone.noop;
-
-    // possibly our input is an array of byte integers
-    // or a typed array
-    if (!Buffer.isBuffer(string)) {
-        string = Buffer.from(string);
-    }
-
-    let failed = false;
-
-    stream.once("error", (err) => {
-        failed = true;
-        onFinish(null, err);
-    });
-
-    const deferred = adone.promise.defer();
-
-    // Since using the Promise API is optional, generating unhandled rejections is not okay.
-    deferred.promise.catch(adone.noop);
-
-    stream.once("error", (e) => {
-        deferred.reject(e);
-    });
-
-    const buffers = [];
-
-    stream.on("data", (b) => {
-        buffers.push(b);
-    });
-
-    stream.once("end", () => {
-        const result = Buffer.concat(buffers);
-
-        if (!failed) {
-            onProgress(1.0);
-            onFinish(result);
-        }
-
-        if (deferred) {
-            deferred.resolve(result);
-        }
-    });
-
-    onProgress(0.0);
-
-    stream.end(string);
-
-    return deferred.promise;
-};
-
-function skipLeadingZeroes(buffer) {
-    let i;
-    for (i = 0; i < buffer.length; i++) {
-        if (buffer[i] !== 0x00) {
-            break;
-        }
-    }
-
-    return buffer.slice(i);
-}
-
-function bufferIndexOfYZ(chunk) {
-    if (!chunk) {
-        return -1;
-    }
-
-    if (chunk.indexOf) {
-        return chunk.indexOf("YZ");
-    }
-
-    let i;
-    for (i = 0; i < chunk.length - 1; i++) {
-        if (chunk[i] === 0x59 && chunk[i + 1] === 0x5a) {
-            return i;
-        }
-    }
-
-    return -1;
-}
-
 const xz = {
     asyncCodeAvailable: native.asyncCodeAvailable,
     versionNumber: native.versionNumber,
@@ -373,7 +296,82 @@ const xz = {
     easyEncoderMemusage: native.easyEncoderMemusage,
     easyDecoderMemusage: native.easyDecoderMemusage,
 
-    createStream,
+    /* helper functions for easy creation of streams */
+    createStream: (coder, options) => {
+        if (["number", "object"].indexOf(typeof(coder)) !== -1 && !options) {
+            options = coder;
+            coder = null;
+        }
+
+        if (parseInt(options) === parseInt(options)) {
+            options = { preset: parseInt(options) };
+        }
+
+        coder = coder || "easyEncoder";
+        options = options || {};
+
+        const stream = new Stream();
+        stream[coder](options);
+
+        if (options.memlimit) {
+            stream.memlimitSet(options.memlimit);
+        }
+
+        return stream.getStream(options);
+    },
+
+    /* compatibility: LZMA-JS (https://github.com/nmrugg/LZMA-JS) */
+    singleStringCoding: (stream, string, onFinish, onProgress) => {
+        onProgress = onProgress || adone.noop;
+        onFinish = onFinish || adone.noop;
+
+        // possibly our input is an array of byte integers
+        // or a typed array
+        if (!Buffer.isBuffer(string)) {
+            string = Buffer.from(string);
+        }
+
+        let failed = false;
+
+        stream.once("error", (err) => {
+            failed = true;
+            onFinish(null, err);
+        });
+
+        const deferred = adone.promise.defer();
+
+        // Since using the Promise API is optional, generating unhandled rejections is not okay.
+        deferred.promise.catch(adone.noop);
+
+        stream.once("error", (e) => {
+            deferred.reject(e);
+        });
+
+        const buffers = [];
+
+        stream.on("data", (b) => {
+            buffers.push(b);
+        });
+
+        stream.once("end", () => {
+            const result = Buffer.concat(buffers);
+
+            if (!failed) {
+                onProgress(1.0);
+                onFinish(result);
+            }
+
+            if (deferred) {
+                deferred.resolve(result);
+            }
+        });
+
+        onProgress(0.0);
+
+        stream.end(string);
+
+        return deferred.promise;
+    },
 
     CHECK_CRC32: native.CHECK_CRC32,
     CHECK_CRC64: native.CHECK_CRC64,
@@ -409,33 +407,28 @@ const xz = {
     MODE_FAST: native.MODE_FAST,
     MODE_NORMAL: native.MODE_NORMAL,
 
-    STREAM_HEADER_SIZE: native.STREAM_HEADER_SIZE
-};
+    STREAM_HEADER_SIZE: native.STREAM_HEADER_SIZE,
 
-xz.compress = (buf, options = {}) => {
-    return singleStringCoding(xz.compress.stream(options), buf);
-};
-
-xz.compress.stream = (options = {}) => {
-    return createStream("easyEncoder", options);
-};
-
-// eslint-disable-next-line no-unused-vars
-xz.compress.sync = (buf, options = {}) => {
-    throw new adone.x.NotImplemented();
-};
-
-xz.decompress = (buf, options = {}) => {
-    return singleStringCoding(xz.decompress.stream(options), buf);
-};
-
-xz.decompress.stream = (options = {}) => {
-    return createStream("autoDecoder", options);
-};
-
-// eslint-disable-next-line no-unused-vars
-xz.decompress.sync = (buf, options = {}) => {
-    throw new adone.x.NotImplemented();
+    compress: (buf, options = {}) => {
+        return xz.singleStringCoding(xz.compressStream(options), buf);
+    },
+    compressStream: (options = {}) => {
+        return xz.createStream("easyEncoder", options);
+    },
+    // eslint-disable-next-line no-unused-vars
+    compressSync: (buf, options = {}) => {
+        throw new adone.x.NotImplemented();
+    },
+    decompress: (buf, options = {}) => {
+        return xz.singleStringCoding(xz.decompressStream(options), buf);
+    },
+    decompressStream: (options = {}) => {
+        return xz.createStream("autoDecoder", options);
+    },
+    // eslint-disable-next-line no-unused-vars
+    decompressSync: (buf, options = {}) => {
+        throw new adone.x.NotImplemented();
+    }
 };
 
 export default xz;

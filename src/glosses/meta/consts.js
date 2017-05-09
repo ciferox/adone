@@ -75,6 +75,13 @@ export const namespaces = [
         ]
     },
     {
+        name: "adone.compressor.snappy",
+        description: "Implementation of snappy compressor",
+        paths: [
+            "glosses/compressors/snappy"
+        ]
+    },
+    {
         name: "adone.archive",
         description: "",
         paths: [
