@@ -3,16 +3,69 @@ module.exports = {
         "no-typeof": {
             meta: {
                 docs: {
-                    description: "disallow using typeof"
+                    description: "disallow using typeof in comparison expressions"
                 }
             },
             create(context) {
                 return {
                     UnaryExpression(node) {
-                        if (node.operator === "typeof") {
+                        if (
+                            node.operator === "typeof" &&
+                            node.parent &&
+                            node.parent.type === "BinaryExpression" &&
+                            (node.parent.operator === "===" || node.parent.operator == "==")
+                        ) {
                             context.report({
                                 node,
                                 message: "typeof not allowed use adone.is"
+                            });
+                        }
+                    }
+                };
+            }
+        },
+        "no-buffer-isbuffer": {
+            meta: {
+                docs: {
+                    description: "disallow using Buffer.isBuffer"
+                }
+            },
+            create(context) {
+                return {
+                    MemberExpression(node) {
+                        if (
+                            node.object.type === "Identifier" &&
+                            node.object.name === "Buffer" &&
+                            node.property.type === "Identifier" &&
+                            node.property.name === "isBuffer"
+                        ) {
+                            context.report({
+                                node,
+                                message: "use adone.is.buffer instead"
+                            });
+                        }
+                    }
+                };
+            }
+        },
+        "no-array-isarray": {
+            meta: {
+                docs: {
+                    description: "disallow using Array.isArray"
+                }
+            },
+            create(context) {
+                return {
+                    MemberExpression(node) {
+                        if (
+                            node.object.type === "Identifier" &&
+                            node.object.name === "Array" &&
+                            node.property.type === "Identifier" &&
+                            node.property.name === "isArray"
+                        ) {
+                            context.report({
+                                node,
+                                message: "use adone.is.array instead"
                             });
                         }
                     }

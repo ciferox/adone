@@ -144,7 +144,9 @@ module.exports = {
         "adone/no-typeof": "error",
         "adone/no-buffer-constructor": "error",
         "adone/no-undefined-comp": "error",
-        "adone/no-null-comp": "error"
+        "adone/no-null-comp": "error",
+        "adone/no-buffer-isbuffer": "error",
+        "adone/no-array-isarray": "error"
     },
     "plugins": [
         "adone",
