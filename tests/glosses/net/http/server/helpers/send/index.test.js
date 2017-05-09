@@ -648,7 +648,7 @@ describe("glosses", "net", "http", "helpers", "send", () => {
             ctx.socket.emit("error", new Error("boom"));
         });
 
-        const instance = server.listen(0, "127.0.0.1");
+        const instance = server.bind(0, "127.0.0.1");
         await new Promise((resolve) => instance.once("listening", resolve));
         const err = await request(server).get("/").expectStatus(500).then(() => null, (x) => x);
         expect(err).to.be.ok;

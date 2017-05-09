@@ -1198,15 +1198,18 @@ export class Application extends Subsystem {
         this._subsystems.push(subsystem);
     }
 
-    exitOnSignal(sigName) {
-        if (is.nil(this._exitSignals)) {
-            this._exitSignals = [];
+    exitOnSignal(...names) {
+        for (const sigName of names) {
+            if (is.nil(this._exitSignals)) {
+                this._exitSignals = [];
+            }
+            if (this._exitSignals.includes(sigName)) {
+                continue;
+            }
+            this._exitSignals.push(sigName);
+            process.on(sigName, () => this._handlers.signalExit(sigName));
         }
-        if (this._exitSignals.includes(sigName)) {
-            return;
-        }
-        this._exitSignals.push(sigName);
-        process.on(sigName, () => this._handlers.signalExit(sigName));
+        return this;
     }
 
     async exit(code = Application.SUCCESS) {

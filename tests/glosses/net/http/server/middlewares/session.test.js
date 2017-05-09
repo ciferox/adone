@@ -68,7 +68,7 @@ describe("glosses", "net", "http", "server", "middlewares", "session", function 
         });
 
         it("should work when multiple clients access", async () => {
-            const instance = server.listen();
+            const instance = server.bind();
 
             const res1 = await request(instance).get("/set");
             const cookie1 = res1.headers["set-cookie"];

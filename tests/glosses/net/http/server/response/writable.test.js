@@ -21,7 +21,7 @@ describe("glosses", "net", "http", "server", "response", "writable", () => {
                 ctx.body = `request ${count}, writable: ${ctx.writable}`;
             });
 
-            const instance = server.listen();
+            const instance = server.bind();
 
             requestTwice(instance, (_, datas) => {
                 instance.close();
@@ -55,7 +55,7 @@ describe("glosses", "net", "http", "server", "response", "writable", () => {
                     done();
                 });
             });
-            const instance = server.listen();
+            const instance = server.bind();
             requsetClosed(instance);
         });
     });
@@ -83,7 +83,7 @@ describe("glosses", "net", "http", "server", "response", "writable", () => {
                 }
                 done();
             });
-            const instance = server.listen();
+            const instance = server.bind();
             request(instance);
         });
     });

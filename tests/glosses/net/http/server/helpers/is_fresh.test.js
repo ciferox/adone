@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "helpers",  "isFresh", () => {
+describe("glosses", "net", "http", "helpers", "isFresh", () => {
     const { isFresh } = adone.net.http.server.helper;
 
 

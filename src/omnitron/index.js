@@ -17,9 +17,7 @@ export default class Omnitron extends adone.application.Application {
         this._.configurator = new adone.omnitron.Configurator(this);
         await this._.configurator.loadAll();
 
-        this.exitOnSignal("SIGQUIT");
-        this.exitOnSignal("SIGTERM");
-        this.exitOnSignal("SIGINT");
+        this.exitOnSignal("SIGQUIT", "SIGTERM", "SIGINT");
         process.on("SIGILL", () => {
             global.gc();
             adone.info("running garbage collector");

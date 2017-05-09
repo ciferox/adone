@@ -56,21 +56,14 @@ export class Server extends EventEmitter {
     constructor() {
         super();
 
+        this.server = null;
         this.proxy = false;
         this.middlewares = [];
     }
 
-    listen(...args) {
-        const server = std.http.createServer(this.callback());
-        return server.listen(...args);
-    }
-
-    use(middleware) {
-        if (!is.function(middleware)) {
-            throw new x.InvalidArgument("Middleware must be a function");
-        }
-        this.middlewares.push(middleware);
-        return this;
+    bind(...args) {
+        this.server = std.http.createServer(this.callback());
+        return this.server.listen(...args);
     }
 
     callback() {
@@ -80,7 +73,7 @@ export class Server extends EventEmitter {
             this.on("error", this.onerror);
         }
 
-        const handleRequest = (req, res) => {
+        return (req, res) => {
             res.statusCode = 404;
             const ctx = this.createContext(req, res);
             const onerror = (err) => ctx.onerror(err);
@@ -88,8 +81,22 @@ export class Server extends EventEmitter {
             onFinished(res, onerror);
             return fn(ctx).then(handleResponse).catch(onerror);
         };
+    }
 
-        return handleRequest;
+    unbind() {
+        if (!is.null(this.server)) {
+            return new Promise((resolve) => {
+                this.server.close(resolve);
+            });
+        }
+    }
+
+    use(middleware) {
+        if (!is.function(middleware)) {
+            throw new x.InvalidArgument("Middleware must be a function");
+        }
+        this.middlewares.push(middleware);
+        return this;
     }
 
     createContext(req, res) {

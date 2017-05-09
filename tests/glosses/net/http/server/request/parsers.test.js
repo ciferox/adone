@@ -143,7 +143,7 @@ describe("glosses", "net", "http", "server", "request", "parsers", () => {
             server.use(async (ctx) => {
                 ctx.body = await ctx.request.json();
             });
-            server.listen(function onListen() {
+            server.bind(function onListen() {
                 adone.std.http.request({
                     port: this.address().port,
                     path: "/",
