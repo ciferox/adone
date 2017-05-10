@@ -57,9 +57,9 @@ export default class Stub {
                 return Promise.reject(new x.InvalidAccess(`${prop} is not writable`));
             }
             return Promise.resolve(true);
-        } else {
-            return Promise.reject(new x.NotExists(`${prop} not exists`));
         }
+        return Promise.reject(new x.NotExists(`${prop} not exists`));
+
     }
 
     get(prop, defaultData, peer = null) {
@@ -74,19 +74,17 @@ export default class Stub {
                 }).then((result) => {
                     return this._processResult(peer, result);
                 });
-            } else {
-                let val = target[prop];
-                if (is.undefined(val)) {
-                    defaultData = this._processArgs(peer, defaultData, false);
-                    val = defaultData;
-                } else {
-                    val = this._processResult(peer, val);
-                }
-                return Promise.resolve(val);
             }
-        } else {
-            return Promise.reject(new x.NotExists(`${prop} not exists`));
+            let val = target[prop];
+            if (is.undefined(val)) {
+                defaultData = this._processArgs(peer, defaultData, false);
+                val = defaultData;
+            } else {
+                val = this._processResult(peer, val);
+            }
+            return Promise.resolve(val);
         }
+        return Promise.reject(new x.NotExists(`${prop} not exists`));
     }
 
     _processResult(peer, result) {

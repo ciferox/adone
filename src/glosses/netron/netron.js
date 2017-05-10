@@ -13,13 +13,13 @@ export default class Netron extends GenesisNetron {
             refGates: true,
             refPeers: true
         }, options, {
-            peerFactory: (socket, gate) => {
-                const peer = this._createPeer(socket, gate, PEER_TYPE.ACTIVE);
-                this._emitPeerEvent("peer create", peer);
-                return peer;
-            },
-            сonnectionHandler: this.onNewConnection.bind(this)
-        });
+                peerFactory: (socket, gate) => {
+                    const peer = this._createPeer(socket, gate, PEER_TYPE.ACTIVE);
+                    this._emitPeerEvent("peer create", peer);
+                    return peer;
+                },
+                сonnectionHandler: this.onNewConnection.bind(this)
+            });
 
         this._nonauthPeers = [];
         this._gates = new Map();
@@ -45,7 +45,7 @@ export default class Netron extends GenesisNetron {
 
     async bind(options) {
         if (is.nil(options)) {
-            await this._bindSocket({ });
+            await this._bindSocket({});
             for (const name of this._adapters.keys()) {
                 await this.bind({ port: name });
             }
@@ -142,9 +142,8 @@ export default class Netron extends GenesisNetron {
             });
             this._emitPeerEvent("peer connect", peer);
             return true;
-        } else {
-            return peer.disconnect();
         }
+        return peer.disconnect();
     }
 
     onSendHandshake(peer) {

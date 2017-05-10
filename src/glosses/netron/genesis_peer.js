@@ -114,9 +114,8 @@ export default class GenesisPeer extends AsyncEmitter {
             }
             data = this._processArgs(ctxDef, $, data);
             return this.netron.send(this, 1, this.streamId.next(), 1, ACTION.SET, [defId, name, data]);
-        } else {
-            return Promise.reject(new x.NotExists(`${name} not exists`));
         }
+        return Promise.reject(new x.NotExists(`${name} not exists`));
     }
 
     get(defId, name, defaultData) {
@@ -138,9 +137,8 @@ export default class GenesisPeer extends AsyncEmitter {
                     }
                 }).catch(reject);
             });
-        } else {
-            return Promise.reject(new x.NotExists(`${name} not exists`));
         }
+        return Promise.reject(new x.NotExists(`${name} not exists`));
     }
 
     ping() {
@@ -283,9 +281,9 @@ export default class GenesisPeer extends AsyncEmitter {
                 result.$proxyDef = def;
                 this.netron._proxifyContext(result.id, stub);
                 return def;
-            } else {
-                return this.netron._createInterface(result, this.uid);
             }
+            return this.netron._createInterface(result, this.uid);
+
         } else if (is.netronDefinitions(result)) {
             for (let i = 0; i < result.length; i++) {
                 result.set(i, this._processResult(ctxDef, result.get(i)));

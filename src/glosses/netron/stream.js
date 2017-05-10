@@ -3,7 +3,7 @@ const { EventEmitter, collection: { LinkedList }, netron: { ACTION, SequenceId }
 export default class Stream extends EventEmitter {
     constructor({ peer, id, highWaterMark, allowHalfOpen }) {
         super();
-        
+
         this.peer = peer;
         this.netron = peer.netron;
         this.id = id;
@@ -87,7 +87,7 @@ export default class Stream extends EventEmitter {
 
     _wEnd() {
         if (!this._writing && this._writableState.buffer.empty) {
-            this.netron.send(this.peer, 0, this.id, this.packetId.next(), ACTION.STREAM_END).catch(err => this.emit("error", err)).then(() => {
+            this.netron.send(this.peer, 0, this.id, this.packetId.next(), ACTION.STREAM_END).catch((err) => this.emit("error", err)).then(() => {
                 this.ending = false;
                 this.ended = true;
                 this._releaseRemoteStream();
@@ -136,7 +136,7 @@ export default class Stream extends EventEmitter {
 
         if (this._readableState.buffer.length >= this._readableState.highWaterMark && !this._readableState.pauseSended) {
             this._readableState.pauseSended = true;
-            this.netron.send(this.peer, 0, this.id, this.packetId.next(), ACTION.STREAM_PAUSE).catch(err => this.emit("error", err));
+            this.netron.send(this.peer, 0, this.id, this.packetId.next(), ACTION.STREAM_PAUSE).catch((err) => this.emit("error", err));
         }
 
         return true;
@@ -202,7 +202,7 @@ export default class Stream extends EventEmitter {
 
         if (this._readableState.pauseSended) {
             this._readableState.pauseSended = false;
-            this.netron.send(this.peer, 0, this.id, this.packetId.next(), ACTION.STREAM_RESUME).catch(err => this.emit("error", err));
+            this.netron.send(this.peer, 0, this.id, this.packetId.next(), ACTION.STREAM_RESUME).catch((err) => this.emit("error", err));
         }
         if (this.remoteEnding && this._readableState.buffer.empty) {
             this._rEnd();

@@ -34,9 +34,9 @@ export default class RemoteStub {
                 return target[prop].set(data);
             }
             return Promise.reject(new x.InvalidAccess(`${prop} is not writable`));
-        } else {
-            return Promise.reject(new x.NotExists(`${prop} not exists`));
         }
+        return Promise.reject(new x.NotExists(`${prop} not exists`));
+
     }
 
     get(prop, defaultData, peer) {
@@ -47,13 +47,11 @@ export default class RemoteStub {
             if ($.method) {
                 this._processArgs(peer, defaultData, true);
                 return target[prop].apply(this.iInstance, defaultData);
-            } else {
-                this._processArgs(peer, defaultData, false);
-                return target[prop].get(defaultData);
             }
-        } else {
-            return Promise.reject(new x.NotExists(`${prop} not exists`));
+            this._processArgs(peer, defaultData, false);
+            return target[prop].get(defaultData);
         }
+        return Promise.reject(new x.NotExists(`${prop} not exists`));
     }
 
     _processArgs(peer, args, isMethod) {

@@ -33,7 +33,7 @@ export const STATUS = {
     HANDSHAKING: 2,
     ONLINE: 3,
 
-    MAX: 0x100 
+    MAX: 0x100
 };
 
 export const PEER_TYPE = {
@@ -91,7 +91,6 @@ export class Identity {
         this.uid = uid;
 
     }
-
 }
 
 adone.lazify({
