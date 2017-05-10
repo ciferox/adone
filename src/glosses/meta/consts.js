@@ -492,5 +492,19 @@ export const namespaces = [
         paths: [
             "glosses/vault/index"
         ]
+    },
+    {
+        name: "adone.hardware",
+        description: "Hardware stuff",
+        paths: [
+            "glosses/hardware/index"
+        ]
+    },
+    {
+        name: "adone.hardware.hid",
+        description: "USB HID stuff",
+        paths: [
+            "glosses/hardware/hid"
+        ]
     }
 ];
