@@ -1,4 +1,3 @@
-
 const { x } = adone;
 
 export default function compose(middlewares) {

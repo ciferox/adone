@@ -6,9 +6,10 @@ const { ENABLED, ACTIVE } = adone.omnitron.const;
 @Contextable
 @Description("Manager os omnitron gates")
 export default class GateManager extends adone.AsyncEmitter {
-    constructor(config) {
+    constructor(gates, netron = null) {
         super();
-        this.config = config;
+        this.gates = gates;
+        this.netron = netron;
     }
 
     setNetron(netron) {
@@ -17,7 +18,7 @@ export default class GateManager extends adone.AsyncEmitter {
 
     async bindAll() {
         // Bind all gates.
-        for (const gate of this.config.gates) {
+        for (const gate of this.gates) {
             if (gate.status === ENABLED) {
                 const bindOptions = this.getNetronOptions(gate);
                 switch (gate.type) {
@@ -41,7 +42,7 @@ export default class GateManager extends adone.AsyncEmitter {
     @Public
     @Type(Array)
     list() {
-        return this.config.gates;
+        return this.gates;
     }
 
     getNetronOptions(id) {
@@ -57,7 +58,7 @@ export default class GateManager extends adone.AsyncEmitter {
     @Type(Object)
     getGate({ id = "local", type = null, status = null, contexts = null } = {}) {
         if (id !== undefined) {
-            for (const gate of this.config.gates) {
+            for (const gate of this.gates) {
                 if (id === gate.id) {
                     return gate;
                 }
@@ -65,7 +66,7 @@ export default class GateManager extends adone.AsyncEmitter {
             return;
         }
         const gates = [];
-        for (const gate of this.config.gates) {
+        for (const gate of this.gates) {
             if ((is.null(type) || type === gate.type) && (is.null(status) || status === gate.status)) {
                 if (!is.array(contexts) || gate.access === undefined || !is.array(gate.access.contexts)) {
                     gates.push(gate);

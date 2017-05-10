@@ -14,7 +14,7 @@ export default class Configurator {
 
     get gates() {
         if (is.null(this._gateManager)) {
-            this._gateManager = new adone.omnitron.GateManager(this.config.omnitron);
+            this._gateManager = new adone.omnitron.GateManager(this.config.omnitron.gates);
         }
         return this._gateManager;
     }

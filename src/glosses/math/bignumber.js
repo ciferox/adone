@@ -226,7 +226,7 @@ BigNumber.prototype.root = function (num) {
 };
 
 BigNumber.prototype.rand = function (to) {
-    if (to === undefined) {
+    if (is.undefined(to)) {
         if (this.toString() === "1") {
             return new BigNumber(0);
         }
@@ -305,7 +305,7 @@ BigNumber.prototype.toBuffer = function (opts = {}) {
             len++;
         }
 
-        const ret = new Buffer(4 + len);
+        const ret = Buffer.allocUnsafe(4 + len);
         if (len > 0) {
             buf.copy(ret, 4 + (buf[0] & 0x80 ? 1 : 0));
         }
@@ -343,7 +343,7 @@ BigNumber.prototype.toBuffer = function (opts = {}) {
     const size = opts.size === "auto" ? Math.ceil(hex.length / 2) : (opts.size || 1);
 
     const len = Math.ceil(hex.length / (2 * size)) * size;
-    const buf = new Buffer(len);
+    const buf = Buffer.allocUnsafe(len);
 
     // zero-pad the hex string so the chunks are all `size` long
     while (hex.length < 2 * len) {

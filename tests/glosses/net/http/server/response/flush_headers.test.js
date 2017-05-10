@@ -111,7 +111,7 @@ describe("glosses", "net", "http", "server", "response", "flush headers", () => 
             }, 3500);
         });
 
-        const httpServer = server.bind(function onListen(err) {
+        const httpServer = server.bind({}, function onListen(err) {
             if (err) {
                 return done(err);
             }

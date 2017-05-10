@@ -22,6 +22,15 @@ export default class Dispatcher {
         return this._configurator.loadAll();
     }
 
+    async connect(gate = null, options = {}) {
+        if (is.nil(gate) || is.nil(gate.port)) {
+            return this.connectLocal(options);
+        }
+
+        this.netron = new adone.netron.Netron(null, options);
+        this.peer = await this.netron.connect(gate);
+    }
+
     async connectLocal(options, forceStart = true, _secondTime = false) {
         if (is.null(this.netron)) {
             const gates = (await this.configurator()).gates;
@@ -59,9 +68,12 @@ export default class Dispatcher {
         }
     }
 
-    disconnect() {
+    async disconnect() {
         if (!is.null(this.netron)) {
-            return this.netron.disconnect();
+            await this.netron.disconnect();
+            await this.netron.unbind();
+            this.netron = null;
+            this.peer = null;
         }
     }
 
@@ -88,15 +100,14 @@ export default class Dispatcher {
                     });
                 });
             });
-        } else {
-            let omnitron;
-            if (is.null(this.omnitron)) {
-                omnitron = new adone.omnitron.Omnitron();
-            } else {
-                omnitron = this.omnitron;
-            }
-            return omnitron.run({ ignoreArgs: true });
         }
+        let omnitron;
+        if (is.null(this.omnitron)) {
+            omnitron = new adone.omnitron.Omnitron();
+        } else {
+            omnitron = this.omnitron;
+        }
+        return omnitron.run({ ignoreArgs: true });
     }
 
     async kill({ clean = false, killChildren = true } = {}) {
@@ -118,7 +129,7 @@ export default class Dispatcher {
                         this.netron && await this.netron.disconnect();
                         this.netron = null;
                         this.peer = null;
-                        
+
                         try {
                             const pid = parseInt(adone.std.fs.readFileSync(this.app.config.omnitron.pidFilePath).toString());
                             if (killChildren) {
@@ -217,25 +228,25 @@ export default class Dispatcher {
     async start(serviceName = "") {
         if (serviceName === "") {
             return this.connectLocal();
-        } else {
-            return (await this.getService("omnitron")).start(serviceName);
         }
+        return (await this.getService("omnitron")).start(serviceName);
+
     }
 
     async stop(serviceName = "") {
         if (serviceName === "") {
             return this.kill({ clean: false, killChildren: true });
-        } else {
-            return (await this.getService("omnitron")).stop(serviceName);
         }
+        return (await this.getService("omnitron")).stop(serviceName);
+
     }
 
     async restart(serviceName = "") {
         if (serviceName === "") {
             return this.respawn();
-        } else {
-            return (await this.getService("omnitron")).restart(serviceName);
         }
+        return (await this.getService("omnitron")).restart(serviceName);
+
     }
 
     async status(serviceName) {

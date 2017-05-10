@@ -1,9 +1,34 @@
+const { is, x, std, EventEmitter, net: { http } } = adone;
+
 adone.lazify({
     Context: "./context",
     Request: "./request",
     Response: "./response",
-    helper: "./helpers",
     util: "./utils",
+    helper: () => adone.lazify({
+        compose: "./helpers/compose",
+        status: "./helpers/statuses",
+        Accepts: "./helpers/accepts",
+        parseURL: "./helpers/parse_url",
+        isFresh: "./helpers/is_fresh",
+        contentType: "./helpers/content_type",
+        Negotiator: "./helpers/negotiator",
+        mediaTyper: "./helpers/media_typer",
+        typeIs: "./helpers/type_is",
+        onFinished: "./helpers/on_finished",
+        isFinished: "./helpers/is_finished",
+        vary: "./helpers/vary",
+        escapeHTML: "./helpers/escape_html",
+        contentDisposition: "./helpers/content_disposition",
+        assert: "./helpers/assert",
+        resolvePath: "./helpers/resolve_path",
+        send: "./helpers/send",
+        IncomingForm: "./helpers/incoming_form",
+        Cookies: "./helpers/cookies",
+        pathToRegexp: "./helpers/path_to_regexp",
+        getRawBody: "./helpers/raw_body",
+        basicAuth: "./helpers/basic_auth"
+    }, null, require),
     middleware: () => adone.lazify({
         serve: "./middlewares/serve",
         favicon: "./middlewares/favicon",
@@ -47,27 +72,46 @@ adone.lazify({
     // })
 }, exports, require);
 
-const {
-    net: { http: { server: { helper: { compose, onFinished, status: { isEmptyBody } } } } },
-    is, x, std, EventEmitter
-} = adone;
-
 export class Server extends EventEmitter {
     constructor() {
         super();
 
         this.server = null;
+        this._sockets = [];
         this.proxy = false;
         this.middlewares = [];
     }
 
-    bind(...args) {
-        this.server = std.http.createServer(this.callback());
-        return this.server.listen(...args);
+    bind(options = {}, listenCallback) {
+        const callback = this.callback();
+        if (is.plainObject(options.secure)) {
+            this.server = std.https.createServer(options.secure, callback);
+        } else {
+            this.server = std.http.createServer(callback);
+        }
+        
+        this.server.on("connection", (socket) => {
+            this._addSocket(socket);
+            socket.on("error", (/*err*/) => {
+                this._removeSocket(socket);
+            }).on("close", () => {
+                this._removeSocket(socket);
+            });        
+        });
+
+        const port = is.number(options.port) ? options.port : (is.string(options.port) ? options.port : 0);
+        const host = options.host;
+        let backlog;
+        if (is.number(options.backlog)) {
+            backlog = options.backlog;
+        } else {
+            backlog = 511;
+        }
+        return this.server.listen(port, host, backlog, listenCallback);
     }
 
     callback() {
-        const fn = compose(this.middlewares);
+        const fn = http.server.helper.compose(this.middlewares);
 
         if (!this.listeners("error").length) {
             this.on("error", this.onerror);
@@ -78,13 +122,17 @@ export class Server extends EventEmitter {
             const ctx = this.createContext(req, res);
             const onerror = (err) => ctx.onerror(err);
             const handleResponse = () => Server.respond(ctx);
-            onFinished(res, onerror);
+            http.server.helper.onFinished(res, onerror);
             return fn(ctx).then(handleResponse).catch(onerror);
         };
     }
 
     unbind() {
         if (!is.null(this.server)) {
+            // Force close all active connections
+            for (const socket of this._sockets) {
+                socket.end();
+            }
             return new Promise((resolve) => {
                 this.server.close(resolve);
             });
@@ -109,6 +157,8 @@ export class Server extends EventEmitter {
         return context;
     }
 
+    
+
     onerror(err) {
         if (!is.error(err)) {
             throw new x.IllegalState(`non-error thrown: ${err}`);
@@ -127,6 +177,17 @@ export class Server extends EventEmitter {
         console.error();
     }
 
+    _addSocket(socket) {
+        this._sockets.push(socket);
+    }
+
+    _removeSocket(socket) {
+        const i = this._sockets.indexOf(socket);
+        if (i > -1) {
+            this._sockets.splice(i, 1);
+        }
+    }
+
     static respond(ctx) {
         if (ctx.respond === false) {
             return;
@@ -141,7 +202,7 @@ export class Server extends EventEmitter {
         const code = ctx.status;
 
         // ignore body
-        if (isEmptyBody(code)) {
+        if (http.server.helper.status.isEmptyBody(code)) {
             // strip headers
             ctx.body = null;
             return res.end();
