@@ -106,7 +106,50 @@
       'cflags_cc!': [ '-fno-exceptions' ],
       'cflags': ['-g', '-exceptions'],
       'cflags_cc': ['-g', '-exceptions']
-    },  
+    },
+    {
+      'target_name': 'serial',
+      'sources': [
+        'src/native/hardware/serial/serialport.cc',
+      ],
+      'include_dirs': [ "nan" ],
+      'conditions': [
+        ['OS=="win"',
+          {
+            'sources': [
+              'src/native/hardware/serial/serialport_win.cc'
+            ],
+            'msvs_settings': {
+              'VCCLCompilerTool': {
+                'ExceptionHandling': '2',
+                'DisableSpecificWarnings': [ '4530', '4506' ],
+              },
+            },
+          },
+        ],
+        ['OS=="mac"',
+          {
+            'sources': [
+              'src/native/hardware/serial/serialport_unix.cc',
+              'src/native/hardware/serial/read-poller.cc',
+            ],
+            'xcode_settings': {
+              'OTHER_LDFLAGS': [
+                '-framework CoreFoundation -framework IOKit'
+              ]
+            }
+          }
+        ],
+        ['OS!="win"',
+          {
+            'sources': [
+              'src/native/hardware/serial/serialport_unix.cc',
+              'src/native/hardware/serial/read-poller.cc',
+            ],
+          }
+        ],
+      ],
+    },
     {
       'target_name': 'common',
       'sources': [
@@ -114,9 +157,7 @@
       ],
       'cflags!': [ '-O3' ],
       'cflags': [ '-O2' ],
-      'include_dirs' : [
-        "nan"
-      ]
+      'include_dirs' : [ "nan" ]
     },
     {
       'target_name': 'bignumber',
@@ -586,7 +627,7 @@
       "variables": {
         "srcpath%": "<(module_root_dir)/build/Release",
       },
-      "dependencies" : [ "bignumber", "brotli", "lzma", "bson", "hiredis", "common", "metrics", "snappy", "leveldown", "masscan", "hid" ],
+      "dependencies" : [ "bignumber", "brotli", "lzma", "bson", "hiredis", "common", "metrics", "snappy", "leveldown", "masscan", "hid", "serial" ],
       "copies": [
         {
           "files": [ 
@@ -600,7 +641,8 @@
             "<(srcpath)/leveldown.node",
             "<(srcpath)/lzma.node",
             "<(srcpath)/masscan.node",
-            "<(srcpath)/hid.node"
+            "<(srcpath)/hid.node",
+            "<(srcpath)/serial.node"
           ],
           "destination": "<(module_root_dir)/lib/native"
         },

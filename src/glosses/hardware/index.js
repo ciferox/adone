@@ -1,3 +1,4 @@
 adone.lazify({
-    hid: "./hid"
+    hid: "./hid",
+    serial: "./serial"
 }, exports, require);
