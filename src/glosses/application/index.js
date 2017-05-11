@@ -1230,6 +1230,8 @@ export class Application extends Subsystem {
 
         this.removeProcessHandlers();
 
+        adone.terminal.destroy();
+
         await new Promise((resolve) => {
             let fds = 0;
             code = code || Application.SUCCESS;
@@ -1258,6 +1260,7 @@ export class Application extends Subsystem {
                 }
             });
         });
+
         process.exit(code);
     }
 

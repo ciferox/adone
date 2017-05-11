@@ -1,13 +1,17 @@
-const bar = adone.terminal.progress({
-    schema: "╢:bar╟ :current/:total :percent :elapsed :eta",
-    blank: "░",
-    filled: "█"
-});
+adone.run({
+    main() {
+        const bar = adone.terminal.progress({
+            schema: "╢:bar╟ :current/:total :percent :elapsed :eta",
+            blank: "░",
+            filled: "█"
+        });
 
-const iv = setInterval(() => {
-    bar.tick();
+        const iv = setInterval(() => {
+            bar.tick();
 
-    if (bar.completed) {
-        clearInterval(iv);
+            if (bar.completed) {
+                clearInterval(iv);
+            }
+        }, 100);
     }
-}, 100);
+});

@@ -13,13 +13,10 @@ const newlineHandler = (count) => {
         return;
     }
 
-    const current = terminal.getCursorPos();
-    // did not reach the end, the screen need not scroll up
-    if (current.row < terminal.rows) {
-        return;
-    }
+    const row = terminal.y;
+    const col = terminal.x;
 
-    let minRow = 1;
+    let minRow = 0;
 
     beginUpdate();
 
@@ -37,9 +34,8 @@ const newlineHandler = (count) => {
         }
     });
 
-    // append empty row for the new lines, the screen will scroll up,
-    // then we can move the bars to their's new position.
-    terminal.moveTo(current.row - 1, current.col - 1).write("\n".repeat(count));
+    // append empty row for the new lines, the screen will scroll up, then we can move the bars to their's new position.
+    terminal.moveTo(row, col).write("\n".repeat(count));
 
     instances.forEach((instance) => {
         if (instance.rendered && (!instance.completed || instance.tough)) {
@@ -47,14 +43,12 @@ const newlineHandler = (count) => {
         }
     });
 
-    terminal.moveTo(current.row - count - 1, current.col - 1);
+    terminal.moveTo(row - count, col);
 
     endUpdate();
 };
 
-adone.stream.newlineCounter.install(terminal.output);
 terminal.output.on("newlines:before", newlineHandler);
-adone.stream.newlineCounter.install(process.stderr);
 process.stderr.on("newlines:before", newlineHandler);
 
 const toFixed = (value, precision) => {
@@ -140,6 +134,8 @@ export default class ProgressBar {
 
         // callback on completed
         this.callback = callback;
+
+        terminal.trackCursor();
 
         this.setSchema(schema);
         this.snoop();
@@ -232,7 +228,7 @@ export default class ProgressBar {
             .replace(/:eta/g, eta)
             .replace(/:percent/g, `${toFixed(percent, 0)}%`);
 
-        if (tokens && typeof tokens === "object") {
+        if (tokens && is.plainObject(tokens)) {
             for (const key in tokens) {
                 if (tokens.hasOwnProperty(key)) {
                     output = output.replace(new RegExp(`:${key}`, "g"), (String(tokens[key])) || placeholder);
@@ -273,11 +269,10 @@ export default class ProgressBar {
             return;
         }
 
-        const current = terminal.getCursorPos();
-        if (is.undefined(current)) {
-            return;
-        }
-
+        const current = {
+            row: terminal.y,
+            col: terminal.x
+        };
         beginUpdate();
 
         this.savedPos = current;
@@ -285,7 +280,7 @@ export default class ProgressBar {
             this.origin = current;
         }
 
-        if (this.origin.row === terminal.rows) {
+        if (this.origin.row === (terminal.rows - 1)) {
             terminal.write("\n".repeat(this.rows));
 
             instances.forEach((instance) => {
@@ -300,7 +295,7 @@ export default class ProgressBar {
 
         // move the cursor to the current position.
         if (this.rendered) {
-            terminal.moveTo(current.row - 1, current.col - 1);
+            terminal.moveTo(current.row, current.col);
         }
 
         this.output = output;
@@ -310,7 +305,7 @@ export default class ProgressBar {
     }
 
     print(output) {
-        terminal.moveTo(this.origin.row - 1, this.origin.col - 1);
+        terminal.moveTo(this.origin.row, this.origin.col);
         const content = output.replace(new RegExp(placeholder, "g"), "");
         if (content !== "") {
             terminal.print(content);
@@ -320,11 +315,11 @@ export default class ProgressBar {
 
     clear() {
         if (this.output) {
-            terminal.moveTo(this.origin.row - 1, this.origin.col - 1);
+            terminal.moveTo(this.origin.row, this.origin.col);
             for (let i = 0; i < this.rows; i++) {
                 terminal.eraseLine().down();
             }
-            terminal.moveTo(this.origin.row - 1, this.origin.col - 1);
+            terminal.moveTo(this.origin.row, this.origin.col);
         }
     }
 
@@ -345,7 +340,7 @@ export default class ProgressBar {
         }
 
         this.callback && this.callback(this);
-        terminal.moveTo(this.savedPos.row - 1, this.savedPos.col - 1);
+        terminal.moveTo(this.savedPos.row, this.savedPos.col);
         const index = instances.indexOf(this);
         if (index >= 0) {
             instances.splice(index, 1);

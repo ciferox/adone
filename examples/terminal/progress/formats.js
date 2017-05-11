@@ -1,18 +1,10 @@
-const bar = adone.terminal.progress({
-    schema: " :bar :title",
-    total: 10
-});
+let bar = null;
+let bar2 = null;
+let bar3 = null;
+let bar4 = null;
+let bar5 = null;
 
-const iv = setInterval(() => {
-    const randomTitle = ["some", "random", "title"][Math.random() * 3 | 0];
-    bar.tick({ title: randomTitle });
-    if (bar.completed) {
-        clearInterval(iv);
-        bar2();
-    }
-}, 100);
-
-function bar2() {
+bar2 = () => {
     const bar = adone.terminal.progress({
         schema: " processing: [:bar]",
         completed: "*",
@@ -27,9 +19,9 @@ function bar2() {
             bar3();
         }
     }, 100);
-}
+};
 
-function bar3() {
+bar3 = () => {
     const bar = adone.terminal.progress({
         schema: " download |:bar| :percent",
         completed: "=",
@@ -45,9 +37,9 @@ function bar3() {
             bar4();
         }
     }, 100);
-}
+};
 
-function bar4() {
+bar4 = () => {
     const bar = adone.terminal.progress({
         schema: " :current of :total :percent",
         total: 20
@@ -60,9 +52,9 @@ function bar4() {
             bar5();
         }
     }, 100);
-}
+};
 
-function bar5() {
+bar5 = () => {
     const bar = adone.terminal.progress({
         schema: " [:bar] :elapsed elapsed, eta :eta",
         width: 8,
@@ -75,4 +67,21 @@ function bar5() {
             clearInterval(iv);
         }
     }, 300);
-}
+};
+
+adone.run({
+    main() {
+        bar = adone.terminal.progress({
+            schema: " :bar :title",
+            total: 10
+        });
+        const iv = setInterval(() => {
+            const randomTitle = ["some", "random", "title"][Math.random() * 3 | 0];
+            bar.tick({ title: randomTitle });
+            if (bar.completed) {
+                clearInterval(iv);
+                bar2();
+            }
+        }, 100);
+    }
+});

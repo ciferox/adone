@@ -1,9 +1,13 @@
-const bar = adone.terminal.progress();
+adone.run({
+    main() {
+        const bar = adone.terminal.progress();
 
-const iv = setInterval(() => {
-    bar.tick();
+        const iv = setInterval(() => {
+            bar.tick();
 
-    if (bar.completed) {
-        clearInterval(iv);
+            if (bar.completed) {
+                clearInterval(iv);
+            }
+        }, 100);
     }
-}, 100);
+});

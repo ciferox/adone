@@ -1425,8 +1425,7 @@ class Terminfo {
             if (read(/^%([+\-*\/m&|\^=><])/)) {
                 if (ch === "=") {
                     ch = "===";
-                }
-                else if (ch === "m") {
+                } else if (ch === "m") {
                     ch = "%";
                 }
                 expr(`${"(v = stack.pop(),"
@@ -4116,15 +4115,15 @@ export default class Terminal extends adone.EventEmitter {
         this.hasProcessOnExit = false;
         this.lock = {};
 
-        const listeners = process.listeners("exit");
-        process.removeAllListeners("exit");
-        process.on("exit", Terminal._exitHandler = () => {
-            this.flush();
-            this._exiting = true;
-        });
-        listeners.forEach((listener) => {
-            process.on("exit", listener);
-        });
+        // const listeners = process.listeners("exit");
+        // process.removeAllListeners("exit");
+        // process.on("exit", Terminal._exitHandler = () => {
+        //     this.flush();
+        //     this._exiting = true;
+        // });
+        // listeners.forEach((listener) => {
+        //     process.on("exit", listener);
+        // });
 
         this._rl = null;
         this._logger = null;
@@ -4286,6 +4285,29 @@ export default class Terminal extends adone.EventEmitter {
             this._rl.pause();
             this._rl.close();
             this._rl = null;
+        }
+    }
+
+    trackCursor() {
+        if (is.undefined(this._trackCursor)) {
+            this._trackCursor = true;
+            const current = this.getCursorPos();
+            this.x = current.col - 1;
+            this.y = current.row - 1;
+
+            const newlineHandler = (count) => {
+                let newY = this.y + count;
+                if (newY >= this.rows) {
+                    newY = this.rows - 1;
+                }
+                this.y = newY;
+            };
+
+            adone.stream.newlineCounter.install(this.output);
+            adone.stream.newlineCounter.install(process.stderr);
+
+            this.output.on("newlines:after", newlineHandler);
+            process.stderr.on("newlines:after", newlineHandler);
         }
     }
 
@@ -4672,13 +4694,12 @@ export default class Terminal extends adone.EventEmitter {
             this.input._adoneInput++;
         }
 
-        const self = this;
         this._newHandler = (type) => {
             if (type === "keypress" || type === "mouse") {
-                self.removeListener("newListener", this._newHandler);
-                if (self.input.setRawMode && !self.input.isRaw) {
-                    self.input.setRawMode(true);
-                    self.input.resume();
+                this.removeListener("newListener", this._newHandler);
+                if (this.input.setRawMode && !this.input.isRaw) {
+                    this.input.setRawMode(true);
+                    this.input.resume();
                     // if (options.mouse) {
                     //     switch (options.mouse) {
                     //         case "button": this.mouseButton().mouseSGR(); break;
@@ -4696,8 +4717,8 @@ export default class Terminal extends adone.EventEmitter {
 
         this.on("newListener", this._newHandler).on("newListener", function fn(type) {
             if (type === "mouse") {
-                self.removeListener("newListener", fn);
-                self.bindMouse();
+                this.removeListener("newListener", fn);
+                this.bindMouse();
             }
         });
     }
@@ -4832,17 +4853,22 @@ export default class Terminal extends adone.EventEmitter {
 
         this.styleReset();
 
-        process.removeListener("exit", Terminal._exitHandler);
-        delete Terminal._exitHandler;
+        // process.removeListener("exit", Terminal._exitHandler);
+        // delete Terminal._exitHandler;
         this.input._adoneInput--;
 
         if (this.input._adoneInput === 0) {
-            this.input.removeListener("keypress", this.input._keypressHandler);
-            this.input.removeListener("data", this.input._dataHandler);
-            delete this.input._keypressHandler;
-            delete this.input._dataHandler;
+            if (is.function(this.input._keypressHandler)) {
+                this.input.removeListener("keypress", this.input._keypressHandler);
+                delete this.input._keypressHandler;
+            }
 
-            if (this.input.setRawMode) {
+            if (is.function(this.input._dataHandler)) {
+                this.input.removeListener("data", this.input._dataHandler);
+                delete this.input._dataHandler;
+            }
+
+            if (is.function(this.input.setRawMode)) {
                 if (this.input.isRaw) {
                     this.input.setRawMode(false);
                 }
@@ -4859,8 +4885,10 @@ export default class Terminal extends adone.EventEmitter {
         }
         delete this.output._resizeHandler;
 
-        this.removeListener("newListener", this._newHandler);
-        delete this._newHandler;
+        if (is.function(this._newHandler)) {
+            this.removeListener("newListener", this._newHandler);
+            delete this._newHandler;
+        }
 
         this.destroyed = true;
         this.emit("destroy");
@@ -5263,7 +5291,7 @@ export default class Terminal extends adone.EventEmitter {
                 self.emit("mouse", key);
                 self.emit(key.action);
 
-                return;
+
             }
         });
     }
@@ -5395,6 +5423,7 @@ export default class Terminal extends adone.EventEmitter {
 
         this.on("data", (data) => {
             data = decoder.write(data);
+            
             if (!data) {
                 return;
             }
@@ -5957,7 +5986,7 @@ export default class Terminal extends adone.EventEmitter {
         }
     }
 
-    response(name, text, callback) {
+    response(name, text, callback, noBypass) {
         if (arguments.length === 2) {
             callback = text;
             text = name;
@@ -5965,16 +5994,15 @@ export default class Terminal extends adone.EventEmitter {
         }
 
         if (!callback) {
-            callback = () => { };
+            callback = adone.noop;
         }
 
         this.bindResponse();
 
         name = name ? `response ${name}` : "response";
 
-        let onresponse;
         let timeout;
-        this.once(name, onresponse = (event) => {
+        let onresponse = (event) => {
             if (timeout) {
                 clearTimeout(timeout);
             }
@@ -5982,7 +6010,9 @@ export default class Terminal extends adone.EventEmitter {
                 return callback(new Error(`${event.event}: ${event.text}`));
             }
             return callback(null, event);
-        });
+        };
+
+        this.once(name, onresponse);
 
         timeout = setTimeout(() => {
             this.removeListener(name, onresponse);
@@ -6351,7 +6381,7 @@ export default class Terminal extends adone.EventEmitter {
                 break;
             default:
                 this.write(this.parse(adone.sprintf.apply(null, args)));
-        } 
+        }
         return this;
     }
 
@@ -6475,7 +6505,38 @@ export default class Terminal extends adone.EventEmitter {
         return this;
     }
 
-    getCursorPos() {
+    // CSI Ps n  Device Status Report (DSR).
+    //     Ps = 5  -> Status Report.  Result (``OK'') is
+    //   CSI 0 n
+    //     Ps = 6  -> Report Cursor Position (CPR) [row;column].
+    //   Result is
+    //   CSI r ; c R
+    // CSI ? Ps n
+    //   Device Status Report (DSR, DEC-specific).
+    //     Ps = 6  -> Report Cursor Position (CPR) [row;column] as CSI
+    //     ? r ; c R (assumes page is zero).
+    //     Ps = 1 5  -> Report Printer status as CSI ? 1 0  n  (ready).
+    //     or CSI ? 1 1  n  (not ready).
+    //     Ps = 2 5  -> Report UDK status as CSI ? 2 0  n  (unlocked)
+    //     or CSI ? 2 1  n  (locked).
+    //     Ps = 2 6  -> Report Keyboard status as
+    //   CSI ? 2 7  ;  1  ;  0  ;  0  n  (North American).
+    //   The last two parameters apply to VT400 & up, and denote key-
+    //   board ready and LK01 respectively.
+    //     Ps = 5 3  -> Report Locator status as
+    //   CSI ? 5 3  n  Locator available, if compiled-in, or
+    //   CSI ? 5 0  n  No Locator, if not.
+    deviceStatus(param, callback, dec, noBypass) {
+        if (dec) {
+            return this.response('device-status', '\x1b[?' + (param || '0') + 'n', callback, noBypass);
+        }
+        return this.response('device-status', '\x1b[' + (param || '0') + 'n', callback, noBypass);
+    }
+
+    getCursorPos(callback) {
+        if (is.function(callback)) {
+            return this.deviceStatus(6, callback, false, true);
+        }
         return this.native.getCursorPos();
     }
 
