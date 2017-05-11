@@ -984,7 +984,7 @@ export const futureConsoleReporter = ({
 
                 // }
                 bar = new adone.terminal.Progress({
-                    schema: `${"    ".repeat(test.block.level() + 1)}:spinner {gray-fg}${test.description}{/}`
+                    schema: `${"    ".repeat(test.block.level() + 1)}:spinner {gray-fg}{escape}${test.description}{/escape}{/}`
                 });
                 bar.update(0);
             })
@@ -1026,8 +1026,8 @@ export const futureConsoleReporter = ({
             })
             .on("skip test", ({ test, runtime }) => {
                 const msg = `{cyan-fg}${symbol.minus} {escape}${test.description}{/escape}{/}`;
-                // log(`${(runtime && ticks) ? "\x1b[F\x1b[K" : ""}${"    ".repeat(test.block.level() + 1)} ${msg}`);
-                log(`${"    ".repeat(test.block.level() + 1)} ${msg}`);
+                bar.setSchema(`${"    ".repeat(test.block.level() + 1)} ${msg}`);
+                bar.complete();
                 ++pending;
             })
             .on("done", () => {
