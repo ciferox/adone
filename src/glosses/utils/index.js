@@ -711,6 +711,9 @@ export const clone = (obj, { deep = true } = {}) => {
     if (is.function(obj)) {
         return obj;
     }
+    if (is.regexp(obj)) {
+        return new RegExp(obj.source, obj.flags);
+    }
     const res = {};
     for (const key of keys(obj)) {
         res[key] = deep ? clone(obj[key], { deep }) : obj[key];

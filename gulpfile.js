@@ -8,6 +8,8 @@ const gutil = require("gulp-util");
 const del = require("del");
 const chmod = require("gulp-chmod");
 const path = require("path");
+const dot = require("dot");
+const through2 = require("through2");
 const importReplace = function () {  // ... gulp
     return {
         visitor: {
@@ -36,8 +38,12 @@ const paths = {
         to: "lib/omnitron"
     },
     glosses: {
-        from: ["src/glosses/**/*", "!src/glosses/vendor/**/*"],
+        from: ["src/glosses/**/*", "!src/glosses/vendor/**/*", "!src/glosses/schema/dot/*"],
         to: "lib/glosses"
+    },
+    schemaTemplates: {
+        from: ["src/glosses/schema/__/dot/*"],
+        to: "lib/glosses/schema/__/dot"
     },
     index: {
         from: ["src/index.js"],
@@ -151,6 +157,66 @@ function buildGlosses() {
         .pipe(gulp.dest(paths.glosses.to));
 }
 
+function buildSchemaTemplates(cb) {
+    // shit..
+    const defs = {};
+    const FUNCTION_NAME = /function\s+anonymous\s*\(it[^)]*\)\s*{/;
+    const OUT_EMPTY_STRING = /out\s*\+=\s*'\s*';/g;
+    const ISTANBUL = /\'(istanbul[^']+)\';/g;
+    const ERROR_KEYWORD = /\$errorKeyword/g;
+    const ERROR_KEYWORD_OR = /\$errorKeyword\s+\|\|/g;
+    const VARS = [
+        "$errs", "$valid", "$lvl", "$data", "$dataLvl",
+        "$errorKeyword", "$closingBraces", "$schemaPath",
+        "$validate"
+    ];
+
+    gulp.src(`${paths.schemaTemplates.from}.def`)
+        .on("data", (file) => {
+            const name = path.basename(file.path, ".def");
+            defs[name] = file.contents.toString("utf-8");
+        })
+        .once("error", cb)
+        .once("end", () => {
+            gulp.src(`${paths.schemaTemplates.from}.jst`)
+                .once("error", cb)
+                .pipe(through2.obj((file, _, cb) => {
+                    const keyword = path.basename(file.path, ".jst");
+                    const template = file.contents.toString("utf-8");
+                    let code = dot
+                        .compile(template, defs)
+                        .toString()
+                        .replace(OUT_EMPTY_STRING, "")
+                        .replace(FUNCTION_NAME, `function generate_${keyword}(it, $keyword, $ruleType) {`)
+                        .replace(ISTANBUL, "/* $1 */");
+
+                    const occurrences = (regexp) => (code.match(regexp) || []).length;
+                    const countUsed = occurrences(ERROR_KEYWORD);
+                    const countOr = occurrences(ERROR_KEYWORD_OR);
+                    if (countUsed == countOr + 1) {
+                        code = code.replace(ERROR_KEYWORD_OR, "");
+                    }
+                    VARS.forEach(function removeUnusedVar(v) {
+                        v = v.replace(/\$/g, "\\$$");
+                        let regexp = new RegExp(`${v}[^A-Za-z0-9_$]`, "g");
+                        const count = occurrences(regexp);
+                        if (count == 1) {
+                            regexp = new RegExp(`var\\s+${v}\\s*=[^;]+;|var\\s+${v};`);
+                            code = code.replace(regexp, "");
+                        }
+                    });
+                    code = `'use strict';\nmodule.exports = ${code}`;
+                    file.contents = Buffer.from(code);
+                    file.path = `${file.path.slice(0, -4)}.js`;
+                    cb(null, file);
+                }))
+                .once("error", cb)
+                .pipe(gulp.dest(paths.schemaTemplates.to))
+                .once("error", cb)
+                .on("end", cb);
+        });
+}
+
 function buildTests() {
     return gulp.src(paths.tests.from)
         .pipe(errorHandler())
@@ -201,8 +267,11 @@ gulp.task("build-examples", ["clean-tests"], buildExamples);
 
 gulp.task("build-vendor", ["clean-glosses"], copyVendor);
 
-gulp.task("clean", ["clean-examples", "clean-tests", "clean-glosses", "clean-bin", "clean-omnitron", "clean-index"]);
-gulp.task("build", ["build-examples", "build-tests", "build-glosses", "build-bin", "build-omnitron", "build-index", "build-vendor"]);
+gulp.task("clean-schema-templates", () => del(paths.schemaTemplates.to));
+gulp.task("build-schema-templates", ["clean-schema-templates"], buildSchemaTemplates);
+
+gulp.task("clean", ["clean-examples", "clean-tests", "clean-glosses", "clean-bin", "clean-omnitron", "clean-index", "clean-schema-templates"]);
+gulp.task("build", ["build-examples", "build-tests", "build-glosses", "build-bin", "build-omnitron", "build-index", "build-vendor", "build-schema-templates"]);
 
 gulp.task("watch", ["build"], () => {
     gulp.watch(paths.bin.from, buildBin);
@@ -212,6 +281,7 @@ gulp.task("watch", ["build"], () => {
     gulp.watch(paths.omnitron.from, buildOmnitron);
     gulp.watch(paths.index.from, buildIndex);
     gulp.watch(paths.vendor.from, copyVendor);
+    gulp.watch(paths.schemaTemplates.from, () => buildSchemaTemplates());
 });
 
 gulp.task("default", ["build"]);

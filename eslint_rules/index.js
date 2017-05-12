@@ -13,7 +13,12 @@ module.exports = {
                             node.operator === "typeof" &&
                             node.parent &&
                             node.parent.type === "BinaryExpression" &&
-                            (node.parent.operator === "===" || node.parent.operator == "==")
+                            (
+                                node.parent.operator === "===" ||
+                                node.parent.operator === "!==" ||
+                                node.parent.operator == "==" ||
+                                node.parent.operator == "!="
+                            )
                         ) {
                             context.report({
                                 node,
@@ -106,8 +111,8 @@ module.exports = {
             create(context) {
                 return {
                     BinaryExpression(node) {
-                        const eq = node.operator === "==";
-                        const eqeq = !eq && node.operator === "===";
+                        const eq = node.operator === "==" || node.operator == "!=";
+                        const eqeq = !eq && (node.operator === "===" || node.operator === "!==");
                         if (
                             (eq || eqeq) &&
                             (
@@ -135,8 +140,8 @@ module.exports = {
             create(context) {
                 return {
                     BinaryExpression(node) {
-                        const eq = node.operator === "==";
-                        const eqeq = !eq && node.operator === "===";
+                        const eq = node.operator === "==" || node.operator === "!=";
+                        const eqeq = !eq && node.operator === "===" || node.operator === "!==";
                         if (
                             (eq || eqeq) &&
                             (

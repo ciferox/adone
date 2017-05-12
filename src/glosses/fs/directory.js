@@ -142,6 +142,29 @@ export default class Directory {
         return files.filter((x) => x);
     }
 
+    filesSync() {
+        const paths = fs.readdirSync(this._path);
+        return paths.map((x) => {
+            const path = spath.join(this._path, x);
+            let stat;
+            try {
+                stat = fs.statSync(path);
+            } catch (err) {
+                if (err.code === "ENOENT") {  // wow
+                    stat = null;
+                }
+                throw err;
+            }
+            if (!stat) {
+                return null;
+            }
+            if (stat.isSymbolicLink()) {
+                return stat.isDirectory() ? new fs.SymbolicLinkDirectory(path) : new fs.SymbolicLinkFile(path);
+            }
+            return stat.isDirectory() ? new Directory(path) : new fs.File(path);
+        }).filter((x) => x);
+    }
+
     async clean() {
         const files = await this.files();
         for (const file of files) {
@@ -165,6 +188,23 @@ export default class Directory {
                     nested.push(file);
                 }
                 nested.push(...(await file.find({ files, dirs })));
+            }
+        }
+        return nested;
+    }
+
+    findSync({ files = true, dirs = false } = {}) {
+        const nested = [];
+        for (const file of this.filesSync()) {
+            if (file instanceof fs.File) {
+                if (files) {
+                    nested.push(file);
+                }
+            } else {
+                if (dirs) {
+                    nested.push(file);
+                }
+                nested.push(...file.findSync({ files, dirs }));
             }
         }
         return nested;
