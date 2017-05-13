@@ -1006,7 +1006,7 @@ export const futureConsoleReporter = ({
                 // } else {
                 //     msg = `:spinner {grey-fg}{escape}${test.description}{/escape}{/}`;
                 // }
-                bar.setSchema(`${"    ".repeat(test.block.level() + 1)}:spinner ${err ? "{red-fg}${failed + 1}) " : "{grey-fg}"}{escape}${test.description}{/escape}{/}`, true);
+                bar.setSchema(`${"    ".repeat(test.block.level() + 1)}:spinner ${err ? `{red-fg}${failed + 1}) ` : "{grey-fg}"}{escape}${test.description}{/escape}{/}`, true);
                 bar.complete(!err);
                 // if (elapsedString) {
                 //     msg = `${msg} (${elapsedString})`;

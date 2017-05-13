@@ -158,11 +158,25 @@ export default class extends adone.application.Subsystem {
                             handler: this.pmStart,
                             arguments: [
                                 "id"
+                            ],
+                            options: [
+                                { name: "--name", type: String },
+                                { name: "--autorestart" },
+                                { name: "--max-restarts", type: Number },
+                                { name: "--restart-delay", type: Number },
+                                { name: "--normal-start", type: Number }
                             ]
                         },
                         {
                             name: "stop",
                             handler: this.pmStop,
+                            arguments: [
+                                "id"
+                            ]
+                        },
+                        {
+                            name: "delete",
+                            handler: this.pmDelete,
                             arguments: [
                                 "id"
                             ]
@@ -799,11 +813,41 @@ export default class extends adone.application.Subsystem {
     async pmStart(args, opts) {
         const id = args.get("id");
         const pm = await this.dispatcher.context("pm");
-        if (await pm.hasApplication(id)) {
-            await pm.start(id);
-        } else {
-            await pm.start({ path: id });
+
+        const config = {};
+
+        if (opts.has("name")) {
+            config.name = opts.get("name");
         }
+
+        if (opts.has("autorestart")) {
+            config.autorestart = opts.get("autorestart");
+        }
+
+        if (opts.has("max-restarts")) {
+            config.restarts = opts.get("max-restarts");
+        }
+
+        if (opts.has("restart-delay")) {
+            config.restartDelay = opts.get("restart-delay");
+        }
+
+        if (opts.has("normal-start")) {
+            config.normalStart = opts.get("normal-start");
+        }
+
+
+        if (await pm.hasApplication(id, { checkID: false })) {
+            // todo: change app name using --name
+            config.name = id;
+        } else if (await pm.hasApplication(Number(id), { checkID: true })) {
+            config.id = Number(id);
+        } else {
+            config.path = adone.std.path.resolve(id);
+        }
+
+        await pm.start(config);
+
         return 0;
     }
 
@@ -903,6 +947,13 @@ export default class extends adone.application.Subsystem {
             }
         }
         adone.log(table.toString());
+        return 0;
+    }
+
+    async pmDelete(args) {
+        const pm = await this.dispatcher.context("pm");
+        const id = args.get("id");
+        await pm.delete(id);
         return 0;
     }
 

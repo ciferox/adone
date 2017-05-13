@@ -407,21 +407,20 @@ export class MainProcess extends Process {
         return this.container.killWorker(id, { graceful, timeout });
     }
 
-    start() {
-        return super.start().then(async () => {  // generators break "super"...
-            const { config } = this;
-            this.reemitter = new ReEmitter(this);  // listening to exit events
-            await this.container.register(this.reemitter);
-            try {
-                for (let i = 0; i < config.instances; ++i) {
-                    await this.createNewWorker();
-                }
-                this.on("workerExit", (id) => this._onWorkerExit(id));
-            } catch (err) {
-                this.kill("SIGKILL");
-                throw err;
+    async start() {
+        await super.start();
+        const { config } = this;
+        this.reemitter = new ReEmitter(this);  // listening to exit events
+        await this.container.register(this.reemitter);
+        try {
+            for (let i = 0; i < config.instances; ++i) {
+                await this.createNewWorker();
             }
-        });
+            this.on("workerExit", (id) => this._onWorkerExit(id));
+        } catch (err) {
+            this.kill("SIGKILL");
+            throw err;
+        }
     }
 
     _onWorkerExit(id) {
@@ -903,7 +902,14 @@ export default class ProcessManager {
             config = config.process.config.id;  // IProcess -> config.id
         }
         if (is.object(config)) {
-            const currentConfig = await this.getConfigFor(config.name);
+            let currentConfig;
+
+            if ("id" in config) {
+                currentConfig = await this.getConfigByID(config.id);
+            }
+            if (!currentConfig) {
+                currentConfig = await this.getConfigFor(config.name);
+            }
             if (currentConfig) {
                 config = _.defaultsDeep(config, currentConfig);
                 if (store) {
@@ -948,7 +954,7 @@ export default class ProcessManager {
 
         const { db } = this;
         let stored = false;
-        if (store && !(await this.hasApplication(config.name))) {
+        if (store && !(await this.hasApplication(config.id))) {
             config = await this.storeDBConfig(config);
             stored = true;
         }
@@ -1229,7 +1235,7 @@ export default class ProcessManager {
                 }
             }
         }
-        return this.db.applications.findOne({ name: ident }).then((x) => Boolean(x));
+        return Boolean(await this.db.applications.findOne({ name: ident }));
     }
 
     @Public
