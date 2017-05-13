@@ -9,7 +9,7 @@
           , ['OS=="openbsd"', {'os_include': 'openbsd'}]
         ]
     }
-  , 'target_name': 'snappy'
+  , 'target_name': 'libsnappy'
   , 'type': 'static_library'
 		# Overcomes an issue with the linker and thin .a files on SmartOS
   , 'standalone_static_library': 1

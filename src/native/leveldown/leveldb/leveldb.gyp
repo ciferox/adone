@@ -7,7 +7,7 @@
 		# Overcomes an issue with the linker and thin .a files on SmartOS
   , 'standalone_static_library': 1
   , 'dependencies': [
-        '../../compressors/snappy/deps/snappy.gyp:snappy'
+        '../../compressors/snappy/deps/snappy.gyp:libsnappy'
     ]
   , 'direct_dependent_settings': {
         'include_dirs': [

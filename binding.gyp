@@ -274,7 +274,7 @@
     {
       'target_name': 'snappy',
       'include_dirs': [ "nan" ],
-      'dependencies': [ 'src/native/compressors/snappy/deps/snappy.gyp:snappy' ],
+      'dependencies': [ 'src/native/compressors/snappy/deps/snappy.gyp:libsnappy' ],
       'sources': [ 'src/native/compressors/snappy/snappy.cc' ]
     },
     {
@@ -374,7 +374,7 @@
           }]
         ],
         "dependencies": [
-            "<(module_root_dir)/src/native/leveldown/leveldb/leveldb.gyp:leveldb"
+            "src/native/leveldown/leveldb/leveldb.gyp:leveldb"
         ],
         "include_dirs": ["nan"],
         "sources": [
