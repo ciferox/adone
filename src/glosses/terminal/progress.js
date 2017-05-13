@@ -154,7 +154,7 @@ export default class ProgressBar {
         if (!this.completed && schema.indexOf(":spinner") >= 0) {
             this.spinner.timer = setInterval(() => {
                 this.spinner.frame++;
-                this.update(this.current / this.total);
+                this.compile();
             }, this.spinner.active.interval);
         }
 
@@ -172,8 +172,8 @@ export default class ProgressBar {
         } else if (type === "undefined") {
             delta = 1;
         } else {
-            delta = parseFloat(delta);
-            if (isNaN(delta) || !isFinite(delta)) {
+            const parsed = Number.parseFloat(delta);
+            if (is.nan(parsed) || !is.finite(parsed)) {
                 delta = 1;
             }
         }

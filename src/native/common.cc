@@ -1,8 +1,5 @@
 #include "adone.h"
 #include <sys/types.h>
-#include <grp.h>
-#include <pwd.h>
-#include <errno.h>
 
 #if ADONE_OS_WINDOWS
 
@@ -65,6 +62,9 @@ int getCursorPosition(int *const rowptr, int *const colptr)
 
 #else
 
+#include <grp.h>
+#include <pwd.h>
+#include <errno.h>
 #include <sys/time.h>
 #include <fcntl.h>
 #include <termios.h>
