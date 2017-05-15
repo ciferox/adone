@@ -2,6 +2,9 @@ const { is } = adone;
 
 export default class ConcatStream extends adone.std.stream.Writable {
     constructor(opts = {}) {
+        if (is.string(opts)) {
+            opts = { encoding: opts };
+        }
         let encoding = opts.encoding;
         let shouldInferEncoding = false;
 

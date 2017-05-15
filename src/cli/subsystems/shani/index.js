@@ -166,9 +166,6 @@ export default class ShaniCLI extends adone.application.Subsystem {
             return 1;
         }
         this.success = true;
-        if (!future && adone.terminal.input.isTTY) {
-            adone.terminal.destroy();
-        }
         return 0;
     }
 

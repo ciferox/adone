@@ -45,6 +45,10 @@ export default class File {
         return spath.extname(this._path);
     }
 
+    stem() {
+        return spath.basename(this._path, this.extname());
+    }
+
     relativePath(path) {
         if (path instanceof adone.fs.Directory) {
             path = path.path();
