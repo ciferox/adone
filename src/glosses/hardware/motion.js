@@ -1,0 +1,258 @@
+const Collection = require("./mixins/collection");
+const Board = require("./board");
+const events = require("events");
+const util = require("util");
+const priv = new Map();
+
+
+function analogInitializer(opts, dataHandler) {
+    const state = priv.get(this);
+
+    this.io.pinMode(opts.pin, this.io.MODES.ANALOG);
+
+    setTimeout(() => {
+        state.isCalibrated = true;
+        this.emit("calibrated");
+    }, 10);
+
+    this.io.analogRead(opts.pin, dataHandler);
+}
+
+const Controllers = {
+    PIR: {
+        initialize: {
+            value(opts, dataHandler) {
+                const state = priv.get(this);
+                const calibrationDelay = typeof opts.calibrationDelay !== "undefined" ?
+                    opts.calibrationDelay : 2000;
+
+                this.io.pinMode(opts.pin, this.io.MODES.INPUT);
+
+                setTimeout(() => {
+                    state.isCalibrated = true;
+                    this.emit("calibrated");
+                }, calibrationDelay);
+
+                this.io.digitalRead(opts.pin, dataHandler);
+            }
+        },
+        toBoolean: {
+            value(raw) {
+                return Boolean(raw);
+            }
+        }
+    },
+    GP2Y0D805Z0F: {
+        initialize: {
+            value(opts, dataHandler) {
+                const address = opts.address || 0x26;
+                const state = priv.get(this);
+
+                opts.address = address;
+
+                // This is meaningless for GP2Y0D805Z0F.
+                // The event is implemented for consistency
+                // with the digital passive infrared sensor
+                setTimeout(() => {
+                    state.isCalibrated = true;
+                    this.emit("calibrated");
+                }, 10);
+
+
+                // Set up I2C data connection
+                this.io.i2cConfig(opts);
+
+                this.io.i2cWriteReg(address, 0x03, 0xFE);
+                this.io.i2cWrite(address, [0x00]);
+                this.io.i2cRead(address, 1, (data) => {
+                    dataHandler(data[0] & 0x02);
+                });
+            }
+        },
+        toBoolean: {
+            value(raw) {
+                return raw === 0;
+            }
+        }
+    },
+    GP2Y0D810Z0F: {
+        initialize: {
+            value: analogInitializer
+        },
+        toBoolean: {
+            value(raw) {
+                return raw >> 9 === 0;
+            }
+        }
+    },
+    GP2Y0A60SZLF: {
+        initialize: {
+            value: analogInitializer
+        },
+        toBoolean: {
+            value(raw) {
+                return raw >> 9 === 1;
+            }
+        }
+    }
+};
+
+Controllers.GP2Y0D815Z0F = Controllers.GP2Y0D810Z0F;
+
+Controllers["HC-SR501"] = Controllers.PIR;
+Controllers.HCSR501 = Controllers.PIR;
+Controllers["0D805"] = Controllers.GP2Y0D805Z0F;
+Controllers["805"] = Controllers.GP2Y0D805Z0F;
+Controllers["0D810"] = Controllers.GP2Y0D810Z0F;
+Controllers["810"] = Controllers.GP2Y0D810Z0F;
+Controllers["0D815"] = Controllers.GP2Y0D815Z0F;
+Controllers["815"] = Controllers.GP2Y0D815Z0F;
+Controllers["0A60SZLF"] = Controllers.GP2Y0A60SZLF;
+Controllers["60SZLF"] = Controllers.GP2Y0A60SZLF;
+
+/**
+ * Motion
+ * @constructor
+ *
+ * five.Motion(7);
+ *
+ * five.Motion({
+ *  controller: "PIR",
+ *  pin: 7,
+ *  freq: 100,
+ *  calibrationDelay: 1000
+ * });
+ *
+ *
+ * @param {Object} opts [description]
+ *
+ */
+
+function Motion(opts) {
+
+    if (!(this instanceof Motion)) {
+        return new Motion(opts);
+    }
+
+    const freq = opts.freq || 25;
+    let last = false;
+    let controller;
+    let state;
+
+    Board.Component.call(
+        this, opts = Board.Options(opts)
+    );
+
+    if (typeof opts.controller === "string") {
+        controller = Controllers[opts.controller];
+    } else {
+        controller = opts.controller || Controllers.PIR;
+    }
+
+    Board.Controller.call(this, controller, opts);
+
+    state = {
+        value: false,
+        isCalibrated: false
+    };
+
+    priv.set(this, state);
+
+    Object.defineProperties(this, {
+        /**
+         * [read-only] Current sensor state
+         * @property detectedMotion
+         * @type Boolean
+         */
+        detectedMotion: {
+            get() {
+                return this.toBoolean(state.value);
+            }
+        },
+        /**
+         * [read-only] Sensor calibration status
+         * @property isCalibrated
+         * @type Boolean
+         */
+        isCalibrated: {
+            get() {
+                return state.isCalibrated;
+            }
+        }
+    });
+
+    if (typeof this.initialize === "function") {
+        this.initialize(opts, (data) => {
+            state.value = data;
+        });
+    }
+
+    setInterval(() => {
+        let isChange = false;
+        const eventData = {
+            timestamp: Date.now(),
+            detectedMotion: this.detectedMotion,
+            isCalibrated: state.isCalibrated
+        };
+
+        if (state.isCalibrated && this.detectedMotion && !last) {
+            this.emit("motionstart", eventData);
+        }
+
+        if (state.isCalibrated && !this.detectedMotion && last) {
+            this.emit("motionend", eventData);
+        }
+
+        if (last !== this.detectedMotion) {
+            isChange = true;
+        }
+
+        this.emit("data", eventData);
+
+        if (isChange) {
+            this.emit("change", eventData);
+        }
+
+        last = this.detectedMotion;
+    }, freq);
+}
+
+util.inherits(Motion, events.EventEmitter);
+
+
+
+/**
+ * Motion.Collection()
+ * new Motion.Collection()
+ *
+ * Constructs an Array-like instance
+ */
+
+Motion.Collection = function (numsOrObjects) {
+    if (!(this instanceof Motion.Collection)) {
+        return new Motion.Collection(numsOrObjects);
+    }
+
+    Object.defineProperty(this, "type", {
+        value: Motion
+    });
+
+    Collection.Emitter.call(this, numsOrObjects);
+};
+
+util.inherits(Motion.Collection, Collection.Emitter);
+
+Collection.installMethodForwarding(
+    Motion.Collection.prototype, Motion.prototype
+);
+
+
+/* istanbul ignore else */
+if (process.env.IS_TEST_MODE) {
+    Motion.Controllers = Controllers;
+    Motion.purge = function () {
+        priv.clear();
+    };
+}
+
+module.exports = Motion;

@@ -18,7 +18,7 @@ export default class DarwinBinding extends adone.hardware.serial.__.BaseBinding 
     }
 
     get isOpen() {
-        return this.fd !== null;
+        return !adone.is.null(this.fd);
     }
 
     open(path, options) {

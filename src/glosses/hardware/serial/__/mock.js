@@ -8,42 +8,6 @@ export default class MockBindings extends adone.hardware.serial.__.BaseBinding {
         this.isOpen = false;
     }
 
-    // Reset mocks
-    static reset() {
-        ports = {};
-    }
-
-    // Create a mock port
-    static createPort(path, opt) {
-        opt = Object.assign({
-            echo: true,
-            readyData: Buffer.from("READY")
-        }, opt);
-
-        ports[path] = {
-            data: Buffer.allocUnsafe(0),
-            lastWrite: null,
-            echo: opt.echo,
-            readyData: opt.readyData,
-            info: {
-                comName: path,
-                manufacturer: "The J5 Robotics Company",
-                serialNumber: undefined,
-                pnpId: undefined,
-                locationId: undefined,
-                vendorId: undefined,
-                productId: undefined
-            }
-        };
-    }
-
-    static list() {
-        const info = Object.keys(ports).map((path) => {
-            return ports[path].info;
-        });
-        return Promise.resolve(info);
-    }
-
     // emit data on a mock port
     emitData(data) {
         if (!this.isOpen) {
@@ -167,5 +131,41 @@ export default class MockBindings extends adone.hardware.serial.__.BaseBinding {
 
     drain() {
         return super.drain();
+    }
+
+    // Reset mocks
+    static reset() {
+        ports = {};
+    }
+
+    // Create a mock port
+    static createPort(path, options) {
+        options = Object.assign({
+            echo: true,
+            readyData: Buffer.from("READY")
+        }, options);
+
+        ports[path] = {
+            data: Buffer.allocUnsafe(0),
+            lastWrite: null,
+            echo: options.echo,
+            readyData: options.readyData,
+            info: {
+                comName: path,
+                manufacturer: "The J5 Robotics Company",
+                serialNumber: undefined,
+                pnpId: undefined,
+                locationId: undefined,
+                vendorId: undefined,
+                productId: undefined
+            }
+        };
+    }
+
+    static list() {
+        const info = Object.keys(ports).map((path) => {
+            return ports[path].info;
+        });
+        return Promise.resolve(info);
     }
 }

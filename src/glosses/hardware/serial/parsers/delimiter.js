@@ -10,7 +10,7 @@ export default class DelimiterParser extends adone.std.stream.Transform {
             throw new TypeError('"delimiter" has a 0 or undefined length');
         }
 
-        this.delimiter = Buffer.allocUnsafe(options.delimiter);
+        this.delimiter = Buffer.from(options.delimiter);
         this.buffer = Buffer.allocUnsafe(0);
     }
 

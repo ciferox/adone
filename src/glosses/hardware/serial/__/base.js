@@ -1,3 +1,4 @@
+const { is } = adone;
 /**
  * @name module:serialport.Binding
  * @type {module:serialport~BaseBinding}
@@ -20,11 +21,11 @@
  * @since 5.0.0
  */
 export default class BaseBinding {
-    constructor(opt) {
-        if (typeof opt !== "object") {
+    constructor(options) {
+        if (!is.plainObject(options)) {
             throw new TypeError('"options" is not an object');
         }
-        if (typeof opt.disconnect !== "function") {
+        if (!is.function(options.disconnect)) {
             throw new TypeError('"options.disconnect" is not a function');
         }
     }
@@ -41,7 +42,7 @@ export default class BaseBinding {
             throw new TypeError('"path" is not a valid port');
         }
 
-        if (typeof options !== "object") {
+        if (!is.plainObject(options)) {
             throw new TypeError('"options" is not an object');
         }
 
@@ -76,11 +77,11 @@ export default class BaseBinding {
             throw new TypeError('"buffer" is not a Buffer');
         }
 
-        if (typeof offset !== "number") {
+        if (!is.number(offset)) {
             throw new TypeError('"offset" is not an integer');
         }
 
-        if (typeof length !== "number") {
+        if (!is.number(length)) {
             throw new TypeError('"length" is not an integer');
         }
 
@@ -119,11 +120,11 @@ export default class BaseBinding {
      * @throws {TypeError} When given invalid arguments a TypeError will be thrown.
      */
     update(options) {
-        if (typeof options !== "object") {
-            throw TypeError('"options" is not an object');
+        if (!is.plainObject(options)) {
+            throw new TypeError('"options" is not an object');
         }
 
-        if (typeof options.baudRate !== "number") {
+        if (!is.number(options.baudRate)) {
             throw new TypeError('"options.baudRate" is not a number');
         }
 
@@ -145,7 +146,7 @@ export default class BaseBinding {
      * @throws {TypeError} When given invalid arguments a TypeError will be thrown.
      */
     set(options) {
-        if (typeof options !== "object") {
+        if (!is.plainObject(options)) {
             throw new TypeError('"options" is not an object');
         }
 

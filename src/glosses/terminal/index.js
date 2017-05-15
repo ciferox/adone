@@ -4878,12 +4878,14 @@ export default class Terminal extends adone.EventEmitter {
             }
         }
 
-        if (this.output.isTTY) {
-            this.output.removeListener("resize", this.output._resizeHandler);
-        } else {
-            process.removeListener("SIGWINCH", this.output._resizeHandler);
+        if (is.function(this.output._resizeHandler)) {
+            if (this.output.isTTY) {
+                this.output.removeListener("resize", this.output._resizeHandler);
+            } else {
+                process.removeListener("SIGWINCH", this.output._resizeHandler);
+            }
+            delete this.output._resizeHandler;
         }
-        delete this.output._resizeHandler;
 
         if (is.function(this._newHandler)) {
             this.removeListener("newListener", this._newHandler);
