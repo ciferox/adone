@@ -30,6 +30,7 @@ export default () => {
     ];
     const TYPES = ["number", "integer", "string", "array", "object", "boolean", "null"];
     RULES.all = __.util.toHash(ALL);
+    RULES.types = __.util.toHash(TYPES);
 
     RULES.forEach((group) => {
         group.rules = group.rules.map((keyword) => {
@@ -51,10 +52,13 @@ export default () => {
             };
             return rule;
         });
+
+        if (group.type) {
+            RULES.types[group.type] = group;
+        }
     });
 
     RULES.keywords = __.util.toHash(ALL.concat(KEYWORDS));
-    RULES.types = __.util.toHash(TYPES);
     RULES.custom = {};
 
     return RULES;

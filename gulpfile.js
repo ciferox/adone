@@ -281,7 +281,11 @@ gulp.task("watch", ["build"], () => {
     gulp.watch(paths.omnitron.from, buildOmnitron);
     gulp.watch(paths.index.from, buildIndex);
     gulp.watch(paths.vendor.from, copyVendor);
-    gulp.watch(paths.schemaTemplates.from, () => buildSchemaTemplates());
+    gulp.watch(paths.schemaTemplates.from, () => buildSchemaTemplates((err) => {
+        if (err) {
+            gutil.log(err);
+        }
+    }));
 });
 
 gulp.task("default", ["build"]);

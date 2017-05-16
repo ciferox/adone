@@ -511,4 +511,42 @@ describe("glosses", "schema", "issues", () => {
             expect(code.match(/[^\.]errors|vErrors/g)).to.be.equal(null);
         });
     });
+
+    describe("issue #485, order of type validation", () => {
+        it("should validate types befor keywords", () => {
+            const instance = new Validator({ allErrors: true });
+            const validate = instance.compile({
+                type: ["integer", "string"],
+                required: ["foo"],
+                minimum: 2
+            });
+
+            expect(validate(2)).to.be.true;
+            expect(validate("foo")).to.be.true;
+
+            const checkErrors = (expectedErrs) => {
+                expect(validate.errors).to.have.lengthOf(expectedErrs.length);
+                expectedErrs.forEach((keyword, i) => {
+                    expect(validate.errors[i].keyword).to.be.equal(keyword);
+                });
+            };
+
+            expect(validate(1.5)).to.be.false;
+            checkErrors(["type", "minimum"]);
+
+            expect(validate({})).to.be.false;
+            checkErrors(["type", "required"]);
+
+        });
+
+        it('should validate type only once when "type" is "integer"', () => {
+            const instance = new Validator();
+            const validate = instance.compile({
+                type: "integer",
+                minimum: 2
+            });
+            const code = validate.toString();
+            expect(code.match(/typeof\s+/g)).to.have.lengthOf(1);
+        });
+    });
 });
