@@ -3,7 +3,7 @@
     'driver%': 'libusb'
   },
   'targets': [
-    {  
+    {
       'target_name': 'hidapi',
       'type': 'static_library',
       'conditions': [
@@ -278,7 +278,7 @@
       'sources': [ 'src/native/compressors/snappy/snappy.cc' ]
     },
     {
-        "target_name": "metrics", 
+        "target_name": "metrics",
         "include_dirs": [ "nan" ],
         "sources": [
             "src/native/metrics/system.cc"
@@ -621,16 +621,47 @@
         ],
       }]
     ],
+  }, {
+    "target_name": "report",
+    "sources": [ "src/native/report/report.cc", "src/native/report/module.cc" ],
+    "include_dirs": [ 'nan' ],
+    "conditions": [
+      ["OS=='linux'", {
+        "defines": [ "_GNU_SOURCE" ],
+        "cflags": [ "-g", "-O2", "-std=c++11", ],
+      }],
+      ["OS=='win'", {
+        "libraries": [ "dbghelp.lib", "Netapi32.lib", "PsApi.lib" ],
+        "dll_files": [ "dbghelp.dll", "Netapi32.dll", "PsApi.dll" ],
+      }],
+    ],
+    "defines": [
+      'NODEREPORT_VERSION="<!(node -p \"require(\'./package.json\').version\")"'
+    ],
   },
     {
       "target_name": "copy_modules",
       "variables": {
         "srcpath%": "<(module_root_dir)/build/Release",
       },
-      "dependencies" : [ "bignumber", "brotli", "lzma", "bson", "hiredis", "common", "metrics", "snappy", "leveldown", "masscan", "hid", "serial" ],
+      "dependencies" : [
+        "bignumber",
+        "brotli",
+        "lzma",
+        "bson",
+        "hiredis",
+        "common",
+        "metrics",
+        "snappy",
+        "leveldown",
+        "masscan",
+        "hid",
+        "serial",
+        "report"
+      ],
       "copies": [
         {
-          "files": [ 
+          "files": [
             "<(srcpath)/bignumber.node",
             "<(srcpath)/brotli.node",
             "<(srcpath)/bson.node",
@@ -642,7 +673,8 @@
             "<(srcpath)/lzma.node",
             "<(srcpath)/masscan.node",
             "<(srcpath)/hid.node",
-            "<(srcpath)/serial.node"
+            "<(srcpath)/serial.node",
+            "<(srcpath)/report.node"
           ],
           "destination": "<(module_root_dir)/lib/native"
         },

@@ -1,4 +1,8 @@
-const { is, x, text } = adone;
+const { is, x, text, lazify } = adone;
+
+const lazy = lazify({
+    report: "./report"
+}, null, require);
 
 export class Subsystem extends adone.EventEmitter {
     constructor() {
@@ -1068,6 +1072,7 @@ export class Application extends Subsystem {
         this._errorScope = false;
         this._version = null;
         this.config = null;
+        this.report = null;
 
         this._subsystems = [];
         this.adoneRootPath = adone.std.path.resolve(__dirname, "../../..");
@@ -1081,8 +1086,6 @@ export class Application extends Subsystem {
         this.setMaxListeners(Infinity);
         this.defineMainCommand();
     }
-    
-    
 
     _setupMain() {
         // setup the main application
@@ -1092,6 +1095,10 @@ export class Application extends Subsystem {
             throw new x.IllegalState("It is impossible to have several main applications");
         }
         adone.appinstance = this;
+
+        if (this.env.ADONE_REPORT) {
+            this.enableReport();
+        }
 
         const uncaughtException = (...args) => this._uncaughtException(...args);
         const unhandledRejection = (...args) => this._unhandledRejection(...args);
@@ -1110,6 +1117,31 @@ export class Application extends Subsystem {
         process.on("rejectionHandled", rejectionHandled);
         process.on("beforeExit", beforeExit);
         this._main = true;
+    }
+
+    enableReport({
+        events = this.env.ADONE_REPORT_EVENTS || "exception+fatalerror+signal+apicall",
+        signal = this.env.ADONE_REPORT_SIGNAL,
+        filename = this.env.ADONE_REPORT_FILENAME,
+        directory = this.env.ADONE_REPORT_DIRECTORY
+    } = {}) {
+        this.report = lazy.report;
+        if (events) {
+            this.report.setEvents(events);
+        }
+        if (signal) {
+            this.report.setSignal(signal);
+        }
+        if (filename) {
+            this.report.setFileName(filename);
+        }
+        if (directory) {
+            this.report.setDirectory(directory);
+        }
+    }
+
+    reportEnabled() {
+        return !is.null(this.report);
     }
 
     main() {
@@ -1233,7 +1265,7 @@ export class Application extends Subsystem {
         if (this._main) {
             adone.terminal.destroy();
         }
-        
+
         await new Promise((resolve) => {
             let fds = 0;
             code = code || Application.SUCCESS;
