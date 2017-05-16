@@ -264,7 +264,13 @@ export default class extends adone.application.Subsystem {
             if (objectName === "") {
                 adone.log(adone.meta.inspect(ns, inspectOptions));
             } else if (adone.vendor.lodash.has(ns, objectName)) {
-                adone.log(adone.meta.inspect(adone.vendor.lodash.get(ns, objectName), inspectOptions));
+                const obj = adone.vendor.lodash.get(ns, objectName);
+                const type = adone.util.typeOf(obj);
+                if (type === "function") {
+                    adone.log(obj.toString());
+                } else {
+                    adone.log(adone.meta.inspect(adone.vendor.lodash.get(ns, objectName), inspectOptions));
+                }
             } else {
                 throw new adone.x.Unknown(`Unknown object: ${name}`);
             }
@@ -291,39 +297,37 @@ export default class extends adone.application.Subsystem {
         return 0;
     }
 
-    async bundleCommand(args) {
+    async bundleCommand(args, opts) {
         try {
             const bundler = new Bundler();
             await bundler.prepare(args.get("name"));
-            return 0;
+            const code = bundler.generate();
 
-            // const code = x.code;
+            let out;
+            if (opts.has("out")) {
+                out = opts.get("out");
+                if (!adone.std.path.isAbsolute(out)) {
+                    out = adone.std.path.resolve(process.cwd(), out);
+                }
+            }
+            if (opts.has("editor")) {
+                //     const options = {
+                //         editor: opts.get("editor"),
+                //         text: code,
+                //         ext: ".js"
+                //     };
+                //     if (is.string(out)) {
+                //         options.path = out;
+                //     }
 
-            // let out;
-            // if (opts.has("out")) {
-            //     out = opts.get("out");
-            //     if (!adone.std.path.isAbsolute(out)) {
-            //         out = adone.std.path.resolve(process.cwd(), out);
-            //     }
-            // }
-            // if (opts.has("editor")) {
-            //     const options = {
-            //         editor: opts.get("editor"),
-            //         text: code,
-            //         ext: ".js"
-            //     };
-            //     if (is.string(out)) {
-            //         options.path = out;
-            //     }
-
-            //     const editor = new util.Editor(options);
-            //     await editor.run();
-            // } else if (is.string(out)) {
-            //     await fs.writeFile(out, code);
-            //     adone.log(`Saved to ${out}.`);
-            // } else {
-            //     console.log(code);
-            // }
+                //     const editor = new util.Editor(options);
+                //     await editor.run();
+            } else if (is.string(out)) {
+                await fs.writeFile(out, code);
+                adone.log(`Saved to ${out}.`);
+            } else {
+                console.log(code);
+            }
         } catch (err) {
             adone.error(err/*.message*/);
             return 1;
@@ -337,10 +341,9 @@ export default class extends adone.application.Subsystem {
         if (await builder.install(args.get("name"), opts.get("dirname"), opts.get("env"))) {
             adone.log(`Adone v${builder.adoneVersion} successfully installed`);
             return 0;
-        } else {
-            adone.log("Something already exists");
-            return 1;
         }
+        adone.log("Something already exists");
+        return 1;
     }
 
     async uninstallCommand(args) {

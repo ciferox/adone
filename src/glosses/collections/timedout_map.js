@@ -20,14 +20,16 @@ export default class TimedoutMap extends Map {
             const oldObj = super.get(key);
             clearTimeout(oldObj.timer);
         }
-        const newObj = adone.o({ value });
+        const newObj = { value };
         super.set(key, newObj);
         newObj.timer = setTimeout(this._callback, this._timeout, key);
     }
 
     get(key) {
         const obj = super.get(key);
-        if (is.undefined(obj)) return obj;
+        if (is.undefined(obj)) {
+            return obj;
+        }
         return obj.value;
     }
 
@@ -55,7 +57,9 @@ export default class TimedoutMap extends Map {
 
     delete(key) {
         const obj = super.get(key);
-        if (is.undefined(obj)) return false;
+        if (is.undefined(obj)) {
+            return false;
+        }
         clearTimeout(obj.timer);
         return super.delete(key);
     }

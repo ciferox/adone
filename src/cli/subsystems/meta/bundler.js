@@ -1,3 +1,5 @@
+const { is } = adone;
+
 const bundleTemplate = `
 ; (function () {
     const lazify = (modules, obj_) => {
@@ -11,6 +13,7 @@ const bundleTemplate = `
                     const mod = value(key);
                     Object.defineProperty(obj, key, {
                         configurable: false,
+                        enumerable: true,
                         value: mod
                     });
                     return mod;
@@ -19,16 +22,48 @@ const bundleTemplate = `
         }
     };
     const adone = Object.create({
-        lazify
+        lazify,
+        log: console.log,
+        fatal: console.error,
+        error: console.error,
+        warn: console.warn,
+        info: console.info,
+        debug: console.debug,
+        trace: console.trace,
+        null: Symbol(),
+        noop: () => { },
+        identity: (x) => x,
+        truly: () => true,
+        falsely: () => false,
+        ok: "OK"
     });
 
     lazify({
-        {{ namespaces }}
+{{ code | safe }}
     }, adone);
 
     window["adone"] = adone;
 })();
 `;
+
+const ignoredRefs = [
+    "adone.native",
+    "adone.bind",
+    "adone.lazify",
+    "adone.log",
+    "adone.fatal",
+    "adone.error",
+    "adone.warn",
+    "adone.info",
+    "adone.debug",
+    "adone.trace",
+    "adone.null",
+    "adone.noop",
+    "adone.identity",
+    "adone.truly",
+    "adone.falsely",
+    "adone.ok"
+];
 
 export default class Bundler {
     constructor() {
@@ -38,7 +73,8 @@ export default class Bundler {
     async prepare(name) {
         adone.info(`Preparing bundle for '${name}'`);
         await this._lookupRefs(name);
-        const x = this.inspector.get(name);
+        this.name = name;
+        // const x = this.inspector.get(name);
 
         // adone.log(/*x.name, x.ast.type, */x.code);
         // adone.log(adone.meta.inspect(x.references(), { style: "color" }));
@@ -46,6 +82,100 @@ export default class Bundler {
         // adone.log(x.name, x.ast.type, adone.meta.inspect(x.xModule.globals, { style: "color" }));
 
         // adone.log(this._refExprs);
+    }
+
+    generate() {
+        const x = this.inspector.get(this.name);
+        const allRefs = [];
+        
+        this._obtainReferences(x, allRefs);
+        const bundleSchema = {};
+
+        for (const ref of allRefs) {
+            adone.vendor.lodash.set(bundleSchema, ref.split(".").slice(1), null);
+
+        }
+        adone.log(bundleSchema);
+        // adone.log(x.references());
+        // adone.log(this._generateReferencesDeclaration(x));
+
+        return this._generate("adone", bundleSchema, bundleTemplate, 8);
+    }
+
+    _obtainReferences(xObj, allRefs) {
+        const refs = xObj.references();
+        for (const ref of refs) {
+            if (ref.startsWith("adone.") && !ref.startsWith("adone.vendor.") && !ref.startsWith("adone.std.") && !ignoredRefs.includes(ref) && !allRefs.includes(ref)) {
+                allRefs.push(ref);
+                const x = this.inspector.get(ref);
+                this._obtainReferences(x, allRefs);
+            }
+        }
+    }
+
+    _generate(nsName, schema, codeTemplate, tabSize) {
+        const lazies = [];
+        for (const [key, val] of Object.entries(schema)) {
+            if (is.null(val)) {
+                const objectName = `${nsName}.${key}`;
+                const xObj = this.inspector.get(objectName);
+                if (adone.meta.code.is.arrowFunction(xObj)) {
+                    lazies.push(`${" ".repeat(tabSize)}${key}: ${xObj.code}`);
+                }
+            }
+        }
+
+
+        // return lazies.join(",\n");
+        return adone.templating.nunjucks.renderString(codeTemplate, {
+            code: lazies.join(",\n")
+        });
+    }
+
+    _generateReferencesDeclaration(xObj) {
+        const refs = xObj.references();
+        const lazyRefs = [];
+        let maxLevel = 0;
+        const globalNames = xObj.xModule.globals.map((x) => x.name);
+
+        for (const ref of refs) {
+            if (ref.startsWith("adone.")) {
+                const parts = ref.split(".");
+
+                lazyRefs.push(parts.slice(1));
+                const sz = parts.length - 1;
+                if (maxLevel < sz) {
+                    maxLevel = sz;
+                }
+            }
+        }
+
+        const obj = {};
+
+        for (let level = 0; level < maxLevel; level++) {
+            for (let i = 0; i < lazyRefs.length; i++) {
+                const parts = lazyRefs[i];
+                if (level < parts.length) {
+                    let subObj = obj;
+                    for (let j = 0; j <= level; j++) {
+                        const part = parts[j];
+
+                        if (!is.propertyOwned(obj, part)) {
+                            if (globalNames.includes(part)) {
+                                subObj[part] = null;
+                            } else if (j < (parts.length - 1)) {
+                                subObj[part] = {};
+                            } else {
+                                break;
+                            }
+                        }
+                        subObj = subObj[part];
+                    }
+                }
+            }
+        }
+
+        return `const ${adone.std.util.inspect(obj, { depth: null, breakLength: Infinity }).replace(/: null/g, "")} = adone;`;
     }
 
     async _lookupRefs(name) {

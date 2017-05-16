@@ -28,13 +28,7 @@ const defaultSetFlags = Object.freeze({
 });
 
 const allocNewReadPool = (poolSize) => {
-    let pool;
-    // performs better on node 6+
-    if (Buffer.allocUnsafe) {
-        pool = Buffer.allocUnsafe(poolSize);
-    } else {
-        pool = Buffer.allocUnsafe(poolSize);
-    }
+    const pool = Buffer.allocUnsafe(poolSize);
     pool.used = 0;
     return pool;
 };
