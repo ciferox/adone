@@ -496,12 +496,16 @@
               "libraries": [
                 "-ldl"
               ]
+            }],
+            ['OS!="mac"', {
+              "libraries": [
+                "-lrt"
+              ]
             }]
           ],
           "libraries": [
             "-pthread",
             "-lpcap",
-            "-lrt",
             "-lm"
           ]
         },
