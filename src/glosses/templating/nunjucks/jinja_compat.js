@@ -1,10 +1,24 @@
-const { is, x, util } = adone;
+const { is, x, util, templating: { nunjucks } } = adone;
 
 export default function installCompat() {
     // This must be called like `nunjucks.installCompat` so that `this` references the nunjucks instance
-    const { runtime } = this;
+    const { runtime, lexer, nodes } = nunjucks;
+
+    const Compiler = nunjucks.compiler.Compiler;
+    const Parser = nunjucks.parser.Parser;
 
     const origContextOrFrameLookup = runtime.contextOrFrameLookup;
+    const origCompilerAssertType = Compiler.prototype.assertType;
+    const origParserParseAggregate = Parser.prototype.parseAggregate;
+    const origMemberLookup = runtime.memberLookup;
+
+    const uninstall = () => {
+        runtime.contextOrFrameLookup = origContextOrFrameLookup;
+        Compiler.prototype.assertType = origCompilerAssertType;
+        Parser.prototype.parseAggregate = origParserParseAggregate;
+        runtime.memberLookup = origMemberLookup;
+    };
+
     runtime.contextOrFrameLookup = function (context, frame, name) {
         const val = origContextOrFrameLookup.call(this, context, frame, name);
         if (is.undefined(val)) {
@@ -22,6 +36,135 @@ export default function installCompat() {
         }
 
         return val;
+    };
+
+    class Slice extends nodes.Node {
+        constructor(lineno, colno, start, stop, step) {
+            super(
+                lineno,
+                colno,
+                start || new nodes.Literal(lineno, colno, null),
+                stop || new nodes.Literal(lineno, colno, null),
+                step || new nodes.Literal(lineno, colno, 1)
+            );
+        }
+    }
+    Slice.prototype.typename = "Slice";
+    Slice.prototype.fields = ["start", "stop", "step"];
+
+    Compiler.prototype.assertType = function (...args) {
+        if (args[0] instanceof Slice) {
+            return;
+        }
+        return origCompilerAssertType.apply(this, args);
+    };
+
+    Compiler.prototype.compileSlice = function (node, frame) {
+        this.emit("(");
+        this._compileExpression(node.start, frame);
+        this.emit("),(");
+        this._compileExpression(node.stop, frame);
+        this.emit("),(");
+        this._compileExpression(node.step, frame);
+        this.emit(")");
+    };
+
+    const getTokensState = (tokens) => ({
+        index: tokens.index,
+        lineno: tokens.lineno,
+        colno: tokens.colno
+    });
+
+    Parser.prototype.parseAggregate = function () {
+        const self = this;
+        const origState = getTokensState(this.tokens);
+        // Set back one accounting for opening bracket/parens
+        origState.colno--;
+        origState.index--;
+        try {
+            return origParserParseAggregate.apply(this);
+        } catch (e) {
+            const errState = getTokensState(this.tokens);
+            const rethrow = function () {
+                Object.assign(self.tokens, errState);
+                return e;
+            };
+
+            // Reset to state before original parseAggregate called
+            Object.assign(this.tokens, origState);
+            this.peeked = false;
+
+            const tok = this.peekToken();
+            if (tok.type !== lexer.TOKEN_LEFT_BRACKET) {
+                throw rethrow();
+            } else {
+                this.nextToken();
+            }
+
+            const node = new Slice(tok.lineno, tok.colno);
+
+            // If we don't encounter a colon while parsing, this is not a slice,
+            // so re-raise the original exception.
+            let isSlice = false;
+
+            for (let i = 0; i <= node.fields.length; i++) {
+                if (this.skip(lexer.TOKEN_RIGHT_BRACKET)) {
+                    break;
+                }
+                if (i === node.fields.length) {
+                    if (isSlice) {
+                        this.fail("parseSlice: too many slice components", tok.lineno, tok.colno);
+                    } else {
+                        break;
+                    }
+                }
+                if (this.skip(lexer.TOKEN_COLON)) {
+                    isSlice = true;
+                } else {
+                    const field = node.fields[i];
+                    node[field] = this.parseExpression();
+                    isSlice = this.skip(lexer.TOKEN_COLON) || isSlice;
+                }
+            }
+            if (!isSlice) {
+                throw rethrow();
+            }
+            return new nodes.Array(tok.lineno, tok.colno, [node]);
+        }
+    };
+
+    const sliceLookup = (obj, start, stop, step) => {
+        obj = obj || [];
+        if (is.null(start)) {
+            start = (step < 0) ? (obj.length - 1) : 0;
+        }
+        if (is.null(stop)) {
+            stop = (step < 0) ? -1 : obj.length;
+        } else {
+            if (stop < 0) {
+                stop += obj.length;
+            }
+        }
+
+        if (start < 0) {
+            start += obj.length;
+        }
+
+        const results = [];
+
+        for (let i = start; ; i += step) {
+            if (i < 0 || i > obj.length) {
+                break;
+            }
+            if (step > 0 && i >= stop) {
+                break;
+            }
+            if (step < 0 && i <= stop) {
+                break;
+            }
+            results.push(runtime.memberLookup(obj, i));
+        }
+        return results;
     };
 
     const ARRAY_MEMBERS = {
@@ -129,9 +272,11 @@ export default function installCompat() {
     OBJECT_MEMBERS.itervalues = OBJECT_MEMBERS.values;
     OBJECT_MEMBERS.iterkeys = OBJECT_MEMBERS.keys;
 
-    const origMemberLookup = runtime.memberLookup;
-
-    runtime.memberLookup = function (obj = {}, val, autoescape) {
+    runtime.memberLookup = function (...args) {
+        if (args.length === 4) {
+            return sliceLookup.apply(this, args);
+        }
+        const [obj = {}, val, autoescape] = args;
         // If the object is an object, return any of the methods that Python would otherwise provide.
         if (is.array(obj) && is.propertyOwned(ARRAY_MEMBERS, val)) {
             return (...args) => ARRAY_MEMBERS[val].apply(obj, args);
@@ -140,7 +285,8 @@ export default function installCompat() {
         if (is.object(obj) && is.propertyOwned(OBJECT_MEMBERS, val)) {
             return (...args) => OBJECT_MEMBERS[val].apply(obj, args);
         }
-
-        return origMemberLookup.apply(this, obj, val, autoescape);
+        return origMemberLookup.call(this, obj, val, autoescape);
     };
+
+    return uninstall;
 }

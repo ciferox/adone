@@ -1,4 +1,4 @@
-const { std: { path }, templating: { nunjucks: { Environment, Template, FileSystemLoader: Loader } } } = adone;
+const { std: { path }, templating: { nunjucks: { Environment, Template, FileSystemLoader: Loader, installJinjaCompat } } } = adone;
 
 const templatesPath = path.resolve(__dirname, "templates");
 
@@ -34,6 +34,15 @@ function normEOL(str) {
         return str;
     }
     return str.replace(/\r\n|\r/g, "\n");
+}
+
+function jinjaEqual(str, ctx, str2, env) {
+    const jinjaUninstall = installJinjaCompat();
+    try {
+        return equal(str, ctx, str2, env);
+    } finally {
+        jinjaUninstall();
+    }
 }
 
 function render(str, ctx, opts, env, cb) {
@@ -79,25 +88,26 @@ function render(str, ctx, opts, env, cb) {
 
     if (!cb) {
         return t.render(ctx);
-    } else {
-        numAsyncs++;
-        t.render(ctx, (err, res) => {
-            if (err && !opts.noThrow) {
-                throw err;
-            }
-
-            cb(err, normEOL(res));
-
-            numAsyncs--;
-
-            if (numAsyncs === 0 && doneHandler) {
-                doneHandler();
-            }
-        });
     }
+    numAsyncs++;
+    t.render(ctx, (err, res) => {
+        if (err && !opts.noThrow) {
+            throw err;
+        }
+
+        cb(err, normEOL(res));
+
+        numAsyncs--;
+
+        if (numAsyncs === 0 && doneHandler) {
+            doneHandler();
+        }
+    });
+
 }
 
 module.exports.render = render;
 module.exports.equal = equal;
 module.exports.finish = finish;
 module.exports.normEOL = normEOL;
+module.exports.jinjaEqual = jinjaEqual;

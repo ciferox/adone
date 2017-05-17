@@ -45,18 +45,41 @@ export const compile = (src, env, path, eagerCompile) => {
     return new nunjucks.Template(src, env, path, eagerCompile);
 };
 
-export const render = (name, ctx, cb) => {
+export const renderSync = (name, ctx) => {
+    if (is.null(environment)) {
+        configure();
+    }
+    return environment.render(name, ctx);
+};
+
+export const render = async (name, ctx) => {
     if (is.null(environment)) {
         configure();
     }
 
-    return environment.render(name, ctx, cb);
+    return new Promise((resolve, reject) => {
+        environment.render(name, ctx, (err, res) => {
+            err ? reject(err) : resolve(res);
+        });
+    });
 };
 
-export const renderString = (src, ctx, cb) => {
+export const renderStringSync = (src, ctx) => {
     if (!environment) {
         configure();
     }
 
-    return environment.renderString(src, ctx, cb);
+    return environment.renderString(src, ctx);
+};
+
+export const renderString = async (src, ctx) => {
+    if (!environment) {
+        configure();
+    }
+
+    return new Promise((resolve, reject) => {
+        environment.renderString(src, ctx, (err, res) => {
+            err ? reject(err) : resolve(res);
+        });
+    });
 };
