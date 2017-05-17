@@ -49,7 +49,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
                             throw new TypeError(`Invalid module type of ${key}`);
                         }
 
-                        if (typeof mod === "object" && mod.__esModule && "default" in mod) {
+                        if (typeof mod === "object" && mod.__esModule === true && "default" in mod) {
                             mod = mod.default;
                         }
 
