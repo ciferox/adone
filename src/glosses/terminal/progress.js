@@ -106,6 +106,7 @@ export default class ProgressBar {
         this.width = width;
         this.start = null;
         this.origin = null;
+        this.customTokens = null;
 
         if (is.string(this.width)) {
             if (this.width.endsWith("%")) {
@@ -159,7 +160,7 @@ export default class ProgressBar {
         }
 
         if (refresh) {
-            this.compile(refresh);
+            this.compile();
         }
     }
 
@@ -188,7 +189,10 @@ export default class ProgressBar {
 
         this.current += delta;
         this.completed = this.current >= this.total;
-        this.compile(tokens);
+        if (is.plainObject(tokens)) {
+            this.customTokens = Object.assign({ }, this.customTokens, tokens); 
+        }
+        this.compile();
         this.snoop();
     }
 
@@ -199,16 +203,16 @@ export default class ProgressBar {
         this.tick(delta, tokens);
     }
 
-    complete(spinnerComplete = true) {
+    complete(spinnerComplete = true, tokens) {
         if (is.string(spinnerComplete)) {
             this.spinner.complete = spinnerComplete;
         } else {
             this.spinner.complete = Boolean(spinnerComplete) === true ? this.spinner.ok : this.spinner.bad;
         }
-        this.update(1);
+        this.update(1, tokens);
     }
 
-    compile(tokens) {
+    compile() {
         const ratio = Math.min(Math.max(this.current / this.total, 0), 1);
         const chars = this.chars;
         const percent = ratio * 100;
@@ -221,20 +225,23 @@ export default class ProgressBar {
             eta = this.timeFormatter(percent === 100 ? 0 : elapsed * this.total / this.current);
         }
 
-        let output = this.schema
-            .replace(/:total/g, this.total)
-            .replace(/:current/g, this.current)
-            .replace(/:elapsed/g, this.timeFormatter(elapsed))
-            .replace(/:eta/g, eta)
-            .replace(/:percent/g, `${toFixed(percent, 0)}%`);
+        let output = this.schema;
 
-        if (tokens && is.plainObject(tokens)) {
+        const tokens = this.customTokens;
+        if (is.plainObject(tokens)) {
             for (const key in tokens) {
                 if (tokens.hasOwnProperty(key)) {
                     output = output.replace(new RegExp(`:${key}`, "g"), (String(tokens[key])) || placeholder);
                 }
             }
         }
+
+        output = output
+            .replace(/:total/g, this.total)
+            .replace(/:current/g, this.current)
+            .replace(/:elapsed/g, this.timeFormatter(elapsed))
+            .replace(/:eta/g, eta)
+            .replace(/:percent/g, `${toFixed(percent, 0)}%`);
 
         let raw = output; // !!! not raw here
         const cols = terminal.cols;
