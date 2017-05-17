@@ -301,7 +301,7 @@ export default class extends adone.application.Subsystem {
         try {
             const bundler = new Bundler();
             await bundler.prepare(args.get("name"));
-            const code = bundler.generate();
+            const code = await bundler.generate();
 
             let out;
             if (opts.has("out")) {

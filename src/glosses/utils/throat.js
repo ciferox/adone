@@ -11,7 +11,9 @@ class Delayed {
 
 export default function throat(size, fn) {
     const queue = [];
-    function run(fn, self, args) {
+    let release = null;
+
+    const run = (fn, self, args) => {
         if (size) {
             size--;
             const result = new Promise((resolve) => {
@@ -23,15 +25,16 @@ export default function throat(size, fn) {
         return new Promise((resolve) => {
             queue.push(new Delayed(resolve, fn, self, args));
         });
+    };
 
-    }
-    function release() {
+    release = () => {
         size++;
         if (queue.length) {
             const next = queue.shift();
             next.resolve(run(next.fn, next.self, next.args));
         }
-    }
+    };
+
     if (is.function(size)) {
         const temp = fn;
         fn = size;

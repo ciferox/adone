@@ -84,7 +84,7 @@ export default class Bundler {
         // adone.log(this._refExprs);
     }
 
-    generate() {
+    async generate() {
         const x = this.inspector.get(this.name);
         const allRefs = [];
         
@@ -120,6 +120,7 @@ export default class Bundler {
                 const objectName = `${nsName}.${key}`;
                 const xObj = this.inspector.get(objectName);
                 if (adone.meta.code.is.arrowFunction(xObj)) {
+                    adone.log(xObj.references());
                     lazies.push(`${" ".repeat(tabSize)}${key}: ${xObj.code}`);
                 }
             }

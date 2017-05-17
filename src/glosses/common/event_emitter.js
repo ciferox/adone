@@ -1,5 +1,3 @@
-
-
 // This constructor is used to store event handlers. Instantiating this is
 // faster than explicitly calling `Object.create(null)` to get a "clean" empty
 // object (tested with v8 v4.9).
@@ -13,6 +11,155 @@ const $maxListeners = Symbol("maxListeners");
 // By default EventEmitters will print a warning if more than 10 listeners are
 // added to it. This is a useful default which helps finding memory leaks.
 let defaultMaxListeners = 10;
+
+const _addListener = (target, type, listener, prepend) => {
+    if (!adone.is.function(listener)) {
+        throw new adone.x.InvalidArgument("\"listener\" argument must be a function");
+    }
+    let events = target[$events];
+    // To avoid recursion in the case that type === "newListener"! Before
+    // adding it to the listeners, first emit "newListener".
+    if (events.newListener) {
+        target.emit("newListener", type, listener.listener ? listener.listener : listener);
+
+        // Re-assign `events` because a newListener handler could have caused the
+        // this._events to be assigned to a new object
+        events = target[$events];
+    }
+    let existing = events[type];
+
+    if (!existing) {
+        // Optimize the case of one listener. Don't need the extra array object.
+        existing = events[type] = listener;
+        ++target[$eventsCount];
+    } else {
+        if (adone.is.function(existing)) {
+            // Adding the second element, need to change to array.
+            existing = events[type] = prepend ? [listener, existing] : [existing, listener];
+        } else {
+            if (prepend) {
+                existing.unshift(listener);
+            } else {
+                existing.push(listener);
+            }
+        }
+
+        // Check for listener leak
+        if (!existing.warned) {
+            const m = target.getMaxListeners();
+            if (m && m > 0 && existing.length > m) {
+                existing.warned = true;
+                const w = new adone.x.Exception(`Possible EventEmitter memory leak detected. ${existing.length} ${String(type)} listeners added. Use emitter.setMaxListeners() to increase limit`);
+                w.name = "MaxListenersExceededWarning";
+                w.emitter = target;
+                w.type = type;
+                w.count = existing.length;
+                process.emitWarning(w);
+            }
+        }
+    }
+
+    return target;
+};
+
+const arrayClone = (arr, n) => {
+    const copy = new Array(n);
+    for (let i = 0; i < n; ++i) {
+        copy[i] = arr[i];
+    }
+    return copy;
+};
+
+// These standalone emit* functions are used to optimize calling of event
+// handlers for fast cases because emit() itself often has a variable number of
+// arguments and can be deoptimized because of that. These functions always have
+// the same number of arguments and thus do not get deoptimized, so the code
+// inside them can execute faster.
+const emitNone = (handler, isFn, self) => {
+    if (isFn) {
+        handler.call(self);
+
+    } else {
+        const len = handler.length;
+        const listeners = arrayClone(handler, len);
+        for (let i = 0; i < len; ++i) {
+            listeners[i].call(self);
+        }
+    }
+};
+
+const emitOne = (handler, isFn, self, arg1) => {
+    if (isFn) {
+        handler.call(self, arg1);
+
+    } else {
+        const len = handler.length;
+        const listeners = arrayClone(handler, len);
+        for (let i = 0; i < len; ++i) {
+            listeners[i].call(self, arg1);
+        }
+    }
+};
+
+const emitTwo = (handler, isFn, self, arg1, arg2) => {
+    if (isFn) {
+        handler.call(self, arg1, arg2);
+    } else {
+        const len = handler.length;
+        const listeners = arrayClone(handler, len);
+        for (let i = 0; i < len; ++i) {
+            listeners[i].call(self, arg1, arg2);
+        }
+    }
+};
+
+const emitThree = (handler, isFn, self, arg1, arg2, arg3) => {
+    if (isFn) {
+        handler.call(self, arg1, arg2, arg3);
+    } else {
+        const len = handler.length;
+        const listeners = arrayClone(handler, len);
+        for (let i = 0; i < len; ++i) {
+            listeners[i].call(self, arg1, arg2, arg3);
+        }
+    }
+};
+
+const emitMany = (handler, isFn, self, args) => {
+    if (isFn) {
+        handler.apply(self, args);
+    } else {
+        const len = handler.length;
+        const listeners = arrayClone(handler, len);
+        for (let i = 0; i < len; ++i) {
+            listeners[i].apply(self, args);
+        }
+    }
+};
+
+const onceWrapper = function () {
+    this.target.removeListener(this.type, this.wrapFn);
+    if (!this.fired) {
+        this.fired = true;
+        this.listener.apply(this.target, arguments);
+    }
+};
+
+const _onceWrap = (target, type, listener) => {
+    const state = { fired: false, wrapFn: undefined, target, type, listener };
+    const wrapped = onceWrapper.bind(state);
+    wrapped.listener = listener;
+    state.wrapFn = wrapped;
+    return wrapped;
+};
+
+const unwrapListeners = (arr) => {
+    const ret = new Array(arr.length);
+    for (let i = 0; i < ret.length; ++i) {
+        ret[i] = arr[i].listener || arr[i];
+    }
+    return ret;
+};
 
 export default class EventEmitter {
     constructor() {
@@ -47,7 +194,7 @@ export default class EventEmitter {
                 throw er; // Unhandled 'error' event
             } else {
                 // At least give some kind of context to the user
-                const err = new adone.x.Exception("Uncaught, unspecified \"error\" event. (" + er + ")");
+                const err = new adone.x.Exception(`Uncaught, unspecified "error" event. (${er})`);
                 err.context = er;
                 throw err;
             }
@@ -153,9 +300,8 @@ export default class EventEmitter {
                 if (--this[$eventsCount] === 0) {
                     this[$events] = new EventHandlers();
                     return this;
-                } else {
-                    delete events[type];
                 }
+                delete events[type];
             } else if (position === 0) {
                 list.shift();
             } else {
@@ -179,9 +325,9 @@ export default class EventEmitter {
                 this[$events] = new EventHandlers();
                 this[$eventsCount] = 0;
             } else if (events[type]) {
-                if (--this[$eventsCount] === 0)
+                if (--this[$eventsCount] === 0) {
                     this[$events] = new EventHandlers();
-                else {
+                } else {
                     delete events[type];
                 }
             }
@@ -193,7 +339,9 @@ export default class EventEmitter {
             const keys = Object.keys(events);
             for (let i = 0, key; i < keys.length; ++i) {
                 key = keys[i];
-                if (key === "removeListener") continue;
+                if (key === "removeListener") {
+                    continue;
+                }
                 this.removeAllListeners(key);
             }
             this.removeAllListeners("removeListener");
@@ -258,150 +406,3 @@ export default class EventEmitter {
 }
 
 EventEmitter.prototype.on = EventEmitter.prototype.addListener;
-
-function _addListener(target, type, listener, prepend) {
-    if (!adone.is.function(listener)) {
-        throw new adone.x.InvalidArgument("\"listener\" argument must be a function");
-    }
-    let events = target[$events];
-    // To avoid recursion in the case that type === "newListener"! Before
-    // adding it to the listeners, first emit "newListener".
-    if (events.newListener) {
-        target.emit("newListener", type, listener.listener ? listener.listener : listener);
-
-        // Re-assign `events` because a newListener handler could have caused the
-        // this._events to be assigned to a new object
-        events = target[$events];
-    }
-    let existing = events[type];
-
-    if (!existing) {
-        // Optimize the case of one listener. Don't need the extra array object.
-        existing = events[type] = listener;
-        ++target[$eventsCount];
-    } else {
-        if (adone.is.function(existing)) {
-            // Adding the second element, need to change to array.
-            existing = events[type] = prepend ? [listener, existing] : [existing, listener];
-        } else {
-            if (prepend) {
-                existing.unshift(listener);
-            } else {
-                existing.push(listener);
-            }
-        }
-
-        // Check for listener leak
-        if (!existing.warned) {
-            const m = target.getMaxListeners();
-            if (m && m > 0 && existing.length > m) {
-                existing.warned = true;
-                const w = new adone.x.Exception(`Possible EventEmitter memory leak detected. ${existing.length} ${String(type)} listeners added. Use emitter.setMaxListeners() to increase limit`);
-                w.name = "MaxListenersExceededWarning";
-                w.emitter = target;
-                w.type = type;
-                w.count = existing.length;
-                process.emitWarning(w);
-            }
-        }
-    }
-
-    return target;
-}
-
-// These standalone emit* functions are used to optimize calling of event
-// handlers for fast cases because emit() itself often has a variable number of
-// arguments and can be deoptimized because of that. These functions always have
-// the same number of arguments and thus do not get deoptimized, so the code
-// inside them can execute faster.
-function emitNone(handler, isFn, self) {
-    if (isFn) {
-        handler.call(self);
-
-    } else {
-        const len = handler.length;
-        const listeners = arrayClone(handler, len);
-        for (let i = 0; i < len; ++i) {
-            listeners[i].call(self);
-        }
-    }
-}
-function emitOne(handler, isFn, self, arg1) {
-    if (isFn) {
-        handler.call(self, arg1);
-
-    } else {
-        const len = handler.length;
-        const listeners = arrayClone(handler, len);
-        for (let i = 0; i < len; ++i) {
-            listeners[i].call(self, arg1);
-        }
-    }
-}
-function emitTwo(handler, isFn, self, arg1, arg2) {
-    if (isFn) {
-        handler.call(self, arg1, arg2);
-    } else {
-        const len = handler.length;
-        const listeners = arrayClone(handler, len);
-        for (let i = 0; i < len; ++i) {
-            listeners[i].call(self, arg1, arg2);
-        }
-    }
-}
-function emitThree(handler, isFn, self, arg1, arg2, arg3) {
-    if (isFn) {
-        handler.call(self, arg1, arg2, arg3);
-    } else {
-        const len = handler.length;
-        const listeners = arrayClone(handler, len);
-        for (let i = 0; i < len; ++i) {
-            listeners[i].call(self, arg1, arg2, arg3);
-        }
-    }
-}
-
-function emitMany(handler, isFn, self, args) {
-    if (isFn) {
-        handler.apply(self, args);
-    } else {
-        const len = handler.length;
-        const listeners = arrayClone(handler, len);
-        for (let i = 0; i < len; ++i) {
-            listeners[i].apply(self, args);
-        }
-    }
-}
-
-function onceWrapper() {
-    this.target.removeListener(this.type, this.wrapFn);
-    if (!this.fired) {
-        this.fired = true;
-        this.listener.apply(this.target, arguments);
-    }
-}
-
-function _onceWrap(target, type, listener) {
-    const state = { fired: false, wrapFn: undefined, target, type, listener };
-    const wrapped = onceWrapper.bind(state);
-    wrapped.listener = listener;
-    state.wrapFn = wrapped;
-    return wrapped;
-}
-
-
-function arrayClone(arr, n) {
-    const copy = new Array(n);
-    for (let i = 0; i < n; ++i) {
-        copy[i] = arr[i];
-    }
-    return copy;
-}
-
-function unwrapListeners(arr) {
-    const ret = new Array(arr.length);
-    for (let i = 0; i < ret.length; ++i) {
-        ret[i] = arr[i].listener || arr[i];
-    }
-    return ret;
-}
