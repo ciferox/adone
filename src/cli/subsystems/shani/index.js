@@ -1,4 +1,4 @@
-const { shani: { Engine, consoleReporter, futureConsoleReporter }, is, std: { path } } = adone;
+const { shani: { Engine, consoleReporter, simpleReporter }, is, std: { path } } = adone;
 
 export default class ShaniCLI extends adone.application.Subsystem {
     initialize() {
@@ -30,7 +30,7 @@ export default class ShaniCLI extends adone.application.Subsystem {
                 { name: "--dont-keep-hooks", help: "Dont keep hook info on the screen", group: "output" },
                 { name: "--show-handles", help: "show handles holding the event loop", group: "output" },
                 { name: "--no-ticks", help: "Don't show the test/hook/timers ticks.\nForced to be true if there is no TTY", group: "output" },
-                { name: "--future", help: "Use new console reporter", group: "output" }
+                { name: "--simple", help: "Use simple console reporter", group: "output" }
             ],
             handler: this.main,
             commands: [
@@ -102,9 +102,13 @@ export default class ShaniCLI extends adone.application.Subsystem {
 
         const emitter = engine.start();
 
-        const future = opts.get("future");
+        let simple = opts.get("simple");
 
-        if (!future && adone.terminal.input.isTTY) {
+        if (process.stdin.isTTY && process.stdout.isTTY) {
+            // TODO: fix this
+            // trackCursor must not be called there,
+            // but it doesnt work after enabling stdin raw mode (on("keypress") enables it)
+            adone.terminal.trackCursor();
             adone.terminal.listen();
             adone.terminal.on("keypress", (ch, key) => {
                 switch (key.full) {
@@ -120,9 +124,11 @@ export default class ShaniCLI extends adone.application.Subsystem {
                     }
                 }
             });
+        } else {
+            simple = true;
         }
 
-        const reporter = future ? futureConsoleReporter : consoleReporter;
+        const reporter = simple ? simpleReporter : consoleReporter;
 
         reporter({
             allTimings: config.options.allTimings,
@@ -140,7 +146,7 @@ export default class ShaniCLI extends adone.application.Subsystem {
                 if (test) {
                     msg = `${msg} - ${test.description}`;
                 }
-                console.error(`${type}(${hook.description}) - ${msg}\n${err.message}\n${err.stack}`);
+                adone.error(`${type}(${hook.description}) - ${msg}\n${err.message}\n${err.stack}`);
                 emitter.stop();
             }
         };
