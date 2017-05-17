@@ -491,11 +491,17 @@
           "-Wl,--whole-archive"
         ],
         "link_settings": {
+          "conditions": [
+            ['OS!="freebsd"', {
+              "libraries": [
+                "-ldl"
+              ]
+            }]
+          ],
           "libraries": [
             "-pthread",
             "-lpcap",
             "-lrt",
-            "-ldl",
             "-lm"
           ]
         },
