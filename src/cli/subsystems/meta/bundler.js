@@ -20,6 +20,7 @@ const bundleTemplate = `
                 }
             });
         }
+        return obj;
     };
     const adone = Object.create({
         lazify,

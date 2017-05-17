@@ -1,4 +1,4 @@
-const { is, x, ExBuffer, netron: { GenesisPeer }, util, net } = adone;
+const { is, x, data, ExBuffer, netron: { GenesisPeer }, net, std } = adone;
 
 export default class Peer extends GenesisPeer {
     constructor(options) {
@@ -10,8 +10,8 @@ export default class Peer extends GenesisPeer {
     }
 
     connect(options) {
-        [options.port, options.host] = adone.net.util.normalizeAddr(options.port, options.host, this.option.defaultPort);
-        const addr = util.humanizeAddr((options.useTls ? "wss:" : "ws:"), options.port, options.host);
+        [options.port, options.host] = net.util.normalizeAddr(options.port, options.host, this.option.defaultPort);
+        const addr = net.util.humanizeAddr((options.useTls ? "wss:" : "ws:"), options.port, options.host);
 
         if (is.nil(this._ws)) {
             return new Promise((resolve) => {
@@ -44,7 +44,7 @@ export default class Peer extends GenesisPeer {
     write(data) {
         return new Promise((resolve, reject) => {
             const buf = new ExBuffer().skip(4);
-            const encoded = adone.data.mpak.serializer.encode(data, buf).flip();
+            const encoded = data.mpak.serializer.encode(data, buf).flip();
             encoded.writeUInt32BE(encoded.remaining() - 4, 0);
             const ws = this._ws;
             if (!is.null(ws) && ws.readyState === net.ws.WebSocket.OPEN) {
@@ -65,21 +65,21 @@ export default class Peer extends GenesisPeer {
                 }
                 if (!is.nil(socket.remoteAddress) && is.number(socket.remotePort)) {
                     this._remoteAddr = { port: socket.remotePort, address: socket.remoteAddress, family: socket.remoteFamily };
-                    this._remoteAddr.full = util.humanizeAddr(protocol, socket.remotePort, socket.remoteAddress);
+                    this._remoteAddr.full = net.util.humanizeAddr(protocol, socket.remotePort, socket.remoteAddress);
                 } else if (!is.nil(socket.server) && is.string(socket.server._pipeName)) {
                     this._remoteAddr = { port: socket.server._pipeName, address: null, family: null };
-                    this._remoteAddr.full = util.humanizeAddr(protocol, this._remoteAddr.port);
+                    this._remoteAddr.full = net.util.humanizeAddr(protocol, this._remoteAddr.port);
                 } else {
                     this._remoteAddr = { port: "unixsocket", address: null, family: null };
-                    this._remoteAddr.full = util.humanizeAddr(protocol, "unixsocket");
+                    this._remoteAddr.full = net.util.humanizeAddr(protocol, "unixsocket");
                 }
                 this._remoteAddr.protocol = protocol;
             } else {
                 const url = this._ws.url;
                 if (!is.nil(url)) {
-                    const parsedUrl = adone.std.url.parse(url);
+                    const parsedUrl = std.url.parse(url);
                     this._remoteAddr = { port: parseInt(parsedUrl.port), address: parsedUrl.hostname, family: null };
-                    this._remoteAddr.full = util.humanizeAddr(parsedUrl.protocol, this._remoteAddr.port, this._remoteAddr.address);
+                    this._remoteAddr.full = net.util.humanizeAddr(parsedUrl.protocol, this._remoteAddr.port, this._remoteAddr.address);
                     this._remoteAddr.protocol = parsedUrl.protocol;
                 }
             }
@@ -91,7 +91,7 @@ export default class Peer extends GenesisPeer {
         const buffer = ExBuffer.wrap(msgEvent.data);
         const packetSize = buffer.readUInt32BE();
         buffer.compact();
-        const result = adone.data.mpak.tryDecode(buffer);
+        const result = data.mpak.tryDecode(buffer);
         if (result) {
             if (packetSize === result.bytesConsumed) {
                 this._handler.call(this._handlerThisArg, this, result.value);

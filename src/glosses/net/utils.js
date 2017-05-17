@@ -26,6 +26,20 @@ export const normalizeAddr = (port, host, defaultPort) => {
     return [port, host];
 };
 
+export const humanizeAddr = (protocol, port, host) => {
+    let addr;
+    protocol = protocol || "tcp:";
+    if (!protocol.endsWith(":")) {
+        protocol += ":";
+    }
+    if (is.number(port)) {
+        addr = adone.sprintf("%s//%s:%d", protocol, host, port);
+    } else {
+        addr = adone.sprintf("%s//%s", protocol, port);
+    }
+    return addr;
+};
+
 export const isFreePort = (port) => {
     return new Promise((resolve) => {
         const socket = new adone.std.net.Server();

@@ -1,4 +1,4 @@
-const { is, net: { Socket } } = adone;
+const { is, net } = adone;
 
 export default class Server extends adone.EventEmitter {
     constructor(options = {}) {
@@ -13,7 +13,7 @@ export default class Server extends adone.EventEmitter {
         this._sockets = [];
         this._peerFactory = this.option.peerFactory;
         if (!is.function(this._peerFactory)) {
-            this._peerFactory = (socket, param) => new Socket(Object.assign({ socket }, param));
+            this._peerFactory = (socket, param) => new net.Socket(Object.assign({ socket }, param));
         }
         const onNewConn = this.option.сonnectionHandler;
         if (is.function(onNewConn)) {
@@ -30,10 +30,10 @@ export default class Server extends adone.EventEmitter {
             }
             if (is.string(addr)) {
                 this._address = { port: addr, address: null, family: null };
-                this._address.full = adone.util.humanizeAddr(protocol, addr);
+                this._address.full = net.util.humanizeAddr(protocol, addr);
             } else {
                 this._address = { port: addr.port, address: addr.address, family: addr.family };
-                this._address.full = adone.util.humanizeAddr(protocol, addr.port, addr.address);
+                this._address.full = net.util.humanizeAddr(protocol, addr.port, addr.address);
             }
             this._address.protocol = protocol;
         }

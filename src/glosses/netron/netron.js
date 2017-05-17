@@ -1,4 +1,4 @@
-const { is, x, netron: { DEFAULT_PORT, ACTION, STATUS, PEER_TYPE, GenesisNetron, Peer, RemoteStub } } = adone;
+const { is, x, net, netron: { DEFAULT_PORT, ACTION, STATUS, PEER_TYPE, GenesisNetron, Peer, RemoteStub } } = adone;
 
 const IP_POLICY_NONE = 0;
 const IP_POLICY_ALLOW = 1;
@@ -13,13 +13,13 @@ export default class Netron extends GenesisNetron {
             refGates: true,
             refPeers: true
         }, options, {
-                peerFactory: (socket, gate) => {
-                    const peer = this._createPeer(socket, gate, PEER_TYPE.ACTIVE);
-                    this._emitPeerEvent("peer create", peer);
-                    return peer;
-                },
-                сonnectionHandler: this.onNewConnection.bind(this)
-            });
+            peerFactory: (socket, gate) => {
+                const peer = this._createPeer(socket, gate, PEER_TYPE.ACTIVE);
+                this._emitPeerEvent("peer create", peer);
+                return peer;
+            },
+            сonnectionHandler: this.onNewConnection.bind(this)
+        });
 
         this._nonauthPeers = [];
         this._gates = new Map();
@@ -84,8 +84,8 @@ export default class Netron extends GenesisNetron {
             await gate.server.unbind();
             this._gates.delete(options.port);
         } else {
-            const [port, host] = adone.net.util.normalizeAddr(options.port, options.host, this.option.defaultPort);
-            const addr = adone.util.humanizeAddr(this.option.protocol, port, host);
+            const [port, host] = net.util.normalizeAddr(options.port, options.host, this.option.defaultPort);
+            const addr = net.util.humanizeAddr(this.option.protocol, port, host);
             const gate = this._gates.get(addr);
             if (is.undefined(gate)) {
                 throw new x.Unknown(`unknown gate '${options.port}'`);
@@ -123,9 +123,9 @@ export default class Netron extends GenesisNetron {
             const peerAddress = peer.getRemoteAddress().address;
             let peerIpBn;
             if (is.ip4(peerAddress)) {
-                peerIpBn = new adone.net.address.IP4(peerAddress).toBigNumber();
+                peerIpBn = new net.address.IP4(peerAddress).toBigNumber();
             } else if (is.ip6(peerAddress)) {
-                peerIpBn = new adone.net.address.IP6(peerAddress).toBigNumber();
+                peerIpBn = new net.address.IP6(peerAddress).toBigNumber();
             } else {
                 throw new x.Unknown(`unknown address: ${peerAddress}`);
             }
@@ -331,14 +331,14 @@ export default class Netron extends GenesisNetron {
     _bindSocket(options) {
         let id = options.id;
         if (is.undefined(id)) {
-            [options.port, options.host] = adone.net.util.normalizeAddr(options.port, options.host, this.option.defaultPort);
-            id = adone.util.humanizeAddr(this.option.protocol, options.port, options.host);
+            [options.port, options.host] = net.util.normalizeAddr(options.port, options.host, this.option.defaultPort);
+            id = net.util.humanizeAddr(this.option.protocol, options.port, options.host);
         }
         if (this._gates.has(id)) {
             throw new x.Exists(`Already bound to '${id}'`);
         }
 
-        const server = new adone.net.Server(this.option);
+        const server = new net.Server(this.option);
         this._setGate(id, server, options);
         if (!this.option.refGates) {
             server.unref();
@@ -364,9 +364,9 @@ export default class Netron extends GenesisNetron {
                 for (const addr of ipList) {
                     let ipAddr;
                     if (is.ip4(addr)) {
-                        ipAddr = new adone.net.address.IP4(addr).toBigNumber();
+                        ipAddr = new net.address.IP4(addr).toBigNumber();
                     } else if (is.ip6(addr)) {
-                        ipAddr = new adone.net.address.IP6(addr).toBigNumber();
+                        ipAddr = new net.address.IP6(addr).toBigNumber();
                     } else {
                         throw new x.NotValid(`address or subnet '${addr}' is not valid`);
                     }

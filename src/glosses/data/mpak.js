@@ -74,7 +74,7 @@ export class Encoder {
                 break;
             }
             default: {
-                if (x === null) {
+                if (is.null(x)) {
                     buf.writeInt8(0xC0);
                 } else if (is.buffer(x)) {
                     if (x.length <= 0xFF) {

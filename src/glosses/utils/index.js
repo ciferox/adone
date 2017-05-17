@@ -684,20 +684,6 @@ export const parseSize = (str) => {
     return Math.floor(value * units.get(unit.toLowerCase()));
 };
 
-export const humanizeAddr = (protocol, port, host) => {
-    let addr;
-    protocol = protocol || "tcp:";
-    if (!protocol.endsWith(":")) {
-        protocol += ":";
-    }
-    if (is.number(port)) {
-        addr = adone.sprintf("%s//%s:%d", protocol, host, port);
-    } else {
-        addr = adone.sprintf("%s//%s", protocol, port);
-    }
-    return addr;
-};
-
 export const clone = (obj, { deep = true } = {}) => {
     if (!is.object(obj)) {
         return obj;

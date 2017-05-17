@@ -1,4 +1,4 @@
-const { is } = adone;
+const { is, net } = adone;
 
 export default class Socket extends adone.EventEmitter {
     constructor(options = { }) {
@@ -30,10 +30,10 @@ export default class Socket extends adone.EventEmitter {
                 const protocol = this.option.protocol;
                 if (!is.nil(nodeSocket.localAddress) && is.number(nodeSocket.localPort)) {
                     this._localAddr = adone.o({ port: nodeSocket.localPort, address: nodeSocket.localAddress });
-                    this._localAddr.full = adone.util.humanizeAddr(protocol, nodeSocket.localPort, nodeSocket.localAddress);
+                    this._localAddr.full = net.util.humanizeAddr(protocol, nodeSocket.localPort, nodeSocket.localAddress);
                 } else {
                     this._localAddr = adone.o({ port: "unixsocket", address: null });
-                    this._localAddr.full = adone.util.humanizeAddr(protocol, "unixsocket");
+                    this._localAddr.full = net.util.humanizeAddr(protocol, "unixsocket");
                 }
                 this._localAddr.protocol = protocol;
             }
@@ -51,13 +51,13 @@ export default class Socket extends adone.EventEmitter {
                 }
                 if (!is.nil(nodeSocket.remoteAddress) && is.number(nodeSocket.remotePort)) {
                     this._remoteAddr = adone.o({ port: nodeSocket.remotePort, address: nodeSocket.remoteAddress, family: nodeSocket.remoteFamily });
-                    this._remoteAddr.full = adone.util.humanizeAddr(protocol, nodeSocket.remotePort, nodeSocket.remoteAddress);
+                    this._remoteAddr.full = net.util.humanizeAddr(protocol, nodeSocket.remotePort, nodeSocket.remoteAddress);
                 } else if (!is.nil(nodeSocket.server) && is.string(nodeSocket.server._pipeName)) {
                     this._remoteAddr = adone.o({ port: nodeSocket.server._pipeName, address: null, family: null });
-                    this._remoteAddr.full = adone.util.humanizeAddr(protocol, this._remoteAddr.port);
+                    this._remoteAddr.full = net.util.humanizeAddr(protocol, this._remoteAddr.port);
                 } else {
                     this._remoteAddr = adone.o({ port: "unixsocket", address: null, family: null });
-                    this._remoteAddr.full = adone.util.humanizeAddr(protocol, "unixsocket");
+                    this._remoteAddr.full = net.util.humanizeAddr(protocol, "unixsocket");
                 }
                 this._remoteAddr.protocol = protocol;
             }
@@ -85,7 +85,7 @@ export default class Socket extends adone.EventEmitter {
                             break;
                         }
                         let packetSize = lpsz;
-                        if (packetSize === null) {
+                        if (is.null(packetSize)) {
                             lpsz = packetSize = buffer.readUInt32BE();
                             buffer.compact();
                         }
@@ -169,9 +169,9 @@ export default class Socket extends adone.EventEmitter {
                 } else {
                     this.nodeSocket = null;
                     if (options.port === 0) {
-                        reject(new adone.x.Connect(`host ${adone.util.humanizeAddr(this.option.protocol, options.path)} is unreachable`));
+                        reject(new adone.x.Connect(`host ${net.util.humanizeAddr(this.option.protocol, options.path)} is unreachable`));
                     } else {
-                        reject(new adone.x.Connect(`host ${adone.util.humanizeAddr(this.option.protocol, options.port, options.host)} is unreachable`));
+                        reject(new adone.x.Connect(`host ${net.util.humanizeAddr(this.option.protocol, options.port, options.host)} is unreachable`));
                     }
                 }
             });

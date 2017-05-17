@@ -1,4 +1,4 @@
-const { is, x, util, data: { mpak: { serializer } }, configuration: { Configuration }, AsyncEmitter } = adone;
+const { is, x, util, net, data: { mpak: { serializer } }, configuration: { Configuration }, AsyncEmitter } = adone;
 const { DEFAULT_PORT, ACTION, STATUS, Reference, Interface, Stub, Investigator, Definition, Definitions, SequenceId, Identity } = adone.netron;
 
 const MAGIC_FLAG = 0x80000000 >>> 0;
@@ -138,8 +138,8 @@ export default class GenesisNetron extends AsyncEmitter {
     }
 
     connect(options = {}) {
-        const [port, host] = adone.net.util.normalizeAddr(options.port, options.host, this.option.defaultPort);
-        const addr = adone.util.humanizeAddr(this.option.protocol, options.port, options.host);
+        const [port, host] = net.util.normalizeAddr(options.port, options.host, this.option.defaultPort);
+        const addr = net.util.humanizeAddr(this.option.protocol, options.port, options.host);
         const peer = this._svrNetronAddrs.get(addr);
         if (!is.undefined(peer)) {
             return Promise.resolve(peer);
