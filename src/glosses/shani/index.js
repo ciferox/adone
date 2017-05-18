@@ -942,6 +942,18 @@ export const consoleReporter = ({
 
         let enteredBlocks = [];
         let blockLevel = 0;
+
+        const createTestBar = (test) => {
+            const padding = "    ".repeat(test.block.level() + 1);
+            const options = {
+                schema: `${padding}:spinner {:color-fg}{escape}${test.description}{/escape}{/}:suffix`
+            };
+            if (timers || allTimings) {
+                options.timeFormatter = (x) => elapsedToString(x, test.timeout());
+            }
+            return adone.terminal.progress(options);
+        };
+
         emitter
             .on("enter block", ({ block }) => {
                 if (enteredBlocks[blockLevel] !== block.name) {
@@ -955,17 +967,9 @@ export const consoleReporter = ({
                 --blockLevel;
             })
             .on("start test", ({ test }) => {
-                const padding = "    ".repeat(test.block.level() + 1);
-                const options = {
-                    schema: `${padding}:spinner {:color-fg}:prefix{escape}${test.description}{/escape}{/}:suffix`
-                };
-                if (timers || allTimings) {
-                    options.timeFormatter = (x) => elapsedToString(x, test.timeout());
-                }
-                bar = new adone.terminal.Progress(options);
+                bar = createTestBar(test);
                 bar.update(0, {
                     color: "grey",
-                    prefix: "",
                     suffix: timers ? " (:elapsed)" : ""
                 });
             })
@@ -988,10 +992,12 @@ export const consoleReporter = ({
                     ++passed;
                 }
             })
-            .on("skip test", () => {
-                bar.complete(true, {
+            .on("skip test", ({ test, runtime }) => {
+                if (!runtime) {
+                    bar = createTestBar(test);
+                }
+                bar.complete(`{cyan-fg}${symbol.minus}{/cyan-fg}`, {
                     color: "cyan",
-                    prefix: ` ${symbol.minus}`,
                     suffix: ""
                 });
                 ++pending;
