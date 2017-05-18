@@ -1,11 +1,11 @@
 const { is } = adone;
-// const pigpio = require("bindings")("pigpio.node");
+const native = adone.bind("rpigpio.node");
 
 let initialized = false;
 
 const initializePigpio = () => {
     if (!initialized) {
-        pigpio.gpioInitialise();
+        native.gpioInitialise();
         initialized = true;
     }
 };
@@ -42,76 +42,76 @@ export class Gpio extends adone.EventEmitter {
     mode(mode) {
         // What happens if the mode is INPUT, there is an ISR, and the mode is
         // changed to OUTPUT (or anything else for that matter)?
-        pigpio.gpioSetMode(this.gpio, Number(mode));
+        native.gpioSetMode(this.gpio, Number(mode));
         return this;
     }
 
     getMode() {
-        return pigpio.gpioGetMode(this.gpio);
+        return native.gpioGetMode(this.gpio);
     }
 
     pullUpDown(pud) {
-        pigpio.gpioSetPullUpDown(this.gpio, Number(pud));
+        native.gpioSetPullUpDown(this.gpio, Number(pud));
         return this;
     }
 
     digitalRead() {
-        return pigpio.gpioRead(this.gpio);
+        return native.gpioRead(this.gpio);
     }
 
     digitalWrite(level) {
-        pigpio.gpioWrite(this.gpio, Number(level));
+        native.gpioWrite(this.gpio, Number(level));
         return this;
     }
 
     trigger(pulseLen, level) {
-        pigpio.gpioTrigger(this.gpio, Number(pulseLen), Number(level));
+        native.gpioTrigger(this.gpio, Number(pulseLen), Number(level));
         return this;
     }
 
     pwmWrite(dutyCycle) {
-        pigpio.gpioPWM(this.gpio, Number(dutyCycle));
+        native.gpioPWM(this.gpio, Number(dutyCycle));
         return this;
     }
 
     hardwarePwmWrite(frequency, dutyCycle) {
-        pigpio.gpioHardwarePWM(this.gpio, Number(frequency), Number(dutyCycle));
+        native.gpioHardwarePWM(this.gpio, Number(frequency), Number(dutyCycle));
         return this;
     }
 
     getPwmDutyCycle() {
-        return pigpio.gpioGetPWMdutycycle(this.gpio);
+        return native.gpioGetPWMdutycycle(this.gpio);
     }
 
     pwmRange(range) {
-        pigpio.gpioSetPWMrange(this.gpio, Number(range));
+        native.gpioSetPWMrange(this.gpio, Number(range));
         return this;
     }
 
     getPwmRange() {
-        return pigpio.gpioGetPWMrange(this.gpio);
+        return native.gpioGetPWMrange(this.gpio);
     }
 
     getPwmRealRange() {
-        return pigpio.gpioGetPWMrealRange(this.gpio);
+        return native.gpioGetPWMrealRange(this.gpio);
     }
 
     pwmFrequency(frequency) {
-        pigpio.gpioSetPWMfrequency(this.gpio, Number(frequency));
+        native.gpioSetPWMfrequency(this.gpio, Number(frequency));
         return this;
     }
 
     getPwmFrequency() {
-        return pigpio.gpioGetPWMfrequency(this.gpio);
+        return native.gpioGetPWMfrequency(this.gpio);
     }
 
     servoWrite(pulseWidth) {
-        pigpio.gpioServo(this.gpio, Number(pulseWidth));
+        native.gpioServo(this.gpio, Number(pulseWidth));
         return this;
     }
 
     getServoPulseWidth() {
-        return pigpio.gpioGetServoPulsewidth(this.gpio);
+        return native.gpioGetServoPulsewidth(this.gpio);
     }
 
     enableInterrupt(edge, timeout) {
@@ -120,12 +120,12 @@ export class Gpio extends adone.EventEmitter {
         }.bind(this);
 
         timeout = timeout || 0;
-        pigpio.gpioSetISRFunc(this.gpio, Number(edge), Number(timeout), handler);
+        native.gpioSetISRFunc(this.gpio, Number(edge), Number(timeout), handler);
         return this;
     }
 
     disableInterrupt() {
-        pigpio.gpioSetISRFunc(this.gpio, Gpio.EITHER_EDGE, 0);
+        native.gpioSetISRFunc(this.gpio, Gpio.EITHER_EDGE, 0);
         return this;
     }
 
@@ -134,12 +134,12 @@ export class Gpio extends adone.EventEmitter {
             this.emit("alert", level, tick);
         }.bind(this);
 
-        pigpio.gpioSetAlertFunc(this.gpio, handler);
+        native.gpioSetAlertFunc(this.gpio, handler);
         return this;
     }
 
     disableAlert() {
-        pigpio.gpioSetAlertFunc(this.gpio);
+        native.gpioSetAlertFunc(this.gpio);
         return this;
     }
 }
@@ -183,17 +183,17 @@ export class GpioBank {
 
     read() {
         if (this.bankNo === GpioBank.BANK1) {
-            return pigpio.GpioReadBits_0_31();
+            return native.GpioReadBits_0_31();
         } else if (this.bankNo === GpioBank.BANK2) {
-            return pigpio.GpioReadBits_32_53();
+            return native.GpioReadBits_32_53();
         }
     }
 
     set(bits) {
         if (this.bankNo === GpioBank.BANK1) {
-            pigpio.GpioWriteBitsSet_0_31(Number(bits));
+            native.GpioWriteBitsSet_0_31(Number(bits));
         } else if (this.bankNo === GpioBank.BANK2) {
-            pigpio.GpioWriteBitsSet_32_53(Number(bits));
+            native.GpioWriteBitsSet_32_53(Number(bits));
         }
 
         return this;
@@ -201,9 +201,9 @@ export class GpioBank {
 
     clear(bits) {
         if (this.bankNo === GpioBank.BANK1) {
-            pigpio.GpioWriteBitsClear_0_31(Number(bits));
+            native.GpioWriteBitsClear_0_31(Number(bits));
         } else if (this.bankNo === GpioBank.BANK2) {
-            pigpio.GpioWriteBitsClear_32_53(Number(bits));
+            native.GpioWriteBitsClear_32_53(Number(bits));
         }
 
         return this;
@@ -226,7 +226,7 @@ export class Notifier {
 
         options = options || {};
 
-        this.handle = pigpio.gpioNotifyOpenWithSize(1048576);
+        this.handle = native.gpioNotifyOpenWithSize(1048576);
 
         // set highWaterMark to a multiple of NOTIFICATION_LENGTH to avoid 'data'
         // events being emitted with buffers containing partial notifications.
@@ -241,17 +241,17 @@ export class Notifier {
     }
 
     start(bits) {
-        pigpio.gpioNotifyBegin(this.handle, Number(bits));
+        native.gpioNotifyBegin(this.handle, Number(bits));
         return this;
     }
 
     stop() {
-        pigpio.gpioNotifyPause(this.handle);
+        native.gpioNotifyPause(this.handle);
         return this;
     }
 
     close() {
-        pigpio.gpioNotifyClose(this.handle);
+        native.gpioNotifyClose(this.handle);
     }
 
     stream() {
@@ -262,11 +262,11 @@ Notifier.NOTIFICATION_LENGTH = 12;
 Notifier.PI_NTFY_FLAGS_ALIVE = 1 << 6;
 
 
-export const hardwareRevision = () => pigpio.gpioHardwareRevision();
+export const hardwareRevision = () => native.gpioHardwareRevision();
 export const initialize = () => initializePigpio();
-export const terminate = () => pigpio.gpioTerminate();
+export const terminate = () => native.gpioTerminate();
 export const configureClock = (microseconds, peripheral) => {
-    pigpio.gpioCfgClock(Number(microseconds), Number(peripheral));
+    native.gpioCfgClock(Number(microseconds), Number(peripheral));
     initializePigpio();
 };
 export const CLOCK_PWM = 0; // PI_CLOCK_PWM;

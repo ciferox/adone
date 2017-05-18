@@ -631,24 +631,51 @@
         ],
       }]
     ],
-  }, {
-    "target_name": "report",
-    "sources": [ "src/native/report/report.cc", "src/native/report/module.cc" ],
-    "include_dirs": [ 'nan' ],
-    "conditions": [
-      ["OS=='linux'", {
-        "defines": [ "_GNU_SOURCE" ],
-        "cflags": [ "-g", "-O2", "-std=c++11", ],
-      }],
-      ["OS=='win'", {
-        "libraries": [ "dbghelp.lib", "Netapi32.lib", "PsApi.lib" ],
-        "dll_files": [ "dbghelp.dll", "Netapi32.dll", "PsApi.dll" ],
-      }],
-    ],
-    "defines": [
-      'NODEREPORT_VERSION="<!(node -p \"require(\'./package.json\').version\")"'
-    ],
-  },
+    }, {
+        "target_name": "report",
+        "sources": [ "src/native/report/report.cc", "src/native/report/module.cc" ],
+        "include_dirs": [ 'nan' ],
+        "conditions": [
+        ["OS=='linux'", {
+            "defines": [ "_GNU_SOURCE" ],
+            "cflags": [ "-g", "-O2", "-std=c++11", ],
+        }],
+        ["OS=='win'", {
+            "libraries": [ "dbghelp.lib", "Netapi32.lib", "PsApi.lib" ],
+            "dll_files": [ "dbghelp.dll", "Netapi32.dll", "PsApi.dll" ],
+        }],
+        ],
+        "defines": [
+        'NODEREPORT_VERSION="<!(node -p \"require(\'./package.json\').version\")"'
+        ],
+    },
+    {
+        "target_name": "rpigpio",
+        "conditions": [[
+            "OS == \"linux\"", {
+            "cflags": [
+                "-Wno-unused-local-typedefs"
+            ]
+            }]
+        ],
+        "cflags": [
+            "-Wall",
+            "-O3"
+        ],
+        "include_dirs" : [ "nan" ],
+        "sources": [
+            "./src/native/hardware/boards/rpi/deps/pigpio.c",
+            "./src/native/hardware/boards/rpi/deps/custom.cext",
+            "./src/native/hardware/boards/rpi/deps/command.c",
+            "./src/native/hardware/boards/rpi/gpio.cc"
+        ],
+        "link_settings": {
+            "libraries": [
+            "-pthread",
+            
+            ]
+        }
+    },
     {
       "target_name": "copy_modules",
       "variables": {
@@ -667,7 +694,8 @@
         "masscan",
         "hid",
         "serial",
-        "report"
+        "report",
+        "rpigpio"
       ],
       "copies": [
         {
@@ -684,7 +712,8 @@
             "<(srcpath)/masscan.node",
             "<(srcpath)/hid.node",
             "<(srcpath)/serial.node",
-            "<(srcpath)/report.node"
+            "<(srcpath)/report.node",
+            "<(srcpath)/rpigpio.node"
           ],
           "destination": "<(module_root_dir)/lib/native"
         },
