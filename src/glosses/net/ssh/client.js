@@ -124,7 +124,7 @@ const reqX11 = (chan, screen, cb) => {
 
     if (is.function(screen)) {
         cb = screen;
-    } else if (is.object(screen)) {
+    } else if (is.plainObject(screen)) {
         if (is.boolean(screen.single)) {
             cfg.single = screen.single;
         }
@@ -170,7 +170,7 @@ const reqPty = (chan, opts, cb) => {
 
     if (is.function(opts)) {
         cb = opts;
-    } else if (is.object(opts)) {
+    } else if (is.plainObject(opts)) {
         if (is.number(opts.rows)) {
             rows = opts.rows;
         }
@@ -541,23 +541,26 @@ export default class Client extends adone.EventEmitter {
             }
         }
 
-        this.config.username = options.username || options.user;
+        if (is.string(options.username)) {
+            this.config.username = options.username;
+        } else if (is.string(options.user)) {
+            this.config.username = options.user;
+        } else {
+            throw new Error("Invalid username");
+        }
+
         this.config.password = (is.string(options.password) ? options.password : undefined);
-        this.config.privateKey = (is.string(options.privateKey) || Buffer.isBuffer(options.privateKey) ? options.privateKey : undefined);
+        this.config.privateKey = (is.string(options.privateKey) || is.buffer(options.privateKey) ? options.privateKey : undefined);
         this.config.publicKey = undefined;
         this.config.localHostname = (is.string(options.localHostname) && options.localHostname.length ? options.localHostname : undefined);
         this.config.localUsername = (is.string(options.localUsername) && options.localUsername.length ? options.localUsername : undefined);
         this.config.tryKeyboard = (options.tryKeyboard === true);
         this.config.agent = (is.string(options.agent) && options.agent.length ? options.agent : undefined);
-        this.config.allowAgentFwd = (options.agentForward === true && this.config.agent !== undefined);
+        this.config.allowAgentFwd = (options.agentForward === true && !is.undefined(this.config.agent));
 
         this.config.strictVendor = (is.boolean(options.strictVendor) ? options.strictVendor : true);
 
         const debug = this.config.debug = (is.function(options.debug) ? options.debug : adone.noop);
-
-        if (!is.string(this.config.username)) {
-            throw new Error("Invalid username");
-        }
 
         if (options.agentForward === true && !this.config.allowAgentFwd) {
             throw new Error("You must set a valid agent path to allow agent forwarding");
@@ -1114,7 +1117,7 @@ export default class Client extends adone.EventEmitter {
 
             const todo = [];
 
-            function reqCb(err) {
+            const reqCb = (err) => {
                 if (err) {
                     chan.close();
                     return cb(err);
@@ -1122,27 +1125,24 @@ export default class Client extends adone.EventEmitter {
                 if (todo.length) {
                     todo.shift()();
                 }
-            }
+            };
 
-            if (self.config.allowAgentFwd === true ||
-                (opts &&
-                    opts.agentForward === true &&
-                    self.config.agent !== undefined)) {
+            if (self.config.allowAgentFwd === true || (opts && opts.agentForward === true && !is.undefined(self.config.agent))) {
                 todo.push(() => {
                     reqAgentFwd(chan, reqCb);
                 });
             }
 
-            if (is.object(opts)) {
-                if (is.object(opts.env)) {
+            if (is.plainObject(opts)) {
+                if (is.plainObject(opts.env)) {
                     reqEnv(chan, opts.env);
                 }
-                if (is.object(opts.pty) || opts.pty === true) {
+                if (is.plainObject(opts.pty) || opts.pty === true) {
                     todo.push(() => {
                         reqPty(chan, opts.pty, reqCb);
                     });
                 }
-                if (is.object(opts.x11) || is.number(opts.x11) || opts.x11 === true) {
+                if (is.plainObject(opts.x11) || is.number(opts.x11) || opts.x11 === true) {
                     todo.push(() => {
                         reqX11(chan, opts.x11, reqCb);
                     });
@@ -1171,7 +1171,7 @@ export default class Client extends adone.EventEmitter {
             cb = opts;
             opts = undefined;
         }
-        if (wndopts && wndopts.x11 !== undefined) {
+        if (wndopts && (!is.undefined(wndopts.x11) || !is.undefined(wndopts.env))) {
             opts = wndopts;
             wndopts = undefined;
         }
@@ -1183,7 +1183,7 @@ export default class Client extends adone.EventEmitter {
 
             const todo = [];
 
-            function reqCb(err) {
+            const reqCb = (err) => {
                 if (err) {
                     chan.close();
                     return cb(err);
@@ -1191,12 +1191,9 @@ export default class Client extends adone.EventEmitter {
                 if (todo.length) {
                     todo.shift()();
                 }
-            }
+            };
 
-            if (self.config.allowAgentFwd === true ||
-                (opts &&
-                    opts.agentForward === true &&
-                    self.config.agent !== undefined)) {
+            if (self.config.allowAgentFwd === true || (opts && opts.agentForward === true && !is.undefined(self.config.agent))) {
                 todo.push(() => {
                     reqAgentFwd(chan, reqCb);
                 });
@@ -1208,8 +1205,11 @@ export default class Client extends adone.EventEmitter {
                 });
             }
 
-            if (is.object(opts)) {
-                if (is.object(opts.x11) || is.number(opts.x11) || opts.x11 === true) {
+            if (is.plainObject(opts)) {
+                if (is.plainObject(opts.env)) {
+                    reqEnv(chan, opts.env);
+                }
+                if (is.plainObject(opts.x11) || is.number(opts.x11) || opts.x11 === true) {
                     todo.push(() => {
                         reqX11(chan, opts.x11, reqCb);
                     });

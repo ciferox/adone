@@ -107,6 +107,7 @@ export default class ProgressBar {
         this.start = null;
         this.origin = null;
         this.customTokens = null;
+        this.output = null;
 
         if (is.string(this.width)) {
             if (this.width.endsWith("%")) {
@@ -144,7 +145,7 @@ export default class ProgressBar {
         instances.push(this);
     }
 
-    setSchema(schema = " [:bar] :current/:total :percent :elapsed :eta", refresh = false) {
+    setSchema(schema = " [:bar] :current/:total :percent :elapsed :eta") {
         this.schema = schema;
 
         if (!is.null(this.spinner.timer)) {
@@ -157,10 +158,6 @@ export default class ProgressBar {
                 this.spinner.frame++;
                 this.compile();
             }, this.spinner.active.interval);
-        }
-
-        if (refresh) {
-            this.compile();
         }
     }
 
@@ -243,12 +240,12 @@ export default class ProgressBar {
             .replace(/:eta/g, eta)
             .replace(/:percent/g, `${toFixed(percent, 0)}%`);
 
-        let raw = output; // !!! not raw here
+        let result = output;
         const cols = terminal.cols;
         let width = this.width;
 
         width = width < 1 ? cols * width : width;
-        width = Math.min(width, Math.max(0, cols - bareLength(raw)));
+        width = Math.min(width, Math.max(0, cols - bareLength(result)));
 
         const length = Math.round(width * ratio);
         let spinner;
@@ -260,13 +257,10 @@ export default class ProgressBar {
         const filled = chars.filled.repeat(length);
         const blank = chars.blank.repeat(width - length);
 
-        raw = combine(raw, spinner, filled, blank, true);
+        result = combine(result, spinner, filled, blank, true);
         output = combine(output, spinner, filled, blank, false);
 
-        // without color and font styles
-        this.raw = raw;
-        // row count of the progress bar
-        this.rows = raw.split("\n").length;
+        this.rows = result.split("\n").length;
 
         this.render(output);
     }
@@ -282,7 +276,6 @@ export default class ProgressBar {
         };
         beginUpdate();
 
-        this.savedPos = current;
         if (is.null(this.origin)) {
             this.origin = current;
         }
@@ -321,7 +314,7 @@ export default class ProgressBar {
     }
 
     clear() {
-        if (this.output) {
+        if (!is.null(this.output)) {
             terminal.moveTo(this.origin.row, this.origin.col);
             for (let i = 0; i < this.rows; i++) {
                 terminal.eraseLine().down();
@@ -347,7 +340,6 @@ export default class ProgressBar {
         }
 
         this.callback && this.callback(this);
-        terminal.moveTo(this.savedPos.row, this.savedPos.col);
         const index = instances.indexOf(this);
         if (index >= 0) {
             instances.splice(index, 1);

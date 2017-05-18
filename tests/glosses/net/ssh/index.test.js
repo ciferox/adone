@@ -153,8 +153,9 @@ describe("SSH", () => {
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
-                if (ctx.method === "none")
-                { return ctx.reject(); }
+                if (ctx.method === "none") {
+                    return ctx.reject();
+                }
                 assert(ctx.method === "publickey", `Unexpected auth method: ${ctx.method}`);
                 assert(ctx.username === USER, `Unexpected username: ${ctx.username}`);
                 assert(ctx.key.algo === "ssh-rsa", `Unexpected key algo: ${ctx.key.algo}`);
@@ -165,8 +166,9 @@ describe("SSH", () => {
                     verifier.update(ctx.blob);
                     assert(verifier.verify(pem, ctx.signature), "Could not verify PK signature");
                     ctx.accept();
-                } else
-                { ctx.accept(); }
+                } else {
+                    ctx.accept();
+                }
             }).on("ready", () => {
                 conn.end();
             });
@@ -190,8 +192,9 @@ describe("SSH", () => {
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
-                if (ctx.method === "none")
-                { return ctx.reject(); }
+                if (ctx.method === "none") {
+                    return ctx.reject();
+                }
                 assert(ctx.method === "publickey", `Unexpected auth method: ${ctx.method}`);
                 assert(ctx.username === USER, `Unexpected username: ${ctx.username}`);
                 assert(ctx.key.algo === "ssh-rsa", `Unexpected key algo: ${ctx.key.algo}`);
@@ -201,8 +204,9 @@ describe("SSH", () => {
                     verifier.update(ctx.blob);
                     assert(verifier.verify(pem, ctx.signature), "Could not verify PK signature");
                     ctx.accept();
-                } else
-                { ctx.accept(); }
+                } else {
+                    ctx.accept();
+                }
             }).on("ready", () => {
                 conn.end();
             });
@@ -226,8 +230,9 @@ describe("SSH", () => {
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
-                if (ctx.method === "none")
-                { return ctx.reject(); }
+                if (ctx.method === "none") {
+                    return ctx.reject();
+                }
                 assert(ctx.method === "publickey", `Unexpected auth method: ${ctx.method}`);
                 assert(ctx.username === USER, `Unexpected username: ${ctx.username}`);
                 assert(ctx.key.algo === "ssh-dss", `Unexpected key algo: ${ctx.key.algo}`);
@@ -238,8 +243,9 @@ describe("SSH", () => {
                     verifier.update(ctx.blob);
                     assert(verifier.verify(pem, ctx.signature), "Could not verify PK signature");
                     ctx.accept();
-                } else
-                { ctx.accept(); }
+                } else {
+                    ctx.accept();
+                }
             }).on("ready", () => {
                 conn.end();
             });
@@ -255,8 +261,8 @@ describe("SSH", () => {
             username: USER,
             privateKey: CLIENT_KEY_ECDSA
         }, {
-                hostKeys: [HOST_KEY_RSA]
-            }, done);
+            hostKeys: [HOST_KEY_RSA]
+        }, done);
         const server = r.server;
 
         server.on("connection", (conn) => {
@@ -291,8 +297,8 @@ describe("SSH", () => {
                 serverHostKey: ["ssh-dss"]
             }
         }, {
-                hostKeys: [HOST_KEY_DSA]
-            }, done);
+            hostKeys: [HOST_KEY_DSA]
+        }, done);
         const server = r.server;
 
         server.on("connection", (conn) => {
@@ -311,8 +317,9 @@ describe("SSH", () => {
     });
 
     it("Server with ECDSA host key", function (done) {
-        if (semver.lt(process.version, "5.2.0"))
-        { return done(); }
+        if (semver.lt(process.version, "5.2.0")) {
+            return done();
+        }
         let server;
         let r;
 
@@ -329,8 +336,9 @@ describe("SSH", () => {
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
-                if (ctx.method === "none")
-                { return ctx.reject(); }
+                if (ctx.method === "none") {
+                    return ctx.reject();
+                }
                 assert(ctx.method === "password", `Unexpected auth method: ${ctx.method}`);
                 assert(ctx.username === USER, `Unexpected username: ${ctx.username}`);
                 assert(ctx.password === "asdf", `Unexpected password: ${ctx.password}`);
@@ -361,8 +369,9 @@ describe("SSH", () => {
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
-                if (ctx.method === "none")
-                { return ctx.reject(); }
+                if (ctx.method === "none") {
+                    return ctx.reject();
+                }
                 assert(ctx.method === "password", `Unexpected auth method: ${ctx.method}`);
                 assert(ctx.username === USER, `Unexpected username: ${ctx.username}`);
                 assert(ctx.password === "asdf", `Unexpected password: ${ctx.password}`);
@@ -393,8 +402,9 @@ describe("SSH", () => {
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
-                if (ctx.method === "none")
-                { return ctx.reject(); }
+                if (ctx.method === "none") {
+                    return ctx.reject();
+                }
                 assert(ctx.method === "password", `Unexpected auth method: ${ctx.method}`);
                 assert(ctx.username === USER, `Unexpected username: ${ctx.username}`);
                 assert(ctx.password === "asdf", `Unexpected password: ${ctx.password}`);
@@ -426,8 +436,9 @@ describe("SSH", () => {
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
-                if (ctx.method !== "hostbased")
-                { return ctx.reject(); }
+                if (ctx.method !== "hostbased") {
+                    return ctx.reject();
+                }
                 assert(ctx.method === "hostbased", `Unexpected auth method: ${ctx.method}`);
                 assert(ctx.username === USER, `Unexpected username: ${ctx.username}`);
                 assert(ctx.key.algo === "ssh-rsa", `Unexpected key algo: ${ctx.key.algo}`);
@@ -463,8 +474,9 @@ describe("SSH", () => {
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
-                if (ctx.method === "none")
-                { return ctx.reject(); }
+                if (ctx.method === "none") {
+                    return ctx.reject();
+                }
                 assert(ctx.method === "password", `Unexpected auth method: ${ctx.method}`);
                 assert(ctx.username === USER, `Unexpected username: ${ctx.username}`);
                 assert(ctx.password === PASSWORD, `Unexpected password: ${ctx.password}`);
@@ -577,7 +589,9 @@ describe("SSH", () => {
         let client;
         let server;
         let r;
-        let out = "";
+        const out = "";
+        const serverEnv = {};
+        const clientEnv = { SSH2NODETEST: "foo" };
 
         r = setup(
             this,
@@ -597,14 +611,12 @@ describe("SSH", () => {
             }).on("ready", () => {
                 conn.once("session", (accept, reject) => {
                     const session = accept();
-                    const env = {};
                     session.once("env", (accept, reject, info) => {
-                        env[info.key] = info.val;
+                        serverEnv[info.key] = info.val;
                         accept && accept();
                     }).once("exec", (accept, reject, info) => {
                         assert(info.command === "foo --bar", `Wrong exec command: ${info.command}`);
                         const stream = accept();
-                        stream.write(String(env.SSH2NODETEST));
                         stream.exit(100);
                         stream.end();
                         conn.end();
@@ -614,16 +626,14 @@ describe("SSH", () => {
         });
         client.on("ready", () => {
             client.exec("foo --bar",
-                { env: { SSH2NODETEST: "foo" } },
+                { env: clientEnv },
                 (err, stream) => {
                     assert(!err, `Unexpected exec error: ${err}`);
-                    stream.on("data", (d) => {
-                        out += d;
-                    });
+                    stream.resume();
                 }
             );
         }).on("end", () => {
-            assert(out === "foo", `Wrong stdout data: ${inspect(out)}`);
+            assert.deepEqual(serverEnv, clientEnv, "Environment mismatch");
         });
     });
 
@@ -837,13 +847,64 @@ describe("SSH", () => {
         });
         client.on("ready", () => {
             client.shell((err, stream) => {
-                assert(!err, `Unexpected exec error: ${err}`);
+                assert(!err, `Unexpected shell error: ${err}`);
                 stream.on("data", (d) => {
                     out += d;
                 });
             });
         }).on("end", () => {
             assert(out === "Cowabunga dude! true", `Wrong stdout data: ${inspect(out)}`);
+        });
+    });
+
+    it("Shell with environment set", function (done) {
+        let client;
+        let server;
+        let r;
+        const serverEnv = {};
+        const clientEnv = { SSH2NODETEST: "foo" };
+        let sawPty = false;
+
+        r = setup(
+            this,
+            {
+                username: USER,
+                password: PASSWORD
+            },
+            { hostKeys: [HOST_KEY_RSA] },
+            done
+        );
+        client = r.client;
+        server = r.server;
+
+        server.on("connection", (conn) => {
+            conn.on("authentication", (ctx) => {
+                ctx.accept();
+            }).on("ready", () => {
+                conn.once("session", (accept, reject) => {
+                    const session = accept();
+                    session.once("env", (accept, reject, info) => {
+                        serverEnv[info.key] = info.val;
+                        accept && accept();
+                    }).once("pty", (accept, reject, info) => {
+                        sawPty = true;
+                        accept && accept();
+                    }).once("shell", (accept, reject) => {
+                        const stream = accept();
+                        stream.end();
+                        conn.end();
+                    });
+                });
+            });
+        });
+        client.on("ready", () => {
+            client.shell({ env: clientEnv }, (err, stream) => {
+                assert(!err, `Unexpected shell error: ${err}`);
+                stream.resume();
+            });
+        }).on("end", () => {
+            assert.deepEqual(serverEnv, clientEnv, "Environment mismatch");
+            assert.strictEqual(sawPty, true);
         });
     });
 
@@ -940,10 +1001,11 @@ describe("SSH", () => {
         }
         function onClose() {
             assert(++state.closes <= 3, `Wrong close count: ${state.closes}`);
-            if (state.closes === 2)
-            { server.close(); }
-            else if (state.closes === 3)
-            { done(); }
+            if (state.closes === 2) {
+                server.close();
+            } else if (state.closes === 3) {
+                done();
+            }
         }
 
         server.listen(0, "localhost", () => {
@@ -959,9 +1021,9 @@ describe("SSH", () => {
         }).on("close", onClose);
         client.on("ready", () => {
             onReady();
-            if (reconnect)
-            { client.end(); }
-            else {
+            if (reconnect) {
+                client.end();
+            } else {
                 reconnect = true;
                 client.connect(clientcfg);
             }
@@ -1075,8 +1137,9 @@ describe("SSH", () => {
             function callback(err, stream) {
                 assert.ifError(err);
                 stream.resume();
-                if (++calledBack === 3)
-                { client.end(); }
+                if (++calledBack === 3) {
+                    client.end();
+                }
             }
             client.exec("foo", callback);
             client.exec("bar", callback);
@@ -1131,8 +1194,9 @@ describe("SSH", () => {
             function callback(err, stream) {
                 assert.ifError(err);
                 stream.resume();
-                if (++calledBack === 3)
-                { client.end(); }
+                if (++calledBack === 3) {
+                    client.end();
+                }
             }
             client.exec("foo", callback);
             client.exec("bar", callback);
@@ -1338,8 +1402,9 @@ describe("SSH", () => {
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
                 assert(sawGreeting, "Client did not see greeting");
-                if (ctx.method === "none")
-                { return ctx.reject(); }
+                if (ctx.method === "none") {
+                    return ctx.reject();
+                }
                 assert(ctx.method === "password", `Unexpected auth method: ${ctx.method}`);
                 assert(ctx.username === USER, `Unexpected username: ${ctx.username}`);
                 assert(ctx.password === PASSWORD, `Unexpected password: ${ctx.password}`);
@@ -1383,8 +1448,9 @@ describe("SSH", () => {
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
                 assert(sawBanner, "Client did not see banner");
-                if (ctx.method === "none")
-                { return ctx.reject(); }
+                if (ctx.method === "none") {
+                    return ctx.reject();
+                }
                 assert(ctx.method === "password", `Unexpected auth method: ${ctx.method}`);
                 assert(ctx.username === USER, `Unexpected username: ${ctx.username}`);
                 assert(ctx.password === PASSWORD, `Unexpected password: ${ctx.password}`);
@@ -1402,10 +1468,11 @@ describe("SSH", () => {
         let fastRejectSent = false;
 
         function sendAcceptLater(accept) {
-            if (fastRejectSent)
-            { accept(); }
-            else
-            { setImmediate(sendAcceptLater, accept); }
+            if (fastRejectSent) {
+                accept();
+            } else {
+                setImmediate(sendAcceptLater, accept);
+            }
         }
 
         r = setup(
@@ -1429,7 +1496,9 @@ describe("SSH", () => {
                     fastRejectSent = true;
                 } else
                 // but accept on "slowAccept" later
-                { sendAcceptLater(accept); }
+                {
+                    sendAcceptLater(accept);
+                }
             });
         });
 
@@ -1438,14 +1507,16 @@ describe("SSH", () => {
 
             client.forwardIn("slowAccept", 0, (err) => {
                 assert.ifError(err);
-                if (++replyCnt === 2)
-                { client.end(); }
+                if (++replyCnt === 2) {
+                    client.end();
+                }
             });
 
             client.forwardIn("fastReject", 0, (err) => {
                 assert(err, "Should receive error");
-                if (++replyCnt === 2)
-                { client.end(); }
+                if (++replyCnt === 2) {
+                    client.end();
+                }
             });
         });
     });
@@ -1526,8 +1597,9 @@ describe("SSH", () => {
                         // Write enough to bring the Client"s channel window to 0
                         // (currently 1MB)
                         const buf = new Buffer(2048);
-                        for (let i = 0; i < 1000; ++i)
-                        { stream.write(buf); }
+                        for (let i = 0; i < 1000; ++i) {
+                            stream.write(buf);
+                        }
                         stream.exit(0);
                         stream.close();
                     });
@@ -1682,8 +1754,9 @@ describe("SSH", () => {
                 assert(ctx.method === "publickey" || ctx.method === "none",
                     `Unexpected auth method: ${ctx.method}`);
                 assert(!ctx.signature, "Unexpected signature");
-                if (ctx.method === "none")
-                { return ctx.reject(); }
+                if (ctx.method === "none") {
+                    return ctx.reject();
+                }
                 ctx.accept();
             });
             conn.on("ready", () => {
@@ -1757,6 +1830,69 @@ describe("SSH", () => {
         client.on("close", () => {
             assert(srvError, "Expected server error");
             assert(cliError, "Expected client error");
+        });
+    });
+
+
+    it("Empty username string works", function (done) {
+        let client;
+        let server;
+        let r;
+        let sawReady = false;
+
+        r = setup(
+            this,
+            { username: "", password: "foo" },
+            { hostKeys: [HOST_KEY_RSA] },
+            done
+        );
+        client = r.client;
+        server = r.server;
+
+        server.on("connection", (conn) => {
+            conn.on("authentication", (ctx) => {
+                assert.strictEqual(ctx.username, "", "Expected empty username");
+                ctx.accept();
+            }).on("ready", () => {
+                conn.end();
+            });
+        });
+
+        client.on("ready", () => {
+            sawReady = true;
+        }).on("close", () => {
+            assert.strictEqual(sawReady, true, "Expected ready event");
+        });
+    });
+
+    it("Empty user string works", function (done) {
+        let client;
+        let server;
+        let r;
+        let sawReady = false;
+
+        r = setup(
+            this,
+            { user: "", password: "foo" },
+            { hostKeys: [HOST_KEY_RSA] },
+            done
+        );
+        client = r.client;
+        server = r.server;
+
+        server.on("connection", (conn) => {
+            conn.on("authentication", (ctx) => {
+                assert.strictEqual(ctx.username, "", "Expected empty username");
+                ctx.accept();
+            }).on("ready", () => {
+                conn.end();
+            });
+        });
+
+        client.on("ready", () => {
+            sawReady = true;
+        }).on("close", () => {
+            assert.strictEqual(sawReady, true, "Expected ready event");
         });
     });
 });

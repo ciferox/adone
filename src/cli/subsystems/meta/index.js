@@ -391,7 +391,7 @@ export default class extends adone.application.Subsystem {
             const st = await file.stat();
 
             bar.total = st.size;
-            bar.setSchema(`:spinner Uploading {bold}${fileName}{/} {green-fg}:filled{/}{gray-fg}:blank{/} :current/:total :elapsed`, true);
+            bar.setSchema(`:spinner Uploading {bold}${fileName}{/} {green-fg}:filled{/}{gray-fg}:blank{/} :current/:total :elapsed`);
 
             await adone.net.http.client.request.post(`https://adone.io/public/dist?subject=adone&version=${builder.adoneVersion}&filename=${fileName}`, std.fs.createReadStream(filePath), {
                 headers: {
@@ -408,7 +408,7 @@ export default class extends adone.application.Subsystem {
                 }
             });
 
-            bar.setSchema(`:spinner Complete {bold}${fileName}{/} :elapsed`, true);
+            bar.setSchema(`:spinner Complete {bold}${fileName}{/} :elapsed`);
         }
 
         await outDir.unlink();
