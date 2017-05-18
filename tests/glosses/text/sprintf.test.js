@@ -136,4 +136,14 @@ describe("sprintf", () => {
             shouldNotThrow(fmt, [null]);
         });
     });
+
+    describe("cache", () => {
+        it("should not throw Error (cache consistency)", () => {
+            // redefine object properties to ensure that is not affect to the cache
+            sprintf("hasOwnProperty");
+            sprintf("constructor");
+            shouldNotThrow("%s", ["caching..."]);
+            shouldNotThrow("%s", ["crash?"]);
+        });
+    });
 });

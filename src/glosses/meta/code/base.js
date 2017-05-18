@@ -20,6 +20,10 @@ export default class XBase {
         this.init();
     }
 
+    getType() {
+        return "Base";
+    }
+
     init() {
         if (is.null(this.ast) && is.string(this.code)) {
             this.parse();

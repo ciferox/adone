@@ -158,6 +158,10 @@ export default class XAdoneModule extends adone.meta.code.Module {
         }
     }
 
+    getType() {
+        return "AdoneModule";
+    }
+
     exports() {
         const result = super.exports();
         Object.assign(result, this._adoneProto);

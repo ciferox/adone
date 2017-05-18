@@ -1,4 +1,4 @@
-const { is, std, fs, util } = adone;
+const { is, std, fs, terminal } = adone;
 import AdoneManager from "./adone_manager";
 import Bundler from "./bundler";
 
@@ -78,6 +78,18 @@ export default class extends adone.application.Subsystem {
                         }
                     ],
                     handler: this.searchCommand
+                },
+                {
+                    name: "verify",
+                    help: "Verify namespace",
+                    arguments: [
+                        {
+                            name: "name",
+                            type: String,
+                            help: "Fully qualified namespace name (e.g. 'adone.netron')"
+                        }
+                    ],
+                    handler: this.verifyCommand
                 },
                 {
                     name: "bundle",
@@ -294,6 +306,42 @@ export default class extends adone.application.Subsystem {
             adone.error(err.message);
             return 1;
         }
+        return 0;
+    }
+
+    async verifyCommand(args) {
+        try {
+            const inspector = new adone.meta.code.Inspector();
+            const name = args.get("name");
+            const { namespace } = adone.meta.parseName(name);
+
+            if (namespace === "adone" || namespace === "global") {
+                throw new adone.x.NotSupported(`Whole ${namespace} namespace verification is not supported`);
+            } else if (namespace.startsWith("adone.vendor")) {
+                throw new adone.x.NotSupported("'adone.vendor' namespace verification is not supported");
+            } else if (namespace.startsWith("adone.std")) {
+                throw new adone.x.NotSupported("'adone.std' namespace verification is not supported");
+            }
+
+            terminal.print(`Namespace:{/} {bold}{green-fg}${namespace}{/}\n`);
+
+            await inspector.attachNamespace(namespace);
+            const ns = inspector.getNamespace(namespace);
+
+            const names = Object.keys(ns.exports);
+
+            terminal.print("Exports:\n");
+
+            for (const name of names) {
+                const fullName = `${namespace}.${name}`;
+                const xObj = inspector.get(fullName);
+                terminal.print(` {bold}{green-fg}${name}{/} {#7B1FA2-fg}(${xObj.getType()}){/}\n`);
+            }
+        } catch (err) {
+            terminal.print(`{bold}{red-fg}${err.message}{/}\n`);
+            return 1;
+        }
+
         return 0;
     }
 

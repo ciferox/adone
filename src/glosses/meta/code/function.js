@@ -9,6 +9,10 @@ export default class XFunction extends adone.meta.code.Base {
             this.name = null;            
         }
     }
+
+    getType() {
+        return "Function";
+    }
 }
 adone.tag.define("CODEMOD_FUNCTION");
 adone.tag.set(XFunction, adone.tag.CODEMOD_FUNCTION);

@@ -22,6 +22,10 @@ export default class XModule extends adone.meta.code.Base {
         this._lazies = null;
     }
 
+    getType() {
+        return "Module";
+    }
+
     async load() {
         this.code = await fs.readFile(this.filePath, { check: true, encoding: "utf8" });
         this.init();

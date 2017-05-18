@@ -66,4 +66,11 @@ export default class XNamespace {
 
         return ns;
     }
+
+    get(name) {
+        if (!is.propertyOwned(this.exports, name)) {
+            throw new adone.x.NotFound(`Unknown object: ${this.name}.${name}`);
+        }
+        return this.exports[name];
+    } 
 }

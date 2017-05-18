@@ -1,3 +1,5 @@
+const { is } = adone;
+
 const re = {
     notString: /[^s]/,
     notBool: /[^t]/,
@@ -20,9 +22,9 @@ const re = {
  * helpers
  */
 const getType = (variable) => {
-    if (typeof variable === "number") {
+    if (is.number(variable)) {
         return "number";
-    } else if (typeof variable === "string") {
+    } else if (is.string(variable)) {
         return "string";
     }
     return Object.prototype.toString.call(variable).slice(8, -1).toLowerCase();
@@ -45,13 +47,13 @@ const strRepeat = (input, multiplier) => {
 const sprintf = (...args) => {
     const key = args[0];
     const cache = sprintf.cache;
-    if (!(cache[key] && cache.hasOwnProperty(key))) {
+    if (!cache[key]) {
         cache[key] = sprintf.parse(key);
     }
     return sprintf.format.call(null, cache[key], args);
 };
 
-sprintf.cache = {};
+sprintf.cache = Object.create(null);
 
 sprintf.format = (parseTree, argv) => {
     let cursor = 1;
@@ -176,22 +178,22 @@ sprintf.parse = function (fmt) {
     const parseTree = [];
     let argNames = 0;
     while (_fmt) {
-        if ((match = re.text.exec(_fmt)) !== null) {
+        if (!is.null(match = re.text.exec(_fmt))) {
             parseTree[parseTree.length] = match[0];
-        } else if ((match = re.modulo.exec(_fmt)) !== null) {
+        } else if (!is.null(match = re.modulo.exec(_fmt))) {
             parseTree[parseTree.length] = "%";
-        } else if ((match = re.placeholder.exec(_fmt)) !== null) {
+        } else if (!is.null(match = re.placeholder.exec(_fmt))) {
             if (match[2]) {
                 argNames |= 1;
                 const fieldList = [];
                 let replacementField = match[2];
                 let fieldMatch = [];
-                if ((fieldMatch = re.key.exec(replacementField)) !== null) {
+                if (!is.null(fieldMatch = re.key.exec(replacementField))) {
                     fieldList[fieldList.length] = fieldMatch[1];
                     while ((replacementField = replacementField.substring(fieldMatch[0].length)) !== "") {
-                        if ((fieldMatch = re.keyAccess.exec(replacementField)) !== null) {
+                        if (!is.null(fieldMatch = re.keyAccess.exec(replacementField))) {
                             fieldList[fieldList.length] = fieldMatch[1];
-                        } else if ((fieldMatch = re.indexAccess.exec(replacementField)) !== null) {
+                        } else if (!is.null(fieldMatch = re.indexAccess.exec(replacementField))) {
                             fieldList[fieldList.length] = fieldMatch[1];
                         } else {
                             throw new SyntaxError("[sprintf] failed to parse named argument key");

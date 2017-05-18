@@ -39,10 +39,7 @@ export class Inspector {
     get(name) {
         const names = {};
         const ns = this.getNamespace(name, names);
-        if (!is.propertyOwned(ns.exports, names.objectName)) {
-            throw new adone.x.NotFound(`Unknown object: ${name}`);
-        }
-        return ns.exports[names.objectName];
+        return ns.get(names.objectName);
     }
 
     getCode(name) {

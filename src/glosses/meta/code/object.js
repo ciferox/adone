@@ -24,6 +24,10 @@ export default class XObject extends adone.meta.code.Base {
     set(key, value) {
         this._entries.set(key, value);
     }
+
+    getType() {
+        return "Object";
+    }
 }
 adone.tag.define("CODEMOD_OBJECT");
 adone.tag.set(XObject, adone.tag.CODEMOD_OBJECT);

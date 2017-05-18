@@ -5,6 +5,10 @@ export default class XNative extends adone.meta.code.Base {
             this.name = options.name;
         }
     }
+
+    getType() {
+        return "Native";
+    }
 }
 adone.tag.define("CODEMOD_NATIVE");
 adone.tag.set(XNative, adone.tag.CODEMOD_NATIVE);

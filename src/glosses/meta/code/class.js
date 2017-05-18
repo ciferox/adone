@@ -31,6 +31,10 @@ export default class XClass extends adone.meta.code.Base {
         }
     }
 
+    getType() {
+        return "Class";
+    }
+
     references() {
         super.references();
         if (is.string(this.superClassName)) {

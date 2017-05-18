@@ -10,6 +10,10 @@ export default class XVariable extends adone.meta.code.Base {
         }
         this.kind = null;
     }
+
+    getType() {
+        return "Variable";
+    }
 }
 adone.tag.define("CODEMOD_VAR");
 adone.tag.set(XVariable, adone.tag.CODEMOD_VAR);
