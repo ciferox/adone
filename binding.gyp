@@ -651,30 +651,34 @@
     },
     {
         "target_name": "rpigpio",
-        "conditions": [[
-            "OS == \"linux\"", {
+        "conditions": [
+          ["OS!='win'", {
+            "conditions": [[
+                "OS == \"linux\"", {
+                "cflags": [
+                    "-Wno-unused-local-typedefs"
+                ]
+                }]
+            ],
             "cflags": [
-                "-Wno-unused-local-typedefs"
-            ]
-            }]
-        ],
-        "cflags": [
-            "-Wall",
-            "-O3"
-        ],
-        "include_dirs" : [ "nan" ],
-        "sources": [
-            "./src/native/hardware/boards/rpi/deps/pigpio.c",
-            "./src/native/hardware/boards/rpi/deps/custom.cext",
-            "./src/native/hardware/boards/rpi/deps/command.c",
-            "./src/native/hardware/boards/rpi/gpio.cc"
-        ],
-        "link_settings": {
-            "libraries": [
-            "-pthread",
-            
-            ]
-        }
+                "-Wall",
+                "-O3"
+            ],
+            "include_dirs" : [ "nan" ],
+            "sources": [
+                "./src/native/hardware/boards/rpi/deps/pigpio.c",
+                "./src/native/hardware/boards/rpi/deps/custom.cext",
+                "./src/native/hardware/boards/rpi/deps/command.c",
+                "./src/native/hardware/boards/rpi/gpio.cc"
+            ],
+            "link_settings": {
+                "libraries": [
+                "-pthread",
+                
+                ]
+            }
+          }]
+        ]
     },
     {
       "target_name": "copy_modules",
