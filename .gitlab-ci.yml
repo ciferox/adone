@@ -6,7 +6,8 @@ ubuntu:
     script:
         - npm i
         - npm run build
-        - npm test
+        - npm test glosses
+        - npm test omnitron
     tags:
         - ubuntu
 
@@ -15,7 +16,8 @@ debian:
     script:
         - npm i
         - npm run build
-        - npm test
+        - npm test glosses
+        - npm test omnitron
     tags:
         - debian
 
@@ -24,7 +26,8 @@ freebsd:
     script:
         - npm i
         - npm run build
-        - npm test
+        - npm test glosses
+        - npm test omnitron
     tags:
         - freebsd
 
@@ -33,7 +36,8 @@ osx:
     script:
         - npm i
         - npm run build
-        - npm test
+        - npm test glosses
+        - npm test omnitron
     tags:
         - osx
 
@@ -42,7 +46,8 @@ windows 7:
     script:
         - call npm i
         - call npm run build
-        - call npm test
+        - call npm test glosses
+        - call npm test omnitron
     tags:
         - windows 7
 
@@ -51,7 +56,8 @@ windows 8.1:
     script:
         - call npm i
         - call npm run build
-        - call npm test
+        - call npm test glosses
+        - call npm test omnitron
     tags:
         - windows 8.1
 
@@ -60,6 +66,7 @@ windows 10:
     script:
         - call npm i
         - call npm run build
-        - call npm test
+        - call npm test glosses
+        - call npm test omnitron
     tags:
         - windows 10
