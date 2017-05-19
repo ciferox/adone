@@ -1040,7 +1040,7 @@ export const consoleReporter = ({
                             stack.push(block.name);
                             block = block.parent;
                         } while (block && block.level() >= 0);
-                        log(`${idx}) {escape}${[...stack].join(` ${symbol.rightArrow} `)} : ${failed.description}{/escape}`);
+                        log(`${idx}) {escape}${[...stack].join(` ${symbol.arrowRight}  `)} : ${failed.description}{/escape}`);
                         log();
 
                         if (err.name && err.message) {
@@ -1280,7 +1280,7 @@ export const simpleReporter = ({
                             stack.push(block.name);
                             block = block.parent;
                         } while (block && block.level() >= 0);
-                        log(`${idx}) {escape}${[...stack].join(` ${symbol.rightArrow} `)} : ${failed.description}{/escape}`);
+                        log(`${idx}) {escape}${[...stack].join(` ${symbol.arrowRight}  `)} : ${failed.description}{/escape}`);
                         log();
 
                         if (err.name && err.message) {
