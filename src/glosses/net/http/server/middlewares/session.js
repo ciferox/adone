@@ -22,7 +22,7 @@ class Store {
 
     set(session, { sid = this.getID(24), maxAge } = {}) {
         if (this.sessions.has(sid) && this[timer].has(sid)) {
-            const { timeout } = this[timer].get(sid);
+            const timeout = this[timer].get(sid);
             if (timeout) {
                 clearTimeout(timeout);
             }
@@ -50,7 +50,7 @@ export default function session(opts = {}) {
     const { key = "session", store = new Store() } = opts;
 
     return async (ctx, next) => {
-        let id = ctx.cookies.get(key, opts);
+        const id = ctx.cookies.get(key, opts);
 
         if (!id) {
             ctx.session = {};
@@ -70,10 +70,14 @@ export default function session(opts = {}) {
             return;
         }
 
-        if (id) {
+        // if is an empty object
+        if (ctx.session instanceof Object && !Object.keys(ctx.session).length) {
+            ctx.session = null;
+        }
+
+        if (id && !ctx.session) {
             await store.destroy(id);
-            // set it to undefined instead of null to be able to use default parameters at Store
-            id = undefined;
+            return;
         }
 
         if (!is.emptyObject(ctx.session)) {

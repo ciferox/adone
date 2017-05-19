@@ -210,7 +210,7 @@ export default class Response {
     }
 
     set type(type) {
-        type = contentType(type) || false;
+        type = contentType(type);
         if (type) {
             this.set("Content-Type", type);
         } else {

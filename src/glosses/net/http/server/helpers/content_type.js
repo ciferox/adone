@@ -1,37 +1,37 @@
 
 const { x, is, util } = adone;
 
-const paramRegExp = /; *([!#$%&'\*\+\-\.\^_`\|~0-9A-Za-z]+) *= *("(?:[\u000b\u0020\u0021\u0023-\u005b\u005d-\u007e\u0080-\u00ff]|\\[\u000b\u0020-\u00ff])*"|[!#$%&'\*\+\-\.\^_`\|~0-9A-Za-z]+) */g;
-const textRegExp = /^[\u000b\u0020-\u007e\u0080-\u00ff]+$/;
-const tokenRegExp = /^[!#$%&'\*\+\-\.\^_`\|~0-9A-Za-z]+$/;
+const PARAM_REGEXP = /; *([!#$%&'*+.^_`|~0-9A-Za-z-]+) *= *("(?:[\u000b\u0020\u0021\u0023-\u005b\u005d-\u007e\u0080-\u00ff]|\\[\u000b\u0020-\u00ff])*"|[!#$%&'*+.^_`|~0-9A-Za-z-]+) */g
+const TEXT_REGEXP = /^[\u000b\u0020-\u007e\u0080-\u00ff]+$/;
+const TOKEN_REGEXP = /^[!#$%&'\*\+\-\.\^_`\|~0-9A-Za-z]+$/;
 
 // RegExp to match quoted-pair in RFC 7230 sec 3.2.6
 // quoted-pair = "\" ( HTAB / SP / VCHAR / obs-text )
 // obs-text    = %x80-FF
-const qescRegExp = /\\([\u000b\u0020-\u00ff])/g;
+const QESC_REGEXP = /\\([\u000b\u0020-\u00ff])/g;
 
 // RegExp to match chars that must be quoted-pair in RFC 7230 sec 3.2.6
-const quoteRegExp = /([\\"])/g;
+const QUOTE_REGEXP = /([\\"])/g;
 
-// RegExp to match type in RFC 6838
+// RegExp to match type in RFC 7231 sec 3.1.1.1
 // media-type = type "/" subtype
 // type       = token
 // subtype    = token
-const typeRegExp = /^[!#$%&'\*\+\-\.\^_`\|~0-9A-Za-z]+\/[!#$%&'\*\+\-\.\^_`\|~0-9A-Za-z]+$/;
+const TYPE_REGEXP = /^[!#$%&'*+.^_`|~0-9A-Za-z-]+\/[!#$%&'*+.^_`|~0-9A-Za-z-]+$/;
 
 const quoteString = (val) => {
     const str = String(val);
 
     // no need to quote tokens
-    if (tokenRegExp.test(str)) {
+    if (TOKEN_REGEXP.test(str)) {
         return str;
     }
 
-    if (str.length > 0 && !textRegExp.test(str)) {
+    if (str.length > 0 && !TEXT_REGEXP.test(str)) {
         throw new x.InvalidArgument("invalid parameter value");
     }
 
-    return `"${str.replace(quoteRegExp, "\\$1")}"`;
+    return `"${str.replace(QUOTE_REGEXP, "\\$1")}"`;
 };
 
 export const format = (obj) => {
@@ -41,7 +41,7 @@ export const format = (obj) => {
 
     const { parameters, type } = obj;
 
-    if (!type || !typeRegExp.test(type)) {
+    if (!type || !TYPE_REGEXP.test(type)) {
         throw new x.InvalidArgument("invalid type");
     }
 
@@ -55,7 +55,7 @@ export const format = (obj) => {
         for (let i = 0; i < params.length; i++) {
             param = params[i];
 
-            if (!tokenRegExp.test(param)) {
+            if (!TOKEN_REGEXP.test(param)) {
                 throw new x.InvalidArgument("invalid parameter name");
             }
 
@@ -107,18 +107,18 @@ export const parse = (string) => {
     let index = string.indexOf(";");
     const type = index !== -1 ? string.substr(0, index).trim() : string.trim();
 
-    if (!typeRegExp.test(type)) {
+    if (!TYPE_REGEXP.test(type)) {
         throw new x.IllegalState("invalid media type");
     }
 
     const obj = new ContentType(type.toLowerCase());
 
-    paramRegExp.lastIndex = index;
+    PARAM_REGEXP.lastIndex = index;
 
     let key;
     let value;
     let match;
-    while ((match = paramRegExp.exec(string))) {
+    while ((match = PARAM_REGEXP.exec(string))) {
         if (match.index !== index) {
             throw new x.IllegalState("invalid parameter format");
         }
@@ -129,7 +129,7 @@ export const parse = (string) => {
 
         if (value[0] === '"') {
             // remove quotes and escapes
-            value = value.substr(1, value.length - 2).replace(qescRegExp, "$1");
+            value = value.substr(1, value.length - 2).replace(QESC_REGEXP, "$1");
         }
 
         obj.parameters[key] = value;

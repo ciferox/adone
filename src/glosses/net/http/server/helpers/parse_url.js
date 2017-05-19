@@ -1,12 +1,12 @@
 
 const { std: { url: { parse, Url } }, is } = adone;
 
-const simplePathRegExp = /^(\/\/?(?!\/)[^?#\s]*)(\?[^#\s]*)?$/;
+const SIMPLE_PATH_REGEXP = /^(\/\/?(?!\/)[^?#\s]*)(\?[^#\s]*)?$/;
 
 const fastparse = (str) => {
     if (is.string(str)) {
         // Try fast path regexp
-        const simplePath = simplePathRegExp.exec(str);
+        const simplePath = SIMPLE_PATH_REGEXP.exec(str);
         if (simplePath) {
             // Construct simple URL
             const pathname = simplePath[1];
@@ -24,7 +24,10 @@ const fastparse = (str) => {
     return parse(str);
 };
 
-const fresh = (url, parsedUrl) => is.object(parsedUrl) && !is.null(parsedUrl) && parsedUrl instanceof Url && parsedUrl._raw === url;
+const fresh = (url, parsedUrl) => is.object(parsedUrl) &&
+                                  !is.null(parsedUrl) &&
+                                  parsedUrl instanceof Url &&
+                                  parsedUrl._raw === url;
 
 const parseURL = (req) => {
     const { url } = req;

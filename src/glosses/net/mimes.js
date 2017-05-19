@@ -25,7 +25,7 @@ export const types = new Map();
                 const to = preference.indexOf(mime.source);
 
                 if (types.get(extension) !== "application/octet-stream" &&
-                    from > to || (from === to && types.get(extension).startsWith("application/"))) {
+                    (from > to || (from === to && types.get(extension).startsWith("application/")))) {
                     // skip the remapping
                     continue;
                 }

@@ -86,6 +86,7 @@ const typeis = (value, types) => {
         return val;
     }
 
+
     for (const type of types) {
         if (mimeMatch(normalize(type), val)) {
             return type[0] === "+" || type.includes("*") ? val : type;

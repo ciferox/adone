@@ -191,30 +191,6 @@ describe("glosses", "net", "http", "helpers", "on finished", () => {
                 });
             });
         });
-
-        describe("when calling many times on same response", () => {
-            it("should not print warnings", (done) => {
-                const server = http.createServer((req, res) => {
-                    const stderr = captureStderr(() => {
-                        for (let i = 0; i < 400; i++) {
-                            onFinished(res, noop);
-                        }
-                    });
-
-                    onFinished(res, done);
-                    assert.equal(stderr, "");
-                    res.end();
-                });
-
-                server.listen(function () {
-                    const port = this.address().port;
-                    http.get(`http://127.0.0.1:${port}`, (res) => {
-                        res.resume();
-                        res.on("end", server.close.bind(server));
-                    });
-                });
-            });
-        });
     });
 
     describe("onFinished(req, listener)", () => {
@@ -355,33 +331,6 @@ describe("glosses", "net", "http", "helpers", "on finished", () => {
                     const port = this.address().port;
                     client = http.get(`http://127.0.0.1:${port}`);
                     client.on("error", noop);
-                });
-            });
-        });
-
-        describe("when calling many times on same request", () => {
-            it("should not print warnings", (done) => {
-                const server = http.createServer((req, res) => {
-                    const stderr = captureStderr(() => {
-                        for (let i = 0; i < 400; i++) {
-                            onFinished(req, noop);
-                        }
-                    });
-
-                    onFinished(req, (err) => {
-                        server.close();
-                        done(err);
-                    });
-                    assert.equal(stderr, "");
-                    res.end();
-                });
-
-                server.listen(function () {
-                    const port = this.address().port;
-                    http.get(`http://127.0.0.1:${port}`, (res) => {
-                        res.resume();
-                        res.on("end", server.close.bind(server));
-                    });
                 });
             });
         });
@@ -583,23 +532,6 @@ describe("glosses", "net", "http", "helpers", "on finished", () => {
             });
         });
     });
-
-    function captureStderr(fn) {
-        const chunks = [];
-        const write = process.stderr.write;
-
-        process.stderr.write = function write(chunk, encoding) {
-            chunks.push(new Buffer(chunk, encoding));
-        };
-
-        try {
-            fn();
-        } finally {
-            process.stderr.write = write;
-        }
-
-        return Buffer.concat(chunks).toString("utf8");
-    }
 
     function sendget(server) {
         server.listen(function onListening() {

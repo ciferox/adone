@@ -29,6 +29,7 @@ describe("glosses", "net", "http", "helpers", "send", () => {
             });
         });
 
+
         describe("when the path is relative", () => {
             it("should 200", async () => {
                 const server = new Server();
@@ -360,6 +361,83 @@ describe("glosses", "net", "http", "helpers", "send", () => {
             });
         });
 
+        describe("or .br version when requested and if possible", () => {
+            it("should return path", async () => {
+                const server = new Server();
+
+                server.use(async (ctx) => {
+                    await send(ctx, "/fixtures/gzip.json");
+                });
+
+                await request(server)
+                    .get("/")
+                    .setHeader("Accept-Encoding", "deflate, identity")
+                    .expectStatus(200)
+                    .expectHeader("Content-Length", 16)
+                    .expectBody({ foo: "bar" });
+            });
+
+            it("should return .br path (br option defaults to true)", async () => {
+                const server = new Server();
+
+                server.use(async (ctx) => {
+                    await send(ctx, "/fixtures/gzip.json");
+                });
+
+                await request(server)
+                    .get("/")
+                    .setHeader("Accept-Encoding", "br, deflate, identity")
+                    .expectStatus(200)
+                    .expectHeader("Content-Length", 20)
+                    .expectBody({ foo: "bar" }, { decompress: true });
+            });
+
+            it("should return .br path when brotli option is turned on", async () => {
+                const server = new Server();
+
+                server.use(async (ctx) => {
+                    await send(ctx, "/fixtures/gzip.json", { brotli: true });
+                });
+
+                await request(server)
+                    .get("/")
+                    .setHeader("Accept-Encoding", "br, deflate, identity")
+                    .expectHeader("Content-Length", 20)
+                    .expectBody({ foo: "bar" }, { decompress: true })
+                    .expectStatus(200);
+            });
+
+            it("should not return .br path when brotli option is false", async () => {
+                const server = new Server();
+
+                server.use(async (ctx) => {
+                    await send(ctx, "/fixtures/gzip.json", { brotli: false });
+                });
+
+                await request(server)
+                    .get("/")
+                    .setHeader("Accept-Encoding", "br, deflate, identity")
+                    .expectHeader("Content-Length", 16)
+                    .expectBody({ foo: "bar" })
+                    .expectStatus(200);
+            });
+
+            it("should return .gz path when brotli option is turned off", async () => {
+                const server = new Server();
+
+                server.use(async (ctx) => {
+                    await send(ctx, "/fixtures/gzip.json", { brotli: false });
+                });
+
+                await request(server)
+                    .get("/")
+                    .setHeader("Accept-Encoding", "br, gzip, deflate, identity")
+                    .expectHeader("Content-Length", 46)
+                    .expectBody({ foo: "bar" }, { decompress: true })
+                    .expectStatus(200);
+            });
+        });
+
         describe("and max age is specified", () => {
             it("should set max-age in seconds", async () => {
                 const server = new Server();
@@ -391,7 +469,43 @@ describe("glosses", "net", "http", "helpers", "send", () => {
                     .expectStatus(200);
             });
         });
+
+        describe("and immutable is specified", () => {
+            it("should set the immutable directive", async () => {
+                const server = new Server();
+
+                server.use(async (ctx) => {
+                    const p = "/fixtures/user.json";
+                    const { path: _path, sent } = await send(ctx, p, { immutable: true, maxage: 31536000000 });
+                    assert.equal(sent, true);
+                    assert.equal(_path, path.join(__dirname, "/fixtures/user.json"));
+                });
+
+                await request(server)
+                    .get("/")
+                    .expectHeader("Cache-Control", "max-age=31536000,immutable")
+                    .expectStatus(200);
+            });
+        });
     });
+
+    describe(".immutable option", () => {
+        describe("when trying to get a non-existent file", () => {
+            it("should not set the Cache-Control header", async () => {
+                const server = new Server();
+
+                server.use(async (ctx) => {
+                    await send(ctx, "fixtures/does-not-exist.json", { immutable: true });
+                });
+
+                await request(server)
+                    .get("/")
+                    .expectNoHeader("Cache-Control")
+                    .expectStatus(404);
+            });
+        });
+    });
+
     describe(".hidden option", () => {
         describe("when trying to get a hidden file", () => {
             it("should 404", async () => {

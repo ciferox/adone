@@ -120,6 +120,10 @@ class Request extends EventEmitter {
                         responseBody = await compressor.gz.decompress(responseBody);
                         break;
                     }
+                    case "br": {
+                        responseBody = await compressor.brotli.decompress(responseBody);
+                        break;
+                    }
                 }
             }
             if (is.regexp(body)) {

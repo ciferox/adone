@@ -34,12 +34,12 @@ export default async function send(ctx, path, opts = {}) {
         throw new x.InvalidArgument("pathname is required");
     }
 
-    const { index, maxage = 0, hidden = false, setHeaders } = opts;
+    const { index, maxage = 0, hidden = false, immutable = false, setHeaders } = opts;
     const root = opts.root ? normalize(resolve(opts.root)) : "";
     const trailingSlash = path[path.length - 1] === "/";
     path = path.substr(parse(path).root.length);
 
-
+    const brotli = opts.brotli !== false;
     const format = opts.format === false ? false : true;
     const extensions = is.array(opts.extensions) ? opts.extensions : false;
     const gzip = opts.gzip === false ? false : true;
@@ -47,8 +47,6 @@ export default async function send(ctx, path, opts = {}) {
     if (setHeaders && !is.function(setHeaders)) {
         throw new x.InvalidArgument("option setHeaders must be function");
     }
-
-    const encoding = ctx.acceptsEncodings("gzip", "deflate", "identity");
 
     path = decode(path);
 
@@ -64,11 +62,14 @@ export default async function send(ctx, path, opts = {}) {
     path = resolvePath(root, path);
 
     if (!hidden && isHidden(root, path)) {
-        return { sent: false };
+        return { sent: false, hidden: true };
     }
-
-    // serve gzipped file when possible
-    if (encoding === "gzip" && gzip && (await fs.exists(`${path}.gz`))) {
+    // serve brotli file when possible otherwise gzipped file when possible
+    if (brotli && ctx.acceptsEncodings("br", "deflate", "identity") === "br" && (await fs.exists(`${path}.br`))) {
+        path = `${path}.br`;
+        ctx.set("Content-Encoding", "br");
+        ctx.res.removeHeader("Content-Length");
+    } else if (gzip && ctx.acceptsEncodings("gzip", "deflate", "identity") === "gzip" && (await fs.exists(`${path}.gz`))) {
         path = `${path}.gz`;
         ctx.set("Content-Encoding", "gzip");
         ctx.res.removeHeader("Content-Length");
@@ -104,7 +105,7 @@ export default async function send(ctx, path, opts = {}) {
         }
     } catch (err) {
         if (["ENOENT", "ENAMETOOLONG", "ENOTDIR"].includes(err.code)) {
-            return { sent: false };
+            return { sent: false, notFound: true, code: err.code };
         }
         err.status = 500;
         throw err;
@@ -119,7 +120,11 @@ export default async function send(ctx, path, opts = {}) {
         ctx.set("Last-Modified", stats.mtime.toUTCString());
     }
     if (!ctx.response.get("Cache-Control")) {
-        ctx.set("Cache-Control", `max-age=${maxage / 1000 | 0}`);
+        const directives = [`max-age=${maxage / 1000 | 0}`];
+        if (immutable) {
+            directives.push("immutable");
+        }
+        ctx.set("Cache-Control", directives.join(","));
     }
     ctx.type = type(path);
     ctx.body = fs.createReadStream(path);
