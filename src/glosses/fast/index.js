@@ -130,11 +130,11 @@ export class Fast extends Core {
             throw new x.InvalidArgument(`Unknown compressor: ${compressorName}`);
         }
 
-        const { decompress } = adone.compressor[compressorName];
+        const { decompress, decompressStream } = adone.compressor[compressorName];
 
         return this.through(async function decompressing(file) {
             if (file.isStream()) {
-                file.contents = file.contents.pipe(decompress.stream(options));
+                file.contents = file.contents.pipe(decompressStream(options));
             } else if (file.isBuffer()) {
                 file.contents = await decompress(file.contents, options);
             }
@@ -147,7 +147,7 @@ export class Fast extends Core {
             throw new adone.x.InvalidArgument(`Unknown compressor: ${compressorType}`);
         }
 
-        const { compress } = adone.compressor[compressorType];
+        const { compress, compressStream } = adone.compressor[compressorType];
         const extname = {
             lzma: "lzma",
             gz: "gz",
@@ -158,7 +158,7 @@ export class Fast extends Core {
 
         return this.through(async function compressor(file) {
             if (file.isStream()) {
-                file.contents = file.contents.pipe(compress.stream(options));
+                file.contents = file.contents.pipe(compressStream(options));
             } else if (file.isBuffer()) {
                 file.contents = await compress(file.contents, options);
             }

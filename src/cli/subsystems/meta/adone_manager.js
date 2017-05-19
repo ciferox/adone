@@ -2,22 +2,6 @@ const { is, std, fs, util } = adone;
 
 const configRelativePath = "etc/configs/adone.js".replace(/\//g, std.path.sep);
 
-const getArch = () => {
-    const arch = process.arch;
-    switch (arch) {
-        case "ia32": return "x86";
-        default: return arch;
-    }
-};
-
-const getPlatform = () => {
-    const platform = process.platform;
-    switch (platform) {
-        case "win32": return "win";
-        default: return platform;
-    }
-};
-
 export default class AdoneManager {
     constructor() {
         this.app = adone.appinstance;
@@ -25,7 +9,27 @@ export default class AdoneManager {
         // this.nodeModulesDir = new fs.Directory(std.path.resolve(fs.homeDir(), ".node_modules"));
         this.nodeModulesDir = new fs.Directory("/usr/local/lib/node");
         this.adoneVersion = adone.package.version;
-        this.name = `${getPlatform()}-${getArch()}.tar`;
+        this.name = `adone-v${this.adoneVersion}-${this.os}-${this.arch}.tar`;
+    }
+
+    get arch() {
+        const arch = process.arch;
+        switch (arch) {
+            case "ia32": return "x86";
+            default: return arch;
+        }
+    }
+
+    get os() {
+        const platform = process.platform;
+        switch (platform) {
+            case "win32": return "win";
+            default: return platform;
+        }
+    }
+
+    archiveName(type) {
+        return `${this.name}.${type}`;
     }
 
     async install(name, dirName, env) {
@@ -103,10 +107,6 @@ export default class AdoneManager {
 
     getScriptPath(name) {
         return std.path.join(this.nodePath, `${name}${(is.win32 ? ".cmd" : "")}`);
-    }
-
-    getArchiveName(type) {
-        return `${this.name}.${type}`;
     }
 
     async createArchive(outPath, { env, dirName, type = "gz" } = {}) {

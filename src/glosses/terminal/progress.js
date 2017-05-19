@@ -176,9 +176,9 @@ export default class ProgressBar {
             }
         }
 
-        if (this.completed && delta >= 0) {
-            return;
-        }
+        // if (this.completed && delta >= 0) {
+        //     return;
+        // }
 
         if (is.null(this.start)) {
             this.start = new Date();

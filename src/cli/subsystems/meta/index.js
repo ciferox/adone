@@ -196,6 +196,12 @@ export default class extends adone.application.Subsystem {
                             type: String,
                             default: "production",
                             help: "The short name of the environment the build is intended for"
+                        },
+                        {
+                            name: "--build",
+                            type: String,
+                            default: "latest",
+                            help: "Build name: latest, stable, 'X.Y.Z'"
                         }
                     ],
                     handler: this.publishCommand
@@ -422,43 +428,62 @@ export default class extends adone.application.Subsystem {
         const builder = new AdoneManager();
         const outDir = await fs.Directory.createTmp();
         const auth = opts.get("auth");
+        const build = opts.get("build");
         const username = auth[1];
         const password = auth[2];
-        const types = ["gz", "xz"];
+        let types;
 
-        for (const type of types) {
-            const fileName = builder.getArchiveName(type);
-            const bar = new adone.cui.Progress({
-                schema: `:spinner Preparing {bold}${fileName}{/} :elapsed`
-            });
-
-            await builder.createArchive(outDir.path(), { env: opts.get("env"), dirName: opts.get("dirname"), type });
-
-            const filePath = outDir.resolve(fileName);
-            const file = new fs.File(filePath);
-            const st = await file.stat();
-
-            bar.total = st.size;
-            bar.setSchema(`:spinner Uploading {bold}${fileName}{/} {green-fg}:filled{/}{gray-fg}:blank{/} :current/:total :elapsed`);
-
-            await adone.net.http.client.request.post(`https://adone.io/public/dist?subject=adone&version=${builder.adoneVersion}&filename=${fileName}`, std.fs.createReadStream(filePath), {
-                headers: {
-                    "Content-Type": "application/octet-stream",
-                    "Content-Length": st.size
-                },
-                auth: {
-                    username,
-                    password
-                },
-                rejectUnauthorized: false,
-                onUploadProgress: (evt) => {
-                    bar.update(evt.loaded / evt.total);
-                }
-            });
-
-            bar.setSchema(`:spinner Complete {bold}${fileName}{/} :elapsed`);
+        switch (builder.os) {
+            case "win":
+                types = ["zip", "7z"];
+                break;
+            case "linux":
+            case "freebsd":
+            case "darwin":
+            case "sunos":
+                types = ["gz", "xz"];
+                break;
         }
 
+        const promises = [];
+
+        for (const type of types) {
+            const fileName = builder.archiveName(type);
+            const bar = adone.terminal.progress({
+                schema: `:spinner Preparing {bold}${fileName}{/} :elapsed`
+            });
+            bar.update(0);
+
+            const p = builder.createArchive(outDir.path(), { env: opts.get("env"), dirName: opts.get("dirname"), type }).then(() => {
+                const filePath = outDir.resolve(fileName);
+                const file = new fs.File(filePath);
+                const st = file.statSync();
+
+                bar.total = st.size;
+                bar.setSchema(`:spinner Uploading {bold}${fileName}{/} {green-fg}:filled{/}{gray-fg}:blank{/} :current/:total :elapsed`);
+
+                return adone.net.http.client.request.post(`https://adone.io/dist?subject=adone&build=${build}&version=${builder.adoneVersion}&type=${type}&os=${builder.os}&arch=${builder.arch}`, std.fs.createReadStream(filePath), {
+                    headers: {
+                        "Content-Type": "application/octet-stream",
+                        "Content-Length": st.size
+                    },
+                    auth: {
+                        username,
+                        password
+                    },
+                    rejectUnauthorized: false,
+                    onUploadProgress: (evt) => {
+                        bar.update(evt.loaded / evt.total);
+                    }
+                }).then(() => {
+                    bar.setSchema(`:spinner Complete {bold}${fileName}{/} :elapsed`);
+                    bar.complete(true);
+                });
+            });
+
+            promises.push(p);
+        }
+        await Promise.all(promises);
         await outDir.unlink();
     }
 }
