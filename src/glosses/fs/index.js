@@ -1,6 +1,7 @@
 const { is, x, promise: { promisify } } = adone;
 
 const fs = adone.lazify({
+    readlink: () => promisify(adone.std.fs.readlink),
     unlink: () => promisify(adone.std.fs.unlink),  // we have rm, should we have this one?
     chmod: () => promisify(adone.std.fs.chmod),
     chown: () => promisify(adone.std.fs.chown),

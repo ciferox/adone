@@ -21,11 +21,13 @@ export default class File {
         path = null,
         base = null,
         cwd = process.cwd(),
+        symlink = null,
         history = []
     } = {}) {
         this._ = new Map([
             ["contents", contents]
         ]);
+        this.symlink = symlink;
         this.cwd = cwd;
         this.base = base;
         this.stat = stat;
@@ -202,5 +204,13 @@ export default class File {
             throw new adone.x.Exception("No path - no ability to set the stem");
         }
         this.path = std.path.join(this.dirname, value + this.extname);
+    }
+
+    get symlink() {
+        return this._.get("symlink");
+    }
+
+    set symlink(value) {
+        this._.set("symlink", value);
     }
 }

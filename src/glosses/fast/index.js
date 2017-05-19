@@ -183,7 +183,7 @@ export class Fast extends Core {
         const stream = new archive.RawPackStream();
         const self = this;
         return this.through(async (file) => {
-            if (file.isNull()) {
+            if (file.isNull() && !file.isSymbolic()) {
                 // ok? add an empty file?
                 return;
             }
@@ -191,8 +191,13 @@ export class Fast extends Core {
                 name: file.relative,
                 mode: file.stat && file.stat.mode,
                 mtime: file.stat && file.stat.mtime,
-                type: "file"
+                type: file.isSymbolic() ? "symlink" : "file"
             };
+            if (file.isSymbolic()) {
+                header.linkname = file.symlink;
+                stream.entry(header);
+                return;
+            }
             if (file.isBuffer()) {
                 stream.entry(header, file.contents);
             } else {
@@ -297,7 +302,7 @@ export class FastFS extends Fast {
     }
 
     static async bufferReader(file) {
-        if (file.isBuffer()) {
+        if (file.isSymbolic() || file.isBuffer()) {
             return file;
         }
         if (file.isNull()) {
@@ -318,7 +323,7 @@ export class FastFS extends Fast {
     }
 
     static async streamReader(file) {
-        if (!file.isNull()) {
+        if (file.isSymbolic() || !file.isNull()) {
             return file;
         }
         file.contents = std.fs.createReadStream(file.path);
@@ -386,14 +391,14 @@ const resolveGlob = (glob, cwd) => {
     return adone.std.path.resolve(cwd, glob);
 };
 
-const globSource = (globs, { cwd = process.cwd(), base = null, dot = true } = {}) => {
+const globSource = (globs, { cwd = process.cwd(), base = null, dot = true, links = false } = {}) => {
     let globsParents;
     if (!base) {
         globsParents = globs.map((x) => util.globParent(x));
     }
     return adone.fs.glob(globs, { dot, patternIndex: true })
         .through(async function fileWrapper({ path, patternIndex }) {
-            const stat = await adone.fs.stat(path);
+            const stat = await (links ? adone.fs.lstat : adone.fs.stat)(path);
             if (stat.isDirectory()) {
                 return;
             }
@@ -403,7 +408,8 @@ const globSource = (globs, { cwd = process.cwd(), base = null, dot = true } = {}
                 base: _base,
                 path,
                 contents: null,
-                stat: await adone.fs.stat(path)  // TODO, it should be handled by the glob
+                stat,  // TODO, it should be handled by the glob
+                symlink: stat.isSymbolicLink() ? await adone.fs.readlink(path) : null
             }));
         });
 };
@@ -414,10 +420,11 @@ export const src = (globs, {
     read = true,
     buffer = true,
     stream = false,
-    dot = true
+    dot = true,
+    links = false
 } = {}) => {
     globs = util.arrify(globs).map((x) => resolveGlob(x, cwd));
-    const source = globSource(globs, { cwd, base, dot });
+    const source = globSource(globs, { cwd, base, dot, links });
     const fast = new FastFS(source, { read, buffer, stream, cwd });
     fast.once("end", () => source.end({ force: true }));
     return fast;
