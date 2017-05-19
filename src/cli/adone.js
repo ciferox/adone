@@ -7,6 +7,7 @@ const { is, std } = adone;
 export default class AdoneCLI extends adone.application.Application {
     async initialize() {
         // Loading common subsystems
+        this.loadSubsystem(adone.std.path.resolve(__dirname, "./subsystems/service"));
         this.loadSubsystem(adone.std.path.resolve(__dirname, "./subsystems/meta"));
         this.loadSubsystem(adone.std.path.resolve(__dirname, "./subsystems/bench"));
         this.loadSubsystem(adone.std.path.resolve(__dirname, "./subsystems/shani"));

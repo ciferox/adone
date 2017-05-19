@@ -32,6 +32,7 @@ export default class Dispatcher {
     }
 
     async connectLocal(options, forceStart = true, _secondTime = false) {
+        let status = 0;
         if (is.null(this.netron)) {
             const gates = (await this.configurator()).gates;
             const localGate = gates.getGate({ id: (is.plainObject(options) && is.string(options.gateId) ? options.gateId : "local") });
@@ -47,9 +48,13 @@ export default class Dispatcher {
                 if (is.netron(options)) {
                     netron = options;
                 } else {
-                    netron = new adone.netron.Netron(null, options);
+                    netron = new adone.netron.Netron(null, Object.assign({
+                        reconnects: 5,
+                        retryTimeout: 500
+                    }, options));
                 }
                 peer = await netron.connect(localGate);
+                status = _secondTime ? 0 : 1;
             } catch (err) {
                 if (_secondTime) {
                     throw err;
@@ -60,12 +65,16 @@ export default class Dispatcher {
 
                 const pid = await this.spawn();
                 if (is.number(pid)) {
+                    // Wait about 1 sec
+                    await adone.promise.delay(1000);
                     return this.connectLocal(options, forceStart, true);
                 }
             }
             this.netron = netron;
             this.peer = peer;
         }
+
+        return status;
     }
 
     async disconnect() {

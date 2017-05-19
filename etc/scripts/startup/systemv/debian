@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Provides:          omnitron
+# Required-Start:    $remote_fs $local_fs
+# Required-Stop:     $remote_fs $local_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Omnitron service
+# Description:       Omnitron service - ADONE execution core
+# Author:            Adone Core Team
+# Created:           {{created}}
+
+NODE_EXEC=$(which node)
+OMNI_SCRIPT_PATH="{{script}}"
+USER={{user}}
+
+case "$1" in
+  start) echo "$NODE_EXEC $OMNI_SCRIPT_PATH start" | sudo -i -u $USER ;;
+  stop) echo "$NODE_EXEC $OMNI_SCRIPT_PATH stop" | sudo -i -u $USER ;;  
+  restart) echo "$NODE_EXEC $OMNI_SCRIPT_PATH restart" | sudo -i -u $USER ;;
+  status) echo "$NODE_EXEC $OMNI_SCRIPT_PATH status" | sudo -i -u $USER ;;
+  *)
+    echo "Usage: $0 {start|stop|restart|status}" >&2
+    exit 3
+  ;;
+esac

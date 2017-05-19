@@ -100,7 +100,7 @@ export class Encoder {
                     for (const obj of x) {
                         this._encode(obj, buf);
                     }
-                } else if (is.plainObject(x)) {
+                } else if (is.object(x)) {
                     const keys = Object.keys(x);
 
                     if (keys.length < 16) {
@@ -147,7 +147,7 @@ export class Encoder {
                             return;
                         }
                     }
-                    throw new adone.x.NotSupported("Not supported");
+                    throw new adone.x.NotSupported(`Not supported: ${adone.util.typeOf(x)}`);
                 }
             }
         }
