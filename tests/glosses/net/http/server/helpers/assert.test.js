@@ -69,7 +69,7 @@ describe("glosses", "net", "http", "helpers", "assert", () => {
     });
 
     describe("assert.equal()", () => {
-        it("should throw when things aren't equal", () =>  {
+        it("should throw when things aren't equal", () => {
             let err;
             try {
                 assert.equal("a", "b", 401, "fail");
@@ -88,7 +88,7 @@ describe("glosses", "net", "http", "helpers", "assert", () => {
     });
 
     describe("assert.notEqual()", () => {
-        it("should throw when things are equal", () =>  {
+        it("should throw when things are equal", () => {
             let err;
             try {
                 assert.notEqual("a", "a", 401, "fail");
@@ -107,7 +107,7 @@ describe("glosses", "net", "http", "helpers", "assert", () => {
     });
 
     describe("assert.strictEqual()", () => {
-        it("should throw when things aren't equal", () =>  {
+        it("should throw when things aren't equal", () => {
             let err;
             try {
                 assert.strictEqual(1, "1", 401, "fail");
@@ -126,7 +126,7 @@ describe("glosses", "net", "http", "helpers", "assert", () => {
     });
 
     describe("assert.notStrictEqual()", () => {
-        it("should throw when things are equal", () =>  {
+        it("should throw when things are equal", () => {
             let err;
             try {
                 assert.notStrictEqual(1, 1, 401, "fail");
@@ -145,7 +145,7 @@ describe("glosses", "net", "http", "helpers", "assert", () => {
     });
 
     describe("assert.deepEqual()", () => {
-        it("should throw when things aren't deeply equal", () =>  {
+        it("should throw when things aren't deeply equal", () => {
             let err;
             try {
                 assert.deepEqual({ a: "a" }, { b: "b" }, 401, "fail");
@@ -164,7 +164,7 @@ describe("glosses", "net", "http", "helpers", "assert", () => {
     });
 
     describe("assert.notDeepEqual()", () => {
-        it("should throw when things aren't deeply equal", () =>  {
+        it("should throw when things aren't deeply equal", () => {
             let err;
             try {
                 assert.notDeepEqual({ a: "a" }, { a: "a" }, 401, "fail");

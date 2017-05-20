@@ -4,7 +4,7 @@
 
 const {
     js: {
-        compiler: { types, parse, helpers, codeFrame, traverse, generate },
+        compiler: { types, parse, helpers, codeFrame, traverse, generate }
     },
     sourcemap,
     vendor: { lodash: { defaults } },
@@ -265,9 +265,9 @@ export default class File extends Store {
         if (opts.getModuleId) {
         // If return is falsy, assume they want us to use our generated default name
             return opts.getModuleId(moduleName) || moduleName;
-        } else {
-            return moduleName;
-        }
+        } 
+        return moduleName;
+        
     }
 
     resolveModuleSource(source: string): string {
@@ -439,9 +439,9 @@ export default class File extends Store {
             const mergedMap = mergedGenerator.toJSON();
             inputMap.mappings = mergedMap.mappings;
             return inputMap;
-        } else {
-            return map;
-        }
+        } 
+        return map;
+        
     }
 
     parse(code: string) {
@@ -526,9 +526,9 @@ export default class File extends Store {
         try {
             if (this.shouldIgnore()) {
                 return this.makeResult({ code, ignored: true });
-            } else {
-                return callback();
-            }
+            } 
+            return callback();
+            
         } catch (err) {
             if (err._babel) {
                 throw err;
@@ -635,7 +635,7 @@ export default class File extends Store {
 
     generate(): BabelFileResult {
         const opts = this.opts;
-        const ast  = this.ast;
+        const ast = this.ast;
 
         const result: BabelFileResult = { ast };
         if (!opts.code) {

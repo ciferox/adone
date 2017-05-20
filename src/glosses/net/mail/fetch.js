@@ -24,16 +24,16 @@ function fetch(url, options) {
         options.cookie = false;
     }
 
-    let fetchRes = options.fetchRes;
-    let parsed = adone.std.url.parse(url);
+    const fetchRes = options.fetchRes;
+    const parsed = adone.std.url.parse(url);
     let method = (options.method || "").toString().trim().toUpperCase() || "GET";
     let finished = false;
     let cookies;
     let body;
 
-    let handler = parsed.protocol === "https:" ? adone.std.https : adone.std.http;
+    const handler = parsed.protocol === "https:" ? adone.std.https : adone.std.http;
 
-    let headers = {
+    const headers = {
         "accept-encoding": "gzip,deflate"
     };
 
@@ -46,7 +46,7 @@ function fetch(url, options) {
     }
 
     if (parsed.auth) {
-        headers.Authorization = "Basic " + new Buffer(parsed.auth).toString("base64");
+        headers.Authorization = `Basic ${new Buffer(parsed.auth).toString("base64")}`;
     }
 
     if ((cookies = options.cookies.get(url))) {
@@ -74,8 +74,8 @@ function fetch(url, options) {
                 body = options.body;
             } else if (typeof options.body === "object") {
                 body = new Buffer(Object.keys(options.body).map((key) => {
-                    let value = options.body[key].toString().trim();
-                    return encodeURIComponent(key) + "=" + encodeURIComponent(value);
+                    const value = options.body[key].toString().trim();
+                    return `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
                 }).join("&"));
             } else {
                 body = new Buffer(options.body.toString().trim());
@@ -89,7 +89,7 @@ function fetch(url, options) {
     }
 
     let req;
-    let reqOptions = {
+    const reqOptions = {
         method,
         host: parsed.hostname,
         path: parsed.path,
@@ -170,7 +170,7 @@ function fetch(url, options) {
 
         if (res.statusCode >= 300 && !options.allowErrorResponse) {
             finished = true;
-            fetchRes.emit("error", new Error("Invalid status code " + res.statusCode));
+            fetchRes.emit("error", new Error(`Invalid status code ${res.statusCode}`));
             req.abort();
             return;
         }
@@ -204,9 +204,9 @@ function fetch(url, options) {
             try {
                 if (typeof body.pipe === "function") {
                     return body.pipe(req);
-                } else {
-                    req.write(body);
-                }
+                } 
+                req.write(body);
+                
             } catch (err) {
                 finished = true;
                 fetchRes.emit("error", err);

@@ -14,7 +14,9 @@ export function getBindingIdentifiers(
 
     while (search.length) {
         const id = search.shift();
-        if (!id) continue;
+        if (!id) {
+            continue; 
+        }
 
         const keys = t.getBindingIdentifiers.keys[id.type];
 

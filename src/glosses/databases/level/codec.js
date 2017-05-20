@@ -166,9 +166,9 @@ export default class Codec {
             return function (_, value) {
                 return self.decodeValue(value, opts);
             };
-        } else {
-            return function () { };
-        }
+        } 
+        return function () { };
+        
     }
 
     keyAsBuffer(opts) {

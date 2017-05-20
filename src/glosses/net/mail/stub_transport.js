@@ -18,20 +18,20 @@ StubTransport.prototype.isIdle = function () {
 };
 
 StubTransport.prototype.verify = function (callback) {
-    setImmediate(function () {
+    setImmediate(() => {
         if (this.options.error) {
             return callback(new Error(this.options.error));
         }
         return callback(null, true);
-    }.bind(this));
+    });
 };
 
 StubTransport.prototype.send = function (mail, callback) {
 
     if (this.options.error) {
-        setImmediate(function () {
+        setImmediate(() => {
             callback(new Error(this.options.error));
-        }.bind(this));
+        });
         return;
     }
 
@@ -39,42 +39,42 @@ StubTransport.prototype.send = function (mail, callback) {
         mail.message.keepBcc = true;
     }
 
-    var message = mail.message.createReadStream();
-    var chunks = [];
-    var chunklen = 0;
-    var envelope = mail.data.envelope || mail.message.getEnvelope();
+    const message = mail.message.createReadStream();
+    const chunks = [];
+    let chunklen = 0;
+    const envelope = mail.data.envelope || mail.message.getEnvelope();
 
     this._log("info", "envelope", JSON.stringify(envelope));
     this.emit("envelope", envelope);
 
-    message.on("error", function (err) {
-        setImmediate(function () {
+    message.on("error", (err) => {
+        setImmediate(() => {
             callback(err);
         });
     });
 
-    message.on("data", function (chunk) {
+    message.on("data", (chunk) => {
         chunks.push(chunk);
         chunklen += chunk.length;
 
         this._log("verbose", "message", chunk.toString());
         this.emit("data", chunk.toString());
-    }.bind(this));
+    });
 
-    message.on("end", function () {
-        setImmediate(function () {
-            var messageId = (mail.message.getHeader("message-id") || "").replace(/[<>\s]/g, "");
-            var response = Buffer.concat(chunks, chunklen);
-            var info = {
+    message.on("end", () => {
+        setImmediate(() => {
+            const messageId = (mail.message.getHeader("message-id") || "").replace(/[<>\s]/g, "");
+            const response = Buffer.concat(chunks, chunklen);
+            const info = {
                 envelope: mail.data.envelope || mail.message.getEnvelope(),
-                messageId: messageId,
-                response: response
+                messageId,
+                response
             };
             this._log("info", "end", "Processed <%s> (%sB)", messageId, response.length);
             this.emit("end", info);
             callback(null, info);
-        }.bind(this));
-    }.bind(this));
+        });
+    });
 };
 
 /**
@@ -84,16 +84,16 @@ StubTransport.prototype.send = function (mail, callback) {
  * @param {String} message Message to log
  */
 StubTransport.prototype._log = function ( /* level, type, message */ ) {
-    var args = Array.prototype.slice.call(arguments);
-    var level = (args.shift() || "INFO").toUpperCase();
-    var type = (args.shift() || "");
-    var message = adone.std.util.format.apply(adone.std.util, args);
+    const args = Array.prototype.slice.call(arguments);
+    const level = (args.shift() || "INFO").toUpperCase();
+    const type = (args.shift() || "");
+    const message = adone.std.util.format.apply(adone.std.util, args);
 
     this.emit("log", {
         name: packageData.name,
         version: packageData.version,
-        level: level,
-        type: type,
-        message: message
+        level,
+        type,
+        message
     });
 };

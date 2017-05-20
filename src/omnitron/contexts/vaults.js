@@ -39,9 +39,9 @@ class Vault extends adone.vault.Vault {
     getOrCreate(name) {
         if (this.has(name)) {
             return super.get(name);
-        } else {
-            return this.create(name);
-        }
+        } 
+        return this.create(name);
+        
     }
 
     @Public

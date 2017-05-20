@@ -133,7 +133,7 @@ export default class Base {
             state.errorCode = options.code;
         }
 
-        let logEntry =- options.prefix + msg;
+        let logEntry = - options.prefix + msg;
         if (!is.string(logEntry)) {
             throw new TypeError("Input must be a string");
         }

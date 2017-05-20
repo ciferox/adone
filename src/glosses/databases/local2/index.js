@@ -211,7 +211,7 @@ class Model extends events.EventEmitter {
     addToIndexes(doc) {
         let i, failingIndex, error,
             keys = Object.keys(this.indexes)
-            ;
+        ;
 
         for (i = 0; i < keys.length; i += 1) {
             try {
@@ -252,7 +252,7 @@ class Model extends events.EventEmitter {
     updateIndexes(oldDoc, newDoc) {
         let i, failingIndex, error,
             keys = Object.keys(this.indexes)
-            ;
+        ;
 
         const skipId = (oldDoc && oldDoc._id) === (newDoc && newDoc._id);
 
@@ -358,7 +358,7 @@ class Model extends events.EventEmitter {
     _insertMultipleDocsInIdx(newDocs) {
         let i, failingI, error,
             preparedDocs = this.prepareDocumentForInsertion(newDocs)
-            ;
+        ;
 
         for (i = 0; i < preparedDocs.length; i += 1) {
             try {
@@ -544,7 +544,7 @@ class Model extends events.EventEmitter {
                         stream.close();
                     } // Not a multi update, close after one valid modification
                 } catch (e) {
-                    err = e; stream.close(); data.unlock(); return;
+                    err = e; stream.close(); data.unlock(); 
                 }
             });
 
@@ -624,10 +624,10 @@ class Model extends events.EventEmitter {
                 }
 
                 let inserted = modifications.filter((x) => {
-                    return !x.oldDoc;
-                }).map((x) => {
-                    return x.newDoc;
-                }),
+                        return !x.oldDoc;
+                    }).map((x) => {
+                        return x.newDoc;
+                    }),
                     updated = modifications.filter((x) => {
                         return x.oldDoc;
                     }).map((x) => {

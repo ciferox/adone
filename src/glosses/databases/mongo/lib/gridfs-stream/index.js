@@ -44,12 +44,12 @@ function GridFSBucket(db, options) {
     this.s = {
         db,
         options,
-        _chunksCollection: db.collection(options.bucketName + ".chunks"),
-        _filesCollection: db.collection(options.bucketName + ".files"),
+        _chunksCollection: db.collection(`${options.bucketName}.chunks`),
+        _filesCollection: db.collection(`${options.bucketName}.files`),
         checkedIndexes: false,
         calledOpenUploadStream: false,
         promiseLibrary: db.s.promiseLibrary ||
-        (typeof global.Promise == "function" ? global.Promise : require("es6-promise").Promise)
+        (typeof global.Promise === "function" ? global.Promise : require("es6-promise").Promise)
     };
 }
 
@@ -158,8 +158,8 @@ GridFSBucket.prototype.delete = function (id, callback) {
     }
 
     const _this = this;
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        _delete(_this, id, function (error, res) {
+    return new this.s.promiseLibrary((resolve, reject) => {
+        _delete(_this, id, (error, res) => {
             if (error) {
                 reject(error);
             } else {
@@ -174,19 +174,19 @@ GridFSBucket.prototype.delete = function (id, callback) {
  */
 
 function _delete(_this, id, callback) {
-    _this.s._filesCollection.deleteOne({ _id: id }, function (error, res) {
+    _this.s._filesCollection.deleteOne({ _id: id }, (error, res) => {
         if (error) {
             return callback(error);
         }
 
-        _this.s._chunksCollection.deleteMany({ files_id: id }, function (error) {
+        _this.s._chunksCollection.deleteMany({ files_id: id }, (error) => {
             if (error) {
                 return callback(error);
             }
 
             // Delete orphaned chunks before returning FileNotFound
             if (!res.result.n) {
-                const errmsg = "FileNotFound: no file with id " + id + " found";
+                const errmsg = `FileNotFound: no file with id ${id} found`;
                 return callback(new Error(errmsg));
             }
 
@@ -289,8 +289,8 @@ GridFSBucket.prototype.rename = function (id, filename, callback) {
     }
 
     const _this = this;
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        _rename(_this, id, filename, function (error, res) {
+    return new this.s.promiseLibrary((resolve, reject) => {
+        _rename(_this, id, filename, (error, res) => {
             if (error) {
                 reject(error);
             } else {
@@ -307,12 +307,12 @@ GridFSBucket.prototype.rename = function (id, filename, callback) {
 function _rename(_this, id, filename, callback) {
     const filter = { _id: id };
     const update = { $set: { filename } };
-    _this.s._filesCollection.updateOne(filter, update, function (error, res) {
+    _this.s._filesCollection.updateOne(filter, update, (error, res) => {
         if (error) {
             return callback(error);
         }
         if (!res.result.n) {
-            return callback(toError("File with id " + id + " not found"));
+            return callback(toError(`File with id ${id} not found`));
         }
         callback();
     });
@@ -330,8 +330,8 @@ GridFSBucket.prototype.drop = function (callback) {
     }
 
     const _this = this;
-    return new this.s.promiseLibrary(function (resolve, reject) {
-        _drop(_this, function (error, res) {
+    return new this.s.promiseLibrary((resolve, reject) => {
+        _drop(_this, (error, res) => {
             if (error) {
                 reject(error);
             } else {
@@ -346,11 +346,11 @@ GridFSBucket.prototype.drop = function (callback) {
  */
 
 function _drop(_this, callback) {
-    _this.s._filesCollection.drop(function (error) {
+    _this.s._filesCollection.drop((error) => {
         if (error) {
             return callback(error);
         }
-        _this.s._chunksCollection.drop(function (error) {
+        _this.s._chunksCollection.drop((error) => {
             if (error) {
                 return callback(error);
             }

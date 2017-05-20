@@ -20,7 +20,9 @@ type WhitespaceObject = {
 function crawl(node, state = {}) {
     if (types.isMemberExpression(node)) {
         crawl(node.object, state);
-        if (node.computed) crawl(node.property, state);
+        if (node.computed) {
+            crawl(node.property, state); 
+        }
     } else if (types.isBinary(node) || types.isAssignmentExpression(node)) {
         crawl(node.left, state);
         crawl(node.right, state);
@@ -49,9 +51,9 @@ function isHelper(node) {
         return isHelper(node.callee);
     } else if (types.isBinary(node) || types.isAssignmentExpression(node)) {
         return (types.isIdentifier(node.left) && isHelper(node.left)) || isHelper(node.right);
-    } else {
-        return false;
-    }
+    } 
+    return false;
+    
 }
 
 function isType(node) {

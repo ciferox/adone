@@ -11,7 +11,7 @@ describe("sq", () => {
         const tests = "Janar Jan_Shkurt Shk_Mars Mar_Prill Pri_Maj Maj_Qershor Qer_Korrik Kor_Gusht Gus_Shtator Sht_Tetor Tet_Nëntor Nën_Dhjetor Dhj".split("_");
 
         function equalTest(input, mmm, i) {
-            assert.equal(adone.datetime(input, mmm).month(), i, input + " should be month " + (i + 1));
+            assert.equal(adone.datetime(input, mmm).month(), i, `${input} should be month ${i + 1}`);
         }
 
         for (i = 0; i < 12; i++) {
@@ -57,7 +57,7 @@ describe("sq", () => {
         let i;
 
         for (i = 0; i < a.length; i++) {
-            assert.equal(b.format(a[i][0]), a[i][1], a[i][0] + " ---> " + a[i][1]);
+            assert.equal(b.format(a[i][0]), a[i][1], `${a[i][0]} ---> ${a[i][1]}`);
         }
     });
 
@@ -257,11 +257,11 @@ describe("sq", () => {
             m = adone.datetime().add({
                 d: i
             });
-            assert.equal(m.calendar(), m.format("dddd [në] LT"), "Today + " + i + " days current time");
+            assert.equal(m.calendar(), m.format("dddd [në] LT"), `Today + ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("dddd [në] LT"), "Today + " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format("dddd [në] LT"), `Today + ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("dddd [në] LT"), "Today + " + i + " days end of day");
+            assert.equal(m.calendar(), m.format("dddd [në] LT"), `Today + ${i} days end of day`);
         }
     });
 
@@ -273,11 +273,11 @@ describe("sq", () => {
             m = adone.datetime().subtract({
                 d: i
             });
-            assert.equal(m.calendar(), m.format("dddd [e kaluar në] LT"), "Today - " + i + " days current time");
+            assert.equal(m.calendar(), m.format("dddd [e kaluar në] LT"), `Today - ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("dddd [e kaluar në] LT"), "Today - " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format("dddd [e kaluar në] LT"), `Today - ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("dddd [e kaluar në] LT"), "Today - " + i + " days end of day");
+            assert.equal(m.calendar(), m.format("dddd [e kaluar në] LT"), `Today - ${i} days end of day`);
         }
     });
 

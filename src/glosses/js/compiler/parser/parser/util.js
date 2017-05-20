@@ -9,7 +9,9 @@ const pp = Parser.prototype;
 // TODO
 
 pp.addExtra = function (node, key, val) {
-    if (!node) return;
+    if (!node) {
+        return; 
+    }
 
     const extra = node.extra = node.extra || {};
     extra[key] = val;
@@ -46,7 +48,9 @@ pp.eatContextual = function (name) {
 // Asserts that following token is given contextual keyword.
 
 pp.expectContextual = function (name, message) {
-    if (!this.eatContextual(name)) this.unexpected(null, message);
+    if (!this.eatContextual(name)) {
+        this.unexpected(null, message); 
+    }
 };
 
 // Test whether a semicolon can be inserted at the current position.
@@ -67,7 +71,9 @@ pp.isLineTerminator = function () {
 // pretend that there is a semicolon at this position.
 
 pp.semicolon = function () {
-    if (!this.isLineTerminator()) this.unexpected(null, tt.semi);
+    if (!this.isLineTerminator()) {
+        this.unexpected(null, tt.semi); 
+    }
 };
 
 // Expect a token of a given type. If found, consume it, otherwise,

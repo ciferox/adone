@@ -37,7 +37,9 @@ export function getCompletionRecords(): Array {
     let paths = [];
 
     const add = function (path) {
-        if (path) paths = paths.concat(path.getCompletionRecords());
+        if (path) {
+            paths = paths.concat(path.getCompletionRecords()); 
+        }
     };
 
     if (this.isIfStatement()) {
@@ -66,18 +68,20 @@ export function getSibling(key) {
         parent: this.parent,
         container: this.container,
         listKey: this.listKey,
-        key: key
+        key
     });
 }
 
 export function get(key: string, context?: boolean | TraversalContext): NodePath {
-    if (context === true) context = this.context;
+    if (context === true) {
+        context = this.context;
+    }
     const parts = key.split(".");
     if (parts.length === 1) { // "foo"
         return this._getKey(key, context);
-    } else { // "foo.bar"
-        return this._getPattern(parts, context);
-    }
+    }  // "foo.bar"
+    return this._getPattern(parts, context);
+    
 }
 
 export function _getKey(key, context?) {
@@ -91,18 +95,18 @@ export function _getKey(key, context?) {
                 listKey: key,
                 parentPath: this,
                 parent: node,
-                container: container,
+                container,
                 key: i
             }).setContext(context);
         });
-    } else {
-        return NodePath.get({
-            parentPath: this,
-            parent: node,
-            container: node,
-            key: key
-        }).setContext(context);
-    }
+    } 
+    return NodePath.get({
+        parentPath: this,
+        parent: node,
+        container: node,
+        key
+    }).setContext(context);
+    
 }
 
 export function _getPattern(parts, context) {
@@ -139,8 +143,12 @@ export function getBindingIdentifierPaths(duplicates = false, outerOnly = false)
 
     while (search.length) {
         const id = search.shift();
-        if (!id) continue;
-        if (!id.node) continue;
+        if (!id) {
+            continue; 
+        }
+        if (!id.node) {
+            continue; 
+        }
 
         const keys = t.getBindingIdentifiers.keys[id.node.type];
 

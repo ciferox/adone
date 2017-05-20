@@ -1,6 +1,6 @@
-var http = require("http");
-var crypto = require("crypto");
-var querystring = require("querystring");
+const http = require("http");
+const crypto = require("crypto");
+const querystring = require("querystring");
 
 module.exports = function (options) {
     return new OAuthServer(options);
@@ -16,8 +16,8 @@ function OAuthServer(options) {
 }
 
 OAuthServer.prototype.addUser = function (username, refreshToken) {
-    var user = {
-        username: username,
+    const user = {
+        username,
         refreshToken: refreshToken || crypto.randomBytes(10).toString("base64")
     };
 
@@ -28,7 +28,7 @@ OAuthServer.prototype.addUser = function (username, refreshToken) {
 };
 
 OAuthServer.prototype.generateAccessToken = function (refreshToken) {
-    var username = this.tokens[refreshToken],
+    let username = this.tokens[refreshToken],
         accessToken = crypto.randomBytes(10).toString("base64");
 
     if (!username) {
@@ -57,16 +57,16 @@ OAuthServer.prototype.validateAccessToken = function (username, accessToken) {
         this.users[username].expiresIn < Date.now()) {
 
         return false;
-    } else {
-        return true;
-    }
+    } 
+    return true;
+    
 };
 
 OAuthServer.prototype.start = function (callback) {
-    this.server = http.createServer((function (req, res) {
-        var data = [],
+    this.server = http.createServer((req, res) => {
+        let data = [],
             datalen = 0;
-        req.on("data", function (chunk) {
+        req.on("data", (chunk) => {
             if (!chunk || !chunk.length) {
                 return;
             }
@@ -74,8 +74,8 @@ OAuthServer.prototype.start = function (callback) {
             data.push(chunk);
             datalen += chunk.length;
         });
-        req.on("end", (function () {
-            var query = querystring.parse(Buffer.concat(data, datalen).toString()),
+        req.on("end", () => {
+            let query = querystring.parse(Buffer.concat(data, datalen).toString()),
                 response = this.generateAccessToken(query.refresh_token);
 
             res.writeHead(!response.error ? 200 : 401, {
@@ -83,8 +83,8 @@ OAuthServer.prototype.start = function (callback) {
             });
 
             res.end(JSON.stringify(response));
-        }).bind(this));
-    }).bind(this));
+        });
+    });
 
     this.server.listen(this.options.port, callback);
 };

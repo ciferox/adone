@@ -10,20 +10,20 @@ exports.match = function (r1, g1, b1) {
         b1 = r1[2], g1 = r1[1], r1 = r1[0];
     }
 
-    let hash = (r1 << 16) | (g1 << 8) | b1;
+    const hash = (r1 << 16) | (g1 << 8) | b1;
 
     if (exports._cache[hash] != null) {
         return exports._cache[hash];
     }
 
-    let ldiff = Infinity
-        , li = -1
-        , i = 0
-        , c
-        , r2
-        , g2
-        , b2
-        , diff;
+    let ldiff = Infinity,
+        li = -1,
+        i = 0,
+        c,
+        r2,
+        g2,
+        b2,
+        diff;
 
     for (; i < exports.vcolors.length; i++) {
         c = exports.vcolors[i];
@@ -54,7 +54,9 @@ exports.RGBToHex = function (r, g, b) {
 
     function hex(n) {
         n = n.toString(16);
-        if (n.length < 2) { n = "0" + n; }
+        if (n.length < 2) {
+            n = `0${n}`; 
+        }
         return n;
     }
 
@@ -69,10 +71,10 @@ exports.hexToRGB = function (hex) {
             + hex[3] + hex[3];
     }
 
-    let col = parseInt(hex.substring(1), 16)
-        , r = (col >> 16) & 0xff
-        , g = (col >> 8) & 0xff
-        , b = col & 0xff;
+    let col = parseInt(hex.substring(1), 16),
+        r = (col >> 16) & 0xff,
+        g = (col >> 8) & 0xff,
+        b = col & 0xff;
 
     return [r, g, b];
 };
@@ -94,9 +96,15 @@ function colorDistance(r1, g1, b1, r2, g2, b2) {
 exports.mixColors = function (c1, c2, alpha) {
     // if (c1 === 0x1ff) return c1;
     // if (c2 === 0x1ff) return c1;
-    if (c1 === 0x1ff) { c1 = 0; }
-    if (c2 === 0x1ff) { c2 = 0; }
-    if (alpha == null) { alpha = 0.5; }
+    if (c1 === 0x1ff) {
+        c1 = 0; 
+    }
+    if (c2 === 0x1ff) {
+        c2 = 0; 
+    }
+    if (alpha == null) {
+        alpha = 0.5; 
+    }
 
     c1 = exports.vcolors[c1];
     let r1 = c1[0];
@@ -104,9 +112,9 @@ exports.mixColors = function (c1, c2, alpha) {
     let b1 = c1[2];
 
     c2 = exports.vcolors[c2];
-    let r2 = c2[0];
-    let g2 = c2[1];
-    let b2 = c2[2];
+    const r2 = c2[0];
+    const g2 = c2[1];
+    const b2 = c2[2];
 
     r1 += (r2 - r1) * alpha | 0;
     g1 += (g2 - g1) * alpha | 0;
@@ -121,8 +129,12 @@ exports.blend = function blend(attr, attr2, alpha) {
     let bg = attr & 0x1ff;
     if (attr2 != null) {
         let bg2 = attr2 & 0x1ff;
-        if (bg === 0x1ff) { bg = 0; }
-        if (bg2 === 0x1ff) { bg2 = 0; }
+        if (bg === 0x1ff) {
+            bg = 0; 
+        }
+        if (bg2 === 0x1ff) {
+            bg2 = 0; 
+        }
         bg = exports.mixColors(bg, bg2, alpha);
     } else {
         if (blend._cache[bg] != null) {
@@ -160,8 +172,12 @@ exports.blend = function blend(attr, attr2, alpha) {
             // XXX workaround
             fg = 248;
         } else {
-            if (fg === 0x1ff) { fg = 7; }
-            if (fg2 === 0x1ff) { fg2 = 7; }
+            if (fg === 0x1ff) {
+                fg = 7; 
+            }
+            if (fg2 === 0x1ff) {
+                fg2 = 7; 
+            }
             fg = exports.mixColors(fg, fg2, alpha);
         }
     } else {
@@ -236,17 +252,19 @@ exports.xterm = [
 // Seed all 256 colors. Assume xterm defaults.
 // Ported from the xterm color generation script.
 exports.colors = (function () {
-    let cols = exports.colors = []
-        , _cols = exports.vcolors = []
-        , r
-        , g
-        , b
-        , i
-        , l;
+    let cols = exports.colors = [],
+        _cols = exports.vcolors = [],
+        r,
+        g,
+        b,
+        i,
+        l;
 
     function hex(n) {
         n = n.toString(16);
-        if (n.length < 2) { n = "0" + n; }
+        if (n.length < 2) {
+            n = `0${n}`; 
+        }
         return n;
     }
 
@@ -287,9 +305,9 @@ exports.colors = (function () {
 // Map higher colors to the first 8 colors.
 // This allows translation of high colors to low colors on 8-color terminals.
 exports.ccolors = (function () {
-    let _cols = exports.vcolors.slice()
-        , cols = exports.colors.slice()
-        , out;
+    let _cols = exports.vcolors.slice(),
+        cols = exports.colors.slice(),
+        out;
 
     exports.vcolors = exports.vcolors.slice(0, 8);
     exports.colors = exports.colors.slice(0, 8);
@@ -303,7 +321,7 @@ exports.ccolors = (function () {
     return out;
 })();
 
-let colorNames = exports.colorNames = {
+const colorNames = exports.colorNames = {
     // special
     default: -1,
     normal: -1,

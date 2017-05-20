@@ -88,7 +88,9 @@ export default class Table extends adone.cui.widget.Element {
 
         this._calculateMaxes();
 
-        if (!this._maxes) return;
+        if (!this._maxes) {
+            return;
+        }
 
         this.rows.forEach((row, i) => {
             const isFooter = i === this.rows.length - 1;
@@ -102,13 +104,13 @@ export default class Table extends adone.cui.widget.Element {
 
                 while (clen < width) {
                     if (align === "center") {
-                        cell = " " + cell + " ";
+                        cell = ` ${cell} `;
                         clen += 2;
                     } else if (align === "left") {
-                        cell = cell + " ";
+                        cell = `${cell} `;
                         clen += 1;
                     } else if (align === "right") {
-                        cell = " " + cell;
+                        cell = ` ${cell}`;
                         clen += 1;
                     }
                 }
@@ -140,11 +142,15 @@ export default class Table extends adone.cui.widget.Element {
 
     render() {
         const coords = super.render();
-        if (!coords) return;
+        if (!coords) {
+            return;
+        }
 
         this._calculateMaxes();
 
-        if (!this._maxes) return coords;
+        if (!this._maxes) {
+            return coords; 
+        }
 
         const lines = this.screen.lines;
         const xi = coords.xi;
@@ -163,11 +169,17 @@ export default class Table extends adone.cui.widget.Element {
 
         // Apply attributes to header cells and cells.
         for (let y = this.itop; y < height; y++) {
-            if (!lines[yi + y]) break;
+            if (!lines[yi + y]) {
+                break; 
+            }
             for (let x = this.ileft; x < width; x++) {
-                if (!lines[yi + y][xi + x]) break;
+                if (!lines[yi + y][xi + x]) {
+                    break; 
+                }
                 // Check to see if it's not the default attr. Allows for tags:
-                if (lines[yi + y][xi + x][0] !== dattr) continue;
+                if (lines[yi + y][xi + x][0] !== dattr) {
+                    continue;
+                }
                 if (y === this.itop) {
                     lines[yi + y][xi + x][0] = hattr;
                 } else {
@@ -177,17 +189,23 @@ export default class Table extends adone.cui.widget.Element {
             }
         }
 
-        if (!this.border || this.options.noCellBorders) return coords;
+        if (!this.border || this.options.noCellBorders) {
+            return coords;
+        }
 
         // Draw border with correct angles.
         ry = 0;
         for (i = 0; i < this.rows.length + 1; i++) {
-            if (!lines[yi + ry]) break;
+            if (!lines[yi + ry]) {
+                break; 
+            }
             rx = 0;
             this._maxes.forEach((max, i) => {
                 rx += max;
                 if (i === 0) {
-                    if (!lines[yi + ry][xi + 0]) return;
+                    if (!lines[yi + ry][xi + 0]) {
+                        return;
+                    }
                     // left side
                     if (ry === 0) {
                         // top
@@ -208,7 +226,9 @@ export default class Table extends adone.cui.widget.Element {
                     }
                     lines[yi + ry].dirty = true;
                 } else if (i === this._maxes.length - 1) {
-                    if (!lines[yi + ry][xi + rx + 1]) return;
+                    if (!lines[yi + ry][xi + rx + 1]) {
+                        return;
+                    }
                     // right side
                     if (ry === 0) {
                         // top
@@ -233,7 +253,9 @@ export default class Table extends adone.cui.widget.Element {
                     lines[yi + ry].dirty = true;
                     return;
                 }
-                if (!lines[yi + ry][xi + rx + 1]) return;
+                if (!lines[yi + ry][xi + rx + 1]) {
+                    return; 
+                }
                 // center
                 if (ry === 0) {
                     // top
@@ -273,11 +295,15 @@ export default class Table extends adone.cui.widget.Element {
 
         // Draw internal borders.
         for (ry = 1; ry < this.rows.length * 2; ry++) {
-            if (!lines[yi + ry]) break;
+            if (!lines[yi + ry]) {
+                break; 
+            }
             rx = 0;
             this._maxes.slice(0, -1).forEach((max) => {
                 rx += max;
-                if (!lines[yi + ry][xi + rx + 1]) return;
+                if (!lines[yi + ry][xi + rx + 1]) {
+                    return;
+                }
                 if (ry % 2 !== 0) {
                     if (this.options.fillCellBorders) {
                         const lbg = (ry <= 2 ? hattr : cattr) & 0x1ff;
@@ -297,8 +323,12 @@ export default class Table extends adone.cui.widget.Element {
             this._maxes.forEach((max) => {
                 while (max--) {
                     if (ry % 2 === 0) {
-                        if (!lines[yi + ry]) break;
-                        if (!lines[yi + ry][xi + rx + 1]) break;
+                        if (!lines[yi + ry]) {
+                            break; 
+                        }
+                        if (!lines[yi + ry][xi + rx + 1]) {
+                            break; 
+                        }
                         if (this.options.fillCellBorders) {
                             const lbg = (ry <= 2 ? hattr : cattr) & 0x1ff;
                             lines[yi + ry][xi + rx][0] = (battr & ~0x1ff) | lbg;

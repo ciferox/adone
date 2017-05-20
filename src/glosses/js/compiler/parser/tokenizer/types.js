@@ -27,13 +27,13 @@ export class TokenType {
     constructor(label, conf = {}) {
         this.label = label;
         this.keyword = conf.keyword;
-        this.beforeExpr = !!conf.beforeExpr;
-        this.startsExpr = !!conf.startsExpr;
-        this.rightAssociative = !!conf.rightAssociative;
-        this.isLoop = !!conf.isLoop;
-        this.isAssign = !!conf.isAssign;
-        this.prefix = !!conf.prefix;
-        this.postfix = !!conf.postfix;
+        this.beforeExpr = Boolean(conf.beforeExpr);
+        this.startsExpr = Boolean(conf.startsExpr);
+        this.rightAssociative = Boolean(conf.rightAssociative);
+        this.isLoop = Boolean(conf.isLoop);
+        this.isAssign = Boolean(conf.isAssign);
+        this.prefix = Boolean(conf.prefix);
+        this.postfix = Boolean(conf.postfix);
         this.binop = conf.binop || null;
         this.updateContext = null;
     }
@@ -116,46 +116,46 @@ export const types = {
 };
 
 export const keywords = {
-    "break": new KeywordTokenType("break"),
-    "case": new KeywordTokenType("case", { beforeExpr }),
-    "catch": new KeywordTokenType("catch"),
-    "continue": new KeywordTokenType("continue"),
-    "debugger": new KeywordTokenType("debugger"),
-    "default": new KeywordTokenType("default", { beforeExpr }),
-    "do": new KeywordTokenType("do", { isLoop, beforeExpr }),
-    "else": new KeywordTokenType("else", { beforeExpr }),
-    "finally": new KeywordTokenType("finally"),
-    "for": new KeywordTokenType("for", { isLoop }),
-    "function": new KeywordTokenType("function", { startsExpr }),
-    "if": new KeywordTokenType("if"),
-    "return": new KeywordTokenType("return", { beforeExpr }),
-    "switch": new KeywordTokenType("switch"),
-    "throw": new KeywordTokenType("throw", { beforeExpr }),
-    "try": new KeywordTokenType("try"),
-    "var": new KeywordTokenType("var"),
-    "let": new KeywordTokenType("let"),
-    "const": new KeywordTokenType("const"),
-    "while": new KeywordTokenType("while", { isLoop }),
-    "with": new KeywordTokenType("with"),
-    "new": new KeywordTokenType("new", { beforeExpr, startsExpr }),
-    "this": new KeywordTokenType("this", { startsExpr }),
-    "super": new KeywordTokenType("super", { startsExpr }),
-    "class": new KeywordTokenType("class"),
-    "extends": new KeywordTokenType("extends", { beforeExpr }),
-    "export": new KeywordTokenType("export"),
-    "import": new KeywordTokenType("import"),
-    "yield": new KeywordTokenType("yield", { beforeExpr, startsExpr }),
-    "null": new KeywordTokenType("null", { startsExpr }),
-    "true": new KeywordTokenType("true", { startsExpr }),
-    "false": new KeywordTokenType("false", { startsExpr }),
-    "in": new KeywordTokenType("in", { beforeExpr, binop: 7 }),
-    "instanceof": new KeywordTokenType("instanceof", { beforeExpr, binop: 7 }),
-    "typeof": new KeywordTokenType("typeof", { beforeExpr, prefix, startsExpr }),
-    "void": new KeywordTokenType("void", { beforeExpr, prefix, startsExpr }),
-    "delete": new KeywordTokenType("delete", { beforeExpr, prefix, startsExpr })
+    break: new KeywordTokenType("break"),
+    case: new KeywordTokenType("case", { beforeExpr }),
+    catch: new KeywordTokenType("catch"),
+    continue: new KeywordTokenType("continue"),
+    debugger: new KeywordTokenType("debugger"),
+    default: new KeywordTokenType("default", { beforeExpr }),
+    do: new KeywordTokenType("do", { isLoop, beforeExpr }),
+    else: new KeywordTokenType("else", { beforeExpr }),
+    finally: new KeywordTokenType("finally"),
+    for: new KeywordTokenType("for", { isLoop }),
+    function: new KeywordTokenType("function", { startsExpr }),
+    if: new KeywordTokenType("if"),
+    return: new KeywordTokenType("return", { beforeExpr }),
+    switch: new KeywordTokenType("switch"),
+    throw: new KeywordTokenType("throw", { beforeExpr }),
+    try: new KeywordTokenType("try"),
+    var: new KeywordTokenType("var"),
+    let: new KeywordTokenType("let"),
+    const: new KeywordTokenType("const"),
+    while: new KeywordTokenType("while", { isLoop }),
+    with: new KeywordTokenType("with"),
+    new: new KeywordTokenType("new", { beforeExpr, startsExpr }),
+    this: new KeywordTokenType("this", { startsExpr }),
+    super: new KeywordTokenType("super", { startsExpr }),
+    class: new KeywordTokenType("class"),
+    extends: new KeywordTokenType("extends", { beforeExpr }),
+    export: new KeywordTokenType("export"),
+    import: new KeywordTokenType("import"),
+    yield: new KeywordTokenType("yield", { beforeExpr, startsExpr }),
+    null: new KeywordTokenType("null", { startsExpr }),
+    true: new KeywordTokenType("true", { startsExpr }),
+    false: new KeywordTokenType("false", { startsExpr }),
+    in: new KeywordTokenType("in", { beforeExpr, binop: 7 }),
+    instanceof: new KeywordTokenType("instanceof", { beforeExpr, binop: 7 }),
+    typeof: new KeywordTokenType("typeof", { beforeExpr, prefix, startsExpr }),
+    void: new KeywordTokenType("void", { beforeExpr, prefix, startsExpr }),
+    delete: new KeywordTokenType("delete", { beforeExpr, prefix, startsExpr })
 };
 
 // Map keyword names to token types.
 Object.keys(keywords).forEach((name) => {
-    types["_" + name] = keywords[name];
+    types[`_${name}`] = keywords[name];
 });

@@ -395,9 +395,9 @@ export default class Packet {
                 result = parseInt(str, 10);
                 if (result.toString() === str) {
                     return sign * result;
-                } else {
-                    return sign === -1 ? `-${str}` : str;
-                }
+                } 
+                return sign === -1 ? `-${str}` : str;
+                
             } else if (numDigits > 16) {
                 str = this.readString(end - this.offset);
                 return sign === -1 ? `-${str}` : str;
@@ -419,9 +419,9 @@ export default class Packet {
         str = this.buffer.toString("ascii", start, end);
         if (num.toString() === str) {
             return num;
-        } else {
-            return str;
-        }
+        } 
+        return str;
+        
     }
 
     // note that if value of inputNumberAsString is bigger than MAX_SAFE_INTEGER

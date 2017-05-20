@@ -1,5 +1,5 @@
 /* global describe */
 
-describe("test", async function() {
+describe("test", async () => {
     
 });

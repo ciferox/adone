@@ -5,7 +5,7 @@ import defineType, {
     assertValueType,
     chain,
     assertEach,
-    assertOneOf,
+    assertOneOf
 } from "./index";
 
 defineType("AssignmentPattern", {
@@ -366,7 +366,7 @@ defineType("YieldExpression", {
         },
         argument: {
             optional: true,
-            validate: assertNodeType("Expression"),
+            validate: assertNodeType("Expression")
         }
     }
 });

@@ -1,7 +1,7 @@
-let BinarySearchTree = require("binary-search-tree").AVLTree
-    , document = require("./document")
-    , _ = require("underscore")
-    , util = require("util")
+let BinarySearchTree = require("binary-search-tree").AVLTree,
+    document = require("./document"),
+    _ = require("underscore"),
+    util = require("util")
     ;
 
 /**
@@ -19,16 +19,16 @@ function projectForUnique(elt) {
         return "$null";
     }
     if (typeof elt === "string") {
-        return "$string" + elt;
+        return `$string${elt}`;
     }
     if (typeof elt === "boolean") {
-        return "$boolean" + elt;
+        return `$boolean${elt}`;
     }
     if (typeof elt === "number") {
-        return "$number" + elt;
+        return `$number${elt}`;
     }
     if (util.isArray(elt)) {
-        return "$date" + elt.getTime();
+        return `$date${elt.getTime()}`;
     }
 
     return elt;   // Arrays and ob
@@ -47,9 +47,9 @@ function getDotValues(doc, fields) {
             key[field] = document.getDotValue(doc, field);
         }
         return key;
-    } else {
-        return document.getDotValue(doc, fields);
-    }
+    } 
+    return document.getDotValue(doc, fields);
+    
 }
 
 
@@ -66,7 +66,7 @@ function Index(options) {
     this.unique = options.unique || false;
     this.sparse = options.sparse || false;
 
-    let compareFunc = util.isArray(this.fieldName) ? document.compoundCompareThings(this.fieldName) : document.compareThings;
+    const compareFunc = util.isArray(this.fieldName) ? document.compoundCompareThings(this.fieldName) : document.compareThings;
     this.treeOptions = { unique: this.unique, compareKeys: compareFunc, checkValueEquality };
 
     this.reset();   // No data in the beginning
@@ -88,9 +88,9 @@ Index.prototype.reset = function () {
  * O(log(n))
  */
 Index.prototype.insert = function (doc) {
-    let key, val, self = this
-        , keys, i, failingI, error
-        ;
+    let key, val, self = this,
+        keys, i, failingI, error
+    ;
 
     if (util.isArray(doc)) {
         this.insertMultipleDocs(doc); return;
@@ -224,12 +224,16 @@ Index.prototype.updateMultipleDocs = function (pairs) {
     let i, failingI, error;
 
     for (i = 0; i < pairs.length; i += 1) {
-        if (pairs[i].oldDoc) { this.remove(pairs[i].oldDoc); }
+        if (pairs[i].oldDoc) {
+            this.remove(pairs[i].oldDoc); 
+        }
     }
 
     for (i = 0; i < pairs.length; i += 1) {
         try {
-            if (pairs[i].newDoc) { this.insert(pairs[i].newDoc); }
+            if (pairs[i].newDoc) {
+                this.insert(pairs[i].newDoc); 
+            }
         } catch (e) {
             error = e;
             failingI = i;
@@ -241,11 +245,15 @@ Index.prototype.updateMultipleDocs = function (pairs) {
     if (error) {
         for (i = 0; i < failingI; i += 1) {
             // no newDoc scenario might happen with .save on a unique constraint
-            if (pairs[i].newDoc) { this.remove(pairs[i].newDoc); }
+            if (pairs[i].newDoc) {
+                this.remove(pairs[i].newDoc); 
+            }
         }
 
         for (i = 0; i < pairs.length; i += 1) {
-            if (pairs[i].oldDoc) { this.insert(pairs[i].oldDoc); }
+            if (pairs[i].oldDoc) {
+                this.insert(pairs[i].oldDoc); 
+            }
         }
 
         throw error;
@@ -257,7 +265,7 @@ Index.prototype.updateMultipleDocs = function (pairs) {
  * Revert an update
  */
 Index.prototype.revertUpdate = function (oldDoc, newDoc) {
-    let revert = [];
+    const revert = [];
 
     if (!util.isArray(oldDoc)) {
         this.update(newDoc, oldDoc);
@@ -290,13 +298,13 @@ Index.prototype.getMatching = function (value) {
 
     if (!util.isArray(value)) {
         return this.tree.search(value);
-    } else {
-        res = [];
-        value.forEach((v) => {
-            append(res, self.getMatching(v));
-        });
-        return res;
-    }
+    } 
+    res = [];
+    value.forEach((v) => {
+        append(res, self.getMatching(v));
+    });
+    return res;
+    
 };
 
 
@@ -316,10 +324,12 @@ Index.prototype.getBetweenBounds = function (query) {
  * @return {Array of documents}
  */
 Index.prototype.getAll = function (matcher) {
-    let res = [];
+    const res = [];
 
     this.tree.executeOnEveryNode((node) => {
-        if (typeof (matcher) === "function" && !matcher(node)) { return; }
+        if (typeof (matcher) === "function" && !matcher(node)) {
+            return; 
+        }
 
         let i;
 

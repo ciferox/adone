@@ -13,7 +13,9 @@ const { types: t } = adone.js.compiler;
 export function findParent(callback) {
     let path = this;
     while (path = path.parentPath) {
-        if (callback(path)) return path;
+        if (callback(path)) {
+            return path; 
+        }
     }
     return null;
 }
@@ -25,7 +27,9 @@ export function findParent(callback) {
 export function find(callback) {
     let path = this;
     do {
-        if (callback(path)) return path;
+        if (callback(path)) {
+            return path; 
+        }
     } while (path = path.parentPath);
     return null;
 }
@@ -60,7 +64,7 @@ export function getStatementParent() {
  */
 
 export function getEarliestCommonAncestorFrom(paths: NodePath[]): NodePath {
-    return this.getDeepestCommonAncestorFrom(paths, function (deepest, i, ancestries) {
+    return this.getDeepestCommonAncestorFrom(paths, (deepest, i, ancestries) => {
         let earliest;
         const keys = t.VISITOR_KEYS[deepest.type];
 
@@ -154,12 +158,12 @@ export function getDeepestCommonAncestorFrom(paths: NodePath[], filter?: Functio
     if (lastCommon) {
         if (filter) {
             return filter(lastCommon, lastCommonIndex, ancestries);
-        } else {
-            return lastCommon;
-        }
-    } else {
-        throw new Error("Couldn't find intersection");
-    }
+        } 
+        return lastCommon;
+        
+    } 
+    throw new Error("Couldn't find intersection");
+    
 }
 
 /**
@@ -188,14 +192,16 @@ export function isAncestor(maybeDescendant) {
  * A helper to find if `this` path is a descendant of @param maybeAncestor
  */
 export function isDescendant(maybeAncestor) {
-    return !!this.findParent((parent) => parent === maybeAncestor);
+    return Boolean(this.findParent((parent) => parent === maybeAncestor));
 }
 
 export function inType() {
     let path = this;
     while (path) {
         for (const type of (arguments: Array)) {
-            if (path.node.type === type) return true;
+            if (path.node.type === type) {
+                return true;
+            }
         }
         path = path.parentPath;
     }
@@ -238,7 +244,9 @@ export function inType() {
 
 export function inShadow(key?) {
     const parentFn = this.isFunction() ? this : this.findParent((p) => p.isFunction());
-    if (!parentFn) return;
+    if (!parentFn) {
+        return; 
+    }
 
     if (parentFn.isFunctionExpression() || parentFn.isFunctionDeclaration()) {
         const shadow = parentFn.node.shadow;

@@ -36,7 +36,7 @@ export default function (code: string, opts?: Object): Function {
 
             ast = traverse.removeProperties(ast, { preserveComments: opts.preserveComments });
 
-            traverse.cheap(ast, function (node) {
+            traverse.cheap(ast, (node) => {
                 node[FROM_TEMPLATE] = true;
             });
         } catch (err) {
@@ -66,9 +66,9 @@ function useTemplate(ast, nodes?: Object[]) {
 
     if (program.body.length > 1) {
         return program.body;
-    } else {
-        return program.body[0];
-    }
+    } 
+    return program.body[0];
+    
 }
 
 const templateVisitor = {
@@ -77,7 +77,9 @@ const templateVisitor = {
 
     enter(path, args) {
         let { node } = path;
-        if (node[TEMPLATE_SKIP]) return path.skip();
+        if (node[TEMPLATE_SKIP]) {
+            return path.skip(); 
+        }
 
         if (types.isExpressionStatement(node)) {
             node = node.expression;
@@ -89,8 +91,10 @@ const templateVisitor = {
             if (node.name in args[0]) {
                 replacement = args[0][node.name];
             } else if (node.name[0] === "$") {
-                const i = +node.name.slice(1);
-                if (args[i]) replacement = args[i];
+                const i = Number(node.name.slice(1));
+                if (args[i]) {
+                    replacement = args[i]; 
+                }
             }
         }
 
@@ -105,7 +109,8 @@ const templateVisitor = {
     },
 
     exit({ node }) {
-        if (!node.loc)
-            traverse.clearNode(node);
+        if (!node.loc) {
+            traverse.clearNode(node); 
+        }
     }
 };

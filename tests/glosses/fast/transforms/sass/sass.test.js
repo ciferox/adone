@@ -32,21 +32,21 @@ describe("Fast", () => {
                 await root.unlink();
             });
 
-            it("should pass file when it isNull()", function (done) {
+            it("should pass file when it isNull()", (done) => {
                 const stream = sass();
                 const emptyFile = {
                     isNull() {
                         return true;
                     }
                 };
-                stream.on("data", function (data) {
+                stream.on("data", (data) => {
                     expect(data).to.be.equal(emptyFile);
                     done();
                 });
                 stream.resume().write(emptyFile);
             });
 
-            it("should emit error when file isStream()", function (done) {
+            it("should emit error when file isStream()", (done) => {
                 const stream = sass();
                 const streamFile = {
                     isNull() {
@@ -56,7 +56,7 @@ describe("Fast", () => {
                         return true;
                     }
                 };
-                stream.on("error", function (err) {
+                stream.on("error", (err) => {
                     expect(err.message).to.be.equal("Streaming is not supported");
                     done();
                 });
@@ -90,7 +90,7 @@ describe("Fast", () => {
                 expect(cssFile.contents.toString()).to.be.equal(await expectdir.getVirtualFile("mixins.css").content());
             });
 
-            it("should compile multiple sass files", function (done) {
+            it("should compile multiple sass files", (done) => {
                 const files = [
                     createVinyl("mixins.scss"),
                     createVinyl("variables.scss")
@@ -98,7 +98,7 @@ describe("Fast", () => {
                 const stream = sass();
                 let mustSee = files.length;
 
-                stream.on("data", function (cssFile) {
+                stream.on("data", (cssFile) => {
                     expect(cssFile).to.be.ok;
                     expect(cssFile.path).to.be.ok;
                     expect(cssFile.relative).to.be.ok;
@@ -112,15 +112,15 @@ describe("Fast", () => {
                     }
                 });
                 stream.resume();
-                files.forEach(function (file) {
+                files.forEach((file) => {
                     stream.write(file);
                 });
             });
 
-            it("should compile files with partials in another folder", function (done) {
+            it("should compile files with partials in another folder", (done) => {
                 const sassFile = createVinyl("inheritance.scss");
                 const stream = sass();
-                stream.on("data", function (cssFile) {
+                stream.on("data", (cssFile) => {
                     expect(cssFile).to.be.ok;
                     expect(cssFile.path).to.be.ok;
                     expect(cssFile.relative).to.be.ok;
@@ -133,11 +133,11 @@ describe("Fast", () => {
                 stream.resume().write(sassFile);
             });
 
-            it("should handle sass errors", function (done) {
+            it("should handle sass errors", (done) => {
                 const errorFile = createVinyl("error.scss");
                 const stream = sass();
 
-                stream.on("error", function (err) {
+                stream.on("error", (err) => {
                     // Error must include message body
                     expect(err.message).to.match(/property \"font\" must be followed by a ':'/);
                     expect(err.message).to.match(/scss\/error.scss/);
@@ -148,11 +148,11 @@ describe("Fast", () => {
                 stream.resume().write(errorFile);
             });
 
-            it("should preserve the original sass error message", function (done) {
+            it("should preserve the original sass error message", (done) => {
                 const errorFile = createVinyl("error.scss");
                 const stream = sass();
 
-                stream.on("error", function (err) {
+                stream.on("error", (err) => {
                     // Error must include original error message
                     expect(err.message).to.match(/property \"font\" must be followed by a ':'/);
                     expect(err.message).to.match(/on line 2/);
@@ -161,14 +161,14 @@ describe("Fast", () => {
                 stream.resume().write(errorFile);
             });
 
-            it("should compile a single sass file if the file name has been changed in the stream", function (done) {
+            it("should compile a single sass file if the file name has been changed in the stream", (done) => {
                 const sassFile = createVinyl("mixins.scss");
 
                 // Transform file name
                 sassFile.path = scssdir.getVirtualFile("mixin--changed.scss").path();
 
                 const stream = sass();
-                stream.on("data", function (cssFile) {
+                stream.on("data", (cssFile) => {
                     expect(cssFile).to.be.ok;
                     expect(cssFile.path).to.be.ok;
                     expect(cssFile.path.split(path.sep).pop()).to.be.equal("mixin--changed.css");
@@ -182,27 +182,27 @@ describe("Fast", () => {
                 stream.resume().write(sassFile);
             });
 
-            it("should preserve changes made in-stream to a Sass file", function (done) {
+            it("should preserve changes made in-stream to a Sass file", (done) => {
                 const sassFile = createVinyl("mixins.scss");
 
                 // Transform file name
-                sassFile.contents = new Buffer("/* Added Dynamically */" + sassFile.contents.toString());
+                sassFile.contents = new Buffer(`/* Added Dynamically */${sassFile.contents.toString()}`);
 
                 const stream = sass();
-                stream.on("data", function (cssFile) {
+                stream.on("data", (cssFile) => {
                     expect(cssFile).to.be.ok;
                     expect(cssFile.path).to.be.ok;
                     expect(cssFile.relative).to.be.ok;
                     expect(cssFile.contents).to.be.ok;
-                    expect(cssFile.contents.toString()).to.be.equal("/* Added Dynamically */\n" +
-                        expectdir.getVirtualFile(cssFile.basename).contentSync()
+                    expect(cssFile.contents.toString()).to.be.equal(`/* Added Dynamically */\n${ 
+                        expectdir.getVirtualFile(cssFile.basename).contentSync()}`
                     );
                     done();
                 });
                 stream.resume().write(sassFile);
             });
 
-            it("should work with sourcemaps", function (done) {
+            it("should work with sourcemaps", (done) => {
                 const sassFile = createVinyl("inheritance.scss");
 
                 // Expected sources are relative to file.base
@@ -222,7 +222,7 @@ describe("Fast", () => {
                     "}";
 
                 const stream = sass();
-                stream.on("data", function (cssFile) {
+                stream.on("data", (cssFile) => {
                     expect(cssFile.sourceMap).to.be.ok;
                     expect(cssFile.sourceMap.sources).to.be.deep.equal(expectedSources);
                     done();
@@ -230,10 +230,10 @@ describe("Fast", () => {
                 stream.resume().write(sassFile);
             });
 
-            it("should compile a single indented sass file", function (done) {
+            it("should compile a single indented sass file", (done) => {
                 const sassFile = createVinyl("indent.sass");
                 const stream = sass();
-                stream.on("data", function (cssFile) {
+                stream.on("data", (cssFile) => {
                     expect(cssFile).to.be.ok;
                     expect(cssFile.path).to.be.ok;
                     expect(cssFile.relative).to.be.ok;
@@ -246,7 +246,7 @@ describe("Fast", () => {
                 stream.resume().write(sassFile);
             });
 
-            it("should parse files in sass and scss", function (done) {
+            it("should parse files in sass and scss", (done) => {
                 const files = [
                     createVinyl("mixins.scss"),
                     createVinyl("indent.sass")
@@ -254,7 +254,7 @@ describe("Fast", () => {
                 const stream = sass();
                 let mustSee = files.length;
 
-                stream.on("data", function (cssFile) {
+                stream.on("data", (cssFile) => {
                     expect(cssFile).to.be.ok;
                     expect(cssFile.path).to.be.ok;
                     expect(cssFile.relative).to.be.ok;
@@ -268,7 +268,7 @@ describe("Fast", () => {
                     }
                 });
                 stream.resume();
-                files.forEach(function (file) {
+                files.forEach((file) => {
                     stream.write(file);
                 });
             });
@@ -277,7 +277,7 @@ describe("Fast", () => {
                 const files = await adone.fs.glob(scssdir.getVirtualFile("globbed", "**", "*.scss").path());
 
                 const filesContent = {};
-                files.forEach(function (file) {
+                files.forEach((file) => {
                     const globPath = new adone.fs.File(file).relativePath(scssdir.getVirtualDirectory("globbed"));
                     filesContent[globPath] = fs.readFileSync(file, "utf8");
                 });

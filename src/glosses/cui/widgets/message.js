@@ -20,7 +20,9 @@ export default class Message extends adone.cui.widget.Element {
 
             if (time === Infinity || time === -1 || time === 0) {
                 const end = () => {
-                    if (end.done) return;
+                    if (end.done) {
+                        return;
+                    }
                     end.done = true;
                     if (this.scrollable) {
                         try {
@@ -36,7 +38,9 @@ export default class Message extends adone.cui.widget.Element {
                 setTimeout(() => {
                     let fn;
                     this.onScreenEvent("keypress", fn = (ch, key) => {
-                        if (key.name === "mouse") return;
+                        if (key.name === "mouse") {
+                            return; 
+                        }
                         if (this.scrollable) {
                             if ((key.name === "up" || (this.options.vi && key.name === "k"))
                                 || (key.name === "down" || (this.options.vi && key.name === "j"))
@@ -56,10 +60,14 @@ export default class Message extends adone.cui.widget.Element {
                         end();
                     });
                     // XXX May be affected by new element.options.mouse option.
-                    if (!this.options.mouse) return;
+                    if (!this.options.mouse) {
+                        return; 
+                    }
                     let mouseFn;
                     this.onScreenEvent("mouse", mouseFn = (data) => {
-                        if (data.action === "mousemove") return;
+                        if (data.action === "mousemove") {
+                            return; 
+                        }
                         this.removeScreenEvent("mouse", mouseFn);
                         end();
                     });
@@ -78,7 +86,7 @@ export default class Message extends adone.cui.widget.Element {
     }
 
     error(text, time, callback) {
-        return this.display("{red-fg}Error: " + text + "{/red-fg}", time, callback);
+        return this.display(`{red-fg}Error: ${text}{/red-fg}`, time, callback);
     }
 }
 Message.prototype.type = "message";

@@ -9,9 +9,9 @@ export function clear() {
 }
 
 export function clearPath() {
-    path = new WeakMap;
+    path = new WeakMap();
 }
 
 export function clearScope() {
-    scope = new WeakMap;
+    scope = new WeakMap();
 }

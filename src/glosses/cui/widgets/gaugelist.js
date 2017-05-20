@@ -14,7 +14,7 @@ export default class GaugeList extends adone.cui.widget.Canvas {
 
 
         this.on("attach", () => {
-            var gauges = this.gauges = this.options.gauges;
+            const gauges = this.gauges = this.options.gauges;
             this.setGauges(gauges);
         });
     }
@@ -31,51 +31,54 @@ export default class GaugeList extends adone.cui.widget.Canvas {
             throw "error: canvas context does not exist. setData() for gauges must be called after the gauge has been added to the screen via screen.append()";
         }
 
-        var c = this.ctx;
+        const c = this.ctx;
         c.clearRect(0, 0, this.canvasSize.width, this.canvasSize.height);
 
-        for (var i = 0; i < gauges.length; i++) {
+        for (let i = 0; i < gauges.length; i++) {
             this.setSingleGauge(gauges[i], i);
         }
     }
 
     setSingleGauge(gauge, offset) {
-        var colors = ["green", "magenta", "cyan", "red", "blue"];
-        var stack = gauge.stack;
+        const colors = ["green", "magenta", "cyan", "red", "blue"];
+        const stack = gauge.stack;
 
-        var c = this.ctx;
-        var leftStart = 3;
-        var textLeft = 5;
+        const c = this.ctx;
+        let leftStart = 3;
+        let textLeft = 5;
 
         c.strokeStyle = "normal";
         c.fillStyle = "white";
         c.fillText(offset.toString(), 0, offset * (this.options.gaugeHeight + this.options.gaugeSpacing));
 
-        for (var i = 0; i < stack.length; i++) {
-            var currentStack = stack[i];
+        for (let i = 0; i < stack.length; i++) {
+            const currentStack = stack[i];
 
-            if (typeof (currentStack) == typeof ({}))
-                var percent = currentStack.percent;
-            else
+            if (typeof (currentStack) === typeof ({})) {
+                var percent = currentStack.percent; 
+            } else {
                 var percent = currentStack;
+            }
 
             c.strokeStyle = currentStack.stroke || colors[(i % colors.length)]; // use specified or choose from the array of colors
             c.fillStyle = this.options.fill;//'white'
 
             textLeft = 5;
 
-            var width = percent / 100 * (this.canvasSize.width - 5);
+            const width = percent / 100 * (this.canvasSize.width - 5);
 
             c.fillRect(leftStart, offset * (this.options.gaugeHeight + this.options.gaugeSpacing), width, this.options.gaugeHeight - 1);
 
             textLeft = (width / 2) - 1;
             // if (textLeft)
-            var textX = leftStart + textLeft;
+            const textX = leftStart + textLeft;
 
             if ((leftStart + width) < textX) {
                 c.strokeStyle = "normal";
             }
-            if (gauge.showLabel) c.fillText(percent + "%", textX, 3);
+            if (gauge.showLabel) {
+                c.fillText(`${percent}%`, textX, 3);
+            }
 
             leftStart += width;
         }

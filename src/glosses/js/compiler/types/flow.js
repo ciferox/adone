@@ -10,9 +10,9 @@ export function createUnionTypeAnnotation(types: Object[]) {
 
     if (flattened.length === 1) {
         return flattened[0];
-    } else {
-        return t.unionTypeAnnotation(flattened);
-    }
+    } 
+    return t.unionTypeAnnotation(flattened);
+    
 }
 
 /**
@@ -30,7 +30,9 @@ export function removeTypeDuplicates(nodes: Object[]): Object[] {
 
     for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i];
-        if (!node) continue;
+        if (!node) {
+            continue; 
+        }
 
         // detect duplicates
         if (types.indexOf(node) >= 0) {
@@ -114,7 +116,7 @@ export function createTypeAnnotationBasedOnTypeof(type: string) {
         return t.genericTypeAnnotation(t.identifier("Object"));
     } else if (type === "symbol") {
         return t.genericTypeAnnotation(t.identifier("Symbol"));
-    } else {
-        throw new Error("Invalid typeof value");
-    }
+    } 
+    throw new Error("Invalid typeof value");
+    
 }

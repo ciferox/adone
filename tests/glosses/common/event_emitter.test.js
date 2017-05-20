@@ -10,7 +10,7 @@ describe("Event emitter", () => {
             // Sanity check
             assert.strictEqual(ee.addListener, ee.on);
 
-            ee.on("newListener", function (event, listener) {
+            ee.on("newListener", (event, listener) => {
                 // Don't track newListener listeners.
                 if (event === "newListener") {
                     return;
@@ -51,9 +51,9 @@ describe("Event emitter", () => {
             const listen2 = function listen2() { };
             const ee = new EventEmitter();
 
-            ee.once("newListener", function () {
+            ee.once("newListener", () => {
                 expect(ee.listeners("hello")).to.be.empty;
-                ee.once("newListener", function () {
+                ee.once("newListener", () => {
                     expect(ee.listeners("hello")).to.be.empty;
                 });
                 ee.on("hello", listen2);
@@ -103,15 +103,15 @@ describe("Event emitter", () => {
     describe("listenerCount", () => {
         it("should be equal 2", () => {
             const emitter = new EventEmitter();
-            emitter.on("foo", function () { });
-            emitter.on("foo", function () { });
+            emitter.on("foo", () => { });
+            emitter.on("foo", () => { });
 
             expect(emitter.listenerCount("foo")).to.be.equal(2);
         });
 
         it("should be equal 1", () => {
             const emitter = new EventEmitter();
-            emitter.on("baz", function () { });
+            emitter.on("baz", () => { });
             expect(emitter.listenerCount("baz")).to.be.equal(1);
         });
 
@@ -247,8 +247,8 @@ describe("Event emitter", () => {
                 done();
             });
 
-            e.on("event-type", function () { });
-            e.on("event-type", function () { });
+            e.on("event-type", () => { });
+            e.on("event-type", () => { });
         });
 
         it("should emit a warning message for 'null' event", (done) => {
@@ -265,8 +265,8 @@ describe("Event emitter", () => {
                 done();
             });
 
-            e.on(null, function () { });
-            e.on(null, function () { });
+            e.on(null, () => { });
+            e.on(null, () => { });
         });
 
         it("should emit a warning message for a symbol", (done) => {
@@ -285,8 +285,8 @@ describe("Event emitter", () => {
                 done();
             });
 
-            e.on(symbol, function () { });
-            e.on(symbol, function () { });
+            e.on(symbol, () => { });
+            e.on(symbol, () => { });
         });
     });
 

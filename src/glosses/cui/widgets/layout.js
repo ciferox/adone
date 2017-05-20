@@ -14,20 +14,26 @@ export default class Layout extends adone.cui.widget.Element {
     }
 
     isRendered(el) {
-        if (!el.lpos) return false;
+        if (!el.lpos) {
+            return false;
+        }
         return (el.lpos.xl - el.lpos.xi) > 0 && (el.lpos.yl - el.lpos.yi) > 0;
     }
 
     getLast(i) {
         while (this.children[--i]) {
             const el = this.children[i];
-            if (this.isRendered(el)) return el;
+            if (this.isRendered(el)) {
+                return el;
+            }
         }
     }
 
     getLastCoords(i) {
         const last = this.getLast(i);
-        if (last) return last.lpos;
+        if (last) {
+            return last.lpos;
+        }
     }
 
     _renderCoords() {
@@ -96,7 +102,9 @@ export default class Layout extends adone.cui.widget.Element {
                     // `rowOffset` and `rowIndex` (the index of the child on the current
                     // row).
                     rowOffset += this.children.slice(rowIndex, i).reduce((out, el) => {
-                        if (!this.isRendered(el)) return out;
+                        if (!this.isRendered(el)) {
+                            return out; 
+                        }
                         out = Math.max(out, el.lpos.yl - el.lpos.yi);
                         return out;
                     }, 0);
@@ -113,7 +121,9 @@ export default class Layout extends adone.cui.widget.Element {
                 let abovea = Infinity;
                 for (let j = lastRowIndex; j < rowIndex; j++) {
                     const l = this.children[j];
-                    if (!this.isRendered(l)) continue;
+                    if (!this.isRendered(l)) {
+                        continue; 
+                    }
                     const abs = Math.abs(el.position.left - (l.lpos.xi - xi));
                     // if (abs < abovea && (l.lpos.xl - l.lpos.xi) <= el.width) {
                     if (abs < abovea) {
@@ -155,7 +165,9 @@ export default class Layout extends adone.cui.widget.Element {
 
         this.lpos = coords;
 
-        if (this.border) coords.xi++, coords.xl--, coords.yi++, coords.yl--;
+        if (this.border) {
+            coords.xi++, coords.xl--, coords.yi++, coords.yl--; 
+        }
         if (this.tpadding) {
             coords.xi += this.padding.left, coords.xl -= this.padding.right;
             coords.yi += this.padding.top, coords.yl -= this.padding.bottom;
@@ -163,7 +175,9 @@ export default class Layout extends adone.cui.widget.Element {
 
         const iterator = this.renderer(coords);
 
-        if (this.border) coords.xi--, coords.xl++, coords.yi--, coords.yl++;
+        if (this.border) {
+            coords.xi--, coords.xl++, coords.yi--, coords.yl++; 
+        }
         if (this.tpadding) {
             coords.xi -= this.padding.left, coords.xl += this.padding.right;
             coords.yi -= this.padding.top, coords.yl += this.padding.bottom;

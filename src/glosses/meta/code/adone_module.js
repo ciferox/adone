@@ -31,7 +31,7 @@ export default class XAdoneModule extends adone.meta.code.Module {
                     case "ExpressionStatement": {
                         if (traverseState === STATE_PROGRAM) {
                             path.skip();
-                            return;
+                            
                         }
                         break;
                     }
@@ -67,10 +67,10 @@ export default class XAdoneModule extends adone.meta.code.Module {
                     case "ObjectExpression": {
                         if (traverseState === STATE_ADONE_DECL) {
                             traverseState = STATE_ADONE_PROTO;
-                            return;
+                            
                         } else if (traverseState === STATE_LAZY_DEFS) {
                             traverseState = STATE_ADONE_LAZIFIERS;
-                            return;
+                            
                         }
                         break;
                     }
@@ -92,7 +92,7 @@ export default class XAdoneModule extends adone.meta.code.Module {
                             xObj._adoneProto = true;
                             this._adoneProto[node.key.name] = xObj;
                             path.skip();
-                            return;
+                            
                         } else if (traverseState === STATE_ADONE_LAZIFIERS) {
                             const basePath = adone.std.path.dirname(this.filePath);
                             const node = path.node;
@@ -118,7 +118,7 @@ export default class XAdoneModule extends adone.meta.code.Module {
                                 }
                             }
                             path.skip();
-                            return;
+                            
                         }
                         break;
                     }
@@ -128,7 +128,7 @@ export default class XAdoneModule extends adone.meta.code.Module {
                                 path.node.arguments[1].type === "Identifier" && path.node.arguments[1].name === "adone") {
                                 traverseState = STATE_LAZY_DEFS;
                             }
-                            return;
+                            
                         }
                         break;
                     }

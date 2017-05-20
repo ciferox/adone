@@ -190,7 +190,7 @@ function ReflectanceArray(opts) {
         },
         isOnLine: {
             get() {
-                let line = this.line;
+                const line = this.line;
                 return line > CALIBRATED_MIN_VALUE && line < maxLineValue.call(this);
             }
         },

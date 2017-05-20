@@ -54,11 +54,11 @@ const httpsOptions = {
         "-----END CERTIFICATE-----"
 };
 
-describe("fetch tests", function () {
+describe("fetch tests", () => {
     let httpServer, httpsServer;
 
-    beforeEach(function (done) {
-        httpServer = http.createServer(function (req, res) {
+    beforeEach((done) => {
+        httpServer = http.createServer((req, res) => {
             switch (req.url) {
 
                 case "/redirect6":
@@ -118,7 +118,7 @@ describe("fetch tests", function () {
                             "Content-Encoding": "gzip"
                         });
 
-                        let stream = zlib.createGzip();
+                        const stream = zlib.createGzip();
                         stream.pipe(res);
                         stream.end("Hello World HTTP\n");
                         break;
@@ -153,14 +153,14 @@ describe("fetch tests", function () {
 
                 case "/post":
                     {
-                        let body = [];
-                        req.on("readable", function () {
+                        const body = [];
+                        req.on("readable", () => {
                             let chunk;
                             while ((chunk = req.read()) !== null) {
                                 body.push(chunk);
                             }
                         });
-                        req.on("end", function () {
+                        req.on("end", () => {
                             res.writeHead(200, {
                                 "Content-Type": "text/plain"
                             });
@@ -177,208 +177,208 @@ describe("fetch tests", function () {
             }
         });
 
-        httpsServer = https.createServer(httpsOptions, function (req, res) {
+        httpsServer = https.createServer(httpsOptions, (req, res) => {
             res.writeHead(200, {
                 "Content-Type": "text/plain"
             });
             res.end("Hello World HTTPS\n");
         });
 
-        httpServer.listen(HTTP_PORT, function () {
+        httpServer.listen(HTTP_PORT, () => {
             httpsServer.listen(HTTPS_PORT, done);
         });
     });
 
-    afterEach(function (done) {
-        httpServer.close(function () {
+    afterEach((done) => {
+        httpServer.close(() => {
             httpsServer.close(done);
         });
     });
 
-    it("should fetch HTTP data", function (done) {
-        let req = fetch("http://localhost:" + HTTP_PORT);
-        let buf = [];
-        req.on("data", function (chunk) {
+    it("should fetch HTTP data", (done) => {
+        const req = fetch(`http://localhost:${HTTP_PORT}`);
+        const buf = [];
+        req.on("data", (chunk) => {
             buf.push(chunk);
         });
-        req.on("end", function () {
+        req.on("end", () => {
             expect(Buffer.concat(buf).toString()).to.equal("Hello World HTTP\n");
             done();
         });
     });
 
-    it("should fetch HTTPS data", function (done) {
-        let req = fetch("https://localhost:" + HTTPS_PORT);
-        let buf = [];
-        req.on("data", function (chunk) {
+    it("should fetch HTTPS data", (done) => {
+        const req = fetch(`https://localhost:${HTTPS_PORT}`);
+        const buf = [];
+        req.on("data", (chunk) => {
             buf.push(chunk);
         });
-        req.on("end", function () {
+        req.on("end", () => {
             expect(Buffer.concat(buf).toString()).to.equal("Hello World HTTPS\n");
             done();
         });
     });
 
-    it("should fetch HTTP data with redirects", function (done) {
-        let req = fetch("http://localhost:" + HTTP_PORT + "/redirect3");
-        let buf = [];
-        req.on("data", function (chunk) {
+    it("should fetch HTTP data with redirects", (done) => {
+        const req = fetch(`http://localhost:${HTTP_PORT}/redirect3`);
+        const buf = [];
+        req.on("data", (chunk) => {
             buf.push(chunk);
         });
-        req.on("end", function () {
+        req.on("end", () => {
             expect(Buffer.concat(buf).toString()).to.equal("Hello World HTTP\n");
             done();
         });
     });
 
-    it("should return error for too many redirects", function (done) {
-        let req = fetch("http://localhost:" + HTTP_PORT + "/redirect6");
-        let buf = [];
-        req.on("data", function (chunk) {
+    it("should return error for too many redirects", (done) => {
+        const req = fetch(`http://localhost:${HTTP_PORT}/redirect6`);
+        const buf = [];
+        req.on("data", (chunk) => {
             buf.push(chunk);
         });
-        req.on("error", function (err) {
+        req.on("error", (err) => {
             expect(err).to.exist;
             done();
         });
-        req.on("end", function () {});
+        req.on("end", () => {});
     });
 
-    it("should fetch HTTP data with custom redirect limit", function (done) {
-        let req = fetch("http://localhost:" + HTTP_PORT + "/redirect3", {
+    it("should fetch HTTP data with custom redirect limit", (done) => {
+        const req = fetch(`http://localhost:${HTTP_PORT}/redirect3`, {
             maxRedirects: 3
         });
-        let buf = [];
-        req.on("data", function (chunk) {
+        const buf = [];
+        req.on("data", (chunk) => {
             buf.push(chunk);
         });
-        req.on("end", function () {
+        req.on("end", () => {
             expect(Buffer.concat(buf).toString()).to.equal("Hello World HTTP\n");
             done();
         });
     });
 
-    it("should return error for custom redirect limit", function (done) {
-        let req = fetch("http://localhost:" + HTTP_PORT + "/redirect3", {
+    it("should return error for custom redirect limit", (done) => {
+        const req = fetch(`http://localhost:${HTTP_PORT}/redirect3`, {
             maxRedirects: 2
         });
-        let buf = [];
-        req.on("data", function (chunk) {
+        const buf = [];
+        req.on("data", (chunk) => {
             buf.push(chunk);
         });
-        req.on("error", function (err) {
+        req.on("error", (err) => {
             expect(err).to.exist;
             done();
         });
-        req.on("end", function () {});
+        req.on("end", () => {});
     });
 
-    it("should return disable redirects", function (done) {
-        let req = fetch("http://localhost:" + HTTP_PORT + "/redirect1", {
+    it("should return disable redirects", (done) => {
+        const req = fetch(`http://localhost:${HTTP_PORT}/redirect1`, {
             maxRedirects: 0
         });
-        let buf = [];
-        req.on("data", function (chunk) {
+        const buf = [];
+        req.on("data", (chunk) => {
             buf.push(chunk);
         });
-        req.on("error", function (err) {
+        req.on("error", (err) => {
             expect(err).to.exist;
             done();
         });
-        req.on("end", function () {});
+        req.on("end", () => {});
     });
 
-    it("should unzip compressed HTTP data", function (done) {
-        let req = fetch("http://localhost:" + HTTP_PORT + "/gzip");
-        let buf = [];
-        req.on("data", function (chunk) {
+    it("should unzip compressed HTTP data", (done) => {
+        const req = fetch(`http://localhost:${HTTP_PORT}/gzip`);
+        const buf = [];
+        req.on("data", (chunk) => {
             buf.push(chunk);
         });
-        req.on("end", function () {
+        req.on("end", () => {
             expect(Buffer.concat(buf).toString()).to.equal("Hello World HTTP\n");
             done();
         });
     });
 
-    it.skip("should return error for unresolved host", function (done) {
-        let req = fetch("http://asfhaskhhgbjdsfhgbsdjgk");
-        let buf = [];
-        req.on("data", function (chunk) {
+    it.skip("should return error for unresolved host", (done) => {
+        const req = fetch("http://asfhaskhhgbjdsfhgbsdjgk");
+        const buf = [];
+        req.on("data", (chunk) => {
             buf.push(chunk);
         });
-        req.on("error", function (err) {
+        req.on("error", (err) => {
             expect(err).to.exist;
             done();
         });
-        req.on("end", function () {});
+        req.on("end", () => {});
     });
 
-    it("should return error for invalid status", function (done) {
-        let req = fetch("http://localhost:" + HTTP_PORT + "/invalid");
-        let buf = [];
-        req.on("data", function (chunk) {
+    it("should return error for invalid status", (done) => {
+        const req = fetch(`http://localhost:${HTTP_PORT}/invalid`);
+        const buf = [];
+        req.on("data", (chunk) => {
             buf.push(chunk);
         });
-        req.on("error", function (err) {
+        req.on("error", (err) => {
             expect(err).to.exist;
             done();
         });
-        req.on("end", function () {});
+        req.on("end", () => {});
     });
 
-    it("should allow invalid status", function (done) {
-        let req = fetch("http://localhost:" + HTTP_PORT + "/invalid", {
+    it("should allow invalid status", (done) => {
+        const req = fetch(`http://localhost:${HTTP_PORT}/invalid`, {
             allowErrorResponse: true
         });
-        let buf = [];
-        req.on("data", function (chunk) {
+        const buf = [];
+        req.on("data", (chunk) => {
             buf.push(chunk);
         });
-        req.on("error", function (err) {
+        req.on("error", (err) => {
             expect(err).to.not.exist;
         });
-        req.on("end", function () {
+        req.on("end", () => {
             expect(req.statusCode).to.equal(500);
             expect(Buffer.concat(buf).toString()).to.equal("Hello World HTTP\n");
             done();
         });
     });
 
-    it("should return error for invalid url", function (done) {
-        let req = fetch("http://localhost:99999999/");
-        let buf = [];
-        req.on("data", function (chunk) {
+    it("should return error for invalid url", (done) => {
+        const req = fetch("http://localhost:99999999/");
+        const buf = [];
+        req.on("data", (chunk) => {
             buf.push(chunk);
         });
-        req.on("error", function (err) {
+        req.on("error", (err) => {
             expect(err).to.exist;
             done();
         });
-        req.on("end", function () {});
+        req.on("end", () => {});
     });
 
-    it("should return timeout error", function (done) {
-        let req = fetch("http://localhost:" + HTTP_PORT + "/forever", {
+    it("should return timeout error", (done) => {
+        const req = fetch(`http://localhost:${HTTP_PORT}/forever`, {
             timeout: 1000
         });
-        let buf = [];
-        req.on("data", function (chunk) {
+        const buf = [];
+        req.on("data", (chunk) => {
             buf.push(chunk);
         });
-        req.on("error", function (err) {
+        req.on("error", (err) => {
             expect(err).to.exist;
             done();
         });
-        req.on("end", function () {});
+        req.on("end", () => {});
     });
 
-    it("should handle basic HTTP auth", function (done) {
-        let req = fetch("http://user:pass@localhost:" + HTTP_PORT + "/auth");
-        let buf = [];
-        req.on("data", function (chunk) {
+    it("should handle basic HTTP auth", (done) => {
+        const req = fetch(`http://user:pass@localhost:${HTTP_PORT}/auth`);
+        const buf = [];
+        req.on("data", (chunk) => {
             buf.push(chunk);
         });
-        req.on("end", function () {
+        req.on("end", () => {
             expect(Buffer.concat(buf).toString()).to.equal("user:pass");
             done();
         });
@@ -386,89 +386,89 @@ describe("fetch tests", function () {
 
     if (!/^0\.10\./.test(process.versions.node)) {
         // disabled for node 0.10
-        it("should return error for invalid protocol", function (done) {
-            let req = fetch("http://localhost:" + HTTPS_PORT);
-            let buf = [];
-            req.on("data", function (chunk) {
+        it("should return error for invalid protocol", (done) => {
+            const req = fetch(`http://localhost:${HTTPS_PORT}`);
+            const buf = [];
+            req.on("data", (chunk) => {
                 buf.push(chunk);
             });
-            req.on("error", function (err) {
+            req.on("error", (err) => {
                 expect(err).to.exist;
                 done();
             });
-            req.on("end", function () {});
+            req.on("end", () => {});
         });
     }
 
-    it("should set cookie value", function (done) {
-        let req = fetch("http://localhost:" + HTTP_PORT + "/cookie", {
+    it("should set cookie value", (done) => {
+        const req = fetch(`http://localhost:${HTTP_PORT}/cookie`, {
             cookie: "test=pest"
         });
-        let buf = [];
-        req.on("data", function (chunk) {
+        const buf = [];
+        req.on("data", (chunk) => {
             buf.push(chunk);
         });
-        req.on("end", function () {
+        req.on("end", () => {
             expect(Buffer.concat(buf).toString()).to.equal("test=pest");
             done();
         });
     });
 
-    it("should set user agent", function (done) {
-        let req = fetch("http://localhost:" + HTTP_PORT + "/ua", {
+    it("should set user agent", (done) => {
+        const req = fetch(`http://localhost:${HTTP_PORT}/ua`, {
             userAgent: "mailer-fetch"
         });
-        let buf = [];
-        req.on("data", function (chunk) {
+        const buf = [];
+        req.on("data", (chunk) => {
             buf.push(chunk);
         });
-        req.on("end", function () {
+        req.on("end", () => {
             expect(Buffer.concat(buf).toString()).to.equal("mailer-fetch");
             done();
         });
     });
 
-    it("should post data", function (done) {
-        let req = fetch("http://localhost:" + HTTP_PORT + "/post", {
+    it("should post data", (done) => {
+        const req = fetch(`http://localhost:${HTTP_PORT}/post`, {
             method: "post",
             body: {
                 hello: "world 😭",
                 another: "value"
             }
         });
-        let buf = [];
-        req.on("data", function (chunk) {
+        const buf = [];
+        req.on("data", (chunk) => {
             buf.push(chunk);
         });
-        req.on("end", function () {
+        req.on("end", () => {
             expect(Buffer.concat(buf).toString()).to.equal("hello=world%20%F0%9F%98%AD&another=value");
             done();
         });
     });
 
-    it("should post stream data", function (done) {
-        let body = new PassThrough();
-        let data = new Buffer("hello=world%20%F0%9F%98%AD&another=value");
+    it("should post stream data", (done) => {
+        const body = new PassThrough();
+        const data = new Buffer("hello=world%20%F0%9F%98%AD&another=value");
 
-        let req = fetch("http://localhost:" + HTTP_PORT + "/post", {
+        const req = fetch(`http://localhost:${HTTP_PORT}/post`, {
             method: "post",
             body
         });
-        let buf = [];
-        req.on("data", function (chunk) {
+        const buf = [];
+        req.on("data", (chunk) => {
             buf.push(chunk);
         });
-        req.on("end", function () {
+        req.on("end", () => {
             expect(Buffer.concat(buf).toString()).to.equal(data.toString());
             done();
         });
 
         let pos = 0;
-        let writeNext = function () {
+        const writeNext = function () {
             if (pos >= data.length) {
                 return body.end();
             }
-            let char = data.slice(pos++, pos);
+            const char = data.slice(pos++, pos);
             body.write(char);
             setImmediate(writeNext);
         };
@@ -476,20 +476,20 @@ describe("fetch tests", function () {
         setImmediate(writeNext);
     });
 
-    it("should return error for invalid cert", function (done) {
-        let req = fetch("https://localhost:" + HTTPS_PORT, {
+    it("should return error for invalid cert", (done) => {
+        const req = fetch(`https://localhost:${HTTPS_PORT}`, {
             tls: {
                 rejectUnauthorized: true
             }
         });
-        let buf = [];
-        req.on("data", function (chunk) {
+        const buf = [];
+        req.on("data", (chunk) => {
             buf.push(chunk);
         });
-        req.on("error", function (err) {
+        req.on("error", (err) => {
             expect(err).to.exist;
             done();
         });
-        req.on("end", function () {});
+        req.on("end", () => {});
     });
 });

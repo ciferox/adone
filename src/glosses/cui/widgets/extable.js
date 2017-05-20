@@ -57,10 +57,9 @@ export default class ExTable extends adone.cui.widget.Element {
     }
 
     render() {
-        if (this.screen.focused == this.rows)
-            { 
-this.rows.focus(); 
-}
+        if (this.screen.focused == this.rows) { 
+            this.rows.focus(); 
+        }
 
         this.rows.width = this.width - 3;
         this.rows.height = this.height - 4;
@@ -98,20 +97,20 @@ this.rows.focus();
 
     getOptionsPrototype() {
         return {
-            keys: true
-            , fg: "white"
-            , interactive: false
-            , label: "Active Processes"
-            , width: "30%"
-            , height: "30%"
-            , border: { type: "line", fg: "cyan" }
-            , columnSpacing: 10
-            , columnWidth: [16, 12]
-            , data: {
-                headers: ["col1", "col2"]
-                , data: [["a", "b"]
-                    , ["5", "u"]
-                    , ["x", "16.1"]]
+            keys: true,
+            fg: "white",
+            interactive: false,
+            label: "Active Processes",
+            width: "30%",
+            height: "30%",
+            border: { type: "line", fg: "cyan" },
+            columnSpacing: 10,
+            columnWidth: [16, 12],
+            data: {
+                headers: ["col1", "col2"],
+                data: [["a", "b"],
+                     ["5", "u"],
+                     ["x", "16.1"]]
             }
         };
     }

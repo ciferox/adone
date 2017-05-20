@@ -12,12 +12,12 @@ const libmime = module.exports = {
      * @param {String} value String to be tested
      * @returns {Boolean} true if it is a plaintext string
      */
-    isPlainText: function (value) {
+    isPlainText(value) {
         if (typeof value !== "string" || /[\x00-\x08\x0b\x0c\x0e-\x1f\u0080-\uFFFF]/.test(value)) {
             return false;
-        } else {
-            return true;
-        }
+        } 
+        return true;
+        
     },
 
     /**
@@ -31,8 +31,8 @@ const libmime = module.exports = {
      * @param {Number} lineLength Max line length to check for
      * @returns {Boolean} Returns true if there is at least one line longer than lineLength chars
      */
-    hasLongerLines: function (str, lineLength) {
-        return new RegExp("^.{" + (lineLength + 1) + ",}", "m").test(str);
+    hasLongerLines(str, lineLength) {
+        return new RegExp(`^.{${lineLength + 1},}`, "m").test(str);
     },
 
     /**
@@ -42,7 +42,7 @@ const libmime = module.exports = {
      * @param {Boolean} [delSp] If true, delete leading spaces (delsp=yes)
      * @return {String} Mime decoded string
      */
-    decodeFlowed: function (str, delSp) {
+    decodeFlowed(str, delSp) {
         str = (str || "").toString();
 
         return str.
@@ -50,8 +50,8 @@ const libmime = module.exports = {
             // remove soft linebreaks
             // soft linebreaks are added after space symbols
         reduce(
-                function (previousValue, currentValue, index) {
-                    var body = previousValue;
+                (previousValue, currentValue, index) => {
+                    let body = previousValue;
                     if (delSp) {
                         // delsp adds spaces to text to be able to fold it
                         // these spaces can be removed once the text is unfolded
@@ -59,9 +59,9 @@ const libmime = module.exports = {
                     }
                     if (/ $/.test(previousValue) && !/(^|\n)\-\- $/.test(previousValue) || index === 1) {
                         return body + currentValue;
-                    } else {
-                        return body + "\n" + currentValue;
-                    }
+                    } 
+                    return `${body}\n${currentValue}`;
+                    
                 }
             ).
             // remove whitespace stuffing
@@ -77,11 +77,11 @@ const libmime = module.exports = {
      * @param {Number} [lineLength=76] Maximum length of a line
      * @return {String} String with forced line breaks
      */
-    encodeFlowed: function (str, lineLength) {
+    encodeFlowed(str, lineLength) {
         lineLength = lineLength || 76;
 
-        var flowed = [];
-        str.split(/\r?\n/).forEach(function (line) {
+        const flowed = [];
+        str.split(/\r?\n/).forEach((line) => {
             flowed.push(libmime.foldLines(line.
                 // space stuffing http://tools.ietf.org/html/rfc3676#section-4.2
                 replace(/^( |From|>)/igm, " $1"),
@@ -98,11 +98,11 @@ const libmime = module.exports = {
      * @param {Number} [maxLength=0] If set, split mime words into several chunks if needed
      * @return {String} Single or several mime words joined together
      */
-    encodeWord: function (data, mimeWordEncoding, maxLength) {
+    encodeWord(data, mimeWordEncoding, maxLength) {
         mimeWordEncoding = (mimeWordEncoding || "Q").toString().toUpperCase().trim().charAt(0);
         maxLength = maxLength || 0;
 
-        var encodedStr,
+        let encodedStr,
             toCharset = "UTF-8",
             i, len, parts, lpart, chr;
 
@@ -112,13 +112,13 @@ const libmime = module.exports = {
 
         if (mimeWordEncoding === "Q") {
             // https://tools.ietf.org/html/rfc2047#section-5 rule (3)
-            encodedStr = libqp.encode(data).replace(/[^a-z0-9!*+\-\/=]/ig, function (chr) {
-                var ord = chr.charCodeAt(0).toString(16).toUpperCase();
+            encodedStr = libqp.encode(data).replace(/[^a-z0-9!*+\-\/=]/ig, (chr) => {
+                const ord = chr.charCodeAt(0).toString(16).toUpperCase();
                 if (chr === " ") {
                     return "_";
-                } else {
-                    return "=" + (ord.length === 1 ? "0" + ord : ord);
-                }
+                } 
+                return `=${ord.length === 1 ? `0${ord}` : ord}`;
+                
             });
         } else if (mimeWordEncoding === "B") {
             encodedStr = typeof data === "string" ? data : libbase64.encode(data);
@@ -127,7 +127,7 @@ const libmime = module.exports = {
 
         if (maxLength && (mimeWordEncoding !== "B" ? encodedStr : libbase64.encode(data)).length > maxLength) {
             if (mimeWordEncoding === "Q") {
-                encodedStr = splitMimeEncodedString(encodedStr, maxLength).join("?= =?" + toCharset + "?" + mimeWordEncoding + "?");
+                encodedStr = splitMimeEncodedString(encodedStr, maxLength).join(`?= =?${toCharset}?${mimeWordEncoding}?`);
             } else {
                 // RFC2047 6.3 (2) states that encoded-word must include an integral number of characters, so no chopping unicode sequences
                 parts = [];
@@ -149,7 +149,7 @@ const libmime = module.exports = {
                 }
 
                 if (parts.length > 1) {
-                    encodedStr = parts.join("?= =?" + toCharset + "?" + mimeWordEncoding + "?");
+                    encodedStr = parts.join(`?= =?${toCharset}?${mimeWordEncoding}?`);
                 } else {
                     encodedStr = parts.join("");
                 }
@@ -158,7 +158,7 @@ const libmime = module.exports = {
             encodedStr = libbase64.encode(data);
         }
 
-        return "=?" + toCharset + "?" + mimeWordEncoding + "?" + encodedStr + (encodedStr.substr(-2) === "?=" ? "" : "?=");
+        return `=?${toCharset}?${mimeWordEncoding}?${encodedStr}${encodedStr.substr(-2) === "?=" ? "" : "?="}`;
     },
 
     /**
@@ -167,10 +167,10 @@ const libmime = module.exports = {
      * @param {String} str Mime word encoded string
      * @return {String} Decoded unicode string
      */
-    decodeWord: function (str) {
+    decodeWord(str) {
         str = (str || "").toString().trim();
 
-        var fromCharset, encoding, match;
+        let fromCharset, encoding, match;
 
         match = str.match(/^\=\?([\w_\-\*]+)\?([QqBb])\?([^\?]+)\?\=$/i);
         if (!match) {
@@ -197,9 +197,9 @@ const libmime = module.exports = {
             return libcharset.decode(libbase64.decode(str), fromCharset);
         } else if (encoding === "Q") {
             return libcharset.decode(libqp.decode(str), fromCharset);
-        } else {
-            return str;
-        }
+        } 
+        return str;
+        
     },
 
     /**
@@ -211,7 +211,7 @@ const libmime = module.exports = {
      * @param {String} [fromCharset='UTF-8'] Source sharacter set
      * @return {String} String with possible mime words
      */
-    encodeWords: function (data, mimeWordEncoding, maxLength, fromCharset) {
+    encodeWords(data, mimeWordEncoding, maxLength, fromCharset) {
         if (!fromCharset && typeof maxLength === "string" && !maxLength.match(/^[0-9]+$/)) {
             fromCharset = maxLength;
             maxLength = undefined;
@@ -219,22 +219,22 @@ const libmime = module.exports = {
 
         maxLength = maxLength || 0;
 
-        var decodedValue = libcharset.decode(libcharset.convert((data || ""), fromCharset));
-        var encodedValue;
+        const decodedValue = libcharset.decode(libcharset.convert((data || ""), fromCharset));
+        let encodedValue;
 
-        var firstMatch = decodedValue.match(/(?:^|\s)([^\s]*[\u0080-\uFFFF])/);
+        const firstMatch = decodedValue.match(/(?:^|\s)([^\s]*[\u0080-\uFFFF])/);
         if (!firstMatch) {
             return decodedValue;
         }
-        var lastMatch = decodedValue.match(/([\u0080-\uFFFF][^\s]*)[^\u0080-\uFFFF]*$/);
+        const lastMatch = decodedValue.match(/([\u0080-\uFFFF][^\s]*)[^\u0080-\uFFFF]*$/);
         if (!lastMatch) {
             // should not happen
             return decodedValue;
         }
-        var startIndex = firstMatch.index + (firstMatch[0].match(/[^\s]/) || {
+        const startIndex = firstMatch.index + (firstMatch[0].match(/[^\s]/) || {
             index: 0
         }).index;
-        var endIndex = lastMatch.index + (lastMatch[1] || "").length;
+        const endIndex = lastMatch.index + (lastMatch[1] || "").length;
 
         encodedValue =
             (startIndex ? decodedValue.substr(0, startIndex) : "") +
@@ -250,27 +250,27 @@ const libmime = module.exports = {
      * @param {String} str String including some mime words that will be encoded
      * @return {String} Decoded unicode string
      */
-    decodeWords: function (str) {
+    decodeWords(str) {
         return (str || "").toString().
 
         // find base64 words that can be joined
         replace(/(=\?([^?]+)\?[Bb]\?[^?]+[^^=]\?=)\s*(?==\?([^?]+)\?[Bb]\?[^?]+\?=)/g,
-            function (match, left, chLeft, chRight) {
+            (match, left, chLeft, chRight) => {
                 // only mark b64 chunks to be joined if charsets match
                 if (libcharset.normalizeCharset(chLeft || "").toLowerCase().trim() === libcharset.normalizeCharset(chRight || "").toLowerCase().trim()) {
                     // set a joiner marker
-                    return left + "__\x00JOIN\x00__";
+                    return `${left}__\x00JOIN\x00__`;
                 }
                 return match;
             }).
 
         // find QP words that can be joined
         replace(/(=\?([^?]+)\?[Qq]\?[^?]+\?=)\s*(?==\?([^?]+)\?[Qq]\?[^?]+\?=)/g,
-            function (match, left, chLeft, chRight) {
+            (match, left, chLeft, chRight) => {
                 // only mark QP chunks to be joined if charsets match
                 if (libcharset.normalizeCharset(chLeft || "").toLowerCase().trim() === libcharset.normalizeCharset(chRight || "").toLowerCase().trim()) {
                     // set a joiner marker
-                    return left + "__\x00JOIN\x00__";
+                    return `${left}__\x00JOIN\x00__`;
                 }
                 return match;
             }).
@@ -282,7 +282,7 @@ const libmime = module.exports = {
         replace(/(=\?[^?]+\?[QqBb]\?[^?]+\?=)\s+(?==\?[^?]+\?[QqBb]\?[^?]+\?=)/g, "$1").
 
         // decode words
-        replace(/\=\?([\w_\-\*]+)\?([QqBb])\?[^\?]+\?\=/g, function (mimeWord) {
+        replace(/\=\?([\w_\-\*]+)\?([QqBb])\?[^\?]+\?\=/g, (mimeWord) => {
             return libmime.decodeWord(mimeWord);
         });
     },
@@ -295,15 +295,15 @@ const libmime = module.exports = {
      * @param {String} headerLine Single header line, might include linebreaks as well if folded
      * @return {Object} And object of {key, value}
      */
-    decodeHeader: function (headerLine) {
-        var line = (headerLine || "").toString().replace(/(?:\r?\n|\r)[ \t]*/g, " ").trim(),
+    decodeHeader(headerLine) {
+        let line = (headerLine || "").toString().replace(/(?:\r?\n|\r)[ \t]*/g, " ").trim(),
             match = line.match(/^\s*([^:]+):(.*)$/),
             key = (match && match[1] || "").trim().toLowerCase(),
             value = (match && match[2] || "").trim();
 
         return {
-            key: key,
-            value: value
+            key,
+            value
         };
     },
 
@@ -314,15 +314,15 @@ const libmime = module.exports = {
      * @param {String} headers Headers string
      * @return {Object} An object of headers, where header keys are object keys. NB! Several values with the same key make up an Array
      */
-    decodeHeaders: function (headers) {
-        var lines = headers.split(/\r?\n|\r/),
+    decodeHeaders(headers) {
+        let lines = headers.split(/\r?\n|\r/),
             headersObj = {},
             header,
             i, len;
 
         for (i = lines.length - 1; i >= 0; i--) {
             if (i && lines[i].match(/^\s/)) {
-                lines[i - 1] += "\r\n" + lines[i];
+                lines[i - 1] += `\r\n${lines[i]}`;
                 lines.splice(i, 1);
             }
         }
@@ -346,28 +346,28 @@ const libmime = module.exports = {
      * @param {Object} structured Parsed header value
      * @return {String} joined header value
      */
-    buildHeaderValue: function (structured) {
-        var paramsArray = [];
+    buildHeaderValue(structured) {
+        const paramsArray = [];
 
-        Object.keys(structured.params || {}).forEach(function (param) {
+        Object.keys(structured.params || {}).forEach((param) => {
             // filename might include unicode characters so it is a special case
-            var value = structured.params[param];
+            const value = structured.params[param];
             if (!libmime.isPlainText(value) || value.length >= 75) {
-                libmime.buildHeaderParam(param, value, 50).forEach(function (encodedParam) {
+                libmime.buildHeaderParam(param, value, 50).forEach((encodedParam) => {
                     if (!/[\s"\\;:\/=\(\),<>@\[\]\?]|^[\-']|'$/.test(encodedParam.value) || encodedParam.key.substr(-1) === "*") {
-                        paramsArray.push(encodedParam.key + "=" + encodedParam.value);
+                        paramsArray.push(`${encodedParam.key}=${encodedParam.value}`);
                     } else {
-                        paramsArray.push(encodedParam.key + "=" + JSON.stringify(encodedParam.value));
+                        paramsArray.push(`${encodedParam.key}=${JSON.stringify(encodedParam.value)}`);
                     }
                 });
             } else if (/[\s'"\\;:\/=\(\),<>@\[\]\?]|^\-/.test(value)) {
-                paramsArray.push(param + "=" + JSON.stringify(value));
+                paramsArray.push(`${param}=${JSON.stringify(value)}`);
             } else {
-                paramsArray.push(param + "=" + value);
+                paramsArray.push(`${param}=${value}`);
             }
-        }.bind(this));
+        });
 
-        return structured.value + (paramsArray.length ? "; " + paramsArray.join("; ") : "");
+        return structured.value + (paramsArray.length ? `; ${paramsArray.join("; ")}` : "");
     },
 
     /**
@@ -385,8 +385,8 @@ const libmime = module.exports = {
      * @param {String} str Header value
      * @return {Object} Header value as a parsed structure
      */
-    parseHeaderValue: function (str) {
-        var response = {
+    parseHeaderValue(str) {
+        let response = {
                 value: false,
                 params: {}
             },
@@ -397,7 +397,7 @@ const libmime = module.exports = {
             escaped = false,
             chr;
 
-        for (var i = 0, len = str.length; i < len; i++) {
+        for (let i = 0, len = str.length; i < len; i++) {
             chr = str.charAt(i);
             if (type === "key") {
                 if (chr === "=") {
@@ -447,8 +447,8 @@ const libmime = module.exports = {
         // https://tools.ietf.org/html/rfc2231#section-3
 
         // preprocess values
-        Object.keys(response.params).forEach(function (key) {
-            var actualKey, nr, match, value;
+        Object.keys(response.params).forEach((key) => {
+            let actualKey, nr, match, value;
             if ((match = key.match(/(\*(\d+)|\*(\d+)\*|\*)$/))) {
                 actualKey = key.substr(0, match.index);
                 nr = Number(match[2] || match[3]) || 0;
@@ -475,38 +475,38 @@ const libmime = module.exports = {
         });
 
         // concatenate split rfc2231 strings and convert encoded strings to mime encoded words
-        Object.keys(response.params).forEach(function (key) {
-            var value;
+        Object.keys(response.params).forEach((key) => {
+            let value;
             if (response.params[key] && Array.isArray(response.params[key].values)) {
-                value = response.params[key].values.map(function (val) {
+                value = response.params[key].values.map((val) => {
                     return val || "";
                 }).join("");
 
                 if (response.params[key].charset) {
                     // convert "%AB" to "=?charset?Q?=AB?="
-                    response.params[key] = "=?" +
-                        response.params[key].charset +
-                        "?Q?" +
+                    response.params[key] = `=?${ 
+                        response.params[key].charset 
+                        }?Q?${ 
                         value.
                         // fix invalidly encoded chars
                     replace(/[=\?_\s]/g,
-                            function (s) {
-                                var c = s.charCodeAt(0).toString(16);
+                            (s) => {
+                                const c = s.charCodeAt(0).toString(16);
                                 if (s === " ") {
                                     return "_";
-                                } else {
-                                    return "%" + (c.length < 2 ? "0" : "") + c;
-                                }
+                                } 
+                                return `%${ c.length < 2 ? "0" : ""  }${c}`;
+                                
                             }
                         ).
                         // change from urlencoding to percent encoding
-                    replace(/%/g, "=") +
-                        "?=";
+                    replace(/%/g, "=") 
+                        }?=`;
                 } else {
                     response.params[key] = value;
                 }
             }
-        }.bind(this));
+        });
 
         return response;
     },
@@ -526,15 +526,15 @@ const libmime = module.exports = {
      * @param {String} [fromCharset='UTF-8'] Source sharacter set
      * @return {Array} A list of encoded keys and headers
      */
-    buildHeaderParam: function (key, data, maxLength, fromCharset) {
-        var list = [];
-        var encodedStr = typeof data === "string" ? data : libmime.decode(data, fromCharset);
-        var encodedStrArr;
-        var chr, ord;
-        var line;
-        var startPos = 0;
-        var isEncoded = false;
-        var i, len;
+    buildHeaderParam(key, data, maxLength, fromCharset) {
+        const list = [];
+        let encodedStr = typeof data === "string" ? data : libmime.decode(data, fromCharset);
+        let encodedStrArr;
+        let chr, ord;
+        let line;
+        let startPos = 0;
+        let isEncoded = false;
+        let i, len;
 
         maxLength = maxLength || 50;
 
@@ -544,12 +544,12 @@ const libmime = module.exports = {
             // check if conversion is even needed
             if (encodedStr.length <= maxLength) {
                 return [{
-                    key: key,
+                    key,
                     value: encodedStr
                 }];
             }
 
-            encodedStr = encodedStr.replace(new RegExp(".{" + maxLength + "}", "g"), function (str) {
+            encodedStr = encodedStr.replace(new RegExp(`.{${maxLength}}`, "g"), (str) => {
                 list.push({
                     line: str
                 });
@@ -606,7 +606,7 @@ const libmime = module.exports = {
                         // and start a new line with the char that needs encoding
                         if ((safeEncodeURIComponent(line) + chr).length >= maxLength) {
                             list.push({
-                                line: line,
+                                line,
                                 encoded: isEncoded
                             });
                             line = "";
@@ -623,7 +623,7 @@ const libmime = module.exports = {
                 // if the line is already too long, push it to the list and start a new one
                 if ((line + chr).length >= maxLength) {
                     list.push({
-                        line: line,
+                        line,
                         encoded: isEncoded
                     });
                     line = chr = encodedStr[i] === " " ? " " : safeEncodeURIComponent(encodedStr[i]);
@@ -640,18 +640,18 @@ const libmime = module.exports = {
 
             if (line) {
                 list.push({
-                    line: line,
+                    line,
                     encoded: isEncoded
                 });
             }
         }
 
-        return list.map(function (item, i) {
+        return list.map((item, i) => {
             return {
                 // encoded lines: {name}*{part}*
                 // unencoded lines: {name}*{part}
                 // if any line needs to be encoded then the first line (part==0) is always encoded
-                key: key + "*" + i + (item.encoded ? "*" : ""),
+                key: `${key}*${i}${item.encoded ? "*" : ""}`,
                 value: item.line
             };
         });
@@ -665,7 +665,7 @@ const libmime = module.exports = {
      * @param {String} mimeType Content type to be checked for
      * @return {String} File extension
      */
-    detectExtension: function (mimeType) {
+    detectExtension(mimeType) {
         mimeType = (mimeType || "").toString().toLowerCase().replace(/\s/g, "");
         if (!(mimeType in mimetypes.list)) {
             return "bin";
@@ -675,10 +675,10 @@ const libmime = module.exports = {
             return mimetypes.list[mimeType];
         }
 
-        var mimeParts = mimeType.split("/");
+        const mimeParts = mimeType.split("/");
 
         // search for name match
-        for (var i = 0, len = mimetypes.list[mimeType].length; i < len; i++) {
+        for (let i = 0, len = mimetypes.list[mimeType].length; i < len; i++) {
             if (mimeParts[1] === mimetypes.list[mimeType][i]) {
                 return mimetypes.list[mimeType][i];
             }
@@ -695,7 +695,7 @@ const libmime = module.exports = {
      * @param {String} extension Extension to be checked for
      * @return {String} File extension
      */
-    detectMimeType: function (extension) {
+    detectMimeType(extension) {
         extension = (extension || "").toString().toLowerCase().replace(/\s/g, "").replace(/^\./g, "").split(".").pop();
 
         if (!(extension in mimetypes.extensions)) {
@@ -706,10 +706,10 @@ const libmime = module.exports = {
             return mimetypes.extensions[extension];
         }
 
-        var mimeParts;
+        let mimeParts;
 
         // search for name match
-        for (var i = 0, len = mimetypes.extensions[extension].length; i < len; i++) {
+        for (let i = 0, len = mimetypes.extensions[extension].length; i < len; i++) {
             mimeParts = mimetypes.extensions[extension][i].split("/");
             if (mimeParts[1] === extension) {
                 return mimetypes.extensions[extension][i];
@@ -729,11 +729,11 @@ const libmime = module.exports = {
      * @param {Boolean} afterSpace If true, leave a space in th end of a line
      * @return {String} String with folded lines
      */
-    foldLines: function (str, lineLength, afterSpace) {
+    foldLines(str, lineLength, afterSpace) {
         str = (str || "").toString();
         lineLength = lineLength || 76;
 
-        var pos = 0,
+        let pos = 0,
             len = str.length,
             result = "",
             line, match;
@@ -774,7 +774,7 @@ const libmime = module.exports = {
  * @return {Array} Split string
  */
 function splitMimeEncodedString(str, maxlen) {
-    var curLine, match, chr, done,
+    let curLine, match, chr, done,
         lines = [];
 
     // require at least 12 symbols to fit possible 4 octet UTF-8 sequences
@@ -812,19 +812,19 @@ function splitMimeEncodedString(str, maxlen) {
 }
 
 function encodeURICharComponent(chr) {
-    var i, len, ord;
-    var res = "";
+    let i, len, ord;
+    let res = "";
 
     ord = chr.charCodeAt(0).toString(16).toUpperCase();
     if (ord.length % 2) {
-        ord = "0" + ord;
+        ord = `0${ord}`;
     }
     if (ord.length > 2) {
         for (i = 0, len = ord.length / 2; i < len; i++) {
-            res += "%" + ord.substr(i, 2);
+            res += `%${ord.substr(i, 2)}`;
         }
     } else {
-        res += "%" + ord;
+        res += `%${ord}`;
     }
 
     return res;

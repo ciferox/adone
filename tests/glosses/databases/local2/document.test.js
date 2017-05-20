@@ -57,9 +57,9 @@ describe.skip("Document", () => {
         });
 
         it("undefined fields are removed when serialized", () => {
-            let a = { bloup: undefined, hello: "world" }
-                , b = document.serialize(a)
-                , c = document.deserialize(b)
+            let a = { bloup: undefined, hello: "world" },
+                b = document.serialize(a),
+                c = document.deserialize(b)
                 ;
 
             assert.equal(Object.keys(c).length, 1);
@@ -68,8 +68,8 @@ describe.skip("Document", () => {
         });
 
         it("Can serialize and deserialize a date", () => {
-            let a, b, c
-                , d = new Date();
+            let a, b, c,
+                d = new Date();
 
             a = { test: d };
             b = document.serialize(a);
@@ -82,8 +82,8 @@ describe.skip("Document", () => {
 
 
         it("Can serialize and deserialize a RegExp", () => {
-            let a, b, c
-                , r = /test/i;
+            let a, b, c,
+                r = /test/i;
 
             a = { test: r };
             b = document.serialize(a);
@@ -95,8 +95,8 @@ describe.skip("Document", () => {
         });
 
         it("Can serialize and deserialize sub objects", () => {
-            let a, b, c
-                , d = new Date();
+            let a, b, c,
+                d = new Date();
 
             a = { test: { something: 39, also: d, yes: { again: "yes" } } };
             b = document.serialize(a);
@@ -108,8 +108,8 @@ describe.skip("Document", () => {
         });
 
         it("Can serialize and deserialize sub arrays", () => {
-            let a, b, c
-                , d = new Date();
+            let a, b, c,
+                d = new Date();
 
             a = { test: [39, d, { again: "yes" }] };
             b = document.serialize(a);
@@ -121,13 +121,13 @@ describe.skip("Document", () => {
         });
 
         it("Reject field names beginning with a $ sign or containing a dot, except the four edge cases", () => {
-            let a1 = { $something: "totest" }
-                , a2 = { "with.dot": "totest" }
-                , e1 = { $$date: 4321 }
-                , e2 = { $$deleted: true }
-                , e3 = { $$indexCreated: "indexName" }
-                , e4 = { $$indexRemoved: "indexName" }
-                , b;
+            let a1 = { $something: "totest" },
+                a2 = { "with.dot": "totest" },
+                e1 = { $$date: 4321 },
+                e2 = { $$deleted: true },
+                e3 = { $$indexCreated: "indexName" },
+                e4 = { $$indexRemoved: "indexName" },
+                b;
 
             // Normal cases
             assert.throws(() => b = document.serialize(a1));
@@ -223,9 +223,9 @@ describe.skip("Document", () => {
     describe("Deep copying", () => {
 
         it("Should be able to deep copy any serializable document", () => {
-            let d = new Date()
-                , obj = { a: ["ee", "ff", 42], date: d, subobj: { a: "b", b: "c" } }
-                , res = document.deepCopy(obj);
+            let d = new Date(),
+                obj = { a: ["ee", "ff", 42], date: d, subobj: { a: "b", b: "c" } },
+                res = document.deepCopy(obj);
 
 
             assert.equal(res.a.length, 3);
@@ -251,9 +251,9 @@ describe.skip("Document", () => {
         });
 
         it("Should deep copy the contents of an array", () => {
-            let a = [{ hello: "world" }]
-                , b = document.deepCopy(a)
-                ;
+            let a = [{ hello: "world" }],
+                b = document.deepCopy(a)
+            ;
 
             assert.equal(b[0].hello, "world");
             b[0].hello = "another";
@@ -262,17 +262,17 @@ describe.skip("Document", () => {
         });
 
         it("Without the strictKeys option, everything gets deep copied", () => {
-            let a = { a: 4, $e: "rrr", "eee.rt": 42, nested: { yes: 1, "tt.yy": 2, $nopenope: 3 }, array: [{ "rr.hh": 1 }, { yes: true }, { $yes: false }] }
-                , b = document.deepCopy(a)
-                ;
+            let a = { a: 4, $e: "rrr", "eee.rt": 42, nested: { yes: 1, "tt.yy": 2, $nopenope: 3 }, array: [{ "rr.hh": 1 }, { yes: true }, { $yes: false }] },
+                b = document.deepCopy(a)
+            ;
 
             assert.deepEqual(a, b);
         });
 
         it("With the strictKeys option, only valid keys gets deep copied", () => {
-            let a = { a: 4, $e: "rrr", "eee.rt": 42, nested: { yes: 1, "tt.yy": 2, $nopenope: 3 }, array: [{ "rr.hh": 1 }, { yes: true }, { $yes: false }] }
-                , b = document.deepCopy(a, true)
-                ;
+            let a = { a: 4, $e: "rrr", "eee.rt": 42, nested: { yes: 1, "tt.yy": 2, $nopenope: 3 }, array: [{ "rr.hh": 1 }, { yes: true }, { $yes: false }] },
+                b = document.deepCopy(a, true)
+            ;
 
             assert.deepEqual(b, { a: 4, nested: { yes: 1 }, array: [{}, { yes: true }, {}] });
         });
@@ -283,9 +283,9 @@ describe.skip("Document", () => {
     describe("Modifying documents", () => {
 
         it("Queries not containing any modifier just replace the document by the contents of the query but keep its _id", () => {
-            let obj = { some: "thing", _id: "keepit" }
-                , updateQuery = { replace: "done", bloup: [1, 8] }
-                , t
+            let obj = { some: "thing", _id: "keepit" },
+                updateQuery = { replace: "done", bloup: [1, 8] },
+                t
                 ;
 
             t = document.modify(obj, updateQuery);
@@ -299,9 +299,9 @@ describe.skip("Document", () => {
         });
 
         it("Throw an error if trying to change the _id field in a copy-type modification", () => {
-            let obj = { some: "thing", _id: "keepit" }
-                , updateQuery = { replace: "done", bloup: [1, 8], _id: "donttryit" }
-                ;
+            let obj = { some: "thing", _id: "keepit" },
+                updateQuery = { replace: "done", bloup: [1, 8], _id: "donttryit" }
+            ;
 
             assert.throws(() => document.modify(obj, updateQuery));
 
@@ -310,15 +310,15 @@ describe.skip("Document", () => {
         });
 
         it("Throw an error if trying to use modify in a mixed copy+modify way", () => {
-            let obj = { some: "thing" }
-                , updateQuery = { replace: "me", $modify: "metoo" };
+            let obj = { some: "thing" },
+                updateQuery = { replace: "me", $modify: "metoo" };
 
             assert.throws(() => document.modify(obj, updateQuery));
         });
 
         it("Throw an error if trying to use an inexistent modifier", () => {
-            let obj = { some: "thing" }
-                , updateQuery = { $set: "this exists", $modify: "not this one" };
+            let obj = { some: "thing" },
+                updateQuery = { $set: "this exists", $modify: "not this one" };
 
             assert.throws(() => document.modify(obj, updateQuery));
         });
@@ -332,9 +332,9 @@ describe.skip("Document", () => {
 
         describe("$set modifier", () => {
             it("Can change already set fields without modfifying the underlying object", () => {
-                let obj = { some: "thing", yup: "yes", nay: "noes" }
-                    , updateQuery = { $set: { some: "changed", nay: "yes indeed" } }
-                    , modified = document.modify(obj, updateQuery);
+                let obj = { some: "thing", yup: "yes", nay: "noes" },
+                    updateQuery = { $set: { some: "changed", nay: "yes indeed" } },
+                    modified = document.modify(obj, updateQuery);
 
                 assert.equal(Object.keys(modified).length, 3);
                 assert.equal(modified.some, "changed");
@@ -348,9 +348,9 @@ describe.skip("Document", () => {
             });
 
             it("Creates fields to set if they dont exist yet", () => {
-                let obj = { yup: "yes" }
-                    , updateQuery = { $set: { some: "changed", nay: "yes indeed" } }
-                    , modified = document.modify(obj, updateQuery);
+                let obj = { yup: "yes" },
+                    updateQuery = { $set: { some: "changed", nay: "yes indeed" } },
+                    modified = document.modify(obj, updateQuery);
 
                 assert.equal(Object.keys(modified).length, 3);
                 assert.equal(modified.some, "changed");
@@ -359,9 +359,9 @@ describe.skip("Document", () => {
             });
 
             it("Can set sub-fields and create them if necessary", () => {
-                let obj = { yup: { subfield: "bloup" } }
-                    , updateQuery = { $set: { "yup.subfield": "changed", "yup.yop": "yes indeed", "totally.doesnt.exist": "now it does" } }
-                    , modified = document.modify(obj, updateQuery);
+                let obj = { yup: { subfield: "bloup" } },
+                    updateQuery = { $set: { "yup.subfield": "changed", "yup.yop": "yes indeed", "totally.doesnt.exist": "now it does" } },
+                    modified = document.modify(obj, updateQuery);
 
                 assert.equal(_.isEqual(modified, { yup: { subfield: "changed", yop: "yes indeed" }, totally: { doesnt: { exist: "now it does" } } }), true);
             });
@@ -412,21 +412,21 @@ describe.skip("Document", () => {
         describe("$inc modifier", () => {
             it("Throw an error if you try to use it with a non-number or on a non number field", () => {
                 assert.throws(() => {
-                    let obj = { some: "thing", yup: "yes", nay: 2 }
-                        , updateQuery = { $inc: { nay: "notanumber" } }
-                        , modified = document.modify(obj, updateQuery);
+                    let obj = { some: "thing", yup: "yes", nay: 2 },
+                        updateQuery = { $inc: { nay: "notanumber" } },
+                        modified = document.modify(obj, updateQuery);
                 });
 
                 assert.throws(() => {
-                    let obj = { some: "thing", yup: "yes", nay: "nope" }
-                        , updateQuery = { $inc: { nay: 1 } }
-                        , modified = document.modify(obj, updateQuery);
+                    let obj = { some: "thing", yup: "yes", nay: "nope" },
+                        updateQuery = { $inc: { nay: 1 } },
+                        modified = document.modify(obj, updateQuery);
                 });
             });
 
             it("Can increment number fields or create and initialize them if needed", () => {
-                let obj = { some: "thing", nay: 40 }
-                    , modified;
+                let obj = { some: "thing", nay: 40 },
+                    modified;
 
                 modified = document.modify(obj, { $inc: { nay: 2 } });
                 assert.equal(_.isEqual(modified, { some: "thing", nay: 42 }), true);
@@ -437,8 +437,8 @@ describe.skip("Document", () => {
             });
 
             it("Works recursively", () => {
-                let obj = { some: "thing", nay: { nope: 40 } }
-                    , modified;
+                let obj = { some: "thing", nay: { nope: 40 } },
+                    modified;
 
                 modified = document.modify(obj, { $inc: { "nay.nope": -2, "blip.blop": 123 } });
                 assert.equal(_.isEqual(modified, { some: "thing", nay: { nope: 38 }, blip: { blop: 123 } }), true);
@@ -448,24 +448,24 @@ describe.skip("Document", () => {
         describe("$push modifier", () => {
 
             it("Can push an element to the end of an array", () => {
-                let obj = { arr: ["hello"] }
-                    , modified;
+                let obj = { arr: ["hello"] },
+                    modified;
 
                 modified = document.modify(obj, { $push: { arr: "world" } });
                 assert.deepEqual(modified, { arr: ["hello", "world"] });
             });
 
             it("Can push an element to a non-existent field and will create the array", () => {
-                let obj = {}
-                    , modified;
+                let obj = {},
+                    modified;
 
                 modified = document.modify(obj, { $push: { arr: "world" } });
                 assert.deepEqual(modified, { arr: ["world"] });
             });
 
             it("Can push on nested fields", () => {
-                let obj = { arr: { nested: ["hello"] } }
-                    , modified;
+                let obj = { arr: { nested: ["hello"] } },
+                    modified;
 
                 modified = document.modify(obj, { $push: { "arr.nested": "world" } });
                 assert.deepEqual(modified, { arr: { nested: ["hello", "world"] } });
@@ -476,8 +476,8 @@ describe.skip("Document", () => {
             });
 
             it("Throw if we try to push to a non-array", () => {
-                let obj = { arr: "hello" }
-                    , modified;
+                let obj = { arr: "hello" },
+                    modified;
 
                 assert.throws(() => modified = document.modify(obj, { $push: { arr: "world" } }));
 
@@ -486,8 +486,8 @@ describe.skip("Document", () => {
             });
 
             it("Can use the $each modifier to add multiple values to an array at once", () => {
-                let obj = { arr: ["hello"] }
-                    , modified;
+                let obj = { arr: ["hello"] },
+                    modified;
 
                 modified = document.modify(obj, { $push: { arr: { $each: ["world", "earth", "everything"] } } });
                 assert.deepEqual(modified, { arr: ["hello", "world", "earth", "everything"] });
@@ -502,8 +502,8 @@ describe.skip("Document", () => {
         describe("$addToSet modifier", () => {
 
             it("Can add an element to a set", () => {
-                let obj = { arr: ["hello"] }
-                    , modified;
+                let obj = { arr: ["hello"] },
+                    modified;
 
                 modified = document.modify(obj, { $addToSet: { arr: "world" } });
                 assert.deepEqual(modified, { arr: ["hello", "world"] });
@@ -514,23 +514,23 @@ describe.skip("Document", () => {
             });
 
             it("Can add an element to a non-existent set and will create the array", () => {
-                let obj = { arr: [] }
-                    , modified;
+                let obj = { arr: [] },
+                    modified;
 
                 modified = document.modify(obj, { $addToSet: { arr: "world" } });
                 assert.deepEqual(modified, { arr: ["world"] });
             });
 
             it("Throw if we try to addToSet to a non-array", () => {
-                let obj = { arr: "hello" }
-                    , modified;
+                let obj = { arr: "hello" },
+                    modified;
 
                 assert.throws(() => modified = document.modify(obj, { $addToSet: { arr: "world" } }));
             });
 
             it("Use deep-equality to check whether we can add a value to a set", () => {
-                let obj = { arr: [{ b: 2 }] }
-                    , modified;
+                let obj = { arr: [{ b: 2 }] },
+                    modified;
 
                 modified = document.modify(obj, { $addToSet: { arr: { b: 3 } } });
                 assert.deepEqual(modified, { arr: [{ b: 2 }, { b: 3 }] });
@@ -541,8 +541,8 @@ describe.skip("Document", () => {
             });
 
             it("Can use the $each modifier to add multiple values to a set at once", () => {
-                let obj = { arr: ["hello"] }
-                    , modified;
+                let obj = { arr: ["hello"] },
+                    modified;
 
                 modified = document.modify(obj, { $addToSet: { arr: { $each: ["world", "earth", "hello", "earth"] } } });
                 assert.deepEqual(modified, { arr: ["hello", "world", "earth"] });
@@ -557,8 +557,8 @@ describe.skip("Document", () => {
         describe("$pop modifier", () => {
 
             it("Throw if called on a non array, a non defined field or a non integer", () => {
-                let obj = { arr: "hello" }
-                    , modified;
+                let obj = { arr: "hello" },
+                    modified;
 
                 assert.throws(() => modified = document.modify(obj, { $pop: { arr: 1 } }));
 
@@ -570,8 +570,8 @@ describe.skip("Document", () => {
             });
 
             it("Can remove the first and last element of an array", () => {
-                let obj
-                    , modified;
+                let obj,
+                    modified;
 
                 obj = { arr: [1, 4, 8] };
                 modified = document.modify(obj, { $pop: { arr: 1 } });
@@ -594,8 +594,8 @@ describe.skip("Document", () => {
         describe("$pull modifier", () => {
 
             it("Can remove an element from a set", () => {
-                let obj = { arr: ["hello", "world"] }
-                    , modified;
+                let obj = { arr: ["hello", "world"] },
+                    modified;
 
                 modified = document.modify(obj, { $pull: { arr: "world" } });
                 assert.deepEqual(modified, { arr: ["hello"] });
@@ -606,23 +606,23 @@ describe.skip("Document", () => {
             });
 
             it("Can remove multiple matching elements", () => {
-                let obj = { arr: ["hello", "world", "hello", "world"] }
-                    , modified;
+                let obj = { arr: ["hello", "world", "hello", "world"] },
+                    modified;
 
                 modified = document.modify(obj, { $pull: { arr: "world" } });
                 assert.deepEqual(modified, { arr: ["hello", "hello"] });
             });
 
             it("Throw if we try to pull from a non-array", () => {
-                let obj = { arr: "hello" }
-                    , modified;
+                let obj = { arr: "hello" },
+                    modified;
 
                 assert.throws(() => modified = document.modify(obj, { $pull: { arr: "world" } }));
             });
 
             it("Use deep-equality to check whether we can remove a value from a set", () => {
-                let obj = { arr: [{ b: 2 }, { b: 3 }] }
-                    , modified;
+                let obj = { arr: [{ b: 2 }, { b: 3 }] },
+                    modified;
 
                 modified = document.modify(obj, { $pull: { arr: { b: 3 } } });
                 assert.deepEqual(modified, { arr: [{ b: 2 }] });
@@ -633,9 +633,9 @@ describe.skip("Document", () => {
             });
 
             it("Can use any kind of nedb query with $pull", () => {
-                let obj = { arr: [4, 7, 12, 2], other: "yup" }
-                    , modified
-                    ;
+                let obj = { arr: [4, 7, 12, 2], other: "yup" },
+                    modified
+                ;
 
                 modified = document.modify(obj, { $pull: { arr: { $gte: 5 } } });
                 assert.deepEqual(modified, { arr: [4, 2], other: "yup" });
@@ -675,8 +675,8 @@ describe.skip("Document", () => {
         });
 
         it("Then numbers", () => {
-            let otherStuff = ["string", "", true, false, new Date(4312), {}, { hello: "world" }, [], ["quite", 5]]
-                , numbers = [-12, 0, 12, 5.7];
+            let otherStuff = ["string", "", true, false, new Date(4312), {}, { hello: "world" }, [], ["quite", 5]],
+                numbers = [-12, 0, 12, 5.7];
 
             assert.equal(document.compareThings(-12, 0), -1);
             assert.equal(document.compareThings(0, -3), 1);
@@ -695,8 +695,8 @@ describe.skip("Document", () => {
         });
 
         it("Then strings", () => {
-            let otherStuff = [true, false, new Date(4321), {}, { hello: "world" }, [], ["quite", 5]]
-                , strings = ["", "string", "hello world"];
+            let otherStuff = [true, false, new Date(4321), {}, { hello: "world" }, [], ["quite", 5]],
+                strings = ["", "string", "hello world"];
 
             assert.equal(document.compareThings("", "hey"), -1);
             assert.equal(document.compareThings("hey", ""), 1);
@@ -712,8 +712,8 @@ describe.skip("Document", () => {
         });
 
         it("Then booleans", () => {
-            let otherStuff = [new Date(4321), {}, { hello: "world" }, [], ["quite", 5]]
-                , bools = [true, false];
+            let otherStuff = [new Date(4321), {}, { hello: "world" }, [], ["quite", 5]],
+                bools = [true, false];
 
             assert.equal(document.compareThings(true, true), 0);
             assert.equal(document.compareThings(false, false), 0);
@@ -729,9 +729,9 @@ describe.skip("Document", () => {
         });
 
         it("Then dates", () => {
-            let otherStuff = [{}, { hello: "world" }, [], ["quite", 5]]
-                , dates = [new Date(-123), new Date(), new Date(5555), new Date(0)]
-                , now = new Date();
+            let otherStuff = [{}, { hello: "world" }, [], ["quite", 5]],
+                dates = [new Date(-123), new Date(), new Date(5555), new Date(0)],
+                now = new Date();
 
             assert.equal(document.compareThings(now, now), 0);
             assert.equal(document.compareThings(new Date(54341), now), -1);
@@ -748,9 +748,9 @@ describe.skip("Document", () => {
         });
 
         it("Then arrays", () => {
-            let otherStuff = [{}, { hello: "world" }]
-                , arrays = [[], ["yes"], ["hello", 5]]
-                ;
+            let otherStuff = [{}, { hello: "world" }],
+                arrays = [[], ["yes"], ["hello", 5]]
+            ;
 
             assert.equal(document.compareThings([], []), 0);
             assert.equal(document.compareThings(["hello"], []), 1);
@@ -784,9 +784,9 @@ describe.skip("Document", () => {
         describe("Comparing things", () => {
 
             it("Two things of different types cannot be equal, two identical native things are equal", () => {
-                let toTest = [null, "somestring", 42, true, new Date(72998322), { hello: "world" }]
-                    , toTestAgainst = [null, "somestring", 42, true, new Date(72998322), { hello: "world" }]   // Use another array so that we don't test pointer equality
-                    , i, j
+                let toTest = [null, "somestring", 42, true, new Date(72998322), { hello: "world" }],
+                    toTestAgainst = [null, "somestring", 42, true, new Date(72998322), { hello: "world" }],   // Use another array so that we don't test pointer equality
+                    i, j
                     ;
 
                 for (i = 0; i < toTest.length; i += 1) {
@@ -797,9 +797,9 @@ describe.skip("Document", () => {
             });
 
             it("Can test native types null undefined string number boolean date equality", () => {
-                let toTest = [null, undefined, "somestring", 42, true, new Date(72998322), { hello: "world" }]
-                    , toTestAgainst = [undefined, null, "someotherstring", 5, false, new Date(111111), { hello: "mars" }]
-                    , i
+                let toTest = [null, undefined, "somestring", 42, true, new Date(72998322), { hello: "world" }],
+                    toTestAgainst = [undefined, null, "someotherstring", 5, false, new Date(111111), { hello: "mars" }],
+                    i
                     ;
 
                 for (i = 0; i < toTest.length; i += 1) {
@@ -808,9 +808,9 @@ describe.skip("Document", () => {
             });
 
             it("If one side is an array or undefined, comparison fails", () => {
-                let toTestAgainst = [null, undefined, "somestring", 42, true, new Date(72998322), { hello: "world" }]
-                    , i
-                    ;
+                let toTestAgainst = [null, undefined, "somestring", 42, true, new Date(72998322), { hello: "world" }],
+                    i
+                ;
 
                 for (i = 0; i < toTestAgainst.length; i += 1) {
                     assert.equal(document.areThingsEqual([1, 2, 3], toTestAgainst[i]), false);
@@ -923,8 +923,8 @@ describe.skip("Document", () => {
         describe("Regular expression matching", () => {
 
             it("Matching a non-string to a regular expression always yields false", () => {
-                let d = new Date()
-                    , r = new RegExp(d.getTime());
+                let d = new Date(),
+                    r = new RegExp(d.getTime());
 
                 assert.equal(document.match({ test: true }, { test: /true/ }), false);
                 assert.equal(document.match({ test: null }, { test: /null/ }), false);

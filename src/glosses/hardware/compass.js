@@ -331,7 +331,7 @@ const Controllers = {
                             isDataPending = true;
 
                             this.io.i2cReadOnce(address, this.REGISTER.READ, 6, (bytes) => {
-                                var timeout = 0;
+                                let timeout = 0;
 
                                 isDataPending = false;
 
@@ -383,13 +383,13 @@ const Controllers = {
                                         this.io.i2cWrite(address, this.REGISTER.OFFSETS, [
                                             state.offsets.x >> 7, (state.offsets.x << 1) & 0xFF,
                                             state.offsets.y >> 7, (state.offsets.y << 1) & 0xFF,
-                                            state.offsets.z >> 7, (state.offsets.z << 1) & 0xFF,
+                                            state.offsets.z >> 7, (state.offsets.z << 1) & 0xFF
                                         ]);
 
                                         this.emit("calibrated", {
                                             x: [state.accum.x.low, state.accum.x.high],
                                             y: [state.accum.y.low, state.accum.y.high],
-                                            z: [state.accum.z.low, state.accum.z.high],
+                                            z: [state.accum.z.low, state.accum.z.high]
                                         });
                                     }
 

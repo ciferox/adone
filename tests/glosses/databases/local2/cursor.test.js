@@ -73,8 +73,8 @@ describe.skip("Cursor", () => {
                         })[0].age, 89);
                         cb();
                     });
-                }
-                , function (cb) {
+                },
+                function (cb) {
                     const cursor = new Cursor(d, {});
                     cursor.exec((err, docs) => {
                         assert.isNull(err);
@@ -96,8 +96,8 @@ describe.skip("Cursor", () => {
                         })[0].age, 89);
                         cb();
                     });
-                }
-                , function (cb) {
+                },
+                function (cb) {
                     const cursor = new Cursor(d, { age: { $gt: 23 } });
                     cursor.exec((err, docs) => {
                         assert.isNull(err);
@@ -123,8 +123,8 @@ describe.skip("Cursor", () => {
                     d.remove({}, { multi: true }, (err) => {
                         return cb(err);
                     });
-                }
-                , function (cb) {
+                },
+                function (cb) {
                     const cursor = new Cursor(d);
                     cursor.exec((err, docs) => {
                         assert.isNull(err);
@@ -265,8 +265,8 @@ describe.skip("Cursor", () => {
                     d.remove({}, { multi: true }, (err) => {
                         return cb(err);
                     });
-                }
-                , function (cb) {
+                },
+                function (cb) {
                     const cursor = new Cursor(d);
                     cursor.sort({ age: 1 });
                     cursor.exec((err, docs) => {
@@ -291,8 +291,8 @@ describe.skip("Cursor", () => {
                         }
                         cb();
                     });
-                }
-                , function (cb) {
+                },
+                function (cb) {
                     const cursor = new Cursor(d);
                     cursor.sort({ age: -1 }).exec((err, docs) => {
                         assert.isNull(err);
@@ -319,8 +319,8 @@ describe.skip("Cursor", () => {
                         assert.equal(docs[2].age, 52);
                         cb();
                     });
-                }
-                , function (cb) {
+                },
+                function (cb) {
                     const cursor = new Cursor(d);
                     cursor.sort({ age: -1 }).limit(2).exec((err, docs) => {
                         assert.isNull(err);
@@ -363,8 +363,8 @@ describe.skip("Cursor", () => {
                         assert.equal(docs[0].age, 52);
                         cb();
                     });
-                }
-                , function (cb) {
+                },
+                function (cb) {
                     const cursor = new Cursor(d);
                     cursor.sort({ age: 1 }).limit(3).skip(1).exec((err, docs) => {
                         assert.isNull(err);
@@ -374,8 +374,8 @@ describe.skip("Cursor", () => {
                         assert.equal(docs[2].age, 57);
                         cb();
                     });
-                }
-                , function (cb) {
+                },
+                function (cb) {
                     const cursor = new Cursor(d);
                     cursor.sort({ age: -1 }).limit(2).skip(2).exec((err, docs) => {
                         assert.isNull(err);
@@ -415,24 +415,24 @@ describe.skip("Cursor", () => {
                         assert.equal(docs.length, 0);
                         cb();
                     });
-                }
-                , function (cb) {
+                },
+                function (cb) {
                     const cursor = new Cursor(d);
                     cursor.sort({ age: 1 }).skip(7).exec((err, docs) => {
                         assert.isNull(err);
                         assert.equal(docs.length, 0);
                         cb();
                     });
-                }
-                , function (cb) {
+                },
+                function (cb) {
                     const cursor = new Cursor(d);
                     cursor.sort({ age: 1 }).limit(3).skip(7).exec((err, docs) => {
                         assert.isNull(err);
                         assert.equal(docs.length, 0);
                         cb();
                     });
-                }
-                , function (cb) {
+                },
+                function (cb) {
                     const cursor = new Cursor(d);
                     cursor.sort({ age: 1 }).limit(6).skip(7).exec((err, docs) => {
                         assert.isNull(err);
@@ -459,8 +459,8 @@ describe.skip("Cursor", () => {
                             });
                         });
                     });
-                }
-                , function (cb) {
+                },
+                function (cb) {
                     const cursor = new Cursor(d, {});
                     cursor.sort({ name: 1 }).exec((err, docs) => {
                         assert.equal(docs.length, 3);
@@ -469,8 +469,8 @@ describe.skip("Cursor", () => {
                         assert.equal(docs[2].name, "sue");
                         return cb();
                     });
-                }
-                , function (cb) {
+                },
+                function (cb) {
                     const cursor = new Cursor(d, {});
                     cursor.sort({ name: -1 }).exec((err, docs) => {
                         assert.equal(docs.length, 3);
@@ -504,8 +504,8 @@ describe.skip("Cursor", () => {
                             });
                         });
                     });
-                }
-                , function (cb) {
+                },
+                function (cb) {
                     const cursor = new Cursor(d, {});
                     cursor.sort({ "event.recorded": 1 }).exec((err, docs) => {
                         assert.equal(docs.length, 3);
@@ -514,8 +514,8 @@ describe.skip("Cursor", () => {
                         assert.equal(docs[2]._id, doc2._id);
                         return cb();
                     });
-                }
-                , function (cb) {
+                },
+                function (cb) {
                     const cursor = new Cursor(d, {});
                     cursor.sort({ "event.recorded": -1 }).exec((err, docs) => {
                         assert.equal(docs.length, 3);
@@ -546,8 +546,8 @@ describe.skip("Cursor", () => {
                             });
                         });
                     });
-                }
-                , function (cb) {
+                },
+                function (cb) {
                     const cursor = new Cursor(d, {});
                     cursor.sort({ other: 1 }).exec((err, docs) => {
                         assert.equal(docs.length, 4);
@@ -561,8 +561,8 @@ describe.skip("Cursor", () => {
                         assert.equal(docs[3].other, 4);
                         return cb();
                     });
-                }
-                , function (cb) {
+                },
+                function (cb) {
                     const cursor = new Cursor(d, { name: { $in: ["suzy", "jakeb", "jako"] } });
                     cursor.sort({ other: -1 }).exec((err, docs) => {
                         assert.equal(docs.length, 2);
@@ -592,15 +592,15 @@ describe.skip("Cursor", () => {
                             });
                         });
                     });
-                }
-                , function (cb) {
+                },
+                function (cb) {
                     const cursor = new Cursor(d, {});
                     cursor.sort({ other: 1 }).exec((err, docs) => {
                         assert.equal(docs.length, 3);
                         return cb();
                     });
-                }
-                , function (cb) {
+                },
+                function (cb) {
                     const cursor = new Cursor(d, { name: { $in: ["sue", "jakeb", "jakob"] } });
                     cursor.sort({ other: -1 }).exec((err, docs) => {
                         assert.equal(docs.length, 2);
@@ -630,8 +630,8 @@ describe.skip("Cursor", () => {
                             });
                         });
                     });
-                }
-                , function (cb) {
+                },
+                function (cb) {
                     const cursor = new Cursor(d, {});
                     cursor.sort({ name: 1, age: -1 }).exec((err, docs) => {
                         assert.equal(docs.length, 5);
@@ -643,8 +643,8 @@ describe.skip("Cursor", () => {
                         assert.equal(docs[4].nid, 4);
                         return cb();
                     });
-                }
-                , function (cb) {
+                },
+                function (cb) {
                     const cursor = new Cursor(d, {});
                     cursor.sort({ name: 1, age: 1 }).exec((err, docs) => {
                         assert.equal(docs.length, 5);
@@ -656,8 +656,8 @@ describe.skip("Cursor", () => {
                         assert.equal(docs[4].nid, 4);
                         return cb();
                     });
-                }
-                , function (cb) {
+                },
+                function (cb) {
                     const cursor = new Cursor(d, {});
                     cursor.sort({ age: 1, name: 1 }).exec((err, docs) => {
                         assert.equal(docs.length, 5);
@@ -669,8 +669,8 @@ describe.skip("Cursor", () => {
                         assert.equal(docs[4].nid, 1);
                         return cb();
                     });
-                }
-                , function (cb) {
+                },
+                function (cb) {
                     const cursor = new Cursor(d, {});
                     cursor.sort({ age: 1, name: -1 }).exec((err, docs) => {
                         assert.equal(docs.length, 5);
@@ -687,9 +687,9 @@ describe.skip("Cursor", () => {
         });
 
         it("Similar data, multiple consecutive sorts", (done) => {
-            let i, j, id
-                , companies = ["acme", "milkman", "zoinks"]
-                , entities = []
+            let i, j, id,
+                companies = ["acme", "milkman", "zoinks"],
+                entities = []
                 ;
 
             async.waterfall([
@@ -719,8 +719,8 @@ describe.skip("Cursor", () => {
                             return cb();
                         });
                     });
-                }
-                , function (cb) {
+                },
+                function (cb) {
                     const cursor = new Cursor(d, {});
                     cursor.sort({ company: 1, cost: 1 }).exec((err, docs) => {
                         assert.equal(docs.length, 60);

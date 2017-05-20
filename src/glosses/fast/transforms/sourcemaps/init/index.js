@@ -65,8 +65,9 @@ export default function init(options = {}) {
                     sources: [adone.util.unixifyPath(file.relative)],
                     sourcesContent: [fileContent]
                 };
-            } else if (!is.null(preExistingComment) && !is.undefined(preExistingComment))
-                sourceMap.preExistingComment = preExistingComment;
+            } else if (!is.null(preExistingComment) && !is.undefined(preExistingComment)) {
+                sourceMap.preExistingComment = preExistingComment; 
+            }
 
             sourceMap.file = adone.util.unixifyPath(file.relative);
             file.sourceMap = sourceMap;

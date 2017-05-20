@@ -71,11 +71,15 @@ pp.parseStatement = function (declaration, topLevel) {
         case tt._do: return this.parseDoStatement(node);
         case tt._for: return this.parseForStatement(node);
         case tt._function:
-            if (!declaration) this.unexpected();
+            if (!declaration) {
+                this.unexpected();
+            }
             return this.parseFunctionStatement(node);
 
         case tt._class:
-            if (!declaration) this.unexpected();
+            if (!declaration) {
+                this.unexpected();
+            }
             this.takeDecorators(node);
             return this.parseClass(node, true);
 
@@ -87,7 +91,9 @@ pp.parseStatement = function (declaration, topLevel) {
 
         case tt._let:
         case tt._const:
-            if (!declaration) this.unexpected(); // NOTE: falls through to _var
+            if (!declaration) {
+                this.unexpected(); 
+            } // NOTE: falls through to _var
 
         case tt._var:
             return this.parseVarStatement(node, starttype);
@@ -98,7 +104,9 @@ pp.parseStatement = function (declaration, topLevel) {
         case tt.semi: return this.parseEmptyStatement(node);
         case tt._export:
         case tt._import:
-            if (this.hasPlugin("dynamicImport") && this.lookahead().type === tt.parenL) break;
+            if (this.hasPlugin("dynamicImport") && this.lookahead().type === tt.parenL) {
+                break;
+            }
 
             if (!this.options.allowImportExportEverywhere) {
                 if (!topLevel) {
@@ -119,9 +127,9 @@ pp.parseStatement = function (declaration, topLevel) {
                 if (this.match(tt._function) && !this.canInsertSemicolon()) {
                     this.expect(tt._function);
                     return this.parseFunction(node, true, false, true);
-                } else {
-                    this.state = state;
-                }
+                } 
+                this.state = state;
+                
             }
     }
 
@@ -135,9 +143,9 @@ pp.parseStatement = function (declaration, topLevel) {
 
     if (starttype === tt.name && expr.type === "Identifier" && this.eat(tt.colon)) {
         return this.parseLabeledStatement(node, maybeName, expr);
-    } else {
-        return this.parseExpressionStatement(node, expr);
-    }
+    } 
+    return this.parseExpressionStatement(node, expr);
+    
 };
 
 pp.takeDecorators = function (node) {
@@ -191,11 +199,17 @@ pp.parseBreakContinueStatement = function (node, keyword) {
     for (i = 0; i < this.state.labels.length; ++i) {
         const lab = this.state.labels[i];
         if (node.label == null || lab.name === node.label.name) {
-            if (lab.kind != null && (isBreak || lab.kind === "loop")) break;
-            if (node.label && isBreak) break;
+            if (lab.kind != null && (isBreak || lab.kind === "loop")) {
+                break;
+            }
+            if (node.label && isBreak) {
+                break;
+            }
         }
     }
-    if (i === this.state.labels.length) this.raise(node.start, "Unsyntactic " + keyword);
+    if (i === this.state.labels.length) {
+        this.raise(node.start, `Unsyntactic ${keyword}`); 
+    }
     return this.finishNode(node, isBreak ? "BreakStatement" : "ContinueStatement");
 };
 
@@ -325,14 +339,18 @@ pp.parseSwitchStatement = function (node) {
     for (let sawDefault; !this.match(tt.braceR);) {
         if (this.match(tt._case) || this.match(tt._default)) {
             const isCase = this.match(tt._case);
-            if (cur) this.finishNode(cur, "SwitchCase");
+            if (cur) {
+                this.finishNode(cur, "SwitchCase");
+            }
             node.cases.push(cur = this.startNode());
             cur.consequent = [];
             this.next();
             if (isCase) {
                 cur.test = this.parseExpression();
             } else {
-                if (sawDefault) this.raise(this.state.lastTokStart, "Multiple default clauses");
+                if (sawDefault) {
+                    this.raise(this.state.lastTokStart, "Multiple default clauses");
+                }
                 sawDefault = true;
                 cur.test = null;
             }
@@ -345,7 +363,9 @@ pp.parseSwitchStatement = function (node) {
             }
         }
     }
-    if (cur) this.finishNode(cur, "SwitchCase");
+    if (cur) {
+        this.finishNode(cur, "SwitchCase");
+    }
     this.next(); // Closing brace
     this.state.labels.pop();
     return this.finishNode(node, "SwitchStatement");
@@ -353,8 +373,9 @@ pp.parseSwitchStatement = function (node) {
 
 pp.parseThrowStatement = function (node) {
     this.next();
-    if (lineBreak.test(this.input.slice(this.state.lastTokEnd, this.state.start)))
+    if (lineBreak.test(this.input.slice(this.state.lastTokEnd, this.state.start))) {
         this.raise(this.state.lastTokEnd, "Illegal newline after throw");
+    }
     node.argument = this.parseExpression();
     this.semicolon();
     return this.finishNode(node, "ThrowStatement");
@@ -410,7 +431,9 @@ pp.parseWhileStatement = function (node) {
 };
 
 pp.parseWithStatement = function (node) {
-    if (this.state.strict) this.raise(this.state.start, "'with' in strict mode");
+    if (this.state.strict) {
+        this.raise(this.state.start, "'with' in strict mode"); 
+    }
     this.next();
     node.object = this.parseParenExpression();
     node.body = this.parseStatement(false);
@@ -564,7 +587,9 @@ pp.parseVar = function (node, isFor, kind) {
             decl.init = null;
         }
         node.declarations.push(this.finishNode(decl, "VariableDeclarator"));
-        if (!this.eat(tt.comma)) break;
+        if (!this.eat(tt.comma)) {
+            break; 
+        }
     }
     return node;
 };
@@ -692,7 +717,9 @@ pp.parseClassBody = function (node) {
 
         const isAsyncMethod = !this.match(tt.parenL) && !method.computed && method.key.type === "Identifier" && method.key.name === "async";
         if (isAsyncMethod) {
-            if (this.hasPlugin("asyncGenerators") && this.eat(tt.star)) isGenerator = true;
+            if (this.hasPlugin("asyncGenerators") && this.eat(tt.star)) {
+                isGenerator = true; 
+            }
             isAsync = true;
             this.parsePropertyName(method);
         }
@@ -716,10 +743,18 @@ pp.parseClassBody = function (node) {
                 (key.value === "constructor")   // Literal
             );
             if (isConstructor) {
-                if (hadConstructor) this.raise(key.start, "Duplicate constructor in the same class");
-                if (isGetSet) this.raise(key.start, "Constructor can't have get/set modifier");
-                if (isGenerator) this.raise(key.start, "Constructor can't be a generator");
-                if (isAsync) this.raise(key.start, "Constructor can't be an async function");
+                if (hadConstructor) {
+                    this.raise(key.start, "Duplicate constructor in the same class");
+                }
+                if (isGetSet) {
+                    this.raise(key.start, "Constructor can't have get/set modifier"); 
+                }
+                if (isGenerator) {
+                    this.raise(key.start, "Constructor can't be a generator"); 
+                }
+                if (isAsync) {
+                    this.raise(key.start, "Constructor can't be an async function"); 
+                }
                 method.kind = "constructor";
                 hadConstructor = true;
             }
@@ -736,7 +771,9 @@ pp.parseClassBody = function (node) {
 
         // convert constructor to a constructor call
         if (isConstructorCall) {
-            if (hadConstructorCall) this.raise(method.start, "Duplicate constructor call in the same class");
+            if (hadConstructorCall) {
+                this.raise(method.start, "Duplicate constructor call in the same class");
+            }
             method.kind = "constructorCall";
             hadConstructorCall = true;
         }
@@ -769,7 +806,9 @@ pp.parseClassProperty = function (node) {
     }
 
     if (this.match(tt.eq)) {
-        if (!this.hasPlugin("classProperties")) this.raise(this.state.start, noPluginMsg);
+        if (!this.hasPlugin("classProperties")) {
+            this.raise(this.state.start, noPluginMsg);
+        }
         this.next();
         node.value = this.parseMaybeAssign();
     } else {
@@ -846,7 +885,9 @@ pp.parseExport = function (node) {
             expr = this.parseMaybeAssign();
         }
         node.declaration = expr;
-        if (needsSemi) this.semicolon();
+        if (needsSemi) {
+            this.semicolon(); 
+        }
         this.checkExport(node, true, true);
         return this.finishNode(node, "ExportDefaultDeclaration");
     } else if (this.shouldParseExportDeclaration()) {
@@ -992,11 +1033,15 @@ pp.parseExportSpecifiers = function () {
             first = false;
         } else {
             this.expect(tt.comma);
-            if (this.eat(tt.braceR)) break;
+            if (this.eat(tt.braceR)) {
+                break; 
+            }
         }
 
         const isDefault = this.match(tt._default);
-        if (isDefault && !needsFrom) needsFrom = true;
+        if (isDefault && !needsFrom) {
+            needsFrom = true; 
+        }
 
         const node = this.startNode();
         node.local = this.parseIdentifier(isDefault);
@@ -1040,7 +1085,9 @@ pp.parseImportSpecifiers = function (node) {
         const startPos = this.state.start;
         const startLoc = this.state.startLoc;
         node.specifiers.push(this.parseImportSpecifierDefault(this.parseIdentifier(), startPos, startLoc));
-        if (!this.eat(tt.comma)) return;
+        if (!this.eat(tt.comma)) {
+            return; 
+        }
     }
 
     if (this.match(tt.star)) {
@@ -1064,7 +1111,9 @@ pp.parseImportSpecifiers = function (node) {
             }
 
             this.expect(tt.comma);
-            if (this.eat(tt.braceR)) break;
+            if (this.eat(tt.braceR)) {
+                break; 
+            }
         }
 
         this.parseImportSpecifier(node);

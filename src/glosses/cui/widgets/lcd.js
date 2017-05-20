@@ -9,30 +9,34 @@ function ElementArray(count) {
     this.SetCount(count || 0);
 
     function SetCount(count) {
-        var c = parseInt(count, 10);
+        const c = parseInt(count, 10);
         if (isNaN(c)) {
-            throw "Invalid element count: " + count;
+            throw `Invalid element count: ${count}`;
         }
         this.Elements = [c];
-        for (var i = 0; i < c; i++) {
+        for (let i = 0; i < c; i++) {
             this.Elements[i] = 0;
         }
     }
 
     function SetText(value, charMaps) {
         // Get the string of the value passed in
-        if (value === null) value = "";
+        if (value === null) {
+            value = "";
+        }
         value = value.toString();
 
         // Clear the elements
-        for (var i = 0; i < this.Elements.length; i++) {
+        for (let i = 0; i < this.Elements.length; i++) {
             this.SetElementValue(i, 0);
         }
-        if (value.length === 0) return;
+        if (value.length === 0) {
+            return;
+        }
         // Set the bitmask to dispay the proper character for each element
-        for (var e = 0; e < this.Elements.length && e < value.length; e++) {
-            var c = value[e];
-            var mask = charMaps[c];
+        for (let e = 0; e < this.Elements.length && e < value.length; e++) {
+            const c = value[e];
+            let mask = charMaps[c];
             // Use blank of there is no bitmask for this character
             if (mask === null || mask === undefined) {
                 mask = this.NullMask;
@@ -92,8 +96,9 @@ function SixteenSegment(count, canvas, width, height, x, y, options) {
     this.ElementArray.SetCount(count);
 
     function setOptions(options) {
-        if (options.elements)
+        if (options.elements) {
             this.ElementArray.SetCount(options.elements);
+        }
 
         this.SegmentWidth = options.segmentWidth || this.SegmentWidth;
         this.SegmentInterval = options.segmentInterval || this.SegmentInterval;
@@ -120,22 +125,22 @@ function SixteenSegment(count, canvas, width, height, x, y, options) {
     }
 
     function CalcElementDimensions() {
-        var n = this.ElementCount;
-        var h = this.ElementHeight;
+        const n = this.ElementCount;
+        let h = this.ElementHeight;
         h -= this.Padding * 2;
 
-        var w = this.Width;
+        let w = this.Width;
         w -= this.Spacing * (n - 1);
         w -= this.Padding * 2;
         w /= n;
-        var output = { Width: w, Height: h };
+        const output = { Width: w, Height: h };
         // console.error(output);
         return output;
     }
 
     function FlipVertical(points, height) {
-        var flipped = [];
-        for (var i = 0; i < points.length; i++) {
+        const flipped = [];
+        for (let i = 0; i < points.length; i++) {
             flipped[i] = {};
             flipped[i].x = points[i].x;
             flipped[i].y = height - points[i].y;
@@ -144,8 +149,8 @@ function SixteenSegment(count, canvas, width, height, x, y, options) {
     }
 
     function FlipHorizontal(points, width) {
-        var flipped = [];
-        for (var i = 0; i < points.length; i++) {
+        const flipped = [];
+        for (let i = 0; i < points.length; i++) {
             flipped[i] = {};
             flipped[i].x = width - points[i].x;
             flipped[i].y = points[i].y;
@@ -159,20 +164,22 @@ function SixteenSegment(count, canvas, width, height, x, y, options) {
         context.save();
 
         // Calculate the width and spacing of each element
-        var elementWidth = this.CalcElementDimensions().Width;
+        const elementWidth = this.CalcElementDimensions().Width;
         // console.error("width: %s", elementWidth);
         // Offset to adjust for starting point and padding
         context.translate(this.X, this.Y);
         context.translate(this.Padding, this.Padding);
 
         // Draw each segment of each element
-        for (var i = 0; i < elements.length; i++) {
-            var element = elements[i];
-            for (var s = 0; s < this.Points.length; s++) {
+        for (let i = 0; i < elements.length; i++) {
+            const element = elements[i];
+            for (let s = 0; s < this.Points.length; s++) {
                 // Pick the on or off color based on the bitmask
-                var color = (element & 1 << s) ? this.FillLight : this.FillDark;
-                var stroke = (element & 1 << s) ? this.StrokeLight : this.StrokeDark;
-                if (stroke == this.StrokeDark) continue;
+                const color = (element & 1 << s) ? this.FillLight : this.FillDark;
+                const stroke = (element & 1 << s) ? this.StrokeLight : this.StrokeDark;
+                if (stroke == this.StrokeDark) {
+                    continue; 
+                }
                 // console.error("c: %s, s: %s", color, stroke);
                 context.lineWidth = this.StrokeWidth;
                 context.strokeStyle = stroke;
@@ -181,16 +188,19 @@ function SixteenSegment(count, canvas, width, height, x, y, options) {
                 context.beginPath();
                 context.moveTo(this.Points[s][0].x, this.Points[s][0].y);
                 // Create the segment path
-                var maxX = 0;
-                for (var p = 1; p < this.Points[s].length; p++) {
-                    if (this.Points[s][p].x > maxX)
-                        maxX = this.Points[s][p].x;
+                let maxX = 0;
+                for (let p = 1; p < this.Points[s].length; p++) {
+                    if (this.Points[s][p].x > maxX) {
+                        maxX = this.Points[s][p].x; 
+                    }
                     context.lineTo(Math.round(this.Points[s][p].x), Math.round(this.Points[s][p].y));
                 }
                 context.closePath();
                 context.fill();
                 context.stroke();
-                if (this.StrokeWidth > 0) context.stroke();
+                if (this.StrokeWidth > 0) {
+                    context.stroke();
+                }
             }
             context.translate(elementWidth + this.Spacing, 0);
         }
@@ -198,7 +208,7 @@ function SixteenSegment(count, canvas, width, height, x, y, options) {
     }
 
     function CalcPoints() {
-        var d = this.CalcElementDimensions(),
+        let d = this.CalcElementDimensions(),
             w = this.ElementWidth,
             h = this.ElementHeight,
             sw = this.SegmentWidth * w,
@@ -211,7 +221,7 @@ function SixteenSegment(count, canvas, width, height, x, y, options) {
             sqrt3 = Math.sqrt(3);
 
         // Base position of points w/out bevel and interval
-        var w0 = w / 2 - sw / 2, h0 = 0,
+        let w0 = w / 2 - sw / 2, h0 = 0,
             w1 = w / 2, h1 = sw / 2,
             w2 = w / 2 + sw / 2, h2 = sw,
             w3 = w - sw, h3 = h / 2 - sw / 2,
@@ -219,11 +229,11 @@ function SixteenSegment(count, canvas, width, height, x, y, options) {
             w5 = w, h5 = h / 2 + sw / 2;
 
         // Order of segments stored in Points[][]
-        var A1 = 0, A2 = 1, B = 2, C = 3, D1 = 4, D2 = 5, E = 6, F = 7,
+        let A1 = 0, A2 = 1, B = 2, C = 3, D1 = 4, D2 = 5, E = 6, F = 7,
             G1 = 8, G2 = 9, H = 10, I = 11, J = 12, K = 13, L = 14, M = 15;
 
         // Create the points array for all segments
-        var points = [];
+        const points = [];
         points[A1] = [
             { x: bw * 2 + si / sqrt2, y: h0 },
             { x: w1 - si / 2 - sw / 2 * ib, y: h0 },
@@ -282,7 +292,7 @@ const CharacterMasks = (function () {
     // Segment Bitmasks for individual segments.
     // Binary Or them together to create bitmasks
     // a1|a2|b|c|d1|d2|e|f|g1|g2|h|i|j|k|l|m
-    var a1 = 1 << 0, a2 = 1 << 1, b = 1 << 2, c = 1 << 3,
+    let a1 = 1 << 0, a2 = 1 << 1, b = 1 << 2, c = 1 << 3,
         d1 = 1 << 4, d2 = 1 << 5, e = 1 << 6, f = 1 << 7,
         g1 = 1 << 8, g2 = 1 << 9, h = 1 << 10, i = 1 << 11,
         j = 1 << 12, k = 1 << 13, l = 1 << 14, m = 1 << 15;
@@ -290,48 +300,48 @@ const CharacterMasks = (function () {
     return {
         " ": 0,
         "": 0,
-        "0": a1 | a2 | b | c | d1 | d2 | e | f | j | m,
-        "1": b | c | j,
-        "2": a1 | a2 | b | d1 | d2 | e | g1 | g2,
-        "3": a1 | a2 | b | c | d1 | d2 | g2,
-        "4": b | c | f | g1 | g2,
-        "5": a1 | a2 | c | d1 | d2 | f | g1 | g2,
-        "6": a1 | a2 | c | d1 | d2 | e | f | g1 | g2,
-        "7": a1 | a2 | b | c,
-        "8": a1 | a2 | b | c | d1 | d2 | e | f | g1 | g2,
-        "9": a1 | a2 | b | c | f | g1 | g2,
-        "A": e | f | a1 | a2 | b | c | g1 | g2,
-        "B": a1 | a2 | b | c | d1 | d2 | g2 | i | l,
-        "C": a1 | a2 | f | e | d1 | d2,
-        "D": a1 | a2 | b | c | d1 | d2 | i | l,
-        "E": a1 | a2 | f | e | d1 | d2 | g1 | g2,
-        "F": a1 | a2 | e | f | g1,
-        "G": a1 | a2 | c | d1 | d2 | e | f | g2,
-        "H": b | c | e | f | g1 | g2,
-        "I": a1 | a2 | d1 | d2 | i | l,
-        "J": b | c | d1 | d2 | e,
-        "K": e | f | g1 | j | k,
-        "L": d1 | d2 | e | f,
-        "M": b | c | e | f | h | j,
-        "N": b | c | e | f | h | k,
-        "O": a1 | a2 | b | c | d1 | d2 | e | f,
-        "P": a1 | a2 | b | e | f | g1 | g2,
-        "Q": a1 | a2 | b | c | d1 | d2 | e | f | k,
-        "R": a1 | a2 | b | e | f | g1 | g2 | k,
-        "S": a1 | a2 | c | d1 | d2 | f | g1 | g2,
-        "T": a1 | a2 | i | l,
-        "U": b | c | d1 | d2 | e | f,
-        "V": e | f | j | m,
-        "W": b | c | e | f | k | m,
-        "X": h | j | k | m,
-        "Y": b | f | g1 | g2 | l,
-        "Z": a1 | a2 | d1 | d2 | j | m,
+        0: a1 | a2 | b | c | d1 | d2 | e | f | j | m,
+        1: b | c | j,
+        2: a1 | a2 | b | d1 | d2 | e | g1 | g2,
+        3: a1 | a2 | b | c | d1 | d2 | g2,
+        4: b | c | f | g1 | g2,
+        5: a1 | a2 | c | d1 | d2 | f | g1 | g2,
+        6: a1 | a2 | c | d1 | d2 | e | f | g1 | g2,
+        7: a1 | a2 | b | c,
+        8: a1 | a2 | b | c | d1 | d2 | e | f | g1 | g2,
+        9: a1 | a2 | b | c | f | g1 | g2,
+        A: e | f | a1 | a2 | b | c | g1 | g2,
+        B: a1 | a2 | b | c | d1 | d2 | g2 | i | l,
+        C: a1 | a2 | f | e | d1 | d2,
+        D: a1 | a2 | b | c | d1 | d2 | i | l,
+        E: a1 | a2 | f | e | d1 | d2 | g1 | g2,
+        F: a1 | a2 | e | f | g1,
+        G: a1 | a2 | c | d1 | d2 | e | f | g2,
+        H: b | c | e | f | g1 | g2,
+        I: a1 | a2 | d1 | d2 | i | l,
+        J: b | c | d1 | d2 | e,
+        K: e | f | g1 | j | k,
+        L: d1 | d2 | e | f,
+        M: b | c | e | f | h | j,
+        N: b | c | e | f | h | k,
+        O: a1 | a2 | b | c | d1 | d2 | e | f,
+        P: a1 | a2 | b | e | f | g1 | g2,
+        Q: a1 | a2 | b | c | d1 | d2 | e | f | k,
+        R: a1 | a2 | b | e | f | g1 | g2 | k,
+        S: a1 | a2 | c | d1 | d2 | f | g1 | g2,
+        T: a1 | a2 | i | l,
+        U: b | c | d1 | d2 | e | f,
+        V: e | f | j | m,
+        W: b | c | e | f | k | m,
+        X: h | j | k | m,
+        Y: b | f | g1 | g2 | l,
+        Z: a1 | a2 | d1 | d2 | j | m,
         "-": g1 | g2,
         "?": a1 | a2 | b | g2 | l,
         "+": g1 | g2 | i | l,
         "*": g1 | g2 | h | i | j | k | l | m
     };
-} ());
+}());
 
 export default class LCD extends adone.cui.widget.Canvas {
     constructor(options = {}) {
@@ -356,9 +366,10 @@ export default class LCD extends adone.cui.widget.Canvas {
         this.segment16 = null;
 
         this.on("attach", () => {
-            var display = this.options.display || 1234;
-            if (!this.segment16)
+            const display = this.options.display || 1234;
+            if (!this.segment16) {
                 this.segment16 = new SixteenSegment(this.options.elements, this.ctx, this.canvasSize.width, this.canvasSize.height, 0, 0, this.options);
+            }
 
             this.setDisplay(display);
         });

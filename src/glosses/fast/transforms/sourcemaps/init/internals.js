@@ -26,7 +26,7 @@ export default function (options, file, fileContent) {
         // fix source paths and sourceContent for imported source map
         if (sources.map) {
             sources.map.sourcesContent = sources.map.sourcesContent || [];
-            sources.map.sources.forEach(function (source, i) {
+            sources.map.sources.forEach((source, i) => {
                 if (source.match(urlRegex)) {
                     sources.map.sourcesContent[i] = sources.map.sourcesContent[i] || null;
                     return;
@@ -69,8 +69,9 @@ export default function (options, file, fileContent) {
         // Try to read inline source map
         sources.map = adone.sourcemap.convert.fromSource(sources.content, options.largeFile);
 
-        if (!sources.map)
-            return sources;
+        if (!sources.map) {
+            return sources; 
+        }
 
         sources.map = sources.map.toObject();
         // sources in map are relative to the source file

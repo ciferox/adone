@@ -2631,7 +2631,7 @@ describe("Engine", () => {
                 const engine = new Engine();
                 const { describe, it, start } = engine.context();
 
-                describe("/", function () {
+                describe("/", () => {
 
                     it("test", async function () {
                         this.timeout(val);

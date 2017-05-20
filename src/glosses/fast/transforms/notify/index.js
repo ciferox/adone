@@ -76,7 +76,7 @@ notify.onError = function (options = {}, callback) {
         }
         reporter = n.notify.bind(n);
     }
-    return function(error) {
+    return function (error) {
         return report(reporter, error, options, templateOptions).then(callback, callback).then(() => {
             if (options.endStream) {
                 this.emit && this.emit("end");

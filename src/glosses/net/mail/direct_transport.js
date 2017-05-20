@@ -34,16 +34,16 @@ function DirectMailer(options) {
     this.logger = shared.getLogger(this.options);
 
     // temporary object
-    var connection = new SMTPConnection({});
+    const connection = new SMTPConnection({});
 
     this.name = "SMTP (direct)";
-    this.version = packageData.version + "[client:" + connection.version + "]";
+    this.version = `${packageData.version}[client:${connection.version}]`;
 }
 util.inherits(DirectMailer, adone.std.events.EventEmitter);
 
 // Adds a dynamic property 'length'
 Object.defineProperty(DirectMailer.prototype, "length", {
-    get: function () {
+    get() {
         return this._queue._instantQueue.length + this._queue._sortedQueue.length;
     }
 });
@@ -72,8 +72,8 @@ DirectMailer.prototype.getSocket = function (options, callback) {
  */
 DirectMailer.prototype.send = function (mail, callback) {
 
-    var envelope = mail.message.getEnvelope();
-    var domainEnvelopes = {};
+    const envelope = mail.message.getEnvelope();
+    const domainEnvelopes = {};
 
     if (!envelope.from) {
         return callback(new Error("\"From\" address missing"));
@@ -88,17 +88,17 @@ DirectMailer.prototype.send = function (mail, callback) {
     // We cant't run existing streams more than once so we need to change these
     // to buffers. Filenames, URLs etc are not affected – for every
     // message copy a new file stream will be created
-    this._clearStreams(mail, function (err) {
+    this._clearStreams(mail, (err) => {
         if (err) {
             return callback(err);
         }
 
         this._formatMessage(mail.message);
 
-        envelope.to.forEach(function (recipient) {
+        envelope.to.forEach((recipient) => {
             recipient = (recipient || "").toString();
 
-            var domain = (recipient.split("@").pop() || "").toLowerCase().trim();
+            const domain = (recipient.split("@").pop() || "").toLowerCase().trim();
 
             if (!domainEnvelopes[domain]) {
                 domainEnvelopes[domain] = {
@@ -110,9 +110,9 @@ DirectMailer.prototype.send = function (mail, callback) {
             }
         });
 
-        var returned = 0;
-        var domains = Object.keys(domainEnvelopes);
-        var combinedInfo = {
+        let returned = 0;
+        const domains = Object.keys(domainEnvelopes);
+        const combinedInfo = {
             accepted: [],
             rejected: [],
             pending: [],
@@ -120,15 +120,15 @@ DirectMailer.prototype.send = function (mail, callback) {
             envelope: mail.message.getEnvelope()
         };
 
-        domains.forEach((function (domain) {
-            var called = false;
-            var id = ++this._lastId;
-            var item = {
+        domains.forEach((domain) => {
+            let called = false;
+            const id = ++this._lastId;
+            const item = {
                 envelope: domainEnvelopes[domain],
                 data: mail.data,
                 message: mail.message,
-                domain: domain,
-                id: id,
+                domain,
+                id,
                 callback: function (err, info) {
                     if (called) {
                         this.logger.info("Callback for #%s already called. Updated values: %s", id, JSON.stringify(err || info));
@@ -148,24 +148,25 @@ DirectMailer.prototype.send = function (mail, callback) {
                         combinedInfo.rejected = combinedInfo.rejected.concat(info.rejected || []);
                         combinedInfo.pending = combinedInfo.pending.concat(info.pending || []);
                         combinedInfo.messageId = info.messageId;
-                        if (info.response)
-                            combinedInfo.response = info.response;
+                        if (info.response) {
+                            combinedInfo.response = info.response; 
+                        }
                     }
 
                     if (returned >= domains.length) {
                         if (combinedInfo.errors.length === domains.length) {
-                            var error = new Error("Sending failed");
+                            const error = new Error("Sending failed");
                             error.errors = combinedInfo.errors;
                             return callback(error);
-                        } else {
-                            return callback(null, combinedInfo);
-                        }
+                        } 
+                        return callback(null, combinedInfo);
+                        
                     }
                 }.bind(this)
             };
 
             this._queue.insert(item);
-        }).bind(this));
+        });
 
         // start send loop if needed
         if (!this._started) {
@@ -175,7 +176,7 @@ DirectMailer.prototype.send = function (mail, callback) {
             setImmediate(this._loop.bind(this));
         }
 
-    }.bind(this));
+    });
 };
 
 /**
@@ -184,12 +185,12 @@ DirectMailer.prototype.send = function (mail, callback) {
 DirectMailer.prototype._loop = function () {
 
     // callback is fired when a message is added to the queue
-    this._queue.get((function (data) {
+    this._queue.get((data) => {
 
         this.logger.info("Retrieved message #%s from the queue, resolving %s", data.id, data.domain);
 
         // Resolve destination MX server
-        this._resolveMx(data.domain, (function (err, list) {
+        this._resolveMx(data.domain, (err, list) => {
 
             if (err) {
                 this.logger.info("Resolving %s for #%s failed", data.domain, data.id);
@@ -198,22 +199,22 @@ DirectMailer.prototype._loop = function () {
                 this.logger.info("Could not resolve any MX servers for %s", data.domain);
             }
             if (err || !list || !list.length) {
-                data.callback(err || new Error("Could not resolve MX for " + data.domain));
+                data.callback(err || new Error(`Could not resolve MX for ${data.domain}`));
                 return setImmediate(this._loop.bind(this));
             }
 
             // Sort MX list by priority field
-            list.sort(function (a, b) {
+            list.sort((a, b) => {
                 return (a && a.priority || 0) - (b && b.priority || 0);
             });
 
             // Use the first server on the list
-            var exchanges = list.map(function (item) {
+            const exchanges = list.map((item) => {
                 return item.exchange;
             });
 
             // Try to send the message
-            this._process([].concat(exchanges), data, (function (err, response) {
+            this._process([].concat(exchanges), data, (err, response) => {
                 if (err) {
                     this.logger.info("Failed processing message #%s", data.id);
                 } else {
@@ -251,9 +252,9 @@ DirectMailer.prototype._loop = function () {
                 }
 
                 setImmediate(this._loop.bind(this));
-            }).bind(this));
-        }).bind(this));
-    }).bind(this));
+            });
+        });
+    });
 };
 
 /**
@@ -264,13 +265,13 @@ DirectMailer.prototype._loop = function () {
  * @param {Function} callback Callback to run once the message is either sent or sending fails
  */
 DirectMailer.prototype._process = function (exchanges, data, callback) {
-    var exchange = exchanges[0];
+    const exchange = exchanges[0];
 
     this.logger.info("%s resolved to %s for #%s", data.domain, exchange, data.id);
 
     this.logger.info("Connecting to %s:%s for message #%s %s STARTTLS", exchange, this.options.port || 25, data.id, data.ignoreTLS ? "without" : "with");
 
-    var options = {
+    const options = {
         host: exchange,
         port: this.options.port || 25,
         requireTLS: !data.ignoreTLS,
@@ -281,11 +282,11 @@ DirectMailer.prototype._process = function (exchanges, data, callback) {
     };
 
     // Add options from DirectMailer options to simplesmtp client
-    Object.keys(this.options).forEach((function (key) {
+    Object.keys(this.options).forEach((key) => {
         options[key] = this.options[key];
-    }).bind(this));
+    });
 
-    this.getSocket(options, function (err, socketOptions) {
+    this.getSocket(options, (err, socketOptions) => {
         if (err) {
             // try next host
             exchanges.shift();
@@ -299,16 +300,16 @@ DirectMailer.prototype._process = function (exchanges, data, callback) {
 
         if (socketOptions && socketOptions.connection) {
             this.logger.info("Using proxied socket from %s:%s to %s:%s", socketOptions.connection.remoteAddress, socketOptions.connection.remotePort, options.host || "", options.port || "");
-            Object.keys(socketOptions).forEach(function (key) {
+            Object.keys(socketOptions).forEach((key) => {
                 options[key] = socketOptions[key];
             });
         }
 
-        var connection = new SMTPConnection(options);
-        var returned = false;
-        var connected = false;
+        const connection = new SMTPConnection(options);
+        let returned = false;
+        let connected = false;
 
-        connection.once("error", function (err) {
+        connection.once("error", (err) => {
             if (returned) {
                 return;
             }
@@ -329,17 +330,17 @@ DirectMailer.prototype._process = function (exchanges, data, callback) {
                 return this._process(exchanges, data, callback);
             }
             return callback(err);
-        }.bind(this));
+        });
 
-        var sendMessage = function () {
-            var messageId = (data.message.getHeader("message-id") || "").replace(/[<>\s]/g, "");
-            var recipients = [].concat(data.envelope.to || []);
+        const sendMessage = function () {
+            const messageId = (data.message.getHeader("message-id") || "").replace(/[<>\s]/g, "");
+            const recipients = [].concat(data.envelope.to || []);
             if (recipients.length > 3) {
-                recipients.push("...and " + recipients.splice(2).length + " more");
+                recipients.push(`...and ${recipients.splice(2).length} more`);
             }
 
             this.logger.info("Sending message <%s> to <%s>", messageId, recipients.join(", "));
-            connection.send(data.envelope, data.message.createReadStream(), function (err, info) {
+            connection.send(data.envelope, data.message.createReadStream(), (err, info) => {
                 if (returned) {
                     return;
                 }
@@ -355,14 +356,14 @@ DirectMailer.prototype._process = function (exchanges, data, callback) {
             });
         }.bind(this);
 
-        connection.connect(function () {
+        connection.connect(() => {
             connected = true;
             if (returned) {
                 return;
             }
             sendMessage();
-        }.bind(this));
-    }.bind(this));
+        });
+    });
 };
 
 /**
@@ -371,12 +372,12 @@ DirectMailer.prototype._process = function (exchanges, data, callback) {
  * @param {Object} message BuildMail message object
  */
 DirectMailer.prototype._formatMessage = function (message) {
-    var hostname = this._resolveHostname(this.options.name);
+    const hostname = this._resolveHostname(this.options.name);
 
     // set the first header as 'Received:'
     message._headers.unshift({
         key: "Received",
-        value: "from localhost (127.0.0.1) by " + hostname + " with SMTP; " + Date()
+        value: `from localhost (127.0.0.1) by ${hostname} with SMTP; ${Date()}`
     });
 };
 
@@ -388,7 +389,7 @@ DirectMailer.prototype._formatMessage = function (message) {
  * @param {Function} callback Callback to run
  */
 DirectMailer.prototype._clearStreams = function (mail, callback) {
-    var streamNodes = [];
+    const streamNodes = [];
 
     function walkNode(node) {
         if (node.content && typeof node.content.pipe === "function") {
@@ -404,9 +405,9 @@ DirectMailer.prototype._clearStreams = function (mail, callback) {
         if (!streamNodes.length) {
             return callback();
         }
-        var node = streamNodes.shift();
+        const node = streamNodes.shift();
 
-        mail.resolveContent(node, "content", function (err) {
+        mail.resolveContent(node, "content", (err) => {
             if (err) {
                 return callback(err);
             }
@@ -435,21 +436,21 @@ DirectMailer.prototype._resolveMx = function (domain, callback) {
         }]);
     }
 
-    dns.resolveMx(domain, function (err, list) {
+    dns.resolveMx(domain, (err, list) => {
         if (err) {
             if (err.code === "ENODATA" || err.code === "ENOTFOUND") {
                 // fallback to A
-                dns.resolve4(domain, function (err, list) {
+                dns.resolve4(domain, (err, list) => {
                     if (err) {
                         if (err.code === "ENODATA" || err.code === "ENOTFOUND") {
                             // fallback to AAAA
-                            dns.resolve6(domain, function (err, list) {
+                            dns.resolve6(domain, (err, list) => {
                                 if (err) {
                                     return callback(err);
                                 }
 
                                 // return the first resolved Ipv6 with priority 0
-                                return callback(null, [].concat(list || []).map(function (entry) {
+                                return callback(null, [].concat(list || []).map((entry) => {
                                     return {
                                         priority: 0,
                                         exchange: entry
@@ -463,7 +464,7 @@ DirectMailer.prototype._resolveMx = function (domain, callback) {
                     }
 
                     // return the first resolved Ipv4 with priority 0
-                    return callback(null, [].concat(list || []).map(function (entry) {
+                    return callback(null, [].concat(list || []).map((entry) => {
                         return {
                             priority: 0,
                             exchange: entry

@@ -77,13 +77,13 @@ export default class Bar extends adone.cui.widget.Canvas {
 
     getOptionsPrototype() {
         return {
-            barWidth: 1
-            , barSpacing: 1
-            , xOffset: 1
-            , maxHeight: 1
-            , data: {
-                titles: ["s"]
-                , data: [1]
+            barWidth: 1,
+            barSpacing: 1,
+            xOffset: 1,
+            maxHeight: 1,
+            data: {
+                titles: ["s"],
+                data: [1]
             }
         };
     }

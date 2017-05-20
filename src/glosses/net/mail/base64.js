@@ -1,14 +1,14 @@
-var stream = require("stream");
-var util = require("util");
-var Transform = stream.Transform;
+const stream = require("stream");
+const util = require("util");
+const Transform = stream.Transform;
 
 // expose to the world
 module.exports = {
-    encode: encode,
-    decode: decode,
-    wrap: wrap,
-    Encoder: Encoder,
-    Decoder: Decoder
+    encode,
+    decode,
+    wrap,
+    Encoder,
+    Decoder
 };
 
 /**
@@ -51,7 +51,7 @@ function wrap(str, lineLength) {
         return str;
     }
 
-    return str.replace(new RegExp(".{" + lineLength + "}", "g"), "$&\r\n").trim();
+    return str.replace(new RegExp(`.{${lineLength}}`, "g"), "$&\r\n").trim();
 }
 
 /**
@@ -79,8 +79,8 @@ function Encoder(options) {
 }
 util.inherits(Encoder, Transform);
 
-Encoder.prototype._transform = function(chunk, encoding, done) {
-    var b64, _self = this;
+Encoder.prototype._transform = function (chunk, encoding, done) {
+    let b64, _self = this;
 
     if (encoding !== "buffer") {
         chunk = new Buffer(chunk, encoding);
@@ -108,7 +108,7 @@ Encoder.prototype._transform = function(chunk, encoding, done) {
 
     if (this.options.lineLength) {
         b64 = wrap(b64, this.options.lineLength);
-        b64 = b64.replace(/(^|\n)([^\n]*)$/, function(match, lineBreak, lastLine) {
+        b64 = b64.replace(/(^|\n)([^\n]*)$/, (match, lineBreak, lastLine) => {
             _self._curLine = lastLine;
             return lineBreak;
         });
@@ -122,7 +122,7 @@ Encoder.prototype._transform = function(chunk, encoding, done) {
     done();
 };
 
-Encoder.prototype._flush = function(done) {
+Encoder.prototype._flush = function (done) {
     if (this._remainingBytes && this._remainingBytes.length) {
         this._curLine += encode(this._remainingBytes);
     }
@@ -153,8 +153,8 @@ function Decoder(options) {
 }
 util.inherits(Decoder, Transform);
 
-Decoder.prototype._transform = function(chunk, encoding, done) {
-    var b64, buf;
+Decoder.prototype._transform = function (chunk, encoding, done) {
+    let b64, buf;
 
     chunk = chunk.toString("ascii");
 
@@ -187,8 +187,8 @@ Decoder.prototype._transform = function(chunk, encoding, done) {
     done();
 };
 
-Decoder.prototype._flush = function(done) {
-    var b64, buf;
+Decoder.prototype._flush = function (done) {
+    let b64, buf;
     if (this._curLine) {
         buf = decode(this._curLine);
         this.outputBytes += buf.length;

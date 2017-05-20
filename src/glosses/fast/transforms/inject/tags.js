@@ -2,8 +2,8 @@
 /**
  * Constants
  */
-var DEFAULT_TARGET = "html";
-var DEFAULTS = {
+const DEFAULT_TARGET = "html";
+const DEFAULTS = {
     STARTS: {
         html: "<!-- {{name}}:{{ext}} -->",
         jsx: "{/* {{name}}:{{ext}} */}",
@@ -38,7 +38,7 @@ module.exports = function tags() {
 };
 
 function getTag(defaults, targetExt, sourceExt, defaultValue) {
-    var tag = defaultValue;
+    let tag = defaultValue;
     if (!tag) {
         tag = defaults[targetExt] || defaults[DEFAULT_TARGET];
     } else if (typeof tag === "function") {

@@ -76,7 +76,7 @@ const buildApplyDecoratedDescriptor = template(`
     }
 `);
 
-export default function({ types: t }) {
+export default function ({ types: t }) {
     /**
      * Add a helper to take an initial descriptor, apply some decorators to it, and optionally
      * define the property.
@@ -133,12 +133,12 @@ export default function({ types: t }) {
         const decorators = (path.isClass() ? [path].concat(path.get("body.body")) : path.get("properties"))
                 .reduce((acc, prop) => acc.concat(prop.node.decorators || []), []);
 
-        const identDecorators = decorators.filter(decorator => !t.isIdentifier(decorator.expression));
+        const identDecorators = decorators.filter((decorator) => !t.isIdentifier(decorator.expression));
         if (identDecorators.length === 0) {
             return;
         }
 
-        return t.sequenceExpression(identDecorators.map(decorator => {
+        return t.sequenceExpression(identDecorators.map((decorator) => {
             const expression = decorator.expression;
             const id = decorator.expression = path.scope.generateDeclaredUidIdentifier("dec");
             return t.assignmentExpression("=", id, expression);
@@ -160,9 +160,9 @@ export default function({ types: t }) {
         const name = classPath.scope.generateDeclaredUidIdentifier("class");
 
         return decorators
-            .map(dec => dec.expression)
+            .map((dec) => dec.expression)
             .reverse()
-            .reduce(function(acc, decorator) {
+            .reduce((acc, decorator) => {
                 return buildClassDecorator({
                     CLASS_REF: name,
                     DECORATOR: decorator,
@@ -176,7 +176,7 @@ export default function({ types: t }) {
      * with the proper decorated behavior.
      */
     function applyMethodDecorators(path, state) {
-        const hasMethodDecorators = path.node.body.body.some(function(node) {
+        const hasMethodDecorators = path.node.body.body.some((node) => {
             return (node.decorators || []).length > 0;
         });
 
@@ -192,7 +192,7 @@ export default function({ types: t }) {
      * with the proper decorated behavior.
      */
     function applyObjectDecorators(path, state) {
-        const hasMethodDecorators = path.node.properties.some(function(node) {
+        const hasMethodDecorators = path.node.properties.some((node) => {
             return (node.decorators || []).length > 0;
         });
 
@@ -209,7 +209,7 @@ export default function({ types: t }) {
     function applyTargetDecorators(path, state, decoratedProps) {
         const name = path.scope.generateDeclaredUidIdentifier(path.isClass() ? "class" : "obj");
 
-        const exprs = decoratedProps.reduce(function(acc, node) {
+        const exprs = decoratedProps.reduce((acc, node) => {
             const decorators = node.decorators || [];
             node.decorators = null;
 
@@ -239,7 +239,7 @@ export default function({ types: t }) {
                     t.assignmentExpression("=", descriptor, t.callExpression(ensureApplyDecoratedDescriptorHelper(path, state), [
                         target,
                         property,
-                        t.arrayExpression(decorators.map(dec => dec.expression)),
+                        t.arrayExpression(decorators.map((dec) => dec.expression)),
                         t.objectExpression([
                             t.objectProperty(t.identifier("enumerable"), t.booleanLiteral(true)),
                             t.objectProperty(t.identifier("initializer"), initializer)
@@ -251,7 +251,7 @@ export default function({ types: t }) {
                     t.callExpression(ensureApplyDecoratedDescriptorHelper(path, state), [
                         target,
                         property,
-                        t.arrayExpression(decorators.map(dec => dec.expression)),
+                        t.arrayExpression(decorators.map((dec) => dec.expression)),
                         (t.isObjectProperty(node) || t.isClassProperty(node, { static: true })) ? buildGetObjectInitializer({
                             TEMP: path.scope.generateDeclaredUidIdentifier("init"),
                             TARGET: target,

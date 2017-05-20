@@ -19,18 +19,18 @@ class CallbackCache {
         if (this._cache.has(key)) {
             this._cache.get(key).push(callback);
             return null;
-        } else {
-            this._cache.set(key, [callback]);
-            return (...args) => {
-                const callbacks = this._cache.get(key);
+        } 
+        this._cache.set(key, [callback]);
+        return (...args) => {
+            const callbacks = this._cache.get(key);
 
-                for (let i = 0; i < callbacks.length; i++) {
-                    callbacks[i](...args);
-                }
+            for (let i = 0; i < callbacks.length; i++) {
+                callbacks[i](...args);
+            }
 
-                this._cache.delete(key);
-            };
-        }
+            this._cache.delete(key);
+        };
+        
     }
 }
 
@@ -514,7 +514,7 @@ class Glob extends adone.EventEmitter {
 
         this.found.push(e);
         this.emit("match", e, this.statCache.get(abs));
-        return;
+        
     }
 
     _readdirInGlobStar(abs, cb) {
@@ -768,14 +768,14 @@ class Glob extends adone.EventEmitter {
         if (stat !== undefined) {
             if (stat === false) {
                 return cb(null, stat);
-            } else {
-                const type = stat.isDirectory() ? "DIR" : "FILE";
-                if (needDir && type === "FILE") {
-                    return cb();
-                } else {
-                    return cb(null, type, stat);
-                }
-            }
+            } 
+            const type = stat.isDirectory() ? "DIR" : "FILE";
+            if (needDir && type === "FILE") {
+                return cb();
+            } 
+            return cb(null, type, stat);
+                
+            
         }
 
         const _lstatcb = (er, lstat) => {
@@ -789,9 +789,9 @@ class Glob extends adone.EventEmitter {
                         this._stat2(f, abs, er, stat, cb);
                     }
                 });
-            } else {
-                this._stat2(f, abs, er, lstat, cb);
-            }
+            } 
+            this._stat2(f, abs, er, lstat, cb);
+            
         };
 
         const statcb = this.callbackCache.inflight(`stat\0${abs}`, _lstatcb);

@@ -18,15 +18,15 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE. */
 
-var glMatrix = require("./common.js");
+const glMatrix = require("./common.js");
 
 /**
  * @class 4x4 Matrix
  * @name mat4
  */
-var mat4 = {
-  scalar: {},
-  SIMD: {}
+const mat4 = {
+    scalar: {},
+    SIMD: {}
 };
 
 /**
@@ -34,8 +34,8 @@ var mat4 = {
  *
  * @returns {mat4} a new 4x4 matrix
  */
-mat4.create = function() {
-    var out = new glMatrix.ARRAY_TYPE(16);
+mat4.create = function () {
+    const out = new glMatrix.ARRAY_TYPE(16);
     out[0] = 1;
     out[1] = 0;
     out[2] = 0;
@@ -61,8 +61,8 @@ mat4.create = function() {
  * @param {mat4} a matrix to clone
  * @returns {mat4} a new 4x4 matrix
  */
-mat4.clone = function(a) {
-    var out = new glMatrix.ARRAY_TYPE(16);
+mat4.clone = function (a) {
+    const out = new glMatrix.ARRAY_TYPE(16);
     out[0] = a[0];
     out[1] = a[1];
     out[2] = a[2];
@@ -89,7 +89,7 @@ mat4.clone = function(a) {
  * @param {mat4} a the source matrix
  * @returns {mat4} out
  */
-mat4.copy = function(out, a) {
+mat4.copy = function (out, a) {
     out[0] = a[0];
     out[1] = a[1];
     out[2] = a[2];
@@ -130,8 +130,8 @@ mat4.copy = function(out, a) {
  * @param {Number} m33 Component in column 3, row 3 position (index 15)
  * @returns {mat4} A new mat4
  */
-mat4.fromValues = function(m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33) {
-    var out = new glMatrix.ARRAY_TYPE(16);
+mat4.fromValues = function (m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33) {
+    const out = new glMatrix.ARRAY_TYPE(16);
     out[0] = m00;
     out[1] = m01;
     out[2] = m02;
@@ -173,7 +173,7 @@ mat4.fromValues = function(m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22
  * @param {Number} m33 Component in column 3, row 3 position (index 15)
  * @returns {mat4} out
  */
-mat4.set = function(out, m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33) {
+mat4.set = function (out, m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, m23, m30, m31, m32, m33) {
     out[0] = m00;
     out[1] = m01;
     out[2] = m02;
@@ -200,7 +200,7 @@ mat4.set = function(out, m00, m01, m02, m03, m10, m11, m12, m13, m20, m21, m22, 
  * @param {mat4} out the receiving matrix
  * @returns {mat4} out
  */
-mat4.identity = function(out) {
+mat4.identity = function (out) {
     out[0] = 1;
     out[1] = 0;
     out[2] = 0;
@@ -227,10 +227,10 @@ mat4.identity = function(out) {
  * @param {mat4} a the source matrix
  * @returns {mat4} out
  */
-mat4.scalar.transpose = function(out, a) {
+mat4.scalar.transpose = function (out, a) {
     // If we are transposing ourselves we can skip a few steps but have to cache some values
     if (out === a) {
-        var a01 = a[1], a02 = a[2], a03 = a[3],
+        let a01 = a[1], a02 = a[2], a03 = a[3],
             a12 = a[6], a13 = a[7],
             a23 = a[11];
 
@@ -275,8 +275,8 @@ mat4.scalar.transpose = function(out, a) {
  * @param {mat4} a the source matrix
  * @returns {mat4} out
  */
-mat4.SIMD.transpose = function(out, a) {
-    var a0, a1, a2, a3,
+mat4.SIMD.transpose = function (out, a) {
+    let a0, a1, a2, a3,
         tmp01, tmp23,
         out0, out1, out2, out3;
 
@@ -287,16 +287,16 @@ mat4.SIMD.transpose = function(out, a) {
 
     tmp01 = SIMD.Float32x4.shuffle(a0, a1, 0, 1, 4, 5);
     tmp23 = SIMD.Float32x4.shuffle(a2, a3, 0, 1, 4, 5);
-    out0  = SIMD.Float32x4.shuffle(tmp01, tmp23, 0, 2, 4, 6);
-    out1  = SIMD.Float32x4.shuffle(tmp01, tmp23, 1, 3, 5, 7);
-    SIMD.Float32x4.store(out, 0,  out0);
-    SIMD.Float32x4.store(out, 4,  out1);
+    out0 = SIMD.Float32x4.shuffle(tmp01, tmp23, 0, 2, 4, 6);
+    out1 = SIMD.Float32x4.shuffle(tmp01, tmp23, 1, 3, 5, 7);
+    SIMD.Float32x4.store(out, 0, out0);
+    SIMD.Float32x4.store(out, 4, out1);
 
     tmp01 = SIMD.Float32x4.shuffle(a0, a1, 2, 3, 6, 7);
     tmp23 = SIMD.Float32x4.shuffle(a2, a3, 2, 3, 6, 7);
-    out2  = SIMD.Float32x4.shuffle(tmp01, tmp23, 0, 2, 4, 6);
-    out3  = SIMD.Float32x4.shuffle(tmp01, tmp23, 1, 3, 5, 7);
-    SIMD.Float32x4.store(out, 8,  out2);
+    out2 = SIMD.Float32x4.shuffle(tmp01, tmp23, 0, 2, 4, 6);
+    out3 = SIMD.Float32x4.shuffle(tmp01, tmp23, 1, 3, 5, 7);
+    SIMD.Float32x4.store(out, 8, out2);
     SIMD.Float32x4.store(out, 12, out3);
 
     return out;
@@ -318,8 +318,8 @@ mat4.transpose = glMatrix.USE_SIMD ? mat4.SIMD.transpose : mat4.scalar.transpose
  * @param {mat4} a the source matrix
  * @returns {mat4} out
  */
-mat4.scalar.invert = function(out, a) {
-    var a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3],
+mat4.scalar.invert = function (out, a) {
+    let a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3],
         a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7],
         a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11],
         a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15],
@@ -372,98 +372,98 @@ mat4.scalar.invert = function(out, a) {
  * @param {mat4} a the source matrix
  * @returns {mat4} out
  */
-mat4.SIMD.invert = function(out, a) {
-  var row0, row1, row2, row3,
-      tmp1,
-      minor0, minor1, minor2, minor3,
-      det,
-      a0 = SIMD.Float32x4.load(a, 0),
-      a1 = SIMD.Float32x4.load(a, 4),
-      a2 = SIMD.Float32x4.load(a, 8),
-      a3 = SIMD.Float32x4.load(a, 12);
+mat4.SIMD.invert = function (out, a) {
+    let row0, row1, row2, row3,
+        tmp1,
+        minor0, minor1, minor2, minor3,
+        det,
+        a0 = SIMD.Float32x4.load(a, 0),
+        a1 = SIMD.Float32x4.load(a, 4),
+        a2 = SIMD.Float32x4.load(a, 8),
+        a3 = SIMD.Float32x4.load(a, 12);
 
   // Compute matrix adjugate
-  tmp1 = SIMD.Float32x4.shuffle(a0, a1, 0, 1, 4, 5);
-  row1 = SIMD.Float32x4.shuffle(a2, a3, 0, 1, 4, 5);
-  row0 = SIMD.Float32x4.shuffle(tmp1, row1, 0, 2, 4, 6);
-  row1 = SIMD.Float32x4.shuffle(row1, tmp1, 1, 3, 5, 7);
-  tmp1 = SIMD.Float32x4.shuffle(a0, a1, 2, 3, 6, 7);
-  row3 = SIMD.Float32x4.shuffle(a2, a3, 2, 3, 6, 7);
-  row2 = SIMD.Float32x4.shuffle(tmp1, row3, 0, 2, 4, 6);
-  row3 = SIMD.Float32x4.shuffle(row3, tmp1, 1, 3, 5, 7);
+    tmp1 = SIMD.Float32x4.shuffle(a0, a1, 0, 1, 4, 5);
+    row1 = SIMD.Float32x4.shuffle(a2, a3, 0, 1, 4, 5);
+    row0 = SIMD.Float32x4.shuffle(tmp1, row1, 0, 2, 4, 6);
+    row1 = SIMD.Float32x4.shuffle(row1, tmp1, 1, 3, 5, 7);
+    tmp1 = SIMD.Float32x4.shuffle(a0, a1, 2, 3, 6, 7);
+    row3 = SIMD.Float32x4.shuffle(a2, a3, 2, 3, 6, 7);
+    row2 = SIMD.Float32x4.shuffle(tmp1, row3, 0, 2, 4, 6);
+    row3 = SIMD.Float32x4.shuffle(row3, tmp1, 1, 3, 5, 7);
 
-  tmp1   = SIMD.Float32x4.mul(row2, row3);
-  tmp1   = SIMD.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
-  minor0 = SIMD.Float32x4.mul(row1, tmp1);
-  minor1 = SIMD.Float32x4.mul(row0, tmp1);
-  tmp1   = SIMD.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
-  minor0 = SIMD.Float32x4.sub(SIMD.Float32x4.mul(row1, tmp1), minor0);
-  minor1 = SIMD.Float32x4.sub(SIMD.Float32x4.mul(row0, tmp1), minor1);
-  minor1 = SIMD.Float32x4.swizzle(minor1, 2, 3, 0, 1);
+    tmp1 = SIMD.Float32x4.mul(row2, row3);
+    tmp1 = SIMD.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
+    minor0 = SIMD.Float32x4.mul(row1, tmp1);
+    minor1 = SIMD.Float32x4.mul(row0, tmp1);
+    tmp1 = SIMD.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
+    minor0 = SIMD.Float32x4.sub(SIMD.Float32x4.mul(row1, tmp1), minor0);
+    minor1 = SIMD.Float32x4.sub(SIMD.Float32x4.mul(row0, tmp1), minor1);
+    minor1 = SIMD.Float32x4.swizzle(minor1, 2, 3, 0, 1);
 
-  tmp1   = SIMD.Float32x4.mul(row1, row2);
-  tmp1   = SIMD.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
-  minor0 = SIMD.Float32x4.add(SIMD.Float32x4.mul(row3, tmp1), minor0);
-  minor3 = SIMD.Float32x4.mul(row0, tmp1);
-  tmp1   = SIMD.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
-  minor0 = SIMD.Float32x4.sub(minor0, SIMD.Float32x4.mul(row3, tmp1));
-  minor3 = SIMD.Float32x4.sub(SIMD.Float32x4.mul(row0, tmp1), minor3);
-  minor3 = SIMD.Float32x4.swizzle(minor3, 2, 3, 0, 1);
+    tmp1 = SIMD.Float32x4.mul(row1, row2);
+    tmp1 = SIMD.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
+    minor0 = SIMD.Float32x4.add(SIMD.Float32x4.mul(row3, tmp1), minor0);
+    minor3 = SIMD.Float32x4.mul(row0, tmp1);
+    tmp1 = SIMD.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
+    minor0 = SIMD.Float32x4.sub(minor0, SIMD.Float32x4.mul(row3, tmp1));
+    minor3 = SIMD.Float32x4.sub(SIMD.Float32x4.mul(row0, tmp1), minor3);
+    minor3 = SIMD.Float32x4.swizzle(minor3, 2, 3, 0, 1);
 
-  tmp1   = SIMD.Float32x4.mul(SIMD.Float32x4.swizzle(row1, 2, 3, 0, 1), row3);
-  tmp1   = SIMD.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
-  row2   = SIMD.Float32x4.swizzle(row2, 2, 3, 0, 1);
-  minor0 = SIMD.Float32x4.add(SIMD.Float32x4.mul(row2, tmp1), minor0);
-  minor2 = SIMD.Float32x4.mul(row0, tmp1);
-  tmp1   = SIMD.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
-  minor0 = SIMD.Float32x4.sub(minor0, SIMD.Float32x4.mul(row2, tmp1));
-  minor2 = SIMD.Float32x4.sub(SIMD.Float32x4.mul(row0, tmp1), minor2);
-  minor2 = SIMD.Float32x4.swizzle(minor2, 2, 3, 0, 1);
+    tmp1 = SIMD.Float32x4.mul(SIMD.Float32x4.swizzle(row1, 2, 3, 0, 1), row3);
+    tmp1 = SIMD.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
+    row2 = SIMD.Float32x4.swizzle(row2, 2, 3, 0, 1);
+    minor0 = SIMD.Float32x4.add(SIMD.Float32x4.mul(row2, tmp1), minor0);
+    minor2 = SIMD.Float32x4.mul(row0, tmp1);
+    tmp1 = SIMD.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
+    minor0 = SIMD.Float32x4.sub(minor0, SIMD.Float32x4.mul(row2, tmp1));
+    minor2 = SIMD.Float32x4.sub(SIMD.Float32x4.mul(row0, tmp1), minor2);
+    minor2 = SIMD.Float32x4.swizzle(minor2, 2, 3, 0, 1);
 
-  tmp1   = SIMD.Float32x4.mul(row0, row1);
-  tmp1   = SIMD.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
-  minor2 = SIMD.Float32x4.add(SIMD.Float32x4.mul(row3, tmp1), minor2);
-  minor3 = SIMD.Float32x4.sub(SIMD.Float32x4.mul(row2, tmp1), minor3);
-  tmp1   = SIMD.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
-  minor2 = SIMD.Float32x4.sub(SIMD.Float32x4.mul(row3, tmp1), minor2);
-  minor3 = SIMD.Float32x4.sub(minor3, SIMD.Float32x4.mul(row2, tmp1));
+    tmp1 = SIMD.Float32x4.mul(row0, row1);
+    tmp1 = SIMD.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
+    minor2 = SIMD.Float32x4.add(SIMD.Float32x4.mul(row3, tmp1), minor2);
+    minor3 = SIMD.Float32x4.sub(SIMD.Float32x4.mul(row2, tmp1), minor3);
+    tmp1 = SIMD.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
+    minor2 = SIMD.Float32x4.sub(SIMD.Float32x4.mul(row3, tmp1), minor2);
+    minor3 = SIMD.Float32x4.sub(minor3, SIMD.Float32x4.mul(row2, tmp1));
 
-  tmp1   = SIMD.Float32x4.mul(row0, row3);
-  tmp1   = SIMD.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
-  minor1 = SIMD.Float32x4.sub(minor1, SIMD.Float32x4.mul(row2, tmp1));
-  minor2 = SIMD.Float32x4.add(SIMD.Float32x4.mul(row1, tmp1), minor2);
-  tmp1   = SIMD.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
-  minor1 = SIMD.Float32x4.add(SIMD.Float32x4.mul(row2, tmp1), minor1);
-  minor2 = SIMD.Float32x4.sub(minor2, SIMD.Float32x4.mul(row1, tmp1));
+    tmp1 = SIMD.Float32x4.mul(row0, row3);
+    tmp1 = SIMD.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
+    minor1 = SIMD.Float32x4.sub(minor1, SIMD.Float32x4.mul(row2, tmp1));
+    minor2 = SIMD.Float32x4.add(SIMD.Float32x4.mul(row1, tmp1), minor2);
+    tmp1 = SIMD.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
+    minor1 = SIMD.Float32x4.add(SIMD.Float32x4.mul(row2, tmp1), minor1);
+    minor2 = SIMD.Float32x4.sub(minor2, SIMD.Float32x4.mul(row1, tmp1));
 
-  tmp1   = SIMD.Float32x4.mul(row0, row2);
-  tmp1   = SIMD.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
-  minor1 = SIMD.Float32x4.add(SIMD.Float32x4.mul(row3, tmp1), minor1);
-  minor3 = SIMD.Float32x4.sub(minor3, SIMD.Float32x4.mul(row1, tmp1));
-  tmp1   = SIMD.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
-  minor1 = SIMD.Float32x4.sub(minor1, SIMD.Float32x4.mul(row3, tmp1));
-  minor3 = SIMD.Float32x4.add(SIMD.Float32x4.mul(row1, tmp1), minor3);
+    tmp1 = SIMD.Float32x4.mul(row0, row2);
+    tmp1 = SIMD.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
+    minor1 = SIMD.Float32x4.add(SIMD.Float32x4.mul(row3, tmp1), minor1);
+    minor3 = SIMD.Float32x4.sub(minor3, SIMD.Float32x4.mul(row1, tmp1));
+    tmp1 = SIMD.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
+    minor1 = SIMD.Float32x4.sub(minor1, SIMD.Float32x4.mul(row3, tmp1));
+    minor3 = SIMD.Float32x4.add(SIMD.Float32x4.mul(row1, tmp1), minor3);
 
   // Compute matrix determinant
-  det   = SIMD.Float32x4.mul(row0, minor0);
-  det   = SIMD.Float32x4.add(SIMD.Float32x4.swizzle(det, 2, 3, 0, 1), det);
-  det   = SIMD.Float32x4.add(SIMD.Float32x4.swizzle(det, 1, 0, 3, 2), det);
-  tmp1  = SIMD.Float32x4.reciprocalApproximation(det);
-  det   = SIMD.Float32x4.sub(
+    det = SIMD.Float32x4.mul(row0, minor0);
+    det = SIMD.Float32x4.add(SIMD.Float32x4.swizzle(det, 2, 3, 0, 1), det);
+    det = SIMD.Float32x4.add(SIMD.Float32x4.swizzle(det, 1, 0, 3, 2), det);
+    tmp1 = SIMD.Float32x4.reciprocalApproximation(det);
+    det = SIMD.Float32x4.sub(
                SIMD.Float32x4.add(tmp1, tmp1),
                SIMD.Float32x4.mul(det, SIMD.Float32x4.mul(tmp1, tmp1)));
-  det   = SIMD.Float32x4.swizzle(det, 0, 0, 0, 0);
-  if (!det) {
-      return null;
-  }
+    det = SIMD.Float32x4.swizzle(det, 0, 0, 0, 0);
+    if (!det) {
+        return null;
+    }
 
   // Compute matrix inverse
-  SIMD.Float32x4.store(out, 0,  SIMD.Float32x4.mul(det, minor0));
-  SIMD.Float32x4.store(out, 4,  SIMD.Float32x4.mul(det, minor1));
-  SIMD.Float32x4.store(out, 8,  SIMD.Float32x4.mul(det, minor2));
-  SIMD.Float32x4.store(out, 12, SIMD.Float32x4.mul(det, minor3));
-  return out;
-}
+    SIMD.Float32x4.store(out, 0, SIMD.Float32x4.mul(det, minor0));
+    SIMD.Float32x4.store(out, 4, SIMD.Float32x4.mul(det, minor1));
+    SIMD.Float32x4.store(out, 8, SIMD.Float32x4.mul(det, minor2));
+    SIMD.Float32x4.store(out, 12, SIMD.Float32x4.mul(det, minor3));
+    return out;
+};
 
 /**
  * Inverts a mat4 using SIMD if available and enabled
@@ -481,28 +481,28 @@ mat4.invert = glMatrix.USE_SIMD ? mat4.SIMD.invert : mat4.scalar.invert;
  * @param {mat4} a the source matrix
  * @returns {mat4} out
  */
-mat4.scalar.adjoint = function(out, a) {
-    var a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3],
+mat4.scalar.adjoint = function (out, a) {
+    let a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3],
         a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7],
         a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11],
         a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
 
-    out[0]  =  (a11 * (a22 * a33 - a23 * a32) - a21 * (a12 * a33 - a13 * a32) + a31 * (a12 * a23 - a13 * a22));
-    out[1]  = -(a01 * (a22 * a33 - a23 * a32) - a21 * (a02 * a33 - a03 * a32) + a31 * (a02 * a23 - a03 * a22));
-    out[2]  =  (a01 * (a12 * a33 - a13 * a32) - a11 * (a02 * a33 - a03 * a32) + a31 * (a02 * a13 - a03 * a12));
-    out[3]  = -(a01 * (a12 * a23 - a13 * a22) - a11 * (a02 * a23 - a03 * a22) + a21 * (a02 * a13 - a03 * a12));
-    out[4]  = -(a10 * (a22 * a33 - a23 * a32) - a20 * (a12 * a33 - a13 * a32) + a30 * (a12 * a23 - a13 * a22));
-    out[5]  =  (a00 * (a22 * a33 - a23 * a32) - a20 * (a02 * a33 - a03 * a32) + a30 * (a02 * a23 - a03 * a22));
-    out[6]  = -(a00 * (a12 * a33 - a13 * a32) - a10 * (a02 * a33 - a03 * a32) + a30 * (a02 * a13 - a03 * a12));
-    out[7]  =  (a00 * (a12 * a23 - a13 * a22) - a10 * (a02 * a23 - a03 * a22) + a20 * (a02 * a13 - a03 * a12));
-    out[8]  =  (a10 * (a21 * a33 - a23 * a31) - a20 * (a11 * a33 - a13 * a31) + a30 * (a11 * a23 - a13 * a21));
-    out[9]  = -(a00 * (a21 * a33 - a23 * a31) - a20 * (a01 * a33 - a03 * a31) + a30 * (a01 * a23 - a03 * a21));
-    out[10] =  (a00 * (a11 * a33 - a13 * a31) - a10 * (a01 * a33 - a03 * a31) + a30 * (a01 * a13 - a03 * a11));
+    out[0] = (a11 * (a22 * a33 - a23 * a32) - a21 * (a12 * a33 - a13 * a32) + a31 * (a12 * a23 - a13 * a22));
+    out[1] = -(a01 * (a22 * a33 - a23 * a32) - a21 * (a02 * a33 - a03 * a32) + a31 * (a02 * a23 - a03 * a22));
+    out[2] = (a01 * (a12 * a33 - a13 * a32) - a11 * (a02 * a33 - a03 * a32) + a31 * (a02 * a13 - a03 * a12));
+    out[3] = -(a01 * (a12 * a23 - a13 * a22) - a11 * (a02 * a23 - a03 * a22) + a21 * (a02 * a13 - a03 * a12));
+    out[4] = -(a10 * (a22 * a33 - a23 * a32) - a20 * (a12 * a33 - a13 * a32) + a30 * (a12 * a23 - a13 * a22));
+    out[5] = (a00 * (a22 * a33 - a23 * a32) - a20 * (a02 * a33 - a03 * a32) + a30 * (a02 * a23 - a03 * a22));
+    out[6] = -(a00 * (a12 * a33 - a13 * a32) - a10 * (a02 * a33 - a03 * a32) + a30 * (a02 * a13 - a03 * a12));
+    out[7] = (a00 * (a12 * a23 - a13 * a22) - a10 * (a02 * a23 - a03 * a22) + a20 * (a02 * a13 - a03 * a12));
+    out[8] = (a10 * (a21 * a33 - a23 * a31) - a20 * (a11 * a33 - a13 * a31) + a30 * (a11 * a23 - a13 * a21));
+    out[9] = -(a00 * (a21 * a33 - a23 * a31) - a20 * (a01 * a33 - a03 * a31) + a30 * (a01 * a23 - a03 * a21));
+    out[10] = (a00 * (a11 * a33 - a13 * a31) - a10 * (a01 * a33 - a03 * a31) + a30 * (a01 * a13 - a03 * a11));
     out[11] = -(a00 * (a11 * a23 - a13 * a21) - a10 * (a01 * a23 - a03 * a21) + a20 * (a01 * a13 - a03 * a11));
     out[12] = -(a10 * (a21 * a32 - a22 * a31) - a20 * (a11 * a32 - a12 * a31) + a30 * (a11 * a22 - a12 * a21));
-    out[13] =  (a00 * (a21 * a32 - a22 * a31) - a20 * (a01 * a32 - a02 * a31) + a30 * (a01 * a22 - a02 * a21));
+    out[13] = (a00 * (a21 * a32 - a22 * a31) - a20 * (a01 * a32 - a02 * a31) + a30 * (a01 * a22 - a02 * a21));
     out[14] = -(a00 * (a11 * a32 - a12 * a31) - a10 * (a01 * a32 - a02 * a31) + a30 * (a01 * a12 - a02 * a11));
-    out[15] =  (a00 * (a11 * a22 - a12 * a21) - a10 * (a01 * a22 - a02 * a21) + a20 * (a01 * a12 - a02 * a11));
+    out[15] = (a00 * (a11 * a22 - a12 * a21) - a10 * (a01 * a22 - a02 * a21) + a20 * (a01 * a12 - a02 * a11));
     return out;
 };
 
@@ -513,85 +513,85 @@ mat4.scalar.adjoint = function(out, a) {
  * @param {mat4} a the source matrix
  * @returns {mat4} out
  */
-mat4.SIMD.adjoint = function(out, a) {
-  var a0, a1, a2, a3;
-  var row0, row1, row2, row3;
-  var tmp1;
-  var minor0, minor1, minor2, minor3;
+mat4.SIMD.adjoint = function (out, a) {
+    let a0, a1, a2, a3;
+    let row0, row1, row2, row3;
+    let tmp1;
+    let minor0, minor1, minor2, minor3;
 
-  a0 = SIMD.Float32x4.load(a, 0);
-  a1 = SIMD.Float32x4.load(a, 4);
-  a2 = SIMD.Float32x4.load(a, 8);
-  a3 = SIMD.Float32x4.load(a, 12);
+    a0 = SIMD.Float32x4.load(a, 0);
+    a1 = SIMD.Float32x4.load(a, 4);
+    a2 = SIMD.Float32x4.load(a, 8);
+    a3 = SIMD.Float32x4.load(a, 12);
 
   // Transpose the source matrix.  Sort of.  Not a true transpose operation
-  tmp1 = SIMD.Float32x4.shuffle(a0, a1, 0, 1, 4, 5);
-  row1 = SIMD.Float32x4.shuffle(a2, a3, 0, 1, 4, 5);
-  row0 = SIMD.Float32x4.shuffle(tmp1, row1, 0, 2, 4, 6);
-  row1 = SIMD.Float32x4.shuffle(row1, tmp1, 1, 3, 5, 7);
+    tmp1 = SIMD.Float32x4.shuffle(a0, a1, 0, 1, 4, 5);
+    row1 = SIMD.Float32x4.shuffle(a2, a3, 0, 1, 4, 5);
+    row0 = SIMD.Float32x4.shuffle(tmp1, row1, 0, 2, 4, 6);
+    row1 = SIMD.Float32x4.shuffle(row1, tmp1, 1, 3, 5, 7);
 
-  tmp1 = SIMD.Float32x4.shuffle(a0, a1, 2, 3, 6, 7);
-  row3 = SIMD.Float32x4.shuffle(a2, a3, 2, 3, 6, 7);
-  row2 = SIMD.Float32x4.shuffle(tmp1, row3, 0, 2, 4, 6);
-  row3 = SIMD.Float32x4.shuffle(row3, tmp1, 1, 3, 5, 7);
+    tmp1 = SIMD.Float32x4.shuffle(a0, a1, 2, 3, 6, 7);
+    row3 = SIMD.Float32x4.shuffle(a2, a3, 2, 3, 6, 7);
+    row2 = SIMD.Float32x4.shuffle(tmp1, row3, 0, 2, 4, 6);
+    row3 = SIMD.Float32x4.shuffle(row3, tmp1, 1, 3, 5, 7);
 
-  tmp1   = SIMD.Float32x4.mul(row2, row3);
-  tmp1   = SIMD.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
-  minor0 = SIMD.Float32x4.mul(row1, tmp1);
-  minor1 = SIMD.Float32x4.mul(row0, tmp1);
-  tmp1   = SIMD.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
-  minor0 = SIMD.Float32x4.sub(SIMD.Float32x4.mul(row1, tmp1), minor0);
-  minor1 = SIMD.Float32x4.sub(SIMD.Float32x4.mul(row0, tmp1), minor1);
-  minor1 = SIMD.Float32x4.swizzle(minor1, 2, 3, 0, 1);
+    tmp1 = SIMD.Float32x4.mul(row2, row3);
+    tmp1 = SIMD.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
+    minor0 = SIMD.Float32x4.mul(row1, tmp1);
+    minor1 = SIMD.Float32x4.mul(row0, tmp1);
+    tmp1 = SIMD.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
+    minor0 = SIMD.Float32x4.sub(SIMD.Float32x4.mul(row1, tmp1), minor0);
+    minor1 = SIMD.Float32x4.sub(SIMD.Float32x4.mul(row0, tmp1), minor1);
+    minor1 = SIMD.Float32x4.swizzle(minor1, 2, 3, 0, 1);
 
-  tmp1   = SIMD.Float32x4.mul(row1, row2);
-  tmp1   = SIMD.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
-  minor0 = SIMD.Float32x4.add(SIMD.Float32x4.mul(row3, tmp1), minor0);
-  minor3 = SIMD.Float32x4.mul(row0, tmp1);
-  tmp1   = SIMD.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
-  minor0 = SIMD.Float32x4.sub(minor0, SIMD.Float32x4.mul(row3, tmp1));
-  minor3 = SIMD.Float32x4.sub(SIMD.Float32x4.mul(row0, tmp1), minor3);
-  minor3 = SIMD.Float32x4.swizzle(minor3, 2, 3, 0, 1);
+    tmp1 = SIMD.Float32x4.mul(row1, row2);
+    tmp1 = SIMD.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
+    minor0 = SIMD.Float32x4.add(SIMD.Float32x4.mul(row3, tmp1), minor0);
+    minor3 = SIMD.Float32x4.mul(row0, tmp1);
+    tmp1 = SIMD.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
+    minor0 = SIMD.Float32x4.sub(minor0, SIMD.Float32x4.mul(row3, tmp1));
+    minor3 = SIMD.Float32x4.sub(SIMD.Float32x4.mul(row0, tmp1), minor3);
+    minor3 = SIMD.Float32x4.swizzle(minor3, 2, 3, 0, 1);
 
-  tmp1   = SIMD.Float32x4.mul(SIMD.Float32x4.swizzle(row1, 2, 3, 0, 1), row3);
-  tmp1   = SIMD.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
-  row2   = SIMD.Float32x4.swizzle(row2, 2, 3, 0, 1);
-  minor0 = SIMD.Float32x4.add(SIMD.Float32x4.mul(row2, tmp1), minor0);
-  minor2 = SIMD.Float32x4.mul(row0, tmp1);
-  tmp1   = SIMD.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
-  minor0 = SIMD.Float32x4.sub(minor0, SIMD.Float32x4.mul(row2, tmp1));
-  minor2 = SIMD.Float32x4.sub(SIMD.Float32x4.mul(row0, tmp1), minor2);
-  minor2 = SIMD.Float32x4.swizzle(minor2, 2, 3, 0, 1);
+    tmp1 = SIMD.Float32x4.mul(SIMD.Float32x4.swizzle(row1, 2, 3, 0, 1), row3);
+    tmp1 = SIMD.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
+    row2 = SIMD.Float32x4.swizzle(row2, 2, 3, 0, 1);
+    minor0 = SIMD.Float32x4.add(SIMD.Float32x4.mul(row2, tmp1), minor0);
+    minor2 = SIMD.Float32x4.mul(row0, tmp1);
+    tmp1 = SIMD.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
+    minor0 = SIMD.Float32x4.sub(minor0, SIMD.Float32x4.mul(row2, tmp1));
+    minor2 = SIMD.Float32x4.sub(SIMD.Float32x4.mul(row0, tmp1), minor2);
+    minor2 = SIMD.Float32x4.swizzle(minor2, 2, 3, 0, 1);
 
-  tmp1   = SIMD.Float32x4.mul(row0, row1);
-  tmp1   = SIMD.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
-  minor2 = SIMD.Float32x4.add(SIMD.Float32x4.mul(row3, tmp1), minor2);
-  minor3 = SIMD.Float32x4.sub(SIMD.Float32x4.mul(row2, tmp1), minor3);
-  tmp1   = SIMD.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
-  minor2 = SIMD.Float32x4.sub(SIMD.Float32x4.mul(row3, tmp1), minor2);
-  minor3 = SIMD.Float32x4.sub(minor3, SIMD.Float32x4.mul(row2, tmp1));
+    tmp1 = SIMD.Float32x4.mul(row0, row1);
+    tmp1 = SIMD.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
+    minor2 = SIMD.Float32x4.add(SIMD.Float32x4.mul(row3, tmp1), minor2);
+    minor3 = SIMD.Float32x4.sub(SIMD.Float32x4.mul(row2, tmp1), minor3);
+    tmp1 = SIMD.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
+    minor2 = SIMD.Float32x4.sub(SIMD.Float32x4.mul(row3, tmp1), minor2);
+    minor3 = SIMD.Float32x4.sub(minor3, SIMD.Float32x4.mul(row2, tmp1));
 
-  tmp1   = SIMD.Float32x4.mul(row0, row3);
-  tmp1   = SIMD.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
-  minor1 = SIMD.Float32x4.sub(minor1, SIMD.Float32x4.mul(row2, tmp1));
-  minor2 = SIMD.Float32x4.add(SIMD.Float32x4.mul(row1, tmp1), minor2);
-  tmp1   = SIMD.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
-  minor1 = SIMD.Float32x4.add(SIMD.Float32x4.mul(row2, tmp1), minor1);
-  minor2 = SIMD.Float32x4.sub(minor2, SIMD.Float32x4.mul(row1, tmp1));
+    tmp1 = SIMD.Float32x4.mul(row0, row3);
+    tmp1 = SIMD.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
+    minor1 = SIMD.Float32x4.sub(minor1, SIMD.Float32x4.mul(row2, tmp1));
+    minor2 = SIMD.Float32x4.add(SIMD.Float32x4.mul(row1, tmp1), minor2);
+    tmp1 = SIMD.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
+    minor1 = SIMD.Float32x4.add(SIMD.Float32x4.mul(row2, tmp1), minor1);
+    minor2 = SIMD.Float32x4.sub(minor2, SIMD.Float32x4.mul(row1, tmp1));
 
-  tmp1   = SIMD.Float32x4.mul(row0, row2);
-  tmp1   = SIMD.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
-  minor1 = SIMD.Float32x4.add(SIMD.Float32x4.mul(row3, tmp1), minor1);
-  minor3 = SIMD.Float32x4.sub(minor3, SIMD.Float32x4.mul(row1, tmp1));
-  tmp1   = SIMD.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
-  minor1 = SIMD.Float32x4.sub(minor1, SIMD.Float32x4.mul(row3, tmp1));
-  minor3 = SIMD.Float32x4.add(SIMD.Float32x4.mul(row1, tmp1), minor3);
+    tmp1 = SIMD.Float32x4.mul(row0, row2);
+    tmp1 = SIMD.Float32x4.swizzle(tmp1, 1, 0, 3, 2);
+    minor1 = SIMD.Float32x4.add(SIMD.Float32x4.mul(row3, tmp1), minor1);
+    minor3 = SIMD.Float32x4.sub(minor3, SIMD.Float32x4.mul(row1, tmp1));
+    tmp1 = SIMD.Float32x4.swizzle(tmp1, 2, 3, 0, 1);
+    minor1 = SIMD.Float32x4.sub(minor1, SIMD.Float32x4.mul(row3, tmp1));
+    minor3 = SIMD.Float32x4.add(SIMD.Float32x4.mul(row1, tmp1), minor3);
 
-  SIMD.Float32x4.store(out, 0,  minor0);
-  SIMD.Float32x4.store(out, 4,  minor1);
-  SIMD.Float32x4.store(out, 8,  minor2);
-  SIMD.Float32x4.store(out, 12, minor3);
-  return out;
+    SIMD.Float32x4.store(out, 0, minor0);
+    SIMD.Float32x4.store(out, 4, minor1);
+    SIMD.Float32x4.store(out, 8, minor2);
+    SIMD.Float32x4.store(out, 12, minor3);
+    return out;
 };
 
 /**
@@ -601,7 +601,7 @@ mat4.SIMD.adjoint = function(out, a) {
  * @param {mat4} a the source matrix
  * @returns {mat4} out
  */
- mat4.adjoint = glMatrix.USE_SIMD ? mat4.SIMD.adjoint : mat4.scalar.adjoint;
+mat4.adjoint = glMatrix.USE_SIMD ? mat4.SIMD.adjoint : mat4.scalar.adjoint;
 
 /**
  * Calculates the determinant of a mat4
@@ -610,7 +610,7 @@ mat4.SIMD.adjoint = function(out, a) {
  * @returns {Number} determinant of a
  */
 mat4.determinant = function (a) {
-    var a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3],
+    let a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3],
         a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7],
         a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11],
         a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15],
@@ -641,13 +641,13 @@ mat4.determinant = function (a) {
  * @returns {mat4} out
  */
 mat4.SIMD.multiply = function (out, a, b) {
-    var a0 = SIMD.Float32x4.load(a, 0);
-    var a1 = SIMD.Float32x4.load(a, 4);
-    var a2 = SIMD.Float32x4.load(a, 8);
-    var a3 = SIMD.Float32x4.load(a, 12);
+    const a0 = SIMD.Float32x4.load(a, 0);
+    const a1 = SIMD.Float32x4.load(a, 4);
+    const a2 = SIMD.Float32x4.load(a, 8);
+    const a3 = SIMD.Float32x4.load(a, 12);
 
-    var b0 = SIMD.Float32x4.load(b, 0);
-    var out0 = SIMD.Float32x4.add(
+    const b0 = SIMD.Float32x4.load(b, 0);
+    const out0 = SIMD.Float32x4.add(
                    SIMD.Float32x4.mul(SIMD.Float32x4.swizzle(b0, 0, 0, 0, 0), a0),
                    SIMD.Float32x4.add(
                        SIMD.Float32x4.mul(SIMD.Float32x4.swizzle(b0, 1, 1, 1, 1), a1),
@@ -656,8 +656,8 @@ mat4.SIMD.multiply = function (out, a, b) {
                            SIMD.Float32x4.mul(SIMD.Float32x4.swizzle(b0, 3, 3, 3, 3), a3))));
     SIMD.Float32x4.store(out, 0, out0);
 
-    var b1 = SIMD.Float32x4.load(b, 4);
-    var out1 = SIMD.Float32x4.add(
+    const b1 = SIMD.Float32x4.load(b, 4);
+    const out1 = SIMD.Float32x4.add(
                    SIMD.Float32x4.mul(SIMD.Float32x4.swizzle(b1, 0, 0, 0, 0), a0),
                    SIMD.Float32x4.add(
                        SIMD.Float32x4.mul(SIMD.Float32x4.swizzle(b1, 1, 1, 1, 1), a1),
@@ -666,8 +666,8 @@ mat4.SIMD.multiply = function (out, a, b) {
                            SIMD.Float32x4.mul(SIMD.Float32x4.swizzle(b1, 3, 3, 3, 3), a3))));
     SIMD.Float32x4.store(out, 4, out1);
 
-    var b2 = SIMD.Float32x4.load(b, 8);
-    var out2 = SIMD.Float32x4.add(
+    const b2 = SIMD.Float32x4.load(b, 8);
+    const out2 = SIMD.Float32x4.add(
                    SIMD.Float32x4.mul(SIMD.Float32x4.swizzle(b2, 0, 0, 0, 0), a0),
                    SIMD.Float32x4.add(
                        SIMD.Float32x4.mul(SIMD.Float32x4.swizzle(b2, 1, 1, 1, 1), a1),
@@ -676,8 +676,8 @@ mat4.SIMD.multiply = function (out, a, b) {
                                SIMD.Float32x4.mul(SIMD.Float32x4.swizzle(b2, 3, 3, 3, 3), a3))));
     SIMD.Float32x4.store(out, 8, out2);
 
-    var b3 = SIMD.Float32x4.load(b, 12);
-    var out3 = SIMD.Float32x4.add(
+    const b3 = SIMD.Float32x4.load(b, 12);
+    const out3 = SIMD.Float32x4.add(
                    SIMD.Float32x4.mul(SIMD.Float32x4.swizzle(b3, 0, 0, 0, 0), a0),
                    SIMD.Float32x4.add(
                         SIMD.Float32x4.mul(SIMD.Float32x4.swizzle(b3, 1, 1, 1, 1), a1),
@@ -698,35 +698,35 @@ mat4.SIMD.multiply = function (out, a, b) {
  * @returns {mat4} out
  */
 mat4.scalar.multiply = function (out, a, b) {
-    var a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3],
+    let a00 = a[0], a01 = a[1], a02 = a[2], a03 = a[3],
         a10 = a[4], a11 = a[5], a12 = a[6], a13 = a[7],
         a20 = a[8], a21 = a[9], a22 = a[10], a23 = a[11],
         a30 = a[12], a31 = a[13], a32 = a[14], a33 = a[15];
 
     // Cache only the current line of the second matrix
-    var b0  = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
-    out[0] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
-    out[1] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
-    out[2] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
-    out[3] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+    let b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3];
+    out[0] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
+    out[1] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
+    out[2] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
+    out[3] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
 
     b0 = b[4]; b1 = b[5]; b2 = b[6]; b3 = b[7];
-    out[4] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
-    out[5] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
-    out[6] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
-    out[7] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+    out[4] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
+    out[5] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
+    out[6] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
+    out[7] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
 
     b0 = b[8]; b1 = b[9]; b2 = b[10]; b3 = b[11];
-    out[8] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
-    out[9] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
-    out[10] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
-    out[11] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+    out[8] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
+    out[9] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
+    out[10] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
+    out[11] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
 
     b0 = b[12]; b1 = b[13]; b2 = b[14]; b3 = b[15];
-    out[12] = b0*a00 + b1*a10 + b2*a20 + b3*a30;
-    out[13] = b0*a01 + b1*a11 + b2*a21 + b3*a31;
-    out[14] = b0*a02 + b1*a12 + b2*a22 + b3*a32;
-    out[15] = b0*a03 + b1*a13 + b2*a23 + b3*a33;
+    out[12] = b0 * a00 + b1 * a10 + b2 * a20 + b3 * a30;
+    out[13] = b0 * a01 + b1 * a11 + b2 * a21 + b3 * a31;
+    out[14] = b0 * a02 + b1 * a12 + b2 * a22 + b3 * a32;
+    out[15] = b0 * a03 + b1 * a13 + b2 * a23 + b3 * a33;
     return out;
 };
 
@@ -755,7 +755,7 @@ mat4.mul = mat4.multiply;
  * @returns {mat4} out
  */
 mat4.scalar.translate = function (out, a, v) {
-    var x = v[0], y = v[1], z = v[2],
+    let x = v[0], y = v[1], z = v[2],
         a00, a01, a02, a03,
         a10, a11, a12, a13,
         a20, a21, a22, a23;
@@ -792,11 +792,11 @@ mat4.scalar.translate = function (out, a, v) {
  * @returns {mat4} out
  */
 mat4.SIMD.translate = function (out, a, v) {
-    var a0 = SIMD.Float32x4.load(a, 0),
+    let a0 = SIMD.Float32x4.load(a, 0),
         a1 = SIMD.Float32x4.load(a, 4),
         a2 = SIMD.Float32x4.load(a, 8),
         a3 = SIMD.Float32x4.load(a, 12),
-        vec = SIMD.Float32x4(v[0], v[1], v[2] , 0);
+        vec = SIMD.Float32x4(v[0], v[1], v[2], 0);
 
     if (a !== out) {
         out[0] = a[0]; out[1] = a[1]; out[2] = a[2]; out[3] = a[3];
@@ -808,7 +808,7 @@ mat4.SIMD.translate = function (out, a, v) {
     a1 = SIMD.Float32x4.mul(a1, SIMD.Float32x4.swizzle(vec, 1, 1, 1, 1));
     a2 = SIMD.Float32x4.mul(a2, SIMD.Float32x4.swizzle(vec, 2, 2, 2, 2));
 
-    var t0 = SIMD.Float32x4.add(a0, SIMD.Float32x4.add(a1, SIMD.Float32x4.add(a2, a3)));
+    const t0 = SIMD.Float32x4.add(a0, SIMD.Float32x4.add(a1, SIMD.Float32x4.add(a2, a3)));
     SIMD.Float32x4.store(out, 12, t0);
 
     return out;
@@ -832,8 +832,8 @@ mat4.translate = glMatrix.USE_SIMD ? mat4.SIMD.translate : mat4.scalar.translate
  * @param {vec3} v the vec3 to scale the matrix by
  * @returns {mat4} out
  **/
-mat4.scalar.scale = function(out, a, v) {
-    var x = v[0], y = v[1], z = v[2];
+mat4.scalar.scale = function (out, a, v) {
+    let x = v[0], y = v[1], z = v[2];
 
     out[0] = a[0] * x;
     out[1] = a[1] * x;
@@ -862,9 +862,9 @@ mat4.scalar.scale = function(out, a, v) {
  * @param {vec3} v the vec3 to scale the matrix by
  * @returns {mat4} out
  **/
-mat4.SIMD.scale = function(out, a, v) {
-    var a0, a1, a2;
-    var vec = SIMD.Float32x4(v[0], v[1], v[2], 0);
+mat4.SIMD.scale = function (out, a, v) {
+    let a0, a1, a2;
+    const vec = SIMD.Float32x4(v[0], v[1], v[2], 0);
 
     a0 = SIMD.Float32x4.load(a, 0);
     SIMD.Float32x4.store(
@@ -905,7 +905,7 @@ mat4.scale = glMatrix.USE_SIMD ? mat4.SIMD.scale : mat4.scalar.scale;
  * @returns {mat4} out
  */
 mat4.rotate = function (out, a, rad, axis) {
-    var x = axis[0], y = axis[1], z = axis[2],
+    let x = axis[0], y = axis[1], z = axis[2],
         len = Math.sqrt(x * x + y * y + z * z),
         s, c, t,
         a00, a01, a02, a03,
@@ -915,7 +915,9 @@ mat4.rotate = function (out, a, rad, axis) {
         b10, b11, b12,
         b20, b21, b22;
 
-    if (Math.abs(len) < glMatrix.EPSILON) { return null; }
+    if (Math.abs(len) < glMatrix.EPSILON) {
+        return null; 
+    }
 
     len = 1 / len;
     x *= len;
@@ -967,7 +969,7 @@ mat4.rotate = function (out, a, rad, axis) {
  * @returns {mat4} out
  */
 mat4.scalar.rotateX = function (out, a, rad) {
-    var s = Math.sin(rad),
+    let s = Math.sin(rad),
         c = Math.cos(rad),
         a10 = a[4],
         a11 = a[5],
@@ -979,10 +981,10 @@ mat4.scalar.rotateX = function (out, a, rad) {
         a23 = a[11];
 
     if (a !== out) { // If the source and destination differ, copy the unchanged rows
-        out[0]  = a[0];
-        out[1]  = a[1];
-        out[2]  = a[2];
-        out[3]  = a[3];
+        out[0] = a[0];
+        out[1] = a[1];
+        out[2] = a[2];
+        out[3] = a[3];
         out[12] = a[12];
         out[13] = a[13];
         out[14] = a[14];
@@ -1010,23 +1012,23 @@ mat4.scalar.rotateX = function (out, a, rad) {
  * @returns {mat4} out
  */
 mat4.SIMD.rotateX = function (out, a, rad) {
-    var s = SIMD.Float32x4.splat(Math.sin(rad)),
+    let s = SIMD.Float32x4.splat(Math.sin(rad)),
         c = SIMD.Float32x4.splat(Math.cos(rad));
 
     if (a !== out) { // If the source and destination differ, copy the unchanged rows
-      out[0]  = a[0];
-      out[1]  = a[1];
-      out[2]  = a[2];
-      out[3]  = a[3];
-      out[12] = a[12];
-      out[13] = a[13];
-      out[14] = a[14];
-      out[15] = a[15];
+        out[0] = a[0];
+        out[1] = a[1];
+        out[2] = a[2];
+        out[3] = a[3];
+        out[12] = a[12];
+        out[13] = a[13];
+        out[14] = a[14];
+        out[15] = a[15];
     }
 
     // Perform axis-specific matrix multiplication
-    var a_1 = SIMD.Float32x4.load(a, 4);
-    var a_2 = SIMD.Float32x4.load(a, 8);
+    const a_1 = SIMD.Float32x4.load(a, 4);
+    const a_2 = SIMD.Float32x4.load(a, 8);
     SIMD.Float32x4.store(out, 4,
                          SIMD.Float32x4.add(SIMD.Float32x4.mul(a_1, c), SIMD.Float32x4.mul(a_2, s)));
     SIMD.Float32x4.store(out, 8,
@@ -1053,7 +1055,7 @@ mat4.rotateX = glMatrix.USE_SIMD ? mat4.SIMD.rotateX : mat4.scalar.rotateX;
  * @returns {mat4} out
  */
 mat4.scalar.rotateY = function (out, a, rad) {
-    var s = Math.sin(rad),
+    let s = Math.sin(rad),
         c = Math.cos(rad),
         a00 = a[0],
         a01 = a[1],
@@ -1065,10 +1067,10 @@ mat4.scalar.rotateY = function (out, a, rad) {
         a23 = a[11];
 
     if (a !== out) { // If the source and destination differ, copy the unchanged rows
-        out[4]  = a[4];
-        out[5]  = a[5];
-        out[6]  = a[6];
-        out[7]  = a[7];
+        out[4] = a[4];
+        out[5] = a[5];
+        out[6] = a[6];
+        out[7] = a[7];
         out[12] = a[12];
         out[13] = a[13];
         out[14] = a[14];
@@ -1096,14 +1098,14 @@ mat4.scalar.rotateY = function (out, a, rad) {
  * @returns {mat4} out
  */
 mat4.SIMD.rotateY = function (out, a, rad) {
-    var s = SIMD.Float32x4.splat(Math.sin(rad)),
+    let s = SIMD.Float32x4.splat(Math.sin(rad)),
         c = SIMD.Float32x4.splat(Math.cos(rad));
 
     if (a !== out) { // If the source and destination differ, copy the unchanged rows
-        out[4]  = a[4];
-        out[5]  = a[5];
-        out[6]  = a[6];
-        out[7]  = a[7];
+        out[4] = a[4];
+        out[5] = a[5];
+        out[6] = a[6];
+        out[7] = a[7];
         out[12] = a[12];
         out[13] = a[13];
         out[14] = a[14];
@@ -1111,8 +1113,8 @@ mat4.SIMD.rotateY = function (out, a, rad) {
     }
 
     // Perform axis-specific matrix multiplication
-    var a_0 = SIMD.Float32x4.load(a, 0);
-    var a_2 = SIMD.Float32x4.load(a, 8);
+    const a_0 = SIMD.Float32x4.load(a, 0);
+    const a_2 = SIMD.Float32x4.load(a, 8);
     SIMD.Float32x4.store(out, 0,
                          SIMD.Float32x4.sub(SIMD.Float32x4.mul(a_0, c), SIMD.Float32x4.mul(a_2, s)));
     SIMD.Float32x4.store(out, 8,
@@ -1128,7 +1130,7 @@ mat4.SIMD.rotateY = function (out, a, rad) {
  * @param {Number} rad the angle to rotate the matrix by
  * @returns {mat4} out
  */
- mat4.rotateY = glMatrix.USE_SIMD ? mat4.SIMD.rotateY : mat4.scalar.rotateY;
+mat4.rotateY = glMatrix.USE_SIMD ? mat4.SIMD.rotateY : mat4.scalar.rotateY;
 
 /**
  * Rotates a matrix by the given angle around the Z axis not using SIMD
@@ -1139,7 +1141,7 @@ mat4.SIMD.rotateY = function (out, a, rad) {
  * @returns {mat4} out
  */
 mat4.scalar.rotateZ = function (out, a, rad) {
-    var s = Math.sin(rad),
+    let s = Math.sin(rad),
         c = Math.cos(rad),
         a00 = a[0],
         a01 = a[1],
@@ -1151,8 +1153,8 @@ mat4.scalar.rotateZ = function (out, a, rad) {
         a13 = a[7];
 
     if (a !== out) { // If the source and destination differ, copy the unchanged last row
-        out[8]  = a[8];
-        out[9]  = a[9];
+        out[8] = a[8];
+        out[9] = a[9];
         out[10] = a[10];
         out[11] = a[11];
         out[12] = a[12];
@@ -1182,12 +1184,12 @@ mat4.scalar.rotateZ = function (out, a, rad) {
  * @returns {mat4} out
  */
 mat4.SIMD.rotateZ = function (out, a, rad) {
-    var s = SIMD.Float32x4.splat(Math.sin(rad)),
+    let s = SIMD.Float32x4.splat(Math.sin(rad)),
         c = SIMD.Float32x4.splat(Math.cos(rad));
 
     if (a !== out) { // If the source and destination differ, copy the unchanged last row
-        out[8]  = a[8];
-        out[9]  = a[9];
+        out[8] = a[8];
+        out[9] = a[9];
         out[10] = a[10];
         out[11] = a[11];
         out[12] = a[12];
@@ -1197,8 +1199,8 @@ mat4.SIMD.rotateZ = function (out, a, rad) {
     }
 
     // Perform axis-specific matrix multiplication
-    var a_0 = SIMD.Float32x4.load(a, 0);
-    var a_1 = SIMD.Float32x4.load(a, 4);
+    const a_0 = SIMD.Float32x4.load(a, 0);
+    const a_1 = SIMD.Float32x4.load(a, 4);
     SIMD.Float32x4.store(out, 0,
                          SIMD.Float32x4.add(SIMD.Float32x4.mul(a_0, c), SIMD.Float32x4.mul(a_1, s)));
     SIMD.Float32x4.store(out, 4,
@@ -1214,7 +1216,7 @@ mat4.SIMD.rotateZ = function (out, a, rad) {
  * @param {Number} rad the angle to rotate the matrix by
  * @returns {mat4} out
  */
- mat4.rotateZ = glMatrix.USE_SIMD ? mat4.SIMD.rotateZ : mat4.scalar.rotateZ;
+mat4.rotateZ = glMatrix.USE_SIMD ? mat4.SIMD.rotateZ : mat4.scalar.rotateZ;
 
 /**
  * Creates a matrix from a vector translation
@@ -1227,7 +1229,7 @@ mat4.SIMD.rotateZ = function (out, a, rad) {
  * @param {vec3} v Translation vector
  * @returns {mat4} out
  */
-mat4.fromTranslation = function(out, v) {
+mat4.fromTranslation = function (out, v) {
     out[0] = 1;
     out[1] = 0;
     out[2] = 0;
@@ -1245,7 +1247,7 @@ mat4.fromTranslation = function(out, v) {
     out[14] = v[2];
     out[15] = 1;
     return out;
-}
+};
 
 /**
  * Creates a matrix from a vector scaling
@@ -1258,7 +1260,7 @@ mat4.fromTranslation = function(out, v) {
  * @param {vec3} v Scaling vector
  * @returns {mat4} out
  */
-mat4.fromScaling = function(out, v) {
+mat4.fromScaling = function (out, v) {
     out[0] = v[0];
     out[1] = 0;
     out[2] = 0;
@@ -1276,7 +1278,7 @@ mat4.fromScaling = function(out, v) {
     out[14] = 0;
     out[15] = 1;
     return out;
-}
+};
 
 /**
  * Creates a matrix from a given angle around a given axis
@@ -1290,12 +1292,14 @@ mat4.fromScaling = function(out, v) {
  * @param {vec3} axis the axis to rotate around
  * @returns {mat4} out
  */
-mat4.fromRotation = function(out, rad, axis) {
-    var x = axis[0], y = axis[1], z = axis[2],
+mat4.fromRotation = function (out, rad, axis) {
+    let x = axis[0], y = axis[1], z = axis[2],
         len = Math.sqrt(x * x + y * y + z * z),
         s, c, t;
 
-    if (Math.abs(len) < glMatrix.EPSILON) { return null; }
+    if (Math.abs(len) < glMatrix.EPSILON) {
+        return null; 
+    }
 
     len = 1 / len;
     x *= len;
@@ -1324,7 +1328,7 @@ mat4.fromRotation = function(out, rad, axis) {
     out[14] = 0;
     out[15] = 1;
     return out;
-}
+};
 
 /**
  * Creates a matrix from the given angle around the X axis
@@ -1337,15 +1341,15 @@ mat4.fromRotation = function(out, rad, axis) {
  * @param {Number} rad the angle to rotate the matrix by
  * @returns {mat4} out
  */
-mat4.fromXRotation = function(out, rad) {
-    var s = Math.sin(rad),
+mat4.fromXRotation = function (out, rad) {
+    let s = Math.sin(rad),
         c = Math.cos(rad);
 
     // Perform axis-specific matrix multiplication
-    out[0]  = 1;
-    out[1]  = 0;
-    out[2]  = 0;
-    out[3]  = 0;
+    out[0] = 1;
+    out[1] = 0;
+    out[2] = 0;
+    out[3] = 0;
     out[4] = 0;
     out[5] = c;
     out[6] = s;
@@ -1359,7 +1363,7 @@ mat4.fromXRotation = function(out, rad) {
     out[14] = 0;
     out[15] = 1;
     return out;
-}
+};
 
 /**
  * Creates a matrix from the given angle around the Y axis
@@ -1372,15 +1376,15 @@ mat4.fromXRotation = function(out, rad) {
  * @param {Number} rad the angle to rotate the matrix by
  * @returns {mat4} out
  */
-mat4.fromYRotation = function(out, rad) {
-    var s = Math.sin(rad),
+mat4.fromYRotation = function (out, rad) {
+    let s = Math.sin(rad),
         c = Math.cos(rad);
 
     // Perform axis-specific matrix multiplication
-    out[0]  = c;
-    out[1]  = 0;
-    out[2]  = -s;
-    out[3]  = 0;
+    out[0] = c;
+    out[1] = 0;
+    out[2] = -s;
+    out[3] = 0;
     out[4] = 0;
     out[5] = 1;
     out[6] = 0;
@@ -1394,7 +1398,7 @@ mat4.fromYRotation = function(out, rad) {
     out[14] = 0;
     out[15] = 1;
     return out;
-}
+};
 
 /**
  * Creates a matrix from the given angle around the Z axis
@@ -1407,15 +1411,15 @@ mat4.fromYRotation = function(out, rad) {
  * @param {Number} rad the angle to rotate the matrix by
  * @returns {mat4} out
  */
-mat4.fromZRotation = function(out, rad) {
-    var s = Math.sin(rad),
+mat4.fromZRotation = function (out, rad) {
+    let s = Math.sin(rad),
         c = Math.cos(rad);
 
     // Perform axis-specific matrix multiplication
-    out[0]  = c;
-    out[1]  = s;
-    out[2]  = 0;
-    out[3]  = 0;
+    out[0] = c;
+    out[1] = s;
+    out[2] = 0;
+    out[3] = 0;
     out[4] = -s;
     out[5] = c;
     out[6] = 0;
@@ -1429,7 +1433,7 @@ mat4.fromZRotation = function(out, rad) {
     out[14] = 0;
     out[15] = 1;
     return out;
-}
+};
 
 /**
  * Creates a matrix from a quaternion rotation and vector translation
@@ -1448,7 +1452,7 @@ mat4.fromZRotation = function(out, rad) {
  */
 mat4.fromRotationTranslation = function (out, q, v) {
     // Quaternion math
-    var x = q[0], y = q[1], z = q[2], w = q[3],
+    let x = q[0], y = q[1], z = q[2], w = q[3],
         x2 = x + x,
         y2 = y + y,
         z2 = z + z,
@@ -1493,11 +1497,11 @@ mat4.fromRotationTranslation = function (out, q, v) {
  * @return {vec3} out
  */
 mat4.getTranslation = function (out, mat) {
-  out[0] = mat[12];
-  out[1] = mat[13];
-  out[2] = mat[14];
+    out[0] = mat[12];
+    out[1] = mat[13];
+    out[2] = mat[14];
 
-  return out;
+    return out;
 };
 
 /**
@@ -1511,21 +1515,21 @@ mat4.getTranslation = function (out, mat) {
  * @return {vec3} out
  */
 mat4.getScaling = function (out, mat) {
-  var m11 = mat[0],
-      m12 = mat[1],
-      m13 = mat[2],
-      m21 = mat[4],
-      m22 = mat[5],
-      m23 = mat[6],
-      m31 = mat[8],
-      m32 = mat[9],
-      m33 = mat[10];
+    let m11 = mat[0],
+        m12 = mat[1],
+        m13 = mat[2],
+        m21 = mat[4],
+        m22 = mat[5],
+        m23 = mat[6],
+        m31 = mat[8],
+        m32 = mat[9],
+        m33 = mat[10];
 
-  out[0] = Math.sqrt(m11 * m11 + m12 * m12 + m13 * m13);
-  out[1] = Math.sqrt(m21 * m21 + m22 * m22 + m23 * m23);
-  out[2] = Math.sqrt(m31 * m31 + m32 * m32 + m33 * m33);
+    out[0] = Math.sqrt(m11 * m11 + m12 * m12 + m13 * m13);
+    out[1] = Math.sqrt(m21 * m21 + m22 * m22 + m23 * m23);
+    out[2] = Math.sqrt(m31 * m31 + m32 * m32 + m33 * m33);
 
-  return out;
+    return out;
 };
 
 /**
@@ -1539,36 +1543,36 @@ mat4.getScaling = function (out, mat) {
  */
 mat4.getRotation = function (out, mat) {
   // Algorithm taken from http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/index.htm
-  var trace = mat[0] + mat[5] + mat[10];
-  var S = 0;
+    const trace = mat[0] + mat[5] + mat[10];
+    let S = 0;
 
-  if (trace > 0) { 
-    S = Math.sqrt(trace + 1.0) * 2;
-    out[3] = 0.25 * S;
-    out[0] = (mat[6] - mat[9]) / S;
-    out[1] = (mat[8] - mat[2]) / S; 
-    out[2] = (mat[1] - mat[4]) / S; 
-  } else if ((mat[0] > mat[5])&(mat[0] > mat[10])) { 
-    S = Math.sqrt(1.0 + mat[0] - mat[5] - mat[10]) * 2;
-    out[3] = (mat[6] - mat[9]) / S;
-    out[0] = 0.25 * S;
-    out[1] = (mat[1] + mat[4]) / S; 
-    out[2] = (mat[8] + mat[2]) / S; 
-  } else if (mat[5] > mat[10]) { 
-    S = Math.sqrt(1.0 + mat[5] - mat[0] - mat[10]) * 2;
-    out[3] = (mat[8] - mat[2]) / S;
-    out[0] = (mat[1] + mat[4]) / S; 
-    out[1] = 0.25 * S;
-    out[2] = (mat[6] + mat[9]) / S; 
-  } else { 
-    S = Math.sqrt(1.0 + mat[10] - mat[0] - mat[5]) * 2;
-    out[3] = (mat[1] - mat[4]) / S;
-    out[0] = (mat[8] + mat[2]) / S;
-    out[1] = (mat[6] + mat[9]) / S;
-    out[2] = 0.25 * S;
-  }
+    if (trace > 0) { 
+        S = Math.sqrt(trace + 1.0) * 2;
+        out[3] = 0.25 * S;
+        out[0] = (mat[6] - mat[9]) / S;
+        out[1] = (mat[8] - mat[2]) / S; 
+        out[2] = (mat[1] - mat[4]) / S; 
+    } else if ((mat[0] > mat[5]) & (mat[0] > mat[10])) { 
+        S = Math.sqrt(1.0 + mat[0] - mat[5] - mat[10]) * 2;
+        out[3] = (mat[6] - mat[9]) / S;
+        out[0] = 0.25 * S;
+        out[1] = (mat[1] + mat[4]) / S; 
+        out[2] = (mat[8] + mat[2]) / S; 
+    } else if (mat[5] > mat[10]) { 
+        S = Math.sqrt(1.0 + mat[5] - mat[0] - mat[10]) * 2;
+        out[3] = (mat[8] - mat[2]) / S;
+        out[0] = (mat[1] + mat[4]) / S; 
+        out[1] = 0.25 * S;
+        out[2] = (mat[6] + mat[9]) / S; 
+    } else { 
+        S = Math.sqrt(1.0 + mat[10] - mat[0] - mat[5]) * 2;
+        out[3] = (mat[1] - mat[4]) / S;
+        out[0] = (mat[8] + mat[2]) / S;
+        out[1] = (mat[6] + mat[9]) / S;
+        out[2] = 0.25 * S;
+    }
 
-  return out;
+    return out;
 };
 
 /**
@@ -1590,7 +1594,7 @@ mat4.getRotation = function (out, mat) {
  */
 mat4.fromRotationTranslationScale = function (out, q, v, s) {
     // Quaternion math
-    var x = q[0], y = q[1], z = q[2], w = q[3],
+    let x = q[0], y = q[1], z = q[2], w = q[3],
         x2 = x + x,
         y2 = y + y,
         z2 = z + z,
@@ -1650,47 +1654,47 @@ mat4.fromRotationTranslationScale = function (out, q, v, s) {
  */
 mat4.fromRotationTranslationScaleOrigin = function (out, q, v, s, o) {
   // Quaternion math
-  var x = q[0], y = q[1], z = q[2], w = q[3],
-      x2 = x + x,
-      y2 = y + y,
-      z2 = z + z,
+    let x = q[0], y = q[1], z = q[2], w = q[3],
+        x2 = x + x,
+        y2 = y + y,
+        z2 = z + z,
 
-      xx = x * x2,
-      xy = x * y2,
-      xz = x * z2,
-      yy = y * y2,
-      yz = y * z2,
-      zz = z * z2,
-      wx = w * x2,
-      wy = w * y2,
-      wz = w * z2,
+        xx = x * x2,
+        xy = x * y2,
+        xz = x * z2,
+        yy = y * y2,
+        yz = y * z2,
+        zz = z * z2,
+        wx = w * x2,
+        wy = w * y2,
+        wz = w * z2,
 
-      sx = s[0],
-      sy = s[1],
-      sz = s[2],
+        sx = s[0],
+        sy = s[1],
+        sz = s[2],
 
-      ox = o[0],
-      oy = o[1],
-      oz = o[2];
+        ox = o[0],
+        oy = o[1],
+        oz = o[2];
 
-  out[0] = (1 - (yy + zz)) * sx;
-  out[1] = (xy + wz) * sx;
-  out[2] = (xz - wy) * sx;
-  out[3] = 0;
-  out[4] = (xy - wz) * sy;
-  out[5] = (1 - (xx + zz)) * sy;
-  out[6] = (yz + wx) * sy;
-  out[7] = 0;
-  out[8] = (xz + wy) * sz;
-  out[9] = (yz - wx) * sz;
-  out[10] = (1 - (xx + yy)) * sz;
-  out[11] = 0;
-  out[12] = v[0] + ox - (out[0] * ox + out[4] * oy + out[8] * oz);
-  out[13] = v[1] + oy - (out[1] * ox + out[5] * oy + out[9] * oz);
-  out[14] = v[2] + oz - (out[2] * ox + out[6] * oy + out[10] * oz);
-  out[15] = 1;
+    out[0] = (1 - (yy + zz)) * sx;
+    out[1] = (xy + wz) * sx;
+    out[2] = (xz - wy) * sx;
+    out[3] = 0;
+    out[4] = (xy - wz) * sy;
+    out[5] = (1 - (xx + zz)) * sy;
+    out[6] = (yz + wx) * sy;
+    out[7] = 0;
+    out[8] = (xz + wy) * sz;
+    out[9] = (yz - wx) * sz;
+    out[10] = (1 - (xx + yy)) * sz;
+    out[11] = 0;
+    out[12] = v[0] + ox - (out[0] * ox + out[4] * oy + out[8] * oz);
+    out[13] = v[1] + oy - (out[1] * ox + out[5] * oy + out[9] * oz);
+    out[14] = v[2] + oz - (out[2] * ox + out[6] * oy + out[10] * oz);
+    out[15] = 1;
 
-  return out;
+    return out;
 };
 
 /**
@@ -1702,7 +1706,7 @@ mat4.fromRotationTranslationScaleOrigin = function (out, q, v, s, o) {
  * @returns {mat4} out
  */
 mat4.fromQuat = function (out, q) {
-    var x = q[0], y = q[1], z = q[2], w = q[3],
+    let x = q[0], y = q[1], z = q[2], w = q[3],
         x2 = x + x,
         y2 = y + y,
         z2 = z + z,
@@ -1753,7 +1757,7 @@ mat4.fromQuat = function (out, q) {
  * @returns {mat4} out
  */
 mat4.frustum = function (out, left, right, bottom, top, near, far) {
-    var rl = 1 / (right - left),
+    let rl = 1 / (right - left),
         tb = 1 / (top - bottom),
         nf = 1 / (near - far);
     out[0] = (near * 2) * rl;
@@ -1786,7 +1790,7 @@ mat4.frustum = function (out, left, right, bottom, top, near, far) {
  * @returns {mat4} out
  */
 mat4.perspective = function (out, fovy, aspect, near, far) {
-    var f = 1.0 / Math.tan(fovy / 2),
+    let f = 1.0 / Math.tan(fovy / 2),
         nf = 1 / (near - far);
     out[0] = f / aspect;
     out[1] = 0;
@@ -1819,10 +1823,10 @@ mat4.perspective = function (out, fovy, aspect, near, far) {
  * @returns {mat4} out
  */
 mat4.perspectiveFromFieldOfView = function (out, fov, near, far) {
-    var upTan = Math.tan(fov.upDegrees * Math.PI/180.0),
-        downTan = Math.tan(fov.downDegrees * Math.PI/180.0),
-        leftTan = Math.tan(fov.leftDegrees * Math.PI/180.0),
-        rightTan = Math.tan(fov.rightDegrees * Math.PI/180.0),
+    let upTan = Math.tan(fov.upDegrees * Math.PI / 180.0),
+        downTan = Math.tan(fov.downDegrees * Math.PI / 180.0),
+        leftTan = Math.tan(fov.leftDegrees * Math.PI / 180.0),
+        rightTan = Math.tan(fov.rightDegrees * Math.PI / 180.0),
         xScale = 2.0 / (leftTan + rightTan),
         yScale = 2.0 / (upTan + downTan);
 
@@ -1843,7 +1847,7 @@ mat4.perspectiveFromFieldOfView = function (out, fov, near, far) {
     out[14] = (far * near) / (near - far);
     out[15] = 0.0;
     return out;
-}
+};
 
 /**
  * Generates a orthogonal projection matrix with the given bounds
@@ -1858,7 +1862,7 @@ mat4.perspectiveFromFieldOfView = function (out, fov, near, far) {
  * @returns {mat4} out
  */
 mat4.ortho = function (out, left, right, bottom, top, near, far) {
-    var lr = 1 / (left - right),
+    let lr = 1 / (left - right),
         bt = 1 / (bottom - top),
         nf = 1 / (near - far);
     out[0] = -2 * lr;
@@ -1890,7 +1894,7 @@ mat4.ortho = function (out, left, right, bottom, top, near, far) {
  * @returns {mat4} out
  */
 mat4.lookAt = function (out, eye, center, up) {
-    var x0, x1, x2, y0, y1, y2, z0, z1, z2, len,
+    let x0, x1, x2, y0, y1, y2, z0, z1, z2, len,
         eyex = eye[0],
         eyey = eye[1],
         eyez = eye[2],
@@ -1974,10 +1978,10 @@ mat4.lookAt = function (out, eye, center, up) {
  * @returns {String} string representation of the matrix
  */
 mat4.str = function (a) {
-    return 'mat4(' + a[0] + ', ' + a[1] + ', ' + a[2] + ', ' + a[3] + ', ' +
-                    a[4] + ', ' + a[5] + ', ' + a[6] + ', ' + a[7] + ', ' +
-                    a[8] + ', ' + a[9] + ', ' + a[10] + ', ' + a[11] + ', ' +
-                    a[12] + ', ' + a[13] + ', ' + a[14] + ', ' + a[15] + ')';
+    return `mat4(${a[0]}, ${a[1]}, ${a[2]}, ${a[3]}, ${ 
+                    a[4]}, ${a[5]}, ${a[6]}, ${a[7]}, ${ 
+                    a[8]}, ${a[9]}, ${a[10]}, ${a[11]}, ${ 
+                    a[12]}, ${a[13]}, ${a[14]}, ${a[15]})`;
 };
 
 /**
@@ -1987,7 +1991,7 @@ mat4.str = function (a) {
  * @returns {Number} Frobenius norm
  */
 mat4.frob = function (a) {
-    return(Math.sqrt(Math.pow(a[0], 2) + Math.pow(a[1], 2) + Math.pow(a[2], 2) + Math.pow(a[3], 2) + Math.pow(a[4], 2) + Math.pow(a[5], 2) + Math.pow(a[6], 2) + Math.pow(a[7], 2) + Math.pow(a[8], 2) + Math.pow(a[9], 2) + Math.pow(a[10], 2) + Math.pow(a[11], 2) + Math.pow(a[12], 2) + Math.pow(a[13], 2) + Math.pow(a[14], 2) + Math.pow(a[15], 2) ))
+    return (Math.sqrt(Math.pow(a[0], 2) + Math.pow(a[1], 2) + Math.pow(a[2], 2) + Math.pow(a[3], 2) + Math.pow(a[4], 2) + Math.pow(a[5], 2) + Math.pow(a[6], 2) + Math.pow(a[7], 2) + Math.pow(a[8], 2) + Math.pow(a[9], 2) + Math.pow(a[10], 2) + Math.pow(a[11], 2) + Math.pow(a[12], 2) + Math.pow(a[13], 2) + Math.pow(a[14], 2) + Math.pow(a[15], 2) ));
 };
 
 /**
@@ -1998,7 +2002,7 @@ mat4.frob = function (a) {
  * @param {mat4} b the second operand
  * @returns {mat4} out
  */
-mat4.add = function(out, a, b) {
+mat4.add = function (out, a, b) {
     out[0] = a[0] + b[0];
     out[1] = a[1] + b[1];
     out[2] = a[2] + b[2];
@@ -2026,7 +2030,7 @@ mat4.add = function(out, a, b) {
  * @param {mat4} b the second operand
  * @returns {mat4} out
  */
-mat4.subtract = function(out, a, b) {
+mat4.subtract = function (out, a, b) {
     out[0] = a[0] - b[0];
     out[1] = a[1] - b[1];
     out[2] = a[2] - b[2];
@@ -2060,7 +2064,7 @@ mat4.sub = mat4.subtract;
  * @param {Number} b amount to scale the matrix's elements by
  * @returns {mat4} out
  */
-mat4.multiplyScalar = function(out, a, b) {
+mat4.multiplyScalar = function (out, a, b) {
     out[0] = a[0] * b;
     out[1] = a[1] * b;
     out[2] = a[2] * b;
@@ -2089,7 +2093,7 @@ mat4.multiplyScalar = function(out, a, b) {
  * @param {Number} scale the amount to scale b's elements by before adding
  * @returns {mat4} out
  */
-mat4.multiplyScalarAndAdd = function(out, a, b, scale) {
+mat4.multiplyScalarAndAdd = function (out, a, b, scale) {
     out[0] = a[0] + (b[0] * scale);
     out[1] = a[1] + (b[1] * scale);
     out[2] = a[2] + (b[2] * scale);
@@ -2131,32 +2135,32 @@ mat4.exactEquals = function (a, b) {
  * @returns {Boolean} True if the matrices are equal, false otherwise.
  */
 mat4.equals = function (a, b) {
-    var a0  = a[0],  a1  = a[1],  a2  = a[2],  a3  = a[3],
-        a4  = a[4],  a5  = a[5],  a6  = a[6],  a7  = a[7], 
-        a8  = a[8],  a9  = a[9],  a10 = a[10], a11 = a[11], 
+    let a0 = a[0], a1 = a[1], a2 = a[2], a3 = a[3],
+        a4 = a[4], a5 = a[5], a6 = a[6], a7 = a[7], 
+        a8 = a[8], a9 = a[9], a10 = a[10], a11 = a[11], 
         a12 = a[12], a13 = a[13], a14 = a[14], a15 = a[15];
 
-    var b0  = b[0],  b1  = b[1],  b2  = b[2],  b3  = b[3],
-        b4  = b[4],  b5  = b[5],  b6  = b[6],  b7  = b[7], 
-        b8  = b[8],  b9  = b[9],  b10 = b[10], b11 = b[11], 
+    let b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3],
+        b4 = b[4], b5 = b[5], b6 = b[6], b7 = b[7], 
+        b8 = b[8], b9 = b[9], b10 = b[10], b11 = b[11], 
         b12 = b[12], b13 = b[13], b14 = b[14], b15 = b[15];
 
-    return (Math.abs(a0 - b0) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a0), Math.abs(b0)) &&
-            Math.abs(a1 - b1) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a1), Math.abs(b1)) &&
-            Math.abs(a2 - b2) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a2), Math.abs(b2)) &&
-            Math.abs(a3 - b3) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a3), Math.abs(b3)) &&
-            Math.abs(a4 - b4) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a4), Math.abs(b4)) &&
-            Math.abs(a5 - b5) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a5), Math.abs(b5)) &&
-            Math.abs(a6 - b6) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a6), Math.abs(b6)) &&
-            Math.abs(a7 - b7) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a7), Math.abs(b7)) &&
-            Math.abs(a8 - b8) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a8), Math.abs(b8)) &&
-            Math.abs(a9 - b9) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a9), Math.abs(b9)) &&
-            Math.abs(a10 - b10) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a10), Math.abs(b10)) &&
-            Math.abs(a11 - b11) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a11), Math.abs(b11)) &&
-            Math.abs(a12 - b12) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a12), Math.abs(b12)) &&
-            Math.abs(a13 - b13) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a13), Math.abs(b13)) &&
-            Math.abs(a14 - b14) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a14), Math.abs(b14)) &&
-            Math.abs(a15 - b15) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a15), Math.abs(b15)));
+    return (Math.abs(a0 - b0) <= glMatrix.EPSILON * Math.max(1.0, Math.abs(a0), Math.abs(b0)) &&
+            Math.abs(a1 - b1) <= glMatrix.EPSILON * Math.max(1.0, Math.abs(a1), Math.abs(b1)) &&
+            Math.abs(a2 - b2) <= glMatrix.EPSILON * Math.max(1.0, Math.abs(a2), Math.abs(b2)) &&
+            Math.abs(a3 - b3) <= glMatrix.EPSILON * Math.max(1.0, Math.abs(a3), Math.abs(b3)) &&
+            Math.abs(a4 - b4) <= glMatrix.EPSILON * Math.max(1.0, Math.abs(a4), Math.abs(b4)) &&
+            Math.abs(a5 - b5) <= glMatrix.EPSILON * Math.max(1.0, Math.abs(a5), Math.abs(b5)) &&
+            Math.abs(a6 - b6) <= glMatrix.EPSILON * Math.max(1.0, Math.abs(a6), Math.abs(b6)) &&
+            Math.abs(a7 - b7) <= glMatrix.EPSILON * Math.max(1.0, Math.abs(a7), Math.abs(b7)) &&
+            Math.abs(a8 - b8) <= glMatrix.EPSILON * Math.max(1.0, Math.abs(a8), Math.abs(b8)) &&
+            Math.abs(a9 - b9) <= glMatrix.EPSILON * Math.max(1.0, Math.abs(a9), Math.abs(b9)) &&
+            Math.abs(a10 - b10) <= glMatrix.EPSILON * Math.max(1.0, Math.abs(a10), Math.abs(b10)) &&
+            Math.abs(a11 - b11) <= glMatrix.EPSILON * Math.max(1.0, Math.abs(a11), Math.abs(b11)) &&
+            Math.abs(a12 - b12) <= glMatrix.EPSILON * Math.max(1.0, Math.abs(a12), Math.abs(b12)) &&
+            Math.abs(a13 - b13) <= glMatrix.EPSILON * Math.max(1.0, Math.abs(a13), Math.abs(b13)) &&
+            Math.abs(a14 - b14) <= glMatrix.EPSILON * Math.max(1.0, Math.abs(a14), Math.abs(b14)) &&
+            Math.abs(a15 - b15) <= glMatrix.EPSILON * Math.max(1.0, Math.abs(a15), Math.abs(b15)));
 };
 
 

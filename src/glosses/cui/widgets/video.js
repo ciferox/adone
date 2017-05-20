@@ -1,11 +1,11 @@
 
-var cp = adone.std.child_process;
-var Terminal = require("./terminal");
+const cp = adone.std.child_process;
+const Terminal = require("./terminal");
 
 function Video(options) {
-    var self = this
-    , shell
-    , args;
+    let self = this,
+        shell,
+        args;
 
     if (!(this instanceof adone.cui.widget.Node)) {
         return new Video(options);
@@ -28,13 +28,13 @@ function Video(options) {
         return this;
     }
 
-    var opts = {
+    const opts = {
         parent: this,
         left: 0,
         top: 0,
         width: this.width - this.iwidth,
         height: this.height - this.iheight,
-        shell: shell,
+        shell,
         args: args.slice()
     };
 
@@ -42,46 +42,46 @@ function Video(options) {
     this.start = opts.start || 0;
     if (this.start) {
         if (shell === "mplayer") {
-            opts.args.unshift("-ss", this.start + "");
+            opts.args.unshift("-ss", `${this.start}`);
         } else if (shell === "mpv") {
-            opts.args.unshift("--start", this.start + "");
+            opts.args.unshift("--start", String(this.start));
         }
     }
 
-    var DISPLAY = process.env.DISPLAY;
+    const DISPLAY = process.env.DISPLAY;
     delete process.env.DISPLAY;
     this.tty = new Terminal(opts);
     process.env.DISPLAY = DISPLAY;
 
-    this.on("click", function() {
+    this.on("click", () => {
         self.tty.pty.write("p");
     });
 
   // mplayer/mpv cannot resize itself in the terminal, so we have
   // to restart it at the correct start time.
-    this.on("resize", function() {
+    this.on("resize", () => {
         self.tty.destroy();
 
-        var opts = {
+        const opts = {
             parent: self,
             left: 0,
             top: 0,
             width: self.width - self.iwidth,
             height: self.height - self.iheight,
-            shell: shell,
+            shell,
             args: args.slice()
         };
 
-        var watched = (Date.now() / 1000 | 0) - self.now;
+        const watched = (Date.now() / 1000 | 0) - self.now;
         self.now = Date.now() / 1000 | 0;
         self.start += watched;
         if (shell === "mplayer") {
-            opts.args.unshift("-ss", self.start + "");
+            opts.args.unshift("-ss", `${self.start}`);
         } else if (shell === "mpv") {
-            opts.args.unshift("--start", self.start + "");
+            opts.args.unshift("--start", String(self.start));
         }
 
-        var DISPLAY = process.env.DISPLAY;
+        const DISPLAY = process.env.DISPLAY;
         delete process.env.DISPLAY;
         self.tty = new Terminal(opts);
         process.env.DISPLAY = DISPLAY;
@@ -93,11 +93,11 @@ Video.prototype.__proto__ = adone.cui.widget.Element.prototype;
 
 Video.prototype.type = "video";
 
-Video.prototype.exists = function(program) {
+Video.prototype.exists = function (program) {
     try {
-        return !!+cp.execSync("type "
-      + program + " > /dev/null 2> /dev/null"
-      + " && echo 1", { encoding: "utf8" }).trim();
+        return Boolean(Number(cp.execSync(`type ${
+       program} > /dev/null 2> /dev/null`
+      + " && echo 1", { encoding: "utf8" }).trim()));
     } catch (e) {
         return false;
     }

@@ -52,7 +52,7 @@ describe("Fast", () => {
                 const filter = new Filter();
                 const ss = filter.stash((x) => x % 2);
                 let i;
-                for (i = 0; ss.write(i); i += 2);
+                for (i = 0; ss.write(i); i += 2) { }
                 const us = filter.unstash();
                 expect(i >> 1).to.be.equal(us._readableState.highWaterMark);
                 us.resume();

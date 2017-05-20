@@ -5,7 +5,9 @@ import type NodePath from "../index";
 const { types: t } = adone.js.compiler;
 
 export default function (node: Object) {
-    if (!this.isReferenced()) return;
+    if (!this.isReferenced()) {
+        return; 
+    }
 
     // check if a binding exists of this value and if so then return a union type of all
     // possible types that the binding could be
@@ -13,9 +15,9 @@ export default function (node: Object) {
     if (binding) {
         if (binding.identifier.typeAnnotation) {
             return binding.identifier.typeAnnotation;
-        } else {
-            return getTypeAnnotationBindingConstantViolations(this, node.name);
-        }
+        } 
+        return getTypeAnnotationBindingConstantViolations(this, node.name);
+        
     }
 
     // built-in values
@@ -95,7 +97,9 @@ function getConstantViolationsBefore(binding, path, functions) {
     return violations.filter((violation) => {
         violation = violation.resolve();
         const status = violation._guessExecutionStatusRelativeTo(path);
-        if (functions && status === "function") functions.push(violation);
+        if (functions && status === "function") {
+            functions.push(violation); 
+        }
         return status === "before";
     });
 }
@@ -117,12 +121,14 @@ function inferAnnotationFromBinaryExpression(name, path) {
             return target.getTypeAnnotation();
         } else if (t.BOOLEAN_NUMBER_BINARY_OPERATORS.indexOf(operator) >= 0) {
             return t.numberTypeAnnotation();
-        } else {
-            return;
-        }
-    } else {
-        if (operator !== "===") return;
+        } 
+        return;
+        
+    } 
+    if (operator !== "===") {
+        return;
     }
+    
 
     //
     let typeofPath;
@@ -134,18 +140,26 @@ function inferAnnotationFromBinaryExpression(name, path) {
         typeofPath = right;
         typePath = left;
     }
-    if (!typePath && !typeofPath) return;
+    if (!typePath && !typeofPath) {
+        return; 
+    }
 
     // ensure that the type path is a Literal
     typePath = typePath.resolve();
-    if (!typePath.isLiteral()) return;
+    if (!typePath.isLiteral()) {
+        return; 
+    }
 
     // and that it's a string so we can infer it
     const typeValue = typePath.node.value;
-    if (typeof typeValue !== "string") return;
+    if (typeof typeValue !== "string") {
+        return; 
+    }
 
     // and that the argument of the typeof path references us!
-    if (!typeofPath.get("argument").isIdentifier({ name })) return;
+    if (!typeofPath.get("argument").isIdentifier({ name })) {
+        return; 
+    }
 
     // turn type value into a type annotation
     return t.createTypeAnnotationBasedOnTypeof(typePath.node.value);
@@ -157,18 +171,20 @@ function getParentConditionalPath(path) {
         if (parentPath.isIfStatement() || parentPath.isConditionalExpression()) {
             if (path.key === "test") {
                 return;
-            } else {
-                return parentPath;
-            }
-        } else {
-            path = parentPath;
-        }
+            } 
+            return parentPath;
+            
+        } 
+        path = parentPath;
+        
     }
 }
 
 function getConditionalAnnotation(path, name) {
     const ifStatement = getParentConditionalPath(path);
-    if (!ifStatement) return;
+    if (!ifStatement) {
+        return; 
+    }
 
     const test = ifStatement.get("test");
     const paths = [test];
@@ -184,7 +200,9 @@ function getConditionalAnnotation(path, name) {
 
         if (path.isBinaryExpression()) {
             const type = inferAnnotationFromBinaryExpression(name, path);
-            if (type) types.push(type);
+            if (type) {
+                types.push(type); 
+            }
         }
     } while (paths.length);
 
@@ -193,7 +211,7 @@ function getConditionalAnnotation(path, name) {
             typeAnnotation: t.createUnionTypeAnnotation(types),
             ifStatement
         };
-    } else {
-        return getConditionalAnnotation(ifStatement, name);
-    }
+    } 
+    return getConditionalAnnotation(ifStatement, name);
+    
 }

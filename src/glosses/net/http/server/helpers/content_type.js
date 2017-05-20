@@ -1,7 +1,7 @@
 
 const { x, is, util } = adone;
 
-const PARAM_REGEXP = /; *([!#$%&'*+.^_`|~0-9A-Za-z-]+) *= *("(?:[\u000b\u0020\u0021\u0023-\u005b\u005d-\u007e\u0080-\u00ff]|\\[\u000b\u0020-\u00ff])*"|[!#$%&'*+.^_`|~0-9A-Za-z-]+) */g
+const PARAM_REGEXP = /; *([!#$%&'*+.^_`|~0-9A-Za-z-]+) *= *("(?:[\u000b\u0020\u0021\u0023-\u005b\u005d-\u007e\u0080-\u00ff]|\\[\u000b\u0020-\u00ff])*"|[!#$%&'*+.^_`|~0-9A-Za-z-]+) */g;
 const TEXT_REGEXP = /^[\u000b\u0020-\u007e\u0080-\u00ff]+$/;
 const TOKEN_REGEXP = /^[!#$%&'\*\+\-\.\^_`\|~0-9A-Za-z]+$/;
 

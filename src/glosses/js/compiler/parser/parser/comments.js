@@ -33,13 +33,17 @@ function last(stack) {
 const pp = Parser.prototype;
 
 pp.addComment = function (comment) {
-    if (this.filename) comment.loc.filename = this.filename;
+    if (this.filename) {
+        comment.loc.filename = this.filename; 
+    }
     this.state.trailingComments.push(comment);
     this.state.leadingComments.push(comment);
 };
 
 pp.processComment = function (node) {
-    if (node.type === "Program" && node.body.length > 0) return;
+    if (node.type === "Program" && node.body.length > 0) {
+        return; 
+    }
 
     const stack = this.state.commentStack;
 

@@ -209,9 +209,9 @@ export function ConditionalExpression(node: Object, parent: Object): boolean {
 export function AssignmentExpression(node: Object): boolean {
     if (types.isObjectPattern(node.left)) {
         return true;
-    } else {
-        return ConditionalExpression(...arguments);
-    }
+    } 
+    return ConditionalExpression(...arguments);
+    
 }
 
 // Walk up the print stack to deterimine if our node can come first

@@ -1378,7 +1378,7 @@ describe("Glob", () => {
             const stream = adone.fs.glob("/b*/**", { root: path.resolve("a"), absolute: true, cwd: __dirname });
             await stream;
 
-            assert.equal(stream.globs[0].cwdAbs,  __dirname.replace(/\\/g, "/"));
+            assert.equal(stream.globs[0].cwdAbs, __dirname.replace(/\\/g, "/"));
         });
     });
 

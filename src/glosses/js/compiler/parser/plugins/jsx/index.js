@@ -106,7 +106,9 @@ pp.jsxReadString = function (quote) {
         }
 
         const ch = this.input.charCodeAt(this.state.pos);
-        if (ch === quote) break;
+        if (ch === quote) {
+            break;
+        }
         if (ch === 38) { // "&"
             out += this.input.slice(chunkStart, this.state.pos);
             out += this.jsxReadEntity();
@@ -136,12 +138,14 @@ pp.jsxReadEntity = function () {
             if (str[0] === "#") {
                 if (str[1] === "x") {
                     str = str.substr(2);
-                    if (HEX_NUMBER.test(str))
-                        entity = fromCodePoint(parseInt(str, 16));
+                    if (HEX_NUMBER.test(str)) {
+                        entity = fromCodePoint(parseInt(str, 16)); 
+                    }
                 } else {
                     str = str.substr(1);
-                    if (DECIMAL_NUMBER.test(str))
+                    if (DECIMAL_NUMBER.test(str)) {
                         entity = fromCodePoint(parseInt(str, 10));
+                    }
                 }
             } else {
                 entity = XHTMLEntities[str];
@@ -182,11 +186,11 @@ function getQualifiedJSXName(object) {
     }
 
     if (object.type === "JSXNamespacedName") {
-        return object.namespace.name + ":" + object.name.name;
+        return `${object.namespace.name}:${object.name.name}`;
     }
 
     if (object.type === "JSXMemberExpression") {
-        return getQualifiedJSXName(object.object) + "." + getQualifiedJSXName(object.property);
+        return `${getQualifiedJSXName(object.object)}.${getQualifiedJSXName(object.property)}`;
     }
 }
 
@@ -211,7 +215,9 @@ pp.jsxParseNamespacedName = function () {
     const startPos = this.state.start;
     const startLoc = this.state.startLoc;
     const name = this.jsxParseIdentifier();
-    if (!this.eat(tt.colon)) return name;
+    if (!this.eat(tt.colon)) {
+        return name;
+    }
 
     const node = this.startNodeAt(startPos, startLoc);
     node.namespace = name;
@@ -377,7 +383,7 @@ pp.jsxParseElementAt = function (startPos, startLoc) {
         if (getQualifiedJSXName(closingElement.name) !== getQualifiedJSXName(openingElement.name)) {
             this.raise(
                 closingElement.start,
-                "Expected corresponding JSX closing tag for <" + getQualifiedJSXName(openingElement.name) + ">"
+                `Expected corresponding JSX closing tag for <${getQualifiedJSXName(openingElement.name)}>`
             );
         }
     }
@@ -401,7 +407,7 @@ pp.jsxParseElement = function () {
 };
 
 export default function (instance) {
-    instance.extend("parseExprAtom", function (inner) {
+    instance.extend("parseExprAtom", (inner) => {
         return function (refShortHandDefaultPos) {
             if (this.match(tt.jsxText)) {
                 const node = this.parseLiteral(this.state.value, "JSXText");
@@ -410,15 +416,17 @@ export default function (instance) {
                 return node;
             } else if (this.match(tt.jsxTagStart)) {
                 return this.jsxParseElement();
-            } else {
-                return inner.call(this, refShortHandDefaultPos);
-            }
+            } 
+            return inner.call(this, refShortHandDefaultPos);
+            
         };
     });
 
-    instance.extend("readToken", function (inner) {
+    instance.extend("readToken", (inner) => {
         return function (code) {
-            if (this.state.inPropertyName) return inner.call(this, code);
+            if (this.state.inPropertyName) {
+                return inner.call(this, code); 
+            }
 
             const context = this.curContext();
 
@@ -450,7 +458,7 @@ export default function (instance) {
         };
     });
 
-    instance.extend("updateContext", function (inner) {
+    instance.extend("updateContext", (inner) => {
         return function (prevType) {
             if (this.match(tt.braceL)) {
                 const curContext = this.curContext();

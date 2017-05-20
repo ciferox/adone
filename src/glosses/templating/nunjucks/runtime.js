@@ -29,9 +29,9 @@ export const numArgs = (args) => {
     const lastArg = args[length - 1];
     if (lastArg && is.propertyOwned(lastArg, keywords)) {
         return length - 1;
-    } else {
-        return length;
-    }
+    } 
+    return length;
+    
 };
 
 export class Frame {

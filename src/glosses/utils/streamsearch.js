@@ -101,9 +101,9 @@ export default class StreamSearch extends adone.EventEmitter {
                     }
 
                     return (this._bufpos = pos + needleLen);
-                } else {
-                    pos += occ[ch];
-                }
+                } 
+                pos += occ[ch];
+                
             }
 
             // No match.
@@ -170,9 +170,9 @@ export default class StreamSearch extends adone.EventEmitter {
                 }
 
                 return (this._bufpos = pos + needleLen);
-            } else {
-                pos += occ[ch];
-            }
+            } 
+            pos += occ[ch];
+            
         }
 
         // There was no match. If there's trailing haystack data that we cannot
@@ -203,9 +203,9 @@ export default class StreamSearch extends adone.EventEmitter {
     _lookupChar(data, pos) {
         if (pos < 0) {
             return this._lookbehind[this._lookbehindSize + pos];
-        } else {
-            return data[pos];
-        }
+        } 
+        return data[pos];
+        
     }
 
     _memcmp(data, pos, len) {

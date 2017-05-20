@@ -87,7 +87,7 @@ describe("MuteStream", () => {
         str.columns = 80;
         str.rows = 24;
 
-        let ms = new MuteStream;
+        let ms = new MuteStream();
         assert.equal(ms.isTTY, false);
         assert.equal(ms.columns, undefined);
         assert.equal(ms.rows, undefined);
@@ -123,8 +123,8 @@ describe("MuteStream", () => {
     });
 
     it("pause/resume incoming", (done) => {
-        const str = new PassThrough;
-        const ms = new MuteStream;
+        const str = new PassThrough();
+        const ms = new MuteStream();
         let expect;
         str.on("pause", () => {
             assert.equal(PAUSE, expect.shift());
@@ -170,7 +170,7 @@ describe("MuteStream", () => {
     });
 
     it("replace with ~YARG~", () => {
-        const str = new PassThrough;
+        const str = new PassThrough();
         const ms = new MuteStream({ replace: "~YARG~" });
         str.pipe(ms);
         const expect = ["foo", "~YARG~~YARG~~YARG~~YARG~~YARG~", "bar",

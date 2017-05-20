@@ -36,7 +36,7 @@ export default class Grid extends adone.cui.widget.Element {
 
         // Process default widgets
         if (is.object(this.options.defaultWidget)) {
-            for (let dockId of this._dockMap.keys()) {
+            for (const dockId of this._dockMap.keys()) {
                 const widget = this._widgetMap.get(dockId); 
                 if (is.undefined(widget)) {
                     this.setWidget(new DefaultWidget(this.options.defaultWidget), dockId);
@@ -57,9 +57,13 @@ export default class Grid extends adone.cui.widget.Element {
     }
 
     setWidget(widget, dockId) {
-        if (!this.isValidDockId(dockId)) return;
+        if (!this.isValidDockId(dockId)) {
+            return; 
+        }
         const oldWidget = this._widgetMap.get(dockId);
-        if (oldWidget === widget) return;
+        if (oldWidget === widget) {
+            return; 
+        }
         let index = dockId;
         if (!is.undefined(oldWidget)) {
             if (!(oldWidget instanceof DefaultWidget)) {
@@ -129,10 +133,14 @@ export default class Grid extends adone.cui.widget.Element {
                 el.index = el.screen._ci++;
             }
 
-            if (el.hidden || el._isLabel) return;
+            if (el.hidden || el._isLabel) {
+                return; 
+            }
 
-            let dockId = this._getWidgetDockId(el);
-            if (is.nil(dockId)) return;
+            const dockId = this._getWidgetDockId(el);
+            if (is.nil(dockId)) {
+                return; 
+            }
 
             const modW = width % 2;
             const modH = height % 2;
@@ -156,8 +164,10 @@ export default class Grid extends adone.cui.widget.Element {
     }
 
     _getWidgetDockId(widget) {
-        for (let [dockId, dockedWidget] of this._widgetMap.entries()) {
-            if (widget === dockedWidget) return dockId;
+        for (const [dockId, dockedWidget] of this._widgetMap.entries()) {
+            if (widget === dockedWidget) {
+                return dockId; 
+            }
         }
         return null;
     }
@@ -184,9 +194,9 @@ export default class Grid extends adone.cui.widget.Element {
         const normW = cols / items.length;
         const normH = rows / items.length;
 
-        for (let it of items) {
+        for (const it of items) {
             if (is.propertyDefined(it, "cols") || is.propertyDefined(it, "rows")) {
-                dockId = this._calculatePos(it, dockId, left, top, (isRows ? cols : normW), (!isRows ? rows: normH));
+                dockId = this._calculatePos(it, dockId, left, top, (isRows ? cols : normW), (!isRows ? rows : normH));
                 if (isRows) {
                     top += it.height || normH;
                     rows -= it.height || 0;

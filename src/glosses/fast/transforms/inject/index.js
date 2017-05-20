@@ -63,17 +63,17 @@ export default function (sources, options = {}) {
  */
 function getNewContent(target, collection, options) {
     let content = String(target.contents);
-    let targetExt = target.extname.slice(1);
-    let files = prepareFiles(collection, targetExt, options, target);
-    let filesPerTags = groupArray(files, "tagKey");
-    let startAndEndTags = adone.util.keys(filesPerTags);
-    let matches = [];
+    const targetExt = target.extname.slice(1);
+    const files = prepareFiles(collection, targetExt, options, target);
+    const filesPerTags = groupArray(files, "tagKey");
+    const startAndEndTags = adone.util.keys(filesPerTags);
+    const matches = [];
 
-    startAndEndTags.forEach(function (tagKey) {
-        let files = filesPerTags[tagKey];
-        let startTag = files[0].startTag;
-        let endTag = files[0].endTag;
-        let tagsToInject = getTagsToInject(files, target, options);
+    startAndEndTags.forEach((tagKey) => {
+        const files = filesPerTags[tagKey];
+        const startTag = files[0].startTag;
+        const endTag = files[0].endTag;
+        const tagsToInject = getTagsToInject(files, target, options);
         content = inject(content, {
             startTag,
             endTag,
@@ -87,9 +87,9 @@ function getNewContent(target, collection, options) {
     });
 
     if (options.empty) {
-        let ext = "{{ANY}}";
-        let startTag = getTagRegExp(options.tags.start(targetExt, ext, options.starttag), ext, options);
-        let endTag = getTagRegExp(options.tags.end(targetExt, ext, options.starttag), ext, options);
+        const ext = "{{ANY}}";
+        const startTag = getTagRegExp(options.tags.start(targetExt, ext, options.starttag), ext, options);
+        const endTag = getTagRegExp(options.tags.end(targetExt, ext, options.starttag), ext, options);
 
         content = inject(content, {
             startTag,
@@ -115,8 +115,8 @@ function getNewContent(target, collection, options) {
  * @returns {String}
  */
 function inject(content, options) {
-    let startTag = options.startTag;
-    let endTag = options.endTag;
+    const startTag = options.startTag;
+    const endTag = options.endTag;
     let startMatch;
     let endMatch;
 
@@ -141,9 +141,9 @@ function inject(content, options) {
         endTag.lastIndex = startTag.lastIndex;
         endMatch = endTag.exec(content);
         if (!endMatch) {
-            throw Error("Missing end tag for start tag: " + startMatch[0]);
+            throw Error(`Missing end tag for start tag: ${startMatch[0]}`);
         }
-        let toInject = options.tagsToInject.slice();
+        const toInject = options.tagsToInject.slice();
 
         if (typeof options.willInject === "function") {
             options.willInject(toInject);
@@ -162,8 +162,8 @@ function inject(content, options) {
             toInject.unshift(startMatch[0]);
             toInject.push(endMatch[0]);
         }
-        let previousInnerContent = content.substring(startTag.lastIndex, endMatch.index);
-        let indent = getLeadingWhitespace(previousInnerContent);
+        const previousInnerContent = content.substring(startTag.lastIndex, endMatch.index);
+        const indent = getLeadingWhitespace(previousInnerContent);
         // <new inner content>:
         newContents += toInject.join(indent);
         // <everything after endMatch>:
@@ -181,11 +181,11 @@ function getLeadingWhitespace(str) {
 
 function prepareFiles(files, targetExt, options, target) {
     return files.map((file) => {
-        let ext = file.extname.slice(1);
-        let filePath = getFilepath(file, target, options);
-        let startTag = getTagRegExp(options.tags.start(targetExt, ext, options.starttag), ext, options, filePath);
-        let endTag = getTagRegExp(options.tags.end(targetExt, ext, options.endtag), ext, options, filePath);
-        let tagKey = String(startTag) + String(endTag);
+        const ext = file.extname.slice(1);
+        const filePath = getFilepath(file, target, options);
+        const startTag = getTagRegExp(options.tags.start(targetExt, ext, options.starttag), ext, options, filePath);
+        const endTag = getTagRegExp(options.tags.end(targetExt, ext, options.endtag), ext, options, filePath);
+        const tagKey = String(startTag) + String(endTag);
         return {
             file,
             ext,
@@ -207,8 +207,8 @@ function getTagRegExp(tag, sourceExt, options, sourcePath) {
 }
 
 function replaceVariables(str, variables) {
-    return Object.keys(variables).reduce(function (str, variable) {
-        return str.replace(new RegExp(escapeStringRegexp(escapeStringRegexp("{{" + variable + "}}")), "ig"), variables[variable] + "\\b");
+    return Object.keys(variables).reduce((str, variable) => {
+        return str.replace(new RegExp(escapeStringRegexp(escapeStringRegexp(`{{${variable}}}`)), "ig"), `${variables[variable]}\\b`);
     }, str);
 }
 
@@ -218,8 +218,8 @@ function makeWhiteSpaceOptional(str) {
 
 function getTagsToInject(files, target, options) {
     return files.reduce(function transformFile(lines, file, i, files) {
-        let filepath = getFilepath(file.file, target, options);
-        let transformedContents = options.transform(filepath, file.file, i, files.length, target);
+        const filepath = getFilepath(file.file, target, options);
+        const transformedContents = options.transform(filepath, file.file, i, files.length, target);
         if (!adone.is.string(transformedContents)) {
             return lines;
         }
@@ -228,8 +228,8 @@ function getTagsToInject(files, target, options) {
 }
 
 function getFilepath(sourceFile, targetFile, options = {}) {
-    let ignorePath = adone.util.arrify(options.ignorePath);
-    let base = options.relative ? path.dirname(addRootSlash(unixify(targetFile.path))) : addRootSlash(unixify(sourceFile.cwd));
+    const ignorePath = adone.util.arrify(options.ignorePath);
+    const base = options.relative ? path.dirname(addRootSlash(unixify(targetFile.path))) : addRootSlash(unixify(sourceFile.cwd));
 
     let filepath = unixify(path.relative(base, addRootSlash(unixify(sourceFile.path))));
 
@@ -268,12 +268,12 @@ function addPrefix(filepath, prefix) {
 }
 
 function removeBasePath(basedirs, filepath) {
-    return basedirs.map(unixify).reduce(function (path, remove) {
+    return basedirs.map(unixify).reduce((path, remove) => {
         if (path[0] === "/" && remove[0] !== "/") {
-            remove = "/" + remove;
+            remove = `/${remove}`;
         }
         if (path[0] !== "/" && remove[0] === "/") {
-            path = "/" + path;
+            path = `/${path}`;
         }
         if (remove && path.indexOf(remove) === 0) {
             return path.slice(remove.length);

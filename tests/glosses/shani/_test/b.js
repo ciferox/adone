@@ -2,7 +2,7 @@ const assert = require("assert");
 
 /*eslint no-undef:0*/
 describe("first", () => {
-    before(function() {
+    before(() => {
         global.b = 5;
     });
 

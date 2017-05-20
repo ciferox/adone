@@ -34,14 +34,14 @@ function codePointToString(code) {
     // UTF-16 Decoding
     if (code <= 0xFFFF) {
         return String.fromCharCode(code);
-    } else {
-        return String.fromCharCode(((code - 0x10000) >> 10) + 0xD800, ((code - 0x10000) & 1023) + 0xDC00);
-    }
+    } 
+    return String.fromCharCode(((code - 0x10000) >> 10) + 0xD800, ((code - 0x10000) & 1023) + 0xDC00);
+    
 }
 
 export default class Tokenizer {
     constructor(options, input) {
-        this.state = new State;
+        this.state = new State();
         this.state.init(options, input);
     }
 
@@ -65,9 +65,9 @@ export default class Tokenizer {
         if (this.match(type)) {
             this.next();
             return true;
-        } else {
-            return false;
-        }
+        } 
+        return false;
+        
     }
 
     // TODO
@@ -102,7 +102,9 @@ export default class Tokenizer {
 
     setStrict(strict) {
         this.state.strict = strict;
-        if (!this.match(tt.num) && !this.match(tt.string)) return;
+        if (!this.match(tt.num) && !this.match(tt.string)) {
+            return;
+        }
         this.state.pos = this.state.start;
         while (this.state.pos < this.state.lineStart) {
             this.state.lineStart = this.input.lastIndexOf("\n", this.state.lineStart - 2) + 1;
@@ -120,19 +122,23 @@ export default class Tokenizer {
 
     nextToken() {
         const curContext = this.curContext();
-        if (!curContext || !curContext.preserveSpace) this.skipSpace();
+        if (!curContext || !curContext.preserveSpace) {
+            this.skipSpace(); 
+        }
 
         this.state.containsOctal = false;
         this.state.octalPosition = null;
         this.state.start = this.state.pos;
         this.state.startLoc = this.state.curPosition();
-        if (this.state.pos >= this.input.length) return this.finishToken(tt.eof);
+        if (this.state.pos >= this.input.length) {
+            return this.finishToken(tt.eof);
+        }
 
         if (curContext.override) {
             return curContext.override(this);
-        } else {
-            return this.readToken(this.fullCharCodeAtPos());
-        }
+        } 
+        return this.readToken(this.fullCharCodeAtPos());
+        
     }
 
     readToken(code) {
@@ -140,14 +146,16 @@ export default class Tokenizer {
         // identifiers, so '\' also dispatches to that.
         if (isIdentifierStart(code) || code === 92 /* '\' */) {
             return this.readWord();
-        } else {
-            return this.getTokenFromCode(code);
-        }
+        } 
+        return this.getTokenFromCode(code);
+        
     }
 
     fullCharCodeAtPos() {
         const code = this.input.charCodeAt(this.state.pos);
-        if (code <= 0xd7ff || code >= 0xe000) return code;
+        if (code <= 0xd7ff || code >= 0xe000) {
+            return code;
+        }
 
         const next = this.input.charCodeAt(this.state.pos + 1);
         return (code << 10) + next - 0x35fdc00;
@@ -173,7 +181,9 @@ export default class Tokenizer {
         const startLoc = this.state.curPosition();
         const start = this.state.pos;
         const end = this.input.indexOf("*/", this.state.pos += 2);
-        if (end === -1) this.raise(this.state.pos - 2, "Unterminated comment");
+        if (end === -1) {
+            this.raise(this.state.pos - 2, "Unterminated comment");
+        }
 
         this.state.pos = end + 2;
         lineBreakG.lastIndex = start;
@@ -279,10 +289,10 @@ export default class Tokenizer {
         if (next === 46 && next2 === 46) { // 46 = dot '.'
             this.state.pos += 3;
             return this.finishToken(tt.ellipsis);
-        } else {
-            ++this.state.pos;
-            return this.finishToken(tt.dot);
-        }
+        } 
+        ++this.state.pos;
+        return this.finishToken(tt.dot);
+        
     }
 
     readToken_slash() { // '/'
@@ -294,9 +304,9 @@ export default class Tokenizer {
         const next = this.input.charCodeAt(this.state.pos + 1);
         if (next === 61) {
             return this.finishOp(tt.assign, 2);
-        } else {
-            return this.finishOp(tt.slash, 1);
-        }
+        } 
+        return this.finishOp(tt.slash, 1);
+        
     }
 
     readToken_mult_modulo(code) { // '%*'
@@ -320,9 +330,15 @@ export default class Tokenizer {
 
     readToken_pipe_amp(code) { // '|&'
         const next = this.input.charCodeAt(this.state.pos + 1);
-        if (next === code) return this.finishOp(code === 124 ? tt.logicalOR : tt.logicalAND, 2);
-        if (next === 61) return this.finishOp(tt.assign, 2);
-        if (code === 124 && next === 125 && this.hasPlugin("flow")) return this.finishOp(tt.braceBarR, 2);
+        if (next === code) {
+            return this.finishOp(code === 124 ? tt.logicalOR : tt.logicalAND, 2); 
+        }
+        if (next === 61) {
+            return this.finishOp(tt.assign, 2);
+        }
+        if (code === 124 && next === 125 && this.hasPlugin("flow")) {
+            return this.finishOp(tt.braceBarR, 2);
+        }
         return this.finishOp(code === 124 ? tt.bitwiseOR : tt.bitwiseAND, 1);
     }
 
@@ -330,9 +346,9 @@ export default class Tokenizer {
         const next = this.input.charCodeAt(this.state.pos + 1);
         if (next === 61) {
             return this.finishOp(tt.assign, 2);
-        } else {
-            return this.finishOp(tt.bitwiseXOR, 1);
-        }
+        } 
+        return this.finishOp(tt.bitwiseXOR, 1);
+        
     }
 
     readToken_plus_min(code) { // '+-'
@@ -350,9 +366,9 @@ export default class Tokenizer {
 
         if (next === 61) {
             return this.finishOp(tt.assign, 2);
-        } else {
-            return this.finishOp(tt.plusMin, 1);
-        }
+        } 
+        return this.finishOp(tt.plusMin, 1);
+        
     }
 
     readToken_lt_gt(code) { // '<>'
@@ -361,12 +377,16 @@ export default class Tokenizer {
 
         if (next === code) {
             size = code === 62 && this.input.charCodeAt(this.state.pos + 2) === 62 ? 3 : 2;
-            if (this.input.charCodeAt(this.state.pos + size) === 61) return this.finishOp(tt.assign, size + 1);
+            if (this.input.charCodeAt(this.state.pos + size) === 61) {
+                return this.finishOp(tt.assign, size + 1); 
+            }
             return this.finishOp(tt.bitShift, size);
         }
 
         if (next === 33 && code === 60 && this.input.charCodeAt(this.state.pos + 2) === 45 && this.input.charCodeAt(this.state.pos + 3) === 45) {
-            if (this.inModule) this.unexpected();
+            if (this.inModule) {
+                this.unexpected();
+            }
             // `<!--`, an XML-style comment that should be interpreted as a line comment
             this.skipLineComment(4);
             this.skipSpace();
@@ -383,7 +403,9 @@ export default class Tokenizer {
 
     readToken_eq_excl(code) { // '=!'
         const next = this.input.charCodeAt(this.state.pos + 1);
-        if (next === 61) return this.finishOp(tt.equality, this.input.charCodeAt(this.state.pos + 2) === 61 ? 3 : 2);
+        if (next === 61) {
+            return this.finishOp(tt.equality, this.input.charCodeAt(this.state.pos + 2) === 61 ? 3 : 2);
+        }
         if (code === 61 && next === 62) { // '=>'
             this.state.pos += 2;
             return this.finishToken(tt.arrow);
@@ -409,10 +431,10 @@ export default class Tokenizer {
             case 123:
                 if (this.hasPlugin("flow") && this.input.charCodeAt(this.state.pos + 1) === 124) {
                     return this.finishOp(tt.braceBarL, 2);
-                } else {
-                    ++this.state.pos;
-                    return this.finishToken(tt.braceL);
-                }
+                } 
+                ++this.state.pos;
+                return this.finishToken(tt.braceL);
+                
 
             case 125:
                 ++this.state.pos; return this.finishToken(tt.braceR);
@@ -420,10 +442,10 @@ export default class Tokenizer {
             case 58:
                 if (this.hasPlugin("functionBind") && this.input.charCodeAt(this.state.pos + 1) === 58) {
                     return this.finishOp(tt.doubleColon, 2);
-                } else {
-                    ++this.state.pos;
-                    return this.finishToken(tt.colon);
-                }
+                } 
+                ++this.state.pos;
+                return this.finishToken(tt.colon);
+                
 
             case 63: ++this.state.pos; return this.finishToken(tt.question);
             case 64: ++this.state.pos; return this.finishToken(tt.at);
@@ -434,9 +456,15 @@ export default class Tokenizer {
 
             case 48: // '0'
                 const next = this.input.charCodeAt(this.state.pos + 1);
-                if (next === 120 || next === 88) return this.readRadixNumber(16); // '0x', '0X' - hex number
-                if (next === 111 || next === 79) return this.readRadixNumber(8); // '0o', '0O' - octal number
-                if (next === 98 || next === 66) return this.readRadixNumber(2); // '0b', '0B' - binary number
+                if (next === 120 || next === 88) {
+                    return this.readRadixNumber(16);
+                } // '0x', '0X' - hex number
+                if (next === 111 || next === 79) {
+                    return this.readRadixNumber(8); 
+                } // '0o', '0O' - octal number
+                if (next === 98 || next === 66) {
+                    return this.readRadixNumber(2); 
+                } // '0b', '0B' - binary number
             // Anything else beginning with a digit is an integer, octal
             // number, or float.
             case 49: case 50: case 51: case 52: case 53: case 54: case 55: case 56: case 57: // 1-9
@@ -489,7 +517,9 @@ export default class Tokenizer {
         const start = this.state.pos;
         let escaped, inClass;
         for (; ;) {
-            if (this.state.pos >= this.input.length) this.raise(start, "Unterminated regular expression");
+            if (this.state.pos >= this.input.length) {
+                this.raise(start, "Unterminated regular expression"); 
+            }
             const ch = this.input.charAt(this.state.pos);
             if (lineBreak.test(ch)) {
                 this.raise(start, "Unterminated regular expression");
@@ -515,7 +545,9 @@ export default class Tokenizer {
         const mods = this.readWord1();
         if (mods) {
             const validFlags = /^[gmsiyu]*$/;
-            if (!validFlags.test(mods)) this.raise(start, "Invalid regular expression flag");
+            if (!validFlags.test(mods)) {
+                this.raise(start, "Invalid regular expression flag");
+            }
         }
         return this.finishToken(tt.regexp, {
             pattern: content,
@@ -543,11 +575,15 @@ export default class Tokenizer {
             } else {
                 val = Infinity;
             }
-            if (val >= radix) break;
+            if (val >= radix) {
+                break; 
+            }
             ++this.state.pos;
             total = total * radix + val;
         }
-        if (this.state.pos === start || len != null && this.state.pos - start !== len) return null;
+        if (this.state.pos === start || len != null && this.state.pos - start !== len) {
+            return null;
+        }
 
         return total;
     }
@@ -555,8 +591,12 @@ export default class Tokenizer {
     readRadixNumber(radix) {
         this.state.pos += 2; // 0x
         const val = this.readInt(radix);
-        if (val == null) this.raise(this.state.start + 2, "Expected number in radix " + radix);
-        if (isIdentifierStart(this.fullCharCodeAtPos())) this.raise(this.state.pos, "Identifier directly after number");
+        if (val == null) {
+            this.raise(this.state.start + 2, `Expected number in radix ${radix}`); 
+        }
+        if (isIdentifierStart(this.fullCharCodeAtPos())) {
+            this.raise(this.state.pos, "Identifier directly after number");
+        }
         return this.finishToken(tt.num, val);
     }
 
@@ -567,7 +607,9 @@ export default class Tokenizer {
         const octal = this.input.charCodeAt(this.state.pos) === 48;
         let isFloat = false;
 
-        if (!startsWithDot && this.readInt(10) === null) this.raise(start, "Invalid number");
+        if (!startsWithDot && this.readInt(10) === null) {
+            this.raise(start, "Invalid number");
+        }
         let next = this.input.charCodeAt(this.state.pos);
         if (next === 46) { // '.'
             ++this.state.pos;
@@ -577,11 +619,17 @@ export default class Tokenizer {
         }
         if (next === 69 || next === 101) { // 'eE'
             next = this.input.charCodeAt(++this.state.pos);
-            if (next === 43 || next === 45)++this.state.pos; // '+-'
-            if (this.readInt(10) === null) this.raise(start, "Invalid number");
+            if (next === 43 || next === 45) {
+                ++this.state.pos;
+            } // '+-'
+            if (this.readInt(10) === null) {
+                this.raise(start, "Invalid number"); 
+            }
             isFloat = true;
         }
-        if (isIdentifierStart(this.fullCharCodeAtPos())) this.raise(this.state.pos, "Identifier directly after number");
+        if (isIdentifierStart(this.fullCharCodeAtPos())) {
+            this.raise(this.state.pos, "Identifier directly after number"); 
+        }
 
         const str = this.input.slice(start, this.state.pos);
         let val;
@@ -607,7 +655,9 @@ export default class Tokenizer {
             const codePos = ++this.state.pos;
             code = this.readHexChar(this.input.indexOf("}", this.state.pos) - this.state.pos);
             ++this.state.pos;
-            if (code > 0x10FFFF) this.raise(codePos, "Code point out of bounds");
+            if (code > 0x10FFFF) {
+                this.raise(codePos, "Code point out of bounds"); 
+            }
         } else {
             code = this.readHexChar(4);
         }
@@ -617,15 +667,21 @@ export default class Tokenizer {
     readString(quote) {
         let out = "", chunkStart = ++this.state.pos;
         for (; ;) {
-            if (this.state.pos >= this.input.length) this.raise(this.state.start, "Unterminated string constant");
+            if (this.state.pos >= this.input.length) {
+                this.raise(this.state.start, "Unterminated string constant");
+            }
             const ch = this.input.charCodeAt(this.state.pos);
-            if (ch === quote) break;
+            if (ch === quote) {
+                break; 
+            }
             if (ch === 92) { // '\'
                 out += this.input.slice(chunkStart, this.state.pos);
                 out += this.readEscapedChar(false);
                 chunkStart = this.state.pos;
             } else {
-                if (isNewLine(ch)) this.raise(this.state.start, "Unterminated string constant");
+                if (isNewLine(ch)) {
+                    this.raise(this.state.start, "Unterminated string constant"); 
+                }
                 ++this.state.pos;
             }
         }
@@ -638,17 +694,19 @@ export default class Tokenizer {
     readTmplToken() {
         let out = "", chunkStart = this.state.pos;
         for (; ;) {
-            if (this.state.pos >= this.input.length) this.raise(this.state.start, "Unterminated template");
+            if (this.state.pos >= this.input.length) {
+                this.raise(this.state.start, "Unterminated template"); 
+            }
             const ch = this.input.charCodeAt(this.state.pos);
             if (ch === 96 || ch === 36 && this.input.charCodeAt(this.state.pos + 1) === 123) { // '`', '${'
                 if (this.state.pos === this.state.start && this.match(tt.template)) {
                     if (ch === 36) {
                         this.state.pos += 2;
                         return this.finishToken(tt.dollarBraceL);
-                    } else {
-                        ++this.state.pos;
-                        return this.finishToken(tt.backQuote);
-                    }
+                    } 
+                    ++this.state.pos;
+                    return this.finishToken(tt.backQuote);
+                    
                 }
                 out += this.input.slice(chunkStart, this.state.pos);
                 return this.finishToken(tt.template, out);
@@ -662,7 +720,9 @@ export default class Tokenizer {
                 ++this.state.pos;
                 switch (ch) {
                     case 13:
-                        if (this.input.charCodeAt(this.state.pos) === 10)++this.state.pos;
+                        if (this.input.charCodeAt(this.state.pos) === 10) {
+                            ++this.state.pos;
+                        }
                     case 10:
                         out += "\n";
                         break;
@@ -693,7 +753,9 @@ export default class Tokenizer {
             case 98: return "\b"; // 'b' -> '\b'
             case 118: return "\u000b"; // 'v' -> '\u000b'
             case 102: return "\f"; // 'f' -> '\f'
-            case 13: if (this.input.charCodeAt(this.state.pos) === 10)++this.state.pos; // '\r\n'
+            case 13: if (this.input.charCodeAt(this.state.pos) === 10) {
+                ++this.state.pos;
+            } // '\r\n'
             case 10: // ' \n'
                 this.state.lineStart = this.state.pos;
                 ++this.state.curLine;
@@ -727,7 +789,9 @@ export default class Tokenizer {
     readHexChar(len) {
         const codePos = this.state.pos;
         const n = this.readInt(16, len);
-        if (n === null) this.raise(codePos, "Bad character escape sequence");
+        if (n === null) {
+            this.raise(codePos, "Bad character escape sequence"); 
+        }
         return n;
     }
 

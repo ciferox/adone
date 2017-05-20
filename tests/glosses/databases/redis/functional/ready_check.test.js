@@ -35,10 +35,10 @@ describe("glosses", "databases", "redis", "ready_check", () => {
     it("should reconnect when info return a error", (done) => {
         const redis = new Redis({
             lazyConnect: true,
-            retryStrategy () {
+            retryStrategy() {
                 redis.disconnect();
                 done();
-                return;
+                
             }
         });
 

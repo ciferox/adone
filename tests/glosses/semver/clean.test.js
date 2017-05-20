@@ -3,9 +3,9 @@
 
 const clean = adone.semver.clean;
 
-describe("semver", function() {
-    describe("clean", function() {
-        it("multiple tests", function() {
+describe("semver", () => {
+    describe("clean", () => {
+        it("multiple tests", () => {
             // [range, version]
             // Version should be detectable despite extra characters
             [
@@ -21,10 +21,10 @@ describe("semver", function() {
                 ["~1.2.3", null],
                 ["<=1.2.3", null],
                 ["1.2.x", null]
-            ].forEach(function(tuple) {
-                let range = tuple[0];
-                let version = tuple[1];
-                let msg = "clean(" + range + ") = " + version;
+            ].forEach((tuple) => {
+                const range = tuple[0];
+                const version = tuple[1];
+                const msg = `clean(${range}) = ${version}`;
                 assert.equal(clean(range), version, msg);
             });
         });

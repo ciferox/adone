@@ -432,15 +432,15 @@ export const decorate = (decorators, target, propertyKey, attributes) => {
         }
         propertyKey = toPropertyKey(propertyKey);
         return decorateProperty(decorators, target, propertyKey, attributes);
-    } else {
-        if (!is.array(decorators)) {
-            throw new TypeError();
-        }
-        if (!is.function(target)) {
-            throw new TypeError();
-        }
-        return decorateConstructor(decorators, target);
+    } 
+    if (!is.array(decorators)) {
+        throw new TypeError();
     }
+    if (!is.function(target)) {
+        throw new TypeError();
+    }
+    return decorateConstructor(decorators, target);
+    
 };
 
 // 4.1.2 Reflect.metadata(metadataKey, metadataValue)

@@ -13,7 +13,7 @@ export default class OverlayImage extends adone.cui.widget.Element {
             if (adone.std.fs.existsSync(OverlayImage.w3mdisplay)) {
                 OverlayImage.hasW3MDisplay = true;
             } else if (options.search !== false) {
-                var file = helpers.findFile("/usr", "w3mimgdisplay")
+                const file = helpers.findFile("/usr", "w3mimgdisplay")
                     || helpers.findFile("/lib", "w3mimgdisplay")
                     || helpers.findFile("/bin", "w3mimgdisplay");
                 if (file) {
@@ -31,7 +31,9 @@ export default class OverlayImage extends adone.cui.widget.Element {
         });
 
         this.on("show", () => {
-            if (!this._lastFile) return;
+            if (!this._lastFile) {
+                return; 
+            }
             this.setImage(this._lastFile);
         });
 
@@ -41,7 +43,9 @@ export default class OverlayImage extends adone.cui.widget.Element {
         });
 
         this.on("attach", () => {
-            if (!this._lastFile) return;
+            if (!this._lastFile) {
+                return; 
+            }
             this.setImage(this._lastFile);
         });
 
@@ -89,20 +93,26 @@ export default class OverlayImage extends adone.cui.widget.Element {
     }
 
     spawn(file, args, opt, callback) {
-        var spawn = require("child_process").spawn
-            , ps;
+        let spawn = require("child_process").spawn,
+            ps;
 
         opt = opt || {};
         ps = spawn(file, args, opt);
 
         ps.on("error", (err) => {
-            if (!callback) return;
+            if (!callback) {
+                return; 
+            }
             return callback(err);
         });
 
         ps.on("exit", (code) => {
-            if (!callback) return;
-            if (code !== 0) return callback(new Error("Exit Code: " + code));
+            if (!callback) {
+                return;
+            }
+            if (code !== 0) {
+                return callback(new Error(`Exit Code: ${code}`));
+            }
             return callback(null, code === 0);
         });
 
@@ -120,7 +130,7 @@ export default class OverlayImage extends adone.cui.widget.Element {
         const reset = () => {
             this._settingImage = false;
             this._queue = this._queue || [];
-            var item = this._queue.shift();
+            const item = this._queue.shift();
             if (item) {
                 this.setImage(item[0], item[1]);
             }
@@ -128,13 +138,17 @@ export default class OverlayImage extends adone.cui.widget.Element {
 
         if (OverlayImage.hasW3MDisplay === false) {
             reset();
-            if (!callback) return;
+            if (!callback) {
+                return; 
+            }
             return callback(new Error("W3M Image Display not available."));
         }
 
         if (!img) {
             reset();
-            if (!callback) return;
+            if (!callback) {
+                return; 
+            }
             return callback(new Error("No image."));
         }
 
@@ -143,14 +157,18 @@ export default class OverlayImage extends adone.cui.widget.Element {
         return this.getPixelRatio((err, ratio) => {
             if (err) {
                 reset();
-                if (!callback) return;
+                if (!callback) {
+                    return; 
+                }
                 return callback(err);
             }
 
             return this.renderImage(img, ratio, (err, success) => {
                 if (err) {
                     reset();
-                    if (!callback) return;
+                    if (!callback) {
+                        return;
+                    }
                     return callback(err);
                 }
 
@@ -161,7 +179,9 @@ export default class OverlayImage extends adone.cui.widget.Element {
                     return this.imageSize((err, size) => {
                         if (err) {
                             reset();
-                            if (!callback) return;
+                            if (!callback) {
+                                return;
+                            }
                             return callback(err);
                         }
 
@@ -173,7 +193,9 @@ export default class OverlayImage extends adone.cui.widget.Element {
                             && this.aleft === this._lastSize.aleft
                             && this.atop === this._lastSize.atop) {
                             reset();
-                            if (!callback) return;
+                            if (!callback) {
+                                return; 
+                            }
                             return callback(null, success);
                         }
 
@@ -199,7 +221,9 @@ export default class OverlayImage extends adone.cui.widget.Element {
                 }
 
                 reset();
-                if (!callback) return;
+                if (!callback) {
+                    return;
+                }
                 return callback(null, success);
             });
         });
@@ -216,55 +240,63 @@ export default class OverlayImage extends adone.cui.widget.Element {
         }
 
         if (OverlayImage.hasW3MDisplay === false) {
-            if (!callback) return;
+            if (!callback) {
+                return;
+            }
             return callback(new Error("W3M Image Display not available."));
         }
 
         if (!ratio) {
-            if (!callback) return;
+            if (!callback) {
+                return; 
+            }
             return callback(new Error("No ratio."));
         }
 
         // clearImage unsets these:
         const _file = this.file;
-        var _lastSize = this._lastSize;
+        const _lastSize = this._lastSize;
         return this.clearImage((err) => {
-            if (err) return callback(err);
+            if (err) {
+                return callback(err);
+            }
 
             this.file = _file;
             this._lastSize = _lastSize;
 
-            var opt = {
+            const opt = {
                 stdio: "pipe",
                 env: process.env,
                 cwd: process.env.HOME
             };
 
-            var ps = this.spawn(OverlayImage.w3mdisplay, [], opt, (err, success) => {
-                if (!callback) return;
+            const ps = this.spawn(OverlayImage.w3mdisplay, [], opt, (err, success) => {
+                if (!callback) {
+                    return;
+                }
                 return err
                     ? callback(err)
                     : callback(null, success);
             });
 
-            var width = this.width * ratio.tw | 0
-                , height = this.height * ratio.th | 0
-                , aleft = this.aleft * ratio.tw | 0
-                , atop = this.atop * ratio.th | 0;
+            let width = this.width * ratio.tw | 0,
+                height = this.height * ratio.th | 0,
+                aleft = this.aleft * ratio.tw | 0,
+                atop = this.atop * ratio.th | 0;
 
-            var input = "0;1;"
-                + aleft + ";"
-                + atop + ";"
-                + width + ";"
-                + height + ";;;;;"
-                + img
-                + "\n4;\n3;\n";
+            const input = `0;1;${
+                 aleft};${
+                 atop};${
+                 width};${
+                 height};;;;;${
+                 img
+                 }\n4;\n3;\n`;
 
             this._props = {
-                aleft: aleft,
-                atop: atop,
-                width: width,
-                height: height
+                aleft,
+                atop,
+                width,
+                height
             };
 
             ps.stdin.write(input);
@@ -283,30 +315,36 @@ export default class OverlayImage extends adone.cui.widget.Element {
         }
 
         if (OverlayImage.hasW3MDisplay === false) {
-            if (!callback) return;
+            if (!callback) {
+                return; 
+            }
             return callback(new Error("W3M Image Display not available."));
         }
 
         if (!this._props) {
-            if (!callback) return;
+            if (!callback) {
+                return; 
+            }
             return callback(null);
         }
 
-        var opt = {
+        const opt = {
             stdio: "pipe",
             env: process.env,
             cwd: process.env.HOME
         };
 
-        var ps = this.spawn(OverlayImage.w3mdisplay, [], opt, (err, success) => {
-            if (!callback) return;
+        const ps = this.spawn(OverlayImage.w3mdisplay, [], opt, (err, success) => {
+            if (!callback) {
+                return;
+            }
             return err ? callback(err) : callback(null, success);
         });
 
-        var width = this._props.width + 2
-            , height = this._props.height + 2
-            , aleft = this._props.aleft
-            , atop = this._props.atop;
+        let width = this._props.width + 2,
+            height = this._props.height + 2,
+            aleft = this._props.aleft,
+            atop = this._props.atop;
 
         if (this._drag) {
             aleft -= 10;
@@ -315,12 +353,12 @@ export default class OverlayImage extends adone.cui.widget.Element {
             height += 10;
         }
 
-        var input = "6;"
-            + aleft + ";"
-            + atop + ";"
-            + width + ";"
-            + height
-            + "\n4;\n3;\n";
+        const input = `6;${
+             aleft};${
+             atop};${
+             width};${
+             height
+             }\n4;\n3;\n`;
 
         delete this.file;
         delete this._props;
@@ -331,7 +369,7 @@ export default class OverlayImage extends adone.cui.widget.Element {
     }
 
     imageSize(callback) {
-        var img = this.file;
+        const img = this.file;
 
         if (adone.std.child_process.execSync) {
             callback = callback || ((err, result) => result);
@@ -343,24 +381,28 @@ export default class OverlayImage extends adone.cui.widget.Element {
         }
 
         if (OverlayImage.hasW3MDisplay === false) {
-            if (!callback) return;
+            if (!callback) {
+                return;
+            }
             return callback(new Error("W3M Image Display not available."));
         }
 
         if (!img) {
-            if (!callback) return;
+            if (!callback) {
+                return;
+            }
             return callback(new Error("No image."));
         }
 
-        var opt = {
+        const opt = {
             stdio: "pipe",
             env: process.env,
             cwd: process.env.HOME
         };
 
-        var ps = this.spawn(OverlayImage.w3mdisplay, [], opt);
+        const ps = this.spawn(OverlayImage.w3mdisplay, [], opt);
 
-        var buf = "";
+        let buf = "";
 
         ps.stdout.setEncoding("utf8");
 
@@ -369,21 +411,25 @@ export default class OverlayImage extends adone.cui.widget.Element {
         });
 
         ps.on("error", (err) => {
-            if (!callback) return;
+            if (!callback) {
+                return; 
+            }
             return callback(err);
         });
 
         ps.on("exit", () => {
-            if (!callback) return;
-            var size = buf.trim().split(/\s+/);
+            if (!callback) {
+                return;
+            }
+            const size = buf.trim().split(/\s+/);
             return callback(null, {
                 raw: buf.trim(),
-                width: +size[0],
-                height: +size[1]
+                width: Number(size[0]),
+                height: Number(size[1])
             });
         });
 
-        var input = "5;" + img + "\n";
+        const input = `5;${img}\n`;
 
         ps.stdin.write(input);
         ps.stdin.end();
@@ -400,19 +446,21 @@ export default class OverlayImage extends adone.cui.widget.Element {
         }
 
         if (OverlayImage.hasW3MDisplay === false) {
-            if (!callback) return;
+            if (!callback) {
+                return; 
+            }
             return callback(new Error("W3M Image Display not available."));
         }
 
-        var opt = {
+        const opt = {
             stdio: "pipe",
             env: process.env,
             cwd: process.env.HOME
         };
 
-        var ps = this.spawn(OverlayImage.w3mdisplay, ["-test"], opt);
+        const ps = this.spawn(OverlayImage.w3mdisplay, ["-test"], opt);
 
-        var buf = "";
+        let buf = "";
 
         ps.stdout.setEncoding("utf8");
 
@@ -421,12 +469,16 @@ export default class OverlayImage extends adone.cui.widget.Element {
         });
 
         ps.on("error", (err) => {
-            if (!callback) return;
+            if (!callback) {
+                return;
+            }
             return callback(err);
         });
 
         ps.on("exit", () => {
-            if (!callback) return;
+            if (!callback) {
+                return; 
+            }
 
             if (!buf.trim()) {
                 // Bug: w3mimgdisplay will sometimes
@@ -434,12 +486,12 @@ export default class OverlayImage extends adone.cui.widget.Element {
                 return this.termSize(callback);
             }
 
-            var size = buf.trim().split(/\s+/);
+            const size = buf.trim().split(/\s+/);
 
             return callback(null, {
                 raw: buf.trim(),
-                width: +size[0],
-                height: +size[1]
+                width: Number(size[0]),
+                height: Number(size[1])
             });
         });
 
@@ -463,7 +515,9 @@ export default class OverlayImage extends adone.cui.widget.Element {
         }
 
         return this.termSize((err, dimensions) => {
-            if (err) return callback(err);
+            if (err) {
+                return callback(err); 
+            }
 
             this._ratio = {
                 tw: dimensions.width / this.screen.width,
@@ -486,39 +540,39 @@ export default class OverlayImage extends adone.cui.widget.Element {
         }
 
         // clearImage unsets these:
-        var _file = this.file;
-        var _lastSize = this._lastSize;
+        const _file = this.file;
+        const _lastSize = this._lastSize;
 
         this.clearImageSync();
 
         this.file = _file;
         this._lastSize = _lastSize;
 
-        var width = this.width * ratio.tw | 0
-            , height = this.height * ratio.th | 0
-            , aleft = this.aleft * ratio.tw | 0
-            , atop = this.atop * ratio.th | 0;
+        let width = this.width * ratio.tw | 0,
+            height = this.height * ratio.th | 0,
+            aleft = this.aleft * ratio.tw | 0,
+            atop = this.atop * ratio.th | 0;
 
-        var input = "0;1;"
-            + aleft + ";"
-            + atop + ";"
-            + width + ";"
-            + height + ";;;;;"
-            + img
-            + "\n4;\n3;\n";
+        const input = `0;1;${
+             aleft};${
+             atop};${
+             width};${
+             height};;;;;${
+             img
+             }\n4;\n3;\n`;
 
         this._props = {
-            aleft: aleft,
-            atop: atop,
-            width: width,
-            height: height
+            aleft,
+            atop,
+            width,
+            height
         };
 
         try {
             adone.std.child_process.execFileSync(OverlayImage.w3mdisplay, [], {
                 env: process.env,
                 encoding: "utf8",
-                input: input,
+                input,
                 timeout: 1000
             });
         } catch (e) {
@@ -537,10 +591,10 @@ export default class OverlayImage extends adone.cui.widget.Element {
             return false;
         }
 
-        var width = this._props.width + 2
-            , height = this._props.height + 2
-            , aleft = this._props.aleft
-            , atop = this._props.atop;
+        let width = this._props.width + 2,
+            height = this._props.height + 2,
+            aleft = this._props.aleft,
+            atop = this._props.atop;
 
         if (this._drag) {
             aleft -= 10;
@@ -549,12 +603,12 @@ export default class OverlayImage extends adone.cui.widget.Element {
             height += 10;
         }
 
-        var input = "6;"
-            + aleft + ";"
-            + atop + ";"
-            + width + ";"
-            + height
-            + "\n4;\n3;\n";
+        const input = `6;${
+             aleft};${
+             atop};${
+             width};${
+             height
+             }\n4;\n3;\n`;
 
         delete this.file;
         delete this._props;
@@ -564,7 +618,7 @@ export default class OverlayImage extends adone.cui.widget.Element {
             adone.std.child_process.execFileSync(OverlayImage.w3mdisplay, [], {
                 env: process.env,
                 encoding: "utf8",
-                input: input,
+                input,
                 timeout: 1000
             });
         } catch (e) {
@@ -575,7 +629,7 @@ export default class OverlayImage extends adone.cui.widget.Element {
     }
 
     imageSizeSync() {
-        var img = this.file;
+        const img = this.file;
 
         if (OverlayImage.hasW3MDisplay === false) {
             throw new Error("W3M Image Display not available.");
@@ -585,24 +639,24 @@ export default class OverlayImage extends adone.cui.widget.Element {
             throw new Error("No image.");
         }
 
-        var buf = "";
-        var input = "5;" + img + "\n";
+        let buf = "";
+        const input = `5;${img}\n`;
 
         try {
             buf = adone.std.child_process.execFileSync(OverlayImage.w3mdisplay, [], {
                 env: process.env,
                 encoding: "utf8",
-                input: input,
+                input,
                 timeout: 1000
             });
         } catch (e) { }
 
-        var size = buf.trim().split(/\s+/);
+        const size = buf.trim().split(/\s+/);
 
         return {
             raw: buf.trim(),
-            width: +size[0],
-            height: +size[1]
+            width: Number(size[0]),
+            height: Number(size[1])
         };
     }
 
@@ -611,7 +665,7 @@ export default class OverlayImage extends adone.cui.widget.Element {
             throw new Error("W3M Image Display not available.");
         }
 
-        var buf = "";
+        let buf = "";
 
         try {
             buf = adone.std.child_process.execFileSync(OverlayImage.w3mdisplay, ["-test"], {
@@ -633,12 +687,12 @@ export default class OverlayImage extends adone.cui.widget.Element {
             return this.termSizeSync(_, recurse);
         }
 
-        var size = buf.trim().split(/\s+/);
+        const size = buf.trim().split(/\s+/);
 
         return {
             raw: buf.trim(),
-            width: +size[0],
-            height: +size[1]
+            width: Number(size[0]),
+            height: Number(size[1])
         };
     }
 
@@ -650,7 +704,7 @@ export default class OverlayImage extends adone.cui.widget.Element {
         }
         this._needsRatio = false;
 
-        var dimensions = this.termSizeSync();
+        const dimensions = this.termSizeSync();
 
         this._ratio = {
             tw: dimensions.width / this.screen.width,

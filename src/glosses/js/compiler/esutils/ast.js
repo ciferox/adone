@@ -23,7 +23,9 @@
 */
 // @flow
 export function isExpression(node) {
-    if (node == null) return false;
+    if (node == null) {
+        return false; 
+    }
     switch (node.type) {
         case "ArrayExpression":
         case "AssignmentExpression":
@@ -47,7 +49,9 @@ export function isExpression(node) {
 }
 
 export function isIterationStatement(node) {
-    if (node == null) return false;
+    if (node == null) {
+        return false; 
+    }
 
     switch (node.type) {
         case "DoWhileStatement":
@@ -60,7 +64,9 @@ export function isIterationStatement(node) {
 }
 
 export function isStatement(node) {
-    if (node == null) return false;
+    if (node == null) {
+        return false; 
+    }
 
     switch (node.type) {
         case "BlockStatement":
@@ -109,7 +115,7 @@ export function trailingStatement(node) {
 }
 
 export function isProblematicIfStatement(node) {
-    var current;
+    let current;
 
     if (node.type !== "IfStatement") {
         return false;

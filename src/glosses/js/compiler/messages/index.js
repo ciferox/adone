@@ -49,13 +49,15 @@ export const MESSAGES = {
 
 export function get(key: string, ...args: any[]): string {
     const msg = MESSAGES[key];
-    if (!msg) throw new ReferenceError(`Unknown message ${JSON.stringify(key)}`);
+    if (!msg) {
+        throw new ReferenceError(`Unknown message ${JSON.stringify(key)}`);
+    }
 
     // stringify args
     args = parseArgs(args);
 
     // replace $0 placeholders with args
-    return msg.replace(/\$(\d+)/g, function (str, i) {
+    return msg.replace(/\$(\d+)/g, (str, i) => {
         return args[i - 1];
     });
 }
@@ -65,15 +67,15 @@ export function get(key: string, ...args: any[]): string {
  */
 
 export function parseArgs(args: any[]): string[] {
-    return args.map(function (val) {
+    return args.map((val) => {
         if (val != null && val.inspect) {
             return val.inspect();
-        } else {
-            try {
-                return JSON.stringify(val) || val + "";
-            } catch (e) {
-                return util.inspect(val);
-            }
+        } 
+        try {
+            return JSON.stringify(val) || `${val}`;
+        } catch (e) {
+            return util.inspect(val);
         }
+        
     });
 }

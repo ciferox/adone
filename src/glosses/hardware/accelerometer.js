@@ -506,7 +506,7 @@ const Controllers = {
 
 
                 this.io.i2cRead(address, this.REGISTER.STATUS, 7, (data) => {
-                    let status = (data.shift() & 0x08) >>> 3;
+                    const status = (data.shift() & 0x08) >>> 3;
 
                     /* istanbul ignore else */
                     if (status) {
@@ -522,8 +522,8 @@ const Controllers = {
                 });
 
                 this.io.i2cRead(address, this.REGISTER.PULSE_SRC, 1, (data) => {
-                    let status = data[0];
-                    let tap = status & 0x7F;
+                    const status = data[0];
+                    const tap = status & 0x7F;
 
                     /* istanbul ignore else */
                     if (status & 0x80) {
@@ -782,9 +782,9 @@ const Controllers = {
                     // var timelimit = 10;
                     // var timelatency = 20;
                     // var timewindow = 255;
-                    let timelimit = 10;
-                    let timelatency = 20;
-                    let timewindow = 255;
+                    const timelimit = 10;
+                    const timelatency = 20;
+                    const timewindow = 255;
 
                     state.expander.i2cWrite(address, this.REGISTER.CLICK_THS, threshold);
                     state.expander.i2cWrite(address, this.REGISTER.TIME_LIMIT, timelimit);
@@ -800,8 +800,8 @@ const Controllers = {
                     let lastEmitTime = null;
 
                     state.expander.i2cRead(address, this.REGISTER.CLICK_SRC, 1, (data) => {
-                        var status = data[0];
-                        var thisEmitTime = Date.now();
+                        const status = data[0];
+                        const thisEmitTime = Date.now();
                         // var tap = status & 0x7F;
 
                         if (lastEmitTime === null) {

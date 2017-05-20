@@ -333,7 +333,7 @@ const Controllers = {
 
                             ratio1 = Math.round(ratio1);
 
-                            let ratio = (ratio1 + 1) >> 1;
+                            const ratio = (ratio1 + 1) >> 1;
 
                             if (ratio >= 0 && ratio <= K1T) {
                                 b = B1T;

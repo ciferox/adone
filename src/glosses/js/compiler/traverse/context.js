@@ -25,18 +25,26 @@ export default class TraversalContext {
 
     shouldVisit(node): boolean {
         const opts = this.opts;
-        if (opts.enter || opts.exit) {return true;}
+        if (opts.enter || opts.exit) {
+            return true; 
+        }
 
         // check if we have a visitor for this node
-        if (opts[node.type]) {return true;}
+        if (opts[node.type]) {
+            return true; 
+        }
 
         // check if we're going to traverse into this node
         const keys: ?string[] = t.VISITOR_KEYS[node.type];
-        if (!keys || !keys.length) {return false;}
+        if (!keys || !keys.length) {
+            return false; 
+        }
 
         // we need to traverse into this node so ensure that it has children to traverse into!
         for (const key of keys) {
-            if (node[key]) {return true;}
+            if (node[key]) {
+                return true;
+            }
         }
 
         return false;
@@ -68,7 +76,9 @@ export default class TraversalContext {
 
     visitMultiple(container, parent, listKey) {
         // nothing to traverse!
-        if (container.length === 0) {return false;}
+        if (container.length === 0) {
+            return false; 
+        }
 
         const queue = [];
 
@@ -88,9 +98,9 @@ export default class TraversalContext {
             return this.visitQueue([
                 this.create(node, node, key)
             ]);
-        } else {
-            return false;
-        }
+        } 
+        return false;
+        
     }
 
     visitQueue(queue: NodePath[]) {
@@ -113,14 +123,18 @@ export default class TraversalContext {
             }
 
             // this path no longer belongs to the tree
-            if (path.key === null) {continue;}
+            if (path.key === null) {
+                continue; 
+            }
 
             if (testing && queue.length >= 10000) {
                 this.trap = true;
             }
 
             // ensure we don't visit the same node twice
-            if (visited.indexOf(path.node) >= 0) {continue;}
+            if (visited.indexOf(path.node) >= 0) {
+                continue; 
+            }
             visited.push(path.node);
 
             if (path.visit()) {
@@ -132,7 +146,9 @@ export default class TraversalContext {
                 stop = this.visitQueue(this.priorityQueue);
                 this.priorityQueue = [];
                 this.queue = queue;
-                if (stop) {break;}
+                if (stop) {
+                    break; 
+                }
             }
         }
 
@@ -149,12 +165,14 @@ export default class TraversalContext {
 
     visit(node, key) {
         const nodes = node[key];
-        if (!nodes) {return false;}
+        if (!nodes) {
+            return false; 
+        }
 
         if (Array.isArray(nodes)) {
             return this.visitMultiple(nodes, node, key);
-        } else {
-            return this.visitSingle(node, key);
-        }
+        } 
+        return this.visitSingle(node, key);
+        
     }
 }

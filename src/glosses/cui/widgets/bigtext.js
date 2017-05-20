@@ -84,7 +84,9 @@ export default class BigText extends adone.cui.widget.Element {
         }
 
         const coords = super.render();
-        if (!coords) { return; }
+        if (!coords) {
+            return; 
+        }
 
         const lines = this.screen.lines;
         const left = coords.xi + this.ileft;

@@ -49,5 +49,5 @@ export default function (obj, args) {
         .replace(/#\{act\}/g, () => objDisplay(actual))
         .replace(/#\{exp\}/g, () => objDisplay(expected));
 
-    return flagMsg ? flagMsg + ": " + msg : msg;
+    return flagMsg ? `${flagMsg}: ${msg}` : msg;
 }

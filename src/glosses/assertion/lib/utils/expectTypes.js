@@ -29,17 +29,17 @@ export default function (obj, types) {
     types.sort();
 
     // Transforms ['lorem', 'ipsum'] into 'a lirum, or an ipsum'
-    const str = types.map(function (t, index) {
+    const str = types.map((t, index) => {
         const art = vowels.has(t.charAt(0)) ? "an" : "a";
         const or = types.length > 1 && index === types.length - 1 ? "or " : "";
-        return or + art + " " + t;
+        return `${or + art} ${t}`;
     }).join(", ");
 
     const objType = adone.util.typeOf(obj).toLowerCase();
 
     if (!types.some((expected) => objType === expected)) {
         throw new AssertionError(
-            "object tested must be " + str + ", but " + objType + " given"
+            `object tested must be ${str}, but ${objType} given`
         );
     }
 }

@@ -48,7 +48,9 @@ export default class LinuxProcess extends Process {
         let youngestPid = null;
         for (const pid of pids) {
             const parts = adone.fs.readWordsSync(adone.sprintf("/proc/%s/stat", pid));
-            if (is.nil(parts) || parts.length < 22) continue;
+            if (is.nil(parts) || parts.length < 22) {
+                continue; 
+            }
             const jiffies = Number.parseInt(parts[21]);
             if (jiffies > youngestJiffies) {
                 youngestJiffies = jiffies;
@@ -56,10 +58,12 @@ export default class LinuxProcess extends Process {
             }
         }
 
-        if (is.null(youngestPid)) return;
+        if (is.null(youngestPid)) {
+            return; 
+        }
 
         let startTimeSecsSinceBoot = getSystemUptimeFromProc();
-        bootTime = (new Date()).getTime() -  ((1000 * startTimeSecsSinceBoot) >>> 0);
+        bootTime = (new Date()).getTime() - ((1000 * startTimeSecsSinceBoot) >>> 0);
         // Now execute `ps -p <pid> -o etimes=` to get the elapsed time of this
         // process in seconds.Timeline:
         // BOOT|<----jiffies---->|<----etime---->|NOW
@@ -74,7 +78,9 @@ export default class LinuxProcess extends Process {
         // Since we picked the youngest process, it's safe to assume an etime close to 0 in case this command fails; the longer the system has been up, the less impact this assumption will have
         startTimeSecsSinceBoot -= Number.parseFloat(etime);
         // By subtracting etime (secs) from uptime (secs) we get uptime (in secs) when the process was started. This correlates with startTime in jiffies for this process
-        if (startTimeSecsSinceBoot <= 0) return;
+        if (startTimeSecsSinceBoot <= 0) {
+            return; 
+        }
 
         // divide jiffies (since boot) by seconds (since boot)
         HZ = (youngestJiffies / startTimeSecsSinceBoot + 0.5) >>> 0;

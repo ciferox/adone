@@ -21,8 +21,8 @@ class Cookies {
      * @param {String} url Current URL
      */
     set(cookieStr, url) {
-        let urlparts = adone.std.url.parse(url || "");
-        let cookie = this.parse(cookieStr);
+        const urlparts = adone.std.url.parse(url || "");
+        const cookie = this.parse(cookieStr);
         let domain;
 
         if (cookie.domain) {
@@ -34,7 +34,7 @@ class Cookies {
                 urlparts.hostname.length < domain.length ||
 
                 // prefix domains with dot to be sure that partial matches are not used
-                ("." + urlparts.hostname).substr(-domain.length + 1) !== ("." + domain)) {
+                (`.${urlparts.hostname}`).substr(-domain.length + 1) !== (`.${domain}`)) {
                 cookie.domain = urlparts.hostname;
             }
         } else {
@@ -61,7 +61,7 @@ class Cookies {
      */
     get(url) {
         return this.list(url).map((cookie) =>
-            cookie.name + "=" + cookie.value).join("; ");
+            `${cookie.name}=${cookie.value}`).join("; ");
     }
 
     /**
@@ -71,7 +71,7 @@ class Cookies {
      * @returns {Array} An array of cookie objects
      */
     list(url) {
-        let result = [];
+        const result = [];
         let i;
         let cookie;
 
@@ -98,11 +98,11 @@ class Cookies {
      * @returns {Object} Cookie object
      */
     parse(cookieStr) {
-        let cookie = {};
+        const cookie = {};
 
         (cookieStr || "").toString().split(";").forEach((cookiePart) => {
-            let valueParts = cookiePart.split("=");
-            let key = valueParts.shift().trim().toLowerCase();
+            const valueParts = cookiePart.split("=");
+            const key = valueParts.shift().trim().toLowerCase();
             let value = valueParts.join("=").trim();
             let domain;
 
@@ -128,7 +128,7 @@ class Cookies {
                 case "domain":
                     domain = value.toLowerCase();
                     if (domain.length && domain.charAt(0) !== ".") {
-                        domain = "." + domain; // ensure preceeding dot for user set domains
+                        domain = `.${domain}`; // ensure preceeding dot for user set domains
                     }
                     cookie.domain = domain;
                     break;
@@ -164,16 +164,16 @@ class Cookies {
      * @returns {Boolean} true if cookie is valid for specifiec URL
      */
     match(cookie, url) {
-        let urlparts = adone.std.url.parse(url || "");
+        const urlparts = adone.std.url.parse(url || "");
 
         // check if hostname matches
         // .foo.com also matches subdomains, foo.com does not
-        if (urlparts.hostname !== cookie.domain && (cookie.domain.charAt(0) !== "." || ("." + urlparts.hostname).substr(-cookie.domain.length) !== cookie.domain)) {
+        if (urlparts.hostname !== cookie.domain && (cookie.domain.charAt(0) !== "." || (`.${urlparts.hostname}`).substr(-cookie.domain.length) !== cookie.domain)) {
             return false;
         }
 
         // check if path matches
-        let path = this.getPath(urlparts.pathname);
+        const path = this.getPath(urlparts.pathname);
         if (path.substr(0, cookie.path.length) !== cookie.path) {
             return false;
         }
@@ -257,7 +257,7 @@ class Cookies {
 
         // ensure path prefix /
         if (path.charAt(0) !== "/") {
-            path = "/" + path;
+            path = `/${path}`;
         }
 
         // ensure path suffix /

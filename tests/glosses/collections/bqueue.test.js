@@ -2,14 +2,14 @@ const BQueue = adone.collection.BQueue;
 
 describe("Blocking queue", () => {
     it("should block until an element comes", async () => {
-        const q = new BQueue;
+        const q = new BQueue();
         const p = q.shift();
         q.push(1);
         expect(await p).to.be.equal(1);
     });
 
     it("should work as expected", async () => {
-        const q = new BQueue;
+        const q = new BQueue();
         q.push(1);
         q.push(2);
         q.push(3);
@@ -19,7 +19,7 @@ describe("Blocking queue", () => {
     });
 
     it("the order should be correct", async () => {
-        const q = new BQueue;
+        const q = new BQueue();
         const p1 = q.shift();
         const p2 = q.shift();
         q.push(1);

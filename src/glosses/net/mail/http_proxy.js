@@ -20,12 +20,12 @@ module.exports = proxyConnect;
  * @param {Function} callback Callback to run with the rocket object once connection is established
  */
 function proxyConnect(proxyUrl, destinationPort, destinationHost, callback) {
-    var proxy = adone.std.url.parse(proxyUrl);
+    const proxy = adone.std.url.parse(proxyUrl);
 
     // create a socket connection to the proxy server
-    var options;
-    var connect;
-    var socket;
+    let options;
+    let connect;
+    let socket;
 
     options = {
         host: proxy.hostname,
@@ -42,8 +42,8 @@ function proxyConnect(proxyUrl, destinationPort, destinationHost, callback) {
 
     // Error harness for initial connection. Once connection is established, the responsibility
     // to handle errors is passed to whoever uses this socket
-    var finished = false;
-    var tempSocketErr = function (err) {
+    let finished = false;
+    const tempSocketErr = function (err) {
         if (finished) {
             return;
         }
@@ -56,36 +56,36 @@ function proxyConnect(proxyUrl, destinationPort, destinationHost, callback) {
         callback(err);
     };
 
-    socket = connect(options, function () {
+    socket = connect(options, () => {
         if (finished) {
             return;
         }
 
-        var reqHeaders = {
-            Host: destinationHost + ":" + destinationPort,
+        const reqHeaders = {
+            Host: `${destinationHost}:${destinationPort}`,
             Connection: "close"
         };
         if (proxy.auth) {
-            reqHeaders["Proxy-Authorization"] = "Basic " + new Buffer(proxy.auth).toString("base64");
+            reqHeaders["Proxy-Authorization"] = `Basic ${new Buffer(proxy.auth).toString("base64")}`;
         }
 
         socket.write(
             // HTTP method
-            "CONNECT " + destinationHost + ":" + destinationPort + " HTTP/1.1\r\n" +
+            `CONNECT ${destinationHost}:${destinationPort} HTTP/1.1\r\n${ 
 
             // HTTP request headers
-            Object.keys(reqHeaders).map(function (key) {
-                return key + ": " + reqHeaders[key];
-            }).join("\r\n") +
+            Object.keys(reqHeaders).map((key) => {
+                return `${key}: ${ reqHeaders[key]}`;
+            }).join("\r\n") 
 
             // End request
-            "\r\n\r\n");
+            }\r\n\r\n`);
 
 
-        var headers = "";
+        let headers = "";
         var onSocketData = function (chunk) {
-            var match;
-            var remainder;
+            let match;
+            let remainder;
 
             if (finished) {
                 return;
@@ -112,7 +112,7 @@ function proxyConnect(proxyUrl, destinationPort, destinationHost, callback) {
                     } catch (E) {
                         // ignore
                     }
-                    return callback(new Error("Invalid response from proxy" + (match && ": " + match[1] || "")));
+                    return callback(new Error(`Invalid response from proxy${match && `: ${ match[1]}` || ""}`));
                 }
 
                 return callback(null, socket);

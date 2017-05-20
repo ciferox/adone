@@ -56,7 +56,9 @@ export default class Binding {
     }
 
     setValue(value: any) {
-        if (this.hasDeoptedValue) return;
+        if (this.hasDeoptedValue) {
+            return; 
+        }
         this.hasValue = true;
         this.value = value;
     }
@@ -98,6 +100,6 @@ export default class Binding {
 
     dereference() {
         this.references--;
-        this.referenced = !!this.references;
+        this.referenced = Boolean(this.references);
     }
 }

@@ -96,11 +96,11 @@ export default class Transform extends EventEmitter {
                     }
                 });
                 return;
-            } else {
-                if (!this._readableState.buffer.empty) {
-                    return;
-                }
+            } 
+            if (!this._readableState.buffer.empty) {
+                return;
             }
+            
         }
         this.ending = false;
         this.ended = true;

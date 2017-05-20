@@ -38,12 +38,14 @@ export default function (ctx, name, getter = new Function()) {
         get: function addProperty() {
             const keep_ssfi = flag(this, "keep_ssfi");
             const old_ssfi = flag(this, "ssfi");
-            if (!keep_ssfi && old_ssfi)
-                flag(this, "ssfi", addProperty);
+            if (!keep_ssfi && old_ssfi) {
+                flag(this, "ssfi", addProperty); 
+            }
 
             const result = getter.call(this);
-            if (result !== undefined)
-                return result;
+            if (result !== undefined) {
+                return result; 
+            }
 
             const newAssertion = $assert.getAssertion();
             transferFlags(this, newAssertion);

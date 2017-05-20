@@ -1,6 +1,6 @@
-export default function(a, b) {
+export default function (a, b) {
     [a, b] = [String(a), String(b)];
-    let length = a.length;
+    const length = a.length;
     if (length !== b.length) {
         return false;
     }

@@ -17,8 +17,8 @@ const toComparators = semver.toComparators;
 const SemVer = semver.SemVer;
 const Range = semver.Range;
 
-describe("semver", function () {
-    it("comparison tests", function() {
+describe("semver", () => {
+    it("comparison tests", () => {
         // [version1, version2]
         // version1 should be greater than version2
         [
@@ -53,25 +53,25 @@ describe("semver", function () {
             ["1.2.3-a.b.c.10.d.5", "1.2.3-a.b.c.5.d.100"],
             ["1.2.3-r2", "1.2.3-r100"],
             ["1.2.3-r100", "1.2.3-R2"]
-        ].forEach(function(v) {
-            let v0 = v[0];
-            let v1 = v[1];
-            let loose = v[2];
-            assert.isOk(gt(v0, v1, loose), "gt('" + v0 + "', '" + v1 + "')");
-            assert.isOk(lt(v1, v0, loose), "lt('" + v1 + "', '" + v0 + "')");
-            assert.isOk(!gt(v1, v0, loose), "!gt('" + v1 + "', '" + v0 + "')");
-            assert.isOk(!lt(v0, v1, loose), "!lt('" + v0 + "', '" + v1 + "')");
-            assert.isOk(eq(v0, v0, loose), "eq('" + v0 + "', '" + v0 + "')");
-            assert.isOk(eq(v1, v1, loose), "eq('" + v1 + "', '" + v1 + "')");
-            assert.isOk(neq(v0, v1, loose), "neq('" + v0 + "', '" + v1 + "')");
-            assert.isOk(cmp(v1, "==", v1, loose), "cmp('" + v1 + "' == '" + v1 + "')");
-            assert.isOk(cmp(v0, ">=", v1, loose), "cmp('" + v0 + "' >= '" + v1 + "')");
-            assert.isOk(cmp(v1, "<=", v0, loose), "cmp('" + v1 + "' <= '" + v0 + "')");
-            assert.isOk(cmp(v0, "!=", v1, loose), "cmp('" + v0 + "' != '" + v1 + "')");
+        ].forEach((v) => {
+            const v0 = v[0];
+            const v1 = v[1];
+            const loose = v[2];
+            assert.isOk(gt(v0, v1, loose), `gt('${v0}', '${v1}')`);
+            assert.isOk(lt(v1, v0, loose), `lt('${v1}', '${v0}')`);
+            assert.isOk(!gt(v1, v0, loose), `!gt('${v1}', '${v0}')`);
+            assert.isOk(!lt(v0, v1, loose), `!lt('${v0}', '${v1}')`);
+            assert.isOk(eq(v0, v0, loose), `eq('${v0}', '${v0}')`);
+            assert.isOk(eq(v1, v1, loose), `eq('${v1}', '${v1}')`);
+            assert.isOk(neq(v0, v1, loose), `neq('${v0}', '${v1}')`);
+            assert.isOk(cmp(v1, "==", v1, loose), `cmp('${v1}' == '${v1}')`);
+            assert.isOk(cmp(v0, ">=", v1, loose), `cmp('${v0}' >= '${v1}')`);
+            assert.isOk(cmp(v1, "<=", v0, loose), `cmp('${v1}' <= '${v0}')`);
+            assert.isOk(cmp(v0, "!=", v1, loose), `cmp('${v0}' != '${v1}')`);
         });
     });
 
-    it("equality tests", function() {
+    it("equality tests", () => {
         // [version1, version2]
         // version1 should be equivalent to version2
         [
@@ -112,25 +112,25 @@ describe("semver", function () {
             ["1.2.3-beta+build", "1.2.3-beta+otherbuild"],
             ["1.2.3+build", "1.2.3+otherbuild"],
             ["  v1.2.3+build", "1.2.3+otherbuild"]
-        ].forEach(function(v) {
-            let v0 = v[0];
-            let v1 = v[1];
-            let loose = v[2];
-            assert.isOk(eq(v0, v1, loose), "eq('" + v0 + "', '" + v1 + "')");
-            assert.isOk(!neq(v0, v1, loose), "!neq('" + v0 + "', '" + v1 + "')");
-            assert.isOk(cmp(v0, "==", v1, loose), "cmp(" + v0 + "==" + v1 + ")");
-            assert.isOk(!cmp(v0, "!=", v1, loose), "!cmp(" + v0 + "!=" + v1 + ")");
-            assert.isOk(!cmp(v0, "===", v1, loose), "!cmp(" + v0 + "===" + v1 + ")");
-            assert.isOk(cmp(v0, "!==", v1, loose), "cmp(" + v0 + "!==" + v1 + ")");
-            assert.isOk(!gt(v0, v1, loose), "!gt('" + v0 + "', '" + v1 + "')");
-            assert.isOk(gte(v0, v1, loose), "gte('" + v0 + "', '" + v1 + "')");
-            assert.isOk(!lt(v0, v1, loose), "!lt('" + v0 + "', '" + v1 + "')");
-            assert.isOk(lte(v0, v1, loose), "lte('" + v0 + "', '" + v1 + "')");
+        ].forEach((v) => {
+            const v0 = v[0];
+            const v1 = v[1];
+            const loose = v[2];
+            assert.isOk(eq(v0, v1, loose), `eq('${v0}', '${v1}')`);
+            assert.isOk(!neq(v0, v1, loose), `!neq('${v0}', '${v1}')`);
+            assert.isOk(cmp(v0, "==", v1, loose), `cmp(${v0}==${v1})`);
+            assert.isOk(!cmp(v0, "!=", v1, loose), `!cmp(${v0}!=${v1})`);
+            assert.isOk(!cmp(v0, "===", v1, loose), `!cmp(${v0}===${v1})`);
+            assert.isOk(cmp(v0, "!==", v1, loose), `cmp(${v0}!==${v1})`);
+            assert.isOk(!gt(v0, v1, loose), `!gt('${v0}', '${v1}')`);
+            assert.isOk(gte(v0, v1, loose), `gte('${v0}', '${v1}')`);
+            assert.isOk(!lt(v0, v1, loose), `!lt('${v0}', '${v1}')`);
+            assert.isOk(lte(v0, v1, loose), `lte('${v0}', '${v1}')`);
         });
     });
 
 
-    it("range tests", function() {
+    it("range tests", () => {
         // [range, version]
         // version should be included by range
         [
@@ -226,15 +226,15 @@ describe("semver", function () {
             ["^1.2.3-alpha", "1.2.3-pre"],
             ["^1.2.0-alpha", "1.2.0-pre"],
             ["^0.0.1-alpha", "0.0.1-beta"]
-        ].forEach(function(v) {
-            let range = v[0];
-            let ver = v[1];
-            let loose = v[2];
-            assert.isOk(satisfies(ver, range, loose), range + " satisfied by " + ver);
+        ].forEach((v) => {
+            const range = v[0];
+            const ver = v[1];
+            const loose = v[2];
+            assert.isOk(satisfies(ver, range, loose), `${range} satisfied by ${ver}`);
         });
     });
 
-    it("negative range tests", function() {
+    it("negative range tests", () => {
         // [range, version]
         // version should not be included by range
         [
@@ -306,16 +306,16 @@ describe("semver", function () {
             ["blerg", "1.2.3"],
             ["git+https://user:password0123@github.com/foo", "123.0.0", true],
             ["^1.2.3", "2.0.0-pre"]
-        ].forEach(function(v) {
-            let range = v[0];
-            let ver = v[1];
-            let loose = v[2];
-            let found = satisfies(ver, range, loose);
-            assert.isOk(!found, ver + " not satisfied by " + range);
+        ].forEach((v) => {
+            const range = v[0];
+            const ver = v[1];
+            const loose = v[2];
+            const found = satisfies(ver, range, loose);
+            assert.isOk(!found, `${ver} not satisfied by ${range}`);
         });
     });
 
-    it("increment versions test", function() {
+    it("increment versions test", () => {
         //  [version, inc, result, identifier]
         //  inc(version, inc) -> result
         [
@@ -401,23 +401,23 @@ describe("semver", function () {
             ["1.0.0-1", "major", "1.0.0", false, "dev"],
             ["1.2.3-dev.bar", "prerelease", "1.2.3-dev.0", false, "dev"]
 
-        ].forEach(function(v) {
-            let pre = v[0];
-            let what = v[1];
-            let wanted = v[2];
-            let loose = v[3];
-            let id = v[4];
-            let found = inc(pre, what, loose, id);
-            let cmd = "inc(" + pre + ", " + what + ", " + id + ")";
-            assert.equal(found, wanted, cmd + " === " + wanted);
+        ].forEach((v) => {
+            const pre = v[0];
+            const what = v[1];
+            const wanted = v[2];
+            const loose = v[3];
+            const id = v[4];
+            const found = inc(pre, what, loose, id);
+            const cmd = `inc(${pre}, ${what}, ${id})`;
+            assert.equal(found, wanted, `${cmd} === ${wanted}`);
 
-            let parsed = semver.parse(pre, loose);
+            const parsed = semver.parse(pre, loose);
             if (wanted) {
                 parsed.inc(what, id);
-                assert.equal(parsed.version, wanted, cmd + " object version updated");
-                assert.equal(parsed.raw, wanted, cmd + " object raw field updated");
+                assert.equal(parsed.version, wanted, `${cmd} object version updated`);
+                assert.equal(parsed.raw, wanted, `${cmd} object raw field updated`);
             } else if (parsed) {
-                assert.throws(function() {
+                assert.throws(() => {
                     parsed.inc(what, id);
                 });
             } else {
@@ -426,7 +426,7 @@ describe("semver", function () {
         });
     });
 
-    it("diff versions test", function() {
+    it("diff versions test", () => {
         //  [version1, version2, result]
         //  diff(version1, version2) -> result
         [
@@ -443,17 +443,17 @@ describe("semver", function () {
             ["1.1.0-pre-1", "1.1.0-pre-2", "prerelease"],
             ["1.0.0", "1.0.0", null]
 
-        ].forEach(function(v) {
-            let version1 = v[0];
-            let version2 = v[1];
-            let wanted = v[2];
-            let found = diff(version1, version2);
-            let cmd = "diff(" + version1 + ", " + version2 + ")";
-            assert.equal(found, wanted, cmd + " === " + wanted);
+        ].forEach((v) => {
+            const version1 = v[0];
+            const version2 = v[1];
+            const wanted = v[2];
+            const found = diff(version1, version2);
+            const cmd = `diff(${version1}, ${version2})`;
+            assert.equal(found, wanted, `${cmd} === ${wanted}`);
         });
     });
 
-    it("valid range test", function() {
+    it("valid range test", () => {
         // [range, result]
         // validRange(range) -> result
         // translate ranges into their canonical form
@@ -530,17 +530,17 @@ describe("semver", function () {
             ["~1.2.3beta", ">=1.2.3-beta <1.3.0", true],
             ["~1.2.3beta", null],
             ["^ 1.2 ^ 1", ">=1.2.0 <2.0.0 >=1.0.0 <2.0.0"]
-        ].forEach(function(v) {
-            let pre = v[0];
-            let wanted = v[1];
-            let loose = v[2];
-            let found = validRange(pre, loose);
+        ].forEach((v) => {
+            const pre = v[0];
+            const wanted = v[1];
+            const loose = v[2];
+            const found = validRange(pre, loose);
 
-            assert.equal(found, wanted, "validRange(" + pre + ") === " + wanted);
+            assert.equal(found, wanted, `validRange(${pre}) === ${wanted}`);
         });
     });
 
-    it("comparators test", function() {
+    it("comparators test", () => {
         // [range, comparators]
         // turn range into a set of individual comparators
         [
@@ -760,68 +760,68 @@ describe("semver", function () {
             ["<*", [
                 ["<0.0.0"]
             ]]
-        ].forEach(function(v) {
-            let pre = v[0];
-            let wanted = v[1];
-            let found = toComparators(v[0]);
-            let jw = JSON.stringify(wanted);
-            assert.deepEqual(found, wanted, "toComparators(" + pre + ") === " + jw);
+        ].forEach((v) => {
+            const pre = v[0];
+            const wanted = v[1];
+            const found = toComparators(v[0]);
+            const jw = JSON.stringify(wanted);
+            assert.deepEqual(found, wanted, `toComparators(${pre}) === ${jw}`);
         });
     });
 
-    it("invalid version numbers", function() {
+    it("invalid version numbers", () => {
         ["1.2.3.4",
             "NOT VALID",
             1.2,
             null,
             "Infinity.NaN.Infinity"
-        ].forEach(function(v) {
-            assert.throws(function() {
+        ].forEach((v) => {
+            assert.throws(() => {
                 SemVer.get(v);
-            }, adone.x.InvalidArgument, "Invalid Version: " + v);
+            }, adone.x.InvalidArgument, `Invalid Version: ${v}`);
         });
     });
 
-    it("strict vs loose version numbers", function() {
+    it("strict vs loose version numbers", () => {
         [
             ["=1.2.3", "1.2.3"],
             ["01.02.03", "1.2.3"],
             ["1.2.3-beta.01", "1.2.3-beta.1"],
             ["   =1.2.3", "1.2.3"],
             ["1.2.3foo", "1.2.3-foo"]
-        ].forEach(function(v) {
-            let loose = v[0];
-            let strict = v[1];
-            assert.throws(function() {
+        ].forEach((v) => {
+            const loose = v[0];
+            const strict = v[1];
+            assert.throws(() => {
                 SemVer.get(loose);
             });
-            let lv = SemVer.get(loose, true);
+            const lv = SemVer.get(loose, true);
             assert.equal(lv.version, strict);
             assert.isOk(eq(loose, strict, true));
-            assert.throws(function() {
+            assert.throws(() => {
                 eq(loose, strict);
             });
-            assert.throws(function() {
+            assert.throws(() => {
                 SemVer.get(strict).compare(loose);
             });
         });
     });
 
-    it("strict vs loose ranges", function() {
+    it("strict vs loose ranges", () => {
         [
             [">=01.02.03", ">=1.2.3"],
             ["~1.02.03beta", ">=1.2.3-beta <1.3.0"]
-        ].forEach(function(v) {
-            let loose = v[0];
-            let comps = v[1];
-            assert.throws(function() {
+        ].forEach((v) => {
+            const loose = v[0];
+            const comps = v[1];
+            assert.throws(() => {
                 new Range(loose);
             });
             assert.equal(new Range(loose, true).range, comps);
         });
     });
 
-    it("max satisfying", function() {
+    it("max satisfying", () => {
         [
             [
                 ["1.2.3", "1.2.4"], "1.2", "1.2.4"
@@ -835,17 +835,17 @@ describe("semver", function () {
             [
                 ["1.1.0", "1.2.0", "1.2.1", "1.3.0", "2.0.0b1", "2.0.0b2", "2.0.0b3", "2.0.0", "2.1.0"], "~2.0.0", "2.0.0", true
             ]
-        ].forEach(function(v) {
-            let versions = v[0];
-            let range = v[1];
-            let expect = v[2];
-            let loose = v[3];
-            let actual = semver.maxSatisfying(versions, range, loose);
+        ].forEach((v) => {
+            const versions = v[0];
+            const range = v[1];
+            const expect = v[2];
+            const loose = v[3];
+            const actual = semver.maxSatisfying(versions, range, loose);
             assert.equal(actual, expect);
         });
     });
 
-    it("min satisfying", function() {
+    it("min satisfying", () => {
         [
             [
                 ["1.2.3", "1.2.4"], "1.2", "1.2.3"
@@ -859,12 +859,12 @@ describe("semver", function () {
             [
                 ["1.1.0", "1.2.0", "1.2.1", "1.3.0", "2.0.0b1", "2.0.0b2", "2.0.0b3", "2.0.0", "2.1.0"], "~2.0.0", "2.0.0", true
             ]
-        ].forEach(function(v) {
-            let versions = v[0];
-            let range = v[1];
-            let expect = v[2];
-            let loose = v[3];
-            let actual = semver.minSatisfying(versions, range, loose);
+        ].forEach((v) => {
+            const versions = v[0];
+            const range = v[1];
+            const expect = v[2];
+            const loose = v[3];
+            const actual = semver.minSatisfying(versions, range, loose);
             assert.equal(actual, expect);
         });
     });

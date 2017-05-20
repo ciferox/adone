@@ -3,7 +3,7 @@
 const { utou, atoa, atou, utoa } = adone.util.memcpy;
 
 describe("C++ Memory copy", () => {
-    it("copy Buffer to Buffer", function() {
+    it("copy Buffer to Buffer", () => {
         const str = "test buffer";
         const srcBuf = Buffer.from(str);
         const targetBuf = Buffer.alloc(str.length);
@@ -11,7 +11,7 @@ describe("C++ Memory copy", () => {
         assert.deepEqual(srcBuf, targetBuf);
     });
 
-    it("copy UInt8Array to UInt8Array", function() {
+    it("copy UInt8Array to UInt8Array", () => {
         const testArr = [0xaa, 0xcb, 0xde, 0x13, 0x56, 0x85, 0xa5, 0xf1, 0x62, 0x77, 0x89, 0xfa];
         const srcBuf = new Uint8Array(testArr);
         const targetBuf = new Uint8Array(testArr.length);
@@ -19,7 +19,7 @@ describe("C++ Memory copy", () => {
         assert.deepEqual(srcBuf, targetBuf);
     });
 
-    it("copy ArrayBuffer to ArrayBuffer", function() {
+    it("copy ArrayBuffer to ArrayBuffer", () => {
         const srcBuf = new ArrayBuffer(64);
         const srcU32a = new Uint32Array(srcBuf);
         for (let i = 0; i < 16; i++) {
@@ -30,7 +30,7 @@ describe("C++ Memory copy", () => {
         assert.deepEqual(srcBuf, targetBuf);
     });
 
-    it("copy UInt8Array to ArrayBuffer", function() {
+    it("copy UInt8Array to ArrayBuffer", () => {
         const testArr = [0xaa, 0xcb, 0xde, 0x13, 0x56, 0x85, 0xa5, 0xf1, 0x62, 0x77, 0x89, 0xfa];
         const srcBuf = new Uint8Array(testArr);
         const targetBuf = new ArrayBuffer(testArr.length);
@@ -39,7 +39,7 @@ describe("C++ Memory copy", () => {
         assert.deepEqual(srcBuf, newBuf);
     });
 
-    it("copy ArrayBuffer to Buffer", function() {
+    it("copy ArrayBuffer to Buffer", () => {
         const srcBuf = new ArrayBuffer(64);
         const srcU32a = new Uint32Array(srcBuf);
         for (let i = 0; i < 16; i++) {

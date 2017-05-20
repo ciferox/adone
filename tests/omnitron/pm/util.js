@@ -1,4 +1,4 @@
-const { std: { path }, is  } = adone;
+const { std: { path }, is } = adone;
 
 export const fixturesDir = path.join(__dirname, "fixture_apps");
 export const fixture = (p) => path.join(fixturesDir, p);

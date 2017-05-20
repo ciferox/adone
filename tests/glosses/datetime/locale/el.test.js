@@ -15,7 +15,7 @@ describe("el", () => {
         const tests = "Ιανουάριος Ιαν_Φεβρουάριος Φεβ_Μάρτιος Μαρ_Απρίλιος Απρ_Μάιος Μαϊ_Ιούνιος Ιουν_Ιούλιος Ιουλ_Αύγουστος Αυγ_Σεπτέμβριος Σεπ_Οκτώβριος Οκτ_Νοέμβριος Νοε_Δεκέμβριος Δεκ".split("_");
 
         function equalTest(input, mmm, i) {
-            assert.equal(adone.datetime(input, mmm).month(), i, input + " should be month " + (i + 1));
+            assert.equal(adone.datetime(input, mmm).month(), i, `${input} should be month ${i + 1}`);
         }
 
         for (i = 0; i < 12; i++) {
@@ -54,16 +54,16 @@ describe("el", () => {
         let parsed;
 
         // test that a formatted adone.datetime including meridiem string can be parsed back to the same adone.datetime
-        assert.ok(b.isSame(adone.datetime(b.format("h:mm:ss a"), "h:mm:ss a", "el", true), "seconds"), b.format("h:mm:ss a") + " should be equal to " + adone.datetime(b.format("h:mm:ss a"), "h:mm:ss a", "el", true).format("h:mm:ss a"));
+        assert.ok(b.isSame(adone.datetime(b.format("h:mm:ss a"), "h:mm:ss a", "el", true), "seconds"), `${b.format("h:mm:ss a")} should be equal to ${adone.datetime(b.format("h:mm:ss a"), "h:mm:ss a", "el", true).format("h:mm:ss a")}`);
 
         // test that a formatted adone.datetime having a meridiem string can be parsed with strict flag
-        assert.ok(adone.datetime(b.format("h:mm:ss a"), "h:mm:ss a", "el", true).isValid(), b.format("h:mm:ss a") + " should be parsed as valid");
+        assert.ok(adone.datetime(b.format("h:mm:ss a"), "h:mm:ss a", "el", true).isValid(), `${b.format("h:mm:ss a")} should be parsed as valid`);
 
         for (i = 0; i < meridiemTests.length; i++) {
             parsed = adone.datetime(meridiemTests[i][0], "h a", "el", true);
-            assert.equal(parsed.isValid(), meridiemTests[i][2], "validity for " + meridiemTests[i][0]);
+            assert.equal(parsed.isValid(), meridiemTests[i][2], `validity for ${meridiemTests[i][0]}`);
             if (parsed.isValid()) {
-                assert.equal(parsed.hours(), meridiemTests[i][1], "hours for " + meridiemTests[i][0]);
+                assert.equal(parsed.hours(), meridiemTests[i][1], `hours for ${meridiemTests[i][0]}`);
             }
         }
     });
@@ -100,7 +100,7 @@ describe("el", () => {
         let i;
 
         for (i = 0; i < a.length; i++) {
-            assert.equal(b.format(a[i][0]), a[i][1], a[i][0] + " ---> " + a[i][1]);
+            assert.equal(b.format(a[i][0]), a[i][1], `${a[i][0]} ---> ${a[i][1]}`);
         }
     });
 
@@ -295,11 +295,11 @@ describe("el", () => {
             m = adone.datetime().add({
                 d: i
             });
-            assert.equal(m.calendar(), m.format("dddd [" + (m.hours() % 12 === 1 ? "στη" : "στις") + "] LT"), "Today + " + i + " days current time");
+            assert.equal(m.calendar(), m.format(`dddd [${m.hours() % 12 === 1 ? "στη" : "στις"}] LT`), `Today + ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("dddd [στις] LT"), "Today + " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format("dddd [στις] LT"), `Today + ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("dddd [στις] LT"), "Today + " + i + " days end of day");
+            assert.equal(m.calendar(), m.format("dddd [στις] LT"), `Today + ${i} days end of day`);
         }
     });
 
@@ -313,13 +313,13 @@ describe("el", () => {
                 d: i
             });
             dayString = m.day() === 6 ? "[το προηγούμενο Σάββατο]" : "[την προηγούμενη] dddd";
-            assert.equal(m.calendar(), m.format(dayString + " [" + (m.hours() % 12 === 1 ? "στη" : "στις") + "] LT"), "Today - " + i + " days current time");
+            assert.equal(m.calendar(), m.format(`${dayString} [${m.hours() % 12 === 1 ? "στη" : "στις"}] LT`), `Today - ${i} days current time`);
             m.hours(1).minutes(30).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format(dayString + " [στη] LT"), "Today - " + i + " days one o clock");
+            assert.equal(m.calendar(), m.format(`${dayString} [στη] LT`), `Today - ${i} days one o clock`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format(dayString + " [στις] LT"), "Today - " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format(`${dayString} [στις] LT`), `Today - ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format(dayString + " [στις] LT"), "Today - " + i + " days end of day");
+            assert.equal(m.calendar(), m.format(`${dayString} [στις] LT`), `Today - ${i} days end of day`);
         }
     });
 

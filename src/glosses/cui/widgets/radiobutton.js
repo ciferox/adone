@@ -7,7 +7,9 @@ export default class RadioButton extends adone.cui.widget.CheckBox {
         this.on("check", () => {
             let el = this;
             while (el = el.parent) {
-                if (el.type === "radio-set" || el.type === "form") break;
+                if (el.type === "radio-set" || el.type === "form") {
+                    break; 
+                }
             }
             el = el || this.parent;
             el.forDescendants((el) => {
@@ -21,7 +23,7 @@ export default class RadioButton extends adone.cui.widget.CheckBox {
 
     render() {
         this.clearPos(true);
-        this.setContent("(" + (this.checked ? "*" : " ") + ") " + this.text, true);
+        this.setContent(`(${this.checked ? "*" : " "}) ${this.text}`, true);
         return super.render();
     }
 }

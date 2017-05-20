@@ -11,10 +11,10 @@ const Socks = adone.net.proxy.socks;
 
 // Export createTransport method
 module.exports.createTransport = function (transporter, defaults) {
-    var urlConfig;
-    var options;
-    var mailer;
-    var proxyUrl;
+    let urlConfig;
+    let options;
+    let mailer;
+    let proxyUrl;
 
     // if no transporter configuration is provided use direct as default
     transporter = transporter || directTransport({
@@ -41,15 +41,15 @@ module.exports.createTransport = function (transporter, defaults) {
 
         if (options.transport && typeof options.transport === "string") {
             try {
-                transporter = adone.net.mail[options.transport.toLowerCase() + "Transport"](options);
+                transporter = adone.net.mail[`${options.transport.toLowerCase()}Transport`](options);
             } catch (err) {
                 // if transporter loader fails, return an error when sending mail
                 transporter = {
-                    send: function (mail, callback) {
-                        var errmsg = "Requested transport plugin  \"" + (options.transport).toLowerCase() + "Transport\" could not be initiated";
-                        var err = new Error(errmsg);
+                    send(mail, callback) {
+                        const errmsg = `Requested transport plugin  "${(options.transport).toLowerCase()}Transport" could not be initiated`;
+                        const err = new Error(errmsg);
                         err.code = "EINIT";
-                        setImmediate(function () {
+                        setImmediate(() => {
                             return callback(err);
                         });
                     }
@@ -80,7 +80,7 @@ module.exports.createTransport = function (transporter, defaults) {
  * @param {String} proxyUrl Proxy configuration url
  */
 function setupProxy(mailer, proxyUrl) {
-    var proxy = adone.std.url.parse(proxyUrl);
+    const proxy = adone.std.url.parse(proxyUrl);
 
     // setup socket handler for the mailer object
     mailer.getSocket = function (options, callback) {
@@ -89,7 +89,7 @@ function setupProxy(mailer, proxyUrl) {
             // Connect using a HTTP CONNECT method
             case "http:":
             case "https:":
-                httpProxy(proxy.href, options.port, options.host, function (err, socket) {
+                httpProxy(proxy.href, options.port, options.host, (err, socket) => {
                     if (err) {
                         return callback(err);
                     }
@@ -119,7 +119,7 @@ function setupProxy(mailer, proxyUrl) {
                         username: decodeURIComponent(proxy.auth.split(":").shift()),
                         password: decodeURIComponent(proxy.auth.split(":").pop())
                     }
-                }, function (err, socket) {
+                }, (err, socket) => {
                     if (err) {
                         return callback(err);
                     }
@@ -161,19 +161,19 @@ function Mailer(transporter, options, defaults) {
     if (typeof transporter.on === "function") {
 
         // deprecated log interface
-        this.transporter.on("log", function (log) {
+        this.transporter.on("log", (log) => {
             this.logger.debug("%s: %s", log.type, log.message);
-        }.bind(this));
+        });
 
         // transporter errors
-        this.transporter.on("error", function (err) {
+        this.transporter.on("error", (err) => {
             this.logger.error("Transport Error: %s", err.message);
             this.emit("error", err);
-        }.bind(this));
+        });
 
         // indicates if the sender has became idle
         this.transporter.on("idle", function () {
-            var args = Array.prototype.slice.call(arguments);
+            const args = Array.prototype.slice.call(arguments);
             args.unshift("idle");
             this.emit.apply(this, args);
         }.bind(this));
@@ -204,14 +204,14 @@ Mailer.prototype.use = function (step, plugin) {
 /**
  * Optional methods passed to the underlying transport object
  */
-["close", "isIdle", "verify"].forEach(function (method) {
+["close", "isIdle", "verify"].forEach((method) => {
     Mailer.prototype[method] = function ( /* possible arguments */ ) {
-        var args = Array.prototype.slice.call(arguments);
+        const args = Array.prototype.slice.call(arguments);
         if (typeof this.transporter[method] === "function") {
             return this.transporter[method].apply(this.transporter, args);
-        } else {
-            return false;
-        }
+        } 
+        return false;
+        
     };
 });
 
@@ -222,10 +222,10 @@ Mailer.prototype.use = function (step, plugin) {
  * @param {Function} callback Callback to run once the sending succeeded or failed
  */
 Mailer.prototype.sendMail = function (data, callback) {
-    var promise;
+    let promise;
 
     if (!callback && typeof Promise === "function") {
-        promise = new Promise(function (resolve, reject) {
+        promise = new Promise((resolve, reject) => {
             callback = shared.callbackPromise(resolve, reject);
         });
     }
@@ -240,28 +240,28 @@ Mailer.prototype.sendMail = function (data, callback) {
     callback = callback || function () {};
 
     // apply defaults
-    Object.keys(this._defaults).forEach(function (key) {
+    Object.keys(this._defaults).forEach((key) => {
         if (!(key in data)) {
             data[key] = this._defaults[key];
         } else if (key === "headers") {
             // headers is a special case. Allow setting individual default headers
-            Object.keys(this._defaults.headers || {}).forEach(function (key) {
+            Object.keys(this._defaults.headers || {}).forEach((key) => {
                 if (!(key in data.headers)) {
                     data.headers[key] = this._defaults.headers[key];
                 }
-            }.bind(this));
+            });
         }
-    }.bind(this));
+    });
 
     // force specific keys from transporter options
-    ["disableFileAccess", "disableUrlAccess"].forEach(function (key) {
+    ["disableFileAccess", "disableUrlAccess"].forEach((key) => {
         if (key in this._options) {
             data[key] = this._options[key];
         }
-    }.bind(this));
+    });
 
-    var mail = {
-        data: data,
+    const mail = {
+        data,
         message: null,
         resolveContent: shared.resolveContent
     };
@@ -273,7 +273,7 @@ Mailer.prototype.sendMail = function (data, callback) {
 
     this.logger.info("Sending mail using %s/%s", this.transporter.name, this.transporter.version);
 
-    this._processPlugins("compile", mail, function (err) {
+    this._processPlugins("compile", mail, (err) => {
         if (err) {
             this.logger.error("PluginCompile Error: %s", err.message);
             return callback(err);
@@ -304,28 +304,28 @@ Mailer.prototype.sendMail = function (data, callback) {
 
         // add optional List-* headers
         if (mail.data.list && typeof mail.data.list === "object") {
-            this._getListHeaders(mail.data.list).forEach(function (listHeader) {
-                listHeader.value.forEach(function (value) {
+            this._getListHeaders(mail.data.list).forEach((listHeader) => {
+                listHeader.value.forEach((value) => {
                     mail.message.addHeader(listHeader.key, value);
                 });
             });
         }
 
-        this._processPlugins("stream", mail, function (err) {
+        this._processPlugins("stream", mail, (err) => {
             if (err) {
                 this.logger.error("PluginStream Error: %s", err.message);
                 return callback(err);
             }
 
             this.transporter.send(mail, function () {
-                var args = Array.prototype.slice.call(arguments);
+                const args = Array.prototype.slice.call(arguments);
                 if (args[0]) {
                     this.logger.error("Send Error: %s", args[0].message);
                 }
                 callback.apply(null, args);
             }.bind(this));
-        }.bind(this));
-    }.bind(this));
+        });
+    });
 
     return promise;
 };
@@ -348,7 +348,7 @@ Mailer.prototype._processPlugins = function (step, mail, callback) {
         return callback(null);
     }
 
-    var plugins = Array.prototype.slice.call(this._plugins[step]);
+    const plugins = Array.prototype.slice.call(this._plugins[step]);
 
     this.logger.debug("Using %s plugins for %s", plugins.length, step);
 
@@ -356,14 +356,14 @@ Mailer.prototype._processPlugins = function (step, mail, callback) {
         if (!plugins.length) {
             return callback(null);
         }
-        var plugin = plugins.shift();
-        plugin(mail, function (err) {
+        const plugin = plugins.shift();
+        plugin(mail, (err) => {
             if (err) {
                 return callback(err);
             }
             processPlugins();
         });
-    }.bind(this);
+    };
 
     processPlugins();
 };
@@ -377,33 +377,33 @@ Mailer.prototype._processPlugins = function (step, mail, callback) {
  */
 Mailer.prototype._getListHeaders = function (listData) {
     // make sure an url looks like <protocol:url>
-    var formatListUrl = function (url) {
+    const formatListUrl = function (url) {
         url = url.replace(/[\s<]+|[\s>]+/g, "");
         if (/^(https?|mailto|ftp):/.test(url)) {
-            return "<" + url + ">";
+            return `<${url}>`;
         }
         if (/^[^@]+@[^@]+$/.test(url)) {
-            return "<mailto:" + url + ">";
+            return `<mailto:${url}>`;
         }
 
-        return "<http://" + url + ">";
+        return `<http://${url}>`;
     };
 
-    return Object.keys(listData).map(function (key) {
+    return Object.keys(listData).map((key) => {
         return {
-            key: "list-" + key.toLowerCase().trim(),
-            value: [].concat(listData[key] || []).map(function (value) {
+            key: `list-${key.toLowerCase().trim()}`,
+            value: [].concat(listData[key] || []).map((value) => {
                 if (typeof value === "string") {
                     return formatListUrl(value);
                 }
                 return {
                     prepared: true,
-                    value: [].concat(value || []).map(function (value) {
+                    value: [].concat(value || []).map((value) => {
                         if (typeof value === "string") {
                             return formatListUrl(value);
                         }
                         if (value && value.url) {
-                            return formatListUrl(value.url) + (value.comment ? " (" + value.comment + ")" : "");
+                            return formatListUrl(value.url) + (value.comment ? ` (${value.comment})` : "");
                         }
                         return "";
                     }).join(", ")

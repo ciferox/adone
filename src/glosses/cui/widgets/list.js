@@ -1,6 +1,6 @@
 
 const is = adone.is;
-var helpers = require("../helpers");
+const helpers = require("../helpers");
 
 export default class List extends adone.cui.widget.Element {
     constructor(options = { }) {
@@ -128,7 +128,7 @@ export default class List extends adone.cui.widget.Element {
                 if (options.vi && key.name === "m" && key.shift) {
                     // TODO: Maybe use Math.min(this.items.length,
                     // ... for calculating visible items elsewhere.
-                    var visible = Math.min(
+                    const visible = Math.min(
                         this.height - this.iheight,
                         this.items.length) / 2 | 0;
                     this.move(this.childBase + visible - this.selected);
@@ -163,7 +163,9 @@ export default class List extends adone.cui.widget.Element {
                             value = err;
                             err = null;
                         }
-                        if (err || !value) return this.screen.render();
+                        if (err || !value) {
+                            return this.screen.render(); 
+                        }
                         this.select(this.find(value, key.ch === "?"));
                         this.screen.render();
                     });
@@ -172,7 +174,7 @@ export default class List extends adone.cui.widget.Element {
         }
 
         this.on("resize", () => {
-            var visible = this.height - this.iheight;
+            const visible = this.height - this.iheight;
             // if (this.selected < visible - 1) {
             if (visible >= this.selected + 1) {
                 this.childBase = 0;
@@ -199,7 +201,7 @@ export default class List extends adone.cui.widget.Element {
 
     createItem(content) {
         // Note: Could potentially use Button here.
-        var options = {
+        const options = {
             screen: this.screen,
             content,
             align: this.align || "left",
@@ -228,8 +230,10 @@ export default class List extends adone.cui.widget.Element {
 
         ["bg", "fg", "bold", "underline", "blink", "inverse", "invisible"].forEach((name) => {
             options[name] = () => {
-                var attr = this.items[this.selected] === item && this.interactive ? this.style.selected[name] : this.style.item[name];
-                if (is.function(attr)) attr = attr(item);
+                let attr = this.items[this.selected] === item && this.interactive ? this.style.selected[name] : this.style.item[name];
+                if (is.function(attr)) {
+                    attr = attr(item);
+                }
                 return attr;
             };
         });
@@ -261,7 +265,7 @@ export default class List extends adone.cui.widget.Element {
     addItem(content) {
         content = is.string(content) ? content : content.getContent();
 
-        var item = this.createItem(content);
+        const item = this.createItem(content);
         item.position.top = this.items.length;
         if (!this.screen.autoPadding) {
             item.position.top = this.itop + this.items.length;
@@ -281,12 +285,12 @@ export default class List extends adone.cui.widget.Element {
     }
 
     removeItem(child) {
-        var i = this.getItemIndex(child);
+        const i = this.getItemIndex(child);
         if (~i && this.items[i]) {
             child = this.items.splice(i, 1)[0];
             this.ritems.splice(i, 1);
             this.remove(child);
-            for (var j = i; j < this.items.length; j++) {
+            for (let j = i; j < this.items.length; j++) {
                 this.items[j].position.top--;
             }
             if (i === this.selected) {
@@ -299,11 +303,15 @@ export default class List extends adone.cui.widget.Element {
 
     insertItem(child, content) {
         content = is.string(content) ? content : content.getContent();
-        var i = this.getItemIndex(child);
-        if (!~i) return;
-        if (i >= this.items.length) return this.appendItem(content);
-        var item = this.createItem(content);
-        for (var j = i; j < this.items.length; j++) {
+        const i = this.getItemIndex(child);
+        if (!~i) {
+            return; 
+        }
+        if (i >= this.items.length) {
+            return this.appendItem(content);
+        }
+        const item = this.createItem(content);
+        for (let j = i; j < this.items.length; j++) {
             this.items[j].position.top++;
         }
         item.position.top = i + (!this.screen.autoPadding ? 1 : 0);
@@ -322,8 +330,10 @@ export default class List extends adone.cui.widget.Element {
 
     setItem(child, content) {
         content = is.string(content) ? content : content.getContent();
-        var i = this.getItemIndex(child);
-        if (!~i) return;
+        const i = this.getItemIndex(child);
+        if (!~i) {
+            return; 
+        }
         this.items[i].setContent(content);
         this.ritems[i] = content;
     }
@@ -333,10 +343,10 @@ export default class List extends adone.cui.widget.Element {
     }
 
     setItems(items) {
-        var original = this.items.slice()
-            , selected = this.selected
-            , sel = this.ritems[this.selected]
-            , i = 0;
+        let original = this.items.slice(),
+            selected = this.selected,
+            sel = this.ritems[this.selected],
+            i = 0;
 
         items = items.slice();
 
@@ -388,10 +398,12 @@ export default class List extends adone.cui.widget.Element {
     }
 
     spliceItem(child, n) {
-        var i = this.getItemIndex(child);
-        if (!~i) return;
-        var items = Array.prototype.slice.call(arguments, 2);
-        var removed = [];
+        let i = this.getItemIndex(child);
+        if (!~i) {
+            return;
+        }
+        const items = Array.prototype.slice.call(arguments, 2);
+        const removed = [];
         while (n--) {
             removed.push(this.removeItem(i));
         }
@@ -405,7 +417,9 @@ export default class List extends adone.cui.widget.Element {
         const start = this.selected + (back ? -1 : 1);
         let i;
 
-        if (is.number(search)) search += "";
+        if (is.number(search)) {
+            search = String(search); 
+        }
 
         if (search && search[0] === "/" && search[search.length - 1] === "/") {
             try {
@@ -413,7 +427,9 @@ export default class List extends adone.cui.widget.Element {
             } catch (e) { }
         }
 
-        var test = is.string(search) ? function (item) { return !!~item.indexOf(search); } : (search.test ? search.test.bind(search) : search);
+        const test = is.string(search) ? function (item) {
+            return Boolean(~item.indexOf(search)); 
+        } : (search.test ? search.test.bind(search) : search);
 
         if (!is.function(test)) {
             if (this.screen.options.debug) {
@@ -424,17 +440,25 @@ export default class List extends adone.cui.widget.Element {
 
         if (!back) {
             for (i = start; i < this.ritems.length; i++) {
-                if (test(helpers.cleanTags(this.ritems[i]))) return i;
+                if (test(helpers.cleanTags(this.ritems[i]))) {
+                    return i; 
+                }
             }
             for (i = 0; i < start; i++) {
-                if (test(helpers.cleanTags(this.ritems[i]))) return i;
+                if (test(helpers.cleanTags(this.ritems[i]))) {
+                    return i; 
+                }
             }
         } else {
             for (i = start; i >= 0; i--) {
-                if (test(helpers.cleanTags(this.ritems[i]))) return i;
+                if (test(helpers.cleanTags(this.ritems[i]))) {
+                    return i;
+                }
             }
             for (i = this.ritems.length - 1; i > start; i--) {
-                if (test(helpers.cleanTags(this.ritems[i]))) return i;
+                if (test(helpers.cleanTags(this.ritems[i]))) {
+                    return i; 
+                }
             }
         }
 
@@ -445,17 +469,19 @@ export default class List extends adone.cui.widget.Element {
         if (is.number(child)) {
             return child;
         } else if (is.string(child)) {
-            var i = this.ritems.indexOf(child);
-            if (~i) return i;
+            let i = this.ritems.indexOf(child);
+            if (~i) {
+                return i; 
+            }
             for (i = 0; i < this.ritems.length; i++) {
                 if (helpers.cleanTags(this.ritems[i]) === child) {
                     return i;
                 }
             }
             return -1;
-        } else {
-            return this.items.indexOf(child);
-        }
+        } 
+        return this.items.indexOf(child);
+        
     }
 
     select(index) {
@@ -480,12 +506,16 @@ export default class List extends adone.cui.widget.Element {
             index = this.items.length - 1;
         }
 
-        if (this.selected === index && this._listInitialized) return;
+        if (this.selected === index && this._listInitialized) {
+            return; 
+        }
         this._listInitialized = true;
 
         this.selected = index;
         this.value = helpers.cleanTags(this.ritems[this.selected]);
-        if (!this.parent) return;
+        if (!this.parent) {
+            return; 
+        }
         this.setScroll(this.selected);
 
         // XXX Move `action` and `select` events here.
@@ -514,8 +544,10 @@ export default class List extends adone.cui.widget.Element {
             return callback();
         }
 
-        var focused = this.screen.focused;
-        if (focused && focused._done) focused._done("stop");
+        const focused = this.screen.focused;
+        if (focused && focused._done) {
+            focused._done("stop"); 
+        }
         this.screen.saveFocus();
 
         // XXX Keep above:
@@ -526,26 +558,36 @@ export default class List extends adone.cui.widget.Element {
         this.focus();
         this.show();
         this.select(0);
-        if (label) this.setLabel(label);
+        if (label) {
+            this.setLabel(label);
+        }
         this.screen.render();
         this.once("action", (el, selected) => {
-            if (label) this.removeLabel();
+            if (label) {
+                this.removeLabel();
+            }
             this.screen.restoreFocus();
             this.hide();
             this.screen.render();
-            if (!el) return callback();
+            if (!el) {
+                return callback(); 
+            }
             return callback(null, helpers.cleanTags(this.ritems[selected]));
         });
     }
 
     enterSelected(i) {
-        if (i != null) this.select(i);
+        if (i != null) {
+            this.select(i);
+        }
         this.emit("action", this.items[this.selected], this.selected);
         this.emit("select", this.items[this.selected], this.selected);
     }
 
     cancelSelected(i) {
-        if (i != null) this.select(i);
+        if (i != null) {
+            this.select(i);
+        }
         this.emit("action");
         this.emit("cancel");
     }

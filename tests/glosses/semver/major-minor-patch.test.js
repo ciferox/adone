@@ -2,9 +2,9 @@
 
 const semver = adone.semver;
 
-describe("semver", function () {
-    describe("major-minor-patch", function () {
-        it("major tests", function() {
+describe("semver", () => {
+    describe("major-minor-patch", () => {
+        it("major tests", () => {
             // [range, version]
             // Version should be detectable despite extra characters
             [
@@ -17,16 +17,16 @@ describe("semver", function () {
                 ["\t13.2.3", 13],
                 ["=21.2.3", 21, true],
                 ["v=34.2.3", 34, true]
-            ].forEach(function(tuple) {
-                let range = tuple[0];
-                let version = tuple[1];
-                let loose = tuple[2] || false;
-                let msg = "major(" + range + ") = " + version;
+            ].forEach((tuple) => {
+                const range = tuple[0];
+                const version = tuple[1];
+                const loose = tuple[2] || false;
+                const msg = `major(${range}) = ${version}`;
                 assert.equal(semver.major(range, loose), version, msg);
             });
         });
 
-        it("minor tests", function() {
+        it("minor tests", () => {
             // [range, version]
             // Version should be detectable despite extra characters
             [
@@ -39,16 +39,16 @@ describe("semver", function () {
                 ["\t1.13.3", 13],
                 ["=1.21.3", 21, true],
                 ["v=1.34.3", 34, true]
-            ].forEach(function(tuple) {
-                let range = tuple[0];
-                let version = tuple[1];
-                let loose = tuple[2] || false;
-                let msg = "minor(" + range + ") = " + version;
+            ].forEach((tuple) => {
+                const range = tuple[0];
+                const version = tuple[1];
+                const loose = tuple[2] || false;
+                const msg = `minor(${range}) = ${version}`;
                 assert.equal(semver.minor(range, loose), version, msg);
             });
         });
 
-        it("patch tests", function() {
+        it("patch tests", () => {
             // [range, version]
             // Version should be detectable despite extra characters
             [
@@ -61,11 +61,11 @@ describe("semver", function () {
                 ["\t1.2.13", 13],
                 ["=1.2.21", 21, true],
                 ["v=1.2.34", 34, true]
-            ].forEach(function(tuple) {
-                let range = tuple[0];
-                let version = tuple[1];
-                let loose = tuple[2] || false;
-                let msg = "patch(" + range + ") = " + version;
+            ].forEach((tuple) => {
+                const range = tuple[0];
+                const version = tuple[1];
+                const loose = tuple[2] || false;
+                const msg = `patch(${range}) = ${version}`;
                 assert.equal(semver.patch(range, loose), version, msg);
             });
         });

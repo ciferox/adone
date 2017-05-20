@@ -20,9 +20,9 @@ async function wiredep(options = {}) {
     config = new HelperStore();
 
     config.set
-        ("on-file-updated", options.onFileUpdated || function () { })
-        ("on-main-not-found", options.onMainNotFound || function () { })
-        ("on-path-injected", options.onPathInjected || function () { });
+        ("on-file-updated", options.onFileUpdated || () => { })
+        ("on-main-not-found", options.onMainNotFound || () => { })
+        ("on-path-injected", options.onPathInjected || () => { });
 
     config.set
         ("bower.json", options.bowerJson || JSON.parse(await adone.fs.readFile(adone.std.path.join(cwd, "./bower.json"))))
@@ -41,9 +41,9 @@ async function wiredep(options = {}) {
         ("stream", options.stream ? options.stream : {});
 
     adone.vendor.lodash.map(config.get("file-types"), "detect").
-        forEach(function (fileType) {
+        forEach((fileType) => {
             adone.util.keys(fileType)
-                .forEach(function (detectableFileType) {
+                .forEach((detectableFileType) => {
                     const detectableFileTypes = config.get("detectable-file-types");
 
                     if (detectableFileTypes.indexOf(detectableFileType) === -1) {
@@ -63,7 +63,7 @@ async function wiredep(options = {}) {
 
     return config.get("stream").src ||
         adone.util.keys(config.get("global-dependencies-sorted"))
-            .reduce(function (acc, depType) {
+            .reduce((acc, depType) => {
                 if (config.get("global-dependencies-sorted")[depType].length) {
                     acc[depType] = config.get("global-dependencies-sorted")[depType];
                 }
@@ -75,10 +75,10 @@ async function wiredep(options = {}) {
 function mergeFileTypesWithDefaults(optsFileTypes) {
     const fileTypes = adone.vendor.lodash.clone(fileTypesDefault, true);
 
-    adone.vendor.lodash(optsFileTypes).each(function (fileTypeConfig, fileType) {
+    adone.vendor.lodash(optsFileTypes).each((fileTypeConfig, fileType) => {
         // fallback to the default type for all html-like extensions (php, twig, hbs, etc)
-        fileTypes[fileType] = fileTypes[fileType] || fileTypes["default"];
-        adone.vendor.lodash.each(fileTypeConfig, function (config, configKey) {
+        fileTypes[fileType] = fileTypes[fileType] || fileTypes.default;
+        adone.vendor.lodash.each(fileTypeConfig, (config, configKey) => {
             if (adone.vendor.lodash.isPlainObject(fileTypes[fileType][configKey])) {
                 fileTypes[fileType][configKey] =
                     adone.vendor.lodash.assign(fileTypes[fileType][configKey], config);

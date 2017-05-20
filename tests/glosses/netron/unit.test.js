@@ -1596,9 +1596,9 @@ describe("Netron", () => {
                             const data = packet[adone.netron.GenesisNetron._DATA];
                             if (data.secret === "right secret") {
                                 return true;
-                            } else {
-                                return false;
-                            }
+                            } 
+                            return false;
+                            
                         }
                     }
 
@@ -1638,7 +1638,7 @@ describe("Netron", () => {
                 it.skip("custom action on server", async () => {
                     const min_action = ACTION.MAX - 20;
                     const max_action = ACTION.MAX - 1;
-                    const an =  Math.round(min_action + Math.random() * (max_action - min_action));
+                    const an = Math.round(min_action + Math.random() * (max_action - min_action));
                     const sendData = "hello";
                     const p = new Promise((resolve) => {
                         class ServerNetron extends Netron {

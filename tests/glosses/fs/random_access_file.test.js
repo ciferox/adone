@@ -1,4 +1,4 @@
-const tmp = adone.std.path.join(adone.std.os.tmpdir(), "raf-" + process.pid + "-" + Date.now());
+const tmp = adone.std.path.join(adone.std.os.tmpdir(), `raf-${process.pid}-${Date.now()}`);
 let i = 0;
 
 try {
@@ -8,12 +8,12 @@ try {
 }
 
 function gen() {
-    return adone.std.path.join(tmp, ++i + ".txt");
+    return adone.std.path.join(tmp, `${++i}.txt`);
 }
 
-describe("fs", "RandomAccessFile", function() {
-    it("write and read", async function () {
-        const file = await  adone.fs.RandomAccessFile.open(gen());
+describe("fs", "RandomAccessFile", () => {
+    it("write and read", async () => {
+        const file = await adone.fs.RandomAccessFile.open(gen());
         let isOk = true;
         try {
             await file.write(new Buffer("hello"), 0);
@@ -27,8 +27,8 @@ describe("fs", "RandomAccessFile", function() {
         assert.isOk(isOk);
     });
 
-    it("read empty", async function () {
-        const file = await  adone.fs.RandomAccessFile.open(gen());
+    it("read empty", async () => {
+        const file = await adone.fs.RandomAccessFile.open(gen());
         let isOk = true;
         try {
             const buf = await file.read(0, 0);
@@ -41,8 +41,8 @@ describe("fs", "RandomAccessFile", function() {
         assert.isOk(isOk);
     });
 
-    it("read range > file", async function () {
-        const file = await  adone.fs.RandomAccessFile.open(gen());
+    it("read range > file", async () => {
+        const file = await adone.fs.RandomAccessFile.open(gen());
         let isOk = false;
         try {
             await file.read(5, 0);
@@ -54,8 +54,8 @@ describe("fs", "RandomAccessFile", function() {
         assert.isOk(isOk);
     });
 
-    it("random access write and read", async function () {
-        const file = await  adone.fs.RandomAccessFile.open(gen());
+    it("random access write and read", async () => {
+        const file = await adone.fs.RandomAccessFile.open(gen());
         let isOk = true;
 
         try {
@@ -76,14 +76,14 @@ describe("fs", "RandomAccessFile", function() {
         assert.isOk(isOk);
     });
 
-    it("re-open", async function () {
+    it("re-open", async () => {
         const name = gen();
-        const file = await  adone.fs.RandomAccessFile.open(name);
+        const file = await adone.fs.RandomAccessFile.open(name);
         let isOk = true;
 
         try {
             await file.write(new Buffer("hello"), 10);
-            const file2 = await  adone.fs.RandomAccessFile.open(name);
+            const file2 = await adone.fs.RandomAccessFile.open(name);
             const buf = await file2.read(5, 10);
             assert.deepEqual(buf, new Buffer("hello"));
             await file.close();
@@ -94,15 +94,15 @@ describe("fs", "RandomAccessFile", function() {
         assert.isOk(isOk);
     });
 
-    it("re-open and truncate", async function () {
+    it("re-open and truncate", async () => {
         const name = gen();
-        const file = await  adone.fs.RandomAccessFile.open(name);
+        const file = await adone.fs.RandomAccessFile.open(name);
         let file2;
         let isOk = false;
 
         try {
             await file.write(new Buffer("hello"), 10);
-            file2 = await  adone.fs.RandomAccessFile.open(name, { truncate: 0 });
+            file2 = await adone.fs.RandomAccessFile.open(name, { truncate: 0 });
             await file2.read(5, 10);
         } catch (err) {
             isOk = (err.message === "Could not satisfy length");
@@ -112,19 +112,19 @@ describe("fs", "RandomAccessFile", function() {
         assert.isOk(isOk);
     });
 
-    it("append mode", async function() {
+    it("append mode", async () => {
         const name = gen();
-        let file = await  adone.fs.RandomAccessFile.open(name, { appendable: true });
+        let file = await adone.fs.RandomAccessFile.open(name, { appendable: true });
         let isOk = true;
         try {
             await file.write(new Buffer("hello"));
             await file.write(new Buffer(", "));
             await file.close();
-            file = await  adone.fs.RandomAccessFile.open(name, { appendable: true });
+            file = await adone.fs.RandomAccessFile.open(name, { appendable: true });
             await file.write(new Buffer("world"));
             await file.write(new Buffer("!!!"));
             await file.close();
-            file = await  adone.fs.RandomAccessFile.open(name, { writable: false });
+            file = await adone.fs.RandomAccessFile.open(name, { writable: false });
             let buf = await file.read(7, 2);
             assert.deepEqual(buf, new Buffer("llo, wo"));
             buf = await file.read(2, 9);
@@ -140,9 +140,9 @@ describe("fs", "RandomAccessFile", function() {
         assert.isOk(isOk);
     });
 
-    it("mkdir path", async function () {
-        const name = adone.std.path.join(tmp, ++i + "-folder", "test.txt");
-        const file = await  adone.fs.RandomAccessFile.open(name);
+    it("mkdir path", async () => {
+        const name = adone.std.path.join(tmp, `${++i}-folder`, "test.txt");
+        const file = await adone.fs.RandomAccessFile.open(name);
         let isOk = true;
 
         try {
@@ -157,11 +157,11 @@ describe("fs", "RandomAccessFile", function() {
         assert.isOk(isOk);
     });
 
-    it("end", async function () {
+    it("end", async () => {
         const name = gen();
         const atime = new Date(1000 * Math.round((Date.now() + 1000 * 60 * 60 * 10) / 1000));
         const mtime = new Date(1000 * Math.round((Date.now() + 1000 * 60 * 60 * 20) / 1000));
-        const file = await  adone.fs.RandomAccessFile.open(name, { atime });
+        const file = await adone.fs.RandomAccessFile.open(name, { atime });
         let isOk = true;
         try {
             await file.end();

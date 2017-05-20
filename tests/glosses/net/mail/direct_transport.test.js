@@ -1,10 +1,10 @@
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
-var net = require("net");
-var directTransport = adone.net.mail.directTransport;
-var SMTPServer = require("smtp-server").SMTPServer;
+const net = require("net");
+const directTransport = adone.net.mail.directTransport;
+const SMTPServer = require("smtp-server").SMTPServer;
 
-var PORT_NUMBER = 8712;
+const PORT_NUMBER = 8712;
 
 function MockBuilder(envelope, message) {
     this.envelope = envelope;
@@ -27,34 +27,34 @@ MockBuilder.prototype.getHeader = function () {
 describe("SMTP Transport Tests", function () {
     this.timeout(100 * 1000); // eslint-disable-line
 
-    var server;
-    var retryCount = 0;
+    let server;
+    let retryCount = 0;
 
-    beforeEach(function (done) {
+    beforeEach((done) => {
         server = new SMTPServer({
             disabledCommands: ["STARTTLS", "AUTH"],
 
-            onData: function (stream, session, callback) {
-                stream.on("data", function () {});
-                stream.on("end", function () {
-                    var err;
+            onData(stream, session, callback) {
+                stream.on("data", () => {});
+                stream.on("end", () => {
+                    let err;
                     if (/retry@/.test(session.envelope.mailFrom.address) && retryCount++ < 3) {
                         err = new Error("Please try again later");
                         err.responseCode = 451;
                         return callback(err);
-                    } else {
-                        return callback(null, "OK");
-                    }
+                    } 
+                    return callback(null, "OK");
+                    
                 });
             },
 
-            onMailFrom: function (address, session, callback) {
+            onMailFrom(address, session, callback) {
                 if (/invalid@/.test(address.address)) {
                     return callback(new Error("Invalid sender"));
                 }
                 return callback(); // Accept the address
             },
-            onRcptTo: function (address, session, callback) {
+            onRcptTo(address, session, callback) {
                 if (/invalid@/.test(address.address)) {
                     return callback(new Error("Invalid recipient"));
                 }
@@ -66,32 +66,32 @@ describe("SMTP Transport Tests", function () {
         server.listen(PORT_NUMBER, done);
     });
 
-    afterEach(function (done) {
+    afterEach((done) => {
         server.close(done);
     });
 
-    it("Should expose version number", function () {
-        var client = directTransport();
+    it("Should expose version number", () => {
+        const client = directTransport();
         expect(client.name).to.exist;
         expect(client.version).to.exist;
     });
 
-    it("Should send mail", function (done) {
-        var client = directTransport({
+    it("Should send mail", (done) => {
+        const client = directTransport({
             port: PORT_NUMBER,
             logger: false,
             debug: true
         });
 
-        var chunks = [];
-        var message = new Array(1024).join("teretere, vana kere\n");
+        const chunks = [];
+        const message = new Array(1024).join("teretere, vana kere\n");
 
-        server.on("data", function (connection, chunk) {
+        server.on("data", (connection, chunk) => {
             chunks.push(chunk);
         });
 
-        server.on("dataReady", function (connection, callback) {
-            var body = Buffer.concat(chunks);
+        server.on("dataReady", (connection, callback) => {
+            const body = Buffer.concat(chunks);
             expect(body.toString()).to.equal(message.trim().replace(/\n/g, "\r\n"));
             callback(null, true);
         });
@@ -102,15 +102,15 @@ describe("SMTP Transport Tests", function () {
                 from: "test@[127.0.0.1]",
                 to: ["test@[127.0.0.1]"]
             }, message)
-        }, function (err, info) {
+        }, (err, info) => {
             expect(err).to.not.exist;
             expect(info.accepted).to.deep.equal(["test@[127.0.0.1]"]);
             done();
         });
     });
 
-    it("Should retry mail", function (done) {
-        var client = directTransport({
+    it("Should retry mail", (done) => {
+        const client = directTransport({
             port: PORT_NUMBER,
             retryDelay: 1000,
             logger: false,
@@ -123,15 +123,15 @@ describe("SMTP Transport Tests", function () {
                 from: "retry@[127.0.0.1]",
                 to: ["test@[127.0.0.1]", "test2@[127.0.0.1]"]
             }, "test")
-        }, function (err, info) {
+        }, (err, info) => {
             expect(err).to.not.exist;
             expect(info.pending.length).to.equal(1);
             done();
         });
     });
 
-    it("Should reject mail", function (done) {
-        var client = directTransport({
+    it("Should reject mail", (done) => {
+        const client = directTransport({
             port: PORT_NUMBER,
             retryDelay: 1000,
             logger: false,
@@ -144,24 +144,24 @@ describe("SMTP Transport Tests", function () {
                 from: "invalid@[127.0.0.1]",
                 to: ["test@[127.0.0.1]", "test2@[127.0.0.1]"]
             }, "test")
-        }, function (err) {
+        }, (err) => {
             expect(err).to.exist;
             expect(err.errors[0].recipients).to.deep.equal(["test@[127.0.0.1]", "test2@[127.0.0.1]"]);
             done();
         });
     });
 
-    it("Should resolve MX", function (done) {
-        var client = directTransport({
+    it("Should resolve MX", (done) => {
+        const client = directTransport({
             port: PORT_NUMBER,
             retryDelay: 1000,
             logger: false,
             debug: true
         });
 
-        client._resolveMx("kreata.ee", function (err, list) {
+        client._resolveMx("kreata.ee", (err, list) => {
             expect(err).to.not.exist;
-            expect(list.sort(function (a, b) {
+            expect(list.sort((a, b) => {
                 return a.priority - b.priority;
             })).to.deep.equal([{
                 exchange: "aspmx.l.google.com",
@@ -177,15 +177,15 @@ describe("SMTP Transport Tests", function () {
         });
     });
 
-    it("Should resolve A", function (done) {
-        var client = directTransport({
+    it("Should resolve A", (done) => {
+        const client = directTransport({
             port: PORT_NUMBER,
             retryDelay: 1000,
             logger: false,
             debug: true
         });
 
-        client._resolveMx("localhost.kreata.ee", function (err, list) {
+        client._resolveMx("localhost.kreata.ee", (err, list) => {
             expect(err).to.not.exist;
             expect(list).to.deep.equal([{
                 priority: 0,
@@ -195,22 +195,22 @@ describe("SMTP Transport Tests", function () {
         });
     });
 
-    it("Should send mail to next alternative MX", function (done) {
-        var client = directTransport({
+    it("Should send mail to next alternative MX", (done) => {
+        const client = directTransport({
             port: PORT_NUMBER,
             logger: false,
             debug: false
         });
 
-        var chunks = [];
-        var message = new Array(1024).join("teretere, vana kere\n");
+        const chunks = [];
+        const message = new Array(1024).join("teretere, vana kere\n");
 
-        server.on("data", function (connection, chunk) {
+        server.on("data", (connection, chunk) => {
             chunks.push(chunk);
         });
 
-        server.on("dataReady", function (connection, callback) {
-            var body = Buffer.concat(chunks);
+        server.on("dataReady", (connection, callback) => {
+            const body = Buffer.concat(chunks);
             expect(body.toString()).to.equal(message.trim().replace(/\n/g, "\r\n"));
             callback(null, true);
         });
@@ -231,25 +231,25 @@ describe("SMTP Transport Tests", function () {
                 from: "test@test",
                 to: ["test@test"]
             }, message)
-        }, function (err, info) {
+        }, (err, info) => {
             expect(err).to.not.exist;
             expect(info.accepted).to.deep.equal(["test@test"]);
             done();
         });
     });
 
-    it("Should send mail using proxied socket", function (done) {
-        var client = directTransport({
+    it("Should send mail using proxied socket", (done) => {
+        const client = directTransport({
             port: 25,
             logger: false,
             debug: true,
-            getSocket: function (options, callback) {
-                var socket = net.connect(PORT_NUMBER, "localhost");
-                var errHandler = function (err) {
+            getSocket(options, callback) {
+                const socket = net.connect(PORT_NUMBER, "localhost");
+                const errHandler = function (err) {
                     callback(err);
                 };
                 socket.on("error", errHandler);
-                socket.on("connect", function () {
+                socket.on("connect", () => {
                     socket.removeListener("error", errHandler);
                     callback(null, {
                         connection: socket
@@ -258,15 +258,15 @@ describe("SMTP Transport Tests", function () {
             }
         });
 
-        var chunks = [],
+        let chunks = [],
             message = new Array(1024).join("teretere, vana kere\n");
 
-        server.on("data", function (connection, chunk) {
+        server.on("data", (connection, chunk) => {
             chunks.push(chunk);
         });
 
-        server.on("dataReady", function (connection, callback) {
-            var body = Buffer.concat(chunks);
+        server.on("dataReady", (connection, callback) => {
+            const body = Buffer.concat(chunks);
             expect(body.toString()).to.equal(message.trim().replace(/\n/g, "\r\n"));
             callback(null, true);
         });
@@ -277,7 +277,7 @@ describe("SMTP Transport Tests", function () {
                 from: "test@[127.0.0.1]",
                 to: ["test@[127.0.0.1]"]
             }, message)
-        }, function (err, info) {
+        }, (err, info) => {
             expect(err).to.not.exist;
             expect(info.accepted).to.deep.equal(["test@[127.0.0.1]"]);
             done();

@@ -28,12 +28,12 @@ function MailComposer(mail) {
  */
 MailComposer.prototype.compile = function () {
     this._alternatives = this.getAlternatives();
-    this._htmlNode = this._alternatives.filter(function (alternative) {
+    this._htmlNode = this._alternatives.filter((alternative) => {
         return /^text\/html\b/i.test(alternative.contentType);
     }).pop();
-    this._attachments = this.getAttachments(!!this._htmlNode);
+    this._attachments = this.getAttachments(Boolean(this._htmlNode));
 
-    this._useRelated = !!(this._htmlNode && this._attachments.related.length);
+    this._useRelated = Boolean(this._htmlNode && this._attachments.related.length);
     this._useAlternative = this._alternatives.length > 1;
     this._useMixed = this._attachments.attached.length > 1 || (this._alternatives.length && this._attachments.attached.length === 1);
 
@@ -71,14 +71,14 @@ MailComposer.prototype.compile = function () {
         "subject",
         "message-id",
         "date"
-    ].forEach(function (header) {
-        var key = header.replace(/-(\w)/g, function (o, c) {
+    ].forEach((header) => {
+        const key = header.replace(/-(\w)/g, (o, c) => {
             return c.toUpperCase();
         });
         if (this.mail[key]) {
             this.message.setHeader(header, this.mail[key]);
         }
-    }.bind(this));
+    });
 
     // Sets custom envelope
     if (this.mail.envelope) {
@@ -98,9 +98,9 @@ MailComposer.prototype.compile = function () {
  * @returns {Object} An object of arrays (`related` and `attached`)
  */
 MailComposer.prototype.getAttachments = function (findRelated) {
-    var attachments = [].concat(this.mail.attachments || []).map(function (attachment, i) {
-        var data;
-        var isMessageNode = /^message\//i.test(attachment.contentType);
+    const attachments = [].concat(this.mail.attachments || []).map((attachment, i) => {
+        let data;
+        const isMessageNode = /^message\//i.test(attachment.contentType);
 
         if (/^data:/i.test(attachment.path || attachment.href)) {
             attachment = this._processDataUrl(attachment);
@@ -116,9 +116,9 @@ MailComposer.prototype.getAttachments = function (findRelated) {
         if (attachment.filename) {
             data.filename = attachment.filename;
         } else if (!isMessageNode && attachment.filename !== false) {
-            data.filename = adone.std.path.basename(attachment.path || attachment.href || "") || "attachment-" + (i + 1);
+            data.filename = adone.std.path.basename(attachment.path || attachment.href || "") || `attachment-${i + 1}`;
             if (data.filename.indexOf(".") < 0) {
-                data.filename += "." + mime.detectExtension(data.contentType);
+                data.filename += `.${mime.detectExtension(data.contentType)}`;
             }
         }
 
@@ -154,23 +154,23 @@ MailComposer.prototype.getAttachments = function (findRelated) {
         }
 
         return data;
-    }.bind(this));
+    });
 
     if (!findRelated) {
         return {
             attached: attachments,
             related: []
         };
-    } else {
-        return {
-            attached: attachments.filter(function (attachment) {
-                return !attachment.cid;
-            }),
-            related: attachments.filter(function (attachment) {
-                return !!attachment.cid;
-            })
-        };
-    }
+    } 
+    return {
+        attached: attachments.filter((attachment) => {
+            return !attachment.cid;
+        }),
+        related: attachments.filter((attachment) => {
+            return Boolean(attachment.cid);
+        })
+    };
+    
 };
 
 /**
@@ -179,7 +179,7 @@ MailComposer.prototype.getAttachments = function (findRelated) {
  * @returns {Array} An array of alternative elements. Includes the `text` and `html` values as well
  */
 MailComposer.prototype.getAlternatives = function () {
-    var alternatives = [],
+    let alternatives = [],
         text, html, watchHtml, icalEvent;
 
     if (this.mail.text) {
@@ -190,7 +190,7 @@ MailComposer.prototype.getAlternatives = function () {
                 content: this.mail.text
             };
         }
-        text.contentType = "text/plain" + (!text.encoding && mime.isPlainText(text.content) ? "" : "; charset=utf-8");
+        text.contentType = `text/plain${!text.encoding && mime.isPlainText(text.content) ? "" : "; charset=utf-8"}`;
     }
 
     if (this.mail.watchHtml) {
@@ -201,7 +201,7 @@ MailComposer.prototype.getAlternatives = function () {
                 content: this.mail.watchHtml
             };
         }
-        watchHtml.contentType = "text/watch-html" + (!watchHtml.encoding && mime.isPlainText(watchHtml.content) ? "" : "; charset=utf-8");
+        watchHtml.contentType = `text/watch-html${!watchHtml.encoding && mime.isPlainText(watchHtml.content) ? "" : "; charset=utf-8"}`;
     }
 
     if (this.mail.icalEvent) {
@@ -212,7 +212,7 @@ MailComposer.prototype.getAlternatives = function () {
                 content: this.mail.icalEvent
             };
         }
-        icalEvent.contentType = "text/calendar; charset=\"utf-8\"; method=" + (icalEvent.method || "PUBLISH").toString().trim().toUpperCase();
+        icalEvent.contentType = `text/calendar; charset="utf-8"; method=${(icalEvent.method || "PUBLISH").toString().trim().toUpperCase()}`;
         if (!icalEvent.headers) {
             icalEvent.headers = {};
         }
@@ -227,7 +227,7 @@ MailComposer.prototype.getAlternatives = function () {
                 content: this.mail.html
             };
         }
-        html.contentType = "text/html" + (!html.encoding && mime.isPlainText(html.content) ? "" : "; charset=utf-8");
+        html.contentType = `text/html${!html.encoding && mime.isPlainText(html.content) ? "" : "; charset=utf-8"}`;
     }
 
     [].
@@ -236,8 +236,8 @@ MailComposer.prototype.getAlternatives = function () {
     concat(html || []).
     concat(icalEvent || []).
     concat(this.mail.alternatives || []).
-    forEach(function (alternative) {
-        var data;
+    forEach((alternative) => {
+        let data;
 
         if (/^data:/i.test(alternative.path || alternative.href)) {
             alternative = this._processDataUrl(alternative);
@@ -281,7 +281,7 @@ MailComposer.prototype.getAlternatives = function () {
         }
 
         alternatives.push(data);
-    }.bind(this));
+    });
 
     return alternatives;
 };
@@ -294,7 +294,7 @@ MailComposer.prototype.getAlternatives = function () {
  * @returns {Object} BuildMail node element
  */
 MailComposer.prototype._createMixed = function (parentNode) {
-    var node;
+    let node;
 
     if (!parentNode) {
         node = new BuildMail("multipart/mixed", {
@@ -317,12 +317,12 @@ MailComposer.prototype._createMixed = function (parentNode) {
         this._createRelated(node);
     }
 
-    [].concat(!this._useAlternative && this._alternatives || []).concat(this._attachments.attached || []).forEach(function (element) {
+    [].concat(!this._useAlternative && this._alternatives || []).concat(this._attachments.attached || []).forEach((element) => {
         // if the element is a html node from related subpart then ignore it
         if (!this._useRelated || element !== this._htmlNode) {
             this._createContentNode(node, element);
         }
-    }.bind(this));
+    });
 
     return node;
 };
@@ -335,7 +335,7 @@ MailComposer.prototype._createMixed = function (parentNode) {
  * @returns {Object} BuildMail node element
  */
 MailComposer.prototype._createAlternative = function (parentNode) {
-    var node;
+    let node;
 
     if (!parentNode) {
         node = new BuildMail("multipart/alternative", {
@@ -352,13 +352,13 @@ MailComposer.prototype._createAlternative = function (parentNode) {
         });
     }
 
-    this._alternatives.forEach(function (alternative) {
+    this._alternatives.forEach((alternative) => {
         if (this._useRelated && this._htmlNode === alternative) {
             this._createRelated(node);
         } else {
             this._createContentNode(node, alternative);
         }
-    }.bind(this));
+    });
 
     return node;
 };
@@ -370,7 +370,7 @@ MailComposer.prototype._createAlternative = function (parentNode) {
  * @returns {Object} BuildMail node element
  */
 MailComposer.prototype._createRelated = function (parentNode) {
-    var node;
+    let node;
 
     if (!parentNode) {
         node = new BuildMail("multipart/related; type=\"text/html\"", {
@@ -389,9 +389,9 @@ MailComposer.prototype._createRelated = function (parentNode) {
 
     this._createContentNode(node, this._htmlNode);
 
-    this._attachments.related.forEach(function (alternative) {
+    this._attachments.related.forEach((alternative) => {
         this._createContentNode(node, alternative);
-    }.bind(this));
+    });
 
     return node;
 };
@@ -407,8 +407,8 @@ MailComposer.prototype._createContentNode = function (parentNode, element) {
     element = element || {};
     element.content = element.content || "";
 
-    var node;
-    var encoding = (element.encoding || "utf8")
+    let node;
+    const encoding = (element.encoding || "utf8")
         .toString()
         .toLowerCase()
         .replace(/[-_\s]/g, "");
@@ -436,7 +436,7 @@ MailComposer.prototype._createContentNode = function (parentNode, element) {
     }
 
     if (element.cid) {
-        node.setHeader("Content-Id", "<" + element.cid.replace(/[<>]/g, "") + ">");
+        node.setHeader("Content-Id", `<${element.cid.replace(/[<>]/g, "")}>`);
     }
 
     if (element.contentTransferEncoding) {
@@ -470,7 +470,7 @@ MailComposer.prototype._createContentNode = function (parentNode, element) {
  * @return {Object} Parsed element
  */
 MailComposer.prototype._processDataUrl = function (element) {
-    var parts = (element.path || element.href).match(/^data:((?:[^;]*;)*(?:[^,]*)),(.*)$/i);
+    const parts = (element.path || element.href).match(/^data:((?:[^;]*;)*(?:[^,]*)),(.*)$/i);
     if (!parts) {
         return element;
     }
@@ -485,7 +485,7 @@ MailComposer.prototype._processDataUrl = function (element) {
         element.href = false;
     }
 
-    parts[1].split(";").forEach(function (item) {
+    parts[1].split(";").forEach((item) => {
         if (/^\w+\/[^\/]+$/i.test(item)) {
             element.contentType = element.contentType || item.toLowerCase();
         }

@@ -92,7 +92,7 @@ export function isRestrictedWord(id) {
 }
 
 export function isIdentifierNameES5(id) {
-    var i, iz, ch;
+    let i, iz, ch;
 
     if (id.length === 0) {
         return false; 
@@ -117,7 +117,7 @@ function decodeUtf16(lead, trail) {
 }
 
 export function isIdentifierNameES6(id) {
-    var i, iz, ch, lowCh, check;
+    let i, iz, ch, lowCh, check;
 
     if (id.length === 0) {
         return false; 
@@ -126,13 +126,13 @@ export function isIdentifierNameES6(id) {
     check = code.isIdentifierStartES6;
     for (i = 0, iz = id.length; i < iz; ++i) {
         ch = id.charCodeAt(i);
-        if (0xD800 <= ch && ch <= 0xDBFF) {
+        if (ch >= 0xD800 && ch <= 0xDBFF) {
             ++i;
             if (i >= iz) {
                 return false; 
             }
             lowCh = id.charCodeAt(i);
-            if (!(0xDC00 <= lowCh && lowCh <= 0xDFFF)) {
+            if (!(lowCh >= 0xDC00 && lowCh <= 0xDFFF)) {
                 return false;
             }
             ch = decodeUtf16(ch, lowCh);

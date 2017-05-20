@@ -241,10 +241,10 @@ function Stepper(opts) {
     state = Step.PROPERTIES.reduce((state, key, i) => {
         return (state[key] = typeof opts[key] !== "undefined" ? opts[key] : Step.DEFAULTS[i], state);
     }, {
-            isRunning: false,
-            type: opts.type,
-            pins: this.pins
-        });
+        isRunning: false,
+        type: opts.type,
+        pins: this.pins
+    });
 
     priv.set(this, state);
 

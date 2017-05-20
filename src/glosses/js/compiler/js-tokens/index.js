@@ -8,20 +8,20 @@ export default /((['"])(?:(?!\2|\\).|\\(?:\r\n|[\s\S]))*(\2)?|`(?:[^`\\$]|\\[\s\
 export function matchToToken(match) {
     const token = { type: "invalid", value: match[0] };
     if (match[1]) {
-        token.type = "string", token.closed = !!(match[3] || match[4]);
-    }    else if (match[5]) {
+        token.type = "string", token.closed = Boolean(match[3] || match[4]);
+    } else if (match[5]) {
         token.type = "comment";
-    }    else if (match[6]) {
-        token.type = "comment", token.closed = !!match[7];
-    }    else if (match[8]) {
+    } else if (match[6]) {
+        token.type = "comment", token.closed = Boolean(match[7]);
+    } else if (match[8]) {
         token.type = "regex";
-    }    else if (match[9]) {
+    } else if (match[9]) {
         token.type = "number";
-    }    else if (match[10]) {
+    } else if (match[10]) {
         token.type = "name";
-    }    else if (match[11]) {
+    } else if (match[11]) {
         token.type = "punctuator";
-    }    else if (match[12]) {
+    } else if (match[12]) {
         token.type = "whitespace";
     }
     return token;

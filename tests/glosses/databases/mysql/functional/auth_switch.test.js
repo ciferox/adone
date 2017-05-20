@@ -54,10 +54,10 @@ describe("glosses", "databases", "mysql", "functional", "auth switch", () => {
                 const asrmd = new AuthSwitchRequestMoreData(Buffer.from(`hahaha ${count}`));
                 connection.writePacket(asrmd.toPacket());
                 return TestAuthSwitchHandshake.prototype.readClientAuthSwitchResponse;
-            } else {
-                connection.writeOk();
-                return TestAuthSwitchHandshake.prototype.dispatchCommands;
-            }
+            } 
+            connection.writeOk();
+            return TestAuthSwitchHandshake.prototype.dispatchCommands;
+            
         }
 
         dispatchCommands(packet, connection) {

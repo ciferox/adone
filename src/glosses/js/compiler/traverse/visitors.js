@@ -20,15 +20,21 @@ const { clone } = adone.vendor.lodash;
  *   visitors
  */
 export function explode(visitor) {
-    if (visitor._exploded) { return visitor; }
+    if (visitor._exploded) {
+        return visitor; 
+    }
     visitor._exploded = true;
 
     // normalise pipes
     for (const nodeType in visitor) {
-        if (shouldIgnoreKey(nodeType)) { continue; }
+        if (shouldIgnoreKey(nodeType)) {
+            continue; 
+        }
 
         const parts: string[] = nodeType.split("|");
-        if (parts.length === 1) { continue; }
+        if (parts.length === 1) {
+            continue; 
+        }
 
         const fns = visitor[nodeType];
         delete visitor[nodeType];
@@ -53,10 +59,14 @@ export function explode(visitor) {
 
     // add type wrappers
     for (const nodeType of (Object.keys(visitor): Array)) {
-        if (shouldIgnoreKey(nodeType)) { continue; }
+        if (shouldIgnoreKey(nodeType)) {
+            continue; 
+        }
 
         const wrapper = virtualTypes[nodeType];
-        if (!wrapper) { continue; }
+        if (!wrapper) {
+            continue; 
+        }
 
         // wrap all the functions
         const fns = visitor[nodeType];
@@ -83,7 +93,9 @@ export function explode(visitor) {
 
     // add aliases
     for (const nodeType in visitor) {
-        if (shouldIgnoreKey(nodeType)) { continue; }
+        if (shouldIgnoreKey(nodeType)) {
+            continue; 
+        }
 
         const fns = visitor[nodeType];
 
@@ -95,7 +107,9 @@ export function explode(visitor) {
             aliases = [deprecratedKey];
         }
 
-        if (!aliases) { continue; }
+        if (!aliases) {
+            continue; 
+        }
 
         // clear it from the visitor
         delete visitor[nodeType];
@@ -111,7 +125,9 @@ export function explode(visitor) {
     }
 
     for (const nodeType in visitor) {
-        if (shouldIgnoreKey(nodeType)) { continue; }
+        if (shouldIgnoreKey(nodeType)) {
+            continue; 
+        }
 
         ensureCallbackArrays(visitor[nodeType]);
     }
@@ -120,7 +136,9 @@ export function explode(visitor) {
 }
 
 export function verify(visitor) {
-    if (visitor._verified) { return; }
+    if (visitor._verified) {
+        return; 
+    }
 
     if (typeof visitor === "function") {
         throw new Error(messages.get("traverseVerifyRootFunction"));
@@ -131,7 +149,9 @@ export function verify(visitor) {
             validateVisitorMethods(nodeType, visitor[nodeType]);
         }
 
-        if (shouldIgnoreKey(nodeType)) { continue; }
+        if (shouldIgnoreKey(nodeType)) {
+            continue; 
+        }
 
         if (t.TYPES.indexOf(nodeType) < 0) {
             throw new Error(messages.get("traverseVerifyNodeType", nodeType));
@@ -194,7 +214,9 @@ function wrapWithStateOrWrapper(oldVisitor, state, wrapper: ?Function) {
         let fns = oldVisitor[key];
 
         // not an enter/exit array of callbacks
-        if (!Array.isArray(fns)) { continue; }
+        if (!Array.isArray(fns)) {
+            continue; 
+        }
 
         fns = fns.map((fn) => {
             let newFn = fn;
@@ -220,7 +242,9 @@ function wrapWithStateOrWrapper(oldVisitor, state, wrapper: ?Function) {
 
 function ensureEntranceObjects(obj) {
     for (const key in obj) {
-        if (shouldIgnoreKey(key)) { continue; }
+        if (shouldIgnoreKey(key)) {
+            continue; 
+        }
 
         const fns = obj[key];
         if (typeof fns === "function") {
@@ -230,8 +254,12 @@ function ensureEntranceObjects(obj) {
 }
 
 function ensureCallbackArrays(obj) {
-    if (obj.enter && !Array.isArray(obj.enter)) { obj.enter = [obj.enter]; }
-    if (obj.exit && !Array.isArray(obj.exit)) { obj.exit = [obj.exit]; }
+    if (obj.enter && !Array.isArray(obj.enter)) {
+        obj.enter = [obj.enter]; 
+    }
+    if (obj.exit && !Array.isArray(obj.exit)) {
+        obj.exit = [obj.exit]; 
+    }
 }
 
 function wrapCheck(wrapper, fn) {
@@ -246,13 +274,19 @@ function wrapCheck(wrapper, fn) {
 
 function shouldIgnoreKey(key) {
     // internal/hidden key
-    if (key[0] === "_") { return true; }
+    if (key[0] === "_") {
+        return true; 
+    }
 
     // ignore function keys
-    if (key === "enter" || key === "exit" || key === "shouldSkip") { return true; }
+    if (key === "enter" || key === "exit" || key === "shouldSkip") {
+        return true; 
+    }
 
     // ignore other options
-    if (key === "blacklist" || key === "noScope" || key === "skipKeys") { return true; }
+    if (key === "blacklist" || key === "noScope" || key === "skipKeys") {
+        return true; 
+    }
 
     return false;
 }

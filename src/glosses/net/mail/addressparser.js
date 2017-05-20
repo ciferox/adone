@@ -16,14 +16,14 @@ module.exports = addressparser;
  * @return {Array} An array of address objects
  */
 function addressparser(str) {
-    var tokenizer = new Tokenizer(str);
-    var tokens = tokenizer.tokenize();
+    const tokenizer = new Tokenizer(str);
+    const tokens = tokenizer.tokenize();
 
-    var addresses = [];
-    var address = [];
-    var parsedAddresses = [];
+    const addresses = [];
+    let address = [];
+    let parsedAddresses = [];
 
-    tokens.forEach(function (token) {
+    tokens.forEach((token) => {
         if (token.type === "operator" && (token.value === "," || token.value === ";")) {
             if (address.length) {
                 addresses.push(address);
@@ -38,7 +38,7 @@ function addressparser(str) {
         addresses.push(address);
     }
 
-    addresses.forEach(function (address) {
+    addresses.forEach((address) => {
         address = _handleAddress(address);
         if (address.length) {
             parsedAddresses = parsedAddresses.concat(address);
@@ -55,19 +55,19 @@ function addressparser(str) {
  * @return {Object} Address object
  */
 function _handleAddress(tokens) {
-    var token;
-    var isGroup = false;
-    var state = "text";
-    var address;
-    var addresses = [];
-    var data = {
+    let token;
+    let isGroup = false;
+    let state = "text";
+    let address;
+    const addresses = [];
+    const data = {
         address: [],
         comment: [],
         group: [],
         text: []
     };
-    var i;
-    var len;
+    let i;
+    let len;
 
     // Filter out <addresses>, (comments) and regular text
     for (i = 0, len = tokens.length; i < len; i++) {
@@ -121,13 +121,13 @@ function _handleAddress(tokens) {
                 }
             }
 
-            var _regexHandler = function (address) {
+            const _regexHandler = function (address) {
                 if (!data.address.length) {
                     data.address = [address.trim()];
                     return " ";
-                } else {
-                    return address;
-                }
+                } 
+                return address;
+                
             };
 
             // still no address
@@ -158,29 +158,29 @@ function _handleAddress(tokens) {
         data.address = data.address.join(" ");
 
         // Prevents single or double quoted emails which fails certain email validation
-        if(data.address.match(/^(\"|\'){1}.+@.+(\"|\'){1}$/)) {
+        if (data.address.match(/^(\"|\'){1}.+@.+(\"|\'){1}$/)) {
             data.address = data.address.substring(1, data.address.length - 1);
         }
 
         if (!data.address && isGroup) {
             return [];
-        } else {
-            address = {
-                address: data.address || data.text || "",
-                name: data.text || data.address || ""
-            };
+        } 
+        address = {
+            address: data.address || data.text || "",
+            name: data.text || data.address || ""
+        };
 
-            if (address.address === address.name) {
-                if ((address.address || "").match(/@/)) {
-                    address.name = "";
-                } else {
-                    address.address = "";
-                }
-
+        if (address.address === address.name) {
+            if ((address.address || "").match(/@/)) {
+                address.name = "";
+            } else {
+                address.address = "";
             }
 
-            addresses.push(address);
         }
+
+        addresses.push(address);
+        
     }
 
     return addresses;
@@ -226,13 +226,13 @@ Tokenizer.prototype.operators = {
  * @return {Array} An array of operator|text tokens
  */
 Tokenizer.prototype.tokenize = function () {
-    var chr, list = [];
-    for (var i = 0, len = this.str.length; i < len; i++) {
+    let chr, list = [];
+    for (let i = 0, len = this.str.length; i < len; i++) {
         chr = this.str.charAt(i);
         this.checkChar(chr);
     }
 
-    this.list.forEach(function (node) {
+    this.list.forEach((node) => {
         node.value = (node.value || "").toString().trim();
         if (node.value) {
             list.push(node);

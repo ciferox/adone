@@ -11,7 +11,7 @@ describe("uk", () => {
         let i;
 
         function equalTest(input, mmm, i) {
-            assert.equal(adone.datetime(input, mmm).month(), i, input + " should be month " + (i + 1));
+            assert.equal(adone.datetime(input, mmm).month(), i, `${input} should be month ${i + 1}`);
         }
         for (i = 0; i < 12; i++) {
             tests[i] = tests[i].split(" ");
@@ -52,7 +52,7 @@ describe("uk", () => {
         let i;
 
         for (i = 0; i < a.length; i++) {
-            assert.equal(b.format(a[i][0]), a[i][1], a[i][0] + " ---> " + a[i][1]);
+            assert.equal(b.format(a[i][0]), a[i][1], `${a[i][0]} ---> ${a[i][1]}`);
         }
     });
 
@@ -115,14 +115,14 @@ describe("uk", () => {
 
     it("format month case", () => {
         const months = {
-            "nominative": "січень_лютий_березень_квітень_травень_червень_липень_серпень_вересень_жовтень_листопад_грудень".split("_"),
-            "accusative": "січня_лютого_березня_квітня_травня_червня_липня_серпня_вересня_жовтня_листопада_грудня".split("_")
+            nominative: "січень_лютий_березень_квітень_травень_червень_липень_серпень_вересень_жовтень_листопад_грудень".split("_"),
+            accusative: "січня_лютого_березня_квітня_травня_червня_липня_серпня_вересня_жовтня_листопада_грудня".split("_")
         };
         let i;
 
         for (i = 0; i < 12; i++) {
-            assert.equal(adone.datetime([2011, i, 1]).format("D MMMM"), "1 " + months.accusative[i], "1 " + months.accusative[i]);
-            assert.equal(adone.datetime([2011, i, 1]).format("MMMM"), months.nominative[i], "1 " + months.nominative[i]);
+            assert.equal(adone.datetime([2011, i, 1]).format("D MMMM"), `1 ${months.accusative[i]}`, `1 ${months.accusative[i]}`);
+            assert.equal(adone.datetime([2011, i, 1]).format("MMMM"), months.nominative[i], `1 ${months.nominative[i]}`);
         }
     });
 
@@ -276,11 +276,11 @@ describe("uk", () => {
             m = adone.datetime().add({
                 d: i
             });
-            assert.equal(m.calendar(), m.format("[У] dddd [о" + (m.hours() === 11 ? "б" : "") + "] LT"), "Today + " + i + " days current time");
+            assert.equal(m.calendar(), m.format(`[У] dddd [о${m.hours() === 11 ? "б" : ""}] LT`), `Today + ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("[У] dddd [о] LT"), "Today + " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format("[У] dddd [о] LT"), `Today + ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("[У] dddd [о] LT"), "Today + " + i + " days end of day");
+            assert.equal(m.calendar(), m.format("[У] dddd [о] LT"), `Today + ${i} days end of day`);
         }
     });
 
@@ -294,11 +294,11 @@ describe("uk", () => {
                 case 3:
                 case 5:
                 case 6:
-                    return "[Минулої] dddd [о" + (d.hours() === 11 ? "б" : "") + "] LT";
+                    return `[Минулої] dddd [о${d.hours() === 11 ? "б" : ""}] LT`;
                 case 1:
                 case 2:
                 case 4:
-                    return "[Минулого] dddd [о" + (d.hours() === 11 ? "б" : "") + "] LT";
+                    return `[Минулого] dddd [о${d.hours() === 11 ? "б" : ""}] LT`;
             }
         }
 
@@ -306,11 +306,11 @@ describe("uk", () => {
             m = adone.datetime().subtract({
                 d: i
             });
-            assert.equal(m.calendar(), m.format(makeFormat(m)), "Today - " + i + " days current time");
+            assert.equal(m.calendar(), m.format(makeFormat(m)), `Today - ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format(makeFormat(m)), "Today - " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format(makeFormat(m)), `Today - ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format(makeFormat(m)), "Today - " + i + " days end of day");
+            assert.equal(m.calendar(), m.format(makeFormat(m)), `Today - ${i} days end of day`);
         }
     });
 

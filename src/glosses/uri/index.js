@@ -388,19 +388,19 @@ export default class URI {
     username(value) {
         if (is.undefined(value)) {
             return this._parts.username || "";
-        } else {
-            this._parts.username = value || null;
-            return this;
         }
+        this._parts.username = value || null;
+        return this;
+
     }
 
     password(value) {
         if (is.undefined(value)) {
             return this._parts.password || "";
-        } else {
-            this._parts.password = value || null;
-            return this;
         }
+        this._parts.password = value || null;
+        return this;
+
     }
 
     protocol(value) {
@@ -480,11 +480,11 @@ export default class URI {
             }
 
             return (protocol ? `${protocol}://` : "") + this.authority();
-        } else {
-            const origin = new URI(value);
-            this.protocol(origin.protocol()).authority(origin.authority());
-            return this;
         }
+        const origin = new URI(value);
+        this.protocol(origin.protocol()).authority(origin.authority());
+        return this;
+
     }
 
     host(value) {
@@ -494,14 +494,14 @@ export default class URI {
 
         if (is.undefined(value)) {
             return this._parts.hostname ? URI._buildHost(this._parts) : "";
-        } else {
-            const res = URI._parseHost(value, this._parts);
-            if (res !== "/") {
-                throw new x.InvalidArgument(`Hostname "${value}" contains characters other than [A-Z0-9.-]`);
-            }
-
-            return this;
         }
+        const res = URI._parseHost(value, this._parts);
+        if (res !== "/") {
+            throw new x.InvalidArgument(`Hostname "${value}" contains characters other than [A-Z0-9.-]`);
+        }
+
+        return this;
+
     }
 
     authority(value) {
@@ -511,14 +511,14 @@ export default class URI {
 
         if (is.undefined(value)) {
             return this._parts.hostname ? URI._buildAuthority(this._parts) : "";
-        } else {
-            const res = URI._parseAuthority(value, this._parts);
-            if (res !== "/") {
-                throw new x.InvalidArgument(`Hostname "${value}" contains characters other than [A-Z0-9.-]`);
-            }
-
-            return this;
         }
+        const res = URI._parseAuthority(value, this._parts);
+        if (res !== "/") {
+            throw new x.InvalidArgument(`Hostname "${value}" contains characters other than [A-Z0-9.-]`);
+        }
+
+        return this;
+
     }
 
     userinfo(value) {
@@ -531,14 +531,14 @@ export default class URI {
         if (is.undefined(newUserinfo)) {
             const t = URI._buildUserinfo(this._parts);
             return t ? t.substring(0, t.length - 1) : t;
-        } else {
-            if (newUserinfo[newUserinfo.length - 1] !== "@") {
-                newUserinfo += "@";
-            }
-
-            URI._parseUserinfo(newUserinfo, this._parts);
-            return this;
         }
+        if (newUserinfo[newUserinfo.length - 1] !== "@") {
+            newUserinfo += "@";
+        }
+
+        URI._parseUserinfo(newUserinfo, this._parts);
+        return this;
+
     }
 
     resource(value) {
@@ -572,22 +572,22 @@ export default class URI {
             // grab domain and add another segment
             const end = this._parts.hostname.length - this.domain().length - 1;
             return this._parts.hostname.substring(0, end) || "";
-        } else {
-            const e = this._parts.hostname.length - this.domain().length;
-            const sub = this._parts.hostname.substring(0, e);
-            const replace = new RegExp(`^${escapeRegEx(sub)}`);
-
-            if (newSubdomain && newSubdomain.charAt(newSubdomain.length - 1) !== ".") {
-                newSubdomain += ".";
-            }
-
-            if (newSubdomain) {
-                URI._ensureValidHostname(newSubdomain);
-            }
-
-            this._parts.hostname = this._parts.hostname.replace(replace, newSubdomain);
-            return this;
         }
+        const e = this._parts.hostname.length - this.domain().length;
+        const sub = this._parts.hostname.substring(0, e);
+        const replace = new RegExp(`^${escapeRegEx(sub)}`);
+
+        if (newSubdomain && newSubdomain.charAt(newSubdomain.length - 1) !== ".") {
+            newSubdomain += ".";
+        }
+
+        if (newSubdomain) {
+            URI._ensureValidHostname(newSubdomain);
+        }
+
+        this._parts.hostname = this._parts.hostname.replace(replace, newSubdomain);
+        return this;
+
     }
 
     domain(value) {
@@ -619,22 +619,22 @@ export default class URI {
             let end = this._parts.hostname.length - this.tld(onlyDomain).length - 1;
             end = this._parts.hostname.lastIndexOf(".", end - 1) + 1;
             return this._parts.hostname.substring(end) || "";
-        } else {
-            if (!newDomain) {
-                throw new x.InvalidArgument("cannot set domain empty");
-            }
-
-            URI._ensureValidHostname(newDomain);
-
-            if (!this._parts.hostname || this.is("IP")) {
-                this._parts.hostname = newDomain;
-            } else {
-                const replace = new RegExp(`${escapeRegEx(this.domain())}$`);
-                this._parts.hostname = this._parts.hostname.replace(replace, newDomain);
-            }
-
-            return this;
         }
+        if (!newDomain) {
+            throw new x.InvalidArgument("cannot set domain empty");
+        }
+
+        URI._ensureValidHostname(newDomain);
+
+        if (!this._parts.hostname || this.is("IP")) {
+            this._parts.hostname = newDomain;
+        } else {
+            const replace = new RegExp(`${escapeRegEx(this.domain())}$`);
+            this._parts.hostname = this._parts.hostname.replace(replace, newDomain);
+        }
+
+        return this;
+
     }
 
     tld(value) {
@@ -664,27 +664,27 @@ export default class URI {
             }
 
             return tld;
-        } else {
-            let replace;
+        }
+        let replace;
 
-            if (!newTLD) {
-                throw new x.InvalidArgument("cannot set TLD empty");
-            } else if (newTLD.match(/[^a-zA-Z0-9-]/)) {
-                if (SLD && SLD.is(newTLD)) {
-                    replace = new RegExp(`${escapeRegEx(this.tld())}$`);
-                    this._parts.hostname = this._parts.hostname.replace(replace, newTLD);
-                } else {
-                    throw new x.InvalidArgument(`TLD "${newTLD}" contains characters other than [A-Z0-9]`);
-                }
-            } else if (!this._parts.hostname || this.is("IP")) {
-                throw new x.IllegalState("cannot set TLD on non-domain host");
-            } else {
+        if (!newTLD) {
+            throw new x.InvalidArgument("cannot set TLD empty");
+        } else if (newTLD.match(/[^a-zA-Z0-9-]/)) {
+            if (SLD && SLD.is(newTLD)) {
                 replace = new RegExp(`${escapeRegEx(this.tld())}$`);
                 this._parts.hostname = this._parts.hostname.replace(replace, newTLD);
+            } else {
+                throw new x.InvalidArgument(`TLD "${newTLD}" contains characters other than [A-Z0-9]`);
             }
-
-            return this;
+        } else if (!this._parts.hostname || this.is("IP")) {
+            throw new x.IllegalState("cannot set TLD on non-domain host");
+        } else {
+            replace = new RegExp(`${escapeRegEx(this.tld())}$`);
+            this._parts.hostname = this._parts.hostname.replace(replace, newTLD);
         }
+
+        return this;
+
     }
 
     directory(value) {
@@ -709,35 +709,35 @@ export default class URI {
 
             return newDirectory ? URI.decodePath(res) : res;
 
-        } else {
-            if (newDirectory instanceof URI) {
-                newDirectory = newDirectory.path();
-            }
+        }
+        if (newDirectory instanceof URI) {
+            newDirectory = newDirectory.path();
+        }
 
-            const e = this._parts.path.length - this.filename().length;
-            const directory = this._parts.path.substring(0, e);
-            const replace = new RegExp(`^${escapeRegEx(directory)}`);
+        const e = this._parts.path.length - this.filename().length;
+        const directory = this._parts.path.substring(0, e);
+        const replace = new RegExp(`^${escapeRegEx(directory)}`);
 
             // fully qualifier directories begin with a slash
-            if (!this.is("relative")) {
-                if (!newDirectory) {
-                    newDirectory = "/";
-                }
-
-                if (newDirectory.charAt(0) !== "/") {
-                    newDirectory = `/${newDirectory}`;
-                }
+        if (!this.is("relative")) {
+            if (!newDirectory) {
+                newDirectory = "/";
             }
+
+            if (newDirectory.charAt(0) !== "/") {
+                newDirectory = `/${newDirectory}`;
+            }
+        }
 
             // directories always end with a slash
-            if (newDirectory && newDirectory.charAt(newDirectory.length - 1) !== "/") {
-                newDirectory += "/";
-            }
-
-            newDirectory = URI.recodePath(newDirectory);
-            this._parts.path = this._parts.path.replace(replace, newDirectory);
-            return this;
+        if (newDirectory && newDirectory.charAt(newDirectory.length - 1) !== "/") {
+            newDirectory += "/";
         }
+
+        newDirectory = URI.recodePath(newDirectory);
+        this._parts.path = this._parts.path.replace(replace, newDirectory);
+        return this;
+
     }
 
     filename(value) {
@@ -757,27 +757,27 @@ export default class URI {
             const res = this._parts.path.substring(pos + 1);
 
             return newFilename ? URI.decodePathSegment(res) : res;
-        } else {
-            let mutatedDirectory = false;
-
-            if (newFilename.charAt(0) === "/") {
-                newFilename = newFilename.substring(1);
-            }
-
-            if (newFilename.match(/\.?\//)) {
-                mutatedDirectory = true;
-            }
-
-            const replace = new RegExp(`${escapeRegEx(this.filename())}$`);
-            newFilename = URI.recodePath(newFilename);
-            this._parts.path = this._parts.path.replace(replace, newFilename);
-
-            if (mutatedDirectory) {
-                this.normalizePath();
-            }
-
-            return this;
         }
+        let mutatedDirectory = false;
+
+        if (newFilename.charAt(0) === "/") {
+            newFilename = newFilename.substring(1);
+        }
+
+        if (newFilename.match(/\.?\//)) {
+            mutatedDirectory = true;
+        }
+
+        const replace = new RegExp(`${escapeRegEx(this.filename())}$`);
+        newFilename = URI.recodePath(newFilename);
+        this._parts.path = this._parts.path.replace(replace, newFilename);
+
+        if (mutatedDirectory) {
+            this.normalizePath();
+        }
+
+        return this;
+
     }
 
     suffix(value) {
@@ -804,32 +804,32 @@ export default class URI {
             const s = filename.substring(pos + 1);
             const res = (/^[a-z0-9%]+$/i).test(s) ? s : "";
             return newSuffix ? URI.decodePathSegment(res) : res;
-        } else {
-            if (newSuffix.charAt(0) === ".") {
-                newSuffix = newSuffix.substring(1);
-            }
-
-            const suffix = this.suffix();
-            let replace;
-
-            if (!suffix) {
-                if (!newSuffix) {
-                    return this;
-                }
-                this._parts.path += `.${URI.recodePath(newSuffix)}`;
-            } else if (!newSuffix) {
-                replace = new RegExp(`${escapeRegEx(`.${suffix}`)}$`);
-            } else {
-                replace = new RegExp(`${escapeRegEx(suffix)}$`);
-            }
-
-            if (replace) {
-                newSuffix = URI.recodePath(newSuffix);
-                this._parts.path = this._parts.path.replace(replace, newSuffix);
-            }
-
-            return this;
         }
+        if (newSuffix.charAt(0) === ".") {
+            newSuffix = newSuffix.substring(1);
+        }
+
+        const suffix = this.suffix();
+        let replace;
+
+        if (!suffix) {
+            if (!newSuffix) {
+                return this;
+            }
+            this._parts.path += `.${URI.recodePath(newSuffix)}`;
+        } else if (!newSuffix) {
+            replace = new RegExp(`${escapeRegEx(`.${suffix}`)}$`);
+        } else {
+            replace = new RegExp(`${escapeRegEx(suffix)}$`);
+        }
+
+        if (replace) {
+            newSuffix = URI.recodePath(newSuffix);
+            this._parts.path = this._parts.path.replace(replace, newSuffix);
+        }
+
+        return this;
+
     }
 
     segment(_segment, _value) {
@@ -1029,18 +1029,18 @@ export default class URI {
         if (is.undefined(newPath) || newPath === true) {
             const res = this._parts.path || (this._parts.hostname ? "/" : "");
             return newPath ? (this._parts.urn ? URI.decodeUrnPath : URI.decodePath)(res) : res;
-        } else {
-            if (newPath instanceof URI) {
-                newPath = newPath.path();
-            }
-
-            if (this._parts.urn) {
-                this._parts.path = newPath ? URI.recodeUrnPath(newPath) : "";
-            } else {
-                this._parts.path = newPath ? URI.recodePath(newPath) : "/";
-            }
-            return this;
         }
+        if (newPath instanceof URI) {
+            newPath = newPath.path();
+        }
+
+        if (this._parts.urn) {
+            this._parts.path = newPath ? URI.recodeUrnPath(newPath) : "";
+        } else {
+            this._parts.path = newPath ? URI.recodePath(newPath) : "/";
+        }
+        return this;
+
     }
 
     href(value) {
@@ -1291,7 +1291,6 @@ export default class URI {
 
     normalizePort() {
         // remove port of it's the protocol's default
-        adone.log(this._parts.protocol);
         if (is.string(this._parts.protocol)) {
             if (this._parts.port === defaultPorts[this._parts.protocol]) {
                 this._parts.port = null;
@@ -1622,28 +1621,28 @@ export default class URI {
     static resolve(...args) {
         if (args.length === 0) {
             return new URI(process.cwd());
-        } else {
-            let path = ".";
-            for (let i = 0; i < args.length; i++) {
-                if (URI.isAbsolute(args[i])) {
-                    path = args[i];
+        }
+        let path = ".";
+        for (let i = 0; i < args.length; i++) {
+            if (URI.isAbsolute(args[i])) {
+                path = args[i];
+            } else {
+                if (is.string(args[i])) {
+                    path = URI.join(path, args[i]);
+                } else if (args[i] instanceof URI) {
+                    path = URI.join(path, args[i].toString());
                 } else {
-                    if (is.string(args[i])) {
-                        path = URI.join(path, args[i]);
-                    } else if (args[i] instanceof URI) {
-                        path = URI.join(path, args[i].toString());
-                    } else {
-                        throw new x.InvalidArgument("URI.resolve() accepts only strings and URI's as arguments");
-                    }
+                    throw new x.InvalidArgument("URI.resolve() accepts only strings and URI's as arguments");
                 }
             }
-
-            if (!URI.isAbsolute(path)) {
-                path = URI.join(process.cwd(), path);
-            }
-
-            return new URI(path).toString();
         }
+
+        if (!URI.isAbsolute(path)) {
+            path = URI.join(process.cwd(), path);
+        }
+
+        return new URI(path).toString();
+
     }
 
     static _parseQuery(_string, escapeQuerySpace) {

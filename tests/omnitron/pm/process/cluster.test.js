@@ -271,7 +271,7 @@ describe("Process manager", () => {
                 });
             });
 
-            it("should return info about the workers", async function () {
+            it("should return info about the workers", async () => {
                 const { stdout, port, stderr } = processFiles(storage);
                 const p = new stuff.MainProcess({}, {
                     path: fixture("run_forever.js"),

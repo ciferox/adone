@@ -334,10 +334,10 @@ describe.skip("Schema", () => {
                 age: { type: "number", default: 5 },
                 tags: ["string"]
             }), {
-                    name: { type: "string" },
-                    age: { type: "number", default: 5 },
-                    tags: { type: "array", schema: "string" }
-                });
+                name: { type: "string" },
+                age: { type: "number", default: 5 },
+                tags: { type: "array", schema: "string" }
+            });
             done();
         });
 
@@ -347,10 +347,10 @@ describe.skip("Schema", () => {
                 age: { type: "number", default: 5 },
                 address: { city: "string" }
             }), {
-                    name: { type: "string" },
-                    age: { type: "number", default: 5 },
-                    address: { type: "object", schema: { city: { type: "string" } } }
-                });
+                name: { type: "string" },
+                age: { type: "number", default: 5 },
+                address: { type: "object", schema: { city: { type: "string" } } }
+            });
             done();
         });
     });

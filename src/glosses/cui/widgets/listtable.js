@@ -72,7 +72,9 @@ export default class ListTable extends adone.cui.widget.List {
 
         this._calculateMaxes();
 
-        if (!this._maxes) return;
+        if (!this._maxes) {
+            return; 
+        }
 
         this.addItem("");
 
@@ -89,13 +91,13 @@ export default class ListTable extends adone.cui.widget.List {
 
                 while (clen < width) {
                     if (align === "center") {
-                        cell = " " + cell + " ";
+                        cell = ` ${cell} `;
                         clen += 2;
                     } else if (align === "left") {
-                        cell = cell + " ";
+                        cell = `${cell} `;
                         clen += 1;
                     } else if (align === "right") {
-                        cell = " " + cell;
+                        cell = ` ${cell}`;
                         clen += 1;
                     }
                 }
@@ -147,11 +149,15 @@ export default class ListTable extends adone.cui.widget.List {
 
     render() {
         const coords = super.render();
-        if (!coords) return;
+        if (!coords) {
+            return; 
+        }
 
         this._calculateMaxes();
 
-        if (!this._maxes) return coords;
+        if (!this._maxes) {
+            return coords; 
+        }
 
         const lines = this.screen.lines;
         const xi = coords.xi;
@@ -166,16 +172,22 @@ export default class ListTable extends adone.cui.widget.List {
             border = this.options.border;
         }
 
-        if (!border || this.options.noCellBorders) return coords;
+        if (!border || this.options.noCellBorders) {
+            return coords; 
+        }
 
         // Draw border with correct angles.
         ry = 0;
         for (i = 0; i < height + 1; i++) {
-            if (!lines[yi + ry]) break;
+            if (!lines[yi + ry]) {
+                break; 
+            }
             rx = 0;
             this._maxes.slice(0, -1).forEach((max) => {
                 rx += max;
-                if (!lines[yi + ry][xi + rx + 1]) return;
+                if (!lines[yi + ry][xi + rx + 1]) {
+                    return; 
+                }
                 // center
                 if (ry === 0) {
                     // top
@@ -207,11 +219,15 @@ export default class ListTable extends adone.cui.widget.List {
 
         // Draw internal borders.
         for (ry = 1; ry < height; ry++) {
-            if (!lines[yi + ry]) break;
+            if (!lines[yi + ry]) {
+                break; 
+            }
             rx = 0;
             this._maxes.slice(0, -1).forEach((max) => {
                 rx += max;
-                if (!lines[yi + ry][xi + rx + 1]) return;
+                if (!lines[yi + ry][xi + rx + 1]) {
+                    return; 
+                }
                 if (this.options.fillCellBorders !== false) {
                     const lbg = lines[yi + ry][xi + rx][0] & 0x1ff;
                     rx++;

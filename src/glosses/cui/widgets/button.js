@@ -23,7 +23,7 @@ export default class Button extends adone.cui.widget.Input {
     press() {
         this.focus();
         this.value = true;
-        var result = this.emit("press");
+        const result = this.emit("press");
         delete this.value;
         return result;
     }

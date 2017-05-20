@@ -16,9 +16,13 @@ export function isBinding(node: Object, parent: Object): boolean {
             const key = keys[i];
             const val = parent[key];
             if (Array.isArray(val)) {
-                if (val.indexOf(node) >= 0) return true;
+                if (val.indexOf(node) >= 0) {
+                    return true; 
+                }
             } else {
-                if (val === node) return true;
+                if (val === node) {
+                    return true; 
+                }
             }
         }
     }
@@ -46,9 +50,9 @@ export function isReferenced(node: Object, parent: Object): boolean {
                 return true;
             } else if (parent.object === node) {
                 return true;
-            } else {
-                return false;
-            }
+            } 
+            return false;
+            
 
         // no: new.NODE
         // no: NODE.target
@@ -74,7 +78,9 @@ export function isReferenced(node: Object, parent: Object): boolean {
         case "FunctionDeclaration":
         case "FunctionExpression":
             for (const param of (parent.params: any[])) {
-                if (param === node) return false;
+                if (param === node) {
+                    return false; 
+                }
             }
 
             return parent.id !== node;
@@ -85,9 +91,9 @@ export function isReferenced(node: Object, parent: Object): boolean {
         case "ExportSpecifier":
             if (parent.source) {
                 return false;
-            } else {
-                return parent.local === node;
-            }
+            } 
+            return parent.local === node;
+            
 
         // no: export NODE from "foo";
         // no: export * as NODE from "foo";
@@ -105,9 +111,9 @@ export function isReferenced(node: Object, parent: Object): boolean {
         case "ClassProperty":
             if (parent.key === node) {
                 return parent.computed;
-            } else {
-                return parent.value === node;
-            }
+            } 
+            return parent.value === node;
+            
 
         // no: import NODE from "foo";
         // no: import * as NODE from "foo";
@@ -169,9 +175,9 @@ export function isReferenced(node: Object, parent: Object): boolean {
 export function isValidIdentifier(name: string): boolean {
     if (typeof name !== "string" || esutils.keyword.isReservedWordES6(name, true)) {
         return false;
-    } else {
-        return esutils.keyword.isIdentifierNameES6(name);
-    }
+    } 
+    return esutils.keyword.isIdentifierNameES6(name);
+    
 }
 
 /**
@@ -224,16 +230,18 @@ export function isScope(node: Object, parent: Object): boolean {
  */
 
 export function isImmutable(node: Object): boolean {
-    if (t.isType(node.type, "Immutable")) return true;
+    if (t.isType(node.type, "Immutable")) {
+        return true; 
+    }
 
     if (t.isIdentifier(node)) {
         if (node.name === "undefined") {
             // immutable!
             return true;
-        } else {
+        } 
             // no idea...
-            return false;
-        }
+        return false;
+        
     }
 
     return false;

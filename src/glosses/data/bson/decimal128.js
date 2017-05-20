@@ -542,10 +542,10 @@ export default class Decimal128 {
                 return `${string.join("")}Infinity`;
             } else if (combination === COMBINATION_NAN) {
                 return "NaN";
-            } else {
-                biasedExponent = (high >> 15) & EXPONENT_MASK;
-                significandMSB = 0x08 + ((high >> 14) & 0x01);
-            }
+            } 
+            biasedExponent = (high >> 15) & EXPONENT_MASK;
+            significandMSB = 0x08 + ((high >> 14) & 0x01);
+            
         } else {
             significandMSB = (high >> 14) & 0x07;
             biasedExponent = (high >> 17) & EXPONENT_MASK;

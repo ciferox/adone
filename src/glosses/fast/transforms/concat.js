@@ -2,7 +2,7 @@
 
 
 
-const {  is, std: { path }, x, fast: { File, Fast, helpers: { Concat } } } = adone;
+const { is, std: { path }, x, fast: { File, Fast, helpers: { Concat } } } = adone;
 
 export default function (file, options = {}) {
     if (!file) {

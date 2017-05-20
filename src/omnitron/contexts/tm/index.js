@@ -327,7 +327,9 @@ export default class TaskManager {
     async _uninstall(taskNames, cntainerId = "") {
         let uninstallCount = 0;
         for (const name of taskNames) {
-            if (!this._isCompatibleName(name, cntainerId)) { continue; }
+            if (!this._isCompatibleName(name, cntainerId)) {
+                continue; 
+            }
             const taskInfo = this._tasks.get(name);
             if (!is.undefined(taskInfo)) {
                 if (taskInfo.instances.size > 0) {

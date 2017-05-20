@@ -122,7 +122,8 @@ describe("Fast", () => {
                 let i = 1;
                 let values = [];
                 s.on("data", (x) => values.push(x));
-                while (s.write(i += 2));
+                while (s.write(i += 2)) {
+                }
                 s.resume();
                 await adone.promise.delay(1);
                 s.pause();
@@ -134,7 +135,9 @@ describe("Fast", () => {
                 values = [];
                 _truev = [];
                 _falsev = [];
-                while (s.write(i += 2));
+                while (s.write(i += 2)) {
+
+                }
                 s.resume();
                 await adone.promise.delay(1);
                 s.pause();
@@ -146,7 +149,7 @@ describe("Fast", () => {
                 values = [];
                 _truev = [];
                 _falsev = [];
-                while (s.write(++i));
+                while (s.write(++i)) { }
                 s.resume();
                 await adone.promise.delay(1);
                 s.pause();

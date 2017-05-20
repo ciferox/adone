@@ -28,9 +28,9 @@ async function detectDependencies(config) {
 
     config.set("global-dependencies-sorted", filterExcludedDependencies(
         config.get("detectable-file-types").
-            reduce(function (acc, fileType) {
+            reduce((acc, fileType) => {
                 if (!acc[fileType]) {
-                    acc[fileType] = prioritizeDependencies(config, "." + fileType);
+                    acc[fileType] = prioritizeDependencies(config, `.${fileType}`);
                 }
                 return acc;
             }, {}),
@@ -93,19 +93,19 @@ async function findMainFiles(config, component, componentConfigFile) {
         filePaths = componentConfigFile.scripts;
     } else {
         for (const type of ["js", "css"]) {
-            file[type] = adone.std.path.join(config.get("bower-directory"), component, componentConfigFile.name + "." + type);
+            file[type] = adone.std.path.join(config.get("bower-directory"), component, `${componentConfigFile.name}.${type}`);
 
             if (await adone.fs.exists(file[type])) {
-                filePaths.push(componentConfigFile.name + "." + type);
+                filePaths.push(`${componentConfigFile.name}.${type}`);
             }
         }
     }
 
-    let acc = new Array;
+    let acc = new Array();
     for (const filePath of filePaths) {
         acc = acc.concat(
             (await adone.fs.glob(filePath, { cwd, root: "/" }))
-            .map((path) =>  adone.std.path.join(cwd, path))
+            .map((path) => adone.std.path.join(cwd, path))
         );
     }
 
@@ -137,7 +137,7 @@ function gatherInfo(config) {
 
         const componentConfigFile = await findComponentConfigFile(config, component);
         if (!componentConfigFile) {
-            const error = new adone.x.NotFound(component + " is not installed. Try running `bower install` or remove the component from your bower.json file.");
+            const error = new adone.x.NotFound(`${component} is not installed. Try running \`bower install\` or remove the component from your bower.json file.`);
             error.code = "PKG_NOT_INSTALLED";
             throw error;
         }
@@ -161,7 +161,7 @@ function gatherInfo(config) {
         dep.type = fileTypes;
         dep.name = componentConfigFile.name;
 
-        const depIsExcluded = adone.vendor.lodash.find(config.get("exclude"), function (pattern) {
+        const depIsExcluded = adone.vendor.lodash.find(config.get("exclude"), (pattern) => {
             return adone.std.path.join(config.get("bower-directory"), component).match(pattern);
         });
 
@@ -193,7 +193,7 @@ function dependencyComparator(a, b) {
     let bNeedsA = false;
 
     aNeedsB = adone.util.keys(a.dependencies)
-        .some(function (dependency) {
+        .some((dependency) => {
             return dependency === b.name;
         });
 
@@ -202,7 +202,7 @@ function dependencyComparator(a, b) {
     }
 
     bNeedsA = adone.util.keys(b.dependencies)
-        .some(function (dependency) {
+        .some((dependency) => {
             return dependency === a.name;
         });
 
@@ -271,7 +271,7 @@ function mergeSort(items) {
 function prioritizeDependencies(config, fileType) {
     const globalDependencies = adone.vendor.lodash.toArray(config.get("global-dependencies").get());
 
-    const dependencies = globalDependencies.filter(function (dependency) {
+    const dependencies = globalDependencies.filter((dependency) => {
         return adone.vendor.lodash.includes(dependency.type, fileType);
     });
 
@@ -279,7 +279,7 @@ function prioritizeDependencies(config, fileType) {
             map((x) => x.main).
             flatten().
             value().
-            filter(function (main) {
+            filter((main) => {
                 return adone.std.path.extname(main) === fileType;
             });
 }
@@ -293,9 +293,9 @@ function prioritizeDependencies(config, fileType) {
  * @return {array} items that don't match any of the patterns
  */
 function filterExcludedDependencies(allDependencies, patterns) {
-    return adone.vendor.lodash.transform(allDependencies, function (result, dependencies, fileType) {
-        result[fileType] = adone.vendor.lodash.reject(dependencies, function (dependency) {
-            return adone.vendor.lodash.find(patterns, function (pattern) {
+    return adone.vendor.lodash.transform(allDependencies, (result, dependencies, fileType) => {
+        result[fileType] = adone.vendor.lodash.reject(dependencies, (dependency) => {
+            return adone.vendor.lodash.find(patterns, (pattern) => {
                 return dependency.replace(/\\/g, "/").match(pattern);
             });
         });

@@ -1,50 +1,50 @@
-'use strict';
-var ansiRegex = require('../');
-var ansiCodes = require('./ansi-codes');
-var allCodes = {};
-var supported = [];
-var unsupported = [];
+
+const ansiRegex = require("../");
+const ansiCodes = require("./ansi-codes");
+const allCodes = {};
+const supported = [];
+const unsupported = [];
 
 function addCodesToTest(codes) {
-	for (var code in codes) {
-		allCodes[code] = codes[code];
-	}
+    for (const code in codes) {
+        allCodes[code] = codes[code];
+    }
 }
 
 function identifySupportedCodes() {
-	var codeSupport = {};
+    let codeSupport = {};
 
-	for (var code in allCodes) {
-		codeSupport = {
-			code: code,
-			matches: ('\u001b' + code).match(ansiRegex()),
-			description: allCodes[code][0]
-		};
+    for (const code in allCodes) {
+        codeSupport = {
+            code,
+            matches: (`\u001b${code}`).match(ansiRegex()),
+            description: allCodes[code][0]
+        };
 
-		if (codeSupport.matches !== null && codeSupport.matches[0] === '\u001b' + code) {
-			supported.push(codeSupport);
-		} else {
-			unsupported.push(codeSupport);
-		}
-	}
+        if (codeSupport.matches !== null && codeSupport.matches[0] === `\u001b${code}`) {
+            supported.push(codeSupport);
+        } else {
+            unsupported.push(codeSupport);
+        }
+    }
 }
 
 function displaySupport() {
-	process.stdout.write('\u001b[32m');
+    process.stdout.write("\u001b[32m");
 
-	console.log('SUPPORTED');
-	for (var i = 0; i < supported.length; i++) {
-		console.log(supported[i]);
-	}
+    console.log("SUPPORTED");
+    for (let i = 0; i < supported.length; i++) {
+        console.log(supported[i]);
+    }
 
-	process.stdout.write('\u001b[31m');
-	console.log('UNSUPPORTED');
+    process.stdout.write("\u001b[31m");
+    console.log("UNSUPPORTED");
 
-	for (var j = 0; j < unsupported.length; j++) {
-		console.log(unsupported[j]);
-	}
+    for (let j = 0; j < unsupported.length; j++) {
+        console.log(unsupported[j]);
+    }
 
-	process.stdout.write('\u001b[0m');
+    process.stdout.write("\u001b[0m");
 }
 
 addCodesToTest(ansiCodes.vt52Codes);

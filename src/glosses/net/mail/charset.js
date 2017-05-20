@@ -1,5 +1,5 @@
 const { util: { iconv } } = adone;
-var charsets = require("./charsets");
+const charsets = require("./charsets");
 
 /**
  * Character set encoding and decoding functions
@@ -14,7 +14,7 @@ var charset = module.exports = {
      * @param {String} str String to be encoded
      * @return {Buffer} UTF-8 encoded typed array
      */
-    encode: function (str) {
+    encode(str) {
         return new Buffer(str, "utf-8");
     },
 
@@ -26,7 +26,7 @@ var charset = module.exports = {
      * @param {String} [fromCharset='UTF-8'] Binary data is decoded into string using this charset
      * @return {String} Decded string
      */
-    decode: function (buf, fromCharset) {
+    decode(buf, fromCharset) {
         fromCharset = charset.normalizeCharset(fromCharset || "UTF-8");
 
         if (/^(us\-)?ascii|utf\-8|7bit$/i.test(fromCharset)) {
@@ -43,10 +43,10 @@ var charset = module.exports = {
      * @param {String} [fromCharset='UTF-8'] Source encoding for the string
      * @return {Buffer} UTF-8 encoded typed array
      */
-    convert: function (data, fromCharset) {
+    convert(data, fromCharset) {
         fromCharset = charset.normalizeCharset(fromCharset || "UTF-8");
 
-        var bufString;
+        let bufString;
 
         if (typeof data !== "string") {
             if (/^(us\-)?ascii|utf\-8|7bit$/i.test(fromCharset)) {
@@ -65,7 +65,7 @@ var charset = module.exports = {
      * @param {String} charset Charset name to convert
      * @return {String} Canoninicalized charset name
      */
-    normalizeCharset: function (charset) {
+    normalizeCharset(charset) {
         charset = charset.toLowerCase().trim();
 
         // first pass

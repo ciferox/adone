@@ -135,7 +135,7 @@ export default class BufferList extends DuplexStream {
             return dst || new Buffer(0);
         }
 
-        const copy = !!dst;
+        const copy = Boolean(dst);
         const off = this._offset(srcStart);
         const len = srcEnd - srcStart;
         let bytes = len;
@@ -261,20 +261,20 @@ export default class BufferList extends DuplexStream {
 
 
 const methods = {
-    "readDoubleBE": 8,
-    "readDoubleLE": 8,
-    "readFloatBE": 4,
-    "readFloatLE": 4,
-    "readInt32BE": 4,
-    "readInt32LE": 4,
-    "readUInt32BE": 4,
-    "readUInt32LE": 4,
-    "readInt16BE": 2,
-    "readInt16LE": 2,
-    "readUInt16BE": 2,
-    "readUInt16LE": 2,
-    "readInt8": 1,
-    "readUInt8": 1
+    readDoubleBE: 8,
+    readDoubleLE: 8,
+    readFloatBE: 4,
+    readFloatLE: 4,
+    readInt32BE: 4,
+    readInt32LE: 4,
+    readUInt32BE: 4,
+    readUInt32LE: 4,
+    readInt16BE: 2,
+    readInt16LE: 2,
+    readUInt16BE: 2,
+    readUInt16LE: 2,
+    readInt8: 1,
+    readUInt8: 1
 };
 
 for (const m in methods) {

@@ -650,7 +650,9 @@ describe("Task Manager", () => {
                 });
 
                 for (let i = 0; i < 21; i++) {
-                    if (i >= 3 && modeId === 1) { continue; }
+                    if (i >= 3 && modeId === 1) {
+                        continue; 
+                    }
                     it(`execute task with ${i + 1} arguments`, async () => {
                         const args = [];
                         for (let n = 0; n < i; n++) {

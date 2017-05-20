@@ -20,7 +20,9 @@ export function remove() {
 
 export function _callRemovalHooks() {
     for (const fn of (hooks: Function[])) {
-        if (fn(this, this.parentPath)) return true;
+        if (fn(this, this.parentPath)) {
+            return true; 
+        }
     }
 }
 

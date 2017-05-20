@@ -7,20 +7,30 @@
 
 export function shareCommentsWithSiblings() {
     // NOTE: this assumes numbered keys
-    if (typeof this.key === "string") return;
+    if (typeof this.key === "string") {
+        return;
+    }
 
     const node = this.node;
-    if (!node) return;
+    if (!node) {
+        return; 
+    }
 
     const trailing = node.trailingComments;
     const leading = node.leadingComments;
-    if (!trailing && !leading) return;
+    if (!trailing && !leading) {
+        return; 
+    }
 
     let prev = this.getSibling(this.key - 1);
     let next = this.getSibling(this.key + 1);
 
-    if (!prev.node) prev = next;
-    if (!next.node) next = prev;
+    if (!prev.node) {
+        prev = next; 
+    }
+    if (!next.node) {
+        next = prev; 
+    }
 
     prev.addComments("trailing", leading);
     next.addComments("leading", trailing);
@@ -38,10 +48,14 @@ export function addComment(type, content, line?) {
  */
 
 export function addComments(type: string, comments: Array) {
-    if (!comments) return;
+    if (!comments) {
+        return; 
+    }
 
     const node = this.node;
-    if (!node) return;
+    if (!node) {
+        return; 
+    }
 
     const key = `${type}Comments`;
 

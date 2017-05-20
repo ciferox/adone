@@ -4,20 +4,20 @@ const { File } = fast;
 const fixture = "Hello old world!\nHello new world!\nHello kind world!\nHello cruel world!";
 
 const expected = {
-    "helloperson": "Hello old person!\nHello new person!\nHello kind person!\nHello cruel person!",
-    "hellofarm": "Hello old cow!\nHello new chicken!\nHello kind duck!\nHello cruel person!",
-    "multreplace": "Hello dlo cow!\nHello new chicken!\nHello kind duck!\nHello cruel person!",
-    "multreplace2": "Hello dlo person!\nHello new person!\nHello kind person!\nHello cruel person!"
+    helloperson: "Hello old person!\nHello new person!\nHello kind person!\nHello cruel person!",
+    hellofarm: "Hello old cow!\nHello new chicken!\nHello kind duck!\nHello cruel person!",
+    multreplace: "Hello dlo cow!\nHello new chicken!\nHello kind duck!\nHello cruel person!",
+    multreplace2: "Hello dlo person!\nHello new person!\nHello kind person!\nHello cruel person!"
 };
 
-describe("Fast", function () {
-    describe("transforms", function () {
-        describe("replace", function () {
+describe("Fast", () => {
+    describe("transforms", () => {
+        describe("replace", () => {
             let replacements;
             let file;
             let check;
 
-            beforeEach(function () {
+            beforeEach(() => {
                 replacements = [
                     "cow",
                     "chicken",
@@ -31,7 +31,7 @@ describe("Fast", function () {
                 });
 
                 check = function (stream, done, cb) {
-                    stream.on("data", function (newFile) {
+                    stream.on("data", (newFile) => {
                         cb(newFile);
                         done();
                     });
@@ -42,58 +42,58 @@ describe("Fast", function () {
                 };
             });
 
-            describe("buffered input", function () {
+            describe("buffered input", () => {
 
-                it("should replace string on a buffer", function(done) {
+                it("should replace string on a buffer", (done) => {
                     const stream = fast.plugin.replace("world", "person");
 
-                    check(stream, done, function (newFile) {
-                        assert.equal(String(newFile.contents), expected["helloperson"]);
+                    check(stream, done, (newFile) => {
+                        assert.equal(String(newFile.contents), expected.helloperson);
                     });
                 });
 
-                it("should replace regex on a buffer", function(done) {
+                it("should replace regex on a buffer", (done) => {
                     const stream = fast.plugin.replace(/world/g, "person");
 
-                    check(stream, done, function (newFile) {
-                        assert.equal(String(newFile.contents), expected["helloperson"]);
+                    check(stream, done, (newFile) => {
+                        assert.equal(String(newFile.contents), expected.helloperson);
                     });
                 });
 
-                it("should replace regex on a buffer with a function", function(done) {
+                it("should replace regex on a buffer with a function", (done) => {
                     const stream = fast.plugin.replace(/world/g, () => "person");
 
-                    check(stream, done, function (newFile) {
-                        assert.equal(String(newFile.contents), expected["helloperson"]);
+                    check(stream, done, (newFile) => {
+                        assert.equal(String(newFile.contents), expected.helloperson);
                     });
                 });
 
-                it("should replace string on a buffer with a function", function(done) {
+                it("should replace string on a buffer with a function", (done) => {
                     const stream = fast.plugin.replace("world", () => "person");
 
-                    check(stream, done, function (newFile) {
-                        assert.equal(String(newFile.contents), expected["helloperson"]);
+                    check(stream, done, (newFile) => {
+                        assert.equal(String(newFile.contents), expected.helloperson);
                     });
                 });
 
-                it("should call function once for each replacement when replacing a string on a buffer", function(done) {
+                it("should call function once for each replacement when replacing a string on a buffer", (done) => {
                     const stream = fast.plugin.replace("world", () => replacements.shift());
-                    check(stream, done, function (newFile) {
-                        assert.equal(String(newFile.contents), expected["hellofarm"]);
+                    check(stream, done, (newFile) => {
+                        assert.equal(String(newFile.contents), expected.hellofarm);
                     });
                 });
 
-                it("should call function once for each replacement when replacing a regex on a buffer", function(done) {
+                it("should call function once for each replacement when replacing a regex on a buffer", (done) => {
                     const stream = fast.plugin.replace(/world/g, () => replacements.shift());
 
-                    check(stream, done, function (newFile) {
-                        assert.equal(String(newFile.contents), expected["hellofarm"]);
+                    check(stream, done, (newFile) => {
+                        assert.equal(String(newFile.contents), expected.hellofarm);
                     });
                 });
 
-                it("should trigger events on a buffer", function(done) {
+                it("should trigger events on a buffer", (done) => {
                     const stream = fast.plugin.replace("world", "elephant");
-                    stream.on("end", function() {
+                    stream.on("end", () => {
                         // No assertion required, we should end up here, if we don"t the test will time out
                         done();
                     });
@@ -124,11 +124,11 @@ describe("Fast", function () {
                 });
             });
 
-            describe("streamed input", function () {
-                it("should throw an error", function() {
+            describe("streamed input", () => {
+                it("should throw an error", () => {
                     const file = new File({
                         path: "test/fixtures/helloworld.txt",
-                        contents: new adone.std.stream.Stream.Readable
+                        contents: new adone.std.stream.Stream.Readable()
                     });
 
                     const stream = fast.plugin.replace("world", "person");
@@ -143,8 +143,8 @@ describe("Fast", function () {
                 });
             });
 
-            describe("multiple replacements", function () {
-                it("should throw an error if first argument is array, but second aren't", function() {
+            describe("multiple replacements", () => {
+                it("should throw an error if first argument is array, but second aren't", () => {
                     try {
                         fast.plugin.replace(["world"], "person");
                     } catch (e) {
@@ -154,7 +154,7 @@ describe("Fast", function () {
                     throw new Error("Didn't throw any error!");
                 });
 
-                it("should throw an error if lengths didn't match", function() {
+                it("should throw an error if lengths didn't match", () => {
                     try {
                         fast.plugin.replace(["world"], ["person", "world"]);
                     } catch (e) {
@@ -164,22 +164,22 @@ describe("Fast", function () {
                     throw new Error("Didn't throw any error!");
                 });
 
-                it("should replace by arrays", function(done) {
+                it("should replace by arrays", (done) => {
                     const stream = fast.plugin.replace(["old", /world/g], ["dlo", () => replacements.shift()]);
 
-                    check(stream, done, function (newFile) {
-                        assert.equal(String(newFile.contents), expected["multreplace"]);
+                    check(stream, done, (newFile) => {
+                        assert.equal(String(newFile.contents), expected.multreplace);
                     });
                 });
 
-                it("should replace by objects", function(done) {
+                it("should replace by objects", (done) => {
                     const stream = fast.plugin.replace({
-                        "old": "dlo",
+                        old: "dlo",
                         world: "person"
                     });
 
-                    check(stream, done, function (newFile) {
-                        assert.equal(String(newFile.contents), expected["multreplace2"]);
+                    check(stream, done, (newFile) => {
+                        assert.equal(String(newFile.contents), expected.multreplace2);
                     });
                 });
 

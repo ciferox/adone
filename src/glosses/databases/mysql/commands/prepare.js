@@ -65,9 +65,9 @@ export default class Prepare extends Command {
             return Prepare.prototype.readParameter;
         } else if (this.fieldCount > 0) {
             return Prepare.prototype.readField;
-        } else {
-            return this.prepareDone(connection);
-        }
+        } 
+        return this.prepareDone(connection);
+        
     }
 
     readParameter(p, connection) {
@@ -95,9 +95,9 @@ export default class Prepare extends Command {
 
         if (this.fieldCount > 0) {
             return Prepare.prototype.readField;
-        } else {
-            return this.prepareDone(connection);
-        }
+        } 
+        return this.prepareDone(connection);
+        
     }
 
     fieldsEOF(p, connection) {

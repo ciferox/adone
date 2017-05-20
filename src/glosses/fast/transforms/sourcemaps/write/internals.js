@@ -23,7 +23,7 @@ export default function (destPath, options) {
             return;
         }
 
-        file.sourceMap.sources = file.sourceMap.sources.map(function (filePath) {
+        file.sourceMap.sources = file.sourceMap.sources.map((filePath) => {
             // keep the references files like ../node_modules within the sourceRoot
             if (options.mapSourcesAbsolute === true) {
                 if (!file.dirname) {

@@ -82,9 +82,9 @@ var Drivers = {
         },
         initialize: {
             value(board, opts) {
-                let READLENGTH = 6;
-                let io = board.io;
-                let address = opts.address || this.ADDRESSES[0];
+                const READLENGTH = 6;
+                const io = board.io;
+                const address = opts.address || this.ADDRESSES[0];
 
                 opts.address = address;
 
@@ -99,7 +99,7 @@ var Drivers = {
                     this.REGISTER.SOFT_RESET & 0xFF
                 ]);
 
-                let computed = {
+                const computed = {
                     temperature: null,
                     humidity: null
                 };
@@ -115,12 +115,12 @@ var Drivers = {
                     ]);
 
                     setTimeout(() => {
-                        io.i2cReadOnce(address, READLENGTH, function (data) {
+                        io.i2cReadOnce(address, READLENGTH, (data) => {
                             computed.temperature = uint16(data[0], data[1]);
                             computed.humidity = uint16(data[3], data[4]);
                             this.emit("data", computed);
                             readCycle();
-                        }.bind(this));
+                        });
                     }, 16);
                 }.bind(this);
 
@@ -129,7 +129,7 @@ var Drivers = {
         },
         identifier: {
             value(opts) {
-                let address = opts.address || Drivers.SHT31D.ADDRESSES.value[0];
+                const address = opts.address || Drivers.SHT31D.ADDRESSES.value[0];
                 return `sht-31d-${address}`;
             }
         }
@@ -149,8 +149,8 @@ var Drivers = {
         },
         initialize: {
             value(board, opts) {
-                let io = board.io;
-                let address = opts.address || this.ADDRESSES[0];
+                const io = board.io;
+                const address = opts.address || this.ADDRESSES[0];
 
                 opts.address = address;
 
@@ -163,7 +163,7 @@ var Drivers = {
                 io.i2cConfig(opts);
                 io.i2cWrite(address, this.REGISTER.SOFT_RESET);
 
-                let computed = {
+                const computed = {
                     temperature: null,
                     humidity: null
                 };
@@ -173,8 +173,8 @@ var Drivers = {
                     // Despite the registers being back to back, the HTU21D
                     // does not like when 5 bytes are requested, so we put
                     // the two data sources on their own read channels.
-                    let isTemperatureCycle = cycle === 0;
-                    let register = isTemperatureCycle ? this.REGISTER.TEMPERATURE : this.REGISTER.HUMIDITY;
+                    const isTemperatureCycle = cycle === 0;
+                    const register = isTemperatureCycle ? this.REGISTER.TEMPERATURE : this.REGISTER.HUMIDITY;
 
                     io.i2cReadOnce(address, register, 2, (data) => {
                         if (isTemperatureCycle) {
@@ -197,7 +197,7 @@ var Drivers = {
         },
         identifier: {
             value(opts) {
-                let address = opts.address || Drivers.HTU21D.ADDRESSES.value[0];
+                const address = opts.address || Drivers.HTU21D.ADDRESSES.value[0];
                 return `htu-s1d-${address}`;
             }
         }
@@ -211,14 +211,14 @@ var Drivers = {
         },
         initialize: {
             value(board, opts) {
-                let io = board.io;
-                let address = opts.address || this.ADDRESSES[0];
+                const io = board.io;
+                const address = opts.address || this.ADDRESSES[0];
 
                 opts.address = address;
 
                 io.i2cConfig(opts);
 
-                let computed = {
+                const computed = {
                     humidity: null,
                     temperature: null
                 };
@@ -233,11 +233,11 @@ var Drivers = {
 
                     setTimeout(() => {
                         io.i2cWrite(address, 0x80, [0x00, 0x00]);
-                        io.i2cReadOnce(address, 4, function (data) {
+                        io.i2cReadOnce(address, 4, (data) => {
                             // Page 2
                             // Figure 4. Humidity and Temperature Data Fetch, Four Byte Data Read
                             // B7:6 Contain status bits
-                            var status = data[0] >> 6;
+                            const status = data[0] >> 6;
                             // Mask out B7:6 status bits from H MSB
                             computed.humidity = int16(data[0] & 0x3F, data[1]);
                             // Shift off B1:0 (which are empty)
@@ -269,7 +269,7 @@ var Drivers = {
                             this.emit("data", computed);
 
                             measureCycle();
-                        }.bind(this));
+                        });
                         // Page 3
                         // 3.0 Measurement Cycle
                         // The measurement cycle duration is typically
@@ -282,7 +282,7 @@ var Drivers = {
         },
         identifier: {
             value(opts) {
-                let address = opts.address || Drivers.HIH6130.ADDRESSES.value[0];
+                const address = opts.address || Drivers.HIH6130.ADDRESSES.value[0];
                 return `hih6130-${address}`;
             }
         }
@@ -298,18 +298,18 @@ var Drivers = {
         },
         initialize: {
             value(board, opts) {
-                let io = board.io;
-                let address = opts.address || this.ADDRESSES[0];
+                const io = board.io;
+                const address = opts.address || this.ADDRESSES[0];
                 // Correspond to firmware variables
-                let dhtPin = 2;
+                const dhtPin = 2;
                 let dhtType = 11;
 
                 opts.address = address;
 
                 io.i2cConfig(opts);
 
-                let dhtVariantExec = /(\d{2})/.exec(opts.controller);
-                let dhtVariant = dhtVariantExec && dhtVariantExec.length && dhtVariantExec[0];
+                const dhtVariantExec = /(\d{2})/.exec(opts.controller);
+                const dhtVariant = dhtVariantExec && dhtVariantExec.length && dhtVariantExec[0];
 
                 if (dhtVariant) {
                     dhtType = Number(dhtVariant);
@@ -319,7 +319,7 @@ var Drivers = {
                     }
                 }
 
-                let computed = {
+                const computed = {
                     temperature: null,
                     humidity: null
                 };
@@ -334,7 +334,7 @@ var Drivers = {
         },
         identifier: {
             value(opts) {
-                let address = opts.address || Drivers.DHT_I2C_NANO_BACKPACK.ADDRESSES.value[0];
+                const address = opts.address || Drivers.DHT_I2C_NANO_BACKPACK.ADDRESSES.value[0];
                 return `dht_i2c_nano_backpack-${address}`;
             }
         }
@@ -354,13 +354,13 @@ var Drivers = {
         },
         initialize: {
             value(board, opts) {
-                let READLENGTH = 14;
-                let io = board.io;
-                let address = opts.address || this.ADDRESSES[0];
+                const READLENGTH = 14;
+                const io = board.io;
+                const address = opts.address || this.ADDRESSES[0];
 
                 opts.address = address;
 
-                let computed = {
+                const computed = {
                     accelerometer: {},
                     temperature: {},
                     gyro: {}
@@ -390,7 +390,7 @@ var Drivers = {
         },
         identifier: {
             value(opts) {
-                let address = opts.address || Drivers.MPU6050.ADDRESSES.value[0];
+                const address = opts.address || Drivers.MPU6050.ADDRESSES.value[0];
                 return `mpu-6050-${address}`;
             }
         }
@@ -500,17 +500,17 @@ var Drivers = {
                 //
                 // AF: https://www.adafruit.com/datasheets/BST_BNO055_DS000_12.pdf
                 //
-                let io = board.io;
-                let address = opts.address || this.ADDRESSES[0];
+                const io = board.io;
+                const address = opts.address || this.ADDRESSES[0];
 
 
                 // AF. Page 67 4.3.54
                 //a value for what we use to consider the system calibrated, 0xC0 represents the just fusion algorithm/system
-                let calibrationMask = opts.calibrationMask || 0xC0;
+                const calibrationMask = opts.calibrationMask || 0xC0;
 
                 opts.address = address;
 
-                let computed = {
+                const computed = {
                     accelerometer: {
                         x: null,
                         y: null,
@@ -560,8 +560,8 @@ var Drivers = {
                 //
                 io.i2cWriteReg(address, this.REGISTER.SYS_TRIGGER, 0x20);
 
-                let por = new Promise((resolve) => {
-                    setTimeout(function () {
+                const por = new Promise((resolve) => {
+                    setTimeout(() => {
 
                         // Normal power mode
                         io.i2cWriteReg(address, this.REGISTER.PWR_MODE_ADDR, this.REGISTER.PWR_MODES.NORMAL);
@@ -589,7 +589,7 @@ var Drivers = {
                         //
                         // see also the defaults starting on AF Page 50
                         //
-                        var axisMap = opts.axisMap || 0x24;
+                        const axisMap = opts.axisMap || 0x24;
                         io.i2cWriteReg(address, this.REGISTER.AXIS_MAP_CONFIG_ADDR, axisMap);
 
                         //AF Page 24 3.4, Axis remap
@@ -602,29 +602,29 @@ var Drivers = {
                         //
                         // 0 = positive, 1 = negative
                         //
-                        var axisSign = opts.axisSign || 0x00;
+                        const axisSign = opts.axisSign || 0x00;
                         io.i2cWriteReg(address, this.REGISTER.AXIS_MAP_SIGN_ADDR, axisSign);
 
 
                         // Set operational mode to "nine degrees of freedom"
-                        setTimeout(function () {
+                        setTimeout(() => {
                             io.i2cWriteReg(address, this.REGISTER.OPR_MODE_ADDR, this.REGISTER.OPR_MODES.NDOF);
                             resolve();
-                        }.bind(this), 10);
+                        }, 10);
 
                         // OPERATING CONDITIONS BNO055
                         // AF Page 13, 1.2, OPERATING CONDITIONS BNO055
                         // From reset to config mode
-                    }.bind(this), 650);
+                    }, 650);
                 });
 
                 por.then(() => {
-                    return new Promise(function (resolve) {
+                    return new Promise((resolve) => {
                         var readCalibration = function () {
-                            io.i2cReadOnce(address, this.REGISTER.CALIBRATION, 1, function (data) {
+                            io.i2cReadOnce(address, this.REGISTER.CALIBRATION, 1, (data) => {
 
-                                var calibration = data[0];
-                                var didCalibrationChange = computed.calibration !== calibration;
+                                const calibration = data[0];
+                                const didCalibrationChange = computed.calibration !== calibration;
 
 
                                 computed.calibration = calibration;
@@ -649,32 +649,32 @@ var Drivers = {
                                     readCalibration();
                                 }
 
-                            }.bind(this));
+                            });
                         }.bind(this);
 
                         readCalibration();
 
-                    }.bind(this));
+                    });
                 }).then(() => {
 
                     // Temperature requires no calibration, begin reading immediately
                     // here we read out temp, and the calibration state since they are back to back
                     // and the device can, has been observed to go out of calibration and we may want to check
-                    io.i2cRead(address, this.REGISTER.READ.TEMP, 2, function (data) {
+                    io.i2cRead(address, this.REGISTER.READ.TEMP, 2, (data) => {
                         computed.temperature = data[0];
 
-                        var didCalibrationChange = computed.calibration !== data[1];
+                        const didCalibrationChange = computed.calibration !== data[1];
                         computed.calibration = data[1];
 
                         this.emit("data", computed);
                         if (didCalibrationChange) {
                             this.emit("calibration", computed.calibration);
                         }
-                    }.bind(this));
+                    });
 
 
                     // ACCEL, MAG and GYRO are 6 bytes each => 18 bytes total
-                    io.i2cRead(address, this.REGISTER.READ.ACCEL, 18, function (data) {
+                    io.i2cRead(address, this.REGISTER.READ.ACCEL, 18, (data) => {
 
                         computed.accelerometer = {
                             x: int16(data[1], data[0]),
@@ -695,10 +695,10 @@ var Drivers = {
                         };
 
                         this.emit("data", computed);
-                    }.bind(this));
+                    });
 
                     // moved the ndof/quarternions to their own read.. bytes go missing, lots of 32 byte buffers everywhere
-                    io.i2cRead(address, this.REGISTER.READ.EULER, 14, function (data) {
+                    io.i2cRead(address, this.REGISTER.READ.EULER, 14, (data) => {
 
                         // raw euler
                         computed.orientation.euler = {
@@ -716,14 +716,14 @@ var Drivers = {
                         };
 
                         this.emit("data", computed);
-                    }.bind(this));
+                    });
 
                 });
             }
         },
         identifier: {
             value(opts) {
-                let address = opts.address || Drivers.BNO055.ADDRESSES.value[0];
+                const address = opts.address || Drivers.BNO055.ADDRESSES.value[0];
                 return `bno055-${address}`;
             }
         }
@@ -750,31 +750,31 @@ var Drivers = {
                   http://cache.freescale.com/files/sensors/doc/data_sheet/MPL115A2.pdf
                  */
 
-                let io = board.io;
-                let address = opts.address || this.ADDRESSES[0];
+                const io = board.io;
+                const address = opts.address || this.ADDRESSES[0];
 
                 opts.address = address;
 
                 io.i2cConfig(opts);
 
-                let computed = {
+                const computed = {
                     pressure: null,
                     temperature: null
                 };
 
-                let cof = {
+                const cof = {
                     a0: null,
                     b1: null,
                     b2: null,
                     c12: null
                 };
 
-                let handler = function (data) {
+                const handler = function (data) {
 
                     // Page 5
                     // 3.1 Pressure, Temperature and Coefficient Bit-Width Specifications
-                    let Padc = uint16(data[0], data[1]) >> 6;
-                    let Tadc = uint16(data[2], data[3]) >> 6;
+                    const Padc = uint16(data[0], data[1]) >> 6;
+                    const Tadc = uint16(data[2], data[3]) >> 6;
 
                     // Page 6
                     // 3.2 Compensation
@@ -802,12 +802,12 @@ var Drivers = {
                     // TODO: User specified "frequency" needs to be applied here.
                 }.bind(this);
 
-                let pCoefficients = new Promise((resolve) => {
-                    io.i2cReadOnce(address, this.REGISTER.COEFFICIENTS, 8, function (data) {
-                        var A0 = int16(data[0], data[1]);
-                        var B1 = int16(data[2], data[3]);
-                        var B2 = int16(data[4], data[5]);
-                        var C12 = int16(data[6], data[7]) >> 2;
+                const pCoefficients = new Promise((resolve) => {
+                    io.i2cReadOnce(address, this.REGISTER.COEFFICIENTS, 8, (data) => {
+                        const A0 = int16(data[0], data[1]);
+                        const B1 = int16(data[2], data[3]);
+                        const B2 = int16(data[4], data[5]);
+                        const C12 = int16(data[6], data[7]) >> 2;
 
                         // Source:
                         // https://github.com/adafruit/Adafruit_MPL115A2
@@ -821,7 +821,7 @@ var Drivers = {
                         cof.c12 = C12 / 4194304;
 
                         resolve();
-                    }.bind(this));
+                    });
                 });
 
                 pCoefficients.then(readCycle);
@@ -829,7 +829,7 @@ var Drivers = {
         },
         identifier: {
             value(opts) {
-                let address = opts.address || Drivers.MPL115A2.ADDRESSES.value[0];
+                const address = opts.address || Drivers.MPL115A2.ADDRESSES.value[0];
                 return `mpl115a2-${address}`;
             }
         }
@@ -872,9 +872,9 @@ var Drivers = {
         },
         initialize: {
             value(board, opts) {
-                let READLENGTH = 6;
-                let io = board.io;
-                let address = opts.address || this.ADDRESSES[0];
+                const READLENGTH = 6;
+                const io = board.io;
+                const address = opts.address || this.ADDRESSES[0];
                 let isPressure = false;
                 let elevation = null;
                 let offset = 0;
@@ -884,7 +884,7 @@ var Drivers = {
                 // See http://www.henrylahr.com/?p=99 for implementation approach
                 //
                 let altNow = 0;
-                let computed = {
+                const computed = {
                     pressure: 0,
                     altitude: 0,
                     temperature: 0
@@ -904,7 +904,7 @@ var Drivers = {
                         if (data[0] & this.MASK.STATUS.PRESSURE_DATA_READ) {
                             next();
                         } else {
-                            setTimeout(function () {
+                            setTimeout(() => {
                                 waitForReady(next);
                             }, 100);
                         }
@@ -912,16 +912,16 @@ var Drivers = {
                 }.bind(this);
 
                 var readValues = function () {
-                    let modeMask = isPressure ? this.MASK.CONTROL.PRESSURE : this.MASK.CONTROL.ALTIMETER;
-                    let mode = this.MASK.CONTROL.SBYB | this.MASK.CONTROL.OS128 | modeMask;
+                    const modeMask = isPressure ? this.MASK.CONTROL.PRESSURE : this.MASK.CONTROL.ALTIMETER;
+                    const mode = this.MASK.CONTROL.SBYB | this.MASK.CONTROL.OS128 | modeMask;
 
                     io.i2cWrite(address, this.REGISTER.CONTROL, mode);
 
                     waitForReady(() => {
-                        io.i2cReadOnce(address, this.REGISTER.PRESSURE, READLENGTH, function (data) {
-                            var value = uint24(data[1], data[2], data[3]) >> 4;
-                            var temperature = uint16(data[4], data[5]) >> 4;
-                            var altVal;
+                        io.i2cReadOnce(address, this.REGISTER.PRESSURE, READLENGTH, (data) => {
+                            const value = uint24(data[1], data[2], data[3]) >> 4;
+                            const temperature = uint16(data[4], data[5]) >> 4;
+                            let altVal;
 
                             computed.temperature = temperature;
 
@@ -929,10 +929,10 @@ var Drivers = {
                                 computed.pressure = value;
                                 this.emit("data", computed);
                             } else {
-                                var m = data[1];
-                                var c = data[2];
-                                var l = data[3];
-                                var fl = (l >> 4) / 16;
+                                const m = data[1];
+                                const c = data[2];
+                                const l = data[3];
+                                const fl = (l >> 4) / 16;
 
                                 altVal = (m << 8 | c) + fl;
                                 altNow = (altNow * 3 + altVal) / 4;
@@ -943,28 +943,28 @@ var Drivers = {
                             isPressure = !isPressure;
 
                             readValues();
-                        }.bind(this));
+                        });
                     });
                 }.bind(this);
 
-                let reads = [];
+                const reads = [];
                 var calibrate = function () {
                     // Clear Oversampling and OST
                     io.i2cWrite(address, this.REGISTER.CONTROL, 0x3B);
                     io.i2cWrite(address, this.REGISTER.CONTROL, 0x39);
 
                     setTimeout(() => {
-                        io.i2cReadOnce(address, this.REGISTER.PRESSURE, READLENGTH, function (data) {
-                            var m = data[1];
-                            var c = data[2];
-                            var l = data[3];
-                            var fl = (l >> 4) / 4;
+                        io.i2cReadOnce(address, this.REGISTER.PRESSURE, READLENGTH, (data) => {
+                            const m = data[1];
+                            const c = data[2];
+                            const l = data[3];
+                            const fl = (l >> 4) / 4;
 
                             reads.push((m << 10 | c << 2) + fl);
 
                             if (reads.length === 4) {
-                                var curpress = (reads[0] + reads[1] + reads[2] + reads[3]) / 4;
-                                var seapress = curpress / Math.pow(1 - elevation * 0.0000225577, 5.255);
+                                const curpress = (reads[0] + reads[1] + reads[2] + reads[3]) / 4;
+                                const seapress = curpress / Math.pow(1 - elevation * 0.0000225577, 5.255);
 
                                 // Update Barometric input for Altitude
                                 io.i2cWrite(address, this.REGISTER.BAR_IN_MSB, (seapress / 2) >> 8);
@@ -975,23 +975,23 @@ var Drivers = {
                                 io.i2cWrite(address, this.REGISTER.CONTROL, 0xBB);
                                 io.i2cWrite(address, this.REGISTER.CONTROL, 0xB9);
 
-                                setTimeout(function () {
-                                    io.i2cReadOnce(address, this.REGISTER.PRESSURE, READLENGTH, function (data) {
-                                        var m = data[1];
-                                        var c = data[2];
-                                        var l = data[3];
-                                        var fl = (l >> 4) / 16;
+                                setTimeout(() => {
+                                    io.i2cReadOnce(address, this.REGISTER.PRESSURE, READLENGTH, (data) => {
+                                        const m = data[1];
+                                        const c = data[2];
+                                        const l = data[3];
+                                        const fl = (l >> 4) / 16;
 
                                         altNow = (m << 8 | c) + fl;
 
                                         readValues(false);
                                     });
-                                }.bind(this), 550);
+                                }, 550);
 
                             } else {
                                 calibrate();
                             }
-                        }.bind(this));
+                        });
                     }, 500);
                 }.bind(this);
 
@@ -1024,7 +1024,7 @@ var Drivers = {
         },
         identifier: {
             value(opts) {
-                let address = opts.address || Drivers.MPL3115A2.ADDRESSES.value[0];
+                const address = opts.address || Drivers.MPL3115A2.ADDRESSES.value[0];
                 return `mpl3115a2-${address}`;
             }
         }
@@ -1043,8 +1043,8 @@ var Drivers = {
         },
         initialize: {
             value(board, opts) {
-                let io = board.io;
-                let address = opts.address || this.ADDRESSES[0];
+                const io = board.io;
+                const address = opts.address || this.ADDRESSES[0];
                 let elevation = null;
                 let offset = 0;
 
@@ -1077,11 +1077,11 @@ var Drivers = {
                  * Table 1, for the Conversion Time entries.
                  */
 
-                let mode = opts.mode || 3;
-                let kpDelay = [5, 8, 14, 26][mode];
-                let oss = Fn.constrain(mode, 0, 3);
+                const mode = opts.mode || 3;
+                const kpDelay = [5, 8, 14, 26][mode];
+                const oss = Fn.constrain(mode, 0, 3);
 
-                let cof = {
+                const cof = {
                     a1: null,
                     a2: null,
                     a3: null,
@@ -1098,8 +1098,8 @@ var Drivers = {
 
                 io.i2cConfig(opts);
 
-                let pCoefficients = new Promise((resolve) => {
-                    io.i2cReadOnce(address, this.REGISTER.COEFFICIENTS, 22, function (data) {
+                const pCoefficients = new Promise((resolve) => {
+                    io.i2cReadOnce(address, this.REGISTER.COEFFICIENTS, 22, (data) => {
                         // https://www.sparkfun.com/datasheets/Components/General/BST-BMP085-DS000-05.pdf
                         // Page 12
                         // 3.4 Calibration Coefficients
@@ -1138,13 +1138,13 @@ var Drivers = {
                     // Pages 13, 14, 15, 16
                     // 3.5 Calculating pressure and temperature
                     //
-                    var computed = {
+                    const computed = {
                         altitude: null,
                         pressure: null,
-                        temperature: null,
+                        temperature: null
                     };
 
-                    var cycle = 0;
+                    let cycle = 0;
 
                     // http://www.adafruit.com/datasheets/BST-BMP180-DS000-09.pdf
                     // Pages 11, 15
@@ -1155,10 +1155,10 @@ var Drivers = {
                         // cycle 0: temperature
                         // cycle 1: pressure
 
-                        var isTemperatureCycle = cycle === 0;
-                        var component = isTemperatureCycle ? 0x2E : 0x34 + (oss << 6);
-                        var numBytes = isTemperatureCycle ? 2 : 3;
-                        var delay = isTemperatureCycle ? 5 : kpDelay;
+                        const isTemperatureCycle = cycle === 0;
+                        const component = isTemperatureCycle ? 0x2E : 0x34 + (oss << 6);
+                        const numBytes = isTemperatureCycle ? 2 : 3;
+                        const delay = isTemperatureCycle ? 5 : kpDelay;
 
 
                         io.i2cWriteReg(address, this.REGISTER.READ_START, component);
@@ -1166,10 +1166,10 @@ var Drivers = {
                         // Once the READ_START register is set,
                         // delay the READ_RESULT request based on the
                         // mode value provided by the user, or default.
-                        setTimeout(function () {
-                            io.i2cReadOnce(address, this.REGISTER.READ_RESULT, numBytes, function (data) {
-                                var compensated, uncompensated;
-                                var x1, x2, x3, b3, b4, b6, b7, b6s, bx;
+                        setTimeout(() => {
+                            io.i2cReadOnce(address, this.REGISTER.READ_RESULT, numBytes, (data) => {
+                                let compensated, uncompensated;
+                                let x1, x2, x3, b3, b4, b6, b7, b6s, bx;
 
                                 if (isTemperatureCycle) {
                                     // TEMPERATURE
@@ -1223,8 +1223,8 @@ var Drivers = {
                                     computed.pressure = compensated;
 
                                     // 3.7 Calculating pressure at sea level
-                                    var seapress = compensated / Math.pow(1 - elevation * 0.0000225577, 5.255);
-                                    var altitude = 44330 * (1 - Math.pow(compensated / seapress, 1 / 5.255));
+                                    const seapress = compensated / Math.pow(1 - elevation * 0.0000225577, 5.255);
+                                    const altitude = 44330 * (1 - Math.pow(compensated / seapress, 1 / 5.255));
 
                                     // Page 3 (of BMP280 Datasheet)
                                     // ...relative accuracy is ±0.12 hPa, which is equivalent to
@@ -1238,8 +1238,8 @@ var Drivers = {
                                 }
 
                                 readCycle();
-                            }.bind(this));
-                        }.bind(this), delay);
+                            });
+                        }, delay);
                     }.bind(this);
 
                     // Kick off "read loop"
@@ -1250,7 +1250,7 @@ var Drivers = {
         },
         identifier: {
             value(opts) {
-                let address = opts.address || Drivers.BMP180.ADDRESSES.value[0];
+                const address = opts.address || Drivers.BMP180.ADDRESSES.value[0];
                 return `bmp180-${address}`;
             }
         }
@@ -1276,8 +1276,8 @@ var Drivers = {
         },
         initialize: {
             value(board, opts) {
-                let io = board.io;
-                let address = opts.address || this.ADDRESSES[0];
+                const io = board.io;
+                const address = opts.address || this.ADDRESSES[0];
                 let elevation = null;
                 let offset = 0;
 
@@ -1299,7 +1299,7 @@ var Drivers = {
                  *
                  */
 
-                let dig = {
+                const dig = {
                     T1: null,
                     T2: null,
                     T3: null,
@@ -1320,8 +1320,8 @@ var Drivers = {
                 // 4.3.2 Register 0xE0 "reset"
                 io.i2cWrite(address, this.REGISTER.RESET, 0xB6);
 
-                let pCoefficients = new Promise((resolve) => {
-                    io.i2cReadOnce(address, this.REGISTER.COEFFICIENTS, 24, function (data) {
+                const pCoefficients = new Promise((resolve) => {
+                    io.i2cReadOnce(address, this.REGISTER.COEFFICIENTS, 24, (data) => {
 
                         // Page 21, Table 17
                         // Compensation parameter storage, naming and data type
@@ -1358,10 +1358,10 @@ var Drivers = {
 
                     io.i2cWrite(address, this.REGISTER.MEASURE, 0x3F);
 
-                    var computed = {
+                    const computed = {
                         altitude: null,
                         pressure: null,
-                        temperature: null,
+                        temperature: null
                     };
 
                     //
@@ -1372,13 +1372,13 @@ var Drivers = {
                     // 3.3.2 Temperature measurement
                     //
 
-                    io.i2cRead(address, this.REGISTER.PRESSURE, 6, function (data) {
-                        var compensated = 0;
+                    io.i2cRead(address, this.REGISTER.PRESSURE, 6, (data) => {
+                        let compensated = 0;
 
                         // Page 45
                         // "Returns temperature in DegC, double precision. Output value of
                         // '51.23' equals 51.23 DegC. t_fine carries fine temperature as global value"
-                        var fine;
+                        let fine;
 
                         // var1, var2
                         //
@@ -1386,7 +1386,7 @@ var Drivers = {
                         //
                         // int32
                         //
-                        var v1, v2;
+                        let v1, v2;
 
                         // Page 44
                         // "Both pressure and temperature values are expected to be
@@ -1397,8 +1397,8 @@ var Drivers = {
                         //
 
                         // Page 45
-                        var P = Fn.s32(uint24(data[0], data[1], data[2]));
-                        var T = Fn.s32(uint24(data[3], data[4], data[5]));
+                        let P = Fn.s32(uint24(data[0], data[1], data[2]));
+                        let T = Fn.s32(uint24(data[3], data[4], data[5]));
 
                         P >>= 4;
                         T >>= 4;
@@ -1414,8 +1414,8 @@ var Drivers = {
                         //          ((BMP280_S32_t)dig_T3)) >> 14;
                         //
                         //
-                        var adc16 = T >> 4;
-                        var adc16subT1 = adc16 - dig.T1;
+                        const adc16 = T >> 4;
+                        const adc16subT1 = adc16 - dig.T1;
                         v1 = (((T >> 3) - (dig.T1 << 1)) * dig.T2) >> 11;
                         v2 = (((adc16subT1 * adc16subT1) >> 12) * dig.T3) >> 14;
 
@@ -1486,7 +1486,7 @@ var Drivers = {
                         compensated = Fn.u32(compensated) >>> 0;
 
                         // var1 = (((BMP280_S32_t)dig_P9) * ((BMP280_S32_t)(((p>>3) * (p>>3))>>13)))>>12;
-                        var compshift3r = compensated >> 3;
+                        const compshift3r = compensated >> 3;
                         v1 = (Fn.s32(dig.P9) * Fn.s32(((compshift3r * compshift3r) >> 13))) >> 12;
 
                         // var2 = (((BMP280_S32_t)(p>>2)) * ((BMP280_S32_t)dig_P8))>>13;
@@ -1499,8 +1499,8 @@ var Drivers = {
                         computed.pressure = compensated;
 
                         // Calculating pressure at sea level (copied from BMP180)
-                        var seapress = compensated / Math.pow(1 - elevation * 0.0000225577, 5.255);
-                        var altitude = 44330 * (1 - Math.pow(compensated / seapress, 1 / 5.255));
+                        const seapress = compensated / Math.pow(1 - elevation * 0.0000225577, 5.255);
+                        const altitude = 44330 * (1 - Math.pow(compensated / seapress, 1 / 5.255));
 
                         // Page 3
                         // ...relative accuracy is ±0.12 hPa, which is equivalent to
@@ -1508,13 +1508,13 @@ var Drivers = {
                         computed.altitude = Math.round(altitude - offset);
 
                         this.emit("data", computed);
-                    }.bind(this));
+                    });
                 });
             }
         },
         identifier: {
             value(opts) {
-                let address = opts.address || Drivers.BMP280.ADDRESSES.value[0];
+                const address = opts.address || Drivers.BMP280.ADDRESSES.value[0];
                 return `bmp280-${address}`;
             }
         }
@@ -1545,8 +1545,8 @@ var Drivers = {
         },
         initialize: {
             value(board, opts) {
-                let io = board.io;
-                let address = opts.address || this.ADDRESSES[0];
+                const io = board.io;
+                const address = opts.address || this.ADDRESSES[0];
                 let elevation = null;
                 let offset = 0;
 
@@ -1568,7 +1568,7 @@ var Drivers = {
                  *
                  */
 
-                let dig = {
+                const dig = {
                     T1: null,
                     T2: null,
                     T3: null,
@@ -1595,7 +1595,7 @@ var Drivers = {
                 // 4.3.2 Register 0xE0 "reset"
                 io.i2cWrite(address, this.REGISTER.RESET, 0xB6);
 
-                let pCoefficients = new Promise((resolveCoeffs) => {
+                const pCoefficients = new Promise((resolveCoeffs) => {
 
                     // Page 22,
                     // Table 16: Compensation parameter storage, naming and data type
@@ -1605,8 +1605,8 @@ var Drivers = {
 
 
                     Promise.all([
-                        new Promise(function (resolve) {
-                            io.i2cReadOnce(address, 0x88, 24, function (data) {
+                        new Promise((resolve) => {
+                            io.i2cReadOnce(address, 0x88, 24, (data) => {
                                 dig.T1 = uint16(data[1], data[0]);
                                 dig.T2 = int16(data[3], data[2]);
                                 dig.T3 = int16(data[5], data[4]);
@@ -1623,14 +1623,14 @@ var Drivers = {
                                 resolve();
                             });
                         }),
-                        new Promise(function (resolve) {
-                            io.i2cReadOnce(address, 0xA1, 1, function (data) {
+                        new Promise((resolve) => {
+                            io.i2cReadOnce(address, 0xA1, 1, (data) => {
                                 dig.H1 = Fn.u8(data[0]);
                                 resolve();
                             });
                         }),
-                        new Promise(function (resolve) {
-                            io.i2cReadOnce(address, 0xE1, 8, function (data) {
+                        new Promise((resolve) => {
+                            io.i2cReadOnce(address, 0xE1, 8, (data) => {
                                 /*
                                   0xE1 => data[0]
                                   0xE2 => data[1]
@@ -1732,11 +1732,11 @@ var Drivers = {
                     io.i2cWrite(address, this.REGISTER.MEASURE_TP, 0xB7);
 
 
-                    var computed = {
+                    const computed = {
                         altitude: null,
                         pressure: null,
                         humidity: null,
-                        temperature: null,
+                        temperature: null
                     };
 
                     //
@@ -1747,9 +1747,9 @@ var Drivers = {
                     // 3.3.2 Temperature measurement
                     //
 
-                    var standby = Date.now();
+                    const standby = Date.now();
 
-                    io.i2cRead(address, this.REGISTER.PRESSURE, 8, function (data) {
+                    io.i2cRead(address, this.REGISTER.PRESSURE, 8, (data) => {
                         //
                         // Response time to complete 63% of a step is 1 second.
                         // Don't emit a reading until a complete step has occurred.
@@ -1762,12 +1762,12 @@ var Drivers = {
                             }
                         }
 
-                        var compensated = 0;
+                        let compensated = 0;
 
                         // Page 45
                         // "Returns temperature in DegC, double precision. Output value of
                         // '51.23' equals 51.23 DegC. t_fine carries fine temperature as global value"
-                        var fine;
+                        let fine;
 
                         // var1, var2
                         //
@@ -1775,7 +1775,7 @@ var Drivers = {
                         //
                         // int32
                         //
-                        var v1, v2, vx;
+                        let v1, v2, vx;
 
                         // Page 50
                         // "Both pressure and temperature values are expected to be
@@ -1786,9 +1786,9 @@ var Drivers = {
                         //
 
                         // Page 50
-                        var P = Fn.s32(uint24(data[0], data[1], data[2]));
-                        var T = Fn.s32(uint24(data[3], data[4], data[5]));
-                        var H = Fn.s32(uint16(data[6], data[7]));
+                        let P = Fn.s32(uint24(data[0], data[1], data[2]));
+                        let T = Fn.s32(uint24(data[3], data[4], data[5]));
+                        const H = Fn.s32(uint16(data[6], data[7]));
 
                         P >>= 4;
                         T >>= 4;
@@ -1804,8 +1804,8 @@ var Drivers = {
                         //          ((BMP280_S32_t)dig_T3)) >> 14;
                         //
                         //
-                        var adc16 = T >> 4;
-                        var adc16subT1 = adc16 - dig.T1;
+                        const adc16 = T >> 4;
+                        const adc16subT1 = adc16 - dig.T1;
                         v1 = (((T >> 3) - (dig.T1 << 1)) * dig.T2) >> 11;
                         v2 = (((adc16subT1 * adc16subT1) >> 12) * dig.T3) >> 14;
 
@@ -1876,7 +1876,7 @@ var Drivers = {
                         compensated = Fn.u32(compensated) >>> 0;
 
                         // var1 = (((BMP280_S32_t)dig_P9) * ((BMP280_S32_t)(((p>>3) * (p>>3))>>13)))>>12;
-                        var compshift3r = compensated >> 3;
+                        const compshift3r = compensated >> 3;
                         v1 = (Fn.s32(dig.P9) * Fn.s32(((compshift3r * compshift3r) >> 13))) >> 12;
 
                         // var2 = (((BMP280_S32_t)(p>>2)) * ((BMP280_S32_t)dig_P8))>>13;
@@ -1889,8 +1889,8 @@ var Drivers = {
                         computed.pressure = compensated;
 
                         // Calculating pressure at sea level (copied from BMP180)
-                        var seapress = compensated / Math.pow(1 - elevation * 0.0000225577, 5.255);
-                        var altitude = 44330 * (1 - Math.pow(compensated / seapress, 1 / 5.255));
+                        const seapress = compensated / Math.pow(1 - elevation * 0.0000225577, 5.255);
+                        const altitude = 44330 * (1 - Math.pow(compensated / seapress, 1 / 5.255));
 
                         // Page 3
                         // ...relative accuracy is ±0.12 hPa, which is equivalent to
@@ -1922,13 +1922,13 @@ var Drivers = {
                         computed.humidity = Fn.u32(vx >> 12);
 
                         this.emit("data", computed);
-                    }.bind(this));
+                    });
                 });
             }
         },
         identifier: {
             value(opts) {
-                let address = opts.address || Drivers.BME280.ADDRESSES.value[0];
+                const address = opts.address || Drivers.BME280.ADDRESSES.value[0];
                 return `bme280-${address}`;
             }
         }
@@ -1945,8 +1945,8 @@ var Drivers = {
         },
         initialize: {
             value(board, opts) {
-                let io = board.io;
-                let address = opts.address || this.ADDRESSES[0];
+                const io = board.io;
+                const address = opts.address || this.ADDRESSES[0];
 
                 opts.address = address;
 
@@ -1961,7 +1961,7 @@ var Drivers = {
                 // Reference
                 // https://www.silabs.com/Support%20Documents/TechnicalDocs/Si7020-A20.pdf
                 // P. 19
-                let computed = {
+                const computed = {
                     temperature: null,
                     humidity: null
                 };
@@ -1982,7 +1982,7 @@ var Drivers = {
         },
         identifier: {
             value(opts) {
-                let address = opts.address || Drivers.SI7020.ADDRESSES.value[0];
+                const address = opts.address || Drivers.SI7020.ADDRESSES.value[0];
                 return `si7020-${address}`;
             }
         }
@@ -2003,8 +2003,8 @@ var Drivers = {
         },
         initialize: {
             value(board, opts) {
-                let io = board.io;
-                let address = opts.address || this.ADDRESSES[0];
+                const io = board.io;
+                const address = opts.address || this.ADDRESSES[0];
                 let elevation = null;
                 let offset = 0;
 
@@ -2021,7 +2021,7 @@ var Drivers = {
 
                 opts.address = address;
 
-                let computed = {
+                const computed = {
                     altitude: null,
                     pressure: null,
                     temperature: null
@@ -2043,7 +2043,7 @@ var Drivers = {
                  *
                  */
 
-                let mode = opts.mode || 5;
+                const mode = opts.mode || 5;
                 /*
                 [
                  ULTRA_LOW_POWER
@@ -2054,7 +2054,7 @@ var Drivers = {
                  ]
                  */
 
-                let kpDelay = [1, 2, 3, 4, 5, 10][mode];
+                const kpDelay = [1, 2, 3, 4, 5, 10][mode];
 
                 /**
                  * http://www.hpinfotech.ro/MS5611-01BA03.pdf
@@ -2070,7 +2070,7 @@ var Drivers = {
                  *
                  */
 
-                let cof = {
+                const cof = {
                     C1: null,
                     C2: null,
                     C3: null,
@@ -2079,7 +2079,7 @@ var Drivers = {
                     C6: null
                 };
 
-                let cKeys = Object.keys(cof);
+                const cKeys = Object.keys(cof);
 
 
                 // TODO: confirm this is actually necessary?
@@ -2088,22 +2088,22 @@ var Drivers = {
                 io.i2cConfig(opts);
                 io.i2cWrite(address, this.REGISTER.RESET);
 
-                let pCoefficients = new Promise((resolve) => {
+                const pCoefficients = new Promise((resolve) => {
                     // First, a small delay is required following the reset...
-                    setTimeout(function () {
+                    setTimeout(() => {
                         // Next, each coefficient must be read on it's own.
-                        var cofs = cKeys.map(function (key, index) {
-                            var register = this.REGISTER.COEFFICIENTS + (index * 2);
-                            return new Promise(function (resolve) {
-                                io.i2cReadOnce(address, register, 2, function (data) {
+                        const cofs = cKeys.map((key, index) => {
+                            const register = this.REGISTER.COEFFICIENTS + (index * 2);
+                            return new Promise((resolve) => {
+                                io.i2cReadOnce(address, register, 2, (data) => {
                                     cof[key] = uint16(data[0], data[1]);
                                     resolve();
                                 });
                             });
-                        }.bind(this));
+                        });
 
                         Promise.all(cofs).then(resolve);
-                    }.bind(this), 50);
+                    }, 50);
                 });
 
                 pCoefficients.then(() => {
@@ -2112,18 +2112,18 @@ var Drivers = {
                     // Page 7
                     // Page 8
                     //
-                    var cycle = 0;
-                    var D1, D2;
-                    var dT, TEMP, OFF, SENS, P;
-                    var TEMP2, OFF2, SENS2;
+                    let cycle = 0;
+                    let D1, D2;
+                    let dT, TEMP, OFF, SENS, P;
+                    let TEMP2, OFF2, SENS2;
 
                     var readCycle = function () {
 
                         // cycle 0: temperature
                         // cycle 1: pressure
 
-                        var isTemperatureCycle = cycle === 0;
-                        var component = (isTemperatureCycle ? 0x50 : 0x40) + mode;
+                        const isTemperatureCycle = cycle === 0;
+                        const component = (isTemperatureCycle ? 0x50 : 0x40) + mode;
 
                         io.i2cWrite(address, component);
 
@@ -2144,8 +2144,8 @@ var Drivers = {
                         // Once the READ_START register is set,
                         // delay the READ_RESULT request based on the
                         // mode value provided by the user, or default.
-                        setTimeout(function () {
-                            io.i2cReadOnce(address, this.REGISTER.READ, 3, function (data) {
+                        setTimeout(() => {
+                            io.i2cReadOnce(address, this.REGISTER.READ, 3, (data) => {
 
                                 if (isTemperatureCycle) {
                                     // TEMPERATURE
@@ -2211,8 +2211,8 @@ var Drivers = {
                                     computed.pressure = P;
 
                                     // Sea level pressure...
-                                    var seapress = P / Math.pow(1 - elevation * 0.0000225577, 5.255);
-                                    var altitude = 44330 * (1 - Math.pow(P / seapress, 1 / 5.255));
+                                    const seapress = P / Math.pow(1 - elevation * 0.0000225577, 5.255);
+                                    const altitude = 44330 * (1 - Math.pow(P / seapress, 1 / 5.255));
 
                                     computed.altitude = altitude - offset;
                                 }
@@ -2223,8 +2223,8 @@ var Drivers = {
                                 }
 
                                 readCycle();
-                            }.bind(this));
-                        }.bind(this), kpDelay);
+                            });
+                        }, kpDelay);
                     }.bind(this);
 
                     // Kick off "read loop"
@@ -2235,7 +2235,7 @@ var Drivers = {
         },
         identifier: {
             value(opts) {
-                let address = opts.address || Drivers.MS5611.ADDRESSES.value[0];
+                const address = opts.address || Drivers.MS5611.ADDRESSES.value[0];
                 return `ms5611-${address}`;
             }
         }
@@ -2260,8 +2260,8 @@ var Drivers = {
         },
         initialize: {
             value(board, opts) {
-                let io = board.io;
-                let address = opts.address || this.ADDRESSES[0];
+                const io = board.io;
+                const address = opts.address || this.ADDRESSES[0];
 
                 opts.address = address;
 
@@ -2286,7 +2286,7 @@ var Drivers = {
                 //   humidity: null,
                 // };
 
-                let computed = {
+                const computed = {
                     temperature: null,
                     humidity: null
                 };
@@ -2303,13 +2303,13 @@ var Drivers = {
 
                 var readCycle = function () {
                     // 1. Determine which data we want to request
-                    let isTemperatureCycle = cycle === 0;
-                    let command = isTemperatureCycle ?
+                    const isTemperatureCycle = cycle === 0;
+                    const command = isTemperatureCycle ?
                         this.COMMAND.MEASURE_TEMPERATURE :
                         this.COMMAND.MEASURE_HUMIDITY;
 
 
-                    let conversion = new Promise((resolve) => {
+                    const conversion = new Promise((resolve) => {
                         // 2. Send the appropriate measurement/conversion
                         //    command for this read cycle.
                         io.i2cWrite(address, this.REGISTER.CONFIG, command);
@@ -2322,8 +2322,8 @@ var Drivers = {
                         //    with. These peripherals have ample space to store data
                         //    in different registers, but do not.
                         var requestStatus = function () {
-                            io.i2cReadOnce(address, this.REGISTER.STATUS, 1, function (data) {
-                                var status = data[0];
+                            io.i2cReadOnce(address, this.REGISTER.STATUS, 1, (data) => {
+                                const status = data[0];
 
                                 if (!(status & 0x01)) {
                                     resolve();
@@ -2354,17 +2354,17 @@ var Drivers = {
                         // but that also produces garbage, so in the end we need to read
                         // 3 bytes from 0x01.
                         Promise.all([
-                            new Promise(function (resolve) {
-                                io.i2cReadOnce(address, 0x01, 1, function (data) {
+                            new Promise((resolve) => {
+                                io.i2cReadOnce(address, 0x01, 1, (data) => {
                                     resolve(data[0]);
                                 });
                             }),
-                            new Promise(function (resolve) {
-                                io.i2cReadOnce(address, 0x02, 1, function (data) {
+                            new Promise((resolve) => {
+                                io.i2cReadOnce(address, 0x02, 1, (data) => {
                                     resolve(data[0]);
                                 });
                             })
-                        ]).then(function (data) {
+                        ]).then((data) => {
 
                             if (isTemperatureCycle) {
                                 computed.temperature = ((uint16(data[0], data[1]) >> 2) / 32) - 50;
@@ -2378,7 +2378,7 @@ var Drivers = {
                             }
 
                             readCycle();
-                        }.bind(this));
+                        });
                     });
                 }.bind(this);
 
@@ -2387,7 +2387,7 @@ var Drivers = {
         },
         identifier: {
             value(opts) {
-                let address = opts.address || Drivers.TH02.ADDRESSES.value[0];
+                const address = opts.address || Drivers.TH02.ADDRESSES.value[0];
                 return `th02-${address}`;
             }
         }
@@ -2450,15 +2450,15 @@ const Controllers = {
     BNO055: {
         initialize: {
             value(opts) {
-                let state = priv.get(this);
-                let CONTROLLER = "BNO055";
+                const state = priv.get(this);
+                const CONTROLLER = "BNO055";
 
                 state.calibrationMask = opts.calibrationMask || 0xC0;
 
                 // here we want to catch the events coming out of the driver and re-emit them
                 // not sure what is cleaner here, picking these up from a data event
                 // in the sub controllers, or this
-                let driver = Drivers.get(this.board, CONTROLLER, opts);
+                const driver = Drivers.get(this.board, CONTROLLER, opts);
                 driver.on("calibrated", () => {
                     this.emit("calibrated");
                 });
@@ -2481,7 +2481,7 @@ const Controllers = {
         isCalibrated: {
             get() {
                 //returns if the system and all sensors are fully calibrated
-                let calibrationMask = priv.get(this).calibrationMask;
+                const calibrationMask = priv.get(this).calibrationMask;
                 return (this.orientation.calibration & calibrationMask) === calibrationMask;
             }
         }
@@ -2674,7 +2674,7 @@ function IMU(opts) {
 
             this[component].on("change", () => {
                 if (awaiting.length) {
-                    let index = awaiting.indexOf(component);
+                    const index = awaiting.indexOf(component);
 
                     if (index !== -1) {
                         awaiting.splice(index, 1);

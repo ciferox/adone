@@ -217,7 +217,8 @@ describe("core", () => {
 
         it("should emit drain when the writable buffer is empty", () => {
             const c = core();
-            for (; c.write(1););
+            for (; c.write(1);) { 
+            }
             const drain = spy();
             c.on("drain", drain);
             c.resume();
@@ -568,7 +569,8 @@ describe("core", () => {
                     c.pipe(d);
                     c.resume();
                     d.pause(); // HA!
-                    for (let i = 0; c.write(++i););
+                    for (let i = 0; c.write(++i);) {
+                    }
                     const drain = spy();
                     c.on("drain", drain);
                     expect(d._readableState.buffer.full).to.be.true;
@@ -987,7 +989,9 @@ describe("core", () => {
                     c.pipe(d);
                     c.resume();
                     d.pause(); // HA!
-                    for (let i = 0; c.write(++i););
+                    for (let i = 0; c.write(++i);) {
+
+                    }
                     const drain = spy();
                     c.on("drain", drain);
                     expect(d._readableState.buffer.full).to.be.true;
@@ -1394,7 +1398,7 @@ describe("core", () => {
                 const a = core([obj]);
                 const orig = Set.prototype.clear;
                 let called = false;
-                Set.prototype.clear = function(...args) {
+                Set.prototype.clear = function (...args) {
                     if (this.size === 1 && [...this.keys()][0] === obj) {
                         called = true;
                     }
@@ -1510,7 +1514,8 @@ describe("core", () => {
                     await adone.promise.delay(2);
                     // resumed
 
-                    for (; a.write(1););
+                    for (; a.write(1);) { 
+                    }
 
                     expect(a.paused).to.be.true;
 
@@ -1535,7 +1540,7 @@ describe("core", () => {
 
                     c.pause();
 
-                    for (; a.push(1););
+                    for (; a.push(1);) { }
 
                     // it should not touch ended streams
                     a.end();

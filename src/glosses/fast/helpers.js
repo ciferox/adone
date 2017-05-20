@@ -14,7 +14,7 @@ export function applySourceMap(file, sourceMap) {
     }
 
     if (file.sourceMap && file.sourceMap.mappings !== "") {
-        var generator = sourcemap.Generator.fromSourceMap(adone.sourcemap.createConsumer(sourceMap));
+        const generator = sourcemap.Generator.fromSourceMap(adone.sourcemap.createConsumer(sourceMap));
         generator.applySourceMap(adone.sourcemap.createConsumer(file.sourceMap));
         file.sourceMap = JSON.parse(generator.toString());
     } else {
@@ -89,8 +89,9 @@ export class Concat {
                     });
                 }
             } else {
-                if (sourceMap && sourceMap.sources && sourceMap.sources.length > 0)
-                    filePath = sourceMap.sources[0];
+                if (sourceMap && sourceMap.sources && sourceMap.sources.length > 0) {
+                    filePath = sourceMap.sources[0]; 
+                }
                 if (filePath) {
                     for (let i = 1; i <= lines; i++) {
                         this._sourceMap.addMapping({
@@ -105,8 +106,9 @@ export class Concat {
                             source: filePath
                         });
                     }
-                    if (sourceMap && sourceMap.sourcesContent)
-                        this._sourceMap.setSourceContent(filePath, sourceMap.sourcesContent[0]);
+                    if (sourceMap && sourceMap.sourcesContent) {
+                        this._sourceMap.setSourceContent(filePath, sourceMap.sourcesContent[0]); 
+                    }
                 }
             }
             if (lines > 1) {
@@ -149,7 +151,7 @@ function getTimesDiff(fsStat, fileStat) {
         return;
     }
 
-    if (+fileStat.mtime === +fsStat.mtime && +fileStat.atime === +fsStat.atime) {
+    if (Number(fileStat.mtime) === Number(fsStat.mtime) && Number(fileStat.atime) === Number(fsStat.atime)) {
         return;
     }
 

@@ -108,7 +108,7 @@ export default function serve(root, opts = {}) {
             }
             if (directory && listing) {
                 await handleListing(ctx, path);
-                return;
+                
             }
         };
     }

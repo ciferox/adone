@@ -56,23 +56,23 @@ describe("glosses", () => {
             context("objects", () => {
                 it("should support objects", async () => {
                     const stream = concat({ encoding: "objects" });
-                    stream.write({ "foo": "bar" });
-                    stream.write({ "baz": "taco" });
+                    stream.write({ foo: "bar" });
+                    stream.write({ baz: "taco" });
                     stream.end();
                     expect(await stream).to.be.deep.equal([
-                        { "foo": "bar" },
-                        { "baz": "taco" }
+                        { foo: "bar" },
+                        { baz: "taco" }
                     ]);
                 });
 
                 it("should switch to objects encoding if no encoding specified and objects are written", async () => {
                     const stream = concat();
-                    stream.write({ "foo": "bar" });
-                    stream.write({ "baz": "taco" });
+                    stream.write({ foo: "bar" });
+                    stream.write({ baz: "taco" });
                     stream.end();
                     expect(await stream).to.be.deep.equal([
-                        { "foo": "bar" },
-                        { "baz": "taco" }
+                        { foo: "bar" },
+                        { baz: "taco" }
                     ]);
                 });
             });

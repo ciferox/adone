@@ -38,12 +38,14 @@ export default function (ctx, name, method) {
     const fn = function () {
         const keep_ssfi = flag(this, "keep_ssfi");
         const old_ssfi = flag(this, "ssfi");
-        if (!keep_ssfi && old_ssfi)
-            flag(this, "ssfi", fn);
+        if (!keep_ssfi && old_ssfi) {
+            flag(this, "ssfi", fn); 
+        }
 
         const result = method.apply(this, arguments);
-        if (result !== undefined)
-            return result;
+        if (result !== undefined) {
+            return result; 
+        }
 
         const newAssertion = $assert.getAssertion();
         transferFlags(this, newAssertion);

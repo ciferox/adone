@@ -95,7 +95,7 @@ const setFSEventsListener = (path, realPath, listener, rawEmitter) => {
             FSEventsWatchers.delete(watchPath);
         }
     };
-}
+};
 
 /**
  * Decide whether or not we should start a new higher-level parent watcher
@@ -173,10 +173,10 @@ export default {
                         this._ignoredPaths.add(`${path}/**/*`);
                     }
                     return true;
-                } else {
-                    this._ignoredPaths.delete(path);
-                    this._ignoredPaths.delete(`${path}/**/*`);
-                }
+                } 
+                this._ignoredPaths.delete(path);
+                this._ignoredPaths.delete(`${path}/**/*`);
+                
             };
 
             const handleEvent = (event) => {
@@ -200,11 +200,11 @@ export default {
                             // push symlinks back to the top of the stack to get handled
                             const curDepth = this.options.depth === undefined ? undefined : depth(fullPath, realPath) + 1;
                             return this._addToFsEvents(path, false, true, curDepth);
-                        } else {
+                        } 
                             // track new paths
                             // (other than symlinks being followed, which will be tracked soon)
-                            this._getWatchedDir(parent).add(item);
-                        }
+                        this._getWatchedDir(parent).add(item);
+                        
                     }
                     const eventName = info.type === "directory" ? `${event}Dir` : event;
                     this._emit(eventName, path);
@@ -380,9 +380,9 @@ export default {
         // don't follow the same symlink more than once
         if (this._symlinkPaths.has(fullPath)) {
             return;
-        } else {
-            this._symlinkPaths.set(fullPath, true);
-        }
+        } 
+        this._symlinkPaths.set(fullPath, true);
+        
 
         this._readyCount++;
 

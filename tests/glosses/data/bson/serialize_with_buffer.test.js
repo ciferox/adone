@@ -1,7 +1,7 @@
 describe("glosses", "data", "bson", "serialize with buffer", () => {
     const { data: { bson: { BSON } } } = adone;
 
-    it("correctly serialize into buffer using serializeWithBufferAndIndex", function () {
+    it("correctly serialize into buffer using serializeWithBufferAndIndex", () => {
         const bson = new BSON();
         // Create a buffer
         const b = new Buffer(256);

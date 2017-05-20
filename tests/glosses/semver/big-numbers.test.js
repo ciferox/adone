@@ -3,11 +3,11 @@
 
 const semver = adone.semver;
 
-describe("semver", function () {
-    describe("big numbers", function () {
-        it("long version is too long", function() {
-            let v = "1.2." + new Array(256).join("1");
-            assert.throws(function() {
+describe("semver", () => {
+    describe("big numbers", () => {
+        it("long version is too long", () => {
+            const v = `1.2.${new Array(256).join("1")}`;
+            assert.throws(() => {
                 new semver.SemVer(v);
             });
             assert.equal(semver.valid(v, false), null);
@@ -15,9 +15,9 @@ describe("semver", function () {
             assert.equal(semver.inc(v, "patch"), null);
         });
 
-        it("big number is like too long version", function() {
-            let v = "1.2." + new Array(100).join("1");
-            assert.throws(function() {
+        it("big number is like too long version", () => {
+            const v = `1.2.${new Array(100).join("1")}`;
+            assert.throws(() => {
                 new semver.SemVer(v);
             });
             assert.equal(semver.valid(v, false), null);
@@ -25,7 +25,7 @@ describe("semver", function () {
             assert.equal(semver.inc(v, "patch"), null);
         });
 
-        it("parsing null does not throw", function() {
+        it("parsing null does not throw", () => {
             assert.equal(semver.parse(null), null);
             assert.equal(semver.parse({}), null);
             assert.equal(semver.parse(new semver.SemVer("1.2.3")).version, "1.2.3");

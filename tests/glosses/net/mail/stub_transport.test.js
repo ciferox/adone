@@ -21,17 +21,17 @@ MockBuilder.prototype.getHeader = function () {
     return "teretere";
 };
 
-describe("Stub Transport Tests", function () {
-    it("Should expose version number", function () {
-        var client = stubTransport();
+describe("Stub Transport Tests", () => {
+    it("Should expose version number", () => {
+        const client = stubTransport();
         expect(client.name).to.exist;
         expect(client.version).to.exist;
     });
 
-    it("Should send mail", function (done) {
-        var client = stubTransport();
+    it("Should send mail", (done) => {
+        const client = stubTransport();
 
-        var message = new Array(1024).join("teretere, vana kere\n");
+        const message = new Array(1024).join("teretere, vana kere\n");
 
         client.send({
             data: {},
@@ -39,46 +39,46 @@ describe("Stub Transport Tests", function () {
                 from: "test@valid.sender",
                 to: "test@valid.recipient"
             }, message)
-        }, function (err, info) {
+        }, (err, info) => {
             expect(err).to.not.exist;
             expect(info.response.toString()).to.equal(message);
             done();
         });
     });
 
-    it("Should verify settings", function (done) {
-        var client = stubTransport();
+    it("Should verify settings", (done) => {
+        const client = stubTransport();
 
-        client.verify(function (err, status) {
+        client.verify((err, status) => {
             expect(err).to.not.exist;
             expect(status).to.be.true;
             done();
         });
     });
 
-    it("Should not verify settings", function (done) {
-        var client = stubTransport({
+    it("Should not verify settings", (done) => {
+        const client = stubTransport({
             error: new Error("test")
         });
 
-        client.verify(function (err, status) {
+        client.verify((err, status) => {
             expect(err).to.exist;
             expect(status).to.not.be.true;
             done();
         });
     });
 
-    it("Should fire the events", function (done) {
-        var envelopeSpy = spy();
-        var dataSpy = spy();
-        var endSpy = spy();
-        var client = stubTransport();
+    it("Should fire the events", (done) => {
+        const envelopeSpy = spy();
+        const dataSpy = spy();
+        const endSpy = spy();
+        const client = stubTransport();
         client.on("envelope", envelopeSpy);
         client.on("data", dataSpy);
         client.on("end", endSpy);
 
-        var message = new Array(1024).join("teretere, vana kere\n");
-        var envelope = {
+        const message = new Array(1024).join("teretere, vana kere\n");
+        const envelope = {
             from: "test@valid.sender",
             to: "test@valid.recipient"
         };
@@ -86,7 +86,7 @@ describe("Stub Transport Tests", function () {
         client.send({
             data: {},
             message: new MockBuilder(envelope, message)
-        }, function (err, info) {
+        }, (err, info) => {
             expect(err).to.not.exist;
             expect(info.response.toString()).to.equal(message);
             expect(envelopeSpy.calledWith(envelope)).to.be.true;
@@ -96,12 +96,12 @@ describe("Stub Transport Tests", function () {
         });
     });
 
-    it("Should return an error", function (done) {
-        var client = stubTransport({
+    it("Should return an error", (done) => {
+        const client = stubTransport({
             error: new Error("Invalid recipient")
         });
 
-        var message = new Array(1024).join("teretere, vana kere\n");
+        const message = new Array(1024).join("teretere, vana kere\n");
 
         client.send({
             data: {},
@@ -109,7 +109,7 @@ describe("Stub Transport Tests", function () {
                 from: "test@valid.sender",
                 to: "test@valid.recipient"
             }, message)
-        }, function (err) {
+        }, (err) => {
             expect(err).to.exist;
             done();
         });

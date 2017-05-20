@@ -200,8 +200,8 @@ const Controllers = {
                 this.on(`digital-read-${pin}`, callback);
 
                 this.io.i2cRead(this.address, gpioaddr, 1, (data) => {
-                    let byte = data[0];
-                    let value = byte >> pin & 0x01;
+                    const byte = data[0];
+                    const value = byte >> pin & 0x01;
 
                     this.pins[pinIndex].value = value;
 
@@ -341,8 +341,8 @@ const Controllers = {
                 this.on(`digital-read-${pin}`, callback);
 
                 this.io.i2cRead(this.address, gpioaddr, 1, (data) => {
-                    let byte = data[0];
-                    let value = byte >> pin & 0x01;
+                    const byte = data[0];
+                    const value = byte >> pin & 0x01;
 
                     this.pins[pinIndex].value = value;
 
@@ -455,8 +455,8 @@ const Controllers = {
                 this.on(`digital-read-${pin}`, callback);
 
                 this.io.i2cRead(this.address, 1, (data) => {
-                    let byte = data[0];
-                    let value = byte >> pin & 0x01;
+                    const byte = data[0];
+                    const value = byte >> pin & 0x01;
 
                     state.pins = byte;
 
@@ -565,8 +565,8 @@ const Controllers = {
                 this.on(`digital-read-${pin}`, callback);
 
                 this.io.i2cRead(this.address, 2, (data) => {
-                    let byte = data[port];
-                    let value = byte >> pin & 0x01;
+                    const byte = data[port];
+                    const value = byte >> pin & 0x01;
 
                     this.pins[pinIndex].value = value;
 
@@ -1350,10 +1350,10 @@ const Controllers = {
                     this.io.i2cReadOnce(this.address, 3, (data) => {
                         // The GrovePi firmware sends this value in CM
                         // so the value must be converted back to duration.
-                        var value = Math.round(((data[1] << 8) + data[2]) * 29 * 2);
+                        const value = Math.round(((data[1] << 8) + data[2]) * 29 * 2);
 
                         this.pins[pinIndex].value = value;
-                        this.emit("ping-read-" + settings.pin, value);
+                        this.emit(`ping-read-${settings.pin}`, value);
                     });
                 }, 200);
             }
@@ -1553,7 +1553,7 @@ const Controllers = {
                     this.io.i2cRead(this.address, 32, (data) => {
                         let value;
                         for (let i = 0; i < 16; i++) {
-                            let index = i * 2;
+                            const index = i * 2;
 
                             value = (data[index] << 8) + data[index + 1];
 

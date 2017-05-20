@@ -1604,7 +1604,7 @@ const tests = [{
         ])
     },
     name: "DSA public key (RFC4716 format) with no comment"
-}/*, {
+}, /*, {
     source: [
         "PuTTY-User-Key-File-2: ssh-rsa",
         "Encryption: none",
@@ -1807,7 +1807,7 @@ const tests = [{
         _macresult: true
     },
     name: "Unencrypted RSA key (PPK format)"
-}*/, {
+}*/ {
     source: [
         "PuTTY-User-Key-File-2: ssh-rsa",
         "Encryption: aes256-cbc",

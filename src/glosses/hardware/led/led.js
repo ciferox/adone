@@ -11,7 +11,7 @@ const Controllers = {
         initialize: {
             value(opts) {
 
-                let state = priv.get(this);
+                const state = priv.get(this);
 
                 this.address = opts.address || 0x40;
                 this.pwmRange = opts.pwmRange || [0, 4095];
@@ -33,16 +33,16 @@ const Controllers = {
         update: {
             writable: true,
             value(input) {
-                let state = priv.get(this);
-                let output = typeof input !== "undefined" ? input : state.value;
-                let value = state.isAnode ? 255 - Board.constrain(output, 0, 255) : output;
+                const state = priv.get(this);
+                const output = typeof input !== "undefined" ? input : state.value;
+                const value = state.isAnode ? 255 - Board.constrain(output, 0, 255) : output;
                 this.write(value);
             }
         },
         write: {
             writable: true,
             value(value) {
-                let state = priv.get(this);
+                const state = priv.get(this);
                 state.expander.analogWrite(this.pin, value);
             }
         }
@@ -51,7 +51,7 @@ const Controllers = {
         initialize: {
             value(opts, pinValue) {
 
-                let state = priv.get(this);
+                const state = priv.get(this);
                 let isFirmata = true;
                 let defaultLed;
 
@@ -80,8 +80,8 @@ const Controllers = {
         update: {
             writable: true,
             value(input) {
-                let state = priv.get(this);
-                let output = typeof input !== "undefined" ? input : state.value;
+                const state = priv.get(this);
+                const output = typeof input !== "undefined" ? input : state.value;
                 let value = state.isAnode ? 255 - Board.constrain(output, 0, 255) : output;
 
                 // If pin is not a PWM pin and brightness is not HIGH or LOW, emit an error
@@ -103,7 +103,7 @@ const Controllers = {
         write: {
             writable: true,
             value(value) {
-                let state = priv.get(this);
+                const state = priv.get(this);
 
                 if (state.mode === this.io.MODES.OUTPUT) {
                     this.io.digitalWrite(this.pin, value);

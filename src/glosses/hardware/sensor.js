@@ -199,9 +199,9 @@ function Sensor(opts) {
         },
         boolean: {
             get() {
-                let state = priv.get(this);
+                const state = priv.get(this);
                 let booleanBarrier = state.booleanBarrier;
-                let scale = state.scale || [0, resolution];
+                const scale = state.scale || [0, resolution];
 
                 if (booleanBarrier === null) {
                     booleanBarrier = scale[0] + (scale[1] - scale[0]) / 2;

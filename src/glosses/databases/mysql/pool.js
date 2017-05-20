@@ -118,7 +118,7 @@ export default class Pool extends EventEmitter {
             if (err || ++closedConnections >= this._allConnections.length) {
                 fired = true;
                 cb(err);
-                return;
+                
             }
         };
 

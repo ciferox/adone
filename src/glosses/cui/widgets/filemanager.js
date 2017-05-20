@@ -45,8 +45,11 @@ export default class FileManager extends adone.cui.widget.List {
             cwd = null;
         }
 
-        if (cwd) this.cwd = cwd;
-        else cwd = this.cwd;
+        if (cwd) {
+            this.cwd = cwd; 
+        } else {
+            cwd = this.cwd;
+        }
 
         return adone.std.fs.readdir(cwd, (err, list) => {
             if (err && err.code === "ENOENT") {
@@ -55,7 +58,9 @@ export default class FileManager extends adone.cui.widget.List {
             }
 
             if (err) {
-                if (callback) return callback(err);
+                if (callback) {
+                    return callback(err);
+                }
                 return this.emit("error", err, cwd);
             }
 
@@ -74,14 +79,14 @@ export default class FileManager extends adone.cui.widget.List {
 
                 if ((stat && stat.isDirectory()) || name === "..") {
                     dirs.push({
-                        name: name,
-                        text: "{brightblue-fg}" + name + "{/brightblue-fg}/",
+                        name,
+                        text: `{brightblue-fg}${name}{/brightblue-fg}/`,
                         dir: true
                     });
                 } else if (stat && stat.isSymbolicLink()) {
                     files.push({
-                        name: name,
-                        text: "{brightcyan-fg}" + name + "{/brightcyan-fg}@",
+                        name,
+                        text: `{brightcyan-fg}${name}{/brightcyan-fg}@`,
                         dir: false
                     });
                 } else {
@@ -106,7 +111,9 @@ export default class FileManager extends adone.cui.widget.List {
 
             this.emit("refresh");
 
-            if (callback) callback();
+            if (callback) {
+                callback(); 
+            }
         });
     }
 
@@ -116,8 +123,8 @@ export default class FileManager extends adone.cui.widget.List {
             cwd = null;
         }
 
-        let focused = this.screen.focused === this;
-        let hidden = this.hidden;
+        const focused = this.screen.focused === this;
+        const hidden = this.hidden;
         let onfile;
         let oncancel;
 
@@ -144,7 +151,9 @@ export default class FileManager extends adone.cui.widget.List {
         });
 
         this.refresh(cwd, (err) => {
-            if (err) return callback(err);
+            if (err) {
+                return callback(err); 
+            }
 
             if (hidden) {
                 this.show();

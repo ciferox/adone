@@ -48,7 +48,7 @@ export default function ({ types: t }) {
         visitor: {
             Class(path, state) {
                 const buildClassProperty = state.opts.spec ? buildClassPropertySpec : buildClassPropertyNonSpec;
-                const isDerived = !!path.node.superClass;
+                const isDerived = Boolean(path.node.superClass);
                 let constructor;
                 const props = [];
                 const body = path.get("body");

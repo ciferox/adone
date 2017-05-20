@@ -4,8 +4,8 @@ const http = require("http");
 const fs = require("fs");
 const zlib = require("zlib");
 
-describe("Logger tests", function () {
-    it("Should create a logger", function () {
+describe("Logger tests", () => {
+    it("Should create a logger", () => {
         expect(typeof shared.getLogger({
             logger: false
         })).to.equal("object");
@@ -16,9 +16,9 @@ describe("Logger tests", function () {
     });
 });
 
-describe("Connection url parser tests", function () {
-    it("Should parse connection url", function () {
-        let url = "smtps://user:pass@localhost:123?tls.rejectUnauthorized=false&name=horizon";
+describe("Connection url parser tests", () => {
+    it("Should parse connection url", () => {
+        const url = "smtps://user:pass@localhost:123?tls.rejectUnauthorized=false&name=horizon";
         expect(shared.parseConnectionUrl(url)).to.deep.equal({
             secure: true,
             port: 123,
@@ -34,8 +34,8 @@ describe("Connection url parser tests", function () {
         });
     });
 
-    it("should not choke on special symbols in auth", function () {
-        let url = "smtps://user%40gmail.com:%3Apasswith%25Char@smtp.gmail.com";
+    it("should not choke on special symbols in auth", () => {
+        const url = "smtps://user%40gmail.com:%3Apasswith%25Char@smtp.gmail.com";
         expect(shared.parseConnectionUrl(url)).to.deep.equal({
             secure: true,
             host: "smtp.gmail.com",
@@ -47,23 +47,23 @@ describe("Connection url parser tests", function () {
     });
 });
 
-describe("Resolver tests", function () {
-    let port = 10337;
+describe("Resolver tests", () => {
+    const port = 10337;
     let server;
 
-    beforeEach(function (done) {
-        server = http.createServer(function (req, res) {
+    beforeEach((done) => {
+        server = http.createServer((req, res) => {
             if (/redirect/.test(req.url)) {
                 res.writeHead(302, {
-                    Location: "http://localhost:" + port + "/message.html"
+                    Location: `http://localhost:${port}/message.html`
                 });
-                res.end("Go to http://localhost:" + port + "/message.html");
+                res.end(`Go to http://localhost:${port}/message.html`);
             } else if (/compressed/.test(req.url)) {
                 res.writeHead(200, {
                     "Content-Type": "text/plain",
                     "Content-Encoding": "gzip"
                 });
-                let stream = zlib.createGzip();
+                const stream = zlib.createGzip();
                 stream.pipe(res);
                 stream.write("<p>Tere, tere</p><p>vana kere!</p>\n");
                 stream.end();
@@ -78,103 +78,103 @@ describe("Resolver tests", function () {
         server.listen(port, done);
     });
 
-    afterEach(function (done) {
+    afterEach((done) => {
         server.close(done);
     });
 
-    it("should set text from html string", function (done) {
-        let mail = {
+    it("should set text from html string", (done) => {
+        const mail = {
             data: {
                 html: "<p>Tere, tere</p><p>vana kere!</p>\n"
             }
         };
-        shared.resolveContent(mail.data, "html", function (err, value) {
+        shared.resolveContent(mail.data, "html", (err, value) => {
             expect(err).to.not.exist;
             expect(value).to.equal("<p>Tere, tere</p><p>vana kere!</p>\n");
             done();
         });
     });
 
-    it("should set text from html buffer", function (done) {
-        let mail = {
+    it("should set text from html buffer", (done) => {
+        const mail = {
             data: {
                 html: new Buffer("<p>Tere, tere</p><p>vana kere!</p>\n")
             }
         };
-        shared.resolveContent(mail.data, "html", function (err, value) {
+        shared.resolveContent(mail.data, "html", (err, value) => {
             expect(err).to.not.exist;
             expect(value).to.deep.equal(mail.data.html);
             done();
         });
     });
 
-    it("should set text from a html file", function (done) {
-        let mail = {
+    it("should set text from a html file", (done) => {
+        const mail = {
             data: {
                 html: {
-                    path: __dirname + "/fixtures/message.html"
+                    path: `${__dirname}/fixtures/message.html`
                 }
             }
         };
-        shared.resolveContent(mail.data, "html", function (err, value) {
+        shared.resolveContent(mail.data, "html", (err, value) => {
             expect(err).to.not.exist;
             expect(value).to.deep.equal(new Buffer("<p>Tere, tere</p><p>vana kere!</p>\n"));
             done();
         });
     });
 
-    it("should set text from an html url", function (done) {
-        let mail = {
+    it("should set text from an html url", (done) => {
+        const mail = {
             data: {
                 html: {
-                    path: "http://localhost:" + port + "/message.html"
+                    path: `http://localhost:${port}/message.html`
                 }
             }
         };
-        shared.resolveContent(mail.data, "html", function (err, value) {
+        shared.resolveContent(mail.data, "html", (err, value) => {
             expect(err).to.not.exist;
             expect(value).to.deep.equal(new Buffer("<p>Tere, tere</p><p>vana kere!</p>\n"));
             done();
         });
     });
 
-    it("should set text from redirecting url", function (done) {
-        let mail = {
+    it("should set text from redirecting url", (done) => {
+        const mail = {
             data: {
                 html: {
-                    path: "http://localhost:" + port + "/redirect.html"
+                    path: `http://localhost:${port}/redirect.html`
                 }
             }
         };
-        shared.resolveContent(mail.data, "html", function (err, value) {
+        shared.resolveContent(mail.data, "html", (err, value) => {
             expect(err).to.not.exist;
             expect(value).to.deep.equal(new Buffer("<p>Tere, tere</p><p>vana kere!</p>\n"));
             done();
         });
     });
 
-    it("should set text from gzipped url", function (done) {
-        let mail = {
+    it("should set text from gzipped url", (done) => {
+        const mail = {
             data: {
                 html: {
-                    path: "http://localhost:" + port + "/compressed.html"
+                    path: `http://localhost:${port}/compressed.html`
                 }
             }
         };
-        shared.resolveContent(mail.data, "html", function (err, value) {
+        shared.resolveContent(mail.data, "html", (err, value) => {
             expect(err).to.not.exist;
             expect(value).to.deep.equal(new Buffer("<p>Tere, tere</p><p>vana kere!</p>\n"));
             done();
         });
     });
 
-    it("should set text from a html stream", function (done) {
-        let mail = {
+    it("should set text from a html stream", (done) => {
+        const mail = {
             data: {
-                html: fs.createReadStream(__dirname + "/fixtures/message.html")
+                html: fs.createReadStream(`${__dirname}/fixtures/message.html`)
             }
         };
-        shared.resolveContent(mail.data, "html", function (err, value) {
+        shared.resolveContent(mail.data, "html", (err, value) => {
             expect(err).to.not.exist;
             expect(mail).to.deep.equal({
                 data: {
@@ -186,23 +186,23 @@ describe("Resolver tests", function () {
         });
     });
 
-    it("should return an error", function (done) {
-        let mail = {
+    it("should return an error", (done) => {
+        const mail = {
             data: {
                 html: {
-                    path: "http://localhost:" + (port + 1000) + "/message.html"
+                    path: `http://localhost:${port + 1000}/message.html`
                 }
             }
         };
-        shared.resolveContent(mail.data, "html", function (err) {
+        shared.resolveContent(mail.data, "html", (err) => {
             expect(err).to.exist;
             done();
         });
     });
 
-    it("should return encoded string as buffer", function (done) {
-        let str = "<p>Tere, tere</p><p>vana kere!</p>\n";
-        let mail = {
+    it("should return encoded string as buffer", (done) => {
+        const str = "<p>Tere, tere</p><p>vana kere!</p>\n";
+        const mail = {
             data: {
                 html: {
                     encoding: "base64",
@@ -210,69 +210,69 @@ describe("Resolver tests", function () {
                 }
             }
         };
-        shared.resolveContent(mail.data, "html", function (err, value) {
+        shared.resolveContent(mail.data, "html", (err, value) => {
             expect(err).to.not.exist;
             expect(value).to.deep.equal(new Buffer(str));
             done();
         });
     });
 
-    describe("data uri tests", function () {
+    describe("data uri tests", () => {
 
-        it("should resolve with mime type and base64", function (done) {
-            let mail = {
+        it("should resolve with mime type and base64", (done) => {
+            const mail = {
                 data: {
                     attachment: {
                         path: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="
                     }
                 }
             };
-            shared.resolveContent(mail.data, "attachment", function (err, value) {
+            shared.resolveContent(mail.data, "attachment", (err, value) => {
                 expect(err).to.not.exist;
                 expect(value).to.deep.equal(new Buffer("iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==", "base64"));
                 done();
             });
         });
 
-        it("should resolve with mime type and plaintext", function (done) {
-            let mail = {
+        it("should resolve with mime type and plaintext", (done) => {
+            const mail = {
                 data: {
                     attachment: {
                         path: "data:image/png,tere%20tere"
                     }
                 }
             };
-            shared.resolveContent(mail.data, "attachment", function (err, value) {
+            shared.resolveContent(mail.data, "attachment", (err, value) => {
                 expect(err).to.not.exist;
                 expect(value).to.deep.equal(new Buffer("tere tere"));
                 done();
             });
         });
 
-        it("should resolve with plaintext", function (done) {
-            let mail = {
+        it("should resolve with plaintext", (done) => {
+            const mail = {
                 data: {
                     attachment: {
                         path: "data:,tere%20tere"
                     }
                 }
             };
-            shared.resolveContent(mail.data, "attachment", function (err, value) {
+            shared.resolveContent(mail.data, "attachment", (err, value) => {
                 expect(err).to.not.exist;
                 expect(value).to.deep.equal(new Buffer("tere tere"));
                 done();
             });
         });
 
-        it("should resolve with mime type, charset and base64", function (done) {
-            let mail = {
+        it("should resolve with mime type, charset and base64", (done) => {
+            const mail = {
                 data: {
                     attachment: {
                         path: "data:image/png;charset=iso-8859-1;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg=="
                     }
                 }
             };
-            shared.resolveContent(mail.data, "attachment", function (err, value) {
+            shared.resolveContent(mail.data, "attachment", (err, value) => {
                 expect(err).to.not.exist;
                 expect(value).to.deep.equal(new Buffer("iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU5ErkJggg==", "base64"));
                 done();

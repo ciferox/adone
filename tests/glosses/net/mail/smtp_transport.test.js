@@ -1,10 +1,10 @@
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
-var net = require("net");
-var smtpTransport = adone.net.mail.smtpTransport;
-var SMTPServer = require("smtp-server").SMTPServer;
+const net = require("net");
+const smtpTransport = adone.net.mail.smtpTransport;
+const SMTPServer = require("smtp-server").SMTPServer;
 
-var PORT_NUMBER = 8397;
+const PORT_NUMBER = 8397;
 
 function MockBuilder(envelope, message) {
     this.envelope = envelope;
@@ -26,27 +26,27 @@ MockBuilder.prototype.getHeader = function () {
 describe("SMTP Transport Tests", function () {
     this.timeout(10000);
 
-    describe("Anonymous sender tests", function () {
+    describe("Anonymous sender tests", () => {
 
-        var server;
+        let server;
 
-        beforeEach(function (done) {
+        beforeEach((done) => {
             server = new SMTPServer({
                 disabledCommands: ["STARTTLS", "AUTH"],
 
-                onData: function (stream, session, callback) {
-                    stream.on("data", function () {});
+                onData(stream, session, callback) {
+                    stream.on("data", () => {});
                     stream.on("end", callback);
                 },
 
-                onMailFrom: function (address, session, callback) {
+                onMailFrom(address, session, callback) {
                     if (!/@valid.sender/.test(address.address)) {
                         return callback(new Error("Only user@valid.sender is allowed to send mail"));
                     }
                     return callback(); // Accept the address
                 },
 
-                onRcptTo: function (address, session, callback) {
+                onRcptTo(address, session, callback) {
                     if (!/@valid.recipient/.test(address.address)) {
                         return callback(new Error("Only user@valid.recipient is allowed to receive mail"));
                     }
@@ -58,18 +58,18 @@ describe("SMTP Transport Tests", function () {
             server.listen(PORT_NUMBER, done);
         });
 
-        afterEach(function (done) {
+        afterEach((done) => {
             server.close(done);
         });
 
-        it("Should expose version number", function () {
-            var client = smtpTransport();
+        it("Should expose version number", () => {
+            const client = smtpTransport();
             expect(client.name).to.exist;
             expect(client.version).to.exist;
         });
 
-        it("Should detect wellknown data", function () {
-            var client = smtpTransport({
+        it("Should detect wellknown data", () => {
+            const client = smtpTransport({
                 service: "google mail",
                 logger: false
             });
@@ -78,8 +78,8 @@ describe("SMTP Transport Tests", function () {
             expect(client.options.secure).to.be.true;
         });
 
-        it("Should fail envelope", function (done) {
-            var client = smtpTransport({
+        it("Should fail envelope", (done) => {
+            const client = smtpTransport({
                 port: PORT_NUMBER,
                 logger: false
             });
@@ -90,14 +90,14 @@ describe("SMTP Transport Tests", function () {
                     from: "test@invalid.sender",
                     to: "test@valid.recipient"
                 }, "test")
-            }, function (err) {
+            }, (err) => {
                 expect(err.code).to.equal("EENVELOPE");
                 done();
             });
         });
 
-        it("Should fail message", function (done) {
-            var client = smtpTransport({
+        it("Should fail message", (done) => {
+            const client = smtpTransport({
                 port: PORT_NUMBER,
                 logger: false
             });
@@ -108,14 +108,14 @@ describe("SMTP Transport Tests", function () {
                     from: "test@valid.sender",
                     to: "test@valid.recipient"
                 }, "")
-            }, function (err) {
+            }, (err) => {
                 expect(err.code).to.equal("EMESSAGE");
                 done();
             });
         });
 
-        it("Should fail auth", function (done) {
-            var client = smtpTransport({
+        it("Should fail auth", (done) => {
+            const client = smtpTransport({
                 port: PORT_NUMBER,
                 auth: {
                     user: "zzz"
@@ -129,23 +129,23 @@ describe("SMTP Transport Tests", function () {
                     from: "test@valid.sender",
                     to: "test@valid.recipient"
                 }, "message")
-            }, function (err) {
+            }, (err) => {
                 expect(err.code).to.equal("EAUTH");
                 done();
             });
         });
 
-        it("Should send mail", function (done) {
-            var client = smtpTransport("smtp:localhost:" + PORT_NUMBER + "?logger=false");
-            var chunks = [],
+        it("Should send mail", (done) => {
+            const client = smtpTransport(`smtp:localhost:${PORT_NUMBER}?logger=false`);
+            let chunks = [],
                 message = new Array(1024).join("teretere, vana kere\n");
 
-            server.on("data", function (connection, chunk) {
+            server.on("data", (connection, chunk) => {
                 chunks.push(chunk);
             });
 
-            server.on("dataReady", function (connection, callback) {
-                var body = Buffer.concat(chunks);
+            server.on("dataReady", (connection, callback) => {
+                const body = Buffer.concat(chunks);
                 expect(body.toString()).to.equal(message.trim().replace(/\n/g, "\r\n"));
                 callback(null, true);
             });
@@ -156,28 +156,28 @@ describe("SMTP Transport Tests", function () {
                     from: "test@valid.sender",
                     to: "test@valid.recipient"
                 }, message)
-            }, function (err) {
+            }, (err) => {
                 expect(err).to.not.exist;
                 done();
             });
         });
     });
 
-    describe("Authenticated sender tests", function () {
+    describe("Authenticated sender tests", () => {
 
-        var server;
+        let server;
 
-        beforeEach(function (done) {
+        beforeEach((done) => {
             server = new SMTPServer({
                 authMethods: ["PLAIN", "XOAUTH2"],
                 disabledCommands: ["STARTTLS"],
 
-                onData: function (stream, session, callback) {
-                    stream.on("data", function () {});
+                onData(stream, session, callback) {
+                    stream.on("data", () => {});
                     stream.on("end", callback);
                 },
 
-                onAuth: function (auth, session, callback) {
+                onAuth(auth, session, callback) {
                     if (auth.method !== "XOAUTH2") {
                         if (auth.username !== "testuser" || auth.password !== "testpass") {
                             return callback(new Error("Invalid username or password"));
@@ -195,13 +195,13 @@ describe("SMTP Transport Tests", function () {
                         user: 123
                     });
                 },
-                onMailFrom: function (address, session, callback) {
+                onMailFrom(address, session, callback) {
                     if (!/@valid.sender/.test(address.address)) {
                         return callback(new Error("Only user@valid.sender is allowed to send mail"));
                     }
                     return callback(); // Accept the address
                 },
-                onRcptTo: function (address, session, callback) {
+                onRcptTo(address, session, callback) {
                     if (!/@valid.recipient/.test(address.address)) {
                         return callback(new Error("Only user@valid.recipient is allowed to receive mail"));
                     }
@@ -213,24 +213,24 @@ describe("SMTP Transport Tests", function () {
             server.listen(PORT_NUMBER, done);
         });
 
-        afterEach(function (done) {
+        afterEach((done) => {
             server.close(done);
         });
 
-        it("Should login and send mail", function (done) {
-            var client = smtpTransport({
-                url: "smtp:testuser:testpass@localhost:" + PORT_NUMBER,
+        it("Should login and send mail", (done) => {
+            const client = smtpTransport({
+                url: `smtp:testuser:testpass@localhost:${PORT_NUMBER}`,
                 logger: false
             });
-            var chunks = [],
+            let chunks = [],
                 message = new Array(1024).join("teretere, vana kere\n");
 
-            server.on("data", function (connection, chunk) {
+            server.on("data", (connection, chunk) => {
                 chunks.push(chunk);
             });
 
-            server.on("dataReady", function (connection, callback) {
-                var body = Buffer.concat(chunks);
+            server.on("dataReady", (connection, callback) => {
+                const body = Buffer.concat(chunks);
                 expect(body.toString()).to.equal(message.trim().replace(/\n/g, "\r\n"));
                 callback(null, true);
             });
@@ -241,48 +241,48 @@ describe("SMTP Transport Tests", function () {
                     from: "test@valid.sender",
                     to: "test@valid.recipient"
                 }, message)
-            }, function (err) {
+            }, (err) => {
                 expect(err).to.not.exist;
                 done();
             });
         });
 
-        it("Should verify connection with success", function (done) {
-            var client = smtpTransport({
-                url: "smtp:testuser:testpass@localhost:" + PORT_NUMBER,
+        it("Should verify connection with success", (done) => {
+            const client = smtpTransport({
+                url: `smtp:testuser:testpass@localhost:${PORT_NUMBER}`,
                 logger: false
             });
 
-            client.verify(function (err, success) {
+            client.verify((err, success) => {
                 expect(err).to.not.exist;
                 expect(success).to.be.true;
                 done();
             });
         });
 
-        it("Should not verify connection", function (done) {
-            var client = smtpTransport({
-                url: "smtp:testuser:testpass@localhost:999" + PORT_NUMBER,
+        it("Should not verify connection", (done) => {
+            const client = smtpTransport({
+                url: `smtp:testuser:testpass@localhost:999${PORT_NUMBER}`,
                 logger: false
             });
 
-            client.verify(function (err) {
+            client.verify((err) => {
                 expect(err).to.exist;
                 done();
             });
         });
 
-        it("Should login and send mail using proxied socket", function (done) {
-            var client = smtpTransport({
+        it("Should login and send mail using proxied socket", (done) => {
+            const client = smtpTransport({
                 url: "smtp:testuser:testpass@www.example.com:1234",
                 logger: false,
-                getSocket: function (options, callback) {
-                    var socket = net.connect(PORT_NUMBER, "localhost");
-                    var errHandler = function (err) {
+                getSocket(options, callback) {
+                    const socket = net.connect(PORT_NUMBER, "localhost");
+                    const errHandler = function (err) {
                         callback(err);
                     };
                     socket.on("error", errHandler);
-                    socket.on("connect", function () {
+                    socket.on("connect", () => {
                         socket.removeListener("error", errHandler);
                         callback(null, {
                             connection: socket
@@ -290,15 +290,15 @@ describe("SMTP Transport Tests", function () {
                     });
                 }
             });
-            var chunks = [],
+            let chunks = [],
                 message = new Array(1024).join("teretere, vana kere\n");
 
-            server.on("data", function (connection, chunk) {
+            server.on("data", (connection, chunk) => {
                 chunks.push(chunk);
             });
 
-            server.on("dataReady", function (connection, callback) {
-                var body = Buffer.concat(chunks);
+            server.on("dataReady", (connection, callback) => {
+                const body = Buffer.concat(chunks);
                 expect(body.toString()).to.equal(message.trim().replace(/\n/g, "\r\n"));
                 callback(null, true);
             });
@@ -309,7 +309,7 @@ describe("SMTP Transport Tests", function () {
                     from: "test@valid.sender",
                     to: "test@valid.recipient"
                 }, message)
-            }, function (err) {
+            }, (err) => {
                 expect(err).to.not.exist;
                 done();
             });

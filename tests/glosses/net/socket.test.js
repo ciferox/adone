@@ -22,7 +22,7 @@ class ServerSocket extends adone.net.Server {
             return socket.disconnect();
         }
         socket.setPacketHandler(this.handler);
-        return;
+        
     }
 }
 
@@ -57,7 +57,7 @@ describe("Socket", function () {
 
     this.timeout(10000);
 
-    beforeEach(async function () {
+    beforeEach(async () => {
         client = new ClientSocket();
         server = new ServerSocket();
         server.defaults();
@@ -66,7 +66,7 @@ describe("Socket", function () {
         SERVER_PORT === null && (SERVER_PORT = await adone.net.util.getFreePort());
     });
 
-    afterEach(async function () {
+    afterEach(async () => {
         client.disconnect();
         await server.unbind();
     });
@@ -84,41 +84,41 @@ describe("Socket", function () {
             });
         }
 
-        it("bind()", async function () {
+        it("bind()", async () => {
             await server.bind();
             assert.equal(server.address().full, `tcp://127.0.0.1:${defaultPort}`);
             await checkBind(server, defaultPort);
         });
 
-        it("bind({ port = string address })", async function () {
+        it("bind({ port = string address })", async () => {
             await server.bind({ port: `tcp://127.0.0.1:${SERVER_PORT}` });
 
             assert.equal(server.address().full, `tcp://127.0.0.1:${SERVER_PORT}`);
             await checkBind(server, SERVER_PORT);
         });
 
-        it("bind({ host })", async function () {
+        it("bind({ host })", async () => {
             await server.bind({ host: "0.0.0.0" });
 
             assert.equal(server.address().full, `tcp://0.0.0.0:${defaultPort}`);
             await checkBind(server, defaultPort);
         });
 
-        it("bind({ port })", async function () {
+        it("bind({ port })", async () => {
             await server.bind({ port: SERVER_PORT });
 
             assert.equal(server.address().full, `tcp://127.0.0.1:${SERVER_PORT}`);
             await checkBind(server, SERVER_PORT);
         });
 
-        it("bind({ host, port })", async function () {
+        it("bind({ host, port })", async () => {
             await server.bind({ host: "0.0.0.0", port: SERVER_PORT });
 
             assert.equal(server.address().full, `tcp://0.0.0.0:${SERVER_PORT}`);
             await checkBind(server, SERVER_PORT);
         });
 
-        it("double bind error", async function () {
+        it("double bind error", async () => {
             try {
                 await server.bind({ port: SERVER_PORT });
                 await server.bind({ port: SERVER_PORT });
@@ -132,14 +132,14 @@ describe("Socket", function () {
 
         if (!is.win32) {
             describe("Unix socket", () => {
-                it("bind", async function () {
+                it("bind", async () => {
                     await server.bind({ port: UNIX_SOCKET });
                     expect(server.address().full).to.be.equal(`tcp://${UNIX_SOCKET}`);
                     adone.std.fs.accessSync(UNIX_SOCKET);
                     await checkBind(server, UNIX_SOCKET);
                 });
 
-                it("local address", async function () {
+                it("local address", async () => {
                     await server.bind({ port: UNIX_SOCKET });
                     await client.connect({ port: UNIX_SOCKET });
 
@@ -147,7 +147,7 @@ describe("Socket", function () {
                     assert.isOk(is.string(client.getLocalAddress().port));
                 });
 
-                it("remote address", async function () {
+                it("remote address", async () => {
                     await server.bind({ port: UNIX_SOCKET });
                     await client.connect({ port: UNIX_SOCKET });
 
@@ -155,7 +155,7 @@ describe("Socket", function () {
                     assert.isOk(is.string(client.getRemoteAddress().port));
                 });
 
-                it("double bind", async function () {
+                it("double bind", async () => {
                     try {
                         await server.bind({ port: UNIX_SOCKET });
                         const anotherSock = new adone.net.Server();
@@ -170,7 +170,7 @@ describe("Socket", function () {
             });
         }
 
-        it("unbind", async function () {
+        it("unbind", async () => {
             await server.bind({ port: SERVER_PORT });
             await server.unbind(SERVER_PORT);
             try {
@@ -181,7 +181,7 @@ describe("Socket", function () {
             assert.fail("Did not unbind port");
         });
 
-        it("bind unbind bind", async function () {
+        it("bind unbind bind", async () => {
             await server.bind({ port: SERVER_PORT });
             await server.unbind(SERVER_PORT);
             try {
@@ -196,19 +196,19 @@ describe("Socket", function () {
 
     });
 
-    describe("Connect", function () {
-        it("connect with defaults", async function () {
+    describe("Connect", () => {
+        it("connect with defaults", async () => {
             await server.bind();
             await client.connect();
         });
 
-        it("connect with 'null' options", async function () {
+        it("connect with 'null' options", async () => {
             await server.bind();
             client = new adone.net.Socket(null, null);
             await client.connect();
         });
 
-        it("reconnect attempts", async function () {
+        it("reconnect attempts", async () => {
             let reconnects = 0;
 
             client.on("reconnect attempt", () => {
@@ -225,7 +225,7 @@ describe("Socket", function () {
             assert.fail("Did not thrown any error");
         });
 
-        it("double reconnect attempts", async function () {
+        it("double reconnect attempts", async () => {
             async function testReconnect() {
                 let reconnects = 0;
 
@@ -247,7 +247,7 @@ describe("Socket", function () {
             await testReconnect();
         });
 
-        it("reject connection", async function (done) {
+        it("reject connection", async (done) => {
             server.reject = true;
             await server.bind({ port: SERVER_PORT });
             client.on("disconnect", () => {
@@ -256,7 +256,7 @@ describe("Socket", function () {
             await client.connect({ port: SERVER_PORT });
         });
 
-        it("server disconnect", async function (done) {
+        it("server disconnect", async (done) => {
             await server.bind({ port: SERVER_PORT });
             client.on("disconnect", () => {
                 done();
@@ -265,7 +265,7 @@ describe("Socket", function () {
             server.disconnect();
         });
 
-        it("local & remote addresses after connect", async function () {
+        it("local & remote addresses after connect", async () => {
             await server.bind({ port: SERVER_PORT });
             await client.connect({ port: SERVER_PORT });
             assert.isOk(is.object(client.getRemoteAddress()));
@@ -274,7 +274,7 @@ describe("Socket", function () {
             assert.isOk(is.string(client.getLocalAddress().full));
         });
 
-        it("local & remote addresses after disconnect", async function () {
+        it("local & remote addresses after disconnect", async () => {
             await server.bind({ port: SERVER_PORT });
             await client.connect({ port: SERVER_PORT });
             client.disconnect();
@@ -285,10 +285,10 @@ describe("Socket", function () {
         });
     });
 
-    describe("Options", function () {
-        it("get()", function () {
-            const s = new adone.net.Server;
-            const c = new adone.net.Socket;
+    describe("Options", () => {
+        it("get()", () => {
+            const s = new adone.net.Server();
+            const c = new adone.net.Socket();
 
             assert.equal(s.option.protocol, "tcp:");
             assert.equal(c.option.protocol, "tcp:");
@@ -296,9 +296,9 @@ describe("Socket", function () {
             assert.isNotOk(c.option.does_not_exit);
         });
 
-        it("set()", function () {
-            const s = new adone.net.Server;
-            const c = new adone.net.Socket;
+        it("set()", () => {
+            const s = new adone.net.Server();
+            const c = new adone.net.Socket();
 
             s.option.hello = "world";
             c.option.hello = "world";
@@ -307,9 +307,9 @@ describe("Socket", function () {
             assert.equal(c.option.hello, "world");
         });
 
-        it("assign()", function () {
-            const s = new adone.net.Server;
-            const c = new adone.net.Socket;
+        it("assign()", () => {
+            const s = new adone.net.Server();
+            const c = new adone.net.Socket();
 
             const options = {
                 a: "aa",
@@ -325,9 +325,9 @@ describe("Socket", function () {
             assert.equal(c.option.b, "bb");
         });
 
-        it("has()", function () {
-            const s = new adone.net.Server;
-            const c = new adone.net.Socket;
+        it("has()", () => {
+            const s = new adone.net.Server();
+            const c = new adone.net.Socket();
 
             s.option.a = "aa";
             c.option.a = "aa";
@@ -339,13 +339,13 @@ describe("Socket", function () {
         });
     });
 
-    describe("Addresses", function () {
+    describe("Addresses", () => {
         let server;
         let socket;
 
-        before(async function () {
-            server = new adone.net.Server;
-            socket = new adone.net.Socket;
+        before(async () => {
+            server = new adone.net.Server();
+            socket = new adone.net.Socket();
 
             SERVER_PORT === null && (SERVER_PORT = await adone.net.util.getFreePort());
 
@@ -353,12 +353,12 @@ describe("Socket", function () {
             await socket.connect({ port: SERVER_PORT });
         });
 
-        after(async function () {
+        after(async () => {
             await socket.disconnect();
             await server.unbind();
         });
 
-        it("server.address()", function () {
+        it("server.address()", () => {
             assert.deepEqual(server.address(), {
                 port: SERVER_PORT,
                 address: "127.0.0.1",
@@ -368,14 +368,14 @@ describe("Socket", function () {
             });
         });
 
-        it("socket.getLocalAddress()", function () {
+        it("socket.getLocalAddress()", () => {
             const address = socket.getLocalAddress();
-            assert.equal(address.address,  "127.0.0.1");
+            assert.equal(address.address, "127.0.0.1");
             assert.equal(address.protocol, "tcp:");
-            assert.equal(address.full,     `tcp://127.0.0.1:${address.port}`);
+            assert.equal(address.full, `tcp://127.0.0.1:${address.port}`);
         });
 
-        it("socket.getRemoteAddress()", function () {
+        it("socket.getRemoteAddress()", () => {
             assert.deepEqual(socket.getRemoteAddress(), {
                 port: SERVER_PORT,
                 address: "127.0.0.1",
@@ -386,10 +386,10 @@ describe("Socket", function () {
         });
     });
 
-    describe("socket.isConnected()", function () {
-        it("socket.isConnected()", async function () {
-            const server = new adone.net.Server;
-            const socket = new adone.net.Socket;
+    describe("socket.isConnected()", () => {
+        it("socket.isConnected()", async () => {
+            const server = new adone.net.Server();
+            const socket = new adone.net.Socket();
             await server.bind();
 
             await socket.connect();
@@ -401,8 +401,8 @@ describe("Socket", function () {
         });
     });
 
-    describe("Data", function () {
-        it("send 'true'", async function (done) {
+    describe("Data", () => {
+        it("send 'true'", async (done) => {
             await server.bind({ port: SERVER_PORT });
             server.setPacketHandler((socket, packet) => {
                 try {
@@ -416,7 +416,7 @@ describe("Socket", function () {
             client.write(true);
         });
 
-        it("send number", async function (done) {
+        it("send number", async (done) => {
             const n = 48763;
 
             await server.bind({ port: SERVER_PORT });
@@ -432,7 +432,7 @@ describe("Socket", function () {
             client.write(n);
         });
 
-        it("send string", async function (done) {
+        it("send string", async (done) => {
             const str = "interogatorplasmonferometer";
 
             await server.bind({ port: SERVER_PORT });
@@ -448,7 +448,7 @@ describe("Socket", function () {
             client.write(str);
         });
 
-        it("send array", async function (done) {
+        it("send array", async (done) => {
             const arr = [123, "testword", false];
 
             await server.bind({ port: SERVER_PORT });
@@ -464,7 +464,7 @@ describe("Socket", function () {
             client.write(arr);
         });
 
-        it("send object", async function (done) {
+        it("send object", async (done) => {
             const obj = { a: 1000000, b: { c: "good", d: [1, 2, 3] }, e: true };
 
             await server.bind({ port: SERVER_PORT });
@@ -480,7 +480,7 @@ describe("Socket", function () {
             client.write(obj);
         });
 
-        it("send data after destroy", async function (done) {
+        it("send data after destroy", async (done) => {
             try {
                 const obj = { a: 1000000, b: { c: "good", d: [1, 2, 3] }, e: true };
 
@@ -498,7 +498,7 @@ describe("Socket", function () {
             done(new Error("No error thrown"));
         });
 
-        it("echo response", async function (done) {
+        it("echo response", async (done) => {
             const obj = { a: 1000000, b: { c: "good", d: [1, 2, 3] }, e: true };
 
             await server.bind({ port: SERVER_PORT });
@@ -518,8 +518,8 @@ describe("Socket", function () {
         });
     });
 
-    describe("Stability", function () {
-        it("10 MB", function (done) {
+    describe("Stability", () => {
+        it("10 MB", (done) => {
             const tenMB = "a".repeat(Math.pow(2, 20) * 10);
 
             server.bind({ port: SERVER_PORT });
@@ -538,7 +538,7 @@ describe("Socket", function () {
             client.write(tenMB);
         });
 
-        it("client - write after self disconnect", async function () {
+        it("client - write after self disconnect", async () => {
             const data = "a".repeat(Math.pow(2, 10));
 
             await server.bind({ port: SERVER_PORT });
@@ -554,7 +554,7 @@ describe("Socket", function () {
             assert.fail("client.write(data) did not thrown any error");
         });
 
-        it("client - write after server disconnect", async function () {
+        it("client - write after server disconnect", async () => {
             const data = "a".repeat(Math.pow(2, 10));
 
             await server.bind({ port: SERVER_PORT });

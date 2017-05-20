@@ -3,7 +3,7 @@
 
 const { template } = adone.js.compiler;
 
-let helpers = {};
+const helpers = {};
 export default helpers;
 
 helpers.typeof = template(`

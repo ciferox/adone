@@ -59,7 +59,7 @@ const Controllers = {
         },
         toRGB: {
             value(raw) {
-                let state = priv.get(this);
+                const state = priv.get(this);
 
                 if (state.mode === EVS.Type_EV3_COLOR) {
                     return raw > 0 && raw < 8 ? state.colors[raw] : state.colors[0];
@@ -136,7 +136,7 @@ const Controllers = {
         },
         toRGB: {
             value(raw) {
-                let state = priv.get(this);
+                const state = priv.get(this);
 
                 if (state.mode === EVS.Type_NXT_COLOR) {
                     return raw > 0 && raw < 7 ? state.colors[raw] : state.colors[0];

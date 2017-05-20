@@ -392,9 +392,9 @@ describe("WebSocket Netron", () => {
                 addDocument(name, doc) {
                     if (this._docs.size >= this._totalSize || this._docs.has(name)) {
                         return false;
-                    } else {
-                        this._docs.set(name, doc);
-                    }
+                    } 
+                    this._docs.set(name, doc);
+                    
                     return true;
                 }
 
@@ -818,9 +818,9 @@ describe("WebSocket Netron", () => {
                             if (this.keeper) {
                                 depthLabel++;
                                 return (await this.keeper.getCounter()) + 1;
-                            } else {
-                                return 1;
-                            }
+                            } 
+                            return 1;
+                            
                         }
 
                         async getNextKeeper(keeper) {

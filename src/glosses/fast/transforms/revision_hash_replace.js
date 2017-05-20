@@ -82,7 +82,7 @@ export default function revisionHashReplace(options = {}) {
                     const reved = options.modifyReved ? options.modifyReved(rename.reved) : rename.reved;
                     contents = contents.split(unreved).join(reved);
                     if (options.prefix) {
-                        contents = contents.split("/" + options.prefix).join(options.prefix + "/");
+                        contents = contents.split(`/${options.prefix}`).join(`${options.prefix}/`);
                     }
                 }
 

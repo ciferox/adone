@@ -37,9 +37,9 @@ export default class Parser extends Tokenizer {
     isReservedWord(word: string): boolean {
         if (word === "await") {
             return this.inModule;
-        } else {
-            return reservedWords[6](word);
-        }
+        } 
+        return reservedWords[6](word);
+        
     }
 
     hasPlugin(name: string): boolean {
@@ -47,7 +47,7 @@ export default class Parser extends Tokenizer {
             return true;
         }
 
-        return !!this.plugins[name];
+        return Boolean(this.plugins[name]);
     }
 
     extend(name: string, f: Function) {
@@ -61,7 +61,9 @@ export default class Parser extends Tokenizer {
 
         pluginNames.forEach((name) => {
             const plugin = plugins[name];
-            if (plugin) plugin(this);
+            if (plugin) {
+                plugin(this); 
+            }
         });
     }
 
@@ -86,7 +88,9 @@ export default class Parser extends Tokenizer {
                 pluginMap[name] = true;
 
                 const plugin = plugins[name];
-                if (plugin) plugin(this);
+                if (plugin) {
+                    plugin(this); 
+                }
             }
         }
 

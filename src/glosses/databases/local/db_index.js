@@ -23,7 +23,7 @@ const projectForUnique = (elt) => {
 
 
 export default class Index {
-    constructor({ fieldName, unique = false, sparse = false  } = {}) {
+    constructor({ fieldName, unique = false, sparse = false } = {}) {
         this.fieldName = fieldName;
         this.unique = unique;
         this.sparse = sparse;

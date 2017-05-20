@@ -153,20 +153,20 @@ const decodeOct = (val, offset) => {
     // If prefixed with 0x80 then parse as a base-256 integer
     if (val[offset] & 0x80) {
         return parse256(val.slice(offset, offset + 8));
-    } else {
+    } 
         // Older versions of tar can prefix with spaces
-        while (offset < val.length && val[offset] === 32) {
-            offset++;
-        }
-        const end = clamp(indexOf(val, 32, offset, val.length), val.length, val.length);
-        while (offset < end && val[offset] === 0) {
-            offset++;
-        }
-        if (end === offset) {
-            return 0;
-        }
-        return parseInt(val.slice(offset, end).toString(), 8);
+    while (offset < val.length && val[offset] === 32) {
+        offset++;
     }
+    const end = clamp(indexOf(val, 32, offset, val.length), val.length, val.length);
+    while (offset < end && val[offset] === 0) {
+        offset++;
+    }
+    if (end === offset) {
+        return 0;
+    }
+    return parseInt(val.slice(offset, end).toString(), 8);
+    
 };
 
 const decodeStr = (val, offset, length) => val.slice(offset, indexOf(val, 0, offset, offset + length)).toString();

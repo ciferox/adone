@@ -164,7 +164,7 @@ function Orientation(opts) {
             state.calibration = raw.calibration;
         }
 
-        let data = {
+        const data = {
             euler: this.euler,
             quarternion: this.quarternion,
             calibration: this.calibration
@@ -189,13 +189,13 @@ util.inherits(Orientation, Emitter);
 Object.defineProperties(Orientation.prototype, {
     euler: {
         get() {
-            let state = priv.get(this);
+            const state = priv.get(this);
             return this.toScaledEuler(state);
         }
     },
     quarternion: {
         get() {
-            let state = priv.get(this);
+            const state = priv.get(this);
             return this.toScaledQuarternion(state);
         }
     }

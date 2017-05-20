@@ -3,22 +3,22 @@
 /**
  * Constants
  */
-var TARGET_TYPES = ["html", "jade", "pug", "slm", "slim", "jsx", "haml", "less", "sass", "scss"];
-var IMAGES = ["jpeg", "jpg", "png", "gif"];
-var DEFAULT_TARGET = TARGET_TYPES[0];
+const TARGET_TYPES = ["html", "jade", "pug", "slm", "slim", "jsx", "haml", "less", "sass", "scss"];
+const IMAGES = ["jpeg", "jpg", "png", "gif"];
+const DEFAULT_TARGET = TARGET_TYPES[0];
 
 /**
  * Transform module
  */
 var transform = function (filepath, i, length, sourceFile, targetFile) {
-    var type;
+    let type;
     if (targetFile && targetFile.path) {
         type = typeFromExt(targetFile.extname.slice(1));
     }
     if (!TARGET_TYPES.includes(type)) {
         type = DEFAULT_TARGET;
     }
-    var func = transform[type];
+    const func = transform[type];
     if (func) {
         return func.apply(transform, arguments);
     }
@@ -34,11 +34,11 @@ transform.selfClosingTag = false;
 /**
  * Transform functions
  */
-TARGET_TYPES.forEach(function (targetType) {
+TARGET_TYPES.forEach((targetType) => {
     transform[targetType] = function (filepath) {
-        var ext = adone.std.path.extname(filepath).slice(1);
-        var type = typeFromExt(ext);
-        var func = transform[targetType][type];
+        const ext = adone.std.path.extname(filepath).slice(1);
+        const type = typeFromExt(ext);
+        const func = transform[targetType][type];
         if (func) {
             return func.apply(transform[targetType], arguments);
         }
@@ -46,7 +46,7 @@ TARGET_TYPES.forEach(function (targetType) {
 });
 
 transform.html.css = function (filepath) {
-    return `<link rel="stylesheet" href="${filepath}"` + end();
+    return `<link rel="stylesheet" href="${filepath}"${end()}`;
 };
 
 transform.html.js = function (filepath) {
@@ -59,7 +59,7 @@ transform.html.jsx = function (filepath) {
 };
 
 transform.html.html = function (filepath) {
-    return `<link rel="import" href="${filepath}"` + end();
+    return `<link rel="import" href="${filepath}"${end()}`;
 };
 
 transform.html.coffee = function (filepath) {
@@ -67,7 +67,7 @@ transform.html.coffee = function (filepath) {
 };
 
 transform.html.image = function (filepath) {
-    return `<img src="${filepath}"` + end();
+    return `<img src="${filepath}"${end()}`;
 };
 
 transform.jade.css = function (filepath) {
@@ -83,7 +83,7 @@ transform.jade.jsx = function (filepath) {
 };
 
 transform.jade.jade = function (filepath) {
-    return "include " + filepath;
+    return `include ${filepath}`;
 };
 
 transform.jade.html = function (filepath) {
@@ -111,7 +111,7 @@ transform.pug.jsx = function (filepath) {
 };
 
 transform.pug.pug = function (filepath) {
-    return "include " + filepath;
+    return `include ${filepath}`;
 };
 
 transform.pug.html = function (filepath) {
@@ -193,11 +193,11 @@ transform.scss.css = transform.scss.sass;
  * Transformations for jsx is like html
  * but always with self closing tags, invalid jsx otherwise
  */
-Object.keys(transform.html).forEach(function (type) {
+Object.keys(transform.html).forEach((type) => {
     transform.jsx[type] = function () {
-        var originalOption = transform.selfClosingTag;
+        const originalOption = transform.selfClosingTag;
         transform.selfClosingTag = true;
-        var result = transform.html[type].apply(transform.html, arguments);
+        const result = transform.html[type].apply(transform.html, arguments);
         transform.selfClosingTag = originalOption;
         return result;
     };

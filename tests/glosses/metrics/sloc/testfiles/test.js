@@ -1,11 +1,11 @@
 (function (exports) {
-  var Bitcoin = exports;
+    const Bitcoin = exports;
 
-  if ('object' !== typeof module) {
-    Bitcoin.EventEmitter = EventEmitter;
-  }
+    if (typeof module !== "object") {
+        Bitcoin.EventEmitter = EventEmitter;
+    }
 })(
-  'object' === typeof module ? module.exports : (window.Bitcoin = {})
+  typeof module === "object" ? module.exports : (window.Bitcoin = {})
 );
 
 /*

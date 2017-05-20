@@ -15,7 +15,7 @@ let ignorePath;
  */
 async function injectDependencies(globalConfig) {
     config = globalConfig;
-    let stream = config.get("stream");
+    const stream = config.get("stream");
 
     globalDependenciesSorted = config.get("global-dependencies-sorted");
     ignorePath = config.get("ignore-path");
@@ -27,7 +27,7 @@ async function injectDependencies(globalConfig) {
             fileType: stream.fileType
         });
     } else {
-        for (let source of config.get("src")) {
+        for (const source of config.get("src")) {
             await injectScripts(source);
         }
     }
@@ -52,19 +52,19 @@ function replaceIncludes(file, fileType, returnType) {
         blockType = blockType || "js";
 
         let newFileContents = startBlock;
-        let dependencies = globalDependenciesSorted[blockType] || [];
+        const dependencies = globalDependenciesSorted[blockType] || [];
         let quoteMark = "";
 
         (string.substr(0, offset) + string.substr(offset + match.length)).
             replace(oldScripts, "").
             replace(fileType.block, "").
-            replace(fileType.detect[blockType], function (match) {
+            replace(fileType.detect[blockType], (match) => {
                 quoteMark = match.match(/['"]/) && match.match(/['"]/)[0];
             });
 
         if (!quoteMark) {
             // What the heck. Check if there's anything in the oldScripts block.
-            match.replace(fileType.detect[blockType], function (match) {
+            match.replace(fileType.detect[blockType], (match) => {
                 quoteMark = match.match(/['"]/) && match.match(/['"]/)[0];
             });
         }
@@ -72,13 +72,13 @@ function replaceIncludes(file, fileType, returnType) {
         spacing = returnType + spacing.replace(/\r|\n/g, "");
 
         dependencies.
-            map(function (filePath) {
+            map((filePath) => {
                 return path.join(
                     path.relative(path.dirname(file), path.dirname(filePath)),
                     path.basename(filePath)
                 ).replace(/\\/g, "/").replace(ignorePath, "");
             }).
-            forEach(function (filePath) {
+            forEach((filePath) => {
                 if (typeof fileType.replace[blockType] === "function") {
                     newFileContents += spacing + fileType.replace[blockType](filePath);
                 } else if (typeof fileType.replace[blockType] === "string") {
@@ -108,7 +108,7 @@ function replaceIncludes(file, fileType, returnType) {
 async function injectScripts(filePath) {
     let contents = await new Promise((resolve, reject) => {
         adone.std.fs.readFile(filePath, (error, data) => {
-            if (error){
+            if (error) {
                 reject(error);
             } else {
                 resolve(data);
@@ -116,11 +116,11 @@ async function injectScripts(filePath) {
         });
     });
     contents = String(contents);
-    let fileExt = path.extname(filePath).substr(1);
-    let fileType = fileTypes[fileExt] || fileTypes["default"];
-    let returnType = /\r\n/.test(contents) ? "\r\n" : "\n";
+    const fileExt = path.extname(filePath).substr(1);
+    const fileType = fileTypes[fileExt] || fileTypes.default;
+    const returnType = /\r\n/.test(contents) ? "\r\n" : "\n";
 
-    let newContents = contents.replace(
+    const newContents = contents.replace(
         fileType.block,
         replaceIncludes(filePath, fileType, returnType)
     );
@@ -128,7 +128,7 @@ async function injectScripts(filePath) {
     if (contents !== newContents) {
         await new Promise((resolve, reject) => {
             adone.std.fs.writeFile(filePath, newContents, (error) => {
-                if (error){
+                if (error) {
                     reject(error);
                 } else {
                     resolve();
@@ -142,10 +142,10 @@ async function injectScripts(filePath) {
 
 
 function injectScriptsStream(filePath, contents, fileExt) {
-    let returnType = /\r\n/.test(contents) ? "\r\n" : "\n";
-    let fileType = fileTypes[fileExt] || fileTypes["default"];
+    const returnType = /\r\n/.test(contents) ? "\r\n" : "\n";
+    const fileType = fileTypes[fileExt] || fileTypes.default;
 
-    let newContents = contents.replace(
+    const newContents = contents.replace(
         fileType.block,
         replaceIncludes(filePath, fileType, returnType)
     );

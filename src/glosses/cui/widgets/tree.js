@@ -58,17 +58,17 @@ export default class Tree extends adone.cui.widget.Element {
 
             let i = 0;
 
-            if (typeof node.children === "function")                {
+            if (typeof node.children === "function") {
                 node.childrenContent = node.children(node);
             }
 
-            if (!node.childrenContent)                { 
+            if (!node.childrenContent) { 
                 node.childrenContent = node.children;
             }
 
             for (let child in node.childrenContent) {
 
-                if (!node.childrenContent[child].name)                    { 
+                if (!node.childrenContent[child].name) { 
                     node.childrenContent[child].name = child;
                 }
 
@@ -77,13 +77,13 @@ export default class Tree extends adone.cui.widget.Element {
                 child.parent = node;
                 child.position = i++;
 
-                if (typeof child.extended === "undefined")                    {
+                if (typeof child.extended === "undefined") {
                     child.extended = this.options.extended; 
                 }
 
-                if (typeof child.children === "function")                    { 
+                if (typeof child.children === "function") { 
                     child.childrenContent = child.children(child); 
-}                else                    {
+                } else {
                     child.childrenContent = child.children; 
                 }
 
@@ -130,7 +130,7 @@ export default class Tree extends adone.cui.widget.Element {
     }
 
     render() {
-        if (this.screen.focused == this.rows)            {
+        if (this.screen.focused == this.rows) {
             this.rows.focus(); 
         }
 

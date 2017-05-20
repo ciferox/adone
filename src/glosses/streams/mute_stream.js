@@ -93,14 +93,14 @@ export default class MuteStream extends Stream {
                 }
                 this._hadControl = true;
                 return this.emit("data", c);
-            } else {
-                if (this._prompt && this._hadControl && c.indexOf(this._prompt) === 0) {
-                    this._hadControl = false;
-                    this.emit("data", this._prompt);
-                    c = c.substr(this._prompt.length);
-                }
-                c = c.toString().replace(/./g, this.replace);
+            } 
+            if (this._prompt && this._hadControl && c.indexOf(this._prompt) === 0) {
+                this._hadControl = false;
+                this.emit("data", this._prompt);
+                c = c.substr(this._prompt.length);
             }
+            c = c.toString().replace(/./g, this.replace);
+            
         }
         this.emit("data", c);
     }

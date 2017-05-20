@@ -25,8 +25,8 @@ function SMTPTransport(options) {
         };
     }
 
-    var urlData;
-    var service = options.service;
+    let urlData;
+    let service = options.service;
 
     if (typeof options.getSocket === "function") {
         this.getSocket = options.getSocket;
@@ -47,10 +47,10 @@ function SMTPTransport(options) {
     this.logger = shared.getLogger(this.options);
 
     // temporary object
-    var connection = new SMTPConnection(this.options);
+    const connection = new SMTPConnection(this.options);
 
     this.name = "SMTP";
-    this.version = packageData.version + "[client:" + connection.version + "]";
+    this.version = `${packageData.version}[client:${connection.version}]`;
 }
 adone.std.util.inherits(SMTPTransport, adone.std.events.EventEmitter);
 
@@ -74,25 +74,25 @@ SMTPTransport.prototype.getSocket = function (options, callback) {
  */
 SMTPTransport.prototype.send = function (mail, callback) {
 
-    this.getSocket(this.options, function (err, socketOptions) {
+    this.getSocket(this.options, (err, socketOptions) => {
         if (err) {
             return callback(err);
         }
 
-        var options = this.options;
+        let options = this.options;
         if (socketOptions && socketOptions.connection) {
             this.logger.info("Using proxied socket from %s:%s to %s:%s", socketOptions.connection.remoteAddress, socketOptions.connection.remotePort, options.host || "", options.port || "");
             // only copy options if we need to modify it
             options = assign(false, options);
-            Object.keys(socketOptions).forEach(function (key) {
+            Object.keys(socketOptions).forEach((key) => {
                 options[key] = socketOptions[key];
             });
         }
 
-        var connection = new SMTPConnection(options);
-        var returned = false;
+        const connection = new SMTPConnection(options);
+        let returned = false;
 
-        connection.once("error", function (err) {
+        connection.once("error", (err) => {
             if (returned) {
                 return;
             }
@@ -101,7 +101,7 @@ SMTPTransport.prototype.send = function (mail, callback) {
             return callback(err);
         });
 
-        connection.once("end", function () {
+        connection.once("end", () => {
             if (returned) {
                 return;
             }
@@ -109,17 +109,17 @@ SMTPTransport.prototype.send = function (mail, callback) {
             return callback(new Error("Connection closed"));
         });
 
-        var sendMessage = function () {
-            var envelope = mail.message.getEnvelope();
-            var messageId = (mail.message.getHeader("message-id") || "").replace(/[<>\s]/g, "");
-            var recipients = [].concat(envelope.to || []);
+        const sendMessage = function () {
+            const envelope = mail.message.getEnvelope();
+            const messageId = (mail.message.getHeader("message-id") || "").replace(/[<>\s]/g, "");
+            const recipients = [].concat(envelope.to || []);
             if (recipients.length > 3) {
-                recipients.push("...and " + recipients.splice(2).length + " more");
+                recipients.push(`...and ${recipients.splice(2).length} more`);
             }
 
             this.logger.info("Sending message <%s> to <%s>", messageId, recipients.join(", "));
 
-            connection.send(envelope, mail.message.createReadStream(), function (err, info) {
+            connection.send(envelope, mail.message.createReadStream(), (err, info) => {
                 if (returned) {
                     return;
                 }
@@ -138,13 +138,13 @@ SMTPTransport.prototype.send = function (mail, callback) {
             });
         }.bind(this);
 
-        connection.connect(function () {
+        connection.connect(() => {
             if (returned) {
                 return;
             }
 
             if (this.options.auth) {
-                connection.login(this.options.auth, function (err) {
+                connection.login(this.options.auth, (err) => {
                     if (returned) {
                         return;
                     }
@@ -160,8 +160,8 @@ SMTPTransport.prototype.send = function (mail, callback) {
             } else {
                 sendMessage();
             }
-        }.bind(this));
-    }.bind(this));
+        });
+    });
 };
 
 /**
@@ -170,32 +170,32 @@ SMTPTransport.prototype.send = function (mail, callback) {
  * @param {Function} callback Callback function
  */
 SMTPTransport.prototype.verify = function (callback) {
-    var promise;
+    let promise;
 
     if (!callback && typeof Promise === "function") {
-        promise = new Promise(function (resolve, reject) {
+        promise = new Promise((resolve, reject) => {
             callback = shared.callbackPromise(resolve, reject);
         });
     }
 
-    this.getSocket(this.options, function (err, socketOptions) {
+    this.getSocket(this.options, (err, socketOptions) => {
         if (err) {
             return callback(err);
         }
 
-        var options = this.options;
+        let options = this.options;
         if (socketOptions && socketOptions.connection) {
             this.logger.info("Using proxied socket from %s:%s", socketOptions.connection.remoteAddress, socketOptions.connection.remotePort);
             options = assign(false, options);
-            Object.keys(socketOptions).forEach(function (key) {
+            Object.keys(socketOptions).forEach((key) => {
                 options[key] = socketOptions[key];
             });
         }
 
-        var connection = new SMTPConnection(options);
-        var returned = false;
+        const connection = new SMTPConnection(options);
+        let returned = false;
 
-        connection.once("error", function (err) {
+        connection.once("error", (err) => {
             if (returned) {
                 return;
             }
@@ -204,7 +204,7 @@ SMTPTransport.prototype.verify = function (callback) {
             return callback(err);
         });
 
-        connection.once("end", function () {
+        connection.once("end", () => {
             if (returned) {
                 return;
             }
@@ -212,7 +212,7 @@ SMTPTransport.prototype.verify = function (callback) {
             return callback(new Error("Connection closed"));
         });
 
-        var finalize = function () {
+        const finalize = function () {
             if (returned) {
                 return;
             }
@@ -221,13 +221,13 @@ SMTPTransport.prototype.verify = function (callback) {
             return callback(null, true);
         };
 
-        connection.connect(function () {
+        connection.connect(() => {
             if (returned) {
                 return;
             }
 
             if (this.options.auth) {
-                connection.login(this.options.auth, function (err) {
+                connection.login(this.options.auth, (err) => {
                     if (returned) {
                         return;
                     }
@@ -243,8 +243,8 @@ SMTPTransport.prototype.verify = function (callback) {
             } else {
                 finalize();
             }
-        }.bind(this));
-    }.bind(this));
+        });
+    });
 
     return promise;
 };
@@ -253,11 +253,11 @@ SMTPTransport.prototype.verify = function (callback) {
  * Copies properties from source objects to target objects
  */
 function assign( /* target, ... sources */ ) {
-    var args = Array.prototype.slice.call(arguments);
-    var target = args.shift() || {};
+    const args = Array.prototype.slice.call(arguments);
+    const target = args.shift() || {};
 
-    args.forEach(function (source) {
-        Object.keys(source || {}).forEach(function (key) {
+    args.forEach((source) => {
+        Object.keys(source || {}).forEach((key) => {
             if (["tls", "auth"].indexOf(key) >= 0 && source[key] && typeof source[key] === "object") {
                 // tls and auth are special keys that need to be enumerated separately
                 // other objects are passed as is
@@ -265,7 +265,7 @@ function assign( /* target, ... sources */ ) {
                     // esnure that target has this key
                     target[key] = {};
                 }
-                Object.keys(source[key]).forEach(function (subKey) {
+                Object.keys(source[key]).forEach((subKey) => {
                     target[key][subKey] = source[key][subKey];
                 });
             } else {

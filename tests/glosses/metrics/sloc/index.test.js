@@ -19,7 +19,7 @@ const longLine = ((() => {
     return result1;
 })()).join("");
 
-describe("Sloc", function() {
+describe("Sloc", () => {
 
     it("should be a function", () => {
         expect(sloc).to.be.a("function");
@@ -46,10 +46,10 @@ describe("Sloc", function() {
         expect(sloc("a\rb\rc", "js").total).to.be.equal(3);
     });
 
-    describe("language support", function (){
-        langs.map((l) => (l =>
-            l.names.map((n) => (n =>
-                it(`should support ${n}`, function() {
+    describe("language support", () => {
+        langs.map((l) => ((l) =>
+            l.names.map((n) => ((n) =>
+                it(`should support ${n}`, () => {
                     const res = sloc(l.code, n);
                     expect(sloc.extensions.includes(n)).to.be.equal(true);
                     if (l.total) {
@@ -81,12 +81,12 @@ describe("Sloc", function() {
         )(l));
     });
 
-    it("should throw an error", function() {
+    it("should throw an error", () => {
         expect(() => sloc("foo", "foobar")).to.throw();
         expect(() => sloc(null, "coffee")).to.throw();
     });
 
-    it("keeps an array with all supported extensions", function() {
+    it("keeps an array with all supported extensions", () => {
         expect(sloc.extensions).to.be.be.an("array");
         langs.map((l) => {
             l.names.map((n) => {
@@ -95,7 +95,7 @@ describe("Sloc", function() {
         });
     });
 
-    it("keeps an array with all supported keys", function() {
+    it("keeps an array with all supported keys", () => {
         const keys = [
             "total",
             "source",
@@ -119,7 +119,7 @@ describe("Sloc", function() {
     });
 
     it("evaluates the testfiles correctly", (done) =>
-        fs.readFile(path.resolve(__dirname, "./testfiles/test.js"), "utf-8", function(err, code) {
+        fs.readFile(path.resolve(__dirname, "./testfiles/test.js"), "utf-8", (err, code) => {
             expect(err).to.be.null;
             let res = sloc(code, "js");
             expect(res.total).to.be.equal(175);
@@ -131,7 +131,7 @@ describe("Sloc", function() {
             expect(res.source).to.be.equal(8);
             expect(res.todo).to.be.equal(4);
 
-            fs.readFile(path.resolve(__dirname, "./testfiles/test2.js"), "utf-8", function(err, code) {
+            fs.readFile(path.resolve(__dirname, "./testfiles/test2.js"), "utf-8", (err, code) => {
                 res = sloc(code, "js");
                 expect(res.source).to.be.equal(0);
                 expect(res.empty).to.be.equal(5);
@@ -143,8 +143,8 @@ describe("Sloc", function() {
         })
     );
 
-    it("evaluates an empty file correctly", done =>
-        fs.readFile(path.resolve(__dirname, "./testfiles/empty.js"), "utf-8", function(err, code) {
+    it("evaluates an empty file correctly", (done) =>
+        fs.readFile(path.resolve(__dirname, "./testfiles/empty.js"), "utf-8", (err, code) => {
             const res = sloc(code, "js");
             expect(res.empty).to.be.equal(1);
             expect(res.source).to.be.equal(0);
@@ -154,7 +154,7 @@ describe("Sloc", function() {
         })
     );
 
-    it("ignores the last newline char", function() {
+    it("ignores the last newline char", () => {
         const res = sloc("foo\nbar\n", "js");
         expect(res.empty).to.be.equal(0);
         expect(res.source).to.be.equal(2);

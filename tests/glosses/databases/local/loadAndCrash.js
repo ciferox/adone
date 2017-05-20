@@ -22,7 +22,7 @@ function isFd(path) {
 
 function assertEncoding(encoding) {
     if (encoding && !Buffer.isEncoding(encoding)) {
-        throw new Error("Unknown encoding: " + encoding);
+        throw new Error(`Unknown encoding: ${encoding}`);
     }
 }
 
@@ -36,20 +36,26 @@ function writeAll(fd, isUserFd, buffer, offset, length, position) {
     const l = Math.min(5000, length);   // Force write by chunks of 5000 bytes to ensure data will be incomplete on crash
 
     // write(fd, buffer, offset, length, position, callback)
-    fs.write(fd, buffer, offset, l, position, function (writeErr, written) {
+    fs.write(fd, buffer, offset, l, position, (writeErr, written) => {
         if (writeErr) {
             if (isUserFd) {
-                if (callback) callback(writeErr);
+                if (callback) {
+                    callback(writeErr); 
+                }
             } else {
-                fs.close(fd, function () {
-                    if (callback) callback(writeErr);
+                fs.close(fd, () => {
+                    if (callback) {
+                        callback(writeErr); 
+                    }
                 });
             }
         } else {
             onePassDone = true;
             if (written === length) {
                 if (isUserFd) {
-                    if (callback) callback(null);
+                    if (callback) {
+                        callback(null); 
+                    }
                 } else {
                     fs.close(fd, callback);
                 }
@@ -85,16 +91,18 @@ fs.writeFile = function (path, data, options) {
         return;
     }
 
-    fs.open(path, flag, options.mode, function (openErr, fd) {
+    fs.open(path, flag, options.mode, (openErr, fd) => {
         if (openErr) {
-            if (callback) callback(openErr);
+            if (callback) {
+                callback(openErr); 
+            }
         } else {
             writeFd(fd, false);
         }
     });
 
     function writeFd(fd, isUserFd) {
-        const buffer = (data instanceof Buffer) ? data : new Buffer("" + data,
+        const buffer = (data instanceof Buffer) ? data : new Buffer(`${data}`,
             options.encoding || "utf8");
         const position = /a/.test(flag) ? null : 0;
 

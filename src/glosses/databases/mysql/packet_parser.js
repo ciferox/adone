@@ -170,9 +170,9 @@ export default class PacketParser {
             this.length += chunk[1] << 16;
             this.execute = PacketParser.prototype.executePayload;
             return this.executePayload(chunk.slice(2));
-        } else {
-            this.execute = PacketParser.prototype.executeHeader3;
-        }
+        } 
+        this.execute = PacketParser.prototype.executeHeader3;
+        
         return null;
     }
 

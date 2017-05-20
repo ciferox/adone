@@ -15,12 +15,12 @@ export default class Store extends Map {
     get(key: string): any {
         if (this.has(key)) {
             return super.get(key);
-        } else {
-            if (Object.prototype.hasOwnProperty.call(this.dynamicData, key)) {
-                const val = this.dynamicData[key]();
-                this.set(key, val);
-                return val;
-            }
+        } 
+        if (Object.prototype.hasOwnProperty.call(this.dynamicData, key)) {
+            const val = this.dynamicData[key]();
+            this.set(key, val);
+            return val;
         }
+        
     }
 }

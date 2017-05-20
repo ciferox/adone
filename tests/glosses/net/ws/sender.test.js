@@ -41,8 +41,8 @@ describe("net", "ws", "Sender", () => {
                     }
                 }
             }, {
-                    "permessage-deflate": perMessageDeflate
-                });
+                "permessage-deflate": perMessageDeflate
+            });
 
             perMessageDeflate.accept([{}]);
 
@@ -62,8 +62,8 @@ describe("net", "ws", "Sender", () => {
                     done();
                 }
             }, {
-                    "permessage-deflate": perMessageDeflate
-                });
+                "permessage-deflate": perMessageDeflate
+            });
 
             perMessageDeflate.accept([{}]);
 
@@ -87,8 +87,8 @@ describe("net", "ws", "Sender", () => {
                     done();
                 }
             }, {
-                    "permessage-deflate": perMessageDeflate
-                });
+                "permessage-deflate": perMessageDeflate
+            });
 
             perMessageDeflate.accept([{}]);
 
@@ -113,8 +113,8 @@ describe("net", "ws", "Sender", () => {
                     done();
                 }
             }, {
-                    "permessage-deflate": perMessageDeflate
-                });
+                "permessage-deflate": perMessageDeflate
+            });
 
             perMessageDeflate.accept([{}]);
 
@@ -139,8 +139,8 @@ describe("net", "ws", "Sender", () => {
                     done();
                 }
             }, {
-                    "permessage-deflate": perMessageDeflate
-                });
+                "permessage-deflate": perMessageDeflate
+            });
 
             perMessageDeflate.accept([{}]);
 
@@ -165,8 +165,8 @@ describe("net", "ws", "Sender", () => {
                     done();
                 }
             }, {
-                    "permessage-deflate": perMessageDeflate
-                });
+                "permessage-deflate": perMessageDeflate
+            });
 
             perMessageDeflate.accept([{}]);
 
@@ -184,8 +184,8 @@ describe("net", "ws", "Sender", () => {
                     }
                 }
             }, {
-                    "permessage-deflate": perMessageDeflate
-                });
+                "permessage-deflate": perMessageDeflate
+            });
 
             perMessageDeflate.accept([{}]);
 
@@ -215,8 +215,8 @@ describe("net", "ws", "Sender", () => {
                     }
                 }
             }, {
-                    "permessage-deflate": perMessageDeflate
-                });
+                "permessage-deflate": perMessageDeflate
+            });
 
             perMessageDeflate.accept([{}]);
 
@@ -245,8 +245,8 @@ describe("net", "ws", "Sender", () => {
                     }
                 }
             }, {
-                    "permessage-deflate": perMessageDeflate
-                });
+                "permessage-deflate": perMessageDeflate
+            });
 
             perMessageDeflate.accept([{}]);
 
@@ -272,8 +272,8 @@ describe("net", "ws", "Sender", () => {
                     }
                 }
             }, {
-                    "permessage-deflate": perMessageDeflate
-                });
+                "permessage-deflate": perMessageDeflate
+            });
 
             perMessageDeflate.accept([{}]);
 

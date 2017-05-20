@@ -1,15 +1,15 @@
 const { is } = adone;
 
-describe("Configuration", function () {
+describe("Configuration", () => {
     let conf;
     let proto;
 
-    beforeEach(function () {
+    beforeEach(() => {
         conf = new adone.configuration.Configuration();
         proto = conf.__proto__;
     });
 
-    it("should have map-like interface", function () {
+    it("should have map-like interface", () => {
         assert.isTrue(is.propertyOwned(proto, "set"));
         assert.isTrue(is.propertyOwned(proto, "get"));
         assert.isTrue(is.propertyOwned(proto, "has"));
@@ -19,11 +19,11 @@ describe("Configuration", function () {
         assert.isTrue(is.propertyOwned(proto, "entries"));
     });
 
-    it("should get undefined of nonexisting key", function () {
+    it("should get undefined of nonexisting key", () => {
         assert.isUndefined(conf.get("nonexists"));
     });
 
-    it("should correctly check key", function () {
+    it("should correctly check key", () => {
         assert.throws(() => (conf.get(1)), adone.x.InvalidArgument);
         assert.throws(() => (conf.get({})), adone.x.InvalidArgument);
         assert.throws(() => (conf.get(true)), adone.x.InvalidArgument);
@@ -31,12 +31,12 @@ describe("Configuration", function () {
         assert.throws(() => (conf.get([""])), adone.x.InvalidArgument);
     });
 
-    it("should set value be accesisble directly", function () {
+    it("should set value be accesisble directly", () => {
         conf.set("a", 10);
         assert.equal(conf.a, 10);
     });
 
-    it("should set value of complex key", function () {
+    it("should set value of complex key", () => {
         conf.set("a.b", 10);
         assert.equal(conf.a.b, 10);
         conf.set("a.c.d", 20);
@@ -45,21 +45,21 @@ describe("Configuration", function () {
         assert.equal(conf.a.d.e.f.g, 30);
     });
 
-    it("should reassign value of non-plain object", function () {
+    it("should reassign value of non-plain object", () => {
         conf.set("a.b", 10);
         assert.equal(conf.a.b, 10);
         conf.set("a.b.d", 20);
         assert.equal(conf.a.b.d, 20);
     });
 
-    it("should reassign value of middle subkey", function () {
+    it("should reassign value of middle subkey", () => {
         conf.set("a.b.c", 10);
         assert.equal(conf.a.b.c, 10);
         conf.set("a.b", 20);
         assert.equal(conf.a.b, 20);
     });
 
-    it("should has() correcly check existence of key", function () {
+    it("should has() correcly check existence of key", () => {
         conf.set("a.b.c", 10);
         assert.isTrue(conf.has("a"));
         assert.isTrue(conf.has("a.b"));
@@ -78,7 +78,7 @@ describe("Configuration", function () {
         assert.isFalse(conf.has("a.b.a.other"));
     });
 
-    it("should get() value of existence key", function () {
+    it("should get() value of existence key", () => {
         conf.set("a.b.c", 10);
         assert.isTrue(is.plainObject(conf.get("a")));
         assert.isTrue(is.plainObject(conf.get("a.b")));
@@ -98,7 +98,7 @@ describe("Configuration", function () {
         assert.isUndefined(conf.get("a.b.a.other"));
     });
 
-    it("shouldn't get access to value reserved property '_' and nested properties", function () {
+    it("shouldn't get access to value reserved property '_' and nested properties", () => {
         assert.throws(() => (conf.has("_")), TypeError);
         assert.throws(() => (conf.has("_.size")), TypeError);
         assert.throws(() => (conf.get("_")), TypeError);
@@ -109,7 +109,7 @@ describe("Configuration", function () {
         assert.throws(() => (conf.delete("_.size")), TypeError);
     });
 
-    it("should delete keys", function () {
+    it("should delete keys", () => {
         conf.set("a.b.c", 10);
         conf.delete("a.b.c");
         assert.isTrue(conf.has("a.b"));
@@ -119,11 +119,11 @@ describe("Configuration", function () {
         assert.isFalse(conf.has("a.b"));
     });
 
-    it("initially keys() should return empty array", function () {
+    it("initially keys() should return empty array", () => {
         assert.deepEqual(conf.keys(), []);
     });
 
-    it("assign()", function () {
+    it("assign()", () => {
         conf.assign({
             a: 1,
             b: 2,
@@ -134,7 +134,7 @@ describe("Configuration", function () {
         assert.equal(conf.c, 3);
     });
 
-    it("assign() multi", function () {
+    it("assign() multi", () => {
         conf.assign({
             a: 1,
             b: 2,
@@ -152,7 +152,7 @@ describe("Configuration", function () {
         assert.equal(conf.e, 6);
     });
 
-    it("assign() other configuration", function () {
+    it("assign() other configuration", () => {
         const otherConf = new adone.configuration.Configuration();
         otherConf.assign({
             c: 4,
@@ -172,7 +172,7 @@ describe("Configuration", function () {
         assert.equal(conf.e, 6);
     });
 
-    it("assign() to non existing key", function () {
+    it("assign() to non existing key", () => {
         conf.assign("adone", {
             a: 1,
             b: 2,
@@ -183,7 +183,7 @@ describe("Configuration", function () {
         assert.equal(conf.adone.c, 3);
     });
 
-    it("keys()", function () {
+    it("keys()", () => {
         conf.set("a", 1);
         conf.set("b", 2);
         conf.set("c", 3);
@@ -194,7 +194,7 @@ describe("Configuration", function () {
         assert.isTrue(keys.includes("c"));
     });
 
-    it("values()", function () {
+    it("values()", () => {
         conf.set("a", 1);
         conf.set("b", 2);
         conf.set("c", 3);
@@ -205,7 +205,7 @@ describe("Configuration", function () {
         assert.isTrue(vals.includes(3));
     });
 
-    it("entries()", function () {
+    it("entries()", () => {
         conf.set("a", 1);
         conf.set("b", 2);
         conf.set("c", 3);

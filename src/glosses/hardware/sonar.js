@@ -97,9 +97,9 @@ Devices = {
     SRF10: {
         initialize(opts) {
 
-            let samples = priv.get(this).samples;
-            let address = 0x70;
-            let delay = 65;
+            const samples = priv.get(this).samples;
+            const address = 0x70;
+            const delay = 65;
 
             // Set up I2C data connection
             this.io.i2cConfig(opts);
@@ -131,7 +131,7 @@ Devices = {
         descriptor: {
             cm: {
                 get() {
-                    let median = priv.get(this).median;
+                    const median = priv.get(this).median;
                     return Number(((((median / 2) * 343.2) / 10) / 1000).toFixed(1));
                 }
             }
@@ -140,7 +140,7 @@ Devices = {
 
     DEFAULT: {
         initialize() {
-            let samples = priv.get(this).samples;
+            const samples = priv.get(this).samples;
 
             // Set the pin to ANALOG mode
             this.mode = this.io.MODES.ANALOG;
@@ -153,7 +153,7 @@ Devices = {
         descriptor: {
             cm: {
                 get() {
-                    let median = priv.get(this).median;
+                    const median = priv.get(this).median;
                     return Number(((median / 2) * 2.54).toFixed(1));
                 }
             }

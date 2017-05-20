@@ -10,16 +10,16 @@ function sort(files, checkResults, handleError) {
 
     stream.on("error", handleError);
 
-    stream.on("data", function (file) {
+    stream.on("data", (file) => {
         resultFiles.push(file.relative);
     });
 
-    stream.on("end", function () {
+    stream.on("end", () => {
         checkResults(resultFiles);
     });
 
     stream.resume();
-    files.forEach(function (file) {
+    files.forEach((file) => {
         stream.write(file);
     });
     stream.end();
@@ -51,7 +51,7 @@ describe("Fast", () => {
             }
 
 
-            it("should sort file with a module definition before files that uses it", function (done) {
+            it("should sort file with a module definition before files that uses it", (done) => {
                 const files = [
                     fixture("another-factory.js"),
                     fixture("another.js"),
@@ -62,7 +62,7 @@ describe("Fast", () => {
                     fixture("yet-another.js")
                 ];
 
-                sort(files, function (resultFiles) {
+                sort(files, (resultFiles) => {
                     expect(resultFiles.length).to.be.equal(7);
                     expect(resultFiles.indexOf("module-controller.js")).to.be.above(resultFiles.indexOf("module.js"));
                     expect(resultFiles.indexOf("yet-another.js")).to.be.above(resultFiles.indexOf("another.js"));
@@ -71,7 +71,7 @@ describe("Fast", () => {
                 }, done);
             });
 
-            it("should sort files alphabetically when no ordering is required", function (done) {
+            it("should sort files alphabetically when no ordering is required", (done) => {
                 const files = [
                     fixture("module.js"),
                     fixture("circular3.js"),
@@ -80,7 +80,7 @@ describe("Fast", () => {
                     fixture("circular2.js")
                 ];
 
-                sort(files, function (resultFiles) {
+                sort(files, (resultFiles) => {
                     expect(resultFiles.length).to.be.equal(5);
                     expect(resultFiles.indexOf("module-controller.js")).to.be.above(resultFiles.indexOf("module.js"));
                     expect(resultFiles.indexOf("module.js")).to.be.above(resultFiles.indexOf("circular.js"));
@@ -90,25 +90,25 @@ describe("Fast", () => {
                 }, done);
             });
 
-            it("should not crash when a module is both declared and used in the same file (Issue #5)", function (done) {
+            it("should not crash when a module is both declared and used in the same file (Issue #5)", (done) => {
                 const files = [
                     fixture("circular.js")
                 ];
 
-                sort(files, function (resultFiles) {
+                sort(files, (resultFiles) => {
                     expect(resultFiles.length).to.be.equal(1);
                     expect(resultFiles[0]).to.be.equal("circular.js");
                     done();
                 }, done);
             });
 
-            it("should not crash when a module is used inside a declaration even though it's before that module's declaration (Issue #7)", function (done) {
+            it("should not crash when a module is used inside a declaration even though it's before that module's declaration (Issue #7)", (done) => {
                 const files = [
                     fixture("circular2.js"),
                     fixture("circular3.js")
                 ];
 
-                sort(files, function (resultFiles) {
+                sort(files, (resultFiles) => {
                     expect(resultFiles.length).to.be.equal(2);
                     expect(resultFiles).to.contain("circular2.js");
                     expect(resultFiles).to.contain("circular3.js");
@@ -116,24 +116,24 @@ describe("Fast", () => {
                 }, done);
             });
 
-            it("fails for not read file", function (done) {
+            it("fails for not read file", (done) => {
                 const files = [
                     fixture("fake.js", { withoutContents: true })
                 ];
 
-                sort(files, function () {
-                }, function (err) {
+                sort(files, () => {
+                }, (err) => {
                     expect(err).to.be.ok;
                     done();
                 }, done);
             });
 
-            it("does not fail for empty file", function (done) {
+            it("does not fail for empty file", (done) => {
                 const files = [
                     fixture("empty.js")
                 ];
 
-                sort(files, function (resultFiles) {
+                sort(files, (resultFiles) => {
                     expect(resultFiles).to.be.deep.equal(["empty.js"]);
                     done();
                 }, done);

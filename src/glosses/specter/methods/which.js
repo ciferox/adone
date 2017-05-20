@@ -8,9 +8,9 @@ export default async function (host, program) {
         }
         if (result.code === 0) {
             return result.stdout;
-        } else {
-            throw new adone.x.Runtime(result.stderr);
-        }
+        } 
+        throw new adone.x.Runtime(result.stderr);
+        
     } else if (host.isSSH()) {
         const ssh = await host.getConnection();
         const result = adone.text.stripLastCRLF(await ssh.exec(`which ${program}`)).trim();

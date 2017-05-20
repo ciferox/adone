@@ -22,7 +22,9 @@ const renameVisitor = {
         const ids = path.getOuterBindingIdentifiers();
 
         for (const name in ids) {
-            if (name === state.oldName) ids[name].name = state.newName;
+            if (name === state.oldName) {
+                ids[name].name = state.newName; 
+            }
         }
     }
 };
@@ -40,7 +42,9 @@ export default class Renamer {
 
     maybeConvertFromExportDeclaration(parentDeclar) {
         const exportDeclar = parentDeclar.parentPath.isExportDeclaration() && parentDeclar.parentPath;
-        if (!exportDeclar) return;
+        if (!exportDeclar) {
+            return; 
+        }
 
         // build specifiers that point back to this export declaration
         const isDefault = exportDeclar.isExportDefaultDeclaration();
@@ -79,8 +83,8 @@ export default class Renamer {
 
         // retain the `name` of a class/function declaration
 
-        if (!path.isFunctionDeclaration() && !path.isClassDeclaration()) return;
-        if (this.binding.kind !== "hoisted") return;
+        if (!path.isFunctionDeclaration() && !path.isClassDeclaration()) {}
+        if (this.binding.kind !== "hoisted") {}
 
         path.node.id = t.identifier(this.oldName);
         path.node._blockHoist = 3;
@@ -95,8 +99,8 @@ export default class Renamer {
 
         // retain the `name` of a class/function expression
 
-        if (!path.isFunctionExpression() && !path.isClassExpression()) return;
-        if (this.binding.kind !== "local") return;
+        if (!path.isFunctionExpression() && !path.isClassExpression()) {}
+        if (this.binding.kind !== "local") {}
 
         path.node.id = t.identifier(this.oldName);
 

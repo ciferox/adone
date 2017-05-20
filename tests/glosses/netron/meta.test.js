@@ -349,9 +349,9 @@ describe("Meta", () => {
                                 const argsToMeta = args.map((x) => {
                                     if (is.array(x[3]) && x[3].length === 2) {
                                         return x[3];
-                                    } else {
-                                        return [x[1], x[2]];
-                                    }
+                                    } 
+                                    return [x[1], x[2]];
+                                    
                                 });
 
                                 let signature;

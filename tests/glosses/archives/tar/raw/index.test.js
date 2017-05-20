@@ -612,8 +612,8 @@ describe("glosses", "archives", "tar", "raw", () => {
         specify("invalid file", (done) => {
             const extract = new tar.RawExtractStream();
 
-            extract.on("error", function (err) {
-                assert(!!err);
+            extract.on("error", (err) => {
+                assert(Boolean(err));
                 extract.destroy();
                 done();
             });

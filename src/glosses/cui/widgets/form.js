@@ -10,7 +10,9 @@ export default class Form extends adone.cui.widget.Element {
             this.on("element keypress", (el, ch, key) => {
                 if ((key.name === "tab" && !key.shift) || (el.type === "textbox" && options.autoNext && key.name === "enter") || key.name === "down" || (options.vi && key.name === "j")) {
                     if (el.type === "textbox" || el.type === "textarea") {
-                        if (key.name === "j") return;
+                        if (key.name === "j") {
+                            return; 
+                        }
                         if (key.name === "tab") {
                             // Workaround, since we can't stop the tab from being added.
                             el.emit("keypress", null, { name: "backspace" });
@@ -23,7 +25,9 @@ export default class Form extends adone.cui.widget.Element {
 
                 if ((key.name === "tab" && key.shift) || key.name === "up" || (options.vi && key.name === "k")) {
                     if (el.type === "textbox" || el.type === "textarea") {
-                        if (key.name === "k") return;
+                        if (key.name === "k") {
+                            return; 
+                        }
                         el.emit("keypress", "\x1b", { name: "escape" });
                     }
                     this.focusPrevious();
@@ -32,7 +36,7 @@ export default class Form extends adone.cui.widget.Element {
 
                 if (key.name === "escape") {
                     this.focus();
-                    return;
+                    
                 }
             });
         }
@@ -44,10 +48,12 @@ export default class Form extends adone.cui.widget.Element {
         // This would remove the need to check for _selected.visible in previous()
         // and next().
         if (!this._children) {
-            var out = [];
+            const out = [];
 
             this.children.forEach(function fn(el) {
-                if (el.keyable) out.push(el);
+                if (el.keyable) {
+                    out.push(el);
+                }
                 el.children.forEach(fn);
             });
 
@@ -56,65 +62,89 @@ export default class Form extends adone.cui.widget.Element {
     }
 
     _visible() {
-        return !!this._children.filter(function (el) {
+        return Boolean(this._children.filter((el) => {
             return el.visible;
-        }).length;
+        }).length);
     }
 
     next() {
         this._refresh();
 
-        if (!this._visible()) return;
+        if (!this._visible()) {
+            return;
+        }
 
         if (!this._selected) {
             this._selected = this._children[0];
-            if (!this._selected.visible) return this.next();
-            if (this.screen.focused !== this._selected) return this._selected;
+            if (!this._selected.visible) {
+                return this.next(); 
+            }
+            if (this.screen.focused !== this._selected) {
+                return this._selected;
+            }
         }
 
-        var i = this._children.indexOf(this._selected);
+        const i = this._children.indexOf(this._selected);
         if (!~i || !this._children[i + 1]) {
             this._selected = this._children[0];
-            if (!this._selected.visible) return this.next();
+            if (!this._selected.visible) {
+                return this.next(); 
+            }
             return this._selected;
         }
 
         this._selected = this._children[i + 1];
-        if (!this._selected.visible) return this.next();
+        if (!this._selected.visible) {
+            return this.next();
+        }
         return this._selected;
     }
 
     previous() {
         this._refresh();
 
-        if (!this._visible()) return;
+        if (!this._visible()) {
+            return;
+        }
 
         if (!this._selected) {
             this._selected = this._children[this._children.length - 1];
-            if (!this._selected.visible) return this.previous();
-            if (this.screen.focused !== this._selected) return this._selected;
+            if (!this._selected.visible) {
+                return this.previous();
+            }
+            if (this.screen.focused !== this._selected) {
+                return this._selected;
+            }
         }
 
-        var i = this._children.indexOf(this._selected);
+        const i = this._children.indexOf(this._selected);
         if (!~i || !this._children[i - 1]) {
             this._selected = this._children[this._children.length - 1];
-            if (!this._selected.visible) return this.previous();
+            if (!this._selected.visible) {
+                return this.previous();
+            }
             return this._selected;
         }
 
         this._selected = this._children[i - 1];
-        if (!this._selected.visible) return this.previous();
+        if (!this._selected.visible) {
+            return this.previous(); 
+        }
         return this._selected;
     }
 
     focusNext() {
-        var next = this.next();
-        if (next) next.focus();
+        const next = this.next();
+        if (next) {
+            next.focus();
+        }
     }
 
     focusPrevious() {
-        var previous = this.previous();
-        if (previous) previous.focus();
+        const previous = this.previous();
+        if (previous) {
+            previous.focus();
+        }
     }
 
     resetSelected() {
@@ -132,11 +162,11 @@ export default class Form extends adone.cui.widget.Element {
     }
 
     submit() {
-        var out = {};
+        const out = {};
 
         this.children.forEach(function fn(el) {
             if (el.value != null) {
-                var name = el.name || el.type;
+                const name = el.name || el.type;
                 if (Array.isArray(out[name])) {
                     out[name].push(el.value);
                 } else if (out[name]) {

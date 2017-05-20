@@ -82,8 +82,8 @@ const Controllers = {
         initialize: {
             value(opts, dataHandler) {
 
-                let address = opts.address || 0x70;
-                let msUntilNextRead = 65;
+                const address = opts.address || 0x70;
+                const msUntilNextRead = 65;
 
                 opts.address = address;
 
@@ -171,7 +171,7 @@ const Controllers = {
         initialize: {
             value(opts, dataHandler) {
                 let pinValue = opts.pinValue;
-                let msToNextRead = 65;
+                const msToNextRead = 65;
 
                 if (Pins.isFirmata(this)) {
                     if (typeof pinValue === "string" && pinValue[0] === "A") {
@@ -188,7 +188,7 @@ const Controllers = {
                 }
 
                 // Private settings object
-                let settings = {
+                const settings = {
                     pin: opts.pin,
                     value: this.io.HIGH,
                     pulseOut: 5
@@ -213,8 +213,8 @@ const Controllers = {
     HCSR04I2CBACKPACK: {
         initialize: {
             value(opts, datahandler) {
-                let address = opts.address || 0x27;
-                let msToNextRead = 90;
+                const address = opts.address || 0x27;
+                const msToNextRead = 90;
 
                 opts.address = address;
 
@@ -253,7 +253,7 @@ const Controllers = {
         },
         initialize: {
             value(opts, dataHandler) {
-                let address = 0x62;
+                const address = 0x62;
 
                 opts.address = address;
 
@@ -262,7 +262,7 @@ const Controllers = {
                 var read = function () {
                     this.io.i2cWrite(address, this.REGISTER.ENABLE, 0x04);
                     setTimeout(() => {
-                        this.io.i2cReadOnce(address, this.REGISTER.READ, 2, function (bytes) {
+                        this.io.i2cReadOnce(address, this.REGISTER.READ, 2, (bytes) => {
                             // http://www.robotshop.com/media/files/pdf/operating-manual-llm20c132i500s011.pdf
                             // Step 5 of Quick Start Guide
                             dataHandler((bytes[0] << 8) + bytes[1]);
@@ -283,7 +283,7 @@ const Controllers = {
     EVS_EV3_IR: {
         initialize: {
             value(opts, dataHandler) {
-                let state = priv.get(this);
+                const state = priv.get(this);
 
                 state.shield = EVS.shieldPort(opts.pin);
 
@@ -292,7 +292,7 @@ const Controllers = {
                 }));
                 state.ev3.setup(state.shield, EVS.Type_EV3);
                 state.ev3.read(state.shield, EVS.Proximity, EVS.Proximity_Bytes, (data) => {
-                    let value = data[0] | (data[1] << 8);
+                    const value = data[0] | (data[1] << 8);
 
                     dataHandler(value);
                 });
@@ -307,7 +307,7 @@ const Controllers = {
     EVS_EV3_US: {
         initialize: {
             value(opts, dataHandler) {
-                let state = priv.get(this);
+                const state = priv.get(this);
 
                 state.shield = EVS.shieldPort(opts.pin);
 
@@ -316,7 +316,7 @@ const Controllers = {
                 }));
                 state.ev3.setup(state.shield, EVS.Type_EV3);
                 state.ev3.read(state.shield, EVS.Proximity, EVS.Proximity_Bytes, (data) => {
-                    let value = data[0] | (data[1] << 8);
+                    const value = data[0] | (data[1] << 8);
                     dataHandler(value);
                 });
             }
@@ -483,7 +483,7 @@ function Proximity(opts) {
             return;
         }
 
-        let data = {
+        const data = {
             cm: this.cm,
             centimeters: this.centimeters,
             in: this.in,

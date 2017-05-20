@@ -2,7 +2,7 @@
  * @class Common utilities
  * @name glMatrix
  */
-var glMatrix = {};
+const glMatrix = {};
 
 // Configuration Constants
 glMatrix.EPSILON = 0.000001;
@@ -18,20 +18,20 @@ glMatrix.USE_SIMD = glMatrix.ENABLE_SIMD;
  *
  * @param {Type} type Array type, such as Float32Array or Array
  */
-glMatrix.setMatrixArrayType = function(type) {
+glMatrix.setMatrixArrayType = function (type) {
     glMatrix.ARRAY_TYPE = type;
-}
+};
 
-var degree = Math.PI / 180;
+const degree = Math.PI / 180;
 
 /**
 * Convert Degree To Radian
 *
 * @param {Number} a Angle in Degrees
 */
-glMatrix.toRadian = function(a) {
+glMatrix.toRadian = function (a) {
     return a * degree;
-}
+};
 
 /**
  * Tests whether or not the arguments have approximately the same value, within an absolute
@@ -42,8 +42,8 @@ glMatrix.toRadian = function(a) {
  * @param {Number} b The second number to test.
  * @returns {Boolean} True if the numbers are approximately equal, false otherwise.
  */
-glMatrix.equals = function(a, b) {
-    return Math.abs(a - b) <= glMatrix.EPSILON*Math.max(1.0, Math.abs(a), Math.abs(b));
-}
+glMatrix.equals = function (a, b) {
+    return Math.abs(a - b) <= glMatrix.EPSILON * Math.max(1.0, Math.abs(a), Math.abs(b));
+};
 
 module.exports = glMatrix;

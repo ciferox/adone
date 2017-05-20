@@ -65,7 +65,7 @@ function templateCacheStream(root, base, templateBody, transformUrl) {
             }
 
             if (root === "." || root.indexOf("./") === 0) {
-                url = "./" + url;
+                url = `./${url}`;
             }
 
             if (is.function(transformUrl)) {

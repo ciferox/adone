@@ -3,7 +3,7 @@ const { std: { fs, util, stream } } = adone;
 function fsCreateWriteStream(filename) {
     const s = fs.createWriteStream(filename);
     if (process.version.match(/^v0.8/)) {
-        s.on("close", function() {
+        s.on("close", () => {
             s.emit("finish"); 
         });
     }
@@ -14,18 +14,22 @@ function bufferEqual(a, b) {
    * however, Buffer.get is deprecated and will be removed.
    * (See https://github.com/nodejs/io.js/blob/60a974d200/lib/buffer.js#L425)
    * => All incoming objects will be coerced to Buffer */
-    if (!Buffer.isBuffer(a))
-        a = a.slice();
+    if (!Buffer.isBuffer(a)) {
+        a = a.slice(); 
+    }
   
-    if (!Buffer.isBuffer(b))
+    if (!Buffer.isBuffer(b)) {
         b = b.slice();
+    }
   
-    if (a.length !== b.length)
-        return false;
+    if (a.length !== b.length) {
+        return false; 
+    }
   
     for (let i = 0; i < a.length; ++i) {
-        if (a[i] !== b[i])
-            return false;
+        if (a[i] !== b[i]) {
+            return false; 
+        }
     }
   
     return true;
@@ -35,7 +39,7 @@ function NullStream(options) {
     stream.Writable.call(this, options);
 }
 util.inherits(NullStream, stream.Writable);
-NullStream.prototype._write = function(chunk, encoding, callback) {
+NullStream.prototype._write = function (chunk, encoding, callback) {
     callback();
 };
 

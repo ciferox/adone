@@ -80,7 +80,9 @@ export default class Element extends adone.cui.Node {
                 this.border = { type: this.border };
             }
             this.border.type = this.border.type || "bg";
-            if (this.border.type === "ascii") this.border.type = "line";
+            if (this.border.type === "ascii") {
+                this.border.type = "line";
+            }
             this.border.ch = this.border.ch || " ";
             this.style.border = this.style.border || this.border.style;
             if (!this.style.border) {
@@ -89,10 +91,18 @@ export default class Element extends adone.cui.Node {
                 this.style.border.bg = this.border.bg;
             }
             //this.border.style = this.style.border;
-            if (is.nil(this.border.left)) this.border.left = true;
-            if (is.nil(this.border.top)) this.border.top = true;
-            if (is.nil(this.border.right)) this.border.right = true;
-            if (is.nil(this.border.bottom)) this.border.bottom = true;
+            if (is.nil(this.border.left)) {
+                this.border.left = true; 
+            }
+            if (is.nil(this.border.top)) {
+                this.border.top = true;
+            }
+            if (is.nil(this.border.right)) {
+                this.border.right = true;
+            }
+            if (is.nil(this.border.bottom)) {
+                this.border.bottom = true; 
+            }
         }
 
         // if (options.mouse || options.clickable) {
@@ -108,11 +118,16 @@ export default class Element extends adone.cui.Node {
 
         this.setContent(options.content || "", true);
 
-        if (options.id) this.id = options.id;
-        else this.id = "";
+        if (options.id) {
+            this.id = options.id; 
+        } else {
+            this.id = "";
+        }
 
         if (options.label) {
-            if (this.id === "") this.id = options.label;
+            if (this.id === "") {
+                this.id = options.label; 
+            }
             this.setLabel(options.label);
         }
 
@@ -156,8 +171,12 @@ export default class Element extends adone.cui.Node {
         }
 
         if (options.effects) {
-            if (options.effects.hover) options.hoverEffects = options.effects.hover;
-            if (options.effects.focus) options.focusEffects = options.effects.focus;
+            if (options.effects.hover) {
+                options.hoverEffects = options.effects.hover;
+            }
+            if (options.effects.focus) {
+                options.focusEffects = options.effects.focus; 
+            }
         }
 
         [["hoverEffects", "mouseover", "mouseout", "_htemp"], ["focusEffects", "focus", "blur", "_ftemp"]].forEach((props) => {
@@ -223,20 +242,20 @@ export default class Element extends adone.cui.Node {
                             delete this._drag;
                             return;
                         }
-                        var x = data.x - this.aleft;
-                        var y = data.y - this.atop;
+                        const x = data.x - this.aleft;
+                        const y = data.y - this.atop;
                         if (x === this.width - this.iright - 1) {
                             // Do not allow dragging on the scrollbar:
                             delete this.screen._dragging;
                             delete this._drag;
-                            var perc = (y - this.itop) / (this.height - this.iheight);
+                            const perc = (y - this.itop) / (this.height - this.iheight);
                             this.setScrollPerc(perc * 100 | 0);
                             this.screen.render();
-                            var smd, smu;
+                            let smd, smu;
                             this._scrollingBar = true;
                             this.onScreenEvent("mousedown", smd = (data) => {
-                                var y = data.y - this.atop;
-                                var perc = y / this.height;
+                                const y = data.y - this.atop;
+                                const perc = y / this.height;
                                 this.setScrollPerc(perc * 100 | 0);
                                 this.screen.render();
                             });
@@ -304,7 +323,7 @@ export default class Element extends adone.cui.Node {
                     if (options.vi && key.name === "g" && key.shift) {
                         this.setScroll(this.getScrollHeight());
                         this.screen.render();
-                        return;
+                        
                     }
                 });
             }
@@ -330,10 +349,14 @@ export default class Element extends adone.cui.Node {
     }
 
     get visible() {
-        var el = this;
+        let el = this;
         do {
-            if (el.detached) return false;
-            if (el.hidden) return false;
+            if (el.detached) {
+                return false;
+            }
+            if (el.hidden) {
+                return false; 
+            }
             // if (!el.lpos) return false;
             // if (el.position.width === 0 || el.position.height === 0) return false;
         } while (el = el.parent);
@@ -341,10 +364,14 @@ export default class Element extends adone.cui.Node {
     }
 
     get _detached() {
-        var el = this;
+        let el = this;
         do {
-            if (el.type === "screen") return false;
-            if (!el.parent) return true;
+            if (el.type === "screen") {
+                return false; 
+            }
+            if (!el.parent) {
+                return true;
+            }
         } while (el = el.parent);
         return false;
     }
@@ -407,23 +434,31 @@ export default class Element extends adone.cui.Node {
     // But it wouldn't replicate bottom behavior appropriately if
     // the parent was resized, etc.
     set width(val) {
-        if (this.position.width === val) return;
-        if (/^\d+$/.test(val)) val = +val;
+        if (this.position.width === val) {
+            return; 
+        }
+        if (/^\d+$/.test(val)) {
+            val = Number(val); 
+        }
         this.emit("resize");
         this.clearPos();
         return this.position.width = val;
     }
 
     set height(val) {
-        if (this.position.height === val) return;
-        if (/^\d+$/.test(val)) val = +val;
+        if (this.position.height === val) {
+            return;
+        }
+        if (/^\d+$/.test(val)) {
+            val = Number(val); 
+        }
         this.emit("resize");
         this.clearPos();
         return this.position.height = val;
     }
 
     set aleft(val) {
-        var expr;
+        let expr;
         if (typeof val === "string") {
             if (val === "center") {
                 val = this.screen.width / 2 | 0;
@@ -431,13 +466,15 @@ export default class Element extends adone.cui.Node {
             } else {
                 expr = val.split(/(?=\+|-)/);
                 val = expr[0];
-                val = +val.slice(0, -1) / 100;
+                val = Number(val.slice(0, -1)) / 100;
                 val = this.screen.width * val | 0;
-                val += +(expr[1] || 0);
+                val += Number(expr[1] || 0);
             }
         }
         val -= this.parent.aleft;
-        if (this.position.left === val) return;
+        if (this.position.left === val) {
+            return;
+        }
         this.emit("move");
         this.clearPos();
         return this.position.left = val;
@@ -445,14 +482,16 @@ export default class Element extends adone.cui.Node {
 
     set aright(val) {
         val -= this.parent.aright;
-        if (this.position.right === val) return;
+        if (this.position.right === val) {
+            return; 
+        }
         this.emit("move");
         this.clearPos();
         return this.position.right = val;
     }
 
     set atop(val) {
-        var expr;
+        let expr;
         if (typeof val === "string") {
             if (val === "center") {
                 val = this.screen.height / 2 | 0;
@@ -460,13 +499,15 @@ export default class Element extends adone.cui.Node {
             } else {
                 expr = val.split(/(?=\+|-)/);
                 val = expr[0];
-                val = +val.slice(0, -1) / 100;
+                val = Number(val.slice(0, -1)) / 100;
                 val = this.screen.height * val | 0;
-                val += +(expr[1] || 0);
+                val += Number(expr[1] || 0);
             }
         }
         val -= this.parent.atop;
-        if (this.position.top === val) return;
+        if (this.position.top === val) {
+            return;
+        }
         this.emit("move");
         this.clearPos();
         return this.position.top = val;
@@ -474,37 +515,51 @@ export default class Element extends adone.cui.Node {
 
     set abottom(val) {
         val -= this.parent.abottom;
-        if (this.position.bottom === val) return;
+        if (this.position.bottom === val) {
+            return;
+        }
         this.emit("move");
         this.clearPos();
         return this.position.bottom = val;
     }
 
     set rleft(val) {
-        if (this.position.left === val) return;
-        if (/^\d+$/.test(val)) val = +val;
+        if (this.position.left === val) {
+            return; 
+        }
+        if (/^\d+$/.test(val)) {
+            val = Number(val); 
+        }
         this.emit("move");
         this.clearPos();
         return this.position.left = val;
     }
 
     set rright(val) {
-        if (this.position.right === val) return;
+        if (this.position.right === val) {
+            return;
+        }
         this.emit("move");
         this.clearPos();
         return this.position.right = val;
     }
 
     set rtop(val) {
-        if (this.position.top === val) return;
-        if (/^\d+$/.test(val)) val = +val;
+        if (this.position.top === val) {
+            return;
+        }
+        if (/^\d+$/.test(val)) {
+            val = Number(val); 
+        }
         this.emit("move");
         this.clearPos();
         return this.position.top = val;
     }
 
     set rbottom(val) {
-        if (this.position.bottom === val) return;
+        if (this.position.bottom === val) {
+            return;
+        }
         this.emit("move");
         this.clearPos();
         return this.position.bottom = val;
@@ -587,16 +642,18 @@ export default class Element extends adone.cui.Node {
 
     // XXX Potentially use this in place of scrollable checks elsewhere.
     get reallyScrollable() {
-        if (this.shrink) return this.scrollable;
+        if (this.shrink) {
+            return this.scrollable;
+        }
         return this.getScrollHeight() > this.height;
     }
 
     sattr(style, fg, bg) {
-        var bold = style.bold
-            , underline = style.underline
-            , blink = style.blink
-            , inverse = style.inverse
-            , invisible = style.invisible;
+        let bold = style.bold,
+            underline = style.underline,
+            blink = style.blink,
+            inverse = style.inverse,
+            invisible = style.invisible;
 
         // if (arguments.length === 1) {
         if (fg == null && bg == null) {
@@ -606,14 +663,28 @@ export default class Element extends adone.cui.Node {
 
         // This used to be a loop, but I decided
         // to unroll it for performance's sake.
-        if (typeof bold === "function") bold = bold(this);
-        if (typeof underline === "function") underline = underline(this);
-        if (typeof blink === "function") blink = blink(this);
-        if (typeof inverse === "function") inverse = inverse(this);
-        if (typeof invisible === "function") invisible = invisible(this);
+        if (typeof bold === "function") {
+            bold = bold(this);
+        }
+        if (typeof underline === "function") {
+            underline = underline(this); 
+        }
+        if (typeof blink === "function") {
+            blink = blink(this);
+        }
+        if (typeof inverse === "function") {
+            inverse = inverse(this); 
+        }
+        if (typeof invisible === "function") {
+            invisible = invisible(this); 
+        }
 
-        if (typeof fg === "function") fg = fg(this);
-        if (typeof bg === "function") bg = bg(this);
+        if (typeof fg === "function") {
+            fg = fg(this);
+        }
+        if (typeof bg === "function") {
+            bg = bg(this);
+        }
 
         // return (this.uid << 24)
         //   | ((this.dockBorders ? 32 : 0) << 18)
@@ -627,26 +698,28 @@ export default class Element extends adone.cui.Node {
     }
 
     onScreenEvent(type, handler) {
-        var listeners = this._slisteners = this._slisteners || [];
-        listeners.push({ type: type, handler: handler });
+        const listeners = this._slisteners = this._slisteners || [];
+        listeners.push({ type, handler });
         this.screen.on(type, handler);
     }
 
     onceScreenEvent(type, handler) {
-        var listeners = this._slisteners = this._slisteners || [];
-        var entry = { type: type, handler: handler };
+        const listeners = this._slisteners = this._slisteners || [];
+        const entry = { type, handler };
         listeners.push(entry);
         this.screen.once(type, function () {
-            var i = listeners.indexOf(entry);
-            if (~i) listeners.splice(i, 1);
+            const i = listeners.indexOf(entry);
+            if (~i) {
+                listeners.splice(i, 1);
+            }
             return handler.apply(this, arguments);
         });
     }
 
     removeScreenEvent(type, handler) {
-        var listeners = this._slisteners = this._slisteners || [];
-        for (var i = 0; i < listeners.length; i++) {
-            var listener = listeners[i];
+        const listeners = this._slisteners = this._slisteners || [];
+        for (let i = 0; i < listeners.length; i++) {
+            const listener = listeners[i];
             if (listener.type === type && listener.handler === handler) {
                 listeners.splice(i, 1);
                 if (this._slisteners.length === 0) {
@@ -659,16 +732,18 @@ export default class Element extends adone.cui.Node {
     }
 
     free() {
-        var listeners = this._slisteners = this._slisteners || [];
-        for (var i = 0; i < listeners.length; i++) {
-            var listener = listeners[i];
+        const listeners = this._slisteners = this._slisteners || [];
+        for (let i = 0; i < listeners.length; i++) {
+            const listener = listeners[i];
             this.screen.removeListener(listener.type, listener.handler);
         }
         delete this._slisteners;
     }
 
     hide() {
-        if (this.hidden) return;
+        if (this.hidden) {
+            return;
+        }
         this.clearPos();
         this.hidden = true;
         this.emit("hide");
@@ -678,7 +753,9 @@ export default class Element extends adone.cui.Node {
     }
 
     show() {
-        if (!this.hidden) return;
+        if (!this.hidden) {
+            return; 
+        }
         this.hidden = false;
         this.emit("show");
     }
@@ -692,14 +769,18 @@ export default class Element extends adone.cui.Node {
     }
 
     setContent(content, noClear, noTags) {
-        if (!noClear) this.clearPos();
+        if (!noClear) {
+            this.clearPos(); 
+        }
         this.content = content || "";
         this.parseContent(noTags);
         this.emit("set content");
     }
 
     getContent() {
-        if (!this._clines) return "";
+        if (!this._clines) {
+            return ""; 
+        }
         return this._clines.fake.join("\n");
     }
 
@@ -714,11 +795,13 @@ export default class Element extends adone.cui.Node {
     }
 
     parseContent(noTags) {
-        if (this.detached) return false;
+        if (this.detached) {
+            return false;
+        }
 
-        var width = this.width - this.iwidth;
+        const width = this.width - this.iwidth;
         if (this._clines == null || this._clines.width !== width || this._clines.content !== this.content) {
-            var content = this.content;
+            let content = this.content;
 
             content = content
                 .replace(/[\x00-\x08\x0b-\x0c\x0e-\x1a\x1c-\x1f\x7f]/g, "")
@@ -776,13 +859,13 @@ export default class Element extends adone.cui.Node {
     }
 
     _parseAttr(lines) {
-        var dattr = this.sattr(this.style)
-            , attr = dattr
-            , attrs = []
-            , line
-            , i
-            , j
-            , c;
+        let dattr = this.sattr(this.style),
+            attr = dattr,
+            attrs = [],
+            line,
+            i,
+            j,
+            c;
 
         if (lines[0].attr === attr) {
             return;
@@ -805,19 +888,25 @@ export default class Element extends adone.cui.Node {
     }
 
     _align(line, width, align) {
-        if (!align) return line;
+        if (!align) {
+            return line;
+        }
         //if (!align && !~line.indexOf('{|}')) return line;
 
-        var cline = line.replace(/\x1b\[[\d;]*m/g, "")
-            , len = cline.length
-            , s = width - len;
+        let cline = line.replace(/\x1b\[[\d;]*m/g, ""),
+            len = cline.length,
+            s = width - len;
 
         if (this.shrink) {
             s = 0;
         }
 
-        if (len === 0) return line;
-        if (s < 0) return line;
+        if (len === 0) {
+            return line;
+        }
+        if (s < 0) {
+            return line;
+        }
 
         if (align === "center") {
             s = Array(((s / 2) | 0) + 1).join(" ");
@@ -826,8 +915,8 @@ export default class Element extends adone.cui.Node {
             s = Array(s + 1).join(" ");
             return s + line;
         } else if (this.parseTags && ~line.indexOf("{|}")) {
-            var parts = line.split("{|}");
-            var cparts = cline.split("{|}");
+            const parts = line.split("{|}");
+            const cparts = cline.split("{|}");
             s = Math.max(width - cparts[0].length - cparts[1].length, 0);
             s = Array(s + 1).join(" ");
             return parts[0] + s + parts[1];
@@ -837,23 +926,23 @@ export default class Element extends adone.cui.Node {
     }
 
     _wrapContent(content, width) {
-        var tags = this.parseTags
-            , state = this.align
-            , wrap = this.wrap
-            , margin = 0
-            , rtof = []
-            , ftor = []
-            , out = []
-            , no = 0
-            , line
-            , align
-            , cap
-            , total
-            , i
-            , part
-            , j
-            , lines
-            , rest;
+        let tags = this.parseTags,
+            state = this.align,
+            wrap = this.wrap,
+            margin = 0,
+            rtof = [],
+            ftor = [],
+            out = [],
+            no = 0,
+            line,
+            align,
+            cap,
+            total,
+            i,
+            part,
+            j,
+            lines,
+            rest;
 
         lines = content.split("\n");
 
@@ -867,9 +956,15 @@ export default class Element extends adone.cui.Node {
             return out;
         }
 
-        if (this.scrollbar) margin++;
-        if (this.type === "textarea") margin++;
-        if (width > margin) width -= margin;
+        if (this.scrollbar) {
+            margin++; 
+        }
+        if (this.type === "textarea") {
+            margin++; 
+        }
+        if (width > margin) {
+            width -= margin; 
+        }
 
         main:
         for (; no < lines.length; no++) {
@@ -898,9 +993,11 @@ export default class Element extends adone.cui.Node {
                 // Measure the real width of the string.
                 for (i = 0, total = 0; i < line.length; i++) {
                     while (line[i] === "\x1b") {
-                        while (line[i] && line[i++] !== "m");
+                        while (line[i] && line[i++] !== "m") { }
                     }
-                    if (!line[i]) break;
+                    if (!line[i]) {
+                        break; 
+                    }
                     if (++total === width) {
                         // If we're not wrapping the text, we have to finish up the rest of
                         // the control sequences before cutting off the line.
@@ -917,8 +1014,12 @@ export default class Element extends adone.cui.Node {
                             // Try to find a space to break on.
                             if (i !== line.length) {
                                 j = i;
-                                while (j > i - 10 && j > 0 && line[--j] !== " ");
-                                if (line[j] === " ") i = j + 1;
+                                while (j > i - 10 && j > 0 && line[--j] !== " ") {
+
+                                }
+                                if (line[j] === " ") {
+                                    i = j + 1;
+                                }
                             }
                         } else {
                             // Try to find a character to break on.
@@ -928,9 +1029,13 @@ export default class Element extends adone.cui.Node {
                                 // counts on wrapping (experimental):
                                 // NOTE: Could optimize this by putting
                                 // it in the parent for loop.
-                                if (unicode.isSurrogate(line, i)) i--;
+                                if (unicode.isSurrogate(line, i)) {
+                                    i--;
+                                }
                                 for (var s = 0, n = 0; n < i; n++) {
-                                    if (unicode.isSurrogate(line, n)) s++ , n++;
+                                    if (unicode.isSurrogate(line, n)) {
+                                        s++, n++; 
+                                    }
                                 }
                                 i += s;
                                 // </XXX>
@@ -969,7 +1074,9 @@ export default class Element extends adone.cui.Node {
 
                 // Make sure we didn't wrap the line to the very end, otherwise
                 // we get a pointless empty line after a newline.
-                if (line === "") continue main;
+                if (line === "") {
+                    continue main;
+                }
 
                 // If only an escape code got cut off, at it to `part`.
                 if (/^(?:\x1b[\[\d;]*m)+$/.test(line)) {
@@ -988,7 +1095,7 @@ export default class Element extends adone.cui.Node {
         out.fake = lines;
         out.real = out;
 
-        out.mwidth = out.reduce(function (current, line) {
+        out.mwidth = out.reduce((current, line) => {
             line = line.replace(/\x1b\[[\d;]*m/g, "");
             return line.length > current
                 ? line.length
@@ -1012,19 +1119,27 @@ export default class Element extends adone.cui.Node {
     }
 
     enableDrag(verify) {
-        var self = this;
+        const self = this;
 
-        if (this._draggable) return true;
+        if (this._draggable) {
+            return true;
+        }
 
         if (typeof verify !== "function") {
-            verify = function () { return true; };
+            verify = function () {
+                return true; 
+            };
         }
 
         this.enableMouse();
 
         this.on("mousedown", this._dragMD = function (data) {
-            if (self.screen._dragging) return;
-            if (!verify(data)) return;
+            if (self.screen._dragging) {
+                return; 
+            }
+            if (!verify(data)) {
+                return;
+            }
             self.screen._dragging = self;
             self._drag = {
                 x: data.x - self.aleft,
@@ -1034,7 +1149,9 @@ export default class Element extends adone.cui.Node {
         });
 
         this.onScreenEvent("mouse", this._dragM = function (data) {
-            if (self.screen._dragging !== self) return;
+            if (self.screen._dragging !== self) {
+                return; 
+            }
 
             if (data.action !== "mousedown" && data.action !== "mousemove") {
                 delete self.screen._dragging;
@@ -1044,25 +1161,27 @@ export default class Element extends adone.cui.Node {
 
             // This can happen in edge cases where the user is
             // already dragging and element when it is detached.
-            if (!self.parent) return;
+            if (!self.parent) {
+                return; 
+            }
 
-            var ox = self._drag.x
-                , oy = self._drag.y
-                , px = self.parent.aleft
-                , py = self.parent.atop
-                , x = data.x - px - ox
-                , y = data.y - py - oy;
+            let ox = self._drag.x,
+                oy = self._drag.y,
+                px = self.parent.aleft,
+                py = self.parent.atop,
+                x = data.x - px - ox,
+                y = data.y - py - oy;
 
             if (self.position.right != null) {
                 if (self.position.left != null) {
-                    self.width = "100%-" + (self.parent.width - self.width);
+                    self.width = `100%-${self.parent.width - self.width}`;
                 }
                 self.position.right = null;
             }
 
             if (self.position.bottom != null) {
                 if (self.position.top != null) {
-                    self.height = "100%-" + (self.parent.height - self.height);
+                    self.height = `100%-${self.parent.height - self.height}`;
                 }
                 self.position.bottom = null;
             }
@@ -1077,7 +1196,9 @@ export default class Element extends adone.cui.Node {
     }
 
     disableDrag() {
-        if (!this._draggable) return false;
+        if (!this._draggable) {
+            return false; 
+        }
         delete this.screen._dragging;
         delete this._drag;
         this.removeListener("mousedown", this._dragMD);
@@ -1098,7 +1219,9 @@ export default class Element extends adone.cui.Node {
     }
 
     setIndex(index) {
-        if (!this.parent) return;
+        if (!this.parent) {
+            return; 
+        }
 
         if (index < 0) {
             index = this.parent.children.length + index;
@@ -1107,10 +1230,12 @@ export default class Element extends adone.cui.Node {
         index = Math.max(index, 0);
         index = Math.min(index, this.parent.children.length - 1);
 
-        var i = this.parent.children.indexOf(this);
-        if (!~i) return;
+        const i = this.parent.children.indexOf(this);
+        if (!~i) {
+            return;
+        }
 
-        var item = this.parent.children.splice(i, 1)[0];
+        const item = this.parent.children.splice(i, 1)[0];
         this.parent.children.splice(index, 0, item);
     }
 
@@ -1123,9 +1248,13 @@ export default class Element extends adone.cui.Node {
     }
 
     clearPos(get, override) {
-        if (this.detached) return;
+        if (this.detached) {
+            return; 
+        }
         const lpos = this._getCoords(get);
-        if (!lpos) return;
+        if (!lpos) {
+            return; 
+        }
         this.screen.clearRegion(
             lpos.xi, lpos.xl,
             lpos.yi, lpos.yl,
@@ -1202,7 +1331,9 @@ export default class Element extends adone.cui.Node {
     }
 
     removeLabel() {
-        if (!this._label) return;
+        if (!this._label) {
+            return; 
+        }
         this.removeListener("scroll", this._labelScroll);
         this.removeListener("resize", this._labelResize);
         this._label.detach();
@@ -1223,7 +1354,9 @@ export default class Element extends adone.cui.Node {
 
     removeHover() {
         delete this._hoverOptions;
-        if (!this.screen._hoverText || this.screen._hoverText.detached) return;
+        if (!this.screen._hoverText || this.screen._hoverText.detached) {
+            return; 
+        }
         this.screen._hoverText.detach();
         this.screen.render();
     }
@@ -1248,9 +1381,11 @@ export default class Element extends adone.cui.Node {
     // it doesn't handle content shrinkage).
 
     _getPos() {
-        var pos = this.lpos;
+        const pos = this.lpos;
 
-        if (pos.aleft != null) return pos;
+        if (pos.aleft != null) {
+            return pos;
+        }
 
         pos.aleft = pos.xi;
         pos.atop = pos.yi;
@@ -1267,18 +1402,20 @@ export default class Element extends adone.cui.Node {
      */
 
     _getWidth(get) {
-        var parent = get ? this.parent._getPos() : this.parent
-            , width = this.position.width
-            , left
-            , expr;
+        let parent = get ? this.parent._getPos() : this.parent,
+            width = this.position.width,
+            left,
+            expr;
 
         if (typeof width === "string") {
-            if (width === "half") width = "50%";
+            if (width === "half") {
+                width = "50%";
+            }
             expr = width.split(/(?=\+|-)/);
             width = expr[0];
-            width = +width.slice(0, -1) / 100;
+            width = Number(width.slice(0, -1)) / 100;
             width = parent.width * width | 0;
-            width += +(expr[1] || 0);
+            width += Number(expr[1] || 0);
             return width;
         }
 
@@ -1291,12 +1428,14 @@ export default class Element extends adone.cui.Node {
         if (width == null) {
             left = this.position.left || 0;
             if (typeof left === "string") {
-                if (left === "center") left = "50%";
+                if (left === "center") {
+                    left = "50%"; 
+                }
                 expr = left.split(/(?=\+|-)/);
                 left = expr[0];
-                left = +left.slice(0, -1) / 100;
+                left = Number(left.slice(0, -1)) / 100;
                 left = parent.width * left | 0;
-                left += +(expr[1] || 0);
+                left += Number(expr[1] || 0);
             }
             width = parent.width - (this.position.right || 0) - left;
             if (this.screen.autoPadding) {
@@ -1312,18 +1451,20 @@ export default class Element extends adone.cui.Node {
     }
 
     _getHeight(get) {
-        var parent = get ? this.parent._getPos() : this.parent
-            , height = this.position.height
-            , top
-            , expr;
+        let parent = get ? this.parent._getPos() : this.parent,
+            height = this.position.height,
+            top,
+            expr;
 
         if (typeof height === "string") {
-            if (height === "half") height = "50%";
+            if (height === "half") {
+                height = "50%";
+            }
             expr = height.split(/(?=\+|-)/);
             height = expr[0];
-            height = +height.slice(0, -1) / 100;
+            height = Number(height.slice(0, -1)) / 100;
             height = parent.height * height | 0;
-            height += +(expr[1] || 0);
+            height += Number(expr[1] || 0);
             return height;
         }
 
@@ -1336,12 +1477,14 @@ export default class Element extends adone.cui.Node {
         if (height == null) {
             top = this.position.top || 0;
             if (typeof top === "string") {
-                if (top === "center") top = "50%";
+                if (top === "center") {
+                    top = "50%";
+                }
                 expr = top.split(/(?=\+|-)/);
                 top = expr[0];
-                top = +top.slice(0, -1) / 100;
+                top = Number(top.slice(0, -1)) / 100;
                 top = parent.height * top | 0;
-                top += +(expr[1] || 0);
+                top += Number(expr[1] || 0);
             }
             height = parent.height - (this.position.bottom || 0) - top;
             if (this.screen.autoPadding) {
@@ -1358,17 +1501,19 @@ export default class Element extends adone.cui.Node {
     }
 
     _getLeft(get) {
-        var parent = get ? this.parent._getPos() : this.parent
-            , left = this.position.left || 0
-            , expr;
+        let parent = get ? this.parent._getPos() : this.parent,
+            left = this.position.left || 0,
+            expr;
 
         if (typeof left === "string") {
-            if (left === "center") left = "50%";
+            if (left === "center") {
+                left = "50%";
+            }
             expr = left.split(/(?=\+|-)/);
             left = expr[0];
-            left = +left.slice(0, -1) / 100;
+            left = Number(left.slice(0, -1)) / 100;
             left = parent.width * left | 0;
-            left += +(expr[1] || 0);
+            left += Number(expr[1] || 0);
             if (this.position.left === "center") {
                 left -= this._getWidth(get) / 2 | 0;
             }
@@ -1390,8 +1535,8 @@ export default class Element extends adone.cui.Node {
     }
 
     _getRight(get) {
-        var parent = get ? this.parent._getPos() : this.parent
-            , right;
+        let parent = get ? this.parent._getPos() : this.parent,
+            right;
 
         if (this.position.right == null && this.position.left != null) {
             right = this.screen.cols - (this._getLeft(get) + this._getWidth(get));
@@ -1411,17 +1556,19 @@ export default class Element extends adone.cui.Node {
     }
 
     _getTop(get) {
-        var parent = get ? this.parent._getPos() : this.parent
-            , top = this.position.top || 0
-            , expr;
+        let parent = get ? this.parent._getPos() : this.parent,
+            top = this.position.top || 0,
+            expr;
 
         if (typeof top === "string") {
-            if (top === "center") top = "50%";
+            if (top === "center") {
+                top = "50%";
+            }
             expr = top.split(/(?=\+|-)/);
             top = expr[0];
-            top = +top.slice(0, -1) / 100;
+            top = Number(top.slice(0, -1)) / 100;
             top = parent.height * top | 0;
-            top += +(expr[1] || 0);
+            top += Number(expr[1] || 0);
             if (this.position.top === "center") {
                 top -= this._getHeight(get) / 2 | 0;
             }
@@ -1443,8 +1590,8 @@ export default class Element extends adone.cui.Node {
     }
 
     _getBottom(get) {
-        var parent = get ? this.parent._getPos() : this.parent
-            , bottom;
+        let parent = get ? this.parent._getPos() : this.parent,
+            bottom;
 
         if (this.position.bottom == null && this.position.top != null) {
             bottom = this.screen.rows - (this._getTop(get) + this._getHeight(get));
@@ -1469,20 +1616,20 @@ export default class Element extends adone.cui.Node {
 
     _getShrinkBox(xi, xl, yi, yl, get) {
         if (!this.children.length) {
-            return { xi: xi, xl: xi + 1, yi: yi, yl: yi + 1 };
+            return { xi, xl: xi + 1, yi, yl: yi + 1 };
         }
 
-        var i, el, ret, mxi = xi, mxl = xi + 1, myi = yi, myl = yi + 1;
+        let i, el, ret, mxi = xi, mxl = xi + 1, myi = yi, myl = yi + 1;
 
         // This is a chicken and egg problem. We need to determine how the children
         // will render in order to determine how this element renders, but it in
         // order to figure out how the children will render, they need to know
         // exactly how their parent renders, so, we can give them what we have so
         // far.
-        var _lpos;
+        let _lpos;
         if (get) {
             _lpos = this.lpos;
-            this.lpos = { xi: xi, xl: xl, yi: yi, yl: yl };
+            this.lpos = { xi, xl, yi, yl };
             //this.shrink = false;
         }
 
@@ -1494,7 +1641,9 @@ export default class Element extends adone.cui.Node {
             // Or just (seemed to work, but probably not good):
             // ret = el.lpos || this.lpos;
 
-            if (!ret) continue;
+            if (!ret) {
+                continue; 
+            }
 
             // Since the parent element is shrunk, and the child elements think it's
             // going to take up as much space as possible, an element anchored to the
@@ -1521,10 +1670,18 @@ export default class Element extends adone.cui.Node {
                 }
             }
 
-            if (ret.xi < mxi) mxi = ret.xi;
-            if (ret.xl > mxl) mxl = ret.xl;
-            if (ret.yi < myi) myi = ret.yi;
-            if (ret.yl > myl) myl = ret.yl;
+            if (ret.xi < mxi) {
+                mxi = ret.xi; 
+            }
+            if (ret.xl > mxl) {
+                mxl = ret.xl; 
+            }
+            if (ret.yi < myi) {
+                myi = ret.yi;
+            }
+            if (ret.yl > myl) {
+                myl = ret.yl; 
+            }
         }
 
         if (get) {
@@ -1590,12 +1747,12 @@ export default class Element extends adone.cui.Node {
             }
         }
 
-        return { xi: xi, xl: xl, yi: yi, yl: yl };
+        return { xi, xl, yi, yl };
     }
 
     _getShrinkContent(xi, xl, yi, yl) {
-        var h = this._clines.length
-            , w = this._clines.mwidth || 1;
+        let h = this._clines.length,
+            w = this._clines.mwidth || 1;
 
         if (this.position.width == null
             && (this.position.left == null
@@ -1618,14 +1775,14 @@ export default class Element extends adone.cui.Node {
             }
         }
 
-        return { xi: xi, xl: xl, yi: yi, yl: yl };
+        return { xi, xl, yi, yl };
     }
 
     _getShrink(xi, xl, yi, yl, get) {
-        var shrinkBox = this._getShrinkBox(xi, xl, yi, yl, get)
-            , shrinkContent = this._getShrinkContent(xi, xl, yi, yl, get)
-            , xll = xl
-            , yll = yl;
+        let shrinkBox = this._getShrinkBox(xi, xl, yi, yl, get),
+            shrinkContent = this._getShrinkContent(xi, xl, yi, yl, get),
+            xll = xl,
+            yll = yl;
 
         // Figure out which one is bigger and use it.
         if (shrinkBox.xl - shrinkBox.xi > shrinkContent.xl - shrinkContent.xi) {
@@ -1657,31 +1814,33 @@ export default class Element extends adone.cui.Node {
             yl += yll;
         }
 
-        return { xi: xi, xl: xl, yi: yi, yl: yl };
+        return { xi, xl, yi, yl };
     }
 
     _getCoords(get, noscroll) {
-        if (this.hidden) return;
+        if (this.hidden) {
+            return; 
+        }
 
         // if (this.parent._rendering) {
         //   get = true;
         // }
 
-        var xi = this._getLeft(get)
-            , xl = xi + this._getWidth(get)
-            , yi = this._getTop(get)
-            , yl = yi + this._getHeight(get)
-            , base = this.childBase || 0
-            , el = this
-            , fixed = this.fixed
-            , coords
-            , v
-            , noleft
-            , noright
-            , notop
-            , nobot
-            , ppos
-            , b;
+        let xi = this._getLeft(get),
+            xl = xi + this._getWidth(get),
+            yi = this._getTop(get),
+            yl = yi + this._getHeight(get),
+            base = this.childBase || 0,
+            el = this,
+            fixed = this.fixed,
+            coords,
+            v,
+            noleft,
+            noright,
+            notop,
+            nobot,
+            ppos,
+            b;
 
         // Attempt to shrink the element base on the size of the content and child elements.
         if (this.shrink) {
@@ -1711,7 +1870,7 @@ export default class Element extends adone.cui.Node {
         // See: $ node test/widget-shrink-fail.js
         // var thisparent = this.parent;
 
-        var thisparent = el;
+        const thisparent = el;
         if (el && !noscroll) {
             ppos = thisparent.lpos;
 
@@ -1721,7 +1880,9 @@ export default class Element extends adone.cui.Node {
             //   ppos = thisparent._getCoords();
             // }
 
-            if (!ppos) return;
+            if (!ppos) {
+                return; 
+            }
 
             // TODO: Figure out how to fix base (and cbase to only
             // take into account the *parent's* padding.
@@ -1745,49 +1906,69 @@ export default class Element extends adone.cui.Node {
                 if (yl - 1 < ppos.yi + b) {
                     // Is above.
                     return;
-                } else {
+                } 
                     // Is partially covered above.
-                    notop = true;
-                    v = ppos.yi - yi;
-                    if (this.border) v--;
-                    if (thisparent.border) v++;
-                    base += v;
-                    yi += v;
+                notop = true;
+                v = ppos.yi - yi;
+                if (this.border) {
+                    v--;
                 }
+                if (thisparent.border) {
+                    v++;
+                }
+                base += v;
+                yi += v;
+                
             } else if (yl > ppos.yl - b) {
                 if (yi > ppos.yl - 1 - b) {
                     // Is below.
                     return;
-                } else {
+                } 
                     // Is partially covered below.
-                    nobot = true;
-                    v = yl - ppos.yl;
-                    if (this.border) v--;
-                    if (thisparent.border) v++;
-                    yl -= v;
+                nobot = true;
+                v = yl - ppos.yl;
+                if (this.border) {
+                    v--; 
                 }
+                if (thisparent.border) {
+                    v++;
+                }
+                yl -= v;
+                
             }
 
             // Shouldn't be necessary.
             // assert.ok(yi < yl);
-            if (yi >= yl) return;
+            if (yi >= yl) {
+                return; 
+            }
 
             // Could allow overlapping stuff in scrolling elements
             // if we cleared the pending buffer before every draw.
             if (xi < el.lpos.xi) {
                 xi = el.lpos.xi;
                 noleft = true;
-                if (this.border) xi--;
-                if (thisparent.border) xi++;
+                if (this.border) {
+                    xi--; 
+                }
+                if (thisparent.border) {
+                    xi++;
+                }
             }
             if (xl > el.lpos.xl) {
                 xl = el.lpos.xl;
                 noright = true;
-                if (this.border) xl++;
-                if (thisparent.border) xl--;
+                if (this.border) {
+                    xl++;
+                }
+                if (thisparent.border) {
+                    xl--; 
+                }
             }
             //if (xi > xl) return;
-            if (xi >= xl) return;
+            if (xi >= xl) {
+                return;
+            }
         }
 
         if (this.noOverflow && this.parent.lpos) {
@@ -1829,7 +2010,7 @@ export default class Element extends adone.cui.Node {
 
         this.parseContent();
 
-        var coords = this._getCoords(true);
+        const coords = this._getCoords(true);
         if (!coords) {
             delete this.lpos;
             return;
@@ -1845,24 +2026,24 @@ export default class Element extends adone.cui.Node {
             return;
         }
 
-        var lines = this.screen.lines
-            , xi = coords.xi
-            , xl = coords.xl
-            , yi = coords.yi
-            , yl = coords.yl
-            , x
-            , y
-            , cell
-            , attr
-            , ch
-            , content = this._pcontent
-            , ci = this._clines.ci[coords.base]
-            , battr
-            , dattr
-            , c
-            , visible
-            , i
-            , bch = this.ch;
+        let lines = this.screen.lines,
+            xi = coords.xi,
+            xl = coords.xl,
+            yi = coords.yi,
+            yl = coords.yl,
+            x,
+            y,
+            cell,
+            attr,
+            ch,
+            content = this._pcontent,
+            ci = this._clines.ci[coords.base],
+            battr,
+            dattr,
+            c,
+            visible,
+            i,
+            bch = this.ch;
 
         // Clip content if it's off the edge of the screen
         // if (xi + this.ileft < 0 || yi + this.itop < 0) {
@@ -1920,7 +2101,9 @@ export default class Element extends adone.cui.Node {
             attr = this._clines.attr[Math.min(coords.base, this._clines.length - 1)];
         }
 
-        if (this.border) xi++ , xl-- , yi++ , yl--;
+        if (this.border) {
+            xi++, xl--, yi++, yl--;
+        }
 
         // If we have padding/valign, that means the
         // content-drawing loop will skip a few cells/lines.
@@ -1929,9 +2112,13 @@ export default class Element extends adone.cui.Node {
         if (this.tpadding || (this.valign && this.valign !== "top")) {
             if (this.style.transparent) {
                 for (y = Math.max(yi, 0); y < yl; y++) {
-                    if (!lines[y]) break;
+                    if (!lines[y]) {
+                        break;
+                    }
                     for (x = Math.max(xi, 0); x < xl; x++) {
-                        if (!lines[y][x]) break;
+                        if (!lines[y][x]) {
+                            break; 
+                        }
                         lines[y][x][0] = colors.blend(attr, lines[y][x][0]);
                         // lines[y][x][1] = bch;
                         lines[y].dirty = true;
@@ -2005,7 +2192,9 @@ export default class Element extends adone.cui.Node {
                 }
 
                 // Handle newlines.
-                if (ch === "\t") ch = bch;
+                if (ch === "\t") {
+                    ch = bch;
+                }
                 if (ch === "\n") {
                     // If we're on the first cell and we find a newline and the last cell
                     // of the last line was not a newline, let's just treat this like the
@@ -2019,10 +2208,14 @@ export default class Element extends adone.cui.Node {
                     ch = bch;
                     for (; x < xl; x++) {
                         cell = lines[y][x];
-                        if (!cell) break;
+                        if (!cell) {
+                            break; 
+                        }
                         if (this.style.transparent) {
                             lines[y][x][0] = colors.blend(attr, lines[y][x][0]);
-                            if (content[ci]) lines[y][x][1] = ch;
+                            if (content[ci]) {
+                                lines[y][x][1] = ch; 
+                            }
                             lines[y].dirty = true;
                         } else {
                             if (attr !== cell[0] || ch !== cell[1]) {
@@ -2036,7 +2229,7 @@ export default class Element extends adone.cui.Node {
                 }
 
                 if (this.screen.fullUnicode && content[ci - 1]) {
-                    var point = unicode.codePointAt(content, ci - 1);
+                    const point = unicode.codePointAt(content, ci - 1);
                     // Handle combining chars:
                     // Make sure they get in the same cell and are counted as 0.
                     if (unicode.combining[point]) {
@@ -2060,11 +2253,15 @@ export default class Element extends adone.cui.Node {
                     }
                 }
 
-                if (this._noFill) continue;
+                if (this._noFill) {
+                    continue; 
+                }
 
                 if (this.style.transparent) {
                     lines[y][x][0] = colors.blend(attr, lines[y][x][0]);
-                    if (content[ci]) lines[y][x][1] = ch;
+                    if (content[ci]) {
+                        lines[y][x][1] = ch; 
+                    }
                     lines[y].dirty = true;
                 } else {
                     if (attr !== cell[0] || ch !== cell[1]) {
@@ -2083,17 +2280,23 @@ export default class Element extends adone.cui.Node {
             // i = this.getScrollHeight();
             i = Math.max(this._clines.length, this._scrollBottom());
         }
-        if (coords.notop || coords.nobot) i = -Infinity;
+        if (coords.notop || coords.nobot) {
+            i = -Infinity;
+        }
         if (this.scrollbar && (yl - yi) < i) {
             x = xl - 1;
-            if (this.scrollbar.ignoreBorder && this.border) x++;
+            if (this.scrollbar.ignoreBorder && this.border) {
+                x++; 
+            }
             if (this.alwaysScroll) {
                 y = this.childBase / (i - (yl - yi));
             } else {
                 y = (this.childBase + this.childOffset) / (i - 1);
             }
             y = yi + ((yl - yi) * y | 0);
-            if (y >= yl) y = yl - 1;
+            if (y >= yl) {
+                y = yl - 1;
+            }
             cell = lines[y] && lines[y][x];
             if (cell) {
                 if (this.track) {
@@ -2115,7 +2318,9 @@ export default class Element extends adone.cui.Node {
             }
         }
 
-        if (this.border) xi-- , xl++ , yi-- , yl++;
+        if (this.border) {
+            xi--, xl++, yi--, yl++;
+        }
 
         if (this.tpadding) {
             xi -= this.padding.left, xl += this.padding.right;
@@ -2126,13 +2331,23 @@ export default class Element extends adone.cui.Node {
         if (this.border) {
             battr = this.sattr(this.style.border);
             y = yi;
-            if (coords.notop) y = -1;
+            if (coords.notop) {
+                y = -1;
+            }
             for (x = xi; x < xl; x++) {
-                if (!lines[y]) break;
-                if (coords.noleft && x === xi) continue;
-                if (coords.noright && x === xl - 1) continue;
+                if (!lines[y]) {
+                    break;
+                }
+                if (coords.noleft && x === xi) {
+                    continue;
+                }
+                if (coords.noright && x === xl - 1) {
+                    continue;
+                }
                 cell = lines[y][x];
-                if (!cell) continue;
+                if (!cell) {
+                    continue; 
+                }
                 if (this.border.type === "line") {
                     if (x === xi) {
                         ch = "\u250c"; // '┌'
@@ -2183,7 +2398,9 @@ export default class Element extends adone.cui.Node {
             }
             y = yi + 1;
             for (; y < yl - 1; y++) {
-                if (!lines[y]) continue;
+                if (!lines[y]) {
+                    continue;
+                }
                 cell = lines[y][xi];
                 if (cell) {
                     if (this.border.left) {
@@ -2192,12 +2409,13 @@ export default class Element extends adone.cui.Node {
                         } else if (this.border.type === "bg") {
                             ch = this.border.ch;
                         }
-                        if (!coords.noleft)
+                        if (!coords.noleft) {
                             if (battr !== cell[0] || ch !== cell[1]) {
                                 lines[y][xi][0] = battr;
                                 lines[y][xi][1] = ch;
                                 lines[y].dirty = true;
                             }
+                        }
                     } else {
                         ch = " ";
                         if (dattr !== cell[0] || ch !== cell[1]) {
@@ -2215,12 +2433,13 @@ export default class Element extends adone.cui.Node {
                         } else if (this.border.type === "bg") {
                             ch = this.border.ch;
                         }
-                        if (!coords.noright)
+                        if (!coords.noright) {
                             if (battr !== cell[0] || ch !== cell[1]) {
                                 lines[y][xl - 1][0] = battr;
                                 lines[y][xl - 1][1] = ch;
                                 lines[y].dirty = true;
                             }
+                        }
                     } else {
                         ch = " ";
                         if (dattr !== cell[0] || ch !== cell[1]) {
@@ -2232,13 +2451,23 @@ export default class Element extends adone.cui.Node {
                 }
             }
             y = yl - 1;
-            if (coords.nobot) y = -1;
+            if (coords.nobot) {
+                y = -1; 
+            }
             for (x = xi; x < xl; x++) {
-                if (!lines[y]) break;
-                if (coords.noleft && x === xi) continue;
-                if (coords.noright && x === xl - 1) continue;
+                if (!lines[y]) {
+                    break;
+                }
+                if (coords.noleft && x === xi) {
+                    continue; 
+                }
+                if (coords.noright && x === xl - 1) {
+                    continue; 
+                }
                 cell = lines[y][x];
-                if (!cell) continue;
+                if (!cell) {
+                    continue; 
+                }
                 if (this.border.type === "line") {
                     if (x === xi) {
                         ch = "\u2514"; // '└'
@@ -2293,10 +2522,14 @@ export default class Element extends adone.cui.Node {
             // right
             y = Math.max(yi + 1, 0);
             for (; y < yl + 1; y++) {
-                if (!lines[y]) break;
+                if (!lines[y]) {
+                    break; 
+                }
                 x = xl;
                 for (; x < xl + 2; x++) {
-                    if (!lines[y][x]) break;
+                    if (!lines[y][x]) {
+                        break;
+                    }
                     // lines[y][x][0] = colors.blend(this.dattr, lines[y][x][0]);
                     lines[y][x][0] = colors.blend(lines[y][x][0]);
                     lines[y].dirty = true;
@@ -2305,9 +2538,13 @@ export default class Element extends adone.cui.Node {
             // bottom
             y = yl;
             for (; y < yl + 1; y++) {
-                if (!lines[y]) break;
+                if (!lines[y]) {
+                    break;
+                }
                 for (x = Math.max(xi + 1, 0); x < xl; x++) {
-                    if (!lines[y][x]) break;
+                    if (!lines[y][x]) {
+                        break;
+                    }
                     // lines[y][x][0] = colors.blend(this.dattr, lines[y][x][0]);
                     lines[y][x][0] = colors.blend(lines[y][x][0]);
                     lines[y].dirty = true;
@@ -2315,7 +2552,7 @@ export default class Element extends adone.cui.Node {
             }
         }
 
-        this.children.forEach(function (el) {
+        this.children.forEach((el) => {
             if (el.screen._ci !== -1) {
                 el.index = el.screen._ci++;
             }
@@ -2338,7 +2575,9 @@ export default class Element extends adone.cui.Node {
      */
 
     insertLine(i, line) {
-        if (typeof line === "string") line = line.split("\n");
+        if (typeof line === "string") {
+            line = line.split("\n");
+        }
 
         if (i !== i || i == null) {
             i = this._clines.ftor.length;
@@ -2350,13 +2589,13 @@ export default class Element extends adone.cui.Node {
             this._clines.fake.push("");
             this._clines.ftor.push([this._clines.push("") - 1]);
             this._clines.rtof(this._clines.fake.length - 1);
-                }
+        }
 
         // NOTE: Could possibly compare the first and last ftor line numbers to see
         // if they're the same, or if they fit in the visible region entirely.
-        var start = this._clines.length
-            , diff
-            , real;
+        let start = this._clines.length,
+            diff,
+            real;
 
         if (i >= this._clines.ftor.length) {
             real = this._clines.ftor[this._clines.ftor.length - 1];
@@ -2365,7 +2604,7 @@ export default class Element extends adone.cui.Node {
             real = this._clines.ftor[i][0];
         }
 
-        for (var j = 0; j < line.length; j++) {
+        for (let j = 0; j < line.length; j++) {
             this._clines.fake.splice(i + j, 0, line[j]);
         }
 
@@ -2374,12 +2613,14 @@ export default class Element extends adone.cui.Node {
         diff = this._clines.length - start;
 
         if (diff > 0) {
-            var pos = this._getCoords();
-            if (!pos) return;
+            const pos = this._getCoords();
+            if (!pos) {
+                return;
+            }
 
-            var height = pos.yl - pos.yi - this.iheight
-                , base = this.childBase || 0
-                , visible = real >= base && real - base < height;
+            let height = pos.yl - pos.yi - this.iheight,
+                base = this.childBase || 0,
+                visible = real >= base && real - base < height;
 
             if (pos && visible && this.screen.cleanSides(this)) {
                 this.screen.insertLine(diff,
@@ -2402,9 +2643,9 @@ export default class Element extends adone.cui.Node {
 
         // NOTE: Could possibly compare the first and last ftor line numbers to see
         // if they're the same, or if they fit in the visible region entirely.
-        var start = this._clines.length
-            , diff
-            , real = this._clines.ftor[i][0];
+        let start = this._clines.length,
+            diff,
+            real = this._clines.ftor[i][0];
 
         while (n--) {
             this._clines.fake.splice(i, 1);
@@ -2415,16 +2656,18 @@ export default class Element extends adone.cui.Node {
         diff = start - this._clines.length;
 
         // XXX clearPos() without diff statement?
-        var height = 0;
+        let height = 0;
 
         if (diff > 0) {
-            var pos = this._getCoords();
-            if (!pos) return;
+            const pos = this._getCoords();
+            if (!pos) {
+                return; 
+            }
 
             height = pos.yl - pos.yi - this.iheight;
 
-            var base = this.childBase || 0
-                , visible = real >= base && real - base < height;
+            let base = this.childBase || 0,
+                visible = real >= base && real - base < height;
 
             if (pos && visible && this.screen.cleanSides(this)) {
                 this.screen.deleteLine(diff,
@@ -2440,27 +2683,27 @@ export default class Element extends adone.cui.Node {
     }
 
     insertTop(line) {
-        var fake = this._clines.rtof[this.childBase || 0];
+        const fake = this._clines.rtof[this.childBase || 0];
         return this.insertLine(fake, line);
     }
 
     insertBottom(line) {
-        var h = (this.childBase || 0) + this.height - this.iheight
-            , i = Math.min(h, this._clines.length)
-            , fake = this._clines.rtof[i - 1] + 1;
+        let h = (this.childBase || 0) + this.height - this.iheight,
+            i = Math.min(h, this._clines.length),
+            fake = this._clines.rtof[i - 1] + 1;
 
         return this.insertLine(fake, line);
     }
 
     deleteTop(n) {
-        var fake = this._clines.rtof[this.childBase || 0];
+        const fake = this._clines.rtof[this.childBase || 0];
         return this.deleteLine(fake, n);
     }
 
     deleteBottom(n) {
-        var h = (this.childBase || 0) + this.height - 1 - this.iheight
-            , i = Math.min(h, this._clines.length - 1)
-            , fake = this._clines.rtof[i];
+        let h = (this.childBase || 0) + this.height - 1 - this.iheight,
+            i = Math.min(h, this._clines.length - 1),
+            fake = this._clines.rtof[i];
 
         n = n || 1;
 
@@ -2477,7 +2720,7 @@ export default class Element extends adone.cui.Node {
     }
 
     setBaseLine(i, line) {
-        var fake = this._clines.rtof[this.childBase || 0];
+        const fake = this._clines.rtof[this.childBase || 0];
         return this.setLine(fake + i, line);
     }
 
@@ -2488,7 +2731,7 @@ export default class Element extends adone.cui.Node {
     }
 
     getBaseLine(i) {
-        var fake = this._clines.rtof[this.childBase || 0];
+        const fake = this._clines.rtof[this.childBase || 0];
         return this.getLine(fake + i);
     }
 
@@ -2498,7 +2741,7 @@ export default class Element extends adone.cui.Node {
     }
 
     clearBaseLine(i) {
-        var fake = this._clines.rtof[this.childBase || 0];
+        const fake = this._clines.rtof[this.childBase || 0];
         return this.clearLine(fake + i);
     }
 
@@ -2511,7 +2754,9 @@ export default class Element extends adone.cui.Node {
     }
 
     pushLine(line) {
-        if (!this.content) return this.setLine(0, line);
+        if (!this.content) {
+            return this.setLine(0, line);
+        }
         return this.insertLine(this._clines.fake.length, line);
     }
 
@@ -2549,7 +2794,9 @@ export default class Element extends adone.cui.Node {
     }
 
     _scrollBottom() {
-        if (!this.scrollable) return 0;
+        if (!this.scrollable) {
+            return 0; 
+        }
 
         // We could just calculate the children, but we can
         // optimize for lists by just returning the items.length.
@@ -2561,7 +2808,7 @@ export default class Element extends adone.cui.Node {
             return this.lpos._scrollBottom;
         }
 
-        var bottom = this.children.reduce(function (current, el) {
+        const bottom = this.children.reduce((current, el) => {
             // el.height alone does not calculate the shrunken height, we need to use
             // getCoords. A shrunken box inside a scrollable element will not grow any
             // larger than the scrollable element's context regardless of how much
@@ -2569,7 +2816,7 @@ export default class Element extends adone.cui.Node {
             // without the scrollable calculation):
             // See: $ node test/widget-shrink-fail-2.js
             if (!el.detached) {
-                var lpos = el._getCoords(false, true);
+                const lpos = el._getCoords(false, true);
                 if (lpos) {
                     return Math.max(current, el.rtop + (lpos.yl - lpos.yi));
                 }
@@ -2580,7 +2827,9 @@ export default class Element extends adone.cui.Node {
         // XXX Use this? Makes .getScrollHeight() useless!
         // if (bottom < this._clines.length) bottom = this._clines.length;
 
-        if (this.lpos) this.lpos._scrollBottom = bottom;
+        if (this.lpos) {
+            this.lpos._scrollBottom = bottom; 
+        }
 
         return bottom;
     }
@@ -2597,19 +2846,23 @@ export default class Element extends adone.cui.Node {
     }
 
     scroll(offset, always) {
-        if (!this.scrollable) return;
+        if (!this.scrollable) {
+            return;
+        }
 
-        if (this.detached) return;
+        if (this.detached) {
+            return;
+        }
 
         // Handle scrolling.
-        var visible = this.height - this.iheight
-            , base = this.childBase
-            , d
-            , p
-            , t
-            , b
-            , max
-            , emax;
+        let visible = this.height - this.iheight,
+            base = this.childBase,
+            d,
+            p,
+            t,
+            b,
+            max,
+            emax;
 
         if (this.alwaysScroll || always) {
             // Semi-workaround
@@ -2652,9 +2905,13 @@ export default class Element extends adone.cui.Node {
         // max = this.getScrollHeight() - (this.height - this.iheight);
 
         max = this._clines.length - (this.height - this.iheight);
-        if (max < 0) max = 0;
+        if (max < 0) {
+            max = 0;
+        }
         emax = this._scrollBottom() - (this.height - this.iheight);
-        if (emax < 0) emax = 0;
+        if (emax < 0) {
+            emax = 0; 
+        }
 
         this.childBase = Math.min(this.childBase, Math.max(emax, max));
 
@@ -2690,7 +2947,7 @@ export default class Element extends adone.cui.Node {
     }
 
     _recalculateIndex() {
-        var max, emax;
+        let max, emax;
 
         if (this.detached || !this.scrollable) {
             return 0;
@@ -2700,9 +2957,13 @@ export default class Element extends adone.cui.Node {
         // max = this.getScrollHeight() - (this.height - this.iheight);
 
         max = this._clines.length - (this.height - this.iheight);
-        if (max < 0) max = 0;
+        if (max < 0) {
+            max = 0; 
+        }
         emax = this._scrollBottom() - (this.height - this.iheight);
-        if (emax < 0) emax = 0;
+        if (emax < 0) {
+            emax = 0; 
+        }
 
         this.childBase = Math.min(this.childBase, Math.max(emax, max));
 
@@ -2714,7 +2975,9 @@ export default class Element extends adone.cui.Node {
     }
 
     resetScroll() {
-        if (!this.scrollable) return;
+        if (!this.scrollable) {
+            return; 
+        }
         this.childOffset = 0;
         this.childBase = 0;
         return this.emit("scroll");
@@ -2725,12 +2988,14 @@ export default class Element extends adone.cui.Node {
     }
 
     getScrollPerc(s) {
-        var pos = this.lpos || this._getCoords();
-        if (!pos) return s ? -1 : 0;
+        const pos = this.lpos || this._getCoords();
+        if (!pos) {
+            return s ? -1 : 0; 
+        }
 
-        var height = (pos.yl - pos.yi) - this.iheight
-            , i = this.getScrollHeight()
-            , p;
+        let height = (pos.yl - pos.yi) - this.iheight,
+            i = this.getScrollHeight(),
+            p;
 
         if (height < i) {
             if (this.alwaysScroll) {
@@ -2747,7 +3012,7 @@ export default class Element extends adone.cui.Node {
     setScrollPerc(i) {
         // XXX
         // var m = this.getScrollHeight();
-        var m = Math.max(this._clines.length, this._scrollBottom());
+        const m = Math.max(this._clines.length, this._scrollBottom());
         return this.setScroll((i / 100) * m | 0);
     }
 }

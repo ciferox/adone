@@ -53,11 +53,13 @@ pp.toAssignable = function (node, isBinding, contextDescription) {
                 break;
 
             case "MemberExpression":
-                if (!isBinding) break;
+                if (!isBinding) {
+                    break; 
+                }
 
             default: {
-                const message = "Invalid left-hand side" +
-                    (contextDescription ? " in " + contextDescription : /* istanbul ignore next */ "expression");
+                const message = `Invalid left-hand side${ 
+                    contextDescription ? ` in ${contextDescription}` : /* istanbul ignore next */ "expression"}`;
                 this.raise(node.start, message);
             }
         }
@@ -85,7 +87,9 @@ pp.toAssignableList = function (exprList, isBinding, contextDescription) {
     }
     for (let i = 0; i < end; i++) {
         const elt = exprList[i];
-        if (elt) this.toAssignable(elt, isBinding, contextDescription);
+        if (elt) {
+            this.toAssignable(elt, isBinding, contextDescription);
+        }
     }
     return exprList;
 };
@@ -125,7 +129,9 @@ pp.parseBindingIdentifier = function () {
 pp.parseBindingAtom = function () {
     switch (this.state.type) {
         case tt._yield:
-            if (this.state.strict || this.state.inGenerator) this.unexpected();
+            if (this.state.strict || this.state.inGenerator) {
+                this.unexpected();
+            }
         // fall-through
         case tt.name:
             return this.parseIdentifier(true);
@@ -187,7 +193,9 @@ pp.parseMaybeDefault = function (startPos, startLoc, left) {
     startLoc = startLoc || this.state.startLoc;
     startPos = startPos || this.state.start;
     left = left || this.parseBindingAtom();
-    if (!this.eat(tt.eq)) return left;
+    if (!this.eat(tt.eq)) {
+        return left; 
+    }
 
     const node = this.startNodeAt(startPos, startLoc);
     node.left = left;
@@ -226,19 +234,25 @@ pp.checkLVal = function (expr, isBinding, checkClashes, contextDescription) {
             break;
 
         case "MemberExpression":
-            if (isBinding) this.raise(expr.start, (isBinding ? "Binding" : "Assigning to") + " member expression");
+            if (isBinding) {
+                this.raise(expr.start, `${isBinding ? "Binding" : "Assigning to"} member expression`);
+            }
             break;
 
         case "ObjectPattern":
             for (let prop of (expr.properties: Object[])) {
-                if (prop.type === "ObjectProperty") prop = prop.value;
+                if (prop.type === "ObjectProperty") {
+                    prop = prop.value; 
+                }
                 this.checkLVal(prop, isBinding, checkClashes, "object destructuring pattern");
             }
             break;
 
         case "ArrayPattern":
             for (const elem of (expr.elements: Object[])) {
-                if (elem) this.checkLVal(elem, isBinding, checkClashes, "array destructuring pattern");
+                if (elem) {
+                    this.checkLVal(elem, isBinding, checkClashes, "array destructuring pattern"); 
+                }
             }
             break;
 
@@ -255,9 +269,9 @@ pp.checkLVal = function (expr, isBinding, checkClashes, contextDescription) {
             break;
 
         default: {
-            const message = (isBinding ? /* istanbul ignore next */ "Binding invalid" : "Invalid") +
-                " left-hand side" +
-                (contextDescription ? " in " + contextDescription : /* istanbul ignore next */ "expression");
+            const message = `${isBinding ? /* istanbul ignore next */ "Binding invalid" : "Invalid" 
+                } left-hand side${ 
+                contextDescription ? ` in ${contextDescription}` : /* istanbul ignore next */ "expression"}`;
             this.raise(expr.start, message);
         }
     }

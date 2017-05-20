@@ -46,6 +46,6 @@ export default class Host {
         if (this.isLocal()) {
             return "localhost";
         }
-        return `${this.access.protocol}//${this.access.hostname}${is.undefined(this.access.port) ? "" : ":" + this.access.port}`;
+        return `${this.access.protocol}//${this.access.hostname}${is.undefined(this.access.port) ? "" : `:${this.access.port}`}`;
     }
 }

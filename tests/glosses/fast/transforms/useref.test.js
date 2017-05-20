@@ -28,7 +28,7 @@ describe("Fast", () => {
                 await root.clean();
             });
 
-            it("file should pass through", function (done) {
+            it("file should pass through", (done) => {
                 let a = 0;
 
                 const fakeFile = new File({
@@ -39,14 +39,14 @@ describe("Fast", () => {
                 });
 
                 const stream = useref();
-                stream.on("data", function (file) {
+                stream.on("data", (file) => {
                     expect(file.contents).to.be.ok;
                     expect(file.path).to.be.equal(P("test/fixture/file.js"));
                     expect(file.relative).to.be.equal("file.js");
                     ++a;
                 });
 
-                stream.once("end", function () {
+                stream.once("end", () => {
                     expect(a).to.be.equal(1);
                     done();
                 });

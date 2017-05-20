@@ -1,13 +1,13 @@
-var createMessageQueue = adone.net.mail.messageQueue;
+const createMessageQueue = adone.net.mail.messageQueue;
 
-describe("Message Queue Tests", function () {
-    var queue;
+describe("Message Queue Tests", () => {
+    let queue;
 
-    beforeEach(function () {
+    beforeEach(() => {
         queue = createMessageQueue();
     });
 
-    it("Should Add item to queue", function () {
+    it("Should Add item to queue", () => {
         expect(queue._instantQueue).to.deep.equal([]);
         queue.insert("value1");
         expect(queue._instantQueue).to.deep.equal(["value1"]);
@@ -15,14 +15,14 @@ describe("Message Queue Tests", function () {
         expect(queue._instantQueue).to.deep.equal(["value2", "value1"]);
     });
 
-    it("Should Pull items from a queue", function (done) {
+    it("Should Pull items from a queue", (done) => {
         queue.insert("value1");
         queue.insert("value2");
 
-        queue.get(function (value) {
+        queue.get((value) => {
             expect(value).to.be.equal("value1");
 
-            queue.get(function (value) {
+            queue.get((value) => {
                 expect(value).to.be.equal("value2");
                 expect(queue._instantQueue).to.deep.equal([]);
                 done();
@@ -30,18 +30,18 @@ describe("Message Queue Tests", function () {
         });
     });
 
-    it("Should Add delayed items", function (done) {
+    it("Should Add delayed items", (done) => {
         queue.insert("value1", 300);
         queue.insert("value2", 100);
         queue.insert("value3");
 
-        queue.get(function (value) {
+        queue.get((value) => {
             expect(value).to.be.equal("value3");
 
-            queue.get(function (value) {
+            queue.get((value) => {
                 expect(value).to.be.equal("value2");
 
-                queue.get(function (value) {
+                queue.get((value) => {
                     expect(value).to.be.equal("value1");
                     done();
                 });

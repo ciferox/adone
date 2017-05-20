@@ -19,9 +19,9 @@ function templateSender(transport, templates, defaults) {
     defaults = defaults || {};
 
     // built in renderer
-    var defaultRenderer = function (context, callback) {
-        var rendered = {};
-        Object.keys(templates).forEach(function (key) {
+    const defaultRenderer = function (context, callback) {
+        const rendered = {};
+        Object.keys(templates).forEach((key) => {
             rendered[key] = render(templates[key], {
                 escapeHtml: key === "html"
             }, context);
@@ -30,25 +30,25 @@ function templateSender(transport, templates, defaults) {
     };
 
     // actual renderer
-    var renderer = (typeof templates.render === "function" ? templates.render.bind(templates) : defaultRenderer);
+    const renderer = (typeof templates.render === "function" ? templates.render.bind(templates) : defaultRenderer);
 
     return function (fields, context, callback) {
 
-        var promise;
+        let promise;
 
         if (!callback && typeof Promise === "function") {
-            promise = new Promise(function (resolve, reject) {
+            promise = new Promise((resolve, reject) => {
                 callback = shared.callbackPromise(resolve, reject);
             });
         }
 
         // render data
-        renderer(context, function (err, rendered) {
+        renderer(context, (err, rendered) => {
             if (err) {
                 return callback(err);
             }
-            var mailData = mix(defaults, fields, rendered);
-            setImmediate(function () {
+            const mailData = mix(defaults, fields, rendered);
+            setImmediate(() => {
                 transport.sendMail(mailData, callback);
             });
         });
@@ -61,16 +61,16 @@ function templateSender(transport, templates, defaults) {
  * Merges multiple objects into one. Assumes single level, except 'headers'
  */
 function mix( /* obj1, obj2, ..., objN */ ) {
-    var args = Array.prototype.slice.call(arguments);
-    var result = {};
+    const args = Array.prototype.slice.call(arguments);
+    const result = {};
 
-    args.forEach(function (arg) {
-        Object.keys(arg || {}).forEach(function (key) {
+    args.forEach((arg) => {
+        Object.keys(arg || {}).forEach((key) => {
             if (key === "headers") {
                 if (!result.headers) {
                     result.headers = {};
                 }
-                Object.keys(arg[key]).forEach(function (hKey) {
+                Object.keys(arg[key]).forEach((hKey) => {
                     if (!(hKey in result.headers)) {
                         result.headers[hKey] = arg[key][hKey];
                     }
@@ -97,14 +97,14 @@ function render(str, options, context) {
     context = context || {};
     options = options || {};
 
-    var re = /\{\{[ ]*([^{}\s]+)[ ]*\}\}/g;
+    const re = /\{\{[ ]*([^{}\s]+)[ ]*\}\}/g;
 
-    return str.replace(re, function (match, key) {
-        var value;
+    return str.replace(re, (match, key) => {
+        let value;
         if (context.hasOwnProperty(key)) {
             value = context[key].toString();
             if (options.escapeHtml) {
-                value = value.replace(/["'&<>]/g, function (char) {
+                value = value.replace(/["'&<>]/g, (char) => {
                     switch (char) {
                         case "&":
                             return "&amp;";

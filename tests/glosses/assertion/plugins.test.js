@@ -2,10 +2,12 @@ const { assertion } = adone;
 
 assertion.loadExpectInterface();
 
-describe("plugins", function () {
+describe("plugins", () => {
 
     function plugin(assertion) {
-        if (assertion.Assertion.prototype.testing) return;
+        if (assertion.Assertion.prototype.testing) {
+            return; 
+        }
 
         Object.defineProperty(assertion.Assertion.prototype, "testing", {
             get() {
@@ -14,19 +16,19 @@ describe("plugins", function () {
         });
     }
 
-    it("basic usage", function () {
+    it("basic usage", () => {
         assertion.use(plugin);
         const expect = assertion.expect;
         expect(expect("").testing).to.equal("successful");
     });
 
-    it("double plugin", function () {
-        assertion.expect(function () {
+    it("double plugin", () => {
+        assertion.expect(() => {
             assertion.use(plugin);
         }).to.not.throw();
     });
 
-    it(".use detached from assertion object", function () {
+    it(".use detached from assertion object", () => {
         function anotherPlugin(assertion) {
             Object.defineProperty(assertion.Assertion.prototype, "moreTesting", {
                 get() {

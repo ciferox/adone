@@ -1,45 +1,45 @@
 const { fast, std: { fs, path } } = adone;
 const { plugin: { inject }, File } = fast;
 
-describe("FAST", function() {
-    describe("transforms", function() {
-        describe("inject", function () {
+describe("FAST", () => {
+    describe("transforms", () => {
+        describe("inject", () => {
 
-            it("should throw an error when the old api with target as string is used", function () {
-                assert.throw(function () {
+            it("should throw an error when the old api with target as string is used", () => {
+                assert.throw(() => {
                     inject("fixtures/template.html");
                 });
             });
 
-            it("should throw an error if sources stream is undefined", function () {
-                assert.throw(function () {
+            it("should throw an error if sources stream is undefined", () => {
+                assert.throw(() => {
                     inject();
                 });
             });
 
-            it("should throw an error if `templateString` option is specified", function () {
-                assert.throw(function () {
-                    fast.src(["template.html"], {read: true})
-                        .pipe(inject(src(["file.js"]), {templateString: "<html></html>"}));
+            it("should throw an error if `templateString` option is specified", () => {
+                assert.throw(() => {
+                    fast.src(["template.html"], { read: true })
+                        .pipe(inject(src(["file.js"]), { templateString: "<html></html>" }));
                 });
             });
 
-            it("should inject stylesheets, scripts, images, jsx and html components into desired file", function (done) {
-                const target = src(["template.html"], {read: true});
+            it("should inject stylesheets, scripts, images, jsx and html components into desired file", (done) => {
+                const target = src(["template.html"], { read: true });
                 const sources = src([
                     "lib.js",
                     "component.html",
                     "styles.css",
                     "image.png",
                     "lib.jsx"
-                ], {read: false});
+                ], { read: false });
 
                 const stream = target.pipe(inject(sources));
 
                 streamShouldContain(stream, ["defaults.html"], done);
             });
 
-            it("should inject sources into multiple targets", function (done) {
+            it("should inject sources into multiple targets", (done) => {
                 const target = src(["template.html", "template2.html"], { read: true });
                 const sources = src([
                     "lib.js",
@@ -54,8 +54,8 @@ describe("FAST", function() {
                 streamShouldContain(stream, ["defaults.html", "defaults2.html"], done);
             });
 
-            it("should inject stylesheets, scripts and html components with `ignorePath` removed from file path", function (done) {
-                const target = src(["template.html"], {read: true});
+            it("should inject stylesheets, scripts and html components with `ignorePath` removed from file path", (done) => {
+                const target = src(["template.html"], { read: true });
                 const sources = src([
                     "lib.js",
                     "component.html",
@@ -64,13 +64,13 @@ describe("FAST", function() {
                     "lib.jsx"
                 ]);
 
-                const stream = target.pipe(inject(sources, {ignorePath: "/fixtures"}));
+                const stream = target.pipe(inject(sources, { ignorePath: "/fixtures" }));
 
                 streamShouldContain(stream, ["ignorePath.html"], done);
             });
 
-            it("should inject stylesheets, scripts and html components with relative paths to target file if `relative` is truthy", function (done) {
-                const target = src(["template.html"], {read: true});
+            it("should inject stylesheets, scripts and html components with relative paths to target file if `relative` is truthy", (done) => {
+                const target = src(["template.html"], { read: true });
                 const sources = src([
                     "../../folder/lib.js",
                     "../../another/component.html",
@@ -79,13 +79,13 @@ describe("FAST", function() {
                     "../components/lib.jsx"
                 ]);
 
-                const stream = target.pipe(inject(sources, {relative: true}));
+                const stream = target.pipe(inject(sources, { relative: true }));
 
                 streamShouldContain(stream, ["relative.html"], done);
             });
 
-            it("should inject stylesheets, scripts and html components with `addPrefix` added to file path", function (done) {
-                const target = src(["template.html"], {read: true});
+            it("should inject stylesheets, scripts and html components with `addPrefix` added to file path", (done) => {
+                const target = src(["template.html"], { read: true });
                 const sources = src([
                     "lib.js",
                     "component.html",
@@ -94,15 +94,15 @@ describe("FAST", function() {
                     "lib.jsx"
                 ]);
 
-                const stream = target.pipe(inject(sources, {addPrefix: "my-test-dir"}));
+                const stream = target.pipe(inject(sources, { addPrefix: "my-test-dir" }));
 
                 streamShouldContain(stream, ["addPrefix.html"], done);
             });
 
             // Причина пропуска: поддержка опции addSuffix вносит изрядной путаницы в код,
             // нужна ли она вообще?
-            it.skip("should inject stylesheets, scripts and html components with `addSuffix` added to file path", function (done) {
-                const target = src(["template.html"], {read: true});
+            it.skip("should inject stylesheets, scripts and html components with `addSuffix` added to file path", (done) => {
+                const target = src(["template.html"], { read: true });
                 const sources = src([
                     "lib.js",
                     "component.html",
@@ -111,25 +111,25 @@ describe("FAST", function() {
                     "lib.jsx"
                 ]);
 
-                const stream = target.pipe(inject(sources, {addSuffix: "?my-test=suffix"}));
+                const stream = target.pipe(inject(sources, { addSuffix: "?my-test=suffix" }));
 
                 streamShouldContain(stream, ["addSuffix.html"], done);
             });
 
-            it("should inject stylesheets and html components with self closing tags if `selfClosingTag` is truthy", function (done) {
-                const target = src(["template.html"], {read: true});
+            it("should inject stylesheets and html components with self closing tags if `selfClosingTag` is truthy", (done) => {
+                const target = src(["template.html"], { read: true });
                 const sources = src([
                     "component.html",
                     "styles.css"
                 ]);
 
-                const stream = target.pipe(inject(sources, {selfClosingTag: true}));
+                const stream = target.pipe(inject(sources, { selfClosingTag: true }));
 
                 streamShouldContain(stream, ["selfClosingTag.html"], done);
             });
 
-            it("should inject stylesheets, scripts and html components without root slash if `addRootSlash` is `false`", function (done) {
-                const target = src(["template.html"], {read: true});
+            it("should inject stylesheets, scripts and html components without root slash if `addRootSlash` is `false`", (done) => {
+                const target = src(["template.html"], { read: true });
                 const sources = src([
                     "lib.js",
                     "component.html",
@@ -137,13 +137,13 @@ describe("FAST", function() {
                     "lib.jsx"
                 ]);
 
-                const stream = target.pipe(inject(sources, {addRootSlash: false}));
+                const stream = target.pipe(inject(sources, { addRootSlash: false }));
 
                 streamShouldContain(stream, ["noRootSlash.html"], done);
             });
 
-            it("should inject stylesheets, scripts and html components without root slash if `addRootSlash` is `false` and `ignorePath` is set", function (done) {
-                const target = src(["template.html"], {read: true});
+            it("should inject stylesheets, scripts and html components without root slash if `addRootSlash` is `false` and `ignorePath` is set", (done) => {
+                const target = src(["template.html"], { read: true });
                 const sources = src([
                     "a/folder/lib.js",
                     "a/folder/component.html",
@@ -151,13 +151,13 @@ describe("FAST", function() {
                     "a/folder/lib.jsx"
                 ]);
 
-                const stream = target.pipe(inject(sources, {addRootSlash: false, ignorePath: "fixtures"}));
+                const stream = target.pipe(inject(sources, { addRootSlash: false, ignorePath: "fixtures" }));
 
                 streamShouldContain(stream, ["noRootSlashWithIgnorePath.html"], done);
             });
 
-            it("should use starttag and endtag if specified", function (done) {
-                const target = src(["templateCustomTags.html"], {read: true});
+            it("should use starttag and endtag if specified", (done) => {
+                const target = src(["templateCustomTags.html"], { read: true });
                 const sources = src([
                     "lib.js",
                     "lib2.js",
@@ -173,20 +173,20 @@ describe("FAST", function() {
                 streamShouldContain(stream, ["customTags.html"], done);
             });
 
-            it("should use starttag and endtag with specified name if specified", function (done) {
-                const target = src(["templateCustomName.html"], {read: true});
+            it("should use starttag and endtag with specified name if specified", (done) => {
+                const target = src(["templateCustomName.html"], { read: true });
                 const sources = src([
                     "lib.js",
                     "lib2.js"
                 ]);
 
-                const stream = target.pipe(inject(sources, {name: "head"}));
+                const stream = target.pipe(inject(sources, { name: "head" }));
 
                 streamShouldContain(stream, ["customName.html"], done);
             });
 
-            it("should replace {{ext}} in starttag and endtag with current file extension if specified", function (done) {
-                const target = src(["templateTagsWithExt.html"], {read: true});
+            it("should replace {{ext}} in starttag and endtag with current file extension if specified", (done) => {
+                const target = src(["templateTagsWithExt.html"], { read: true });
                 const sources = src([
                     "lib.js",
                     "component.html",
@@ -202,13 +202,13 @@ describe("FAST", function() {
                 streamShouldContain(stream, ["customTagsWithExt.html"], done);
             });
 
-            it("should replace {{path}} in starttag and endtag with current file path if specified", function (done) {
-                const target = src(["templateTagsWithPath.html"], {read: true});
+            it("should replace {{path}} in starttag and endtag with current file path if specified", (done) => {
+                const target = src(["templateTagsWithPath.html"], { read: true });
                 const sources = src([
                     "template.html",
                     "partial.html",
                     "template2.html"
-                ], {read: true});
+                ], { read: true });
 
                 const stream = target.pipe(inject(sources, {
                     starttag: "<!-- {{path}}: -->",
@@ -221,8 +221,8 @@ describe("FAST", function() {
                 streamShouldContain(stream, ["customTagsWithPath.html"], done);
             });
 
-            it("should replace existing data within start and end tag", function (done) {
-                const target = src(["templateWithExistingData.html"], {read: true});
+            it("should replace existing data within start and end tag", (done) => {
+                const target = src(["templateWithExistingData.html"], { read: true });
                 const sources = src([
                     "lib.js",
                     "component.html",
@@ -237,8 +237,8 @@ describe("FAST", function() {
                 streamShouldContain(stream, ["existingData.html"], done);
             });
 
-            it("should use custom transform function for each file if specified", function (done) {
-                const target = src(["template.json"], {read: true});
+            it("should use custom transform function for each file if specified", (done) => {
+                const target = src(["template.json"], { read: true });
                 const sources = src([
                     "lib.js",
                     "component.html",
@@ -258,8 +258,8 @@ describe("FAST", function() {
                 streamShouldContain(stream, ["customTransform.json"], done);
             });
 
-            it("should use special default tags when injecting into jsx files", function (done) {
-                const target = src(["template.jsx"], {read: true});
+            it("should use special default tags when injecting into jsx files", (done) => {
+                const target = src(["template.jsx"], { read: true });
                 const sources = src([
                     "lib.js",
                     "component.html",
@@ -271,8 +271,8 @@ describe("FAST", function() {
                 streamShouldContain(stream, ["defaults.jsx"], done);
             });
 
-            it("should use special default tags when injecting into jade files", function (done) {
-                const target = src(["template.jade"], {read: true});
+            it("should use special default tags when injecting into jade files", (done) => {
+                const target = src(["template.jade"], { read: true });
                 const sources = src([
                     "lib.js",
                     "component.html",
@@ -284,8 +284,8 @@ describe("FAST", function() {
                 streamShouldContain(stream, ["defaults.jade"], done);
             });
 
-            it("should use special default tags when injecting into pug files", function (done) {
-                const target = src(["template.pug"], {read: true});
+            it("should use special default tags when injecting into pug files", (done) => {
+                const target = src(["template.pug"], { read: true });
                 const sources = src([
                     "lib.js",
                     "component.html",
@@ -297,8 +297,8 @@ describe("FAST", function() {
                 streamShouldContain(stream, ["defaults.pug"], done);
             });
 
-            it("should be able to inject jsx into jade files (Issue #144)", function (done) {
-                const target = src(["issue144.jade"], {read: true});
+            it("should be able to inject jsx into jade files (Issue #144)", (done) => {
+                const target = src(["issue144.jade"], { read: true });
                 const sources = src([
                     "lib.js",
                     "component.jsx"
@@ -309,8 +309,8 @@ describe("FAST", function() {
                 streamShouldContain(stream, ["issue144.jade"], done);
             });
 
-            it("should be able to inject jsx into pug files (Issue #144)", function (done) {
-                const target = src(["issue144.pug"], {read: true});
+            it("should be able to inject jsx into pug files (Issue #144)", (done) => {
+                const target = src(["issue144.pug"], { read: true });
                 const sources = src([
                     "lib.js",
                     "component.jsx"
@@ -321,8 +321,8 @@ describe("FAST", function() {
                 streamShouldContain(stream, ["issue144.pug"], done);
             });
 
-            it("should use special default tags when injecting into slm files", function (done) {
-                const target = src(["template.slm"], {read: true});
+            it("should use special default tags when injecting into slm files", (done) => {
+                const target = src(["template.slm"], { read: true });
                 const sources = src([
                     "lib.js",
                     "component.html",
@@ -334,8 +334,8 @@ describe("FAST", function() {
                 streamShouldContain(stream, ["defaults.slm"], done);
             });
 
-            it("should use special default tags when injecting into slim files", function (done) {
-                const target = src(["template.slim"], {read: true});
+            it("should use special default tags when injecting into slim files", (done) => {
+                const target = src(["template.slim"], { read: true });
                 const sources = src([
                     "lib.js",
                     "component.html",
@@ -347,8 +347,8 @@ describe("FAST", function() {
                 streamShouldContain(stream, ["defaults.slim"], done);
             });
 
-            it("should use special default tags when injecting into haml files", function (done) {
-                const target = src(["template.haml"], {read: true});
+            it("should use special default tags when injecting into haml files", (done) => {
+                const target = src(["template.haml"], { read: true });
                 const sources = src([
                     "lib.js",
                     "component.html",
@@ -360,8 +360,8 @@ describe("FAST", function() {
                 streamShouldContain(stream, ["defaults.haml"], done);
             });
 
-            it("should use special default tags when injecting into less files", function (done) {
-                const target = src(["template.less"], {read: true});
+            it("should use special default tags when injecting into less files", (done) => {
+                const target = src(["template.less"], { read: true });
                 const sources = src([
                     "lib.css",
                     "component.less",
@@ -373,8 +373,8 @@ describe("FAST", function() {
                 streamShouldContain(stream, ["defaults.less"], done);
             });
 
-            it("should use special default tags when injecting into sass files", function (done) {
-                const target = src(["template.sass"], {read: true});
+            it("should use special default tags when injecting into sass files", (done) => {
+                const target = src(["template.sass"], { read: true });
                 const sources = src([
                     "lib.css",
                     "component.sass",
@@ -388,8 +388,8 @@ describe("FAST", function() {
                 streamShouldContain(stream, ["defaults.sass"], done);
             });
 
-            it("should use special default tags when injecting into scss files", function (done) {
-                const target = src(["template.scss"], {read: true});
+            it("should use special default tags when injecting into scss files", (done) => {
+                const target = src(["template.scss"], { read: true });
                 const sources = src([
                     "lib.css",
                     "component.sass",
@@ -403,8 +403,8 @@ describe("FAST", function() {
                 streamShouldContain(stream, ["defaults.scss"], done);
             });
 
-            it("should be able to chain inject calls with different names without overrides (Issue #39)", function (done) {
-                const target = src(["issue39.html"], {read: true});
+            it("should be able to chain inject calls with different names without overrides (Issue #39)", (done) => {
+                const target = src(["issue39.html"], { read: true });
                 const sources1 = src([
                     "lib1.js",
                     "lib3.js"
@@ -415,14 +415,14 @@ describe("FAST", function() {
                 ]);
 
                 const stream = target
-                    .pipe(inject(sources1, {name: "head"}))
+                    .pipe(inject(sources1, { name: "head" }))
                     .pipe(inject(sources2));
 
                 streamShouldContain(stream, ["issue39.html"], done);
             });
 
-            it.skip("should be able to inject hashed files (Issue #71)", function (done) {
-                const target = src(["issue71.html"], {read: true});
+            it.skip("should be able to inject hashed files (Issue #71)", (done) => {
+                const target = src(["issue71.html"], { read: true });
                 const sources = src([
                     "lib.js?abcdef0123456789",
                     "styles.css?0123456789abcdef"
@@ -433,8 +433,8 @@ describe("FAST", function() {
                 streamShouldContain(stream, ["issue71.html"], done);
             });
 
-            it("should be able to inject when tags are missing whitespace (Issue #56)", function (done) {
-                const target = src(["issue56.html"], {read: true});
+            it("should be able to inject when tags are missing whitespace (Issue #56)", (done) => {
+                const target = src(["issue56.html"], { read: true });
                 const sources = src([
                     "lib.js"
                 ]);
@@ -444,19 +444,19 @@ describe("FAST", function() {
                 streamShouldContain(stream, ["issue56.html"], done);
             });
 
-            it("should not crash when transform function returns undefined (Issue #74)", function (done) {
-                const target = src(["issue74.html"], {read: true});
+            it("should not crash when transform function returns undefined (Issue #74)", (done) => {
+                const target = src(["issue74.html"], { read: true });
                 const sources = src([
                     "lib.js"
                 ]);
 
-                const stream = target.pipe(inject(sources, {transform: () => {}}));
+                const stream = target.pipe(inject(sources, { transform: () => {} }));
 
                 streamShouldContain(stream, ["issue74.html"], done);
             });
 
-            it("should be able to remove tags if removeTags option is set", function (done) {
-                const target = src(["template.html"], {read: true});
+            it("should be able to remove tags if removeTags option is set", (done) => {
+                const target = src(["template.html"], { read: true });
                 const sources = src([
                     "lib.js",
                     "component.html",
@@ -465,13 +465,13 @@ describe("FAST", function() {
                     "lib.jsx"
                 ]);
 
-                const stream = target.pipe(inject(sources, {removeTags: true}));
+                const stream = target.pipe(inject(sources, { removeTags: true }));
 
                 streamShouldContain(stream, ["removeTags.html"], done);
             });
 
-            it("should be able to remove tags without removing whitespace (issue #177)", function (done) {
-                const target = src(["template.html"], {read: true});
+            it("should be able to remove tags without removing whitespace (issue #177)", (done) => {
+                const target = src(["template.html"], { read: true });
                 const sources = src([
                     "lib.js",
                     "component.html",
@@ -482,7 +482,7 @@ describe("FAST", function() {
                     "lib.jsx"
                 ]);
 
-                const stream = target.pipe(inject(sources, {removeTags: true}));
+                const stream = target.pipe(inject(sources, { removeTags: true }));
 
                 streamShouldContain(stream, ["issue177.html"], done);
             });
@@ -491,14 +491,14 @@ describe("FAST", function() {
             it.skip("should be able to modify only the filepath (Issue #107)", function (done) {
                 const version = "1.0.0";
 
-                const target = src(["issue107.html"], {read: true});
+                const target = src(["issue107.html"], { read: true });
                 const sources = src([
                     "lib.js"
                 ]);
 
                 const stream = target.pipe(inject(sources, {
                     transform: (filepath) => {
-                        arguments[0] = filepath + "?v=" + version;
+                        arguments[0] = `${filepath}?v=${version}`;
                         return inject.transform.apply(inject.transform, arguments);
                     }
                 }));
@@ -506,8 +506,8 @@ describe("FAST", function() {
                 streamShouldContain(stream, ["issue107.html"], done);
             });
 
-            it("should be able to inject source maps (Issue #176)", function (done) {
-                const target = src(["issue176.html"], {read: true});
+            it("should be able to inject source maps (Issue #176)", (done) => {
+                const target = src(["issue176.html"], { read: true });
                 const sources = src([
                     "lib.js",
                     "lib.js.map"
@@ -518,19 +518,19 @@ describe("FAST", function() {
                 streamShouldContain(stream, ["issue176.html"], done);
             });
 
-            it("should be able to empty tags when there are no files for that tag and empty option is set", function (done) {
-                const target = src(["templateWithExistingData2.html"], {read: true});
+            it("should be able to empty tags when there are no files for that tag and empty option is set", (done) => {
+                const target = src(["templateWithExistingData2.html"], { read: true });
                 const sources = src([
                     "lib.js"
                 ]);
 
-                const stream = target.pipe(inject(sources, {empty: true}));
+                const stream = target.pipe(inject(sources, { empty: true }));
 
                 streamShouldContain(stream, ["emptyTags.html"], done);
             });
 
-            it("should be able both leave and replace tag contents when there are no files for some tags and empty option is not set", function (done) {
-                const target = src(["templateWithExistingData2.html"], {read: true});
+            it("should be able both leave and replace tag contents when there are no files for some tags and empty option is not set", (done) => {
+                const target = src(["templateWithExistingData2.html"], { read: true });
                 const sources = src([
                     "picture.png"
                 ]);
@@ -540,17 +540,17 @@ describe("FAST", function() {
                 streamShouldContain(stream, ["existingDataAndReplaced.html"], done);
             });
 
-            it("should be able to empty all tags when there are no files at all and empty option is set", function (done) {
-                const target = src(["templateWithExistingData2.html"], {read: true});
+            it("should be able to empty all tags when there are no files at all and empty option is set", (done) => {
+                const target = src(["templateWithExistingData2.html"], { read: true });
                 const sources = src([]);
 
-                const stream = target.pipe(inject(sources, {empty: true}));
+                const stream = target.pipe(inject(sources, { empty: true }));
 
                 streamShouldContain(stream, ["emptyTags2.html"], done);
             });
 
-            it("should leave all tags when there are no files at all and empty option is not set", function (done) {
-                const target = src(["templateWithExistingData2.html"], {read: true});
+            it("should leave all tags when there are no files at all and empty option is not set", (done) => {
+                const target = src(["templateWithExistingData2.html"], { read: true });
                 const sources = src([]);
 
                 const stream = target.pipe(inject(sources));
@@ -558,18 +558,18 @@ describe("FAST", function() {
                 streamShouldContain(stream, ["templateWithExistingData2.html"], done);
             });
 
-            it("should be able to remove and empty tags when there are no files for that tag and empty and removeTags option is set", function (done) {
-                const target = src(["templateWithExistingData2.html"], {read: true});
+            it("should be able to remove and empty tags when there are no files for that tag and empty and removeTags option is set", (done) => {
+                const target = src(["templateWithExistingData2.html"], { read: true });
                 const sources = src([
                     "lib.js"
                 ]);
 
-                const stream = target.pipe(inject(sources, {empty: true, removeTags: true}));
+                const stream = target.pipe(inject(sources, { empty: true, removeTags: true }));
 
                 streamShouldContain(stream, ["removeAndEmptyTags.html"], done);
             });
 
-            it("should work in chains", function (done) {
+            it("should work in chains", (done) => {
                 const sources = [
                     "lib.js",
                     "component.html",
@@ -578,15 +578,15 @@ describe("FAST", function() {
                     "lib.jsx"
                 ];
 
-                const stream = src(["template.html"], {read: true})
-                .pipe(inject(src(sources, {read: false})));
+                const stream = src(["template.html"], { read: true })
+                .pipe(inject(src(sources, { read: false })));
 
                 streamShouldContain(stream, ["defaults.html"], done);
             });
         });
 
         function src(files, options = {}) {
-            return adone.core(files.map(function (file) {
+            return adone.core(files.map((file) => {
                 return fixture(file, options.read);
             }));
         }
@@ -594,16 +594,16 @@ describe("FAST", function() {
         function streamShouldContain(stream, files, done) {
             let received = 0;
 
-            stream.on("error", function (err) {
+            stream.on("error", (err) => {
                 assert.isOk(err);
                 done(err);
             });
 
-            const contents = files.map(function (file) {
+            const contents = files.map((file) => {
                 return String(expectedFile(file).contents);
             });
 
-            stream.on("data", function (newFile) {
+            stream.on("data", (newFile) => {
                 assert.isOk(newFile);
                 assert.isOk(newFile.contents);
 

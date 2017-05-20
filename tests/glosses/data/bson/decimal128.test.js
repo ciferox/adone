@@ -481,16 +481,16 @@ describe("glosses", "data", "bson", "decimal 128", () => {
             const bson = new BSON();
 
             // Create a custom object
-            const MyCustomDecimal = function(value) {
+            const MyCustomDecimal = function (value) {
                 this.value = value instanceof Decimal128 ? value.toString() : value;
             };
 
-            MyCustomDecimal.prototype.toBSON = function() {
+            MyCustomDecimal.prototype.toBSON = function () {
                 return Decimal128.fromString(this.value);
             };
 
             // Add a custom mapper for the type
-            Decimal128.prototype.toObject = function() {
+            Decimal128.prototype.toObject = function () {
                 return new MyCustomDecimal(this);
             };
 

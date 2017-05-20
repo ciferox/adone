@@ -13,8 +13,8 @@ export class TokContext {
         override?: Function,
     ) {
         this.token = token;
-        this.isExpr = !!isExpr;
-        this.preserveSpace = !!preserveSpace;
+        this.isExpr = Boolean(isExpr);
+        this.preserveSpace = Boolean(preserveSpace);
         this.override = override;
     }
 

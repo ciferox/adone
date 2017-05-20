@@ -37,9 +37,9 @@ export default class Command extends EventEmitter {
         this.next = this.next(packet, connection);
         if (this.next) {
             return false;
-        } else {
-            this.emit("end");
-            return true;
-        }
+        } 
+        this.emit("end");
+        return true;
+        
     }
 }

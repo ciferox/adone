@@ -9,7 +9,7 @@ const fetch = adone.net.mail.fetch;
  */
 module.exports.parseConnectionUrl = (str) => {
     str = str || "";
-    let options = {};
+    const options = {};
 
     [adone.std.url.parse(str, true)].forEach((url) => {
         let auth;
@@ -120,8 +120,8 @@ module.exports.getLogger = (options) => {
  * @param {Function} reject Function to run if callback ends with an error
  */
 module.exports.callbackPromise = (resolve, reject) => function () {
-    let args = Array.prototype.slice.call(arguments);
-    let err = args.shift();
+    const args = Array.prototype.slice.call(arguments);
+    const err = args.shift();
     if (err) {
         reject(err);
     } else {
@@ -153,7 +153,7 @@ module.exports.resolveContent = (data, key, callback) => {
 
     let content = data && data[key] && data[key].content || data[key];
     let contentStream;
-    let encoding = (typeof data[key] === "object" && data[key].encoding || "utf8")
+    const encoding = (typeof data[key] === "object" && data[key].encoding || "utf8")
         .toString()
         .toLowerCase()
         .replace(/[-_\s]/g, "");
@@ -177,7 +177,7 @@ module.exports.resolveContent = (data, key, callback) => {
             contentStream = fetch(content.path || content.href);
             return resolveStream(contentStream, callback);
         } else if (/^data:/i.test(content.path || content.href)) {
-            let parts = (content.path || content.href).match(/^data:((?:[^;]*;)*(?:[^,]*)),(.*)$/i);
+            const parts = (content.path || content.href).match(/^data:((?:[^;]*;)*(?:[^,]*)),(.*)$/i);
             if (!parts) {
                 return callback(null, new Buffer(0));
             }
@@ -205,7 +205,7 @@ module.exports.resolveContent = (data, key, callback) => {
  */
 function resolveStream(stream, callback) {
     let responded = false;
-    let chunks = [];
+    const chunks = [];
     let chunklen = 0;
 
     stream.on("error", (err) => {
@@ -249,10 +249,10 @@ function resolveStream(stream, callback) {
  */
 function createDefaultLogger() {
 
-    let logger = {
+    const logger = {
         _print( /* level, message */ ) {
-            let args = Array.prototype.slice.call(arguments);
-            let level = args.shift();
+            const args = Array.prototype.slice.call(arguments);
+            const level = args.shift();
             let message;
 
             if (args.length > 1) {

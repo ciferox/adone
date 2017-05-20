@@ -1,16 +1,16 @@
 const services = require("./services.json");
 const normalized = {};
 
-Object.keys(services).forEach(function(key) {
-    var service = services[key];
+Object.keys(services).forEach((key) => {
+    const service = services[key];
 
     normalized[normalizeKey(key)] = normalizeService(service);
 
-    [].concat(service.aliases || []).forEach(function(alias) {
+    [].concat(service.aliases || []).forEach((alias) => {
         normalized[normalizeKey(alias)] = normalizeService(service);
     });
 
-    [].concat(service.domains || []).forEach(function(domain) {
+    [].concat(service.domains || []).forEach((domain) => {
         normalized[normalizeKey(domain)] = normalizeService(service);
     });
 });
@@ -20,10 +20,10 @@ function normalizeKey(key) {
 }
 
 function normalizeService(service) {
-    var filter = ["domains", "aliases"];
-    var response = {};
+    const filter = ["domains", "aliases"];
+    const response = {};
 
-    Object.keys(service).forEach(function(key) {
+    Object.keys(service).forEach((key) => {
         if (filter.indexOf(key) < 0) {
             response[key] = service[key];
         }
@@ -39,7 +39,7 @@ function normalizeService(service) {
  * @param {String} key [description]
  * @returns {Object} SMTP config or false if not found
  */
-module.exports = function(key) {
+module.exports = function (key) {
     key = normalizeKey(key.split("@").pop());
     return normalized[key] || false;
 };

@@ -1,6 +1,6 @@
 describe("Stack", () => {
     it("should work as expected", () => {
-        const s = new adone.collection.Stack;
+        const s = new adone.collection.Stack();
         s.push(1);
         s.push(2);
         s.push(3);
@@ -10,7 +10,7 @@ describe("Stack", () => {
     });
 
     it("push() should return the length", () => {
-        const s = new adone.collection.Stack;
+        const s = new adone.collection.Stack();
 
         expect(s.push(1)).to.be.equal(1);
         expect(s.push(1)).to.be.equal(2);
@@ -21,7 +21,7 @@ describe("Stack", () => {
     });
 
     it("length should be the actual length", () => {
-        const s = new adone.collection.Stack;
+        const s = new adone.collection.Stack();
         expect(s.length).to.be.equal(0);
         s.push(1);
         s.push(1);
@@ -33,7 +33,7 @@ describe("Stack", () => {
     });
 
     it("empty() should be the indicator of the emptiness of a stack", () => {
-        const s = new adone.collection.Stack;
+        const s = new adone.collection.Stack();
 
         expect(s.empty).to.be.true;
         s.push(1);
@@ -43,7 +43,7 @@ describe("Stack", () => {
     });
 
     it("top() should return the element at the top of a stack but doesnt remove it", () => {
-        const s = new adone.collection.Stack;
+        const s = new adone.collection.Stack();
         s.push(1);
         expect(s.top).to.be.equal(1);
         expect(s.empty).to.be.false;
@@ -51,7 +51,7 @@ describe("Stack", () => {
     });
 
     it("extend() should push all the items from an iterable into a stack", () => {
-        const s = new adone.collection.Stack;
+        const s = new adone.collection.Stack();
         s.extend([1, 2, 3, 4, 5]);
         expect(s.pop()).to.be.equal(5);
         expect(s.pop()).to.be.equal(4);

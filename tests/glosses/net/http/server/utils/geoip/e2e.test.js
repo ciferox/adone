@@ -14,7 +14,7 @@ describe("glosses", "net", "http", "server", "utils", "geoip", () => {
         const data = JSON.parse(await source.getVirtualFile(file).content());
         const hash = {};
         data.forEach((item) => {
-            for (const key in item)                {
+            for (const key in item) {
                 hash[key] = item[key];
             }
         });

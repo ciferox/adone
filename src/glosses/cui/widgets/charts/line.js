@@ -232,15 +232,15 @@ export default class Line extends adone.cui.widget.Canvas {
 
     getOptionsPrototype() {
         return {
-            width: 80
-            , height: 30
-            , left: 15
-            , top: 12
-            , xPadding: 5
-            , label: "Title"
-            , showLegend: true
-            , legend: { width: 12 }
-            , data: [{
+            width: 80,
+            height: 30,
+            left: 15,
+            top: 12,
+            xPadding: 5,
+            label: "Title",
+            showLegend: true,
+            legend: { width: 12 },
+            data: [{
                 title: "us-east",
                 x: ["t1", "t2", "t3", "t4"],
                 y: [5, 1, 7, 5],

@@ -142,7 +142,7 @@ const fileTypesDefault = {
     }
 };
 
-fileTypesDefault["default"] = fileTypesDefault.html;
+fileTypesDefault.default = fileTypesDefault.html;
 fileTypesDefault.htm = fileTypesDefault.html;
 fileTypesDefault.yml = fileTypesDefault.yaml;
 

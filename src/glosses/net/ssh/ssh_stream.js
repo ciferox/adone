@@ -2027,26 +2027,26 @@ function parse_KEX(self, type, callback) {
             err.level = "handshake";
             self.emit("error", err);
             return false;
-        } else {
-            if (type === MESSAGE.KEXDH_GEX_GROUP) {
+        } 
+        if (type === MESSAGE.KEXDH_GEX_GROUP) {
                 /*
                   byte    SSH_MSG_KEX_DH_GEX_GROUP
                   mpint   p, safe prime
                   mpint   g, generator for subgroup in GF(p)
                 */
-                const prime = readString(payload, 1, self, callback);
-                if (prime === false) {
-                    return false;
-                }
-                const gen = readString(payload, payload._pos, self, callback);
-                if (gen === false) {
-                    return false;
-                }
-                self.emit("KEXDH_GEX_GROUP", prime, gen);
-            } else if (type === MESSAGE.KEXDH_GEX_REPLY) {
-                return parse_KEXDH_REPLY(self, callback);
+            const prime = readString(payload, 1, self, callback);
+            if (prime === false) {
+                return false;
             }
+            const gen = readString(payload, payload._pos, self, callback);
+            if (gen === false) {
+                return false;
+            }
+            self.emit("KEXDH_GEX_GROUP", prime, gen);
+        } else if (type === MESSAGE.KEXDH_GEX_REPLY) {
+            return parse_KEXDH_REPLY(self, callback);
         }
+        
     } else {
         // Static group or ECDH-related
 
@@ -2667,22 +2667,22 @@ function hmacVerify(self, data) {
         );
         decrypt.instance.setAutoPadding(false);
         return true;
-    } else {
-        const calcHmac = crypto.createHmac(SSH_TO_OPENSSL[hmac.type], hmac.key);
+    } 
+    const calcHmac = crypto.createHmac(SSH_TO_OPENSSL[hmac.type], hmac.key);
 
-        hmac.bufCompute.writeUInt32BE(instate.seqno, 0, true);
-        hmac.bufCompute.writeUInt32BE(instate.pktLen, 4, true);
-        hmac.bufCompute[8] = instate.padLen;
+    hmac.bufCompute.writeUInt32BE(instate.seqno, 0, true);
+    hmac.bufCompute.writeUInt32BE(instate.pktLen, 4, true);
+    hmac.bufCompute[8] = instate.padLen;
 
-        calcHmac.update(hmac.bufCompute);
-        calcHmac.update(instate.packet);
+    calcHmac.update(hmac.bufCompute);
+    calcHmac.update(instate.packet);
 
-        let mac = calcHmac.digest("binary");
-        if (mac.length > instate.hmac.size) {
-            mac = mac.slice(0, instate.hmac.size);
-        }
-        return (mac === data.toString("binary"));
+    let mac = calcHmac.digest("binary");
+    if (mac.length > instate.hmac.size) {
+        mac = mac.slice(0, instate.hmac.size);
     }
+    return (mac === data.toString("binary"));
+    
 }
 
 function decryptData(self, data) {
@@ -3206,9 +3206,9 @@ function send(self, payload, cb, bypass) {
             send_(self, compress.read(), cb);
         });
         return true;
-    } else {
-        return send_(self, payload, cb);
-    }
+    } 
+    return send_(self, payload, cb);
+    
 }
 
 function send_(self, payload, cb) {
@@ -3652,9 +3652,9 @@ export default class SSH2Stream extends TransformStream {
                     header.versions.protocol !== "2.0") {
                     this.reset();
                     return callback(new Error("Protocol version not supported"));
-                } else {
-                    this.emit("header", header);
-                }
+                } 
+                this.emit("header", header);
+                
 
                 if (instate.status === IN_INIT) {
                     // We reset from an event handler, possibly due to an unsupported SSH
@@ -3822,12 +3822,12 @@ export default class SSH2Stream extends TransformStream {
                             self._transform(nextSlice, encoding, callback, true);
                         });
                         return;
-                    } else {
+                    } 
                         // Make sure we reset this after this first time in the loop,
                         // otherwise we could end up trying to interpret as-is another
                         // compressed packet that is within the same chunk
-                        decomp = false;
-                    }
+                    decomp = false;
+                    
                 }
 
                 this.emit("packet");

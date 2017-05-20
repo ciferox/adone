@@ -10,9 +10,9 @@ export function VariableDeclarator() {
 
     if (id.isIdentifier()) {
         return this.get("init").getTypeAnnotation();
-    } else {
-        return;
-    }
+    } 
+        
+    
 }
 
 export function TypeCastExpression(node) {
@@ -163,15 +163,15 @@ function resolveCall(callee) {
         if (callee.is("async")) {
             if (callee.is("generator")) {
                 return t.genericTypeAnnotation(t.identifier("AsyncIterator"));
-            } else {
-                return t.genericTypeAnnotation(t.identifier("Promise"));
-            }
-        } else {
-            if (callee.node.returnType) {
-                return callee.node.returnType;
-            } else {
+            } 
+            return t.genericTypeAnnotation(t.identifier("Promise"));
+            
+        } 
+        if (callee.node.returnType) {
+            return callee.node.returnType;
+        } 
                 // todo: get union type of all return arguments
-            }
-        }
+            
+        
     }
 }

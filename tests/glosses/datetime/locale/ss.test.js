@@ -11,7 +11,7 @@ describe("ss", () => {
         let i;
 
         function equalTest(input, mmm, i) {
-            assert.equal(adone.datetime(input, mmm).month(), i, input + " should be month " + (i + 1));
+            assert.equal(adone.datetime(input, mmm).month(), i, `${input} should be month ${i + 1}`);
         }
         for (i = 0; i < 12; i++) {
             tests[i] = tests[i].split(" ");
@@ -44,16 +44,16 @@ describe("ss", () => {
         let parsed;
 
         // test that a formatted adone.datetime including meridiem string can be parsed back to the same adone.datetime
-        assert.ok(b.isSame(adone.datetime(b.format("h:mm:ss a"), "h:mm:ss a", "ss", true), "seconds"), b.format("h:mm:ss a") + " should be equal to " + adone.datetime(b.format("h:mm:ss a"), "h:mm:ss a", "ss", true).format("h:mm:ss a"));
+        assert.ok(b.isSame(adone.datetime(b.format("h:mm:ss a"), "h:mm:ss a", "ss", true), "seconds"), `${b.format("h:mm:ss a")} should be equal to ${adone.datetime(b.format("h:mm:ss a"), "h:mm:ss a", "ss", true).format("h:mm:ss a")}`);
 
         // test that a formatted adone.datetime having a meridiem string can be parsed with strict flag
-        assert.ok(adone.datetime(b.format("h:mm:ss a"), "h:mm:ss a", "ss", true).isValid(), b.format("h:mm:ss a") + " should be parsed as valid");
+        assert.ok(adone.datetime(b.format("h:mm:ss a"), "h:mm:ss a", "ss", true).isValid(), `${b.format("h:mm:ss a")} should be parsed as valid`);
 
         for (i = 0; i < meridiemTests.length; i++) {
             parsed = adone.datetime(meridiemTests[i][0], "h a", "ss", true);
-            assert.equal(parsed.isValid(), meridiemTests[i][2], "validity for " + meridiemTests[i][0]);
+            assert.equal(parsed.isValid(), meridiemTests[i][2], `validity for ${meridiemTests[i][0]}`);
             if (parsed.isValid()) {
-                assert.equal(parsed.hours(), meridiemTests[i][1], "hours for " + meridiemTests[i][0]);
+                assert.equal(parsed.hours(), meridiemTests[i][1], `hours for ${meridiemTests[i][0]}`);
             }
         }
     });
@@ -88,7 +88,7 @@ describe("ss", () => {
         let i;
 
         for (i = 0; i < a.length; i++) {
-            assert.equal(b.format(a[i][0]), a[i][1], a[i][0] + " ---> " + a[i][1]);
+            assert.equal(b.format(a[i][0]), a[i][1], `${a[i][0]} ---> ${a[i][1]}`);
         }
     });
 
@@ -282,11 +282,11 @@ describe("ss", () => {
             m = adone.datetime().add({
                 d: i
             });
-            assert.equal(m.calendar(), m.format("dddd [nga] LT"), "Today + " + i + " days current time");
+            assert.equal(m.calendar(), m.format("dddd [nga] LT"), `Today + ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("dddd [nga] LT"), "Today + " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format("dddd [nga] LT"), `Today + ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("dddd [nga] LT"), "Today + " + i + " days end of day");
+            assert.equal(m.calendar(), m.format("dddd [nga] LT"), `Today + ${i} days end of day`);
         }
     });
 
@@ -298,11 +298,11 @@ describe("ss", () => {
             m = adone.datetime().subtract({
                 d: i
             });
-            assert.equal(m.calendar(), m.format("dddd [leliphelile] [nga] LT"), "Today - " + i + " days current time");
+            assert.equal(m.calendar(), m.format("dddd [leliphelile] [nga] LT"), `Today - ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("dddd [leliphelile] [nga] LT"), "Today - " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format("dddd [leliphelile] [nga] LT"), `Today - ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("dddd [leliphelile] [nga] LT"), "Today - " + i + " days end of day");
+            assert.equal(m.calendar(), m.format("dddd [leliphelile] [nga] LT"), `Today - ${i} days end of day`);
         }
     });
 

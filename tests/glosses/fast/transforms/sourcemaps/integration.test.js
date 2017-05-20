@@ -7,7 +7,7 @@ let root;
 let fromdir;
 
 function base64JSON(object) {
-    return "data:application/json;charset=utf8;base64," + new Buffer(JSON.stringify(object)).toString("base64");
+    return `data:application/json;charset=utf8;base64,${new Buffer(JSON.stringify(object)).toString("base64")}`;
 }
 
 describe("Fast", () => {
@@ -32,7 +32,7 @@ describe("Fast", () => {
                         .map((data) => {
                             expect(data.sourceMap).to.be.ok;
                             expect(data.contents.toString()).to.be.equal(
-                                sourceContent + "\n//# sourceMappingURL=" + base64JSON(data.sourceMap) + "\n",
+                                `${sourceContent}\n//# ${"sourceMappingURL"}=${base64JSON(data.sourceMap)}\n`,
                                 "file should be sourcemapped"
                             );
                         });
@@ -44,10 +44,10 @@ describe("Fast", () => {
                         .sourcemapsWrite()
                         .map((data) => {
                             expect(data.sourceMap).to.be.ok;
-                            expect(!!data.sourceMap.preExistingComment).to.be.true;
+                            expect(Boolean(data.sourceMap.preExistingComment)).to.be.true;
                             expect(data.contents.toString()).to.be.equal(
                                 data.contents.toString(),
-                                sourceContent + "\n//# sourceMappingURL=data:application/json;charset=utf8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiIiwic291cmNlcyI6WyJoZWxsb3dvcmxkLmpzIl0sInNvdXJjZXNDb250ZW50IjpbIid1c2Ugc3RyaWN0JztcblxuZnVuY3Rpb24gaGVsbG9Xb3JsZCgpIHtcbiAgICBjb25zb2xlLmxvZygnSGVsbG8gd29ybGQhJyk7XG59XG4iXSwiZmlsZSI6ImhlbGxvd29ybGQuanMifQ==",
+                                `${sourceContent}\n//# ${"sourceMappingURL"}=data:application/json;charset=utf8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiIiwic291cmNlcyI6WyJoZWxsb3dvcmxkLmpzIl0sInNvdXJjZXNDb250ZW50IjpbIid1c2Ugc3RyaWN0JztcblxuZnVuY3Rpb24gaGVsbG9Xb3JsZCgpIHtcbiAgICBjb25zb2xlLmxvZygnSGVsbG8gd29ybGQhJyk7XG59XG4iXSwiZmlsZSI6ImhlbGxvd29ybGQuanMifQ==`,
                                 "file should be sourcemapped"
                             );
                         });
@@ -56,8 +56,8 @@ describe("Fast", () => {
                 it("concat files with final combined sourcemap file", async () => {
                     await fast.src([
                         fromdir.getVirtualFile("*").path(),
-                        "!" + fromdir.getVirtualFile("test*.js").path(),
-                        "!" + fromdir.getVirtualFile("*map.js").path()
+                        `!${fromdir.getVirtualFile("test*.js").path()}`,
+                        `!${fromdir.getVirtualFile("*map.js").path()}`
                     ])
                         .sourcemapsInit()
                         .if((file) => file.extname === ".js", fast.plugin.concat("index.js"))
@@ -75,8 +75,8 @@ describe("Fast", () => {
                 it("inline concatenated file", async () => {
                     await fast.src([
                         fromdir.getVirtualFile("*").path(),
-                        "!" + fromdir.getVirtualFile("test*.js").path(),
-                        "!" + fromdir.getVirtualFile("*map.js").path()
+                        `!${fromdir.getVirtualFile("test*.js").path()}`,
+                        `!${fromdir.getVirtualFile("*map.js").path()}`
                     ])
                         .sourcemapsInit()
                         .if((file) => file.extname === ".js", fast.plugin.concat("index.js"))

@@ -11,7 +11,7 @@ describe("sk", () => {
         let i;
 
         function equalTest(input, mmm, monthIndex) {
-            assert.equal(adone.datetime(input, mmm).month(), monthIndex, input + " should be month " + (monthIndex + 1));
+            assert.equal(adone.datetime(input, mmm).month(), monthIndex, `${input} should be month ${monthIndex + 1}`);
         }
         for (i = 0; i < 12; i++) {
             tests[i] = tests[i].split(" ");
@@ -56,7 +56,7 @@ describe("sk", () => {
         let i;
 
         for (i = 0; i < a.length; i++) {
-            assert.equal(b.format(a[i][0]), a[i][1], a[i][0] + " ---> " + a[i][1]);
+            assert.equal(b.format(a[i][0]), a[i][1], `${a[i][0]} ---> ${a[i][1]}`);
         }
     });
 
@@ -368,11 +368,11 @@ describe("sk", () => {
                     nextDay = "v sobotu";
                     break;
             }
-            assert.equal(m.calendar(), m.format("[" + nextDay + "] [o] LT"), "Today + " + i + " days current time");
+            assert.equal(m.calendar(), m.format(`[${nextDay}] [o] LT`), `Today + ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("[" + nextDay + "] [o] LT"), "Today + " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format(`[${nextDay}] [o] LT`), `Today + ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("[" + nextDay + "] [o] LT"), "Today + " + i + " days end of day");
+            assert.equal(m.calendar(), m.format(`[${nextDay}] [o] LT`), `Today + ${i} days end of day`);
         }
     });
 
@@ -409,11 +409,11 @@ describe("sk", () => {
                     lastDay = "minulú sobotu";
                     break;
             }
-            assert.equal(m.calendar(), m.format("[" + lastDay + "] [o] LT"), "Today - " + i + " days current time");
+            assert.equal(m.calendar(), m.format(`[${lastDay}] [o] LT`), `Today - ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("[" + lastDay + "] [o] LT"), "Today - " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format(`[${lastDay}] [o] LT`), `Today - ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("[" + lastDay + "] [o] LT"), "Today - " + i + " days end of day");
+            assert.equal(m.calendar(), m.format(`[${lastDay}] [o] LT`), `Today - ${i} days end of day`);
         }
     });
 

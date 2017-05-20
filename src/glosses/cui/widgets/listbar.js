@@ -32,20 +32,24 @@ export default class ListBar extends adone.cui.widget.Element {
                     this.moveLeft();
                     this.screen.render();
                     // Stop propagation if we're in a form.
-                    if (key.name === "tab") return false;
+                    if (key.name === "tab") {
+                        return false; 
+                    }
                     return;
                 }
                 if (key.name === "right" || (options.vi && key.name === "l") || key.name === "tab") {
                     this.moveRight();
                     this.screen.render();
                     // Stop propagation if we're in a form.
-                    if (key.name === "tab") return false;
+                    if (key.name === "tab") {
+                        return false; 
+                    }
                     return;
                 }
                 if (key.name === "enter" || (options.vi && key.name === "k" && !key.shift)) {
                     this.emit("action", this.items[this.selected], this.selected);
                     this.emit("select", this.items[this.selected], this.selected);
-                    var item = this.items[this.selected];
+                    const item = this.items[this.selected];
                     if (item._.cmd.callback) {
                         item._.cmd.callback();
                     }
@@ -55,7 +59,7 @@ export default class ListBar extends adone.cui.widget.Element {
                 if (key.name === "escape" || (options.vi && key.name === "q")) {
                     this.emit("action");
                     this.emit("cancel");
-                    return;
+                    
                 }
             });
         }
@@ -63,8 +67,10 @@ export default class ListBar extends adone.cui.widget.Element {
         if (options.autoCommandKeys) {
             this.onScreenEvent("keypress", (ch) => {
                 if (/^[0-9]$/.test(ch)) {
-                    var i = +ch - 1;
-                    if (!~i) i = 9;
+                    let i = Number(ch) - 1;
+                    if (!~i) {
+                        i = 9; 
+                    }
                     return this.selectTab(i);
                 }
             });
@@ -90,8 +96,12 @@ export default class ListBar extends adone.cui.widget.Element {
                     cmd = { callback: cb };
                 }
 
-                if (cmd.text == null) cmd.text = key;
-                if (cmd.prefix == null) cmd.prefix = ++i + "";
+                if (cmd.text == null) {
+                    cmd.text = key; 
+                }
+                if (cmd.prefix == null) {
+                    cmd.prefix = `${++i}`; 
+                }
 
                 if (cmd.text == null && cmd.callback) {
                     cmd.text = cmd.callback.name;
@@ -136,12 +146,14 @@ export default class ListBar extends adone.cui.widget.Element {
 
         if (is.object(item)) {
             cmd = item;
-            if (cmd.prefix == null) cmd.prefix = (this.items.length + 1) + "";
+            if (cmd.prefix == null) {
+                cmd.prefix = `${this.items.length + 1}`;
+            }
         }
 
         if (is.string(item)) {
             cmd = {
-                prefix: (this.items.length + 1) + "",
+                prefix: `${this.items.length + 1}`,
                 text: item,
                 callback
             };
@@ -149,7 +161,7 @@ export default class ListBar extends adone.cui.widget.Element {
 
         if (is.function(item)) {
             cmd = {
-                prefix: (this.items.length + 1) + "",
+                prefix: `${this.items.length + 1}`,
                 text: item.name,
                 callback: item
             };
@@ -161,11 +173,11 @@ export default class ListBar extends adone.cui.widget.Element {
 
         const t = helpers.generateTags(this.style.prefix || { fg: "brightblack" });
 
-        title = (cmd.prefix != null ? t.open + cmd.prefix + ": " + t.close : "") + cmd.text;
+        title = (cmd.prefix != null ? `${t.open + cmd.prefix}: ${t.close}` : "") + cmd.text;
 
-        len = ((cmd.prefix != null ? cmd.prefix + ": " : "") + cmd.text).length;
+        len = ((cmd.prefix != null ? `${cmd.prefix}: ` : "") + cmd.text).length;
 
-        var options = {
+        const options = {
             screen: this.screen,
             top: 0,
             left: drawn + 1,
@@ -189,7 +201,9 @@ export default class ListBar extends adone.cui.widget.Element {
         ["bg", "fg", "bold", "underline", "blink", "inverse", "invisible"].forEach((name) => {
             options.style[name] = () => {
                 let attr = this.items[this.selected] === el ? this.style.selected[name] : this.style.item[name];
-                if (is.function(attr)) attr = attr(el);
+                if (is.function(attr)) {
+                    attr = attr(el); 
+                }
                 return attr;
             };
         });
@@ -281,7 +295,9 @@ export default class ListBar extends adone.cui.widget.Element {
         }
 
         const lpos = this._getCoords();
-        if (!lpos) return;
+        if (!lpos) {
+            return;
+        }
 
         const width = (lpos.xl - lpos.xi) - this.iwidth;
         let drawn = 0;
@@ -289,22 +305,32 @@ export default class ListBar extends adone.cui.widget.Element {
         let el;
 
         el = this.items[offset];
-        if (!el) return;
+        if (!el) {
+            return;
+        }
 
         this.items.forEach((el, i) => {
-            if (i < this.leftBase) return;
+            if (i < this.leftBase) {
+                return; 
+            }
 
-            var lpos = el._getCoords();
-            if (!lpos) return;
+            const lpos = el._getCoords();
+            if (!lpos) {
+                return;
+            }
 
-            if (lpos.xl - lpos.xi <= 0) return;
+            if (lpos.xl - lpos.xi <= 0) {
+                return;
+            }
 
             drawn += (lpos.xl - lpos.xi) + 2;
 
-            if (drawn <= width) visible++;
+            if (drawn <= width) {
+                visible++; 
+            }
         });
 
-        var diff = offset - (this.leftBase + this.leftOffset);
+        let diff = offset - (this.leftBase + this.leftOffset);
         if (offset > this.leftBase + this.leftOffset) {
             if (offset > this.leftBase + visible - 1) {
                 this.leftOffset = 0;
@@ -327,7 +353,7 @@ export default class ListBar extends adone.cui.widget.Element {
     }
 
     removeItem(child) {
-        var i = !is.number(child) ? this.items.indexOf(child) : child;
+        const i = !is.number(child) ? this.items.indexOf(child) : child;
 
         if (~i && this.items[i]) {
             child = this.items.splice(i, 1)[0];
@@ -355,7 +381,7 @@ export default class ListBar extends adone.cui.widget.Element {
     }
 
     selectTab(index) {
-        var item = this.items[index];
+        const item = this.items[index];
         if (item) {
             if (item._.cmd.callback) {
                 item._.cmd.callback();

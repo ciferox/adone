@@ -198,12 +198,12 @@ export default class PoolCluster extends EventEmitter {
                 if (self._canRetry) {
                     adone.warn(`[Error] PoolCluster : ${err}`);
                     return cb(null, "retry");
-                } else {
-                    return cb(err);
-                }
-            } else {
-                self._decreaseErrorCount(node);
-            }
+                } 
+                return cb(err);
+                
+            } 
+            self._decreaseErrorCount(node);
+            
 
             connection._clusterId = node.id;
 

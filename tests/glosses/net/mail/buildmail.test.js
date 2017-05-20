@@ -1,37 +1,37 @@
-var Buildmail = adone.net.mail.buildmail;
-var http = require("http");
-var stream = require("stream");
-var Transform = stream.Transform;
-var PassThrough = stream.PassThrough;
+const Buildmail = adone.net.mail.buildmail;
+const http = require("http");
+const stream = require("stream");
+const Transform = stream.Transform;
+const PassThrough = stream.PassThrough;
 
-describe("Buildmail", function () {
-    it("should create Buildmail object", function () {
+describe("Buildmail", () => {
+    it("should create Buildmail object", () => {
         expect(new Buildmail()).to.exist;
     });
 
-    describe("#createChild", function () {
-        it("should create child", function () {
-            var mb = new Buildmail("multipart/mixed");
+    describe("#createChild", () => {
+        it("should create child", () => {
+            const mb = new Buildmail("multipart/mixed");
 
-            var child = mb.createChild("multipart/mixed");
+            const child = mb.createChild("multipart/mixed");
             expect(child.parentNode).to.equal(mb);
             expect(child.rootNode).to.equal(mb);
 
-            var subchild1 = child.createChild("text/html");
+            const subchild1 = child.createChild("text/html");
             expect(subchild1.parentNode).to.equal(child);
             expect(subchild1.rootNode).to.equal(mb);
 
-            var subchild2 = child.createChild("text/html");
+            const subchild2 = child.createChild("text/html");
             expect(subchild2.parentNode).to.equal(child);
             expect(subchild2.rootNode).to.equal(mb);
         });
     });
 
-    describe("#appendChild", function () {
-        it("should append child node", function () {
-            var mb = new Buildmail("multipart/mixed");
+    describe("#appendChild", () => {
+        it("should append child node", () => {
+            const mb = new Buildmail("multipart/mixed");
 
-            var child = new Buildmail("text/plain");
+            const child = new Buildmail("text/plain");
             mb.appendChild(child);
             expect(child.parentNode).to.equal(mb);
             expect(child.rootNode).to.equal(mb);
@@ -40,9 +40,9 @@ describe("Buildmail", function () {
         });
     });
 
-    describe("#replace", function () {
-        it("should replace node", function () {
-            var mb = new Buildmail(),
+    describe("#replace", () => {
+        it("should replace node", () => {
+            let mb = new Buildmail(),
                 child = mb.createChild("text/plain"),
                 replacement = new Buildmail("image/png");
 
@@ -53,9 +53,9 @@ describe("Buildmail", function () {
         });
     });
 
-    describe("#remove", function () {
-        it("should remove node", function () {
-            var mb = new Buildmail(),
+    describe("#remove", () => {
+        it("should remove node", () => {
+            let mb = new Buildmail(),
                 child = mb.createChild("text/plain");
 
             child.remove();
@@ -64,9 +64,9 @@ describe("Buildmail", function () {
         });
     });
 
-    describe("#setHeader", function () {
-        it("should set header", function () {
-            var mb = new Buildmail();
+    describe("#setHeader", () => {
+        it("should set header", () => {
+            const mb = new Buildmail();
 
             mb.setHeader("key", "value");
             mb.setHeader("key", "value1");
@@ -102,8 +102,8 @@ describe("Buildmail", function () {
             }]);
         });
 
-        it("should set multiple headers with the same key", function () {
-            var mb = new Buildmail();
+        it("should set multiple headers with the same key", () => {
+            const mb = new Buildmail();
 
             mb.setHeader("key", ["value1", "value2", "value3"]);
             expect(mb._headers).to.deep.equal([{
@@ -113,9 +113,9 @@ describe("Buildmail", function () {
         });
     });
 
-    describe("#addHeader", function () {
-        it("should add header", function () {
-            var mb = new Buildmail();
+    describe("#addHeader", () => {
+        it("should add header", () => {
+            const mb = new Buildmail();
 
             mb.addHeader("key", "value1");
             mb.addHeader("key", "value2");
@@ -154,8 +154,8 @@ describe("Buildmail", function () {
             }]);
         });
 
-        it("should set multiple headers with the same key", function () {
-            var mb = new Buildmail();
+        it("should set multiple headers with the same key", () => {
+            const mb = new Buildmail();
             mb.addHeader("key", ["value1", "value2", "value3"]);
             expect(mb._headers).to.deep.equal([{
                 key: "Key",
@@ -170,9 +170,9 @@ describe("Buildmail", function () {
         });
     });
 
-    describe("#getHeader", function () {
-        it("should return first matching header value", function () {
-            var mb = new Buildmail();
+    describe("#getHeader", () => {
+        it("should return first matching header value", () => {
+            const mb = new Buildmail();
             mb._headers = [{
                 key: "Key",
                 value: "value4"
@@ -185,19 +185,19 @@ describe("Buildmail", function () {
         });
     });
 
-    describe("#setContent", function () {
-        it("should set the contents for a node", function () {
-            var mb = new Buildmail();
+    describe("#setContent", () => {
+        it("should set the contents for a node", () => {
+            const mb = new Buildmail();
             mb.setContent("abc");
             expect(mb.content).to.equal("abc");
         });
     });
 
 
-    describe("#build", function () {
+    describe("#build", () => {
 
-        it("should build root node", function (done) {
-            var mb = new Buildmail("text/plain").
+        it("should build root node", (done) => {
+            let mb = new Buildmail("text/plain").
             setHeader({
                 date: "12345",
                 "message-id": "67890"
@@ -212,7 +212,7 @@ describe("Buildmail", function () {
                 "\r\n" +
                 "Hello world!";
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(msg).to.equal(expected);
@@ -220,8 +220,8 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should build child node", function (done) {
-            var mb = new Buildmail("multipart/mixed"),
+        it("should build child node", (done) => {
+            let mb = new Buildmail("multipart/mixed"),
                 childNode = mb.createChild("text/plain").
             setContent("Hello world!"),
 
@@ -230,7 +230,7 @@ describe("Buildmail", function () {
                 "\r\n" +
                 "Hello world!";
 
-            childNode.build(function (err, msg) {
+            childNode.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(msg).to.equal(expected);
@@ -238,8 +238,8 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should build multipart node", function (done) {
-            var mb = new Buildmail("multipart/mixed", {
+        it("should build multipart node", (done) => {
+            let mb = new Buildmail("multipart/mixed", {
                     baseBoundary: "test"
                 }).setHeader({
                     date: "12345",
@@ -260,7 +260,7 @@ describe("Buildmail", function () {
 
             mb.createChild("text/plain").setContent("Hello world!");
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(msg).to.equal(expected);
@@ -268,11 +268,11 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should build root with generated headers", function (done) {
-            var mb = new Buildmail("text/plain");
+        it("should build root with generated headers", (done) => {
+            const mb = new Buildmail("text/plain");
             mb.hostname = "abc";
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(/^Date:\s/m.test(msg)).to.be.true;
@@ -282,21 +282,21 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should not include bcc missing in output, but in envelope", function (done) {
-            var mb = new Buildmail("text/plain").
+        it("should not include bcc missing in output, but in envelope", (done) => {
+            const mb = new Buildmail("text/plain").
             setHeader({
                 from: "sender@example.com",
                 to: "receiver@example.com",
                 bcc: "bcc@example.com"
             });
-            var envelope = mb.getEnvelope();
+            const envelope = mb.getEnvelope();
 
             expect(envelope).to.deep.equal({
                 from: "sender@example.com",
                 to: ["receiver@example.com", "bcc@example.com"]
             });
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(/^From: sender@example.com$/m.test(msg)).to.be.true;
@@ -306,8 +306,8 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should include bcc missing in output and in envelope", function (done) {
-            var mb = new Buildmail(
+        it("should include bcc missing in output and in envelope", (done) => {
+            const mb = new Buildmail(
                 "text/plain", {
                     keepBcc: true
                 }).
@@ -316,14 +316,14 @@ describe("Buildmail", function () {
                 to: "receiver@example.com",
                 bcc: "bcc@example.com"
             });
-            var envelope = mb.getEnvelope();
+            const envelope = mb.getEnvelope();
 
             expect(envelope).to.deep.equal({
                 from: "sender@example.com",
                 to: ["receiver@example.com", "bcc@example.com"]
             });
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(/^From: sender@example.com$/m.test(msg)).to.be.true;
@@ -333,8 +333,8 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should use set envelope", function (done) {
-            var mb = new Buildmail("text/plain").
+        it("should use set envelope", (done) => {
+            const mb = new Buildmail("text/plain").
             setHeader({
                 from: "sender@example.com",
                 to: "receiver@example.com",
@@ -347,7 +347,7 @@ describe("Buildmail", function () {
                     barValue: "foobar"
                 }
             });
-            var envelope = mb.getEnvelope();
+            const envelope = mb.getEnvelope();
 
             expect(envelope).to.deep.equal({
                 from: "a@a.a",
@@ -357,7 +357,7 @@ describe("Buildmail", function () {
                 }
             });
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(/^From: sender@example.com$/m.test(msg)).to.be.true;
@@ -367,13 +367,13 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should have unicode subject", function (done) {
-            var mb = new Buildmail("text/plain").
+        it("should have unicode subject", (done) => {
+            const mb = new Buildmail("text/plain").
             setHeader({
                 subject: "jõgeval istus kägu metsas"
             });
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(/^Subject: =\?UTF\-8\?Q\?j=C3=B5geval_istus_k=C3=A4gu\?= metsas$/m.test(msg)).to.be.true;
@@ -381,13 +381,13 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should have unicode subject with strange characters", function (done) {
-            var mb = new Buildmail("text/plain").
+        it("should have unicode subject with strange characters", (done) => {
+            const mb = new Buildmail("text/plain").
             setHeader({
                 subject: "ˆ¸ÁÌÓıÏˇÁÛ^¸\\ÁıˆÌÁÛØ^\\˜Û˝™ˇıÓ¸^\\˜ﬁ^\\·\\˜Ø^£˜#ﬁ^\\£ﬁ^\\£ﬁ^\\"
             });
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(msg.match(/\bSubject: [^\r]*\r\n( [^\r]*\r\n)*/)[0]).to.equal("Subject: =?UTF-8?B?y4bCuMOBw4zDk8Sxw4/Lh8OBw5tewrhcw4HEscuG?=\r\n =?UTF-8?B?w4zDgcObw5heXMucw5vLneKEosuHxLHDk8K4Xlw=?=\r\n =?UTF-8?B?y5zvrIFeXMK3XMucw5hewqPLnCPvrIFeXMKj76yB?=\r\n =?UTF-8?B?XlzCo++sgV5c?=\r\n");
@@ -395,11 +395,11 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should keep 7bit text as is", function (done) {
-            var mb = new Buildmail("text/plain").
+        it("should keep 7bit text as is", (done) => {
+            const mb = new Buildmail("text/plain").
             setContent("tere tere");
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(/\r\n\r\ntere tere$/.test(msg)).to.be.true;
@@ -409,14 +409,14 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should prefer base64", function (done) {
-            var mb = new Buildmail("text/plain").
+        it("should prefer base64", (done) => {
+            const mb = new Buildmail("text/plain").
             setHeader({
                 subject: "õõõõ"
             }).
             setContent("õõõõõõõõ");
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
 
@@ -432,15 +432,15 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should force quoted-printable", function (done) {
-            var mb = new Buildmail("text/plain", {
+        it("should force quoted-printable", (done) => {
+            const mb = new Buildmail("text/plain", {
                 textEncoding: "quoted-printable"
             }).setHeader({
                 subject: "õõõõ"
             }).
             setContent("õõõõõõõõ");
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
 
@@ -457,11 +457,11 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should prefer quoted-printable", function (done) {
-            var mb = new Buildmail("text/plain").
+        it("should prefer quoted-printable", (done) => {
+            const mb = new Buildmail("text/plain").
             setContent("ooooooooõ");
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
 
@@ -477,11 +477,11 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should not flow text", function (done) {
-            var mb = new Buildmail("text/plain").
+        it("should not flow text", (done) => {
+            const mb = new Buildmail("text/plain").
             setContent("a b c d e f g h i j k l m o p q r s t u w x y z 1 2 3 4 5 6 7 8 9 0 a b c d e f g h i j k l m o p q r s t u w x y z 1 2 3 4 5 6 7 8 9 0");
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
 
@@ -497,11 +497,11 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should not flow html", function (done) {
-            var mb = new Buildmail("text/html").
+        it("should not flow html", (done) => {
+            const mb = new Buildmail("text/html").
             setContent("a b c d e f g h i j k l m o p q r s t u w x y z 1 2 3 4 5 6 7 8 9 0 a b c d e f g h i j k l m o p q r s t u w x y z 1 2 3 4 5 6 7 8 9 0");
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(/^Content-Type: text\/html$/m.test(msg)).to.be.true;
@@ -516,11 +516,11 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should use 7bit for html", function (done) {
-            var mb = new Buildmail("text/html").
+        it("should use 7bit for html", (done) => {
+            const mb = new Buildmail("text/html").
             setContent("a b c d e f g h i j k l m o p\r\nq r s t u w x y z 1 2 3 4 5 6\r\n7 8 9 0 a b c d e f g h i j k\r\nl m o p q r s t u w x y z\r\n1 2 3 4 5 6 7 8 9 0");
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(/^Content-Type: text\/html$/m.test(msg)).to.be.true;
@@ -535,13 +535,13 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should fetch ascii filename", function (done) {
-            var mb = new Buildmail("text/plain", {
+        it("should fetch ascii filename", (done) => {
+            const mb = new Buildmail("text/plain", {
                 filename: "jogeva.txt"
             }).
             setContent("jogeva");
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(/\r\n\r\njogeva$/.test(msg)).to.be.true;
@@ -552,13 +552,13 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should set unicode filename", function (done) {
-            var mb = new Buildmail("text/plain", {
+        it("should set unicode filename", (done) => {
+            const mb = new Buildmail("text/plain", {
                 filename: "jõgeva.txt"
             }).
             setContent("jõgeva");
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(/^Content-Type: text\/plain; charset=utf-8;/m.test(msg)).to.be.true;
@@ -568,13 +568,13 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should set dashed filename", function (done) {
-            var mb = new Buildmail("text/plain", {
+        it("should set dashed filename", (done) => {
+            const mb = new Buildmail("text/plain", {
                 filename: "Ɣ------Ɣ------Ɣ------Ɣ------Ɣ------Ɣ------Ɣ------.pdf"
             }).
             setContent("jõgeva");
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(msg.indexOf("Content-Disposition: attachment;\r\n" +
@@ -584,13 +584,13 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should encode filename with a space", function (done) {
-            var mb = new Buildmail("text/plain", {
+        it("should encode filename with a space", (done) => {
+            const mb = new Buildmail("text/plain", {
                 filename: "document a.test.pdf"
             }).
             setContent("jõgeva");
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(/^Content-Type: text\/plain; charset=utf-8;/m.test(msg)).to.be.true;
@@ -600,13 +600,13 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should detect content type from filename", function (done) {
-            var mb = new Buildmail(false, {
+        it("should detect content type from filename", (done) => {
+            const mb = new Buildmail(false, {
                 filename: "jogeva.zip"
             }).
             setContent("jogeva");
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(/^Content-Type: application\/zip;/m.test(msg)).to.be.true;
@@ -614,8 +614,8 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should convert address objects", function (done) {
-            var mb = new Buildmail(false).
+        it("should convert address objects", (done) => {
+            const mb = new Buildmail(false).
             setHeader({
                 from: [{
                     name: "the safewithme õ testuser",
@@ -634,7 +634,7 @@ describe("Buildmail", function () {
                 ]
             });
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(/^From: =\?UTF\-8\?Q\?the_safewithme_=C3=B5_testuser\?=$/m.test(msg)).to.be.true; expect(/^\s+<safewithme.testuser@xn\-\-jgeva-dua.com>$/m.test(msg)).to.be.true;
@@ -643,8 +643,8 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should skip empty header", function (done) {
-            var mb = new Buildmail("text/plain").
+        it("should skip empty header", (done) => {
+            let mb = new Buildmail("text/plain").
             setHeader({
                 a: "b",
                 cc: "",
@@ -664,7 +664,7 @@ describe("Buildmail", function () {
                 "\r\n" +
                 "Hello world!";
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(msg).to.equal(expected);
@@ -672,8 +672,8 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should not process prepared headers", function (done) {
-            var mb = new Buildmail("text/plain").
+        it("should not process prepared headers", (done) => {
+            let mb = new Buildmail("text/plain").
             setHeader({
                 unprepared: {
                     value: new Array(100).join("a b")
@@ -713,7 +713,7 @@ describe("Buildmail", function () {
                 "\r\n" +
                 "Hello world!";
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(msg).to.equal(expected);
@@ -721,8 +721,8 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should set default transfer encoding for application content", function (done) {
-            var mb = new Buildmail("application/x-my-stuff").
+        it("should set default transfer encoding for application content", (done) => {
+            let mb = new Buildmail("application/x-my-stuff").
             setHeader({
                 date: "12345",
                 "message-id": "67890"
@@ -737,7 +737,7 @@ describe("Buildmail", function () {
                 "\r\n" +
                 "SGVsbG8gd29ybGQh";
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(msg).to.equal(expected);
@@ -745,8 +745,8 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should not set transfer encoding for multipart content", function (done) {
-            var mb = new Buildmail("multipart/global").
+        it("should not set transfer encoding for multipart content", (done) => {
+            let mb = new Buildmail("multipart/global").
             setHeader({
                 date: "12345",
                 "message-id": "67890"
@@ -764,7 +764,7 @@ describe("Buildmail", function () {
 
             mb.boundary = "abc";
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(msg).to.equal(expected);
@@ -772,8 +772,8 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should not set transfer encoding for message/ content", function (done) {
-            var mb = new Buildmail("message/rfc822").
+        it("should not set transfer encoding for message/ content", (done) => {
+            let mb = new Buildmail("message/rfc822").
             setHeader({
                 date: "12345",
                 "message-id": "67890"
@@ -787,7 +787,7 @@ describe("Buildmail", function () {
                 "\r\n" +
                 "Hello world!";
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(msg).to.equal(expected);
@@ -795,13 +795,13 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should use from domain for message-id", function (done) {
-            var mb = new Buildmail("text/plain").
+        it("should use from domain for message-id", (done) => {
+            const mb = new Buildmail("text/plain").
             setHeader({
                 from: "test@example.com"
             });
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(/^Message-ID: <[0-9a-f\-]+@example\.com>$/m.test(msg)).to.be.true;
@@ -809,10 +809,10 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should fallback to hostname for message-id", function (done) {
-            var mb = new Buildmail("text/plain");
+        it("should fallback to hostname for message-id", (done) => {
+            const mb = new Buildmail("text/plain");
             mb.hostname = "abc";
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(/^Message-ID: <[0-9a-f\-]+@abc>$/m.test(msg)).to.be.true;
@@ -821,8 +821,8 @@ describe("Buildmail", function () {
         });
     });
 
-    describe("#getEnvelope", function () {
-        it("should get envelope", function () {
+    describe("#getEnvelope", () => {
+        it("should get envelope", () => {
             expect(new Buildmail().addHeader({
                 from: "From <from@example.com>",
                 sender: "Sender <sender@example.com>",
@@ -850,20 +850,20 @@ describe("Buildmail", function () {
         });
     });
 
-    describe("#messageId", function () {
-        it("should create and return message-Id", function () {
-            var mail = new Buildmail().addHeader({
+    describe("#messageId", () => {
+        it("should create and return message-Id", () => {
+            const mail = new Buildmail().addHeader({
                 from: "From <from@example.com>"
             });
 
-            var messageId = mail.messageId();
+            const messageId = mail.messageId();
             expect(/^<[\w\-]+@example\.com>$/.test(messageId)).to.be.true;
             expect(messageId).to.equal(mail.messageId());
         });
     });
 
-    describe("#getAddresses", function () {
-        it("should get address object", function () {
+    describe("#getAddresses", () => {
+        it("should get address object", () => {
             expect(new Buildmail().addHeader({
                 from: "From <from@example.com>",
                 sender: "Sender <sender@example.com>",
@@ -938,9 +938,9 @@ describe("Buildmail", function () {
         });
     });
 
-    describe("#_parseAddresses", function () {
-        it("should normalize header key", function () {
-            var mb = new Buildmail();
+    describe("#_parseAddresses", () => {
+        it("should normalize header key", () => {
+            const mb = new Buildmail();
 
             expect(mb._parseAddresses("test address@example.com")).to.deep.equal([{
                 address: "address@example.com",
@@ -969,9 +969,9 @@ describe("Buildmail", function () {
         });
     });
 
-    describe("#_normalizeHeaderKey", function () {
-        it("should normalize header key", function () {
-            var mb = new Buildmail();
+    describe("#_normalizeHeaderKey", () => {
+        it("should normalize header key", () => {
+            const mb = new Buildmail();
 
             expect(mb._normalizeHeaderKey("key")).to.equal("Key");
             expect(mb._normalizeHeaderKey("mime-vERSION")).to.equal("MIME-Version");
@@ -984,9 +984,9 @@ describe("Buildmail", function () {
         });
     });
 
-    describe("#_handleContentType", function () {
-        it("should do nothing on non multipart", function () {
-            var mb = new Buildmail();
+    describe("#_handleContentType", () => {
+        it("should do nothing on non multipart", () => {
+            const mb = new Buildmail();
             expect(mb.boundary).to.not.exist;
             mb._handleContentType({
                 value: "text/plain"
@@ -995,8 +995,8 @@ describe("Buildmail", function () {
             expect(mb.multipart).to.be.false;
         });
 
-        it("should use provided boundary", function () {
-            var mb = new Buildmail();
+        it("should use provided boundary", () => {
+            const mb = new Buildmail();
             expect(mb.boundary).to.not.exist;
             mb._handleContentType({
                 value: "multipart/mixed",
@@ -1008,8 +1008,8 @@ describe("Buildmail", function () {
             expect(mb.multipart).to.equal("mixed");
         });
 
-        it("should generate boundary", function () {
-            var mb = new Buildmail();
+        it("should generate boundary", () => {
+            const mb = new Buildmail();
             stub(mb, "_generateBoundary").returns("def");
 
             expect(mb.boundary).to.not.exist;
@@ -1024,39 +1024,39 @@ describe("Buildmail", function () {
         });
     });
 
-    describe("#_generateBoundary ", function () {
-        it("should genereate boundary string", function () {
-            var mb = new Buildmail();
+    describe("#_generateBoundary ", () => {
+        it("should genereate boundary string", () => {
+            const mb = new Buildmail();
             mb._nodeId = "abc";
             mb.rootNode.baseBoundary = "def";
             expect(mb._generateBoundary()).to.equal("----sinikael-?=_abc-def");
         });
     });
 
-    describe("#_encodeHeaderValue", function () {
-        it("should do noting if possible", function () {
-            var mb = new Buildmail();
+    describe("#_encodeHeaderValue", () => {
+        it("should do noting if possible", () => {
+            const mb = new Buildmail();
             expect(mb._encodeHeaderValue("x-my", "test value")).to.equal("test value");
         });
 
-        it("should encode non ascii characters", function () {
-            var mb = new Buildmail();
+        it("should encode non ascii characters", () => {
+            const mb = new Buildmail();
             expect(mb._encodeHeaderValue("x-my", "test jõgeva value")).to.equal("test =?UTF-8?Q?j=C3=B5geva?= value");
         });
 
-        it("should format references", function () {
-            var mb = new Buildmail();
+        it("should format references", () => {
+            const mb = new Buildmail();
             expect(mb._encodeHeaderValue("references", "abc def")).to.equal("<abc> <def>");
             expect(mb._encodeHeaderValue("references", ["abc", "def"])).to.equal("<abc> <def>");
         });
 
-        it("should format message-id", function () {
-            var mb = new Buildmail();
+        it("should format message-id", () => {
+            const mb = new Buildmail();
             expect(mb._encodeHeaderValue("message-id", "abc")).to.equal("<abc>");
         });
 
-        it("should format addresses", function () {
-            var mb = new Buildmail();
+        it("should format addresses", () => {
+            const mb = new Buildmail();
             expect(mb._encodeHeaderValue("from", {
                 name: "the safewithme testuser",
                 address: "safewithme.testuser@jõgeva.com"
@@ -1064,9 +1064,9 @@ describe("Buildmail", function () {
         });
     });
 
-    describe("#_convertAddresses", function () {
-        it("should convert address object to a string", function () {
-            var mb = new Buildmail();
+    describe("#_convertAddresses", () => {
+        it("should convert address object to a string", () => {
+            const mb = new Buildmail();
             expect(mb._convertAddresses([{
                 name: "Jõgeva Ants",
                 address: "ants@jõgeva.ee"
@@ -1082,32 +1082,32 @@ describe("Buildmail", function () {
             }])).to.equal("=?UTF-8?Q?J=C3=B5geva_Ants?= <ants@xn--jgeva-dua.ee>, Composers:\"Bach, Sebastian\" <sebu@example.com>, Mozzie <mozart@example.com>;");
         });
 
-        it("should keep ascii name as is", function () {
-            var mb = new Buildmail();
+        it("should keep ascii name as is", () => {
+            const mb = new Buildmail();
             expect(mb._convertAddresses([{
                 name: "O'Vigala Sass",
                 address: "a@b.c"
             }])).to.equal("O'Vigala Sass <a@b.c>");
         });
 
-        it("should include name in quotes for special symbols", function () {
-            var mb = new Buildmail();
+        it("should include name in quotes for special symbols", () => {
+            const mb = new Buildmail();
             expect(mb._convertAddresses([{
                 name: "Sass, Vigala",
                 address: "a@b.c"
             }])).to.equal("\"Sass, Vigala\" <a@b.c>");
         });
 
-        it("should escape quotes", function () {
-            var mb = new Buildmail();
+        it("should escape quotes", () => {
+            const mb = new Buildmail();
             expect(mb._convertAddresses([{
                 name: "\"Vigala Sass\"",
                 address: "a@b.c"
             }])).to.equal("\"\\\"Vigala Sass\\\"\" <a@b.c>");
         });
 
-        it("should mime encode unicode names", function () {
-            var mb = new Buildmail();
+        it("should mime encode unicode names", () => {
+            const mb = new Buildmail();
             expect(mb._convertAddresses([{
                 name: "\"Jõgeva Sass\"",
                 address: "a@b.c"
@@ -1115,25 +1115,25 @@ describe("Buildmail", function () {
         });
     });
 
-    describe("#_generateMessageId", function(){
-        it("should generate uuid-looking message-id", function(){
-            var mb = new Buildmail();
-            var mid = mb._generateMessageId();
+    describe("#_generateMessageId", () => {
+        it("should generate uuid-looking message-id", () => {
+            const mb = new Buildmail();
+            const mid = mb._generateMessageId();
             expect(/^<[0-9a-f]{8}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{4}\-[0-9a-f]{12}@.*>/.test(mid)).to.be.true;
         });
     });
 
-    describe("Attachment streaming", function () {
-        var port = 10337;
-        var server;
+    describe("Attachment streaming", () => {
+        const port = 10337;
+        let server;
 
-        beforeEach(function (done) {
-            server = http.createServer(function (req, res) {
+        beforeEach((done) => {
+            server = http.createServer((req, res) => {
                 res.writeHead(200, {
                     "Content-Type": "text/plain"
                 });
-                var data = new Buffer(new Array(1024 + 1).join("ä"), "utf-8");
-                var i = 0;
+                const data = new Buffer(new Array(1024 + 1).join("ä"), "utf-8");
+                let i = 0;
                 var sendByte = function () {
                     if (i >= data.length) {
                         return res.end();
@@ -1148,17 +1148,17 @@ describe("Buildmail", function () {
             server.listen(port, done);
         });
 
-        afterEach(function (done) {
+        afterEach((done) => {
             server.close(done);
         });
 
-        it("should pipe URL as an attachment", function (done) {
-            var mb = new Buildmail("text/plain").
+        it("should pipe URL as an attachment", (done) => {
+            const mb = new Buildmail("text/plain").
             setContent({
-                href: "http://localhost:" + port
+                href: `http://localhost:${port}`
             });
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(/^=C3=A4/m.test(msg)).to.be.true;
@@ -1166,38 +1166,38 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should reject URL attachment", function (done) {
-            var mb = new Buildmail("text/plain", {disableUrlAccess: true}).
+        it("should reject URL attachment", (done) => {
+            const mb = new Buildmail("text/plain", { disableUrlAccess: true }).
             setContent({
-                href: "http://localhost:" + port
+                href: `http://localhost:${port}`
             });
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.exist;
                 expect(msg).to.not.exist;
                 done();
             });
         });
 
-        it("should return an error on invalid url", function (done) {
-            var mb = new Buildmail("text/plain").
+        it("should return an error on invalid url", (done) => {
+            const mb = new Buildmail("text/plain").
             setContent({
                 href: "http://__should_not_exist:58888"
             });
 
-            mb.build(function (err) {
+            mb.build((err) => {
                 expect(err).to.exist;
                 done();
             });
         });
 
-        it("should pipe file as an attachment", function (done) {
-            var mb = new Buildmail("application/octet-stream").
+        it("should pipe file as an attachment", (done) => {
+            const mb = new Buildmail("application/octet-stream").
             setContent({
-                path: __dirname + "/fixtures/attachment.bin"
+                path: `${__dirname}/fixtures/attachment.bin`
             });
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(/^w7VrdmEK$/m.test(msg)).to.be.true;
@@ -1205,74 +1205,74 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should reject file as an attachment", function (done) {
-            var mb = new Buildmail("application/octet-stream", {disableFileAccess: true}).
+        it("should reject file as an attachment", (done) => {
+            const mb = new Buildmail("application/octet-stream", { disableFileAccess: true }).
             setContent({
-                path: __dirname + "/fixtures/attachment.bin"
+                path: `${__dirname}/fixtures/attachment.bin`
             });
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.exist;
                 expect(msg).to.not.exist;
                 done();
             });
         });
 
-        it("should return an error on invalid file path", function (done) {
-            var mb = new Buildmail("text/plain").
+        it("should return an error on invalid file path", (done) => {
+            const mb = new Buildmail("text/plain").
             setContent({
                 href: "/ASfsdfsdf/Sdgsgdfg/SDFgdfgdfg"
             });
 
-            mb.build(function (err) {
+            mb.build((err) => {
                 expect(err).to.exist;
                 done();
             });
         });
 
-        it("should return a error for an errored stream", function (done) {
-            var s = new PassThrough();
-            var mb = new Buildmail("text/plain").
+        it("should return a error for an errored stream", (done) => {
+            const s = new PassThrough();
+            const mb = new Buildmail("text/plain").
             setContent(s);
 
             s.write("abc");
             s.emit("error", new Error("Stream error"));
 
-            setTimeout(function () {
-                mb.build(function (err) {
+            setTimeout(() => {
+                mb.build((err) => {
                     expect(err).to.exist;
                     done();
                 });
             }, 100);
         });
 
-        it("should return a stream error", function (done) {
-            var s = new PassThrough();
-            var mb = new Buildmail("text/plain").
+        it("should return a stream error", (done) => {
+            const s = new PassThrough();
+            const mb = new Buildmail("text/plain").
             setContent(s);
 
-            mb.build(function (err) {
+            mb.build((err) => {
                 expect(err).to.exist;
                 done();
             });
 
             s.write("abc");
-            setTimeout(function () {
+            setTimeout(() => {
                 s.emit("error", new Error("Stream error"));
             }, 100);
         });
     });
 
-    describe("#transform", function () {
-        it("should pipe through provided stream", function (done) {
-            var mb = new Buildmail("text/plain").
+    describe("#transform", () => {
+        it("should pipe through provided stream", (done) => {
+            const mb = new Buildmail("text/plain").
             setHeader({
                 date: "12345",
                 "message-id": "67890"
             }).
             setContent("Hello world!");
 
-            var expected = "Content-Type:\ttext/plain\r\n" +
+            const expected = "Content-Type:\ttext/plain\r\n" +
                 "Date:\t12345\r\n" +
                 "Message-ID:\t<67890>\r\n" +
                 "Content-Transfer-Encoding:\t7bit\r\n" +
@@ -1281,12 +1281,12 @@ describe("Buildmail", function () {
                 "Hello\tworld!";
 
             // Transform stream that replaces all spaces with tabs
-            var transform = new Transform();
+            const transform = new Transform();
             transform._transform = function (chunk, encoding, done) {
                 if (encoding !== "buffer") {
                     chunk = new Buffer(chunk, encoding);
                 }
-                for (var i = 0, len = chunk.length; i < len; i++) {
+                for (let i = 0, len = chunk.length; i < len; i++) {
                     if (chunk[i] === 0x20) {
                         chunk[i] = 0x09;
                     }
@@ -1297,7 +1297,7 @@ describe("Buildmail", function () {
 
             mb.transform(transform);
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(msg).to.equal(expected);
@@ -1306,12 +1306,12 @@ describe("Buildmail", function () {
         });
     });
 
-    describe("Raw content", function () {
-        it("should return pregenerated content", function (done) {
-            var expected = new Array(100).join("Test\n");
-            var mb = new Buildmail("text/plain").setRaw(expected);
+    describe("Raw content", () => {
+        it("should return pregenerated content", (done) => {
+            const expected = new Array(100).join("Test\n");
+            const mb = new Buildmail("text/plain").setRaw(expected);
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(msg).to.equal(expected);
@@ -1319,43 +1319,43 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should return pregenerated content for a child node", function (done) {
-            var expected = new Array(100).join("Test\n");
-            var mb = new Buildmail("multipart/mixed", {
+        it("should return pregenerated content for a child node", (done) => {
+            const expected = new Array(100).join("Test\n");
+            const mb = new Buildmail("multipart/mixed", {
                 baseBoundary: "test"
             }).setHeader({
                 date: "12345",
                 "message-id": "67890"
             });
-            var child = mb.createChild();
+            const child = mb.createChild();
             child.setRaw(expected);
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
-                expect(msg).to.equal("Content-Type: multipart/mixed; boundary=\"----sinikael-?=_1-test\"\r\n" +
+                expect(msg).to.equal(`${"Content-Type: multipart/mixed; boundary=\"----sinikael-?=_1-test\"\r\n" +
                     "Date: 12345\r\n" +
                     "Message-ID: <67890>\r\n" +
                     "MIME-Version: 1.0\r\n" +
                     "\r\n" +
-                    "------sinikael-?=_1-test\r\n" +
-                    expected +
-                    "\r\n" +
+                    "------sinikael-?=_1-test\r\n"}${ 
+                    expected 
+                    }\r\n` +
                     "------sinikael-?=_1-test--\r\n");
                 done();
             });
         });
 
-        it("should return pregenerated content from a stream", function (done) {
-            var expected = new Array(100).join("Test\n");
-            var raw = new PassThrough();
-            var mb = new Buildmail("text/plain").setRaw(raw);
+        it("should return pregenerated content from a stream", (done) => {
+            const expected = new Array(100).join("Test\n");
+            const raw = new PassThrough();
+            const mb = new Buildmail("text/plain").setRaw(raw);
 
-            setImmediate(function () {
+            setImmediate(() => {
                 raw.end(expected);
             });
 
-            mb.build(function (err, msg) {
+            mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
                 expect(msg).to.equal(expected);
@@ -1363,28 +1363,28 @@ describe("Buildmail", function () {
             });
         });
 
-        it("should catch error from a raw stream 1", function (done) {
-            var raw = new PassThrough();
-            var mb = new Buildmail("text/plain").setRaw(raw);
+        it("should catch error from a raw stream 1", (done) => {
+            const raw = new PassThrough();
+            const mb = new Buildmail("text/plain").setRaw(raw);
 
             raw.emit("error", new Error("Stream error"));
 
-            mb.build(function (err) {
+            mb.build((err) => {
                 expect(err).to.exist;
                 done();
             });
         });
 
-        it("should catch error from a raw stream 2", function (done) {
-            var raw = new PassThrough();
-            var mb = new Buildmail("text/plain").setRaw(raw);
+        it("should catch error from a raw stream 2", (done) => {
+            const raw = new PassThrough();
+            const mb = new Buildmail("text/plain").setRaw(raw);
 
-            mb.build(function (err) {
+            mb.build((err) => {
                 expect(err).to.exist;
                 done();
             });
 
-            setImmediate(function () {
+            setImmediate(() => {
                 raw.emit("error", new Error("Stream error"));
             });
         });

@@ -738,9 +738,9 @@ export class Parser {
 
         if (ops.length) {
             return new nodes.Compare(ops[0].lineno, ops[0].colno, expr, ops);
-        } else {
-            return expr;
-        }
+        } 
+        return expr;
+        
     }
 
     // finds the '~' for string concatenation
@@ -1017,9 +1017,9 @@ export class Parser {
         if (!noParens && tok.type !== lexer.TOKEN_LEFT_PAREN) {
             if (tolerant) {
                 return null;
-            } else {
-                this.fail("expected arguments", tok.lineno, tok.colno);
-            }
+            } 
+            this.fail("expected arguments", tok.lineno, tok.colno);
+            
         }
 
         if (tok.type === lexer.TOKEN_LEFT_PAREN) {

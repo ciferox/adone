@@ -35,9 +35,9 @@ function includeParents(dirs, options) {
 function subPath(dirs, options) {
     if (adone.is.array(options)) {
         return dirs.slice(options[0], options[1]);
-    } else {
-        return dirs.slice(options);
-    }
+    } 
+    return dirs.slice(options);
+    
 }
 
 /**

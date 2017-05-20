@@ -668,9 +668,9 @@ export class Comparator {
         if (comp instanceof Comparator) {
             if (comp.loose === loose) {
                 return comp;
-            } else {
-                comp = comp.value;
-            }
+            } 
+            comp = comp.value;
+            
         }
         return new Comparator(comp, loose);
     }

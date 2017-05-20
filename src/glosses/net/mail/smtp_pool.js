@@ -27,8 +27,8 @@ function SMTPPool(options) {
         };
     }
 
-    var urlData;
-    var service = options.service;
+    let urlData;
+    let service = options.service;
 
     if (typeof options.getSocket === "function") {
         this.getSocket = options.getSocket;
@@ -52,10 +52,10 @@ function SMTPPool(options) {
     this.logger = this.options.logger = shared.getLogger(this.options);
 
     // temporary object
-    var connection = new SMTPConnection(this.options);
+    const connection = new SMTPConnection(this.options);
 
     this.name = "SMTP (pool)";
-    this.version = packageData.version + "[client:" + connection.version + "]";
+    this.version = `${packageData.version}[client:${connection.version}]`;
 
     this._rateLimit = {
         counter: 0,
@@ -70,11 +70,11 @@ function SMTPPool(options) {
 
     this.idling = true;
 
-    setImmediate(function () {
+    setImmediate(() => {
         if (this.idling) {
             this.emit("idle");
         }
-    }.bind(this));
+    });
 }
 adone.std.util.inherits(SMTPPool, adone.std.events.EventEmitter);
 
@@ -102,8 +102,8 @@ SMTPPool.prototype.send = function (mail, callback) {
     }
 
     this._queue.push({
-        mail: mail,
-        callback: callback
+        mail,
+        callback
     });
 
     if (this.idling && this._queue.length >= this.options.maxConnections) {
@@ -120,15 +120,15 @@ SMTPPool.prototype.send = function (mail, callback) {
  * is closed later
  */
 SMTPPool.prototype.close = function () {
-    var connection;
-    var len = this._connections.length;
+    let connection;
+    const len = this._connections.length;
     this._closed = true;
 
     // clear rate limit timer if it exists
     clearTimeout(this._rateLimit.timeout);
 
     // remove all available connections
-    for (var i = len - 1; i >= 0; i--) {
+    for (let i = len - 1; i >= 0; i--) {
         if (this._connections[i] && this._connections[i].available) {
             connection = this._connections[i];
             connection.close();
@@ -146,7 +146,7 @@ SMTPPool.prototype.close = function () {
             this.logger.debug("Pending queue elements cleared");
             return;
         }
-        var element = this._queue.shift();
+        const element = this._queue.shift();
         if (element && typeof element.callback === "function") {
             try {
                 element.callback(new Error("Connection pool was closed"));
@@ -164,8 +164,8 @@ SMTPPool.prototype.close = function () {
  * an available connection, then use this connection to send the mail
  */
 SMTPPool.prototype._processMessages = function () {
-    var connection;
-    var i, len;
+    let connection;
+    let i, len;
 
     // do nothing if already closed
     if (this._closed) {
@@ -206,7 +206,7 @@ SMTPPool.prototype._processMessages = function () {
         this.emit("idle");
     }
 
-    var element = connection.queueElement = this._queue.shift();
+    const element = connection.queueElement = this._queue.shift();
     element.messageId = (connection.queueElement.mail.message.getHeader("message-id") || "").replace(/[<>\s]/g, "");
 
     connection.available = false;
@@ -220,7 +220,7 @@ SMTPPool.prototype._processMessages = function () {
         }
     }
 
-    connection.send(element.mail, function (err, info) {
+    connection.send(element.mail, (err, info) => {
         // only process callback if current handler is not changed
         if (element === connection.queueElement) {
             try {
@@ -230,21 +230,21 @@ SMTPPool.prototype._processMessages = function () {
             }
             connection.queueElement = false;
         }
-    }.bind(this));
+    });
 };
 
 /**
  * Creates a new pool resource
  */
 SMTPPool.prototype._createConnection = function () {
-    var connection = new PoolResource(this);
+    const connection = new PoolResource(this);
 
     connection.id = ++this._connectionCounter;
 
     this.logger.info("Created new pool resource #%s", connection.id);
 
     // resource comes available
-    connection.on("available", function () {
+    connection.on("available", () => {
         this.logger.debug("Connection #%s became available", connection.id);
 
         if (this._closed) {
@@ -254,10 +254,10 @@ SMTPPool.prototype._createConnection = function () {
             // check if there's anything else to send
             this._processMessages();
         }
-    }.bind(this));
+    });
 
     // resource is terminated with an error
-    connection.once("error", function (err) {
+    connection.once("error", (err) => {
         if (err.code !== "EMAXLIMIT") {
             this.logger.error("Pool Error for #%s: %s", connection.id, err.message);
         } else {
@@ -277,9 +277,9 @@ SMTPPool.prototype._createConnection = function () {
         this._removeConnection(connection);
 
         this._continueProcessing();
-    }.bind(this));
+    });
 
-    connection.once("close", function () {
+    connection.once("close", () => {
         this.logger.info("Connection #%s was closed", connection.id);
 
         this._removeConnection(connection);
@@ -288,18 +288,18 @@ SMTPPool.prototype._createConnection = function () {
             // If the connection closed when sending, add the message to the queue again
             // Note that we must wait a bit.. because the callback of the 'error' handler might be called
             // in the next event loop
-            setTimeout(function () {
+            setTimeout(() => {
                 if (connection.queueElement) {
                     this.logger.debug("Re-queued message <%s> for #%s", connection.queueElement.messageId, connection.id);
                     this._queue.unshift(connection.queueElement);
                     connection.queueElement = false;
                 }
                 this._continueProcessing();
-            }.bind(this), 50);
+            }, 50);
         } else {
             this._continueProcessing();
         }
-    }.bind(this));
+    });
 
     this._connections.push(connection);
 
@@ -323,7 +323,7 @@ SMTPPool.prototype._continueProcessing = function () {
  * @param {Object} connection The PoolResource to remove
  */
 SMTPPool.prototype._removeConnection = function (connection) {
-    var index = this._connections.indexOf(connection);
+    const index = this._connections.indexOf(connection);
 
     if (index !== -1) {
         this._connections.splice(index, 1);
@@ -340,7 +340,7 @@ SMTPPool.prototype._checkRateLimit = function (callback) {
         return callback();
     }
 
-    var now = Date.now();
+    const now = Date.now();
 
     if (this._rateLimit.counter < this.options.rateLimit) {
         return callback();
@@ -367,7 +367,7 @@ SMTPPool.prototype._clearRateLimit = function () {
 
     // resume all paused connections
     while (this._rateLimit.waiting.length) {
-        var cb = this._rateLimit.waiting.shift();
+        const cb = this._rateLimit.waiting.shift();
         setImmediate(cb);
     }
 };
@@ -385,32 +385,32 @@ SMTPPool.prototype.isIdle = function () {
  * @param {Function} callback Callback function
  */
 SMTPPool.prototype.verify = function (callback) {
-    var promise;
+    let promise;
 
     if (!callback && typeof Promise === "function") {
-        promise = new Promise(function (resolve, reject) {
+        promise = new Promise((resolve, reject) => {
             callback = shared.callbackPromise(resolve, reject);
         });
     }
 
-    this.getSocket(this.options, function (err, socketOptions) {
+    this.getSocket(this.options, (err, socketOptions) => {
         if (err) {
             return callback(err);
         }
 
-        var options = this.options;
+        let options = this.options;
         if (socketOptions && socketOptions.connection) {
             this.logger.info("Using proxied socket from %s:%s to %s:%s", socketOptions.connection.remoteAddress, socketOptions.connection.remotePort, options.host || "", options.port || "");
             options = assign(false, options);
-            Object.keys(socketOptions).forEach(function (key) {
+            Object.keys(socketOptions).forEach((key) => {
                 options[key] = socketOptions[key];
             });
         }
 
-        var connection = new SMTPConnection(options);
-        var returned = false;
+        const connection = new SMTPConnection(options);
+        let returned = false;
 
-        connection.once("error", function (err) {
+        connection.once("error", (err) => {
             if (returned) {
                 return;
             }
@@ -419,7 +419,7 @@ SMTPPool.prototype.verify = function (callback) {
             return callback(err);
         });
 
-        connection.once("end", function () {
+        connection.once("end", () => {
             if (returned) {
                 return;
             }
@@ -427,7 +427,7 @@ SMTPPool.prototype.verify = function (callback) {
             return callback(new Error("Connection closed"));
         });
 
-        var finalize = function () {
+        const finalize = function () {
             if (returned) {
                 return;
             }
@@ -436,13 +436,13 @@ SMTPPool.prototype.verify = function (callback) {
             return callback(null, true);
         };
 
-        connection.connect(function () {
+        connection.connect(() => {
             if (returned) {
                 return;
             }
 
             if (this.options.auth) {
-                connection.login(this.options.auth, function (err) {
+                connection.login(this.options.auth, (err) => {
                     if (returned) {
                         return;
                     }
@@ -458,8 +458,8 @@ SMTPPool.prototype.verify = function (callback) {
             } else {
                 finalize();
             }
-        }.bind(this));
-    }.bind(this));
+        });
+    });
 
     return promise;
 };

@@ -67,8 +67,8 @@ function formatValue(ctx, value, recurseTimes) {
     ))) {
         if (adone.is.function(value)) {
             name = getName(value);
-            nameSuffix = name ? ": " + name : "";
-            return ctx.stylize("[Function" + nameSuffix + "]", "special");
+            nameSuffix = name ? `: ${name}` : "";
+            return ctx.stylize(`[Function${nameSuffix}]`, "special");
         }
         if (adone.is.regexp(value)) {
             return ctx.stylize(RegExp.prototype.toString.call(value), "regexp");
@@ -99,18 +99,18 @@ function formatValue(ctx, value, recurseTimes) {
     // Make functions say that they are functions
     if (adone.is.function(value)) {
         name = getName(value);
-        nameSuffix = name ? ": " + name : "";
-        base = " [Function" + nameSuffix + "]";
+        nameSuffix = name ? `: ${name}` : "";
+        base = ` [Function${nameSuffix}]`;
     }
 
     // Make RegExps say that they are RegExps
     if (adone.is.regexp(value)) {
-        base = " " + RegExp.prototype.toString.call(value);
+        base = ` ${RegExp.prototype.toString.call(value)}`;
     }
 
     // Make dates with properties first say the date
     if (adone.is.date(value)) {
-        base = " " + Date.prototype.toUTCString.call(value);
+        base = ` ${Date.prototype.toUTCString.call(value)}`;
     }
 
     // Make error with message first say the error
@@ -125,9 +125,9 @@ function formatValue(ctx, value, recurseTimes) {
     if (recurseTimes < 0) {
         if (adone.is.regexp(value)) {
             return ctx.stylize(RegExp.prototype.toString.call(value), "regexp");
-        } else {
-            return ctx.stylize("[Object]", "special");
-        }
+        } 
+        return ctx.stylize("[Object]", "special");
+        
     }
 
     ctx.seen.push(value);
@@ -138,7 +138,7 @@ function formatValue(ctx, value, recurseTimes) {
     } else if (typedArray) {
         return formatTypedArray(value);
     } else {
-        output = keys.map(function (key) {
+        output = keys.map((key) => {
             return formatProperty(ctx, value, recurseTimes, visibleKeys, key, array);
         });
     }
@@ -155,19 +155,19 @@ function formatPrimitive(ctx, value) {
             return ctx.stylize("undefined", "undefined");
 
         case "string": {
-            const simple = "'" + JSON.stringify(value).replace(/^"|"$/g, "")
+            const simple = `'${JSON.stringify(value).replace(/^"|"$/g, "")
                 .replace(/'/g, "\\'")
-                .replace(/\\"/g, "\"") + "'";
+                .replace(/\\"/g, "\"")}'`;
             return ctx.stylize(simple, "string");
         }
         case "number":
             if (value === 0 && (1 / value) === -Infinity) {
                 return ctx.stylize("-0", "number");
             }
-            return ctx.stylize("" + value, "number");
+            return ctx.stylize(String(value), "number");
 
         case "boolean":
-            return ctx.stylize("" + value, "boolean");
+            return ctx.stylize(`${value}`, "boolean");
 
         case "symbol":
             return ctx.stylize(value.toString(), "symbol");
@@ -180,7 +180,7 @@ function formatPrimitive(ctx, value) {
 
 
 function formatError(value) {
-    return "[" + Error.prototype.toString.call(value) + "]";
+    return `[${Error.prototype.toString.call(value)}]`;
 }
 
 
@@ -195,7 +195,7 @@ function formatArray(ctx, value, recurseTimes, visibleKeys, keys) {
         }
     }
 
-    keys.forEach(function (key) {
+    keys.forEach((key) => {
         if (!key.match(/^\d+$/)) {
             output.push(formatProperty(ctx, value, recurseTimes, visibleKeys,
                 key, true));
@@ -212,7 +212,7 @@ function formatTypedArray(value) {
             str += "...";
             break;
         }
-        str += value[i] + ", ";
+        str += `${value[i]}, `;
     }
     str += " ]";
 
@@ -243,7 +243,7 @@ function formatProperty(ctx, value, recurseTimes, visibleKeys, key, array) {
         }
     }
     if (visibleKeys.indexOf(key) < 0) {
-        name = "[" + key + "]";
+        name = `[${key}]`;
     }
     if (!str) {
         if (ctx.seen.indexOf(value[key]) < 0) {
@@ -254,13 +254,13 @@ function formatProperty(ctx, value, recurseTimes, visibleKeys, key, array) {
             }
             if (str.indexOf("\n") > -1) {
                 if (array) {
-                    str = str.split("\n").map(function (line) {
-                        return "  " + line;
+                    str = str.split("\n").map((line) => {
+                        return `  ${line}`;
                     }).join("\n").substr(2);
                 } else {
-                    str = "\n" + str.split("\n").map(function (line) {
-                        return "   " + line;
-                    }).join("\n");
+                    str = `\n${str.split("\n").map((line) => {
+                        return `           ${ line}`;
+                    }).join("\n")}`;
                 }
             }
         } else {
@@ -271,7 +271,7 @@ function formatProperty(ctx, value, recurseTimes, visibleKeys, key, array) {
         if (array && key.match(/^\d+$/)) {
             return str;
         }
-        name = JSON.stringify("" + key);
+        name = JSON.stringify(`${key}`);
         if (name.match(/^"([a-zA-Z_][a-zA-Z_0-9]*)"$/)) {
             name = name.substr(1, name.length - 2);
             name = ctx.stylize(name, "name");
@@ -283,25 +283,25 @@ function formatProperty(ctx, value, recurseTimes, visibleKeys, key, array) {
         }
     }
 
-    return name + ": " + str;
+    return `${name}: ${str}`;
 }
 
 
 function reduceToSingleString(output, base, braces) {
-    const length = output.reduce(function (prev, cur) {
+    const length = output.reduce((prev, cur) => {
         return prev + cur.length + 1;
     }, 0);
 
     if (length > 60) {
-        return braces[0] +
-            (base === "" ? "" : base + "\n ") +
-            " " +
-            output.join(",\n  ") +
-            " " +
-            braces[1];
+        return `${braces[0] +
+            (base === "" ? "" : `${base}\n `) 
+            } ${ 
+            output.join(",\n  ") 
+            } ${ 
+            braces[1]}`;
     }
 
-    return braces[0] + base + " " + output.join(", ") + " " + braces[1];
+    return `${braces[0] + base} ${output.join(", ")} ${braces[1]}`;
 }
 
 function isTypedArray(ar) {

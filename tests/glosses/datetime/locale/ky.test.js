@@ -11,7 +11,7 @@ describe("ky", () => {
         let i;
 
         function equalTest(input, mmm, i) {
-            assert.equal(adone.datetime(input, mmm).month(), i, input + " should be month " + (i + 1));
+            assert.equal(adone.datetime(input, mmm).month(), i, `${input} should be month ${i + 1}`);
         }
         for (i = 0; i < 12; i++) {
             tests[i] = tests[i].split(" ");
@@ -56,7 +56,7 @@ describe("ky", () => {
         let i;
 
         for (i = 0; i < a.length; i++) {
-            assert.equal(b.format(a[i][0]), a[i][1], a[i][0] + " ---> " + a[i][1]);
+            assert.equal(b.format(a[i][0]), a[i][1], `${a[i][0]} ---> ${a[i][1]}`);
         }
     });
 
@@ -250,11 +250,11 @@ describe("ky", () => {
             m = adone.datetime().add({
                 d: i
             });
-            assert.equal(m.calendar(), m.format("dddd [саат] LT"), "Today + " + i + " days current time");
+            assert.equal(m.calendar(), m.format("dddd [саат] LT"), `Today + ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("dddd [саат] LT"), "Today + " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format("dddd [саат] LT"), `Today + ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("dddd [саат] LT"), "Today + " + i + " days end of day");
+            assert.equal(m.calendar(), m.format("dddd [саат] LT"), `Today + ${i} days end of day`);
         }
     });
 
@@ -266,11 +266,11 @@ describe("ky", () => {
             m = adone.datetime().subtract({
                 d: i
             });
-            assert.equal(m.calendar(), m.format("[Өткен аптанын] dddd [күнү] [саат] LT"), "Today - " + i + " days current time");
+            assert.equal(m.calendar(), m.format("[Өткен аптанын] dddd [күнү] [саат] LT"), `Today - ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("[Өткен аптанын] dddd [күнү] [саат] LT"), "Today - " + i + " days beginning of day");
+            assert.equal(m.calendar(), m.format("[Өткен аптанын] dddd [күнү] [саат] LT"), `Today - ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("[Өткен аптанын] dddd [күнү] [саат] LT"), "Today - " + i + " days end of day");
+            assert.equal(m.calendar(), m.format("[Өткен аптанын] dddd [күнү] [саат] LT"), `Today - ${i} days end of day`);
         }
     });
 

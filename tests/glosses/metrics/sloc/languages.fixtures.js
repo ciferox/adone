@@ -1,7 +1,7 @@
 export default [
     {
-      names: ["coffee", "iced"],
-      code:
+        names: ["coffee", "iced"],
+        code:
         `\
 # a
 code()
@@ -12,17 +12,17 @@ source.code "\#{interpolation}"
 comment # commented comment
 ###\
 `,
-      comment: 5,
-      source: 3,
-      single: 2,
-      block: 3,
-      total: 8,
-      mixed: 1,
-      empty: 1
+        comment: 5,
+        source: 3,
+        single: 2,
+        block: 3,
+        total: 8,
+        mixed: 1,
+        empty: 1
     },
     {
-      names: ["js", "jsx", "ts", "gs", "tsx"],
-      code:
+        names: ["js", "jsx", "ts", "gs", "tsx"],
+        code:
         `\
 /* a */
 source.code(); //comment
@@ -34,17 +34,17 @@ block comment
 another block comment
 // */\
 `,
-      comment: 9,
-      source: 1,
-      block: 7,
-      single: 2,
-      total: 9,
-      mixed: 1,
-      empty: 0
+        comment: 9,
+        source: 1,
+        block: 7,
+        single: 2,
+        total: 9,
+        mixed: 1,
+        empty: 0
     },
     {
-      names: ["py"],
-      code:
+        names: ["py"],
+        code:
         `\
 \"""
 block comment
@@ -57,17 +57,17 @@ source.code(); #comment
 another block comment
 '''\
 `,
-      comment: 9,
-      source: 1,
-      block: 6,
-      total: 10,
-      single: 3,
-      mixed: 1,
-      empty: 1
+        comment: 9,
+        source: 1,
+        block: 6,
+        total: 10,
+        single: 3,
+        mixed: 1,
+        empty: 1
     },
     {
-      names: ["hx"],
-      code:
+        names: ["hx"],
+        code:
         `\
 /* a */
 source.code(); //comment
@@ -83,17 +83,17 @@ var people = [
 another block comment
 // */\
 `,
-      comment: 11,
-      source: 5,
-      block: 8,
-      single: 3,
-      total: 13,
-      mixed: 3,
-      empty: 0
+        comment: 11,
+        source: 5,
+        block: 8,
+        single: 3,
+        total: 13,
+        mixed: 3,
+        empty: 0
     },
     {
-      names: ["c", "h", "cpp", "hpp", "cxx", "hxx"],
-      code:
+        names: ["c", "h", "cpp", "hpp", "cxx", "hxx"],
+        code:
         `\
 /* a */
 source.code(); /* comment */
@@ -107,17 +107,17 @@ source.code(); /* comment */
   another block comment
  */\
 `,
-      comment: 11,
-      source: 2,
-      block: 10,
-      single: 1,
-      total: 11,
-      mixed: 2,
-      empty: 0
+        comment: 11,
+        source: 2,
+        block: 10,
+        single: 1,
+        total: 11,
+        mixed: 2,
+        empty: 0
     },
     {
-      names: ["java"],
-      code:
+        names: ["java"],
+        code:
         `\
 /** foo
 block comment
@@ -132,17 +132,17 @@ public void source(){ /* comment */
 another block comment
 // */\
 `,
-      comment: 10,
-      source: 4,
-      block: 9,
-      total: 12,
-      empty: 0,
-      single: 1,
-      mixed: 2
+        comment: 10,
+        source: 4,
+        block: 9,
+        total: 12,
+        empty: 0,
+        single: 1,
+        mixed: 2
     },
     {
-      names: ["kt", "kts"],
-      code:
+        names: ["kt", "kts"],
+        code:
         `\
 /** foo
 block comment
@@ -157,17 +157,17 @@ fun source(): Unit { /* comment */
 another block comment
 // */\
 `,
-      comment: 10,
-      source: 4,
-      block: 9,
-      total: 12,
-      empty: 0,
-      single: 1,
-      mixed: 2
+        comment: 10,
+        source: 4,
+        block: 9,
+        total: 12,
+        empty: 0,
+        single: 1,
+        mixed: 2
     },
     {
-      names: ["php", "php5"],
-      code:
+        names: ["php", "php5"],
+        code:
         `\
 /**
  * block
@@ -176,16 +176,16 @@ another block comment
  $test = 0;  // bla
  // comment\
 `,
-      comment: 5,
-      source: 1,
-      block: 3,
-      total: 6,
-      empty: 1,
-      single: 2
+        comment: 5,
+        source: 1,
+        block: 3,
+        total: 6,
+        empty: 1,
+        single: 2
     },
     {
-      names: ["go"],
-      code:
+        names: ["go"],
+        code:
         `\
 /* foo
 block comment
@@ -197,16 +197,16 @@ func main() { /* comment */
 /* general
 // comment */\
 `,
-      comment: 7,
-      source: 3,
-      block: 6,
-      total: 9,
-      empty: 0,
-      single: 1
+        comment: 7,
+        source: 3,
+        block: 6,
+        total: 9,
+        empty: 0,
+        single: 1
     },
     {
-      names: ["css"],
-      code:
+        names: ["css"],
+        code:
         `\
 /* comment */
 selector { property: value; /* comment */ }
@@ -214,16 +214,16 @@ selector { property: value; /* comment */ }
 /* block
    comment */\
 `,
-      comment: 4,
-      source: 2,
-      block: 4,
-      total: 5,
-      empty: 0,
-      single: 0
+        comment: 4,
+        source: 2,
+        block: 4,
+        total: 5,
+        empty: 0,
+        single: 0
     },
     {
-      names: ["scss"],
-      code:
+        names: ["scss"],
+        code:
         `\
 /* comment */
 selector { property: value; /* comment */ }
@@ -233,16 +233,16 @@ selector { property: value; /* comment */ }
 body { margin: 0 }
 // double slash line comment\
 `,
-      comment: 5,
-      source: 3,
-      block: 4,
-      total: 7,
-      empty: 0,
-      single: 1
+        comment: 5,
+        source: 3,
+        block: 4,
+        total: 7,
+        empty: 0,
+        single: 1
     },
     {
-      names: ["less"],
-      code:
+        names: ["less"],
+        code:
         `\
 /* line comment */
 selector { property: value; /* comment */ }
@@ -252,16 +252,16 @@ selector { property: value; /* comment */ }
 body { margin: 0 }
 // double slash line comment\
 `,
-      comment: 5,
-      source: 3,
-      block: 4,
-      total: 7,
-      empty: 0,
-      single: 1
+        comment: 5,
+        source: 3,
+        block: 4,
+        total: 7,
+        empty: 0,
+        single: 1
     },
     {
-      names: ["html", "htm"],
-      code:
+        names: ["html", "htm"],
+        code:
         `\
 <html>
   <!-- one line comment -->
@@ -273,16 +273,16 @@ body { margin: 0 }
   </body>
 </html>\
 `,
-      comment: 5,
-      source: 5,
-      block: 5,
-      total: 9,
-      empty: 0,
-      single: 0
+        comment: 5,
+        source: 5,
+        block: 5,
+        total: 9,
+        empty: 0,
+        single: 0
     },
     {
-      names: ["xml", "svg"],
-      code:
+        names: ["xml", "svg"],
+        code:
         `\
 <svg>
   <!-- one line comment -->
@@ -296,16 +296,16 @@ body { margin: 0 }
    -->
 </svg>\
 `,
-      comment: 5,
-      source: 6,
-      block: 5,
-      total: 11,
-      empty: 0,
-      single: 0
+        comment: 5,
+        source: 6,
+        block: 5,
+        total: 11,
+        empty: 0,
+        single: 0
     },
     {
-      names: ["mustache"],
-      code:
+        names: ["mustache"],
+        code:
         `\
 {{! line comment }}
 {{!-- line comment --}}
@@ -318,16 +318,16 @@ body { margin: 0 }
       line comment
 --}}\
 `,
-      comment: 8,
-      source: 2,
-      block: 8,
-      total: 10,
-      empty: 0,
-      single: 0
+        comment: 8,
+        source: 2,
+        block: 8,
+        total: 10,
+        empty: 0,
+        single: 0
     },
     {
-      names: ["handlebars", "hbs"],
-      code:
+        names: ["handlebars", "hbs"],
+        code:
         `\
 {{! line comment }}
 {{!-- line comment --}}
@@ -340,16 +340,16 @@ body { margin: 0 }
       line comment
 --}}\
 `,
-      comment: 8,
-      source: 2,
-      block: 8,
-      total: 10,
-      empty: 0,
-      single: 0
+        comment: 8,
+        source: 2,
+        block: 8,
+        total: 10,
+        empty: 0,
+        single: 0
     },
     {
-      names: ["styl"],
-      code:
+        names: ["styl"],
+        code:
         `\
 $foo = "bar" /* x */
 html
@@ -364,17 +364,17 @@ html
      buffered
    */\
 `,
-      total: 12,
-      comment: 9,
-      source: 4,
-      block: 7,
-      empty: 1,
-      single: 2,
-      mixed: 2
+        total: 12,
+        comment: 9,
+        source: 4,
+        block: 7,
+        empty: 1,
+        single: 2,
+        mixed: 2
     },
     {
-      names: ["lua"],
-      code:
+        names: ["lua"],
+        code:
         `\
 local x = 3
 -- on line comment
@@ -386,16 +386,16 @@ s = [[ multi
        line
        string]]\
 `,
-      total: 9,
-      comment: 5,
-      source: 5,
-      block: 3,
-      single: 2,
-      empty: 0
+        total: 9,
+        comment: 5,
+        source: 5,
+        block: 3,
+        single: 2,
+        empty: 0
     },
     {
-      names: ["erl"],
-      code:
+        names: ["erl"],
+        code:
         `\
 -module(foo).
 -export([bar/1]).
@@ -405,16 +405,16 @@ bar(0) -> 1;
 bar(42) -> -3; %%% don't tell!
 bar(N) -> N * bar(N-1).\
 `,
-      total: 7,
-      comment: 3,
-      source: 5,
-      block: 0,
-      single: 3,
-      empty: 0
+        total: 7,
+        comment: 3,
+        source: 5,
+        block: 0,
+        single: 3,
+        empty: 0
     },
     {
-      names: ["monkey"],
-      code:
+        names: ["monkey"],
+        code:
         `\
 Strict
 Import mojo
@@ -434,17 +434,17 @@ End Function
 Block comment 2
 #end\
 `,
-      comment: 11,
-      source: 7,
-      block: 9,
-      single: 2,
-      total: 17,
-      mixed: 1,
-      empty: 0
+        comment: 11,
+        source: 7,
+        block: 9,
+        single: 2,
+        total: 17,
+        mixed: 1,
+        empty: 0
     },
     {
-      names: ["ls"],
-      code:
+        names: ["ls"],
+        code:
         `\
 # a
 source.code() # comment
@@ -457,17 +457,17 @@ source() /* one line block */
 /* block */ code() /*
 */ souce() # comment /* no block */\
 `,
-      comment: 9,
-      source: 5,
-      block: 7,
-      single: 3,
-      total: 10,
-      mixed: 5,
-      empty: 1
+        comment: 9,
+        source: 5,
+        block: 7,
+        single: 3,
+        total: 10,
+        mixed: 5,
+        empty: 1
     },
     {
-      names: ["scala"],
-      code:
+        names: ["scala"],
+        code:
         `\
 // define index handler
 def index = Action {
@@ -475,17 +475,17 @@ def index = Action {
 }
 /* block comment */ source()\
 `,
-      comment: 3,
-      source: 4,
-      block: 1,
-      single: 2,
-      total: 5,
-      mixed: 2,
-      empty: 0
+        comment: 3,
+        source: 4,
+        block: 1,
+        single: 2,
+        total: 5,
+        mixed: 2,
+        empty: 0
     },
     {
-      names: ["rb"],
-      code:
+        names: ["rb"],
+        code:
         `\
 # a
 source.code() # comment
@@ -498,58 +498,58 @@ source() =begin one line block=end
 =begin block =end code() =begin
 =end souce() # comment =begin no block =end\
 `,
-      comment: 9,
-      source: 5,
-      block: 7,
-      single: 3,
-      total: 10,
-      mixed: 5,
-      empty: 1
+        comment: 9,
+        source: 5,
+        block: 7,
+        single: 3,
+        total: 10,
+        mixed: 5,
+        empty: 1
     },
     {
-      names: ["jl"],
-      code:
+        names: ["jl"],
+        code:
         `\
 # Single line comment
 #= block comment =#\
 `,
-      comment: 2,
-      source: 0,
-      block: 1,
-      single: 1,
-      total: 2,
-      mixed: 0,
-      empty: 0
+        comment: 2,
+        source: 0,
+        block: 1,
+        single: 1,
+        total: 2,
+        mixed: 0,
+        empty: 0
     },
     {
-      names: ["rs"],
-      code:
+        names: ["rs"],
+        code:
         `\
 // Single line comment
 /* block comment */\
 `,
-      comment: 2,
-      source: 0,
-      block: 1,
-      single: 1,
-      total: 2
+        comment: 2,
+        source: 0,
+        block: 1,
+        single: 1,
+        total: 2
     },
     {
-      names: ["vb"],
-      code:
+        names: ["vb"],
+        code:
         `\
 ' single
 ' line\
 `,
-      comment: 2,
-      source: 0,
-      block: 0,
-      single: 2,
-      total: 2
+        comment: 2,
+        source: 0,
+        block: 0,
+        single: 2,
+        total: 2
     },
     {
-      names: ["rkt"],
-      code:
+        names: ["rkt"],
+        code:
         `\
 ; a
 (+ 1 1) ; comment
@@ -562,17 +562,17 @@ comment ; commented comment
 #| begin block |# (exp 2 3) #| begin
 |# (/ 1 3) ; comment #| begin no block |#\
 `,
-      comment: 9,
-      source: 5,
-      block: 7,
-      single: 3,
-      total: 10,
-      mixed: 5,
-      empty: 1
+        comment: 9,
+        source: 5,
+        block: 7,
+        single: 3,
+        total: 10,
+        mixed: 5,
+        empty: 1
     },
     {
-      names: ["hs"],
-      code:
+        names: ["hs"],
+        code:
         `\
 -- a
 1 + 1 -- comment
@@ -585,17 +585,17 @@ comment -- commented comment
 {- begin block -} ("haskell", 1) {- begin
 -} snd ("haskell", 1) -- comment {- begin no block -}\
 `,
-      comment: 9,
-      source: 5,
-      block: 7,
-      single: 3,
-      total: 10,
-      mixed: 5,
-      empty: 1
+        comment: 9,
+        source: 5,
+        block: 7,
+        single: 3,
+        total: 10,
+        mixed: 5,
+        empty: 1
     },
     {
-      names: ["nix"],
-      code:
+        names: ["nix"],
+        code:
         `\
 { pkgs }: /* foo bar baz */
 
@@ -609,118 +609,118 @@ let
   generated = ./package.nix;
 }; # bla bla\
 `,
-      comment: 3,
-      source: 9,
-      block: 1,
-      single: 2,
-      total: 11,
-      mixed: 2,
-      empty: 1
+        comment: 3,
+        source: 9,
+        block: 1,
+        single: 2,
+        total: 11,
+        mixed: 2,
+        empty: 1
     },
     {
-      names: ["hr"],
-      code:
+        names: ["hr"],
+        code:
         `\
 P | Q # P or Q
 ~P    # not P
 Q?    # Q is TURE?
 => TURE\
 `,
-      comment: 3,
-      source: 4,
-      block: 0,
-      single: 3,
-      total: 4,
-      mixed: 0,
-      empty: 0
+        comment: 3,
+        source: 4,
+        block: 0,
+        single: 3,
+        total: 4,
+        mixed: 0,
+        empty: 0
     },
     {
-      names: ["hy"],
-      code:
+        names: ["hy"],
+        code:
         `\
 (print "Hy!");comment
 ; on line comment
 (.strip " foo   ")
 ;;; comment\
 `,
-      comment: 3,
-      source: 2,
-      block: 0,
-      single: 3,
-      total: 4,
-      mixed: 1,
-      empty: 0
+        comment: 3,
+        source: 2,
+        block: 0,
+        single: 3,
+        total: 4,
+        mixed: 1,
+        empty: 0
     },
     {
-      names: ["mochi"],
-      code:
+        names: ["mochi"],
+        code:
         `\
 # a
 source.code(); #comment
 # no.source.code();\
 `,
-      comment: 3,
-      source: 1,
-      block: 0,
-      total: 3,
-      single: 3,
-      mixed: 1,
-      empty: 0
+        comment: 3,
+        source: 1,
+        block: 0,
+        total: 3,
+        single: 3,
+        mixed: 1,
+        empty: 0
     },
     {
-      names: ["m", "mm"],
-      code:
+        names: ["m", "mm"],
+        code:
         `\
 // comment
 NSLog("foo"); // comment
 
 /* block comment */\
 `,
-      comment: 3,
-      source: 1,
-      block: 1,
-      total: 4,
-      single: 2,
-      mixed: 1,
-      empty: 1
+        comment: 3,
+        source: 1,
+        block: 1,
+        total: 4,
+        single: 2,
+        mixed: 1,
+        empty: 1
     },
     {
-      names: ["sass"],
-      code:
+        names: ["sass"],
+        code:
         `\
 // comment
 body
   font: 100% Helvecia, sans-serif /* multi
   line comments */\
 `,
-      comment: 3,
-      source: 2,
-      block: 2,
-      total: 4,
-      single: 1,
-      mixed: 1,
-      empty: 0
+        comment: 3,
+        source: 2,
+        block: 2,
+        total: 4,
+        single: 1,
+        mixed: 1,
+        empty: 0
     },
     {
-      names: ["cr"],
-      code:
+        names: ["cr"],
+        code:
         `\
 # comment
 def lerp(a, b, v)
   a * (1.0 - v) + b * v
 end\
 `,
-      comment: 1,
-      source: 3,
-      block: 0,
-      total: 4,
-      single: 1,
-      mixed: 0,
-      empty: 0
+        comment: 1,
+        source: 3,
+        block: 0,
+        total: 4,
+        single: 1,
+        mixed: 0,
+        empty: 0
     },
     {
-      names: ["nim"],
-      code:
+        names: ["nim"],
+        code:
         `\
 i = 0  # This is a single comment over multiple lines.
  # The scanner merges these two pieces.
@@ -736,17 +736,17 @@ proc \`host=\`*(s: var Socket, value: int) {.inline.} =
  ## setter of hostAddr
  s.FHost = value\
 `,
-      comment: 5,
-      source: 7,
-      block: 1,
-      total: 13,
-      single: 4,
-      mixed: 1,
-      empty: 2
+        comment: 5,
+        source: 7,
+        block: 1,
+        total: 13,
+        single: 4,
+        mixed: 1,
+        empty: 2
     },
     {
-      names: ["ml", "mli"],
-      code:
+        names: ["ml", "mli"],
+        code:
         `\
 (* a *)
 let double x = 2x in (* comment *)
@@ -759,17 +759,17 @@ let double x = 2x in (* comment *)
   another block comment
  *)\
 `,
-      comment: 9,
-      source: 2,
-      block: 9,
-      single: 0,
-      total: 10,
-      mixed: 2,
-      empty: 1
+        comment: 9,
+        source: 2,
+        block: 9,
+        single: 0,
+        total: 10,
+        mixed: 2,
+        empty: 1
     },
     {
-      names: ["asm"],
-      code:
+        names: ["asm"],
+        code:
         `\
 global start
 
@@ -781,17 +781,17 @@ start:; entry point
   pop rax
   ret\
 `,
-      total: 9,
-      source: 7,
-      comment: 2,
-      single: 2,
-      block: 0,
-      mixed: 1,
-      empty: 1
+        total: 9,
+        source: 7,
+        comment: 2,
+        single: 2,
+        block: 0,
+        mixed: 1,
+        empty: 1
     },
     {
-      names: ["nut"],
-      code:
+        names: ["nut"],
+        code:
         `\
 foo <- "bar";
 // comment
@@ -804,12 +804,12 @@ function something( a )
   block comment
 */\
 `,
-      total: 10,
-      source: 6,
-      comment: 4,
-      single: 1,
-      block: 3,
-      mixed: 0,
-      empty: 0
+        total: 10,
+        source: 6,
+        comment: 4,
+        single: 1,
+        block: 3,
+        mixed: 0,
+        empty: 0
     }
-  ];
+];

@@ -14,13 +14,14 @@ export default class Picture extends adone.cui.widget.Element {
     }
 
     setImage(options) {
-        var tube = pictureTube({ cols: options.cols });
+        const tube = pictureTube({ cols: options.cols });
 
-        if (options.file) fs.createReadStream(options.file).pipe(tube);
-        else if (options.base64) {
-            var memStream = new MemoryStream();
+        if (options.file) {
+            fs.createReadStream(options.file).pipe(tube); 
+        } else if (options.base64) {
+            const memStream = new MemoryStream();
             memStream.pipe(tube);
-            var buf = new Buffer(options.base64, "base64");
+            const buf = new Buffer(options.base64, "base64");
             memStream.write(buf);
             memStream.end();
         }
@@ -28,7 +29,7 @@ export default class Picture extends adone.cui.widget.Element {
         this.writer = new streams.WritableStream();
         tube.pipe(this.writer);
 
-        tube.on("end", function () {
+        tube.on("end", () => {
             if (options.onReady) {
                 options.onReady();
             }
@@ -42,8 +43,8 @@ export default class Picture extends adone.cui.widget.Element {
 
     getOptionsPrototype() {
         return {
-            base64: "AAAA"
-            , cols: 1
+            base64: "AAAA",
+            cols: 1
         };
     }
 }

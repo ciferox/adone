@@ -106,12 +106,12 @@ describe("glosses", () => {
 
                 bl.append(new BufferList([
                     new BufferList([
-                        new BufferList(new Buffer("abc"))
-                        , new Buffer("d")
-                        , new BufferList(new Buffer("efg"))
-                    ])
-                    , new BufferList([new Buffer("hi")])
-                    , new BufferList(new Buffer("j"))
+                        new BufferList(new Buffer("abc")),
+                        new Buffer("d"),
+                        new BufferList(new Buffer("efg"))
+                    ]),
+                    new BufferList([new Buffer("hi")]),
+                    new BufferList(new Buffer("j"))
                 ]));
 
                 assert.equal(bl.length, 10);
@@ -351,7 +351,7 @@ describe("glosses", () => {
                 bl.append(new Buffer("j"));
                 bl.append(new Buffer("\xff\x00"));
 
-                encodings.forEach(function (enc) {
+                encodings.forEach((enc) => {
                     assert.equal(bl.toString(enc), b.toString(enc), enc);
                 });
 
@@ -403,7 +403,7 @@ describe("glosses", () => {
                 bl.append("j");
                 bl.append("\xff\x00");
 
-                encodings.forEach(function (enc) {
+                encodings.forEach((enc) => {
                     assert.equal(bl.toString(enc), b.toString(enc));
                 });
 
@@ -418,14 +418,14 @@ describe("glosses", () => {
                 bl.append(89);
                 bl.append(0);
 
-                encodings.forEach(function (enc) {
+                encodings.forEach((enc) => {
                     assert.equal(bl.toString(enc), b.toString(enc));
                 });
             });
 
             it("write nothing, should get empty buffer", () => {
                 
-                new BufferList(function (err, data) {
+                new BufferList((err, data) => {
                     assert(!err, "no error");
                     assert(Buffer.isBuffer(data), "got a buffer");
                     assert.equal(0, data.length, "got a zero-length buffer");
@@ -436,7 +436,7 @@ describe("glosses", () => {
                 
                 const inp1 = "\u2600";
                 const inp2 = "\u2603";
-                const exp = inp1 + " and " + inp2;
+                const exp = `${inp1} and ${inp2}`;
                 const bl = new BufferList();
                 bl.write(inp1);
                 bl.write(" and ");
@@ -452,7 +452,7 @@ describe("glosses", () => {
                 source.write("hello");
                 source.pipe(dest);
 
-                dest.on("finish", function () {
+                dest.on("finish", () => {
                     assert.equal(dest.toString("utf8"), "hello");
                     done();
                 });

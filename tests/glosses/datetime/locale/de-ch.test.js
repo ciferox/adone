@@ -171,9 +171,9 @@ describe("de-ch", () => {
             m = adone.datetime().add({ d: i });
             assert.equal(m.calendar(), m.format("dddd [um] LT [Uhr]"), `Today + ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(), m.format("dddd [um] LT [Uhr]"), `Today + ${i } days beginning of day`);
+            assert.equal(m.calendar(), m.format("dddd [um] LT [Uhr]"), `Today + ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(), m.format("dddd [um] LT [Uhr]"), `Today + ${i } days end of day`);
+            assert.equal(m.calendar(), m.format("dddd [um] LT [Uhr]"), `Today + ${i} days end of day`);
         }
     });
 
@@ -181,7 +181,7 @@ describe("de-ch", () => {
         let i, m;
         for (i = 2; i < 7; i++) {
             m = adone.datetime().subtract({ d: i });
-            assert.equal(m.calendar(), m.format("[letzten] dddd [um] LT [Uhr]"), `Today + ${i } days current time`);
+            assert.equal(m.calendar(), m.format("[letzten] dddd [um] LT [Uhr]"), `Today + ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
             assert.equal(m.calendar(), m.format("[letzten] dddd [um] LT [Uhr]"), `Today + ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);

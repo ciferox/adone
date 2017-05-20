@@ -6004,7 +6004,7 @@ export default class Terminal extends adone.EventEmitter {
         name = name ? `response ${name}` : "response";
 
         let timeout;
-        let onresponse = (event) => {
+        const onresponse = (event) => {
             if (timeout) {
                 clearTimeout(timeout);
             }
@@ -6530,9 +6530,9 @@ export default class Terminal extends adone.EventEmitter {
     //   CSI ? 5 0  n  No Locator, if not.
     deviceStatus(param, callback, dec, noBypass) {
         if (dec) {
-            return this.response('device-status', '\x1b[?' + (param || '0') + 'n', callback, noBypass);
+            return this.response("device-status", `\x1b[?${param || "0"}n`, callback, noBypass);
         }
-        return this.response('device-status', '\x1b[' + (param || '0') + 'n', callback, noBypass);
+        return this.response("device-status", `\x1b[${param || "0"}n`, callback, noBypass);
     }
 
     getCursorPos(callback) {

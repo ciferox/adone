@@ -55,8 +55,9 @@ export default function (ctx, name, getter) {
         get: function overwriteProperty() {
             const keep_ssfi = flag(this, "keep_ssfi");
             const old_ssfi = flag(this, "ssfi");
-            if (!keep_ssfi && old_ssfi)
-                flag(this, "ssfi", overwriteProperty);
+            if (!keep_ssfi && old_ssfi) {
+                flag(this, "ssfi", overwriteProperty); 
+            }
 
             flag(this, "keep_ssfi", true);
             const result = getter(_super).call(this);
@@ -69,7 +70,7 @@ export default function (ctx, name, getter) {
             const newAssertion = $assert.getAssertion();
             transferFlags(this, newAssertion);
             return newAssertion;
-        }
-        , configurable: true
+        },
+        configurable: true
     });
 }

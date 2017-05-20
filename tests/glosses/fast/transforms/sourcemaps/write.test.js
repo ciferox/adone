@@ -26,7 +26,7 @@ function makeSourceMap(custom) {
 }
 
 function base64JSON(object) {
-    return "data:application/json;charset=utf8;base64," + new Buffer(JSON.stringify(object)).toString("base64");
+    return `data:application/json;charset=utf8;base64,${new Buffer(JSON.stringify(object)).toString("base64")}`;
 }
 
 function makeFile(custom) {
@@ -92,7 +92,7 @@ describe("Fast", () => {
                 it("should pass through when file is null", (done) => {
                     const file = new File();
                     const pipeline = sourcemapsWrite();
-                    pipeline.on("data", function (data) {
+                    pipeline.on("data", (data) => {
                         expect(data).to.be.ok;
                         expect(data instanceof File).to.be.ok;
                         expect(data).to.be.deep.equal(file);
@@ -105,7 +105,7 @@ describe("Fast", () => {
                     const file = makeFile();
                     delete file.sourceMap;
                     const pipeline = sourcemapsWrite();
-                    pipeline.on("data", function (data) {
+                    pipeline.on("data", (data) => {
                         expect(data).to.be.ok;
                         expect(data instanceof File).to.be.ok;
                         expect(data).to.be.deep.equal(file);
@@ -116,7 +116,7 @@ describe("Fast", () => {
 
                 it("should emit an error if file content is a stream", (done) => {
                     const pipeline = sourcemapsWrite();
-                    pipeline.on("data", function () {
+                    pipeline.on("data", () => {
                         done(new Error("should emit an error"));
                     }).on("error", () => done()).resume().write(makeStreamFile());
                 });
@@ -124,11 +124,11 @@ describe("Fast", () => {
                 it("should write an inline source map", (done) => {
                     const file = makeFile();
                     const pipeline = sourcemapsWrite();
-                    pipeline.on("data", function (data) {
+                    pipeline.on("data", (data) => {
                         expect(data).to.be.ok;
                         expect(data instanceof File).to.be.ok;
                         expect(data).to.be.deep.equal(file);
-                        expect(String(data.contents)).to.be.equal(sourceContent + "\n//# sourceMappingURL=" + base64JSON(data.sourceMap) + "\n");
+                        expect(String(data.contents)).to.be.equal(`${sourceContent}\n//# ${"sourceMappingURL"}=${base64JSON(data.sourceMap)}\n`);
                         done();
                     }).on("error", done).resume().write(file);
                 });
@@ -137,8 +137,8 @@ describe("Fast", () => {
                     const file = makeFile();
                     file.path = file.path.replace(".js", ".css");
                     const pipeline = sourcemapsWrite();
-                    pipeline.on("data", function (data) {
-                        expect(String(data.contents)).to.be.equal(sourceContent + "\n/*# sourceMappingURL=" + base64JSON(data.sourceMap) + " */\n");
+                    pipeline.on("data", (data) => {
+                        expect(String(data.contents)).to.be.equal(`${sourceContent}\n/*# sourceMappingURL=${base64JSON(data.sourceMap)} */\n`);
                         done();
                     }).resume().write(file);
                 });
@@ -147,7 +147,7 @@ describe("Fast", () => {
                     const file = makeFile();
                     file.path = file.path.replace(".js", ".txt");
                     const pipeline = sourcemapsWrite();
-                    pipeline.on("data", function (data) {
+                    pipeline.on("data", (data) => {
                         expect(String(data.contents)).to.be.equal(sourceContent);
                         done();
                     }).resume().write(file);
@@ -157,9 +157,9 @@ describe("Fast", () => {
                     const file = makeFile();
                     file.contents = new Buffer(file.contents.toString().replace(/\n/g, "\r\n"));
                     const pipeline = sourcemapsWrite();
-                    pipeline.on("data", function (data) {
+                    pipeline.on("data", (data) => {
                         expect(data).to.be.ok;
-                        expect(String(data.contents)).to.be.equal(sourceContent.replace(/\n/g, "\r\n") + "\r\n//# sourceMappingURL=" + base64JSON(data.sourceMap) + "\r\n", "should add source map as comment");
+                        expect(String(data.contents)).to.be.equal(`${sourceContent.replace(/\n/g, "\r\n")}\r\n//# ${"sourceMappingURL"}=${base64JSON(data.sourceMap)}\r\n`, "should add source map as comment");
                         done();
                     }).on("error", done).resume().write(file);
                 });
@@ -169,10 +169,10 @@ describe("Fast", () => {
                     file.contents = Buffer.from(adone.sourcemap.convert.removeComments(file.contents.toString()).trim());
 
                     sourcemapsWrite({ preExisting: true })
-                        .on("data", function (data) {
+                        .on("data", (data) => {
                             expect(data).to.be.ok;
-                            expect(!!data.sourceMap.preExisting).to.be.ok;
-                            expect(String(data.contents)).to.be.equal(sourceContent + "\n//# sourceMappingURL=" + base64JSON(data.sourceMap) + "\n");
+                            expect(Boolean(data.sourceMap.preExisting)).to.be.ok;
+                            expect(String(data.contents)).to.be.equal(`${sourceContent}\n//# ${"sourceMappingURL"}=${base64JSON(data.sourceMap)}\n`);
                             done();
                         }).on("error", done).resume().write(file);
                 });
@@ -183,16 +183,16 @@ describe("Fast", () => {
                     let fileCount = 0;
                     const outFiles = [];
                     let sourceMap;
-                    pipeline.on("data", function (data) {
+                    pipeline.on("data", (data) => {
                         outFiles.push(data);
                         fileCount++;
                         if (fileCount === 2) {
-                            outFiles.reverse().map(function (data) {
+                            outFiles.reverse().map((data) => {
                                 if (data.path === fromdir.getVirtualFile("helloworld.js").path()) {
                                     sourceMap = data.sourceMap;
                                     expect(data instanceof File).to.be.ok;
                                     expect(data).to.be.deep.equal(file);
-                                    expect(String(data.contents)).to.be.equal(sourceContent + "\n//# sourceMappingURL=../maps/helloworld.js.map\n");
+                                    expect(String(data.contents)).to.be.equal(`${sourceContent}\n//# ${"sourceMappingURL"}=../maps/helloworld.js.map\n`);
                                     expect(sourceMap.file).to.be.equal("../dist/helloworld.js");
                                 } else {
                                     expect(data instanceof File).to.be.ok;
@@ -218,11 +218,11 @@ describe("Fast", () => {
                     const outFiles = [];
                     let fileCount = 0;
                     pipeline
-                        .on("data", function (data) {
+                        .on("data", (data) => {
                             outFiles.push(data);
                             fileCount++;
                             if (fileCount === 2) {
-                                outFiles.reverse().map(function (data) {
+                                outFiles.reverse().map((data) => {
                                     if (data.path === root.getVirtualFile("maps", "helloworld.js.map").path()) {
                                         expect(data.history[0]).to.be.equal(fromdir.getVirtualFile("helloworld.js").path());
                                     }
@@ -241,16 +241,16 @@ describe("Fast", () => {
                     let fileCount = 0;
                     const outFiles = [];
                     let sourceMap;
-                    pipeline.on("data", function (data) {
+                    pipeline.on("data", (data) => {
                         outFiles.push(data);
                         fileCount++;
                         if (fileCount === 2) {
-                            outFiles.reverse().map(function (data) {
+                            outFiles.reverse().map((data) => {
                                 if (data.path === fromdir.getVirtualFile("helloworld.js").path()) {
                                     sourceMap = data.sourceMap;
                                     expect(data).to.be.instanceof(File);
                                     expect(data).to.be.deep.equal(file);
-                                    expect(String(data.contents)).to.be.equal(sourceContent + "\n//# sourceMappingURL=../maps/helloworld.map\n", "should add a comment referencing the source map file");
+                                    expect(String(data.contents)).to.be.equal(`${sourceContent}\n//# sourceMappingURL=../maps/helloworld.map\n`, "should add a comment referencing the source map file");
                                     expect(sourceMap.file).to.be.equal("../dist/helloworld.js");
                                 } else {
                                     expect(data).to.be.instanceof(File);
@@ -268,13 +268,13 @@ describe("Fast", () => {
                     const pipeline = sourcemapsWrite("dir1/maps");
                     let fileCount = 0;
                     const outFiles = [];
-                    pipeline.on("data", function (data) {
+                    pipeline.on("data", (data) => {
                         outFiles.push(data);
                         fileCount++;
                         if (fileCount === 2) {
-                            outFiles.reverse().map(function (data) {
+                            outFiles.reverse().map((data) => {
                                 if (data.path === fromdir.getVirtualFile("dir1", "dir2", "helloworld.js").path()) {
-                                    expect(String(data.contents)).to.be.equal(sourceContent + "\n//# sourceMappingURL=../maps/dir1/dir2/helloworld.js.map\n");
+                                    expect(String(data.contents)).to.be.equal(`${sourceContent}\n//# ${"sourceMappingURL"}=../maps/dir1/dir2/helloworld.js.map\n`);
                                 }
                             });
                             done();
@@ -285,7 +285,7 @@ describe("Fast", () => {
                 it("should write no comment with option addComment=false", (done) => {
                     const file = makeFile();
                     const pipeline = sourcemapsWrite({ addComment: false });
-                    pipeline.on("data", function (data) {
+                    pipeline.on("data", (data) => {
                         expect(String(data.contents)).to.be.equal(sourceContent);
                         done();
                     }).resume().write(file);
@@ -294,7 +294,7 @@ describe("Fast", () => {
                 it("should not include source content with option includeContent=false", (done) => {
                     const file = makeFile();
                     const pipeline = sourcemapsWrite({ includeContent: false });
-                    pipeline.on("data", function (data) {
+                    pipeline.on("data", (data) => {
                         expect(data.sourceMap.sourcesContent).to.be.equal(undefined);
                         done();
                     }).resume().write(file);
@@ -304,7 +304,7 @@ describe("Fast", () => {
                     const file = makeFile();
                     delete file.sourceMap.sourcesContent;
                     const pipeline = sourcemapsWrite();
-                    pipeline.on("data", function (data) {
+                    pipeline.on("data", (data) => {
                         expect(data.sourceMap.sourcesContent).not.to.be.equal(undefined);
                         expect(data.sourceMap.sourcesContent).to.be.deep.equal([sourceContent]);
                         done();
@@ -316,7 +316,7 @@ describe("Fast", () => {
                     file.sourceMap.sources[0] += ".invalid";
                     delete file.sourceMap.sourcesContent;
                     const pipeline = sourcemapsWrite();
-                    pipeline.on("data", function (data) {
+                    pipeline.on("data", (data) => {
                         expect(data.sourceMap.sourcesContent).not.to.be.equal(undefined);
                         expect(data.sourceMap.sourcesContent).to.be.deep.equal([]);
                         done();
@@ -328,7 +328,7 @@ describe("Fast", () => {
                     file.sourceMap.sources[0] += ".invalid";
                     delete file.sourceMap.sourcesContent;
                     const pipeline = sourcemapsWrite();
-                    pipeline.on("data", function (data) {
+                    pipeline.on("data", (data) => {
                         expect(data.sourceMap.sourcesContent).not.to.be.undefined;
                         expect(data.sourceMap.sourcesContent).to.be.empty;
                         done();
@@ -338,7 +338,7 @@ describe("Fast", () => {
                 it("should set the sourceRoot by option sourceRoot", (done) => {
                     const file = makeFile();
                     const pipeline = sourcemapsWrite({ sourceRoot: "/testSourceRoot" });
-                    pipeline.on("data", function (data) {
+                    pipeline.on("data", (data) => {
                         expect(data.sourceMap.sourceRoot).to.be.equal("/testSourceRoot");
                         done();
                     }).resume().write(file);
@@ -347,7 +347,7 @@ describe("Fast", () => {
                 it("should set the mapSourcesAbsolute by option mapSourcesAbsolute", (done) => {
                     const file = makeFile();
                     const pipeline = sourcemapsWrite({ sourceRoot: "/testSourceRoot", mapSourcesAbsolute: true });
-                    pipeline.on("data", function (data) {
+                    pipeline.on("data", (data) => {
                         expect(data.sourceMap.sources).to.be.deep.equal(["/from/helloworld.js"]);
                         expect(data.sourceMap.sourceRoot).to.be.equal("/testSourceRoot");
                         done();
@@ -359,7 +359,7 @@ describe("Fast", () => {
                     const pipeline = sourcemapsWrite({
                         sourceRoot: () => "/testSourceRoot"
                     });
-                    pipeline.on("data", function (data) {
+                    pipeline.on("data", (data) => {
                         expect(data.sourceMap.sourceRoot).to.be.equal("/testSourceRoot");
                         done();
                     }).resume().write(file);
@@ -374,11 +374,11 @@ describe("Fast", () => {
                     let fileCount = 0;
                     const outFiles = [];
 
-                    pipeline.on("data", function (data) {
+                    pipeline.on("data", (data) => {
                         outFiles.push(data);
                         fileCount++;
                         if (fileCount === 2) {
-                            outFiles.reverse().map(function (data) {
+                            outFiles.reverse().map((data) => {
                                 if (data.path === root.getVirtualFile("from", "dir1", "dir2", "helloworld.js").path()) {
                                     expect(data.sourceMap.sourceRoot).to.be.equal("../../../from", "should set correct sourceRoot");
                                     expect(data.sourceMap.file).to.be.equal("helloworld.js");
@@ -397,11 +397,11 @@ describe("Fast", () => {
                     let fileCount = 0;
                     const outFiles = [];
 
-                    pipeline.on("data", function (data) {
+                    pipeline.on("data", (data) => {
                         outFiles.push(data);
                         fileCount++;
                         if (fileCount === 2) {
-                            outFiles.reverse().map(function (data) {
+                            outFiles.reverse().map((data) => {
                                 if (data.path === root.getVirtualFile("from", "dir1", "dir2", "helloworld.js").path()) {
                                     expect(data.sourceMap.sourceRoot).to.be.equal("../../../src");
                                     expect(data.sourceMap.file).to.be.equal("helloworld.js");
@@ -420,11 +420,11 @@ describe("Fast", () => {
                     let fileCount = 0;
                     const outFiles = [];
 
-                    pipeline.on("data", function (data) {
+                    pipeline.on("data", (data) => {
                         outFiles.push(data);
                         fileCount++;
                         if (fileCount === 2) {
-                            outFiles.reverse().map(function (data) {
+                            outFiles.reverse().map((data) => {
                                 if (data.path === root.getVirtualFile("from", "dir1", "dir2", "helloworld.js").path()) {
                                     expect(data.sourceMap.sourceRoot).to.be.equal("../..");
                                     expect(data.sourceMap.file).to.be.equal("helloworld.js");
@@ -443,11 +443,11 @@ describe("Fast", () => {
                     let fileCount = 0;
                     const outFiles = [];
 
-                    pipeline.on("data", function (data) {
+                    pipeline.on("data", (data) => {
                         outFiles.push(data);
                         fileCount++;
                         if (fileCount === 2) {
-                            outFiles.reverse().map(function (data) {
+                            outFiles.reverse().map((data) => {
                                 if (data.path === root.getVirtualFile("from", "dir1", "dir2", "helloworld.js").path()) {
                                     expect(data.sourceMap.sourceRoot).to.be.equal("../../../../src");
                                     expect(data.sourceMap.file).to.be.equal("../../../dir1/dir2/helloworld.js");
@@ -469,11 +469,11 @@ describe("Fast", () => {
                     let fileCount = 0;
                     const outFiles = [];
 
-                    pipeline.on("data", function (data) {
+                    pipeline.on("data", (data) => {
                         outFiles.push(data);
                         fileCount++;
                         if (fileCount === 2) {
-                            outFiles.reverse().map(function (data) {
+                            outFiles.reverse().map((data) => {
                                 if (data.path === root.getVirtualFile("from", "dir1", "dir2", "helloworld.js").path()) {
                                     expect(data.sourceMap.sourceRoot).to.be.equal("../../../src");
                                     expect(data.sourceMap.file).to.be.equal("../../../dist/dir1/dir2/helloworld.js");
@@ -489,7 +489,7 @@ describe("Fast", () => {
                 it("should accept a sourceMappingURLPrefix", (done) => {
                     const file = makeFile();
                     const pipeline = sourcemapsWrite("../maps", { sourceMappingURLPrefix: "https://asset-host.example.com" });
-                    pipeline.on("data", function (data) {
+                    pipeline.on("data", (data) => {
                         if (/helloworld\.js$/.test(data.path)) {
                             expect(String(data.contents).match(/sourceMappingURL.*\n$/)[0]).to.be.equal("sourceMappingURL=https://asset-host.example.com/maps/helloworld.js.map\n");
                             done();
@@ -502,7 +502,7 @@ describe("Fast", () => {
                     const pipeline = sourcemapsWrite("../maps", {
                         sourceMappingURLPrefix: () => "https://asset-host.example.com"
                     });
-                    pipeline.on("data", function (data) {
+                    pipeline.on("data", (data) => {
                         if (/helloworld\.js$/.test(data.path)) {
                             expect(String(data.contents).match(/sourceMappingURL.*\n$/)[0]).to.be.equal("sourceMappingURL=https://asset-host.example.com/maps/helloworld.js.map\n");
                             done();
@@ -515,13 +515,13 @@ describe("Fast", () => {
                     const pipeline = sourcemapsWrite("../maps", {
                         sourceMappingURLPrefix() {
                             ++times;
-                            return "https://asset-host.example.com/" + times;
+                            return `https://asset-host.example.com/${times}`;
                         }
                     });
 
-                    pipeline.on("data", function (data) {
+                    pipeline.on("data", (data) => {
                         if (/helloworld\.js$/.test(data.path)) {
-                            expect(String(data.contents).match(/sourceMappingURL.*\n$/)[0]).to.be.equal("sourceMappingURL=https://asset-host.example.com/" + times + "/maps/helloworld.js.map\n");
+                            expect(String(data.contents).match(/sourceMappingURL.*\n$/)[0]).to.be.equal(`sourceMappingURL=https://asset-host.example.com/${times}/maps/helloworld.js.map\n`);
                             if (times >= 3) {
                                 done();
                                 return;
@@ -534,7 +534,7 @@ describe("Fast", () => {
                 it("null as sourceRoot should not set the sourceRoot", (done) => {
                     const file = makeFile();
                     const pipeline = sourcemapsWrite({ sourceRoot: null });
-                    pipeline.on("data", function (data) {
+                    pipeline.on("data", (data) => {
                         expect(data.sourceMap.sourceRoot).to.be.equal(undefined);
                         done();
                     }).resume().write(file);
@@ -545,7 +545,7 @@ describe("Fast", () => {
                     const pipeline = sourcemapsWrite({
                         sourceRoot: () => null
                     });
-                    pipeline.on("data", function (data) {
+                    pipeline.on("data", (data) => {
                         expect(data.sourceMap.sourceRoot).to.be.equal(undefined);
                         done();
                     }).resume().write(file);
@@ -554,7 +554,7 @@ describe("Fast", () => {
                 it("empty string as sourceRoot should be kept", (done) => {
                     const file = makeFile();
                     const pipeline = sourcemapsWrite({ sourceRoot: "" });
-                    pipeline.on("data", function (data) {
+                    pipeline.on("data", (data) => {
                         expect(data.sourceMap.sourceRoot).to.be.equal("");
                         done();
                     }).resume().write(file);
@@ -563,11 +563,11 @@ describe("Fast", () => {
                 it("should be able to fully control sourceMappingURL by the option sourceMappingURL", (done) => {
                     const file = makeNestedFile();
                     const pipeline = sourcemapsWrite("../aaa/bbb/", {
-                        sourceMappingURL: (file) => "http://maps.example.com/" + file.relative.replace(/\\/g, "/") + ".map"
+                        sourceMappingURL: (file) => `http://maps.example.com/${file.relative.replace(/\\/g, "/")}.map`
                     });
-                    pipeline.on("data", function (data) {
+                    pipeline.on("data", (data) => {
                         if (/helloworld\.js$/.test(data.path)) {
-                            expect(String(data.contents)).to.be.equal(sourceContent + "\n//# sourceMappingURL=http://maps.example.com/dir1/dir2/helloworld.js.map\n");
+                            expect(String(data.contents)).to.be.equal(`${sourceContent}\n//# ${"sourceMappingURL"}=http://maps.example.com/dir1/dir2/helloworld.js.map\n`);
                             done();
                         }
                     }).resume().write(file);
@@ -576,9 +576,9 @@ describe("Fast", () => {
                 it("should allow to change sources", (done) => {
                     const file = makeFile();
                     const pipeline = sourcemapsWrite({
-                        mapSources: (sourcePath) => "../src/" + sourcePath
+                        mapSources: (sourcePath) => `../src/${sourcePath}`
                     });
-                    pipeline.on("data", function (data) {
+                    pipeline.on("data", (data) => {
                         expect(data.sourceMap.sources).to.be.deep.equal(["../src/helloworld.js"]);
                         done();
                     }).on("error", done).resume().write(file);

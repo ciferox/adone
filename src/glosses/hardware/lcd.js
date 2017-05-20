@@ -176,9 +176,9 @@ const Controllers = {
                 this.dots = opts.dots || "5x8";
 
 
-                let display = this.REGISTER.DISPLAY | this.REGISTER.DISPLAYON | this.REGISTER.CURSOROFF | this.REGISTER.BLINKOFF;
+                const display = this.REGISTER.DISPLAY | this.REGISTER.DISPLAYON | this.REGISTER.CURSOROFF | this.REGISTER.BLINKOFF;
 
-                let state = {
+                const state = {
                     display,
                     characters: {},
                     index: this.REGISTER.MEMORYLIMIT - 1,
@@ -194,7 +194,7 @@ const Controllers = {
                 // Operations within the following labelled block are init-only,
                 // but _do_ block the process negligible number of milliseconds.
                 {
-                    let lines = this.REGISTER.DIMENSIONS | this.REGISTER.LINE[2];
+                    const lines = this.REGISTER.DIMENSIONS | this.REGISTER.LINE[2];
                     // Copied from Grove Studio lib.
                     // https://www.sparkfun.com/datasheets/LCD/HD44780.pdf
                     // SEE PAGE 45/46 FOR INITIALIZATION SPECIFICATION!
@@ -248,8 +248,8 @@ const Controllers = {
         },
         bgColor: {
             value(red, green, blue) {
-                let rgb = RGB.ToRGB(red, green, blue);
-                let address = this.address.rgb;
+                const rgb = RGB.ToRGB(red, green, blue);
+                const address = this.address.rgb;
 
                 this.io.i2cWrite(address, [0x00, 0]);
                 this.io.i2cWrite(address, [0x01, 0]);
@@ -361,7 +361,7 @@ const Controllers = {
                 this.expander.portMode(this.io.MODES.OUTPUT);
                 this.expander.portWrite(0);
 
-                let backlight = opts.backlight || {
+                const backlight = opts.backlight || {
                     polarity: 0,
                     pin: 3
                 };
@@ -369,20 +369,20 @@ const Controllers = {
                 backlight.pin = typeof backlight.pin === "undefined" ? 3 : backlight.pin;
                 backlight.polarity = typeof backlight.polarity === "undefined" ? 0 : backlight.polarity;
 
-                let dimensions = this.REGISTER.BITMODE[this.bitMode] |
+                const dimensions = this.REGISTER.BITMODE[this.bitMode] |
                     this.REGISTER.LINE[this.lines] |
                     this.REGISTER.DOTS[this.dots];
 
-                let display = this.REGISTER.DISPLAY |
+                const display = this.REGISTER.DISPLAY |
                     this.REGISTER.DISPLAYON |
                     this.REGISTER.CURSOROFF |
                     this.REGISTER.BLINKOFF;
 
-                let entry = this.REGISTER.ENTRYLEFT |
+                const entry = this.REGISTER.ENTRYLEFT |
                     this.REGISTER.ENTRYSHIFTDECREMENT;
 
 
-                let state = {
+                const state = {
                     display,
                     characters: {},
                     index: this.REGISTER.MEMORYLIMIT - 1,
@@ -453,7 +453,7 @@ const Controllers = {
         },
         backlight: {
             value(value) {
-                let state = priv.get(this);
+                const state = priv.get(this);
                 let mask;
 
                 value = typeof value === "undefined" ? 255 : value;
@@ -478,7 +478,7 @@ const Controllers = {
 
         createChar: {
             value(name, charMap) {
-                let state = priv.get(this);
+                const state = priv.get(this);
                 let address;
 
                 if (typeof name === "number") {
@@ -514,7 +514,7 @@ const Controllers = {
         },
         on: {
             value() {
-                let state = priv.get(this);
+                const state = priv.get(this);
 
                 state.display |= this.REGISTER.DISPLAYON;
                 this.command(this.REGISTER.DISPLAY | state.display);
@@ -524,7 +524,7 @@ const Controllers = {
         },
         off: {
             value() {
-                let state = priv.get(this);
+                const state = priv.get(this);
 
                 state.display &= ~this.REGISTER.DISPLAYON;
                 this.command(this.REGISTER.DISPLAY | state.display);
@@ -563,7 +563,7 @@ const Controllers = {
         writeBits: {
             writable: true,
             value(mode, value) {
-                let state = priv.get(this);
+                const state = priv.get(this);
                 let pinMapValue = 0;
 
                 for (let i = 0; i < 4; i++) {
@@ -625,8 +625,8 @@ const Controllers = {
                     this.pins = opts.pins;
                 }
 
-                let display = this.REGISTER.DISPLAY | this.REGISTER.DISPLAYON;
-                let state = {
+                const display = this.REGISTER.DISPLAY | this.REGISTER.DISPLAYON;
+                const state = {
                     display,
                     characters: {},
                     index: this.REGISTER.MEMORYLIMIT - 1,
@@ -648,7 +648,7 @@ const Controllers = {
 
                 if (opts.backlight) {
                     if (typeof opts.backlight === "number") {
-                        let temp = opts.backlight;
+                        const temp = opts.backlight;
                         opts.backlight = {
                             pin: temp
                         };
@@ -726,7 +726,7 @@ Controllers.MJKDZ = Object.assign({}, Controllers.PCF8574, {
     writeBits: {
         writable: true,
         value(mode, value) {
-            let state = priv.get(this);
+            const state = priv.get(this);
             let pinMapValue = 0;
 
             for (let i = 0; i < 4; i++) {

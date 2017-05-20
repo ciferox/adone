@@ -33,8 +33,8 @@ function MimeNode(contentType, options) {
     this.baseBoundary = options.baseBoundary || Date.now().toString() + Math.random();
     this.boundaryPrefix = options.boundaryPrefix || "----sinikael";
 
-    this.disableFileAccess = !!options.disableFileAccess;
-    this.disableUrlAccess = !!options.disableUrlAccess;
+    this.disableFileAccess = Boolean(options.disableFileAccess);
+    this.disableUrlAccess = Boolean(options.disableUrlAccess);
 
     /**
      * If date headers is missing and current node is the root, this value is used instead
@@ -49,7 +49,7 @@ function MimeNode(contentType, options) {
     /**
      * If true include Bcc in generated headers (if available)
      */
-    this.keepBcc = !!options.keepBcc;
+    this.keepBcc = Boolean(options.keepBcc);
 
     /**
      * If filename is specified but contentType is not (probably an attachment)
@@ -148,7 +148,7 @@ MimeNode.prototype.createChild = function (contentType, options) {
         options = contentType;
         contentType = undefined;
     }
-    var node = new MimeNode(contentType, options);
+    const node = new MimeNode(contentType, options);
     this.appendChild(node);
     return node;
 };
@@ -184,7 +184,7 @@ MimeNode.prototype.replace = function (node) {
         return this;
     }
 
-    this.parentNode.childNodes.forEach(function (childNode, i) {
+    this.parentNode.childNodes.forEach((childNode, i) => {
         if (childNode === this) {
 
             node.rootNode = this.rootNode;
@@ -196,7 +196,7 @@ MimeNode.prototype.replace = function (node) {
 
             node.parentNode.childNodes[i] = node;
         }
-    }.bind(this));
+    });
 
     return node;
 };
@@ -211,7 +211,7 @@ MimeNode.prototype.remove = function () {
         return this;
     }
 
-    for (var i = this.parentNode.childNodes.length - 1; i >= 0; i--) {
+    for (let i = this.parentNode.childNodes.length - 1; i >= 0; i--) {
         if (this.parentNode.childNodes[i] === this) {
             this.parentNode.childNodes.splice(i, 1);
             this.parentNode = undefined;
@@ -231,7 +231,7 @@ MimeNode.prototype.remove = function () {
  * @return {Object} current node
  */
 MimeNode.prototype.setHeader = function (key, value) {
-    var added = false,
+    let added = false,
         headerValue;
 
     // Allow setting multiple headers at once
@@ -242,15 +242,15 @@ MimeNode.prototype.setHeader = function (key, value) {
         }
         // allow [{key:'content-type', value: 'text/plain'}]
         else if (Array.isArray(key)) {
-            key.forEach(function (i) {
+            key.forEach((i) => {
                 this.setHeader(i.key, i.value);
-            }.bind(this));
+            });
         }
         // allow {'content-type': 'text/plain'}
         else {
-            Object.keys(key).forEach(function (i) {
+            Object.keys(key).forEach((i) => {
                 this.setHeader(i, key[i]);
-            }.bind(this));
+            });
         }
         return this;
     }
@@ -258,12 +258,12 @@ MimeNode.prototype.setHeader = function (key, value) {
     key = this._normalizeHeaderKey(key);
 
     headerValue = {
-        key: key,
-        value: value
+        key,
+        value
     };
 
     // Check if the value exists and overwrite
-    for (var i = 0, len = this._headers.length; i < len; i++) {
+    for (let i = 0, len = this._headers.length; i < len; i++) {
         if (this._headers[i].key === key) {
             if (!added) {
                 // replace the first match
@@ -306,27 +306,27 @@ MimeNode.prototype.addHeader = function (key, value) {
         }
         // allow [{key:'content-type', value: 'text/plain'}]
         else if (Array.isArray(key)) {
-            key.forEach(function (i) {
+            key.forEach((i) => {
                 this.addHeader(i.key, i.value);
-            }.bind(this));
+            });
         }
         // allow {'content-type': 'text/plain'}
         else {
-            Object.keys(key).forEach(function (i) {
+            Object.keys(key).forEach((i) => {
                 this.addHeader(i, key[i]);
-            }.bind(this));
+            });
         }
         return this;
     } else if (Array.isArray(value)) {
-        value.forEach(function (val) {
+        value.forEach((val) => {
             this.addHeader(key, val);
-        }.bind(this));
+        });
         return this;
     }
 
     this._headers.push({
         key: this._normalizeHeaderKey(key),
-        value: value
+        value
     });
 
     return this;
@@ -340,7 +340,7 @@ MimeNode.prototype.addHeader = function (key, value) {
  */
 MimeNode.prototype.getHeader = function (key) {
     key = this._normalizeHeaderKey(key);
-    for (var i = 0, len = this._headers.length; i < len; i++) {
+    for (let i = 0, len = this._headers.length; i < len; i++) {
         if (this._headers[i].key === key) {
             return this._headers[i].value;
         }
@@ -356,7 +356,7 @@ MimeNode.prototype.getHeader = function (key) {
  * @return {Object} current node
  */
 MimeNode.prototype.setContent = function (content) {
-    var _self = this;
+    const _self = this;
     this.content = content;
     if (typeof this.content.pipe === "function") {
         // pre-stream handler. might be triggered if a stream is set as content
@@ -377,13 +377,13 @@ MimeNode.prototype.setContent = function (content) {
 };
 
 MimeNode.prototype.build = function (callback) {
-    var stream = this.createReadStream();
-    var buf = [];
-    var buflen = 0;
-    var returned = false;
+    const stream = this.createReadStream();
+    const buf = [];
+    let buflen = 0;
+    let returned = false;
 
-    stream.on("readable", function () {
-        var chunk;
+    stream.on("readable", () => {
+        let chunk;
 
         while ((chunk = stream.read()) !== null) {
             buf.push(chunk);
@@ -391,7 +391,7 @@ MimeNode.prototype.build = function (callback) {
         }
     });
 
-    stream.once("error", function (err) {
+    stream.once("error", (err) => {
         if (returned) {
             return;
         }
@@ -400,7 +400,7 @@ MimeNode.prototype.build = function (callback) {
         return callback(err);
     });
 
-    stream.once("end", function (chunk) {
+    stream.once("end", (chunk) => {
         if (returned) {
             return;
         }
@@ -415,8 +415,8 @@ MimeNode.prototype.build = function (callback) {
 };
 
 MimeNode.prototype.getTransferEncoding = function () {
-    var transferEncoding = false;
-    var contentType = (this.getHeader("Content-Type") || "").toString().toLowerCase().trim();
+    let transferEncoding = false;
+    const contentType = (this.getHeader("Content-Type") || "").toString().toLowerCase().trim();
 
     if (this.content) {
         transferEncoding = (this.getHeader("Content-Transfer-Encoding") || "").toString().toLowerCase().trim();
@@ -446,9 +446,9 @@ MimeNode.prototype.getTransferEncoding = function () {
  * @returns {String} Headers
  */
 MimeNode.prototype.buildHeaders = function () {
-    var _self = this;
-    var transferEncoding = this.getTransferEncoding();
-    var headers = [];
+    const _self = this;
+    const transferEncoding = this.getTransferEncoding();
+    const headers = [];
 
     if (transferEncoding) {
         this.setHeader("Content-Transfer-Encoding", transferEncoding);
@@ -472,16 +472,16 @@ MimeNode.prototype.buildHeaders = function () {
         }
     }
 
-    this._headers.forEach(function (header) {
-        var key = header.key;
-        var value = header.value;
-        var structured;
-        var param;
-        var options = {};
-        var formattedHeaders = ["From", "Sender", "To", "Cc", "Bcc", "Reply-To", "Date", "References"];
+    this._headers.forEach((header) => {
+        const key = header.key;
+        let value = header.value;
+        let structured;
+        let param;
+        const options = {};
+        const formattedHeaders = ["From", "Sender", "To", "Cc", "Bcc", "Reply-To", "Date", "References"];
 
         if (value && formattedHeaders.indexOf(key) < 0 && typeof value === "object") {
-            Object.keys(value).forEach(function (key) {
+            Object.keys(value).forEach((key) => {
                 if (key !== "value") {
                     options[key] = value[key];
                 }
@@ -494,7 +494,7 @@ MimeNode.prototype.buildHeaders = function () {
 
         if (options.prepared) {
             // header value is
-            headers.push(key + ": " + value);
+            headers.push(`${key}: ${value}`);
             return;
         }
 
@@ -525,9 +525,9 @@ MimeNode.prototype.buildHeaders = function () {
 
                     if (param !== _self.filename || /[\s'"\\;:\/=\(\),<>@\[\]\?]|^\-/.test(param)) {
                         // include value in quotes if needed
-                        param = "\"" + param + "\"";
+                        param = `"${param}"`;
                     }
-                    value += "; name=" + param;
+                    value += `; name=${param}`;
                 }
                 break;
             case "Bcc":
@@ -545,8 +545,8 @@ MimeNode.prototype.buildHeaders = function () {
             return;
         }
 
-        headers.push(libmime.foldLines(key + ": " + value, 76));
-    }.bind(this));
+        headers.push(libmime.foldLines(`${key}: ${value}`, 76));
+    });
 
     return headers.join("\r\n");
 };
@@ -560,10 +560,10 @@ MimeNode.prototype.buildHeaders = function () {
 MimeNode.prototype.createReadStream = function (options) {
     options = options || {};
 
-    var outputStream = new PassThrough(options);
-    var transform;
+    let outputStream = new PassThrough(options);
+    let transform;
 
-    this.stream(outputStream, options, function (err) {
+    this.stream(outputStream, options, (err) => {
         if (err) {
             outputStream.emit("error", err);
             return;
@@ -571,9 +571,9 @@ MimeNode.prototype.createReadStream = function (options) {
         outputStream.end();
     });
 
-    for (var i = 0, len = this._transforms.length; i < len; i++) {
+    for (let i = 0, len = this._transforms.length; i < len; i++) {
         transform = typeof this._transforms[i] === "function" ? this._transforms[i]() : this._transforms[i];
-        outputStream.once("error", function (err) {
+        outputStream.once("error", (err) => {
             transform.emit("error", err);
         });
         outputStream = outputStream.pipe(transform);
@@ -593,14 +593,14 @@ MimeNode.prototype.transform = function (transform) {
 };
 
 MimeNode.prototype.stream = function (outputStream, options, done) {
-    var _self = this;
-    var transferEncoding = this.getTransferEncoding();
-    var contentStream;
-    var localStream;
+    const _self = this;
+    const transferEncoding = this.getTransferEncoding();
+    let contentStream;
+    let localStream;
 
     // protect actual callback against multiple triggering
-    var returned = false;
-    var callback = function (err) {
+    let returned = false;
+    const callback = function (err) {
         if (returned) {
             return;
         }
@@ -632,7 +632,7 @@ MimeNode.prototype.stream = function (outputStream, options, done) {
                     end: false
                 });
                 contentStream.once("end", finalize);
-                contentStream.once("error", function (err) {
+                contentStream.once("error", (err) => {
                     return callback(err);
                 });
 
@@ -647,11 +647,11 @@ MimeNode.prototype.stream = function (outputStream, options, done) {
                 localStream.once("end", finalize);
             }
 
-            localStream.once("error", function (err) {
+            localStream.once("error", (err) => {
                 return callback(err);
             });
 
-            return;
+            
         } else {
             return setImmediate(finalize);
         }
@@ -660,15 +660,15 @@ MimeNode.prototype.stream = function (outputStream, options, done) {
     // for multipart nodes, push child nodes
     // for content nodes end the stream
     function finalize() {
-        var childId = 0;
+        let childId = 0;
         var processChildNode = function () {
             if (childId >= _self.childNodes.length) {
-                outputStream.write("\r\n--" + _self.boundary + "--\r\n");
+                outputStream.write(`\r\n--${_self.boundary}--\r\n`);
                 return callback();
             }
-            var child = _self.childNodes[childId++];
-            outputStream.write((childId > 1 ? "\r\n" : "") + "--" + _self.boundary + "\r\n");
-            child.stream(outputStream, options, function (err) {
+            const child = _self.childNodes[childId++];
+            outputStream.write(`${childId > 1 ? "\r\n" : ""}--${_self.boundary}\r\n`);
+            child.stream(outputStream, options, (err) => {
                 if (err) {
                     return callback(err);
                 }
@@ -684,7 +684,7 @@ MimeNode.prototype.stream = function (outputStream, options, done) {
     }
 
     if (this._raw) {
-        setImmediate(function () {
+        setImmediate(() => {
             if (Object.prototype.toString.call(_self._raw) === "[object Error]") {
                 // content is already errored
                 return callback(_self._raw);
@@ -695,17 +695,17 @@ MimeNode.prototype.stream = function (outputStream, options, done) {
                 _self._raw.removeListener("error", _self._contentErrorHandler);
             }
 
-            var raw = _self._getStream(_self._raw);
+            const raw = _self._getStream(_self._raw);
             raw.pipe(outputStream, {
                 end: false
             });
-            raw.on("error", function (err) {
+            raw.on("error", (err) => {
                 outputStream.emit("error", err);
             });
             raw.on("end", finalize);
         });
     } else {
-        outputStream.write(this.buildHeaders() + "\r\n\r\n");
+        outputStream.write(`${this.buildHeaders()}\r\n\r\n`);
         setImmediate(sendContent);
     }
 };
@@ -716,7 +716,7 @@ MimeNode.prototype.stream = function (outputStream, options, done) {
  * @return {Object} SMTP envelope in the form of {from: 'from@example.com', to: ['to@example.com']}
  */
 MimeNode.prototype.setEnvelope = function (envelope) {
-    var list;
+    let list;
 
     this._envelope = {
         from: false,
@@ -726,31 +726,31 @@ MimeNode.prototype.setEnvelope = function (envelope) {
     if (envelope.from) {
         list = [];
         this._convertAddresses(this._parseAddresses(envelope.from), list);
-        list = list.filter(function (address) {
+        list = list.filter((address) => {
             return address && address.address;
         });
         if (list.length && list[0]) {
             this._envelope.from = list[0].address;
         }
     }
-    ["to", "cc", "bcc"].forEach(function (key) {
+    ["to", "cc", "bcc"].forEach((key) => {
         if (envelope[key]) {
             this._convertAddresses(this._parseAddresses(envelope[key]), this._envelope.to);
         }
-    }.bind(this));
+    });
 
-    this._envelope.to = this._envelope.to.map(function (to) {
+    this._envelope.to = this._envelope.to.map((to) => {
         return to.address;
-    }).filter(function (address) {
+    }).filter((address) => {
         return address;
     });
 
-    var standardFields = ["to", "cc", "bcc", "from"];
-    Object.keys(envelope).forEach(function (key) {
+    const standardFields = ["to", "cc", "bcc", "from"];
+    Object.keys(envelope).forEach((key) => {
         if (standardFields.indexOf(key) === -1) {
             this._envelope[key] = envelope[key];
         }
-    }.bind(this));
+    });
 
     return this;
 };
@@ -761,10 +761,10 @@ MimeNode.prototype.setEnvelope = function (envelope) {
  * @return {Object} Address object
  */
 MimeNode.prototype.getAddresses = function () {
-    var addresses = {};
+    const addresses = {};
 
-    this._headers.forEach(function (header) {
-        var key = header.key.toLowerCase();
+    this._headers.forEach((header) => {
+        const key = header.key.toLowerCase();
         if (["from", "sender", "reply-to", "to", "cc", "bcc"].indexOf(key) >= 0) {
             if (!Array.isArray(addresses[key])) {
                 addresses[key] = [];
@@ -772,7 +772,7 @@ MimeNode.prototype.getAddresses = function () {
 
             this._convertAddresses(this._parseAddresses(header.value), addresses[key]);
         }
-    }.bind(this));
+    });
 
     return addresses;
 };
@@ -787,12 +787,12 @@ MimeNode.prototype.getEnvelope = function () {
         return this._envelope;
     }
 
-    var envelope = {
+    const envelope = {
         from: false,
         to: []
     };
-    this._headers.forEach(function (header) {
-        var list = [];
+    this._headers.forEach((header) => {
+        const list = [];
         if (header.key === "From" || (!envelope.from && ["Reply-To", "Sender"].indexOf(header.key) >= 0)) {
             this._convertAddresses(this._parseAddresses(header.value), list);
             if (list.length && list[0]) {
@@ -801,9 +801,9 @@ MimeNode.prototype.getEnvelope = function () {
         } else if (["To", "Cc", "Bcc"].indexOf(header.key) >= 0) {
             this._convertAddresses(this._parseAddresses(header.value), envelope.to);
         }
-    }.bind(this));
+    });
 
-    envelope.to = envelope.to.map(function (to) {
+    envelope.to = envelope.to.map((to) => {
         return to.address;
     });
 
@@ -816,7 +816,7 @@ MimeNode.prototype.getEnvelope = function () {
  * @return {String} Message-Id value
  */
 MimeNode.prototype.messageId = function () {
-    var messageId = this.getHeader("Message-ID");
+    let messageId = this.getHeader("Message-ID");
     // You really should define your own Message-Id field!
     if (!messageId) {
         messageId = this._generateMessageId();
@@ -831,7 +831,7 @@ MimeNode.prototype.messageId = function () {
  * @param {String|Buffer|Stream} Raw MIME contents
  */
 MimeNode.prototype.setRaw = function (raw) {
-    var _self = this;
+    const _self = this;
 
     this._raw = raw;
 
@@ -857,7 +857,7 @@ MimeNode.prototype.setRaw = function (raw) {
  * @returns {Object} Stream object
  */
 MimeNode.prototype._getStream = function (content) {
-    var contentStream;
+    let contentStream;
 
     if (typeof content.pipe === "function") {
         // assume as stream
@@ -865,8 +865,8 @@ MimeNode.prototype._getStream = function (content) {
     } else if (content && typeof content.path === "string" && !content.href) {
         if (this.disableFileAccess) {
             contentStream = new PassThrough();
-            setImmediate(function () {
-                contentStream.emit("error", new Error("File access rejected for " + content.path));
+            setImmediate(() => {
+                contentStream.emit("error", new Error(`File access rejected for ${content.path}`));
             });
             return contentStream;
         }
@@ -875,21 +875,21 @@ MimeNode.prototype._getStream = function (content) {
     } else if (content && typeof content.href === "string") {
         if (this.disableUrlAccess) {
             contentStream = new PassThrough();
-            setImmediate(function () {
-                contentStream.emit("error", new Error("Url access rejected for " + content.href));
+            setImmediate(() => {
+                contentStream.emit("error", new Error(`Url access rejected for ${content.href}`));
             });
             return contentStream;
         }
         // fetch URL
         return fetch(content.href);
-    } else {
+    } 
         // pass string or buffer content as a stream
-        contentStream = new PassThrough();
-        setImmediate(function () {
-            contentStream.end(content || "");
-        });
-        return contentStream;
-    }
+    contentStream = new PassThrough();
+    setImmediate(() => {
+        contentStream.end(content || "");
+    });
+    return contentStream;
+    
 };
 
 /**
@@ -900,14 +900,14 @@ MimeNode.prototype._getStream = function (content) {
  * @return {Array} An array of address objects
  */
 MimeNode.prototype._parseAddresses = function (addresses) {
-    return [].concat.apply([], [].concat(addresses).map(function (address) {
+    return [].concat.apply([], [].concat(addresses).map((address) => {
         if (address && address.address) {
             address.address = this._normalizeAddress(address.address);
             address.name = address.name || "";
             return [address];
         }
         return addressparser(address);
-    }.bind(this)));
+    }));
 };
 
 /**
@@ -923,7 +923,7 @@ MimeNode.prototype._normalizeHeaderKey = function (key) {
     trim().toLowerCase().
         // use uppercase words, except MIME
     replace(/^X\-SMTPAPI$|^(MIME|DKIM)\b|^[a-z]|\-(SPF|FBL|ID|MD5)$|\-[a-z]/ig,
-            function (c) {
+            (c) => {
                 return c.toUpperCase();
             }).
         // special case
@@ -939,7 +939,7 @@ MimeNode.prototype._normalizeHeaderKey = function (key) {
 MimeNode.prototype._handleContentType = function (structured) {
     this.contentType = structured.value.trim().toLowerCase();
 
-    this.multipart = this.contentType.split("/").reduce(function (prev, value) {
+    this.multipart = this.contentType.split("/").reduce((prev, value) => {
         return prev === "multipart" ? value : false;
     });
 
@@ -956,7 +956,7 @@ MimeNode.prototype._handleContentType = function (structured) {
  * @return {String} boundary value
  */
 MimeNode.prototype._generateBoundary = function () {
-    return this.rootNode.boundaryPrefix + "-?=_" + this._nodeId + "-" + this.rootNode.baseBoundary;
+    return `${this.rootNode.boundaryPrefix}-?=_${this._nodeId}-${this.rootNode.baseBoundary}`;
 };
 
 /**
@@ -986,27 +986,27 @@ MimeNode.prototype._encodeHeaderValue = function (key, value) {
             value = (value || "").toString().replace(/\r?\n|\r/g, " ");
 
             if (value.charAt(0) !== "<") {
-                value = "<" + value;
+                value = `<${value}`;
             }
 
             if (value.charAt(value.length - 1) !== ">") {
-                value = value + ">";
+                value = `${value}>`;
             }
             return value;
 
             // space separated list of values enclosed in <>
         case "References":
-            value = [].concat.apply([], [].concat(value || "").map(function (elm) {
+            value = [].concat.apply([], [].concat(value || "").map((elm) => {
                 elm = (elm || "").toString().replace(/\r?\n|\r/g, " ").trim();
-                return elm.replace(/<[^>]*>/g, function (str) {
+                return elm.replace(/<[^>]*>/g, (str) => {
                     return str.replace(/\s/g, "");
                 }).split(/\s+/);
-            })).map(function (elm) {
+            })).map((elm) => {
                 if (elm.charAt(0) !== "<") {
-                    elm = "<" + elm;
+                    elm = `<${elm}`;
                 }
                 if (elm.charAt(elm.length - 1) !== ">") {
-                    elm = elm + ">";
+                    elm = `${elm}>`;
                 }
                 return elm;
             });
@@ -1036,32 +1036,32 @@ MimeNode.prototype._encodeHeaderValue = function (key, value) {
  * @return {String} address string
  */
 MimeNode.prototype._convertAddresses = function (addresses, uniqueList) {
-    var values = [];
+    const values = [];
 
     uniqueList = uniqueList || [];
 
-    [].concat(addresses || []).forEach(function (address) {
+    [].concat(addresses || []).forEach((address) => {
         if (address.address) {
             address.address = this._normalizeAddress(address.address);
 
             if (!address.name) {
                 values.push(address.address);
             } else if (address.name) {
-                values.push(this._encodeAddressName(address.name) + " <" + address.address + ">");
+                values.push(`${this._encodeAddressName(address.name)} <${address.address}>`);
             }
 
             if (address.address) {
                 if (!uniqueList.filter(
-                        function (a) {
+                        (a) => {
                             return a.address === address.address;
                         }).length) {
                     uniqueList.push(address);
                 }
             }
         } else if (address.group) {
-            values.push(this._encodeAddressName(address.name) + ":" + (address.group.length ? this._convertAddresses(address.group, uniqueList) : "").trim() + ";");
+            values.push(`${this._encodeAddressName(address.name)}:${(address.group.length ? this._convertAddresses(address.group, uniqueList) : "").trim()};`);
         }
-    }.bind(this));
+    });
 
     return values.join(", ");
 };
@@ -1075,16 +1075,16 @@ MimeNode.prototype._convertAddresses = function (addresses, uniqueList) {
 MimeNode.prototype._normalizeAddress = function (address) {
     address = (address || "").toString().trim();
 
-    var lastAt = address.lastIndexOf("@");
-    var user = address.substr(0, lastAt);
-    var domain = address.substr(lastAt + 1);
+    const lastAt = address.lastIndexOf("@");
+    const user = address.substr(0, lastAt);
+    const domain = address.substr(lastAt + 1);
 
     // Usernames are not touched and are kept as is even if these include unicode
     // Domains are punycoded by default
     // 'jõgeva.ee' will be converted to 'xn--jgeva-dua.ee'
     // non-unicode domains are left as is
 
-    return user + "@" + adone.punycode.toASCII(domain.toLowerCase());
+    return `${user}@${adone.punycode.toASCII(domain.toLowerCase())}`;
 };
 
 /**
@@ -1096,10 +1096,10 @@ MimeNode.prototype._normalizeAddress = function (address) {
 MimeNode.prototype._encodeAddressName = function (name) {
     if (!/^[\w ']*$/.test(name)) {
         if (/^[\x20-\x7e]*$/.test(name)) {
-            return "\"" + name.replace(/([\\"])/g, "\\$1") + "\"";
-        } else {
-            return libmime.encodeWord(name, this._getTextEncoding(name), 52);
-        }
+            return `"${name.replace(/([\\"])/g, "\\$1")}"`;
+        } 
+        return libmime.encodeWord(name, this._getTextEncoding(name), 52);
+        
     }
     return name;
 };
@@ -1123,9 +1123,9 @@ MimeNode.prototype._encodeWords = function (value) {
 MimeNode.prototype._getTextEncoding = function (value) {
     value = (value || "").toString();
 
-    var encoding = this.textEncoding;
-    var latinLen;
-    var nonLatinLen;
+    let encoding = this.textEncoding;
+    let latinLen;
+    let nonLatinLen;
 
     if (!encoding) {
         // count latin alphabet symbols and 8-bit range symbols + control symbols
@@ -1145,12 +1145,12 @@ MimeNode.prototype._getTextEncoding = function (value) {
  * @return {String} Random Message-ID value
  */
 MimeNode.prototype._generateMessageId = function () {
-    return "<" + [2, 2, 2, 6].reduce(
+    return `<${[2, 2, 2, 6].reduce(
             // crux to generate UUID-like random strings
-            function (prev, len) {
-                return prev + "-" + adone.std.crypto.randomBytes(len).toString("hex");
-            }, adone.std.crypto.randomBytes(4).toString("hex")) +
-        "@" +
+            (prev, len) => {
+                return `${prev}-${ adone.std.crypto.randomBytes(len).toString("hex")}`;
+            }, adone.std.crypto.randomBytes(4).toString("hex")) 
+        }@${ 
         // try to use the domain of the FROM address or fallback to server hostname
-        (this.getEnvelope().from || this.hostname || adone.std.os.hostname() || "localhost").split("@").pop() + ">";
+        (this.getEnvelope().from || this.hostname || adone.std.os.hostname() || "localhost").split("@").pop()}>`;
 };

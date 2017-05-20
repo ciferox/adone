@@ -177,7 +177,7 @@ describe("Fast", () => {
                 }
             });
 
-            describe("manifest option", function () {
+            describe("manifest option", () => {
                 it("should replace filenames from manifest files", async () => {
                     const manifest = src();
                     manifest.write(new File({
@@ -266,7 +266,7 @@ describe("Fast", () => {
                 });
             });
 
-            describe("modifyUnreved and modifyReved options", function () {
+            describe("modifyUnreved and modifyReved options", () => {
                 it("should modify the names of reved and un-reved files", async () => {
                     const manifest = src();
                     manifest.write(new File({

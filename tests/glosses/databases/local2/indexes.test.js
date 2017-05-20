@@ -5,10 +5,10 @@ describe.skip("Indexes", () => {
     describe("Insertion", () => {
 
         it("Can insert pointers to documents in the index correctly when they have the field", () => {
-            let idx = new Index({ fieldName: "_id" })
-                , doc1 = { a: 5, _id: "hello" }
-                , doc2 = { a: 8, _id: "world" }
-                , doc3 = { a: 2, _id: "bloup" }
+            let idx = new Index({ fieldName: "_id" }),
+                doc1 = { a: 5, _id: "hello" },
+                doc2 = { a: 8, _id: "world" },
+                doc3 = { a: 2, _id: "bloup" }
                 ;
 
             idx.insert(doc1);
@@ -26,9 +26,9 @@ describe.skip("Indexes", () => {
         });
 
         it("Inserting twice for the same fieldName in a unique index will result in an error thrown", () => {
-            let idx = new Index({ fieldName: "tf", unique: true })
-                , doc1 = { a: 5, tf: "hello" }
-                ;
+            let idx = new Index({ fieldName: "tf", unique: true }),
+                doc1 = { a: 5, tf: "hello" }
+            ;
 
             idx.insert(doc1);
             assert.equal(idx.tree.getNumberOfKeys(), 1);
@@ -36,9 +36,9 @@ describe.skip("Indexes", () => {
         });
 
         it("Inserting twice for a fieldName the docs dont have with a unique index results in an error thrown", () => {
-            let idx = new Index({ fieldName: "nope", unique: true })
-                , doc1 = { a: 5, tf: "hello" }
-                , doc2 = { a: 5, tf: "world" }
+            let idx = new Index({ fieldName: "nope", unique: true }),
+                doc1 = { a: 5, tf: "hello" },
+                doc2 = { a: 5, tf: "world" }
                 ;
 
             idx.insert(doc1);
@@ -47,9 +47,9 @@ describe.skip("Indexes", () => {
         });
 
         it("Inserting twice for a fieldName the docs dont have with a unique and sparse index will not throw, since the docs will be non indexed", () => {
-            let idx = new Index({ fieldName: "nope", unique: true, sparse: true })
-                , doc1 = { a: 5, tf: "hello" }
-                , doc2 = { a: 5, tf: "world" }
+            let idx = new Index({ fieldName: "nope", unique: true, sparse: true }),
+                doc1 = { a: 5, tf: "hello" },
+                doc2 = { a: 5, tf: "world" }
                 ;
 
             idx.insert(doc1);
@@ -58,10 +58,10 @@ describe.skip("Indexes", () => {
         });
 
         it("Works with dot notation", () => {
-            let idx = new Index({ fieldName: "tf.nested" })
-                , doc1 = { _id: 5, tf: { nested: "hello" } }
-                , doc2 = { _id: 8, tf: { nested: "world", additional: true } }
-                , doc3 = { _id: 2, tf: { nested: "bloup", age: 42 } }
+            let idx = new Index({ fieldName: "tf.nested" }),
+                doc1 = { _id: 5, tf: { nested: "hello" } },
+                doc2 = { _id: 8, tf: { nested: "world", additional: true } },
+                doc3 = { _id: 2, tf: { nested: "bloup", age: 42 } }
                 ;
 
             idx.insert(doc1);
@@ -76,10 +76,10 @@ describe.skip("Indexes", () => {
         });
 
         it("Can insert an array of documents", () => {
-            let idx = new Index({ fieldName: "tf" })
-                , doc1 = { _id: 5, tf: "hello" }
-                , doc2 = { _id: 8, tf: "world" }
-                , doc3 = { _id: 2, tf: "bloup" }
+            let idx = new Index({ fieldName: "tf" }),
+                doc1 = { _id: 5, tf: "hello" },
+                doc2 = { _id: 8, tf: "world" },
+                doc3 = { _id: 2, tf: "bloup" }
                 ;
 
             idx.insert([doc1, doc2, doc3]);
@@ -90,11 +90,11 @@ describe.skip("Indexes", () => {
         });
 
         it("When inserting an array of elements, if an error is thrown all inserts need to be rolled back", () => {
-            let idx = new Index({ fieldName: "tf", unique: true })
-                , doc1 = { a: 5, tf: "hello" }
-                , doc2 = { a: 8, tf: "world" }
-                , doc2b = { a: 84, tf: "world" }
-                , doc3 = { a: 2, tf: "bloup" }
+            let idx = new Index({ fieldName: "tf", unique: true }),
+                doc1 = { a: 5, tf: "hello" },
+                doc2 = { a: 8, tf: "world" },
+                doc2b = { a: 84, tf: "world" },
+                doc3 = { a: 2, tf: "bloup" }
                 ;
 
             try {
@@ -111,9 +111,9 @@ describe.skip("Indexes", () => {
         describe("Array fields", () => {
 
             it("Inserts one entry per array element in the index", () => {
-                let obj = { tf: ["aa", "bb"], really: "yeah", _id: 1 }
-                    , obj2 = { tf: "normal", yes: "indeed", _id: 2 }
-                    , idx = new Index({ fieldName: "tf" })
+                let obj = { tf: ["aa", "bb"], really: "yeah", _id: 1 },
+                    obj2 = { tf: "normal", yes: "indeed", _id: 2 },
+                    idx = new Index({ fieldName: "tf" })
                     ;
 
                 idx.insert(obj);
@@ -126,9 +126,9 @@ describe.skip("Indexes", () => {
             });
 
             it("Inserts one entry per array element in the index, type-checked", () => {
-                let obj = { tf: ["42", 42, new Date(42), 42], really: "yeah", _id: 1 }
-                    , idx = new Index({ fieldName: "tf" })
-                    ;
+                let obj = { tf: ["42", 42, new Date(42), 42], really: "yeah", _id: 1 },
+                    idx = new Index({ fieldName: "tf" })
+                ;
 
                 idx.insert(obj);
                 assert.equal(idx.getAll().length, 3);
@@ -138,9 +138,9 @@ describe.skip("Indexes", () => {
             });
 
             it("Inserts one entry per unique array element in the index, the unique constraint only holds across documents", () => {
-                let obj = { tf: ["aa", "aa"], really: "yeah", _id: 1 }
-                    , obj2 = { tf: ["cc", "yy", "cc"], yes: "indeed", _id: 2 }
-                    , idx = new Index({ fieldName: "tf", unique: true })
+                let obj = { tf: ["aa", "aa"], really: "yeah", _id: 1 },
+                    obj2 = { tf: ["cc", "yy", "cc"], yes: "indeed", _id: 2 },
+                    idx = new Index({ fieldName: "tf", unique: true })
                     ;
 
                 idx.insert(obj);
@@ -152,9 +152,9 @@ describe.skip("Indexes", () => {
             });
 
             it("The unique constraint holds across documents", () => {
-                let obj = { tf: ["aa", "aa"], really: "yeah", _id: 1 }
-                    , obj2 = { tf: ["cc", "aa", "cc"], yes: "indeed", _id: 2 }
-                    , idx = new Index({ fieldName: "tf", unique: true })
+                let obj = { tf: ["aa", "aa"], really: "yeah", _id: 1 },
+                    obj2 = { tf: ["cc", "aa", "cc"], yes: "indeed", _id: 2 },
+                    idx = new Index({ fieldName: "tf", unique: true })
                     ;
 
                 idx.insert(obj);
@@ -165,9 +165,9 @@ describe.skip("Indexes", () => {
             });
 
             it("When removing a document, remove it from the index at all unique array elements", () => {
-                let obj = { tf: ["aa", "aa"], really: "yeah", _id: 1 }
-                    , obj2 = { tf: ["cc", "aa", "cc"], yes: "indeed", _id: 2 }
-                    , idx = new Index({ fieldName: "tf" })
+                let obj = { tf: ["aa", "aa"], really: "yeah", _id: 1 },
+                    obj2 = { tf: ["cc", "aa", "cc"], yes: "indeed", _id: 2 },
+                    idx = new Index({ fieldName: "tf" })
                     ;
 
                 idx.insert(obj);
@@ -185,9 +185,9 @@ describe.skip("Indexes", () => {
             });
 
             it("If a unique constraint is violated when inserting an array key, roll back all inserts before the key", () => {
-                let obj = { tf: ["aa", "bb"], really: "yeah" }
-                    , obj2 = { tf: ["cc", "dd", "aa", "ee"], yes: "indeed" }
-                    , idx = new Index({ fieldName: "tf", unique: true })
+                let obj = { tf: ["aa", "bb"], really: "yeah" },
+                    obj2 = { tf: ["cc", "dd", "aa", "ee"], yes: "indeed" },
+                    idx = new Index({ fieldName: "tf", unique: true })
                     ;
 
                 idx.insert(obj);
@@ -215,11 +215,11 @@ describe.skip("Indexes", () => {
     describe("Removal", () => {
 
         it("Can remove pointers from the index, even when multiple documents have the same key", () => {
-            let idx = new Index({ fieldName: "tf" })
-                , doc1 = { a: 5, tf: "hello", _id: 1 }
-                , doc2 = { a: 8, tf: "world", _id: 2 }
-                , doc3 = { a: 2, tf: "bloup", _id: 3 }
-                , doc4 = { a: 23, tf: "world", _id: 4 }
+            let idx = new Index({ fieldName: "tf" }),
+                doc1 = { a: 5, tf: "hello", _id: 1 },
+                doc2 = { a: 8, tf: "world", _id: 2 },
+                doc3 = { a: 2, tf: "bloup", _id: 3 },
+                doc4 = { a: 23, tf: "world", _id: 4 }
                 ;
 
             idx.insert(doc1);
@@ -239,9 +239,9 @@ describe.skip("Indexes", () => {
         });
 
         it("If we have a sparse index, removing a non indexed doc has no effect", () => {
-            let idx = new Index({ fieldName: "nope", sparse: true })
-                , doc1 = { a: 5, tf: "hello" }
-                , doc2 = { a: 5, tf: "world" }
+            let idx = new Index({ fieldName: "nope", sparse: true }),
+                doc1 = { a: 5, tf: "hello" },
+                doc2 = { a: 5, tf: "world" }
                 ;
 
             idx.insert(doc1);
@@ -253,11 +253,11 @@ describe.skip("Indexes", () => {
         });
 
         it("Works with dot notation", () => {
-            let idx = new Index({ fieldName: "tf.nested" })
-                , doc1 = { _id: 5, tf: { nested: "hello" } }
-                , doc2 = { _id: 8, tf: { nested: "world", additional: true } }
-                , doc3 = { _id: 2, tf: { nested: "bloup", age: 42 } }
-                , doc4 = { _id: 2, tf: { nested: "world", fruits: ["apple", "carrot"] } }
+            let idx = new Index({ fieldName: "tf.nested" }),
+                doc1 = { _id: 5, tf: { nested: "hello" } },
+                doc2 = { _id: 8, tf: { nested: "world", additional: true } },
+                doc3 = { _id: 2, tf: { nested: "bloup", age: 42 } },
+                doc4 = { _id: 2, tf: { nested: "world", fruits: ["apple", "carrot"] } }
                 ;
 
             idx.insert(doc1);
@@ -277,10 +277,10 @@ describe.skip("Indexes", () => {
         });
 
         it("Can remove an array of documents", () => {
-            let idx = new Index({ fieldName: "tf" })
-                , doc1 = { _id: 5, tf: "hello" }
-                , doc2 = { _id: 8, tf: "world" }
-                , doc3 = { _id: 2, tf: "bloup" }
+            let idx = new Index({ fieldName: "tf" }),
+                doc1 = { _id: 5, tf: "hello" },
+                doc2 = { _id: 8, tf: "world" },
+                doc3 = { _id: 2, tf: "bloup" }
                 ;
 
             idx.insert([doc1, doc2, doc3]);
@@ -298,12 +298,12 @@ describe.skip("Indexes", () => {
     describe("Update", () => {
 
         it("Can update a document whose key did or didnt change", () => {
-            let idx = new Index({ fieldName: "tf" })
-                , doc1 = { _id: 5, tf: "hello" }
-                , doc2 = { _id: 8, tf: "world" }
-                , doc3 = { _id: 2, tf: "bloup" }
-                , doc4 = { _id: 23, tf: "world" }
-                , doc5 = { _id: 1, tf: "changed" }
+            let idx = new Index({ fieldName: "tf" }),
+                doc1 = { _id: 5, tf: "hello" },
+                doc2 = { _id: 8, tf: "world" },
+                doc3 = { _id: 2, tf: "bloup" },
+                doc4 = { _id: 23, tf: "world" },
+                doc5 = { _id: 1, tf: "changed" }
                 ;
 
             idx.insert(doc1);
@@ -323,11 +323,11 @@ describe.skip("Indexes", () => {
         });
 
         it("If a simple update violates a unique constraint, changes are rolled back and an error thrown", () => {
-            let idx = new Index({ fieldName: "tf", unique: true })
-                , doc1 = { _id: 5, tf: "hello" }
-                , doc2 = { _id: 8, tf: "world" }
-                , doc3 = { _id: 2, tf: "bloup" }
-                , bad = { _id: 23, tf: "world" }
+            let idx = new Index({ fieldName: "tf", unique: true }),
+                doc1 = { _id: 5, tf: "hello" },
+                doc2 = { _id: 8, tf: "world" },
+                doc3 = { _id: 2, tf: "bloup" },
+                bad = { _id: 23, tf: "world" }
                 ;
 
             idx.insert(doc1);
@@ -353,13 +353,13 @@ describe.skip("Indexes", () => {
         });
 
         it("Can update an array of documents", () => {
-            let idx = new Index({ fieldName: "tf" })
-                , doc1 = { _id: 5, tf: "hello" }
-                , doc2 = { _id: 8, tf: "world" }
-                , doc3 = { _id: 2, tf: "bloup" }
-                , doc1b = { _id: 23, tf: "world" }
-                , doc2b = { _id: 1, tf: "changed" }
-                , doc3b = { _id: 44, tf: "bloup" }
+            let idx = new Index({ fieldName: "tf" }),
+                doc1 = { _id: 5, tf: "hello" },
+                doc2 = { _id: 8, tf: "world" },
+                doc3 = { _id: 2, tf: "bloup" },
+                doc1b = { _id: 23, tf: "world" },
+                doc2b = { _id: 1, tf: "changed" },
+                doc3b = { _id: 44, tf: "bloup" }
                 ;
 
             idx.insert(doc1);
@@ -379,15 +379,15 @@ describe.skip("Indexes", () => {
         });
 
         it("If a unique constraint is violated during an array-update, all changes are rolled back and an error thrown", () => {
-            let idx = new Index({ fieldName: "tf", unique: true })
-                , doc0 = { _id: 432, tf: "notthistoo" }
-                , doc1 = { _id: 5, tf: "hello" }
-                , doc2 = { _id: 8, tf: "world" }
-                , doc3 = { _id: 2, tf: "bloup" }
-                , doc1b = { _id: 23, tf: "changed" }
-                , doc2b = { _id: 1, tf: "changed" }   // Will violate the constraint (first try)
-                , doc2c = { _id: 1, tf: "notthistoo" }   // Will violate the constraint (second try)
-                , doc3b = { _id: 44, tf: "alsochanged" }
+            let idx = new Index({ fieldName: "tf", unique: true }),
+                doc0 = { _id: 432, tf: "notthistoo" },
+                doc1 = { _id: 5, tf: "hello" },
+                doc2 = { _id: 8, tf: "world" },
+                doc3 = { _id: 2, tf: "bloup" },
+                doc1b = { _id: 23, tf: "changed" },
+                doc2b = { _id: 1, tf: "changed" },   // Will violate the constraint (first try)
+                doc2c = { _id: 1, tf: "notthistoo" },   // Will violate the constraint (second try)
+                doc3b = { _id: 44, tf: "alsochanged" }
                 ;
 
             idx.insert(doc1);
@@ -425,11 +425,11 @@ describe.skip("Indexes", () => {
         });
 
         it("If an update doesnt change a document, the unique constraint is not violated", () => {
-            let idx = new Index({ fieldName: "tf", unique: true })
-                , doc1 = { _id: 5, tf: "hello" }
-                , doc2 = { _id: 8, tf: "world" }
-                , doc3 = { _id: 2, tf: "bloup" }
-                , noChange = { _id: 8, tf: "world" }
+            let idx = new Index({ fieldName: "tf", unique: true }),
+                doc1 = { _id: 5, tf: "hello" },
+                doc2 = { _id: 8, tf: "world" },
+                doc3 = { _id: 2, tf: "bloup" },
+                noChange = { _id: 8, tf: "world" }
                 ;
 
             idx.insert(doc1);
@@ -444,14 +444,14 @@ describe.skip("Indexes", () => {
         });
 
         it("Can revert simple and batch updates", () => {
-            let idx = new Index({ fieldName: "tf" })
-                , doc1 = { _id: 5, tf: "hello" }
-                , doc2 = { _id: 8, tf: "world" }
-                , doc3 = { _id: 2, tf: "bloup" }
-                , doc1b = { _id: 23, tf: "world" }
-                , doc2b = { _id: 1, tf: "changed" }
-                , doc3b = { _id: 44, tf: "bloup" }
-                , batchUpdate = [{ oldDoc: doc1, newDoc: doc1b }, { oldDoc: doc2, newDoc: doc2b }, { oldDoc: doc3, newDoc: doc3b }]
+            let idx = new Index({ fieldName: "tf" }),
+                doc1 = { _id: 5, tf: "hello" },
+                doc2 = { _id: 8, tf: "world" },
+                doc3 = { _id: 2, tf: "bloup" },
+                doc1b = { _id: 23, tf: "world" },
+                doc2b = { _id: 1, tf: "changed" },
+                doc3b = { _id: 44, tf: "bloup" },
+                batchUpdate = [{ oldDoc: doc1, newDoc: doc1b }, { oldDoc: doc2, newDoc: doc2b }, { oldDoc: doc3, newDoc: doc3b }]
                 ;
 
             idx.insert(doc1);
@@ -507,11 +507,11 @@ describe.skip("Indexes", () => {
     describe("Get matching documents", () => {
 
         it("Get all documents where fieldName is equal to the given value, or an empty array if no match", () => {
-            let idx = new Index({ fieldName: "tf" })
-                , doc1 = { _id: 5, tf: "hello" }
-                , doc2 = { _id: 8, tf: "world" }
-                , doc3 = { _id: 2, tf: "bloup" }
-                , doc4 = { _id: 23, tf: "world" }
+            let idx = new Index({ fieldName: "tf" }),
+                doc1 = { _id: 5, tf: "hello" },
+                doc2 = { _id: 8, tf: "world" },
+                doc3 = { _id: 2, tf: "bloup" },
+                doc4 = { _id: 23, tf: "world" }
                 ;
 
             idx.insert(doc1);
@@ -525,10 +525,10 @@ describe.skip("Indexes", () => {
         });
 
         it("Can get all documents for a given key in a unique index", () => {
-            let idx = new Index({ fieldName: "tf", unique: true })
-                , doc1 = { _id: 5, tf: "hello" }
-                , doc2 = { _id: 8, tf: "world" }
-                , doc3 = { _id: 2, tf: "bloup" }
+            let idx = new Index({ fieldName: "tf", unique: true }),
+                doc1 = { _id: 5, tf: "hello" },
+                doc2 = { _id: 8, tf: "world" },
+                doc3 = { _id: 2, tf: "bloup" }
                 ;
 
             idx.insert(doc1);
@@ -541,11 +541,11 @@ describe.skip("Indexes", () => {
         });
 
         it("Can get all documents for which a field is undefined", () => {
-            let idx = new Index({ fieldName: "tf" })
-                , doc1 = { _id: 5, tf: "hello" }
-                , doc2 = { _id: 2, nottf: "bloup" }
-                , doc3 = { _id: 8, tf: "world" }
-                , doc4 = { _id: 7, nottf: "yes" }
+            let idx = new Index({ fieldName: "tf" }),
+                doc1 = { _id: 5, tf: "hello" },
+                doc2 = { _id: 2, nottf: "bloup" },
+                doc3 = { _id: 8, tf: "world" },
+                doc4 = { _id: 7, nottf: "yes" }
                 ;
 
             idx.insert(doc1);
@@ -568,11 +568,11 @@ describe.skip("Indexes", () => {
         });
 
         it("Can get all documents for which a field is null", () => {
-            let idx = new Index({ fieldName: "tf" })
-                , doc1 = { _id: 5, tf: "hello" }
-                , doc2 = { _id: 2, tf: null }
-                , doc3 = { _id: 8, tf: "world" }
-                , doc4 = { _id: 7, tf: null }
+            let idx = new Index({ fieldName: "tf" }),
+                doc1 = { _id: 5, tf: "hello" },
+                doc2 = { _id: 2, tf: null },
+                doc3 = { _id: 8, tf: "world" },
+                doc4 = { _id: 7, tf: null }
                 ;
 
             idx.insert(doc1);
@@ -595,11 +595,11 @@ describe.skip("Indexes", () => {
         });
 
         it("Can get all documents for a given key in a sparse index, but not unindexed docs (= field undefined)", () => {
-            let idx = new Index({ fieldName: "tf", sparse: true })
-                , doc1 = { _id: 5, tf: "hello" }
-                , doc2 = { _id: 2, nottf: "bloup" }
-                , doc3 = { _id: 8, tf: "world" }
-                , doc4 = { _id: 7, nottf: "yes" }
+            let idx = new Index({ fieldName: "tf", sparse: true }),
+                doc1 = { _id: 5, tf: "hello" },
+                doc2 = { _id: 2, nottf: "bloup" },
+                doc3 = { _id: 8, tf: "world" },
+                doc4 = { _id: 7, nottf: "yes" }
                 ;
 
             idx.insert(doc1);
@@ -615,12 +615,12 @@ describe.skip("Indexes", () => {
         });
 
         it("Can get all documents whose key is in an array of keys", () => {
-            let idx = new Index({ fieldName: "tf" })
-                , doc1 = { _id: 5, tf: "hello" }
-                , doc2 = { _id: 2, tf: "bloup" }
-                , doc3 = { _id: 8, tf: "world" }
-                , doc4 = { _id: 7, tf: "yes" }
-                , doc5 = { _id: 7, tf: "yes" }
+            let idx = new Index({ fieldName: "tf" }),
+                doc1 = { _id: 5, tf: "hello" },
+                doc2 = { _id: 2, tf: "bloup" },
+                doc3 = { _id: 8, tf: "world" },
+                doc4 = { _id: 7, tf: "yes" },
+                doc5 = { _id: 7, tf: "yes" }
                 ;
 
             idx.insert(doc1);
@@ -637,12 +637,12 @@ describe.skip("Indexes", () => {
         });
 
         it("Can get all documents whose key is between certain bounds", () => {
-            let idx = new Index({ fieldName: "_id" })
-                , doc1 = { _id: 5, tf: "hello" }
-                , doc2 = { _id: 2, tf: "bloup" }
-                , doc3 = { _id: 8, tf: "world" }
-                , doc4 = { _id: 7, tf: "yes" }
-                , doc5 = { _id: 10, tf: "yes" }
+            let idx = new Index({ fieldName: "_id" }),
+                doc1 = { _id: 5, tf: "hello" },
+                doc2 = { _id: 2, tf: "bloup" },
+                doc3 = { _id: 8, tf: "world" },
+                doc4 = { _id: 7, tf: "yes" },
+                doc5 = { _id: 10, tf: "yes" }
                 ;
 
             idx.insert(doc1);
@@ -662,10 +662,10 @@ describe.skip("Indexes", () => {
     describe("Resetting", () => {
 
         it("Can reset an index without any new data, the index will be empty afterwards", () => {
-            let idx = new Index({ fieldName: "tf" })
-                , doc1 = { a: 5, tf: "hello" }
-                , doc2 = { a: 8, tf: "world" }
-                , doc3 = { a: 2, tf: "bloup" }
+            let idx = new Index({ fieldName: "tf" }),
+                doc1 = { a: 5, tf: "hello" },
+                doc2 = { a: 8, tf: "world" },
+                doc3 = { a: 2, tf: "bloup" }
                 ;
 
             idx.insert(doc1);
@@ -739,10 +739,10 @@ describe.skip("Indexes", () => {
     });   // ==== End of 'Resetting' ==== //
 
     it("Get all elements in the index", () => {
-        let idx = new Index({ fieldName: "a" })
-            , doc1 = { a: 5, _id: "hello" }
-            , doc2 = { a: 8, _id: "world" }
-            , doc3 = { a: 2, _id: "bloup" }
+        let idx = new Index({ fieldName: "a" }),
+            doc1 = { a: 5, _id: "hello" },
+            doc2 = { a: 8, _id: "world" },
+            doc3 = { a: 2, _id: "bloup" }
             ;
 
         idx.insert(doc1);

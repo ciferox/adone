@@ -588,9 +588,9 @@ describe.skip("Database", () => {
                         d.insert({ tf: 9 }, () => {
                             getCandidates({ r: 6, tf: 4 }, null, (data) => {
                                 let doc1 = _.find(data, (d) => {
-                                    return d._id === _doc1._id;
-                                })
-                                    , doc2 = _.find(data, (d) => {
+                                        return d._id === _doc1._id;
+                                    }),
+                                    doc2 = _.find(data, (d) => {
                                         return d._id === _doc2._id;
                                     })
                                     ;
@@ -679,9 +679,9 @@ describe.skip("Database", () => {
                         d.insert({ tf: 9 }, () => {
                             getCandidates({ tf: { $ne: 5 }, r: 6 }, null, (data) => {
                                 let doc1 = _.find(data, (d) => {
-                                    return d._id === _doc1._id;
-                                })
-                                    , doc2 = _.find(data, (d) => {
+                                        return d._id === _doc1._id;
+                                    }),
+                                    doc2 = _.find(data, (d) => {
                                         return d._id === _doc2._id;
                                     })
                                     ;
@@ -732,9 +732,9 @@ describe.skip("Database", () => {
                             d.insert({ tf: 9 }, (err, _doc2) => {
                                 getCandidates({ tf: { $in: [6, 9, 5] } }, null, (data) => {
                                     let doc1 = _.find(data, (d) => {
-                                        return d._id === _doc1._id;
-                                    })
-                                        , doc2 = _.find(data, (d) => {
+                                            return d._id === _doc1._id;
+                                        }),
+                                        doc2 = _.find(data, (d) => {
                                             return d._id === _doc2._id;
                                         })
                                         ;
@@ -818,9 +818,9 @@ describe.skip("Database", () => {
                             d.insert({ tf: 9 }, (err, _doc2) => {
                                 getCandidates({ $or: [{ tf: 6 }, { tf: 9 }] }, null, (data) => {
                                     let doc1 = _.find(data, (d) => {
-                                        return d._id === _doc1._id;
-                                    })
-                                        , doc2 = _.find(data, (d) => {
+                                            return d._id === _doc1._id;
+                                        }),
+                                        doc2 = _.find(data, (d) => {
                                             return d._id === _doc2._id;
                                         })
                                         ;
@@ -1010,8 +1010,8 @@ describe.skip("Database", () => {
                     d.insert({ somedata: "ok" }, (err, doc) => {
                         cb(err, doc);
                     });
-                }
-                , function (doc, cb) {   // Test with query that will return docs
+                },
+                function (doc, cb) {   // Test with query that will return docs
                     d.findById(doc._id, (err, res) => {
                         assert.isNull(err);
                         assert.deepEqual(res, doc);
@@ -1032,8 +1032,8 @@ describe.skip("Database", () => {
                             });
                         });
                     });
-                }
-                , function (cb) {   // Test with empty object
+                },
+                function (cb) {   // Test with empty object
                     d.find({}, (err, docs) => {
                         assert.isNull(err);
                         assert.equal(docs.length, 3);
@@ -1059,16 +1059,16 @@ describe.skip("Database", () => {
                             });
                         });
                     });
-                }
-                , function (cb) {   // Test with query that will return docs
+                },
+                function (cb) {   // Test with query that will return docs
                     d.find({ somedata: "again" }, (err, docs) => {
                         assert.isNull(err);
                         assert.equal(docs.length, 2);
                         assert.notInclude(_.pluck(docs, "somedata"), "ok");
                         return cb();
                     });
-                }
-                , function (cb) {   // Test with query that doesn't match anything
+                },
+                function (cb) {   // Test with query that doesn't match anything
                     d.find({ somedata: "nope" }, (err, docs) => {
                         assert.isNull(err);
                         assert.equal(docs.length, 0);
@@ -1089,8 +1089,8 @@ describe.skip("Database", () => {
                             });
                         });
                     });
-                }
-                , function (cb) {   // Test with query that will return docs
+                },
+                function (cb) {   // Test with query that will return docs
                     d.findOne({ somedata: "ok" }, (err, doc) => {
                         assert.isNull(err);
                         assert.equal(Object.keys(doc).length, 2);
@@ -1098,8 +1098,8 @@ describe.skip("Database", () => {
                         assert.isDefined(doc._id);
                         return cb();
                     });
-                }
-                , function (cb) {   // Test with query that doesn't match anything
+                },
+                function (cb) {   // Test with query that doesn't match anything
                     d.findOne({ somedata: "nope" }, (err, doc) => {
                         assert.isNull(err);
                         assert.isNull(doc);
@@ -1110,9 +1110,9 @@ describe.skip("Database", () => {
         });
 
         it("Can find dates and objects (non JS-native types)", (done) => {
-            let date1 = new Date(1234543)
-                , date2 = new Date(9999)
-                ;
+            let date1 = new Date(1234543),
+                date2 = new Date(9999)
+            ;
 
             d.insert({ now: date1, sth: { name: "nedb" } }, () => {
                 d.findOne({ now: date1 }, (err, doc) => {
@@ -1311,8 +1311,8 @@ describe.skip("Database", () => {
                             });
                         });
                     });
-                }
-                , function (cb) {   // Test with empty object
+                },
+                function (cb) {   // Test with empty object
                     d.count({}, (err, docs) => {
                         assert.isNull(err);
                         assert.equal(docs, 3);
@@ -1332,15 +1332,15 @@ describe.skip("Database", () => {
                             });
                         });
                     });
-                }
-                , function (cb) {   // Test with query that will return docs
+                },
+                function (cb) {   // Test with query that will return docs
                     d.count({ somedata: "again" }, (err, docs) => {
                         assert.isNull(err);
                         assert.equal(docs, 2);
                         return cb();
                     });
-                }
-                , function (cb) {   // Test with query that doesn't match anything
+                },
+                function (cb) {   // Test with query that doesn't match anything
                     d.count({ somedata: "nope" }, (err, docs) => {
                         assert.isNull(err);
                         assert.equal(docs, 0);
@@ -1399,20 +1399,20 @@ describe.skip("Database", () => {
                             });
                         });
                     });
-                }
-                , function (cb) {   // Test with query that doesn't match anything
+                },
+                function (cb) {   // Test with query that doesn't match anything
                     d.update({ somedata: "nope" }, { newDoc: "yes" }, { multi: true }, (err, n) => {
                         assert.isNull(err);
                         assert.equal(n, 0);
 
                         d.find({}, (err, docs) => {
                             let doc1 = _.find(docs, (d) => {
-                                return d.somedata === "ok";
-                            })
-                                , doc2 = _.find(docs, (d) => {
+                                    return d.somedata === "ok";
+                                }),
+                                doc2 = _.find(docs, (d) => {
                                     return d.somedata === "again";
-                                })
-                                , doc3 = _.find(docs, (d) => {
+                                }),
+                                doc3 = _.find(docs, (d) => {
                                     return d.somedata === "another";
                                 })
                                 ;
@@ -1440,12 +1440,12 @@ describe.skip("Database", () => {
             function testPostUpdateState(cb) {
                 d.find({}, (err, docs) => {
                     let doc1 = _.find(docs, (d) => {
-                        return d._id === id1;
-                    })
-                        , doc2 = _.find(docs, (d) => {
+                            return d._id === id1;
+                        }),
+                        doc2 = _.find(docs, (d) => {
                             return d._id === id2;
-                        })
-                        , doc3 = _.find(docs, (d) => {
+                        }),
+                        doc3 = _.find(docs, (d) => {
                             return d._id === id3;
                         })
                         ;
@@ -1481,21 +1481,21 @@ describe.skip("Database", () => {
                             });
                         });
                     });
-                }
-                , function (cb) {
+                },
+                function (cb) {
                     d.update({ somedata: "again" }, { newDoc: "yes" }, { multi: true }, (err, n) => {
                         assert.isNull(err);
                         assert.equal(n, 2);
                         return cb();
                     });
-                }
-                , async.apply(testPostUpdateState)
-                , function (cb) {
+                },
+                async.apply(testPostUpdateState),
+                function (cb) {
                     d.reload((err) => {
                         cb(err);
                     });
-                }
-                , async.apply(testPostUpdateState)
+                },
+                async.apply(testPostUpdateState)
             ], done);
         });
 
@@ -1506,12 +1506,12 @@ describe.skip("Database", () => {
             function testPostUpdateState(cb) {
                 d.find({}, (err, docs) => {
                     let doc1 = _.find(docs, (d) => {
-                        return d._id === id1;
-                    })
-                        , doc2 = _.find(docs, (d) => {
+                            return d._id === id1;
+                        }),
+                        doc2 = _.find(docs, (d) => {
                             return d._id === id2;
-                        })
-                        , doc3 = _.find(docs, (d) => {
+                        }),
+                        doc3 = _.find(docs, (d) => {
                             return d._id === id3;
                         })
                         ;
@@ -1547,8 +1547,8 @@ describe.skip("Database", () => {
                             });
                         });
                     });
-                }
-                , function (cb) {   // Test with query that doesn't match anything
+                },
+                function (cb) {   // Test with query that doesn't match anything
                     d.update({ somedata: "again" }, { newDoc: "yes" }, { multi: false }, (err, n, doc) => {
                         assert.isNull(err);
 
@@ -1559,14 +1559,14 @@ describe.skip("Database", () => {
                         assert.equal(n, 1);
                         return cb();
                     });
-                }
-                , async.apply(testPostUpdateState)
-                , function (cb) {
+                },
+                async.apply(testPostUpdateState),
+                function (cb) {
                     d.reload((err) => {
                         return cb(err);
                     });
-                }
-                , async.apply(testPostUpdateState)   // The persisted state has been updated
+                },
+                async.apply(testPostUpdateState)   // The persisted state has been updated
             ], done);
         });
 
@@ -1932,12 +1932,12 @@ describe.skip("Database", () => {
                             assert.equal(nr, 1);
                             d.find({}, (err, docs) => {
                                 let d1 = _.find(docs, (doc) => {
-                                    return doc._id === doc1._id;
-                                })
-                                    , d2 = _.find(docs, (doc) => {
+                                        return doc._id === doc1._id;
+                                    }),
+                                    d2 = _.find(docs, (doc) => {
                                         return doc._id === doc2._id;
-                                    })
-                                    , d3 = _.find(docs, (doc) => {
+                                    }),
+                                    d3 = _.find(docs, (doc) => {
                                         return doc._id === doc3._id;
                                     })
                                     ;
@@ -2013,9 +2013,9 @@ describe.skip("Database", () => {
                             const docs = index.getAll();
                             async.map(docs, d.findById.bind(d), (err, docs) => {
                                 let d1 = _.find(docs, (doc) => {
-                                    return doc._id === doc1._id;
-                                })
-                                    , d2 = _.find(docs, (doc) => {
+                                        return doc._id === doc1._id;
+                                    }),
+                                    d2 = _.find(docs, (doc) => {
                                         return doc._id === doc2._id;
                                     })
                                     ;
@@ -2087,21 +2087,21 @@ describe.skip("Database", () => {
                             });
                         });
                     });
-                }
-                , function (cb) {   // Test with query that doesn't match anything
+                },
+                function (cb) {   // Test with query that doesn't match anything
                     d.remove({ somedata: "again" }, { multi: true }, (err, n) => {
                         assert.isNull(err);
                         assert.equal(n, 2);
                         return cb();
                     });
-                }
-                , async.apply(testPostUpdateState)
-                , function (cb) {
+                },
+                async.apply(testPostUpdateState),
+                function (cb) {
                     d.reload((err) => {
                         return cb(err);
                     });
-                }
-                , async.apply(testPostUpdateState)
+                },
+                async.apply(testPostUpdateState)
             ], done);
         });
 
@@ -2221,12 +2221,12 @@ describe.skip("Database", () => {
                             assert.equal(nr, 1);
                             d.find({}, (err, docs) => {
                                 let d1 = _.find(docs, (doc) => {
-                                    return doc._id === doc1._id;
-                                })
-                                    , d2 = _.find(docs, (doc) => {
+                                        return doc._id === doc1._id;
+                                    }),
+                                    d2 = _.find(docs, (doc) => {
                                         return doc._id === doc2._id;
-                                    })
-                                    , d3 = _.find(docs, (doc) => {
+                                    }),
+                                    d3 = _.find(docs, (doc) => {
                                         return doc._id === doc3._id;
                                     })
                                     ;
@@ -2769,9 +2769,9 @@ describe.skip("Database", () => {
                             const data = d.getAllData();
                             async.map(data, d.findById.bind(d), (err, data) => {
                                 let doc1 = _.find(data, (doc) => {
-                                    return doc._id === _doc1._id;
-                                })
-                                    , doc2 = _.find(data, (doc) => {
+                                        return doc._id === _doc1._id;
+                                    }),
+                                    doc2 = _.find(data, (doc) => {
                                         return doc._id === _doc2._id;
                                     })
                                     ;
@@ -2788,9 +2788,9 @@ describe.skip("Database", () => {
                                     async.map(data, d.findById.bind(d), (err, data) => {
 
                                         let doc1 = _.find(data, (doc) => {
-                                            return doc._id === _doc1._id;
-                                        })
-                                            , doc2 = _.find(data, (doc) => {
+                                                return doc._id === _doc1._id;
+                                            }),
+                                            doc2 = _.find(data, (doc) => {
                                                 return doc._id === _doc2._id;
                                             })
                                             ;
@@ -2883,12 +2883,12 @@ describe.skip("Database", () => {
                                 const data = d.getAllData();
                                 async.map(data, d.findById.bind(d), (er, data) => {
                                     let doc1 = _.find(data, (doc) => {
-                                        return doc._id === _doc1._id;
-                                    })
-                                        , doc2 = _.find(data, (doc) => {
+                                            return doc._id === _doc1._id;
+                                        }),
+                                        doc2 = _.find(data, (doc) => {
                                             return doc._id === _doc2._id;
-                                        })
-                                        , doc3 = _.find(data, (doc) => {
+                                        }),
+                                        doc3 = _.find(data, (doc) => {
                                             return doc._id === _doc3._id;
                                         })
                                         ;
@@ -2938,12 +2938,12 @@ describe.skip("Database", () => {
                             d.update({ a: { $in: [1, 2] } }, { $inc: { a: 10, c: 1000 }, $set: { b: 30 } }, { multi: true }, (err) => {
                                 async.map(d.getAllData(), d.findById.bind(d), (er, data) => {
                                     let doc1 = _.find(data, (doc) => {
-                                        return doc._id === _doc1._id;
-                                    })
-                                        , doc2 = _.find(data, (doc) => {
+                                            return doc._id === _doc1._id;
+                                        }),
+                                        doc2 = _.find(data, (doc) => {
                                             return doc._id === _doc2._id;
-                                        })
-                                        , doc3 = _.find(data, (doc) => {
+                                        }),
+                                        doc3 = _.find(data, (doc) => {
                                             return doc._id === _doc3._id;
                                         })
                                         ;
@@ -2993,9 +2993,9 @@ describe.skip("Database", () => {
                             d.remove({ a: 1 }, {}, (err, nr) => {
                                 async.map(d.getAllData(), d.findById.bind(d), (er, data) => {
                                     let doc2 = _.find(data, (doc) => {
-                                        return doc._id === _doc2._id;
-                                    })
-                                        , doc3 = _.find(data, (doc) => {
+                                            return doc._id === _doc2._id;
+                                        }),
+                                        doc3 = _.find(data, (doc) => {
                                             return doc._id === _doc3._id;
                                         })
                                         ;

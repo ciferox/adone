@@ -44,7 +44,7 @@ const Controllers = {
     ShiftRegister: {
         initialize: {
             value(opts) {
-                let rKey = registerKey(opts.register);
+                const rKey = registerKey(opts.register);
 
                 if (!opts.bits || opts.bits.a === undefined || opts.bits.b === undefined) {
                     throw new Error("ShiftRegister Motors MUST contain HBRIDGE bits {a, b}");
@@ -84,21 +84,21 @@ const Controllers = {
         setPWM: {
             writable: true,
             value(pin, speed) {
-                let state = priv.get(this);
+                const state = priv.get(this);
                 state.expander.analogWrite(pin, speed);
             }
         },
         setPin: {
             writable: true,
             value(pin, value) {
-                let state = priv.get(this);
+                const state = priv.get(this);
                 state.expander.digitalWrite(pin, value);
             }
         },
         initialize: {
             value(opts) {
 
-                let state = priv.get(this);
+                const state = priv.get(this);
 
                 this.address = opts.address || 0x40;
                 this.pwmRange = opts.pwmRange || [0, 4080];
@@ -122,7 +122,7 @@ const Controllers = {
     EVS_EV3: {
         initialize: {
             value(opts) {
-                let state = priv.get(this);
+                const state = priv.get(this);
 
                 state.shield = EVS.shieldPort(opts.pin);
                 state.ev3 = new EVS(Object.assign(opts, {
@@ -137,9 +137,9 @@ const Controllers = {
         },
         setPWM: {
             value(pin, value) {
-                let state = priv.get(this);
+                const state = priv.get(this);
 
-                let register = state.shield.motor === EVS.M1 ? EVS.SPEED_M1 : EVS.SPEED_M2;
+                const register = state.shield.motor === EVS.M1 ? EVS.SPEED_M1 : EVS.SPEED_M2;
                 let speed = __.scale(value, 0, 255, 0, 100) | 0;
 
                 if (value === 0) {
@@ -149,7 +149,7 @@ const Controllers = {
                         speed = -speed;
                     }
 
-                    let data = [
+                    const data = [
                         // 0-100
                         speed,
                         // Duration (0 is forever)
@@ -188,7 +188,7 @@ const Controllers = {
 
         initialize: {
             value(opts) {
-                let state = priv.get(this);
+                const state = priv.get(this);
                 let shared = priv.get("GROVE_I2C_MOTOR_DRIVER");
 
                 if (!shared) {
@@ -223,8 +223,8 @@ const Controllers = {
         },
         setPWM: {
             value(pin, value) {
-                let state = priv.get(this);
-                let speed = Board.constrain(value, 0, 255) | 0;
+                const state = priv.get(this);
+                const speed = Board.constrain(value, 0, 255) | 0;
 
                 state.shared.speed[state.pin] = speed;
 
@@ -237,15 +237,15 @@ const Controllers = {
         },
         setPin: {
             value(pin, value) {
-                let state = priv.get(this);
+                const state = priv.get(this);
 
                 // DIR_CCW = 0x02
                 // DIR_CW  = 0x01
                 state.shared.direction[state.pin] = value ? 0x01 : 0x02;
 
-                let a = state.shared.direction.A & 0x03;
-                let b = state.shared.direction.B & 0x03;
-                let direction = (b << 2) | a;
+                const a = state.shared.direction.A & 0x03;
+                const b = state.shared.direction.B & 0x03;
+                const direction = (b << 2) | a;
 
                 this.io.i2cWrite(this.address, [
                     this.COMMANDS.SET_DIRECTION,
@@ -281,7 +281,7 @@ const Devices = {
         },
         resume: {
             value() {
-                let speed = this.speed();
+                const speed = this.speed();
                 this.speed({
                     speed
                 });
@@ -364,7 +364,7 @@ const Devices = {
                 process.nextTick(this.emit.bind(this, "brake"));
 
                 if (duration) {
-                    let motor = this;
+                    const motor = this;
                     this.board.wait(duration, () => {
                         motor.stop();
                     });
@@ -616,7 +616,7 @@ Motor.prototype.setPWM = function (pin, value) {
 };
 
 Motor.prototype.speed = function (opts) {
-    let state = priv.get(this);
+    const state = priv.get(this);
 
     if (typeof opts === "undefined") {
         return state.currentSpeed;

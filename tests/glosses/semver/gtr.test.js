@@ -1,11 +1,11 @@
 /* global describe it */
 
 
-let gtr = adone.semver.gtr;
+const gtr = adone.semver.gtr;
 
-describe("semver", function () {
-    describe("gtr", function () {
-        it("gtr tests", function() {
+describe("semver", () => {
+    describe("gtr", () => {
+        it("gtr tests", () => {
             // [range, version, loose]
             // Version should be greater than range
             [
@@ -69,16 +69,16 @@ describe("semver", function () {
                 ["< 1", "1.0.0beta", true],
                 ["=0.7.x", "0.8.2"],
                 ["<0.7.x", "0.7.2"]
-            ].forEach(function(tuple) {
-                let range = tuple[0];
-                let version = tuple[1];
-                let loose = tuple[2] || false;
-                let msg = "gtr(" + version + ", " + range + ", " + loose + ")";
+            ].forEach((tuple) => {
+                const range = tuple[0];
+                const version = tuple[1];
+                const loose = tuple[2] || false;
+                const msg = `gtr(${version}, ${range}, ${loose})`;
                 assert.isOk(gtr(version, range, loose), msg);
             });
         });
 
-        it("negative gtr tests", function() {
+        it("negative gtr tests", () => {
             // [range, version, loose]
             // Version should NOT be greater than range
             [
@@ -163,11 +163,11 @@ describe("semver", function () {
                 ["^0.1.0 || ~3.0.1 || 5.0.0", "1.0.0beta", true],
                 ["^0.1.0 || ~3.0.1 || 5.0.0", "5.0.0-0", true],
                 ["^0.1.0 || ~3.0.1 || >4 <=5.0.0", "3.5.0"]
-            ].forEach(function(tuple) {
-                let range = tuple[0];
-                let version = tuple[1];
-                let loose = tuple[2] || false;
-                let msg = "!gtr(" + version + ", " + range + ", " + loose + ")";
+            ].forEach((tuple) => {
+                const range = tuple[0];
+                const version = tuple[1];
+                const loose = tuple[2] || false;
+                const msg = `!gtr(${version}, ${range}, ${loose})`;
                 assert.isNotOk(gtr(version, range, loose), msg);
             });
         });

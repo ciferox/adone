@@ -6,7 +6,7 @@ export default class ProgressBar extends adone.cui.widget.Input {
 
         this.filled = options.filled || 0;
         if (typeof this.filled === "string") {
-            this.filled = +this.filled.slice(0, -1);
+            this.filled = Number(this.filled.slice(0, -1));
         }
         this.value = this.filled;
 
@@ -48,7 +48,7 @@ export default class ProgressBar extends adone.cui.widget.Input {
                 if (key.name === forward[0] || (options.vi && key.name === forward[1])) {
                     this.progress(5);
                     this.screen.render();
-                    return;
+                    
                 }
             });
         }
@@ -59,7 +59,9 @@ export default class ProgressBar extends adone.cui.widget.Input {
                 let y;
                 let m;
                 let p;
-                if (!this.lpos) return;
+                if (!this.lpos) {
+                    return;
+                }
                 if (this.orientation === "horizontal") {
                     x = data.x - this.lpos.xi;
                     m = (this.lpos.xl - this.lpos.xi) - this.iwidth;
@@ -75,8 +77,10 @@ export default class ProgressBar extends adone.cui.widget.Input {
     }
 
     render() {
-        var ret = super.render();
-        if (!ret) return;
+        const ret = super.render();
+        if (!ret) {
+            return;
+        }
 
         let xi = ret.xi;
         let xl = ret.xl;
@@ -84,7 +88,9 @@ export default class ProgressBar extends adone.cui.widget.Input {
         let yl = ret.yl;
         let dattr;
 
-        if (this.border) xi++, yi++, xl--, yl--;
+        if (this.border) {
+            xi++, yi++, xl--, yl--; 
+        }
 
         if (this.orientation === "horizontal") {
             xl = xi + ((xl - xi) * (this.filled / 100)) | 0;
@@ -97,8 +103,8 @@ export default class ProgressBar extends adone.cui.widget.Input {
         this.screen.fillRegion(dattr, this.pch, xi, xl, yi, yl);
 
         if (this.content) {
-            var line = this.screen.lines[yi];
-            for (var i = 0; i < this.content.length; i++) {
+            const line = this.screen.lines[yi];
+            for (let i = 0; i < this.content.length; i++) {
                 line[xi + i][1] = this.content[i];
             }
             line.dirty = true;
@@ -109,8 +115,11 @@ export default class ProgressBar extends adone.cui.widget.Input {
 
     progress(filled) {
         this.filled += filled;
-        if (this.filled < 0) this.filled = 0;
-        else if (this.filled > 100) this.filled = 100;
+        if (this.filled < 0) {
+            this.filled = 0; 
+        } else if (this.filled > 100) {
+            this.filled = 100;
+        }
         if (this.filled === 100) {
             this.emit("complete");
         }

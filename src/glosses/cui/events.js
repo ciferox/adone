@@ -74,7 +74,7 @@ export default class EventEmitter {
 
         if (!handler) {
             if (type === "error") {
-                throw new args[0];
+                throw new args[0]();
             }
             return;
         }

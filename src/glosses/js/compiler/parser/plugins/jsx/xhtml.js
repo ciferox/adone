@@ -223,7 +223,7 @@ export default {
     or: "\u2228",
     cap: "\u2229",
     cup: "\u222A",
-    "int": "\u222B",
+    int: "\u222B",
     there4: "\u2234",
     sim: "\u223C",
     cong: "\u2245",

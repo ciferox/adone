@@ -31,48 +31,48 @@ adone.std.util.inherits(PoolResource, adone.std.events.EventEmitter);
  * @param {Function} callback Callback function to run once the connection is established or failed
  */
 PoolResource.prototype.connect = function (callback) {
-    this.pool.getSocket(this.options, function (err, socketOptions) {
+    this.pool.getSocket(this.options, (err, socketOptions) => {
         if (err) {
             return callback(err);
         }
 
-        var returned = false;
-        var options = this.options;
+        let returned = false;
+        let options = this.options;
         if (socketOptions && socketOptions.connection) {
             this.logger.info("Using proxied socket from %s:%s to %s:%s", socketOptions.connection.remoteAddress, socketOptions.connection.remotePort, options.host || "", options.port || "");
             options = assign(false, options);
-            Object.keys(socketOptions).forEach(function (key) {
+            Object.keys(socketOptions).forEach((key) => {
                 options[key] = socketOptions[key];
             });
         }
 
         this.connection = new SMTPConnection(options);
 
-        this.connection.once("error", function (err) {
+        this.connection.once("error", (err) => {
             this.emit("error", err);
             if (returned) {
                 return;
             }
             returned = true;
             return callback(err);
-        }.bind(this));
+        });
 
-        this.connection.once("end", function () {
+        this.connection.once("end", () => {
             this.close();
             if (returned) {
                 return;
             }
             returned = true;
             return callback();
-        }.bind(this));
+        });
 
-        this.connection.connect(function () {
+        this.connection.connect(() => {
             if (returned) {
                 return;
             }
 
             if (this.options.auth) {
-                this.connection.login(this.options.auth, function (err) {
+                this.connection.login(this.options.auth, (err) => {
                     if (returned) {
                         return;
                     }
@@ -86,14 +86,14 @@ PoolResource.prototype.connect = function (callback) {
 
                     this._connected = true;
                     callback(null, true);
-                }.bind(this));
+                });
             } else {
                 returned = true;
                 this._connected = true;
                 return callback(null, true);
             }
-        }.bind(this));
-    }.bind(this));
+        });
+    });
 };
 
 /**
@@ -104,25 +104,25 @@ PoolResource.prototype.connect = function (callback) {
  */
 PoolResource.prototype.send = function (mail, callback) {
     if (!this._connected) {
-        this.connect(function (err) {
+        this.connect((err) => {
             if (err) {
                 return callback(err);
             }
             this.send(mail, callback);
-        }.bind(this));
+        });
         return;
     }
 
-    var envelope = mail.message.getEnvelope();
-    var messageId = (mail.message.getHeader("message-id") || "").replace(/[<>\s]/g, "");
-    var recipients = [].concat(envelope.to || []);
+    const envelope = mail.message.getEnvelope();
+    const messageId = (mail.message.getHeader("message-id") || "").replace(/[<>\s]/g, "");
+    const recipients = [].concat(envelope.to || []);
     if (recipients.length > 3) {
-        recipients.push("...and " + recipients.splice(2).length + " more");
+        recipients.push(`...and ${recipients.splice(2).length} more`);
     }
 
     this.logger.info("Sending message <%s> using #%s to <%s>", messageId, this.id, recipients.join(", "));
 
-    this.connection.send(envelope, mail.message.createReadStream(), function (err, info) {
+    this.connection.send(envelope, mail.message.createReadStream(), (err, info) => {
         this.messages++;
 
         if (err) {
@@ -137,23 +137,23 @@ PoolResource.prototype.send = function (mail, callback) {
         };
         info.messageId = messageId;
 
-        setImmediate(function () {
-            var err;
+        setImmediate(() => {
+            let err;
             if (this.messages >= this.options.maxMessages) {
                 err = new Error("Resource exhausted");
                 err.code = "EMAXLIMIT";
                 this.connection.close();
                 this.emit("error", err);
             } else {
-                this.pool._checkRateLimit(function () {
+                this.pool._checkRateLimit(() => {
                     this.available = true;
                     this.emit("available");
-                }.bind(this));
+                });
             }
-        }.bind(this));
+        });
 
         callback(null, info);
-    }.bind(this));
+    });
 };
 
 /**

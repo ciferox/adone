@@ -5,9 +5,9 @@ const { isFullWidthCodePoint } = adone.text.unicode;
 const ansiCodes = require(adone.std.path.join(__dirname, "fixtures/ansi-codes"));
 const consumptionChars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()_+1234567890-=[]{};\':"./>?,<\\|';
 
-describe("ANSI", function () {
-    describe("Escape Codes", function () {
-        describe("Regexp", function () {
+describe("ANSI", () => {
+    describe("Escape Codes", () => {
+        describe("Regexp", () => {
             // testing against codes found at: http://ascii-table.com/ansi-escape-sequences-vt-100.php
             it("match ansi code in a string", () => {
                 assert.isTrue(escapeCodesRegexp().test("foo\u001b[4mcake\u001b[0m"));
@@ -47,21 +47,21 @@ describe("ANSI", function () {
                     const codeInfo = ansiCodes[codeSet][code];
                     const skip = /[0-9]$/.test(code);
                     const skipText = skip ? "[SKIP] " : "";
-                    const ecode = "\u001b" + code;
+                    const ecode = `\u001b${code}`;
 
-                    it(skipText + code + " -> " + codeInfo[0], () => {
+                    it(`${skipText + code} -> ${codeInfo[0]}`, () => {
                         if (skip) {
                             return;
                         }
 
-                        const string = "hel" + ecode + "lo";
+                        const string = `hel${ecode}lo`;
 
                         assert.isTrue(escapeCodesRegexp().test(string));
                         assert.equal(string.match(escapeCodesRegexp())[0], ecode);
                         assert.equal(string.replace(escapeCodesRegexp(), ""), "hello");
                     });
 
-                    it(skipText + code + " should not overconsume", () => {
+                    it(`${skipText + code} should not overconsume`, () => {
                         if (skip) {
                             return;
                         }
@@ -78,7 +78,7 @@ describe("ANSI", function () {
                 }
             }
         });
-        describe("Strip", function () {
+        describe("Strip", () => {
             it("strip color from string", () => {
                 assert.equal(stripEscapeCodes("\u001b[0m\u001b[4m\u001b[42m\u001b[31mfoo\u001b[39m\u001b[49m\u001b[24mfoo\u001b[0m"), "foofoo");
             });
@@ -93,8 +93,8 @@ describe("ANSI", function () {
     });
 });
 
-describe("Unicode", function () {
-    describe("Full width", function () {
+describe("Unicode", () => {
+    describe("Full width", () => {
         it("check", () => {
             assert.isTrue(isFullWidthCodePoint("あ".codePointAt(0)));
             assert.isTrue(isFullWidthCodePoint("谢".codePointAt(0)));
@@ -105,8 +105,8 @@ describe("Unicode", function () {
     });
 });
 
-describe("Common", function () {
-    describe("Text width", function () {
+describe("Common", () => {
+    describe("Text width", () => {
         it("main", () => {
             assert.equal(width("abcde"), 5);
             assert.equal(width("古池や"), 6);

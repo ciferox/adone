@@ -1,28 +1,28 @@
 const Cookies = adone.net.mail.cookies;
 
-describe("Cookies Unit Tests", function () {
+describe("Cookies Unit Tests", () => {
     let biskviit;
 
-    beforeEach(function () {
+    beforeEach(() => {
         biskviit = new Cookies();
     });
 
-    describe("#getPath", function () {
+    describe("#getPath", () => {
 
-        it("should return root path", function () {
+        it("should return root path", () => {
             expect(biskviit.getPath("/")).to.equal("/");
             expect(biskviit.getPath("")).to.equal("/");
             expect(biskviit.getPath("/index.php")).to.equal("/");
         });
 
-        it("should return without file", function () {
+        it("should return without file", () => {
             expect(biskviit.getPath("/path/to/file")).to.equal("/path/to/");
         });
 
     });
 
-    describe("#isExpired", function () {
-        it("should match expired cookie", function () {
+    describe("#isExpired", () => {
+        it("should match expired cookie", () => {
             expect(biskviit.isExpired({
                 name: "a",
                 value: "b",
@@ -43,8 +43,8 @@ describe("Cookies Unit Tests", function () {
         });
     });
 
-    describe("#compare", function () {
-        it("should match similar cookies", function () {
+    describe("#compare", () => {
+        it("should match similar cookies", () => {
             expect(biskviit.compare({
                 name: "zzz",
                 path: "/",
@@ -117,8 +117,8 @@ describe("Cookies Unit Tests", function () {
         });
     });
 
-    describe("#add", function () {
-        it("should append new cookie", function () {
+    describe("#add", () => {
+        it("should append new cookie", () => {
             expect(biskviit.cookies.length).to.equal(0);
             biskviit.add({
                 name: "zzz",
@@ -134,7 +134,7 @@ describe("Cookies Unit Tests", function () {
             expect(biskviit.cookies[0].value).to.equal("abc");
         });
 
-        it("should update existing cookie", function () {
+        it("should update existing cookie", () => {
             expect(biskviit.cookies.length).to.equal(0);
             biskviit.add({
                 name: "zzz",
@@ -160,9 +160,9 @@ describe("Cookies Unit Tests", function () {
         });
     });
 
-    describe("#match", function () {
-        it("should check if a cookie matches particular domain and path", function () {
-            let cookie = {
+    describe("#match", () => {
+        it("should check if a cookie matches particular domain and path", () => {
+            const cookie = {
                 name: "zzz",
                 value: "abc",
                 path: "/def/",
@@ -175,8 +175,8 @@ describe("Cookies Unit Tests", function () {
             expect(biskviit.match(cookie, "http://example.com/bef/")).to.be.false;
         });
 
-        it("should check if a cookie matches particular domain and path", function () {
-            let cookie = {
+        it("should check if a cookie matches particular domain and path", () => {
+            const cookie = {
                 name: "zzz",
                 value: "abc",
                 path: "/def",
@@ -189,8 +189,8 @@ describe("Cookies Unit Tests", function () {
             expect(biskviit.match(cookie, "http://example.com/bef/")).to.be.false;
         });
 
-        it("should check if a cookie is secure", function () {
-            let cookie = {
+        it("should check if a cookie is secure", () => {
+            const cookie = {
                 name: "zzz",
                 value: "abc",
                 path: "/def/",
@@ -204,8 +204,8 @@ describe("Cookies Unit Tests", function () {
         });
     });
 
-    describe("#parse", function () {
-        it("should parse Set-Cookie value", function () {
+    describe("#parse", () => {
+        it("should parse Set-Cookie value", () => {
 
             expect(biskviit.parse("theme=plain")).to.deep.equal({
                 name: "theme",
@@ -224,7 +224,7 @@ describe("Cookies Unit Tests", function () {
 
         });
 
-        it("should ignore invalid expire header", function () {
+        it("should ignore invalid expire header", () => {
             expect(biskviit.parse("theme=plain; Expires=Wed, 13 Jan 2021 22:23:01 GMT")).to.deep.equal({
                 name: "theme",
                 value: "plain",
@@ -238,8 +238,8 @@ describe("Cookies Unit Tests", function () {
         });
     });
 
-    describe("Listing", function () {
-        beforeEach(function () {
+    describe("Listing", () => {
+        beforeEach(() => {
             biskviit.cookies = [{
                 name: "ssid1",
                 value: "Ap4P….GTEq1",
@@ -284,8 +284,8 @@ describe("Cookies Unit Tests", function () {
         });
 
 
-        describe("#list", function () {
-            it("should return matching cookies for an URL", function () {
+        describe("#list", () => {
+            it("should return matching cookies for an URL", () => {
                 expect(biskviit.list("https://www.foo.com")).to.deep.equal([{
                     name: "ssid1",
                     value: "Ap4P….GTEq1",
@@ -306,15 +306,15 @@ describe("Cookies Unit Tests", function () {
             });
         });
 
-        describe("#get", function () {
-            it("should return matching cookies for an URL", function () {
+        describe("#get", () => {
+            it("should return matching cookies for an URL", () => {
                 expect(biskviit.get("https://www.foo.com")).to.equal("ssid1=Ap4P….GTEq1; ssid4=Ap4P….GTEq4");
             });
         });
     });
 
-    describe("#set", function () {
-        it("should set cookie", function () {
+    describe("#set", () => {
+        it("should set cookie", () => {
             // short
             biskviit.set("theme=plain", "https://foo.com/");
             // long
@@ -331,7 +331,7 @@ describe("Cookies Unit Tests", function () {
             // should not be added
             biskviit.set("expired_1=date; Expires=1999-01-01 01:01:01 GMT", "https://foo.com/");
 
-            expect(biskviit.cookies.map(function (cookie) {
+            expect(biskviit.cookies.map((cookie) => {
                 delete cookie.expires;
                 return cookie;
             })).to.deep.equal([{

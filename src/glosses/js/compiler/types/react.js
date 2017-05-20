@@ -3,7 +3,7 @@ import * as t from "./index";
 export const isReactComponent = t.buildMatchMemberExpression("React.Component");
 
 export function isCompatTag(tagName?: string): boolean {
-    return !!tagName && /^[a-z]|\-/.test(tagName);
+    return Boolean(tagName) && /^[a-z]|\-/.test(tagName);
 }
 
 function cleanJSXElementLiteralChild(
@@ -51,7 +51,9 @@ function cleanJSXElementLiteralChild(
         }
     }
 
-    if (str) args.push(t.stringLiteral(str));
+    if (str) {
+        args.push(t.stringLiteral(str)); 
+    }
 }
 
 export function buildChildren(node: Object): Object[] {
@@ -65,8 +67,12 @@ export function buildChildren(node: Object): Object[] {
             continue;
         }
 
-        if (t.isJSXExpressionContainer(child)) child = child.expression;
-        if (t.isJSXEmptyExpression(child)) continue;
+        if (t.isJSXExpressionContainer(child)) {
+            child = child.expression; 
+        }
+        if (t.isJSXEmptyExpression(child)) {
+            continue; 
+        }
 
         elems.push(child);
     }

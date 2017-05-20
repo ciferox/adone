@@ -50,9 +50,9 @@ const isOrHasCallExpression = (node) => {
     if (types.isMemberExpression(node)) {
         return isOrHasCallExpression(node.object) ||
             (!node.computed && isOrHasCallExpression(node.property));
-    } else {
-        return false;
-    }
+    } 
+    return false;
+    
 };
 
 export const needsWhitespace = (node, parent, type) => {

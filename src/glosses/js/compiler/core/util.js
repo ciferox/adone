@@ -26,9 +26,9 @@ export const list = (val?: string): string[] => {
         return val;
     } else if (typeof val === "string") {
         return val.split(",");
-    } else {
-        return [val];
-    }
+    } 
+    return [val];
+    
 };
 
 /**
@@ -118,9 +118,9 @@ export const booleanify = (val: any): boolean | any => {
 const _shouldIgnore = (pattern: Function | RegExp, filename: string) => {
     if (typeof pattern === "function") {
         return pattern(filename);
-    } else {
-        return pattern.test(filename);
-    }
+    } 
+    return pattern.test(filename);
+    
 };
 
 /**

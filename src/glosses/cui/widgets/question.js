@@ -48,7 +48,7 @@ export default class Question extends adone.cui.widget.Element {
         // parent.append(this);
 
         this.show();
-        this.setContent(" " + text);
+        this.setContent(` ${text}`);
 
         const done = (err, data) => {
             this.hide();
@@ -60,7 +60,9 @@ export default class Question extends adone.cui.widget.Element {
         };
 
         this.onScreenEvent("keypress", press = (ch, key) => {
-            if (key.name === "mouse") return;
+            if (key.name === "mouse") {
+                return; 
+            }
             if (key.name !== "enter"
                 && key.name !== "escape"
                 && key.name !== "q"

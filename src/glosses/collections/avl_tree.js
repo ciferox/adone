@@ -22,7 +22,7 @@ export default class AVLTree {
     }
 
     insert(key, value) {
-        var newTree = this.tree.insert(key, value);
+        const newTree = this.tree.insert(key, value);
 
         // If newTree is undefined, that means its structure was not modified
         if (newTree) { 
@@ -32,7 +32,7 @@ export default class AVLTree {
 
     // Delete a value
     delete(key, value) {
-        var newTree = this.tree.delete(key, value);
+        const newTree = this.tree.delete(key, value);
 
         // If newTree is undefined, that means its structure was not modified
         if (newTree) { 
@@ -292,7 +292,7 @@ class _AVLTree extends adone.collection.BinarySearchTree {
             // Same key: no change in the tree structure
             if (currentNode.compareKeys(currentNode.key, key) === 0) {
                 if (currentNode.unique) {
-                    var err = new Error(`Can't insert key ${key}, it violates the unique constraint`);
+                    const err = new Error(`Can't insert key ${key}, it violates the unique constraint`);
                     err.key = key;
                     err.errorType = "uniqueViolated";
                     throw err;
@@ -306,14 +306,14 @@ class _AVLTree extends adone.collection.BinarySearchTree {
 
             if (currentNode.compareKeys(key, currentNode.key) < 0) {
                 if (!currentNode.left) {
-                    insertPath.push(currentNode.createLeftChild({ key: key, value: value }));
+                    insertPath.push(currentNode.createLeftChild({ key, value }));
                     break;
                 } else {
                     currentNode = currentNode.left;
                 }
             } else {
                 if (!currentNode.right) {
-                    insertPath.push(currentNode.createRightChild({ key: key, value: value }));
+                    insertPath.push(currentNode.createRightChild({ key, value }));
                     break;
                 } else {
                     currentNode = currentNode.right;
@@ -381,14 +381,14 @@ class _AVLTree extends adone.collection.BinarySearchTree {
                 currentNode.data = [];
                 delete currentNode.height;
                 return this;
+            } 
+            if (currentNode.parent.left === currentNode) {
+                currentNode.parent.left = null;
             } else {
-                if (currentNode.parent.left === currentNode) {
-                    currentNode.parent.left = null;
-                } else {
-                    currentNode.parent.right = null;
-                }
-                return this.rebalanceAlongPath(deletePath);
+                currentNode.parent.right = null;
             }
+            return this.rebalanceAlongPath(deletePath);
+            
         }
 
         let replaceWith;
@@ -399,17 +399,17 @@ class _AVLTree extends adone.collection.BinarySearchTree {
             if (currentNode === this) {   // This node is also the root
                 replaceWith.parent = null;
                 return replaceWith;   // height of replaceWith is necessarily 1 because the tree was balanced before deletion
+            } 
+            if (currentNode.parent.left === currentNode) {
+                currentNode.parent.left = replaceWith;
+                replaceWith.parent = currentNode.parent;
             } else {
-                if (currentNode.parent.left === currentNode) {
-                    currentNode.parent.left = replaceWith;
-                    replaceWith.parent = currentNode.parent;
-                } else {
-                    currentNode.parent.right = replaceWith;
-                    replaceWith.parent = currentNode.parent;
-                }
-
-                return this.rebalanceAlongPath(deletePath);
+                currentNode.parent.right = replaceWith;
+                replaceWith.parent = currentNode.parent;
             }
+
+            return this.rebalanceAlongPath(deletePath);
+            
         }
 
 
@@ -462,7 +462,7 @@ AVLTree._AVLTree = _AVLTree;
  */
 
 for (const m of ["getNumberOfKeys", "search", "betweenBounds", "prettyPrint", "executeOnEveryNode"]) {
-    AVLTree.prototype[m] = function(...args) {
+    AVLTree.prototype[m] = function (...args) {
         return this.tree[m].apply(this.tree, arguments);
     };
 }

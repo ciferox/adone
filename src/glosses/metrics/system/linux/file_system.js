@@ -16,12 +16,16 @@ export default class LinuxFS extends adone.metrics.FileSystem {
 
         const stores = [];
         const mounts = await adone.fs.readLines("/proc/self/mounts");
-        if (is.null(mounts)) return stores;
+        if (is.null(mounts)) {
+            return stores;
+        }
 
         for (const mount of mounts) {
             const parts = mount.split(" ");
             // structure from fstab(5) manpage
-            if (parts.length < 6) continue;
+            if (parts.length < 6) {
+                continue; 
+            }
             const path = parts[1].replace(/\\040/g, " ");
             const type = parts[2];
             if (LinuxFS.pseudofs.includes(type) || path === "/dev" || this._listElementStartsWith(LinuxFS.tmpfsPaths, path)) {
@@ -81,7 +85,7 @@ export default class LinuxFS extends adone.metrics.FileSystem {
 
     _listElementStartsWith(aList, charSeq) {
         for (const match of aList) {
-            if (charSeq === match || charSeq.startsWith(match + "/")) {
+            if (charSeq === match || charSeq.startsWith(`${match}/`)) {
                 return true;
             }
         }

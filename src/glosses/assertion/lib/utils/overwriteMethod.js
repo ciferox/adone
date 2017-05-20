@@ -47,7 +47,7 @@ import transferFlags from "./transferFlags";
 export default function (ctx, name, method) {
     const _method = ctx[name];
     let _super = function () {
-        throw new Error(name + " is not a function");
+        throw new Error(`${name} is not a function`);
     };
 
     if (_method && adone.is.function(_method)) {
@@ -57,8 +57,9 @@ export default function (ctx, name, method) {
     const fn = function () {
         const keep_ssfi = flag(this, "keep_ssfi");
         const old_ssfi = flag(this, "ssfi");
-        if (!keep_ssfi && old_ssfi)
-            flag(this, "ssfi", fn);
+        if (!keep_ssfi && old_ssfi) {
+            flag(this, "ssfi", fn); 
+        }
 
         flag(this, "keep_ssfi", true);
         const result = method(_super).apply(this, arguments);

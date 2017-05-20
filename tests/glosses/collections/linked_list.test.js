@@ -363,7 +363,7 @@ describe("LinkedList", () => {
         });
 
         it("should do autoresizing if the size is not provided", () => {
-            const list = new LinkedList;
+            const list = new LinkedList();
             expect(list.maxLength).to.be.equal(16);  // the default value
             for (let i = 0; i < 16; ++i) {
                 list.push(i);
@@ -386,7 +386,7 @@ describe("LinkedList", () => {
 
     describe("front", () => {
         it("should get the head", () => {
-            const list = new LinkedList;
+            const list = new LinkedList();
             list.push(1);
             expect(list.front).to.be.equal(1);
             list.push(2);
@@ -394,14 +394,14 @@ describe("LinkedList", () => {
         });
 
         it("should throw an error if the list is empty", () => {
-            const list = new LinkedList;
+            const list = new LinkedList();
             expect(() => list.front).to.throw();
         });
     });
 
     describe("back", () => {
         it("should get the last element", () => {
-            const list = new LinkedList;
+            const list = new LinkedList();
             list.push(1);
             expect(list.back).to.be.equal(1);
             list.push(2);
@@ -409,14 +409,14 @@ describe("LinkedList", () => {
         });
 
         it("should throw an error if the list is empty", () => {
-            const list = new LinkedList;
+            const list = new LinkedList();
             expect(() => list.back).to.throw();
         });
     });
 
     describe.only("nextNode", () => {
         it("should return the next node", () => {
-            const list = new LinkedList;
+            const list = new LinkedList();
             const a = list.push(1);
             const b = list.push(2);
             const c = list.push(3);
@@ -425,20 +425,20 @@ describe("LinkedList", () => {
         });
 
         it("should return the first node without any argument", () => {
-            const list = new LinkedList;
+            const list = new LinkedList();
             const a = list.push(1);
             expect(list.nextNode()).to.be.equal(a);
         });
 
         it("should return null if this is the end", () => {
-            const list = new LinkedList;
+            const list = new LinkedList();
             const a = list.push(1);
             const b = list.push(2);
             expect(list.nextNode(b)).to.be.null;
         });
 
         it("should return null there are no elements", () => {
-            const list = new LinkedList;
+            const list = new LinkedList();
             expect(list.nextNode()).to.be.null;
         });
     });

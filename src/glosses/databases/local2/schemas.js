@@ -39,11 +39,10 @@ function mapSpec(spec) {
 function normalize(schema) {
     _.each(schema, (spec, key) => {
         if (isComplexSpec(spec)) {
-            spec.type = mapSpec(spec.type); return;
+            spec.type = mapSpec(spec.type); 
         } else if (util.isArray(spec)) {
             schema[key] = { schema: mapSpec(spec[0]) || undefined, type: "array" };
-        }
-        else if (typeof (spec) === "object") {
+        } else if (typeof (spec) === "object") {
             schema[key] = { schema: normalize(spec), type: "object" };
         } else {
             schema[key] = { type: mapSpec(spec) };
@@ -72,8 +71,7 @@ function construct(self, schema) {
 
             if (canCast(self[len], type)) {
                 self[len] = castToType(self[len], type);
-            }
-            else {
+            } else {
                 self.splice(len, 1);
             }
         }
@@ -98,8 +96,7 @@ function construct(self, schema) {
         var val;
         if (self.hasOwnProperty(key) && canCast(self[key], spec.type)) {
             val = castToType(self[key], spec.type);
-        }
-        else if (spec.hasOwnProperty("default") && canCast(spec.default, spec.type)) {
+        } else if (spec.hasOwnProperty("default") && canCast(spec.default, spec.type)) {
             val = castToType(spec.default, spec.type);
         } else {
             val = defaultValue(spec.type);

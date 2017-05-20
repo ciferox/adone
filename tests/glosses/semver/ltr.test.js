@@ -2,9 +2,9 @@
 
 const ltr = adone.semver.ltr;
 
-describe("semver", function () {
-    describe("ltr", function () {
-        it("ltr tests", function() {
+describe("semver", () => {
+    describe("ltr", () => {
+        it("ltr tests", () => {
             // [range, version, loose]
             // Version should be less than range
             [
@@ -73,16 +73,16 @@ describe("semver", function () {
                 ["1", "1.0.0beta", true],
                 [">=0.7.x", "0.6.2"],
                 [">1.2.3", "1.3.0-alpha"]
-            ].forEach(function(tuple) {
-                let range = tuple[0];
-                let version = tuple[1];
-                let loose = tuple[2] || false;
-                let msg = "ltr(" + version + ", " + range + ", " + loose + ")";
+            ].forEach((tuple) => {
+                const range = tuple[0];
+                const version = tuple[1];
+                const loose = tuple[2] || false;
+                const msg = `ltr(${version}, ${range}, ${loose})`;
                 assert.isOk(ltr(version, range, loose), msg);
             });
         });
 
-        it("negative ltr tests", function() {
+        it("negative ltr tests", () => {
             // [range, version, loose]
             // Version should NOT be less than range
             [
@@ -170,11 +170,11 @@ describe("semver", function () {
                 ["^1.0.0-alpha", "1.0.0-beta"],
                 ["~1.0.0-alpha", "1.0.0-beta"],
                 ["=0.1.0", "1.0.0"]
-            ].forEach(function(tuple) {
-                let range = tuple[0];
-                let version = tuple[1];
-                let loose = tuple[2] || false;
-                let msg = "!ltr(" + version + ", " + range + ", " + loose + ")";
+            ].forEach((tuple) => {
+                const range = tuple[0];
+                const version = tuple[1];
+                const loose = tuple[2] || false;
+                const msg = `!ltr(${version}, ${range}, ${loose})`;
                 assert.isNotOk(ltr(version, range, loose), msg);
             });
         });

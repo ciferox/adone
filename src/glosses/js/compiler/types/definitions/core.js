@@ -7,7 +7,7 @@ import {
     BINARY_OPERATORS,
     LOGICAL_OPERATORS,
     UNARY_OPERATORS,
-    UPDATE_OPERATORS,
+    UPDATE_OPERATORS
 } from "../constants";
 
 import defineType, {
@@ -16,7 +16,7 @@ import defineType, {
     assertNodeOrValueType,
     assertEach,
     chain,
-    assertOneOf,
+    assertOneOf
 } from "./index";
 
 defineType("ArrayExpression", {
@@ -26,7 +26,7 @@ defineType("ArrayExpression", {
                 assertValueType("array"),
                 assertEach(assertNodeOrValueType("null", "Expression", "SpreadElement"))
             ),
-            default: [],
+            default: []
         }
     },
     visitor: ["elements"],

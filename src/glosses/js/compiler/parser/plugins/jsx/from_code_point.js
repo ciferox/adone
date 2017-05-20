@@ -43,7 +43,7 @@ if (!fromCodePoint) {
                 codePoint > 0x10FFFF || // not a valid Unicode code point
                 floor(codePoint) != codePoint // not an integer
             ) {
-                throw RangeError("Invalid code point: " + codePoint);
+                throw RangeError(`Invalid code point: ${codePoint}`);
             }
             if (codePoint <= 0xFFFF) { // BMP code point
                 codeUnits.push(codePoint);

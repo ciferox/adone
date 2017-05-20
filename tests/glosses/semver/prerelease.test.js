@@ -1,10 +1,10 @@
 /* global describe it */
 
-let prerelease = adone.semver.prerelease;
+const prerelease = adone.semver.prerelease;
 
-describe("semver", function () {
-    describe("prerelease", function () {
-        it("prerelease", function() {
+describe("semver", () => {
+    describe("prerelease", () => {
+        it("prerelease", () => {
         // [prereleaseParts, version, loose]
             [
                 [["alpha", 1], "1.2.2-alpha.1"],
@@ -15,12 +15,12 @@ describe("semver", function () {
                 [["beta"], "0.6.1beta", true],
                 [null, "1.0.0", true],
                 [null, "~2.0.0-alpha.1", false],
-                [null, "invalid version"],
-            ].forEach(function(tuple) {
-                let expected = tuple[0];
-                let version = tuple[1];
-                let loose = tuple[2];
-                let msg = "prerelease(" + version + ")";
+                [null, "invalid version"]
+            ].forEach((tuple) => {
+                const expected = tuple[0];
+                const version = tuple[1];
+                const loose = tuple[2];
+                const msg = `prerelease(${version})`;
                 assert.deepEqual(prerelease(version, loose), expected, msg);
             });
         });

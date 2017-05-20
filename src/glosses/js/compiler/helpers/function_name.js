@@ -5,7 +5,7 @@
 
 const { types: t, template, helpers: { getFunctionArity } } = adone.js.compiler;
 
-let buildPropertyMethodAssignmentWrapper = template(`
+const buildPropertyMethodAssignmentWrapper = template(`
   (function (FUNCTION_KEY) {
     function FUNCTION_ID() {
       return FUNCTION_KEY.apply(this, arguments);
@@ -17,7 +17,7 @@ let buildPropertyMethodAssignmentWrapper = template(`
   })(FUNCTION)
 `);
 
-let buildGeneratorPropertyMethodAssignmentWrapper = template(`
+const buildGeneratorPropertyMethodAssignmentWrapper = template(`
   (function (FUNCTION_KEY) {
     function* FUNCTION_ID() {
       return yield* FUNCTION_KEY.apply(this, arguments);
@@ -29,15 +29,19 @@ let buildGeneratorPropertyMethodAssignmentWrapper = template(`
   })(FUNCTION)
 `);
 
-let visitor = {
+const visitor = {
     "ReferencedIdentifier|BindingIdentifier"(path, state) {
         // check if this node matches our function id
-        if (path.node.name !== state.name) return;
+        if (path.node.name !== state.name) {
+            return;
+        }
 
         // check that we don't have a local variable declared as that removes the need
         // for the wrapper
-        let localDeclar = path.scope.getBindingIdentifier(state.name);
-        if (localDeclar !== state.outerDeclar) return;
+        const localDeclar = path.scope.getBindingIdentifier(state.name);
+        if (localDeclar !== state.outerDeclar) {
+            return; 
+        }
 
         state.selfReference = true;
         path.stop();
@@ -51,12 +55,16 @@ function wrap(state, method, id, scope) {
             scope.rename(id.name);
         } else {
             // we don't currently support wrapping class expressions
-            if (!t.isFunction(method)) return;
+            if (!t.isFunction(method)) {
+                return; 
+            }
 
             // need to add a wrapper since we can't change the references
             let build = buildPropertyMethodAssignmentWrapper;
-            if (method.generator) build = buildGeneratorPropertyMethodAssignmentWrapper;
-            let template = build({
+            if (method.generator) {
+                build = buildGeneratorPropertyMethodAssignmentWrapper;
+            }
+            const template = build({
                 FUNCTION: method,
                 FUNCTION_ID: id,
                 FUNCTION_KEY: scope.generateUidIdentifier(id.name)
@@ -65,7 +73,7 @@ function wrap(state, method, id, scope) {
 
             // shim in dummy params to retain function arity, if you try to read the
             // source then you'll get the original since it's proxied so it's all good
-            let params = template.callee.body.body[0].params;
+            const params = template.callee.body.body[0].params;
             for (let i = 0, len = getFunctionArity(method); i < len; i++) {
                 params.push(scope.generateUidIdentifier("x"));
             }
@@ -79,18 +87,18 @@ function wrap(state, method, id, scope) {
 }
 
 function visit(node, name, scope) {
-    let state = {
+    const state = {
         selfAssignment: false,
         selfReference: false,
         outerDeclar: scope.getBindingIdentifier(name),
         references: [],
-        name: name
+        name
     };
 
     // check to see if we have a local binding of the id we're setting inside of
     // the function, this is important as there are caveats associated
 
-    let binding = scope.getOwnBinding(name);
+    const binding = scope.getOwnBinding(name);
 
     if (binding) {
         if (binding.kind === "param") {
@@ -126,7 +134,9 @@ function visit(node, name, scope) {
 
 export default function ({ node, parent, scope, id }) {
     // has an `id` so we don't need to infer one
-    if (node.id) return;
+    if (node.id) {
+        return; 
+    }
 
     if ((t.isObjectProperty(parent) || t.isObjectMethod(parent, { kind: "method" })) && (!parent.computed || t.isLiteral(parent.key))) {
         // { foo() {} };
@@ -136,7 +146,7 @@ export default function ({ node, parent, scope, id }) {
         id = parent.id;
 
         if (t.isIdentifier(id)) {
-            let binding = scope.parent.getBinding(id.name);
+            const binding = scope.parent.getBinding(id.name);
             if (binding && binding.constant && scope.getBinding(id.name) === binding) {
                 // always going to reference this method
                 node.id = id;
@@ -168,6 +178,6 @@ export default function ({ node, parent, scope, id }) {
     // a local binding.
     id[t.NOT_LOCAL_BINDING] = true;
 
-    let state = visit(node, name, scope);
+    const state = visit(node, name, scope);
     return wrap(state, node, id, scope) || node;
 }

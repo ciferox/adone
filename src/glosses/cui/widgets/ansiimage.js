@@ -1,7 +1,7 @@
 
-var cp = require("child_process");
-var colors = require("../colors");
-var tng = require("../tng");
+const cp = require("child_process");
+const colors = require("../colors");
+const tng = require("../tng");
 
 export default class ANSIImage extends adone.cui.widget.Element {
     constructor(options = {}) {
@@ -18,7 +18,9 @@ export default class ANSIImage extends adone.cui.widget.Element {
 
         this.screen.on("prerender", () => {
             const lpos = this.lpos;
-            if (!lpos) return;
+            if (!lpos) {
+                return; 
+            }
             // prevent image from blending with itthis if there are alpha channels
             this.screen.clearRegion(lpos.xi, lpos.xl, lpos.yi, lpos.yl);
         });
@@ -70,28 +72,34 @@ export default class ANSIImage extends adone.cui.widget.Element {
                 this.cellmap = this.img.cellmap;
             }
         } catch (e) {
-            this.setContent("Image Error: " + e.message);
+            this.setContent(`Image Error: ${e.message}`);
             this.img = null;
             this.cellmap = null;
         }
     }
 
     play() {
-        var self = this;
-        if (!this.img) return;
-        return this.img.play(function (bmp, cellmap) {
+        const self = this;
+        if (!this.img) {
+            return;
+        }
+        return this.img.play((bmp, cellmap) => {
             self.cellmap = cellmap;
             self.screen.render();
         });
     }
 
     pause() {
-        if (!this.img) return;
+        if (!this.img) {
+            return; 
+        }
         return this.img.pause();
     }
 
     stop() {
-        if (!this.img) return;
+        if (!this.img) {
+            return;
+        }
         return this.img.stop();
     }
 
@@ -104,7 +112,9 @@ export default class ANSIImage extends adone.cui.widget.Element {
 
     render() {
         const coords = super.render();
-        if (!coords) return;
+        if (!coords) {
+            return; 
+        }
 
         if (this.img && this.cellmap) {
             this.img.renderElement(this.cellmap, this);

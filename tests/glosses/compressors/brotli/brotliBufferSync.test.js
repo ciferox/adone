@@ -60,7 +60,8 @@ describe("Brotli Buffer Sync", () => {
             testBufferSync(brotli.decompressSync, "empty.compressed", "empty");
         });
 
-        it("should decompress to a large buffer", () => {
+        it("should decompress to a large buffer", function () {
+            this.timeout(30000);
             testBufferSync(brotli.decompressSync, "large.compressed", "large");
         });
 

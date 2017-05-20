@@ -361,9 +361,9 @@ const filters = {
                 return reverse ? 1 : -1;
             } else if (x > y) {
                 return reverse ? -1 : 1;
-            } else {
-                return 0;
-            }
+            } 
+            return 0;
+            
         });
 
         return arr;
@@ -429,10 +429,10 @@ const filters = {
         const enc = encodeURIComponent;
         if (is.string(obj)) {
             return enc(obj);
-        } else {
-            const parts = is.array(obj) ? obj : util.entries(obj);
-            return parts.map(([k, v]) => `${enc(k)}=${enc(v)}`).join("&");
-        }
+        } 
+        const parts = is.array(obj) ? obj : util.entries(obj);
+        return parts.map(([k, v]) => `${enc(k)}=${enc(v)}`).join("&");
+        
     },
 
     urlize: (str, length, nofollow) => {

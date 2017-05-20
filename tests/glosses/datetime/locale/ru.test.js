@@ -11,11 +11,11 @@ describe("ru", () => {
         let i;
 
         function equalTest(input, mmm, i) {
-            assert.equal(adone.datetime(input, mmm).month(), i, input + " should be month " + (i + 1));
+            assert.equal(adone.datetime(input, mmm).month(), i, `${input} should be month ${i + 1}`);
         }
 
         function equalTestStrict(input, mmm, monthIndex) {
-            assert.equal(adone.datetime(input, mmm, true).month(), monthIndex, input + " " + mmm + " should be strict month " + (monthIndex + 1));
+            assert.equal(adone.datetime(input, mmm, true).month(), monthIndex, `${input} ${mmm} should be strict month ${monthIndex + 1}`);
         }
         for (i = 0; i < 12; i++) {
             tests[i] = tests[i].split(" ");
@@ -71,7 +71,7 @@ describe("ru", () => {
         let i;
 
         for (i = 0; i < a.length; i++) {
-            assert.equal(b.format(a[i][0]), a[i][1], a[i][0] + " ---> " + a[i][1]);
+            assert.equal(b.format(a[i][0]), a[i][1], `${a[i][0]} ---> ${a[i][1]}`);
         }
     });
 
@@ -134,57 +134,57 @@ describe("ru", () => {
 
     it("format month case", () => {
         const months = {
-            "nominative": "январь_февраль_март_апрель_май_июнь_июль_август_сентябрь_октябрь_ноябрь_декабрь".split("_"),
-            "accusative": "января_февраля_марта_апреля_мая_июня_июля_августа_сентября_октября_ноября_декабря".split("_")
+            nominative: "январь_февраль_март_апрель_май_июнь_июль_август_сентябрь_октябрь_ноябрь_декабрь".split("_"),
+            accusative: "января_февраля_марта_апреля_мая_июня_июля_августа_сентября_октября_ноября_декабря".split("_")
         };
         let i;
 
         for (i = 0; i < 12; i++) {
-            assert.equal(adone.datetime([2011, i, 1]).format("D MMMM"), "1 " + months.accusative[i], "1 " + months.accusative[i]);
-            assert.equal(adone.datetime([2011, i, 1]).format("MMMM"), months.nominative[i], "1 " + months.nominative[i]);
+            assert.equal(adone.datetime([2011, i, 1]).format("D MMMM"), `1 ${months.accusative[i]}`, `1 ${months.accusative[i]}`);
+            assert.equal(adone.datetime([2011, i, 1]).format("MMMM"), months.nominative[i], `1 ${months.nominative[i]}`);
         }
     });
 
     it("format month short case", () => {
         const monthsShort = {
-            "nominative": "янв._февр._март_апр._май_июнь_июль_авг._сент._окт._нояб._дек.".split("_"),
-            "accusative": "янв._февр._мар._апр._мая_июня_июля_авг._сент._окт._нояб._дек.".split("_")
+            nominative: "янв._февр._март_апр._май_июнь_июль_авг._сент._окт._нояб._дек.".split("_"),
+            accusative: "янв._февр._мар._апр._мая_июня_июля_авг._сент._окт._нояб._дек.".split("_")
         };
         let i;
 
         for (i = 0; i < 12; i++) {
-            assert.equal(adone.datetime([2011, i, 1]).format("D MMM"), "1 " + monthsShort.accusative[i], "1 " + monthsShort.accusative[i]);
-            assert.equal(adone.datetime([2011, i, 1]).format("MMM"), monthsShort.nominative[i], "1 " + monthsShort.nominative[i]);
+            assert.equal(adone.datetime([2011, i, 1]).format("D MMM"), `1 ${monthsShort.accusative[i]}`, `1 ${monthsShort.accusative[i]}`);
+            assert.equal(adone.datetime([2011, i, 1]).format("MMM"), monthsShort.nominative[i], `1 ${monthsShort.nominative[i]}`);
         }
     });
 
     it("format month case with escaped symbols", () => {
         const months = {
-            "nominative": "январь_февраль_март_апрель_май_июнь_июль_август_сентябрь_октябрь_ноябрь_декабрь".split("_"),
-            "accusative": "января_февраля_марта_апреля_мая_июня_июля_августа_сентября_октября_ноября_декабря".split("_")
+            nominative: "январь_февраль_март_апрель_май_июнь_июль_август_сентябрь_октябрь_ноябрь_декабрь".split("_"),
+            accusative: "января_февраля_марта_апреля_мая_июня_июля_августа_сентября_октября_ноября_декабря".split("_")
         };
         let i;
 
         for (i = 0; i < 12; i++) {
-            assert.equal(adone.datetime([2013, i, 1]).format("D[] MMMM"), "1 " + months.accusative[i], "1 " + months.accusative[i]);
-            assert.equal(adone.datetime([2013, i, 1]).format("[<i>]D[</i>] [<b>]MMMM[</b>]"), "<i>1</i> <b>" + months.accusative[i] + "</b>", "1 <b>" + months.accusative[i] + "</b>");
-            assert.equal(adone.datetime([2013, i, 1]).format("D[-й день] MMMM"), "1-й день " + months.accusative[i], "1-й день " + months.accusative[i]);
-            assert.equal(adone.datetime([2013, i, 1]).format("D, MMMM"), "1, " + months.nominative[i], "1, " + months.nominative[i]);
+            assert.equal(adone.datetime([2013, i, 1]).format("D[] MMMM"), `1 ${months.accusative[i]}`, `1 ${months.accusative[i]}`);
+            assert.equal(adone.datetime([2013, i, 1]).format("[<i>]D[</i>] [<b>]MMMM[</b>]"), `<i>1</i> <b>${months.accusative[i]}</b>`, `1 <b>${months.accusative[i]}</b>`);
+            assert.equal(adone.datetime([2013, i, 1]).format("D[-й день] MMMM"), `1-й день ${months.accusative[i]}`, `1-й день ${months.accusative[i]}`);
+            assert.equal(adone.datetime([2013, i, 1]).format("D, MMMM"), `1, ${months.nominative[i]}`, `1, ${months.nominative[i]}`);
         }
     });
 
     it("format month short case with escaped symbols", () => {
         const monthsShort = {
-            "nominative": "янв._февр._март_апр._май_июнь_июль_авг._сент._окт._нояб._дек.".split("_"),
-            "accusative": "янв._февр._мар._апр._мая_июня_июля_авг._сент._окт._нояб._дек.".split("_")
+            nominative: "янв._февр._март_апр._май_июнь_июль_авг._сент._окт._нояб._дек.".split("_"),
+            accusative: "янв._февр._мар._апр._мая_июня_июля_авг._сент._окт._нояб._дек.".split("_")
         };
         let i;
 
         for (i = 0; i < 12; i++) {
-            assert.equal(adone.datetime([2013, i, 1]).format("D[] MMM"), "1 " + monthsShort.accusative[i], "1 " + monthsShort.accusative[i]);
-            assert.equal(adone.datetime([2013, i, 1]).format("[<i>]D[</i>] [<b>]MMM[</b>]"), "<i>1</i> <b>" + monthsShort.accusative[i] + "</b>", "1 <b>" + monthsShort.accusative[i] + "</b>");
-            assert.equal(adone.datetime([2013, i, 1]).format("D[-й день] MMM"), "1-й день " + monthsShort.accusative[i], "1-й день " + monthsShort.accusative[i]);
-            assert.equal(adone.datetime([2013, i, 1]).format("D, MMM"), "1, " + monthsShort.nominative[i], "1, " + monthsShort.nominative[i]);
+            assert.equal(adone.datetime([2013, i, 1]).format("D[] MMM"), `1 ${monthsShort.accusative[i]}`, `1 ${monthsShort.accusative[i]}`);
+            assert.equal(adone.datetime([2013, i, 1]).format("[<i>]D[</i>] [<b>]MMM[</b>]"), `<i>1</i> <b>${monthsShort.accusative[i]}</b>`, `1 <b>${monthsShort.accusative[i]}</b>`);
+            assert.equal(adone.datetime([2013, i, 1]).format("D[-й день] MMM"), `1-й день ${monthsShort.accusative[i]}`, `1-й день ${monthsShort.accusative[i]}`);
+            assert.equal(adone.datetime([2013, i, 1]).format("D, MMM"), `1, ${monthsShort.nominative[i]}`, `1, ${monthsShort.nominative[i]}`);
         }
     });
 
@@ -358,9 +358,9 @@ describe("ru", () => {
         function makeFormatThis(d) {
             if (d.day() === 2) {
                 return "[Во] dddd [в] LT";
-            } else {
-                return "[В] dddd [в] LT";
-            }
+            } 
+            return "[В] dddd [в] LT";
+            
         }
 
         now = adone.datetime().startOf("week");
@@ -368,11 +368,11 @@ describe("ru", () => {
             m = adone.datetime(now).add({
                 d: i
             });
-            assert.equal(m.calendar(now), m.format(makeFormatThis(m)), "Today + " + i + " days current time");
+            assert.equal(m.calendar(now), m.format(makeFormatThis(m)), `Today + ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(now), m.format(makeFormatThis(m)), "Today + " + i + " days beginning of day");
+            assert.equal(m.calendar(now), m.format(makeFormatThis(m)), `Today + ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(now), m.format(makeFormatThis(m)), "Today + " + i + " days end of day");
+            assert.equal(m.calendar(now), m.format(makeFormatThis(m)), `Today + ${i} days end of day`);
         }
 
         now = adone.datetime().endOf("week");
@@ -380,11 +380,11 @@ describe("ru", () => {
             m = adone.datetime(now).add({
                 d: i
             });
-            assert.equal(m.calendar(now), m.format(makeFormatNext(m)), "Today + " + i + " days current time");
+            assert.equal(m.calendar(now), m.format(makeFormatNext(m)), `Today + ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(now), m.format(makeFormatNext(m)), "Today + " + i + " days beginning of day");
+            assert.equal(m.calendar(now), m.format(makeFormatNext(m)), `Today + ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(now), m.format(makeFormatNext(m)), "Today + " + i + " days end of day");
+            assert.equal(m.calendar(now), m.format(makeFormatNext(m)), `Today + ${i} days end of day`);
         }
     });
 
@@ -411,9 +411,9 @@ describe("ru", () => {
         function makeFormatThis(d) {
             if (d.day() === 2) {
                 return "[Во] dddd [в] LT";
-            } else {
-                return "[В] dddd [в] LT";
-            }
+            } 
+            return "[В] dddd [в] LT";
+            
         }
 
         now = adone.datetime().startOf("week");
@@ -421,11 +421,11 @@ describe("ru", () => {
             m = adone.datetime(now).subtract({
                 d: i
             });
-            assert.equal(m.calendar(now), m.format(makeFormatLast(m)), "Today - " + i + " days current time");
+            assert.equal(m.calendar(now), m.format(makeFormatLast(m)), `Today - ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(now), m.format(makeFormatLast(m)), "Today - " + i + " days beginning of day");
+            assert.equal(m.calendar(now), m.format(makeFormatLast(m)), `Today - ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(now), m.format(makeFormatLast(m)), "Today - " + i + " days end of day");
+            assert.equal(m.calendar(now), m.format(makeFormatLast(m)), `Today - ${i} days end of day`);
         }
 
         now = adone.datetime().endOf("week");
@@ -433,11 +433,11 @@ describe("ru", () => {
             m = adone.datetime(now).subtract({
                 d: i
             });
-            assert.equal(m.calendar(now), m.format(makeFormatThis(m)), "Today - " + i + " days current time");
+            assert.equal(m.calendar(now), m.format(makeFormatThis(m)), `Today - ${i} days current time`);
             m.hours(0).minutes(0).seconds(0).milliseconds(0);
-            assert.equal(m.calendar(now), m.format(makeFormatThis(m)), "Today - " + i + " days beginning of day");
+            assert.equal(m.calendar(now), m.format(makeFormatThis(m)), `Today - ${i} days beginning of day`);
             m.hours(23).minutes(59).seconds(59).milliseconds(999);
-            assert.equal(m.calendar(now), m.format(makeFormatThis(m)), "Today - " + i + " days end of day");
+            assert.equal(m.calendar(now), m.format(makeFormatThis(m)), `Today - ${i} days end of day`);
         }
     });
 

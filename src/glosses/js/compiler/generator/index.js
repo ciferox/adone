@@ -41,9 +41,9 @@ const findCommonStringDelimiter = (code, tokens) => {
     }
     if (occurences.single > occurences.double) {
         return "single";
-    } else {
-        return "double";
-    }
+    } 
+    return "double";
+    
 };
 
  /**

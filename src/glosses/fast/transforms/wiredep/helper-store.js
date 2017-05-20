@@ -4,7 +4,7 @@
  * @return {object} the API to set and retrieve data
  */
 class MiniStore {
-    constructor(){
+    constructor() {
         this.bucket = {};
     }
 

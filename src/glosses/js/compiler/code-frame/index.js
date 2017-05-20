@@ -53,9 +53,9 @@ export default function (
                 line,
                 markerLine
             ].join("");
-        } else {
-            return ` ${gutter}${line}`;
-        }
+        } 
+        return ` ${gutter}${line}`;
+        
     }).join("\n");
 
     return frame;

@@ -9,7 +9,7 @@ export class EncodeStream extends Transform {
     }
 
     _transform(chunk, encoding, done) {
-        if (!is.string(chunk))        {
+        if (!is.string(chunk)) {
             return done(new x.IllegalState("Iconv encoding stream needs strings as its input."));
         }
         try {
@@ -18,7 +18,7 @@ export class EncodeStream extends Transform {
                 this.push(res);
             }
             done();
-        }    catch (e) {
+        } catch (e) {
             done(e);
         }
     }
@@ -30,7 +30,7 @@ export class EncodeStream extends Transform {
                 this.push(res);
             }
             done();
-        }    catch (e) {
+        } catch (e) {
             done(e);
         }
     }
@@ -45,7 +45,7 @@ export class DecodeStream extends Transform {
     }
 
     _transform(chunk, encoding, done) {
-        if (!is.buffer(chunk))        {
+        if (!is.buffer(chunk)) {
             return done(new x.IllegalState("Iconv decoding stream needs buffers as its input."));
         }
         try {
@@ -54,7 +54,7 @@ export class DecodeStream extends Transform {
                 this.push(res, this.encoding);
             }
             done();
-        }    catch (e) {
+        } catch (e) {
             done(e);
         }
     }
@@ -66,7 +66,7 @@ export class DecodeStream extends Transform {
                 this.push(res, this.encoding);
             }
             done();
-        }    catch (e) {
+        } catch (e) {
             done(e);
         }
     }

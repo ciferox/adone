@@ -428,7 +428,7 @@ describe("Cursor", () => {
                 { age: 23, name: "LM", _id: doc3._id },
                 { age: 52, name: "Grafitti", _id: doc2._id },
                 { age: 57, name: "Louis", _id: doc1._id },
-                {  age: 89, _id: doc4._id }  // No problems if one field to take doesn't exist
+                { age: 89, _id: doc4._id }  // No problems if one field to take doesn't exist
             ]);
 
             cursor.projection({ age: 1, name: 1, _id: 0 });
@@ -440,7 +440,7 @@ describe("Cursor", () => {
                 { age: 23, name: "LM" },
                 { age: 52, name: "Grafitti" },
                 { age: 57, name: "Louis" },
-                {  age: 89 }  // No problems if one field to take doesn't exist
+                { age: 89 }  // No problems if one field to take doesn't exist
             ]);
         });
 

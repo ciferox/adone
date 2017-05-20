@@ -68,8 +68,8 @@ for (const type in t.VISITOR_KEYS) {
 
 t.FLIPPED_ALIAS_KEYS = {};
 
-Object.keys(t.ALIAS_KEYS).forEach(function (type) {
-    t.ALIAS_KEYS[type].forEach(function (alias) {
+Object.keys(t.ALIAS_KEYS).forEach((type) => {
+    t.ALIAS_KEYS[type].forEach((alias) => {
         const types = t.FLIPPED_ALIAS_KEYS[alias] = t.FLIPPED_ALIAS_KEYS[alias] || [];
         types.push(type);
     });
@@ -79,8 +79,8 @@ Object.keys(t.ALIAS_KEYS).forEach(function (type) {
  * Registers `is[Alias]` and `assert[Alias]` functions for all aliases.
  */
 
-Object.keys(t.FLIPPED_ALIAS_KEYS).forEach(function (type) {
-    t[type.toUpperCase() + "_TYPES"] = t.FLIPPED_ALIAS_KEYS[type];
+Object.keys(t.FLIPPED_ALIAS_KEYS).forEach((type) => {
+    t[`${type.toUpperCase()}_TYPES`] = t.FLIPPED_ALIAS_KEYS[type];
     registerType(type);
 });
 
@@ -96,16 +96,20 @@ export const TYPES = Object.keys(t.VISITOR_KEYS)
  */
 
 export function is(type: string, node: Object, opts?: Object): boolean {
-    if (!node) return false;
+    if (!node) {
+        return false;
+    }
 
     const matches = isType(node.type, type);
-    if (!matches) return false;
+    if (!matches) {
+        return false;
+    }
 
     if (typeof opts === "undefined") {
         return true;
-    } else {
-        return t.shallowEqual(node, opts);
-    }
+    } 
+    return t.shallowEqual(node, opts);
+    
 }
 
 /**
@@ -113,18 +117,26 @@ export function is(type: string, node: Object, opts?: Object): boolean {
  */
 
 export function isType(nodeType: string, targetType: string): boolean {
-    if (nodeType === targetType) return true;
+    if (nodeType === targetType) {
+        return true; 
+    }
 
     // This is a fast-path. If the test above failed, but an alias key is found, then the
     // targetType was a primary node type, so there's no need to check the aliases.
-    if (t.ALIAS_KEYS[targetType]) return false;
+    if (t.ALIAS_KEYS[targetType]) {
+        return false; 
+    }
 
     const aliases: ?string[] = t.FLIPPED_ALIAS_KEYS[targetType];
     if (aliases) {
-        if (aliases[0] === nodeType) return true;
+        if (aliases[0] === nodeType) {
+            return true; 
+        }
 
         for (const alias of aliases) {
-            if (nodeType === alias) return true;
+            if (nodeType === alias) {
+                return true; 
+            }
         }
     }
 
@@ -135,7 +147,7 @@ export function isType(nodeType: string, targetType: string): boolean {
  * Description
  */
 
-Object.keys(t.BUILDER_KEYS).forEach(function (type) {
+Object.keys(t.BUILDER_KEYS).forEach((type) => {
     const keys = t.BUILDER_KEYS[type];
 
     function builder() {
@@ -155,7 +167,9 @@ Object.keys(t.BUILDER_KEYS).forEach(function (type) {
             const field = t.NODE_FIELDS[type][key];
 
             let arg = arguments[i++];
-            if (arg === undefined) arg = loClone(field.default);
+            if (arg === undefined) {
+                arg = loClone(field.default); 
+            }
 
             node[key] = arg;
         }
@@ -195,14 +209,22 @@ for (const type in t.DEPRECATED_KEYS) {
  */
 
 export function validate(node?: Object, key: string, val: any) {
-    if (!node) return;
+    if (!node) {
+        return;
+    }
 
     const fields = t.NODE_FIELDS[node.type];
-    if (!fields) return;
+    if (!fields) {
+        return; 
+    }
 
     const field = fields[key];
-    if (!field || !field.validate) return;
-    if (field.optional && val == null) return;
+    if (!field || !field.validate) {
+        return;
+    }
+    if (field.optional && val == null) {
+        return; 
+    }
 
     field.validate(node, key, val);
 }
@@ -230,7 +252,7 @@ export function shallowEqual(actual: Object, expected: Object): boolean {
 export function appendToMemberExpression(member: Object, append: Object, computed?: boolean): Object {
     member.object = t.memberExpression(member.object, member.property, member.computed);
     member.property = append;
-    member.computed = !!computed;
+    member.computed = Boolean(computed);
     return member;
 }
 
@@ -257,10 +279,14 @@ export function ensureBlock(node: Object, key: string = "body"): Object {
  */
 
 export function clone(node: Object): Object {
-    if (!node) return node;
+    if (!node) {
+        return node; 
+    }
     const newNode = {};
     for (const key in node) {
-        if (key[0] === "_") continue;
+        if (key[0] === "_") {
+            continue;
+        }
         newNode[key] = node[key];
     }
     return newNode;
@@ -282,11 +308,15 @@ export function cloneWithoutLoc(node: Object): Object {
  */
 
 export function cloneDeep(node: Object): Object {
-    if (!node) return node;
+    if (!node) {
+        return node; 
+    }
     const newNode = {};
 
     for (const key in node) {
-        if (key[0] === "_") continue;
+        if (key[0] === "_") {
+            continue; 
+        }
 
         let val = node[key];
 
@@ -317,7 +347,9 @@ export function buildMatchMemberExpression(match: string, allowPartial?: boolean
 
     return function (member) {
         // not a member expression
-        if (!t.isMemberExpression(member)) return false;
+        if (!t.isMemberExpression(member)) {
+            return false; 
+        }
 
         const search = [member];
         let i = 0;
@@ -331,19 +363,23 @@ export function buildMatchMemberExpression(match: string, allowPartial?: boolean
 
             if (t.isIdentifier(node)) {
                 // this part doesn't match
-                if (parts[i] !== node.name) return false;
+                if (parts[i] !== node.name) {
+                    return false; 
+                }
             } else if (t.isStringLiteral(node)) {
                 // this part doesn't match
-                if (parts[i] !== node.value) return false;
+                if (parts[i] !== node.value) {
+                    return false;
+                }
             } else if (t.isMemberExpression(node)) {
                 if (node.computed && !t.isStringLiteral(node.property)) {
                     // we can't deal with this
                     return false;
-                } else {
-                    search.push(node.object);
-                    search.push(node.property);
-                    continue;
-                }
+                } 
+                search.push(node.object);
+                search.push(node.property);
+                continue;
+                
             } else {
                 // we can't deal with this
                 return false;
@@ -407,7 +443,9 @@ function _inheritComments(key, child, parent) {
  */
 
 export function inherits(child: Object, parent: Object): Object {
-    if (!child || !parent) return child;
+    if (!child || !parent) {
+        return child;
+    }
 
     // optionally inherit specific properties if not null
     for (const key of (t.INHERIT_KEYS.optional: string[])) {
@@ -418,7 +456,9 @@ export function inherits(child: Object, parent: Object): Object {
 
     // force inherit "private" properties
     for (const key in parent) {
-        if (key[0] === "_") child[key] = parent[key];
+        if (key[0] === "_") {
+            child[key] = parent[key]; 
+        }
     }
 
     // force inherit select properties
@@ -438,7 +478,7 @@ export function inherits(child: Object, parent: Object): Object {
 export function assertNode(node?) {
     if (!isNode(node)) {
         // $FlowFixMe
-        throw new TypeError("Not a valid node " + (node && node.type));
+        throw new TypeError(`Not a valid node ${node && node.type}`);
     }
 }
 
@@ -447,7 +487,7 @@ export function assertNode(node?) {
  */
 
 export function isNode(node?): boolean {
-    return !!(node && VISITOR_KEYS[node.type]);
+    return Boolean(node && VISITOR_KEYS[node.type]);
 }
 
 // Optimize property access.
@@ -459,10 +499,14 @@ adone.util.toFastProperties(t.VISITOR_KEYS);
  */
 
 export function traverseFast(node: Node, enter: (node: Node) => void, opts?: Object) {
-    if (!node) return;
+    if (!node) {
+        return;
+    }
 
     const keys = t.VISITOR_KEYS[node.type];
-    if (!keys) return;
+    if (!keys) {
+        return; 
+    }
 
     opts = opts || {};
     enter(node, opts);
@@ -499,11 +543,15 @@ export function removeProperties(node: Node, opts?: Object): void {
     opts = opts || {};
     const map = opts.preserveComments ? CLEAR_KEYS : CLEAR_KEYS_PLUS_COMMENTS;
     for (const key of map) {
-        if (node[key] != null) node[key] = undefined;
+        if (node[key] != null) {
+            node[key] = undefined;
+        }
     }
 
     for (const key in node) {
-        if (key[0] === "_" && node[key] != null) node[key] = undefined;
+        if (key[0] === "_" && node[key] != null) {
+            node[key] = undefined; 
+        }
     }
 
     const syms: Symbol[] = Object.getOwnPropertySymbols(node);

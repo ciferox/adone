@@ -39,25 +39,25 @@ export default function proxify(obj, nonChainableMethodName) {
                 !Reflect.has(target, property)) {
                 // Special message for invalid property access of non-chainable methods.
                 if (nonChainableMethodName) {
-                    throw Error("Invalid property: " + nonChainableMethodName + "." +
-                        property + ". See docs for proper usage of \"" +
-                        nonChainableMethodName + "\".");
+                    throw Error(`Invalid property: ${nonChainableMethodName}.${ 
+                        property}. See docs for proper usage of "${ 
+                        nonChainableMethodName}".`);
                 }
 
-                const orderedProperties = getProperties(target).filter(function (property) {
+                const orderedProperties = getProperties(target).filter((property) => {
                     return !Object.prototype.hasOwnProperty(property) &&
                         ["_obj", "assert"].indexOf(property) === -1;
-                }).sort(function (a, b) {
+                }).sort((a, b) => {
                     return adone.text.stringDistance(property, a) - adone.text.stringDistance(property, b);
                 });
 
                 if (orderedProperties.length && adone.text.stringDistance(orderedProperties[0], property) < 4) {
                     // If the property is reasonably close to an existing property,
                     // suggest that property to the user.
-                    throw Error("Invalid property: " + property +
-                        ". Did you mean \"" + orderedProperties[0] + "\"?");
+                    throw Error(`Invalid property: ${property 
+                        }. Did you mean "${orderedProperties[0]}"?`);
                 } else {
-                    throw Error("Invalid property: " + property);
+                    throw Error(`Invalid property: ${property}`);
                 }
             }
 

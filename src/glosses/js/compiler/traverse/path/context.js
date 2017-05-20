@@ -9,7 +9,9 @@ export function call(key): boolean {
     this.debug(() => key);
 
     if (this.node) {
-        if (this._call(opts[key])) return true;
+        if (this._call(opts[key])) {
+            return true; 
+        }
     }
 
     if (this.node) {
@@ -20,21 +22,33 @@ export function call(key): boolean {
 }
 
 export function _call(fns?: Function[]): boolean {
-    if (!fns) return false;
+    if (!fns) {
+        return false;
+    }
 
     for (const fn of fns) {
-        if (!fn) continue;
+        if (!fn) {
+            continue; 
+        }
 
         const node = this.node;
-        if (!node) return true;
+        if (!node) {
+            return true;
+        }
 
         const ret = fn.call(this.state, this, this.state);
-        if (ret) throw new Error(`Unexpected return value from visitor method ${fn}`);
+        if (ret) {
+            throw new Error(`Unexpected return value from visitor method ${fn}`);
+        }
 
         // node has been replaced, it will have been requeued
-        if (this.node !== node) return true;
+        if (this.node !== node) {
+            return true; 
+        }
 
-        if (this.shouldStop || this.shouldSkip || this.removed) return true;
+        if (this.shouldStop || this.shouldSkip || this.removed) {
+            return true; 
+        }
     }
 
     return false;
@@ -85,14 +99,18 @@ export function stop() {
 }
 
 export function setScope() {
-    if (this.opts && this.opts.noScope) return;
+    if (this.opts && this.opts.noScope) {
+        return; 
+    }
 
     let target = this.context && this.context.scope;
 
     if (!target) {
         let path = this.parentPath;
         while (path && !target) {
-            if (path.opts && path.opts.noScope) return;
+            if (path.opts && path.opts.noScope) {
+                return; 
+            }
 
             target = path.scope;
             path = path.parentPath;
@@ -100,7 +118,9 @@ export function setScope() {
     }
 
     this.scope = this.getScope(target);
-    if (this.scope) this.scope.init();
+    if (this.scope) {
+        this.scope.init();
+    }
 }
 
 export function setContext(context) {
@@ -127,7 +147,9 @@ export function setContext(context) {
  */
 
 export function resync() {
-    if (this.removed) return;
+    if (this.removed) {
+        return; 
+    }
 
     this._resyncParent();
     this._resyncList();
@@ -142,9 +164,13 @@ export function _resyncParent() {
 }
 
 export function _resyncKey() {
-    if (!this.container) return;
+    if (!this.container) {
+        return;
+    }
 
-    if (this.node === this.container[this.key]) return;
+    if (this.node === this.container[this.key]) {
+        return; 
+    }
 
     // grrr, path key is out of sync. this is likely due to a modification to the AST
     // not done through our path APIs
@@ -168,10 +194,14 @@ export function _resyncKey() {
 }
 
 export function _resyncList() {
-    if (!this.parent || !this.inList) return;
+    if (!this.parent || !this.inList) {
+        return; 
+    }
 
     const newContainer = this.parent[this.listKey];
-    if (this.container === newContainer) return;
+    if (this.container === newContainer) {
+        return;
+    }
 
     // container is out of sync. this is likely the result of it being reassigned
     this.container = newContainer || null;
@@ -194,7 +224,7 @@ export function pushContext(context) {
 }
 
 export function setup(parentPath, container, listKey, key) {
-    this.inList = !!listKey;
+    this.inList = Boolean(listKey);
     this.listKey = listKey;
     this.parentKey = listKey || key;
     this.container = container;
@@ -210,7 +240,9 @@ export function setKey(key) {
 }
 
 export function requeue(pathToQueue = this) {
-    if (pathToQueue.removed) return;
+    if (pathToQueue.removed) {
+        return; 
+    }
 
     // TODO(loganfsmyth): This should be switched back to queue in parent contexts
     // automatically once #2892 and #4135 have been resolved. See #4140.

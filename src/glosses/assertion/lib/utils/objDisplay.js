@@ -31,19 +31,19 @@ export default function (obj) {
         if (type === "[object Function]") {
             return !obj.name || obj.name === ""
                 ? "[Function]"
-                : "[Function: " + obj.name + "]";
+                : `[Function: ${obj.name}]`;
         } else if (type === "[object Array]") {
-            return "[ Array(" + obj.length + ") ]";
+            return `[ Array(${obj.length}) ]`;
         } else if (type === "[object Object]") {
             const keys = Object.keys(obj);
             const kstr = keys.length > 2
-                    ? keys.splice(0, 2).join(", ") + ", ..."
+                    ? `${keys.splice(0, 2).join(", ")}, ...`
                     : keys.join(", ");
-            return "{ Object (" + kstr + ") }";
-        } else {
-            return str;
-        }
-    } else {
+            return `{ Object (${kstr}) }`;
+        } 
         return str;
-    }
+        
+    } 
+    return str;
+    
 }

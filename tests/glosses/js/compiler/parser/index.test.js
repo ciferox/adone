@@ -17,9 +17,9 @@ const ppJSON = (v) => {
 const addPath = (str, pt) => {
     if (str[str.length - 1] === ")") {
         return `${str.slice(0, str.length - 1)}/${pt})`;
-    } else {
-        return `${str} (${pt})`;
-    }
+    } 
+    return `${str} (${pt})`;
+    
 };
 
 const misMatch = (exp, act) => {
@@ -71,10 +71,10 @@ const runTest = (test, parseFunction) => {
         if (opts.throws) {
             if (err.message === opts.throws) {
                 return;
-            } else {
-                err.message = `Expected error message: ${opts.throws}. Got error message: ${err.message}`;
-                throw err;
-            }
+            } 
+            err.message = `Expected error message: ${opts.throws}. Got error message: ${err.message}`;
+            throw err;
+            
         }
 
         throw err;

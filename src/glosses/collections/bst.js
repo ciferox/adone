@@ -1,4 +1,4 @@
-const defaultCompareKeysFunction = (a, b)  => {
+const defaultCompareKeysFunction = (a, b) => {
     if (a < b) { 
         return -1; 
     }
@@ -382,7 +382,7 @@ export default class BinarySearchTree {
      * Return true if it was deleted
      */
     deleteIfOnlyOneChild() {
-        var child;
+        let child;
 
         if (this.left && !this.right) { 
             child = this.left; 
@@ -430,7 +430,7 @@ export default class BinarySearchTree {
      * @param {Key} key
      * @param {Value} value Optional. If not set, the whole key is deleted. If set, only this value is deleted
      */
-    delete (key, value) {
+    delete(key, value) {
         if (!this.hasOwnProperty("key")) { 
             return; 
         }

@@ -1007,17 +1007,17 @@ export default class GlobExp {
                     // XXX remove this slice.  Just pass the start index.
                     if (this._matchOne(file.slice(fr), pattern.slice(pr), partial)) {
                         return true;
-                    } else {
+                    } 
                         // can't swallow "." or ".." ever.
                         // can only swallow ".foo" when explicitly asked.
-                        if (swallowee === "." || swallowee === ".." ||
+                    if (swallowee === "." || swallowee === ".." ||
                             (!options.dot && swallowee.charAt(0) === ".")) {
-                            break;
-                        }
+                        break;
+                    }
 
                         // ** swallows a segment, and continue.
-                        fr++;
-                    }
+                    fr++;
+                    
                 }
 
                 // no match was found.

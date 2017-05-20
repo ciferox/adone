@@ -417,9 +417,9 @@ export default class Omnitron extends adone.application.Application {
                 await this._checkDependencies(service, (depName) => this.enable(depName, needEnabled, { enableDeps }), { checkDisabled: !enableDeps });
                 service.config.status = ENABLED;
                 return this._.configurator.saveServicesConfig();
-            } else {
-                throw new adone.x.IllegalState("Service is not disabled");
-            }
+            } 
+            throw new adone.x.IllegalState("Service is not disabled");
+            
         } else {
             if (service.config.status !== DISABLED) {
                 if (service.config.status === ACTIVE) {

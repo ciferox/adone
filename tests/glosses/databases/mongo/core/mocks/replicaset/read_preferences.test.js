@@ -601,11 +601,11 @@ describe("mongodb", function () {
                         },
                         execute() {
                             // method needs to be called, so provide a dummy version
-                            return;
+                            
                         },
                         flush() {
                             // method needs to be called, so provide a dummy version
-                            return;
+                            
                         }
                     };
 

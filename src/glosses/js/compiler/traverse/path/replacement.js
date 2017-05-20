@@ -12,7 +12,9 @@ const hoistVariablesVisitor = {
     },
 
     VariableDeclaration(path) {
-        if (path.node.kind !== "var") return;
+        if (path.node.kind !== "var") {
+            return;
+        }
 
         const bindings = path.getBindingIdentifiers();
         for (const key in bindings) {
@@ -75,7 +77,7 @@ export function replaceWithSourceString(replacement) {
         const loc = err.loc;
         if (loc) {
             err.message += " - make sure this is an expression.";
-            err.message += "\n" + codeFrame(replacement, loc.line, loc.column + 1);
+            err.message += `\n${codeFrame(replacement, loc.line, loc.column + 1)}`;
         }
         throw err;
     }
@@ -215,7 +217,9 @@ export function replaceExpressionWithStatements(nodes: Object[]) {
         // add implicit returns to all ending expression statements
         const completionRecords: NodePath[] = this.get("callee").getCompletionRecords();
         for (const path of completionRecords) {
-            if (!path.isExpressionStatement()) continue;
+            if (!path.isExpressionStatement()) {
+                continue; 
+            }
 
             const loop = path.findParent((path) => path.isLoop());
             if (loop) {
@@ -244,10 +248,10 @@ export function replaceInline(nodes: Object | Object[]) {
             nodes = this._verifyNodeList(nodes);
             this._containerInsertAfter(nodes);
             return this.remove();
-        } else {
-            return this.replaceWithMultiple(nodes);
-        }
-    } else {
-        return this.replaceWith(nodes);
-    }
+        } 
+        return this.replaceWithMultiple(nodes);
+        
+    } 
+    return this.replaceWith(nodes);
+    
 }

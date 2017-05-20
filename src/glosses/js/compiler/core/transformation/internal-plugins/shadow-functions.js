@@ -24,9 +24,9 @@ const superVisitor = {
 const shouldShadow = (path, shadowPath) => {
     if (path.is("_forceShadow")) {
         return true;
-    } else {
-        return shadowPath;
-    }
+    } 
+    return shadowPath;
+    
 };
 
 const remap = (path, key) => {

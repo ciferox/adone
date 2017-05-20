@@ -482,8 +482,8 @@ Controllers = {
             BLINK: 0x80
         },
         initialize(opts) {
-            var state = priv.get(this);
-            var available = Array.from(addresses);
+            const state = priv.get(this);
+            const available = Array.from(addresses);
 
             if (available.length === 0) {
                 throw new Error("There are no available HT16K33 controller addresses");
@@ -496,9 +496,9 @@ Controllers = {
                 this.addresses = available.slice(0, state.devices);
             }
 
-            this.addresses.forEach(function (address) {
+            this.addresses.forEach((address) => {
                 if (!addresses.has(address)) {
-                    throw new Error("Invalid HT16K33 controller address: " + address);
+                    throw new Error(`Invalid HT16K33 controller address: ${address}`);
                 }
                 addresses.delete(address);
             });
@@ -546,7 +546,7 @@ Controllers = {
                     this.blink(device, val);
                 });
             } else {
-                var _val = null;
+                let _val = null;
                 // Translate human-readable value to value expected by HT16K33, see datasheet.
                 switch (val) {
                     case false:
@@ -577,7 +577,7 @@ Controllers = {
          * @param {Number} addr Address of Led device
          */
         clear(addr) {
-            var offset;
+            let offset;
             if (typeof addr === "undefined") {
                 this.each(function (device) {
                     this.clear(device);
@@ -585,7 +585,7 @@ Controllers = {
             } else {
                 offset = addr * this.columns;
 
-                for (var i = 0; i < this.rows; i++) {
+                for (let i = 0; i < this.rows; i++) {
                     this.memory[offset + i] = 0;
                     this.buffer[addr][i] = 0;
                 }
@@ -612,79 +612,79 @@ Controllers = {
                     this.led(device, row, col, state);
                 });
                 return this;
-            } else {
-                var x = col;
-                var y = row;
-                var tmp, rows = this.rows,
-                    columns = this.columns;
-                if ((y < 0) || (y >= rows)) {
-                    return this;
-                }
-                if ((x < 0) || (x >= columns)) {
-                    return this;
-                }
-                switch (this.rotation) {
-                    case 1:
-                        columns = this.rows;
-                        rows = this.columns;
-                        tmp = x;
-                        x = y;
-                        y = tmp;
-                        x = columns - x - 1;
-                        break;
-                    case 2:
-                        x = columns - x - 1;
-                        y = rows - y - 1;
-                        break;
-                    case 3:
-                        columns = this.rows;
-                        rows = this.columns;
-                        tmp = x;
-                        x = y;
-                        y = tmp;
-                        y = rows - y - 1;
-                        break;
-                }
-                if (!this.isBicolor) {
+            } 
+            let x = col;
+            let y = row;
+            let tmp, rows = this.rows,
+                columns = this.columns;
+            if ((y < 0) || (y >= rows)) {
+                return this;
+            }
+            if ((x < 0) || (x >= columns)) {
+                return this;
+            }
+            switch (this.rotation) {
+                case 1:
+                    columns = this.rows;
+                    rows = this.columns;
+                    tmp = x;
+                    x = y;
+                    y = tmp;
+                    x = columns - x - 1;
+                    break;
+                case 2:
+                    x = columns - x - 1;
+                    y = rows - y - 1;
+                    break;
+                case 3:
+                    columns = this.rows;
+                    rows = this.columns;
+                    tmp = x;
+                    x = y;
+                    y = tmp;
+                    y = rows - y - 1;
+                    break;
+            }
+            if (!this.isBicolor) {
                     // x needs to be wrapped around for single color 8x8 AdaFruit matrix
                     /* istanbul ignore else */
-                    if (columns === 8 && rows === 8) {
-                        x += columns - 1;
-                        x %= columns;
-                    }
-                    if (state) {
-                        this.buffer[addr][y] |= 1 << x;
-                    } else {
-                        this.buffer[addr][y] &= ~(1 << x);
-                    }
-                } else {
-                    // 8x8 bi-color matrixes only
-                    if (state === LedControl.COLORS.GREEN) {
-                        // Turn on green LED.
-                        this.buffer[addr][y] |= 1 << x;
-                        // Turn off red LED.
-                        this.buffer[addr][y] &= ~(1 << (x + 8));
-                    } else if (state === LedControl.COLORS.YELLOW) {
-                        // Turn on green and red LED.
-                        this.buffer[addr][y] |= (1 << (x + 8)) | (1 << x);
-                    } else if (state === LedControl.COLORS.RED) {
-                        // Turn on red LED.
-                        this.buffer[addr][y] |= 1 << (x + 8);
-                        // Turn off green LED.
-                        this.buffer[addr][y] &= ~(1 << x);
-                    } else {
-                        // Turn off green and red LED.
-                        this.buffer[addr][y] &= ~(1 << x) & ~(1 << (x + 8));
-                    }
+                if (columns === 8 && rows === 8) {
+                    x += columns - 1;
+                    x %= columns;
                 }
-                this.writeDisplay(addr);
+                if (state) {
+                    this.buffer[addr][y] |= 1 << x;
+                } else {
+                    this.buffer[addr][y] &= ~(1 << x);
+                }
+            } else {
+                    // 8x8 bi-color matrixes only
+                if (state === LedControl.COLORS.GREEN) {
+                        // Turn on green LED.
+                    this.buffer[addr][y] |= 1 << x;
+                        // Turn off red LED.
+                    this.buffer[addr][y] &= ~(1 << (x + 8));
+                } else if (state === LedControl.COLORS.YELLOW) {
+                        // Turn on green and red LED.
+                    this.buffer[addr][y] |= (1 << (x + 8)) | (1 << x);
+                } else if (state === LedControl.COLORS.RED) {
+                        // Turn on red LED.
+                    this.buffer[addr][y] |= 1 << (x + 8);
+                        // Turn off green LED.
+                    this.buffer[addr][y] &= ~(1 << x);
+                } else {
+                        // Turn off green and red LED.
+                    this.buffer[addr][y] &= ~(1 << x) & ~(1 << (x + 8));
+                }
             }
+            this.writeDisplay(addr);
+            
             return this;
         },
         writeDisplay(addr) {
-            var bytes = [0x00];
+            const bytes = [0x00];
             // always writes 8 rows (for 8x16, the values have already been rotated)
-            for (var i = 0; i < 8; i++) {
+            for (let i = 0; i < 8; i++) {
                 bytes.push(this.buffer[addr][i] & 0xFF);
                 bytes.push(this.buffer[addr][i] >> 8);
             }
@@ -703,7 +703,7 @@ Controllers = {
                 throw new Error("The `row` method is only supported for Matrix devices");
             }
             if (typeof val === "number") {
-                val = ("0000000000000000" + parseInt(val, 10).toString(2)).substr(0 - (this.columns), this.columns);
+                val = (`0000000000000000${parseInt(val, 10).toString(2)}`).substr(0 - (this.columns), this.columns);
             }
             if (arguments.length === 2) {
                 val = row;
@@ -715,7 +715,7 @@ Controllers = {
 
                 // call the led function because the handling of rotation
                 // and wrapping for monochrome matrixes is done there
-                for (var i = 0; i < this.columns; i++) {
+                for (let i = 0; i < this.columns; i++) {
                     this.led(addr, row, i, parseInt(val[i], 10));
                 }
             }
@@ -758,7 +758,7 @@ Controllers = {
             //
             if (code > 0 && code < 255) {
                 // Convert from hex to binary, padded to 8 bits.
-                code = ("00000000" + code.toString(2)).slice(-8).split("");
+                code = (`00000000${code.toString(2)}`).slice(-8).split("");
                 // Reverse bits for each display segment except the decimal,
                 // to match the HT16K33 controller's segment ordering.
                 code = code.shift() + code.reverse().join("");
@@ -793,7 +793,7 @@ Controllers = {
             this.digitOrder = -1;
             this.digitOrder = -1;
 
-            for (var device = 0; device < this.devices; device++) {
+            for (let device = 0; device < this.devices; device++) {
                 /*
                   TODO: Add support for custom initialization
         
@@ -856,7 +856,7 @@ Controllers = {
 
         },
         clear(addr) {
-            var offset;
+            let offset;
 
             if (typeof addr === "undefined") {
                 this.each(function (device) {
@@ -865,7 +865,7 @@ Controllers = {
             } else {
                 offset = addr * 8;
 
-                for (var i = 0; i < 8; i++) {
+                for (let i = 0; i < 8; i++) {
                     this.memory[offset + i] = 0;
                     this.send(addr, i + 1, 0);
                 }
@@ -895,7 +895,7 @@ Controllers = {
          *
          */
         led(addr, row, col, state) {
-            var offset, val;
+            let offset, val;
 
             if (arguments.length === 3) {
                 state = col;
@@ -931,7 +931,7 @@ Controllers = {
             if (!this.isMatrix) {
                 throw new Error("The `row` method is only supported for Matrix devices");
             }
-            var offset;
+            let offset;
             if (typeof val === "string") {
                 val = parseInt(val, 2);
             }
@@ -969,12 +969,12 @@ Controllers = {
             if (arguments.length !== 3) {
                 throw new Error("`send` expects three arguments: device, opcode, data");
             }
-            var offset = addr * 2;
-            var maxBytes = this.devices * 2;
-            var spiData = [];
+            const offset = addr * 2;
+            const maxBytes = this.devices * 2;
+            const spiData = [];
 
             if (addr < this.devices) {
-                for (var i = 0; i < maxBytes; i++) {
+                for (let i = 0; i < maxBytes; i++) {
                     spiData[i] = 0;
                 }
 
@@ -983,7 +983,7 @@ Controllers = {
 
                 this.io.digitalWrite(this.pins.cs, this.io.LOW);
 
-                for (var j = maxBytes; j > 0; j--) {
+                for (let j = maxBytes; j > 0; j--) {
                     this.board.shiftOut(this.pins.data, this.pins.clock, spiData[j - 1]);
                 }
 
@@ -1106,7 +1106,7 @@ LedControl.MATRIX_CHARS = ledCharacters.MATRIX_CHARS;
 LedControl.DIGIT_CHARS = ledCharacters.DIGIT_CHARS;
 
 /* istanbul ignore else */
-if (Boolean(process.env.IS_TEST_MODE)) {
+if (process.env.IS_TEST_MODE) {
     LedControl.Controllers = Controllers;
     LedControl.purge = function () {
         addresses = new Set([0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77]);

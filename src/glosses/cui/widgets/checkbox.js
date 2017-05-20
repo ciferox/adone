@@ -22,8 +22,10 @@ export default class CheckBox extends adone.cui.widget.Input {
         }
 
         this.on("focus", () => {
-            var lpos = this.lpos;
-            if (!lpos) return;
+            const lpos = this.lpos;
+            if (!lpos) {
+                return; 
+            }
             this.screen.terminal.lsaveCursor("checkbox");
             this.screen.terminal.moveTo(lpos.yi, lpos.xi + 1);
             this.screen.terminal.showCursor();
@@ -36,18 +38,22 @@ export default class CheckBox extends adone.cui.widget.Input {
 
     render() {
         this.clearPos(true);
-        this.setContent("[" + (this.checked ? "x" : " ") + "] " + this.text, true);
+        this.setContent(`[${this.checked ? "x" : " "}] ${this.text}`, true);
         return super.render();
     }
 
     check() {
-        if (this.checked) return;
+        if (this.checked) {
+            return; 
+        }
         this.checked = this.value = true;
         this.emit("check");
     }
 
     uncheck() {
-        if (!this.checked) return;
+        if (!this.checked) {
+            return; 
+        }
         this.checked = this.value = false;
         this.emit("uncheck");
     }

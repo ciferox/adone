@@ -24,11 +24,11 @@ const Drivers = {
         initialize: {
             value(board, opts) {
                 let CONSTANTS = {
-                    TEMPERATURE_FAMILY: 0x3B,
-                    CONVERT_TEMPERATURE_COMMAND: 0x44,
-                    READ_SCRATCHPAD_COMMAND: 0xBE,
-                    READ_COUNT: 9
-                },
+                        TEMPERATURE_FAMILY: 0x3B,
+                        CONVERT_TEMPERATURE_COMMAND: 0x44,
+                        READ_SCRATCHPAD_COMMAND: 0xBE,
+                        READ_COUNT: 9
+                    },
                     pin = opts.pin,
                     freq = opts.freq || 100,
                     getAddress, readTemperature, isConversionAvailable, getAddresses, readOne;
@@ -52,7 +52,7 @@ const Drivers = {
                         return;
                     }
 
-                    this.devices = devices.filter(function (device) {
+                    this.devices = devices.filter((device) => {
                         return device[0] === CONSTANTS.TEMPERATURE_FAMILY;
                     }, this);
 
@@ -61,35 +61,35 @@ const Drivers = {
                         return;
                     }
 
-                    this.devices.forEach(function (device) {
+                    this.devices.forEach((device) => {
                         this.emit("initialized", getAddress(device));
-                    }.bind(this));
+                    });
 
                     getAddresses = function () {
                         if (this.addresses) {
                             return this.devices.filter(function (device) {
-                                var address = getAddress(device);
+                                const address = getAddress(device);
                                 return this.addresses.includes(address);
                             }, this);
-                        } else {
-                            return [this.devices[0]];
-                        }
+                        } 
+                        return [this.devices[0]];
+                        
                     }.bind(this);
 
                     readTemperature = function () {
-                        var devicesToWait, devicesToRead, result;
+                        let devicesToWait, devicesToRead, result;
 
                         // request tempeature conversion
                         devicesToWait = getAddresses();
                         devicesToRead = getAddresses();
 
-                        devicesToRead.forEach(function (device) {
+                        devicesToRead.forEach((device) => {
                             board.io.sendOneWireReset(pin);
                             board.io.sendOneWireWrite(pin, device, CONSTANTS.CONVERT_TEMPERATURE_COMMAND);
                         });
 
                         isConversionAvailable = function (done) {
-                            var nextDevice;
+                            let nextDevice;
 
                             if (devicesToWait.length === 0) {
                                 return done();
@@ -99,7 +99,7 @@ const Drivers = {
 
                             board.io.sendOneWireReset(pin);
 
-                            board.io.sendOneWireWriteAndRead(pin, nextDevice, CONSTANTS.READ_SCRATCHPAD_COMMAND, CONSTANTS.READ_COUNT, function (err, data) {
+                            board.io.sendOneWireWriteAndRead(pin, nextDevice, CONSTANTS.READ_SCRATCHPAD_COMMAND, CONSTANTS.READ_COUNT, (err, data) => {
                                 if (!data[0]) {
                                     devicesToWait.push(nextDevice);
 
@@ -110,10 +110,10 @@ const Drivers = {
 
                                 isConversionAvailable(done);
                             });
-                        }.bind(this);
+                        };
 
                         readOne = function () {
-                            var device;
+                            let device;
 
                             if (devicesToRead.length === 0) {
                                 setTimeout(readTemperature, freq);
@@ -124,7 +124,7 @@ const Drivers = {
                             // read from the scratchpad
                             board.io.sendOneWireReset(pin);
 
-                            board.io.sendOneWireWriteAndRead(pin, device, CONSTANTS.READ_SCRATCHPAD_COMMAND, CONSTANTS.READ_COUNT, function (err, data) {
+                            board.io.sendOneWireWriteAndRead(pin, device, CONSTANTS.READ_SCRATCHPAD_COMMAND, CONSTANTS.READ_COUNT, (err, data) => {
                                 if (err) {
                                     this.emit("error", err);
                                     return;
@@ -134,7 +134,7 @@ const Drivers = {
                                 this.emit("data", getAddress(device), result);
 
                                 readOne();
-                            }.bind(this));
+                            });
                         }.bind(this);
 
                         isConversionAvailable(readOne);
@@ -158,11 +158,11 @@ const Drivers = {
         initialize: {
             value(board, opts) {
                 let CONSTANTS = {
-                    TEMPERATURE_FAMILY: 0x28,
-                    CONVERT_TEMPERATURE_COMMAND: 0x44,
-                    READ_SCRATCHPAD_COMMAND: 0xBE,
-                    READ_COUNT: 2
-                },
+                        TEMPERATURE_FAMILY: 0x28,
+                        CONVERT_TEMPERATURE_COMMAND: 0x44,
+                        READ_SCRATCHPAD_COMMAND: 0xBE,
+                        READ_COUNT: 2
+                    },
                     pin = opts.pin,
                     freq = opts.freq || 100,
                     getAddress, readThermometer, readOne;
@@ -186,7 +186,7 @@ const Drivers = {
                         return;
                     }
 
-                    this.devices = devices.filter(function (device) {
+                    this.devices = devices.filter((device) => {
                         return device[0] === CONSTANTS.TEMPERATURE_FAMILY;
                     }, this);
 
@@ -195,24 +195,24 @@ const Drivers = {
                         return;
                     }
 
-                    this.devices.forEach(function (device) {
+                    this.devices.forEach((device) => {
                         this.emit("initialized", getAddress(device));
-                    }.bind(this));
+                    });
 
                     readThermometer = function () {
-                        var devicesToRead, result;
+                        let devicesToRead, result;
 
                         // request tempeature conversion
                         if (this.addresses) {
                             devicesToRead = this.devices.filter(function (device) {
-                                var address = getAddress(device);
+                                const address = getAddress(device);
                                 return this.addresses.includes(address);
                             }, this);
                         } else {
                             devicesToRead = [this.devices[0]];
                         }
 
-                        devicesToRead.forEach(function (device) {
+                        devicesToRead.forEach((device) => {
                             board.io.sendOneWireReset(pin);
                             board.io.sendOneWireWrite(pin, device, CONSTANTS.CONVERT_TEMPERATURE_COMMAND);
                         });
@@ -221,7 +221,7 @@ const Drivers = {
                         board.io.sendOneWireDelay(pin, 1);
 
                         readOne = function () {
-                            var device;
+                            let device;
 
                             if (devicesToRead.length === 0) {
                                 setTimeout(readThermometer, freq);
@@ -232,7 +232,7 @@ const Drivers = {
                             // read from the scratchpad
                             board.io.sendOneWireReset(pin);
 
-                            board.io.sendOneWireWriteAndRead(pin, device, CONSTANTS.READ_SCRATCHPAD_COMMAND, CONSTANTS.READ_COUNT, function (err, data) {
+                            board.io.sendOneWireWriteAndRead(pin, device, CONSTANTS.READ_SCRATCHPAD_COMMAND, CONSTANTS.READ_COUNT, (err, data) => {
                                 if (err) {
                                     this.emit("error", err);
                                     return;
@@ -242,7 +242,7 @@ const Drivers = {
                                 this.emit("data", getAddress(device), result);
 
                                 readOne();
-                            }.bind(this));
+                            });
                         }.bind(this);
 
                         readOne();
@@ -308,7 +308,7 @@ const Controllers = {
                 // VOUT = 250 mV at 25°C
                 // VOUT = –550 mV at –55°C
 
-                let mV = this.aref * 1000 * raw / 1023;
+                const mV = this.aref * 1000 * raw / 1023;
 
                 // 10mV = 1°C
                 //
@@ -327,7 +327,7 @@ const Controllers = {
             value(raw) {
                 // OUTPUT 10mV/°K
 
-                let mV = this.aref * 1000 * raw / 1023;
+                const mV = this.aref * 1000 * raw / 1023;
 
                 // Page 1
                 return Math.round((mV / 10) - CELSIUS_TO_KELVIN);
@@ -343,7 +343,7 @@ const Controllers = {
         toCelsius: {
             value(raw) {
                 // Analog Reference Voltage
-                let mV = this.aref * 1000 * raw / 1023;
+                const mV = this.aref * 1000 * raw / 1023;
 
                 // tempC = (mV / 10) - 50
                 // http://ctms.engin.umich.edu/CTMS/Content/Activities/TMP35_36_37.pdf
@@ -363,7 +363,7 @@ const Controllers = {
         },
         initialize: {
             value(opts, dataHandler) {
-                let address = opts.address || this.ADDRESSES[0];
+                const address = opts.address || this.ADDRESSES[0];
 
                 opts.address = address;
 
@@ -506,8 +506,8 @@ const Controllers = {
     SHT31D: {
         initialize: {
             value(opts, dataHandler) {
-                let Multi = require("./imu");
-                let driver = Multi.Drivers.get(this.board, "SHT31D", opts);
+                const Multi = require("./imu");
+                const driver = Multi.Drivers.get(this.board, "SHT31D", opts);
                 driver.on("data", (data) => {
                     dataHandler(data.temperature);
                 });
@@ -532,8 +532,8 @@ const Controllers = {
     HTU21D: {
         initialize: {
             value(opts, dataHandler) {
-                let Multi = require("./imu");
-                let driver = Multi.Drivers.get(this.board, "HTU21D", opts);
+                const Multi = require("./imu");
+                const driver = Multi.Drivers.get(this.board, "HTU21D", opts);
                 driver.on("data", (data) => {
                     dataHandler(data.temperature);
                 });
@@ -558,8 +558,8 @@ const Controllers = {
     HIH6130: {
         initialize: {
             value(opts, dataHandler) {
-                let Multi = require("./imu");
-                let driver = Multi.Drivers.get(this.board, "HIH6130", opts);
+                const Multi = require("./imu");
+                const driver = Multi.Drivers.get(this.board, "HIH6130", opts);
                 driver.on("data", (data) => {
                     dataHandler(data.temperature);
                 });
@@ -582,8 +582,8 @@ const Controllers = {
     DHT_I2C_NANO_BACKPACK: {
         initialize: {
             value(opts, dataHandler) {
-                let Multi = require("./imu");
-                let driver = Multi.Drivers.get(this.board, "DHT_I2C_NANO_BACKPACK", opts);
+                const Multi = require("./imu");
+                const driver = Multi.Drivers.get(this.board, "DHT_I2C_NANO_BACKPACK", opts);
                 driver.on("data", (data) => {
                     dataHandler(data.temperature);
                 });
@@ -603,8 +603,8 @@ const Controllers = {
     TH02: {
         initialize: {
             value(opts, dataHandler) {
-                let Multi = require("./imu");
-                let driver = Multi.Drivers.get(this.board, "TH02", opts);
+                const Multi = require("./imu");
+                const driver = Multi.Drivers.get(this.board, "TH02", opts);
                 driver.on("data", (data) => {
                     dataHandler(data.temperature);
                 });
@@ -624,8 +624,8 @@ const Controllers = {
     MPU6050: {
         initialize: {
             value(opts, dataHandler) {
-                let IMU = require("./imu");
-                let driver = IMU.Drivers.get(this.board, "MPU6050", opts);
+                const IMU = require("./imu");
+                const driver = IMU.Drivers.get(this.board, "MPU6050", opts);
                 driver.on("data", (data) => {
                     dataHandler(data.temperature);
                 });
@@ -643,8 +643,8 @@ const Controllers = {
     BNO055: {
         initialize: {
             value(opts, dataHandler) {
-                let IMU = require("./imu");
-                let driver = IMU.Drivers.get(this.board, "BNO055", opts);
+                const IMU = require("./imu");
+                const driver = IMU.Drivers.get(this.board, "BNO055", opts);
                 driver.on("data", (data) => {
                     dataHandler(data.temperature);
                 });
@@ -665,8 +665,8 @@ const Controllers = {
     MPL115A2: {
         initialize: {
             value(opts, dataHandler) {
-                let Multi = require("./imu");
-                let driver = Multi.Drivers.get(this.board, "MPL115A2", opts);
+                const Multi = require("./imu");
+                const driver = Multi.Drivers.get(this.board, "MPL115A2", opts);
                 driver.on("data", (data) => {
                     dataHandler(data.temperature);
                 });
@@ -684,8 +684,8 @@ const Controllers = {
     MPL3115A2: {
         initialize: {
             value(opts, dataHandler) {
-                let Multi = require("./imu");
-                let driver = Multi.Drivers.get(this.board, "MPL3115A2", opts);
+                const Multi = require("./imu");
+                const driver = Multi.Drivers.get(this.board, "MPL3115A2", opts);
                 driver.on("data", (data) => {
                     dataHandler(data.temperature);
                 });
@@ -705,8 +705,8 @@ const Controllers = {
     MS5611: {
         initialize: {
             value(opts, dataHandler) {
-                let Multi = require("./imu");
-                let driver = Multi.Drivers.get(this.board, "MS5611", opts);
+                const Multi = require("./imu");
+                const driver = Multi.Drivers.get(this.board, "MS5611", opts);
                 driver.on("data", (data) => {
                     dataHandler(data.temperature);
                 });
@@ -729,18 +729,18 @@ const Controllers = {
         toCelsius: {
             value(raw) {
                 // http://www.seeedstudio.com/wiki/Grove_-_Temperature_Sensor
-                let adcres = 1023;
+                const adcres = 1023;
                 // Beta parameter
-                let beta = 3975;
+                const beta = 3975;
                 // 10 kOhm (sensor resistance)
-                let rb = 10000;
+                const rb = 10000;
                 // Ginf = 1/Rinf
                 // var ginf = 120.6685;
                 // Reference Temperature 25°C
-                let tempr = 298.15;
+                const tempr = 298.15;
 
-                let rthermistor = (adcres - raw) * rb / raw;
-                let tempc = 1 / (Math.log(rthermistor / rb) / beta + 1 / tempr) - CELSIUS_TO_KELVIN;
+                const rthermistor = (adcres - raw) * rb / raw;
+                const tempc = 1 / (Math.log(rthermistor / rb) / beta + 1 / tempr) - CELSIUS_TO_KELVIN;
 
                 return Math.round(tempc);
             }
@@ -755,13 +755,13 @@ const Controllers = {
         },
         toCelsius: {
             value(raw) {
-                let adcres = 1023;
-                let beta = 3950;
-                let rb = 10000; // 10 kOhm
-                let ginf = 120.6685; // Ginf = 1/Rinf
+                const adcres = 1023;
+                const beta = 3950;
+                const rb = 10000; // 10 kOhm
+                const ginf = 120.6685; // Ginf = 1/Rinf
 
-                let rthermistor = rb * (adcres / raw - 1);
-                let tempc = beta / (Math.log(rthermistor * ginf));
+                const rthermistor = rb * (adcres / raw - 1);
+                const tempc = beta / (Math.log(rthermistor * ginf));
 
                 return Math.round(tempc - CELSIUS_TO_KELVIN);
             }
@@ -772,8 +772,8 @@ const Controllers = {
     BMP180: {
         initialize: {
             value(opts, dataHandler) {
-                let Multi = require("./imu");
-                let driver = Multi.Drivers.get(this.board, "BMP180", opts);
+                const Multi = require("./imu");
+                const driver = Multi.Drivers.get(this.board, "BMP180", opts);
                 driver.on("data", (data) => {
                     dataHandler(data.temperature);
                 });
@@ -796,8 +796,8 @@ const Controllers = {
     BMP280: {
         initialize: {
             value(opts, dataHandler) {
-                let Multi = require("./imu");
-                let driver = Multi.Drivers.get(this.board, "BMP280", opts);
+                const Multi = require("./imu");
+                const driver = Multi.Drivers.get(this.board, "BMP280", opts);
                 driver.on("data", (data) => {
                     dataHandler(data.temperature);
                 });
@@ -822,8 +822,8 @@ const Controllers = {
     BME280: {
         initialize: {
             value(opts, dataHandler) {
-                let Multi = require("./imu");
-                let driver = Multi.Drivers.get(this.board, "BME280", opts);
+                const Multi = require("./imu");
+                const driver = Multi.Drivers.get(this.board, "BME280", opts);
                 driver.on("data", (data) => {
                     dataHandler(data.temperature);
                 });
@@ -842,8 +842,8 @@ const Controllers = {
     SI7020: {
         initialize: {
             value(opts, dataHandler) {
-                let Multi = require("./imu");
-                let driver = Multi.Drivers.get(this.board, "SI7020", opts);
+                const Multi = require("./imu");
+                const driver = Multi.Drivers.get(this.board, "SI7020", opts);
                 driver.on("data", (data) => {
                     dataHandler(data.temperature);
                 });
@@ -869,7 +869,7 @@ const Controllers = {
         },
         initialize: {
             value(opts, dataHandler) {
-                let address = opts.address || this.ADDRESSES[0];
+                const address = opts.address || this.ADDRESSES[0];
 
                 opts.address = address;
 
@@ -988,7 +988,7 @@ function Thermometer(opts) {
             return;
         }
 
-        let data = {};
+        const data = {};
         data.C = data.celsius = this.celsius;
         data.F = data.fahrenheit = this.fahrenheit;
         data.K = data.kelvin = this.kelvin;

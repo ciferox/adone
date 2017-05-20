@@ -22,7 +22,9 @@ export class Worker extends Task {
         this.paused = true;
         if (is.number(ms)) {
             setTimeout(() => {
-                if (is.function(callback)) callback();
+                if (is.function(callback)) {
+                    callback(); 
+                }
                 this.resume();
             }, ms);
         }

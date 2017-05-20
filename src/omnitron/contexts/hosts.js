@@ -155,8 +155,8 @@ export default class Hosts {
         const name = host.name();
         if (host.has("aliases")) {
             return [name].concat(await host.get("aliases")).join(", ");
-        } else {
-            return name;
-        }
+        } 
+        return name;
+        
     }
 }

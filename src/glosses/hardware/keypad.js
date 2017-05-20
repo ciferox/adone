@@ -47,17 +47,17 @@ const Controllers = {
         initialize: {
             value(opts, dataHandler) {
 
-                let state = priv.get(this);
-                let address = opts.address || this.ADDRESSES[0];
+                const state = priv.get(this);
+                const address = opts.address || this.ADDRESSES[0];
                 let keys = flatKeys(opts);
-                let keyMap = this.REGISTER.MAPS[opts.controller].KEYS;
-                let targets = this.REGISTER.MAPS[opts.controller].TARGETS;
-                let mapping = Object.keys(keyMap).reduce((accum, index) => {
+                const keyMap = this.REGISTER.MAPS[opts.controller].KEYS;
+                const targets = this.REGISTER.MAPS[opts.controller].TARGETS;
+                const mapping = Object.keys(keyMap).reduce((accum, index) => {
                     accum[index] = keyMap[index];
                     return accum;
                 }, []);
 
-                let length = mapping.length;
+                const length = mapping.length;
                 opts.address = address;
 
                 this.io.i2cConfig(opts);
@@ -203,14 +203,14 @@ const Controllers = {
         },
         toAlias: {
             value(index) {
-                let state = priv.get(this);
+                const state = priv.get(this);
                 return state.keys[index];
             }
         },
         toIndices: {
             value(raw) {
-                let state = priv.get(this);
-                let indices = [];
+                const state = priv.get(this);
+                const indices = [];
                 for (let i = 0; i < 12; i++) {
                     if (raw & (1 << i)) {
                         indices.push(state.targets[raw & (1 << i)]);
@@ -225,11 +225,11 @@ const Controllers = {
     VKEY: {
         initialize: {
             value(opts, dataHandler) {
-                let state = priv.get(this);
-                let aref = opts.aref || this.io.aref || 5;
-                let use5V = Fn.inRange(aref, 4.5, 5.5);
+                const state = priv.get(this);
+                const aref = opts.aref || this.io.aref || 5;
+                const use5V = Fn.inRange(aref, 4.5, 5.5);
                 let keys = flatKeys(opts);
-                let mapping = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+                const mapping = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
                 let length = 0;
 
                 if (!keys.length) {
@@ -257,17 +257,17 @@ const Controllers = {
         },
         toAlias: {
             value(index) {
-                let state = priv.get(this);
+                const state = priv.get(this);
                 return state.keys[index];
             }
         },
         toIndices: {
             value(raw) {
-                let state = priv.get(this);
-                let length = state.length;
-                let low = state.scale[0];
-                let step = state.scale[1];
-                let high = state.scale[2];
+                const state = priv.get(this);
+                const length = state.length;
+                const low = state.scale[0];
+                const step = state.scale[1];
+                const high = state.scale[2];
 
                 if (raw < low || raw > high) {
                     return [];
@@ -310,14 +310,14 @@ const Controllers = {
                 mapping = keys;
                 length = mapping.length;
 
-                let state = priv.get(this);
+                const state = priv.get(this);
                 // keys + Idle state == length + 1
-                let total = length + 1;
-                let vrange = Math.round(1023 / total);
-                let ranges = Array.from({
+                const total = length + 1;
+                const vrange = Math.round(1023 / total);
+                const ranges = Array.from({
                     length: total
                 }, (_, index) => {
-                    let start = vrange * index;
+                    const start = vrange * index;
                     return Array.from({
                         length: vrange - 1
                     }, (_, index) => {
@@ -340,14 +340,14 @@ const Controllers = {
         },
         toAlias: {
             value(index) {
-                let state = priv.get(this);
+                const state = priv.get(this);
                 return state.keys[index];
             }
         },
         toIndices: {
             value(raw) {
-                let state = priv.get(this);
-                let ranges = state.ranges;
+                const state = priv.get(this);
+                const ranges = state.ranges;
                 let index = ranges.findIndex((range) => {
                     return range.includes(raw);
                 });
@@ -375,10 +375,10 @@ const Controllers = {
         },
         initialize: {
             value(opts, dataHandler) {
-                let state = priv.get(this);
-                let address = opts.address || this.ADDRESSES[0];
+                const state = priv.get(this);
+                const address = opts.address || this.ADDRESSES[0];
                 let keys = flatKeys(opts);
-                let mapping = [0, 1, 2, 3, 4, 5, 6];
+                const mapping = [0, 1, 2, 3, 4, 5, 6];
                 let length = 0;
 
                 if (!keys.length) {
@@ -401,13 +401,13 @@ const Controllers = {
         },
         toAlias: {
             value(index) {
-                let state = priv.get(this);
+                const state = priv.get(this);
                 return state.keys[index];
             }
         },
         toIndices: {
             value(raw) {
-                let indices = [];
+                const indices = [];
                 for (let i = 0; i < 7; i++) {
                     if (raw & (1 << i)) {
                         indices.push(i);
@@ -424,10 +424,10 @@ const Controllers = {
         },
         initialize: {
             value(opts, dataHandler) {
-                let state = priv.get(this);
-                let address = opts.address || this.ADDRESSES[0];
+                const state = priv.get(this);
+                const address = opts.address || this.ADDRESSES[0];
                 let keys = flatKeys(opts);
-                let mapping = [1, 2, 3, 4, 5, 6, 7, 8, 9, "*", 0, "#"];
+                const mapping = [1, 2, 3, 4, 5, 6, 7, 8, 9, "*", 0, "#"];
                 let length = 0;
 
                 if (!keys.length) {
@@ -452,14 +452,14 @@ const Controllers = {
         },
         toAlias: {
             value(index) {
-                let state = priv.get(this);
+                const state = priv.get(this);
                 return state.keys[index];
             }
         },
         toIndices: {
             value(raw) {
-                let state = priv.get(this);
-                let indices = [];
+                const state = priv.get(this);
+                const indices = [];
                 for (let i = 0; i < state.length; i++) {
                     if (raw & (1 << i)) {
                         indices.push(i);
@@ -486,10 +486,10 @@ const Controllers = {
         },
         initialize: {
             value(opts, dataHandler) {
-                let state = priv.get(this);
-                let address = opts.address || this.ADDRESSES[0];
+                const state = priv.get(this);
+                const address = opts.address || this.ADDRESSES[0];
                 let keys = flatKeys(opts);
-                let mapping = [1, 2, 3, 4, 5, 6, 7, 8, 9, "*", 0, "#"];
+                const mapping = [1, 2, 3, 4, 5, 6, 7, 8, 9, "*", 0, "#"];
                 let length = 0;
 
                 if (!keys.length) {
@@ -519,14 +519,14 @@ const Controllers = {
         },
         toAlias: {
             value(index) {
-                let state = priv.get(this);
+                const state = priv.get(this);
                 return state.keys[index];
             }
         },
         toIndices: {
             value(raw) {
-                let state = priv.get(this);
-                let indices = [];
+                const state = priv.get(this);
+                const indices = [];
                 for (let i = 0; i < state.length; i++) {
                     if (raw & (1 << i)) {
                         indices.push(i);
@@ -614,11 +614,11 @@ function Keypad(opts) {
 
             raw = data;
 
-            let now = Date.now();
-            let indices = this.toIndices(data);
-            let kLength = state.length;
+            const now = Date.now();
+            const indices = this.toIndices(data);
+            const kLength = state.length;
 
-            let lists = {
+            const lists = {
                 down: [],
                 hold: [],
                 up: []
@@ -656,7 +656,7 @@ function Keypad(opts) {
             }
 
             Object.keys(lists).forEach(function (key) {
-                let list = lists[key];
+                const list = lists[key];
 
                 if (list.length) {
                     trigger.call(this, key, list);

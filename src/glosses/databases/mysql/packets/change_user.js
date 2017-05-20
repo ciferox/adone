@@ -29,7 +29,7 @@ export default class ChangeUser {
     }
 
     serializeToBuffer(buffer) {
-        const isSet = (flag) =>  this.flags & c.client[flag];
+        const isSet = (flag) => this.flags & c.client[flag];
 
         const p = new Packet(0, buffer, 0, buffer.length);
         p.offset = 4;

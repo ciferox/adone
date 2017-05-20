@@ -6,7 +6,7 @@ defineType("AwaitExpression", {
     aliases: ["Expression", "Terminatorless"],
     fields: {
         argument: {
-            validate: assertNodeType("Expression"),
+            validate: assertNodeType("Expression")
         }
     }
 });

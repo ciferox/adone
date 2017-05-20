@@ -114,9 +114,9 @@ export default class Watcher extends adone.EventEmitter {
                     return path;
                 } else if (path[0] === "!") {
                     return `!${adone.std.path.join(cwd, path.substring(1))}`;
-                } else {
-                    return adone.std.path.join(cwd, path);
-                }
+                } 
+                return adone.std.path.join(cwd, path);
+                
             });
         }
 

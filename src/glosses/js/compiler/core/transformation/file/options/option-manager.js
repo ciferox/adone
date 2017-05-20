@@ -73,9 +73,9 @@ export default class OptionManager {
                 plugin
             });
             return plugin;
-        } else {
-            throw new TypeError(messages.get("pluginNotObject", loc, i, typeof obj) + loc + i);
-        }
+        } 
+        throw new TypeError(messages.get("pluginNotObject", loc, i, typeof obj) + loc + i);
+        
     }
 
     static createBareOptions() {

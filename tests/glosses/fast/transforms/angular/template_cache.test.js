@@ -4,10 +4,10 @@ const { File, plugin: { angularTemplateCache: templateCache } } = fast;
 describe("Fast", () => {
     describe("transforms", () => {
         describe("angular template cache", () => {
-            it("should build valid $templateCache from multiple source-files", function (cb) {
+            it("should build valid $templateCache from multiple source-files", (cb) => {
                 const stream = templateCache("templates.js");
 
-                stream.on("data", function (file) {
+                stream.on("data", (file) => {
                     expect(path.normalize(file.path)).to.be.equal(path.normalize(path.join(__dirname, "/templates.js")));
                     expect(file.relative).to.be.equal("templates.js");
                     expect(file.contents.toString()).to.be.equal("angular.module('templates').run(['$templateCache', function($templateCache) {$templateCache.put('/template-a.html','<h1 id=\"template-a\">I\\'m template A!</h1>');\n$templateCache.put('/template-b.html','<h1 id=\"template-b\">I\\'m template B!</h1>');}]);");
@@ -30,14 +30,14 @@ describe("Fast", () => {
                 stream.resume();
             });
 
-            it("should allow options as first parameter if no filename is specified", function (cb) {
+            it("should allow options as first parameter if no filename is specified", (cb) => {
                 const stream = templateCache({
                     standalone: true,
                     root: "/views"
                 });
 
-                stream.on("data", function (file) {
-                    expect(path.normalize(file.path)).to.be.equal(path.normalize(__dirname + "/templates.js"));
+                stream.on("data", (file) => {
+                    expect(path.normalize(file.path)).to.be.equal(path.normalize(`${__dirname}/templates.js`));
                     expect(file.relative).to.be.equal("templates.js");
                     expect(file.contents.toString("utf8")).to.be.equal("angular.module('templates', []).run(['$templateCache', function($templateCache) {$templateCache.put('/views/template-a.html','<h1 id=\"template-a\">I\\'m template A!</h1>');}]);");
                     cb();
@@ -45,7 +45,7 @@ describe("Fast", () => {
 
                 stream.write(new File({
                     base: __dirname,
-                    path: __dirname + "/template-a.html",
+                    path: `${__dirname}/template-a.html`,
                     contents: new Buffer("<h1 id=\"template-a\">I'm template A!</h1>")
                 }));
 
@@ -53,15 +53,15 @@ describe("Fast", () => {
                 stream.resume();
             });
 
-            context("options.root", function () {
+            context("options.root", () => {
 
-                it("should set root", function (cb) {
+                it("should set root", (cb) => {
                     const stream = templateCache("templates.js", {
                         root: "/views"
                     });
 
-                    stream.on("data", function (file) {
-                        expect(path.normalize(file.path)).to.be.equal(path.normalize(__dirname + "/templates.js"));
+                    stream.on("data", (file) => {
+                        expect(path.normalize(file.path)).to.be.equal(path.normalize(`${__dirname}/templates.js`));
                         expect(file.relative).to.be.equal("templates.js");
                         expect(file.contents.toString("utf8")).to.be.equal("angular.module('templates').run(['$templateCache', function($templateCache) {$templateCache.put('/views/template-a.html','<h1 id=\"template-a\">I\\'m template A!</h1>');}]);");
                         cb();
@@ -69,7 +69,7 @@ describe("Fast", () => {
 
                     stream.write(new File({
                         base: __dirname,
-                        path: __dirname + "/template-a.html",
+                        path: `${__dirname}/template-a.html`,
                         contents: new Buffer("<h1 id=\"template-a\">I'm template A!</h1>")
                     }));
 
@@ -77,13 +77,13 @@ describe("Fast", () => {
                     stream.resume();
                 });
 
-                it("should preserve the \"./\" if there is one in front of the root", function (cb) {
+                it("should preserve the \"./\" if there is one in front of the root", (cb) => {
                     const stream = templateCache("templates.js", {
                         root: "./"
                     });
 
-                    stream.on("data", function (file) {
-                        expect(path.normalize(file.path)).to.be.equal(path.normalize(__dirname + "/templates.js"));
+                    stream.on("data", (file) => {
+                        expect(path.normalize(file.path)).to.be.equal(path.normalize(`${__dirname}/templates.js`));
                         expect(file.relative).to.be.equal("templates.js");
                         expect(file.contents.toString("utf8")).to.be.equal("angular.module('templates').run(['$templateCache', function($templateCache) {$templateCache.put('./template-a.html','<h1 id=\"template-a\">I\\'m template A!</h1>');}]);");
                         cb();
@@ -91,7 +91,7 @@ describe("Fast", () => {
 
                     stream.write(new File({
                         base: __dirname,
-                        path: __dirname + "/template-a.html",
+                        path: `${__dirname}/template-a.html`,
                         contents: new Buffer("<h1 id=\"template-a\">I'm template A!</h1>")
                     }));
 
@@ -99,13 +99,13 @@ describe("Fast", () => {
                     stream.resume();
                 });
 
-                it("should preserve the \".\" if there is one in front of the root", function (cb) {
+                it("should preserve the \".\" if there is one in front of the root", (cb) => {
                     const stream = templateCache("templates.js", {
                         root: "."
                     });
 
-                    stream.on("data", function (file) {
-                        expect(path.normalize(file.path)).to.be.equal(path.normalize(__dirname + "/templates.js"));
+                    stream.on("data", (file) => {
+                        expect(path.normalize(file.path)).to.be.equal(path.normalize(`${__dirname}/templates.js`));
                         expect(file.relative).to.be.equal("templates.js");
                         expect(file.contents.toString("utf8")).to.be.equal("angular.module('templates').run(['$templateCache', function($templateCache) {$templateCache.put('./template-a.html','<h1 id=\"template-a\">I\\'m template A!</h1>');}]);");
                         cb();
@@ -113,7 +113,7 @@ describe("Fast", () => {
 
                     stream.write(new File({
                         base: __dirname,
-                        path: __dirname + "/template-a.html",
+                        path: `${__dirname}/template-a.html`,
                         contents: new Buffer("<h1 id=\"template-a\">I'm template A!</h1>")
                     }));
 
@@ -121,13 +121,13 @@ describe("Fast", () => {
                     stream.resume();
                 });
 
-                it("should preserve the root as is, if the root folder name start with a \".\" character", function (cb) {
+                it("should preserve the root as is, if the root folder name start with a \".\" character", (cb) => {
                     const stream = templateCache("templates.js", {
                         root: ".root/"
                     });
 
-                    stream.on("data", function (file) {
-                        expect(path.normalize(file.path)).to.be.equal(path.normalize(__dirname + "/templates.js"));
+                    stream.on("data", (file) => {
+                        expect(path.normalize(file.path)).to.be.equal(path.normalize(`${__dirname}/templates.js`));
                         expect(file.relative).to.be.equal("templates.js");
                         expect(file.contents.toString("utf8")).to.be.equal("angular.module('templates').run(['$templateCache', function($templateCache) {$templateCache.put('.root/template-a.html','<h1 id=\"template-a\">I\\'m template A!</h1>');}]);");
                         cb();
@@ -135,7 +135,7 @@ describe("Fast", () => {
 
                     stream.write(new File({
                         base: __dirname,
-                        path: __dirname + "/template-a.html",
+                        path: `${__dirname}/template-a.html`,
                         contents: new Buffer("<h1 id=\"template-a\">I'm template A!</h1>")
                     }));
 
@@ -145,17 +145,17 @@ describe("Fast", () => {
             });
         });
 
-        context("options.transformUrl", function () {
+        context("options.transformUrl", () => {
 
-            it("should change the URL to the output of the function", function (cb) {
+            it("should change the URL to the output of the function", (cb) => {
                 const stream = templateCache("templates.js", {
-                    transformUrl (url) {
+                    transformUrl(url) {
                         return url.replace(/template/, "tpl");
                     }
                 });
 
-                stream.on("data", function (file) {
-                    expect(path.normalize(file.path)).to.be.equal(path.normalize(__dirname + "/templates.js"));
+                stream.on("data", (file) => {
+                    expect(path.normalize(file.path)).to.be.equal(path.normalize(`${__dirname}/templates.js`));
                     expect(file.relative).to.be.equal("templates.js");
                     expect(file.contents.toString("utf8")).to.be.equal("angular.module('templates').run(['$templateCache', function($templateCache) {$templateCache.put('/tpl-a.html','<h1 id=\"template-a\">I\\'m template A!</h1>');}]);");
                     cb();
@@ -163,7 +163,7 @@ describe("Fast", () => {
 
                 stream.write(new File({
                     base: __dirname,
-                    path: __dirname + "/template-a.html",
+                    path: `${__dirname}/template-a.html`,
                     contents: new Buffer("<h1 id=\"template-a\">I'm template A!</h1>")
                 }));
 
@@ -171,7 +171,7 @@ describe("Fast", () => {
                 stream.resume();
             });
 
-            it("should set the final url, after any root option has been applied", function (cb) {
+            it("should set the final url, after any root option has been applied", (cb) => {
                 const stream = templateCache("templates.js", {
                     root: "./views",
                     transformUrl() {
@@ -179,8 +179,8 @@ describe("Fast", () => {
                     }
                 });
 
-                stream.on("data", function (file) {
-                    expect(path.normalize(file.path)).to.be.equal(path.normalize(__dirname + "/templates.js"));
+                stream.on("data", (file) => {
+                    expect(path.normalize(file.path)).to.be.equal(path.normalize(`${__dirname}/templates.js`));
                     expect(file.relative).to.be.equal("templates.js");
                     expect(file.contents.toString("utf8")).to.be.equal("angular.module('templates').run(['$templateCache', function($templateCache) {$templateCache.put('/completely/transformed/final','<h1 id=\"template-a\">I\\'m template A!</h1>');}]);");
                     cb();
@@ -188,7 +188,7 @@ describe("Fast", () => {
 
                 stream.write(new File({
                     base: __dirname,
-                    path: __dirname + "/template-a.html",
+                    path: `${__dirname}/template-a.html`,
                     contents: new Buffer("<h1 id=\"template-a\">I'm template A!</h1>")
                 }));
 
@@ -197,15 +197,15 @@ describe("Fast", () => {
             });
         });
 
-        context("options.standalone", function () {
+        context("options.standalone", () => {
 
-            it("should create standalone Angular module", function (cb) {
+            it("should create standalone Angular module", (cb) => {
                 const stream = templateCache("templates.js", {
                     standalone: true
                 });
 
-                stream.on("data", function (file) {
-                    expect(path.normalize(file.path)).to.be.equal(path.normalize(__dirname + "/templates.js"));
+                stream.on("data", (file) => {
+                    expect(path.normalize(file.path)).to.be.equal(path.normalize(`${__dirname}/templates.js`));
                     expect(file.relative).to.be.equal("templates.js");
                     expect(file.contents.toString("utf8")).to.be.equal("angular.module('templates', []).run(['$templateCache', function($templateCache) {$templateCache.put('/template-a.html','<h1 id=\"template-a\">I\\'m template A!</h1>');}]);");
                     cb();
@@ -213,7 +213,7 @@ describe("Fast", () => {
 
                 stream.write(new File({
                     base: __dirname,
-                    path: __dirname + "/template-a.html",
+                    path: `${__dirname}/template-a.html`,
                     contents: new Buffer("<h1 id=\"template-a\">I'm template A!</h1>")
                 }));
 
@@ -222,20 +222,20 @@ describe("Fast", () => {
             });
         });
 
-        context("options.filename", function () {
+        context("options.filename", () => {
 
-            it("should default to templates.js if not specified", function (cb) {
+            it("should default to templates.js if not specified", (cb) => {
                 const stream = templateCache();
 
-                stream.on("data", function (file) {
-                    expect(path.normalize(file.path)).to.be.equal(path.normalize(__dirname + "/templates.js"));
+                stream.on("data", (file) => {
+                    expect(path.normalize(file.path)).to.be.equal(path.normalize(`${__dirname}/templates.js`));
                     expect(file.relative).to.be.equal("templates.js");
                     cb();
                 }).on("error", cb);
 
                 stream.write(new File({
                     base: __dirname,
-                    path: __dirname + "/template-a.html",
+                    path: `${__dirname}/template-a.html`,
                     contents: new Buffer("<h1 id=\"template-a\">I'm template A!</h1>")
                 }));
 
@@ -243,15 +243,15 @@ describe("Fast", () => {
                 stream.resume();
             });
 
-            it("should set filename", function (cb) {
+            it("should set filename", (cb) => {
                 const stream = templateCache({
                     standalone: true,
                     root: "/views",
                     filename: "foobar.js"
                 });
 
-                stream.on("data", function (file) {
-                    expect(path.normalize(file.path)).to.be.equal(path.normalize(__dirname + "/foobar.js"));
+                stream.on("data", (file) => {
+                    expect(path.normalize(file.path)).to.be.equal(path.normalize(`${__dirname}/foobar.js`));
                     expect(file.relative).to.be.equal("foobar.js");
                     expect(file.contents.toString("utf8")).to.be.equal("angular.module('templates', []).run(['$templateCache', function($templateCache) {$templateCache.put('/views/template-a.html','<h1 id=\"template-a\">I\\'m template A!</h1>');}]);");
                     cb();
@@ -259,7 +259,7 @@ describe("Fast", () => {
 
                 stream.write(new File({
                     base: __dirname,
-                    path: __dirname + "/template-a.html",
+                    path: `${__dirname}/template-a.html`,
                     contents: new Buffer("<h1 id=\"template-a\">I'm template A!</h1>")
                 }));
                 stream.end();
@@ -267,17 +267,17 @@ describe("Fast", () => {
             });
         });
 
-        context("options.base", function () {
+        context("options.base", () => {
 
-            it("should set base url", function (cb) {
+            it("should set base url", (cb) => {
                 const stream = templateCache({
                     standalone: true,
                     root: "/views",
                     base: path.resolve(__dirname, "..")
                 });
 
-                stream.on("data", function (file) {
-                    expect(path.normalize(file.path)).to.be.equal(path.normalize(__dirname + "/templates.js"));
+                stream.on("data", (file) => {
+                    expect(path.normalize(file.path)).to.be.equal(path.normalize(`${__dirname}/templates.js`));
                     expect(file.relative).to.be.equal("templates.js");
                     expect(file.contents.toString("utf8")).to.be.equal("angular.module('templates', []).run(['$templateCache', function($templateCache) {$templateCache.put('/views/angular/template-a.html','<h1 id=\"template-a\">I\\'m template A!</h1>');}]);");
                     cb();
@@ -285,7 +285,7 @@ describe("Fast", () => {
 
                 stream.write(new File({
                     base: __dirname,
-                    path: __dirname + "/template-a.html",
+                    path: `${__dirname}/template-a.html`,
                     contents: new Buffer("<h1 id=\"template-a\">I'm template A!</h1>")
                 }));
 
@@ -293,17 +293,17 @@ describe("Fast", () => {
                 stream.resume();
             });
 
-            it("should allow functions", function (cb) {
+            it("should allow functions", (cb) => {
                 const stream = templateCache({
                     standalone: true,
                     root: "/templates",
-                    base (file) {
-                        return "/all/" + file.relative;
+                    base(file) {
+                        return `/all/${file.relative}`;
                     }
                 });
 
-                stream.on("data", function (file) {
-                    expect(path.normalize(file.path)).to.be.equal(path.normalize(__dirname + "/templates.js"));
+                stream.on("data", (file) => {
+                    expect(path.normalize(file.path)).to.be.equal(path.normalize(`${__dirname}/templates.js`));
                     expect(file.relative).to.be.equal("templates.js");
                     expect(file.contents.toString("utf8")).to.be.equal("angular.module('templates', []).run(['$templateCache', function($templateCache) {$templateCache.put('/templates/all/template-a.html','<h1 id=\"template-a\">I\\'m template A!</h1>');}]);");
                     cb();
@@ -311,7 +311,7 @@ describe("Fast", () => {
 
                 stream.write(new File({
                     base: __dirname,
-                    path: __dirname + "/template-a.html",
+                    path: `${__dirname}/template-a.html`,
                     contents: new Buffer("<h1 id=\"template-a\">I'm template A!</h1>")
                 }));
 
@@ -320,16 +320,16 @@ describe("Fast", () => {
             });
         });
 
-        context("options.moduleSystem", function () {
+        context("options.moduleSystem", () => {
 
-            it("should support Browserify-style exports", function (cb) {
+            it("should support Browserify-style exports", (cb) => {
                 const stream = templateCache("templates.js", {
                     moduleSystem: "Browserify",
                     standalone: true
                 });
 
-                stream.on("data", function (file) {
-                    expect(file.path).to.be.equal(path.normalize(__dirname + "/templates.js"));
+                stream.on("data", (file) => {
+                    expect(file.path).to.be.equal(path.normalize(`${__dirname}/templates.js`));
                     expect(file.relative).to.be.equal("templates.js");
                     expect(file.contents.toString("utf8")).to.be.equal("'use strict'; module.exports = angular.module('templates', []).run(['$templateCache', function($templateCache) {$templateCache.put('/template-a.html','<h1 id=\"template-a\">I\\'m template A!</h1>');}]);");
                     cb();
@@ -337,7 +337,7 @@ describe("Fast", () => {
 
                 stream.write(new File({
                     base: __dirname,
-                    path: __dirname + "/template-a.html",
+                    path: `${__dirname}/template-a.html`,
                     contents: new Buffer("<h1 id=\"template-a\">I'm template A!</h1>")
                 }));
 
@@ -345,13 +345,13 @@ describe("Fast", () => {
                 stream.resume();
             });
 
-            it("should support RequireJS-style exports", function (cb) {
+            it("should support RequireJS-style exports", (cb) => {
                 const stream = templateCache("templates.js", {
                     moduleSystem: "RequireJS"
                 });
 
-                stream.on("data", function (file) {
-                    expect(path.normalize(file.path)).to.be.equal(path.normalize(__dirname + "/templates.js"));
+                stream.on("data", (file) => {
+                    expect(path.normalize(file.path)).to.be.equal(path.normalize(`${__dirname}/templates.js`));
                     expect(file.relative).to.be.equal("templates.js");
                     expect(file.contents.toString("utf8")).to.be.equal("define(['angular'], function(angular) { 'use strict'; return angular.module('templates').run(['$templateCache', function($templateCache) {$templateCache.put('/template-a.html','<h1 id=\"template-a\">I\\'m template A!</h1>');}]);});");
                     cb();
@@ -359,7 +359,7 @@ describe("Fast", () => {
 
                 stream.write(new File({
                     base: __dirname,
-                    path: __dirname + "/template-a.html",
+                    path: `${__dirname}/template-a.html`,
                     contents: new Buffer("<h1 id=\"template-a\">I'm template A!</h1>")
                 }));
 
@@ -367,13 +367,13 @@ describe("Fast", () => {
                 stream.resume();
             });
 
-            it("should support ES6-style exports", function (cb) {
+            it("should support ES6-style exports", (cb) => {
                 const stream = templateCache("templates.js", {
                     moduleSystem: "ES6"
                 });
 
-                stream.on("data", function (file) {
-                    expect(path.normalize(file.path)).to.be.equal(path.normalize(__dirname + "/templates.js"));
+                stream.on("data", (file) => {
+                    expect(path.normalize(file.path)).to.be.equal(path.normalize(`${__dirname}/templates.js`));
                     expect(file.relative).to.be.equal("templates.js");
                     expect(file.contents.toString("utf8")).to.be.equal("import angular from 'angular'; export default angular.module('templates').run(['$templateCache', function($templateCache) {$templateCache.put('/template-a.html','<h1 id=\"template-a\">I\\'m template A!</h1>');}]);");
                     cb();
@@ -381,7 +381,7 @@ describe("Fast", () => {
 
                 stream.write(new File({
                     base: __dirname,
-                    path: __dirname + "/template-a.html",
+                    path: `${__dirname}/template-a.html`,
                     contents: new Buffer("<h1 id=\"template-a\">I'm template A!</h1>")
                 }));
 
@@ -390,16 +390,16 @@ describe("Fast", () => {
             });
         });
 
-        context("options.templateHeader & options.templateFooter", function () {
+        context("options.templateHeader & options.templateFooter", () => {
 
-            it("should override TEMPLATE_HEADER & TEMPLATE_FOOTER", function (cb) {
+            it("should override TEMPLATE_HEADER & TEMPLATE_FOOTER", (cb) => {
                 const stream = templateCache("templates.js", {
                     templateHeader: "var template = \"",
                     templateFooter: "\";"
                 });
 
-                stream.on("data", function (file) {
-                    expect(file.path).to.be.equal(path.normalize(__dirname + "/templates.js"));
+                stream.on("data", (file) => {
+                    expect(file.path).to.be.equal(path.normalize(`${__dirname}/templates.js`));
                     expect(file.relative).to.be.equal("templates.js");
                     expect(file.contents.toString("utf8")).to.be.equal("var template = \"$templateCache.put('/template-a.html','yoo');\";");
                     cb();
@@ -407,7 +407,7 @@ describe("Fast", () => {
 
                 stream.write(new File({
                     base: __dirname,
-                    path: __dirname + "/template-a.html",
+                    path: `${__dirname}/template-a.html`,
                     contents: new Buffer("yoo")
                 }));
 
@@ -416,15 +416,15 @@ describe("Fast", () => {
             });
         });
 
-        context("options.templateBody", function () {
+        context("options.templateBody", () => {
 
-            it("should override TEMPLATE_BODY", function (cb) {
+            it("should override TEMPLATE_BODY", (cb) => {
                 const stream = templateCache("templates.js", {
                     templateBody: "$templateCache.put('<%= url %>','<%= contents %>');"
                 });
 
-                stream.on("data", function (file) {
-                    expect(file.path).to.be.equal(path.normalize(__dirname + "/templates.js"));
+                stream.on("data", (file) => {
+                    expect(file.path).to.be.equal(path.normalize(`${__dirname}/templates.js`));
                     expect(file.relative).to.be.equal("templates.js");
                     expect(file.contents.toString("utf8")).to.be.equal("angular.module('templates').run(['$templateCache', function($templateCache) {$templateCache.put('/template-a.html','yoo');}]);");
                     cb();
@@ -432,7 +432,7 @@ describe("Fast", () => {
 
                 stream.write(new File({
                     base: __dirname,
-                    path: __dirname + "/template-a.html",
+                    path: `${__dirname}/template-a.html`,
                     contents: new Buffer("yoo")
                 }));
 

@@ -1,8 +1,8 @@
 const { fast } = adone;
 
-describe("FAST", function() {
-    describe("transforms", function() {
-        describe("deleteLines", function() {
+describe("FAST", () => {
+    describe("transforms", () => {
+        describe("deleteLines", () => {
             let root;
             let fromdir;
             let todir;
@@ -26,7 +26,7 @@ describe("FAST", function() {
                 await root.clean();
             });
 
-            it("should delete lines by regex and string", async function() {
+            it("should delete lines by regex and string", async () => {
                 await fromdir.addFile("test.txt", {
                     content: "Hello, World!\nHallo, World!\nScotland!!!\nFreedom!!!\n"
                 });
@@ -38,7 +38,7 @@ describe("FAST", function() {
                 assert.equal(await file.content(), "Freedom!!!\n");
             });
 
-            it("should throw on stream", async function() {
+            it("should throw on stream", async () => {
                 await fromdir.addFile("test.txt");
                 const files = [];
                 try {

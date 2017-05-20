@@ -4,136 +4,138 @@ const { assertion } = adone;
 assertion.loadExpectInterface();
 const { expect, Assertion, util } = assertion;
 
-describe("expect", function () {
-    it("assertion", function () {
+describe("expect", () => {
+    it("assertion", () => {
         expect("test").to.be.a("string");
         expect("foo").to.equal("foo");
     });
 
-    describe("invalid property", function () {
-        if (typeof Proxy === "undefined" || typeof Reflect === "undefined") return;
+    describe("invalid property", () => {
+        if (typeof Proxy === "undefined" || typeof Reflect === "undefined") {
+            return; 
+        }
 
-        before(function () {
-            util.addProperty(Assertion.prototype, "tmpProperty", function () {
+        before(() => {
+            util.addProperty(Assertion.prototype, "tmpProperty", () => {
                 new Assertion(42).equal(42);
             });
-            util.overwriteProperty(Assertion.prototype, "tmpProperty", function (_super) {
+            util.overwriteProperty(Assertion.prototype, "tmpProperty", (_super) => {
                 return function () {
                     _super.call(this);
                 };
             });
 
-            util.addMethod(Assertion.prototype, "tmpMethod", function () {
+            util.addMethod(Assertion.prototype, "tmpMethod", () => {
                 new Assertion(42).equal(42);
             });
-            util.overwriteMethod(Assertion.prototype, "tmpMethod", function (_super) {
+            util.overwriteMethod(Assertion.prototype, "tmpMethod", (_super) => {
                 return function () {
                     _super.call(this);
                 };
             });
 
-            util.addChainableMethod(Assertion.prototype, "tmpChainableMethod", function () {
+            util.addChainableMethod(Assertion.prototype, "tmpChainableMethod", () => {
                 new Assertion(42).equal(42);
-            }, function () {
+            }, () => {
                 new Assertion(42).equal(42);
             });
-            util.overwriteChainableMethod(Assertion.prototype, "tmpChainableMethod", function (_super) {
+            util.overwriteChainableMethod(Assertion.prototype, "tmpChainableMethod", (_super) => {
                 return function () {
                     _super.call(this);
                 };
-            }, function (_super) {
+            }, (_super) => {
                 return function () {
                     _super.call(this);
                 };
             });
         });
 
-        after(function () {
+        after(() => {
             delete Assertion.prototype.tmpProperty;
             delete Assertion.prototype.tmpMethod;
             delete Assertion.prototype.tmpChainableMethod;
         });
 
-        it("throws when invalid property follows expect", function () {
-            err(function () {
+        it("throws when invalid property follows expect", () => {
+            err(() => {
                 expect(42).pizza;
             }, "Invalid property: pizza");
         });
 
-        it("throws when invalid property follows language chain", function () {
-            err(function () {
+        it("throws when invalid property follows language chain", () => {
+            err(() => {
                 expect(42).to.pizza;
             }, "Invalid property: pizza");
         });
 
-        it("throws when invalid property follows property assertion", function () {
-            err(function () {
+        it("throws when invalid property follows property assertion", () => {
+            err(() => {
                 expect(42).ok.pizza;
             }, "Invalid property: pizza");
         });
 
-        it("throws when invalid property follows overwritten property assertion", function () {
-            err(function () {
+        it("throws when invalid property follows overwritten property assertion", () => {
+            err(() => {
                 expect(42).tmpProperty.pizza;
             }, "Invalid property: pizza");
         });
 
-        it("throws when invalid property follows uncalled method assertion", function () {
-            err(function () {
+        it("throws when invalid property follows uncalled method assertion", () => {
+            err(() => {
                 expect(42).equal.pizza;
             }, "Invalid property: equal.pizza. See docs for proper usage of \"equal\".");
         });
 
-        it("throws when invalid property follows called method assertion", function () {
-            err(function () {
+        it("throws when invalid property follows called method assertion", () => {
+            err(() => {
                 expect(42).equal(42).pizza;
             }, "Invalid property: pizza");
         });
 
-        it("throws when invalid property follows uncalled overwritten method assertion", function () {
-            err(function () {
+        it("throws when invalid property follows uncalled overwritten method assertion", () => {
+            err(() => {
                 expect(42).tmpMethod.pizza;
             }, "Invalid property: tmpMethod.pizza. See docs for proper usage of \"tmpMethod\".");
         });
 
-        it("throws when invalid property follows called overwritten method assertion", function () {
-            err(function () {
+        it("throws when invalid property follows called overwritten method assertion", () => {
+            err(() => {
                 expect(42).tmpMethod().pizza;
             }, "Invalid property: pizza");
         });
 
-        it("throws when invalid property follows uncalled chainable method assertion", function () {
-            err(function () {
+        it("throws when invalid property follows uncalled chainable method assertion", () => {
+            err(() => {
                 expect(42).a.pizza;
             }, "Invalid property: pizza");
         });
 
-        it("throws when invalid property follows called chainable method assertion", function () {
-            err(function () {
+        it("throws when invalid property follows called chainable method assertion", () => {
+            err(() => {
                 expect(42).a("number").pizza;
             }, "Invalid property: pizza");
         });
 
-        it("throws when invalid property follows uncalled overwritten chainable method assertion", function () {
-            err(function () {
+        it("throws when invalid property follows uncalled overwritten chainable method assertion", () => {
+            err(() => {
                 expect(42).tmpChainableMethod.pizza;
             }, "Invalid property: pizza");
         });
 
-        it("throws when invalid property follows called overwritten chainable method assertion", function () {
-            err(function () {
+        it("throws when invalid property follows called overwritten chainable method assertion", () => {
+            err(() => {
                 expect(42).tmpChainableMethod().pizza;
             }, "Invalid property: pizza");
         });
 
-        it("doesn't throw if invalid property is excluded via config", function () {
-            expect(function () {
+        it("doesn't throw if invalid property is excluded via config", () => {
+            expect(() => {
                 expect(42).then;
             }).to.not.throw();
         });
     });
 
-    it("no-op chains", function () {
+    it("no-op chains", () => {
         function test(chain) {
             // tests that chain exists
             expect(expect(1)[chain]).not.undefined;
@@ -151,73 +153,73 @@ describe("expect", function () {
             expect([1, 2, 3])[chain].contains(1);
         }
 
-        ["to", "be", "been"
-            , "is", "and", "has", "have"
-            , "with", "that", "which", "at"
-            , "of", "same", "but", "does"].forEach(test);
+        ["to", "be", "been",
+            "is", "and", "has", "have",
+            "with", "that", "which", "at",
+            "of", "same", "but", "does"].forEach(test);
     });
 
-    it("fail", function () {
-        err(function () {
+    it("fail", () => {
+        err(() => {
             expect.fail(0, 1, "this has failed");
         }, /this has failed/);
     });
 
-    it("true", function () {
+    it("true", () => {
         expect(true).to.be.true;
         expect(false).to.not.be.true;
         expect(1).to.not.be.true;
 
-        err(function () {
+        err(() => {
             expect("test").to.be.true;
         }, "expected 'test' to be true");
     });
 
-    it("ok", function () {
+    it("ok", () => {
         expect(true).to.be.ok;
         expect(false).to.not.be.ok;
         expect(1).to.be.ok;
         expect(0).to.not.be.ok;
 
-        err(function () {
+        err(() => {
             expect("").to.be.ok;
         }, "expected '' to be truthy");
 
-        err(function () {
+        err(() => {
             expect("test").to.not.be.ok;
         }, "expected 'test' to be falsy");
     });
 
-    it("false", function () {
+    it("false", () => {
         expect(false).to.be.false;
         expect(true).to.not.be.false;
         expect(0).to.not.be.false;
 
-        err(function () {
+        err(() => {
             expect("").to.be.false;
         }, "expected '' to be false");
     });
 
-    it("null", function () {
+    it("null", () => {
         expect(null).to.be.null;
         expect(false).to.not.be.null;
 
-        err(function () {
+        err(() => {
             expect("").to.be.null;
         }, "expected '' to be null");
 
     });
 
-    it("undefined", function () {
+    it("undefined", () => {
         expect(undefined).to.be.undefined;
         expect(null).to.not.be.undefined;
 
-        err(function () {
+        err(() => {
             expect("").to.be.undefined;
         }, "expected '' to be undefined");
     });
 
-    it("exist", function () {
+    it("exist", () => {
         const foo = "bar";
         let bar;
         expect(foo).to.exist;
@@ -226,16 +228,16 @@ describe("expect", function () {
         expect(false).to.exist;
         expect("").to.exist;
 
-        err(function () {
+        err(() => {
             expect(bar).to.exist;
         }, "expected undefined to exist");
 
-        err(function () {
+        err(() => {
             expect(foo).to.not.exist(foo);
         }, "expected 'bar' to not exist");
     });
 
-    it("arguments", function () {
+    it("arguments", () => {
         const args = (function () {
             return arguments;
         })(1, 2, 3);
@@ -245,19 +247,19 @@ describe("expect", function () {
         expect([]).to.be.an("array").and.not.be.Arguments;
     });
 
-    it(".equal()", function () {
+    it(".equal()", () => {
         let foo;
         expect(undefined).to.equal(foo);
 
-        err(function () {
+        err(() => {
             expect(undefined).to.equal(null);
         }, "expected undefined to equal null");
     });
 
-    it("typeof", function () {
+    it("typeof", () => {
         expect("test").to.be.a("string");
 
-        err(function () {
+        err(() => {
             expect("test").to.not.be.a("string");
         }, "expected 'test' not to be a string");
 
@@ -273,28 +275,28 @@ describe("expect", function () {
         expect(new Object()).to.be.a("object");
         expect({}).to.be.a("object");
         expect([]).to.be.a("array");
-        expect(function () { }).to.be.a("function");
+        expect(() => { }).to.be.a("function");
         expect(null).to.be.a("null");
 
         if (typeof Symbol === "function") {
             expect(Symbol()).to.be.a("symbol");
         }
 
-        err(function () {
+        err(() => {
             expect(5).to.not.be.a("number", "blah");
         }, "blah: expected 5 not to be a number");
     });
 
-    it("instanceof", function () {
+    it("instanceof", () => {
         function Foo() { }
         expect(new Foo()).to.be.an.instanceof(Foo);
 
-        err(function () {
+        err(() => {
             expect(3).to.an.instanceof(Foo, "blah");
         }, "blah: expected 3 to be an instance of Foo");
     });
 
-    it("within(start, finish)", function () {
+    it("within(start, finish)", () => {
         expect(5).to.be.within(5, 10);
         expect(5).to.be.within(3, 6);
         expect(5).to.be.within(3, 5);
@@ -302,52 +304,52 @@ describe("expect", function () {
         expect("foo").to.have.length.within(2, 4);
         expect([1, 2, 3]).to.have.length.within(2, 4);
 
-        err(function () {
+        err(() => {
             expect(5).to.not.be.within(4, 6, "blah");
         }, "blah: expected 5 to not be within 4..6");
 
-        err(function () {
+        err(() => {
             expect(10).to.be.within(50, 100, "blah");
         }, "blah: expected 10 to be within 50..100");
 
-        err(function () {
+        err(() => {
             expect("foo").to.have.length.within(5, 7, "blah");
         }, "blah: expected \'foo\' to have a length within 5..7");
 
-        err(function () {
+        err(() => {
             expect([1, 2, 3]).to.have.length.within(5, 7, "blah");
         }, "blah: expected [ 1, 2, 3 ] to have a length within 5..7");
 
-        err(function () {
+        err(() => {
             expect(null).to.be.within(0, 1, "blah");
         }, "blah: expected null to be a number");
 
-        err(function () {
+        err(() => {
             expect(1).to.be.within(null, 1, "blah");
         }, "the arguments to within must be numbers");
 
-        err(function () {
+        err(() => {
             expect(1).to.be.within(0, null, "blah");
         }, "the arguments to within must be numbers");
 
-        err(function () {
+        err(() => {
             expect(null).to.not.be.within(0, 1, "blah");
         }, "blah: expected null to be a number");
 
-        err(function () {
+        err(() => {
             expect(1).to.not.be.within(null, 1, "blah");
         }, "the arguments to within must be numbers");
 
-        err(function () {
+        err(() => {
             expect(1).to.not.be.within(0, null, "blah");
         }, "the arguments to within must be numbers");
 
-        err(function () {
+        err(() => {
             expect(1).to.have.length.within(5, 7, "blah");
         }, "blah: expected 1 to have property 'length'");
     });
 
-    it("above(n)", function () {
+    it("above(n)", () => {
         expect(5).to.be.above(2);
         expect(5).to.be.greaterThan(2);
         expect(5).to.not.be.above(5);
@@ -355,92 +357,92 @@ describe("expect", function () {
         expect("foo").to.have.length.above(2);
         expect([1, 2, 3]).to.have.length.above(2);
 
-        err(function () {
+        err(() => {
             expect(5).to.be.above(6, "blah");
         }, "blah: expected 5 to be above 6");
 
-        err(function () {
+        err(() => {
             expect(10).to.not.be.above(6, "blah");
         }, "blah: expected 10 to be at most 6");
 
-        err(function () {
+        err(() => {
             expect("foo").to.have.length.above(4, "blah");
         }, "blah: expected \'foo\' to have a length above 4 but got 3");
 
-        err(function () {
+        err(() => {
             expect([1, 2, 3]).to.have.length.above(4, "blah");
         }, "blah: expected [ 1, 2, 3 ] to have a length above 4 but got 3");
 
-        err(function () {
+        err(() => {
             expect(null).to.be.above(0, "blah");
         }, "blah: expected null to be a number");
 
-        err(function () {
+        err(() => {
             expect(1).to.be.above(null, "blah");
         }, "the argument to above must be a number");
 
-        err(function () {
+        err(() => {
             expect(null).to.not.be.above(0, "blah");
         }, "blah: expected null to be a number");
 
-        err(function () {
+        err(() => {
             expect(1).to.not.be.above(null, "blah");
         }, "the argument to above must be a number");
 
-        err(function () {
+        err(() => {
             expect(1).to.have.length.above(0, "blah");
         }, "blah: expected 1 to have property 'length'");
     });
 
-    it("least(n)", function () {
+    it("least(n)", () => {
         expect(5).to.be.at.least(2);
         expect(5).to.be.at.least(5);
         expect(5).to.not.be.at.least(6);
         expect("foo").to.have.length.of.at.least(2);
         expect([1, 2, 3]).to.have.length.of.at.least(2);
 
-        err(function () {
+        err(() => {
             expect(5).to.be.at.least(6, "blah");
         }, "blah: expected 5 to be at least 6");
 
-        err(function () {
+        err(() => {
             expect(10).to.not.be.at.least(6, "blah");
         }, "blah: expected 10 to be below 6");
 
-        err(function () {
+        err(() => {
             expect("foo").to.have.length.of.at.least(4, "blah");
         }, "blah: expected \'foo\' to have a length at least 4 but got 3");
 
-        err(function () {
+        err(() => {
             expect([1, 2, 3]).to.have.length.of.at.least(4, "blah");
         }, "blah: expected [ 1, 2, 3 ] to have a length at least 4 but got 3");
 
-        err(function () {
+        err(() => {
             expect([1, 2, 3, 4]).to.not.have.length.of.at.least(4, "blah");
         }, "blah: expected [ 1, 2, 3, 4 ] to have a length below 4");
 
-        err(function () {
+        err(() => {
             expect(null).to.be.at.least(0, "blah");
         }, "blah: expected null to be a number");
 
-        err(function () {
+        err(() => {
             expect(1).to.be.at.least(null, "blah");
         }, "the argument to least must be a number");
 
-        err(function () {
+        err(() => {
             expect(null).to.not.be.at.least(0, "blah");
         }, "blah: expected null to be a number");
 
-        err(function () {
+        err(() => {
             expect(1).to.not.be.at.least(null, "blah");
         }, "the argument to least must be a number");
 
-        err(function () {
+        err(() => {
             expect(1).to.have.length.at.least(0, "blah");
         }, "blah: expected 1 to have property 'length'");
     });
 
-    it("below(n)", function () {
+    it("below(n)", () => {
         expect(2).to.be.below(5);
         expect(2).to.be.lessThan(5);
         expect(2).to.not.be.below(2);
@@ -448,44 +450,44 @@ describe("expect", function () {
         expect("foo").to.have.length.below(4);
         expect([1, 2, 3]).to.have.length.below(4);
 
-        err(function () {
+        err(() => {
             expect(6).to.be.below(5, "blah");
         }, "blah: expected 6 to be below 5");
 
-        err(function () {
+        err(() => {
             expect(6).to.not.be.below(10, "blah");
         }, "blah: expected 6 to be at least 10");
 
-        err(function () {
+        err(() => {
             expect("foo").to.have.length.below(2, "blah");
         }, "blah: expected \'foo\' to have a length below 2 but got 3");
 
-        err(function () {
+        err(() => {
             expect([1, 2, 3]).to.have.length.below(2, "blah");
         }, "blah: expected [ 1, 2, 3 ] to have a length below 2 but got 3");
 
-        err(function () {
+        err(() => {
             expect(null).to.be.below(0, "blah");
         }, "blah: expected null to be a number");
 
-        err(function () {
+        err(() => {
             expect(1).to.be.below(null, "blah");
         }, "the argument to below must be a number");
 
-        err(function () {
+        err(() => {
             expect(null).to.not.be.below(0, "blah");
         }, "blah: expected null to be a number");
 
-        err(function () {
+        err(() => {
             expect(1).to.not.be.below(null, "blah");
         }, "the argument to below must be a number");
 
-        err(function () {
+        err(() => {
             expect(1).to.have.length.below(0, "blah");
         }, "blah: expected 1 to have property 'length'");
     });
 
-    it("most(n)", function () {
+    it("most(n)", () => {
         expect(2).to.be.at.most(5);
         expect(2).to.be.at.most(2);
         expect(2).to.not.be.at.most(1);
@@ -493,80 +495,80 @@ describe("expect", function () {
         expect("foo").to.have.length.of.at.most(4);
         expect([1, 2, 3]).to.have.length.of.at.most(4);
 
-        err(function () {
+        err(() => {
             expect(6).to.be.at.most(5, "blah");
         }, "blah: expected 6 to be at most 5");
 
-        err(function () {
+        err(() => {
             expect(6).to.not.be.at.most(10, "blah");
         }, "blah: expected 6 to be above 10");
 
-        err(function () {
+        err(() => {
             expect("foo").to.have.length.of.at.most(2, "blah");
         }, "blah: expected \'foo\' to have a length at most 2 but got 3");
 
-        err(function () {
+        err(() => {
             expect([1, 2, 3]).to.have.length.of.at.most(2, "blah");
         }, "blah: expected [ 1, 2, 3 ] to have a length at most 2 but got 3");
 
-        err(function () {
+        err(() => {
             expect([1, 2]).to.not.have.length.of.at.most(2, "blah");
         }, "blah: expected [ 1, 2 ] to have a length above 2");
 
-        err(function () {
+        err(() => {
             expect(null).to.be.at.most(0, "blah");
         }, "blah: expected null to be a number");
 
-        err(function () {
+        err(() => {
             expect(1).to.be.at.most(null, "blah");
         }, "the argument to most must be a number");
 
-        err(function () {
+        err(() => {
             expect(null).to.not.be.at.most(0, "blah");
         }, "blah: expected null to be a number");
 
-        err(function () {
+        err(() => {
             expect(1).to.not.be.at.most(null, "blah");
         }, "the argument to most must be a number");
 
-        err(function () {
+        err(() => {
             expect(1).to.have.length.of.at.most(0, "blah");
         }, "blah: expected 1 to have property 'length'");
     });
 
-    it("match(regexp)", function () {
+    it("match(regexp)", () => {
         expect("foobar").to.match(/^foo/);
         expect("foobar").to.matches(/^foo/);
         expect("foobar").to.not.match(/^bar/);
 
-        err(function () {
+        err(() => {
             expect("foobar").to.match(/^bar/i, "blah");
         }, "blah: expected 'foobar' to match /^bar/i");
 
-        err(function () {
+        err(() => {
             expect("foobar").to.matches(/^bar/i, "blah");
         }, "blah: expected 'foobar' to match /^bar/i");
 
-        err(function () {
+        err(() => {
             expect("foobar").to.not.match(/^foo/i, "blah");
         }, "blah: expected 'foobar' not to match /^foo/i");
     });
 
-    it("length(n)", function () {
+    it("length(n)", () => {
         expect("test").to.have.length(4);
         expect("test").to.not.have.length(3);
         expect([1, 2, 3]).to.have.length(3);
 
-        err(function () {
+        err(() => {
             expect(4).to.have.length(3, "blah");
         }, "blah: expected 4 to have property 'length'");
 
-        err(function () {
+        err(() => {
             expect("asd").to.not.have.length(3, "blah");
         }, "blah: expected 'asd' to not have a length of 3");
     });
 
-    it("eql(val)", function () {
+    it("eql(val)", () => {
         expect("test").to.eql("test");
         expect({ foo: "bar" }).to.eql({ foo: "bar" });
         expect(1).to.eql(1);
@@ -577,22 +579,22 @@ describe("expect", function () {
             expect(sym).to.eql(sym);
         }
 
-        err(function () {
+        err(() => {
             expect(4).to.eql(3, "blah");
         }, "blah: expected 4 to deeply equal 3");
     });
 
-    if ("undefined" !== typeof Buffer) {
-        it("Buffer eql()", function () {
+    if (typeof Buffer !== "undefined") {
+        it("Buffer eql()", () => {
             expect(new Buffer([1])).to.eql(new Buffer([1]));
 
-            err(function () {
+            err(() => {
                 expect(new Buffer([0])).to.eql(new Buffer([1]));
             }, "expected <Buffer 00> to deeply equal <Buffer 01>");
         });
     }
 
-    it("equal(val)", function () {
+    it("equal(val)", () => {
         expect("test").to.equal("test");
         expect(1).to.equal(1);
 
@@ -601,21 +603,21 @@ describe("expect", function () {
             expect(sym).to.equal(sym);
         }
 
-        err(function () {
+        err(() => {
             expect(4).to.equal(3, "blah");
         }, "blah: expected 4 to equal 3");
 
-        err(function () {
+        err(() => {
             expect("4").to.equal(4, "blah");
         }, "blah: expected '4' to equal 4");
     });
 
-    it("deep.equal(val)", function () {
+    it("deep.equal(val)", () => {
         expect({ foo: "bar" }).to.deep.equal({ foo: "bar" });
         expect({ foo: "bar" }).not.to.deep.equal({ foo: "baz" });
     });
 
-    it("deep.equal(/regexp/)", function () {
+    it("deep.equal(/regexp/)", () => {
         expect(/a/).to.deep.equal(/a/);
         expect(/a/).not.to.deep.equal(/b/);
         expect(/a/).not.to.deep.equal({});
@@ -627,7 +629,7 @@ describe("expect", function () {
         expect(/a/m).not.to.deep.equal(/b/m);
     });
 
-    it("deep.equal(Date)", function () {
+    it("deep.equal(Date)", () => {
         const a = new Date(1, 2, 3);
         const b = new Date(4, 5, 6);
         expect(a).to.deep.equal(a);
@@ -635,7 +637,7 @@ describe("expect", function () {
         expect(a).not.to.deep.equal({});
     });
 
-    it("empty", function () {
+    it("empty", () => {
         function FakeArgs() { }
         FakeArgs.prototype.length = 0;
 
@@ -643,159 +645,159 @@ describe("expect", function () {
         expect("foo").not.to.be.empty;
         expect([]).to.be.empty;
         expect(["foo"]).not.to.be.empty;
-        expect(new FakeArgs).to.be.empty;
+        expect(new FakeArgs()).to.be.empty;
         expect({ arguments: 0 }).not.to.be.empty;
         expect({}).to.be.empty;
         expect({ foo: "bar" }).not.to.be.empty;
 
         if (typeof WeakMap === "function") {
-            err(function () {
-                expect(new WeakMap).not.to.be.empty;
+            err(() => {
+                expect(new WeakMap()).not.to.be.empty;
             }, ".empty was passed a weak collection");
         }
 
         if (typeof WeakSet === "function") {
-            err(function () {
-                expect(new WeakSet).not.to.be.empty;
+            err(() => {
+                expect(new WeakSet()).not.to.be.empty;
             }, ".empty was passed a weak collection");
         }
 
         if (typeof Map === "function") {
-            expect(new Map).to.be.empty;
+            expect(new Map()).to.be.empty;
 
             // Not using Map constructor args because not supported in IE 11.
-            let map = new Map;
+            let map = new Map();
             map.set("a", 1);
             expect(map).not.to.be.empty;
 
-            err(function () {
-                expect(new Map).not.to.be.empty;
+            err(() => {
+                expect(new Map()).not.to.be.empty;
             }, "expected {} not to be empty");
 
-            map = new Map;
+            map = new Map();
             map.key = "val";
             expect(map).to.be.empty;
 
-            err(function () {
+            err(() => {
                 expect(map).not.to.be.empty;
             }, "expected { key: 'val' } not to be empty");
         }
 
         if (typeof Set === "function") {
-            expect(new Set).to.be.empty;
+            expect(new Set()).to.be.empty;
 
             // Not using Set constructor args because not supported in IE 11.
-            let set = new Set;
+            let set = new Set();
             set.add(1);
             expect(set).not.to.be.empty;
 
-            err(function () {
-                expect(new Set).not.to.be.empty;
+            err(() => {
+                expect(new Set()).not.to.be.empty;
             }, "expected {} not to be empty");
 
-            set = new Set;
+            set = new Set();
             set.key = "val";
             expect(set).to.be.empty;
 
-            err(function () {
+            err(() => {
                 expect(set).not.to.be.empty;
             }, "expected { key: 'val' } not to be empty");
         }
 
-        err(function () {
+        err(() => {
             expect("").not.to.be.empty;
         }, "expected \'\' not to be empty");
 
-        err(function () {
+        err(() => {
             expect("foo").to.be.empty;
         }, "expected \'foo\' to be empty");
 
-        err(function () {
+        err(() => {
             expect([]).not.to.be.empty;
         }, "expected [] not to be empty");
 
-        err(function () {
+        err(() => {
             expect(["foo"]).to.be.empty;
         }, "expected [ \'foo\' ] to be empty");
 
-        err(function () {
-            expect(new FakeArgs).not.to.be.empty;
+        err(() => {
+            expect(new FakeArgs()).not.to.be.empty;
         }, "expected { length: 0 } not to be empty");
 
-        err(function () {
+        err(() => {
             expect({ arguments: 0 }).to.be.empty;
         }, "expected { arguments: 0 } to be empty");
 
-        err(function () {
+        err(() => {
             expect({}).not.to.be.empty;
         }, "expected {} not to be empty");
 
-        err(function () {
+        err(() => {
             expect({ foo: "bar" }).to.be.empty;
         }, "expected { foo: \'bar\' } to be empty");
 
-        err(function () {
+        err(() => {
             expect(null).to.be.empty;
         }, ".empty was passed non-string primitive null");
 
-        err(function () {
+        err(() => {
             expect(undefined).to.be.empty;
         }, ".empty was passed non-string primitive undefined");
 
-        err(function () {
+        err(() => {
             expect().to.be.empty;
         }, ".empty was passed non-string primitive undefined");
 
-        err(function () {
+        err(() => {
             expect(null).to.not.be.empty;
         }, ".empty was passed non-string primitive null");
 
-        err(function () {
+        err(() => {
             expect(undefined).to.not.be.empty;
         }, ".empty was passed non-string primitive undefined");
 
-        err(function () {
+        err(() => {
             expect().to.not.be.empty;
         }, ".empty was passed non-string primitive undefined");
 
-        err(function () {
+        err(() => {
             expect(0).to.be.empty;
         }, ".empty was passed non-string primitive 0");
 
-        err(function () {
+        err(() => {
             expect(1).to.be.empty;
         }, ".empty was passed non-string primitive 1");
 
-        err(function () {
+        err(() => {
             expect(true).to.be.empty;
         }, ".empty was passed non-string primitive true");
 
-        err(function () {
+        err(() => {
             expect(false).to.be.empty;
         }, ".empty was passed non-string primitive false");
 
         if (typeof Symbol !== "undefined") {
-            err(function () {
+            err(() => {
                 expect(Symbol()).to.be.empty;
             }, ".empty was passed non-string primitive Symbol()");
 
-            err(function () {
+            err(() => {
                 expect(Symbol.iterator).to.be.empty;
             }, ".empty was passed non-string primitive Symbol(Symbol.iterator)");
         }
 
-        err(function () {
-            expect(function () { }).to.be.empty;
+        err(() => {
+            expect(() => { }).to.be.empty;
         }, ".empty was passed a function");
 
         if (FakeArgs.name === "FakeArgs") {
-            err(function () {
+            err(() => {
                 expect(FakeArgs).to.be.empty;
             }, ".empty was passed a function FakeArgs");
         }
     });
 
-    it("NaN", function () {
+    it("NaN", () => {
         expect(NaN).to.be.NaN;
 
         expect(undefined).not.to.be.NaN;
@@ -805,61 +807,61 @@ describe("expect", function () {
         expect(4).not.to.be.NaN;
         expect([]).not.to.be.NaN;
 
-        err(function () {
+        err(() => {
             expect(NaN).not.to.be.NaN;
         }, "expected NaN not to be NaN");
 
-        err(function () {
+        err(() => {
             expect(undefined).to.be.NaN;
         }, "expected undefined to be NaN");
 
-        err(function () {
+        err(() => {
             expect(Infinity).to.be.NaN;
         }, "expected Infinity to be NaN");
 
-        err(function () {
+        err(() => {
             expect("foo").to.be.NaN;
         }, "expected 'foo' to be NaN");
 
-        err(function () {
+        err(() => {
             expect({}).to.be.NaN;
         }, "expected {} to be NaN");
 
-        err(function () {
+        err(() => {
             expect(4).to.be.NaN;
         }, "expected 4 to be NaN");
 
-        err(function () {
+        err(() => {
             expect([]).to.be.NaN;
         }, "expected [] to be NaN");
     });
 
-    it("finite", function () {
+    it("finite", () => {
         expect(4).to.be.finite;
         expect(-10).to.be.finite;
 
-        err(function () {
+        err(() => {
             expect(NaN).to.be.finite;
         }, "expected NaN to be a finite number");
 
-        err(function () {
+        err(() => {
             expect(Infinity).to.be.finite;
         }, "expected Infinity to be a finite number");
 
-        err(function () {
+        err(() => {
             expect("foo").to.be.finite;
         }, "expected \'foo\' to be a finite number");
 
-        err(function () {
+        err(() => {
             expect([]).to.be.finite;
         }, "expected [] to be a finite number");
 
-        err(function () {
+        err(() => {
             expect({}).to.be.finite;
         }, "expected {} to be a finite number");
     });
 
-    it("property(name)", function () {
+    it("property(name)", () => {
         expect("test").to.have.property("length");
         expect({ a: 1 }).to.have.property("toString");
         expect(4).to.not.have.property("length");
@@ -880,20 +882,20 @@ describe("expect", function () {
         expect({ "foo.bar[]": "baz" })
             .to.have.property("foo.bar[]");
 
-        err(function () {
+        err(() => {
             expect("asd").to.have.property("foo");
         }, "expected 'asd' to have property 'foo'");
-        err(function () {
+        err(() => {
             expect({ foo: { bar: "baz" } })
                 .to.have.property("foo.bar");
         }, "expected { foo: { bar: 'baz' } } to have property 'foo.bar'");
 
-        err(function () {
+        err(() => {
             expect({ a: { b: 1 } }).to.have.own.nested.property("a.b");
         }, "The \"nested\" and \"own\" flags cannot be combined.");
     });
 
-    it("property(name, val)", function () {
+    it("property(name, val)", () => {
         expect("test").to.have.property("length", 4);
         expect("asd").to.have.property("constructor", String);
         expect({ a: 1 }).to.have.property("toString", Object.prototype.toString);
@@ -902,8 +904,8 @@ describe("expect", function () {
         expect({ a: { b: 1 } }).to.not.have.property("a", { b: 1 });
 
         const deepObj = {
-            green: { tea: "matcha" }
-            , teas: ["chai", "matcha", { tea: "konacha" }]
+            green: { tea: "matcha" },
+            teas: ["chai", "matcha", { tea: "konacha" }]
         };
         expect(deepObj).to.have.nested.property("green.tea", "matcha");
         expect(deepObj).to.have.nested.property("teas[1]", "matcha");
@@ -914,72 +916,72 @@ describe("expect", function () {
             .with.nested.property("[2]")
             .that.deep.equals({ tea: "konacha" });
 
-        err(function () {
+        err(() => {
             expect(deepObj).to.have.nested.property("teas[3]");
         }, "expected { Object (green, teas) } to have nested property 'teas[3]'");
-        err(function () {
+        err(() => {
             expect(deepObj).to.have.nested.property("teas[3]", "bar");
         }, "expected { Object (green, teas) } to have nested property 'teas[3]'");
-        err(function () {
+        err(() => {
             expect(deepObj).to.have.nested.property("teas[3].tea", "bar");
         }, "expected { Object (green, teas) } to have nested property 'teas[3].tea'");
 
         const arr = [
-            ["chai", "matcha", "konacha"]
-            , [{ tea: "chai" }
-                , { tea: "matcha" }
-                , { tea: "konacha" }]
+            ["chai", "matcha", "konacha"],
+            [{ tea: "chai" },
+                 { tea: "matcha" },
+                 { tea: "konacha" }]
         ];
         expect(arr).to.have.nested.property("[0][1]", "matcha");
         expect(arr).to.have.nested.property("[1][2].tea", "konacha");
-        err(function () {
+        err(() => {
             expect(arr).to.have.nested.property("[2][1]");
         }, "expected [ Array(2) ] to have nested property '[2][1]'");
-        err(function () {
+        err(() => {
             expect(arr).to.have.nested.property("[2][1]", "none");
         }, "expected [ Array(2) ] to have nested property '[2][1]'");
-        err(function () {
+        err(() => {
             expect(arr).to.have.nested.property("[0][3]", "none");
         }, "expected [ Array(2) ] to have nested property '[0][3]'");
 
-        err(function () {
+        err(() => {
             expect("asd").to.have.property("length", 4, "blah");
         }, "blah: expected 'asd' to have property 'length' of 4, but got 3");
 
-        err(function () {
+        err(() => {
             expect("asd").to.not.have.property("length", 3, "blah");
         }, "blah: expected 'asd' to not have property 'length' of 3");
 
-        err(function () {
+        err(() => {
             expect("asd").to.have.property("constructor", Number, "blah");
         }, "blah: expected 'asd' to have property 'constructor' of [Function: Number], but got [Function: String]");
 
-        err(function () {
+        err(() => {
             expect({ a: { b: 1 } }).to.have.own.nested.property("a.b", 1);
         }, "The \"nested\" and \"own\" flags cannot be combined.");
     });
 
-    it("deep.property(name, val)", function () {
+    it("deep.property(name, val)", () => {
         const obj = { a: { b: 1 } };
         expect(obj).to.have.deep.property("a", { b: 1 });
         expect(obj).to.not.have.deep.property("a", { b: 7 });
         expect(obj).to.not.have.deep.property("a", { z: 1 });
         expect(obj).to.not.have.deep.property("z", { b: 1 });
 
-        err(function () {
+        err(() => {
             expect(obj).to.have.deep.property("a", { b: 7 }, "blah");
         }, "blah: expected { a: { b: 1 } } to have deep property 'a' of { b: 7 }, but got { b: 1 }");
 
-        err(function () {
+        err(() => {
             expect(obj).to.have.deep.property("z", { b: 1 }, "blah");
         }, "blah: expected { a: { b: 1 } } to have deep property 'z'");
 
-        err(function () {
+        err(() => {
             expect(obj).to.not.have.deep.property("a", { b: 1 }, "blah");
         }, "blah: expected { a: { b: 1 } } to not have deep property 'a' of { b: 1 }");
     });
 
-    it("own.property(name)", function () {
+    it("own.property(name)", () => {
         expect("test").to.have.own.property("length");
         expect("test").to.have.ownProperty("length");
         expect("test").to.haveOwnProperty("length");
@@ -1002,32 +1004,32 @@ describe("expect", function () {
         expect("test").to.have.ownProperty("length").that.is.a("number");
         expect("test").to.haveOwnProperty("length").that.is.a("number");
 
-        err(function () {
+        err(() => {
             expect({ length: 12 }).to.have.own.property("iDontExist");
         }, "expected { length: 12 } to have own property 'iDontExist'");
 
-        err(function () {
+        err(() => {
             expect({ length: 12 }).to.not.have.own.property("length");
         }, "expected { length: 12 } to not have own property 'length'");
 
-        err(function () {
+        err(() => {
             expect({ length: 12 }).to.have.ownProperty("iDontExist");
         }, "expected { length: 12 } to have own property 'iDontExist'");
 
-        err(function () {
+        err(() => {
             expect({ length: 12 }).to.not.have.ownProperty("length");
         }, "expected { length: 12 } to not have own property 'length'");
 
-        err(function () {
+        err(() => {
             expect({ length: 12 }).to.haveOwnProperty("iDontExist");
         }, "expected { length: 12 } to have own property 'iDontExist'");
 
-        err(function () {
+        err(() => {
             expect({ length: 12 }).to.not.haveOwnProperty("length");
         }, "expected { length: 12 } to not have own property 'length'");
     });
 
-    it("own.property(name, value)", function () {
+    it("own.property(name, value)", () => {
         expect("test").to.have.own.property("length", 4);
         expect("test").to.have.ownProperty("length", 4);
         expect("test").to.haveOwnProperty("length", 4);
@@ -1059,44 +1061,44 @@ describe("expect", function () {
         expect(objNoProto).to.have.ownProperty("a");
         expect(objNoProto).to.haveOwnProperty("a");
 
-        err(function () {
+        err(() => {
             expect({ length: 12 }).to.have.own.property("iDontExist", 12);
         }, "expected { length: 12 } to have own property 'iDontExist'");
 
-        err(function () {
+        err(() => {
             expect({ length: 12 }).to.not.have.own.property("length", 12);
         }, "expected { length: 12 } to not have own property 'length' of 12");
 
-        err(function () {
+        err(() => {
             expect({ length: 12 }).to.have.own.property("length", 15);
         }, "expected { length: 12 } to have own property 'length' of 15, but got 12");
 
-        err(function () {
+        err(() => {
             expect({ length: 12 }).to.have.ownProperty("iDontExist", 12);
         }, "expected { length: 12 } to have own property 'iDontExist'");
 
-        err(function () {
+        err(() => {
             expect({ length: 12 }).to.not.have.ownProperty("length", 12);
         }, "expected { length: 12 } to not have own property 'length' of 12");
 
-        err(function () {
+        err(() => {
             expect({ length: 12 }).to.have.ownProperty("length", 15);
         }, "expected { length: 12 } to have own property 'length' of 15, but got 12");
 
-        err(function () {
+        err(() => {
             expect({ length: 12 }).to.haveOwnProperty("iDontExist", 12);
         }, "expected { length: 12 } to have own property 'iDontExist'");
 
-        err(function () {
+        err(() => {
             expect({ length: 12 }).to.not.haveOwnProperty("length", 12);
         }, "expected { length: 12 } to not have own property 'length' of 12");
 
-        err(function () {
+        err(() => {
             expect({ length: 12 }).to.haveOwnProperty("length", 15);
         }, "expected { length: 12 } to have own property 'length' of 15, but got 12");
     });
 
-    it("deep.own.property(name, val)", function () {
+    it("deep.own.property(name, val)", () => {
         const obj = { a: { b: 1 } };
         expect(obj).to.have.deep.own.property("a", { b: 1 });
         expect(obj).to.have.deep.ownProperty("a", { b: 1 });
@@ -1111,62 +1113,62 @@ describe("expect", function () {
         expect(obj).to.not.have.deep.ownProperty("toString", Object.prototype.toString);
         expect(obj).to.not.deep.haveOwnProperty("toString", Object.prototype.toString);
 
-        err(function () {
+        err(() => {
             expect(obj).to.have.deep.own.property("a", { z: 7 }, "blah");
         }, "blah: expected { a: { b: 1 } } to have deep own property 'a' of { z: 7 }, but got { b: 1 }");
 
-        err(function () {
+        err(() => {
             expect(obj).to.have.deep.own.property("z", { b: 1 }, "blah");
         }, "blah: expected { a: { b: 1 } } to have deep own property 'z'");
 
-        err(function () {
+        err(() => {
             expect(obj).to.not.have.deep.own.property("a", { b: 1 }, "blah");
         }, "blah: expected { a: { b: 1 } } to not have deep own property 'a' of { b: 1 }");
 
-        err(function () {
+        err(() => {
             expect(obj).to.have.deep.ownProperty("a", { z: 7 }, "blah");
         }, "blah: expected { a: { b: 1 } } to have deep own property 'a' of { z: 7 }, but got { b: 1 }");
 
-        err(function () {
+        err(() => {
             expect(obj).to.have.deep.ownProperty("z", { b: 1 }, "blah");
         }, "blah: expected { a: { b: 1 } } to have deep own property 'z'");
 
-        err(function () {
+        err(() => {
             expect(obj).to.not.have.deep.ownProperty("a", { b: 1 }, "blah");
         }, "blah: expected { a: { b: 1 } } to not have deep own property 'a' of { b: 1 }");
 
-        err(function () {
+        err(() => {
             expect(obj).to.deep.haveOwnProperty("a", { z: 7 }, "blah");
         }, "blah: expected { a: { b: 1 } } to have deep own property 'a' of { z: 7 }, but got { b: 1 }");
 
-        err(function () {
+        err(() => {
             expect(obj).to.deep.haveOwnProperty("z", { b: 1 }, "blah");
         }, "blah: expected { a: { b: 1 } } to have deep own property 'z'");
 
-        err(function () {
+        err(() => {
             expect(obj).to.not.deep.haveOwnProperty("a", { b: 1 }, "blah");
         }, "blah: expected { a: { b: 1 } } to not have deep own property 'a' of { b: 1 }");
     });
 
-    it("nested.property(name)", function () {
+    it("nested.property(name)", () => {
         expect({ "foo.bar": "baz" })
             .to.not.have.nested.property("foo.bar");
         expect({ foo: { bar: "baz" } })
             .to.have.nested.property("foo.bar");
 
-        expect({ "foo": [1, 2, 3] })
+        expect({ foo: [1, 2, 3] })
             .to.have.nested.property("foo[1]");
 
         expect({ "foo.bar[]": "baz" })
             .to.have.nested.property("foo\\.bar\\[\\]");
 
-        err(function () {
+        err(() => {
             expect({ "foo.bar": "baz" })
                 .to.have.nested.property("foo.bar");
         }, "expected { 'foo.bar': 'baz' } to have nested property 'foo.bar'");
     });
 
-    it("nested.property(name, val)", function () {
+    it("nested.property(name, val)", () => {
         expect({ foo: { bar: "baz" } })
             .to.have.nested.property("foo.bar", "baz");
         expect({ foo: { bar: "baz" } })
@@ -1175,37 +1177,37 @@ describe("expect", function () {
             .to.not.have.nested.property("foo.quux", "baz");
         expect({ a: { b: { c: 1 } } }).to.not.have.nested.property("a.b", { c: 1 });
 
-        err(function () {
+        err(() => {
             expect({ foo: { bar: "baz" } })
                 .to.have.nested.property("foo.bar", "quux", "blah");
         }, "blah: expected { foo: { bar: 'baz' } } to have nested property 'foo.bar' of 'quux', but got 'baz'");
-        err(function () {
+        err(() => {
             expect({ foo: { bar: "baz" } })
                 .to.not.have.nested.property("foo.bar", "baz", "blah");
         }, "blah: expected { foo: { bar: 'baz' } } to not have nested property 'foo.bar' of 'baz'");
     });
 
-    it("deep.nested.property(name, val)", function () {
+    it("deep.nested.property(name, val)", () => {
         const obj = { a: { b: { c: 1 } } };
         expect(obj).to.have.deep.nested.property("a.b", { c: 1 });
         expect(obj).to.not.have.deep.nested.property("a.b", { c: 7 });
         expect(obj).to.not.have.deep.nested.property("a.b", { z: 1 });
         expect(obj).to.not.have.deep.nested.property("a.z", { c: 1 });
 
-        err(function () {
+        err(() => {
             expect(obj).to.have.deep.nested.property("a.b", { c: 7 }, "blah");
         }, "blah: expected { a: { b: { c: 1 } } } to have deep nested property 'a.b' of { c: 7 }, but got { c: 1 }");
 
-        err(function () {
+        err(() => {
             expect(obj).to.have.deep.nested.property("a.z", { c: 1 }, "blah");
         }, "blah: expected { a: { b: { c: 1 } } } to have deep nested property 'a.z'");
 
-        err(function () {
+        err(() => {
             expect(obj).to.not.have.deep.nested.property("a.b", { c: 1 }, "blah");
         }, "blah: expected { a: { b: { c: 1 } } } to not have deep nested property 'a.b' of { c: 1 }");
     });
 
-    it("ownPropertyDescriptor(name)", function () {
+    it("ownPropertyDescriptor(name)", () => {
         expect("test").to.have.ownPropertyDescriptor("length");
         expect("test").to.haveOwnPropertyDescriptor("length");
         expect("test").not.to.have.ownPropertyDescriptor("foo");
@@ -1219,10 +1221,10 @@ describe("expect", function () {
         };
         Object.defineProperty(obj, "test", descriptor);
         expect(obj).to.have.ownPropertyDescriptor("test", descriptor);
-        err(function () {
+        err(() => {
             expect(obj).not.to.have.ownPropertyDescriptor("test", descriptor, "blah");
         }, /^blah: expected the own property descriptor for 'test' on \{ test: NaN \} to not match \{ [^\}]+ \}$/);
-        err(function () {
+        err(() => {
             const wrongDescriptor = {
                 configurable: false,
                 enumerable: true,
@@ -1232,32 +1234,32 @@ describe("expect", function () {
             expect(obj).to.have.ownPropertyDescriptor("test", wrongDescriptor, "blah");
         }, /^blah: expected the own property descriptor for 'test' on \{ test: NaN \} to match \{ [^\}]+ \}, got \{ [^\}]+ \}$/);
 
-        err(function () {
+        err(() => {
             expect(obj).to.have.ownPropertyDescriptor("test2", "blah");
         }, "blah: expected { test: NaN } to have an own property descriptor for 'test2'");
 
         expect(obj).to.have.ownPropertyDescriptor("test").and.have.property("enumerable", true);
     });
 
-    it("string()", function () {
+    it("string()", () => {
         expect("foobar").to.have.string("bar");
         expect("foobar").to.have.string("foo");
         expect("foobar").to.not.have.string("baz");
 
-        err(function () {
+        err(() => {
             expect(3).to.have.string("baz");
         }, "expected 3 to be a string");
 
-        err(function () {
+        err(() => {
             expect("foobar").to.have.string("baz", "blah");
         }, "blah: expected 'foobar' to contain 'baz'");
 
-        err(function () {
+        err(() => {
             expect("foobar").to.not.have.string("bar", "blah");
         }, "blah: expected 'foobar' to not contain 'bar'");
     });
 
-    it("include()", function () {
+    it("include()", () => {
         expect(["foo", "bar"]).to.include("foo");
         expect(["foo", "bar"]).to.include("foo");
         expect(["foo", "bar"]).to.include("bar");
@@ -1282,76 +1284,76 @@ describe("expect", function () {
             expect([sym1, sym2]).to.not.include(sym3);
         }
 
-        err(function () {
+        err(() => {
             expect(["foo"]).to.include("bar", "blah");
         }, "blah: expected [ 'foo' ] to include 'bar'");
 
-        err(function () {
+        err(() => {
             expect(["bar", "foo"]).to.not.include("foo", "blah");
         }, "blah: expected [ 'bar', 'foo' ] to not include 'foo'");
 
-        err(function () {
+        err(() => {
             expect({ a: 1 }).to.include({ b: 2 });
         }, "expected { a: 1 } to have property 'b'");
 
-        err(function () {
+        err(() => {
             expect({ a: 1, b: 2 }).to.not.include({ b: 2 });
         }, "expected { a: 1, b: 2 } to not have property 'b' of 2");
 
-        err(function () {
+        err(() => {
             expect([{ a: 1 }, { b: 2 }]).to.include({ a: 1 });
         }, "expected [ { a: 1 }, { b: 2 } ] to include { a: 1 }");
 
-        err(function () {
+        err(() => {
             const obj1 = { a: 1 };
             const obj2 = { b: 2 };
             expect([obj1, obj2]).to.not.include(obj1);
         }, "expected [ { a: 1 }, { b: 2 } ] to not include { a: 1 }");
 
-        err(function () {
+        err(() => {
             expect({ foo: { a: 1 }, bar: { b: 2 } }).to.include({ foo: { a: 1 } });
         }, "expected { foo: { a: 1 }, bar: { b: 2 } } to have property 'foo' of { a: 1 }, but got { a: 1 }");
 
-        err(function () {
+        err(() => {
             const obj1 = { a: 1 };
             const obj2 = { b: 2 };
             expect({ foo: obj1, bar: obj2 }).to.not.include({ foo: obj1, bar: obj2 });
         }, "expected { foo: { a: 1 }, bar: { b: 2 } } to not have property 'foo' of { a: 1 }");
 
-        err(function () {
+        err(() => {
             expect(true).to.include(true);
         }, "object tested must be an array, an object, or a string, but boolean given");
 
-        err(function () {
+        err(() => {
             expect(42.0).to.include(42);
         }, "object tested must be an array, an object, or a string, but number given");
 
-        err(function () {
+        err(() => {
             expect(null).to.include(42);
         }, "object tested must be an array, an object, or a string, but null given");
 
-        err(function () {
+        err(() => {
             expect(undefined).to.include(42);
         }, "object tested must be an array, an object, or a string, but undefined given");
 
-        err(function () {
+        err(() => {
             expect(true).to.not.include(true);
         }, "object tested must be an array, an object, or a string, but boolean given");
 
-        err(function () {
+        err(() => {
             expect(42.0).to.not.include(42);
         }, "object tested must be an array, an object, or a string, but number given");
 
-        err(function () {
+        err(() => {
             expect(null).to.not.include(42);
         }, "object tested must be an array, an object, or a string, but null given");
 
-        err(function () {
+        err(() => {
             expect(undefined).to.not.include(42);
         }, "object tested must be an array, an object, or a string, but undefined given");
     });
 
-    it("deep.include()", function () {
+    it("deep.include()", () => {
         const obj1 = { a: 1 };
         const obj2 = { b: 2 };
         expect([obj1, obj2]).to.deep.include({ a: 1 });
@@ -1364,35 +1366,35 @@ describe("expect", function () {
         expect({ foo: obj1, bar: obj2 }).to.not.deep.include({ baz: { a: 1 } });
         expect({ foo: obj1, bar: obj2 }).to.not.deep.include({ foo: { a: 1 }, bar: { b: 9 } });
 
-        err(function () {
+        err(() => {
             expect([obj1, obj2]).to.deep.include({ a: 9 });
         }, "expected [ { a: 1 }, { b: 2 } ] to deep include { a: 9 }");
 
-        err(function () {
+        err(() => {
             expect([obj1, obj2]).to.not.deep.include({ a: 1 });
         }, "expected [ { a: 1 }, { b: 2 } ] to not deep include { a: 1 }");
 
-        err(function () {
+        err(() => {
             expect({ foo: obj1, bar: obj2 }).to.deep.include({ foo: { a: 1 }, bar: { b: 9 } });
         }, "expected { foo: { a: 1 }, bar: { b: 2 } } to have deep property 'bar' of { b: 9 }, but got { b: 2 }");
 
-        err(function () {
+        err(() => {
             expect({ foo: obj1, bar: obj2 }).to.not.deep.include({ foo: { a: 1 }, bar: { b: 2 } });
         }, "expected { foo: { a: 1 }, bar: { b: 2 } } to not have deep property 'foo' of { a: 1 }");
     });
 
-    it("keys(array|Object|arguments)", function () {
+    it("keys(array|Object|arguments)", () => {
         expect({ foo: 1 }).to.have.keys(["foo"]);
-        expect({ foo: 1 }).have.keys({ "foo": 6 });
+        expect({ foo: 1 }).have.keys({ foo: 6 });
         expect({ foo: 1, bar: 2 }).to.have.keys(["foo", "bar"]);
         expect({ foo: 1, bar: 2 }).to.have.keys("foo", "bar");
-        expect({ foo: 1, bar: 2 }).have.keys({ "foo": 6, "bar": 7 });
+        expect({ foo: 1, bar: 2 }).have.keys({ foo: 6, bar: 7 });
         expect({ foo: 1, bar: 2, baz: 3 }).to.contain.keys("foo", "bar");
         expect({ foo: 1, bar: 2, baz: 3 }).to.contain.keys("bar", "foo");
         expect({ foo: 1, bar: 2, baz: 3 }).to.contain.keys("baz");
-        expect({ foo: 1, bar: 2 }).contain.keys({ "foo": 6 });
-        expect({ foo: 1, bar: 2 }).contain.keys({ "bar": 7 });
-        expect({ foo: 1, bar: 2 }).contain.keys({ "foo": 6 });
+        expect({ foo: 1, bar: 2 }).contain.keys({ foo: 6 });
+        expect({ foo: 1, bar: 2 }).contain.keys({ bar: 7 });
+        expect({ foo: 1, bar: 2 }).contain.keys({ foo: 6 });
 
         expect({ foo: 1, bar: 2 }).to.contain.keys("foo");
         expect({ foo: 1, bar: 2 }).to.contain.keys("bar", "foo");
@@ -1413,17 +1415,17 @@ describe("expect", function () {
         expect({ foo: 1, bar: 2 }).to.contain.any.keys(["foo"]);
         expect({ foo: 1, bar: 2 }).to.have.all.keys(["bar", "foo"]);
         expect({ foo: 1, bar: 2 }).to.contain.all.keys(["bar", "foo"]);
-        expect({ foo: 1, bar: 2 }).contain.any.keys({ "foo": 6 });
-        expect({ foo: 1, bar: 2 }).have.all.keys({ "foo": 6, "bar": 7 });
-        expect({ foo: 1, bar: 2 }).contain.all.keys({ "bar": 7, "foo": 6 });
+        expect({ foo: 1, bar: 2 }).contain.any.keys({ foo: 6 });
+        expect({ foo: 1, bar: 2 }).have.all.keys({ foo: 6, bar: 7 });
+        expect({ foo: 1, bar: 2 }).contain.all.keys({ bar: 7, foo: 6 });
 
         expect({ foo: 1, bar: 2 }).to.not.have.any.keys("baz", "abc", "def");
         expect({ foo: 1, bar: 2 }).to.not.have.any.keys("baz");
         expect({ foo: 1, bar: 2 }).to.not.contain.any.keys("baz");
         expect({ foo: 1, bar: 2 }).to.not.have.all.keys(["baz", "foo"]);
         expect({ foo: 1, bar: 2 }).to.not.contain.all.keys(["baz", "foo"]);
-        expect({ foo: 1, bar: 2 }).not.have.all.keys({ "baz": 8, "foo": 7 });
-        expect({ foo: 1, bar: 2 }).not.contain.all.keys({ "baz": 8, "foo": 7 });
+        expect({ foo: 1, bar: 2 }).not.have.all.keys({ baz: 8, foo: 7 });
+        expect({ foo: 1, bar: 2 }).not.contain.all.keys({ baz: 8, foo: 7 });
 
         const enumProp1 = "enumProp1";
         const enumProp2 = "enumProp2";
@@ -1487,26 +1489,26 @@ describe("expect", function () {
 
             expect(testMap).to.not.have.any.keys([{ 13: 37 }, "thisDoesNotExist", "thisToo"]);
             expect(testMap).to.not.have.any.keys([20, 1, { 13: 37 }]);
-            expect(testMap).to.not.have.all.keys([aKey, { "iDoNot": "exist" }]);
+            expect(testMap).to.not.have.all.keys([aKey, { iDoNot: "exist" }]);
 
             // Ensure the assertions above use strict equality
-            err(function () {
+            err(() => {
                 expect(testMap).to.have.any.keys({ thisIs: "anExampleObject" });
             });
 
-            err(function () {
+            err(() => {
                 expect(testMap).to.have.all.keys({ thisIs: "anExampleObject" }, { doingThisBecauseOf: "referential equality" });
             });
 
-            err(function () {
+            err(() => {
                 expect(testMap).to.contain.all.keys({ thisIs: "anExampleObject" });
             });
 
-            err(function () {
+            err(() => {
                 expect(testMap).to.have.any.keys([{ thisIs: "anExampleObject" }]);
             });
 
-            err(function () {
+            err(() => {
                 expect(testMap).to.have.all.keys([{ thisIs: "anExampleObject" }, { doingThisBecauseOf: "referential equality" }]);
             });
 
@@ -1528,7 +1530,7 @@ describe("expect", function () {
 
             expect(testMap).to.not.have.any.deep.keys([{ 13: 37 }, "thisDoesNotExist", "thisToo"]);
             expect(testMap).to.not.have.any.deep.keys([20, 1, { 13: 37 }]);
-            expect(testMap).to.not.have.all.deep.keys([{ thisIs: "anExampleObject" }, { "iDoNot": "exist" }]);
+            expect(testMap).to.not.have.all.deep.keys([{ thisIs: "anExampleObject" }, { iDoNot: "exist" }]);
 
             const weirdMapKey1 = Object.create(null);
             const weirdMapKey2 = { toString: NaN };
@@ -1565,19 +1567,19 @@ describe("expect", function () {
 
             errMap.set({ foo: 1 });
 
-            err(function () {
+            err(() => {
                 expect(errMap).to.have.keys();
             }, "keys required");
 
-            err(function () {
+            err(() => {
                 expect(errMap).to.have.keys([]);
             }, "keys required");
 
-            err(function () {
+            err(() => {
                 expect(errMap).to.contain.keys();
             }, "keys required");
 
-            err(function () {
+            err(() => {
                 expect(errMap).to.contain.keys([]);
             }, "keys required");
 
@@ -1618,26 +1620,26 @@ describe("expect", function () {
 
             expect(testSet).to.not.have.any.keys([{ 13: 37 }, "thisDoesNotExist", "thisToo"]);
             expect(testSet).to.not.have.any.keys([20, 1, { 13: 37 }]);
-            expect(testSet).to.not.have.all.keys([aKey, { "iDoNot": "exist" }]);
+            expect(testSet).to.not.have.all.keys([aKey, { iDoNot: "exist" }]);
 
             // Ensure the assertions above use strict equality
-            err(function () {
+            err(() => {
                 expect(testSet).to.have.any.keys({ thisIs: "anExampleObject" });
             });
 
-            err(function () {
+            err(() => {
                 expect(testSet).to.have.all.keys({ thisIs: "anExampleObject" }, { doingThisBecauseOf: "referential equality" });
             });
 
-            err(function () {
+            err(() => {
                 expect(testSet).to.contain.all.keys({ thisIs: "anExampleObject" });
             });
 
-            err(function () {
+            err(() => {
                 expect(testSet).to.have.any.keys([{ thisIs: "anExampleObject" }]);
             });
 
-            err(function () {
+            err(() => {
                 expect(testSet).to.have.all.keys([{ thisIs: "anExampleObject" }, { doingThisBecauseOf: "referential equality" }]);
             });
 
@@ -1659,7 +1661,7 @@ describe("expect", function () {
 
             expect(testSet).to.not.have.any.deep.keys([{ 13: 37 }, "thisDoesNotExist", "thisToo"]);
             expect(testSet).to.not.have.any.deep.keys([20, 1, { 13: 37 }]);
-            expect(testSet).to.not.have.all.deep.keys([{ thisIs: "anExampleObject" }, { "iDoNot": "exist" }]);
+            expect(testSet).to.not.have.all.deep.keys([{ thisIs: "anExampleObject" }, { iDoNot: "exist" }]);
 
             const weirdSetKey1 = Object.create(null);
             const weirdSetKey2 = { toString: NaN };
@@ -1695,19 +1697,19 @@ describe("expect", function () {
             const errSet = new Set();
             errSet.add({ foo: 1 });
 
-            err(function () {
+            err(() => {
                 expect(errSet).to.have.keys();
             }, "keys required");
 
-            err(function () {
+            err(() => {
                 expect(errSet).to.have.keys([]);
             }, "keys required");
 
-            err(function () {
+            err(() => {
                 expect(errSet).to.contain.keys();
             }, "keys required");
 
-            err(function () {
+            err(() => {
                 expect(errSet).to.contain.keys([]);
             }, "keys required");
 
@@ -1722,143 +1724,143 @@ describe("expect", function () {
             // }, 'expected [ { foo: 1 } ] to deeply contain key { iDoNotExist: 0 }');
         }
 
-        err(function () {
+        err(() => {
             expect({ foo: 1 }).to.have.keys();
         }, "keys required");
 
-        err(function () {
+        err(() => {
             expect({ foo: 1 }).to.have.keys([]);
         }, "keys required");
 
-        err(function () {
+        err(() => {
             expect({ foo: 1 }).to.not.have.keys([]);
         }, "keys required");
 
-        err(function () {
+        err(() => {
             expect({ foo: 1 }).to.contain.keys([]);
         }, "keys required");
 
         const mixedArgsMsg = "when testing keys against an object or an array you must give a single Array|Object|String argument or multiple String arguments";
 
-        err(function () {
+        err(() => {
             expect({}).contain.keys(["a"], "b");
         }, mixedArgsMsg);
 
-        err(function () {
-            expect({}).contain.keys({ "a": 1 }, "b");
+        err(() => {
+            expect({}).contain.keys({ a: 1 }, "b");
         }, mixedArgsMsg);
 
-        err(function () {
+        err(() => {
             expect({ foo: 1 }).to.have.keys(["bar"]);
         }, "expected { foo: 1 } to have key 'bar'");
 
-        err(function () {
+        err(() => {
             expect({ foo: 1 }).to.have.keys(["bar", "baz"]);
         }, "expected { foo: 1 } to have keys 'bar', and 'baz'");
 
-        err(function () {
+        err(() => {
             expect({ foo: 1 }).to.have.keys(["foo", "bar", "baz"]);
         }, "expected { foo: 1 } to have keys 'foo', 'bar', and 'baz'");
 
-        err(function () {
+        err(() => {
             expect({ foo: 1 }).to.not.have.keys(["foo"]);
         }, "expected { foo: 1 } to not have key 'foo'");
 
-        err(function () {
+        err(() => {
             expect({ foo: 1 }).to.not.have.keys(["foo"]);
         }, "expected { foo: 1 } to not have key 'foo'");
 
-        err(function () {
+        err(() => {
             expect({ foo: 1, bar: 2 }).to.not.have.keys(["foo", "bar"]);
         }, "expected { foo: 1, bar: 2 } to not have keys 'foo', and 'bar'");
 
-        err(function () {
+        err(() => {
             expect({ foo: 1, bar: 2 }).to.have.all.keys("foo");
         }, "expected { foo: 1, bar: 2 } to have key 'foo'");
 
-        err(function () {
+        err(() => {
             expect({ foo: 1 }).to.not.contain.keys(["foo"]);
         }, "expected { foo: 1 } to not contain key 'foo'");
 
-        err(function () {
+        err(() => {
             expect({ foo: 1 }).to.contain.keys("foo", "bar");
         }, "expected { foo: 1 } to contain keys 'foo', and 'bar'");
 
-        err(function () {
+        err(() => {
             expect({ foo: 1 }).to.have.any.keys("baz");
         }, "expected { foo: 1 } to have key 'baz'");
 
-        err(function () {
+        err(() => {
             expect({ foo: 1, bar: 2 }).to.not.have.all.keys(["foo", "bar"]);
         }, "expected { foo: 1, bar: 2 } to not have keys 'foo', and 'bar'");
 
-        err(function () {
+        err(() => {
             expect({ foo: 1, bar: 2 }).to.not.have.any.keys(["foo", "baz"]);
         }, "expected { foo: 1, bar: 2 } to not have keys 'foo', or 'baz'");
 
         // repeat previous tests with Object as arg.
-        err(function () {
-            expect({ foo: 1 }).have.keys({ "bar": 1 });
+        err(() => {
+            expect({ foo: 1 }).have.keys({ bar: 1 });
         }, "expected { foo: 1 } to have key 'bar'");
 
-        err(function () {
-            expect({ foo: 1 }).have.keys({ "bar": 1, "baz": 1 });
+        err(() => {
+            expect({ foo: 1 }).have.keys({ bar: 1, baz: 1 });
         }, "expected { foo: 1 } to have keys 'bar', and 'baz'");
 
-        err(function () {
-            expect({ foo: 1 }).have.keys({ "foo": 1, "bar": 1, "baz": 1 });
+        err(() => {
+            expect({ foo: 1 }).have.keys({ foo: 1, bar: 1, baz: 1 });
         }, "expected { foo: 1 } to have keys 'foo', 'bar', and 'baz'");
 
-        err(function () {
-            expect({ foo: 1 }).not.have.keys({ "foo": 1 });
+        err(() => {
+            expect({ foo: 1 }).not.have.keys({ foo: 1 });
         }, "expected { foo: 1 } to not have key 'foo'");
 
-        err(function () {
-            expect({ foo: 1 }).not.have.keys({ "foo": 1 });
+        err(() => {
+            expect({ foo: 1 }).not.have.keys({ foo: 1 });
         }, "expected { foo: 1 } to not have key 'foo'");
 
-        err(function () {
-            expect({ foo: 1, bar: 2 }).not.have.keys({ "foo": 1, "bar": 1 });
+        err(() => {
+            expect({ foo: 1, bar: 2 }).not.have.keys({ foo: 1, bar: 1 });
         }, "expected { foo: 1, bar: 2 } to not have keys 'foo', and 'bar'");
 
-        err(function () {
-            expect({ foo: 1 }).not.contain.keys({ "foo": 1 });
+        err(() => {
+            expect({ foo: 1 }).not.contain.keys({ foo: 1 });
         }, "expected { foo: 1 } to not contain key 'foo'");
 
-        err(function () {
+        err(() => {
             expect({ foo: 1 }).contain.keys("foo", "bar");
         }, "expected { foo: 1 } to contain keys 'foo', and 'bar'");
 
-        err(function () {
+        err(() => {
             expect({ foo: 1 }).have.any.keys("baz");
         }, "expected { foo: 1 } to have key 'baz'");
 
-        err(function () {
-            expect({ foo: 1, bar: 2 }).not.have.all.keys({ "foo": 1, "bar": 1 });
+        err(() => {
+            expect({ foo: 1, bar: 2 }).not.have.all.keys({ foo: 1, bar: 1 });
         }, "expected { foo: 1, bar: 2 } to not have keys 'foo', and 'bar'");
 
-        err(function () {
-            expect({ foo: 1, bar: 2 }).not.have.any.keys({ "foo": 1, "baz": 1 });
+        err(() => {
+            expect({ foo: 1, bar: 2 }).not.have.any.keys({ foo: 1, baz: 1 });
         }, "expected { foo: 1, bar: 2 } to not have keys 'foo', or 'baz'");
 
     });
 
-    it("keys(array) will not mutate array (#359)", function () {
+    it("keys(array) will not mutate array (#359)", () => {
         const expected = ["b", "a"];
         const original_order = ["b", "a"];
-        const obj = { "b": 1, "a": 1 };
+        const obj = { b: 1, a: 1 };
         expect(expected).deep.equal(original_order);
         expect(obj).keys(original_order);
         expect(expected).deep.equal(original_order);
     });
 
-    it("chaining", function () {
+    it("chaining", () => {
         const tea = { name: "chai", extras: ["milk", "sugar", "smile"] };
         expect(tea).to.have.property("extras").with.lengthOf(3);
 
         expect(tea).to.have.property("extras").which.contains("smile");
 
-        err(function () {
+        err(() => {
             expect(tea).to.have.property("extras").with.lengthOf(4);
         }, "expected [ 'milk', 'sugar', 'smile' ] to have a length of 4 but got 3");
 
@@ -1871,7 +1873,7 @@ describe("expect", function () {
         expect(badFn).to.throw(Error).with.property("message", "testing");
     });
 
-    it("throw", function () {
+    it("throw", () => {
         // See GH-45: some poorly-constructed custom errors don't have useful names
         // on either their constructor or their constructor prototype, but instead
         // only set the name inside the constructor itself.
@@ -1946,88 +1948,88 @@ describe("expect", function () {
         expect(badFn).to.not.throw(Error, "I am the wrong error message");
         expect(badFn).to.not.throw(TypeError, "testing");
 
-        err(function () {
+        err(() => {
             expect(goodFn).to.throw();
         }, /^expected \[Function(: goodFn)*\] to throw an error$/);
 
-        err(function () {
+        err(() => {
             expect(goodFn).to.throw(ReferenceError);
         }, /^expected \[Function(: goodFn)*\] to throw ReferenceError$/);
 
-        err(function () {
+        err(() => {
             expect(goodFn).to.throw(specificError);
         }, /^expected \[Function(: goodFn)*\] to throw 'RangeError: boo'$/);
 
-        err(function () {
+        err(() => {
             expect(badFn).to.not.throw();
         }, /^expected \[Function(: badFn)*\] to not throw an error but 'Error: testing' was thrown$/);
 
-        err(function () {
+        err(() => {
             expect(badFn).to.throw(ReferenceError);
         }, /^expected \[Function(: badFn)*\] to throw 'ReferenceError' but 'Error: testing' was thrown$/);
 
-        err(function () {
+        err(() => {
             expect(badFn).to.throw(specificError);
         }, /^expected \[Function(: badFn)*\] to throw 'RangeError: boo' but 'Error: testing' was thrown$/);
 
-        err(function () {
+        err(() => {
             expect(badFn).to.not.throw(Error);
         }, /^expected \[Function(: badFn)*\] to not throw 'Error' but 'Error: testing' was thrown$/);
 
-        err(function () {
+        err(() => {
             expect(refErrFn).to.not.throw(ReferenceError);
         }, /^expected \[Function(: refErrFn)*\] to not throw 'ReferenceError' but 'ReferenceError: hello' was thrown$/);
 
-        err(function () {
+        err(() => {
             expect(badFn).to.throw(PoorlyConstructedError);
         }, /^expected \[Function(: badFn)*\] to throw 'PoorlyConstructedError' but 'Error: testing' was thrown$/);
 
-        err(function () {
+        err(() => {
             expect(ickyErrFn).to.not.throw(PoorlyConstructedError);
         }, /^(expected \[Function(: ickyErrFn)*\] to not throw 'PoorlyConstructedError' but)(.*)(PoorlyConstructedError|\{ Object \()(.*)(was thrown)$/);
 
-        err(function () {
+        err(() => {
             expect(ickyErrFn).to.throw(ReferenceError);
         }, /^(expected \[Function(: ickyErrFn)*\] to throw 'ReferenceError' but)(.*)(PoorlyConstructedError|\{ Object \()(.*)(was thrown)$/);
 
-        err(function () {
+        err(() => {
             expect(specificErrFn).to.throw(new ReferenceError("eek"));
         }, /^expected \[Function(: specificErrFn)*\] to throw 'ReferenceError: eek' but 'RangeError: boo' was thrown$/);
 
-        err(function () {
+        err(() => {
             expect(specificErrFn).to.not.throw(specificError);
         }, /^expected \[Function(: specificErrFn)*\] to not throw 'RangeError: boo'$/);
 
-        err(function () {
+        err(() => {
             expect(badFn).to.not.throw(/testing/);
         }, /^expected \[Function(: badFn)*\] to throw error not matching \/testing\/$/);
 
-        err(function () {
+        err(() => {
             expect(badFn).to.throw(/hello/);
         }, /^expected \[Function(: badFn)*\] to throw error matching \/hello\/ but got 'testing'$/);
 
-        err(function () {
+        err(() => {
             expect(badFn).to.throw(Error, /hello/, "blah");
         }, /^blah: expected \[Function(: badFn)*\] to throw error matching \/hello\/ but got 'testing'$/);
 
-        err(function () {
+        err(() => {
             expect(badFn).to.throw(Error, "hello", "blah");
         }, /^blah: expected \[Function(: badFn)*\] to throw error including 'hello' but got 'testing'$/);
 
-        err(function () {
+        err(() => {
             expect(badFn).to.not.throw(Error, "testing");
         }, /^expected \[Function(: badFn)*\] to not throw 'Error' but 'Error: testing' was thrown$/);
 
-        err(function () {
+        err(() => {
             expect(emptyStringErrFn).to.not.throw(Error, "");
         }, /^expected \[Function(: emptyStringErrFn)*\] to not throw 'Error' but 'Error' was thrown$/);
 
-        err(function () {
+        err(() => {
             expect(emptyStringErrFn).to.not.throw("");
         }, /^expected \[Function(: emptyStringErrFn)*\] to throw error not including ''$/);
     });
 
-    it("respondTo", function () {
+    it("respondTo", () => {
         function Foo() { }
         Foo.prototype.bar = function () { };
         Foo.func = function () { };
@@ -2042,80 +2044,80 @@ describe("expect", function () {
 
         expect(bar).to.respondTo("foo");
 
-        err(function () {
+        err(() => {
             expect(Foo).to.respondTo("baz", "constructor");
         }, /^(constructor: expected)(.*)(\[Function: Foo\])(.*)(to respond to \'baz\')$/);
 
-        err(function () {
+        err(() => {
             expect(bar).to.respondTo("baz", "object");
         }, /^(object: expected)(.*)(\{ foo: \[Function\] \}|\{ Object \()(.*)(to respond to \'baz\')$/);
     });
 
-    it("satisfy", function () {
+    it("satisfy", () => {
         const matcher = function (num) {
             return num === 1;
         };
 
         expect(1).to.satisfy(matcher);
 
-        err(function () {
+        err(() => {
             expect(2).to.satisfy(matcher, "blah");
         }, /^blah: expected 2 to satisfy \[Function(: matcher)*\]$/);
     });
 
-    it("closeTo", function () {
+    it("closeTo", () => {
         expect(1.5).to.be.closeTo(1.0, 0.5);
         expect(10).to.be.closeTo(20, 20);
         expect(-10).to.be.closeTo(20, 30);
 
-        err(function () {
+        err(() => {
             expect(2).to.be.closeTo(1.0, 0.5, "blah");
         }, "blah: expected 2 to be close to 1 +/- 0.5");
 
-        err(function () {
+        err(() => {
             expect(-10).to.be.closeTo(20, 29, "blah");
         }, "blah: expected -10 to be close to 20 +/- 29");
 
-        err(function () {
+        err(() => {
             expect([1.5]).to.be.closeTo(1.0, 0.5);
         }, "expected [ 1.5 ] to be a number");
 
-        err(function () {
+        err(() => {
             expect(1.5).to.be.closeTo("1.0", 0.5);
         }, "the arguments to closeTo or approximately must be numbers");
 
-        err(function () {
+        err(() => {
             expect(1.5).to.be.closeTo(1.0, true);
         }, "the arguments to closeTo or approximately must be numbers");
     });
 
-    it("approximately", function () {
+    it("approximately", () => {
         expect(1.5).to.be.approximately(1.0, 0.5);
         expect(10).to.be.approximately(20, 20);
         expect(-10).to.be.approximately(20, 30);
 
-        err(function () {
+        err(() => {
             expect(2).to.be.approximately(1.0, 0.5, "blah");
         }, "blah: expected 2 to be close to 1 +/- 0.5");
 
-        err(function () {
+        err(() => {
             expect(-10).to.be.approximately(20, 29, "blah");
         }, "blah: expected -10 to be close to 20 +/- 29");
 
-        err(function () {
+        err(() => {
             expect([1.5]).to.be.approximately(1.0, 0.5);
         }, "expected [ 1.5 ] to be a number");
 
-        err(function () {
+        err(() => {
             expect(1.5).to.be.approximately("1.0", 0.5);
         }, "the arguments to closeTo or approximately must be numbers");
 
-        err(function () {
+        err(() => {
             expect(1.5).to.be.approximately(1.0, true);
         }, "the arguments to closeTo or approximately must be numbers");
     });
 
-    it("oneOf", function () {
+    it("oneOf", () => {
         expect(1).to.be.oneOf([1, 2, 3]);
         expect("1").to.not.be.oneOf([1, 2, 3]);
         expect([3, [4]]).to.not.be.oneOf([1, 2, [3, 4]]);
@@ -2123,7 +2125,7 @@ describe("expect", function () {
         expect(threeFour).to.be.oneOf([1, 2, threeFour]);
     });
 
-    it("include.members", function () {
+    it("include.members", () => {
         expect([1, 2, 3]).to.include.members([]);
         expect([1, 2, 3]).to.include.members([3, 2]);
         expect([1, 2, 3]).to.include.members([3, 2, 2]);
@@ -2131,16 +2133,16 @@ describe("expect", function () {
         expect([1, 2, 3]).to.not.include.members([1, 2, 3, 4]);
         expect([{ a: 1 }]).to.not.include.members([{ a: 1 }]);
 
-        err(function () {
+        err(() => {
             expect([1, 2, 3]).to.include.members([2, 5]);
         }, "expected [ 1, 2, 3 ] to be a superset of [ 2, 5 ]");
 
-        err(function () {
+        err(() => {
             expect([1, 2, 3]).to.not.include.members([2, 1]);
         }, "expected [ 1, 2, 3 ] to not be a superset of [ 2, 1 ]");
     });
 
-    it("same.members", function () {
+    it("same.members", () => {
         expect([5, 4]).to.have.same.members([4, 5]);
         expect([5, 4]).to.have.same.members([5, 4]);
         expect([5, 4, 4]).to.have.same.members([5, 4, 4]);
@@ -2153,7 +2155,7 @@ describe("expect", function () {
         expect([5, 4, 3]).to.not.have.same.members([5, 4, 4]);
     });
 
-    it("members", function () {
+    it("members", () => {
         expect([5, 4]).members([4, 5]);
         expect([5, 4]).members([5, 4]);
         expect([5, 4, 4]).members([5, 4, 4]);
@@ -2166,16 +2168,16 @@ describe("expect", function () {
         expect([5, 4, 3]).not.members([5, 4, 4]);
         expect([{ id: 1 }]).not.members([{ id: 1 }]);
 
-        err(function () {
+        err(() => {
             expect([1, 2, 3]).members([2, 1, 5]);
         }, "expected [ 1, 2, 3 ] to have the same members as [ 2, 1, 5 ]");
 
-        err(function () {
+        err(() => {
             expect([1, 2, 3]).not.members([2, 1, 3]);
         }, "expected [ 1, 2, 3 ] to not have the same members as [ 2, 1, 3 ]");
     });
 
-    it("deep.members", function () {
+    it("deep.members", () => {
         expect([{ id: 1 }]).deep.members([{ id: 1 }]);
         expect([{ a: 1 }, { b: 2 }, { b: 2 }]).deep.members([{ a: 1 }, { b: 2 }, { b: 2 }]);
 
@@ -2185,22 +2187,22 @@ describe("expect", function () {
         expect([{ a: 1 }, { b: 2 }, { b: 2 }]).not.deep.members([{ a: 1 }, { b: 2 }, { c: 3 }]);
         expect([{ a: 1 }, { b: 2 }, { c: 3 }]).not.deep.members([{ a: 1 }, { b: 2 }, { b: 2 }]);
 
-        err(function () {
+        err(() => {
             expect([{ id: 1 }]).deep.members([{ id: 2 }]);
         }, "expected [ { id: 1 } ] to have the same members as [ { id: 2 } ]");
     });
 
-    it("include.deep.members", function () {
+    it("include.deep.members", () => {
         expect([{ a: 1 }, { b: 2 }, { c: 3 }]).include.deep.members([{ b: 2 }, { a: 1 }]);
         expect([{ a: 1 }, { b: 2 }, { c: 3 }]).include.deep.members([{ b: 2 }, { a: 1 }, { a: 1 }]);
         expect([{ a: 1 }, { b: 2 }, { c: 3 }]).not.include.deep.members([{ b: 2 }, { a: 1 }, { f: 5 }]);
 
-        err(function () {
+        err(() => {
             expect([{ a: 1 }, { b: 2 }, { c: 3 }]).include.deep.members([{ b: 2 }, { a: 1 }, { f: 5 }]);
         }, "expected [ { a: 1 }, { b: 2 }, { c: 3 } ] to be a superset of [ { b: 2 }, { a: 1 }, { f: 5 } ]");
     });
 
-    it("ordered.members", function () {
+    it("ordered.members", () => {
         expect([1, 2, 3]).ordered.members([1, 2, 3]);
         expect([1, 2, 2]).ordered.members([1, 2, 2]);
 
@@ -2211,31 +2213,31 @@ describe("expect", function () {
         expect([1, 2, 2]).not.ordered.members([1, 2, 3]);
         expect([1, 2, 3]).not.ordered.members([1, 2, 2]);
 
-        err(function () {
+        err(() => {
             expect([1, 2, 3]).ordered.members([2, 1, 3]);
         }, "expected [ 1, 2, 3 ] to have the same ordered members as [ 2, 1, 3 ]");
 
-        err(function () {
+        err(() => {
             expect([1, 2, 3]).not.ordered.members([1, 2, 3]);
         }, "expected [ 1, 2, 3 ] to not have the same ordered members as [ 1, 2, 3 ]");
     });
 
-    it("include.ordered.members", function () {
+    it("include.ordered.members", () => {
         expect([1, 2, 3]).include.ordered.members([1, 2]);
         expect([1, 2, 3]).not.include.ordered.members([2, 1]);
         expect([1, 2, 3]).not.include.ordered.members([2, 3]);
         expect([1, 2, 3]).not.include.ordered.members([1, 2, 2]);
 
-        err(function () {
+        err(() => {
             expect([1, 2, 3]).include.ordered.members([2, 1]);
         }, "expected [ 1, 2, 3 ] to be an ordered superset of [ 2, 1 ]");
 
-        err(function () {
+        err(() => {
             expect([1, 2, 3]).not.include.ordered.members([1, 2]);
         }, "expected [ 1, 2, 3 ] to not be an ordered superset of [ 1, 2 ]");
     });
 
-    it("deep.ordered.members", function () {
+    it("deep.ordered.members", () => {
         expect([{ a: 1 }, { b: 2 }, { c: 3 }]).deep.ordered.members([{ a: 1 }, { b: 2 }, { c: 3 }]);
         expect([{ a: 1 }, { b: 2 }, { b: 2 }]).deep.ordered.members([{ a: 1 }, { b: 2 }, { b: 2 }]);
 
@@ -2245,31 +2247,31 @@ describe("expect", function () {
         expect([{ a: 1 }, { b: 2 }, { b: 2 }]).not.deep.ordered.members([{ a: 1 }, { b: 2 }, { c: 3 }]);
         expect([{ a: 1 }, { b: 2 }, { c: 3 }]).not.deep.ordered.members([{ a: 1 }, { b: 2 }, { b: 2 }]);
 
-        err(function () {
+        err(() => {
             expect([{ a: 1 }, { b: 2 }, { c: 3 }]).deep.ordered.members([{ b: 2 }, { a: 1 }, { c: 3 }]);
         }, "expected [ { a: 1 }, { b: 2 }, { c: 3 } ] to have the same ordered members as [ { b: 2 }, { a: 1 }, { c: 3 } ]");
 
-        err(function () {
+        err(() => {
             expect([{ a: 1 }, { b: 2 }, { c: 3 }]).not.deep.ordered.members([{ a: 1 }, { b: 2 }, { c: 3 }]);
         }, "expected [ { a: 1 }, { b: 2 }, { c: 3 } ] to not have the same ordered members as [ { a: 1 }, { b: 2 }, { c: 3 } ]");
     });
 
-    it("include.deep.ordered.members", function () {
+    it("include.deep.ordered.members", () => {
         expect([{ a: 1 }, { b: 2 }, { c: 3 }]).include.deep.ordered.members([{ a: 1 }, { b: 2 }]);
         expect([{ a: 1 }, { b: 2 }, { c: 3 }]).not.include.deep.ordered.members([{ b: 2 }, { a: 1 }]);
         expect([{ a: 1 }, { b: 2 }, { c: 3 }]).not.include.deep.ordered.members([{ b: 2 }, { c: 3 }]);
         expect([{ a: 1 }, { b: 2 }, { c: 3 }]).not.include.deep.ordered.members([{ a: 1 }, { b: 2 }, { b: 2 }]);
 
-        err(function () {
+        err(() => {
             expect([{ a: 1 }, { b: 2 }, { c: 3 }]).include.deep.ordered.members([{ b: 2 }, { a: 1 }]);
         }, "expected [ { a: 1 }, { b: 2 }, { c: 3 } ] to be an ordered superset of [ { b: 2 }, { a: 1 } ]");
 
-        err(function () {
+        err(() => {
             expect([{ a: 1 }, { b: 2 }, { c: 3 }]).not.include.deep.ordered.members([{ a: 1 }, { b: 2 }]);
         }, "expected [ { a: 1 }, { b: 2 }, { c: 3 } ] to not be an ordered superset of [ { a: 1 }, { b: 2 } ]");
     });
 
-    it("change", function () {
+    it("change", () => {
         const obj = { value: 10, str: "foo" };
         const heroes = ["spiderman", "superman"];
         const fn = function () {
@@ -2307,7 +2309,7 @@ describe("expect", function () {
         expect(batFn).to.change(lenFn).but.not.by(2);
     });
 
-    it("increase, decrease", function () {
+    it("increase, decrease", () => {
         const obj = { value: 10, noop: null };
         const arr = ["one", "two"];
         const pFn = function () {
@@ -2356,25 +2358,25 @@ describe("expect", function () {
         expect(nFn).to.not.decrease(lenFn);
         expect(pFn).to.not.decrease(lenFn);
 
-        err(function () {
+        err(() => {
             expect(incFn).to.increase(obj, "noop");
         }, "expected null to be a number");
-        err(function () {
+        err(() => {
             expect(incFn).to.decrease(obj, "noop");
         }, "expected null to be a number");
     });
 
-    it("extensible", function () {
+    it("extensible", () => {
         const nonExtensibleObject = Object.preventExtensions({});
 
         expect({}).to.be.extensible;
         expect(nonExtensibleObject).to.not.be.extensible;
 
-        err(function () {
+        err(() => {
             expect(nonExtensibleObject).to.be.extensible;
         }, "expected {} to be extensible");
 
-        err(function () {
+        err(() => {
             expect({}).to.not.be.extensible;
         }, "expected {} to not be extensible");
 
@@ -2390,23 +2392,23 @@ describe("expect", function () {
             expect(Symbol()).to.not.be.extensible;
         }
 
-        err(function () {
+        err(() => {
             expect(42).to.be.extensible;
         }, "expected 42 to be extensible");
 
-        err(function () {
+        err(() => {
             expect(null).to.be.extensible;
         }, "expected null to be extensible");
 
-        err(function () {
+        err(() => {
             expect("foo").to.be.extensible;
         }, "expected 'foo' to be extensible");
 
-        err(function () {
+        err(() => {
             expect(false).to.be.extensible;
         }, "expected false to be extensible");
 
-        err(function () {
+        err(() => {
             expect(undefined).to.be.extensible;
         }, "expected undefined to be extensible");
 
@@ -2417,24 +2419,24 @@ describe("expect", function () {
                 }
             });
 
-            err(function () {
+            err(() => {
                 // .extensible should not suppress errors, thrown in proxy traps
                 expect(proxy).to.be.extensible;
             }, { name: "TypeError" });
         }
     });
 
-    it("sealed", function () {
+    it("sealed", () => {
         const sealedObject = Object.seal({});
 
         expect(sealedObject).to.be.sealed;
         expect({}).to.not.be.sealed;
 
-        err(function () {
+        err(() => {
             expect({}).to.be.sealed;
         }, "expected {} to be sealed");
 
-        err(function () {
+        err(() => {
             expect(sealedObject).to.not.be.sealed;
         }, "expected {} to not be sealed");
 
@@ -2450,23 +2452,23 @@ describe("expect", function () {
             expect(Symbol()).to.be.sealed;
         }
 
-        err(function () {
+        err(() => {
             expect(42).to.not.be.sealed;
         }, "expected 42 to not be sealed");
 
-        err(function () {
+        err(() => {
             expect(null).to.not.be.sealed;
         }, "expected null to not be sealed");
 
-        err(function () {
+        err(() => {
             expect("foo").to.not.be.sealed;
         }, "expected 'foo' to not be sealed");
 
-        err(function () {
+        err(() => {
             expect(false).to.not.be.sealed;
         }, "expected false to not be sealed");
 
-        err(function () {
+        err(() => {
             expect(undefined).to.not.be.sealed;
         }, "expected undefined to not be sealed");
 
@@ -2480,24 +2482,24 @@ describe("expect", function () {
             // Object.isSealed will call ownKeys trap only if object is not extensible
             Object.preventExtensions(proxy);
 
-            err(function () {
+            err(() => {
                 // .sealed should not suppress errors, thrown in proxy traps
                 expect(proxy).to.be.sealed;
             }, { name: "TypeError" });
         }
     });
 
-    it("frozen", function () {
+    it("frozen", () => {
         const frozenObject = Object.freeze({});
 
         expect(frozenObject).to.be.frozen;
         expect({}).to.not.be.frozen;
 
-        err(function () {
+        err(() => {
             expect({}).to.be.frozen;
         }, "expected {} to be frozen");
 
-        err(function () {
+        err(() => {
             expect(frozenObject).to.not.be.frozen;
         }, "expected {} to not be frozen");
 
@@ -2513,23 +2515,23 @@ describe("expect", function () {
             expect(Symbol()).to.be.frozen;
         }
 
-        err(function () {
+        err(() => {
             expect(42).to.not.be.frozen;
         }, "expected 42 to not be frozen");
 
-        err(function () {
+        err(() => {
             expect(null).to.not.be.frozen;
         }, "expected null to not be frozen");
 
-        err(function () {
+        err(() => {
             expect("foo").to.not.be.frozen;
         }, "expected 'foo' to not be frozen");
 
-        err(function () {
+        err(() => {
             expect(false).to.not.be.frozen;
         }, "expected false to not be frozen");
 
-        err(function () {
+        err(() => {
             expect(undefined).to.not.be.frozen;
         }, "expected undefined to not be frozen");
 
@@ -2543,7 +2545,7 @@ describe("expect", function () {
             // Object.isFrozen will call ownKeys trap only if object is not extensible
             Object.preventExtensions(proxy);
 
-            err(function () {
+            err(() => {
                 // .frozen should not suppress errors, thrown in proxy traps
                 expect(proxy).to.be.frozen;
             }, { name: "TypeError" });

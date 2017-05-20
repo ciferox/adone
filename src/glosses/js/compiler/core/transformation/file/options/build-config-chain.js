@@ -16,9 +16,9 @@ const exists = (filename) => {
     const cached = existsCache[filename];
     if (adone.is.nil(cached)) {
         return existsCache[filename] = fs.existsSync(filename);
-    } else {
-        return cached;
-    }
+    } 
+    return cached;
+    
 };
 
 class ConfigChainBuilder {

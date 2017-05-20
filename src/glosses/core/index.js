@@ -147,9 +147,9 @@ class Core extends adone.EventEmitter {
             const res = callback(x);
             if (is.promise(res)) {
                 return res.then((y) => this.push(y));
-            } else {
-                this.push(res);
-            }
+            } 
+            this.push(res);
+            
         });
     }
 

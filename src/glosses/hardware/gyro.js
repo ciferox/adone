@@ -32,7 +32,7 @@ const Controllers = {
                 pins.forEach(function (pin, index) {
                     this.io.pinMode(pin, this.io.MODES.ANALOG);
                     this.io.analogRead(pin, (data) => {
-                        var axis = axes[index];
+                        const axis = axes[index];
                         dataPoints[axis] = data;
                         dataHandler(dataPoints);
                     });
@@ -46,9 +46,9 @@ const Controllers = {
         },
         toDegreesPerSecond: {
             value(raw, rawCenter) {
-                let normal = this.toNormal(raw);
-                let center = this.toNormal(rawCenter);
-                let state = priv.get(this);
+                const normal = this.toNormal(raw);
+                const center = this.toNormal(rawCenter);
+                const state = priv.get(this);
 
                 return ((normal - center) * state.K) | 0;
             }
@@ -59,7 +59,7 @@ const Controllers = {
     MPU6050: {
         initialize: {
             value(opts, dataHandler) {
-                let IMU = require("./imu");
+                const IMU = require("./imu");
                 let state = priv.get(this),
                     driver = IMU.Drivers.get(this.board, "MPU6050", opts);
 
@@ -77,7 +77,7 @@ const Controllers = {
         },
         toDegreesPerSecond: {
             value(raw, rawCenter) {
-                let state = priv.get(this);
+                const state = priv.get(this);
 
                 return (raw - rawCenter) / state.sensitivity;
             }
@@ -86,7 +86,7 @@ const Controllers = {
     BNO055: {
         initialize: {
             value(opts, dataHandler) {
-                let IMU = require("./imu");
+                const IMU = require("./imu");
                 let state = priv.get(this),
                     driver = IMU.Drivers.get(this.board, "BNO055", opts);
 
@@ -107,7 +107,7 @@ const Controllers = {
         },
         toDegreesPerSecond: {
             value(raw) {
-                let state = priv.get(this);
+                const state = priv.get(this);
                 return raw / state.sensitivity;
             }
         }
@@ -188,8 +188,8 @@ function Gyro(opts) {
             let isChange = false;
 
             Object.keys(data).forEach(function (axis) {
-                let value = data[axis];
-                let sensor = state[axis];
+                const value = data[axis];
+                const sensor = state[axis];
 
                 sensor.previous = sensor.value;
                 sensor.stash.shift();
@@ -295,9 +295,9 @@ function Gyro(opts) {
         },
         rate: {
             get() {
-                let x = this.toDegreesPerSecond(state.x.value, state.x.center);
-                let y = this.toDegreesPerSecond(state.y.value, state.y.center);
-                let z = state.z.hasValue ?
+                const x = this.toDegreesPerSecond(state.x.value, state.x.center);
+                const y = this.toDegreesPerSecond(state.y.value, state.y.center);
+                const z = state.z.hasValue ?
                     this.toDegreesPerSecond(state.z.value, state.z.center) : 0;
 
                 return {

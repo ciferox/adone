@@ -28,7 +28,7 @@ export default class Canvas extends adone.cui.widget.Element {
     render() {
 
         this.clearPos(true);
-        var inner = this.ctx._canvas.frame();
+        const inner = this.ctx._canvas.frame();
         this.setContent(inner);
         return super.render();
     }

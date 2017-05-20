@@ -23,7 +23,7 @@
   THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 // @flow
-var ES6Regex, ES5Regex, NON_ASCII_WHITESPACES, IDENTIFIER_START, IDENTIFIER_PART, ch;
+let ES6Regex, ES5Regex, NON_ASCII_WHITESPACES, IDENTIFIER_START, IDENTIFIER_PART, ch;
 
 // See `tools/generate-identifier-regex.js`.
 ES5Regex = {
@@ -41,13 +41,13 @@ ES6Regex = {
 };
 
 export function isDecimalDigit(ch) {
-    return 0x30 <= ch && ch <= 0x39;  // 0..9
+    return ch >= 0x30 && ch <= 0x39;  // 0..9
 }
 
 export function isHexDigit(ch) {
-    return 0x30 <= ch && ch <= 0x39 ||  // 0..9
-        0x61 <= ch && ch <= 0x66 ||     // a..f
-        0x41 <= ch && ch <= 0x46;       // A..F
+    return ch >= 0x30 && ch <= 0x39 ||  // 0..9
+        ch >= 0x61 && ch <= 0x66 ||     // a..f
+        ch >= 0x41 && ch <= 0x46;       // A..F
 }
 
 export function isOctalDigit(ch) {
@@ -79,15 +79,15 @@ export function isLineTerminator(ch) {
 
 function fromCodePoint(cp) {
     if (cp <= 0xFFFF) {
- return String.fromCharCode(cp); 
+        return String.fromCharCode(cp); 
     }
-    var cu1 = String.fromCharCode(Math.floor((cp - 0x10000) / 0x400) + 0xD800);
-    var cu2 = String.fromCharCode(((cp - 0x10000) % 0x400) + 0xDC00);
+    const cu1 = String.fromCharCode(Math.floor((cp - 0x10000) / 0x400) + 0xD800);
+    const cu2 = String.fromCharCode(((cp - 0x10000) % 0x400) + 0xDC00);
     return cu1 + cu2;
 }
 
 IDENTIFIER_START = new Array(0x80);
-for(ch = 0; ch < 0x80; ++ch) {
+for (ch = 0; ch < 0x80; ++ch) {
     IDENTIFIER_START[ch] =
         ch >= 0x61 && ch <= 0x7A ||  // a..z
         ch >= 0x41 && ch <= 0x5A ||  // A..Z
@@ -95,7 +95,7 @@ for(ch = 0; ch < 0x80; ++ch) {
 }
 
 IDENTIFIER_PART = new Array(0x80);
-for(ch = 0; ch < 0x80; ++ch) {
+for (ch = 0; ch < 0x80; ++ch) {
     IDENTIFIER_PART[ch] =
         ch >= 0x61 && ch <= 0x7A ||  // a..z
         ch >= 0x41 && ch <= 0x5A ||  // A..Z

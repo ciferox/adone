@@ -19,13 +19,13 @@ export default class Log extends adone.cui.widget.ScrollableText {
     }
 
     log() {
-        var args = Array.prototype.slice.call(arguments);
+        const args = Array.prototype.slice.call(arguments);
         if (typeof args[0] === "object") {
             args[0] = adone.std.util.inspect(args[0], true, 20, true);
         }
-        var text = adone.std.util.format.apply(adone.std.util, args);
+        const text = adone.std.util.format.apply(adone.std.util, args);
         this.emit("log", text);
-        var ret = this.pushLine(text);
+        const ret = this.pushLine(text);
         if (this._clines.fake.length > this.scrollback) {
             this.shiftLine((this.scrollback / 3) | 0);
         }
@@ -33,9 +33,11 @@ export default class Log extends adone.cui.widget.ScrollableText {
     }
 
     scroll(offset, always) {
-        if (offset === 0) return super.scroll(offset, always);
+        if (offset === 0) {
+            return super.scroll(offset, always);
+        }
         this._userScrolled = true;
-        var ret = super.scroll(offset, always);
+        const ret = super.scroll(offset, always);
         if (this.getScrollPerc() === 100) {
             this._userScrolled = false;
         }

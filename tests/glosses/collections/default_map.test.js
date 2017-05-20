@@ -15,7 +15,7 @@ describe("Default map", () => {
         
         it("should pass the key as the first argument", () => {
             const m = new DefaultMap((key) => {
-                return { a: 1, b: 2, c: 3}[key];
+                return { a: 1, b: 2, c: 3 }[key];
             });
             expect(m.get("a")).to.be.equal(1);
             expect(m.get("b")).to.be.equal(2);
@@ -26,7 +26,7 @@ describe("Default map", () => {
     
     describe("an object as the factory", () => {
         it("should map the keys", () => {
-            const m = new DefaultMap({ a: 1, b: 2, c: 3});
+            const m = new DefaultMap({ a: 1, b: 2, c: 3 });
             expect(m.get("a")).to.be.equal(1);
             expect(m.get("b")).to.be.equal(2);
             expect(m.get("c")).to.be.equal(3);

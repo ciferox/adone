@@ -24,30 +24,34 @@ export default class Multi extends adone.cui.widget.Element {
         const widget = this._pageMap.get(id);
         if (is.undefined(widget)) {
             return false;
-        } else {
-            let index = this.children.indexOf(widget);
-            if (this._activeId === id) {
-                if (this.children.length > 0) {
-                    if (index >= this.children.length) index = this.children.length - 1;
-                    this.setActiveWidget(this.children[index].id);
+        } 
+        let index = this.children.indexOf(widget);
+        if (this._activeId === id) {
+            if (this.children.length > 0) {
+                if (index >= this.children.length) {
+                    index = this.children.length - 1; 
                 }
+                this.setActiveWidget(this.children[index].id);
             }
-            this.remove(widget);
-            this._widgets.delete(id);
-            return true;
         }
+        this.remove(widget);
+        this._widgets.delete(id);
+        return true;
+        
     }
 
     setActivePage(id) {
         const widget = this._pageMap.get(id);
         if (is.undefined(widget)) {
             return false;
-        } else {
-            if (this._activePage === widget) return true;
-            this._activePage.hide();
-            this._activePage = widget;
-            widget.show();
+        } 
+        if (this._activePage === widget) {
+            return true; 
         }
+        this._activePage.hide();
+        this._activePage = widget;
+        widget.show();
+        
     }
 
     getActivePage() {

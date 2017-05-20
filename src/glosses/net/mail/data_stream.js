@@ -26,10 +26,10 @@ adone.std.util.inherits(DataStream, Transform);
  * Escapes dots
  */
 DataStream.prototype._transform = function (chunk, encoding, done) {
-    var chunks = [];
-    var chunklen = 0;
-    var i, len, lastPos = 0;
-    var buf;
+    const chunks = [];
+    let chunklen = 0;
+    let i, len, lastPos = 0;
+    let buf;
 
     if (!chunk || !chunk.length) {
         return done();
@@ -94,7 +94,7 @@ DataStream.prototype._transform = function (chunk, encoding, done) {
  * Finalizes the stream with a dot on a single line
  */
 DataStream.prototype._flush = function (done) {
-    var buf;
+    let buf;
     if (this.lastByte === 0x0A) {
         buf = new Buffer(".\r\n");
     } else if (this.lastByte === 0x0D) {

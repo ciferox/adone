@@ -131,8 +131,8 @@ export default {
 
         if (makeCode[0] === 0xE0) {
             return [0xE0, makeCode[1] + 0x80];
-        } else {
-            return [makeCode[0] + 0x80];
-        }
+        } 
+        return [makeCode[0] + 0x80];
+        
     }
 };

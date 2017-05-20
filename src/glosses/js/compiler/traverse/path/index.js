@@ -110,7 +110,9 @@ export default class NodePath {
 
     getData(key: string, def?: any): any {
         let val = this.data[key];
-        if (!val && def) val = this.data[key] = def;
+        if (!val && def) {
+            val = this.data[key] = def;
+        }
         return val;
     }
 
@@ -140,7 +142,9 @@ export default class NodePath {
         let path = this;
         do {
             let key = path.key;
-            if (path.inList) key = `${path.listKey}[${key}]`;
+            if (path.inList) {
+                key = `${path.listKey}[${key}]`; 
+            }
             parts.unshift(key);
         } while (path = path.parentPath);
         return parts.join(".");
@@ -178,8 +182,12 @@ for (const type of (types.TYPES: string[])) {
 }
 
 for (const type in virtualTypes) {
-    if (type[0] === "_") continue;
-    if (types.TYPES.indexOf(type) < 0) types.TYPES.push(type);
+    if (type[0] === "_") {
+        continue; 
+    }
+    if (types.TYPES.indexOf(type) < 0) {
+        types.TYPES.push(type); 
+    }
 
     const virtualType = virtualTypes[type];
 

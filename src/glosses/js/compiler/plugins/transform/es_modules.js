@@ -124,7 +124,7 @@ export default function () {
                 return; 
             }
 
-            const node = t.assignmentExpression(path.node.operator[0] + "=", arg.node, t.numericLiteral(1));
+            const node = t.assignmentExpression(`${path.node.operator[0]}=`, arg.node, t.numericLiteral(1));
 
             if ((path.parentPath.isExpressionStatement() && !path.isCompletionRecord()) || path.node.prefix) {
                 path.replaceWith(node);
@@ -172,7 +172,7 @@ export default function () {
                 exit(path) {
                     this.ranCommonJS = true;
 
-                    const strict = !!this.opts.strict;
+                    const strict = Boolean(this.opts.strict);
 
                     const { scope } = path;
 
@@ -466,7 +466,7 @@ export default function () {
                                 currentExportsNodeAssignmentLength,
                                 currentExportsNodeAssignmentLength + maxHoistedExportsNodeAssignmentLength);
                             let hoistedExportsNode = t.identifier("undefined");
-                            nonHoistedExportNamesChunk.forEach(function (name) {
+                            nonHoistedExportNamesChunk.forEach((name) => {
                                 hoistedExportsNode = buildExportsAssignment(t.identifier(name), hoistedExportsNode).expression;
                             });
 

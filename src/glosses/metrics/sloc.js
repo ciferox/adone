@@ -17,7 +17,7 @@ const newLines = /\n/g;
 const emptyLines = /^\s*$/mg;
 const todoLines = /^.*TODO.*$/mg;
 
-const getCommentExpressions = function(lang) {
+const getCommentExpressions = function (lang) {
 
     // single line comments
     let start;
@@ -84,7 +84,7 @@ const getCommentExpressions = function(lang) {
                 case "monkey":
                 case "vb":
                     return /'/;
-                case "nim":{
+                case "nim": {
                     const r = new RegExp("\
 (?:\
 ^\
@@ -236,9 +236,9 @@ const getCommentExpressions = function(lang) {
     };
 };
 
-const countMixed = function(res, lines, idx, startIdx, match) {
+const countMixed = function (res, lines, idx, startIdx, match) {
 
-    if ((nonEmpty.exec(lines[0])) && ((__guard__(res.last, x => x.stop) === idx) || (startIdx === idx))) {
+    if ((nonEmpty.exec(lines[0])) && ((__guard__(res.last, (x) => x.stop) === idx) || (startIdx === idx))) {
         res.mixed.push({
             start: idx,
             stop: idx
@@ -252,7 +252,7 @@ const countMixed = function(res, lines, idx, startIdx, match) {
     }
 };
 
-const getStopRegex = function(type, regex) {
+const getStopRegex = function (type, regex) {
     switch (type) {
         case "single":
             return endOfLine;
@@ -261,50 +261,50 @@ const getStopRegex = function(type, regex) {
     }
 };
 
-const getType = function(single, start) {
+const getType = function (single, start) {
     if (single && !start) {
         return "single";
     } else if (start && !single) {
         return "block";
-    } else {
-        if (start.index <= single.index) {
-            return "block";
-        } else {
-            return "single";
-        }
-    }
+    } 
+    if (start.index <= single.index) {
+        return "block";
+    } 
+    return "single";
+        
+    
 };
 
-const matchIdx = m => m.index + m[0].length;
+const matchIdx = (m) => m.index + m[0].length;
 
-const emptyLns = c => __guard__(c.match(emptyLines), x => x.length) || 0;
+const emptyLns = (c) => __guard__(c.match(emptyLines), (x) => x.length) || 0;
 
-const newLns = c => __guard__(c.match(newLines), x => x.length) || 0;
+const newLns = (c) => __guard__(c.match(newLines), (x) => x.length) || 0;
 
-const todoLns = c => __guard__(c.match(todoLines), x => x.length) || 0;
+const todoLns = (c) => __guard__(c.match(todoLines), (x) => x.length) || 0;
 
-const indexOfGroup = function(match, n) {
+const indexOfGroup = function (match, n) {
     let ix = match.index;
-    for (let i = 1, end = n, asc = 1 <= end; asc ? i <= end : i >= end; asc ? i++ : i--) {
+    for (let i = 1, end = n, asc = end >= 1; asc ? i <= end : i >= end; asc ? i++ : i--) {
         ix += match[i].length;
     }
     return ix;
 };
 
-const matchDefinedGroup = function(reg, code) {
+const matchDefinedGroup = function (reg, code) {
     let g;
-    const res = __guard__(reg, x => x.exec(code));
+    const res = __guard__(reg, (x) => x.exec(code));
     // This is dirty but it works ;-)
-    if (res && (g = __guard__(reg, x1 => x1._matchGroup_))) {
+    if (res && (g = __guard__(reg, (x1) => x1._matchGroup_))) {
         res.index = indexOfGroup(res, g);
         res[0] = res[g];
     }
     return res;
 };
 
-const countComments = function(code, regex) {
+const countComments = function (code, regex) {
 
-    const myself = function(res, code, idx) {
+    const myself = function (res, code, idx) {
         if (code === "") {
             return res;
         }
@@ -367,19 +367,19 @@ const countComments = function(code, regex) {
     }, code, 0));
 };
 
-const trampoline = function(next) {
+const trampoline = function (next) {
     while (typeof next === "function") {
         next = next();
     }
     return next;
 };
 
-const lineSum = function(comments) {
+const lineSum = function (comments) {
     let sum = 0;
     for (let i = 0; i < comments.length; i++) {
         const c = comments[i];
         let d = (c.stop - c.start) + 1;
-        if (__guard__(comments[i + 1], x => x.start) === c.stop) {
+        if (__guard__(comments[i + 1], (x) => x.start) === c.stop) {
             d--;
         }
         sum += d;
@@ -387,7 +387,7 @@ const lineSum = function(comments) {
     return sum;
 };
 
-const slocModule = function(code, lang, opt = {}) {
+const slocModule = function (code, lang, opt = {}) {
 
     if (!adone.is.string(code)) {
         throw new TypeError("'code' has to be a string");

@@ -243,7 +243,7 @@ export default class Printer {
 
         if (queue) {
             this._buf.queue(str);
-        }        else {
+        } else {
             this._buf.append(str);
         }
 

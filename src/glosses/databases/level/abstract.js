@@ -190,9 +190,9 @@ export class AbstractBackend {
                     resolve();
                 });
             });
-        } else {
-            this.status = "open";
-        }
+        } 
+        this.status = "open";
+        
     }
 
     close() {
@@ -210,9 +210,9 @@ export class AbstractBackend {
                     resolve();
                 });
             });
-        } else {
-            this.status = "closed";
-        }
+        } 
+        this.status = "closed";
+        
     }
 
     get(key, options) {

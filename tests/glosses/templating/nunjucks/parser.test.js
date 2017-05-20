@@ -85,14 +85,14 @@ describe("glosses", "templating", "nunjucks", "parser", () => {
         } else if (dummy instanceof nodes.CallExtension) {
             return new type(ast[1], ast[2], ast[3] ? toNodes(ast[3]) : ast[3],
                 is.array(ast[4]) ? ast[4].map(toNodes) : ast[4]);
-        } else {
-            return new type(0, 0,
+        } 
+        return new type(0, 0,
                 toNodes(ast[1]),
                 toNodes(ast[2]),
                 toNodes(ast[3]),
                 toNodes(ast[4]),
                 toNodes(ast[5]));
-        }
+        
     };
 
     const isAST = (node1, ast) => {
@@ -394,11 +394,11 @@ describe("glosses", "templating", "nunjucks", "parser", () => {
                             [nodes.KeywordArgs,
                                 [nodes.Pair,
             [nodes.Symbol, "caller"],
-                                [nodes.Caller,
+                                    [nodes.Caller,
             [nodes.Symbol, "caller"],
             [nodes.NodeList],
-                                [nodes.NodeList,
-                                [nodes.Output,
+                                        [nodes.NodeList,
+                                            [nodes.Output,
             [nodes.TemplateData, "This is the caller"]]]]]]]]]]);
     });
 
@@ -418,13 +418,13 @@ describe("glosses", "templating", "nunjucks", "parser", () => {
             [nodes.Symbol, "baz"], [nodes.Literal, "foobar"]],
                                 [nodes.Pair,
             [nodes.Symbol, "caller"],
-                                [nodes.Caller,
+                                    [nodes.Caller,
             [nodes.Symbol, "caller"],
             [nodes.NodeList, [nodes.Symbol, "i"]],
-                                [nodes.NodeList,
-                                [nodes.Output,
+                                        [nodes.NodeList,
+                                            [nodes.Output,
             [nodes.TemplateData, "This is "]],
-                                [nodes.Output,
+                                            [nodes.Output,
             [nodes.Symbol, "i"]]]]]]]]]]);
     });
 

@@ -65,8 +65,12 @@ export default function angularFilesort() {
             // Sort files alphabetically first to prevent random reordering.
             // Reverse sorting as it is reversed later on.
             files.sort((a, b) => {
-                if (a.path.toLowerCase().replace(a.extname, "") < b.path.toLowerCase().replace(b.extname, "")) return 1;
-                if (a.path.toLowerCase().replace(a.extname, "") > b.path.toLowerCase().replace(b.extname, "")) return -1;
+                if (a.path.toLowerCase().replace(a.extname, "") < b.path.toLowerCase().replace(b.extname, "")) {
+                    return 1; 
+                }
+                if (a.path.toLowerCase().replace(a.extname, "") > b.path.toLowerCase().replace(b.extname, "")) {
+                    return -1; 
+                }
                 return 0;
             });
             // Sort `files` with `toSort` as dependency tree:
@@ -84,7 +88,7 @@ function isDependecyUsedInAnyDeclaration(dependency, ngDeps) {
     if (dependency in ngDeps.modules) {
         return true;
     }
-    return Object.keys(ngDeps.modules).some(function (module) {
+    return Object.keys(ngDeps.modules).some((module) => {
         return ngDeps.modules[module].indexOf(dependency) > -1;
     });
 }

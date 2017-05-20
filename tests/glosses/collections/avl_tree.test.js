@@ -15,11 +15,11 @@ function getRandomArray(n) {
     return res;
 }
 
-describe("AVL tree", function () {
+describe("AVL tree", () => {
 
-    describe("Sanity checks", function () {
+    describe("Sanity checks", () => {
 
-        it("Checking that all nodes heights are correct", function () {
+        it("Checking that all nodes heights are correct", () => {
             let _AVLTree = AVLTree._AVLTree,
                 avlt = new _AVLTree({ key: 10 }),
                 l = new _AVLTree({ key: 5 }),
@@ -39,57 +39,57 @@ describe("AVL tree", function () {
             r.left = rl;
             r.right = rr;
 
-            expect(function () {
+            expect(() => {
                 avlt.checkHeightCorrect();
             }).to.throw();
 
             avlt.height = 1;
-            expect(function () {
+            expect(() => {
                 avlt.checkHeightCorrect();
             }).to.throw();
 
             l.height = 1;
-            expect(function () {
+            expect(() => {
                 avlt.checkHeightCorrect();
             }).to.throw();
 
             r.height = 1;
-            expect(function () {
+            expect(() => {
                 avlt.checkHeightCorrect();
             }).to.throw();
 
             ll.height = 1;
-            expect(function () {
+            expect(() => {
                 avlt.checkHeightCorrect();
             }).to.throw();
 
             lr.height = 1;
-            expect(function () {
+            expect(() => {
                 avlt.checkHeightCorrect();
             }).to.throw();
 
             rl.height = 1;
-            expect(function () {
+            expect(() => {
                 avlt.checkHeightCorrect();
             }).to.throw();
 
             rr.height = 1;
-            expect(function () {
+            expect(() => {
                 avlt.checkHeightCorrect();
             }).to.throw();
 
             avlt.height = 2;
-            expect(function () {
+            expect(() => {
                 avlt.checkHeightCorrect();
             }).to.throw();
 
             l.height = 2;
-            expect(function () {
+            expect(() => {
                 avlt.checkHeightCorrect();
             }).to.throw();
 
             r.height = 2;
-            expect(function () {
+            expect(() => {
                 avlt.checkHeightCorrect();
             }).to.throw();
 
@@ -98,37 +98,37 @@ describe("AVL tree", function () {
 
             // With an unbalanced tree
             lr.left = lrl;
-            expect(function () {
+            expect(() => {
                 avlt.checkHeightCorrect();
             }).to.throw();
 
             lrl.left = lrll;
-            expect(function () {
+            expect(() => {
                 avlt.checkHeightCorrect();
             }).to.throw();
 
             lrl.height = 1;
-            expect(function () {
+            expect(() => {
                 avlt.checkHeightCorrect();
             }).to.throw();
 
             lrll.height = 1;
-            expect(function () {
+            expect(() => {
                 avlt.checkHeightCorrect();
             }).to.throw();
 
             lrl.height = 2;
-            expect(function () {
+            expect(() => {
                 avlt.checkHeightCorrect();
             }).to.throw();
 
             lr.height = 3;
-            expect(function () {
+            expect(() => {
                 avlt.checkHeightCorrect();
             }).to.throw();
 
             l.height = 4;
-            expect(function () {
+            expect(() => {
                 avlt.checkHeightCorrect();
             }).to.throw();
 
@@ -136,7 +136,7 @@ describe("AVL tree", function () {
             avlt.checkHeightCorrect(); // Correct
         });
 
-        it("Calculate the balance factor", function () {
+        it("Calculate the balance factor", () => {
             let _AVLTree = AVLTree._AVLTree,
                 avlt = new _AVLTree({ key: 10 }),
                 l = new _AVLTree({ key: 5 }),
@@ -182,7 +182,7 @@ describe("AVL tree", function () {
             expect(avlt.balanceFactor()).to.be.equal(2);
         });
 
-        it("Can check that a tree is balanced", function () {
+        it("Can check that a tree is balanced", () => {
             let _AVLTree = AVLTree._AVLTree,
                 avlt = new _AVLTree({ key: 10 }),
                 l = new _AVLTree({ key: 5 }),
@@ -209,12 +209,12 @@ describe("AVL tree", function () {
             avlt.checkBalanceFactors();
 
             r.height = 0;
-            expect(function () {
+            expect(() => {
                 avlt.checkBalanceFactors();
             }).to.throw();
 
             r.height = 4;
-            expect(function () {
+            expect(() => {
                 avlt.checkBalanceFactors();
             }).to.throw();
 
@@ -222,12 +222,12 @@ describe("AVL tree", function () {
             avlt.checkBalanceFactors();
 
             ll.height = -1;
-            expect(function () {
+            expect(() => {
                 avlt.checkBalanceFactors();
             }).to.throw();
 
             ll.height = 3;
-            expect(function () {
+            expect(() => {
                 avlt.checkBalanceFactors();
             }).to.throw();
 
@@ -235,12 +235,12 @@ describe("AVL tree", function () {
             avlt.checkBalanceFactors();
 
             rl.height = -1;
-            expect(function () {
+            expect(() => {
                 avlt.checkBalanceFactors();
             }).to.throw();
 
             rl.height = 3;
-            expect(function () {
+            expect(() => {
                 avlt.checkBalanceFactors();
             }).to.throw();
 
@@ -250,17 +250,17 @@ describe("AVL tree", function () {
     }); // ==== End of 'Sanity checks' ==== //
 
 
-    describe("Insertion", function () {
+    describe("Insertion", () => {
 
-        it("The root has a height of 1", function () {
-            let avlt = new AVLTree();
+        it("The root has a height of 1", () => {
+            const avlt = new AVLTree();
 
             avlt.insert(10, "root");
             expect(avlt.tree.height).to.be.equal(1);
         });
 
-        it("Insert at the root if its the first insertion", function () {
-            let avlt = new AVLTree();
+        it("Insert at the root if its the first insertion", () => {
+            const avlt = new AVLTree();
 
             avlt.insert(10, "some data");
 
@@ -272,8 +272,8 @@ describe("AVL tree", function () {
             assert.isNull(avlt.tree.right);
         });
 
-        it("If uniqueness constraint not enforced, we can insert different data for same key", function () {
-            let avlt = new AVLTree();
+        it("If uniqueness constraint not enforced, we can insert different data for same key", () => {
+            const avlt = new AVLTree();
 
             avlt.insert(10, "some data");
             avlt.insert(3, "hello");
@@ -289,8 +289,8 @@ describe("AVL tree", function () {
             expect(avlt.search(12)).to.be.deep.equal(["a", "b"]);
         });
 
-        it("If uniqueness constraint is enforced, we cannot insert different data for same key", function () {
-            let avlt = new AVLTree({ unique: true });
+        it("If uniqueness constraint is enforced, we cannot insert different data for same key", () => {
+            const avlt = new AVLTree({ unique: true });
 
             avlt.insert(10, "some data");
             avlt.insert(3, "hello");
@@ -316,7 +316,7 @@ describe("AVL tree", function () {
             expect(avlt.search(12)).to.be.deep.equal(["a"]);
         });
 
-        it("Can insert 0 or the empty string", function () {
+        it("Can insert 0 or the empty string", () => {
             let avlt = new AVLTree();
 
             avlt.insert(0, "some data");
@@ -336,7 +336,7 @@ describe("AVL tree", function () {
             expect(avlt.tree.data).to.be.deep.equal(["some other data"]);
         });
 
-        it("Auto-balancing insertions", function () {
+        it("Auto-balancing insertions", () => {
             let avlt = new AVLTree(),
                 avlt2 = new AVLTree(),
                 avlt3 = new AVLTree();
@@ -438,10 +438,10 @@ describe("AVL tree", function () {
             avlt3.tree.checkIsAVLT();
         });
 
-        it("Can insert a lot of keys and still get an AVLT (sanity check)", function () {
-            let avlt = new AVLTree({ unique: true });
+        it("Can insert a lot of keys and still get an AVLT (sanity check)", () => {
+            const avlt = new AVLTree({ unique: true });
 
-            getRandomArray(1000).forEach(function (n) {
+            getRandomArray(1000).forEach((n) => {
                 avlt.insert(n, "some data");
                 avlt.checkIsAVLT();
             });
@@ -449,29 +449,29 @@ describe("AVL tree", function () {
     }); // ==== End of 'Insertion' ==== //
 
 
-    describe("Search", function () {
+    describe("Search", () => {
 
-        it("Can find data in an AVLT", function () {
+        it("Can find data in an AVLT", () => {
             let avlt = new AVLTree(),
                 i;
 
-            getRandomArray(100).forEach(function (n) {
-                avlt.insert(n, "some data for " + n);
+            getRandomArray(100).forEach((n) => {
+                avlt.insert(n, `some data for ${n}`);
             });
 
             avlt.checkIsAVLT();
 
             for (i = 0; i < 100; i += 1) {
-                expect(avlt.search(i)).to.be.deep.equal(["some data for " + i]);
+                expect(avlt.search(i)).to.be.deep.equal([`some data for ${i}`]);
             }
         });
 
-        it("If no data can be found, return an empty array", function () {
-            let avlt = new AVLTree();
+        it("If no data can be found, return an empty array", () => {
+            const avlt = new AVLTree();
 
-            getRandomArray(100).forEach(function (n) {
+            getRandomArray(100).forEach((n) => {
                 if (n !== 63) {
-                    avlt.insert(n, "some data for " + n);
+                    avlt.insert(n, `some data for ${n}`);
                 }
             });
 
@@ -483,22 +483,22 @@ describe("AVL tree", function () {
             expect(avlt.search(63).length).to.be.equal(0);
         });
 
-        it("Can search for data between two bounds", function () {
-            let avlt = new AVLTree();
+        it("Can search for data between two bounds", () => {
+            const avlt = new AVLTree();
 
-            [10, 5, 15, 3, 8, 13, 18].forEach(function (k) {
-                avlt.insert(k, "data " + k);
+            [10, 5, 15, 3, 8, 13, 18].forEach((k) => {
+                avlt.insert(k, `data ${k}`);
             });
 
             assert.deepEqual(avlt.betweenBounds({ $gte: 8, $lte: 15 }), ["data 8", "data 10", "data 13", "data 15"]);
             assert.deepEqual(avlt.betweenBounds({ $gt: 8, $lt: 15 }), ["data 10", "data 13"]);
         });
 
-        it("Bounded search can handle cases where query contains both $lt and $lte, or both $gt and $gte", function () {
-            let avlt = new AVLTree();
+        it("Bounded search can handle cases where query contains both $lt and $lte, or both $gt and $gte", () => {
+            const avlt = new AVLTree();
 
-            [10, 5, 15, 3, 8, 13, 18].forEach(function (k) {
-                avlt.insert(k, "data " + k);
+            [10, 5, 15, 3, 8, 13, 18].forEach((k) => {
+                avlt.insert(k, `data ${k}`);
             });
 
             assert.deepEqual(avlt.betweenBounds({ $gt: 8, $gte: 8, $lte: 15 }), ["data 10", "data 13", "data 15"]);
@@ -510,11 +510,11 @@ describe("AVL tree", function () {
             assert.deepEqual(avlt.betweenBounds({ $gte: 8, $lte: 15, $lt: 18 }), ["data 8", "data 10", "data 13", "data 15"]);
         });
 
-        it("Bounded search can work when one or both boundaries are missing", function () {
-            let avlt = new AVLTree();
+        it("Bounded search can work when one or both boundaries are missing", () => {
+            const avlt = new AVLTree();
 
-            [10, 5, 15, 3, 8, 13, 18].forEach(function (k) {
-                avlt.insert(k, "data " + k);
+            [10, 5, 15, 3, 8, 13, 18].forEach((k) => {
+                avlt.insert(k, `data ${k}`);
             });
 
             assert.deepEqual(avlt.betweenBounds({ $gte: 11 }), ["data 13", "data 15", "data 18"]);
@@ -523,9 +523,9 @@ describe("AVL tree", function () {
     }); /// ==== End of 'Search' ==== //
 
 
-    describe("Deletion", function () {
+    describe("Deletion", () => {
 
-        it("Deletion does nothing on an empty tree", function () {
+        it("Deletion does nothing on an empty tree", () => {
             let avlt = new AVLTree(),
                 avltu = new AVLTree({ unique: true });
 
@@ -543,16 +543,16 @@ describe("AVL tree", function () {
             expect(avltu.getNumberOfKeys()).to.be.equal(0);
         });
 
-        it("Deleting a non-existent key doesnt have any effect", function () {
-            let avlt = new AVLTree();
+        it("Deleting a non-existent key doesnt have any effect", () => {
+            const avlt = new AVLTree();
 
-            [10, 5, 3, 8, 15, 12, 37].forEach(function (k) {
-                avlt.insert(k, "some " + k);
+            [10, 5, 3, 8, 15, 12, 37].forEach((k) => {
+                avlt.insert(k, `some ${k}`);
             });
 
             function checkavlt() {
-                [10, 5, 3, 8, 15, 12, 37].forEach(function (k) {
-                    expect(avlt.search(k)).to.be.deep.equal(["some " + k]);
+                [10, 5, 3, 8, 15, 12, 37].forEach((k) => {
+                    expect(avlt.search(k)).to.be.deep.equal([`some ${k}`]);
                 });
             }
 
@@ -584,8 +584,8 @@ describe("AVL tree", function () {
             checkavlt(); avlt.checkIsAVLT(); expect(avlt.getNumberOfKeys()).to.be.equal(7);
         });
 
-        it("Able to delete the root if it is also a leaf", function () {
-            let avlt = new AVLTree();
+        it("Able to delete the root if it is also a leaf", () => {
+            const avlt = new AVLTree();
 
             avlt.insert(10, "hello");
             expect(avlt.tree.key).to.be.equal(10);
@@ -599,7 +599,7 @@ describe("AVL tree", function () {
             expect(avlt.getNumberOfKeys()).to.be.equal(0);
         });
 
-        it("Able to delete leaf nodes that are non-root", function () {
+        it("Able to delete leaf nodes that are non-root", () => {
             let avlt;
 
             // This will create an AVL tree with leaves 3, 8, 12, 37
@@ -607,8 +607,8 @@ describe("AVL tree", function () {
             function recreateavlt() {
                 avlt = new AVLTree();
 
-                [10, 5, 3, 8, 15, 12, 37].forEach(function (k) {
-                    avlt.insert(k, "some " + k);
+                [10, 5, 3, 8, 15, 12, 37].forEach((k) => {
+                    avlt.insert(k, `some ${k}`);
                 });
 
                 expect(avlt.getNumberOfKeys()).to.be.equal(7);
@@ -616,11 +616,11 @@ describe("AVL tree", function () {
 
             // Check that only keys in array theRemoved were removed
             function checkRemoved(theRemoved) {
-                [10, 5, 3, 8, 15, 12, 37].forEach(function (k) {
+                [10, 5, 3, 8, 15, 12, 37].forEach((k) => {
                     if (theRemoved.indexOf(k) !== -1) {
                         expect(avlt.search(k).length).to.be.equal(0);
                     } else {
-                        expect(avlt.search(k)).to.be.deep.equal(["some " + k]);
+                        expect(avlt.search(k)).to.be.deep.equal([`some ${k}`]);
                     }
                 });
 
@@ -673,13 +673,13 @@ describe("AVL tree", function () {
             checkRemoved([3, 5, 8, 10, 12, 15, 37]);
         });
 
-        it("Able to delete the root if it has only one child", function () {
+        it("Able to delete the root if it has only one child", () => {
             let avlt;
 
             // Root has only one child, on the left
             avlt = new AVLTree();
-            [10, 5].forEach(function (k) {
-                avlt.insert(k, "some " + k);
+            [10, 5].forEach((k) => {
+                avlt.insert(k, `some ${k}`);
             });
             expect(avlt.getNumberOfKeys()).to.be.equal(2);
 
@@ -693,8 +693,8 @@ describe("AVL tree", function () {
             // Root has only one child, on the right
 
             avlt = new AVLTree();
-            [10, 15].forEach(function (k) {
-                avlt.insert(k, "some " + k);
+            [10, 15].forEach((k) => {
+                avlt.insert(k, `some ${k}`);
             });
             expect(avlt.getNumberOfKeys()).to.be.equal(2);
 
@@ -706,18 +706,18 @@ describe("AVL tree", function () {
             expect(avlt.search(10).length).to.be.equal(0);
         });
 
-        it("Able to delete non root nodes that have only one child", function () {
+        it("Able to delete non root nodes that have only one child", () => {
             let avlt = new AVLTree(),
                 firstSet = [10, 5, 15, 3, 1, 4, 20],
                 secondSet = [10, 5, 15, 3, 1, 4, 20, 17, 25];
 
             // Check that only keys in array theRemoved were removed
             function checkRemoved(set, theRemoved) {
-                set.forEach(function (k) {
+                set.forEach((k) => {
                     if (theRemoved.indexOf(k) !== -1) {
                         expect(avlt.search(k).length).to.be.equal(0);
                     } else {
-                        expect(avlt.search(k)).to.be.deep.equal(["some " + k]);
+                        expect(avlt.search(k)).to.be.deep.equal([`some ${k}`]);
                     }
                 });
 
@@ -725,8 +725,8 @@ describe("AVL tree", function () {
             }
 
             // First set: no rebalancing necessary
-            firstSet.forEach(function (k) {
-                avlt.insert(k, "some " + k);
+            firstSet.forEach((k) => {
+                avlt.insert(k, `some ${k}`);
             });
 
             expect(avlt.getNumberOfKeys()).to.be.equal(7);
@@ -751,8 +751,8 @@ describe("AVL tree", function () {
 
             // Second set: some rebalancing necessary
             avlt = new AVLTree();
-            secondSet.forEach(function (k) {
-                avlt.insert(k, "some " + k);
+            secondSet.forEach((k) => {
+                avlt.insert(k, `some ${k}`);
             });
 
             avlt.delete(4); // Leaf
@@ -764,12 +764,12 @@ describe("AVL tree", function () {
             checkRemoved(secondSet, [3, 4]);
         });
 
-        it("Can delete the root if it has 2 children", function () {
+        it("Can delete the root if it has 2 children", () => {
             let avlt = new AVLTree();
 
             // No rebalancing needed
-            [10, 5, 15, 3, 8, 12, 37].forEach(function (k) {
-                avlt.insert(k, "some " + k);
+            [10, 5, 15, 3, 8, 12, 37].forEach((k) => {
+                avlt.insert(k, `some ${k}`);
             });
             expect(avlt.getNumberOfKeys()).to.be.equal(7);
 
@@ -777,16 +777,16 @@ describe("AVL tree", function () {
             avlt.checkIsAVLT();
             expect(avlt.getNumberOfKeys()).to.be.equal(6);
 
-            [5, 3, 8, 15, 12, 37].forEach(function (k) {
-                expect(avlt.search(k)).to.be.deep.equal(["some " + k]);
+            [5, 3, 8, 15, 12, 37].forEach((k) => {
+                expect(avlt.search(k)).to.be.deep.equal([`some ${k}`]);
             });
             expect(avlt.search(10).length).to.be.equal(0);
 
             // Rebalancing needed
 
             avlt = new AVLTree();
-            [10, 5, 15, 8, 12, 37, 42].forEach(function (k) {
-                avlt.insert(k, "some " + k);
+            [10, 5, 15, 8, 12, 37, 42].forEach((k) => {
+                avlt.insert(k, `some ${k}`);
             });
             expect(avlt.getNumberOfKeys()).to.be.equal(7);
 
@@ -794,19 +794,19 @@ describe("AVL tree", function () {
             avlt.checkIsAVLT();
             expect(avlt.getNumberOfKeys()).to.be.equal(6);
 
-            [5, 8, 15, 12, 37, 42].forEach(function (k) {
-                expect(avlt.search(k)).to.be.deep.equal(["some " + k]);
+            [5, 8, 15, 12, 37, 42].forEach((k) => {
+                expect(avlt.search(k)).to.be.deep.equal([`some ${k}`]);
             });
             expect(avlt.search(10).length).to.be.equal(0);
         });
 
-        it("Can delete a non-root node that has two children", function () {
+        it("Can delete a non-root node that has two children", () => {
             let avlt;
 
             // On the left
             avlt = new AVLTree();
-            [10, 5, 15, 3, 8, 12, 20, 1, 4, 6, 9, 11, 13, 19, 42, 3.5].forEach(function (k) {
-                avlt.insert(k, "some " + k);
+            [10, 5, 15, 3, 8, 12, 20, 1, 4, 6, 9, 11, 13, 19, 42, 3.5].forEach((k) => {
+                avlt.insert(k, `some ${k}`);
             });
             expect(avlt.getNumberOfKeys()).to.be.equal(16);
 
@@ -814,16 +814,16 @@ describe("AVL tree", function () {
             avlt.checkIsAVLT();
             expect(avlt.getNumberOfKeys()).to.be.equal(15);
 
-            [10, 3, 1, 4, 8, 6, 9, 15, 12, 11, 13, 20, 19, 42, 3.5].forEach(function (k) {
-                expect(avlt.search(k)).to.be.deep.equal(["some " + k]);
+            [10, 3, 1, 4, 8, 6, 9, 15, 12, 11, 13, 20, 19, 42, 3.5].forEach((k) => {
+                expect(avlt.search(k)).to.be.deep.equal([`some ${k}`]);
             });
             expect(avlt.search(5).length).to.be.equal(0);
 
             // On the right
 
             avlt = new AVLTree();
-            [10, 5, 15, 3, 8, 12, 20, 1, 4, 6, 9, 11, 13, 19, 42, 12.5].forEach(function (k) {
-                avlt.insert(k, "some " + k);
+            [10, 5, 15, 3, 8, 12, 20, 1, 4, 6, 9, 11, 13, 19, 42, 12.5].forEach((k) => {
+                avlt.insert(k, `some ${k}`);
             });
             expect(avlt.getNumberOfKeys()).to.be.equal(16);
 
@@ -831,14 +831,14 @@ describe("AVL tree", function () {
             avlt.checkIsAVLT();
             expect(avlt.getNumberOfKeys()).to.be.equal(15);
 
-            [10, 3, 1, 4, 8, 6, 9, 5, 12, 11, 13, 20, 19, 42, 12.5].forEach(function (k) {
-                expect(avlt.search(k)).to.be.deep.equal(["some " + k]);
+            [10, 3, 1, 4, 8, 6, 9, 5, 12, 11, 13, 20, 19, 42, 12.5].forEach((k) => {
+                expect(avlt.search(k)).to.be.deep.equal([`some ${k}`]);
             });
             expect(avlt.search(15).length).to.be.equal(0);
         });
 
-        it("If no value is provided, it will delete the entire node even if there are multiple pieces of data", function () {
-            let avlt = new AVLTree();
+        it("If no value is provided, it will delete the entire node even if there are multiple pieces of data", () => {
+            const avlt = new AVLTree();
 
             avlt.insert(10, "yes");
             avlt.insert(5, "hello");
@@ -855,8 +855,8 @@ describe("AVL tree", function () {
             expect(avlt.getNumberOfKeys()).to.be.equal(3);
         });
 
-        it("Can remove only one value from an array", function () {
-            let avlt = new AVLTree();
+        it("Can remove only one value from an array", () => {
+            const avlt = new AVLTree();
 
             avlt.insert(10, "yes");
             avlt.insert(5, "hello");
@@ -873,8 +873,8 @@ describe("AVL tree", function () {
             expect(avlt.getNumberOfKeys()).to.be.equal(4);
         });
 
-        it("Removes nothing if value doesnt match", function () {
-            let avlt = new AVLTree();
+        it("Removes nothing if value doesnt match", () => {
+            const avlt = new AVLTree();
 
             avlt.insert(10, "yes");
             avlt.insert(5, "hello");
@@ -891,8 +891,8 @@ describe("AVL tree", function () {
             expect(avlt.getNumberOfKeys()).to.be.equal(4);
         });
 
-        it("If value provided but node contains only one value, remove entire node", function () {
-            let avlt = new AVLTree();
+        it("If value provided but node contains only one value, remove entire node", () => {
+            const avlt = new AVLTree();
 
             avlt.insert(10, "yes");
             avlt.insert(5, "hello");
@@ -909,8 +909,8 @@ describe("AVL tree", function () {
             expect(avlt.getNumberOfKeys()).to.be.equal(3);
         });
 
-        it("Can remove the root from a tree with height 2 when the root has two children (special case)", function () {
-            let avlt = new AVLTree();
+        it("Can remove the root from a tree with height 2 when the root has two children (special case)", () => {
+            const avlt = new AVLTree();
 
             avlt.insert(10, "maybe");
             avlt.insert(5, "no");
@@ -925,8 +925,8 @@ describe("AVL tree", function () {
             assert.deepEqual(avlt.search(15), ["yes"]);
         });
 
-        it("Can remove the root from a tree with height 3 when the root has two children (special case where the two children themselves have children)", function () {
-            let avlt = new AVLTree();
+        it("Can remove the root from a tree with height 3 when the root has two children (special case where the two children themselves have children)", () => {
+            const avlt = new AVLTree();
 
             avlt.insert(10, "maybe");
             avlt.insert(5, "no");
@@ -943,8 +943,8 @@ describe("AVL tree", function () {
             assert.deepEqual(avlt.search(15), ["yes"]);
         });
 
-        it("Removing falsy values does not delete the entire key", function () {
-            let avlt = new AVLTree();
+        it("Removing falsy values does not delete the entire key", () => {
+            const avlt = new AVLTree();
 
             avlt.insert(10, 2);
             avlt.insert(10, 1);
@@ -962,7 +962,7 @@ describe("AVL tree", function () {
     }); // ==== End of 'Deletion' ==== //
 
 
-    it("Can use undefined as key and value", function () {
+    it("Can use undefined as key and value", () => {
         function compareKeys(a, b) {
             if (a === undefined && b === undefined) {
                 return 0;
@@ -985,7 +985,7 @@ describe("AVL tree", function () {
             }
         }
 
-        let avlt = new AVLTree({ compareKeys: compareKeys });
+        const avlt = new AVLTree({ compareKeys });
 
         avlt.insert(2, undefined);
         avlt.checkIsAVLT();
@@ -1049,7 +1049,7 @@ describe("AVL tree", function () {
         assert.deepEqual(avlt.search(undefined), []);
     });
 
-    it("Can use null as key and value", function () {
+    it("Can use null as key and value", () => {
         function compareKeys(a, b) {
             if (a === null && b === null) {
                 return 0;
@@ -1072,7 +1072,7 @@ describe("AVL tree", function () {
             }
         }
 
-        let avlt = new AVLTree({ compareKeys: compareKeys });
+        const avlt = new AVLTree({ compareKeys });
 
         avlt.insert(2, null);
         avlt.checkIsAVLT();
@@ -1136,9 +1136,9 @@ describe("AVL tree", function () {
         assert.deepEqual(avlt.search(null), []);
     });
 
-    describe("Execute on every node (=tree traversal)", function () {
+    describe("Execute on every node (=tree traversal)", () => {
 
-        it("Can execute a function on every node", function () {
+        it("Can execute a function on every node", () => {
             let avlt = new AVLTree(),
                 keys = [],
                 executed = 0;
@@ -1151,7 +1151,7 @@ describe("AVL tree", function () {
             avlt.insert(159, "yes3");
             avlt.insert(11, "yes3");
 
-            avlt.executeOnEveryNode(function (node) {
+            avlt.executeOnEveryNode((node) => {
                 keys.push(node.key);
                 executed += 1;
             });
@@ -1175,10 +1175,10 @@ describe("AVL tree", function () {
 
         // Check a avlt against a simple key => [data] object
         function checkDataIsTheSame(avlt, data) {
-            let avltDataElems = [];
+            const avltDataElems = [];
 
             // avltDataElems is a simple array containing every piece of data in the tree
-            avlt.executeOnEveryNode(function (node) {
+            avlt.executeOnEveryNode((node) => {
                 let i;
                 for (i = 0; i < node.data.length; i += 1) {
                     avltDataElems.push(node.data[i]);
@@ -1188,10 +1188,10 @@ describe("AVL tree", function () {
             // Number of key and number of pieces of data match
             expect(avlt.getNumberOfKeys()).to.be.equal(Object.keys(data).length);
 
-            expect([...adone.util.entries(data)].map(d => d[1].length).reduce((memo, n) => memo + n, 0)).to.be.equal(avltDataElems.length);
+            expect([...adone.util.entries(data)].map((d) => d[1].length).reduce((memo, n) => memo + n, 0)).to.be.equal(avltDataElems.length);
 
             // Compare data
-            Object.keys(data).forEach(function (key) {
+            Object.keys(data).forEach((key) => {
                 checkDataEquality(avlt.search(key), data[key]);
             });
         }
@@ -1208,7 +1208,7 @@ describe("AVL tree", function () {
         }
 
         // Tests the tree structure (deletions concern the whole tree, deletion of some data in a node is well tested above)
-        it("Inserting and deleting entire nodes", function () {
+        it("Inserting and deleting entire nodes", () => {
             // You can skew to be more insertive or deletive, to test all cases
             function launchRandomTest(nTests, proba) {
                 let i, key, dataPiece, possibleKeys;

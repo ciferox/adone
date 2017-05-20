@@ -1,37 +1,37 @@
 const { TimedoutMap } = adone.collection; 
 
 describe("TimedoutMap", () => {
-    it("default timeout", async function() {
+    it("default timeout", async () => {
         const m = new TimedoutMap();
         expect(m.getTimeout()).to.be.equal(1000);
     });
 
-    it("set/get timeout", async function() {
+    it("set/get timeout", async () => {
         const m = new TimedoutMap();
         m.setTimeout(3000);
         expect(m.getTimeout()).to.be.equal(3000);
     });
 
-    it("get nonexistent item", async function() {
+    it("get nonexistent item", async () => {
         const m = new TimedoutMap(1000);
         expect(m.get("a")).to.be.undefined;
     });
 
-    it("get nonexpired item", async function() {
+    it("get nonexpired item", async () => {
         const m = new TimedoutMap(1000);
         m.set("a", 1);
         await adone.promise.delay(100);
         expect(m.get("a")).to.be.equal(1);
     });
 
-    it("get expired item", async function() {
+    it("get expired item", async () => {
         const m = new TimedoutMap(10);
         m.set("a", 1);
         await adone.promise.delay(200);
         expect(m.get("a")).to.be.undefined;
     });
 
-    it("set nonexpired item", async function() {
+    it("set nonexpired item", async () => {
         const m = new TimedoutMap(1000);
         m.set("a", 1);
         await adone.promise.delay(100);
@@ -39,7 +39,7 @@ describe("TimedoutMap", () => {
         expect(m.get("a")).to.be.equal(2);
     });
 
-    it("set expired item", async function() {
+    it("set expired item", async () => {
         const m = new TimedoutMap(150);
         m.set("a", 1);
         await adone.promise.delay(200);
@@ -48,7 +48,7 @@ describe("TimedoutMap", () => {
         expect(m.get("a")).to.be.equal(2);
     });
 
-    it("delete expired item", async function() {
+    it("delete expired item", async () => {
         const m = new TimedoutMap(100);
         m.set("a", 1);
         await adone.promise.delay(200);
@@ -56,7 +56,7 @@ describe("TimedoutMap", () => {
         expect(ret).to.be.false;
     });
 
-    it("delete nonexpired item", async function() {
+    it("delete nonexpired item", async () => {
         const m = new TimedoutMap(100);
         m.set("a", 1);
         const ret = m.delete("a");
@@ -64,7 +64,7 @@ describe("TimedoutMap", () => {
         expect(ret).to.be.true;
     });
 
-    it("clear", async function() {
+    it("clear", async () => {
         let isOK = true;
         const m = new TimedoutMap(100, (key) => {
             isOK = false;
@@ -76,7 +76,7 @@ describe("TimedoutMap", () => {
         expect(isOK).to.be.true;
     });
 
-    it("forEach() before expire", async function() {
+    it("forEach() before expire", async () => {
         const isOK = true;
         const m = new TimedoutMap(1000);
         m.set("a", 1);
@@ -90,7 +90,7 @@ describe("TimedoutMap", () => {
         expect(counter).to.be.equal(3);
     });
 
-    it("forEach() after expire", async function() {
+    it("forEach() after expire", async () => {
         const isOK = true;
         const m = new TimedoutMap(10);
         m.set("a", 1);
@@ -104,7 +104,7 @@ describe("TimedoutMap", () => {
         expect(counter).to.be.equal(0);
     });
 
-    it("keys() before expire", async function() {
+    it("keys() before expire", async () => {
         const isOK = true;
         const m = new TimedoutMap(1000);
         m.set("a", 1);
@@ -119,7 +119,7 @@ describe("TimedoutMap", () => {
         expect(counter).to.be.equal(3);
     });
 
-    it("keys() after expire", async function() {
+    it("keys() after expire", async () => {
         const isOK = true;
         const m = new TimedoutMap(10);
         m.set("a", 1);
@@ -133,7 +133,7 @@ describe("TimedoutMap", () => {
         expect(counter).to.be.equal(0);
     });
 
-    it("values() before expire", async function() {
+    it("values() before expire", async () => {
         const isOK = true;
         const m = new TimedoutMap(1000);
         m.set("a", 1);
@@ -147,7 +147,7 @@ describe("TimedoutMap", () => {
         expect(counter).to.be.equal(3);
     });
 
-    it("values() after expire", async function() {
+    it("values() after expire", async () => {
         const isOK = true;
         const m = new TimedoutMap(10);
         m.set("a", 1);
@@ -161,7 +161,7 @@ describe("TimedoutMap", () => {
         expect(counter).to.be.equal(0);
     });
 
-    it("entries() before expire", async function() {
+    it("entries() before expire", async () => {
         const isOK = true;
         const m = new TimedoutMap(1000);
         m.set("a", 1);
@@ -169,13 +169,13 @@ describe("TimedoutMap", () => {
         m.set("c", 3);
         await adone.promise.delay(100);
         let counter = 0;
-        for (let [key, value] of m.entries()) {
+        for (const [key, value] of m.entries()) {
             expect(value).to.be.equal(++counter);
         }
         expect(counter).to.be.equal(3);
     });
 
-    it("@@iterator", async function() {
+    it("@@iterator", async () => {
         const isOK = true;
         const m = new TimedoutMap(1000);
         m.set("a", 1);
@@ -189,7 +189,7 @@ describe("TimedoutMap", () => {
 
     
 
-    it("entries() before expire", async function() {
+    it("entries() before expire", async () => {
         const isOK = true;
         const m = new TimedoutMap(1000);
         m.set("a", 1);
@@ -197,13 +197,13 @@ describe("TimedoutMap", () => {
         m.set("c", 3);
         await adone.promise.delay(100);
         let counter = 0;
-        for (let [key, value] of m.entries()) {
+        for (const [key, value] of m.entries()) {
             expect(value).to.be.equal(++counter);
         }
         expect(counter).to.be.equal(3);
     });
 
-    it("entries() after expire", async function() {
+    it("entries() after expire", async () => {
         const isOK = true;
         const m = new TimedoutMap(10);
         m.set("a", 1);
@@ -211,13 +211,13 @@ describe("TimedoutMap", () => {
         m.set("c", 3);
         await adone.promise.delay(200);
         let counter = 0;
-        for (let [key, value] of m.entries()) {
+        for (const [key, value] of m.entries()) {
             ++counter;
         }
         expect(counter).to.be.equal(0);
     });
 
-    it("custom callback", async function() {
+    it("custom callback", async () => {
         let isOK = false;
         const m = new TimedoutMap(10, (key) => {
             isOK = true;

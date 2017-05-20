@@ -14,7 +14,9 @@ const { types: t } = adone.js.compiler;
 
 export function matchesPattern(pattern: string, allowPartial?: boolean): boolean {
     // not a member expression
-    if (!this.isMemberExpression()) return false;
+    if (!this.isMemberExpression()) {
+        return false; 
+    }
 
     const parts = pattern.split(".");
     const search = [this.node];
@@ -34,21 +36,27 @@ export function matchesPattern(pattern: string, allowPartial?: boolean): boolean
 
         if (t.isIdentifier(node)) {
             // this part doesn't match
-            if (!matches(node.name)) return false;
+            if (!matches(node.name)) {
+                return false; 
+            }
         } else if (t.isLiteral(node)) {
             // this part doesn't match
-            if (!matches(node.value)) return false;
+            if (!matches(node.value)) {
+                return false; 
+            }
         } else if (t.isMemberExpression(node)) {
             if (node.computed && !t.isLiteral(node.property)) {
                 // we can't deal with this
                 return false;
-            } else {
-                search.unshift(node.property);
-                search.unshift(node.object);
-                continue;
-            }
+            } 
+            search.unshift(node.property);
+            search.unshift(node.object);
+            continue;
+            
         } else if (t.isThisExpression(node)) {
-            if (!matches("this")) return false;
+            if (!matches("this")) {
+                return false;
+            }
         } else {
             // we can't deal with this
             return false;
@@ -71,10 +79,10 @@ export function matchesPattern(pattern: string, allowPartial?: boolean): boolean
 export function has(key): boolean {
     const val = this.node && this.node[key];
     if (val && Array.isArray(val)) {
-        return !!val.length;
-    } else {
-        return !!val;
-    }
+        return Boolean(val.length);
+    } 
+    return Boolean(val);
+    
 }
 
 /**
@@ -165,7 +173,7 @@ export function isCompletionRecord(allowInsideFunction?) {
 
         // we're in a function so can't be a completion record
         if (path.isFunction() && !first) {
-            return !!allowInsideFunction;
+            return Boolean(allowInsideFunction);
         }
 
         first = false;
@@ -188,9 +196,9 @@ export function isCompletionRecord(allowInsideFunction?) {
 export function isStatementOrBlock() {
     if (this.parentPath.isLabeledStatement() || t.isBlockStatement(this.container)) {
         return false;
-    } else {
-        return Object.keys(t.STATEMENT_OR_BLOCK_KEYS).includes(this.key);
-    }
+    } 
+    return Object.keys(t.STATEMENT_OR_BLOCK_KEYS).includes(this.key);
+    
 }
 
 /**
@@ -198,18 +206,26 @@ export function isStatementOrBlock() {
  */
 
 export function referencesImport(moduleSource, importName) {
-    if (!this.isReferencedIdentifier()) return false;
+    if (!this.isReferencedIdentifier()) {
+        return false; 
+    }
 
     const binding = this.scope.getBinding(this.node.name);
-    if (!binding || binding.kind !== "module") return false;
+    if (!binding || binding.kind !== "module") {
+        return false;
+    }
 
     const path = binding.path;
     const parent = path.parentPath;
-    if (!parent.isImportDeclaration()) return false;
+    if (!parent.isImportDeclaration()) {
+        return false; 
+    }
 
     // check moduleSource
     if (parent.node.source.value === moduleSource) {
-        if (!importName) return true;
+        if (!importName) {
+            return true; 
+        }
     } else {
         return false;
     }
@@ -237,9 +253,9 @@ export function getSource() {
     const node = this.node;
     if (node.end) {
         return this.hub.file.code.slice(node.start, node.end);
-    } else {
-        return "";
-    }
+    } 
+    return "";
+    
 }
 
 export function willIMaybeExecuteBefore(target) {
@@ -264,13 +280,15 @@ export function _guessExecutionStatusRelativeTo(target) {
         const status = this._guessExecutionStatusRelativeToDifferentFunctions(targetFuncParent);
         if (status) {
             return status;
-        } else {
-            target = targetFuncParent.path;
-        }
+        } 
+        target = targetFuncParent.path;
+        
     }
 
     const targetPaths = target.getAncestry();
-    if (targetPaths.indexOf(this) >= 0) return "after";
+    if (targetPaths.indexOf(this) >= 0) {
+        return "after"; 
+    }
 
     const selfPaths = this.getAncestry();
 
@@ -310,7 +328,9 @@ export function _guessExecutionStatusRelativeTo(target) {
 
 export function _guessExecutionStatusRelativeToDifferentFunctions(targetFuncParent) {
     const targetFuncPath = targetFuncParent.path;
-    if (!targetFuncPath.isFunctionDeclaration()) return;
+    if (!targetFuncPath.isFunctionDeclaration()) {
+        return; 
+    }
 
     // so we're in a completely different function, if this is a function declaration
     // then we can be a bit smarter and handle cases where the function is either
@@ -319,7 +339,9 @@ export function _guessExecutionStatusRelativeToDifferentFunctions(targetFuncPare
     const binding = targetFuncPath.scope.getBinding(targetFuncPath.node.id.name);
 
     // no references!
-    if (!binding.references) return "before";
+    if (!binding.references) {
+        return "before";
+    }
 
     const referencePaths: NodePath[] = binding.referencePaths;
 
@@ -336,13 +358,17 @@ export function _guessExecutionStatusRelativeToDifferentFunctions(targetFuncPare
     for (const path of referencePaths) {
         // if a reference is a child of the function we're checking against then we can
         // safelty ignore it
-        const childOfFunction = !!path.find((path) => path.node === targetFuncPath.node);
-        if (childOfFunction) continue;
+        const childOfFunction = Boolean(path.find((path) => path.node === targetFuncPath.node));
+        if (childOfFunction) {
+            continue; 
+        }
 
         const status = this._guessExecutionStatusRelativeTo(path);
 
         if (allStatus) {
-            if (allStatus !== status) return;
+            if (allStatus !== status) {
+                return; 
+            }
         } else {
             allStatus = status;
         }
@@ -362,7 +388,9 @@ export function resolve(dangerous, resolved) {
 export function _resolve(dangerous?, resolved?): ?NodePath {
     // detect infinite recursion
     // todo: possibly have a max length on this just to be safe
-    if (resolved && resolved.indexOf(this) >= 0) return;
+    if (resolved && resolved.indexOf(this) >= 0) {
+        return;
+    }
 
     // we store all the paths we've "resolved" in this array to prevent infinite recursion
     resolved = resolved || [];
@@ -371,23 +399,31 @@ export function _resolve(dangerous?, resolved?): ?NodePath {
     if (this.isVariableDeclarator()) {
         if (this.get("id").isIdentifier()) {
             return this.get("init").resolve(dangerous, resolved);
-        } else {
+        } 
             // otherwise it's a request for a pattern and that's a bit more tricky
-        }
+        
     } else if (this.isReferencedIdentifier()) {
         const binding = this.scope.getBinding(this.node.name);
-        if (!binding) return;
+        if (!binding) {
+            return; 
+        }
 
         // reassigned so we can't really resolve it
-        if (!binding.constant) return;
+        if (!binding.constant) {
+            return;
+        }
 
         // todo - lookup module in dependency graph
-        if (binding.kind === "module") return;
+        if (binding.kind === "module") {
+            return; 
+        }
 
         if (binding.path !== this) {
             const ret = binding.path.resolve(dangerous, resolved);
             // If the identifier resolves to parent node then we can't really resolve it.
-            if (this.find((parent) => parent.node === ret.node)) return;
+            if (this.find((parent) => parent.node === ret.node)) {
+                return;
+            }
             return ret;
         }
     } else if (this.isTypeCastExpression()) {
@@ -397,7 +433,9 @@ export function _resolve(dangerous?, resolved?): ?NodePath {
         // making this resolution inaccurate
 
         const targetKey = this.toComputedKey();
-        if (!t.isLiteral(targetKey)) return;
+        if (!t.isLiteral(targetKey)) {
+            return; 
+        }
 
         const targetName = targetKey.value;
 
@@ -406,7 +444,9 @@ export function _resolve(dangerous?, resolved?): ?NodePath {
         if (target.isObjectExpression()) {
             const props = target.get("properties");
             for (const prop of (props: Array)) {
-                if (!prop.isProperty()) continue;
+                if (!prop.isProperty()) {
+                    continue; 
+                }
 
                 const key = prop.get("key");
 
@@ -416,12 +456,16 @@ export function _resolve(dangerous?, resolved?): ?NodePath {
                 // { "foo": "obj" } or { ["foo"]: "obj" }
                 match = match || key.isLiteral({ value: targetName });
 
-                if (match) return prop.get("value").resolve(dangerous, resolved);
+                if (match) {
+                    return prop.get("value").resolve(dangerous, resolved); 
+                }
             }
-        } else if (target.isArrayExpression() && !isNaN(+targetName)) {
+        } else if (target.isArrayExpression() && !isNaN(Number(targetName))) {
             const elems = target.get("elements");
             const elem = elems[targetName];
-            if (elem) return elem.resolve(dangerous, resolved);
+            if (elem) {
+                return elem.resolve(dangerous, resolved); 
+            }
         }
     }
 }

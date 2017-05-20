@@ -59,7 +59,7 @@ export default class Prompt extends adone.cui.widget.Element {
         // parent.append(this);
 
         this.show();
-        this.setContent(" " + text);
+        this.setContent(` ${text}`);
 
         this._.input.value = value;
 

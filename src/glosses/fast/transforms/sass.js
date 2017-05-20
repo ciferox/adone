@@ -85,13 +85,13 @@ export default function (options = {}) {
                 if (sassFileSrcPath) {
                     //Prepend the path to all files in the sources array except the file that's being worked on
                     const sourceFileIndex = sassMap.sources.indexOf(sassMapFile);
-                    sassMap.sources = sassMap.sources.map(function (source, index) {
+                    sassMap.sources = sassMap.sources.map((source, index) => {
                         return (index === sourceFileIndex) ? source : path.join(sassFileSrcPath, source);
                     });
                 }
 
                 // Remove 'stdin' from souces and replace with filenames!
-                sassMap.sources = sassMap.sources.filter(function (src) {
+                sassMap.sources = sassMap.sources.filter((src) => {
                     if (src !== "stdin") {
                         return src;
                     }

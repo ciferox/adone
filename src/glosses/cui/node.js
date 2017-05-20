@@ -158,7 +158,7 @@ export default class Node extends adone.cui.EventEmitter {
     }
 
     free() {
-        return;
+        
     }
 
     destroy() {

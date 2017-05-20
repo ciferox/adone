@@ -1,22 +1,22 @@
 const mailer = adone.net.mail.mailer;
 const stubTransport = adone.net.mail.stubTransport;
-var SMTPServer = require("smtp-server").SMTPServer;
-var crypto = require("crypto");
-var stream = require("stream");
-var path = require("path");
-var templateDir = path.join(__dirname, "fixtures", "welcome-email");
-var net = require("net");
+const SMTPServer = require("smtp-server").SMTPServer;
+const crypto = require("crypto");
+const stream = require("stream");
+const path = require("path");
+const templateDir = path.join(__dirname, "fixtures", "welcome-email");
+const net = require("net");
 
-var PORT_NUMBER = 8397;
+const PORT_NUMBER = 8397;
 
-describe("mailer unit tests", function () {
-    var nm, transport;
+describe("mailer unit tests", () => {
+    let nm, transport;
 
-    beforeEach(function () {
+    beforeEach(() => {
         transport = {
             name: "testsend",
             version: "1",
-            send: function (data, callback) {
+            send(data, callback) {
                 callback();
             },
             logger: false
@@ -24,12 +24,12 @@ describe("mailer unit tests", function () {
         nm = mailer.createTransport(transport);
     });
 
-    it("should create mailer transport object", function () {
+    it("should create mailer transport object", () => {
         expect(nm).to.exist;
     });
 
-    describe("Hooking plugins", function () {
-        it("should add a plugin to queue", function () {
+    describe("Hooking plugins", () => {
+        it("should add a plugin to queue", () => {
             nm.use("compile", "abc");
             nm.use("compile", "def");
 
@@ -42,16 +42,16 @@ describe("mailer unit tests", function () {
             });
         });
 
-        it("should process compile and stream plugins", function (done) {
-            var compilePlugin = stub().yields(null);
-            var streamPlugin = stub().yields(null);
+        it("should process compile and stream plugins", (done) => {
+            const compilePlugin = stub().yields(null);
+            const streamPlugin = stub().yields(null);
 
             nm.use("compile", compilePlugin);
             nm.use("compile", streamPlugin);
 
             nm.sendMail({
                 subject: "test"
-            }, function () {
+            }, () => {
                 expect(compilePlugin.callCount).to.equal(1);
                 expect(compilePlugin.args[0][0].data.subject).to.equal("test");
                 expect(compilePlugin.args[0][0].message).to.exist;
@@ -64,13 +64,13 @@ describe("mailer unit tests", function () {
         });
     });
 
-    describe("#sendMail", function () {
-        it("should process sendMail", function (done) {
+    describe("#sendMail", () => {
+        it("should process sendMail", (done) => {
             stub(transport, "send").yields(null, "tere tere");
 
             nm.sendMail({
                 subject: "test"
-            }, function (err, info) {
+            }, (err, info) => {
                 expect(err).to.not.exist;
                 expect(transport.send.callCount).to.equal(1);
                 expect(info).to.equal("tere tere");
@@ -79,12 +79,12 @@ describe("mailer unit tests", function () {
             });
         });
 
-        it("should process sendMail as a Promise", function (done) {
+        it("should process sendMail as a Promise", (done) => {
             stub(transport, "send").yields(null, "tere tere");
 
             nm.sendMail({
                 subject: "test"
-            }).then(function (info) {
+            }).then((info) => {
                 expect(transport.send.callCount).to.equal(1);
                 expect(info).to.equal("tere tere");
                 transport.send.restore();
@@ -92,12 +92,12 @@ describe("mailer unit tests", function () {
             });
         });
 
-        it("should return transport error", function (done) {
+        it("should return transport error", (done) => {
             stub(transport, "send").yields("tere tere");
 
             nm.sendMail({
                 subject: "test"
-            }, function (err) {
+            }, (err) => {
                 expect(transport.send.callCount).to.equal(1);
                 expect(err).to.equal("tere tere");
                 transport.send.restore();
@@ -105,12 +105,12 @@ describe("mailer unit tests", function () {
             });
         });
 
-        it("should return transport error as Promise", function (done) {
+        it("should return transport error as Promise", (done) => {
             stub(transport, "send").yields("tere tere");
 
             nm.sendMail({
                 subject: "test"
-            }).catch(function (err) {
+            }).catch((err) => {
                 expect(transport.send.callCount).to.equal(1);
                 expect(err).to.equal("tere tere");
                 transport.send.restore();
@@ -118,23 +118,23 @@ describe("mailer unit tests", function () {
             });
         });
 
-        it("should override xMailer", function (done) {
-            stub(transport, "send").callsFake(function (mail, callback) {
+        it("should override xMailer", (done) => {
+            stub(transport, "send").callsFake((mail, callback) => {
                 expect(mail.message.getHeader("x-mailer")).to.equal("yyyy");
                 callback();
             });
             nm.sendMail({
                 subject: "test",
                 xMailer: "yyyy"
-            }, function () {
+            }, () => {
                 expect(transport.send.callCount).to.equal(1);
                 transport.send.restore();
                 done();
             });
         });
 
-        it("should set priority headers", function (done) {
-            stub(transport, "send").callsFake(function (mail, callback) {
+        it("should set priority headers", (done) => {
+            stub(transport, "send").callsFake((mail, callback) => {
                 expect(mail.message.getHeader("X-Priority")).to.equal("5 (Lowest)");
                 expect(mail.message.getHeader("X-Msmail-Priority")).to.equal("Low");
                 expect(mail.message.getHeader("Importance")).to.equal("Low");
@@ -142,19 +142,19 @@ describe("mailer unit tests", function () {
             });
             nm.sendMail({
                 priority: "low"
-            }, function () {
+            }, () => {
                 expect(transport.send.callCount).to.equal(1);
                 transport.send.restore();
                 done();
             });
         });
 
-        it("return invalid configuration error", function (done) {
+        it("return invalid configuration error", (done) => {
             nm = mailer.createTransport("SMTP", {});
             nm.sendMail({
                 subject: "test",
                 xMailer: "yyyy"
-            }, function (err) {
+            }, (err) => {
                 expect(err).to.exist;
                 done();
             });
@@ -164,24 +164,24 @@ describe("mailer unit tests", function () {
 
 describe("mailer integration tests", function () {
     this.timeout(10000); // eslint-disable-line no-invalid-this
-    var server;
+    let server;
 
-    beforeEach(function (done) {
+    beforeEach((done) => {
         server = new SMTPServer({
             authMethods: ["PLAIN", "XOAUTH2"],
             disabledCommands: ["STARTTLS"],
 
-            onData: function (stream, session, callback) {
-                var hash = crypto.createHash("md5");
-                stream.on("data", function (chunk) {
+            onData(stream, session, callback) {
+                const hash = crypto.createHash("md5");
+                stream.on("data", (chunk) => {
                     hash.update(chunk);
                 });
-                stream.on("end", function () {
+                stream.on("end", () => {
                     callback(null, hash.digest("hex"));
                 });
             },
 
-            onAuth: function (auth, session, callback) {
+            onAuth(auth, session, callback) {
                 if (auth.method !== "XOAUTH2") {
                     if (auth.username !== "testuser" || auth.password !== "testpass") {
                         return callback(new Error("Invalid username or password"));
@@ -199,13 +199,13 @@ describe("mailer integration tests", function () {
                     user: 123
                 });
             },
-            onMailFrom: function (address, session, callback) {
+            onMailFrom(address, session, callback) {
                 if (!/@valid.sender/.test(address.address)) {
                     return callback(new Error("Only user@valid.sender is allowed to send mail"));
                 }
                 return callback(); // Accept the address
             },
-            onRcptTo: function (address, session, callback) {
+            onRcptTo(address, session, callback) {
                 if (!/@valid.recipient/.test(address.address)) {
                     return callback(new Error("Only user@valid.recipient is allowed to receive mail"));
                 }
@@ -217,14 +217,14 @@ describe("mailer integration tests", function () {
         server.listen(PORT_NUMBER, done);
     });
 
-    afterEach(function (done) {
+    afterEach((done) => {
         server.close(done);
     });
 
-    describe("smtp-transport tests", function () {
+    describe("smtp-transport tests", () => {
 
-        it("Should verify connection with success", function (done) {
-            var nm = mailer.createTransport({
+        it("Should verify connection with success", (done) => {
+            const nm = mailer.createTransport({
                 host: "localhost",
                 port: PORT_NUMBER,
                 auth: {
@@ -235,17 +235,17 @@ describe("mailer integration tests", function () {
                 logger: false
             });
 
-            nm.verify().then(function (success) {
+            nm.verify().then((success) => {
                 expect(success).to.be.true;
                 done();
-            }).catch(function (err) {
+            }).catch((err) => {
                 expect(err).to.not.exist;
                 done();
             });
         });
 
-        it("Should not verify connection", function (done) {
-            var nm = mailer.createTransport({
+        it("Should not verify connection", (done) => {
+            const nm = mailer.createTransport({
                 host: "localhost",
                 port: PORT_NUMBER,
                 auth: {
@@ -256,14 +256,14 @@ describe("mailer integration tests", function () {
                 logger: false
             });
 
-            nm.verify(function (err) {
+            nm.verify((err) => {
                 expect(err).to.exist;
                 done();
             });
         });
 
-        it("should log in and send mail", function (done) {
-            var nm = mailer.createTransport({
+        it("should log in and send mail", (done) => {
+            const nm = mailer.createTransport({
                 host: "localhost",
                 port: PORT_NUMBER,
                 auth: {
@@ -274,7 +274,7 @@ describe("mailer integration tests", function () {
                 logger: false
             });
 
-            var mailData = {
+            const mailData = {
                 from: "from@valid.sender",
                 sender: "sender@valid.sender",
                 to: ["to1@valid.recipient", "to2@valid.recipient", "to@invalid.recipient"],
@@ -285,7 +285,7 @@ describe("mailer integration tests", function () {
                 text: "uuu"
             };
 
-            nm.sendMail(mailData, function (err, info) {
+            nm.sendMail(mailData, (err, info) => {
                 expect(err).to.not.exist;
                 expect(info.accepted).to.deep.equal([
                     "to1@valid.recipient",
@@ -300,10 +300,10 @@ describe("mailer integration tests", function () {
             });
         });
 
-        it("should log in and send mail using connection url", function (done) {
-            var nm = mailer.createTransport("smtp://testuser:testpass@localhost:" + PORT_NUMBER + "/?logger=false&debug=true");
+        it("should log in and send mail using connection url", (done) => {
+            const nm = mailer.createTransport(`smtp://testuser:testpass@localhost:${PORT_NUMBER}/?logger=false&debug=true`);
 
-            var mailData = {
+            const mailData = {
                 from: "from@valid.sender",
                 sender: "sender@valid.sender",
                 to: ["to1@valid.recipient", "to2@valid.recipient", "to@invalid.recipient"],
@@ -314,7 +314,7 @@ describe("mailer integration tests", function () {
                 text: "uuu"
             };
 
-            nm.sendMail(mailData, function (err, info) {
+            nm.sendMail(mailData, (err, info) => {
                 expect(err).to.not.exist;
                 expect(info.accepted).to.deep.equal([
                     "to1@valid.recipient",
@@ -329,8 +329,8 @@ describe("mailer integration tests", function () {
             });
         });
 
-        it("should return stream error, not send", function (done) {
-            var nm = mailer.createTransport({
+        it("should return stream error, not send", (done) => {
+            const nm = mailer.createTransport({
                 host: "localhost",
                 port: PORT_NUMBER,
                 auth: {
@@ -341,7 +341,7 @@ describe("mailer integration tests", function () {
                 logger: false
             });
 
-            var mailData = {
+            const mailData = {
                 from: "from@valid.sender",
                 sender: "sender@valid.sender",
                 to: ["to1@valid.recipient", "to2@valid.recipient", "to@invalid.recipient"],
@@ -352,19 +352,19 @@ describe("mailer integration tests", function () {
                 text: new stream.PassThrough()
             };
 
-            nm.sendMail(mailData, function (err) {
+            nm.sendMail(mailData, (err) => {
                 expect(err).to.exist;
                 done();
             });
 
             mailData.text.write("teretere");
-            setTimeout(function () {
+            setTimeout(() => {
                 mailData.text.emit("error", new Error("Stream error"));
             }, 400);
         });
 
-        it("should response auth error", function (done) {
-            var nm = mailer.createTransport({
+        it("should response auth error", (done) => {
+            const nm = mailer.createTransport({
                 host: "localhost",
                 port: PORT_NUMBER,
                 auth: {
@@ -375,7 +375,7 @@ describe("mailer integration tests", function () {
                 logger: false
             });
 
-            var mailData = {
+            const mailData = {
                 from: "from@valid.sender",
                 to: ["to1@valid.recipient", "to2@valid.recipient", "to@invalid.recipient"],
                 subject: "test",
@@ -385,7 +385,7 @@ describe("mailer integration tests", function () {
                 text: "uuu"
             };
 
-            nm.sendMail(mailData, function (err, info) {
+            nm.sendMail(mailData, (err, info) => {
                 expect(err).to.exist;
                 expect(info).to.not.exist;
                 expect(err.code).to.equal("EAUTH");
@@ -393,8 +393,8 @@ describe("mailer integration tests", function () {
             });
         });
 
-        it("should response envelope error", function (done) {
-            var nm = mailer.createTransport({
+        it("should response envelope error", (done) => {
+            const nm = mailer.createTransport({
                 host: "localhost",
                 port: PORT_NUMBER,
                 auth: {
@@ -405,7 +405,7 @@ describe("mailer integration tests", function () {
                 logger: false
             });
 
-            var mailData = {
+            const mailData = {
                 from: "from@valid.sender",
                 to: ["to@invalid.recipient"],
                 subject: "test",
@@ -415,7 +415,7 @@ describe("mailer integration tests", function () {
                 text: "uuu"
             };
 
-            nm.sendMail(mailData, function (err, info) {
+            nm.sendMail(mailData, (err, info) => {
                 expect(err).to.exist;
                 expect(info).to.not.exist;
                 expect(err.code).to.equal("EENVELOPE");
@@ -423,8 +423,8 @@ describe("mailer integration tests", function () {
             });
         });
 
-        it("should override envelope", function (done) {
-            var nm = mailer.createTransport({
+        it("should override envelope", (done) => {
+            const nm = mailer.createTransport({
                 host: "localhost",
                 port: PORT_NUMBER,
                 auth: {
@@ -435,7 +435,7 @@ describe("mailer integration tests", function () {
                 logger: false
             });
 
-            var mailData = {
+            const mailData = {
                 from: "from@valid.sender",
                 to: ["to1@valid.recipient", "to2@valid.recipient", "to@invalid.recipient"],
                 subject: "test",
@@ -450,7 +450,7 @@ describe("mailer integration tests", function () {
                 }
             };
 
-            nm.sendMail(mailData, function (err, info) {
+            nm.sendMail(mailData, (err, info) => {
                 expect(err).to.not.exist;
                 expect(info.accepted).to.deep.equal([
                     "vvv@valid.recipient",
@@ -463,8 +463,8 @@ describe("mailer integration tests", function () {
             });
         });
 
-        it("should send to internationalized address", function (done) {
-            var nm = mailer.createTransport({
+        it("should send to internationalized address", (done) => {
+            const nm = mailer.createTransport({
                 host: "localhost",
                 port: PORT_NUMBER,
                 auth: {
@@ -476,7 +476,7 @@ describe("mailer integration tests", function () {
                 debug: false
             });
 
-            var mailData = {
+            const mailData = {
                 from: "from@valid.sender",
                 to: ["internätiõnäližed@valid.recipient"],
                 subject: "test",
@@ -486,7 +486,7 @@ describe("mailer integration tests", function () {
                 text: "uuu"
             };
 
-            nm.sendMail(mailData, function (err, info) {
+            nm.sendMail(mailData, (err, info) => {
                 expect(err).to.not.exist;
                 expect(info.accepted).to.deep.equal(["internätiõnäližed@valid.recipient"]);
                 expect(info.rejected).to.deep.equal([]);
@@ -495,8 +495,8 @@ describe("mailer integration tests", function () {
             });
         });
 
-        it("should log in send mail with attachment", function (done) {
-            var nm = mailer.createTransport({
+        it("should log in send mail with attachment", (done) => {
+            const nm = mailer.createTransport({
                 host: "localhost",
                 port: PORT_NUMBER,
                 auth: {
@@ -507,7 +507,7 @@ describe("mailer integration tests", function () {
                 logger: false
             });
 
-            var mailData = {
+            const mailData = {
                 from: "from@valid.sender",
                 sender: "sender@valid.sender",
                 to: ["to1@valid.recipient", "to2@valid.recipient", "to@invalid.recipient"],
@@ -522,7 +522,7 @@ describe("mailer integration tests", function () {
                 }]
             };
 
-            nm.sendMail(mailData, function (err, info) {
+            nm.sendMail(mailData, (err, info) => {
                 expect(err).to.not.exist;
                 expect(info.accepted).to.deep.equal([
                     "to1@valid.recipient",
@@ -537,8 +537,8 @@ describe("mailer integration tests", function () {
             });
         });
 
-        it("should return an error for disabled file access", function (done) {
-            var nm = mailer.createTransport({
+        it("should return an error for disabled file access", (done) => {
+            const nm = mailer.createTransport({
                 host: "localhost",
                 port: PORT_NUMBER,
                 auth: {
@@ -550,7 +550,7 @@ describe("mailer integration tests", function () {
                 disableFileAccess: true
             });
 
-            var mailData = {
+            const mailData = {
                 from: "from@valid.sender",
                 sender: "sender@valid.sender",
                 to: ["to1@valid.recipient", "to2@valid.recipient", "to@invalid.recipient"],
@@ -560,11 +560,11 @@ describe("mailer integration tests", function () {
                 xMailer: "aaa",
                 text: "uuu",
                 attachments: [{
-                    path: __dirname + "/fixtures/attachment.bin"
+                    path: `${__dirname}/fixtures/attachment.bin`
                 }]
             };
 
-            nm.sendMail(mailData, function (err, info) {
+            nm.sendMail(mailData, (err, info) => {
                 expect(err).to.exist;
                 expect(info).to.not.exist;
                 done();
@@ -573,10 +573,10 @@ describe("mailer integration tests", function () {
 
     });
 
-    describe("smtp-pool tests", function () {
+    describe("smtp-pool tests", () => {
 
-        it("Should verify connection with success", function (done) {
-            var nm = mailer.createTransport({
+        it("Should verify connection with success", (done) => {
+            const nm = mailer.createTransport({
                 host: "localhost",
                 pool: true,
                 port: PORT_NUMBER,
@@ -588,7 +588,7 @@ describe("mailer integration tests", function () {
                 logger: false
             });
 
-            nm.verify(function (err, success) {
+            nm.verify((err, success) => {
                 expect(err).to.not.exist;
                 expect(success).to.be.true;
                 nm.close();
@@ -596,8 +596,8 @@ describe("mailer integration tests", function () {
             });
         });
 
-        it("Should not verify connection", function (done) {
-            var nm = mailer.createTransport({
+        it("Should not verify connection", (done) => {
+            const nm = mailer.createTransport({
                 host: "localhost",
                 pool: true,
                 port: PORT_NUMBER,
@@ -609,15 +609,15 @@ describe("mailer integration tests", function () {
                 logger: false
             });
 
-            nm.verify(function (err) {
+            nm.verify((err) => {
                 expect(err).to.exist;
                 nm.close();
                 done();
             });
         });
 
-        it("should log in and send mail", function (done) {
-            var nm = mailer.createTransport({
+        it("should log in and send mail", (done) => {
+            const nm = mailer.createTransport({
                 pool: true,
                 host: "localhost",
                 port: PORT_NUMBER,
@@ -630,7 +630,7 @@ describe("mailer integration tests", function () {
                 debug: true
             });
 
-            var mailData = {
+            const mailData = {
                 from: "from@valid.sender",
                 sender: "sender@valid.sender",
                 to: ["to1@valid.recipient", "to2@valid.recipient", "to@invalid.recipient"],
@@ -641,7 +641,7 @@ describe("mailer integration tests", function () {
                 text: "uuu"
             };
 
-            nm.sendMail(mailData, function (err, info) {
+            nm.sendMail(mailData, (err, info) => {
                 nm.close();
                 expect(err).to.not.exist;
                 expect(info.accepted).to.deep.equal([
@@ -657,10 +657,10 @@ describe("mailer integration tests", function () {
             });
         });
 
-        it("should log in and send mail using connection url", function (done) {
-            var nm = mailer.createTransport("smtp://testuser:testpass@localhost:" + PORT_NUMBER + "/?pool=true&logger=false&debug=true");
+        it("should log in and send mail using connection url", (done) => {
+            const nm = mailer.createTransport(`smtp://testuser:testpass@localhost:${PORT_NUMBER}/?pool=true&logger=false&debug=true`);
 
-            var mailData = {
+            const mailData = {
                 from: "from@valid.sender",
                 sender: "sender@valid.sender",
                 to: ["to1@valid.recipient", "to2@valid.recipient", "to@invalid.recipient"],
@@ -671,7 +671,7 @@ describe("mailer integration tests", function () {
                 text: "uuu"
             };
 
-            nm.sendMail(mailData, function (err, info) {
+            nm.sendMail(mailData, (err, info) => {
                 nm.close();
                 expect(err).to.not.exist;
                 expect(info.accepted).to.deep.equal([
@@ -687,8 +687,8 @@ describe("mailer integration tests", function () {
             });
         });
 
-        it("should return stream error, not send", function (done) {
-            var nm = mailer.createTransport({
+        it("should return stream error, not send", (done) => {
+            const nm = mailer.createTransport({
                 pool: true,
                 host: "localhost",
                 port: PORT_NUMBER,
@@ -702,7 +702,7 @@ describe("mailer integration tests", function () {
                 debug: true
             });
 
-            var mailData = {
+            const mailData = {
                 from: "from@valid.sender",
                 sender: "sender@valid.sender",
                 to: ["to1@valid.recipient", "to2@valid.recipient", "to@invalid.recipient"],
@@ -713,20 +713,20 @@ describe("mailer integration tests", function () {
                 text: new stream.PassThrough()
             };
 
-            nm.sendMail(mailData, function (err) {
+            nm.sendMail(mailData, (err) => {
                 nm.close();
                 expect(err).to.exist;
                 done();
             });
 
             mailData.text.write("teretere");
-            setTimeout(function () {
+            setTimeout(() => {
                 mailData.text.emit("error", new Error("Stream error"));
             }, 400);
         });
 
-        it("should return proxy error, not send", function (done) {
-            var nm = mailer.createTransport({
+        it("should return proxy error, not send", (done) => {
+            const nm = mailer.createTransport({
                 pool: true,
                 host: "example.com",
                 port: 25,
@@ -744,7 +744,7 @@ describe("mailer integration tests", function () {
                 return callback(new Error("PROXY ERROR"));
             };
 
-            var mailData = {
+            const mailData = {
                 from: "from@valid.sender",
                 sender: "sender@valid.sender",
                 to: ["to1@valid.recipient", "to2@valid.recipient", "to@invalid.recipient"],
@@ -755,15 +755,15 @@ describe("mailer integration tests", function () {
                 text: "uuu"
             };
 
-            nm.sendMail(mailData, function (err) {
+            nm.sendMail(mailData, (err) => {
                 nm.close();
                 expect(err).to.exist;
                 done();
             });
         });
 
-        it("should send using proxy call", function (done) {
-            var nm = mailer.createTransport({
+        it("should send using proxy call", (done) => {
+            const nm = mailer.createTransport({
                 pool: true,
                 host: "localhost",
                 port: PORT_NUMBER,
@@ -777,10 +777,10 @@ describe("mailer integration tests", function () {
                 debug: true
             });
 
-            var socketCreated = false;
+            let socketCreated = false;
 
             nm.getSocket = function (options, callback) {
-                var socket = net.connect(PORT_NUMBER, "localhost", function () {
+                var socket = net.connect(PORT_NUMBER, "localhost", () => {
                     socketCreated = true;
                     return callback(null, {
                         connection: socket
@@ -788,7 +788,7 @@ describe("mailer integration tests", function () {
                 });
             };
 
-            var mailData = {
+            const mailData = {
                 from: "from@valid.sender",
                 sender: "sender@valid.sender",
                 to: ["to1@valid.recipient", "to2@valid.recipient", "to@invalid.recipient"],
@@ -799,7 +799,7 @@ describe("mailer integration tests", function () {
                 text: "uuu"
             };
 
-            nm.sendMail(mailData, function (err, info) {
+            nm.sendMail(mailData, (err, info) => {
                 nm.close();
                 expect(socketCreated).to.be.true;
                 expect(err).to.not.exist;
@@ -808,8 +808,8 @@ describe("mailer integration tests", function () {
             });
         });
 
-        it("should send mail on idle", function (done) {
-            var nm = mailer.createTransport({
+        it("should send mail on idle", (done) => {
+            const nm = mailer.createTransport({
                 pool: true,
                 host: "localhost",
                 port: PORT_NUMBER,
@@ -822,7 +822,7 @@ describe("mailer integration tests", function () {
                 debug: true
             });
 
-            var mailData = [{
+            const mailData = [{
                 from: "from@valid.sender",
                 sender: "sender@valid.sender",
                 to: ["to1@valid.recipient", "to2@valid.recipient", "to@invalid.recipient"],
@@ -833,9 +833,9 @@ describe("mailer integration tests", function () {
                 text: "uuu"
             }];
 
-            nm.on("idle", function () {
+            nm.on("idle", () => {
                 if (nm.isIdle() && mailData.length) {
-                    nm.sendMail(mailData.pop(), function (err, info) {
+                    nm.sendMail(mailData.pop(), (err, info) => {
                         nm.close();
                         expect(err).to.not.exist;
                         expect(info.accepted).to.deep.equal([
@@ -858,34 +858,34 @@ describe("mailer integration tests", function () {
 describe("direct-transport tests", function () {
 
     this.timeout(10000); // eslint-disable-line no-invalid-this
-    var server;
-    var retryCount = 0;
+    let server;
+    let retryCount = 0;
 
-    beforeEach(function (done) {
+    beforeEach((done) => {
         server = new SMTPServer({
             disabledCommands: ["STARTTLS", "AUTH"],
 
-            onData: function (stream, session, callback) {
-                stream.on("data", function () {});
-                stream.on("end", function () {
-                    var err;
+            onData(stream, session, callback) {
+                stream.on("data", () => {});
+                stream.on("end", () => {
+                    let err;
                     if (/retry@/.test(session.envelope.mailFrom.address) && retryCount++ < 3) {
                         err = new Error("Please try again later");
                         err.responseCode = 451;
                         return callback(err);
-                    } else {
-                        return callback(null, "OK");
-                    }
+                    } 
+                    return callback(null, "OK");
+                    
                 });
             },
 
-            onMailFrom: function (address, session, callback) {
+            onMailFrom(address, session, callback) {
                 if (/invalid@/.test(address.address)) {
                     return callback(new Error("Invalid sender"));
                 }
                 return callback(); // Accept the address
             },
-            onRcptTo: function (address, session, callback) {
+            onRcptTo(address, session, callback) {
                 if (/invalid@/.test(address.address)) {
                     return callback(new Error("Invalid recipient"));
                 }
@@ -897,19 +897,19 @@ describe("direct-transport tests", function () {
         server.listen(PORT_NUMBER, done);
     });
 
-    afterEach(function (done) {
+    afterEach((done) => {
         server.close(done);
     });
 
-    it("should send mail", function (done) {
-        var nm = mailer.createTransport({
+    it("should send mail", (done) => {
+        const nm = mailer.createTransport({
             direct: true,
             port: PORT_NUMBER,
             logger: false,
             debug: true
         });
 
-        var mailData = {
+        const mailData = {
             from: "from@valid.sender",
             to: ["test@[127.0.0.1]"],
             subject: "test",
@@ -919,7 +919,7 @@ describe("direct-transport tests", function () {
             text: "uuu"
         };
 
-        nm.sendMail(mailData, function (err, info) {
+        nm.sendMail(mailData, (err, info) => {
             nm.close();
             expect(err).to.not.exist;
             expect(info.accepted).to.deep.equal([
@@ -931,10 +931,10 @@ describe("direct-transport tests", function () {
         });
     });
 
-    it("should send mail using connection url", function (done) {
-        var nm = mailer.createTransport("direct:?port=" + PORT_NUMBER + "&logger=false&debug=true");
+    it("should send mail using connection url", (done) => {
+        const nm = mailer.createTransport(`direct:?port=${PORT_NUMBER}&logger=false&debug=true`);
 
-        var mailData = {
+        const mailData = {
             from: "from@valid.sender",
             to: ["test@[127.0.0.1]"],
             subject: "test",
@@ -944,7 +944,7 @@ describe("direct-transport tests", function () {
             text: "uuu"
         };
 
-        nm.sendMail(mailData, function (err, info) {
+        nm.sendMail(mailData, (err, info) => {
             nm.close();
             expect(err).to.not.exist;
             expect(info.accepted).to.deep.equal([
@@ -956,15 +956,15 @@ describe("direct-transport tests", function () {
         });
     });
 
-    it("should return stream error, not send", function (done) {
-        var nm = mailer.createTransport({
+    it("should return stream error, not send", (done) => {
+        const nm = mailer.createTransport({
             direct: true,
             port: PORT_NUMBER,
             logger: false,
             debug: true
         });
 
-        var mailData = {
+        const mailData = {
             from: "from@valid.sender",
             sender: "sender@valid.sender",
             to: ["test@[127.0.0.1]"],
@@ -975,31 +975,31 @@ describe("direct-transport tests", function () {
             text: new stream.PassThrough()
         };
 
-        nm.sendMail(mailData, function (err) {
+        nm.sendMail(mailData, (err) => {
             nm.close();
             expect(err).to.exist;
             done();
         });
 
         mailData.text.write("teretere");
-        setTimeout(function () {
+        setTimeout(() => {
             mailData.text.emit("error", new Error("Stream error"));
         }, 400);
     });
 });
 
-describe("Generated messages tests", function () {
-    it("should set Message-Id automatically", function (done) {
-        var nm = mailer.createTransport({
+describe("Generated messages tests", () => {
+    it("should set Message-Id automatically", (done) => {
+        const nm = mailer.createTransport({
             transport: "stub"
         });
-        var mailData = {
+        const mailData = {
             from: "Sender Name 👻 <sender@example.com>",
             to: ["Recipient Name 1 👻 <recipient1@example.com>", "Recipient Name 2 👻 <recipient2@example.com>"],
             subject: "test 💀",
             text: "test message 👽"
         };
-        nm.sendMail(mailData, function (err, info) {
+        nm.sendMail(mailData, (err, info) => {
             expect(err).to.not.exist;
             expect(info.envelope).to.deep.equal({
                 from: "sender@example.com",
@@ -1011,9 +1011,9 @@ describe("Generated messages tests", function () {
         });
     });
 
-    it("should set List-* headers", function (done) {
-        var nm = mailer.createTransport(stubTransport());
-        var mailData = {
+    it("should set List-* headers", (done) => {
+        const nm = mailer.createTransport(stubTransport());
+        const mailData = {
             list: {
                 help: [
                     // keep indent
@@ -1054,17 +1054,17 @@ describe("Generated messages tests", function () {
                 ]
             }
         };
-        nm.sendMail(mailData, function (err, info) {
+        nm.sendMail(mailData, (err, info) => {
             expect(err).to.not.exist;
             expect(info.response.toString().match(/^List\-/gim).length).to.equal(10);
             done();
         });
     });
 
-    it("should send mail using a template", function (done) {
-        var nm = mailer.createTransport(stubTransport());
+    it("should send mail using a template", (done) => {
+        const nm = mailer.createTransport(stubTransport());
 
-        var sendPwdReminder = nm.templateSender({
+        const sendPwdReminder = nm.templateSender({
             subject: "Password reminder for {{username}}!",
             text: "Hello, {{username}}, Your password is: {{ password }}",
             html: "<b>Hello, <strong>{{username}}</strong>, Your password is:\n<b>{{ password }}</b></p>"
@@ -1086,8 +1086,8 @@ describe("Generated messages tests", function () {
                 username: "Node Mailer",
                 password: "!\"'<>&some-thing"
             }
-        ).then(function (info) {
-            var msg = info.response.toString();
+        ).then((info) => {
+            const msg = info.response.toString();
 
             expect(msg.indexOf("\r\nFrom: sender@example.com\r\n")).to.be.gte(0);
             expect(msg.indexOf("\r\nTo: receiver@example.com\r\n")).to.be.gte(0);
@@ -1100,13 +1100,13 @@ describe("Generated messages tests", function () {
             expect(msg.indexOf("\n<b>!&quot;&#039;&lt;&gt;&amp;some-thing</b></p>\r\n")).to.be.gte(0);
 
             done();
-        }).catch(function (err) {
+        }).catch((err) => {
             expect(err).to.not.exist;
         });
     });
 
-    it("should send mail using external renderer", function (done) {
-        var nm = mailer.createTransport(stubTransport());
+    it("should send mail using external renderer", (done) => {
+        const nm = mailer.createTransport(stubTransport());
 
         class Renderer {
             render({ name: { first, last } }, callback) {
@@ -1116,7 +1116,7 @@ describe("Generated messages tests", function () {
             }
         }
 
-        var sendWelcome = nm.templateSender(new Renderer(), {
+        const sendWelcome = nm.templateSender(new Renderer(), {
             from: "sender@example.com"
         });
 
@@ -1130,27 +1130,27 @@ describe("Generated messages tests", function () {
                     last: "Mailer"
                 }
             }
-        ).then(function (info) {
-            var msg = info.response.toString();
+        ).then((info) => {
+            const msg = info.response.toString();
 
             expect(msg).to.include("Hello from external renderer to Node Mailer!");
 
             done();
-        }).catch(function (err) {
+        }).catch((err) => {
             expect(err).to.not.exist;
         });
     });
 
-    it("should use pregenerated message", function (done) {
-        var nm = mailer.createTransport(stubTransport());
-        var raw = "Content-Type: text/plain\r\n" +
+    it("should use pregenerated message", (done) => {
+        const nm = mailer.createTransport(stubTransport());
+        const raw = "Content-Type: text/plain\r\n" +
             "Subject: test message\r\n" +
             "\r\n" +
             "Hello world!";
-        var mailData = {
-            raw: raw
+        const mailData = {
+            raw
         };
-        nm.sendMail(mailData, function (err, info) {
+        nm.sendMail(mailData, (err, info) => {
             expect(err).to.not.exist;
             expect(info.response.toString()).to.equal(raw);
             done();

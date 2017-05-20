@@ -23,14 +23,18 @@ export function insertBefore(nodes) {
         this.isNodeType("Expression") ||
         (this.parentPath.isForStatement() && this.key === "init")
     ) {
-        if (this.node) nodes.push(this.node);
+        if (this.node) {
+            nodes.push(this.node);
+        }
         this.replaceExpressionWithStatements(nodes);
     } else {
         this._maybePopFromStatements(nodes);
         if (Array.isArray(this.container)) {
             return this._containerInsertBefore(nodes);
         } else if (this.isStatementOrBlock()) {
-            if (this.node) nodes.push(this.node);
+            if (this.node) {
+                nodes.push(this.node); 
+            }
             this._replaceWith(t.blockStatement(nodes));
         } else {
             throw new Error("We don't know what to do with this node type. " +
@@ -57,7 +61,9 @@ export function _containerInsert(from, nodes) {
             // While this path may have a context, there is currently no guarantee that the context
             // will be the active context, because `popContext` may leave a final context in place.
             // We should remove this `if` and always push once #4145 has been resolved.
-            if (this.context.queue) path.pushContext(this.context);
+            if (this.context.queue) {
+                path.pushContext(this.context); 
+            }
             paths.push(path);
         } else {
             paths.push(NodePath.get({
@@ -129,7 +135,9 @@ export function insertAfter(nodes) {
         if (Array.isArray(this.container)) {
             return this._containerInsertAfter(nodes);
         } else if (this.isStatementOrBlock()) {
-            if (this.node) nodes.unshift(this.node);
+            if (this.node) {
+                nodes.unshift(this.node); 
+            }
             this._replaceWith(t.blockStatement(nodes));
         } else {
             throw new Error("We don't know what to do with this node type. " +
@@ -145,7 +153,9 @@ export function insertAfter(nodes) {
  */
 
 export function updateSiblingKeys(fromIndex, incrementBy) {
-    if (!this.parent) return;
+    if (!this.parent) {
+        return; 
+    }
 
     const paths = pathCache.get(this.parent);
     for (let i = 0; i < paths.length; i++) {
@@ -218,7 +228,7 @@ export function pushContainer(listKey, nodes) {
     const path = NodePath.get({
         parentPath: this,
         parent: this.node,
-        container: container,
+        container,
         listKey,
         key: container.length
     });

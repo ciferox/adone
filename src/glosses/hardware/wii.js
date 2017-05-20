@@ -114,7 +114,7 @@ function Wii(opts) {
 
     // Throttled "read" event loop
     setInterval(() => {
-        let event = new Board.Event({
+        const event = new Board.Event({
             target: this
         });
 
@@ -267,7 +267,7 @@ Change = {
         // Enumerate all button event aliases,
         // fire matching types
         aliases[key].forEach(function (type) {
-            let event = new Board.Event({
+            const event = new Board.Event({
                 // |this| value is a button instance
                 target: this,
                 type
@@ -361,7 +361,7 @@ Update = {
         // Update.component.call( component instance, coordinate, val );
         //
 
-        let state = priv.get(this);
+        const state = priv.get(this);
         state[`d${coordinate}`] = val - state[coordinate];
         state[coordinate] = val;
     }
@@ -383,14 +383,14 @@ Devices = {
         ],
         // device.read.call(this);
         read() {
-            let axes = ["x", "y", "z"];
+            const axes = ["x", "y", "z"];
 
             [
                 this.joystick,
                 this.accelerometer
             ].forEach(function (component) {
                 axes.forEach(function (axis) {
-                    let delta = `d${axis}`;
+                    const delta = `d${axis}`;
                     if (typeof component[delta] !== "undefined") {
                         if (Math.abs(component[delta]) > this.threshold) {
                             Change.component.call(component, axis);

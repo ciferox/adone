@@ -133,9 +133,9 @@ export class Template {
             if (cb) {
                 process.nextTick(cb, err);
                 return;
-            } else {
-                throw err;
-            }
+            } 
+            throw err;
+            
         }
 
         const context = new Context(ctx || {}, this.blocks, this.env);
@@ -187,9 +187,9 @@ export class Template {
         } catch (e) {
             if (cb) {
                 return cb(e);
-            } else {
-                throw e;
-            }
+            } 
+            throw e;
+            
         }
 
         const frame = parentFrame ? parentFrame.push() : new Frame();

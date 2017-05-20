@@ -4,17 +4,17 @@ const path = adone.std.path;
 const { fast } = adone;
 const { File } = fast;
 
-describe("FAST", function() {
-    describe("transforms", function() {
-        describe("flatten", function() {
+describe("FAST", () => {
+    describe("transforms", () => {
+        describe("flatten", () => {
             function P(p) {
                 return p.split("/").join(path.sep);
             }
 
-            describe("flatten()", function() {
+            describe("flatten()", () => {
                 let fileInstance;
 
-                beforeEach(function () {
+                beforeEach(() => {
                     fileInstance = new File({
                         cwd: P("/some/project/"),
                         base: P("/some/project/src/"),
@@ -23,10 +23,10 @@ describe("FAST", function() {
                     });
                 });
 
-                it("should strip relative path without options", function (done) {
+                it("should strip relative path without options", (done) => {
                     const stream = flatten();
                     stream.on("error", done);
-                    stream.on("data", function(newFile) {
+                    stream.on("data", (newFile) => {
                         assert.isOk(newFile);
                         assert.isOk(newFile.path);
                         assert.isOk(newFile.relative);
@@ -38,10 +38,10 @@ describe("FAST", function() {
                     stream.resume();
                 });
 
-                it("should replace relative path with option path", function (done) {
-                    const stream = flatten({newPath: P("new/path") });
+                it("should replace relative path with option path", (done) => {
+                    const stream = flatten({ newPath: P("new/path") });
                     stream.on("error", done);
-                    stream.on("data", function(newFile) {
+                    stream.on("data", (newFile) => {
                         assert.isOk(newFile);
                         assert.isOk(newFile.path);
                         assert.isOk(newFile.relative);
@@ -69,11 +69,11 @@ describe("FAST", function() {
                         await fixtureDir.unlink();
                     });
 
-                    it("should ignore directories", function (done) {
+                    it("should ignore directories", (done) => {
                         const stream = fast.src(path.join(fixtureDir.path(), "/test_dir/**/*.css")).flatten();
 
                         stream.on("error", done);
-                        stream.on("data", function(newFile) {
+                        stream.on("data", (newFile) => {
                             assert.isOk(newFile);
                             assert.isOk(newFile.path);
                             assert.isOk(newFile.relative);
@@ -85,10 +85,10 @@ describe("FAST", function() {
                     });
                 });
 
-                it("should strip relative path at the specified depth if depth option is passed", function (done) {
-                    const stream = flatten({includeParents: 2});
+                it("should strip relative path at the specified depth if depth option is passed", (done) => {
+                    const stream = flatten({ includeParents: 2 });
                     stream.on("error", done);
-                    stream.on("data", function(newFile) {
+                    stream.on("data", (newFile) => {
                         assert.isOk(newFile);
                         assert.isOk(newFile.path);
                         assert.isOk(newFile.relative);
@@ -102,10 +102,10 @@ describe("FAST", function() {
                     stream.resume();
                 });
 
-                it("should leave path from the end if depth option is passed as negative number", function (done) {
-                    const stream = flatten({includeParents: -2});
+                it("should leave path from the end if depth option is passed as negative number", (done) => {
+                    const stream = flatten({ includeParents: -2 });
                     stream.on("error", done);
-                    stream.on("data", function(newFile) {
+                    stream.on("data", (newFile) => {
                         assert.isOk(newFile);
                         assert.isOk(newFile.path);
                         assert.isOk(newFile.relative);
@@ -119,10 +119,10 @@ describe("FAST", function() {
                     stream.resume();
                 });
 
-                it("should make no changes if the absolute depth option is greater than the tree depth", function (done) {
-                    const stream = flatten({includeParents: 8});
+                it("should make no changes if the absolute depth option is greater than the tree depth", (done) => {
+                    const stream = flatten({ includeParents: 8 });
                     stream.on("error", done);
-                    stream.on("data", function(newFile) {
+                    stream.on("data", (newFile) => {
                         assert.isOk(newFile);
                         assert.isOk(newFile.path);
                         assert.isOk(newFile.relative);
@@ -137,10 +137,10 @@ describe("FAST", function() {
                 });
             });
 
-            describe("helper-functions", function () {
+            describe("helper-functions", () => {
                 let fileInstance;
 
-                beforeEach(function () {
+                beforeEach(() => {
                     fileInstance = {
                         base: P("/some/project/src"),
                         path: P("/some/project/src/top1/top2/bottom2/bottom1/app.css"),
@@ -148,60 +148,60 @@ describe("FAST", function() {
                     };
                 });
 
-                describe("includeParents", function () {
-                    it("should keep top parent dirs from indludeParents option", function (done) {
-                        const topOnly = flattenPath(fileInstance, {includeParents: 1});
+                describe("includeParents", () => {
+                    it("should keep top parent dirs from indludeParents option", (done) => {
+                        const topOnly = flattenPath(fileInstance, { includeParents: 1 });
                         assert.equal(topOnly, P("top1/app.css"));
 
                         done();
                     });
 
-                    it("should keep bottom parent dirs from indludeParents option", function (done) {
-                        const bottomOnly = flattenPath(fileInstance, {includeParents: [0, 1]});
+                    it("should keep bottom parent dirs from indludeParents option", (done) => {
+                        const bottomOnly = flattenPath(fileInstance, { includeParents: [0, 1] });
                         assert.equal(bottomOnly, P("bottom1/app.css"));
 
                         done();
                     });
 
-                    it("should treat negative number in indludeParents as bottom parent levels", function (done) {
-                        const bottomOnly = flattenPath(fileInstance, {includeParents: -1});
+                    it("should treat negative number in indludeParents as bottom parent levels", (done) => {
+                        const bottomOnly = flattenPath(fileInstance, { includeParents: -1 });
                         assert.equal(bottomOnly, P("bottom1/app.css"));
 
                         done();
                     });
 
-                    it("should keep top and bottom parent dirs from indludeParents option", function (done) {
-                        const both = flattenPath(fileInstance, {includeParents: [1, 2]});
+                    it("should keep top and bottom parent dirs from indludeParents option", (done) => {
+                        const both = flattenPath(fileInstance, { includeParents: [1, 2] });
                         assert.equal(both, P("top1/bottom2/bottom1/app.css"));
 
                         done();
                     });
 
-                    it("should pick relative path if indludeParents bottom+top too long", function (done) {
-                        const relative = flattenPath(fileInstance, {includeParents: [10, 10]});
+                    it("should pick relative path if indludeParents bottom+top too long", (done) => {
+                        const relative = flattenPath(fileInstance, { includeParents: [10, 10] });
                         assert.equal(relative, fileInstance.relative);
 
                         done();
                     });
                 });
 
-                describe("subPath", function () {
-                    it("should keep top parent dirs from subPath option", function (done) {
-                        const topOnly = flattenPath(fileInstance, {subPath: [0, 2]});
+                describe("subPath", () => {
+                    it("should keep top parent dirs from subPath option", (done) => {
+                        const topOnly = flattenPath(fileInstance, { subPath: [0, 2] });
                         assert.equal(topOnly, P("top1/top2/app.css"));
 
                         done();
                     });
 
-                    it("should keep bottom parent dirs from subPath option", function (done) {
-                        const bottomOnly = flattenPath(fileInstance, {subPath: -2});
+                    it("should keep bottom parent dirs from subPath option", (done) => {
+                        const bottomOnly = flattenPath(fileInstance, { subPath: -2 });
                         assert.equal(bottomOnly, P("bottom2/bottom1/app.css"));
 
                         done();
                     });
 
-                    it("should keep top2 and bottom2 from subPath option", function (done) {
-                        const middleOnly = flattenPath(fileInstance, {subPath: [1, -1]});
+                    it("should keep top2 and bottom2 from subPath option", (done) => {
+                        const middleOnly = flattenPath(fileInstance, { subPath: [1, -1] });
                         assert.equal(middleOnly, P("top2/bottom2/app.css"));
 
                         done();

@@ -392,9 +392,9 @@ export const realpathSync = (p, cache) => {
             }
 
             return p;
-        } else {
-            throw err;
-        }
+        } 
+        throw err;
+        
     }
 };
 

@@ -1,20 +1,20 @@
-'use strict';
 
-describe('/', () => {
-    it('test1', () => {
 
-    });
-
-    it('test2', () => {
+describe("/", () => {
+    it("test1", () => {
 
     });
 
-    describe('nested', () => {
-        it('test3', () => {
+    it("test2", () => {
+
+    });
+
+    describe("nested", () => {
+        it("test3", () => {
 
         });
 
-        it('test4', () => {
+        it("test4", () => {
             
         });
     });

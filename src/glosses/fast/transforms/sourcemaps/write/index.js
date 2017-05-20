@@ -37,5 +37,5 @@ export default function write(destPath, options) {
 
             this.push(file);
         }
-    })
+    });
 }

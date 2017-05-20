@@ -140,7 +140,7 @@ export default class State {
     }
 
     clone(skipArrays?) {
-        const state = new State;
+        const state = new State();
         for (const key in this) {
             let val = this[key];
 

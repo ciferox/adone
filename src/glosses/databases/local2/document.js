@@ -1,11 +1,11 @@
-let util = require("util")
-    , _ = require("underscore")
-    , schemas = require("./schemas")
-    , modifierFunctions = {}
-    , lastStepModifierFunctions = {}
-    , comparisonFunctions = {}
-    , logicalOperators = {}
-    , arrayComparisonFunctions = {}
+let util = require("util"),
+    _ = require("underscore"),
+    schemas = require("./schemas"),
+    modifierFunctions = {},
+    lastStepModifierFunctions = {},
+    comparisonFunctions = {},
+    logicalOperators = {},
+    arrayComparisonFunctions = {}
     ;
 
 /**
@@ -17,7 +17,9 @@ let util = require("util")
  * But you really need to want it to trigger such behaviour, even when warned not to use '$' at the beginning of the field names...
  */
 function checkKey(k, v) {
-    if (typeof (k) !== "string") { return; } // JSON.stringify callback in some environments calls it on arrays
+    if (typeof (k) !== "string") {
+        return; 
+    } // JSON.stringify callback in some environments calls it on arrays
 
     if ((k[0] === "$") && !(k === "$$date" && typeof v === "number") && !(k === "$$regex" && typeof v === "string") && !(k === "$$deleted" && v === true) && !(k === "$$indexCreated") && !(k === "$$indexRemoved")) {
         throw "Field names cannot begin with the $ character";
@@ -112,9 +114,9 @@ function deserialize(rawData) {
 }
 
 function deserializeRegex(r) {
-    let spl = r.split("/");
-    let flags = spl.pop();
-    let regex = spl.slice(1).join("/");
+    const spl = r.split("/");
+    const flags = spl.pop();
+    const regex = spl.slice(1).join("/");
     return new RegExp(regex, flags);
 }
 
@@ -486,7 +488,7 @@ lastStepModifierFunctions.$inc = function (obj, field, value) {
 // Given its name, create the complete modifier function
 function createModifierFunction(modifier) {
     return function (obj, field, value) {
-        let fieldParts = typeof field === "string" ? field.split(".") : field;
+        const fieldParts = typeof field === "string" ? field.split(".") : field;
 
         if (fieldParts.length === 1) {
             lastStepModifierFunctions[modifier](obj, field, value);
@@ -507,14 +509,14 @@ Object.keys(lastStepModifierFunctions).forEach((modifier) => {
  * Modify a DB object according to an update query
  */
 function modify(obj, updateQuery) {
-    let keys = Object.keys(updateQuery)
-        , firstChars = _.map(keys, (item) => {
+    let keys = Object.keys(updateQuery),
+        firstChars = _.map(keys, (item) => {
             return item[0];
-        })
-        , dollarFirstChars = _.filter(firstChars, (c) => {
+        }),
+        dollarFirstChars = _.filter(firstChars, (c) => {
             return c === "$";
-        })
-        , newDoc, modifiers
+        }),
+        newDoc, modifiers
         ;
 
     if ((keys.indexOf("_id") !== -1) && (updateQuery._id !== obj._id)) {
@@ -572,8 +574,8 @@ function modify(obj, updateQuery) {
  * @param {String} field
  */
 function getDotValue(obj, field) {
-    let fieldParts = typeof field === "string" ? field.split(".") : field
-        , i, objs;
+    let fieldParts = typeof field === "string" ? field.split(".") : field,
+        i, objs;
 
     if (!obj) {
         return undefined;
@@ -600,9 +602,9 @@ function getDotValue(obj, field) {
             objs.push(getDotValue(obj[fieldParts[0]][i], fieldParts.slice(1)));
         }
         return objs;
-    } else {
-        return getDotValue(obj[fieldParts[0]], fieldParts.slice(1));
-    }
+    } 
+    return getDotValue(obj[fieldParts[0]], fieldParts.slice(1));
+    
 }
 
 
@@ -732,9 +734,9 @@ comparisonFunctions.$regex = function (a, b) {
 
     if (typeof a !== "string") {
         return false;
-    } else {
-        return b.test(a);
-    }
+    } 
+    return b.test(a);
+    
 };
 
 comparisonFunctions.$exists = function (value, exists) {
@@ -746,9 +748,9 @@ comparisonFunctions.$exists = function (value, exists) {
 
     if (value === undefined) {
         return !exists;
-    } else {
-        return exists;
-    }
+    } 
+    return exists;
+    
 };
 
 /**
@@ -849,8 +851,8 @@ function match(obj, query) {
  * if the treatObjAsValue flag is set, don't try to match every part separately, but the array as a whole
  */
 function matchQueryPart(obj, queryKey, queryValue, treatObjAsValue) {
-    let objValue = getDotValue(obj, queryKey)
-        , i, keys, firstChars, dollarFirstChars;
+    let objValue = getDotValue(obj, queryKey),
+        i, keys, firstChars, dollarFirstChars;
 
     // Check if the value is an array if we don't force a treatment as value
     if (util.isArray(objValue) && !treatObjAsValue) {
@@ -925,8 +927,12 @@ function matchQueryPart(obj, queryKey, queryValue, treatObjAsValue) {
  */
 function Document(db, raw) {
     var self = this, raw;
-    if (raw === undefined) { raw = {}; }
-    if (typeof (raw) === "string") { raw = deserialize(raw); }
+    if (raw === undefined) {
+        raw = {}; 
+    }
+    if (typeof (raw) === "string") {
+        raw = deserialize(raw); 
+    }
 
     Object.defineProperty(this, "save", {
         value(cb) {
@@ -936,14 +942,18 @@ function Document(db, raw) {
 
     Object.defineProperty(this, "remove", {
         value(cb) {
-            if (!self._id) { return cb(); } // TODO maybe emit error
+            if (!self._id) {
+                return cb(); 
+            } // TODO maybe emit error
             return db.remove({ _id: self._id }, {}, cb);
         }, writable: false
     });
 
     Object.defineProperty(this, "update", {
         value(modifier, cb) {
-            if (self._id === undefined) { self._id = db.createNewId(); }
+            if (self._id === undefined) {
+                self._id = db.createNewId(); 
+            }
             return db.update({ _id: self._id }, modifier, { upsert: true }, cb);
         }, writable: false
     });
@@ -961,12 +971,16 @@ function Document(db, raw) {
     });
 
     // Special methods
-    for (let method in db._methods) { Object.defineProperty(this, method, { value: db._methods[method], writable: false }); }
+    for (const method in db._methods) {
+        Object.defineProperty(this, method, { value: db._methods[method], writable: false }); 
+    }
 
     // Persist to LevelUP
     Object.defineProperty(this, "_persist", {
         value(cb, quiet) {
-            if (!quiet) { db.emit("save", self); }
+            if (!quiet) {
+                db.emit("save", self); 
+            }
             db.store.put(self._id, self.serialize(), (err) => {
                 cb(err || null, err ? undefined : self);
             });

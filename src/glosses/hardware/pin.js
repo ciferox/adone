@@ -77,7 +77,7 @@ function Pin(opts) {
         },
         mode: {
             set(mode) {
-                let state = priv.get(this);
+                const state = priv.get(this);
                 state.mode = mode;
                 this.io.pinMode(this.addr, mode);
             },

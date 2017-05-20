@@ -120,8 +120,7 @@ Cursor.prototype.exec = function (callback) {
     let sort, sorter;
     if (typeof (this._sort) === "function") {
         sorter = this._sort;
-    }
-    else {
+    } else {
         sort = this._sort;
     }
 
@@ -268,9 +267,9 @@ Cursor.prototype.exec = function (callback) {
 
         if (typeof (self.execFn) === "function") {
             return self.execFn(err, res, callback);
-        } else {
-            return callback(err, res);
-        }
+        } 
+        return callback(err, res);
+        
     }
 };
 
@@ -411,8 +410,7 @@ Cursor.getMatchesStream = function (db, query, sort, prefetched) {
             ids = Cursor.getIdsForQuery(db, query, sort);
             if (ids) {
                 stream.emit("ids", ids);
-            }
-            else {
+            } else {
                 stream.emit("error", new Error("getIdsForQuery returned null after index building"));
             }
         });
@@ -475,15 +473,16 @@ Cursor.retriever = function (task, cb) {
 
         if (err) {
             task.stream.emit("error", err);
-        }
-        else {
+        } else {
             task.stream.emit("data", {
                 id: task.id, idx: task.idx,
                 val() {
                     return new task.db(buf);
                 },
                 lock() {
-                    if (!locks.hasOwnProperty(task.id)) { locks[task.id] = 0; }
+                    if (!locks.hasOwnProperty(task.id)) {
+                        locks[task.id] = 0; 
+                    }
                     locks[task.id]++;
                     return locked[task.id] = locked[task.id] || this.val();
                 },
@@ -535,10 +534,14 @@ Cursor.getIdsForQuery = function (db, query, sort) {
         _.each(sort, (value, key) => {
             match(key, query[key]); // If there's no query key, the value will be undefined
 
-            if (!sorted) { return; } // We need this to be active in order to avoid empty res
+            if (!sorted) {
+                return; 
+            } // We need this to be active in order to avoid empty res
 
             // Flip results, descending order
-            if (key == firstKey && value == -1 && res) { res = res.reverse(); }
+            if (key == firstKey && value == -1 && res) {
+                res = res.reverse(); 
+            }
 
             // Apply all the sort keys first, effectively allowing results to be sorted by first sort key
             // In order to implement compound sort here, we need compound indexes
@@ -597,7 +600,7 @@ Cursor.getIdsForQuery = function (db, query, sort) {
         }
 
         // 1) We can utilize this index and 2) we should
-        let index = db.indexes[key];
+        const index = db.indexes[key];
         if (index && (indexed || !db.options.autoIndexing)) {
             if (val === undefined) {
                 return push(index.getAll());

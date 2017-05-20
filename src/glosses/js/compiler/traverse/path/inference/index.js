@@ -10,10 +10,14 @@ const { types: t } = adone.js.compiler;
  */
 
 export function getTypeAnnotation(): Object {
-    if (this.typeAnnotation) return this.typeAnnotation;
+    if (this.typeAnnotation) {
+        return this.typeAnnotation; 
+    }
 
     let type = this._getTypeAnnotation() || t.anyTypeAnnotation();
-    if (t.isTypeAnnotation(type)) type = type.typeAnnotation;
+    if (t.isTypeAnnotation(type)) {
+        type = type.typeAnnotation; 
+    }
     return this.typeAnnotation = type;
 }
 
@@ -41,9 +45,9 @@ export function _getTypeAnnotation(): ?Object {
             }
 
             return t.voidTypeAnnotation();
-        } else {
-            return;
-        }
+        } 
+        return;
+        
     }
 
     if (node.typeAnnotation) {
@@ -80,18 +84,20 @@ function _isBaseType(baseName: string, type?, soft?): boolean {
         return t.isEmptyTypeAnnotation(type);
     } else if (baseName === "void") {
         return t.isVoidTypeAnnotation(type);
-    } else {
-        if (soft) {
-            return false;
-        } else {
-            throw new Error(`Unknown base type ${baseName}`);
-        }
-    }
+    } 
+    if (soft) {
+        return false;
+    } 
+    throw new Error(`Unknown base type ${baseName}`);
+        
+    
 }
 
 export function couldBeBaseType(name: string): boolean {
     const type = this.getTypeAnnotation();
-    if (t.isAnyTypeAnnotation(type)) return true;
+    if (t.isAnyTypeAnnotation(type)) {
+        return true; 
+    }
 
     if (t.isUnionTypeAnnotation(type)) {
         for (const type2 of (type.types: Object[])) {
@@ -100,9 +106,9 @@ export function couldBeBaseType(name: string): boolean {
             }
         }
         return false;
-    } else {
-        return _isBaseType(name, type, true);
-    }
+    } 
+    return _isBaseType(name, type, true);
+    
 }
 
 export function baseTypeStrictlyMatches(right: NodePath) {

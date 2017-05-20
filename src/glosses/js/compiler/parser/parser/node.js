@@ -12,7 +12,9 @@ class Node {
         this.start = pos;
         this.end = 0;
         this.loc = new SourceLocation(loc);
-        if (filename) this.loc.filename = filename;
+        if (filename) {
+            this.loc.filename = filename; 
+        }
     }
 
     type: string;
@@ -21,7 +23,7 @@ class Node {
     loc: SourceLocation;
 
     __clone(): Node {
-        const node2 = new Node;
+        const node2 = new Node();
         for (const key in this) {
             // Do not clone comments that are already attached to the node
             if (commentKeys.indexOf(key) < 0) {

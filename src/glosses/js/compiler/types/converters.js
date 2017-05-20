@@ -4,7 +4,9 @@ import * as t from "./index";
 
 export function toComputedKey(node: Object, key: Object = node.key || node.property): Object {
     if (!node.computed) {
-        if (t.isIdentifier(key)) key = t.stringLiteral(key.name);
+        if (t.isIdentifier(key)) {
+            key = t.stringLiteral(key.name);
+        }
     }
     return key;
 }
@@ -19,13 +21,17 @@ export function toComputedKey(node: Object, key: Object = node.key || node.prope
  */
 
 export function toSequenceExpression(nodes: Object[], scope: Scope): ?Object {
-    if (!nodes || !nodes.length) return;
+    if (!nodes || !nodes.length) {
+        return; 
+    }
 
     const declars = [];
     let bailed = false;
 
     const result = convert(nodes);
-    if (bailed) return;
+    if (bailed) {
+        return; 
+    }
 
     for (let i = 0; i < declars.length; i++) {
         scope.push(declars[i]);
@@ -43,7 +49,9 @@ export function toSequenceExpression(nodes: Object[], scope: Scope): ?Object {
             } else if (t.isExpressionStatement(node)) {
                 exprs.push(node.expression);
             } else if (t.isVariableDeclaration(node)) {
-                if (node.kind !== "var") return bailed = true; // bailed
+                if (node.kind !== "var") {
+                    return bailed = true; 
+                } // bailed
 
                 for (const declar of (node.declarations: Array)) {
                     const bindings = t.getBindingIdentifiers(declar);
@@ -64,7 +72,9 @@ export function toSequenceExpression(nodes: Object[], scope: Scope): ?Object {
             } else if (t.isIfStatement(node)) {
                 const consequent = node.consequent ? convert([node.consequent]) : scope.buildUndefinedNode();
                 const alternate = node.alternate ? convert([node.alternate]) : scope.buildUndefinedNode();
-                if (!consequent || !alternate) return bailed = true;
+                if (!consequent || !alternate) {
+                    return bailed = true; 
+                }
 
                 exprs.push(t.conditionalExpression(node.test, consequent, alternate));
             } else if (t.isBlockStatement(node)) {
@@ -89,9 +99,9 @@ export function toSequenceExpression(nodes: Object[], scope: Scope): ?Object {
 
         if (exprs.length === 1) {
             return exprs[0];
-        } else {
-            return t.sequenceExpression(exprs);
-        }
+        } 
+        return t.sequenceExpression(exprs);
+        
     }
 }
 
@@ -99,7 +109,7 @@ export function toKeyAlias(node: Object, key: Object = node.key): string {
     let alias;
 
     if (node.kind === "method") {
-        return toKeyAlias.increment() + "";
+        return `${toKeyAlias.increment()}`;
     } else if (t.isIdentifier(key)) {
         alias = key.name;
     } else if (t.isStringLiteral(key)) {
@@ -124,13 +134,13 @@ toKeyAlias.uid = 0;
 toKeyAlias.increment = function () {
     if (toKeyAlias.uid >= Number.MAX_SAFE_INTEGER) {
         return toKeyAlias.uid = 0;
-    } else {
-        return toKeyAlias.uid++;
-    }
+    } 
+    return toKeyAlias.uid++;
+    
 };
 
 export function toIdentifier(name: string): string {
-    name = name + "";
+    name = `${name}`;
 
     // replace all non-valid identifiers with dashes
     name = name.replace(/[^a-zA-Z0-9$_]/g, "-");
@@ -139,7 +149,7 @@ export function toIdentifier(name: string): string {
     name = name.replace(/^[-0-9]+/, "");
 
     // camel case
-    name = name.replace(/[-\s]+(.)?/g, function (match, c) {
+    name = name.replace(/[-\s]+(.)?/g, (match, c) => {
         return c ? c.toUpperCase() : "";
     });
 
@@ -152,7 +162,9 @@ export function toIdentifier(name: string): string {
 
 export function toBindingIdentifierName(name: string): string {
     name = toIdentifier(name);
-    if (name === "eval" || name === "arguments") name = "_" + name;
+    if (name === "eval" || name === "arguments") {
+        name = `_${name}`; 
+    }
     return name;
 }
 
@@ -186,9 +198,9 @@ export function toStatement(node: Object, ignore?: boolean) {
     if (!newType) {
         if (ignore) {
             return false;
-        } else {
-            throw new Error(`cannot turn ${node.type} to a statement`);
-        }
+        } 
+        throw new Error(`cannot turn ${node.type} to a statement`);
+        
     }
 
     node.type = newType;

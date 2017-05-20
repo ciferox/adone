@@ -21,7 +21,9 @@ export default {
         await this.root.unlink();
     },
     async start() {
-        if (this.skipStart) return;
+        if (this.skipStart) {
+            return;
+        }
         if (this.useReplicaSet) {
             this.port = 31000;
             this.topology = () => {
@@ -130,7 +132,7 @@ export default {
         // console.log("[connected to topology]");
         // Drop the database
         await new Promise((resolve, reject) => {
-            server.command(`${this.db}.$cmd`, { dropDatabase: 1 }, function (err) {
+            server.command(`${this.db}.$cmd`, { dropDatabase: 1 }, (err) => {
                 if (err) {
                     return reject(err);
                 }
@@ -142,13 +144,17 @@ export default {
     },
 
     stop() {
-        if (this.skipStop) return;
+        if (this.skipStop) {
+            return; 
+        }
         // Stop the servers
         return this.manager.stop();
     },
 
     async restart(options = { purge: true, kill: true }) {
-        if (this.skipStop) return;
+        if (this.skipStop) {
+            return; 
+        }
         // Stop the servers
         await this.manager.restart(options);
     },
@@ -158,14 +164,14 @@ export default {
     },
 
     newConnection(options, callback) {
-        if (typeof options == "function") {
+        if (typeof options === "function") {
             callback = options;
             options = {};
         }
 
         const server = this.topology(this, mongo);
         // Set up connect
-        server.once("connect", function () {
+        server.once("connect", () => {
             callback(null, server);
         });
 

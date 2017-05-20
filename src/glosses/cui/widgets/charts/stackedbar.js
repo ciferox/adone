@@ -155,15 +155,15 @@ export default class StackedBar extends adone.cui.widget.Canvas {
 
     getOptionsPrototype() {
         return {
-            barWidth: 1
-            , barSpacing: 1
-            , xOffset: 1
-            , maxValue: 1
-            , barBgColor: "s"
-            , data: {
-                barCategory: ["s"]
-                , stackedCategory: ["s"]
-                , data: [[1]]
+            barWidth: 1,
+            barSpacing: 1,
+            xOffset: 1,
+            maxValue: 1,
+            barBgColor: "s",
+            data: {
+                barCategory: ["s"],
+                stackedCategory: ["s"],
+                data: [[1]]
             }
         };
     }

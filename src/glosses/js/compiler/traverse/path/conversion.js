@@ -17,7 +17,9 @@ export function toComputedKey(): Object {
     }
 
     if (!node.computed) {
-        if (t.isIdentifier(key)) key = t.stringLiteral(key.name);
+        if (t.isIdentifier(key)) {
+            key = t.stringLiteral(key.name); 
+        }
     }
 
     return key;
@@ -29,7 +31,9 @@ export function ensureBlock() {
 
 export function arrowFunctionToShadowed() {
     // todo: maybe error
-    if (!this.isArrowFunctionExpression()) return;
+    if (!this.isArrowFunctionExpression()) {
+        return; 
+    }
 
     this.ensureBlock();
 

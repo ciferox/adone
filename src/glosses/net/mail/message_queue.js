@@ -23,9 +23,9 @@ function MessageQueue() {
 MessageQueue.prototype.get = function (callback) {
     if (this._instantQueue.length) {
         return callback(this._instantQueue.pop());
-    } else {
-        this._callbackQueue.unshift(callback);
-    }
+    } 
+    this._callbackQueue.unshift(callback);
+    
 };
 
 /**
@@ -36,32 +36,32 @@ MessageQueue.prototype.get = function (callback) {
  * @param {Number} [delay] If set, delay the availability of the data by {delay} milliseconds
  */
 MessageQueue.prototype.insert = function (data, delay) {
-    var container, added = -1;
+    let container, added = -1;
     if (typeof delay !== "number") {
         this._instantQueue.unshift(data);
         this._processInsert();
         return true;
-    } else {
-        container = {
-            data: data,
-            available: Date.now() + delay
-        };
-        for (var i = 0, len = this._sortedQueue.length; i < len; i++) {
-            if (this._sortedQueue[i].available >= container.available) {
-                this._sortedQueue.splice(i, 0, container);
-                added = i;
-                break;
-            }
-        }
-        if (added < 0) {
-            this._sortedQueue.push(container);
-            added = 0;
-        }
-
-        if (added === 0) {
-            this._updateShiftTimer();
+    } 
+    container = {
+        data,
+        available: Date.now() + delay
+    };
+    for (let i = 0, len = this._sortedQueue.length; i < len; i++) {
+        if (this._sortedQueue[i].available >= container.available) {
+            this._sortedQueue.splice(i, 0, container);
+            added = i;
+            break;
         }
     }
+    if (added < 0) {
+        this._sortedQueue.push(container);
+        added = 0;
+    }
+
+    if (added === 0) {
+        this._updateShiftTimer();
+    }
+    
 };
 
 /**
@@ -69,7 +69,7 @@ MessageQueue.prototype.insert = function (data, delay) {
  * in the queue that needs to be processed first.
  */
 MessageQueue.prototype._updateShiftTimer = function () {
-    var nextShift, now = Date.now();
+    let nextShift, now = Date.now();
     clearTimeout(this._shiftTimer);
 
     if (!this._sortedQueue.length) {
@@ -92,7 +92,7 @@ MessageQueue.prototype._updateShiftTimer = function () {
  * becomes avilable
  */
 MessageQueue.prototype._shiftSorted = function () {
-    var container;
+    let container;
     if (!this._sortedQueue.length) {
         return;
     }

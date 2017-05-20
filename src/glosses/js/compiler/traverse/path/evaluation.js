@@ -26,7 +26,9 @@ const INVALID_METHODS = ["random"];
 
 export function evaluateTruthy(): boolean {
     const res = this.evaluate();
-    if (res.confident) return !!res.value;
+    if (res.confident) {
+        return Boolean(res.value);
+    }
 }
 
 /**
@@ -47,20 +49,24 @@ export function evaluateTruthy(): boolean {
 export function evaluate(): { confident: boolean; value: any } {
     let confident = true;
     let deoptPath: ?NodePath;
-    const seen = new Map;
+    const seen = new Map();
 
     function deopt(path) {
-        if (!confident) return;
+        if (!confident) {
+            return; 
+        }
         deoptPath = path;
         confident = false;
     }
 
     let value = evaluate(this);
-    if (!confident) value = undefined;
+    if (!confident) {
+        value = undefined;
+    }
     return {
-        confident: confident,
+        confident,
         deopt: deoptPath,
-        value: value
+        value
     };
 
     // we wrap the _evaluate method so we can track `seen` nodes, we push an item
@@ -77,10 +83,10 @@ export function evaluate(): { confident: boolean; value: any } {
             const existing = seen.get(node);
             if (existing.resolved) {
                 return existing.value;
-            } else {
-                deopt(path);
-                return;
-            }
+            } 
+            deopt(path);
+                
+            
         } else {
             const item = { resolved: false };
             seen.set(node, item);
@@ -95,7 +101,9 @@ export function evaluate(): { confident: boolean; value: any } {
     }
 
     function _evaluate(path) {
-        if (!confident) return;
+        if (!confident) {
+            return; 
+        }
 
         const { node } = path;
 
@@ -120,28 +128,36 @@ export function evaluate(): { confident: boolean; value: any } {
 
             for (const elem of (node.quasis: Object[])) {
                 // not confident, evaluated an expression we don't like
-                if (!confident) break;
+                if (!confident) {
+                    break; 
+                }
 
                 // add on cooked element
                 str += elem.value.cooked;
 
                 // add on interpolated expression if it's present
                 const expr = exprs[i++];
-                if (expr) str += String(evaluate(expr));
+                if (expr) {
+                    str += String(evaluate(expr));
+                }
             }
 
-            if (!confident) return;
+            if (!confident) {
+                return;
+            }
             return str;
         }
 
         if (path.isConditionalExpression()) {
             const testResult = evaluate(path.get("test"));
-            if (!confident) return;
+            if (!confident) {
+                return;
+            }
             if (testResult) {
                 return evaluate(path.get("consequent"));
-            } else {
-                return evaluate(path.get("alternate"));
-            }
+            } 
+            return evaluate(path.get("alternate"));
+            
         }
 
         if (path.isExpressionWrapper()) { // TypeCastExpression, ExpressionStatement etc
@@ -175,22 +191,22 @@ export function evaluate(): { confident: boolean; value: any } {
 
             if (binding && binding.hasValue) {
                 return binding.value;
-            } else {
-                if (node.name === "undefined") {
-                    return undefined;
-                } else if (node.name === "Infinity") {
-                    return Infinity;
-                } else if (node.name === "NaN") {
-                    return NaN;
-                }
-
-                const resolved = path.resolve();
-                if (resolved === path) {
-                    return deopt(path);
-                } else {
-                    return evaluate(resolved);
-                }
+            } 
+            if (node.name === "undefined") {
+                return undefined;
+            } else if (node.name === "Infinity") {
+                return Infinity;
+            } else if (node.name === "NaN") {
+                return NaN;
             }
+
+            const resolved = path.resolve();
+            if (resolved === path) {
+                return deopt(path);
+            } 
+            return evaluate(resolved);
+                
+            
         }
 
         if (path.isUnaryExpression({ prefix: true })) {
@@ -205,10 +221,12 @@ export function evaluate(): { confident: boolean; value: any } {
             }
 
             const arg = evaluate(argument);
-            if (!confident) return;
+            if (!confident) {
+                return;
+            }
             switch (node.operator) {
                 case "!": return !arg;
-                case "+": return +arg;
+                case "+": return Number(arg);
                 case "-": return -arg;
                 case "~": return ~arg;
                 case "typeof": return typeof arg;
@@ -281,7 +299,9 @@ export function evaluate(): { confident: boolean; value: any } {
                         return left;
                     }
 
-                    if (!confident) return;
+                    if (!confident) {
+                        return;
+                    }
 
                     return left || right;
                 case "&&":
@@ -289,7 +309,9 @@ export function evaluate(): { confident: boolean; value: any } {
                         confident = true;
                     }
 
-                    if (!confident) return;
+                    if (!confident) {
+                        return;
+                    }
 
                     return left && right;
             }
@@ -297,9 +319,13 @@ export function evaluate(): { confident: boolean; value: any } {
 
         if (path.isBinaryExpression()) {
             const left = evaluate(path.get("left"));
-            if (!confident) return;
+            if (!confident) {
+                return;
+            }
             const right = evaluate(path.get("right"));
-            if (!confident) return;
+            if (!confident) {
+                return; 
+            }
 
             switch (node.operator) {
                 case "-": return left - right;
@@ -364,7 +390,9 @@ export function evaluate(): { confident: boolean; value: any } {
 
             if (func) {
                 const args = path.get("arguments").map(evaluate);
-                if (!confident) return;
+                if (!confident) {
+                    return; 
+                }
 
                 return func.apply(context, args);
             }

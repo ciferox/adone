@@ -1,5 +1,5 @@
 module.exports = {
-    nano: function (ns) {
+    nano(ns) {
         const start = process.hrtime();
         while (process.hrtime() < start + ns) { }
     }

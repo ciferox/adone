@@ -68,11 +68,11 @@ const Chips = {
         },
         frequency: {
             get() {
-                let state = priv.get(this);
+                const state = priv.get(this);
                 return state.frequency;
             },
             set(frequency) {
-                let state = priv.get(this);
+                const state = priv.get(this);
 
                 // Enforce maximum frequency of 10hz
                 if (frequency < 10) {
@@ -323,7 +323,7 @@ GPS.prototype.listen = function () {
     this.io.serialRead(state.portId, (data) => {
 
         input += new Buffer(data).toString("ascii");
-        let sentences = input.split("\r\n");
+        const sentences = input.split("\r\n");
 
         if (sentences.length > 1) {
             for (let i = 0; i < sentences.length - 1; i++) {

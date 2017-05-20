@@ -1,6 +1,6 @@
 const { is, fast } = adone;
 
-describe("FAST", function () {
+describe("FAST", () => {
     let root;
 
     before(async () => {
@@ -15,7 +15,7 @@ describe("FAST", function () {
         await root.clean();
     });
 
-    it("correct file info", async function () {
+    it("correct file info", async () => {
         const file = await root.addFile("in", "transpile.js");
         const files = await fast.src(file.path(), { base: root.path() });
         expect(files).to.have.lengthOf(1);
@@ -25,7 +25,7 @@ describe("FAST", function () {
         expect(files[0].extname).to.be.equal(".js");
     });
 
-    it("correct out file", async function () {
+    it("correct out file", async () => {
         const file0 = await root.addFile("in", "transpile.js");
         const out = root.getVirtualDirectory("out");
         const files = await fast
@@ -302,11 +302,11 @@ describe("FAST", function () {
                 { from: "src1/**/*", to: "dest1" },
                 { from: "src2/**/*", to: "dest2" }
             ], {
-                    cwd: root.path(), unlink: (...args) => {
-                        calls.push(args);
-                        return true;
-                    }
-                }).dest();
+                cwd: root.path(), unlink: (...args) => {
+                    calls.push(args);
+                    return true;
+                }
+            }).dest();
             await adone.promise.delay(100);  // the watcher init
             try {
                 const test1 = root.getVirtualFile("src1", "hello", "test1");
@@ -345,10 +345,10 @@ describe("FAST", function () {
                 { from: "src1/**/*", to: "dest1" },
                 { from: "src2/**/*", to: "dest2" }
             ], {
-                    cwd: root.path(), unlink: () => {
-                        throw new Error("wtf");
-                    }
-                }).dest());
+                cwd: root.path(), unlink: () => {
+                    throw new Error("wtf");
+                }
+            }).dest());
             await adone.promise.delay(100);  // the watcher init
             await root.getVirtualFile("src1", "test1").unlink();
             await result.then(() => {
@@ -371,11 +371,11 @@ describe("FAST", function () {
                 { from: "src1/**/*", to: "dest1" },
                 { from: "src2/**/*", to: "dest2" }
             ], {
-                    cwd: root.path(), unlink: async () => {
-                        await adone.promise.delay(100);
-                        throw new Error("wtf");
-                    }
-                }).dest());
+                cwd: root.path(), unlink: async () => {
+                    await adone.promise.delay(100);
+                    throw new Error("wtf");
+                }
+            }).dest());
             await adone.promise.delay(100);  // the watcher init
             await root.getVirtualFile("src1", "test1").unlink();
             await result.then(() => {

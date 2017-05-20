@@ -1097,7 +1097,7 @@ describe("WebSocket Netron", () => {
                 it("return true", async () => {
                     let isOK = false;
 
-                    class NewNetron extends Netron                    {
+                    class NewNetron extends Netron {
                         async onConfirmConnection(peer) {
                             assert.instanceOf(peer, adone.netron.GenesisPeer);
                             isOK = true;
@@ -1148,7 +1148,7 @@ describe("WebSocket Netron", () => {
                 });
 
                 it("disconnect", async () => {
-                    class NewNetron extends Netron                    {
+                    class NewNetron extends Netron {
                         async onConfirmConnection(peer) {
                             return peer.disconnect();
                         }
@@ -1183,7 +1183,7 @@ describe("WebSocket Netron", () => {
                 it("return true", async () => {
                     let isOK = false;
 
-                    class NewNetron extends Netron                    {
+                    class NewNetron extends Netron {
                         async onConfirmPeer(peer) {
                             assert.instanceOf(peer, adone.netron.GenesisPeer);
                             isOK = true;
@@ -1202,7 +1202,7 @@ describe("WebSocket Netron", () => {
                 });
 
                 it("return false", async () => {
-                    class NewNetron extends Netron                    {
+                    class NewNetron extends Netron {
                         async onConfirmPeer(peer) {
                             assert.instanceOf(peer, adone.netron.GenesisPeer);
                             return false;
@@ -1232,7 +1232,7 @@ describe("WebSocket Netron", () => {
                 });
 
                 it("disconnect", async () => {
-                    class NewNetron extends Netron                    {
+                    class NewNetron extends Netron {
                         async onConfirmPeer(peer) {
                             assert.instanceOf(peer, adone.netron.GenesisPeer);
                             return peer.disconnect();
@@ -1266,7 +1266,7 @@ describe("WebSocket Netron", () => {
                 it("check calling", async () => {
                     let isOK = false;
 
-                    class Client extends adone.netron.ws.Netron                    {
+                    class Client extends adone.netron.ws.Netron {
                         onSendHandshake(peer, packet) {
                             assert.instanceOf(peer, adone.netron.GenesisPeer);
                             isOK = true;
@@ -1281,18 +1281,18 @@ describe("WebSocket Netron", () => {
                 });
 
                 it("simple authorization", async () => {
-                    class ServerNetron extends Netron                    {
+                    class ServerNetron extends Netron {
                         async onConfirmPeer(peer, packet) {
                             const data = packet[adone.netron.GenesisNetron._DATA];
                             if (data.secret === "right secret") {
                                 return true;
-                            } else {
-                                return false;
-                            }
+                            } 
+                            return false;
+                            
                         }
                     }
 
-                    class ClientNetron extends adone.netron.ws.Netron                    {
+                    class ClientNetron extends adone.netron.ws.Netron {
                         constructor(uid, secret) {
                             super(uid);
                             this.secret = secret;
@@ -1330,10 +1330,10 @@ describe("WebSocket Netron", () => {
                 it.skip("custom action on server", async () => {
                     const min_action = ACTION.MAX - 20;
                     const max_action = ACTION.MAX - 1;
-                    const an =  Math.round(min_action + Math.random() * (max_action - min_action));
+                    const an = Math.round(min_action + Math.random() * (max_action - min_action));
                     const sendData = "hello";
                     const p = new Promise((resolve) => {
-                        class ServerNetron extends Netron                        {
+                        class ServerNetron extends Netron {
                             customProcessPacket(peer, flags, action, status, packet) {
                                 super.customProcessPacket(peer, flags, action, status, packet).then((res) => {
                                     if (!res) {
