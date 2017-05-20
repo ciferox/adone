@@ -1,5 +1,9 @@
-const toString = Object.prototype.toString;
-const hasOwnProperty = Object.prototype.hasOwnProperty;
+const objectProto = Object.prototype;
+const hasOwnProperty = objectProto.hasOwnProperty;
+const toString = objectProto.toString;
+const symToStringTag = Symbol.toStringTag;
+const funcToString = Function.prototype.toString;
+const objectCtorString = funcToString.call(Object);
 
 const getTag = (value) => {
     const rawTag = toString.call(value);
@@ -7,6 +11,33 @@ const getTag = (value) => {
         return "null";
     }
     return rawTag.substring(8, rawTag.length - 1).toLowerCase();
+};
+
+
+const baseGetTag = (value) => {
+    if (value == null) {
+        return value === undefined ? "[object Undefined]" : "[object Null]";
+    }
+    if (!(symToStringTag && symToStringTag in Object(value))) {
+        return toString.call(value);
+    }
+    const isOwn = hasOwnProperty.call(value, symToStringTag);
+    const tag = value[symToStringTag];
+    let unmasked = false;
+    try {
+        value[symToStringTag] = undefined;
+        unmasked = true;
+    } catch (e) { }
+
+    const result = toString.call(value);
+    if (unmasked) {
+        if (isOwn) {
+            value[symToStringTag] = tag;
+        } else {
+            delete value[symToStringTag];
+        }
+    }
+    return result;
 };
 
 const binaryExtensions = new Set([
@@ -185,8 +216,17 @@ const is = {
     json: (value) => (is.string(value) && value.endsWith(".json")) || is.object(value),
     // Checks whether given value is an object.
     object: (value) => !is.primitive(value),
-    // Checks whether given value is a plain object ({}).
-    plainObject: (value) => (value && value.constructor === Object),
+    plainObject: (value) => {
+        if (!(value != null && typeof value === "object") || baseGetTag(value) !== "[object Object]") {
+            return false;
+        }
+        const proto = Object.getPrototypeOf(value);
+        if (proto === null) {
+            return true;
+        }
+        const Ctor = hasOwnProperty.call(proto, "constructor") && proto.constructor;
+        return typeof Ctor === "function" && Ctor instanceof Ctor && funcToString.call(Ctor) === objectCtorString;
+    },
     // Checks whether given value is class
     class: (value) => (typeof (value) === "function" && is.propertyOwned(value, "prototype") && is.propertyOwned(value.prototype, "constructor") && value.prototype.constructor.toString().substring(0, 5) === "class"),
     // Checks whether given value is an empty object, i.e, an object without any own, enumerable, string keyed properties.
@@ -765,7 +805,7 @@ const is = {
     ip6: (ip) => {
         return ip6Regex.test(ip);
     },
-    arrayBuffer: (x) => Object.prototype.toString.call(x) === "[object ArrayBuffer]",
+    arrayBuffer: (x) => objectProto.toString.call(x) === "[object ArrayBuffer]",
     arrayBufferView: (x) => ArrayBuffer.isView(x),
     date: (value) => (getTag(value) === "date"),
     error: (value) => (getTag(value) === "error"),

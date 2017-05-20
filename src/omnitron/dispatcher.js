@@ -48,10 +48,7 @@ export default class Dispatcher {
                 if (is.netron(options)) {
                     netron = options;
                 } else {
-                    netron = new adone.netron.Netron(null, Object.assign({
-                        reconnects: 5,
-                        retryTimeout: 500
-                    }, options));
+                    netron = new adone.netron.Netron(null, options);
                 }
                 peer = await netron.connect(localGate);
                 status = _secondTime ? 0 : 1;
@@ -65,8 +62,6 @@ export default class Dispatcher {
 
                 const pid = await this.spawn();
                 if (is.number(pid)) {
-                    // Wait about 1 sec
-                    await adone.promise.delay(1000);
                     return this.connectLocal(options, forceStart, true);
                 }
             }

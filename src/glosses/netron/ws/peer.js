@@ -1,4 +1,4 @@
-const { is, x, data, ExBuffer, netron: { GenesisPeer }, net, std } = adone;
+const { is, x, ExBuffer, netron: { GenesisPeer }, net, std } = adone;
 
 export default class Peer extends GenesisPeer {
     constructor(options) {
@@ -44,7 +44,7 @@ export default class Peer extends GenesisPeer {
     write(data) {
         return new Promise((resolve, reject) => {
             const buf = new ExBuffer().skip(4);
-            const encoded = data.mpak.serializer.encode(data, buf).flip();
+            const encoded = adone.data.mpak.serializer.encode(data, buf).flip();
             encoded.writeUInt32BE(encoded.remaining() - 4, 0);
             const ws = this._ws;
             if (!is.null(ws) && ws.readyState === net.ws.WebSocket.OPEN) {
@@ -91,7 +91,7 @@ export default class Peer extends GenesisPeer {
         const buffer = ExBuffer.wrap(msgEvent.data);
         const packetSize = buffer.readUInt32BE();
         buffer.compact();
-        const result = data.mpak.tryDecode(buffer);
+        const result = adone.data.mpak.tryDecode(buffer);
         if (result) {
             if (packetSize === result.bytesConsumed) {
                 this._handler.call(this._handlerThisArg, this, result.value);

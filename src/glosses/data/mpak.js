@@ -100,7 +100,7 @@ export class Encoder {
                     for (const obj of x) {
                         this._encode(obj, buf);
                     }
-                } else if (is.object(x)) {
+                } else if (is.plainObject(x)) {
                     const keys = Object.keys(x);
 
                     if (keys.length < 16) {

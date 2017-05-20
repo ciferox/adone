@@ -1,7 +1,7 @@
+const { is } = adone;
+
 describe("is", () => {
     describe("is.deepEqual", () => {
-        const { is } = adone;
-
         describe("genertic", () => {
             describe("strings", () => {
 
@@ -511,6 +511,38 @@ describe("is", () => {
                     "eql({}, {}, <nullComparator>) === false");
             });
 
+        });
+    });
+
+    describe("plainObject", () => {
+        class Foo {
+            constructor() {
+                this.a = 1;
+            }
+        }
+
+        function Bar() {
+            this.a = 1;
+        }
+
+        it("class => false", () => {
+            assert.isFalse(adone.is.plainObject(new Foo()));
+        });
+
+        it("function => false", () => {
+            assert.isFalse(adone.is.plainObject(new Bar()));
+        });
+
+        it("[1, 2, 3] => false", () => {
+            assert.isFalse(is.plainObject([1, 2, 3]));
+        });
+
+        it("{ 'x': 0, 'y': 0 } => true", () => {
+            assert.isTrue(is.plainObject({ x: 0, y: 0 }));
+        });
+
+        it("Object.create(null) => true", () => {
+            assert.isTrue(is.plainObject(Object.create(null)));
         });
     });
 });

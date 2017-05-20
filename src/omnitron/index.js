@@ -364,7 +364,7 @@ export default class Omnitron extends adone.application.Application {
     @Description("Omnitron's environment variables")
     @Type(Object)
     envs() {
-        return process.env;
+        return adone.o({}, process.env);
     }
 
     @Public

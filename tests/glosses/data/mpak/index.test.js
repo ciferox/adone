@@ -1,8 +1,4 @@
-const { fs, path } = adone.std;
-const { Long } = adone.math;
-const { Serializer, serializer } = adone.data.mpak;
-const { IncompleteBufferError } = adone.x;
-
+const { x: { IncompleteBufferError }, data: { mpak: { Serializer, serializer } }, math: { Long }, std: { fs, path } } = adone;
 
 describe("Serializer", () => {
     it("encode/decode booleans", () => {
@@ -20,7 +16,7 @@ describe("Serializer", () => {
     describe("1-byte-length-buffers", () => {
 
         const build = function (size) {
-            const buf = new Buffer(size);
+            const buf = Buffer.allocUnsafe(size);
             buf.fill("a");
 
             return buf;
@@ -32,7 +28,7 @@ describe("Serializer", () => {
             all.push(build(Math.pow(2, 8) - 1));
             all.push(build(Math.pow(2, 6) + 1));
             all.push(build(1));
-            all.push(new Buffer(0));
+            all.push(Buffer.allocUnsafe(0));
 
             all.forEach((orig) => {
                 it(`mirror test a buffer of length ${orig.length}`, () => {
@@ -47,7 +43,7 @@ describe("Serializer", () => {
 
         it("decoding a chopped 2^8-1 bytes buffer", () => {
             const orig = build(Math.pow(2, 6));
-            let buf = new Buffer(2 + orig.length);
+            let buf = Buffer.allocUnsafe(2 + orig.length);
             buf[0] = 0xc4;
             buf[1] = Math.pow(2, 8) - 1; // set bigger size
             orig.copy(buf, 2);
@@ -58,7 +54,7 @@ describe("Serializer", () => {
         });
 
         it("decoding an incomplete header of 2^8-1 bytes buffer", () => {
-            let buf = new Buffer(1);
+            let buf = Buffer.allocUnsafe(1);
             buf[0] = 0xc4;
             buf = adone.ExBuffer.wrap(buf);
             const origLength = buf.length;
@@ -78,7 +74,7 @@ describe("Serializer", () => {
         };
 
         const mytypeEncode = function (obj, resbuf) {
-            const buf = new Buffer(obj.size);
+            const buf = Buffer.allocUnsafe(obj.size);
             buf.fill(obj.value);
             resbuf.write(buf);
         };
@@ -130,7 +126,7 @@ describe("Serializer", () => {
         it("decoding an incomplete variable ext data up to 0xff", () => {
             const length = 250;
             const obj = serializer.encode(new MyType(length, "a"));
-            let buf = new Buffer(length);
+            let buf = Buffer.allocUnsafe(length);
             buf[0] = 0xc7;
             buf.writeUInt8(length + 2, 1); // set bigger size
             obj.buffer.copy(buf, 2, 2, length);
@@ -139,7 +135,7 @@ describe("Serializer", () => {
         });
 
         it("decoding an incomplete header of variable ext data up to 0xff", () => {
-            let buf = new Buffer(2);
+            let buf = Buffer.allocUnsafe(2);
             buf[0] = 0xc7;
             buf = new adone.ExBuffer().write(buf);
             assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
@@ -182,7 +178,7 @@ describe("Serializer", () => {
             for (str = "a"; str.length < 40; str += "a") {
                 //
             }
-            let buf = new Buffer(2 + Buffer.byteLength(str));
+            let buf = Buffer.allocUnsafe(2 + Buffer.byteLength(str));
             buf[0] = 0xd9;
             buf[1] = Buffer.byteLength(str) + 10; // set bigger size
             buf.write(str, 2);
@@ -191,7 +187,7 @@ describe("Serializer", () => {
         });
 
         it("decoding an incomplete header of a string", () => {
-            let buf = new Buffer(1);
+            let buf = Buffer.allocUnsafe(1);
             buf[0] = 0xd9;
             buf = new adone.ExBuffer().write(buf);
             assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
@@ -230,7 +226,7 @@ describe("Serializer", () => {
 
         it("decoding an incomplete array", () => {
             const array = build(0xffff / 2);
-            let buf = new Buffer(3 + array.length);
+            let buf = Buffer.allocUnsafe(3 + array.length);
             buf[0] = 0xdc;
             buf.writeUInt16BE(array.length + 10, 1); // set bigger size
             let pos = 3;
@@ -244,7 +240,7 @@ describe("Serializer", () => {
         });
 
         it("decoding an incomplete header", () => {
-            let buf = new Buffer(2);
+            let buf = Buffer.allocUnsafe(2);
             buf[0] = 0xdc;
             buf = adone.ExBuffer.wrap(buf);
             assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
@@ -262,7 +258,7 @@ describe("Serializer", () => {
             };
 
             const mytypeEncode = function (obj, resbuf) {
-                const buf = new Buffer(obj.size);
+                const buf = Buffer.allocUnsafe(obj.size);
                 buf.fill(obj.value);
                 resbuf.write(buf);
             };
@@ -297,19 +293,19 @@ describe("Serializer", () => {
             const all = [];
             let str;
 
-            str = new Buffer(Math.pow(2, 8));
+            str = Buffer.allocUnsafe(Math.pow(2, 8));
             str.fill("a");
             all.push(str.toString());
 
-            str = new Buffer(Math.pow(2, 8) + 1);
+            str = Buffer.allocUnsafe(Math.pow(2, 8) + 1);
             str.fill("a");
             all.push(str.toString());
 
-            str = new Buffer(Math.pow(2, 14));
+            str = Buffer.allocUnsafe(Math.pow(2, 14));
             str.fill("a");
             all.push(str.toString());
 
-            str = new Buffer(Math.pow(2, 16) - 1);
+            str = Buffer.allocUnsafe(Math.pow(2, 16) - 1);
             str.fill("a");
             all.push(str.toString());
 
@@ -321,8 +317,9 @@ describe("Serializer", () => {
         it("decoding a chopped string", () => {
             let str;
             for (str = "a"; str.length < 0xff + 100; str += "a") {
+                /* empty */
             }
-            let buf = new Buffer(3 + Buffer.byteLength(str));
+            let buf = Buffer.allocUnsafe(3 + Buffer.byteLength(str));
             buf[0] = 0xda;
             buf.writeUInt16BE(Buffer.byteLength(str) + 10, 1); // set bigger size
             buf.write(str, 3);
@@ -331,7 +328,7 @@ describe("Serializer", () => {
         });
 
         it("decoding an incomplete header of a string", () => {
-            let buf = new Buffer(2);
+            let buf = Buffer.allocUnsafe(2);
             buf[0] = 0xda;
             buf = adone.ExBuffer.wrap(buf);
             assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
@@ -341,7 +338,7 @@ describe("Serializer", () => {
     describe("2-bytes-length-buffers", () => {
 
         const build = function (size) {
-            const buf = new Buffer(size);
+            const buf = Buffer.allocUnsafe(size);
             buf.fill("a");
 
             return buf;
@@ -362,7 +359,7 @@ describe("Serializer", () => {
 
         it("decoding a chopped 2^16-1 bytes buffer", () => {
             const orig = build(Math.pow(2, 12));
-            let buf = new Buffer(3 + orig.length);
+            let buf = Buffer.allocUnsafe(3 + orig.length);
             buf[0] = 0xc5;
             buf[1] = Math.pow(2, 16) - 1; // set bigger size
             orig.copy(buf, 3);
@@ -371,7 +368,7 @@ describe("Serializer", () => {
         });
 
         it("decoding an incomplete header of 2^16-1 bytes buffer", () => {
-            let buf = new Buffer(2);
+            let buf = Buffer.allocUnsafe(2);
             buf[0] = 0xc5;
             buf = adone.ExBuffer.wrap(buf);
             assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
@@ -416,7 +413,7 @@ describe("Serializer", () => {
         });
 
         it("decoding an incomplete header of a map", () => {
-            let buf = new Buffer(2);
+            let buf = Buffer.allocUnsafe(2);
             buf[0] = 0xde;
             buf = adone.ExBuffer.wrap(buf);
             assert.throws(() => serializer.decode(buf), IncompleteBufferError);
@@ -459,7 +456,7 @@ describe("Serializer", () => {
         });
 
         it("decoding an incomplete header", () => {
-            let buf = new Buffer(4);
+            let buf = Buffer.allocUnsafe(4);
             buf[0] = 0xdd;
             buf = adone.ExBuffer.wrap(buf);
             assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
@@ -468,7 +465,7 @@ describe("Serializer", () => {
 
     describe("4-bytes-length-buffers", () => {
         const build = function (size) {
-            const buf = new Buffer(size);
+            const buf = Buffer.allocUnsafe(size);
             buf.fill("a");
 
             return buf;
@@ -489,7 +486,7 @@ describe("Serializer", () => {
 
         it("decoding a chopped 2^32-1 bytes buffer", () => {
             const orig = build(Math.pow(2, 18));
-            let buf = new Buffer(5 + orig.length);
+            let buf = Buffer.allocUnsafe(5 + orig.length);
             buf[0] = 0xc6;
             buf[1] = Math.pow(2, 32) - 1; // set bigger size
             orig.copy(buf, 5);
@@ -498,7 +495,7 @@ describe("Serializer", () => {
         });
 
         it("decoding an incomplete header of 2^32-1 bytes buffer", () => {
-            let buf = new Buffer(4);
+            let buf = Buffer.allocUnsafe(4);
             buf[0] = 0xc6;
             buf = adone.ExBuffer.wrap(buf);
             assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
@@ -518,7 +515,7 @@ describe("Serializer", () => {
             };
 
             const mytypeEncode = function (obj, resbuf) {
-                const buf = new Buffer(obj.size);
+                const buf = Buffer.allocUnsafe(obj.size);
                 buf.fill(obj.value);
                 resbuf.write(buf);
             };
@@ -553,15 +550,15 @@ describe("Serializer", () => {
             const all = [];
             let str;
 
-            str = new Buffer(Math.pow(2, 16));
+            str = Buffer.allocUnsafe(Math.pow(2, 16));
             str.fill("a");
             all.push(str.toString());
 
-            str = new Buffer(Math.pow(2, 16) + 1);
+            str = Buffer.allocUnsafe(Math.pow(2, 16) + 1);
             str.fill("a");
             all.push(str.toString());
 
-            str = new Buffer(Math.pow(2, 20));
+            str = Buffer.allocUnsafe(Math.pow(2, 20));
             str.fill("a");
             all.push(str.toString());
 
@@ -575,7 +572,7 @@ describe("Serializer", () => {
             for (str = "a"; str.length < 0xffff + 100; str += "a") {
                 //
             }
-            let buf = new Buffer(5 + Buffer.byteLength(str));
+            let buf = Buffer.allocUnsafe(5 + Buffer.byteLength(str));
             buf[0] = 0xdb;
             buf.writeUInt32BE(Buffer.byteLength(str) + 10, 1); // set bigger size
             buf.write(str, 5);
@@ -584,7 +581,7 @@ describe("Serializer", () => {
         });
 
         it("decoding an incomplete header of a string", () => {
-            let buf = new Buffer(4);
+            let buf = Buffer.allocUnsafe(4);
             buf[0] = 0xdb;
             buf = adone.ExBuffer.wrap(buf);
             assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
@@ -630,7 +627,7 @@ describe("Serializer", () => {
         });
 
         it("decoding an incomplete 8-bits unsigned integer", () => {
-            let buf = new Buffer(1);
+            let buf = Buffer.allocUnsafe(1);
             buf[0] = 0xcc;
             buf = adone.ExBuffer.wrap(buf);
             assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
@@ -652,7 +649,7 @@ describe("Serializer", () => {
         });
 
         it("decoding an incomplete 8-bits big-endian signed integer", () => {
-            let buf = new Buffer(1);
+            let buf = Buffer.allocUnsafe(1);
             buf[0] = 0xd0;
             buf = adone.ExBuffer.wrap(buf);
             assert.throws(() => serializer.decode(buf), IncompleteBufferError);
@@ -744,7 +741,7 @@ describe("Serializer", () => {
             const map = {
                 topic: "hello",
                 qos: 1,
-                payload: new Buffer("world"),
+                payload: Buffer.from("world"),
                 messageId: "42",
                 ttl: 1416309270167
             };
@@ -785,7 +782,7 @@ describe("Serializer", () => {
         });
 
         it("decoding an incomplete 16-bits big-endian integer", () => {
-            let buf = new Buffer(2);
+            let buf = Buffer.allocUnsafe(2);
             buf[0] = 0xd1;
             buf = adone.ExBuffer.wrap(buf);
             assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
@@ -810,7 +807,7 @@ describe("Serializer", () => {
         });
 
         it("decoding an incomplete 16-bits big-endian unsigned integer", () => {
-            let buf = new Buffer(2);
+            let buf = Buffer.allocUnsafe(2);
             buf[0] = 0xcd;
             buf = adone.ExBuffer.wrap(buf);
             assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
@@ -833,7 +830,7 @@ describe("Serializer", () => {
         });
 
         it("decoding an incomplete 32-bits big-endian integer", () => {
-            let buf = new Buffer(4);
+            let buf = Buffer.allocUnsafe(4);
             buf[0] = 0xd2;
             buf = adone.ExBuffer.wrap(buf);
             assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
@@ -858,7 +855,7 @@ describe("Serializer", () => {
         });
 
         it("decoding an incomplete 32-bits big-endian unsigned integer", () => {
-            let buf = new Buffer(4);
+            let buf = Buffer.allocUnsafe(4);
             buf[0] = 0xce;
             buf = adone.ExBuffer.wrap(buf);
             assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
@@ -894,7 +891,7 @@ describe("Serializer", () => {
         });
 
         it("decoding an incomplete 64-bits big-endian signed integer", () => {
-            let buf = new Buffer(8);
+            let buf = Buffer.allocUnsafe(8);
             buf[0] = 0xd3;
             buf = adone.ExBuffer.wrap(buf);
             assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
@@ -915,7 +912,7 @@ describe("Serializer", () => {
         });
 
         it("decoding an incomplete 64-bits big-endian unsigned integer", () => {
-            let buf = new Buffer(8);
+            let buf = Buffer.allocUnsafe(8);
             buf[0] = 0xcf;
             buf = adone.ExBuffer.wrap(buf);
             assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
@@ -939,7 +936,7 @@ describe("Serializer", () => {
         });
 
         it("decoding an incomplete 64-bits float numbers", () => {
-            let buf = new Buffer(8);
+            let buf = Buffer.allocUnsafe(8);
             buf[0] = 0xcb;
             buf = adone.ExBuffer.wrap(buf);
             assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
@@ -1196,7 +1193,7 @@ describe("Serializer", () => {
         });
 
         it("decoding an incomplete 32-bits float numbers", () => {
-            let buf = new Buffer(4);
+            let buf = Buffer.allocUnsafe(4);
             buf[0] = 0xca;
             buf = adone.ExBuffer.wrap(buf);
             assert.throws(() => serializer.decode(buf.flip()), IncompleteBufferError);
@@ -1313,9 +1310,9 @@ describe("Serializer", () => {
 
         it("encode/decode map with multiple short buffers", () => {
             const map = {
-                first: new Buffer("first"),
-                second: new Buffer("second"),
-                third: new Buffer("third")
+                first: Buffer.from("first"),
+                second: Buffer.from("second"),
+                third: Buffer.from("third")
             };
 
             const decodedMap = serializer.decode(serializer.encode(map).flip());
