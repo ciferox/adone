@@ -29,7 +29,7 @@ describe("glosses", "net", "http", "server", "request", "ip", () => {
                 const socket = new Duplex();
                 Object.defineProperty(socket, "remoteAddress", {
                     get: () => undefined, // So that the helper doesn't override it with a reasonable value
-                    set: () => {}
+                    set: adone.noop
                 });
                 assert.equal(request({ socket }).ip, "");
             });

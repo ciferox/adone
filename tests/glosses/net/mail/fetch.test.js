@@ -241,7 +241,7 @@ describe("fetch tests", () => {
             expect(err).to.exist;
             done();
         });
-        req.on("end", () => {});
+        req.on("end", adone.noop);
     });
 
     it("should fetch HTTP data with custom redirect limit", (done) => {
@@ -270,7 +270,7 @@ describe("fetch tests", () => {
             expect(err).to.exist;
             done();
         });
-        req.on("end", () => {});
+        req.on("end", adone.noop);
     });
 
     it("should return disable redirects", (done) => {
@@ -285,7 +285,7 @@ describe("fetch tests", () => {
             expect(err).to.exist;
             done();
         });
-        req.on("end", () => {});
+        req.on("end", adone.noop);
     });
 
     it("should unzip compressed HTTP data", (done) => {
@@ -310,7 +310,7 @@ describe("fetch tests", () => {
             expect(err).to.exist;
             done();
         });
-        req.on("end", () => {});
+        req.on("end", adone.noop);
     });
 
     it("should return error for invalid status", (done) => {
@@ -323,7 +323,7 @@ describe("fetch tests", () => {
             expect(err).to.exist;
             done();
         });
-        req.on("end", () => {});
+        req.on("end", adone.noop);
     });
 
     it("should allow invalid status", (done) => {
@@ -354,7 +354,7 @@ describe("fetch tests", () => {
             expect(err).to.exist;
             done();
         });
-        req.on("end", () => {});
+        req.on("end", adone.noop);
     });
 
     it("should return timeout error", (done) => {
@@ -369,7 +369,7 @@ describe("fetch tests", () => {
             expect(err).to.exist;
             done();
         });
-        req.on("end", () => {});
+        req.on("end", adone.noop);
     });
 
     it("should handle basic HTTP auth", (done) => {
@@ -396,7 +396,7 @@ describe("fetch tests", () => {
                 expect(err).to.exist;
                 done();
             });
-            req.on("end", () => {});
+            req.on("end", adone.noop);
         });
     }
 
@@ -490,6 +490,6 @@ describe("fetch tests", () => {
             expect(err).to.exist;
             done();
         });
-        req.on("end", () => {});
+        req.on("end", adone.noop);
     });
 });

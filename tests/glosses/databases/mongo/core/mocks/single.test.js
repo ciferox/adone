@@ -86,7 +86,7 @@ describe("mongodb", function () {
                                 });
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Start dropping the packets
                     adone.promise.delay(5000).then(() => {
@@ -103,7 +103,7 @@ describe("mongodb", function () {
                     });
 
                     // Add event listeners
-                    replset.on("error", () => { });
+                    replset.on("error", adone.noop);
                     replset.connect();
                     const _server = await waitFor(replset, "connect");
                     const insert = promisify(_server.insert).bind(_server);
@@ -112,7 +112,7 @@ describe("mongodb", function () {
                     try {
                         for (; ;) {
                             await adone.promise.delay(500);
-                            const r = await insert("test.test", [{ created: new Date() }]).catch(() => { });
+                            const r = await insert("test.test", [{ created: new Date() }]).catch(adone.noop);
                             if (r) {
                                 expect(r.connection.port).to.be.equal(37019);
                                 break;
@@ -241,7 +241,7 @@ describe("mongodb", function () {
                         });
                     });
 
-                    server.on("error", () => { });
+                    server.on("error", adone.noop);
                     server.connect();
 
                     const _server = await new Promise((resolve) => {

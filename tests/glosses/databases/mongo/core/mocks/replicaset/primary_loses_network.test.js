@@ -131,7 +131,7 @@ describe("mongodb", function () {
                                 request.reply(primary[currentIsMasterIndex]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // First secondary state machine
                     (async () => {
@@ -143,7 +143,7 @@ describe("mongodb", function () {
                                 request.reply(firstSecondary[currentIsMasterIndex]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Second secondary state machine
                     (async () => {
@@ -155,7 +155,7 @@ describe("mongodb", function () {
                                 request.reply(secondSecondary[currentIsMasterIndex]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
                     Connection.enableConnectionAccounting();
 
                     // Attempt to connect

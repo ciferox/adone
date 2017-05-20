@@ -1,3 +1,3 @@
 console.log(process.argv[2]);
 
-setInterval(() => {}, 1000);
+setInterval(adone.noop, 1000);

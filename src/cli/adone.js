@@ -188,7 +188,7 @@ export default class AdoneCLI extends adone.application.Application {
 
                 ++filesCount;
             }
-        }).each(() => { });
+        }).each(adone.noop);
 
         return new Promise((resolve) => {
             search.on("end", () => {

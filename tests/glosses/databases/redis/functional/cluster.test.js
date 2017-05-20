@@ -1038,7 +1038,7 @@ describe("glosses", "databases", "redis", "cluster", () => {
                     return Redis.prototype.psubscribe(...args);
                 });
                 client.once("end", () => {
-                    client.connect().catch(() => { });
+                    client.connect().catch(adone.noop);
                 });
                 client.disconnect();
             });

@@ -233,7 +233,7 @@ export class Process extends AsyncEmitter {
         const container = this.constructor.containerPath;
         const { port } = config;
 
-        await adone.fs.rm(port).catch(() => { });
+        await adone.fs.rm(port).catch(adone.noop);
         this.process = std.child_process.spawn(config.interpreter, [container, port], {
             detached: true,
             stdio: ["ignore", this.fd.stdout, this.fd.stderr]
@@ -390,7 +390,7 @@ export class MainProcess extends Process {
     async createNewWorker(id = this._workers.size) {
         const pid = await this.container.setNewWorker(id);
         this._workers.set(id, { pid, alive: true, appeared: new Date().getTime(), disappeared: null });
-        this.emitParallel("newWorker", id, pid).catch(() => { });
+        this.emitParallel("newWorker", id, pid).catch(adone.noop);
         return [id, pid];
     }
 
@@ -400,7 +400,7 @@ export class MainProcess extends Process {
         }
         await this.container.deleteWorker(id);
         this._workers.delete(id);
-        this.emitParallel("deleteWorker", id).catch(() => { });
+        this.emitParallel("deleteWorker", id).catch(adone.noop);
     }
 
     killWorker(id, { graceful = false, timeout = 2000 } = {}) {

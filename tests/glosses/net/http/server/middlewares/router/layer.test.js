@@ -128,7 +128,7 @@ describe("glosses", "net", "http", "server", "middlewares", "router", "Layer", (
             }).to.throw("get `foo router`: `middleware` must be a function, not `undefined`");
 
             expect(() => {
-                router.post("/foo", () => { }, notexistHandle);
+                router.post("/foo", adone.noop, notexistHandle);
             }).to.throw("post `/foo`: `middleware` must be a function, not `undefined`");
         });
     });

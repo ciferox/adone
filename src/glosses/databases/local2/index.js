@@ -470,7 +470,7 @@ class Model extends events.EventEmitter {
         if (typeof options === "function") {
             cb = options; options = {};
         }
-        const callback = _.once(cb || (() => { }));
+        const callback = _.once(cb || (adone.noop));
         const multi = options.multi !== undefined ? options.multi : false;
         const upsert = options.upsert !== undefined ? options.upsert : false;
 

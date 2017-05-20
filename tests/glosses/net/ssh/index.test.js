@@ -1317,7 +1317,7 @@ describe("SSH", () => {
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
                 ctx.accept();
-            }).on("ready", () => { });
+            }).on("ready", adone.noop);
         });
         client.on("ready", () => {
             client.end();

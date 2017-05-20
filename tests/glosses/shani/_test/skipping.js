@@ -1,9 +1,9 @@
 skip(() => true);
 
 describe("ff", () => {
-    it("a", () => {});
-    it("b", () => {});
-    it("c", () => {});
-    it("d", () => {});
-    it("e", () => {});
+    it("a", adone.noop);
+    it("b", adone.noop);
+    it("c", adone.noop);
+    it("d", adone.noop);
+    it("e", adone.noop);
 });

@@ -81,7 +81,7 @@ describe("mongodb", function () {
                                 });
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     Connection.enableConnectionAccounting();
                     // Attempt to connect
@@ -154,7 +154,7 @@ describe("mongodb", function () {
                                 });
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     Connection.enableConnectionAccounting();
                     // Attempt to connect

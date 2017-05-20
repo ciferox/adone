@@ -27,7 +27,7 @@ describe("glosses", "net", "http", "client", "CancelToken", () => {
         });
 
         it("returns undefined if cancellation has not been requested", () => {
-            const token = new CancelToken(() => { });
+            const token = new CancelToken(adone.noop);
             expect(token.reason).to.be.undefined;
         });
     });
@@ -68,7 +68,7 @@ describe("glosses", "net", "http", "client", "CancelToken", () => {
         });
 
         it("does not throw if cancellation has not been requested", () => {
-            const token = new CancelToken(() => { });
+            const token = new CancelToken(adone.noop);
             token.throwIfRequested();
         });
     });

@@ -56,7 +56,7 @@ describe("glosses", "compressors", "xz", "stream", () => {
         it("should be able to decode .lzma in async mode", (done) => {
             const stream = xz.decompressStream();
             stream.on("end", done);
-            stream.on("data", () => { });
+            stream.on("data", adone.noop);
 
             if (lzma.asyncCodeAvailable) {
                 assert.isOk(!stream.sync);
@@ -68,7 +68,7 @@ describe("glosses", "compressors", "xz", "stream", () => {
         it("should be able to decode .xz in async mode", (done) => {
             const stream = xz.decompressStream();
             stream.on("end", done);
-            stream.on("data", () => { });
+            stream.on("data", adone.noop);
 
             if (xz.asyncCodeAvailable) {
                 assert.isOk(!stream.sync);
@@ -80,7 +80,7 @@ describe("glosses", "compressors", "xz", "stream", () => {
         it("should be able to decode .xz in sync mode", (done) => {
             const stream = xz.decompressStream({ sync: true });
             stream.on("end", done);
-            stream.on("data", () => { });
+            stream.on("data", adone.noop);
 
             assert.isOk(stream.sync);
 
@@ -98,7 +98,7 @@ describe("glosses", "compressors", "xz", "stream", () => {
                 assert.isOk(sawError);
                 done();
             });
-            stream.on("data", () => { });
+            stream.on("data", adone.noop);
 
             fs.createReadStream(commonFixturePath("small")).pipe(stream);
         });
@@ -114,7 +114,7 @@ describe("glosses", "compressors", "xz", "stream", () => {
                 assert.isOk(sawError);
                 done();
             });
-            stream.on("data", () => { });
+            stream.on("data", adone.noop);
 
             fs.createReadStream(commonFixturePath("small")).pipe(stream);
         });
@@ -389,7 +389,7 @@ describe("glosses", "compressors", "xz", "stream", () => {
         it("should return a meaningful value when decoding", (done) => {
             const stream = xz.decompressStream({ sync: true });
             stream.on("end", done);
-            stream.on("data", () => { });
+            stream.on("data", adone.noop);
 
             fs.createReadStream(fixturePath("hamlet.txt.lzma")).pipe(stream);
             assert.isOk(stream.memusage() > 0);
@@ -412,7 +412,7 @@ describe("glosses", "compressors", "xz", "stream", () => {
         it("should set values of memory limits", (done) => {
             const stream = xz.decompressStream({ sync: true });
             stream.on("end", done);
-            stream.on("data", () => { });
+            stream.on("data", adone.noop);
 
             assert.isOk(stream.memlimitGet() > 0);
             stream.memlimitSet(1 << 30);

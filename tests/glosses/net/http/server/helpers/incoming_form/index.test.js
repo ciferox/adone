@@ -139,7 +139,7 @@ describe("glosses", "net", "http", "helpers", "incoming form", () => {
                 });
                 req.on("response", (res) => {
                     assert.equal(res.statusCode, 500);
-                    res.on("data", () => { });
+                    res.on("data", adone.noop);
                     res.on("end", () => {
                         server.close();
                         done();

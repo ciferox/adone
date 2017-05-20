@@ -297,13 +297,13 @@ describe("mongodb", function () {
                 for (; !done;) {
                     await insert(ns, {
                         a: 1
-                    }).catch(() => { });
+                    }).catch(adone.noop);
                     const cursor = _server.cursor(ns, {
                         find: ns,
                         query: {},
                         batchSize: 2
                     });
-                    await promisify(cursor.next).call(cursor).catch(() => { });
+                    await promisify(cursor.next).call(cursor).catch(adone.noop);
                     await adone.promise.delay(500);
                 }
                 await insert(ns, {

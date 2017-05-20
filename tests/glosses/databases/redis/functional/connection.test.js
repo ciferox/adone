@@ -214,7 +214,7 @@ describe("glosses", "databases", "redis", "connection", () => {
                     });
                 }
             });
-            redis.get("foo").catch(() => { });
+            redis.get("foo").catch(adone.noop);
         });
     });
 

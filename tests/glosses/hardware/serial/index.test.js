@@ -80,7 +80,7 @@ describe("hardware", "serial", "Port", () => {
                 new Port("/dev/exists", {
                     baudRate: "whatever",
                     binding: adone.hardware.serial.MockBinding
-                }, () => { });
+                }, adone.noop);
             } catch (err) {
                 assert.instanceOf(err, Error);
                 done();
@@ -627,7 +627,7 @@ describe("hardware", "serial", "Port", () => {
                 }
 
                 try {
-                    port.update(() => { });
+                    port.update(adone.noop);
                 } catch (e) {
                     errors += 1;
                     assert.instanceOf(e, TypeError);
@@ -996,7 +996,7 @@ describe("hardware", "serial", "Port", () => {
                     assert.deepEqual(recvData, testData);
                     done();
                 });
-                port.binding.write(testData, () => { });
+                port.binding.write(testData, adone.noop);
             });
         });
     });

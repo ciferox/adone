@@ -170,7 +170,7 @@ describe("mongodb", function () {
                                 request.reply(primary[currentIsMasterIndex]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // First secondary state machine
                     (async () => {
@@ -182,7 +182,7 @@ describe("mongodb", function () {
                                 request.reply(firstSecondary[currentIsMasterIndex]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Second secondary state machine
                     (async () => {
@@ -194,7 +194,7 @@ describe("mongodb", function () {
                                 request.reply(secondSecondary[0]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     (async () => {
                         while (running) {
@@ -205,7 +205,7 @@ describe("mongodb", function () {
                                 request.reply(arbiter[currentIsMasterIndex]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     Connection.enableConnectionAccounting();
                     // Attempt to connect
@@ -232,11 +232,11 @@ describe("mongodb", function () {
                     const secondaries = {};
                     const arbiters = {};
 
-                    server.on("error", () => { });
+                    server.on("error", adone.noop);
                     server.on("connect", () => {
                         server.__connected = true;
                     });
-                    server.on("fullsetup", () => { });
+                    server.on("fullsetup", adone.noop);
 
                     adone.promise.delay(500).then(() => server.connect());
                     try {
@@ -390,7 +390,7 @@ describe("mongodb", function () {
                                 request.reply(primary[currentIsMasterIndex]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // First secondary state machine
                     (async () => {
@@ -402,7 +402,7 @@ describe("mongodb", function () {
                                 request.reply(firstSecondary[currentIsMasterIndex]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Second secondary state machine
                     (async () => {
@@ -414,7 +414,7 @@ describe("mongodb", function () {
                                 request.reply(secondSecondary[currentIsMasterIndex]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Arbiter state machine
                     (async () => {
@@ -426,7 +426,7 @@ describe("mongodb", function () {
                                 request.reply(arbiter[currentIsMasterIndex]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     Connection.enableConnectionAccounting();
                     // Attempt to connect
@@ -644,7 +644,7 @@ describe("mongodb", function () {
                                 request.reply(primary[currentIsMasterIndex]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // First secondary state machine
                     (async () => {
@@ -656,7 +656,7 @@ describe("mongodb", function () {
                                 request.reply(firstSecondary[currentIsMasterIndex]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Second secondary state machine
                     (async () => {
@@ -668,7 +668,7 @@ describe("mongodb", function () {
                                 request.reply(secondSecondary[currentIsMasterIndex]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Arbiter state machine
                     (async () => {
@@ -680,7 +680,7 @@ describe("mongodb", function () {
                                 request.reply(arbiter[currentIsMasterIndex]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     Connection.enableConnectionAccounting();
                     const server = new ReplSet([{

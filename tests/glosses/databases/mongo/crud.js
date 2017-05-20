@@ -11,9 +11,9 @@ describe("CRUD specs", function () {
                     for (const test of spec.tests) {
                         specify(test.description, async () => {
                             const col = this.db.collection("crud_spec_tests");
-                            await col.drop().catch(() => { });
+                            await col.drop().catch(adone.noop);
                             if (test.outcome.collection && test.outcome.collection.name) {
-                                await this.db.collection(test.outcome.collection.name).drop().catch(() => { });
+                                await this.db.collection(test.outcome.collection.name).drop().catch(adone.noop);
                             }
                             if (spec.data) {
                                 await col.insertMany(spec.data);

@@ -37,13 +37,13 @@ describe("core", () => {
         });
 
         it("should setup a transform function", () => {
-            const transform = () => { };
+            const transform = adone.noop;
             const c = core(null, { transform });
             expect(c._chain[0]._transform).to.be.equal(transform);
         });
 
         it("should setup a flush function", () => {
-            const flush = () => { };
+            const flush = adone.noop;
             const c = core(null, { flush });
             expect(c._chain[0]._flush).to.be.equal(flush);
         });
@@ -1126,7 +1126,7 @@ describe("core", () => {
 
             it("should return itself", () => {
                 const c = core();
-                expect(c.each(() => { })).to.be.equal(c);
+                expect(c.each(adone.noop)).to.be.equal(c);
             });
 
             it("should throw if the callback is not a function", () => {
@@ -1168,7 +1168,7 @@ describe("core", () => {
 
             it("should return itself", () => {
                 const c = core();
-                expect(c.toArray(() => { })).to.be.equal(c);
+                expect(c.toArray(adone.noop)).to.be.equal(c);
             });
 
             it("should throw if the callback is not a function", () => {
@@ -1199,7 +1199,7 @@ describe("core", () => {
             describe("then", () => {
                 it("should return Promise", () => {
                     const c = core();
-                    expect(c.then(() => { }, () => { })).to.be.instanceOf(Promise);
+                    expect(c.then(adone.noop, adone.noop)).to.be.instanceOf(Promise);
                 });
 
                 it("should resolve a promise using the toArray result", async () => {
@@ -1221,7 +1221,7 @@ describe("core", () => {
                 it("should be the same as then where onResolve is null", async () => {
                     const c = core();
                     const then = spy(c, "then");
-                    const cb = () => { };
+                    const cb = adone.noop;
                     c.catch(cb);
                     expect(then.calledOnce).to.be.true;
                     expect(then.args[0]).to.be.deep.equal([null, cb]);
@@ -1232,8 +1232,8 @@ describe("core", () => {
         describe("through", () => {
             it("should pipe a transform", () => {
                 const a = core();
-                const transform = () => { };
-                const flush = () => { };
+                const transform = adone.noop;
+                const flush = adone.noop;
                 a.through(transform, flush);
                 expect(a._chain).to.have.lengthOf(2);
                 expect(a._chain[1]).to.be.instanceOf(Transform);
@@ -1333,7 +1333,7 @@ describe("core", () => {
             it("should be the same as once(\"end\", callback) if current = false", () => {
                 const a = core();
                 const once = spy(a, "once");
-                a.done(() => {});
+                a.done(adone.noop);
                 expect(once.withArgs("end").calledOnce).to.be.true;
             });
 
@@ -1341,15 +1341,15 @@ describe("core", () => {
                 const a = core();
                 const lastOnce = spy(a._lastStream, "once");
                 const once = spy(a, "once");
-                a.done(() => {}, { current: true });
+                a.done(adone.noop, { current: true });
                 expect(once.withArgs("end").called).to.be.false;
                 expect(lastOnce.withArgs("end").calledOnce).to.be.true;
             });
 
             it("should return itself", () => {
                 const a = core();
-                expect(a.done(() => {})).to.be.equal(a);
-                expect(a.done(() => {})).to.be.equal(a);
+                expect(a.done(adone.noop)).to.be.equal(a);
+                expect(a.done(adone.noop)).to.be.equal(a);
             });
 
             it("should throw if the callback is not a function", () => {

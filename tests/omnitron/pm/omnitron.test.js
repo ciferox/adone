@@ -136,7 +136,7 @@ describe("Process manager", function () {
                                 path: fixture("invalid_script.js"),
                                 mode,
                                 instances: 4
-                            }).then(() => { }, (e) => e);
+                            }).then(adone.noop, (e) => e);
                             expect(e).to.be.ok;
                         });
 
@@ -636,7 +636,7 @@ describe("Process manager", function () {
                                     expect(data).to.be.equal("graceful\n");
                                 }
                             } finally {
-                                await pm.stop(name).catch(() => { });
+                                await pm.stop(name).catch(adone.noop);
                             }
                         });
                     });
@@ -1188,7 +1188,7 @@ describe("Process manager", function () {
                 afterEach("stopping applications", async () => {
                     const apps = await pm.list();
                     for (const { name } of apps) {
-                        await pm.stop(name).catch(() => { });
+                        await pm.stop(name).catch(adone.noop);
                     }
                 });
 
@@ -1467,7 +1467,7 @@ describe("Process manager", function () {
                                 await adone.promise.delay(100);
                             }
                         } finally {
-                            await pm.stop("test").catch(() => { });
+                            await pm.stop("test").catch(adone.noop);
                         }
                     });
 
@@ -1536,7 +1536,7 @@ describe("Process manager", function () {
                                 }
                             } finally {
                                 await tmp.unlink();
-                                await pm.stop("test").catch(() => { });
+                                await pm.stop("test").catch(adone.noop);
                             }
                         });
 
@@ -1584,7 +1584,7 @@ describe("Process manager", function () {
                                 await waitFor(() => pm.started("test"));
                             } finally {
                                 await tmp.unlink();
-                                await pm.stop("test").catch(() => { });
+                                await pm.stop("test").catch(adone.noop);
                             }
                         });
 
@@ -1724,7 +1724,7 @@ describe("Process manager", function () {
                         it("should use the restarting delay when restarts the workers", async () => {
                             const f = fixture("dynamic.js");
                             await adone.fs.writeFile(f, `
-                                setInterval(() => {}, 1000);
+                                setInterval(adone.noop, 1000);
                             `);
                             const p = await pm.start({
                                 name: "test",
@@ -1743,7 +1743,7 @@ describe("Process manager", function () {
                                 process.kill(workers[0].pid);
                                 await adone.promise.delay(500);
                                 await adone.fs.writeFile(f, `
-                                    setInterval(() => {}, 1000);
+                                    setInterval(adone.noop, 1000);
                                 `);
                                 await waitFor(async () => {
                                     const workers = await p.workers();
@@ -1752,7 +1752,7 @@ describe("Process manager", function () {
                                 expect(new Date().getTime() - t).to.be.at.least(2500);
                             } finally {
                                 await pm.stop("test");
-                                await adone.fs.unlink(f).catch(() => { });
+                                await adone.fs.unlink(f).catch(adone.noop);
                             }
                         });
 
@@ -1815,7 +1815,7 @@ describe("Process manager", function () {
                                 }
                             } finally {
                                 await tmp.unlink();
-                                await pm.stop("test").catch(() => { });
+                                await pm.stop("test").catch(adone.noop);
                             }
                         });
 

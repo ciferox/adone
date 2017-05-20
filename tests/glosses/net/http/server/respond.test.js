@@ -106,7 +106,7 @@ describe("glosses", "net", "http", "server", "respond", () => {
         it("should respond with a 404 if no body was set", async () => {
             const server = new Server();
 
-            server.use(() => {});
+            server.use(adone.noop);
 
             await request(server)
                 .head("/")

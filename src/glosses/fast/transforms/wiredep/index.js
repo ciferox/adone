@@ -20,9 +20,9 @@ async function wiredep(options = {}) {
     config = new HelperStore();
 
     config.set
-        ("on-file-updated", options.onFileUpdated || () => { })
-        ("on-main-not-found", options.onMainNotFound || () => { })
-        ("on-path-injected", options.onPathInjected || () => { });
+        ("on-file-updated", options.onFileUpdated || adone.noop)
+        ("on-main-not-found", options.onMainNotFound || adone.noop)
+        ("on-path-injected", options.onPathInjected || adone.noop);
 
     config.set
         ("bower.json", options.bowerJson || JSON.parse(await adone.fs.readFile(adone.std.path.join(cwd, "./bower.json"))))

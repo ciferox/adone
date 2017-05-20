@@ -47,7 +47,7 @@ const Controllers = {
                     if ((timer.difTime / 1000000) > duration) {
                         clearTimer.call(this);
                     }
-                }, null, `${tone}u`, () => { });
+                }, null, `${tone}u`, adone.noop);
 
                 return this;
             }

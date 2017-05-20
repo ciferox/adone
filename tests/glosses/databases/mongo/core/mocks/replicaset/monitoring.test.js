@@ -136,7 +136,7 @@ describe("mongodb", function () {
                                 });
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // First secondary state machine
                     (async () => {
@@ -161,7 +161,7 @@ describe("mongodb", function () {
                                 });
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Second secondary state machine
                     (async () => {
@@ -179,7 +179,7 @@ describe("mongodb", function () {
                                 });
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Start dropping the packets
                     adone.promise.delay(5000).then(() => {
@@ -222,7 +222,7 @@ describe("mongodb", function () {
                     const insert = promisify(_server.insert).bind(_server);
                     for (; ;) {
                         await adone.promise.delay(1);
-                        const r = await insert("test.test", [{ created: new Date() }]).catch(() => { });
+                        const r = await insert("test.test", [{ created: new Date() }]).catch(adone.noop);
                         if (r && r.connection.port === 32001) {
                             break;
                         }

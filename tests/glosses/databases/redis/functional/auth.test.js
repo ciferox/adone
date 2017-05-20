@@ -19,7 +19,7 @@ describe("glosses", "databases", "redis", "auth", () => {
     it("should send auth before other commands", (done) => {
         let authed = false;
         const redis = new Redis({ port: 17379, password: "pass" });
-        redis.get("foo").catch(() => { });
+        redis.get("foo").catch(adone.noop);
         const server = new MockServer(17379, (argv) => {
             if (argv[0] === "auth" && argv[1] === "pass") {
                 authed = true;
@@ -39,7 +39,7 @@ describe("glosses", "databases", "redis", "auth", () => {
         redis.once("ready", () => {
             begin = true;
             redis.disconnect({ reconnect: true });
-            redis.get("foo").catch(() => { });
+            redis.get("foo").catch(adone.noop);
         });
         const server = new MockServer(17379, (argv) => {
             if (!begin) {

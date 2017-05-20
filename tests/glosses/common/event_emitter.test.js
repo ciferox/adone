@@ -103,15 +103,15 @@ describe("Event emitter", () => {
     describe("listenerCount", () => {
         it("should be equal 2", () => {
             const emitter = new EventEmitter();
-            emitter.on("foo", () => { });
-            emitter.on("foo", () => { });
+            emitter.on("foo", adone.noop);
+            emitter.on("foo", adone.noop);
 
             expect(emitter.listenerCount("foo")).to.be.equal(2);
         });
 
         it("should be equal 1", () => {
             const emitter = new EventEmitter();
-            emitter.on("baz", () => { });
+            emitter.on("baz", adone.noop);
             expect(emitter.listenerCount("baz")).to.be.equal(1);
         });
 
@@ -122,21 +122,21 @@ describe("Event emitter", () => {
 
         it("should support any type", () => {
             const emitter = new EventEmitter();
-            emitter.on(123, () => { });
+            emitter.on(123, adone.noop);
             expect(emitter.listenerCount(123)).to.be.equal(1);
         });
 
         it("should work using the static method", () => {
             const emitter = new EventEmitter();
-            emitter.on("foo", () => { });
-            emitter.on("foo", () => { });
+            emitter.on("foo", adone.noop);
+            emitter.on("foo", adone.noop);
             expect(EventEmitter.listenerCount(emitter, "foo")).to.be.equal(2);
         });
     });
 
     describe("listeners", () => {
-        const listener = () => { };
-        const listener2 = () => { };
+        const listener = adone.noop;
+        const listener2 = adone.noop;
 
         it("should return listeners", () => {
             const ee = new EventEmitter();
@@ -247,8 +247,8 @@ describe("Event emitter", () => {
                 done();
             });
 
-            e.on("event-type", () => { });
-            e.on("event-type", () => { });
+            e.on("event-type", adone.noop);
+            e.on("event-type", adone.noop);
         });
 
         it("should emit a warning message for 'null' event", (done) => {
@@ -265,8 +265,8 @@ describe("Event emitter", () => {
                 done();
             });
 
-            e.on(null, () => { });
-            e.on(null, () => { });
+            e.on(null, adone.noop);
+            e.on(null, adone.noop);
         });
 
         it("should emit a warning message for a symbol", (done) => {
@@ -285,8 +285,8 @@ describe("Event emitter", () => {
                 done();
             });
 
-            e.on(symbol, () => { });
-            e.on(symbol, () => { });
+            e.on(symbol, adone.noop);
+            e.on(symbol, adone.noop);
         });
     });
 
@@ -439,7 +439,7 @@ describe("Event emitter", () => {
     });
 
     describe("removeAllListeners", () => {
-        const listener = () => { };
+        const listener = adone.noop;
 
         it("should remove all listeners for an event", () => {
             const ee = new EventEmitter();
@@ -508,8 +508,8 @@ describe("Event emitter", () => {
     });
 
     describe("removeListener", () => {
-        const listener1 = () => { };
-        const listener2 = () => { };
+        const listener1 = adone.noop;
+        const listener2 = adone.noop;
 
         it("it should remove a listener", () => {
             const ee = new EventEmitter();
@@ -645,7 +645,7 @@ describe("Event emitter", () => {
 
     it("should correctly handle special event names", () => {
         const ee = new EventEmitter();
-        const handler = () => { };
+        const handler = adone.noop;
 
         ee.on("__proto__", handler);
         ee.on("__defineGetter__", handler);
@@ -669,8 +669,8 @@ describe("Event emitter", () => {
 
             expect(EE.eventNames()).to.be.empty;
                         
-            const m = () => { };
-            EE.on("foo", () => { });
+            const m = adone.noop;
+            EE.on("foo", adone.noop);
             expect(EE.eventNames()).to.be.deep.equal(["foo"]);
 
             EE.on("bar", m);

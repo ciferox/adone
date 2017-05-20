@@ -35,7 +35,7 @@ describe("Connection tests", () => {
                 });
             },
             onData(stream, session, callback) {
-                stream.on("data", () => {});
+                stream.on("data", adone.noop);
                 stream.on("end", callback);
             },
             logger: false
@@ -44,13 +44,13 @@ describe("Connection tests", () => {
         insecureServer = new SMTPServer({
             disabledCommands: ["STARTTLS", "AUTH"],
             onData(stream, session, callback) {
-                stream.on("data", () => {});
+                stream.on("data", adone.noop);
                 stream.on("end", callback);
             },
             logger: false
         });
 
-        invalidServer = net.createServer(() => {});
+        invalidServer = net.createServer(adone.noop);
 
         secureServer = new SMTPServer({
             secure: true,
@@ -63,7 +63,7 @@ describe("Connection tests", () => {
                 });
             },
             onData(stream, session, callback) {
-                stream.on("data", () => {});
+                stream.on("data", adone.noop);
                 stream.on("end", callback);
             },
             logger: false
@@ -441,7 +441,7 @@ describe("Login tests", function () {
             disabledCommands: ["STARTTLS", "AUTH"],
 
             onData(stream, session, callback) {
-                stream.on("data", () => {});
+                stream.on("data", adone.noop);
                 stream.on("end", () => {
                     const response = session.envelope.rcptTo.map((rcpt, i) => {
                         if (i % 2) {

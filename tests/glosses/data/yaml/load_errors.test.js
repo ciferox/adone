@@ -13,7 +13,7 @@ describe("glosses", "data", "yaml", "load errors", () => {
             assert.throws(() => {
                 yaml.loadAll(
                     yamlSource,
-                    () => { },
+                    adone.noop,
                     {
                         filename: file.filename(),
                         schema: TEST_SCHEMA,

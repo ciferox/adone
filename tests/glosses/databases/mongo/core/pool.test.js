@@ -157,7 +157,7 @@ describe("mongodb", function () {
                         numberToSkip: 0,
                         numberToReturn: 1
                     });
-                    _pool.write(query, () => { });
+                    _pool.write(query, adone.noop);
                 });
 
                 pool.on("timeout", () => {
@@ -303,7 +303,7 @@ describe("mongodb", function () {
                     bson: new BSON(),
                     size: 1,
                     socketTimeout: 500,
-                    messageHandler: () => { }
+                    messageHandler: adone.noop
                 });
                 const _pool = await new Promise((resolve) => {
                     pool.on("connect", resolve);

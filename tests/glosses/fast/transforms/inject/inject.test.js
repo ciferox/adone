@@ -450,7 +450,7 @@ describe("FAST", () => {
                     "lib.js"
                 ]);
 
-                const stream = target.pipe(inject(sources, { transform: () => {} }));
+                const stream = target.pipe(inject(sources, { transform: adone.noop }));
 
                 streamShouldContain(stream, ["issue74.html"], done);
             });

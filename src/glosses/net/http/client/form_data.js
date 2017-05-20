@@ -30,7 +30,7 @@ class DelayedStream extends std.stream.Stream {
             return realEmit.apply(source, arguments);
         };
 
-        source.on("error", () => { });
+        source.on("error", adone.noop);
         if (delayedStream.pauseStream) {
             source.pause();
         }

@@ -32,7 +32,7 @@ const bundleTemplate = `
         debug: console.debug,
         trace: console.trace,
         null: Symbol(),
-        noop: () => { },
+        noop: adone.noop,
         identity: (x) => x,
         truly: () => true,
         falsely: () => false,

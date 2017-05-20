@@ -414,7 +414,7 @@ Cursor.getMatchesStream = function (db, query, sort, prefetched) {
                 stream.emit("error", new Error("getIdsForQuery returned null after index building"));
             }
         });
-    }, () => { });
+    }, adone.noop);
 
     /* Stream the documents themselves: push all to the retriever queue */
     stream.on("ids", stream.trigger = function (ids) {

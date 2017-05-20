@@ -71,7 +71,7 @@ describe("Process manager", () => {
                 });
                 const peer = await netron.connect({ port });
                 const simple = peer.getInterfaceByName("simple");
-                setTimeout(() => simple.exit().catch(() => { }), 666);
+                setTimeout(() => simple.exit().catch(adone.noop), 666);
                 const rp = new stuff.PRemoteProcess(p.pid, peer);
                 const t = new Date().getTime();
                 await new Promise((resolve) => rp.on("exit", resolve));

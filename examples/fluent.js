@@ -88,7 +88,7 @@ function fluent(cls) {
                             }
                         }
 
-                        return new Proxy(instance[name] || (() => {}), {
+                        return new Proxy(instance[name] || (adone.noop), {
                             apply: (target, thisValue, args) => {
                                 if (name === 'then' || name === 'catch') {
                                     return _promise[name].apply(_promise, args);

@@ -607,7 +607,7 @@ export class IO extends adone.EventEmitter {
             register = null;
         }
 
-        callback = is.function(callback) ? callback : () => { };
+        callback = is.function(callback) ? callback : adone.noop;
 
         let event = `i2c-reply-${address}-`;
         event += !is.null(register) ? register : 0;

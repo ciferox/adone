@@ -65,7 +65,7 @@ function run() {
 
 // tests
 
-const nop = () => { };
+const nop = adone.noop;
 
 const waitFor = (emitter, event) => new Promise((resolve) => emitter.once(event, resolve));
 
@@ -867,7 +867,7 @@ describe("Engine", () => {
                 const results = [];
 
                 describe("/", () => {
-                    before("before", () => { });
+                    before("before", adone.noop);
 
                     it("test1", () => {
                         results.push("1");
@@ -1314,7 +1314,7 @@ describe("Engine", () => {
                 const results = [];
 
                 describe("/", () => {
-                    after("after", () => { });
+                    after("after", adone.noop);
 
                     it("test1", () => {
                         results.push("1");
@@ -1614,7 +1614,7 @@ describe("Engine", () => {
                 const results = [];
 
                 describe("/", () => {
-                    beforeEach("before each", () => { });
+                    beforeEach("before each", adone.noop);
 
                     it("test1", () => {
                         results.push("1");
@@ -1699,7 +1699,7 @@ describe("Engine", () => {
                 const results = [];
 
                 describe("/", () => {
-                    beforeEach(() => { });
+                    beforeEach(adone.noop);
 
                     it("test1", () => {
                         results.push("1");
@@ -1934,7 +1934,7 @@ describe("Engine", () => {
                 const results = [];
 
                 describe("/", () => {
-                    afterEach("after each", () => { });
+                    afterEach("after each", adone.noop);
 
                     it("test1", () => {
                         results.push("1");
@@ -2019,7 +2019,7 @@ describe("Engine", () => {
                 const results = [];
 
                 describe("/", () => {
-                    afterEach(() => { });
+                    afterEach(adone.noop);
 
                     it("test1", () => {
                         results.push("1");
@@ -3391,7 +3391,7 @@ describe("Engine", () => {
             const engine = new Engine();
             const { root, describe, it } = engine.context();
             describe("a", "b", "c", "d", () => {
-                it("e", () => { });
+                it("e", adone.noop);
             });
             assert.equal(root.children.length, 1);
             assert.equal(root.children[0].name, "a");
@@ -3416,7 +3416,7 @@ describe("Engine", () => {
         it("should return the last block", () => {
             const engine = new Engine();
             const { describe, it } = engine.context();
-            const c = describe("a", "b", "c", () => { });
+            const c = describe("a", "b", "c", adone.noop);
 
             assert.equal(c.name, "c");
         });

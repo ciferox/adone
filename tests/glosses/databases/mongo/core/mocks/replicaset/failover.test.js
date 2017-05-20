@@ -162,7 +162,7 @@ describe("mongodb", function () {
                                 }
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // First secondary state machine
                     (async () => {
@@ -178,7 +178,7 @@ describe("mongodb", function () {
                                 }
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Second secondary state machine
                     (async () => {
@@ -194,7 +194,7 @@ describe("mongodb", function () {
                                 }
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     Connection.enableConnectionAccounting();
                     // Attempt to connect
@@ -212,7 +212,7 @@ describe("mongodb", function () {
                     Server.enableServerAccounting();
 
                     adone.promise.delay(100).then(() => server.connect());
-                    server.on("error", () => { });
+                    server.on("error", adone.noop);
                     await waitFor(server, "connect");
                     server.__connected = true;
                     await adone.promise.delay(100);
@@ -391,7 +391,7 @@ describe("mongodb", function () {
                                 }
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // First secondary state machine
                     (async () => {
@@ -407,7 +407,7 @@ describe("mongodb", function () {
                                 }
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Second secondary state machine
                     (async () => {
@@ -423,7 +423,7 @@ describe("mongodb", function () {
                                 }
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     Connection.enableConnectionAccounting();
                     // Attempt to connect

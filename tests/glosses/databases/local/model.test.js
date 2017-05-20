@@ -137,7 +137,7 @@ describe("Model", () => {
 
             const file = tmpdir.getVirtualFile("test1.db");
 
-            await file.unlink().catch(() => {});
+            await file.unlink().catch(adone.noop);
 
             expect(await file.exists()).to.be.false;
 

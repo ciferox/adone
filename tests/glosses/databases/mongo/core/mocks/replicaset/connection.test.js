@@ -96,7 +96,7 @@ describe("mongodb", function () {
                                 request.reply(primary[0]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // First secondary state machine
                     (async () => {
@@ -108,7 +108,7 @@ describe("mongodb", function () {
                                 request.reply(firstSecondary[0]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Second secondary state machine
                     (async () => {
@@ -120,7 +120,7 @@ describe("mongodb", function () {
                                 request.reply(arbiter[0]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     Connection.enableConnectionAccounting();
                     // Attempt to connect
@@ -231,7 +231,7 @@ describe("mongodb", function () {
                                 request.reply(primary[0]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // First secondary state machine
                     (async () => {
@@ -243,7 +243,7 @@ describe("mongodb", function () {
                                 request.reply(firstSecondary[0]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Second secondary state machine
                     (async () => {
@@ -255,7 +255,7 @@ describe("mongodb", function () {
                                 request.reply(arbiter[0]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     Connection.enableConnectionAccounting();
                     // Attempt to connect
@@ -358,7 +358,7 @@ describe("mongodb", function () {
                                 request.reply(primary[0]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // First secondary state machine
                     (async () => {
@@ -370,7 +370,7 @@ describe("mongodb", function () {
                                 request.reply(firstSecondary[0]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     Connection.enableConnectionAccounting();
                     // Attempt to connect
@@ -462,7 +462,7 @@ describe("mongodb", function () {
                                 request.reply(firstSecondary[0]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     Connection.enableConnectionAccounting();
                     // Attempt to connect
@@ -540,7 +540,7 @@ describe("mongodb", function () {
                                 request.reply(firstSecondary[0]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Second secondary state machine
                     (async () => {
@@ -552,7 +552,7 @@ describe("mongodb", function () {
                                 request.reply(arbiter[0]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
                     Connection.enableConnectionAccounting();
                     // Attempt to connect
                     const server = new ReplSet([
@@ -658,7 +658,7 @@ describe("mongodb", function () {
                                 request.reply(primary[0]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // First secondary state machine
                     (async () => {
@@ -670,7 +670,7 @@ describe("mongodb", function () {
                                 request.reply(firstSecondary[0]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Second secondary state machine
                     (async () => {
@@ -682,7 +682,7 @@ describe("mongodb", function () {
                                 request.reply(arbiter[0]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
                     Connection.enableConnectionAccounting();
                     // Attempt to connect
                     const server = new ReplSet([
@@ -764,7 +764,7 @@ describe("mongodb", function () {
                                 request.reply(primary[0]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // First secondary state machine
                     (async () => {
@@ -776,7 +776,7 @@ describe("mongodb", function () {
                                 request.reply(firstSecondary[0]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     Connection.enableConnectionAccounting();
                     // Attempt to connect
@@ -884,7 +884,7 @@ describe("mongodb", function () {
                                 request.reply(primary[0]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // First secondary state machine
                     (async () => {
@@ -896,7 +896,7 @@ describe("mongodb", function () {
                                 request.reply(firstSecondary[0]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Second secondary state machine
                     (async () => {
@@ -908,7 +908,7 @@ describe("mongodb", function () {
                                 request.reply(arbiter[0]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     Connection.enableConnectionAccounting();
                     // Attempt to connect
@@ -1013,7 +1013,7 @@ describe("mongodb", function () {
                                 request.reply(primary[0]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Second secondary state machine
                     (async () => {
@@ -1025,7 +1025,7 @@ describe("mongodb", function () {
                                 request.reply(arbiter[0]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     Connection.enableConnectionAccounting();
                     // Attempt to connect
@@ -1136,7 +1136,7 @@ describe("mongodb", function () {
                                 request.reply(primary[0]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // First secondary state machine
                     (async () => {
@@ -1148,7 +1148,7 @@ describe("mongodb", function () {
                                 request.reply(firstSecondary[0]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Second secondary state machine
                     (async () => {
@@ -1160,7 +1160,7 @@ describe("mongodb", function () {
                                 request.reply(arbiter[0]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     Connection.enableConnectionAccounting();
                     // Attempt to connect

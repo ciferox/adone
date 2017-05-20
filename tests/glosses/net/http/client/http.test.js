@@ -328,7 +328,7 @@ describe("glosses", "net", "http", "client", "unit", () => {
                     };
                     const proxyAuth = request.headers["proxy-authorization"];
                     http.get(opts, (res) => {
-                        res.on("data", () => { });
+                        res.on("data", adone.noop);
                         res.on("end", () => {
                             response.setHeader("Content-Type", "text/html; charset=UTF-8");
                             response.end(proxyAuth);
@@ -368,7 +368,7 @@ describe("glosses", "net", "http", "client", "unit", () => {
                     const proxyAuth = request.headers["proxy-authorization"];
 
                     http.get(opts, (res) => {
-                        res.on("data", () => { });
+                        res.on("data", adone.noop);
                         res.on("end", () => {
                             response.setHeader("Content-Type", "text/html; charset=UTF-8");
                             response.end(proxyAuth);
@@ -401,7 +401,7 @@ describe("glosses", "net", "http", "client", "unit", () => {
                     const proxyAuth = request.headers["proxy-authorization"];
 
                     http.get(opts, (res) => {
-                        res.on("data", () => { });
+                        res.on("data", adone.noop);
                         res.on("end", () => {
                             response.setHeader("Content-Type", "text/html; charset=UTF-8");
                             response.end(proxyAuth);

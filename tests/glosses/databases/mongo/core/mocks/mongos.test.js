@@ -97,7 +97,7 @@ describe("mongodb", function () {
                                 });
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     const _server = new Mongos([{
                         host: "localhost",
@@ -114,7 +114,7 @@ describe("mongodb", function () {
 
                     await new Promise((resolve) => {
                         _server.once("connect", resolve);
-                        _server.on("error", () => { });
+                        _server.on("error", adone.noop);
                         _server.connect();
                     });
                     try {
@@ -127,7 +127,7 @@ describe("mongodb", function () {
                                     expect(r.connection.port).to.be.equal(52000);
                                     running = false;
                                 }
-                            }, () => { });
+                            }, adone.noop);
                             await adone.promise.delay(500);
                         }
                     } finally {
@@ -189,7 +189,7 @@ describe("mongodb", function () {
                                 });
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Attempt to connect
                     const _server = new Mongos([{
@@ -205,7 +205,7 @@ describe("mongodb", function () {
                     // Are we done
                     await new Promise((resolve) => {
                         _server.once("connect", resolve);
-                        _server.on("error", () => { });
+                        _server.on("error", adone.noop);
                         _server.connect();
                     });
 
@@ -264,7 +264,7 @@ describe("mongodb", function () {
                                 });
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
                     (async () => {
                         while (running) {
                             const request = await mongos2.receive();
@@ -281,7 +281,7 @@ describe("mongodb", function () {
                                 });
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
                     const server = new Mongos([{
                         host: "localhost",
                         port: 52000
@@ -299,7 +299,7 @@ describe("mongodb", function () {
                     });
                     const _server = await new Promise((resolve) => {
                         server.on("connect", resolve);
-                        server.on("error", () => { });
+                        server.on("error", adone.noop);
                         server.connect();
                     });
                     try {
@@ -359,7 +359,7 @@ describe("mongodb", function () {
                                 });
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     (async () => {
                         while (running) {
@@ -380,7 +380,7 @@ describe("mongodb", function () {
                                 });
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Attempt to connect
                     const server = new Mongos([{
@@ -403,7 +403,7 @@ describe("mongodb", function () {
                         // Add event listeners
                         await new Promise((resolve) => {
                             server.once("fullsetup", resolve);
-                            server.on("error", () => { });
+                            server.on("error", adone.noop);
                             server.connect();
                         });
                         try {
@@ -502,7 +502,7 @@ describe("mongodb", function () {
                                 });
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Attempt to connect
                     const server = new Mongos([{
@@ -577,7 +577,7 @@ describe("mongodb", function () {
                                 });
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Attempt to connect
                     const server = new Mongos([{
@@ -650,7 +650,7 @@ describe("mongodb", function () {
                                 request.reply([]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     const server = new Mongos([{
                         host: "localhost",
@@ -720,7 +720,7 @@ describe("mongodb", function () {
                                 request.reply([]);
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Attempt to connect
                     const server = new Mongos([{
@@ -789,7 +789,7 @@ describe("mongodb", function () {
                                 return mongos1.destroy();
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Mongos
                     (async () => {
@@ -808,7 +808,7 @@ describe("mongodb", function () {
                                 });
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Attempt to connect
                     const server = new Mongos([{
@@ -834,7 +834,7 @@ describe("mongodb", function () {
                         for (; ;) {
                             const r = await insert("test.test", [{
                                 created: new Date()
-                            }]).catch(() => { });
+                            }]).catch(adone.noop);
                             if (r) {
                                 expect(r.connection.port).to.be.equal(52001);
                                 break;
@@ -886,7 +886,7 @@ describe("mongodb", function () {
                                 });
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Mongos
                     (async () => {
@@ -905,7 +905,7 @@ describe("mongodb", function () {
                                 });
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Attempt to connect
                     const server = new Mongos([{
@@ -932,7 +932,7 @@ describe("mongodb", function () {
                             await adone.promise.delay(500);
                             const r = await insert("test.test", [{
                                 created: new Date()
-                            }]).catch(() => { });
+                            }]).catch(adone.noop);
                             if (r) {
                                 expect(r.connection.port).to.be.equal(52001);
                                 break;
@@ -948,7 +948,7 @@ describe("mongodb", function () {
                                 created: new Date()
                             }]).then((r) => {
                                 proxies.add(r.connection.port);
-                            }, () => { });
+                            }, adone.noop);
                         }
                     } finally {
                         server.destroy();
@@ -997,7 +997,7 @@ describe("mongodb", function () {
                                 });
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Mongos
                     (async () => {
@@ -1019,7 +1019,7 @@ describe("mongodb", function () {
                                 });
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Attempt to connect
                     const server = new Mongos([{
@@ -1045,7 +1045,7 @@ describe("mongodb", function () {
                         await adone.promise.delay(500);
                         await insert("test.test", [{
                             created: new Date()
-                        }]).catch(() => { });
+                        }]).catch(adone.noop);
                         if (currentStep === 0) {
                             ++currentStep;
                         }
@@ -1056,7 +1056,7 @@ describe("mongodb", function () {
                                 created: new Date()
                             }]).then((r) => {
                                 proxies.add(r.connection.port);
-                            }, () => { });
+                            }, adone.noop);
                         }
                     } finally {
                         server.destroy();

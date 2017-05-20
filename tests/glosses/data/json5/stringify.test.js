@@ -6,7 +6,7 @@ const simpleCases = [
     "", "''", "999", "9aa", "aaa", "aa a", "aa\na", "aa\\a", "'", "\\'", '\\"',
     undefined,
     true, false,
-    {}, [], function () {}, () => {}, 
+    {}, [], function () {}, adone.noop, 
     Date.now(), new Date(Date.now())
 ];
 

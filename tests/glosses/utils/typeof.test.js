@@ -12,7 +12,7 @@ describe("typeOf", () => {
     });
 
     it("function", () => {
-        assert(util.typeOf(() => { }) === "function");
+        assert(util.typeOf(adone.noop) === "function");
     });
 
     it("arguments", function () {
@@ -365,7 +365,7 @@ describe("typeOf", () => {
         });
 
         it("arrow function", () => {
-            assert(util.typeOf(eval("() => {}")) === "function");
+            assert(util.typeOf(eval("adone.noop")) === "function");
         });
 
         it("generator function", () => {

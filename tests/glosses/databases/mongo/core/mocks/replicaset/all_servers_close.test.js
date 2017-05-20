@@ -102,7 +102,7 @@ describe("mongodb", function () {
                                 }
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // First secondary state machine
                     (async () => {
@@ -118,7 +118,7 @@ describe("mongodb", function () {
                                 }
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Second secondary state machine
                     (async () => {
@@ -134,7 +134,7 @@ describe("mongodb", function () {
                                 }
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     Connection.enableConnectionAccounting();
                     // Attempt to connect
@@ -240,7 +240,7 @@ describe("mongodb", function () {
                                 }
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // First secondary state machine
                     (async () => {
@@ -257,7 +257,7 @@ describe("mongodb", function () {
                                 }
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     // Second secondary state machine
                     (async () => {
@@ -274,7 +274,7 @@ describe("mongodb", function () {
                                 }
                             }
                         }
-                    })().catch(() => { });
+                    })().catch(adone.noop);
 
                     Connection.enableConnectionAccounting();
                     // Attempt to connect
@@ -296,7 +296,7 @@ describe("mongodb", function () {
                     adone.promise.delay(25000).then(() => die = false);
                     try {
                         for (let i = 0; i < 15; ++i) {
-                            server.command("admin.$cmd", { ismaster: true }, () => { });
+                            server.command("admin.$cmd", { ismaster: true }, adone.noop);
                             await adone.promise.delay(2000);
                         }
                         await promisify(server.command).call(server, "admin.$cmd", { ismaster: true });

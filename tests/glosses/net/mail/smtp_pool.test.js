@@ -34,7 +34,7 @@ describe("SMTP Pool Tests", function () {
             disabledCommands: ["STARTTLS"],
 
             onData(stream, session, callback) {
-                stream.on("data", () => {});
+                stream.on("data", adone.noop);
                 stream.on("end", callback);
             },
 

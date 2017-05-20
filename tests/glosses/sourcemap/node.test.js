@@ -33,7 +33,7 @@ describe("glosses", "sourcemap", "node", () => {
             node.add({});
         });
         assert.throws(() => {
-            node.add(() => { });
+            node.add(adone.noop);
         });
     });
 
@@ -68,7 +68,7 @@ describe("glosses", "sourcemap", "node", () => {
             node.prepend({});
         });
         assert.throws(() => {
-            node.prepend(() => { });
+            node.prepend(adone.noop);
         });
     });
 

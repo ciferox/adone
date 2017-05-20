@@ -7,4 +7,4 @@ process.on("SIGINT", () => {
     clearInterval(interval);
 });
 
-const interval = setInterval(() => {}, 1000);
+const interval = setInterval(adone.noop, 1000);

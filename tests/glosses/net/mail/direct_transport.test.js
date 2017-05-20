@@ -35,7 +35,7 @@ describe("SMTP Transport Tests", function () {
             disabledCommands: ["STARTTLS", "AUTH"],
 
             onData(stream, session, callback) {
-                stream.on("data", () => {});
+                stream.on("data", adone.noop);
                 stream.on("end", () => {
                     let err;
                     if (/retry@/.test(session.envelope.mailFrom.address) && retryCount++ < 3) {

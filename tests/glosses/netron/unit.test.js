@@ -476,7 +476,7 @@ describe("Netron", () => {
 
                 it("empty function instead instance", () => {
                     try {
-                        superNetron._checkContext(() => {});
+                        superNetron._checkContext(adone.noop);
                     } catch (err) {
                         assert.instanceOf(err, adone.x.NotValid);
                         return;

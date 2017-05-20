@@ -137,7 +137,7 @@ describe("glosses", "promise", () => {
 
         it("should return the passed promise", async () => {
             const p = Promise.resolve(10);
-            expect(promise.nodeify(p, () => { })).to.be.equal(p);
+            expect(promise.nodeify(p, adone.noop)).to.be.equal(p);
         });
 
         it("should throw if the first argument is not a promise", () => {
@@ -203,13 +203,13 @@ describe("glosses", "promise", () => {
         });
 
         it("should set the promisified property", () => {
-            const getSecrets = () => { };
+            const getSecrets = adone.noop;
             const f = promise.promisify(getSecrets);
             expect(f[Symbol.for("adone:promise:promisified")]).to.be.true;
         });
 
         it("should set the promisified source property", () => {
-            const getSecrets = () => { };
+            const getSecrets = adone.noop;
             const f = promise.promisify(getSecrets);
             expect(f[Symbol.for("adone:promise:promisify_source")]).to.be.equal(getSecrets);
         });

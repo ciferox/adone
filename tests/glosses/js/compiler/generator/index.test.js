@@ -334,7 +334,7 @@ const suites = helperFixture(`${__dirname}/fixtures`);
 suites.forEach((testSuite) => {
     describe(`generation/${testSuite.title}`, () => {
         testSuite.tests.forEach((task) => {
-            it(task.title, task.disabled ? () => {} : () => {
+            it(task.title, task.disabled ? adone.noop : () => {
                 const taskExpect = task.expect;
                 const actual = task.actual;
                 const actualCode = actual.code;

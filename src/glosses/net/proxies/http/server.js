@@ -565,12 +565,12 @@ class WSSessionContext {
 
         this._incomingComposed = adone.net.http.server.helper.compose(this.incomingTransforms);
         this._incoming = (data, flags) => {
-            this._incomingComposed({ data, flags }).catch(() => { });
+            this._incomingComposed({ data, flags }).catch(adone.noop);
         };
 
         this._outgoingComposed = adone.net.http.server.helper.compose(this.outgoingTransforms);
         this._outgoing = (data, flags) => {
-            this._outgoingComposed({ data, flags }).catch(() => { });  // swallow all the errors
+            this._outgoingComposed({ data, flags }).catch(adone.noop);  // swallow all the errors
         };
 
         this.localCloseCode = null;

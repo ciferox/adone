@@ -424,8 +424,8 @@ describe("glosses", "net", "http", "server", "middlewares", "router", "Router", 
             const router = new Router();
             server.use(router.routes());
             server.use(router.allowedMethods());
-            router.get("/users", () => { });
-            router.put("/users", () => { });
+            router.get("/users", adone.noop);
+            router.put("/users", adone.noop);
             await request(server)
                 .options("/users")
                 .expectStatus(204)
@@ -435,9 +435,9 @@ describe("glosses", "net", "http", "server", "middlewares", "router", "Router", 
         it("responds with 405 Method Not Allowed", async () => {
             const server = new Server();
             const router = new Router();
-            router.get("/users", () => { });
-            router.put("/users", () => { });
-            router.post("/events", () => { });
+            router.get("/users", adone.noop);
+            router.put("/users", adone.noop);
+            router.post("/events", adone.noop);
             server.use(router.routes());
             server.use(router.allowedMethods());
             await request(server)
@@ -462,9 +462,9 @@ describe("glosses", "net", "http", "server", "middlewares", "router", "Router", 
                 });
             });
             server.use(router.allowedMethods({ throw: true }));
-            router.get("/users", () => { });
-            router.put("/users", () => { });
-            router.post("/events", () => { });
+            router.get("/users", adone.noop);
+            router.put("/users", adone.noop);
+            router.post("/events", adone.noop);
             await request(server)
                 .post("/users")
                 .expectStatus(405)
@@ -500,9 +500,9 @@ describe("glosses", "net", "http", "server", "middlewares", "router", "Router", 
                     return notAllowedErr;
                 }
             }));
-            router.get("/users", () => { });
-            router.put("/users", () => { });
-            router.post("/events", () => { });
+            router.get("/users", adone.noop);
+            router.put("/users", adone.noop);
+            router.post("/events", adone.noop);
             await request(server)
                 .post("/users")
                 .expectStatus(405)
@@ -519,8 +519,8 @@ describe("glosses", "net", "http", "server", "middlewares", "router", "Router", 
             const router = new Router();
             server.use(router.routes());
             server.use(router.allowedMethods());
-            router.get("/users", () => { });
-            router.put("/users", () => { });
+            router.get("/users", adone.noop);
+            router.put("/users", adone.noop);
             await request(server)
                 .search("/users")
                 .expectStatus(501);
@@ -542,8 +542,8 @@ describe("glosses", "net", "http", "server", "middlewares", "router", "Router", 
                 });
             });
             server.use(router.allowedMethods({ throw: true }));
-            router.get("/users", () => { });
-            router.put("/users", () => { });
+            router.get("/users", adone.noop);
+            router.put("/users", adone.noop);
             await request(server)
                 .search("/users")
                 .expectStatus(501)
@@ -580,8 +580,8 @@ describe("glosses", "net", "http", "server", "middlewares", "router", "Router", 
                     return notImplementedErr;
                 }
             }));
-            router.get("/users", () => { });
-            router.put("/users", () => { });
+            router.get("/users", adone.noop);
+            router.put("/users", adone.noop);
             await request(server)
                 .search("/users")
                 .expectStatus(501)
@@ -636,7 +636,7 @@ describe("glosses", "net", "http", "server", "middlewares", "router", "Router", 
             for (const method of methods) {
                 expect(router).to.have.property(method);
                 expect(router[method]).to.be.a("function");
-                router[method]("/", () => { });
+                router[method]("/", adone.noop);
             }
             expect(router.stack).to.have.lengthOf(methods.length);
         });
@@ -644,28 +644,28 @@ describe("glosses", "net", "http", "server", "middlewares", "router", "Router", 
         it("registers route with a regexp path", () => {
             const router = new Router();
             for (const method of methods) {
-                expect(router[method](/^\/\w$/i, () => { })).to.be.equal(router);
+                expect(router[method](/^\/\w$/i, adone.noop)).to.be.equal(router);
             }
         });
 
         it("registers route with a given name", () => {
             const router = new Router();
             for (const method of methods) {
-                expect(router[method](method, "/", () => { })).to.be.equal(router);
+                expect(router[method](method, "/", adone.noop)).to.be.equal(router);
             }
         });
 
         it("registers route with with a given name and regexp path", () => {
             const router = new Router();
             for (const method of methods) {
-                expect(router[method](method, /^\/$/i, () => { })).to.be.equal(router);
+                expect(router[method](method, /^\/$/i, adone.noop)).to.be.equal(router);
             }
         });
 
         it("enables route chaining", () => {
             const router = new Router();
             for (const method of methods) {
-                expect(router[method]("/", () => { })).to.be.equal(router);
+                expect(router[method]("/", adone.noop)).to.be.equal(router);
             }
         });
 
@@ -838,7 +838,7 @@ describe("glosses", "net", "http", "server", "middlewares", "router", "Router", 
             const router = new Router();
             expect(router).to.have.property("register");
             expect(router.register).to.be.a("function");
-            router.register("/", ["GET", "POST"], () => { });
+            router.register("/", ["GET", "POST"], adone.noop);
             server.use(router.routes());
             expect(router.stack).to.be.an("array");
             expect(router.stack).to.have.property("length", 1);
@@ -863,8 +863,8 @@ describe("glosses", "net", "http", "server", "middlewares", "router", "Router", 
             const server = new Server();
             const router = new Router();
             server.use(router.routes());
-            router.get("home", "/", () => { });
-            router.get("sign-up-form", "/sign-up-form", () => { });
+            router.get("home", "/", adone.noop);
+            router.get("sign-up-form", "/sign-up-form", adone.noop);
             router.redirect("home", "sign-up-form");
             await request(server)
                 .post("/")

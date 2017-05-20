@@ -510,8 +510,8 @@ describe("Persistence", () => {
             const sfile = tmpdir.getVirtualFile("it.db~");
             const p = new Persistence({ db: { inMemoryOnly: false, filename: file.path() } });
 
-            await file.unlink().catch(() => {});
-            await sfile.unlink().catch(() => {});
+            await file.unlink().catch(adone.noop);
+            await sfile.unlink().catch(adone.noop);
 
             await storage.ensureDatafileIntegrity(p.filename);
 
@@ -525,8 +525,8 @@ describe("Persistence", () => {
             const sfile = tmpdir.getVirtualFile("it.db~");
             const p = new Persistence({ db: { inMemoryOnly: false, filename: file.path() } });
 
-            await file.unlink().catch(() => {});
-            await sfile.unlink().catch(() => {});
+            await file.unlink().catch(adone.noop);
+            await sfile.unlink().catch(adone.noop);
 
             await file.write("something");
 
@@ -546,8 +546,8 @@ describe("Persistence", () => {
             const sfile = tmpdir.getVirtualFile("it.db~");
             const p = new Persistence({ db: { inMemoryOnly: false, filename: file.path() } });
 
-            await file.unlink().catch(() => {});
-            await sfile.unlink().catch(() => {});
+            await file.unlink().catch(adone.noop);
+            await sfile.unlink().catch(adone.noop);
 
             await sfile.write("something");
 
@@ -568,8 +568,8 @@ describe("Persistence", () => {
             const sfile = tmpdir.getVirtualFile("it.db~");
             const theDb = new Datastore({ filename: file.path() });
 
-            await file.unlink().catch(() => {});
-            await sfile.unlink().catch(() => {});
+            await file.unlink().catch(adone.noop);
+            await sfile.unlink().catch(adone.noop);
 
 
             await file.write("{\"_id\":\"0\",\"hello\":\"world\"}");
@@ -668,8 +668,8 @@ describe("Persistence", () => {
             const file = tmpdir.getVirtualFile("test2.db");
             const sfile = tmpdir.getVirtualFile("test2.db~");
 
-            await file.unlink().catch(() => {});
-            await sfile.unlink().catch(() => {});
+            await file.unlink().catch(adone.noop);
+            await sfile.unlink().catch(adone.noop);
 
             const theDb = new Datastore({ filename: file.path() });
 
@@ -685,8 +685,8 @@ describe("Persistence", () => {
             const file = tmpdir.getVirtualFile("test2.db");
             const sfile = tmpdir.getVirtualFile("test2.db~");
 
-            await file.unlink().catch(() => {});
-            await sfile.unlink().catch(() => {});
+            await file.unlink().catch(adone.noop);
+            await sfile.unlink().catch(adone.noop);
 
             const theDb = new Datastore({ filename: file.path() });
 
@@ -734,8 +734,8 @@ describe("Persistence", () => {
             const file = tmpdir.getVirtualFile("lac.db");
             const sfile = tmpdir.getVirtualFile("lac.db~");
 
-            await file.unlink().catch(() => {});
-            await sfile.unlink().catch(() => {});
+            await file.unlink().catch(adone.noop);
+            await sfile.unlink().catch(adone.noop);
 
             // Creating a db file with 150k records (a bit long to load)
             let toWrite = "";

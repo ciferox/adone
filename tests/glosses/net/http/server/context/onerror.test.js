@@ -155,12 +155,12 @@ describe("glosses", "net", "http", "server", "context", "onerror(err)", () => {
             let removed = 0;
             const ctx = context();
 
-            ctx.server.emit = () => { };
+            ctx.server.emit = adone.noop;
             ctx.res = {
                 getHeaderNames: () => ["content-type", "content-length"],
                 removeHeader: () => removed++,
-                end: () => { },
-                emit: () => { }
+                end: adone.noop,
+                emit: adone.noop
             };
 
             ctx.onerror(new Error("error"));

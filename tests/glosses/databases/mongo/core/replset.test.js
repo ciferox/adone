@@ -172,7 +172,7 @@ describe("mongodb", function () {
                         }
                         return s.name === this.name;
                     },
-                    destroy: () => { }
+                    destroy: adone.noop
                 });
             });
 
@@ -193,14 +193,14 @@ describe("mongodb", function () {
                 if (Object.keys(x[1]).length === 0) {
                     state.remove({
                         name: x[0],
-                        lastIsMaster: () => { },
+                        lastIsMaster: adone.noop,
                         equals(s) {
                             if (typeof s === "string") {
                                 return s === this.name;
                             }
                             return s.name === this.name;
                         },
-                        destroy: () => { }
+                        destroy: adone.noop
                     });
                 } else {
                     const ismaster = x[1];
@@ -217,7 +217,7 @@ describe("mongodb", function () {
                             }
                             return s.name === this.name;
                         },
-                        destroy: () => { }
+                        destroy: adone.noop
                     });
                 }
             });

@@ -8,4 +8,4 @@ process.on("message", (msg) => {
     }
 });
 
-setInterval(() => {}, 1000);
+setInterval(adone.noop, 1000);

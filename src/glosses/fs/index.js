@@ -500,7 +500,7 @@ export const mkdirp = (path, mode, fn, made) => {
         made = null;
     }
 
-    const cb = fn || (() => { });
+    const cb = fn || (adone.noop);
     path = adone.std.path.resolve(path);
 
     xfs.mkdir(path, mode, (err) => {
@@ -536,7 +536,7 @@ export const mkdirp = (path, mode, fn, made) => {
 
 export const mkdir = (path, mode) => {
     if (is.array(path)) {
-        return Promise.all(path.map((x) => mkdir(x, mode))).then(() => { });
+        return Promise.all(path.map((x) => mkdir(x, mode))).then(adone.noop);
     }
     return new Promise((resolve, reject) => {
         mkdirp(path, mode, (err) => {

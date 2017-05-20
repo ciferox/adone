@@ -15,7 +15,7 @@ describe("glosses", "net", "http", "client", () => {
             const promise = request();
             expect(typeof promise.then).to.be.equal("function");
             expect(typeof promise.catch).to.be.equal("function");
-            promise.catch(() => {});
+            promise.catch(adone.noop);
         });
 
         it("should have default options", () => {

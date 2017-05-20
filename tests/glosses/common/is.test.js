@@ -347,7 +347,7 @@ describe("is", () => {
             describe("functions", () => {
 
                 it("returns true for same functions", () => {
-                    const foo = () => { };
+                    const foo = adone.noop;
                     assert(is.deepEqual(foo, foo), "eql(function foo() {}, function foo() {})");
                 });
 

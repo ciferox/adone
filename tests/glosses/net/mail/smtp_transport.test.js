@@ -35,7 +35,7 @@ describe("SMTP Transport Tests", function () {
                 disabledCommands: ["STARTTLS", "AUTH"],
 
                 onData(stream, session, callback) {
-                    stream.on("data", () => {});
+                    stream.on("data", adone.noop);
                     stream.on("end", callback);
                 },
 
@@ -173,7 +173,7 @@ describe("SMTP Transport Tests", function () {
                 disabledCommands: ["STARTTLS"],
 
                 onData(stream, session, callback) {
-                    stream.on("data", () => {});
+                    stream.on("data", adone.noop);
                     stream.on("end", callback);
                 },
 

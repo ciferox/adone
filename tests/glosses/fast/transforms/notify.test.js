@@ -88,7 +88,7 @@ describe("output stream", () => {
 
         it("should emit error when sub-module returns error and emitError is true", (done) => {
             const testString = "testString";
-            const instream = fast.src(srcPath).on("error", () => {});
+            const instream = fast.src(srcPath).on("error", adone.noop);
             const outstream = notify({
                 message: testString,
                 emitError: true,
@@ -131,7 +131,7 @@ describe("output stream", () => {
 
         it("should emit error when sub-module throws exception/error and emitError flag is true", (done) => {
             const testString = "some exception";
-            const instream = fast.src(srcPath).on("error", () => {});
+            const instream = fast.src(srcPath).on("error", adone.noop);
             const outstream = notify({
                 message: testString,
                 notifier() {
@@ -415,7 +415,7 @@ describe("output stream", () => {
 
             it("should call end on stream", (done) => {
                 const onError = notify.onError({
-                    notifier: mockGenerator(() => { }),
+                    notifier: mockGenerator(adone.noop),
                     endStream: true
                 });
 

@@ -1987,7 +1987,7 @@ describe("Database", () => {
             it("Indexes are persisted to a separate file and recreated upon reload", async () => {
                 const persDb = tmpdir.getVirtualFile("persistIndexes.db");
 
-                await persDb.unlink().catch(() => {});
+                await persDb.unlink().catch(adone.noop);
 
                 let db = new Datastore({ filename: persDb.path(), autoload: true });
                 await db.load();
@@ -2037,7 +2037,7 @@ describe("Database", () => {
             it("Indexes are persisted with their options and recreated even if some db operation happen between loads", async () => {
                 const persDb = tmpdir.getVirtualFile("persistIndexes.db");
 
-                await persDb.unlink().catch(() => {});
+                await persDb.unlink().catch(adone.noop);
 
                 let db = new Datastore({ filename: persDb.path(), autoload: true });
                 await db.load();
@@ -2112,7 +2112,7 @@ describe("Database", () => {
             it("Indexes can also be removed and the remove persisted", async () => {
                 const persDb = tmpdir.getVirtualFile("persistIndexes.db");
 
-                await persDb.unlink().catch(() => {});
+                await persDb.unlink().catch(adone.noop);
                 let db = new Datastore({ filename: persDb.path() });
                 await db.load();
 

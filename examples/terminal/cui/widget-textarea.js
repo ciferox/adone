@@ -25,9 +25,9 @@ screen.key("q", () => {
 });
 
 screen.key("i", () => {
-    box.readInput(() => { });
+    box.readInput(adone.noop);
 });
 
 screen.key("e", () => {
-    box.readEditor(() => { });
+    box.readEditor(adone.noop);
 });

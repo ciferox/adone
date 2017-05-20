@@ -72,7 +72,7 @@ describe("glosses", "utils", () => {
             function Test() {
                 this.a = 2;
             }
-            Test.prototype.b = () => { };
+            Test.prototype.b = adone.noop;
             const t = new Test();
             const props = keys(t, { followProto: true });
             expect(props).to.be.deep.equal(["a", "b"]);
@@ -82,14 +82,14 @@ describe("glosses", "utils", () => {
             function A() {
                 this.aProp = 1;
             }
-            A.prototype.aMethod = () => { };
+            A.prototype.aMethod = adone.noop;
 
             function B() {
                 A.call(this);
                 this.bProp = 2;
             }
             adone.std.util.inherits(B, A);
-            B.prototype.bMethod = () => { };
+            B.prototype.bMethod = adone.noop;
             const t = new B();
             const props = keys(t, { followProto: true }).sort();
             expect(props).to.be.deep.equal(["aMethod", "aProp", "bMethod", "bProp"]);
@@ -900,7 +900,7 @@ describe("glosses", "utils", () => {
                 }
             ];
             expect(() => {
-                util.asyncWaterfall(arr, () => { });
+                util.asyncWaterfall(arr, adone.noop);
             }).to.throw(/already called/);
         });
 

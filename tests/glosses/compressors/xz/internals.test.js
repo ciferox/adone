@@ -5,7 +5,7 @@ describe("glosses", "compressors", "xz", "native internals", () => {
         it("should fail for non-buffer input", () => {
             const stream = xz.decompressStream({ sync: true });
 
-            stream.nativeStream.bufferHandler = () => { };
+            stream.nativeStream.bufferHandler = adone.noop;
             assert.throws(() => {
                 stream.nativeStream.code("I am not a Buffer object");
             });
