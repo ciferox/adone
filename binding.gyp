@@ -151,6 +151,75 @@
       ],
     },
     {
+        "target_name": "i2c",
+        "conditions": [[
+        "OS == \"linux\"", {
+            "cflags": [
+            "-Wno-unused-local-typedefs"
+            ]
+        }]
+        ],
+        "include_dirs" : [ "nan" ],
+        "conditions": [
+        ["OS == \"linux\"", {
+            "sources": [
+            "./src/native/hardware/i2c/i2c.cc"
+            ]
+        }],
+        ["OS == \"win\"", {
+            "sources": [
+            "./src/native/hardware/i2c/win/readPartial.cc",
+            "./src/native/hardware/i2c/win/writePartial.cc",
+            "./src/native/hardware/i2c/win/writeReadPartial.cc",
+            "./src/native/hardware/i2c/win/i2c.cc",
+            "./src/native/hardware/i2c/win/i2c.h" 
+            ],
+            'msvs_windows_sdk_version': 'v10.0',
+            'win_delay_load_hook': 'false',
+            'msvs_onecore_vcpp_libs': 1,
+            'msvs_settings': {
+            'VCLinkerTool': {
+                'IgnoreDefaultLibraryNames' : ['kernel32.lib','advapi32.lib', 'ole32.lib' ],
+                'conditions': [
+                [ 'target_arch=="ia32"', {
+                'AdditionalLibraryDirectories' : [ '$(VCInstallDir)lib\onecore;$(WindowsSDK_LibraryPath_x86);$(UniversalCRT_LibraryPath_x86)' ],
+                } ],
+                [ 'target_arch=="x64"', {
+                'AdditionalLibraryDirectories' : [ '$(VCInstallDir)lib\onecore\\amd64;$(WindowsSDK_LibraryPath_x64);$(UniversalCRT_LibraryPath_x64)' ],
+                } ],
+                [ 'target_arch=="arm"', {
+                'AdditionalLibraryDirectories' : [ '$(VCInstallDir)lib\onecore\\arm;$(WindowsSDK_LibraryPath_arm);$(UniversalCRT_LibraryPath_arm)' ],
+                } ],
+            ],
+            },
+            'VCCLCompilerTool': {
+                'AdditionalUsingDirectories': [ '$(VCInstallDir)vcpackages;$(WindowsSdkDir)UnionMetadata;%(AdditionalUsingDirectories)' ],
+                'CompileAsWinRT': 'true',
+            }
+            },
+            'libraries': [
+            '-lonecore.lib',
+            ],
+            'configurations': {
+            'Release': {
+                'msvs_settings': {
+                'VCCLCompilerTool': {
+                    'RuntimeLibrary': '2',
+                }
+                },
+            },
+            'Debug': {
+                'msvs_settings': {
+                'VCCLCompilerTool': {
+                    'RuntimeLibrary': '3',
+                }
+                },
+            }
+            }       
+        }]
+        ]
+    },
+    {
       'target_name': 'common',
       'sources': [
         'src/native/common.cc'
@@ -699,7 +768,8 @@
         "hid",
         "serial",
         "report",
-        "rpigpio"
+        "rpigpio",
+        "i2c"
       ],
       "copies": [
         {
@@ -717,7 +787,8 @@
             "<(srcpath)/hid.node",
             "<(srcpath)/serial.node",
             "<(srcpath)/report.node",
-            "<(srcpath)/rpigpio.node"
+            "<(srcpath)/rpigpio.node",
+            "<(srcpath)/i2c.node"
           ],
           "destination": "<(module_root_dir)/lib/native"
         },

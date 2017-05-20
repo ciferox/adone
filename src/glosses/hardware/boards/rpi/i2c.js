@@ -1,4 +1,3 @@
-import { openSync } from "i2c-bus";
 const { is } = adone;
 
 const checkAddress = (address) => {
@@ -96,7 +95,7 @@ export class I2C extends adone.hardware.board.rpi.Peripheral {
         let device = this.devices[address];
 
         if (is.undefined(device)) {
-            device = openSync(adone.hardware.board.rpi.board.getBoardRevision() === adone.hardware.board.rpi.board.VERSION_1_MODEL_B_REV_1 ? 0 : 1);
+            device = adone.hardware.i2c.openSync(adone.hardware.board.rpi.board.getBoardRevision() === adone.hardware.board.rpi.board.VERSION_1_MODEL_B_REV_1 ? 0 : 1);
             this.devices[address] = device;
         }
 

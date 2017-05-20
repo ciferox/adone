@@ -1,6 +1,7 @@
 adone.lazify({
     hid: "./hid",
     serial: "./serial",
+    i2c: "./i2c",
     Accelerometer: "./accelerometer",
     Animation: "./animation",
     Altimeter: "./altimeter",
