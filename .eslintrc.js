@@ -146,7 +146,10 @@ module.exports = {
         "adone/no-undefined-comp": "error",
         "adone/no-null-comp": "error",
         "adone/no-buffer-isbuffer": "error",
-        "adone/no-array-isarray": "error"
+        "adone/no-array-isarray": "error",
+        "adone/no-isnan": "error",
+        "no-path-concat": "error",  // disallow string concatenation with __dirname and __filename
+        "callback-return": "warn"  // require return statements after callbacks
     },
     "plugins": [
         "adone",

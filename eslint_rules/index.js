@@ -157,6 +157,25 @@ module.exports = {
                     }
                 };
             }
+        },
+        "no-isnan": {
+            meta: {
+                docs: {
+                    description: "disallow using isNaN"
+                }
+            },
+            create(context) {
+                return {
+                    CallExpression(node) {
+                        if (node.callee.name === "isNaN") {
+                            context.report({
+                                node,
+                                message: "use adone.is.nan instead"
+                            });
+                        }
+                    }
+                };
+            }
         }
     }
 };
