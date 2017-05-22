@@ -66,6 +66,7 @@ export default class AdoneManager {
     async installLink(name) {
         this.destAdoneDir = this.nodeModulesDir.getDirectory(name);
         const destPath = this.destAdoneDir.path();
+        await adone.fs.mkdir(adone.std.path.dirname(destPath));
         if (is.win32) {
             await fs.symlink(this.app.adoneRootPath, destPath, "junction");
         } else {

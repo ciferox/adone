@@ -31,10 +31,11 @@ export default class Dispatcher {
         this.peer = await this.netron.connect(gate);
     }
 
-    async connectLocal(options, forceStart = true, _secondTime = false) {
+    async connectLocal(options, forceStart = true, _counter = 0) {
         let status = 0;
         if (is.null(this.netron)) {
-            const gates = (await this.configurator()).gates;
+            const configurator = await this.configurator();
+            const gates = configurator.gates;
             const localGate = gates.getGate({ id: (is.plainObject(options) && is.string(options.gateId) ? options.gateId : "local") });
             if (is.nil(localGate)) {
                 throw new adone.x.NotExists("Configuration for gate 'local' is not found");
@@ -42,6 +43,7 @@ export default class Dispatcher {
             if (localGate.status === adone.omnitron.const.DISABLED) {
                 throw new adone.x.IllegalState("Gate 'local' is disabled");
             }
+
             let netron = null;
             let peer = null;
             try {
@@ -51,19 +53,16 @@ export default class Dispatcher {
                     netron = new adone.netron.Netron(null, options);
                 }
                 peer = await netron.connect(localGate);
-                status = _secondTime ? 0 : 1;
+                status = _counter >= 1 ? 0 : 1;
             } catch (err) {
-                if (_secondTime) {
-                    throw err;
-                }
-                if (!forceStart) {
+                if (!forceStart || _counter >= 3) {
                     throw err;
                 }
 
                 const pid = await this.spawn();
                 if (is.number(pid)) {
-                    return this.connectLocal(options, forceStart, true);
-                }
+                    return this.connectLocal(options, forceStart, ++_counter);
+                };
             }
             this.netron = netron;
             this.peer = peer;

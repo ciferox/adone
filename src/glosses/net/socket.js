@@ -107,7 +107,7 @@ export default class Socket extends adone.EventEmitter {
                 });
             }
         } else {
-            throw new adone.x.IllegalState("socket is not connected");
+            throw new adone.x.IllegalState("Socket is not connected");
         }
     }
 
@@ -169,9 +169,9 @@ export default class Socket extends adone.EventEmitter {
                 } else {
                     this.nodeSocket = null;
                     if (options.port === 0) {
-                        reject(new adone.x.Connect(`host ${net.util.humanizeAddr(this.option.protocol, options.path)} is unreachable`));
+                        reject(new adone.x.Connect(`Host ${net.util.humanizeAddr(this.option.protocol, options.path)} is unreachable`));
                     } else {
-                        reject(new adone.x.Connect(`host ${net.util.humanizeAddr(this.option.protocol, options.port, options.host)} is unreachable`));
+                        reject(new adone.x.Connect(`Host ${net.util.humanizeAddr(this.option.protocol, options.port, options.host)} is unreachable`));
                     }
                 }
             });
@@ -195,7 +195,7 @@ export default class Socket extends adone.EventEmitter {
                 encoded.writeUInt32BE(encoded.remaining() - 4, 0);
                 nodeSocket.write(encoded.toBuffer(), resolve);
             } else {
-                reject(new adone.x.IllegalState("socket is not writable"));
+                reject(new adone.x.IllegalState("Socket is not writable"));
             }
         });
     }

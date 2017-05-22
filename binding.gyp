@@ -721,7 +721,7 @@
     {
         "target_name": "rpigpio",
         "conditions": [
-          ["OS!='win'", {
+          ["OS!='win' and OS!='freebsd'", {
             "conditions": [[
                 "OS == \"linux\"", {
                 "cflags": [

@@ -1,5 +1,6 @@
 #!/bin/bash
 
+### BEGIN INIT INFO
 # Provides:          omnitron
 # Required-Start:    $remote_fs $local_fs
 # Required-Stop:     $remote_fs $local_fs
@@ -9,6 +10,7 @@
 # Description:       Omnitron service - ADONE execution core
 # Author:            Adone Core Team
 # Created:           {{created}}
+### END INIT INFO
 
 NODE_EXEC=$(which node)
 OMNI_SCRIPT_PATH="{{script}}"
