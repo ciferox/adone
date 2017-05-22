@@ -149,7 +149,8 @@ module.exports = {
         "adone/no-array-isarray": "error",
         "adone/no-isnan": "error",
         "no-path-concat": "error",  // disallow string concatenation with __dirname and __filename
-        "callback-return": "warn"  // require return statements after callbacks
+        "callback-return": "warn",  // require return statements after callbacks
+        "adone/no-number-methods": "error"  // disallow Number.isNaN, Number.isFinite etc
     },
     "plugins": [
         "adone",

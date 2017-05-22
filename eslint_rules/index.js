@@ -170,8 +170,37 @@ module.exports = {
                         if (node.callee.name === "isNaN") {
                             context.report({
                                 node,
-                                message: "use adone.is.nan instead"
+                                message: "isNaN is not allowed"
                             });
+                        }
+                    }
+                };
+            }
+        },
+        "no-number-methods": {
+            meta: {
+                docs: {
+                    description: "disallow using Number.isNaN, Number.isFinite, Number.isInteger, Number.isSafeInteger"
+                }
+            },
+            create(context) {
+                const m = {
+                    isNaN: "use adone.is.nan instead",
+                    isFinite: "use adone.is.finite instead",
+                    isInteger: "use adone.is.integer instead",
+                    isSafeInteger: "use adone.is.safeInteger instead"
+                };
+                return {
+                    MemberExpression(node) {
+                        if (
+                            node.object.type === "Identifier" &&
+                            node.object.name === "Number" &&
+                            node.property.type === "Identifier"
+                        ) {
+                            const message = m[node.property.name];
+                            if (message) {
+                                context.report({ node, message });
+                            }
                         }
                     }
                 };
