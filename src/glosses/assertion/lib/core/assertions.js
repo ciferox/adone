@@ -892,8 +892,7 @@ export default function (lib, util) {
         };
 
         if (is.asyncFunction(obj)) {
-            flag(this, "eventually", true);
-            this._obj = obj().then(() => null, (e) => e).then(handle);
+            this._obj = obj().then(() => null, (e) => e).then(handle).then(() => flag(this, "object"));
         } else {
             let caughtErr = null;
             try {
