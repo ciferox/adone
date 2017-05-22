@@ -1,6 +1,19 @@
 const { is, text: { pretty } } = adone;
 const { STATUSES } = adone.omnitron.const;
 
+const runtime = adone.lazify({
+    Service: () => {
+        const os = process.platform;
+        let fileName;
+        switch (os) {
+            case "win32": fileName = "windows"; break;
+            case "linux": fileName = "linux"; break;
+            case "darwin": fileName = "macos"; break;
+        }
+        return require(`../svc/${fileName}`);
+    }
+});
+
 export default class extends adone.application.Subsystem {
     initialize() {
         this.defineCommand({
@@ -56,11 +69,12 @@ export default class extends adone.application.Subsystem {
                 },
                 {
                     name: "enable",
-                    help: "enable service",
+                    help: "enable service or omnitron (autostart)",
                     arguments: [
                         {
                             name: "service",
                             type: String,
+                            default: "",
                             help: "Name of service"
                         }
                     ],
@@ -68,18 +82,45 @@ export default class extends adone.application.Subsystem {
                         {
                             name: "--deps",
                             help: "Enable dependent services"
+                        },
+                        {
+                            name: "--user",
+                            type: String,
+                            help: "User name (omnitron only)"
+                        },
+                        {
+                            name: "--group",
+                            type: String,
+                            help: "Group name (omnitron only)"
+                        },
+                        {
+                            name: "--mode",
+                            type: String,
+                            default: "sysv",
+                            choices: ["sysd", "sysv"],
+                            help: "Service mode (omnitron only)"
                         }
                     ],
                     handler: this.enableCommand
                 },
                 {
                     name: "disable",
-                    help: "disable service",
+                    help: "disable service or omnitron (autostart)",
                     arguments: [
                         {
                             name: "service",
                             type: String,
+                            default: "",
                             help: "Name of service"
+                        }
+                    ],
+                    options: [
+                        {
+                            name: "--mode",
+                            type: String,
+                            default: "sysv",
+                            choices: ["sysd", "sysv"],
+                            help: "Service mode (omnitron only)"
                         }
                     ],
                     handler: this.disableCommand
@@ -659,18 +700,53 @@ export default class extends adone.application.Subsystem {
 
     async enableCommand(args, opts) {
         try {
-            await this.dispatcher.enable(args.get("service"), { enableDeps: opts.has("deps") });
-            adone.log(adone.ok);
+            let name = args.get("service");
+            if (name === "") {
+                name = "omnitron";
+            }
+            if (name === "omnitron") {
+                const config = {
+                    mode: opts.get("mode")
+                };
+
+                if (opts.has("user")) {
+                    config.user = opts.get("user");
+                }
+
+                if (opts.has("group")) {
+                    config.group = opts.get("group");
+                }
+
+                const service = new runtime.Service(config);
+                await service.install();                
+            } else {
+                await this.dispatcher.enable(name, { enableDeps: opts.has("deps") });
+                adone.log(adone.ok);
+            }
         } catch (err) {
             adone.log(err.message);
+            return 1;
         }
         return 0;
     }
 
-    async disableCommand(args) {
+    async disableCommand(args, opts) {
         try {
-            await this.dispatcher.disable(args.get("service"));
-            adone.log(adone.ok);
+            let name = args.get("service");
+            if (name === "") {
+                name = "omnitron";
+            }
+            if (name === "omnitron") {
+                const config = {
+                    mode: opts.get("mode")
+                };
+
+                const service = new runtime.Service(config);
+                await service.uninstall();
+            } else {
+                await this.dispatcher.disable(name);
+                adone.log(adone.ok);
+            }
         } catch (err) {
             adone.log(err.message);
         }

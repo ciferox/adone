@@ -13,14 +13,14 @@
 ### END INIT INFO
 
 NODE_EXEC=$(which node)
-OMNI_SCRIPT_PATH="{{script}}"
+WRAPPER_PATH="{{script}}"
 USER={{user}}
 
 case "$1" in
-  start) echo "$NODE_EXEC $OMNI_SCRIPT_PATH start" | sudo -i -u $USER ;;
-  stop) echo "$NODE_EXEC $OMNI_SCRIPT_PATH stop" | sudo -i -u $USER ;;  
-  restart) echo "$NODE_EXEC $OMNI_SCRIPT_PATH restart" | sudo -i -u $USER ;;
-  status) echo "$NODE_EXEC $OMNI_SCRIPT_PATH status" | sudo -i -u $USER ;;
+  start) echo "$NODE_EXEC $WRAPPER_PATH start" | sudo -i -u $USER ;;
+  stop) echo "$NODE_EXEC $WRAPPER_PATH stop" | sudo -i -u $USER ;;  
+  restart) echo "$NODE_EXEC $WRAPPER_PATH restart" | sudo -i -u $USER ;;
+  status) echo "$NODE_EXEC $WRAPPER_PATH status" | sudo -i -u $USER ;;
   *)
     echo "Usage: $0 {start|stop|restart|status}" >&2
     exit 3

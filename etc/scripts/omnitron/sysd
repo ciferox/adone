@@ -1,0 +1,12 @@
+[Unit]
+Description=Omnitron service - ADONE execution core
+
+[Service]
+ExecStart={{execPath}} {{script}}
+Restart=always
+SyslogIdentifier=omnitron
+User={{user}}
+Group={{group}}
+
+[Install]
+WantedBy=multi-user.target
