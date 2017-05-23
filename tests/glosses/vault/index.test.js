@@ -139,24 +139,14 @@ describe("Vault", () => {
         assert.equal(await val.get("num"), 17);
         assert.deepEqual(await val.get("buf"), buf);
         await val.delete("num");
-        try {
-            await val.get("num");
-        } catch (err) {
-            assert.instanceOf(err, adone.x.NotExists);
-            await vault.close();
+        let err = await assert.throws(async () => val.get("num"));
+        assert.instanceOf(err, adone.x.NotExists);
+        await vault.close();
 
-            await openVault(location);
-            val = await vault.get("val");
-            try {
-                await val.delete("num");
-            } catch (err) {
-                assert.instanceOf(err, adone.x.NotExists);
-                return;
-            }
-            assert.fail("Should have thrown");
-            return;
-        }
-        assert.fail("Should have thrown");
+        await openVault(location);
+        val = await vault.get("val");
+        err = await assert.throws(async () => val.delete("num"));
+        assert.instanceOf(err, adone.x.NotExists);
     });
 
     it("valuable add/delete tags", async () => {
@@ -187,24 +177,14 @@ describe("Vault", () => {
         await openVault();
         const val = await vault.create("val");
         await val.set("num", 17);
-        try {
-            await vault.create("val");
-        } catch (err) {
-            assert.instanceOf(err, adone.x.Exists);
-            return;
-        }
-        assert.fail("Should have thrown");
+        const err = await assert.throws(async () => vault.create("val"));
+        assert.instanceOf(err, adone.x.Exists);
     });
 
     it("get nonexistent valuable", async () => {
         await openVault();
-        try {
-            await vault.get("nonexistent");
-        } catch (err) {
-            assert.instanceOf(err, adone.x.NotExists);
-            return;
-        }
-        assert.fail("Should have thrown");
+        const err = await assert.throws(async () => vault.get("nonexistent"));
+        assert.instanceOf(err, adone.x.NotExists);
     });
 
     it("delete valuable", async () => {
@@ -214,26 +194,16 @@ describe("Vault", () => {
         await vault.delete("val");
         await vault.close();
 
-        try {
-            await vault.get("val");
-        } catch (err) {
-            assert.instanceOf(err, adone.x.NotExists);
-            return;
-        }
-        assert.fail("Should have thrown");
+        const err = await assert.throws(async () => vault.get("val"));
+        assert.instanceOf(err, adone.x.NotExists);
     });
 
     it("get nonexistent item of valuable", async () => {
         await openVault();
         const val = await vault.create("val");
         await val.set("num", 17);
-        try {
-            await val.get("num1");
-        } catch (err) {
-            assert.instanceOf(err, adone.x.NotExists);
-            return;
-        }
-        assert.fail("Should have thrown");
+        const err = await assert.throws(async () => val.get("num1"));
+        assert.instanceOf(err, adone.x.NotExists);
     });
 
     it("delete nonexistent item of valuable", async () => {
@@ -241,13 +211,8 @@ describe("Vault", () => {
         const val = await vault.create("val");
         await val.set("num", 17);
         await val.delete("num");
-        try {
-            await val.delete("num1");
-        } catch (err) {
-            assert.instanceOf(err, adone.x.NotExists);
-            return;
-        }
-        assert.fail("Should have thrown");
+        const err = await assert.throws(async () => val.delete("num1"));
+        assert.instanceOf(err, adone.x.NotExists);
     });
 
     it("clear all item in a valuable", async () => {

@@ -137,15 +137,10 @@ describe("TLS Socket", function () {
         });
 
         it("double bind error", async () => {
-            try {
-                await server.bind(Object.assign({ port: SERVER_PORT }, serverOptions));
-                await server.bind(Object.assign({ port: SERVER_PORT }, serverOptions));
-            } catch (err) {
-                assert(err instanceof adone.x.Bind);
-                await checkBind(server, SERVER_PORT);
-                return;
-            }
-            assert.fail("Did not thrown any error");
+            await server.bind(Object.assign({ port: SERVER_PORT }, serverOptions));
+            const err = await assert.throws(async () => server.bind(Object.assign({ port: SERVER_PORT }, serverOptions)));
+            assert(err instanceof adone.x.Bind);
+            await checkBind(server, SERVER_PORT);
         });
 
         if (!is.win32) {
@@ -175,16 +170,11 @@ describe("TLS Socket", function () {
                 });
 
                 it("double bind", async () => {
-                    try {
-                        await server.bind({ port: UNIX_SOCKET }, Object.assign(serverOptions));
-                        const anotherSock = new adone.net.Server();
-                        await anotherSock.bind({ port: UNIX_SOCKET }, Object.assign(serverOptions));
-                    } catch (err) {
-                        assert(err instanceof adone.x.Bind);
-                        await checkBind(server, UNIX_SOCKET);
-                        return;
-                    }
-                    assert.fail("Did not thrown any error");
+                    await server.bind({ port: UNIX_SOCKET }, Object.assign(serverOptions));
+                    const anotherSock = new adone.net.Server();
+                    const err = await assert.throws(async () => anotherSock.bind({ port: UNIX_SOCKET }, Object.assign(serverOptions)));
+                    assert(err instanceof adone.x.Bind);
+                    await checkBind(server, UNIX_SOCKET);
                 });
             });
         }
@@ -192,25 +182,15 @@ describe("TLS Socket", function () {
         it("unbind", async () => {
             await server.bind({ port: SERVER_PORT }, Object.assign(serverOptions));
             await server.unbind(SERVER_PORT);
-            try {
-                await checkBind(server, SERVER_PORT);
-            } catch (e) {
-                return;
-            }
-            assert.fail("Did not unbind port");
+            await assert.throws(async () => checkBind(server, SERVER_PORT));
         });
 
         it("bind unbind bind", async () => {
             await server.bind({ port: SERVER_PORT }, Object.assign(serverOptions));
             await server.unbind(SERVER_PORT);
-            try {
-                await checkBind(server, SERVER_PORT);
-            } catch (e) {
-                await server.bind({ port: SERVER_PORT }, Object.assign(serverOptions));
-                await checkBind(server, SERVER_PORT);
-                return;
-            }
-            assert.fail("Did not unbind port");
+            await assert.throws(async () => checkBind(server, SERVER_PORT));
+            await server.bind({ port: SERVER_PORT }, Object.assign(serverOptions));
+            await checkBind(server, SERVER_PORT);
         });
 
     });
@@ -234,14 +214,9 @@ describe("TLS Socket", function () {
                 ++reconnects;
             });
 
-            try {
-                await client.connect(Object.assign({ port: SERVER_PORT }, clientOptions));
-            } catch (err) {
-                assert(err instanceof adone.x.Connect);
-                assert.equal(reconnects, 3);
-                return;
-            }
-            assert.fail("Did not thrown any error");
+            const err = await assert.throws(async () => client.connect(Object.assign({ port: SERVER_PORT }, clientOptions)));
+            assert(err instanceof adone.x.Connect);
+            assert.equal(reconnects, 3);
         });
 
         it("double reconnect attempts", async () => {
@@ -252,14 +227,9 @@ describe("TLS Socket", function () {
                     ++reconnects;
                 });
 
-                try {
-                    await client.connect(Object.assign({ port: SERVER_PORT }, clientOptions));
-                } catch (err) {
-                    assert(err instanceof adone.x.Connect);
-                    assert.equal(reconnects, 3);
-                    return;
-                }
-                assert.fail("Did not thrown any error");
+                const err = await assert.throws(async () => client.connect(Object.assign({ port: SERVER_PORT }, clientOptions)));
+                assert(err instanceof adone.x.Connect);
+                assert.equal(reconnects, 3);
             }
 
             await testReconnect();
@@ -563,14 +533,9 @@ describe("TLS Socket", function () {
             await server.bind(Object.assign({ port: SERVER_PORT }, serverOptions));
             await client.connect(Object.assign({ port: SERVER_PORT }, clientOptions));
             client.disconnect();
-            try {
-                await client.write(data);
-            } catch (e) {
-                assert(e instanceof adone.x.IllegalState);
-                assert.equal(e.message, "socket is not writable");
-                return;
-            }
-            assert.fail("client.write(data) did not thrown any error");
+            const e = await assert.throws(async () => client.write(data));
+            assert(e instanceof adone.x.IllegalState);
+            assert.equal(e.message, "Socket is not writable");
         });
 
         it("client - write after server disconnect", async () => {
@@ -583,14 +548,8 @@ describe("TLS Socket", function () {
             await client.connect(Object.assign({ port: SERVER_PORT }, clientOptions));
             server.disconnect();
             await adone.promise.delay(10);
-            try {
-                await client.write(data);
-            } catch (e) {
-                assert.equal(e.message, "socket is not writable");
-                return;
-            }
-
-            assert.fail("client.write(data) did not thrown any error");
+            const e = await assert.throws(async () => client.write(data));
+            assert.equal(e.message, "Socket is not writable");
         });
     });
 });

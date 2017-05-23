@@ -82,14 +82,9 @@ describe("Netron", () => {
                     });
                 });
 
-                try {
-                    await customExNetron.connect({ port: NETRON_PORT });
-                } catch (err) {
-                    assert.instanceOf(err, adone.x.Connect);
-                    assert.equal(reconnects, 4);
-                    return;
-                }
-                assert.fail("Did not thrown any error");
+                const err = await assert.throws(async () => customExNetron.connect({ port: NETRON_PORT }));
+                assert.instanceOf(err, adone.x.Connect);
+                assert.equal(reconnects, 4);
             });
 
             it("right status sequence", async () => {
@@ -434,54 +429,29 @@ describe("Netron", () => {
             // и attachContextRemote. Позже можно будет сделать как-нибудь лучше.
             describe("_checkContext", () => {
                 it("not instance", () => {
-                    try {
-                        superNetron._checkContext("a");
-                    } catch (err) {
-                        assert.instanceOf(err, adone.x.NotValid);
-                        return;
-                    }
-                    assert.fail("Did not thrown any error");
+                    const err = assert.throws(() => superNetron._checkContext("a"));
+                    assert.instanceOf(err, adone.x.NotValid);
                 });
 
                 it("class instead instance", () => {
-                    try {
-                        superNetron._checkContext(A);
-                    } catch (err) {
-                        assert.instanceOf(err, adone.x.NotValid);
-                        return;
-                    }
-                    assert.fail("Did not thrown any error");
+                    const err = assert.throws(() => superNetron._checkContext(A));
+                    assert.instanceOf(err, adone.x.NotValid);
                 });
 
                 it("class without constructor", () => {
-                    try {
-                        class SomeClass { }
-                        superNetron._checkContext(new SomeClass());
-                    } catch (err) {
-                        assert.instanceOf(err, adone.x.NotValid);
-                        return;
-                    }
-                    assert.fail("Did not thrown any error");
+                    class SomeClass { }
+                    const err = assert.throws(() => superNetron._checkContext(new SomeClass()));
+                    assert.instanceOf(err, adone.x.NotValid);
                 });
 
                 it("Object instead instance", () => {
-                    try {
-                        superNetron._checkContext(Object);
-                    } catch (err) {
-                        assert.instanceOf(err, adone.x.NotValid);
-                        return;
-                    }
-                    assert.fail("Did not thrown any error");
+                    const err = assert.throws(() => superNetron._checkContext(Object));
+                    assert.instanceOf(err, adone.x.NotValid);
                 });
 
                 it("empty function instead instance", () => {
-                    try {
-                        superNetron._checkContext(adone.noop);
-                    } catch (err) {
-                        assert.instanceOf(err, adone.x.NotValid);
-                        return;
-                    }
-                    assert.fail("Did not thrown any error");
+                    const err = assert.throws(() => superNetron._checkContext(adone.noop));
+                    assert.instanceOf(err, adone.x.NotValid);
                 });
 
                 it("instance of unnamed class", () => {
@@ -494,13 +464,8 @@ describe("Netron", () => {
                         }()
                     );
 
-                    try {
-                        superNetron._checkContext(a);
-                    } catch (err) {
-                        assert.instanceOf(err, adone.x.NotAllowed);
-                        return;
-                    }
-                    assert.fail("Should throw exception");
+                    const err = assert.throws(() => superNetron._checkContext(a));
+                    assert.instanceOf(err, adone.x.NotAllowed);
                 });
 
                 it("instance with no public methods", () => {
@@ -511,13 +476,8 @@ describe("Netron", () => {
                         }
                     }
 
-                    try {
-                        superNetron._checkContext(new A());
-                    } catch (err) {
-                        assert.instanceOf(err, adone.x.NotValid);
-                        return;
-                    }
-                    assert.fail("Did not thrown any error");
+                    const err = assert.throws(() => superNetron._checkContext(new A()));
+                    assert.instanceOf(err, adone.x.NotValid);
                 });
 
                 it("valid way", () => {
@@ -555,15 +515,10 @@ describe("Netron", () => {
                 });
 
                 it("double attach same context", async () => {
-                    try {
-                        const ctx = new A();
-                        superNetron.attachContext(ctx, "a");
-                        superNetron.attachContext(ctx, "a");
-                    } catch (err) {
-                        assert.instanceOf(err, adone.x.Exists);
-                        return;
-                    }
-                    assert.fail("Did not thrown any error");
+                    const ctx = new A();
+                    superNetron.attachContext(ctx, "a");
+                    const err = assert.throws(() => superNetron.attachContext(ctx, "a"));
+                    assert.instanceOf(err, adone.x.Exists);
                 });
             });
 
@@ -613,31 +568,21 @@ describe("Netron", () => {
                 });
 
                 it("double attach same context", async () => {
-                    try {
-                        const ctx = new A();
+                    const ctx = new A();
 
-                        await superNetron.bind();
-                        const peer = await exNetron.connect();
+                    await superNetron.bind();
+                    const peer = await exNetron.connect();
 
-                        await exNetron.attachContextRemote(peer.uid, ctx, "a");
-                        await exNetron.attachContextRemote(peer.uid, ctx, "a");
-                    } catch (err) {
-                        assert.instanceOf(err, adone.x.Exists);
-                        return;
-                    }
-                    assert.fail("Did not thrown any error");
+                    await exNetron.attachContextRemote(peer.uid, ctx, "a");
+                    const err = await assert.throws(async () => exNetron.attachContextRemote(peer.uid, ctx, "a"));
+                    assert.instanceOf(err, adone.x.Exists);
                 });
             });
 
             describe("detachContext", () => {
                 it("detach not existing context", () => {
-                    try {
-                        superNetron.detachContext("this_context_not_exists");
-                    } catch (e) {
-                        assert.instanceOf(e, adone.x.Unknown);
-                        return;
-                    }
-                    assert.fail("Did not thrown any error");
+                    const e = assert.throws(() => superNetron.detachContext("this_context_not_exists"));
+                    assert.instanceOf(e, adone.x.Unknown);
                 });
 
                 it("valid way", async () => {
@@ -678,16 +623,11 @@ describe("Netron", () => {
                 });
 
                 it("detach not existing context", async () => {
-                    try {
-                        await superNetron.bind();
-                        const peer = await exNetron.connect();
+                    await superNetron.bind();
+                    const peer = await exNetron.connect();
 
-                        await exNetron.detachContextRemote(peer.uid, "this_context_not_exists");
-                    } catch (e) {
-                        assert.instanceOf(e, adone.x.NotExists);
-                        return;
-                    }
-                    assert.fail("Did not thrown any error");
+                    const e = await assert.throws(async () => exNetron.detachContextRemote(peer.uid, "this_context_not_exists"));
+                    assert.instanceOf(e, adone.x.NotExists);
                 });
 
                 it("valid way", async () => {
@@ -895,14 +835,9 @@ describe("Netron", () => {
                     });
 
                     it("call - catch exception", async () => {
-                        try {
-                            await netron.call(uid, defID, "errorMethod");
-                        } catch (e) {
-                            assert.instanceOf(e, Error);
-                            assert.equal(e.message, "I'm an error!");
-                            return;
-                        }
-                        assert.fail("Did not thrown any error");
+                        const e = await assert.throws(async () => netron.call(uid, defID, "errorMethod"));
+                        assert.instanceOf(e, Error);
+                        assert.equal(e.message, "I'm an error!");
                     });
 
                     it("callVoid", async () => {
@@ -1369,14 +1304,9 @@ describe("Netron", () => {
                             });
 
                             it("exception in function call", async () => {
-                                try {
-                                    await iface.errorMethod();
-                                } catch (e) {
-                                    assert.instanceOf(e, Error);
-                                    assert.equal(e.message, "I'm an error!");
-                                    return;
-                                }
-                                assert.fail("Did not thrown any error");
+                                const e = await assert.throws(async () => iface.errorMethod());
+                                assert.instanceOf(e, Error);
+                                assert.equal(e.message, "I'm an error!");
                             });
 
                             it("call function without return", async () => {
@@ -1454,15 +1384,10 @@ describe("Netron", () => {
                         });
                     });
 
-                    try {
-                        await exNetron.connect();
-                    } catch (e) {
-                        assert.instanceOf(e, adone.x.Connect);
-                        assert.include(e.message, "refused connection");
-                        assert.equal(resolved, false);
-                        return;
-                    }
-                    assert.fail("Did not thrown any error");
+                    const e = await assert.throws(async () => exNetron.connect());
+                    assert.instanceOf(e, adone.x.Connect);
+                    assert.include(e.message, "refused connection");
+                    assert.equal(resolved, false);
                 });
 
                 it("disconnect", async () => {
@@ -1483,15 +1408,10 @@ describe("Netron", () => {
                         });
                     });
 
-                    try {
-                        await exNetron.connect();
-                    } catch (e) {
-                        assert.instanceOf(e, adone.x.Connect);
-                        assert.include(e.message, "refused connection");
-                        assert.equal(resolved, false);
-                        return;
-                    }
-                    assert.fail("Did not thrown any error");
+                    const e = await assert.throws(async () => exNetron.connect());
+                    assert.instanceOf(e, adone.x.Connect);
+                    assert.include(e.message, "refused connection");
+                    assert.equal(resolved, false);
                 });
             });
 
@@ -1532,15 +1452,10 @@ describe("Netron", () => {
                         });
                     });
 
-                    try {
-                        await exNetron.connect();
-                    } catch (e) {
-                        assert.instanceOf(e, adone.x.Connect);
-                        assert.include(e.message, "refused connection");
-                        await peerOffline;
-                        return;
-                    }
-                    assert.fail("Did not thrown any error");
+                    const e = await assert.throws(async () => exNetron.connect());
+                    assert.instanceOf(e, adone.x.Connect);
+                    assert.include(e.message, "refused connection");
+                    await peerOffline;
                 });
 
                 it("disconnect", async () => {
@@ -1560,15 +1475,10 @@ describe("Netron", () => {
                         });
                     });
 
-                    try {
-                        await exNetron.connect();
-                    } catch (e) {
-                        assert.instanceOf(e, adone.x.Connect);
-                        assert.include(e.message, "refused connection");
-                        await peerOffline;
-                        return;
-                    }
-                    assert.fail("Did not thrown any error");
+                    const e = await assert.throws(async () => exNetron.connect());
+                    assert.instanceOf(e, adone.x.Connect);
+                    assert.include(e.message, "refused connection");
+                    await peerOffline;
                 });
             });
 
@@ -1623,14 +1533,9 @@ describe("Netron", () => {
 
                     await client.connect();
 
-                    try {
-                        await hacker.connect();
-                    } catch (e) {
-                        assert.instanceOf(e, adone.x.Connect);
-                        assert.include(e.message, "refused connection");
-                        return;
-                    }
-                    assert.fail("Did not refused connection of hacker");
+                    const e = await assert.throws(async () => hacker.connect());
+                    assert.instanceOf(e, adone.x.Connect);
+                    assert.include(e.message, "refused connection");
                 });
             });
 

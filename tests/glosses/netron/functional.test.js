@@ -254,13 +254,8 @@ describe("Netron", () => {
                 await superNetron.callVoid(null, defID, "setValue1", "newProp1");
                 propVal = await superNetron.call(null, defID, "getValue1");
                 expect(propVal).to.be.equal("newProp1");
-                try {
-                    propVal = await superNetron.call(null, defID, "getValue2");
-                } catch (err) {
-                    assert.instanceOf(err, adone.x.NotExists);
-                    return;
-                }
-                assert.fail("Did not thrown any error");
+                const err = await assert.throws(async () => superNetron.call(null, defID, "getValue2"));
+                assert.instanceOf(err, adone.x.NotExists);
             });
 
             it("remote - methods call", async () => {
@@ -274,13 +269,8 @@ describe("Netron", () => {
                 await exNetron.callVoid(peer.uid, defID, "setValue1", "newProp1");
                 propVal = await exNetron.call(peer.uid, defID, "getValue1");
                 expect(propVal).to.be.equal("newProp1");
-                try {
-                    propVal = await exNetron.call(peer.uid, defID, "getValue2");
-                } catch (err) {
-                    assert.instanceOf(err, adone.x.NotExists);
-                    return;
-                }
-                assert.fail("Did not thrown any error");
+                const err = await assert.throws(async () => exNetron.call(peer.uid, defID, "getValue2"));
+                assert.instanceOf(err, adone.x.NotExists);
             });
 
             it("local - properties access", async () => {
@@ -811,14 +801,9 @@ describe("Netron", () => {
                     const iWeak = await iStrong.getWeak();
                     assert.equal(await iWeak.doSomething(), 888);
                     await iStrong.releaseWeak();
-                    try {
-                        await iWeak.doSomething();
-                    } catch (err) {
-                        assert.isOk(err instanceof adone.x.NotExists);
-                        assert.equal(err.message, "Context not exists");
-                        return;
-                    }
-                    assert.fail("should throw exception");
+                    const err = await assert.throws(async () => iWeak.doSomething());
+                    assert.isOk(err instanceof adone.x.NotExists);
+                    assert.equal(err.message, "Context not exists");
                 });
 
                 it("deep contexting", async () => {
@@ -1385,14 +1370,8 @@ describe("Netron", () => {
                 const iA = peer.getInterfaceByName("a");
                 assert.equal(await iA.method1(), "A1");
 
-                try {
-                    const iB = peer.getInterfaceByName("b");
-                    assert.equal(await iB.method1(), "B1");
-                } catch (err) {
-                    assert.instanceOf(err, adone.x.Unknown);
-                    return;
-                }
-                assert.fail("Should throw 'Unknown' exception");
+                const err = assert.throws(() => peer.getInterfaceByName("b"));
+                assert.instanceOf(err, adone.x.Unknown);
             });
         });
     });

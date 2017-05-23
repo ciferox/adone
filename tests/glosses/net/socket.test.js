@@ -119,15 +119,10 @@ describe("Socket", function () {
         });
 
         it("double bind error", async () => {
-            try {
-                await server.bind({ port: SERVER_PORT });
-                await server.bind({ port: SERVER_PORT });
-            } catch (err) {
-                assert(err instanceof adone.x.Bind);
-                await checkBind(server, SERVER_PORT);
-                return;
-            }
-            assert.fail("Did not thrown any error");
+            await server.bind({ port: SERVER_PORT });
+            const err = await assert.throws(async () => server.bind({ port: SERVER_PORT }));
+            assert(err instanceof adone.x.Bind);
+            await checkBind(server, SERVER_PORT);
         });
 
         if (!is.win32) {
@@ -156,16 +151,11 @@ describe("Socket", function () {
                 });
 
                 it("double bind", async () => {
-                    try {
-                        await server.bind({ port: UNIX_SOCKET });
-                        const anotherSock = new adone.net.Server();
-                        await anotherSock.bind({ port: UNIX_SOCKET });
-                    } catch (err) {
-                        assert(err instanceof adone.x.Bind);
-                        await checkBind(server, UNIX_SOCKET);
-                        return;
-                    }
-                    assert.fail("Did not thrown any error");
+                    await server.bind({ port: UNIX_SOCKET });
+                    const anotherSock = new adone.net.Server();
+                    const err = await assert.throws(async () => anotherSock.bind({ port: UNIX_SOCKET }));
+                    assert(err instanceof adone.x.Bind);
+                    await checkBind(server, UNIX_SOCKET);
                 });
             });
         }
@@ -173,25 +163,15 @@ describe("Socket", function () {
         it("unbind", async () => {
             await server.bind({ port: SERVER_PORT });
             await server.unbind(SERVER_PORT);
-            try {
-                await checkBind(server, SERVER_PORT);
-            } catch (e) {
-                return;
-            }
-            assert.fail("Did not unbind port");
+            await assert.throws(async () => checkBind(server, SERVER_PORT));
         });
 
         it("bind unbind bind", async () => {
             await server.bind({ port: SERVER_PORT });
             await server.unbind(SERVER_PORT);
-            try {
-                await checkBind(server, SERVER_PORT);
-            } catch (e) {
-                await server.bind({ port: SERVER_PORT });
-                await checkBind(server, SERVER_PORT);
-                return;
-            }
-            assert.fail("Did not unbind port");
+            await assert.throws(async () => checkBind(server, SERVER_PORT));
+            await server.bind({ port: SERVER_PORT });
+            await checkBind(server, SERVER_PORT);
         });
 
     });
@@ -215,14 +195,9 @@ describe("Socket", function () {
                 ++reconnects;
             });
 
-            try {
-                await client.connect({ port: SERVER_PORT });
-            } catch (err) {
-                assert(err instanceof adone.x.Connect);
-                assert.equal(reconnects, 3);
-                return;
-            }
-            assert.fail("Did not thrown any error");
+            const err = await assert.throws(async () => client.connect({ port: SERVER_PORT }));
+            assert(err instanceof adone.x.Connect);
+            assert.equal(reconnects, 3);
         });
 
         it("double reconnect attempts", async () => {
@@ -233,14 +208,9 @@ describe("Socket", function () {
                     ++reconnects;
                 });
 
-                try {
-                    await client.connect({ port: SERVER_PORT });
-                } catch (err) {
-                    assert(err instanceof adone.x.Connect);
-                    assert.equal(reconnects, 3);
-                    return;
-                }
-                assert.fail("Did not thrown any error");
+                const err = await assert.throws(async () => client.connect({ port: SERVER_PORT }));
+                assert(err instanceof adone.x.Connect);
+                assert.equal(reconnects, 3);
             }
 
             await testReconnect();
@@ -544,14 +514,9 @@ describe("Socket", function () {
             await server.bind({ port: SERVER_PORT });
             await client.connect({ port: SERVER_PORT });
             client.disconnect();
-            try {
-                await client.write(data);
-            } catch (e) {
-                assert(e instanceof adone.x.IllegalState);
-                assert.equal(e.message, "socket is not writable");
-                return;
-            }
-            assert.fail("client.write(data) did not thrown any error");
+            const e = await assert.throws(async () => client.write(data));
+            assert(e instanceof adone.x.IllegalState);
+            assert.equal(e.message, "Socket is not writable");
         });
 
         it("client - write after server disconnect", async () => {
@@ -564,14 +529,8 @@ describe("Socket", function () {
             await client.connect({ port: SERVER_PORT });
             await server.disconnect();
             await adone.promise.delay(10);
-            try {
-                await client.write(data);
-            } catch (e) {
-                assert.equal(e.message, "socket is not writable");
-                return;
-            }
-
-            assert.fail("client.write(data) did not thrown any error");
+            const e = await assert.throws(async () => client.write(data));
+            assert.equal(e.message, "Socket is not writable");
         });
     });
 });
