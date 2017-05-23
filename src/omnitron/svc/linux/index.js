@@ -65,14 +65,11 @@ export default class Service {
                 };
 
                 let templatePath;
-                let cmd;
 
                 if (osFamily === "debian") {
                     templatePath = path.join(this.templateRoot, `sysv_${osFamily}`);
-                    cmd = "/usr/sbin/update-rc.d omnitron defaults";
                 } else {
                     templatePath = path.join(this.templateRoot, "sysd");
-                    cmd = "/sbin/chkconfig omnitron on";
                 }
 
                 const script = await adone.templating.nunjucks.render(templatePath, context);
@@ -80,14 +77,11 @@ export default class Service {
                 adone.info(`Startup script '${filePath}' created`);
                 await adone.fs.chmod(filePath, "755");
                 adone.info("chmod => 755");
-                await new Promise((resolve, reject) => {
-                    adone.std.child_process.exec(cmd, (err) => {
-                        if (err) {
-                            return reject(err);
-                        }
-                        resolve();
-                    });
-                });
+                if (osFamily === "debian") {
+                    await adone.system.process.exec("/usr/sbin/update-rc.d", ["omnitron", "defaults"]);
+                } else {
+                    await adone.system.process.exec("/sbin/chkconfig", ["omnitron", "on"]);
+                }
                 adone.info("System startup enabled");
             } else if (this.config.mode === "sysd") {
                 const context = {
@@ -102,15 +96,7 @@ export default class Service {
                 adone.info(`Startup script '${filePath}' created`);
                 await adone.fs.chmod(filePath, "755");
                 adone.info("chmod => 755");
-                const cmd = "systemctl daemon-reload";
-                await new Promise((resolve, reject) => {
-                    adone.std.child_process.exec(cmd, (err) => {
-                        if (err) {
-                            return reject(err);
-                        }
-                        resolve();
-                    });
-                });
+                await adone.system.process.exec("systemctl", ["daemon-reload"]);
                 adone.info("System startup enabled");
             }
         } else {
@@ -127,20 +113,11 @@ export default class Service {
             if (this.config.mode === "sysv") {
                 const osFamily = getLinuxFlavor();
 
-                let cmd;
                 if (osFamily === "debian") {
-                    cmd = "/usr/sbin/update-rc.d -f omnitron remove";
+                    await adone.system.process.exec("/usr/sbin/update-rc.d", ["-f", "omnitron", "remove"]);
                 } else {
-                    cmd = "/sbin/chkconfig omnitron off";
+                    await adone.system.process.exec("/sbin/chkconfig", ["omnitron", "off"]);
                 }
-                await new Promise((resolve, reject) => {
-                    adone.std.child_process.exec(cmd, (err) => {
-                        if (err) {
-                            return reject(err);
-                        }
-                        resolve();
-                    });
-                });
                 adone.info("System startup disabled");
             }
 

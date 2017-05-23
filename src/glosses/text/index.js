@@ -279,6 +279,21 @@ export const indent = (string, spaces) => {
     return result;
 };
 
+export const stripEof = (x) => {
+    const lf = is.string(x) ? "\n" : "\n".charCodeAt();
+    const cr = is.string(x) ? "\r" : "\r".charCodeAt();
+
+    if (x[x.length - 1] === lf) {
+        x = x.slice(0, x.length - 1);
+    }
+
+    if (x[x.length - 1] === cr) {
+        x = x.slice(0, x.length - 1);
+    }
+
+    return x;
+};
+
 export const stripLastCRLF = (str) => str.replace(/(\r?\n|\r)$/, "");
 
 adone.lazify({
