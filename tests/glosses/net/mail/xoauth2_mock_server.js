@@ -1,94 +1,92 @@
-const http = require("http");
-const crypto = require("crypto");
-const querystring = require("querystring");
+const { std: { http, crypto, querystring } } = adone;
 
-module.exports = function (options) {
-    return new OAuthServer(options);
-};
+class OAuthServer {
+    constructor(options) {
+        this.options = options || {};
+        this.users = {};
+        this.tokens = {};
 
-function OAuthServer(options) {
-    this.options = options || {};
-    this.users = {};
-    this.tokens = {};
+        this.options.port = Number(this.options.port) || 3080;
+        this.options.expiresIn = Number(this.options.expiresIn) || 3600;
+    }
 
-    this.options.port = Number(this.options.port) || 3080;
-    this.options.expiresIn = Number(this.options.expiresIn) || 3600;
-}
+    addUser(username, refreshToken) {
+        const user = {
+            username,
+            refreshToken: refreshToken || crypto.randomBytes(10).toString("base64")
+        };
 
-OAuthServer.prototype.addUser = function (username, refreshToken) {
-    const user = {
-        username,
-        refreshToken: refreshToken || crypto.randomBytes(10).toString("base64")
-    };
+        this.users[username] = user;
+        this.tokens[user.refreshToken] = username;
 
-    this.users[username] = user;
-    this.tokens[user.refreshToken] = username;
+        return this.generateAccessToken(user.refreshToken);
+    }
 
-    return this.generateAccessToken(user.refreshToken);
-};
+    generateAccessToken(refreshToken) {
+        const username = this.tokens[refreshToken];
+        const accessToken = crypto.randomBytes(10).toString("base64");
 
-OAuthServer.prototype.generateAccessToken = function (refreshToken) {
-    let username = this.tokens[refreshToken],
-        accessToken = crypto.randomBytes(10).toString("base64");
+        if (!username) {
+            return {
+                error: "Invalid refresh token"
+            };
+        }
 
-    if (!username) {
+        this.users[username].accessToken = accessToken;
+        this.users[username].expiresIn = Date.now + this.options.expiresIn * 1000;
+
+        if (this.options.onUpdate) {
+            this.options.onUpdate(username, accessToken);
+        }
+
         return {
-            error: "Invalid refresh token"
+            access_token: accessToken,
+            expires_in: this.options.expiresIn,
+            token_type: "Bearer"
         };
     }
 
-    this.users[username].accessToken = accessToken;
-    this.users[username].expiresIn = Date.now + this.options.expiresIn * 1000;
+    validateAccessToken(username, accessToken) {
+        if (!this.users[username] ||
+            this.users[username].accessToken !== accessToken ||
+            this.users[username].expiresIn < Date.now()) {
 
-    if (this.options.onUpdate) {
-        this.options.onUpdate(username, accessToken);
+            return false;
+        }
+        return true;
+
     }
 
-    return {
-        access_token: accessToken,
-        expires_in: this.options.expiresIn,
-        token_type: "Bearer"
-    };
-};
+    start(callback) {
+        this.server = http.createServer((req, res) => {
+            let data = [],
+                datalen = 0;
+            req.on("data", (chunk) => {
+                if (!chunk || !chunk.length) {
+                    return;
+                }
 
-OAuthServer.prototype.validateAccessToken = function (username, accessToken) {
-    if (!this.users[username] ||
-        this.users[username].accessToken !== accessToken ||
-        this.users[username].expiresIn < Date.now()) {
-
-        return false;
-    } 
-    return true;
-    
-};
-
-OAuthServer.prototype.start = function (callback) {
-    this.server = http.createServer((req, res) => {
-        let data = [],
-            datalen = 0;
-        req.on("data", (chunk) => {
-            if (!chunk || !chunk.length) {
-                return;
-            }
-
-            data.push(chunk);
-            datalen += chunk.length;
-        });
-        req.on("end", () => {
-            let query = querystring.parse(Buffer.concat(data, datalen).toString()),
-                response = this.generateAccessToken(query.refresh_token);
-
-            res.writeHead(!response.error ? 200 : 401, {
-                "Content-Type": "application/json"
+                data.push(chunk);
+                datalen += chunk.length;
             });
+            req.on("end", () => {
+                const query = querystring.parse(Buffer.concat(data, datalen).toString());
+                const response = this.generateAccessToken(query.refresh_token);
 
-            res.end(JSON.stringify(response));
+                res.writeHead(!response.error ? 200 : 401, {
+                    "Content-Type": "application/json"
+                });
+
+                res.end(JSON.stringify(response));
+            });
         });
-    });
 
-    this.server.listen(this.options.port, callback);
-};
+        this.server.listen(this.options.port, callback);
+    }
 
-OAuthServer.prototype.stop = function (callback) {
-    this.server.close(callback);
-};
+    stop(callback) {
+        this.server.close(callback);
+    }
+}
+
+export default (options) => new OAuthServer(options);

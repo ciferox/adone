@@ -1,32 +1,49 @@
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+import { SMTPServer } from "smtp-server";
 
-const net = require("net");
-const smtpPool = adone.net.mail.smtpPool;
-const SMTPServer = require("smtp-server").SMTPServer;
+describe("glosses", "net", "mail", "SMTP Pool Tests", function () {
+    this.timeout(100 * 1000); //eslint-disable-line no-invalid-this
 
-const PORT_NUMBER = 8397;
+    const { net: { mail: { __: { SMTPPool } } }, std: { net, stream: { PassThrough } } } = adone;
 
-function MockBuilder(envelope, message) {
-    this.envelope = envelope;
-    this.message = message;
-}
+    class MockBuilder {
+        constructor(envelope, message, messageId) {
+            this.envelope = envelope;
+            this.rawMessage = message;
+            this.mid = messageId || "<test>";
+        }
 
-MockBuilder.prototype.getEnvelope = function () {
-    return this.envelope;
-};
+        getEnvelope() {
+            return this.envelope;
+        }
 
-MockBuilder.prototype.createReadStream = function () {
-    return this.message;
-};
+        messageId() {
+            return this.mid;
+        }
 
-MockBuilder.prototype.getHeader = function () {
-    return "teretere";
-};
+        createReadStream() {
+            const stream = new PassThrough();
+            setImmediate(() => stream.end(this.rawMessage));
+            return stream;
+        }
 
-describe("SMTP Pool Tests", function () {
-    this.timeout(100 * 1000);
+        getHeader() {
+            return "teretere";
+        }
+    }
+
+    const PORT_NUMBER = 8397;
 
     let server;
+
+    const NODE_TLS_REJECT_UNAUTHORIZED = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
+
+    before(() => {
+        process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+    });
+
+    after(() => {
+        process.env.NODE_TLS_REJECT_UNAUTHORIZED = NODE_TLS_REJECT_UNAUTHORIZED;
+    });
 
     beforeEach((done) => {
         server = new SMTPServer({
@@ -34,7 +51,7 @@ describe("SMTP Pool Tests", function () {
             disabledCommands: ["STARTTLS"],
 
             onData(stream, session, callback) {
-                stream.on("data", adone.noop);
+                stream.on("data", () => { });
                 stream.on("end", callback);
             },
 
@@ -82,13 +99,13 @@ describe("SMTP Pool Tests", function () {
     });
 
     it("Should expose version number", () => {
-        const pool = smtpPool();
+        const pool = new SMTPPool();
         expect(pool.name).to.exist;
         expect(pool.version).to.exist;
     });
 
     it("Should detect wellknown data", () => {
-        const pool = smtpPool({
+        const pool = new SMTPPool({
             service: "google mail"
         });
         expect(pool.options.host).to.equal("smtp.gmail.com");
@@ -97,7 +114,7 @@ describe("SMTP Pool Tests", function () {
     });
 
     it("should send mail", (done) => {
-        const pool = smtpPool({
+        const pool = new SMTPPool({
             port: PORT_NUMBER,
             auth: {
                 user: "testuser",
@@ -135,7 +152,7 @@ describe("SMTP Pool Tests", function () {
     });
 
     it("should send multiple mails", (done) => {
-        const pool = smtpPool(`smtp://testuser:testpass@localhost:${PORT_NUMBER}/?logger=false`);
+        const pool = new SMTPPool(`smtp://testuser:testpass@localhost:${PORT_NUMBER}/?logger=false`);
         const message = new Array(10 * 1024).join("teretere, vana kere\n");
 
         server.onData = function (stream, session, callback) {
@@ -187,7 +204,7 @@ describe("SMTP Pool Tests", function () {
     });
 
     it("should tolerate connection errors", (done) => {
-        const pool = smtpPool({
+        const pool = new SMTPPool({
             port: PORT_NUMBER,
             auth: {
                 user: "testuser",
@@ -244,7 +261,7 @@ describe("SMTP Pool Tests", function () {
     });
 
     it("should tolerate idle connections and re-assign messages to other connections", (done) => {
-        const pool = smtpPool({
+        const pool = new SMTPPool({
             port: PORT_NUMBER,
             auth: {
                 user: "testuser",
@@ -319,7 +336,7 @@ describe("SMTP Pool Tests", function () {
     });
 
     it("should call back with connection errors to senders having messages in flight", (done) => {
-        const pool = smtpPool({
+        const pool = new SMTPPool({
             maxConnections: 1,
             socketTimeout: 200,
             port: PORT_NUMBER,
@@ -355,7 +372,7 @@ describe("SMTP Pool Tests", function () {
     });
 
     it("should not send more then allowed for one connection", (done) => {
-        const pool = smtpPool(`smtp://testuser:testpass@localhost:${PORT_NUMBER}/?maxConnections=1&maxMessages=5&logger=false`);
+        const pool = new SMTPPool(`smtp://testuser:testpass@localhost:${PORT_NUMBER}/?maxConnections=1&maxMessages=5&logger=false`);
         const message = new Array(10 * 1024).join("teretere, vana kere\n");
 
         server.onData = function (stream, session, callback) {
@@ -399,7 +416,7 @@ describe("SMTP Pool Tests", function () {
     });
 
     it("should send multiple mails with rate limit", (done) => {
-        const pool = smtpPool({
+        const pool = new SMTPPool({
             port: PORT_NUMBER,
             auth: {
                 user: "testuser",
@@ -450,7 +467,7 @@ describe("SMTP Pool Tests", function () {
         };
 
         let i = 0;
-        var send = function () {
+        const send = function () {
             if (i++ >= total) {
                 return;
             }
@@ -462,7 +479,7 @@ describe("SMTP Pool Tests", function () {
     });
 
     it("should return pending messages once closed", (done) => {
-        const pool = smtpPool(`smtp://testuser:testpass@localhost:${PORT_NUMBER}/?maxConnections=1&logger=false`);
+        const pool = new SMTPPool(`smtp://testuser:testpass@localhost:${PORT_NUMBER}/?maxConnections=1&logger=false`);
         const message = new Array(10 * 1024).join("teretere, vana kere\n");
 
         server.onData = function (stream, session, callback) {
@@ -504,7 +521,7 @@ describe("SMTP Pool Tests", function () {
     });
 
     it("should emit idle for free slots in the pool", (done) => {
-        const pool = smtpPool(`smtp://testuser:testpass@localhost:${PORT_NUMBER}/?logger=false`);
+        const pool = new SMTPPool(`smtp://testuser:testpass@localhost:${PORT_NUMBER}/?logger=false`);
         const message = new Array(10 * 1024).join("teretere, vana kere\n");
 
         server.onData = function (stream, session, callback) {
@@ -560,7 +577,7 @@ describe("SMTP Pool Tests", function () {
     });
 
     it("Should login and send mail using proxied socket", (done) => {
-        const pool = smtpPool({
+        const pool = new SMTPPool({
             url: "smtp:testuser:testpass@www.example.com:1234",
             logger: false,
             getSocket(options, callback) {
@@ -604,7 +621,7 @@ describe("SMTP Pool Tests", function () {
     });
 
     it("Should verify connection with success", (done) => {
-        const client = smtpPool({
+        const client = new SMTPPool({
             url: `smtp:testuser:testpass@localhost:${PORT_NUMBER}`,
             logger: false
         });
@@ -618,7 +635,7 @@ describe("SMTP Pool Tests", function () {
     });
 
     it("Should not verify connection", (done) => {
-        const client = smtpPool({
+        const client = new SMTPPool({
             url: `smtp:testuser:testpass@localhost:999${PORT_NUMBER}`,
             logger: false
         });

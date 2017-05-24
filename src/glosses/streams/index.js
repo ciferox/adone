@@ -14,5 +14,7 @@ adone.lazify({
     iconv: "./iconv",
     CountingStream: "./counting_stream",
     newlineCounter: "./newline_counter",
-    as: "./as"
+    as: "./as",
+    base64: "./base64",
+    LastNewline: "./last_newline"
 }, exports, require);

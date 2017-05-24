@@ -1,6 +1,6 @@
-const addressparser = adone.net.mail.addressparser;
+describe("glosses", "net", "mail", "addressparser", () => {
+    const { net: { mail: { __: { addressparser } } } } = adone;
 
-describe("#addressparser", () => {
     it("should handle single address correctly", () => {
         const input = "andris@tr.ee";
         const expected = [{
@@ -32,7 +32,7 @@ describe("#addressparser", () => {
     });
 
     it("should handle quoted name correctly", () => {
-        const input = "\"reinman, andris\" <andris@tr.ee>";
+        const input = '"reinman, andris" <andris@tr.ee>';
         const expected = [{
             name: "reinman, andris",
             address: "andris@tr.ee"
@@ -41,7 +41,7 @@ describe("#addressparser", () => {
     });
 
     it("should handle quoted semicolons correctly", () => {
-        const input = "\"reinman; andris\" <andris@tr.ee>";
+        const input = '"reinman; andris" <andris@tr.ee>';
         const expected = [{
             name: "reinman; andris",
             address: "andris@tr.ee"
@@ -205,42 +205,6 @@ describe("#addressparser", () => {
         const expected = [{
             name: "reinman > andris",
             address: "andris@tr.ee"
-        }];
-        expect(addressparser(input)).to.deep.equal(expected);
-    });
-
-    it("should handle single-quoted address", () => {
-        const input = "andris reinman <'andris@tr.ee'>";
-        const expected = [{
-            name: "andris reinman",
-            address: "andris@tr.ee"
-        }];
-        expect(addressparser(input)).to.deep.equal(expected);
-    });
-
-    it("should handle double-quoted address", () => {
-        const input = "andris reinman <\"andris@tr.ee\">";
-        const expected = [{
-            name: "andris reinman",
-            address: "andris@tr.ee"
-        }];
-        expect(addressparser(input)).to.deep.equal(expected);
-    });
-
-    it("should handle quoted email name", () => {
-        const input = "\"andris@tr.ee\" <\"andris@tr.ee\">";
-        const expected = [{
-            name: "",
-            address: "andris@tr.ee"
-        }];
-        expect(addressparser(input)).to.deep.equal(expected);
-    });
-
-    it("should not handle email quoted midway", () => {
-        const input = "andris reinman <and\"ris@tr.ee\">";
-        const expected = [{
-            name: "andris reinman",
-            address: "and\"ris@tr.ee\""
         }];
         expect(addressparser(input)).to.deep.equal(expected);
     });

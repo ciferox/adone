@@ -123,13 +123,22 @@ export const encodeVLQ = (aValue) => {
     return encoded;
 };
 
-export const encode = (str) => {
+export const encode = (str, { buffer = true } = {}) => {
     if (!is.buffer(str)) {
         str = Buffer.from(str);
+    }
+    if (!buffer) {
+        return str.toString("base64");
     }
     return Buffer.from(str.toString("base64"));
 };
 
-export const decode = (str) => Buffer.from(str, "base64").toString();
+export const decode = (str, { buffer = false } = {}) => {
+    const b = Buffer.from(str, "base64");
+    if (buffer) {
+        return b;
+    }
+    return b.toString();
+};
 
 export const any = false;

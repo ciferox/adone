@@ -1155,13 +1155,29 @@ export default class Server {
         this.middlewares = [];
         const composed = adone.net.http.server.helper.compose(this.middlewares);
         const processContext = (context) => composed(context);
+        this.authenticate = adone.truly;
         this.server
-            .on("request", (req, res) => {
+            .on("request", async (req, res) => {
+                const authenticated = await this.authenticate(req, "request");
+                if (!authenticated) {
+                    res.writeHead(407);
+                    res.end();
+                    return;
+                }
                 processContext(new HTTPContext(req, res));
             })
-            .on("connect", (req, socket, head) => {
+            .on("connect", async (req, socket, head) => {
+                const authenticated = await this.authenticate(req, "connect");
+                if (!authenticated) {
+                    socket.destroy();
+                    return;
+                }
                 processContext(new HTTPConnectContext(req, socket, head, processContext, https, getInternalPort));
             });
+    }
+
+    authenticate() {
+
     }
 
     use(middleware) {
@@ -1180,5 +1196,11 @@ export default class Server {
 
     address() {
         return this.server.address();
+    }
+
+    async close() {
+        await new Promise((resolve) => {
+            this.server.close(resolve);
+        });
     }
 }
