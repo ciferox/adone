@@ -7,7 +7,7 @@
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # Short-Description: Omnitron service
-# Description:       Omnitron service - ADONE execution core
+# Description:       Omnitron service (adone execution core)
 # Author:            Adone Core Team
 # Created:           {{created}}
 ### END INIT INFO

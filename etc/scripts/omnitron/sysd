@@ -1,12 +1,13 @@
 [Unit]
-Description=Omnitron service - ADONE execution core
+Description=Omnitron service  (adone execution core)
 
 [Service]
-ExecStart={{execPath}} {{script}}
+Type=forking
+ExecStart={{execPath}} {{script}} start
+ExecStop={{execPath}} {{script}} stop
 Restart=always
-SyslogIdentifier=omnitron
 User={{user}}
-Group={{group}}
+PIDFile={{pidPath}}
 
 [Install]
 WantedBy=multi-user.target
