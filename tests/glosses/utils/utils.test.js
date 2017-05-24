@@ -1216,4 +1216,93 @@ describe("glosses", "utils", () => {
             expect(matches).to.be.empty;
         });
     });
+
+    describe("assignDeep", () => {
+        it("should assign deeply", () => {
+            const document = {
+                style: {
+                    align: "left",
+                    font: {
+                        size: 14
+                    }
+                },
+                body: {
+                    lines: 100,
+                    rows: 1000,
+                    custom: {
+                        words: 10,
+                        chars: 28
+                    }
+                }
+            };
+            util.assignDeep(document, {
+                style: {
+                    font: {
+                        value: "Roboto"
+                    }
+                },
+                body: {
+                    pages: 2,
+                    rows: 1010,
+                    custom: {
+                        magic: true,
+                        chars: 22
+                    }
+                }
+            });
+            expect(document).to.be.deep.equal({
+                style: {
+                    align: "left",
+                    font: {
+                        size: 14,
+                        value: "Roboto"
+                    }
+                },
+                body: {
+                    pages: 2,
+                    lines: 100,
+                    rows: 1010,
+                    custom: {
+                        words: 10,
+                        chars: 22,
+                        magic: true
+                    }
+                }
+            });
+        });
+
+        it("should return the target", () => {
+            const target = { a: 1 };
+            const ret = util.assignDeep(target, { b: 2 });
+            expect(ret).to.be.equal(target);
+            expect(ret).to.be.deep.equal({ a: 1, b: 2 });
+        });
+
+        it("should set the target to empty object if it is falsy", () => {
+            expect(util.assignDeep(null, { a: 2 })).to.be.deep.equal({ a: 2 });
+        });
+
+        it("should support multiple sources", () => {
+            expect(util.assignDeep(
+                { a: 1 },
+                { b: 2, c: { d: 3 } },
+                { c: { e: 5 } },
+                { d: { f: 7, g: 1 } },
+                { d: { f: 4, y: 2 }, c: { w: 2 } }
+            )).to.be.deep.equal({
+                a: 1,
+                b: 2,
+                c: {
+                    d: 3,
+                    e: 5,
+                    w: 2
+                },
+                d: {
+                    f: 4,
+                    g: 1,
+                    y: 2
+                }
+            });
+        });
+    });
 });

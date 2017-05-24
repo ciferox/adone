@@ -853,6 +853,23 @@ export const reFindAll = (regexp, str) => {
     return res;
 };
 
+export const assignDeep = (target, ...sources) => {
+    target = target || {};
+    for (const src of sources) {
+        if (!is.object(src)) {
+            continue;
+        }
+        for (const [key, value] of entries(src)) {
+            if (is.object(value) && is.object(target[key])) {
+                assignDeep(target[key], value);
+            } else {
+                target[key] = value;
+            }
+        }
+    }
+    return target;
+};
+
 adone.lazify({
     match: "./match",
     throat: "./throat",
