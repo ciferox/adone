@@ -1,8 +1,24 @@
-import intoStream from "into-stream";
-const { is, std: { fs } } = adone;
-const { as } = adone.stream;
+const { is, std: { fs, stream }, stream: { as } } = adone;
 
 const fixture = (name) => adone.std.path.join(__dirname, "fixtures", name);
+
+class Through extends stream.PassThrough {
+    constructor(data, readableObjectMode = false) {
+        super({
+            writableObjectMode: true,
+            readableObjectMode
+        });
+        if (is.string(data) || is.buffer(data)) {
+            this.push(data);
+        }
+        if (is.array(data)) {
+            for (const i of data) {
+                this.push(i);
+            }
+        }
+        this.end();
+    }
+}
 
 describe("streams", "as", () => {
     const makeSetup = (intoStream) => {
@@ -12,8 +28,8 @@ describe("streams", "as", () => {
         return setup;
     };
 
-    const setup = makeSetup(intoStream);
-    setup.obj = makeSetup(intoStream.obj);
+    const setup = makeSetup((data) => new Through(data));
+    setup.obj = makeSetup((data) => new Through(data, true));
 
     it("get stream as a buffer", async () => {
         assert.isTrue((await as.buffer(fs.createReadStream(fixture("as")))).equals(Buffer.from("unicorn\n")));
@@ -41,7 +57,7 @@ describe("streams", "as", () => {
     });
 
     it("getStream should not affect additional listeners attached to the stream", async () => {
-        const fixture = intoStream(["foo", "bar"]);
+        const fixture = new Through(["foo", "bar"]);
         fixture.on("data", (chunk) => assert.isTrue(is.buffer(chunk)));
         assert.equal(await as.string(fixture), "foobar");
     });
@@ -55,8 +71,8 @@ describe("streams", "as", () => {
     });
 
     it("maxBuffer applies to length of arrays when in objectMode", async () => {
-        await assert.throws(async () => as.array(intoStream.obj([{ a: 1 }, { b: 2 }, { c: 3 }, { d: 4 }]), { maxBuffer: 3 }), /maxBuffer exceeded/);
-        await assert.doesNotThrow(async () => as.array(intoStream.obj([{ a: 1 }, { b: 2 }, { c: 3 }]), { maxBuffer: 3 }));
+        await assert.throws(async () => as.array(new Through([{ a: 1 }, { b: 2 }, { c: 3 }, { d: 4 }], true), { maxBuffer: 3 }), /maxBuffer exceeded/);
+        await assert.doesNotThrow(async () => as.array(new Through([{ a: 1 }, { b: 2 }, { c: 3 }], true), { maxBuffer: 3 }));
     });
 
     it("maxBuffer applies to length of data when not in objectMode", async () => {

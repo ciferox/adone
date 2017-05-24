@@ -85,12 +85,17 @@ class Argument {
         this.appendDefaultHelpMessage = options.appendDefaultMessage;
         this.appendChoicesHelpMessage = options.appendChoicesHelpMessage;
         this.colors = options.colors;
+        this._frozenColors = options._frozenColors;
     }
 
     setCommand(command) {
         this.command = command;
-        if (hasColorsSupport && this.colors !== false) {
-            this.colors = util.assignDeep({}, this.command.colors, this.colors);
+        if (hasColorsSupport && !this._frozenColors) {
+            if (!this.command.colors) {
+                this.colors = this.command.colors;
+            } else {
+                this.colors = util.assignDeep({}, this.command.colors, this.colors);
+            }
         }
     }
 
@@ -291,6 +296,17 @@ class Argument {
 
         if (!hasColorsSupport) {
             options.colors = false;
+        } else if (options.colors === "default") {
+            options.colors = util.clone(defaultColors);
+            options._frozenColors = true;
+        } else if (is.object(options.colors)) {
+            if (options.colors.inherit === false) {
+                options.colors = util.assignDeep({}, defaultColors, options.colors);
+                delete options.colors.inherit;
+                options._frozenColors = true;
+            }
+        } else if (options.colors === false) {
+            options._frozenColors = true;
         }
 
         return options;
@@ -736,12 +752,17 @@ class Command {
         this.optionsGroups = [new Group({ name: UNNAMED })];
         this.commandsGroups = [new Group({ name: UNNAMED })];
         this.colors = options.colors;
+        this._frozenColors = options._frozenColors;
     }
 
     setParentCommand(command) {
         this.parent = command;
-        if (hasColorsSupport && this.colors !== false) {
-            this.colors = util.assignDeep({}, this.parent.colors, this.colors);
+        if (hasColorsSupport && !this._frozenColors) {
+            if (!this.parent.colors) {
+                this.colors = this.parent.colors;
+            } else {
+                this.colors = util.assignDeep({}, this.parent.colors, this.colors);
+            }
         }
     }
 
@@ -971,6 +992,19 @@ class Command {
         }
         if (!hasColorsSupport) {
             options.colors = false;
+        } else if (is.object(options.colors)) {
+            if (!options.colors.inherit) {
+                options.colors = util.assignDeep({}, defaultColors, options.colors);
+                delete options.colors.inherit;
+                options._frozenColors = true;
+            }
+        } else if (options.colors === false) {
+            options._frozenColors = true;
+        } else if (options.colors === "inherit") {
+            options.colors = {};
+        } else {
+            options.colors = util.clone(defaultColors);
+            options._frozenColors = true;
         }
         return options;
     }
@@ -1535,15 +1569,14 @@ export class Application extends Subsystem {
             arguments: [],
             commands: [],
             commandsGroups: [],
-            optionsGroups: []
+            optionsGroups: [],
+            colors: "default"
         }, options);
-        if (hasColorsSupport) {
-            if (options.colors !== false) {
-                options.colors = util.assignDeep({}, defaultColors, options.colors);
-            }
-        } else {
+
+        if (!hasColorsSupport) {
             options.colors = false;
         }
+
         if (options.addVersion !== false) {
             options.options.unshift({
                 name: "--version",

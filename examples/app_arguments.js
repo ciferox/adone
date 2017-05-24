@@ -18,7 +18,12 @@ adone.run({
                 { name: "--nested-array", holder: "AA", nargs: 1, default: [[1], [false], [[{ a: 2 }]]], colors: false },
                 { name: "--object", nargs: 1, default: { a: 1, b: "123", c: [{ b: 4, c: "2" }] }, colors: {
                     value: { number: (x) => adone.terminal.red(x) }
-                } }
+                } },
+                { name: "--object-2", nargs: 1, default: { a: 1, b: "123", c: [{ b: 4, c: "2" }] }, colors: {
+                    inherit: false,
+                    value: { number: (x) => adone.terminal.green(x) }
+                } },
+                { name: "--object-3", nargs: 1, default: { a: 1, b: "123", c: [{ b: 4, c: "2" }] }, colors: "default" }
             ],
             commands: [
                 { name: "command-1", help: "this is command 1" },
@@ -31,10 +36,80 @@ adone.run({
                         commandName: (x) => adone.terminal.yellow(x)  // only for inner commands
                     },
                     commands: [
-                        { name: "command-5-1" },
-                        { name: "command-5-2" },
-                        { name: "command-5-3" },
-                        { name: "command-5-4" }
+                        { name: "command-1" },
+                        { name: "command-2" },
+                        { name: "command-3" },
+                        { name: "command-4" }
+                    ]
+                },
+                {
+                    name: "command-6",
+                    help: "uses default colors",
+                    arguments: ["a1", "a2", "a3"],
+                    options: ["--o1", "--o2", { name: "--o3", nargs: 1, holder: "X" }],
+                    commands: [
+                        { name: "command-1" },
+                        { name: "command-2" },
+                        { name: "command-3" }
+                    ]
+                },
+                {
+                    name: "command-7",
+                    help: "inherit parent colors",
+                    colors: "inherit",
+                    arguments: ["a1", "a2", "a3"],
+                    options: ["--o1", "--o2", { name: "--o3", nargs: 1, holder: "X" }],
+                    commands: [
+                        { name: "command-1" },
+                        { name: "command-2" },
+                        { name: "command-3" }
+                    ]
+                },
+                {
+                    name: "command-8",
+                    help: "extends default colors",
+                    colors: {
+                        optionName: (x) => adone.terminal.grey(x)
+                    },
+                    arguments: ["a1", "a2", "a3"],
+                    options: ["--o1", "--o2", { name: "--o3", nargs: 1, holder: "X" }],
+                    commands: [
+                        { name: "command-1" },
+                        { name: "command-2" },
+                        { name: "command-3" }
+                    ]
+                },
+                {
+                    name: "command-9",
+                    help: "extends parent colors",
+                    colors: {
+                        inherit: true,
+                        optionName: (x) => adone.terminal.grey(x)
+                    },
+                    arguments: ["a1", "a2", "a3"],
+                    options: ["--o1", "--o2", { name: "--o3", nargs: 1, default: "test", holder: "X", colors: {
+                        optionName: (x) => adone.terminal.yellow(x),
+                        value: { string: (x) => adone.terminal.red(x) }
+                    } }],
+                    commands: [
+                        { name: "command-1" },
+                        { name: "command-2" },
+                        { name: "command-3" }
+                    ]
+                },
+                {
+                    name: "command-10",
+                    help: "no colors",
+                    colors: false,
+                    arguments: ["a1", "a2", "a3"],
+                    options: ["--o1", "--o2", { name: "--o3", nargs: 1, default: "test", holder: "X", colors: {
+                        optionName: (x) => adone.terminal.yellow(x),
+                        value: { string: (x) => adone.terminal.red(x) }
+                    } }],
+                    commands: [
+                        { name: "command-1", help: "default colors" },
+                        { name: "command-2", colors: "inherit", help: "no colors from parent" },
+                        { name: "command-3", colors: false, help: "no colors from itself" }
                     ]
                 }
             ],
@@ -52,6 +127,12 @@ adone.run({
                             return adone.terminal.cyan(x);
                         }
                     }
+                },
+                optionName: (x) => {
+                    if (Math.random() > 0.5) {
+                        return adone.terminal.cyan(x);
+                    }
+                    return adone.terminal.red(x);
                 }
             }
         });
