@@ -142,12 +142,15 @@ export const detectNewline = (str) => {
     return crlf > lf ? "\r\n" : "\n";
 };
 
-export const wordwrap = (str, stop, { join = true, mode = "soft" } = {}) => {
+export const wordwrap = (str, stop, { join = true, mode = "soft", countAnsiEscapeCodes = false } = {}) => {
     let lines = str.split("\n");
     if (lines.length > 1) {
-        lines = lines.map((x) => wordwrap(x, stop, { mode }));
+        lines = lines.map((x) => wordwrap(x, stop, { mode, countAnsiEscapeCodes }));
     } else {
-        const chunks = str.split(mode === "soft" ? /(\S+\s+)/ : /\b/).reduce((res, x) => {
+        const chunks = str.split(mode === "soft" ? /(\s+\S+)/ : /\b/).reduce((res, x) => {
+            if (!x) {
+                return res;
+            }
             if (mode === "hard") {
                 for (let i = 0; i < x.length; i += stop) {
                     res.push(x.slice(i, i + stop));
@@ -157,13 +160,18 @@ export const wordwrap = (str, stop, { join = true, mode = "soft" } = {}) => {
             }
             return res;
         }, []);
+        // let lineLength = 0;
         lines = chunks.reduce((lines, rawChunk) => {
             if (rawChunk === "") {
                 return lines;
             }
             const chunk = rawChunk.replace(/\t/g, "    ");
             const i = lines.length - 1;
-            if (lines[i].length + chunk.length > stop) {
+
+            const lineLength = countAnsiEscapeCodes ? lines[i].length : ansi.stripEscapeCodes(lines[i]).length;
+            const chunkLength = countAnsiEscapeCodes ? chunk.length : ansi.stripEscapeCodes(chunk).length;
+
+            if (lineLength + chunkLength > stop) {
                 lines[i] = lines[i].replace(/\s+$/, "");
                 if (lines[i] === "") {
                     lines.pop();
@@ -176,6 +184,9 @@ export const wordwrap = (str, stop, { join = true, mode = "soft" } = {}) => {
             }
             return lines;
         }, [""]);
+    }
+    if (lines.length && lines[lines.length - 1] === "") {
+        lines.pop();
     }
     if (join) {
         return lines.join("\n");

@@ -199,41 +199,13 @@ const truncate = (str, desiredLength, truncateChar) => {
     return truncateWidthWithAnsi(str, desiredLength) + truncateChar;
 };
 
-const wordWrap = (maxLength, input) => {
-    const lines = [];
-    const split = input.split(/(\s+)/g);
-    let line = [];
-    let lineLength = 0;
-    let whitespace;
-    for (let i = 0; i < split.length; i += 2) {
-        const word = split[i];
-        let newLength = lineLength + strlen(word);
-        if (lineLength > 0 && whitespace) {
-            newLength += whitespace.length;
-        }
-        if (newLength > maxLength) {
-            if (lineLength !== 0) {
-                lines.push(line.join(""));
-            }
-            line = [word];
-            lineLength = strlen(word);
-        } else {
-            line.push(whitespace || "", word);
-            lineLength = newLength;
-        }
-        whitespace = split[i + 1];
-    }
-    if (lineLength) {
-        lines.push(line.join(""));
-    }
-    return lines;
-};
+const wordWrap = (maxLength, input) => adone.text.wordwrap(input, maxLength, { join: false });
 
 const multiLineWordWrap = (maxLength, input) => {
     const output = [];
     input = input.split("\n");
     for (let i = 0; i < input.length; i++) {
-        output.push.apply(output, wordWrap(maxLength, input[i]));
+        output.push(...wordWrap(maxLength, input[i]));
     }
     return output;
 };

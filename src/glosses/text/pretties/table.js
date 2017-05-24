@@ -19,7 +19,8 @@ export default function prettyTable(data, {
     borderless = false,
     model,
     style = {},
-    width = null
+    width = null,
+    countAnsiEscapeCodes = false
 } = {}) {
     // normalize width
     // dont touch if it is a number
@@ -55,7 +56,13 @@ export default function prettyTable(data, {
         map[m.id].col = col++;
 
         if (m.wordwrap) {
-            map[m.id].wordwrap = is.string(m.wordwrap) ? m.wordwrap : "soft";
+            if (is.string(m.wordwrap)) {
+                map[m.id].wordwrap = { mode: m.wordwrap };
+            } else if (is.object(m.wordwrap)) {
+                map[m.id].wordwrap = Object.assign({ countAnsiEscapeCodes }, m.wordwrap);
+            } else {
+                map[m.id].wordwrap = { mode: "soft" };
+            }
         }
     }
 
@@ -99,7 +106,7 @@ export default function prettyTable(data, {
 
         const colWidth = data.reduce((x, y) => {
             const v = y[m.id];
-            const l = is.nil(v) ? 0 : v.toString().length + padLeft + padRight;
+            const l = is.nil(v) ? 0 : (countAnsiEscapeCodes ? v.toString() : adone.text.ansi.stripEscapeCodes(v.toString())).length + padLeft + padRight;
             return Math.max(x, l);
         }, 0);
 
@@ -187,7 +194,7 @@ export default function prettyTable(data, {
                     str = str.toString();
                     const maxLen = m.colWidth - padLeft - padRight;
                     if (m.colWidth && str.length > maxLen) {
-                        str = adone.text.wordwrap(str, maxLen, { mode: m.wordwrap });
+                        str = adone.text.wordwrap(str, maxLen, m.wordwrap);
                     }
                 }
 
