@@ -539,12 +539,12 @@ class OptionalArgument extends Argument {
     }
 }
 
-const argumentsWrap = (args, maxLength, colors) => {
+const argumentsWrap = (args, maxLength) => {
     const lines = [];
     let length = 0;
     let line = [];
     for (let i = 0; i < args.length; ++i) {
-        const arg = colors ? colors.argumentName(args[i]) : args[i];
+        const arg = args[i];
         const len = noStyleLength(arg);
         if (length + len + 1 >= maxLength && line.length !== 0) {
             lines.push(line.join(" "));
@@ -1005,7 +1005,7 @@ class Command {
             messages.push(arg.getUsageMessage());
         }
 
-        table.push([null, chain, argumentsWrap(messages, argumentsLength, this.colors)]);
+        table.push([null, chain, argumentsWrap(messages, argumentsLength)]);
 
         const commands = this.commands;
         if (commands.length !== 0) {

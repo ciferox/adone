@@ -13,9 +13,9 @@ adone.run({
             ],
             options: [
                 { name: "--array", nargs: 1, default: ["", "1", 2], help: "some text", colors: {
-                    optionName: (x) => adone.terminal.white(x)
+                    optionName: (x) => adone.terminal.grey(x)
                 } },
-                { name: "--nested-array", holder: "AA", nargs: 1, default: [[1], [false], [[{ a: 2 }]]] },
+                { name: "--nested-array", holder: "AA", nargs: 1, default: [[1], [false], [[{ a: 2 }]]], colors: false },
                 { name: "--object", nargs: 1, default: { a: 1, b: "123", c: [{ b: 4, c: "2" }] }, colors: {
                     value: { number: (x) => adone.terminal.red(x) }
                 } }
