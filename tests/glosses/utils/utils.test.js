@@ -1217,7 +1217,7 @@ describe("glosses", "utils", () => {
         });
     });
 
-    describe("assignDeep", () => {
+    describe.only("assignDeep", () => {
         it("should assign deeply", () => {
             const document = {
                 style: {
@@ -1303,6 +1303,22 @@ describe("glosses", "utils", () => {
                     y: 2
                 }
             });
+        });
+
+        it("should copy values", () => {
+            const a = { a: 1 };
+            const b = { b: { c: 10 } };
+            util.assignDeep(a, b);
+            b.b.c = 42;
+            expect(a).to.be.deep.equal({ a: 1, b: { c: 10 } });
+        });
+
+        it("should not touch not plain objects", () => {
+            const f = () => {};
+            const a = { a: { b: 10 } };
+            const b = { a: f, b: f };
+            util.assignDeep(a, b);
+            expect(a).to.be.deep.equal({ a: f, b: f });
         });
     });
 });

@@ -856,14 +856,14 @@ export const reFindAll = (regexp, str) => {
 export const assignDeep = (target, ...sources) => {
     target = target || {};
     for (const src of sources) {
-        if (!is.object(src)) {
+        if (!is.plainObject(src)) {
             continue;
         }
         for (const [key, value] of entries(src)) {
-            if (is.object(value) && is.object(target[key])) {
+            if (is.plainObject(value) && is.plainObject(target[key])) {
                 assignDeep(target[key], value);
             } else {
-                target[key] = value;
+                target[key] = clone(value);
             }
         }
     }

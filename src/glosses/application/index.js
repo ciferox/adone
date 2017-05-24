@@ -6,8 +6,9 @@ const lazy = lazify({
 
 const noStyleLength = (x) => text.ansi.stripEscapeCodes(x).length;
 
-const colorize = {
-    supported: Boolean(process.stdout.isTTY),
+const hasColorsSupport = Boolean(process.stdout.isTTY);
+
+const defaultColors = {
     commandName: (x) => adone.terminal.parse(`{#4CAF50-fg}${x}{/}`),
     commandSeparator: (x) => x,
     optionName: (x) => adone.terminal.parse(`{#00B0FF-fg}${x}{/}`),
@@ -19,7 +20,22 @@ const colorize = {
     angleBracket: (x) => adone.terminal.parse(`{#F44336-fg}${x}{/}`),
     squareBracket: (x) => adone.terminal.yellow(x),
     curlyBracket: (x) => adone.terminal.yellow(x),
-    ellipsis: (x) => adone.terminal.dim(x)
+    ellipsis: (x) => adone.terminal.dim(x),
+    usage: (x) => adone.terminal.underline(x),
+    commandGroupHeading: (x) => adone.terminal.underline(x),
+    argumentGroupHeading: (x) => adone.terminal.underline(x),
+    optionGroupHeading: (x) => adone.terminal.underline(x),
+    value: {
+        string: (x) => adone.terminal.green(x),
+        null: (x) => adone.terminal.yellow(x),
+        number: (x) => adone.terminal.yellow(x),
+        undefined: (x) => adone.terminal.yellow(x),
+        boolean: (x) => adone.terminal.yellow(x),
+        object: {
+            key: (x) => x,
+            separator: (x) => adone.terminal.cyan(x)
+        }
+    }
 };
 
 export class Subsystem extends adone.EventEmitter {
@@ -68,6 +84,14 @@ class Argument {
         this.const = options.const;
         this.appendDefaultHelpMessage = options.appendDefaultMessage;
         this.appendChoicesHelpMessage = options.appendChoicesHelpMessage;
+        this.colors = options.colors;
+    }
+
+    setCommand(command) {
+        this.command = command;
+        if (hasColorsSupport && this.colors !== false) {
+            this.colors = util.assignDeep({}, this.command.colors, this.colors);
+        }
     }
 
     get default() {
@@ -265,17 +289,21 @@ class Argument {
             options.default = EMPTY_VALUE;
         }
 
+        if (!hasColorsSupport) {
+            options.colors = false;
+        }
+
         return options;
     }
 
-    _formatValue(x, { colors = true } = {}) {
+    _formatValue(x) {
         const type = adone.util.typeOf(x);
 
         switch (type) {
             case "string": {
                 x = `"${x}"`;
-                if (colors) {
-                    return adone.terminal.green(x);
+                if (this.colors) {
+                    return this.colors.value.string(x);
                 }
                 return x;
             }
@@ -284,19 +312,20 @@ class Argument {
             case "undefined":
             case "boolean": {
                 x = String(x);
-                if (colors) {
-                    return adone.terminal.yellow(x);
+                if (this.colors) {
+                    return this.colors.value[type](x);
                 }
                 return x;
             }
             case "Array": {
-                return `[${x.map((y) => this._formatValue(y, { colors })).join(", ")}]`;
+                return `[${x.map((y) => this._formatValue(y)).join(", ")}]`;
             }
             case "Object": {
-                const separator = colors ? adone.terminal.cyan(":") : ":";
+                const separator = this.colors ? this.colors.value.object.separator(":") : ":";
                 let res = "{";
                 const entries = util.entries(x).map(([key, value]) => {
-                    return `${key}${separator} ${this._formatValue(value, { colors })}`;
+                    key = this.colors ? this.colors.value.object.key(key) : key;
+                    return `${key}${separator} ${this._formatValue(value)}`;
                 });
                 if (entries.length) {
                     res += ` ${entries.join(", ")} `;
@@ -309,11 +338,11 @@ class Argument {
         }
     }
 
-    getShortHelpMessage({ colors = true } = {}) {
+    getShortHelpMessage() {
         let msg = this.help;
 
         if (this.appendChoicesHelpMessage && this.choices) {
-            const formatted = this.choices.map((x) => this._formatValue(x, { colors })).join(", ");
+            const formatted = this.choices.map((x) => this._formatValue(x)).join(", ");
             if (msg) {
                 msg = `${msg} `;
             }
@@ -321,12 +350,12 @@ class Argument {
         }
 
         if (this.appendDefaultHelpMessage && this.action === "store" && this.hasDefaultValue()) {
-            const value = this._formatValue(this.default, { colors });
+            const value = this._formatValue(this.default);
             if (msg) {
                 msg = `${msg}\n`;
             }
-            if (colors) {
-                msg = `${msg}${colorize.default("default:")} ${value}`;
+            if (this.colors) {
+                msg = `${msg}${this.colors.default("default:")} ${value}`;
             } else {
                 msg = `${msg}default: ${value}`;
             }
@@ -336,7 +365,7 @@ class Argument {
 }
 
 class PositionalArgument extends Argument {
-    constructor(options = {}) {
+    constructor(options = {}, command) {
         if (is.string(options)) {
             options = { name: options };
         }
@@ -347,7 +376,7 @@ class PositionalArgument extends Argument {
             action: "store",
             required: !(options.nargs === "?" || options.nargs === "*" || (!("nargs" in options) && options.choices))
         }, options);
-        super(options);
+        super(options, command);
         if ("action" in options && options.action !== "store") {
             throw new x.IllegalState(`${this.names[0]}: A positional agrument must have action = store`);
         }
@@ -374,15 +403,15 @@ class PositionalArgument extends Argument {
         return this.names[0];
     }
 
-    getUsageMessage({ colors = true } = {}) {
-        const uaOpenBracket = colors ? colorize.angleBracket("<") : "<";
-        const uaCloseBracket = colors ? colorize.angleBracket(">") : ">";
-        const openBracket = colors ? colorize.squareBracket("[") : "[";
-        const closeBracket = colors ? colorize.squareBracket("]") : "]";
-        const ellipsis = colors ? colorize.ellipsis("...") : "...";
+    getUsageMessage() {
+        const uaOpenBracket = this.colors ? this.colors.angleBracket("<") : "<";
+        const uaCloseBracket = this.colors ? this.colors.angleBracket(">") : ">";
+        const openBracket = this.colors ? this.colors.squareBracket("[") : "[";
+        const closeBracket = this.colors ? this.colors.squareBracket("]") : "]";
+        const ellipsis = this.colors ? this.colors.ellipsis("...") : "...";
         let usageVariable = this.usageVariable;
-        if (colors) {
-            usageVariable = colorize.argumentName(usageVariable);
+        if (this.colors) {
+            usageVariable = this.colors.argumentName(usageVariable);
         }
         const arg = `${uaOpenBracket}${usageVariable}${uaCloseBracket}`;
         let msg = null;
@@ -399,24 +428,24 @@ class PositionalArgument extends Argument {
         return msg;
     }
 
-    getNamesMessage({ colors = true } = {}) {
+    getNamesMessage() {
         if (this.holder) {
-            return colors ? colorize.argumentName(this.holder) : this.holder;
+            return this.colors ? this.colors.argumentName(this.holder) : this.holder;
         }
         return this.names.map((x) => {
-            return colors ? colorize.argumentName(x) : x;
+            return this.colors ? this.colors.argumentName(x) : x;
         }).join(", ");
     }
 }
 
 class OptionalArgument extends Argument {
-    constructor(options = {}) {
+    constructor(options = {}, command) {
         if (is.string(options)) {
             options = { name: options };
         }
         super(adone.o({
             action: (options.choices || options.nargs || (options.type && options.type !== Boolean)) ? "store" : "store_true"
-        }, options));
+        }, options), command);
         for (const name of this.names) {
             if (name[0] !== "-") {
                 throw new x.IllegalState(`${this.names[0]}: The name of an optional argument must start with \"-\": ${name}`);
@@ -437,7 +466,7 @@ class OptionalArgument extends Argument {
         if (raw) {
             return super.match(name);
         }
-        if (this.mappedNames === null) {
+        if (is.null(this.mappedNames)) {
             this.mappedNames = [
                 ...this.names,
                 ...this.names.map((x) => {
@@ -474,19 +503,19 @@ class OptionalArgument extends Argument {
         return s.slice(i);
     }
 
-    getUsageMessage({ required = true, allNames = false, colors = true } = {}) {
+    getUsageMessage({ required = true, allNames = false } = {}) {
         let msg = (allNames ? this.names : this.names.slice(0, 1)).map((x) => {
-            return colors ? colorize.optionName(x) : x;
+            return this.colors ? this.colors.optionName(x) : x;
         }).join(", ");
 
-        const openBrace = colors ? colorize.squareBracket("[") : "[";
-        const closeBrace = colors ? colorize.squareBracket("]") : "]";
-        const ellipsis = colors ? colorize.ellipsis("...") : "...";
+        const openBrace = this.colors ? this.colors.squareBracket("[") : "[";
+        const closeBrace = this.colors ? this.colors.squareBracket("]") : "]";
+        const ellipsis = this.colors ? this.colors.ellipsis("...") : "...";
 
         let usageVariable = this.usageVariable;
 
-        if (colors) {
-            usageVariable = colorize.optionVariable(usageVariable);
+        if (this.colors) {
+            usageVariable = this.colors.optionVariable(usageVariable);
         }
 
         if (this.nargs === "+") {
@@ -515,7 +544,7 @@ const argumentsWrap = (args, maxLength, colors) => {
     let length = 0;
     let line = [];
     for (let i = 0; i < args.length; ++i) {
-        const arg = colors ? colorize.argumentName(args[i]) : args[i];
+        const arg = colors ? colors.argumentName(args[i]) : args[i];
         const len = noStyleLength(arg);
         if (length + len + 1 >= maxLength && line.length !== 0) {
             lines.push(line.join(" "));
@@ -535,15 +564,15 @@ const argumentsWrap = (args, maxLength, colors) => {
     return lines.join("\n");
 };
 
-const commandsWrap = (cmds, maxLength, colors = true) => {
+const commandsWrap = (cmds, maxLength, colors) => {
     const lines = [];
     let length = 0;
     let line = [];
-    const separator = ` ${colors ? colorize.commandSeparator("|") : "|"} `;
-    const openBrace = colors ? colorize.curlyBracket("{") : "{";
-    const closeBrace = colors ? colorize.curlyBracket("}") : "}";
+    const separator = ` ${colors ? colors.commandSeparator("|") : "|"} `;
+    const openBrace = colors ? colors.curlyBracket("{") : "{";
+    const closeBrace = colors ? colors.curlyBracket("}") : "}";
     for (let i = 0; i < cmds.length; ++i) {
-        const cmd = colors ? colorize.commandName(cmds[i]) : cmds[i];
+        const cmd = cmds[i];
         if (line.length !== 0 && length + 3 + noStyleLength(cmd) + 2 > maxLength) {
             lines.push(line.join(separator));
             line = [];
@@ -655,7 +684,7 @@ class ArgumentsMap {
                 return value;
             }
         }
-        if (Value !== EMPTY_VALUE) {
+        if (defaultValue !== EMPTY_VALUE) {
             return defaultValue;
         }
         switch (arg.type) {
@@ -706,6 +735,14 @@ class Command {
 
         this.optionsGroups = [new Group({ name: UNNAMED })];
         this.commandsGroups = [new Group({ name: UNNAMED })];
+        this.colors = options.colors;
+    }
+
+    setParentCommand(command) {
+        this.parent = command;
+        if (hasColorsSupport && this.colors !== false) {
+            this.colors = util.assignDeep({}, this.parent.colors, this.colors);
+        }
     }
 
     get options() {
@@ -747,6 +784,7 @@ class Command {
                 throw new x.IllegalState(`${this.names[0]}: non-default agrument must not follow default argument: ${last.names[0]} -> ${newArgument.names[0]}`);
             }
         }
+        newArgument.setCommand(this);
         this.arguments.push(newArgument);
     }
 
@@ -769,6 +807,7 @@ class Command {
         for (const group of this.optionsGroups) {
             if (group.name === newOption.group) {
                 group.add(newOption);
+                newOption.setCommand(this);
                 return;
             }
         }
@@ -809,7 +848,7 @@ class Command {
 
     addCommand(newCommand) {
         if (!(newCommand instanceof Command)) {
-            newCommand = new Command(newCommand);
+            newCommand = new Command(newCommand, this);
         }
         if (this.hasCommand(newCommand)) {
             throw new x.IllegalState(`${this.names[0]}: Cannot add the command ${newCommand.names[0]} due to name collision`);
@@ -817,7 +856,7 @@ class Command {
         for (const group of this.commandsGroups) {
             if (group.name === newCommand.group) {
                 group.add(newCommand);
-                newCommand.parent = this;
+                newCommand.setParentCommand(this);
                 return;
             }
         }
@@ -906,7 +945,7 @@ class Command {
         }
         if (!options.handler) {
             options.handler = (args, opts, { command }) => {
-                adone.log(escape(command.getHelpMessage({ colors: colorize.supported })));
+                adone.log(escape(command.getHelpMessage()));
             };
             options.handler[INTERNAL] = true;
         }
@@ -930,6 +969,9 @@ class Command {
                 options.match = (x) => x.match(re);
             }
         }
+        if (!hasColorsSupport) {
+            options.colors = false;
+        }
         return options;
     }
 
@@ -940,30 +982,30 @@ class Command {
         return this.names[0];
     }
 
-    getUsageMessage({ colors = true } = {}) {
+    getUsageMessage() {
         const chain = this.getCommandChain();
         const argumentsLength = adone.terminal.cols - chain.length - 1 - 4;
         const table = new text.table.BorderlessTable({
             colWidths: [4, chain.length + 1, argumentsLength]
         });
-        const ellipsis = colors ? colorize.ellipsis("...") : "...";
+        const ellipsis = this.colors ? this.colors.ellipsis("...") : "...";
         const options = this.options;
         const internalOptions = options.filter((x) => x.internal);
         if (internalOptions.length !== 0) {
             for (const opt of internalOptions) {
-                table.push([null, chain, opt.getUsageMessage({ required: false, colors })]);
+                table.push([null, chain, opt.getUsageMessage({ required: false })]);
             }
         }
         const nonInternalOptions = options.filter((x) => !x.internal);
         const messages = [];
         for (const opt of nonInternalOptions) {
-            messages.push(opt.getUsageMessage({ colors }));
+            messages.push(opt.getUsageMessage());
         }
         for (const arg of this.arguments) {
-            messages.push(arg.getUsageMessage({ colors }));
+            messages.push(arg.getUsageMessage());
         }
 
-        table.push([null, chain, argumentsWrap(messages, argumentsLength, colors)]);
+        table.push([null, chain, argumentsWrap(messages, argumentsLength, this.colors)]);
 
         const commands = this.commands;
         if (commands.length !== 0) {
@@ -972,20 +1014,25 @@ class Command {
                 if (group.empty) {
                     continue;
                 }
-                const names = [...group].map((x) => x.names[0]);
-                table.push([null, chain, `${commandsWrap(names, argumentsLength, colors)} ${ellipsis}`]);
+                const names = [...group].map((x) => x.getNamesMessage({ first: true }));
+                table.push([null, chain, `${commandsWrap(names, argumentsLength, this.colors)} ${ellipsis}`]);
             }
         }
         let heading = table.length === 1 ? "Usage:" : "Usages:";
-        if (colors) {
-            heading = adone.terminal.underline(heading);
+        if (this.colors) {
+            heading = this.colors.usage(heading);
         }
-        return `${heading}\n${table.toString()}`;
+        const message = `${heading}\n${table.toString()}`;
+        if (!hasColorsSupport) {
+            return text.ansi.stripEscapeCodes(message);
+        }
+        return message;
     }
 
-    getNamesMessage({ colors }) {
-        return this.names.map((x) => {
-            return colors ? colorize.commandName(x) : x;
+    getNamesMessage({ first = false } = {}) {
+        const colors = this.parent && this.parent.colors;
+        return (first ? this.names.slice(0, 1) : this.names).map((x) => {
+            return colors ? colors.commandName(x) : x;
         }).join(", ");
     }
 
@@ -993,8 +1040,8 @@ class Command {
         return this.help;
     }
 
-    getHelpMessage({ colors = true } = {}) {
-        const helpMessage = [this.getUsageMessage({ colors })];
+    getHelpMessage() {
+        const helpMessage = [this.getUsageMessage()];
 
         const totalWidth = adone.terminal.cols;
 
@@ -1002,9 +1049,23 @@ class Command {
             helpMessage.push("", text.wordwrap(this.description, totalWidth));
         }
 
-        const heading = (x) => {
-            if (colors) {
-                return adone.terminal.underline(x);
+        const commandHeading = (x) => {
+            if (this.colors) {
+                return this.colors.commandGroupHeading(x);
+            }
+            return x;
+        };
+
+        const argumentHeading = (x) => {
+            if (this.colors) {
+                return this.colors.argumentGroupHeading(x);
+            }
+            return x;
+        };
+
+        const optionHeading = (x) => {
+            if (this.colors) {
+                return this.colors.optionGroupHeading(x);
             }
             return x;
         };
@@ -1014,11 +1075,11 @@ class Command {
         if (this.arguments.length || options.length || commands.length) {
             helpMessage.push("");
             if (this.arguments.length) {
-                helpMessage.push(heading("Arguments:"));
+                helpMessage.push(argumentHeading("Arguments:"));
                 helpMessage.push(text.pretty.table(this.arguments.map((arg) => {
                     return {
-                        names: arg.getNamesMessage({ colors }),
-                        message: arg.getShortHelpMessage({ colors })
+                        names: arg.getNamesMessage(),
+                        message: arg.getShortHelpMessage()
                     };
                 }), {
                     model: [
@@ -1046,19 +1107,19 @@ class Command {
                     if (group.name === UNNAMED) {
                         if (options.length !== group.length) {
                             // we have not only unnamed options
-                            helpMessage.push(heading("Other options:"));
+                            helpMessage.push(optionHeading("Other options:"));
                         } else {
                             // we have only unnamed options
-                            helpMessage.push(heading("Options:"));
+                            helpMessage.push(optionHeading("Options:"));
                         }
                     } else {
-                        helpMessage.push(heading(`${group.description}:`));
+                        helpMessage.push(optionHeading(`${group.description}:`));
                     }
 
                     helpMessage.push(text.pretty.table([...group].map((opt) => {
                         return {
-                            names: opt.getUsageMessage({ required: false, allNames: true, colors }),
-                            message: opt.getShortHelpMessage({ colors })
+                            names: opt.getUsageMessage({ required: false, allNames: true }),
+                            message: opt.getShortHelpMessage()
                         };
                     }), {
                         model: [
@@ -1087,19 +1148,19 @@ class Command {
                     if (group.name === UNNAMED) {
                         if (commands.length !== group.length) {
                             // we have not only unnamed options
-                            helpMessage.push(heading("Other commands:"));
+                            helpMessage.push(commandHeading("Other commands:"));
                         } else {
                             // we have only unnamed options
-                            helpMessage.push(heading("Commands:"));
+                            helpMessage.push(commandHeading("Commands:"));
                         }
                     } else {
-                        helpMessage.push(heading(`${group.description}:`));
+                        helpMessage.push(commandHeading(`${group.description}:`));
                     }
 
                     helpMessage.push(text.pretty.table([...group].map((cmd) => {
                         return {
-                            names: cmd.getNamesMessage({ colors }),
-                            message: cmd.getShortHelpMessage({ colors })
+                            names: cmd.getNamesMessage(),
+                            message: cmd.getShortHelpMessage()
                         };
                     }), {
                         model: [
@@ -1115,7 +1176,11 @@ class Command {
                 }
             }
         }
-        return helpMessage.join("\n");
+        const message = helpMessage.join("\n");
+        if (!hasColorsSupport) {
+            return text.ansi.stripEscapeCodes(message);
+        }
+        return message;
     }
 }
 
@@ -1273,7 +1338,7 @@ export class Application extends Subsystem {
             }
 
             if (errors.length) {
-                adone.log(escape(command.getUsageMessage({ colors: colorize.supported })));
+                adone.log(escape(command.getUsageMessage()));
                 adone.log();
                 for (const error of errors) {
                     adone.log(escape(error.message));
@@ -1420,7 +1485,7 @@ export class Application extends Subsystem {
     }
 
     async getVersion() {
-        if (this._version !== null) {
+        if (!is.null(this._version)) {
             return this._version;
         }
         let currentPath = __dirname;
@@ -1472,6 +1537,13 @@ export class Application extends Subsystem {
             commandsGroups: [],
             optionsGroups: []
         }, options);
+        if (hasColorsSupport) {
+            if (options.colors !== false) {
+                options.colors = util.assignDeep({}, defaultColors, options.colors);
+            }
+        } else {
+            options.colors = false;
+        }
         if (options.addVersion !== false) {
             options.options.unshift({
                 name: "--version",
@@ -1483,12 +1555,12 @@ export class Application extends Subsystem {
                 [INTERNAL]: true
             });
         }
-        this._mainCommand = this._parseCommand(options);
+        this._mainCommand = this._parseCommand(options, null);
         this._mainCommand._subsystem = this;
         return this;
     }
 
-    _parseCommand(schema) {
+    _parseCommand(schema, parent) {
         const commandParams = adone.o({
             addHelp: true
         }, schema);
@@ -1502,8 +1574,13 @@ export class Application extends Subsystem {
             description: schema.description,
             handler: schema.handler,
             group: schema.group,
-            match: schema.match
+            match: schema.match,
+            colors: schema.colors
         });
+
+        if (parent) {
+            parent.addCommand(cmd);
+        }
 
         if (schema.arguments) {
             for (const arg of schema.arguments) {
@@ -1523,7 +1600,7 @@ export class Application extends Subsystem {
                 name: ["--help", "-h"],
                 help: "show this message",
                 handler: (_, cmd) => {
-                    adone.log(escape(cmd.getHelpMessage({ colors: colorize.supported })));
+                    adone.log(escape(cmd.getHelpMessage()));
                     return this.exit();
                 },
                 [INTERNAL]: true
@@ -1541,8 +1618,7 @@ export class Application extends Subsystem {
 
         if (schema.commands) {
             for (const cmdParams of schema.commands) {
-                const command = this._parseCommand(cmdParams);
-                cmd.addCommand(command);
+                this._parseCommand(cmdParams, cmd);
             }
         }
         return cmd;
@@ -1561,8 +1637,7 @@ export class Application extends Subsystem {
             }
             if (!subcmd) {
                 if (create) {
-                    subcmd = this._parseCommand({ name });
-                    cmd.addCommand(subcmd);
+                    subcmd = this._parseCommand({ name }, cmd);
                 } else {
                     throw new x.NotExists(`No such command: ${chain.slice(0, i + 1).join(" ")}`);
                 }
@@ -1588,9 +1663,8 @@ export class Application extends Subsystem {
         }
 
         const cmd = this._getCommand(commandsChain, true);
-        const newCommand = this._parseCommand(cmdParams);
+        const newCommand = this._parseCommand(cmdParams, cmd);
         newCommand._subsystem = subsystem;
-        cmd.addCommand(newCommand);
     }
 
     defineOption(...args) {
@@ -2032,7 +2106,7 @@ export class Application extends Subsystem {
                     case "rest": {
                         for (; ;) {
                             nextPart();
-                            if (part === undefined) {
+                            if (is.undefined(part)) {
                                 break;
                             }
                             rest.push(part);
@@ -2054,7 +2128,7 @@ export class Application extends Subsystem {
             adone.error(err.stack || err.message || err);
             errCode = Application.ERROR;
         }
-        if (!Number.isInteger(errCode)) {
+        if (!is.integer(errCode)) {
             errCode = Application.ERROR;
         }
         return this.exit(errCode);
