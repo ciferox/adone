@@ -453,7 +453,7 @@ describe("Table", () => {
             expect(table.toString()).to.equal(expected.join("\n"));
         });
 
-        it("test table colors", () => {
+        it("test table colors", function () {
             if (!process.stdout.isTTY) {
                 // no colors support
                 this.skip();

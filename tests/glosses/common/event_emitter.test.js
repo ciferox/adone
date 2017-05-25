@@ -508,8 +508,9 @@ describe("Event emitter", () => {
     });
 
     describe("removeListener", () => {
-        const listener1 = adone.noop;
-        const listener2 = adone.noop;
+        // must be different
+        const listener1 = () => {};
+        const listener2 = () => {};
 
         it("it should remove a listener", () => {
             const ee = new EventEmitter();
@@ -668,7 +669,7 @@ describe("Event emitter", () => {
             const EE = new EventEmitter();
 
             expect(EE.eventNames()).to.be.empty;
-                        
+
             const m = adone.noop;
             EE.on("foo", adone.noop);
             expect(EE.eventNames()).to.be.deep.equal(["foo"]);
@@ -682,7 +683,7 @@ describe("Event emitter", () => {
             const s = Symbol("s");
             EE.on(s, m);
             expect(EE.eventNames()).to.be.deep.equal(["foo", s]);
-            
+
             EE.removeListener(s, m);
             expect(EE.eventNames()).to.be.deep.equal(["foo"]);
         });
