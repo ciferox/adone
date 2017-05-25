@@ -39,4 +39,7 @@ export const c = {
 
 export const encode = (obj) => bson.serializer.serialize(obj);
 
-export const decode = (buf) => bson.serializer.deserialize(buf);
+export const decode = (buf, opts) => bson.serializer.deserialize(buf, Object.assign({
+    promoteBuffers: true,
+    promoteValues: true
+}, opts));
