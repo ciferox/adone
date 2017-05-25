@@ -28,7 +28,7 @@ describe("diff", () => {
             current.add(1, "hour");
             if (last.utcOffset() !== current.utcOffset()) {
                 return {
-                    moment: last,
+                    datetime: last,
                     diff: -(current.utcOffset() - last.utcOffset()) / 60
                 };
             }
@@ -111,7 +111,7 @@ describe("diff", () => {
             return;
         }
 
-        a = dst.adone.datetime;
+        a = dst.datetime;
         b = a.clone().utc().add(12, "hours").local();
         assert.equal(b.diff(a, "milliseconds", true), 12 * 60 * 60 * 1000,
                 "ms diff across DST");
@@ -134,7 +134,7 @@ describe("diff", () => {
         assert.ok(b.diff(a, "year", true) < 1.05 / (2 * 28 * 12),
                 "year diff across DST, upper bound");
 
-        a = dst.adone.datetime;
+        a = dst.datetime;
         b = a.clone().utc().add(12 + dst.diff, "hours").local();
 
         assert.equal(b.diff(a, "milliseconds", true),

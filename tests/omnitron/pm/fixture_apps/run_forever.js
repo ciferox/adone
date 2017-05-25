@@ -1,1 +1,1 @@
-setInterval(adone.noop, 1000);
+setInterval(() => {}, 1000);

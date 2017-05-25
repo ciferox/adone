@@ -1,4 +1,4 @@
-const timer = setInterval(adone.noop, 1000);
+const timer = setInterval(() => {}, 1000);
 
 
 process.on("SIGINT", () => {

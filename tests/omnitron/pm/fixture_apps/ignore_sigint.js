@@ -1,4 +1,4 @@
-setInterval(adone.noop, 1000);
+setInterval(() => {}, 1000);
 
 process.on("SIGINT", () => {
     // ha ha ha
