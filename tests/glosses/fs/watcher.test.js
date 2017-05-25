@@ -69,7 +69,7 @@ describe("glosses", "fs", "watcher", function watcherTests() {
         await sleep();
     });
 
-    this.timeout(60000);
+    this.timeout(120000);
     it("should expose public API methods", async () => {
         expect(Watcher).to.be.a("class");
         expect(watch).to.be.a("function");
@@ -350,7 +350,7 @@ describe("glosses", "fs", "watcher", function watcherTests() {
                 await sleep();
                 await Promise.all([
                     parentDir.create()
-                        .then(() => sleep(win32Polling ? 900 : 300))
+                        .then(() => sleep(10000))
                         .then(() => parentDir.unlink()),
                     unlinkDir.waitForArg(0, parentDir.path())
                 ]);
@@ -358,7 +358,7 @@ describe("glosses", "fs", "watcher", function watcherTests() {
                 expect(unlinkDir.getCall(0).args[0]).to.be.equal(parentDir.path());
                 await Promise.all([
                     parentDir.create()
-                        .then(() => sleep(win32Polling ? 4600 : 1200))
+                        .then(() => sleep(10000))
                         .then(() => subDir.create()),
                     addDir.waitForNCalls(2)
                 ]);

@@ -10,11 +10,14 @@ const hasColorsSupport = Boolean(process.stdout.isTTY);
 
 const defaultColors = {
     commandName: (x) => adone.terminal.parse(`{#4CAF50-fg}${x}{/}`),
+    commandHelpMessage: (x) => adone.terminal.italic.italic(x),
     commandSeparator: (x) => x,
     optionName: (x) => adone.terminal.parse(`{#00B0FF-fg}${x}{/}`),
     optionVariable: (x) => x,
+    optionHelpMessage: (x) => adone.terminal.italic.italic(x),
     // argumentName: (x) => x,
     argumentName: (x) => adone.terminal.parse(`{#F44336-fg}${x}{/}`),
+    argumentHelpMessage: (x) => adone.terminal.italic(x),
     default: (x) => adone.terminal.grey(x),
     // angleBracket: (x) => adone.terminal.green(x),
     angleBracket: (x) => adone.terminal.parse(`{#F44336-fg}${x}{/}`),
@@ -354,8 +357,12 @@ class Argument {
         }
     }
 
+    _help() {
+        return this.help;
+    }
+
     getShortHelpMessage() {
-        let msg = this.help;
+        let msg = this._help();
 
         if (this.appendChoicesHelpMessage && this.choices) {
             const formatted = this.choices.map((x) => this._formatValue(x)).join(", ");
@@ -442,6 +449,10 @@ class PositionalArgument extends Argument {
             msg = `${msg}${arg}`;
         }
         return msg;
+    }
+
+    _help() {
+        return this.colors ? this.colors.argumentHelpMessage(this.help) : this.help;
     }
 
     getNamesMessage() {
@@ -548,6 +559,10 @@ class OptionalArgument extends Argument {
             msg = `${openBrace}${msg}${closeBrace}`;
         }
         return msg;
+    }
+
+    _help() {
+        return this.colors ? this.colors.optionHelpMessage(this.help) : this.help;
     }
 
     getNamesMessage() {
@@ -1071,7 +1086,7 @@ class Command {
     }
 
     getShortHelpMessage() {
-        return this.help;
+        return this.colors ? this.colors.commandHelpMessage(this.help) : this.help;
     }
 
     getHelpMessage() {
