@@ -640,6 +640,8 @@ class WSSessionContext {
                     resolve(err);
                 });
         });
+        local.resume();
+        remote.resume();
         [localRes, remoteRes] = await Promise.all([localRes, remoteRes]);
         if (!adone.is.number(localRes)) {
             remote.close();
@@ -781,11 +783,6 @@ class HTTPUpgradeContext {
                 if (protocol) {
                     this.remoteResponse.headers["sec-websocket-protocol"] = protocol;
                 }
-                const local = new adone.net.ws.WebSocket([localRequest.req, localSocket], {
-                    protocolVersion: version,
-                    protocol,
-                    perMessageDeflate: "permessage-deflate" in extensionsOffer
-                });
                 const remote = await new Promise((resolve, reject) => {
                     const { host } = this.localRequest.headers;
                     const url = `${this.localRequest.secure ? "wss" : "ws"}://${host}${this.localRequest.url}`;
@@ -813,9 +810,16 @@ class HTTPUpgradeContext {
                     socket.on("error", reject);
                     socket.on("open", () => {
                         socket.removeListener("error", reject);
+                        socket.pause();
                         resolve(socket);
                     });
                 });
+                const local = new adone.net.ws.WebSocket([localRequest.req, localSocket], {
+                    protocolVersion: version,
+                    protocol,
+                    perMessageDeflate: "permessage-deflate" in extensionsOffer
+                });
+                local.pause();
                 finishUpgrade();
                 return [local, remote];
             } catch (err) {
@@ -1056,6 +1060,7 @@ class HTTPConnectContext {
                     const context = new HTTPUpgradeContext(this, request, socket, head, this.processContext);
                     context.clientAddress = this.clientAddress;
                     context.clientPort = this.clientPort;
+                    resolve();  // it calls multiple times, does it matter?
                     this.processContext(context);
                 });
             }
@@ -1100,6 +1105,7 @@ class HTTPConnectContext {
                 const context = new HTTPUpgradeContext(this, request, socket, head, this.processContext);
                 context.clientAddress = this.clientAddress;
                 context.clientPort = this.clientPort;
+                resolve();
                 this.processContext(context);
             }).once("clientError", reject);
             //
