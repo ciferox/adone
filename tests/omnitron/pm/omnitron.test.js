@@ -1721,7 +1721,7 @@ describe("Process manager", function () {
                             });
                         });
 
-                        it.only("should use the restarting delay when restarts the workers", async () => {
+                        it("should use the restarting delay when restarts the workers", async () => {
                             const f = fixture("dynamic.js");
                             await adone.fs.writeFile(f, `
                                 setInterval(() => {}, 1000);
