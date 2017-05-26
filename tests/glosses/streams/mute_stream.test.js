@@ -32,7 +32,7 @@ class PassThrough extends Stream {
     }
 }
 
-describe("MuteStream", () => {
+describe("streams", "MuteStream", () => {
     it("incoming", (done) => {
         const ms = new MuteStream();
         const str = new PassThrough();
@@ -124,7 +124,7 @@ describe("MuteStream", () => {
     it("pause/resume incoming", (done) => {
         const str = new PassThrough();
         const ms = new MuteStream();
-        let expect;
+        let expect = null;
         str.on("pause", () => {
             assert.equal(PAUSE, expect.shift());
         });

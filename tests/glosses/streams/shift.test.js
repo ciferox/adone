@@ -1,6 +1,6 @@
 const { shift, through } = adone.stream;
 
-describe("stream", "shift", () => {
+describe("streams", "shift", () => {
     it("shifts next", () => {
         const passthrough = through.base();
 

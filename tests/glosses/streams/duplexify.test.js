@@ -1,6 +1,6 @@
 const { stream: { concat, through, Duplexify } } = adone;
 
-describe("stream", "Duplecify", () => {
+describe("streams", "Duplexify", () => {
     it("passthrough", async () => {
         const pt = through.base();
         const dup = new Duplexify(pt, pt);

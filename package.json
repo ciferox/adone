@@ -62,7 +62,8 @@
     "which": "^1.2.14",
     "x256": "0.0.2",
     "xoauth2": "^1.2.0",
-    "yargs": "^6.3.0"
+    "yargs": "^6.3.0",
+    "libbase64": "^0.1.0"
   },
   "optionalDependencies": {
     "fsevents": "^1.0.0"

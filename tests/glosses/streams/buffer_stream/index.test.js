@@ -43,7 +43,7 @@ describe("A default buffer.ReadableStream", () => {
     it("emits end event after data, when stopped", (done) => {
         let str = "";
         bs.on("readable", () => {
-            str += (bs.read() || new Buffer(0)).toString("utf8");
+            str += (bs.read() || Buffer.allocUnsafe(0)).toString("utf8");
         });
         bs.on("end", () => {
             expect(str).to.equal(fixtures.unicodeString);
