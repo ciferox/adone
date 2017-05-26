@@ -79,11 +79,11 @@ describe("net", "ws", "WebSocketServer", () => {
             server.listen(sockPath, () => {
                 const wss = new WebSocketServer({ server });
 
-                wss.on("connection", (ws) => {
+                wss.on("connection", (ws, req) => {
                     if (wss.clients.size === 1) {
-                        assert.strictEqual(ws.upgradeReq.url, "/foo?bar=bar");
+                        assert.strictEqual(req.url, "/foo?bar=bar");
                     } else {
-                        assert.strictEqual(ws.upgradeReq.url, "/");
+                        assert.strictEqual(req.url, "/");
                         wss.close();
                         server.close(done);
                     }
@@ -91,20 +91,6 @@ describe("net", "ws", "WebSocketServer", () => {
 
                 const ws = new WebSocket(`ws+unix://${sockPath}:/foo?bar=bar`);
                 ws.on("open", () => new WebSocket(`ws+unix://${sockPath}`));
-            });
-        });
-
-        it("emits path specific connection event", (done) => {
-            const server = http.createServer();
-
-            server.listen(++port, () => {
-                const wss = new WebSocketServer({ server });
-                new WebSocket(`ws://localhost:${port}/endpointName`);
-
-                wss.on("connection/endpointName", (ws) => {
-                    wss.close();
-                    server.close(done);
-                });
             });
         });
 
@@ -265,14 +251,14 @@ describe("net", "ws", "WebSocketServer", () => {
     });
 
     describe("#maxpayload", () => {
-        it("maxpayload is passed on to clients,", (done) => {
+        it("maxpayload is passed on to clients", (done) => {
             const maxPayload = 20480;
             const wss = new WebSocketServer({ port: ++port, maxPayload }, () => {
                 new WebSocket(`ws://localhost:${port}`);
             });
 
             wss.on("connection", (client) => {
-                assert.strictEqual(client.maxPayload, maxPayload);
+                assert.strictEqual(client._maxPayload, maxPayload);
                 wss.close();
                 done();
             });
@@ -285,7 +271,7 @@ describe("net", "ws", "WebSocketServer", () => {
             });
 
             wss.on("connection", (client) => {
-                assert.strictEqual(client._receiver.maxPayload, maxPayload);
+                assert.strictEqual(client._receiver._maxPayload, maxPayload);
                 wss.close();
                 done();
             });
@@ -293,13 +279,17 @@ describe("net", "ws", "WebSocketServer", () => {
 
         it("maxpayload is passed on to permessage-deflate", (done) => {
             const maxPayload = 20480;
-            const wss = new WebSocketServer({ port: ++port, maxPayload }, () => {
+            const wss = new WebSocketServer({
+                perMessageDeflate: true,
+                port: ++port,
+                maxPayload
+            }, () => {
                 new WebSocket(`ws://localhost:${port}`);
             });
 
             wss.on("connection", (client) => {
                 assert.strictEqual(
-                    client._receiver.extensions[adone.net.ws.PerMessageDeflate.extensionName]._maxPayload,
+                    client._receiver._extensions[adone.net.ws.PerMessageDeflate.extensionName]._maxPayload,
                     maxPayload
                 );
                 wss.close();
@@ -929,7 +919,7 @@ describe("net", "ws", "WebSocketServer", () => {
             const wss = new WebSocketServer({ port: ++port }, () => {
                 const ws = new WebSocket(`ws://localhost:${port}`);
 
-                ws.on("message", (message, flags) => ws.send(message));
+                ws.on("message", (message) => ws.send(message));
             });
 
             wss.on("connection", (client) => {
@@ -968,23 +958,14 @@ describe("net", "ws", "WebSocketServer", () => {
                 done();
             });
         });
-
-        it("upgradeReq is the original request object", (done) => {
-            const wss = new WebSocketServer({ port: ++port }, () => {
-                new WebSocket(`ws://localhost:${port}`, { protocolVersion: 8 });
-            });
-
-            wss.on("connection", (client) => {
-                assert.strictEqual(client.upgradeReq.httpVersion, "1.1");
-                wss.close();
-                done();
-            });
-        });
     });
 
     describe("permessage-deflate", () => {
         it("accept connections with permessage-deflate extension", (done) => {
-            const wss = new WebSocketServer({ port: ++port }, () => {
+            const wss = new WebSocketServer({
+                perMessageDeflate: true,
+                port: ++port
+            }, () => {
                 const req = http.request({
                     headers: {
                         Connection: "Upgrade",
@@ -1007,7 +988,10 @@ describe("net", "ws", "WebSocketServer", () => {
         });
 
         it("does not accept connections with not defined extension parameter", (done) => {
-            const wss = new WebSocketServer({ port: ++port }, () => {
+            const wss = new WebSocketServer({
+                perMessageDeflate: true,
+                port: ++port
+            }, () => {
                 const req = http.request({
                     headers: {
                         Connection: "Upgrade",
@@ -1035,7 +1019,10 @@ describe("net", "ws", "WebSocketServer", () => {
         });
 
         it("does not accept connections with invalid extension parameter", (done) => {
-            const wss = new WebSocketServer({ port: ++port }, () => {
+            const wss = new WebSocketServer({
+                perMessageDeflate: true,
+                port: ++port
+            }, () => {
                 const req = http.request({
                     headers: {
                         Connection: "Upgrade",

@@ -1,12 +1,10 @@
+const { is } = adone;
 const AVAILABLE_WINDOW_BITS = [8, 9, 10, 11, 12, 13, 14, 15];
 const TRAILER = Buffer.from([0x00, 0x00, 0xff, 0xff]);
 const EMPTY_BLOCK = Buffer.from([0x00]);
 const DEFAULT_WINDOW_BITS = 15;
 const DEFAULT_MEM_LEVEL = 8;
 
-/**
- * Per-message Deflate implementation.
- */
 export default class PerMessageDeflate {
     constructor(options, isServer, maxPayload) {
         this._options = options || {};
@@ -14,20 +12,14 @@ export default class PerMessageDeflate {
         this._inflate = null;
         this._deflate = null;
         this.params = null;
-        this._maxPayload = maxPayload || 0;
-        this.threshold = this._options.threshold === undefined ? 1024 : this._options.threshold;
+        this._maxPayload = maxPayload | 0;
+        this._threshold = is.undefined(this._options.threshold) ? 1024 : this._options.threshold;
     }
 
     static get extensionName() {
         return "permessage-deflate";
     }
 
-    /**
-     * Create extension parameters offer.
-     *
-     * @return {Object} Extension parameters
-     * @public
-     */
     offer() {
         const params = {};
 
@@ -49,13 +41,6 @@ export default class PerMessageDeflate {
         return params;
     }
 
-    /**
-     * Accept extension offer.
-     *
-     * @param {Array} paramsList Extension parameters
-     * @return {Object} Accepted configuration
-     * @public
-     */
     accept(paramsList) {
         paramsList = this.normalizeParams(paramsList);
 
@@ -70,11 +55,6 @@ export default class PerMessageDeflate {
         return params;
     }
 
-    /**
-     * Releases all resources used by the extension.
-     *
-     * @public
-     */
     cleanup() {
         if (this._inflate) {
             if (this._inflate.writeInProgress) {
@@ -94,22 +74,15 @@ export default class PerMessageDeflate {
         }
     }
 
-    /**
-     * Accept extension offer from client.
-     *
-     * @param {Array} paramsList Extension parameters
-     * @return {Object} Accepted configuration
-     * @private
-     */
     acceptAsServer(paramsList) {
         const accepted = {};
         const result = paramsList.some((params) => {
             if ((this._options.serverNoContextTakeover === false && params.server_no_context_takeover) ||
                 (this._options.serverMaxWindowBits === false && params.server_max_window_bits) ||
-                (typeof this._options.serverMaxWindowBits === "number" && typeof params.server_max_window_bits === "number" &&
+                (is.number(this._options.serverMaxWindowBits) && is.number(params.server_max_window_bits) &&
                     this._options.serverMaxWindowBits > params.server_max_window_bits) ||
-                (typeof this._options.clientMaxWindowBits === "number" && !params.client_max_window_bits)) {
-                return;
+                (is.number(this._options.clientMaxWindowBits) && !params.client_max_window_bits)) {
+                return undefined;
             }
 
             if (this._options.serverNoContextTakeover || params.server_no_context_takeover) {
@@ -121,14 +94,14 @@ export default class PerMessageDeflate {
             if (this._options.clientNoContextTakeover !== false && params.client_no_context_takeover) {
                 accepted.client_no_context_takeover = true;
             }
-            if (typeof this._options.serverMaxWindowBits === "number") {
+            if (is.number(this._options.serverMaxWindowBits)) {
                 accepted.server_max_window_bits = this._options.serverMaxWindowBits;
-            } else if (typeof params.server_max_window_bits === "number") {
+            } else if (is.number(params.server_max_window_bits)) {
                 accepted.server_max_window_bits = params.server_max_window_bits;
             }
-            if (typeof this._options.clientMaxWindowBits === "number") {
+            if (is.number(this._options.clientMaxWindowBits)) {
                 accepted.client_max_window_bits = this._options.clientMaxWindowBits;
-            } else if (this._options.clientMaxWindowBits !== false && typeof params.client_max_window_bits === "number") {
+            } else if (this._options.clientMaxWindowBits !== false && is.number(params.client_max_window_bits)) {
                 accepted.client_max_window_bits = params.client_max_window_bits;
             }
             return true;
@@ -141,36 +114,19 @@ export default class PerMessageDeflate {
         return accepted;
     }
 
-    /**
-     * Accept extension response from server.
-     *
-     * @param {Array} paramsList Extension parameters
-     * @return {Object} Accepted configuration
-     * @private
-     */
     acceptAsClient(paramsList) {
         const params = paramsList[0];
 
         if (this._options.clientNoContextTakeover != null) {
-            if (
-                this._options.clientNoContextTakeover === false &&
-                params.client_no_context_takeover
-            ) {
+            if (this._options.clientNoContextTakeover === false && params.client_no_context_takeover) {
                 throw new Error('Invalid value for "client_no_context_takeover"');
             }
         }
         if (this._options.clientMaxWindowBits != null) {
-            if (
-                this._options.clientMaxWindowBits === false &&
-                params.client_max_window_bits
-            ) {
+            if (this._options.clientMaxWindowBits === false && params.client_max_window_bits) {
                 throw new Error('Invalid value for "client_max_window_bits"');
             }
-            if (
-                typeof this._options.clientMaxWindowBits === "number" && (
-                    !params.client_max_window_bits ||
-                    params.client_max_window_bits > this._options.clientMaxWindowBits
-                )) {
+            if (is.number(this._options.clientMaxWindowBits) && (!params.client_max_window_bits || params.client_max_window_bits > this._options.clientMaxWindowBits)) {
                 throw new Error('Invalid value for "client_max_window_bits"');
             }
         }
@@ -178,13 +134,6 @@ export default class PerMessageDeflate {
         return params;
     }
 
-    /**
-     * Normalize extensions parameters.
-     *
-     * @param {Array} paramsList Extension parameters
-     * @return {Array} Normalized extensions parameters
-     * @private
-     */
     normalizeParams(paramsList) {
         return paramsList.map((params) => {
             Object.keys(params).forEach((key) => {
@@ -205,7 +154,7 @@ export default class PerMessageDeflate {
                         break;
                     case "server_max_window_bits":
                     case "client_max_window_bits":
-                        if (typeof value === "string") {
+                        if (is.string(value)) {
                             value = parseInt(value, 10);
                             if (!~AVAILABLE_WINDOW_BITS.indexOf(value)) {
                                 throw new Error(`invalid extension parameter value for ${key} (${value})`);
@@ -224,21 +173,13 @@ export default class PerMessageDeflate {
         });
     }
 
-    /**
-     * Decompress data.
-     *
-     * @param {Buffer} data Compressed data
-     * @param {Boolean} fin Specifies whether or not this is the last fragment
-     * @param {Function} callback Callback
-     * @public
-     */
     decompress(data, fin, callback) {
         const endpoint = this._isServer ? "client" : "server";
 
         if (!this._inflate) {
             const maxWindowBits = this.params[`${endpoint}_max_window_bits`];
             this._inflate = adone.std.zlib.createInflateRaw({
-                windowBits: typeof maxWindowBits === "number" ? maxWindowBits : DEFAULT_WINDOW_BITS
+                windowBits: is.number(maxWindowBits) ? maxWindowBits : DEFAULT_WINDOW_BITS
             });
         }
         this._inflate.writeInProgress = true;
@@ -298,14 +239,6 @@ export default class PerMessageDeflate {
         });
     }
 
-    /**
-     * Compress data.
-     *
-     * @param {Buffer} data Data to compress
-     * @param {Boolean} fin Specifies whether or not this is the last fragment
-     * @param {Function} callback Callback
-     * @public
-     */
     compress(data, fin, callback) {
         if (!data || data.length === 0) {
             process.nextTick(callback, null, EMPTY_BLOCK);
@@ -318,7 +251,7 @@ export default class PerMessageDeflate {
             const maxWindowBits = this.params[`${endpoint}_max_window_bits`];
             this._deflate = adone.std.zlib.createDeflateRaw({
                 flush: adone.std.zlib.Z_SYNC_FLUSH,
-                windowBits: typeof maxWindowBits === "number" ? maxWindowBits : DEFAULT_WINDOW_BITS,
+                windowBits: is.number(maxWindowBits) ? maxWindowBits : DEFAULT_WINDOW_BITS,
                 memLevel: this._options.memLevel || DEFAULT_MEM_LEVEL
             });
         }

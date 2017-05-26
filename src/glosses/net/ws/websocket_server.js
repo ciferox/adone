@@ -1,20 +1,8 @@
-/**
- * Handle premature socket errors.
- *
- * @private
- */
+
 const socketError = () => {
     this.destroy();
 };
 
-/**
- * Accept WebSocket extensions.
- *
- * @param {Object} options The `WebSocketServer` configuration options
- * @param {Object} offer The parsed value of the `sec-websocket-extensions` header
- * @return {Object} Accepted extensions
- * @private
- */
 const acceptExtensions = (options, offer) => {
     const pmd = options.perMessageDeflate;
     const extensions = {};
@@ -33,14 +21,6 @@ const acceptExtensions = (options, offer) => {
     return extensions;
 };
 
-/**
- * Close the connection when preconditions are not fulfilled.
- *
- * @param {net.Socket} socket The socket of the upgrade request
- * @param {Number} code The HTTP response status code
- * @param {String} [message] The HTTP response body
- * @private
- */
 const abortConnection = (socket, code, message) => {
     if (socket.writable) {
         message = message || adone.std.http.STATUS_CODES[code];
@@ -59,28 +39,12 @@ const abortConnection = (socket, code, message) => {
 };
 
 export default class WebSocketServer extends adone.EventEmitter {
-    /**
-     * Create a `WebSocketServer` instance.
-     *
-     * @param {Object} options Configuration options
-     * @param {String} options.host The hostname where to bind the server
-     * @param {Number} options.port The port where to bind the server
-     * @param {http.Server} options.server A pre-created HTTP/S server to use
-     * @param {Function} options.verifyClient An hook to reject connections
-     * @param {Function} options.handleProtocols An hook to handle protocols
-     * @param {String} options.path Accept only connections matching this path
-     * @param {Boolean} options.noServer Enable no server mode
-     * @param {Boolean} options.clientTracking Specifies whether or not to track clients
-     * @param {(Boolean|Object)} options.perMessageDeflate Enable/disable permessage-deflate
-     * @param {Number} options.maxPayload The maximum allowed message size
-     * @param {Function} callback A listener for the `listening` event
-     */
     constructor(options, callback) {
         super();
 
         options = Object.assign({
             maxPayload: 100 * 1024 * 1024,
-            perMessageDeflate: true,
+            perMessageDeflate: false,
             handleProtocols: null,
             clientTracking: true,
             verifyClient: null,
@@ -118,8 +82,7 @@ export default class WebSocketServer extends adone.EventEmitter {
                 error: (err) => this.emit("error", err),
                 upgrade: (req, socket, head) => {
                     this.handleUpgrade(req, socket, head, (client) => {
-                        this.emit(`connection${req.url}`, client);
-                        this.emit("connection", client);
+                        this.emit("connection", client, req);
                     });
                 }
             };
@@ -132,15 +95,8 @@ export default class WebSocketServer extends adone.EventEmitter {
             this.clients = new Set();
         }
         this.options = options;
-        this.path = options.path;
     }
 
-    /**
-     * Close the server.
-     *
-     * @param {Function} cb Callback
-     * @public
-     */
     close(cb) {
         //
         // Terminate all associated clients.
@@ -172,13 +128,6 @@ export default class WebSocketServer extends adone.EventEmitter {
         }
     }
 
-    /**
-     * See if a given request should be handled by this server instance.
-     *
-     * @param {http.IncomingMessage} req Request object to inspect
-     * @return {Boolean} `true` if the request is valid, else `false`
-     * @public
-     */
     shouldHandle(req) {
         if (this.options.path && adone.std.url.parse(req.url).pathname !== this.options.path) {
             return false;
@@ -187,15 +136,6 @@ export default class WebSocketServer extends adone.EventEmitter {
         return true;
     }
 
-    /**
-     * Handle a HTTP Upgrade request.
-     *
-     * @param {http.IncomingMessage} req The request object
-     * @param {net.Socket} socket The network socket between the server and client
-     * @param {Buffer} head The first packet of the upgraded stream
-     * @param {Function} cb Callback
-     * @public
-     */
     handleUpgrade(req, socket, head, cb) {
         socket.on("error", socketError);
 
@@ -250,17 +190,6 @@ export default class WebSocketServer extends adone.EventEmitter {
         this.completeUpgrade(protocol, version, req, socket, head, cb);
     }
 
-    /**
-     * Upgrade the connection to WebSocket.
-     *
-     * @param {String} protocol The chosen subprotocol
-     * @param {Number} version The WebSocket protocol version
-     * @param {http.IncomingMessage} req The request object
-     * @param {net.Socket} socket The network socket between the server and client
-     * @param {Buffer} head The first packet of the upgraded stream
-     * @param {Function} cb Callback
-     * @private
-     */
     completeUpgrade(protocol, version, req, socket, head, cb) {
         //
         // Destroy the socket if the client has already sent a FIN packet.
@@ -311,7 +240,7 @@ export default class WebSocketServer extends adone.EventEmitter {
 
         socket.write(headers.concat("", "").join("\r\n"));
 
-        const client = new adone.net.ws.WebSocket([req, socket, head], null, {
+        const client = new adone.net.ws.WebSocket([socket, head], null, {
             maxPayload: this.options.maxPayload,
             protocolVersion: version,
             extensions,

@@ -1,10 +1,5 @@
-/**
- * Parse the `Sec-WebSocket-Extensions` header into an object.
- *
- * @param {String} value field value of the header
- * @return {Object} The parsed object
- * @public
- */
+const { is } = adone;
+
 const parse = (value) => {
     value = value || "";
 
@@ -21,7 +16,7 @@ const parse = (value) => {
             const key = parts[0];
             let value = parts[1];
 
-            if (value === undefined) {
+            if (is.undefined(value)) {
                 value = true;
             } else {
                 // unquote value
@@ -51,13 +46,13 @@ const parse = (value) => {
 const format = (value) => {
     return Object.keys(value).map((token) => {
         let paramsList = value[token];
-        if (!Array.isArray(paramsList)) {
+        if (!is.array(paramsList)) {
             paramsList = [paramsList];
         }
         return paramsList.map((params) => {
             return [token].concat(Object.keys(params).map((k) => {
                 let p = params[k];
-                if (!Array.isArray(p)) {
+                if (!is.array(p)) {
                     p = [p];
                 }
                 return p.map((v) => v === true ? k : `${k}=${v}`).join("; ");

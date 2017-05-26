@@ -837,7 +837,7 @@ describe("Task Manager", () => {
             });
         });
 
-        describe("Workers and Jobs", () => {
+        describe.skip("Workers and Jobs", () => {
             it("failed job", async () => {
                 const info = await installSingle(`class $$ extends Worker {
                     run(job) {

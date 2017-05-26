@@ -336,9 +336,9 @@ describe("net", "ws", "Receiver", () => {
             message = msg;
         };
 
-        assert.strictEqual(p.totalPayloadLength, 0);
+        assert.strictEqual(p._totalPayloadLength, 0);
         p.add(Buffer.from("810548656c6c6f", "hex"));
-        assert.strictEqual(p.totalPayloadLength, 0);
+        assert.strictEqual(p._totalPayloadLength, 0);
         assert.strictEqual(message, "Hello");
     });
 
@@ -350,11 +350,11 @@ describe("net", "ws", "Receiver", () => {
             message = msg;
         };
 
-        assert.strictEqual(p.totalPayloadLength, 0);
+        assert.strictEqual(p._totalPayloadLength, 0);
         p.add(Buffer.from("01024865", "hex"));
-        assert.strictEqual(p.totalPayloadLength, 2);
+        assert.strictEqual(p._totalPayloadLength, 2);
         p.add(Buffer.from("80036c6c6f", "hex"));
-        assert.strictEqual(p.totalPayloadLength, 0);
+        assert.strictEqual(p._totalPayloadLength, 0);
         assert.strictEqual(message, "Hello");
     });
 
@@ -366,13 +366,13 @@ describe("net", "ws", "Receiver", () => {
             data.push(buf.toString());
         };
 
-        assert.strictEqual(p.totalPayloadLength, 0);
+        assert.strictEqual(p._totalPayloadLength, 0);
         p.add(Buffer.from("02024865", "hex"));
-        assert.strictEqual(p.totalPayloadLength, 2);
+        assert.strictEqual(p._totalPayloadLength, 2);
         p.add(Buffer.from("8900", "hex"));
-        assert.strictEqual(p.totalPayloadLength, 2);
+        assert.strictEqual(p._totalPayloadLength, 2);
         p.add(Buffer.from("80036c6c6f", "hex"));
-        assert.strictEqual(p.totalPayloadLength, 0);
+        assert.strictEqual(p._totalPayloadLength, 0);
         assert.deepStrictEqual(data, ["", "Hello"]);
     });
 
@@ -544,7 +544,7 @@ describe("net", "ws", "Receiver", () => {
         ])));
     });
 
-    it.only("raises an error if a text frame contains invalid UTF-8 data", (done) => {
+    it("raises an error if a text frame contains invalid UTF-8 data", (done) => {
         const p = new Receiver();
 
         p.onerror = function (err, code) {
@@ -728,8 +728,8 @@ describe("net", "ws", "Receiver", () => {
             p.add(frame);
             p.add(frame);
 
-            assert.strictEqual(p.state, 5);
-            assert.strictEqual(p.bufferedBytes, frame.length);
+            assert.strictEqual(p._state, 5);
+            assert.strictEqual(p._bufferedBytes, frame.length);
 
             p.cleanup(() => {
                 assert.deepStrictEqual(results, ["Hello", "Hello"]);
@@ -762,8 +762,8 @@ describe("net", "ws", "Receiver", () => {
             p.add(textFrame);
             p.add(closeFrame);
 
-            assert.strictEqual(p.state, 5);
-            assert.strictEqual(p.bufferedBytes, textFrame.length + closeFrame.length);
+            assert.strictEqual(p._state, 5);
+            assert.strictEqual(p._bufferedBytes, textFrame.length + closeFrame.length);
 
             p.cleanup(() => {
                 assert.deepStrictEqual(results, ["Hello", "Hello", 1000, ""]);
@@ -796,8 +796,8 @@ describe("net", "ws", "Receiver", () => {
             p.add(textFrame);
             p.add(invalidFrame);
 
-            assert.strictEqual(p.state, 5);
-            assert.strictEqual(p.bufferedBytes, textFrame.length + invalidFrame.length);
+            assert.strictEqual(p._state, 5);
+            assert.strictEqual(p._bufferedBytes, textFrame.length + invalidFrame.length);
 
             p.cleanup(() => {
                 assert.deepStrictEqual(results, [
@@ -833,8 +833,8 @@ describe("net", "ws", "Receiver", () => {
             p.add(textFrame);
             p.add(incompleteFrame);
 
-            assert.strictEqual(p.state, 5);
-            assert.strictEqual(p.bufferedBytes, incompleteFrame.length);
+            assert.strictEqual(p._state, 5);
+            assert.strictEqual(p._bufferedBytes, incompleteFrame.length);
 
             p.cleanup(() => {
                 assert.deepStrictEqual(results, ["Hello"]);
@@ -853,7 +853,7 @@ describe("net", "ws", "Receiver", () => {
             crypto.randomBytes(3)
         ];
 
-        p.binaryType = "nodebuffer";
+        p._binaryType = "nodebuffer";
         p.onmessage = (data) => {
             assert.ok(Buffer.isBuffer(data));
             assert.ok(data.equals(Buffer.concat(frags)));
@@ -879,7 +879,7 @@ describe("net", "ws", "Receiver", () => {
             crypto.randomBytes(623987)
         ];
 
-        p.binaryType = "arraybuffer";
+        p._binaryType = "arraybuffer";
         p.onmessage = (data) => {
             assert.ok(data instanceof ArrayBuffer);
             assert.ok(Buffer.from(data).equals(Buffer.concat(frags)));
@@ -907,7 +907,7 @@ describe("net", "ws", "Receiver", () => {
             crypto.randomBytes(1)
         ];
 
-        p.binaryType = "fragments";
+        p._binaryType = "fragments";
         p.onmessage = (data) => {
             assert.deepStrictEqual(data, frags);
             done();
