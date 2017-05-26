@@ -88,7 +88,7 @@ const EventTarget = {
 const protocolVersions = [8, 13];
 const closeTimeout = 30 * 1000; // Allow 30 seconds to terminate the connection cleanly.
 
-export default class WebSocket extends adone.EventEmitter {
+export default class Client extends adone.EventEmitter {
     constructor(address, protocols, options) {
         super();
 
@@ -101,7 +101,7 @@ export default class WebSocket extends adone.EventEmitter {
             protocols = [];
         }
 
-        this.readyState = WebSocket.CONNECTING;
+        this.readyState = Client.CONNECTING;
         this.bytesReceived = 0;
         this.extensions = {};
         this.protocol = "";
@@ -317,7 +317,7 @@ export default class WebSocket extends adone.EventEmitter {
                 // The user may have closed the connection from a listener of the `headers`
                 // event.
                 //
-                if (this.readyState !== WebSocket.CONNECTING) {
+                if (this.readyState !== Client.CONNECTING) {
                     return;
                 }
 
@@ -376,16 +376,16 @@ export default class WebSocket extends adone.EventEmitter {
     }
 
     get CONNECTING() {
-        return WebSocket.CONNECTING;
+        return Client.CONNECTING;
     }
     get CLOSING() {
-        return WebSocket.CLOSING;
+        return Client.CLOSING;
     }
     get CLOSED() {
-        return WebSocket.CLOSED;
+        return Client.CLOSED;
     }
     get OPEN() {
-        return WebSocket.OPEN;
+        return Client.OPEN;
     }
 
     get bufferedAmount() {
@@ -465,7 +465,7 @@ export default class WebSocket extends adone.EventEmitter {
             this.emit("error", error);
         };
 
-        this.readyState = WebSocket.OPEN;
+        this.readyState = Client.OPEN;
         this.emit("open");
     }
 
@@ -474,7 +474,7 @@ export default class WebSocket extends adone.EventEmitter {
             return;
         }
 
-        this.readyState = WebSocket.CLOSING;
+        this.readyState = Client.CLOSING;
         this._finalizeCalled = true;
 
         clearTimeout(this._closeTimer);
@@ -519,7 +519,7 @@ export default class WebSocket extends adone.EventEmitter {
     }
 
     emitClose() {
-        this.readyState = WebSocket.CLOSED;
+        this.readyState = Client.CLOSED;
         this.emit("close", this._closeCode || 1006, this._closeMessage || "");
 
         if (this.extensions[adone.net.ws.PerMessageDeflate.extensionName]) {
@@ -533,7 +533,7 @@ export default class WebSocket extends adone.EventEmitter {
     }
 
     pause() {
-        if (this.readyState !== WebSocket.OPEN) {
+        if (this.readyState !== Client.OPEN) {
             throw new Error("not opened");
         }
 
@@ -541,7 +541,7 @@ export default class WebSocket extends adone.EventEmitter {
     }
 
     resume() {
-        if (this.readyState !== WebSocket.OPEN) {
+        if (this.readyState !== Client.OPEN) {
             throw new Error("not opened");
         }
 
@@ -549,10 +549,10 @@ export default class WebSocket extends adone.EventEmitter {
     }
 
     close(code, data) {
-        if (this.readyState === WebSocket.CLOSED) {
+        if (this.readyState === Client.CLOSED) {
             return;
         }
-        if (this.readyState === WebSocket.CONNECTING) {
+        if (this.readyState === Client.CONNECTING) {
             if (this._req && !this._req.aborted) {
                 this._req.abort();
                 this.emit("error", new Error("closed before the connection is established"));
@@ -561,14 +561,14 @@ export default class WebSocket extends adone.EventEmitter {
             return;
         }
 
-        if (this.readyState === WebSocket.CLOSING) {
+        if (this.readyState === Client.CLOSING) {
             if (this._closeCode && this._socket) {
                 this._socket.end();
             }
             return;
         }
 
-        this.readyState = WebSocket.CLOSING;
+        this.readyState = Client.CLOSING;
         this._sender.close(code, data, !this._isServer, (err) => {
             if (err) {
                 this.emit("error", err);
@@ -589,7 +589,7 @@ export default class WebSocket extends adone.EventEmitter {
     }
 
     ping(data, mask, failSilently) {
-        if (this.readyState !== WebSocket.OPEN) {
+        if (this.readyState !== Client.OPEN) {
             if (failSilently) {
                 return;
             }
@@ -606,7 +606,7 @@ export default class WebSocket extends adone.EventEmitter {
     }
 
     pong(data, mask, failSilently) {
-        if (this.readyState !== WebSocket.OPEN) {
+        if (this.readyState !== Client.OPEN) {
             if (failSilently) {
                 return;
             }
@@ -628,7 +628,7 @@ export default class WebSocket extends adone.EventEmitter {
             options = {};
         }
 
-        if (this.readyState !== WebSocket.OPEN) {
+        if (this.readyState !== Client.OPEN) {
             if (cb) {
                 cb(new Error("not opened"));
             } else {
@@ -655,10 +655,10 @@ export default class WebSocket extends adone.EventEmitter {
     }
 
     terminate() {
-        if (this.readyState === WebSocket.CLOSED) {
+        if (this.readyState === Client.CLOSED) {
             return;
         }
-        if (this.readyState === WebSocket.CONNECTING) {
+        if (this.readyState === Client.CONNECTING) {
             if (this._req && !this._req.aborted) {
                 this._req.abort();
                 this.emit("error", new Error("closed before the connection is established"));
@@ -671,17 +671,17 @@ export default class WebSocket extends adone.EventEmitter {
     }
 }
 
-WebSocket.CONNECTING = 0;
-WebSocket.OPEN = 1;
-WebSocket.CLOSING = 2;
-WebSocket.CLOSED = 3;
+Client.CONNECTING = 0;
+Client.OPEN = 1;
+Client.CLOSING = 2;
+Client.CLOSED = 3;
 
 //
 // Add the `onopen`, `onerror`, `onclose`, and `onmessage` attributes.
 // See https://html.spec.whatwg.org/multipage/comms.html#the-websocket-interface
 //
 ["open", "error", "close", "message"].forEach((method) => {
-    Object.defineProperty(WebSocket.prototype, `on${method}`, {
+    Object.defineProperty(Client.prototype, `on${method}`, {
         get() {
             const listeners = this.listeners(method);
             for (let i = 0; i < listeners.length; i++) {
@@ -705,5 +705,5 @@ WebSocket.CLOSED = 3;
     });
 });
 
-WebSocket.prototype.addEventListener = EventTarget.addEventListener;
-WebSocket.prototype.removeEventListener = EventTarget.removeEventListener;
+Client.prototype.addEventListener = EventTarget.addEventListener;
+Client.prototype.removeEventListener = EventTarget.removeEventListener;

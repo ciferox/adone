@@ -1,6 +1,6 @@
 adone.lazify({
-    WebSocket: "./websocket",
-    WebSocketServer: "./websocket_server",
+    Client: "./client",
+    Server: "./server",
     Sender: "./sender",
     Receiver: "./receiver",
     PerMessageDeflate: "./per_message_deflate",

@@ -38,7 +38,7 @@ const abortConnection = (socket, code, message) => {
     socket.destroy();
 };
 
-export default class WebSocketServer extends adone.EventEmitter {
+export default class Server extends adone.EventEmitter {
     constructor(options, callback) {
         super();
 
@@ -240,7 +240,7 @@ export default class WebSocketServer extends adone.EventEmitter {
 
         socket.write(headers.concat("", "").join("\r\n"));
 
-        const client = new adone.net.ws.WebSocket([socket, head], null, {
+        const client = new adone.net.ws.Client([socket, head], null, {
             maxPayload: this.options.maxPayload,
             protocolVersion: version,
             extensions,

@@ -136,7 +136,7 @@ describe("net", "ws", "stream", () => {
 
     it("emit sending errors if the socket is closed by the other party", (done) => {
         const server = adone.std.http.createServer();
-        const wss = new adone.net.ws.WebSocketServer({ server });
+        const wss = new adone.net.ws.Server({ server });
 
         server.listen(8344, () => {
             const client = adone.net.ws.stream.createClient("ws://localhost:8344");
@@ -170,7 +170,7 @@ describe("net", "ws", "stream", () => {
         const opts = {};
         const server = adone.std.http.createServer();
         opts.server = server;
-        const wss = new adone.net.ws.WebSocketServer(opts);
+        const wss = new adone.net.ws.Server(opts);
         wss.on("connection", (ws) => {
             const stream = adone.net.ws.stream.createClient(ws);
             stream.on("close", () => {
@@ -191,7 +191,7 @@ describe("net", "ws", "stream", () => {
         const opts = {};
         const server = adone.std.http.createServer();
         opts.server = server;
-        const wss = new adone.net.ws.WebSocketServer(opts);
+        const wss = new adone.net.ws.Server(opts);
         wss.on("connection", (ws) => {
             const stream = adone.net.ws.stream.createClient(ws);
             stream.on("error", () => {

@@ -53,7 +53,7 @@ const createClient = (target, protocols, options) => {
     const proxy = buildProxy(options, (chunk, enc, next) => {
         // avoid errors, this never happens unless
         // destroy() is called
-        if (socket.readyState !== adone.net.ws.WebSocket.OPEN) {
+        if (socket.readyState !== adone.net.ws.Client.OPEN) {
             next();
             return;
         }
@@ -90,12 +90,12 @@ const createClient = (target, protocols, options) => {
     } else {
         // special constructor treatment for native websockets in browsers, see
         // https://github.com/maxogden/websocket-stream/issues/82
-        socket = new adone.net.ws.WebSocket(target, protocols, options);
+        socket = new adone.net.ws.Client(target, protocols, options);
         socket.binaryType = "arraybuffer";
     }
 
     // was already open when passed in
-    if (socket.readyState === adone.net.ws.WebSocket.OPEN) {
+    if (socket.readyState === adone.net.ws.Client.OPEN) {
         stream = proxy;
     } else {
         stream = adone.stream.Duplexify.obj();
@@ -135,7 +135,7 @@ const createClient = (target, protocols, options) => {
 adone.lazify({
     createClient: () => createClient,
     createServer: () => {
-        class Server extends adone.net.ws.WebSocketServer {
+        class Server extends adone.net.ws.Server {
             constructor(opts, cb) {
                 super(opts);
 

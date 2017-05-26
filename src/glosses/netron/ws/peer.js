@@ -15,7 +15,7 @@ export default class Peer extends GenesisPeer {
 
         if (is.nil(this._ws)) {
             return new Promise((resolve) => {
-                const ws = this._ws = new net.ws.WebSocket(addr, "netron");
+                const ws = this._ws = new net.ws.Client(addr, "netron");
                 ws.onopen = () => {
                     resolve();
                 };
@@ -33,7 +33,7 @@ export default class Peer extends GenesisPeer {
     }
 
     isConnected() {
-        return !is.null(this._ws) && this._ws.readyState === net.ws.WebSocket.OPEN;
+        return !is.null(this._ws) && this._ws.readyState === net.ws.Client.OPEN;
     }
 
     disconnect() {
@@ -47,7 +47,7 @@ export default class Peer extends GenesisPeer {
             const encoded = adone.data.mpak.serializer.encode(data, buf).flip();
             encoded.writeUInt32BE(encoded.remaining() - 4, 0);
             const ws = this._ws;
-            if (!is.null(ws) && ws.readyState === net.ws.WebSocket.OPEN) {
+            if (!is.null(ws) && ws.readyState === net.ws.Client.OPEN) {
                 ws.send(encoded.toBuffer(), { binary: true, compress: false }, resolve);
             } else {
                 reject(new x.IllegalState("socket is not writable"));

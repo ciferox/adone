@@ -69,7 +69,7 @@ export default class Adapter extends adone.netron.Adapter {
 
         const connHandler = netron.option.сonnectionHandler;
 
-        this._wss = new adone.net.ws.WebSocketServer({ server: this.server });
+        this._wss = new adone.net.ws.Server({ server: this.server });
         this._wss.on("connection", (ws) => {
             const peer = new adone.netron.ws.Peer({
                 netron,
