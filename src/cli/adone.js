@@ -141,7 +141,7 @@ export default class AdoneCLI extends adone.application.Application {
                 return this.exit(1);
             }
 
-            if (await adone.fs.isDirectory(oldPaths[i])) {
+            if (await adone.fs.is.directory(oldPaths[i])) {
                 paths.push(adone.std.path.join(oldPaths[i], "**/*"));
             } else {
                 paths.push(oldPaths[i]);

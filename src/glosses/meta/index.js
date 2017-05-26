@@ -61,14 +61,14 @@ export const getNamespacePaths = async ({ name, relative = true, pathPrefix = st
         let path = paths[i];
         let isDirectory;
         if ((await fs.exists(path))) {
-            if (await fs.isDirectory(path)) {
+            if (await fs.is.directory(path)) {
                 isDirectory = true;
             } else {
                 isDirectory = false;
             }
         } else {
             path = await fs.lookup(path);
-            if (await fs.isFile(path)) {
+            if (await fs.is.file(path)) {
                 isDirectory = false;
             }
         }

@@ -23,7 +23,15 @@ const fs = adone.lazify({
     Mode: "./mode",
     glob: "./glob",
     Watcher: "./watcher",
-    watch: () => (paths, options) => (new adone.fs.Watcher(options || {}).add(paths))
+    watch: () => (paths, options) => (new adone.fs.Watcher(options || {}).add(paths)),
+    is: () => adone.lazify({
+        file: () => (path) => adone.fs.stat(path).then((st) => st.isFile()),
+        fileSync: () => (path) => adone.fs.statSync(path).isFile(),
+        directory: () => (path) => adone.fs.stat(path).then((st) => st.isDirectory()),
+        directorySync: () => (path) => adone.fs.statSync(path).isDirectory(),
+        executable: ["./is_executable", (mod) => mod.isExecutable],
+        executableSync: ["./is_executable", (mod) => mod.isExecutableSync]
+    }, null, require)
 }, exports, require);
 
 const lazy = adone.lazify({
@@ -400,16 +408,12 @@ export const realpathSync = (p, cache) => {
 
 export const lstatSync = adone.std.fs.lstatSync;
 export const statSync = adone.std.fs.statSync;
-export const isFile = (path) => adone.fs.stat(path).then((st) => st.isFile());
-export const isFileSync = (path) => statSync(path).isFile();
-export const isDirectory = (path) => adone.fs.stat(path).then((st) => st.isDirectory());
-export const isDirectorySync = (path) => statSync(path).isDirectory();
 export const writeFileSync = adone.std.fs.writeFileSync;
 export const readdirSync = adone.std.fs.readdirSync;
 
 export const readFile = async (filepath, { check = false, encoding = null } = {}) => {
     if (check) {
-        if (!await isFile(filepath)) {
+        if (!await adone.fs.is.file(filepath)) {
             return null;
         }
     }
@@ -425,7 +429,7 @@ export const readFile = async (filepath, { check = false, encoding = null } = {}
 
 export const readFileSync = (filepath, { check = false, encoding = null } = {}) => {
     if (check) {
-        if (!isFileSync(filepath)) {
+        if (!adone.fs.is.fileSync(filepath)) {
             return null;
         }
     }

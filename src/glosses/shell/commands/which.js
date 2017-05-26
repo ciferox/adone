@@ -3,7 +3,7 @@ const { is, std } = adone;
 const splitPath = (p) => (is.string(p) ? p.split(std.path.delimiter) : []);
 const checkPath = async (pathName) => {
     try {
-        return await adone.fs.isFile(pathName);
+        return await adone.fs.is.file(pathName);
     } catch (err) {
         return false;
     }

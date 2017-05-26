@@ -254,7 +254,7 @@ describe("Database", "Level", () => {
             const location = manager.nextLocation();
             const db = await Manager.open({ location, errorIfExists: true });
             assert.isTrue(db.isOpen());
-            assert(await adone.fs.isDirectory(location));
+            assert(await adone.fs.is.directory(location));
             await db.close();
         });
 
