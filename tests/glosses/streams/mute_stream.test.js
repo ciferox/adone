@@ -1,4 +1,3 @@
-
 const { std: { stream: { Stream } }, stream: { MuteStream } } = adone;
 
 // some marker objects

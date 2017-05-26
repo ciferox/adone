@@ -1,4 +1,3 @@
-
 adone.lazify({
     buffer: () => adone.lazify({
         DEFAULT_INITIAL_SIZE: ["./buffer_stream", (mod) => mod.DEFAULT_INITIAL_SIZE],
@@ -16,5 +15,9 @@ adone.lazify({
     newlineCounter: "./newline_counter",
     as: "./as",
     base64: "./base64",
-    LastNewline: "./last_newline"
+    LastNewline: "./last_newline",
+    Duplexify: "./duplexify",
+    eos: "./eos",
+    shift: "./shift",
+    through: "./through"
 }, exports, require);
