@@ -1,24 +1,24 @@
 const { Fuzzy } = adone.text;
 
-describe("Fuzzy", () => {
+describe("util", "Fuzzy", () => {
     describe('Flat list of strings: ["Apple", "Orange", "Banana"]', () => {
         const fruits = ["Apple", "Orange", "Banana"];
         const fuzzy = new Fuzzy(fruits);
 
-        it("searching for the term 'Apple'", () => {
+        it('searching for the term "Apple"', () => {
             const result = fuzzy.search("Apple");
             assert.equal(result.length, 1);
             assert.equal(result[0], 0);
         });
 
-        it("performing a fuzzy search for the term 'ran'", () => {
+        it('performing a fuzzy search for the term "ran"', () => {
             const result = fuzzy.search("ran");
             assert.equal(result.length, 2);
             assert.equal(result[0], 1);
             assert.equal(result[1], 2);
         });
 
-        it("performing a fuzzy search for the term 'nan'", () => {
+        it('performing a fuzzy search for the term "nan"', () => {
             const result = fuzzy.search("nan");
             assert.equal(result.length, 2);
             assert.equal(result[0], 2);
@@ -33,6 +33,7 @@ describe("Fuzzy", () => {
             tokenize: true
         };
         const fuzzy = new Fuzzy(books, options);
+
         it('searching for the term "HTML5"', () => {
             const result = fuzzy.search("HTML5");
             assert.equal(result.length, 3);
@@ -41,6 +42,7 @@ describe("Fuzzy", () => {
                 author: "Remy Sharp"
             });
         });
+
         it('searching for the term "Woodhouse"', () => {
             const result = fuzzy.search("Jeeves Woodhouse");
             assert.equal(result.length, 6);
@@ -92,6 +94,7 @@ describe("Fuzzy", () => {
             keys: ["title", "author.firstName"]
         };
         const fuzzy = new Fuzzy(books, options);
+
         it('searching for the term "Stve"', () => {
             const result = fuzzy.search("Stve");
             assert.isTrue(result.length > 0);
@@ -121,7 +124,7 @@ describe("Fuzzy", () => {
         }];
         const options = {
             keys: ["title", "author.firstName"],
-            getFn(obj, path) {
+            getFn(obj) {
                 if (!obj) {
                     return null;
                 }
@@ -153,7 +156,7 @@ describe("Fuzzy", () => {
     describe('Include score in result list: ["Apple", "Orange", "Banana"]', () => {
         const fruits = ["Apple", "Orange", "Banana"];
         const fuzzy = new Fuzzy(fruits, {
-            include: ["score"]
+            includeScore: true
         });
 
         it('searching for the term "Apple"', () => {
@@ -209,7 +212,7 @@ describe("Fuzzy", () => {
         const options = {
             keys: ["title", "author"],
             id: "ISBN",
-            include: ["score"]
+            includeScore: true
         };
         const fuzzy = new Fuzzy(books, options);
 
@@ -234,7 +237,7 @@ describe("Fuzzy", () => {
         const options = {
             keys: ["title", "author"],
             id: "ISBN",
-            include: ["score"]
+            includeScore: true
         };
         const fuzzy = new Fuzzy(books, options);
 
@@ -263,12 +266,11 @@ describe("Fuzzy", () => {
             author: "Remy Sharp",
             tags: ["nonfiction"]
         }];
-        const options = {
+        const fuzzy = new Fuzzy(books, {
             keys: ["tags"],
             id: "ISBN",
             threshold: 0
-        };
-        const fuzzy = new Fuzzy(books, options);
+        });
 
         it('searching for the tag "nonfiction"', () => {
             const result = fuzzy.search("nonfiction");
@@ -344,7 +346,7 @@ describe("Fuzzy", () => {
         });
     });
 
-    describe("Set new list on Fuzzy", () => {
+    describe("Set new list on Fuse", () => {
         const fruits = ["Apple", "Orange", "Banana"];
         const vegetables = ["Onion", "Lettuce", "Broccoli"];
 
@@ -391,9 +393,10 @@ describe("Fuzzy", () => {
         const fuzzy = new Fuzzy(items);
 
         it('searching for the term "Uni Mannheim"', () => {
-            const result = fuzzy.search("Uni Mannheim");
+            const result = fuzzy.search("Unive Mannheim");
+
             assert.equal(result.length, 2);
-            assert.equal(result[0], 0);
+            assert.equal(result[0], 1);
         });
     });
 
@@ -405,7 +408,7 @@ describe("Fuzzy", () => {
             "Boma hamlet"];
 
         const fuzzy = new Fuzzy(items, {
-            include: ["score"]
+            includeScore: true
         });
 
         it('searching for the term "Bo hamet"', () => {
@@ -455,6 +458,7 @@ describe("Fuzzy", () => {
             };
             const fuzzy = new Fuzzy(items, options);
             const result = fuzzy.search("Man");
+
             assert.deepEqual(result[0].title, "Right Ho Jeeves");
         });
 
@@ -470,8 +474,10 @@ describe("Fuzzy", () => {
             };
             const fuzzy = new Fuzzy(items, options);
             const result = fuzzy.search("Man");
+
             assert.deepEqual(result[0].author, "John X");
         });
+
         it('searching for the term "war", where tags are weighted higher than all other keys', () => {
             const options = {
                 keys: [{
@@ -487,6 +493,7 @@ describe("Fuzzy", () => {
             };
             const fuzzy = new Fuzzy(items, options);
             const result = fuzzy.search("fiction");
+
             assert.deepEqual(result[0].author, "P.D. Mans");
         });
     });
@@ -497,13 +504,15 @@ describe("Fuzzy", () => {
         }];
         const options = {
             keys: ["name"],
-            include: ["score", "matches"]
+            includeScore: true,
+            includeMatches: true
         };
         const fuzzy = new Fuzzy(items, options);
 
         it('searching for the term "wor"', () => {
             const result = fuzzy.search("wor");
             assert.isTrue(Boolean(result.length));
+
             const matches = result[0].matches;
             const a = matches[0].indices[0];
             const b = matches[0].indices[1];
@@ -536,6 +545,7 @@ describe("Fuzzy", () => {
                 tokenize: true
             });
             const result = fuzzy.search("corporate");
+
             assert.equal(result.length, 4);
             assert.notEqual(result.indexOf(0), -1);
             assert.notEqual(result.indexOf(1), -1);
@@ -571,7 +581,7 @@ describe("Fuzzy", () => {
         const items = ["t te tes test tes te t"];
 
         const fuzzy = new Fuzzy(items, {
-            include: ["matches"]
+            includeMatches: true
         });
 
         it('searching for the term "test"', () => {
@@ -586,7 +596,7 @@ describe("Fuzzy", () => {
         const items = ["t te tes test tes te t"];
 
         const fuzzy = new Fuzzy(items, {
-            include: ["matches"],
+            includeMatches: true,
             findAllMatches: true
         });
 
@@ -602,7 +612,7 @@ describe("Fuzzy", () => {
         const items = ["t te tes test tes te t"];
 
         const fuzzy = new Fuzzy(items, {
-            include: ["matches"],
+            includeMatches: true,
             minMatchCharLength: 2
         });
 
