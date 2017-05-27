@@ -30,7 +30,7 @@ export default class File {
     }
 
     normalizedPath() {
-        return is.win32 ? adone.util.normalizePath(this._path) : this._path;
+        return is.windows ? adone.util.normalizePath(this._path) : this._path;
     }
 
     dirname() {

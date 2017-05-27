@@ -224,7 +224,7 @@ module.exports = (sockPath, key, keyType, data, cb) => {
         }
     };
 
-    if (is.win32) {
+    if (is.windows) {
         if (sockPath === "pageant") {
             const RET_ERR_BADARGS = 10;
             const RET_ERR_UNAVAILABLE = 11;

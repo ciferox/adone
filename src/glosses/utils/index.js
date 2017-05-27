@@ -180,7 +180,7 @@ export const normalizePath = (str, stripTrailing = false) => {
 };
 
 export const unixifyPath = (filePath, unescape = false) => {
-    if (is.win32 || adone.std.path.sep === "\\") {
+    if (is.windows || adone.std.path.sep === "\\") {
         return normalizePath(filePath);
     }
     if (unescape) {
@@ -420,7 +420,7 @@ export const flatten = (array, { depth = 1 } = {}) => {
 
 export const globParent = (str) => {
     // flip windows path separators
-    if (is.win32 && str.indexOf("/") < 0) {
+    if (is.windows && str.indexOf("/") < 0) {
         str = str.split("\\").join("/");
     }
 

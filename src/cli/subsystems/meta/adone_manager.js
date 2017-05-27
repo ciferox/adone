@@ -67,7 +67,7 @@ export default class AdoneManager {
         this.destAdoneDir = this.nodeModulesDir.getDirectory(name);
         const destPath = this.destAdoneDir.path();
         await adone.fs.mkdir(adone.std.path.dirname(destPath));
-        if (is.win32) {
+        if (is.windows) {
             await fs.symlink(this.app.adoneRootPath, destPath, "junction");
         } else {
             await fs.symlink(this.app.adoneRootPath, destPath);
@@ -88,14 +88,14 @@ export default class AdoneManager {
 
     async installScript(name) {
         const scriptPath = this.getScriptPath(name);
-        const data = await adone.templating.nunjucks.render(std.path.join(this.app.adoneEtcPath, "scripts", (is.win32 ? "adone.cmd" : "adone")), {
+        const data = await adone.templating.nunjucks.render(std.path.join(this.app.adoneEtcPath, "scripts", (is.windows ? "adone.cmd" : "adone")), {
             targetPath: this.destAdoneDir.resolve("bin", "adone.js")
         });
         if (await adone.fs.exists(scriptPath)) {
             await adone.fs.unlink(scriptPath);
         }
         await adone.fs.writeFile(scriptPath, data);
-        if (!is.win32) {
+        if (!is.windows) {
             await adone.fs.chmod(scriptPath, 0o755);
         }
     }
@@ -109,7 +109,7 @@ export default class AdoneManager {
     }
 
     getScriptPath(name) {
-        return std.path.join(this.nodePath, `${name}${(is.win32 ? ".cmd" : "")}`);
+        return std.path.join(this.nodePath, `${name}${(is.windows ? ".cmd" : "")}`);
     }
 
     async createArchive(outPath, { env, dirName, type = "gz" } = {}) {

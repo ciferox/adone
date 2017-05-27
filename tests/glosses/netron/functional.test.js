@@ -52,7 +52,7 @@ describe("Netron", () => {
 
     describe("Functional tests", () => {
         describe("Unix-Sockets and Windows-pipes", () => {
-            const SOCKET_PIPE = is.win32 ? "\\\\.\\pipe\\adone_test_pipe" : "test_socket.sock";
+            const SOCKET_PIPE = is.windows ? "\\\\.\\pipe\\adone_test_pipe" : "test_socket.sock";
 
             it("two connections", async () => {
                 await superNetron.bind({ port: SOCKET_PIPE });

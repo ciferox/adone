@@ -46,7 +46,7 @@ const rmfile = async (p) => {
             return null;
         }
         // Windows can EPERM on stat.  Life is suffering.
-        if (err.code === "EPERM" && is.win32) {
+        if (err.code === "EPERM" && is.windows) {
             return fixWinEPERM(p);
         }
     });
@@ -64,7 +64,7 @@ const rmfile = async (p) => {
             return;  // has been deleted
         }
         if (err.code === "EPERM") {
-            if (is.win32) {
+            if (is.windows) {
                 return fixWinEPERM(p).then(() => rmdir(p));
             }
             return rmdir(p);

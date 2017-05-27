@@ -58,7 +58,7 @@ describe("Process manager", () => {
     describe("PRemoteProcess", () => {
         it("should exit when the peer disconnects", async () => {
             const dir = await fs.Directory.createTmp();
-            const port = is.win32 ? "\\\\.\\pipe\\port.sock" : dir.getVirtualFile("port").path();
+            const port = is.windows ? "\\\\.\\pipe\\port.sock" : dir.getVirtualFile("port").path();
             try {
                 const p = cp.spawn(process.execPath, [fixture("run_forever_bind.js"), port], {
                     stdio: [null, "inherit", "inherit"]

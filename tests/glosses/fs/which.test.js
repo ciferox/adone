@@ -1,7 +1,7 @@
 const { is } = adone;
 
 const fixture = adone.std.path.join(__dirname, "which_fixture");
-const isWindows = is.win32 || process.env.OSTYPE === "cygwin" || process.env.OSTYPE === "msys";
+const isWindows = is.windows || process.env.OSTYPE === "cygwin" || process.env.OSTYPE === "msys";
 const skip = isWindows ? "not relevant on windows" : false;
 
 describe("fs", "which", () => {

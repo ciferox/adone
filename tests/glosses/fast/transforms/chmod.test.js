@@ -258,7 +258,7 @@ describe("Fast", () => {
                     expect(mode.toOctal()).to.be.equal("0700");
                 });
             });
-            if (adone.is.win32) {
+            if (adone.is.windows) {
                 // Windows does not have permission to make these operations.
                 d.skip();
             }

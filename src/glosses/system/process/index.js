@@ -105,7 +105,7 @@ const resolveCommand = (command, noExtension) => {
 
 // See: https://github.com/IndigoUnited/node-cross-spawn/pull/34#issuecomment-221623455
 const hasEmptyArgumentBug = () => {
-    if (!is.win32) {
+    if (!is.windows) {
         return false;
     }
 
@@ -190,7 +190,7 @@ const parseNonShell = (parsed) => {
     let needsShell;
     let applyQuotes;
 
-    if (!is.win32) {
+    if (!is.windows) {
         return parsed;
     }
 
@@ -234,7 +234,7 @@ const parseShell = (parsed) => {
     // Mimic node shell option, see: https://github.com/nodejs/node/blob/b9f6a2dc059a1062776133f3d4fd848c4da7d150/lib/child_process.js#L335
     const shellCommand = [parsed.command].concat(parsed.args).join(" ");
 
-    if (is.win32) {
+    if (is.windows) {
         parsed.command = is.string(parsed.options.shell) ? parsed.options.shell : process.env.comspec || "cmd.exe";
         parsed.args = ["/d", "/s", "/c", `"${shellCommand}"`];
         parsed.options.windowsVerbatimArguments = true;  // Tell node's spawn that the arguments are already escaped
@@ -391,7 +391,7 @@ const handleShell = (fn, cmd, opts) => {
 
     opts = Object.assign({}, opts);
 
-    if (is.win32) {
+    if (is.windows) {
         opts.__winShell = true;
         file = process.env.comspec || "cmd.exe";
         args = ["/s", "/c", `"${cmd}"`];
@@ -438,7 +438,7 @@ const notFoundError = (command, syscall) => {
 };
 
 const verifyENOENT = (status, parsed) => {
-    if (is.win32 && status === 1 && !parsed.file) {
+    if (is.windows && status === 1 && !parsed.file) {
         return notFoundError(parsed.original, "spawn");
     }
 
@@ -446,7 +446,7 @@ const verifyENOENT = (status, parsed) => {
 };
 
 const hookChildProcess = (cp, parsed) => {
-    if (!is.win32) {
+    if (!is.windows) {
         return;
     }
 

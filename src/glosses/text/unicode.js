@@ -119,7 +119,7 @@ const symbolFallback = {
 };
 
 export const approx = (str) => {
-    if (!adone.is.win32) {
+    if (!adone.is.windows) {
         return str;
     }
 

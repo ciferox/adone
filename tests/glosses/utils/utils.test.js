@@ -506,7 +506,7 @@ describe("glosses", "utils", () => {
         });
 
         it("reading root with symlinks using lstat", async function () {
-            if (adone.is.win32) {
+            if (adone.is.windows) {
                 this.skip();
                 return;
             }

@@ -1317,7 +1317,7 @@ describe("Process manager", function () {
                         const pid = await _p.pid();
                         try {
                             // just change the port to fail the attaching
-                            await db.applications.update({ name: "test" }, { $set: { port: is.win32 ? "\\\\.\\pipe\\such_a_file_shouldnt_exist_12345$.sock" : "such_a_file_shouldnt_exist_12345$.sock" } });
+                            await db.applications.update({ name: "test" }, { $set: { port: is.windows ? "\\\\.\\pipe\\such_a_file_shouldnt_exist_12345$.sock" : "such_a_file_shouldnt_exist_12345$.sock" } });
                             expect(RemoteProcess.alive(pid)).to.be.true;
                             await restartOmnitron();
                             expect(await pm.hasApplication("test")).to.be.true;
@@ -1982,7 +1982,7 @@ describe("Process manager", function () {
                     const c = pm.prepareConfig({
                         path: "test.js"
                     });
-                    if (is.win32) {
+                    if (is.windows) {
                         expect(c.port).to.be.equal(`\\\\.\\pipe\\${path.join(basePath, "test", "port.sock")}`);
                     } else {
                         expect(c.port).to.be.equal(path.join(basePath, "test", "port.sock"));

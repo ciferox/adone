@@ -125,7 +125,7 @@ describe("Socket", function () {
             await checkBind(server, SERVER_PORT);
         });
 
-        if (!is.win32) {
+        if (!is.windows) {
             describe("Unix socket", () => {
                 it("bind", async () => {
                     await server.bind({ port: UNIX_SOCKET });

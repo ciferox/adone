@@ -1312,7 +1312,7 @@ describe("glosses", "fs", "watcher", function watcherTests() {
                 });
 
                 it("should respect depth setting when following symlinks", async () => {
-                    if (is.win32) {
+                    if (is.windows) {
                         return; // skip on windows
                     }
                     options.depth = 1;
@@ -1328,7 +1328,7 @@ describe("glosses", "fs", "watcher", function watcherTests() {
                 });
 
                 it("should respect depth setting when following a new symlink", async () => {
-                    if (is.win32) {
+                    if (is.windows) {
                         return; // skip on windows
                     }
                     options.depth = 1;
@@ -1539,7 +1539,7 @@ describe("glosses", "fs", "watcher", function watcherTests() {
                         options.ignorePermissionErrors = false;
                     });
                     it("should not watch files without read permissions", async () => {
-                        if (is.win32) {
+                        if (is.windows) {
                             return;
                         }
                         const all = spy();

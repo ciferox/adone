@@ -122,14 +122,14 @@ let splitRootRe;
 
 // Regexp that finds the next partion of a (partial) path
 // result is [base_with_slash, base], e.g. ['somedir/', 'somedir']
-if (is.win32) {
+if (is.windows) {
     nextPartRe = /(.*?)(?:[\/\\]+|$)/g;
 } else {
     nextPartRe = /(.*?)(?:[\/]+|$)/g;
 }
 
 // Regex to find the device root, including trailing slash. E.g. 'c:\\'.
-if (is.win32) {
+if (is.windows) {
     splitRootRe = /^(?:[a-zA-Z]:|[\\\/]{2}[^\\\/]+[\\\/][^\\\/]+)?[\\\/]*/;
 } else {
     splitRootRe = /^[\/]*/;
@@ -209,7 +209,7 @@ export const realpath = (p, cache) => {
                     // call gotTarget as soon as the link target is known
                     // dev/ino always return 0 on windows, so skip the check.
                     let id = null;
-                    if (!is.win32) {
+                    if (!is.windows) {
                         id = `${stat.dev.toString(32)}:${stat.ino.toString(32)}`;
                         if (seenLinks.hasOwnProperty(id)) {
                             return gotTarget(null, seenLinks[id], base);
@@ -221,7 +221,7 @@ export const realpath = (p, cache) => {
                         }
 
                         fs.readlink(base, (err, target) => {
-                            if (!is.win32) {
+                            if (!is.windows) {
                                 seenLinks[id] = target;
                             }
                             gotTarget(err, target);
@@ -269,7 +269,7 @@ export const realpath = (p, cache) => {
                     previous = "";
 
                     // On windows, check that the root exists. On unix there is no need.
-                    if (is.win32 && !knownHard[base]) {
+                    if (is.windows && !knownHard[base]) {
                         fs.lstat(base, (err) => {
                             if (err) {
                                 return reject(err);
@@ -330,7 +330,7 @@ export const realpathSync = (p, cache) => {
                 previous = "";
 
                 // On windows, check that the root exists. On unix there is no need.
-                if (is.win32 && !knownHard[base]) {
+                if (is.windows && !knownHard[base]) {
                     fs.lstatSync(base);
                     knownHard[base] = true;
                 }
@@ -372,7 +372,7 @@ export const realpathSync = (p, cache) => {
                     // dev/ino always return 0 on windows, so skip the check.
                     let linkTarget = null;
                     let id = null;
-                    if (!is.win32) {
+                    if (!is.windows) {
                         id = `${stat.dev.toString(32)}:${stat.ino.toString(32)}`;
                         if (seenLinks.hasOwnProperty(id)) {
                             linkTarget = seenLinks[id];
@@ -387,7 +387,7 @@ export const realpathSync = (p, cache) => {
                     if (cache) {
                         cache[base] = resolvedLink;
                     }
-                    if (!is.win32) {
+                    if (!is.windows) {
                         seenLinks[id] = linkTarget;
                     }
                 }
@@ -581,7 +581,7 @@ export const rename = (oldPath, newPath, { retries = 10, delay = 100 } = {}) => 
     return new Promise((resolve, reject) => {
         adone.std.fs.rename(oldPath, newPath, (err) => {
             if (err) {
-                if (!is.win32 || !retries) {
+                if (!is.windows || !retries) {
                     return reject(err);
                 }
                 if (err.code !== "EPERM" && err.code !== "EACCESS") {
@@ -595,7 +595,7 @@ export const rename = (oldPath, newPath, { retries = 10, delay = 100 } = {}) => 
     });
 };
 
-export const tail = async (path, n = 10, { separator = is.win32 ? "\r\n" : "\n", chunkLength = 4096 } = {}) => {
+export const tail = async (path, n = 10, { separator = is.windows ? "\r\n" : "\n", chunkLength = 4096 } = {}) => {
     const fd = await fs.fd.open(path, "r");
     const stat = await fs.fd.stat(fd);
     let buffer = Buffer.alloc(0);
@@ -688,7 +688,7 @@ export const tmpName = async ({ name = null, tries = 3, template = null, dir = o
     throw new Error("Could not get a unique tmp filename, max tries reached");
 };
 
-export const homeDir = () => (is.win32 ? process.env.USERPROFILE : process.env.HOME);
+export const homeDir = () => (is.windows ? process.env.USERPROFILE : process.env.HOME);
 
 export const lookup = async (path) => {
     try {

@@ -2,7 +2,7 @@ const { is } = adone;
 
 const runtime = adone.lazify({
     Bus: () => {
-        if (is.win32) {
+        if (is.windows) {
             return require("./bus_windows");
         } 
         return require("./bus_unix");

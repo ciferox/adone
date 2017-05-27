@@ -3,7 +3,7 @@ const { is } = adone;
 let syncCheck;
 let asyncCheck;
 
-if (is.win32) {
+if (is.windows) {
     const checkPathExt = (path, options) => {
         let pathext = !is.undefined(options.pathExt) ? options.pathExt : process.env.PATHEXT;
 

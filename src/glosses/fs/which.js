@@ -1,5 +1,5 @@
 const { is } = adone;
-const isWindows = is.win32 || process.env.OSTYPE === "cygwin" || process.env.OSTYPE === "msys";
+const isWindows = is.windows || process.env.OSTYPE === "cygwin" || process.env.OSTYPE === "msys";
 const COLON = isWindows ? ";" : ":";
 
 const getNotFoundError = (cmd) => {

@@ -31,7 +31,7 @@ export class Command extends adone.shell.Base {
 
         if (cmd.indexOf("/") === -1) {
             let pathExtArray = [""];
-            if (is.win32) {
+            if (is.windows) {
                 const pathExtEnv = process.env.PATHEXT || ".com;.exe;.bat;.cmd;.vbs;.vbe;.js;.jse;.wsf;.wsh";
                 pathExtArray = splitPath(pathExtEnv.toUpperCase());
             }
@@ -43,7 +43,7 @@ export class Command extends adone.shell.Base {
 
                 let attempt = std.path.resolve(pathArray[k], cmd);
 
-                if (is.win32) {
+                if (is.windows) {
                     attempt = attempt.toUpperCase();
                 }
 

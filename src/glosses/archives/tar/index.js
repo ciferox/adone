@@ -1,6 +1,6 @@
 const { is, std: { path, fs }, x } = adone;
 
-const normalize = !is.win32 ? adone.identity : (name) => name.replace(/\\/g, "/").replace(/:/g, "_");
+const normalize = !is.windows ? adone.identity : (name) => name.replace(/\\/g, "/").replace(/:/g, "_");
 
 const head = (list) => list.length ? list[list.length - 1] : null;
 
@@ -170,7 +170,7 @@ export const extractStream = (cwd = process.cwd(), opts = {}) => {
     const ignore = opts.ignore || adone.noop;
     let map = opts.map || adone.noop;
     const mapStream = opts.mapStream || adone.identity;
-    const own = opts.chown !== false && !adone.is.win32 && processGetuid() === 0;
+    const own = opts.chown !== false && !adone.is.windows && processGetuid() === 0;
     const extract = opts.extract || new adone.archive.tar.RawExtractStream();
     const stack = [];
     const now = new Date();
@@ -265,7 +265,7 @@ export const extractStream = (cwd = process.cwd(), opts = {}) => {
                 if (err) {
                     return next(err);
                 }
-                if (is.win32) {
+                if (is.windows) {
                     return next();
                 }
                 chperm(name, header, next);
@@ -273,7 +273,7 @@ export const extractStream = (cwd = process.cwd(), opts = {}) => {
         };
 
         const onsymlink = () => {
-            if (is.win32) {
+            if (is.windows) {
                 return next(); // skip symlinks on win for now before it can be tested
             }
             fs.unlink(name, () => {
@@ -298,7 +298,7 @@ export const extractStream = (cwd = process.cwd(), opts = {}) => {
         };
 
         const onlink = () => {
-            if (is.win32) {
+            if (is.windows) {
                 return next(); // skip links on win for now before it can be tested
             }
             fs.unlink(name, () => {

@@ -23,7 +23,7 @@ const cleanResults = (m) => {
         m[i] = m[i].replace(/\/+/g, "/").replace(/\/$/, "");
     }
 
-    if (is.win32) {
+    if (is.windows) {
         for (let i = 0; i < m.length; ++i) {
             m[i] = m[i].replace(/^[a-zA-Z]:\\\\/, "/").replace(/\\/g, "/");
         }
@@ -75,7 +75,7 @@ describe("Glob", () => {
             await adone.fs.writeFile(f, "i like tests");
         }));
 
-        if (!is.win32) {
+        if (!is.windows) {
             const d = path.dirname(symlinkTo);
             await adone.fs.mkdir(d, 0o755);
             await adone.fs.symlink(symlinkFrom, symlinkTo, "dir");
@@ -87,7 +87,7 @@ describe("Glob", () => {
         }));
 
         // generate the bash pattern test-fixtures if possible
-        if (is.win32 || !process.env.TEST_REGEN) {
+        if (is.windows || !process.env.TEST_REGEN) {
             adone.info("Windows, or TEST_REGEN unset. Using cached fixtures.");
             return;
         }
@@ -227,7 +227,7 @@ describe("Glob", () => {
         const g = adone.fs.glob(path.join(__dirname, "*.js"));
 
         checkGlobResult(g, done, (result) => {
-            if (is.win32) {
+            if (is.windows) {
                 result = result.map((p) => {
                     return path.resolve(p);
                 });
@@ -240,7 +240,7 @@ describe("Glob", () => {
         const g = adone.fs.glob(__filename);
 
         checkGlobResult(g, done, (result) => {
-            if (is.win32) {
+            if (is.windows) {
                 result = result.map((p) => {
                     return path.resolve(p);
                 });
@@ -271,7 +271,7 @@ describe("Glob", () => {
         for (const pattern of globs) {
             const expect = bashResults[pattern];
             // anything regarding the symlink thing will fail on windows, so just skip it
-            if (is.win32 &&
+            if (is.windows &&
                 expect.some((m) => /\bsymlink\b/.test(m))) {
                 return;
             }
@@ -287,7 +287,7 @@ describe("Glob", () => {
         }
     });
 
-    if (!is.win32) {
+    if (!is.windows) {
         describe("broken-symlink", () => {
             const link = "a/broken-link/link";
 
@@ -435,7 +435,7 @@ describe("Glob", () => {
         }
     });
 
-    if (!is.win32) {
+    if (!is.windows) {
         describe("follow", () => {
             const origCwd = process.cwd();
 
@@ -552,7 +552,7 @@ describe("Glob", () => {
                 const stream = adone.fs.glob(pattern, opt);
                 const glob = stream.globs[0];
                 glob.on("end", (res) => {
-                    if (is.win32) {
+                    if (is.windows) {
                         expect = expect.filter((f) => {
                             return !/\bsymlink\b/.test(f);
                         });
@@ -640,7 +640,7 @@ describe("Glob", () => {
                 "cb/e/"
             ].sort();
 
-            if (!is.win32) {
+            if (!is.windows) {
                 expect.push("symlink/a/");
             }
 
@@ -692,7 +692,7 @@ describe("Glob", () => {
                     "a/z/"
                 ];
 
-                if (!is.win32) {
+                if (!is.windows) {
                     expect.push("a/symlink/");
                 }
 
@@ -723,7 +723,7 @@ describe("Glob", () => {
                     "a/z"
                 ];
 
-                if (!is.win32) {
+                if (!is.windows) {
                     expect.push("a/symlink");
                 }
 
@@ -754,7 +754,7 @@ describe("Glob", () => {
                     "a/z/"
                 ];
 
-                if (!is.win32) {
+                if (!is.windows) {
                     expect.push("a/symlink/");
                 }
 
@@ -785,7 +785,7 @@ describe("Glob", () => {
                     "a/z/"
                 ];
 
-                if (!is.win32) {
+                if (!is.windows) {
                     expect.push("a/symlink/");
                 }
 
@@ -862,7 +862,7 @@ describe("Glob", () => {
             "a/abcfed"
         ];
 
-        if (!is.win32) {
+        if (!is.windows) {
             expect.push("a/symlink/a", "a/symlink/a/b/c/a");
         }
 
@@ -982,7 +982,7 @@ describe("Glob", () => {
                 "/tmp/A",
                 "/tmp/a"
             ];
-            if (is.win32) {
+            if (is.windows) {
                 want = want.map((p) => {
                     return `${drive}:${p}`;
                 });
@@ -992,7 +992,7 @@ describe("Glob", () => {
 
             for (let i = 0; i < 2; i++) {
                 p.push(adone.fs.glob("/tmp/a", { nocase: true }).then((res) => {
-                    if (is.win32) {
+                    if (is.windows) {
                         res = res.map((r) => {
                             return r.replace(/\\/g, "/").replace(new RegExp(`^${drive}:`, "i"), `${drive}:`);
                         });
@@ -1015,7 +1015,7 @@ describe("Glob", () => {
                 "/tmp/A",
                 "/tmp/a"
             ];
-            if (is.win32) {
+            if (is.windows) {
                 want = want.map((p) => {
                     return `${drive}:${p}`;
                 });
@@ -1025,7 +1025,7 @@ describe("Glob", () => {
 
             for (let i = 0; i < 2; i++) {
                 p.push(adone.fs.glob("/tmp/*", { nocase: true }).then((res) => {
-                    if (is.win32) {
+                    if (is.windows) {
                         res = res.map((r) => {
                             return r.replace(/\\/g, "/").replace(new RegExp(`^${drive}:`, "i"), `${drive}:`);
                         });
@@ -1208,7 +1208,7 @@ describe("Glob", () => {
         });
     });
 
-    if (!is.win32) {
+    if (!is.windows) {
         describe("realpath", () => {
 
             // pattern to find a bunch of duplicates

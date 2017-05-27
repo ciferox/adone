@@ -7,7 +7,7 @@ export function processFiles(storage) {
     return {
         stdout: path.join(storage.path(), "stdout.log"),
         stderr: path.join(storage.path(), "stderr.log"),
-        port: (is.win32 ? "\\\\.\\pipe\\" : "") + path.join(storage.path(), "port.sock")
+        port: (is.windows ? "\\\\.\\pipe\\" : "") + path.join(storage.path(), "port.sock")
     };
 }
 

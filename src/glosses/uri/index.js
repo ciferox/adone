@@ -2341,7 +2341,7 @@ URI.recodePath = generateSegmentedPathFunction("/", "encodePathSegment", "decode
 URI.recodeUrnPath = generateSegmentedPathFunction(":", "encodeUrnPathSegment", "decode");
 URI.encodeReserved = generateAccessor("reserved", "encode");
 
-if (is.win32) {
+if (is.windows) {
     URI.delimiter = ";";
     URI.sep = "\\";
 } else {

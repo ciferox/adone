@@ -754,7 +754,7 @@ const is = {
     netronRemoteStub: (obj) => adone.tag.has(obj, adone.tag.NETRON_REMOTESTUB),
     netronStream: (obj) => adone.tag.has(obj, adone.tag.NETRON_STREAM),
     iterable: (obj) => obj && is.function(obj[Symbol.iterator]),
-    win32: (platform === "win32"),
+    windows: (platform === "win32"),
     linux: (platform === "linux"),
     freebsd: (platform === "freebsd"),
     darwin: (platform === "darwin"),

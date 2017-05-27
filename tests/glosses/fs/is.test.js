@@ -82,7 +82,7 @@ describe("fs", "is", () => {
             assert.isFalse(await adone.fs.is.executable(__dirname, options));
         };
 
-        if (!is.win32) {
+        if (!is.windows) {
             it("access", async () => {
                 await runTest();
             });

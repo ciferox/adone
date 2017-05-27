@@ -90,12 +90,12 @@ class Glob extends adone.EventEmitter {
 
         this.root = options.root || path.resolve("/");
         this.root = path.resolve(this.root);
-        if (is.win32) {
+        if (is.windows) {
             this.root = this.root.replace(/\\/g, "/");
         }
 
         this.cwdAbs = is.pathAbsolute(this.cwd) ? this.cwd : this._makeAbs(this.cwd);
-        if (is.win32) {
+        if (is.windows) {
             this.cwdAbs = this.cwdAbs.replace(/\\/g, "/");
         }
         this.nomount = Boolean(options.nomount);
@@ -248,7 +248,7 @@ class Glob extends adone.EventEmitter {
             abs = path.resolve(f);
         }
 
-        if (is.win32) {
+        if (is.windows) {
             abs = abs.replace(/\\/g, "/");
         }
 
@@ -727,7 +727,7 @@ class Glob extends adone.EventEmitter {
             }
         }
 
-        if (is.win32) {
+        if (is.windows) {
             prefix = prefix.replace(/\\/g, "/");
         }
 

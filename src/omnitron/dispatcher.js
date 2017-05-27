@@ -120,7 +120,7 @@ export default class Dispatcher {
             if (is.string(this.app.config.omnitron.pidFilePath)) {
                 try {
                     const pid = parseInt(adone.std.fs.readFileSync(this.app.config.omnitron.pidFilePath).toString());
-                    if (is.win32) {
+                    if (is.windows) {
                         try {
                             await this.killSelf();
                             this.noisily && adone.log("Called omnitron's killSelf()");

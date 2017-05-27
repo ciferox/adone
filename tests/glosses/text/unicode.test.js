@@ -1,6 +1,6 @@
 describe("adone.text.unicode", () => {
     const { unicode } = adone.text;
-    const result = (main, win) => adone.is.win32 ? win : main;
+    const result = (main, win) => adone.is.windows ? win : main;
 
     console.log(`  ${Object.keys(unicode.symbol).map((x) => unicode[x]).join("  ")}\n`);
 

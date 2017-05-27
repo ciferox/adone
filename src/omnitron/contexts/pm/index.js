@@ -869,7 +869,7 @@ export default class ProcessManager {
         config.storage = std.path.join(this.basePath, config.name);
         config.stdout = config.stdout || std.path.join(config.storage, "logs", "stdout.log");
         config.stderr = config.stderr || std.path.join(config.storage, "logs", "stderr.log");
-        config.port = config.port || (is.win32 ? "\\\\.\\pipe\\" : "") + std.path.join(config.storage, "port.sock");
+        config.port = config.port || (is.windows ? "\\\\.\\pipe\\" : "") + std.path.join(config.storage, "port.sock");
         if (config.mode === "cluster" && !is.number(config.instances)) {
             config.instances = adone.std.os.cpus().length;
         }
