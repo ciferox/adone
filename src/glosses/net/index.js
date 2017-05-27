@@ -21,5 +21,6 @@ adone.lazify({
         client: "./http/client",
         x: "./http/x"
     }, null, require),
-    mail: "./mail"
+    mail: "./mail",
+    mqtt: "./mqtt"
 }, exports, require);
