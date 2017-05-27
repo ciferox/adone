@@ -120,3 +120,15 @@ export const promisifyAll = (source, { suffix = "Async", filter = () => true, co
     }
     return target;
 };
+
+module.exports.finally = (promise, onFinally) => {
+    onFinally = onFinally || adone.noop;
+
+    return promise.then((val) => new Promise(resolve => {
+        resolve(onFinally());
+    }).then(() => val), err => new Promise(resolve => {
+        resolve(onFinally());
+    }).then(() => {
+        throw err;
+    }));
+};

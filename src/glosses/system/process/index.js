@@ -1,6 +1,5 @@
 const { is } = adone;
 const LRU = require("lru-cache");
-const pFinally = require("p-finally");
 const onExit = require("signal-exit");
 
 // The Node team wants to deprecate `process.bind(...)`.
@@ -540,7 +539,7 @@ export const exec = (cmd, args, opts) => {
         }
     };
 
-    const promise = pFinally(Promise.all([
+    const promise = adone.promise.finally(Promise.all([
         processDone,
         getStream(spawned, "stdout", encoding, maxBuffer),
         getStream(spawned, "stderr", encoding, maxBuffer)

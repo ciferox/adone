@@ -46,7 +46,6 @@
     "mongodb-version-manager": "^1.0.7",
     "node-notifier": "^4.6.1",
     "node-sass": "^4.5.0",
-    "p-finally": "^1.0.0",
     "picture-tube": "^1.0.0",
     "propagate": "^1.0.0",
     "proxy-test-server": "^1.0.0",

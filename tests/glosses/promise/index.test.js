@@ -317,4 +317,50 @@ describe("glosses", "promise", () => {
             expect(await b.gAsync()).to.be.equal(3);
         });
     });
+
+    describe("finally", () => {
+        const fixture = Symbol("fixture");
+        const fixtureErr = new Error("err");
+
+        it("does nothing when nothing is passed", async () => {
+            assert.equal(await promise.finally(Promise.resolve(fixture)), fixture);
+        });
+
+        it("callback is called when promise is fulfilled", async () => {
+            let called = false;
+
+            const val = await promise.finally(Promise.resolve(fixture), () => {
+                called = true;
+            });
+
+            assert.equal(val, fixture);
+            assert.isTrue(called);
+        });
+
+        it("callback is called when promise is rejected", async () => {
+            let called = false;
+
+            await promise.finally(Promise.reject(fixtureErr), () => {
+                called = true;
+            }).catch((err) => {
+                assert.equal(err, fixtureErr);
+            });
+
+            assert.isTrue(called);
+        });
+
+        it("returning a rejected promise in the callback rejects the promise", async () => {
+            await promise.finally(Promise.resolve(fixture), () => Promise.reject(fixtureErr)).then(() => {
+                assert.fail();
+            }, (err) => {
+                assert.equal(err, fixtureErr);
+            });
+        });
+
+        it("returning a rejected promise in the callback for an already rejected promise changes the rejection reason", async () => {
+            await promise.finally(Promise.reject(new Error("orig err")), () => Promise.reject(fixtureErr)).catch((err) => {
+                assert.equal(err, fixtureErr);
+            });
+        });
+    });
 });
