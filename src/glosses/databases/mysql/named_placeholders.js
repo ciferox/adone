@@ -76,7 +76,7 @@ export const createCompiler = (config = {}) => {
         cache = config.cache;
     }
     if (config.cache !== false && !cache) {
-        cache = new collection.LRU(ncache);
+        cache = new collection.FastLRU(ncache);
     }
 
     const toArrayParams = (tree, params) => {

@@ -1,4 +1,4 @@
-const { net: { http: { server: { util: { geoip } } } }, collection: { LRU } } = adone;
+const { net: { http: { server: { util: { geoip } } } }, collection: { FastLRU } } = adone;
 const { _: { Metadata, Decoder, helper: { concat3, concat4, ip: ipUtil } } } = geoip;
 
 const DATA_SECTION_SEPARATOR_SIZE = 16;
@@ -47,7 +47,7 @@ const readNodeRight32 = function (offset) {
 
 export default class Reader {
     constructor(db, opts = {}) {
-        this.cache = new LRU(opts.cache || 50000);  // todo maxage?
+        this.cache = new FastLRU(opts.cache || 50000);  // todo maxage?
         this.load(db);
     }
 

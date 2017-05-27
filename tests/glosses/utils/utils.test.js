@@ -1,4 +1,4 @@
-describe("glosses", "utils", () => {
+describe("utils", () => {
     const { util, is, x } = adone;
 
     describe("arrify", () => {
@@ -1078,7 +1078,7 @@ describe("glosses", "utils", () => {
             list.push(3);
             const fib = function* () {
                 let [a, b] = [0, 1];
-                for (;;) {
+                for (; ;) {
                     yield a;
                     [a, b] = [b, a + b];
                 }
@@ -1217,7 +1217,7 @@ describe("glosses", "utils", () => {
         });
     });
 
-    describe.only("assignDeep", () => {
+    describe("assignDeep", () => {
         it("should assign deeply", () => {
             const document = {
                 style: {
@@ -1314,11 +1314,55 @@ describe("glosses", "utils", () => {
         });
 
         it("should not touch not plain objects", () => {
-            const f = () => {};
+            const f = () => { };
             const a = { a: { b: 10 } };
             const b = { a: f, b: f };
             util.assignDeep(a, b);
             expect(a).to.be.deep.equal({ a: f, b: f });
+        });
+    });
+
+    describe("reinterval", () => {
+        it("should work as an usual setInterval", () => {
+            return new Promise((resolve, reject) => {
+                const startTime = new Date().getTime();
+
+                util.reinterval(() => {
+                    if (Math.abs(new Date().getTime() - startTime - 1000) <= 10) {
+                        resolve();
+                    } else {
+                        reject(new Error("Took too much (or not enough) time"));
+                    }
+                }, 1000);
+            });
+        });
+
+        it("should be able to clear an Interval", () => {
+            return new Promise((resolve, reject) => {
+                const interval = util.reinterval(() => {
+                    reject(new Error("Interval not cleared"));
+                }, 200);
+
+                setTimeout(interval.clear, 100);
+
+                setTimeout(resolve, 300);
+            });
+        });
+
+        it("should be able to reschedule an Interval", () => {
+            return new Promise((resolve, reject) => {
+                const startTime = new Date().getTime();
+
+                const interval = util.reinterval(() => {
+                    if (Math.abs(new Date().getTime() - startTime - 800) <= 10) {
+                        resolve();
+                    } else {
+                        reject(new Error("Took too much (or not enough) time"));
+                    }
+                }, 500);
+
+                setTimeout(interval.reschedule, 300, [500]);
+            });
         });
     });
 });

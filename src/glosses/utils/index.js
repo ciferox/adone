@@ -902,5 +902,6 @@ adone.lazify({
         mask: adone.native.Common.maskBuffer,
         unmask: adone.native.Common.unmaskBuffer
     }),
-    shebang: "./shebang"
+    shebang: "./shebang",
+    reinterval: "./reinterval"
 }, exports, require);

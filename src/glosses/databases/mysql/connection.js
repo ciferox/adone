@@ -45,7 +45,7 @@ export default class Connection extends EventEmitter {
         this._paused = false;
         this._pausedPackets = new adone.collection.LinkedList();
 
-        this._statements = new adone.collection.LRU(this.config.maxPreparedStatements, {
+        this._statements = new adone.collection.FastLRU(this.config.maxPreparedStatements, {
             dispose: (key, statement) => {
                 statement.close();
             }
