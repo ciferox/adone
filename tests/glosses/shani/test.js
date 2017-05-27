@@ -653,6 +653,142 @@ describe("Engine", () => {
 
     describe("hooks", () => {
         describe("before", () => {
+            it("should catch 'uncaughtException' (done)", async () => {
+                const engine = new Engine();
+                const { describe, it, start, before } = engine.context();
+
+                const results = [];
+
+                describe("/1", () => {
+                    before((done) => {
+                        process.nextTick(() => {
+                            throw new Error("error1");
+                        });
+                    });
+
+                    it("test", () => {});
+                });
+
+                const e = start();
+
+                e.on("end before hook", ({ meta }) => {
+                    results.push(meta.err && meta.err.message);
+                });
+
+                await waitFor(e, "done");
+
+                assert.deepEqual(results, ["error1"]);
+            });
+
+            it("should catch 'uncaughtException' (async)", async () => {
+                const engine = new Engine();
+                const { describe, it, start, before } = engine.context();
+
+                const results = [];
+
+                describe("/1", () => {
+                    before(async () => {
+                        const p = new Promise(() => {
+                            setTimeout(() => {
+                                throw new Error("error1");
+                            });
+                        });
+                        await p;
+                    });
+
+                    it("test", () => {});
+                });
+
+                const e = start();
+
+                e.on("end before hook", ({ meta }) => {
+                    results.push(meta.err && meta.err.message);
+                });
+
+                await waitFor(e, "done");
+
+                assert.deepEqual(results, ["error1"]);
+            });
+
+            it("should catch 'unhandledRejection' (done)", async () => {
+                const engine = new Engine();
+                const { describe, it, start, before } = engine.context();
+
+                const results = [];
+
+                describe("/1", () => {
+                    before((done) => {
+                        Promise.reject(new Error("error1"));
+                    });
+
+                    it("test", () => {});
+                });
+
+                const e = start();
+
+                e.on("end before hook", ({ meta }) => {
+                    results.push(meta.err && meta.err.message);
+                });
+
+                await waitFor(e, "done");
+
+                assert.deepEqual(results, ["error1"]);
+            });
+
+            it("should catch 'unhandledRejection' (async)", async () => {
+                const engine = new Engine();
+                const { describe, it, start, before } = engine.context();
+
+                const results = [];
+
+                describe("/1", () => {
+                    before(async () => {
+                        Promise.reject(new Error("error1"));
+                        await new Promise(() => {});
+                    });
+
+                    it("test", () => {});
+                });
+
+                const e = start();
+
+                e.on("end before hook", ({ meta }) => {
+                    results.push(meta.err && meta.err.message);
+                });
+
+                await waitFor(e, "done");
+
+                assert.deepEqual(results, ["error1"]);
+            });
+
+            // it("should catch 'unhandledRejection'", async () => {
+            //     const engine = new Engine();
+            //     const { describe, it, start } = engine.context();
+
+            //     const results = [];
+
+            //     describe("/1", () => {
+            //         it("test1", (done) => {
+            //             Promise.reject(new Error("error1"));
+            //         });
+            //         it("test2", async () => {
+            //             Promise.reject(new Error("error2"));
+            //             await new Promise(() => { });
+            //         });
+            //     });
+
+            //     const e = start();
+
+            //     e.on("end before hook", ({ meta }) => {
+            //         results.push(meta.err && meta.err.message);
+            //     });
+
+            //     await waitFor(e, "done");
+
+            //     assert.deepEqual(results, ["error1"]);
+            // });
+
+
             it("should be invoked only once in the beginning", async () => {
                 const engine = new Engine();
                 const { describe, it, start, before } = engine.context();
@@ -2888,6 +3024,33 @@ describe("Engine", () => {
                     });
                 });
                 await p;
+            });
+        });
+
+        const e = start();
+
+        e.on("end test", ({ test, meta }) => {
+            calls.push([test.description, meta.err && meta.err.message]);
+        });
+
+        await waitFor(e, "done");
+
+        assert.deepEqual(calls, [["test1", "error1"], ["test2", "error2"]]);
+    });
+
+    it("should catch 'unhandledRejection'", async () => {
+        const engine = new Engine();
+        const { describe, it, start } = engine.context();
+
+        const calls = [];
+
+        describe("/1", () => {
+            it("test1", (done) => {
+                Promise.reject(new Error("error1"));
+            });
+            it("test2", async () => {
+                Promise.reject(new Error("error2"));
+                await new Promise(() => { });
             });
         });
 

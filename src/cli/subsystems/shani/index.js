@@ -43,10 +43,10 @@ export default class ShaniCLI extends adone.application.Subsystem {
 
     async main(args, opts) {
         this.app._uncaughtException = (err) => {
-            adone.log("Uncaught exception", err.stack);
+            // adone.log("Uncaught exception", err.stack);
         };
         this.app._unhandledRejection = (err) => {
-            adone.log("Unhandled rejection", err.stack);
+            // adone.log("Unhandled rejection", err.stack);
         };
         this.app.__rejectionHandled = adone.noop;
 

@@ -45,11 +45,14 @@ class Hook {
         this._fired = true;
         let err = null;
         let s = process.hrtime();
-        let uncaught;
+        let uncaughtException;
+        let unhandledRejection;
         try {
             let p = new Promise((resolve, reject) => {
-                uncaught = reject;
-                process.once("uncaughtException", uncaught);
+                uncaughtException = reject;
+                unhandledRejection = reject;
+                process.once("uncaughtException", uncaughtException);
+                process.once("unhandledRejection", unhandledRejection);
                 this.runtimeContext.timeout = this.timeout.bind(this);
                 if (this.callback.length) {
                     this.callback.call(this.runtimeContext, (err) => {
@@ -71,7 +74,8 @@ class Hook {
             err = _err;
         } finally {
             delete this.runtimeContext.timeout;
-            process.removeListener("uncaughtException", uncaught);
+            process.removeListener("uncaughtException", uncaughtException);
+            process.removeListener("unhandledRejection", unhandledRejection);
             s = process.hrtime(s);
         }
         this._failed = err;
@@ -243,11 +247,14 @@ class Test {
     async run() {
         let err = null;
         let s = process.hrtime();
-        let uncaught;
+        let uncaughtException;
+        let unhandledRejection;
         try {
             let p = new Promise((resolve, reject) => {
-                uncaught = reject;
-                process.once("uncaughtException", uncaught);
+                uncaughtException = reject;
+                unhandledRejection = reject;
+                process.once("uncaughtException", uncaughtException);
+                process.once("unhandledRejection", unhandledRejection);
                 this.runtimeContext.skip = this.skip.bind(this);
                 this.runtimeContext.timeout = this.timeout.bind(this);
                 if (this.callback.length) {
@@ -272,7 +279,8 @@ class Test {
             delete this.runtimeContext.skip;
             delete this.runtimeContext.timeout;
 
-            process.removeListener("uncaughtException", uncaught);
+            process.removeListener("uncaughtException", uncaughtException);
+            process.removeListener("unhandledRejection", unhandledRejection);
             s = process.hrtime(s);
         }
         const elapsed = s[0] * 1e3 + s[1] / 1e6;
@@ -954,8 +962,14 @@ export const consoleReporter = ({
             return adone.terminal.progress(options);
         };
 
+        let firstBlock = true;
+
         emitter
             .on("enter block", ({ block }) => {
+                if (firstBlock) {
+                    adone.log();
+                    firstBlock = false;
+                }
                 if (enteredBlocks[blockLevel] !== block.name) {
                     enteredBlocks = enteredBlocks.slice(0, blockLevel);
                     enteredBlocks.push(block.name);
@@ -1199,8 +1213,14 @@ export const simpleReporter = ({
 
         let enteredBlocks = [];
         let blockLevel = 0;
+        let firstBlock = true;
+
         emitter
             .on("enter block", ({ block }) => {
+                if (firstBlock) {
+                    adone.log();
+                    firstBlock = false;
+                }
                 if (enteredBlocks[blockLevel] !== block.name) {
                     enteredBlocks = enteredBlocks.slice(0, blockLevel);
                     enteredBlocks.push(block.name);
