@@ -793,29 +793,29 @@ describe("collections", "lru", () => {
         });
 
         it("load staled cache", (done) => {
-            const cache = new LRU({ maxAge: 50 });
-            const copy = new LRU({ maxAge: 50 });
+            const cache = new LRU({ maxAge: 500 });
+            const copy = new LRU({ maxAge: 500 });
             let arr;
 
-            // expires at 50
+            // expires at 500
             cache.set("a", "A");
             setTimeout(() => {
-                // expires at 80
+                // expires at 800
                 cache.set("b", "B");
                 arr = cache.dump();
                 assert.equal(arr.length, 2);
-            }, 30);
+            }, 300);
 
             setTimeout(() => {
                 copy.load(arr);
                 assert.equal(copy.get("a"), undefined);
                 assert.equal(copy.get("b"), "B");
-            }, 60);
+            }, 600);
 
             setTimeout(() => {
                 assert.equal(copy.get("b"), undefined);
                 done();
-            }, 90);
+            }, 900);
         });
 
         it("load to other size cache", () => {

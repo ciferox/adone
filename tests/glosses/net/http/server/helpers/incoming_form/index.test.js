@@ -149,56 +149,55 @@ describe("glosses", "net", "http", "helpers", "incoming form", () => {
             });
         });
 
-        specify("keep alive errors", (done) => {
-            let ok = 0;
-            let errors = 0;
+        specify("keep alive errors", async () => {
+            const err = spy();
+            const ok = spy();
 
             const server = http.createServer((req, res) => {
                 const form = new IncomingForm();
                 form.on("error", () => {
-                    errors += 1;
                     res.writeHead(500);
                     res.end();
+                    err();
                 });
                 form.on("end", () => {
-                    ok += 1;
                     res.writeHead(200);
                     res.end();
+                    ok();
                 });
                 form.parse(req);
-            }).listen(0, "127.0.0.1", () => {
-                const client = net.createConnection(server.address().port);
-
-                // first send malformed post upload
-                client.write("POST /upload-test HTTP/1.1\r\n" +
-                    "Host: localhost\r\n" +
-                    "Connection: keep-alive\r\n" +
-                    "Content-Type: multipart/form-data; boundary=----aaa\r\n" +
-                    "Content-Length: 10011\r\n\r\n" +
-                    "------aaa\n\r"); // expected \r\n
-
-                setTimeout(() => {
-                    const buf = Buffer.alloc(10000);
-                    buf.fill("a");
-                    client.write(buf);
-
-                    // correct post upload
-                    client.write("POST /upload-test HTTP/1.1\r\n" +
-                        "Host: localhost\r\n" +
-                        "Connection: keep-alive\r\n" +
-                        "Content-Type: multipart/form-data; boundary=----aaa\r\n" +
-                        "Content-Length: 13\r\n\r\n" +
-                        "------aaa--\r\n");
-
-                    setTimeout(() => {
-                        assert(ok === 1);
-                        assert(errors === 1);
-                        client.end();
-                        server.close();
-                        done();
-                    }, 100);
-                }, 100);
             });
+            await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+
+
+            const client = net.createConnection(server.address().port);
+
+            // first send malformed post upload
+            client.write("POST /upload-test HTTP/1.1\r\n" +
+                "Host: localhost\r\n" +
+                "Connection: keep-alive\r\n" +
+                "Content-Type: multipart/form-data; boundary=----aaa\r\n" +
+                "Content-Length: 10011\r\n\r\n" +
+                "------aaa\n\r"); // expected \r\n
+
+            await err.waitForCall();
+
+            const buf = Buffer.alloc(10000);
+            buf.fill("a");
+            client.write(buf);
+
+            // correct post upload
+            client.write("POST /upload-test HTTP/1.1\r\n" +
+                "Host: localhost\r\n" +
+                "Connection: keep-alive\r\n" +
+                "Content-Type: multipart/form-data; boundary=----aaa\r\n" +
+                "Content-Length: 13\r\n\r\n" +
+                "------aaa--\r\n");
+
+            await ok.waitForCall();
+
+            client.end();
+            server.close();
         });
     });
 
@@ -208,9 +207,6 @@ describe("glosses", "net", "http", "helpers", "incoming form", () => {
             const testFile = fixtures.getVirtualFile("file", "archive.tar.gz");
 
             const server = http.createServer((req, res) => {
-                res.end();
-                server.close();
-
                 const form = new IncomingForm();
                 form.uploadDir = tmpdir.path();
 
@@ -223,6 +219,8 @@ describe("glosses", "net", "http", "helpers", "incoming form", () => {
                     const original = testFile.contentSync();
 
                     expect(uploaded).to.be.equal(original);
+                    res.end();
+                    server.close();
                     done();
                 });
             });
@@ -580,10 +578,10 @@ describe("glosses", "net", "http", "helpers", "incoming form", () => {
                 specify("write", () => {
                     const parser = new QuerystringParser();
 
-                    const a = new Buffer("a=1");
+                    const a = Buffer.from("a=1");
                     assert.equal(parser.write(a), a.length);
 
-                    const b = new Buffer("&b=2");
+                    const b = Buffer.frm("&b=2");
                     parser.write(b);
                     assert.equal(parser.buffer, a + b);
                 });

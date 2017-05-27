@@ -5,7 +5,7 @@ module.exports = {
     options: {
         tests: "tests/{glosses,omnitron,polyfills}/**/*.test.js",
         first: false,
-        timeout: 5000,
+        timeout: 30000,
         showHandles: false,
         dontUseConfig: false,
         dontUseMap: false,

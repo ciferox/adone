@@ -74,9 +74,9 @@ describe("Fast", () => {
             });
 
             it("should fail when it cannot read the template file.", (done) => {
-                wrap({ src: "node_modules" })
+                wrap({ src: "something_that_doesnt_exist" })
                     .on("error", (err) => {
-                        expect(err.code).to.be.equal("EISDIR");
+                        expect(err.code).to.be.equal("ENOENT");
                         done();
                     })
                     .resume()

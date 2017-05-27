@@ -1,6 +1,11 @@
-const { x: { IncompleteBufferError }, data: { mpak: { Serializer, serializer } }, math: { Long }, std: { fs, path } } = adone;
+const {
+    x: { IncompleteBufferError },
+    data: { mpak: { Serializer, serializer } },
+    math: { Long },
+    std: { fs, path }
+} = adone;
 
-describe("Serializer", () => {
+describe("data", "mpak", "Serializer", () => {
     it("encode/decode booleans", () => {
         let input = true;
         let encoded = serializer.encode(input);
@@ -207,8 +212,7 @@ describe("Serializer", () => {
             return array;
         };
 
-        it("encode/decode arrays up to 0xffff elements", function () {
-            this.timeout(10000);
+        it("encode/decode arrays up to 0xffff elements", () => {
             const all = [];
             let i;
 
