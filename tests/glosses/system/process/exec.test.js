@@ -454,17 +454,17 @@ describe("system", "process", () => {
         const fallback = (code) => errnameFallback(null, code);
 
         const makeTests = (name, m, expected) => {
-            it(`${name}: >=0 exit codes`, () => {
+            it(`${name}: >=0 exit codes`, async () => {
                 // Throws >= 0
-                assert.throws(async () => exec(0), /err >= 0/);
-                assert.throws(async () => exec(1), /err >= 0/);
-                assert.throws(async () => exec("2"), /err >= 0/);
-                assert.throws(async () => exec("foo"), /err >= 0/);
+                await assert.throws(async () => m(0), /err >= 0/);
+                await assert.throws(async () => m(1), /err >= 0/);
+                await assert.throws(async () => m("2"), /err >= 0/);
+                await assert.throws(async () => m("foo"), /err >= 0/);
             });
 
-            it.skip(`${name}: negative exit codes`, async () => {
-                assert.equal(await exec(-2), expected);
-                assert.equal(await exec("-2"), expected);
+            it(`${name}: negative exit codes`, async () => {
+                assert.equal(await m(-2), expected);
+                assert.equal(await m("-2"), expected);
             });
         };
 
