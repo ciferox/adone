@@ -31,7 +31,9 @@ const fs = adone.lazify({
         directorySync: () => (path) => adone.fs.statSync(path).isDirectory(),
         executable: ["./is_executable", (mod) => mod.isExecutable],
         executableSync: ["./is_executable", (mod) => mod.isExecutableSync]
-    }, null, require)
+    }, null, require),
+    which: ["./which", (mod) => mod.which],
+    whichSync: ["./which", (mod) => mod.whichSync]
 }, exports, require);
 
 const lazy = adone.lazify({
@@ -400,9 +402,9 @@ export const realpathSync = (p, cache) => {
             }
 
             return p;
-        } 
+        }
         throw err;
-        
+
     }
 };
 

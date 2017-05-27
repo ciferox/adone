@@ -1,5 +1,4 @@
 const { is } = adone;
-const which = require("which");
 const LRU = require("lru-cache");
 const shebangCommand = require("shebang-command");
 const pFinally = require("p-finally");
@@ -96,7 +95,7 @@ const resolveCommand = (command, noExtension) => {
     }
 
     try {
-        resolved = !noExtension ? which.sync(command) : which.sync(command, { pathExt: adone.std.path.delimiter + (process.env.PATHEXT || "") });
+        resolved = !noExtension ? adone.fs.whichSync(command) : adone.fs.whichSync(command, { pathExt: adone.std.path.delimiter + (process.env.PATHEXT || "") });
     } catch (e) { /* empty */ }
 
     commandCache.set(`${command}!${noExtension}`, resolved);
