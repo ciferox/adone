@@ -581,7 +581,7 @@ describe("glosses", "net", "http", "helpers", "incoming form", () => {
                     const a = Buffer.from("a=1");
                     assert.equal(parser.write(a), a.length);
 
-                    const b = Buffer.frm("&b=2");
+                    const b = Buffer.from("&b=2");
                     parser.write(b);
                     assert.equal(parser.buffer, a + b);
                 });
