@@ -1,6 +1,5 @@
 const { is } = adone;
 const LRU = require("lru-cache");
-const shebangCommand = require("shebang-command");
 const pFinally = require("p-finally");
 const onExit = require("signal-exit");
 
@@ -172,7 +171,7 @@ const readShebang = (command) => {
     } catch (e) { /* empty */ }
 
     // Attempt to extract shebang (null is returned if not a shebang)
-    const shebang = shebangCommand(buffer.toString());
+    const shebang = adone.util.shebang.command(buffer.toString());
 
     // Store the shebang in the cache
     shebangCache.set(command, shebang);
