@@ -74,7 +74,7 @@ export default class extends adone.application.Subsystem {
                         {
                             name: "service",
                             type: String,
-                            default: "",
+                            default: "omnitron",
                             help: "Name of service"
                         }
                     ],
@@ -86,12 +86,8 @@ export default class extends adone.application.Subsystem {
                         {
                             name: "--user",
                             type: String,
+                            required: true,
                             help: "User name (omnitron only)"
-                        },
-                        {
-                            name: "--group",
-                            type: String,
-                            help: "Group name (omnitron only)"
                         },
                         {
                             name: "--mode",
@@ -110,7 +106,7 @@ export default class extends adone.application.Subsystem {
                         {
                             name: "service",
                             type: String,
-                            default: "",
+                            default: "omnitron",
                             help: "Name of service"
                         }
                     ],
@@ -700,10 +696,7 @@ export default class extends adone.application.Subsystem {
 
     async enableCommand(args, opts) {
         try {
-            let name = args.get("service");
-            if (name === "") {
-                name = "omnitron";
-            }
+            const name = args.get("service");
             if (name === "omnitron") {
                 const config = {
                     mode: opts.get("mode")
@@ -711,10 +704,6 @@ export default class extends adone.application.Subsystem {
 
                 if (opts.has("user")) {
                     config.user = opts.get("user");
-                }
-
-                if (opts.has("group")) {
-                    config.group = opts.get("group");
                 }
 
                 const service = new runtime.Service(config);
@@ -732,10 +721,7 @@ export default class extends adone.application.Subsystem {
 
     async disableCommand(args, opts) {
         try {
-            let name = args.get("service");
-            if (name === "") {
-                name = "omnitron";
-            }
+            const name = args.get("service");
             if (name === "omnitron") {
                 const config = {
                     mode: opts.get("mode")

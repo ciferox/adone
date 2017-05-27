@@ -26,11 +26,10 @@ const getLinuxFlavor = () => {
 };
 
 export default class Service {
-    constructor(config = {}) {
+    constructor(config = {}) { 
         this.config = Object.assign({
             mode: "sysv",
-            user: adone.util.userid.username(),
-            group: adone.util.userid.groupname()
+            user: adone.util.userid.username()
         }, config);
 
         if (!((this.config.mode === "sysd" && (fs.existsSync("/bin/systemctl") || fs.existsSync("/usr/bin/systemctl"))) ||
@@ -86,7 +85,19 @@ export default class Service {
                 adone.info("System startup enabled");
             } else if (this.config.mode === "sysd") {
                 context.execPath = process.execPath;
-                context.pidPath = adone.std.path.join(adone.appinstance.config.adone.home, "omnitron.pid");
+                
+                let pathPrefix;
+                if (adone.util.userid.uid(context.user) === 0) {
+                    pathPrefix = "/root";
+                } else {
+                    pathPrefix = adone.std.path.join("/home", context.user);
+                } 
+                const adoneHomePath = adone.std.path.join(pathPrefix, adone.appinstance.config.adone.dirName);
+                if (!(await adone.fs.exists(adoneHomePath))) {
+                    throw new adone.x.NotExists(`Adone home directory '${adoneHomePath}' not exists`);
+                }
+
+                context.pidPath = adone.std.path.join(adoneHomePath, "omnitron.pid");
 
                 const script = await adone.templating.nunjucks.render(path.join(this.templateRoot, "sysd"), context);
                 await adone.fs.writeFile(filePath, script);
