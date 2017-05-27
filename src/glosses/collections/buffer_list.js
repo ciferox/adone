@@ -1,5 +1,3 @@
-
-
 const { std: { stream: { Duplex: DuplexStream } } } = adone;
 
 export default class BufferList extends DuplexStream {

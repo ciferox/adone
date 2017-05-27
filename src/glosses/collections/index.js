@@ -3,6 +3,7 @@ adone.lazify({
     TimedoutMap: "./timedout_map",
     DefaultMap: "./default_map",
     Heap: "./heap",
+    FastLRU: "./fast_lru",
     LRU: "./lru",
     LinkedList: "./linked_list",
     BQueue: "./bqueue",

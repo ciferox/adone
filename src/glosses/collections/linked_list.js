@@ -116,7 +116,7 @@ export default class LinkedList {
             return;
         }
         const value = this.tail.value;
-        this.tail.value = empty;
+        // this.tail.value = empty;
         this.tail = this.tail.prev;
         --this.length;
         return value;
@@ -134,7 +134,7 @@ export default class LinkedList {
             return;
         }
         const value = this.head.value;
-        this.head.value = empty;
+        // this.head.value = empty;
         this.head = this.head.next;
         --this.length;
         return value;
@@ -224,12 +224,12 @@ export default class LinkedList {
      */
     removeNode(node) {
         if (node === this.tail) {
-            this.tail.value = empty;
+            // this.tail.value = empty;
             this.tail = this.tail.prev;
             --this.length;
             return;
         }
-        node.value = empty;
+        // node.value = empty;
         this.pushNode(node);
         --this.length;
     }
@@ -297,5 +297,13 @@ export default class LinkedList {
             return node.next;
         }
         return null;
+    }
+
+    map(fn) {
+        const res = new LinkedList();
+        for (const value of this) {
+            res.push(fn(value));
+        }
+        return res;
     }
 }

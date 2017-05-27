@@ -41,7 +41,7 @@ const defaultColors = {
     }
 };
 
-export class Subsystem extends adone.EventEmitter {
+export class Subsystem extends adone.AsyncEmitter {
     constructor() {
         super();
 
@@ -1460,6 +1460,8 @@ export class Application extends Subsystem {
         }
         this._exiting = true;
 
+        await this.emitParallel("exit", code);
+
         // Uninitialize subsystems
         await this.uninitializeSubsystems();
 
@@ -1478,7 +1480,6 @@ export class Application extends Subsystem {
 
         await new Promise((resolve) => {
             let fds = 0;
-            code = code || Application.SUCCESS;
 
             // end the logger & waiting for completion
             adone.defaultLogger.done(() => {

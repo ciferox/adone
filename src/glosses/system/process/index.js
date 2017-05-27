@@ -1,6 +1,4 @@
 const { is } = adone;
-const LRU = require("lru-cache");
-const onExit = require("signal-exit");
 
 // The Node team wants to deprecate `process.bind(...)`.
 //   https://github.com/nodejs/node/pull/2768
@@ -79,7 +77,7 @@ export const stdio = (opts) => {
     return result;
 };
 
-const commandCache = new LRU({ max: 50, maxAge: 30 * 1000 });  // Cache just for 30sec
+const commandCache = new adone.collection.LRU({ max: 50, maxAge: 30 * 1000 }); // Cache just for 30sec
 
 const resolveCommand = (command, noExtension) => {
     let resolved;
@@ -150,7 +148,7 @@ const escapeCommand = (command) => {
 
 
 
-const shebangCache = new LRU({ max: 50, maxAge: 30 * 1000 });  // Cache just for 30sec
+const shebangCache = new adone.collection.LRU({ max: 50, maxAge: 30 * 1000 });  // Cache just for 30sec
 
 const readShebang = (command) => {
     let fd;
@@ -487,7 +485,7 @@ export const exec = (cmd, args, opts) => {
 
     let removeExitHandler;
     if (parsed.opts.cleanup) {
-        removeExitHandler = onExit(() => {
+        removeExitHandler = adone.appinstance.subscribe("exit", () => {
             spawned.kill();
         });
     }
