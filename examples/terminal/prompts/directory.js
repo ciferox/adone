@@ -1,10 +1,15 @@
-adone.terminal.prompt([
-    {
-        type: "directory",
-        name: "path",
-        message: "In what directory would like to perform this action?",
-        basePath: "./node_modules"
+adone.run({
+    main() {
+        adone.terminal.prompt([
+            {
+                type: "directory",
+                name: "path",
+                message: "In what directory would like to perform this action?",
+                basePath: "./node_modules"
+            }
+        ], (answers) => {
+            adone.log(JSON.stringify(answers, null, "  "));
+        });
+
     }
-], (answers) => {
-    console.log(JSON.stringify(answers, null, "  "));
 });

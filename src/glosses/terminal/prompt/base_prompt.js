@@ -200,7 +200,7 @@ export default class BasePrompt {
         const validate = runAsync(this.opt.validate);
         const filter = runAsync(this.opt.filter);
         const validation = submit.flatMap((value) => {
-            return filter(value).then((filteredValue) => {
+            return filter(value, this.answers).then((filteredValue) => {
                 return validate(filteredValue, self.answers).then((isValid) => {
                     return { isValid, value: filteredValue };
                 }, (err) => {

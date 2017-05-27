@@ -1,28 +1,32 @@
-const output = [];
+adone.run({
+    main() {
+        this.output = [];
 
-const questions = [
-    {
-        type: "input",
-        name: "tvShow",
-        message: "What's your favorite TV show?"
+        this.questions = [
+            {
+                type: "input",
+                name: "tvShow",
+                message: "What's your favorite TV show?"
+            },
+            {
+                type: "confirm",
+                name: "askAgain",
+                message: "Want to enter another TV show favorite (just hit enter for YES)?",
+                default: true
+            }
+        ];
+
+
+        this._ask();
     },
-    {
-        type: "confirm",
-        name: "askAgain",
-        message: "Want to enter another TV show favorite (just hit enter for YES)?",
-        default: true
+    _ask() {
+        adone.terminal.prompt(this.questions).then((answers) => {
+            this.output.push(answers.tvShow);
+            if (answers.askAgain) {
+                this._ask();
+            } else {
+                adone.log("Your favorite TV Shows:", this.output.join(", "));
+            }
+        });
     }
-];
-
-function ask() {
-    adone.terminal.prompt(questions).then((answers) => {
-        output.push(answers.tvShow);
-        if (answers.askAgain) {
-            ask();
-        } else {
-            console.log("Your favorite TV Shows:", output.join(", "));
-        }
-    });
-}
-
-ask();
+});

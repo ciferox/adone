@@ -1,5 +1,3 @@
-// const fuzzy = require("fuzzy");
-
 const states = [
     "Alabama",
     "Alaska",
@@ -62,37 +60,67 @@ const states = [
     "Wyoming"
 ];
 
-const searchStates = (answers, input) => {
-    input = input || "";
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            const fuzzy = new adone.text.Fuzzy(states);
-            const fuzzyResult = fuzzy.search(input);
-            // const fuzzyResult = fuzzy.filter(input, states);
-            resolve(fuzzyResult.map((el) => {
-                return el.original;
-            }));
-        }, adone.math.random(30, 500));
-    });
-};
+const foods = [
+    "Apple",
+    "Orange",
+    "Banana",
+    "Kiwi",
+    "Lichi",
+    "Grapefruit"
+];
 
-adone.terminal.prompt([
-    {
-        type: "autocomplete",
-        name: "from",
-        suggestOnly: true,
-        message: "Select a state to travel from, you can type any value",
-        source: searchStates,
-        pageSize: 4,
-        validate(val) {
-            return val ? true : "Type something!";
-        }
-    }, {
-        type: "autocomplete",
-        name: "to",
-        message: "Select a state to travel to, select one from the list.",
-        source: searchStates
+adone.run({
+    initialize() {
+        this.fuzzyStates = new adone.text.Fuzzy(states, {
+            threshold: 0.3
+        });
+
+        this.fuzzyFoods = new adone.text.Fuzzy(foods, {
+            threshold: 0.3
+        });
+    },
+    main() {
+        adone.terminal.prompt([
+            {
+                type: "autocomplete",
+                name: "fruit",
+                suggestOnly: true,
+                message: "What is your favorite fruit?",
+                source: (answers, input) => {
+                    input = input || "";
+                    return new Promise((resolve) => {
+                        setTimeout(() => {
+                            if (input === "") {
+                                resolve(foods);
+                            } else {
+                                resolve(this.fuzzyFoods.search(input).map((indx) => foods[indx]));
+                            }
+                        }, adone.math.random(30, 500));
+                    });
+                },
+                pageSize: 4,
+                validate(val) {
+                    return val ? true : "Type something!";
+                }
+            }, {
+                type: "autocomplete",
+                name: "state",
+                message: "Select a state to travel from",
+                source: (answers, input) => {
+                    input = input || "";
+                    return new Promise((resolve) => {
+                        setTimeout(() => {
+                            if (input === "") {
+                                resolve(states);
+                            } else {
+                                resolve(this.fuzzyStates.search(input).map((indx) => states[indx]));
+                            }
+                        }, adone.math.random(30, 500));
+                    });
+                }
+            }
+        ], (answers) => {
+            adone.log(JSON.stringify(answers, null, 2));
+        });
     }
-], (answers) => {
-    console.log(JSON.stringify(answers, null, 2));
 });

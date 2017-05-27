@@ -377,8 +377,6 @@ export default class Fuzzy {
         // When true, the result set will only include records that match all tokens. Will only work
         // if `tokenize` is also true.
         matchAllTokens = false,
-        // Will print to the console. Useful for debugging.
-
         includeMatches = false,
         includeScore = false
       } = {}) {
