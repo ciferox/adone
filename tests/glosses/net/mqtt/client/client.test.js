@@ -120,21 +120,16 @@ describe("MqttClient", () => {
     });
 
     describe("reconnecting", () => {
-        it("should attempt to reconnect once server is down", function (done) {
-            this.timeout(15000);
+        it("should attempt to reconnect once server is down", async () => {
+            const port = await adone.net.util.getFreePort();
+            const innerServer = fork(path.join(__dirname, "helpers", "server_process.js"), [port]);
+            const client = connect({ port, host: "localhost", keepalive: 1 });
 
-            const innerServer = fork(path.join(__dirname, "helpers", "server_process.js"));
-            const client = connect({ port: 3000, host: "localhost", keepalive: 1 });
-
-            client.once("connect", () => {
-                innerServer.kill("SIGINT"); // mocks server shutdown
-
-                client.once("close", () => {
-                    assert.exists(client.reconnectTimer);
-                    client.end();
-                    done();
-                });
-            });
+            await new Promise((resolve) => client.once("connect", resolve));
+            innerServer.kill("SIGINT"); // mocks server shutdown
+            await new Promise((resolve) => client.once("close", resolve));
+            assert.exists(client.reconnectTimer);
+            client.end();
         });
 
         it("should reconnect to multiple host-ports combination if servers is passed", function (done) {
@@ -198,7 +193,7 @@ describe("MqttClient", () => {
             });
         });
 
-        it("shoud not be cleared by the connack timer", function (done) {
+        it("should not be cleared by the connack timer", function (done) {
             this.timeout(4000);
 
             const server2 = net.createServer().listen(port + 44);

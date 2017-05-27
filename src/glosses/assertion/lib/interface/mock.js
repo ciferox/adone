@@ -27,7 +27,7 @@ export default function mock(lib, utils) {
         }
     };
 
-    const getMessages = (spy, action, nonNegatedSuffix, always, args) => {
+    const getMessages = (spy, action, nonNegatedSuffix, always, args = []) => {
         const verbPhrase = always ? "always have " : "have ";
         nonNegatedSuffix = nonNegatedSuffix || "";
         if (isSpy(spy.proxy)) {
@@ -46,7 +46,7 @@ export default function mock(lib, utils) {
             negative() {
                 return printfArray([
                     `expected %n to not ${verbPhrase}${action}`,
-                    args
+                    ...args
                 ]);
             }
         };

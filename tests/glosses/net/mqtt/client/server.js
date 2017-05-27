@@ -1,12 +1,13 @@
-const { is, std: { tls, net } } = adone;
 const Connection = require("mqtt-connection");
+
+const { is, std: { tls, net } } = adone;
 
 const setupConnection = function (duplex) {
     const connection = new Connection(duplex);
     this.emit("client", connection);
 };
 
-export class MqttServer extends net.Server {
+class MqttServer extends net.Server {
     constructor(listener) {
         super();
 
@@ -18,7 +19,7 @@ export class MqttServer extends net.Server {
     }
 }
 
-export class MqttSecureServer extends tls.Server {
+class MqttSecureServer extends tls.Server {
     constructor(opts, listener) {
         if (is.function(opts)) {
             listener = opts;
@@ -34,3 +35,5 @@ export class MqttSecureServer extends tls.Server {
         this.on("secureConnection", setupConnection);
     }
 }
+
+module.exports = { MqttServer, MqttSecureServer };
