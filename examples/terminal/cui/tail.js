@@ -1,4 +1,3 @@
-
 // `tail -f` a file.
 module.exports = function (file) {
     var self = this

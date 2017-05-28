@@ -1,8 +1,6 @@
-
 const { terminal } = adone;
 const marked = require("marked");
 const TerminalRenderer = require("marked-terminal");
-
 
 export default class Markdown extends terminal.widget.Element {
     constructor(options = {}) {

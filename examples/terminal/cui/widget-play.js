@@ -1,15 +1,24 @@
-const screen = new adone.cui.Screen({
-    dump: `${__dirname}/logs/play.log`,
-    smartCSR: true,
-    warnings: true
-});
+adone.run({
+    main() {
+        const screen = new adone.cui.Screen({
+            dump: `${__dirname}/logs/play.log`,
+            smartCSR: true,
+            warnings: true
+        });
 
-const frames = require(`${__dirname}/data/frames.json`);
+        const frames = require(`${__dirname}/data/frames.json`);
 
-const timer = setInterval(() => {
-    if (!frames.length) {
-        clearInterval(timer);
-        return screen.destroy();
+        const timer = setInterval(() => {
+            if (!frames.length) {
+                clearInterval(timer);
+                return screen.destroy();
+            }
+            process.stdout.write(frames.shift());
+        }, 100);
+
+        screen.key("q", () => {
+            screen.destroy();
+            this.exit(0);
+        });
     }
-    process.stdout.write(frames.shift());
-}, 100);
+});

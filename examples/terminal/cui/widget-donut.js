@@ -1,45 +1,47 @@
-// import adone from "adone";
-const screen = new adone.cui.Screen();
+adone.run({
+    main() {
+        const screen = new adone.cui.Screen();
 
-/**
- * Donut Options
-  self.options.stroke = options.stroke || "magenta"
-  self.options.radius = options.radius || 14;
-  self.options.arcWidth = options.arcWidth || 4;
-  self.options.spacing = options.spacing || 2;
-  self.options.yPadding = options.yPadding || 2;
- */
+        /**
+         * Donut Options
+          self.options.stroke = options.stroke || "magenta"
+          self.options.radius = options.radius || 14;
+          self.options.arcWidth = options.arcWidth || 4;
+          self.options.spacing = options.spacing || 2;
+          self.options.yPadding = options.yPadding || 2;
+         */
 
-const donut = new adone.cui.widget.Donut({
-    label: "Test",
-    radius: 8,
-    arcWidth: 3,
-    yPadding: 2,
-    data: [
-        { perent: 80, label: "web1", color: "green" }
-    ]
-});
+        const donut = new adone.cui.widget.Donut({
+            label: "Test",
+            radius: 8,
+            arcWidth: 3,
+            yPadding: 2,
+            data: [
+                { perent: 80, label: "web1", color: "green" }
+            ]
+        });
 
-screen.append(donut);
+        screen.append(donut);
 
-setInterval(updateDonuts, 5);
+        let pct = 0.00;
+        const updateDonuts = () => {
+            if (pct > 0.99) {
+                pct = 0.00;
+            }
+            donut.update([
+                { percent: parseFloat((pct + 0.00) % 1).toFixed(2), label: "rcp", color: [100, 200, 170] },
+                { percent: parseFloat((pct + 0.25) % 1).toFixed(2), label: "rcp", color: [128, 128, 128] },
+                { percent: parseFloat((pct + 0.50) % 1).toFixed(2), label: "rcp", color: [255, 0, 0] },
+                { percent: parseFloat((pct + 0.75) % 1).toFixed(2), label: "web1", color: [255, 128, 0] }
+            ]);
+            screen.render();
+            pct += 0.01;
+        };
 
-let pct = 0.00;
+        setInterval(updateDonuts, 5);
 
-function updateDonuts() {
-    if (pct > 0.99) {
-        pct = 0.00;
+        screen.key(["escape", "q", "C-c"], (ch, key) => {
+            return process.exit(0);
+        });
     }
-    donut.update([
-        { percent: parseFloat((pct + 0.00) % 1).toFixed(2), label: "rcp", color: [100, 200, 170] },
-        { percent: parseFloat((pct + 0.25) % 1).toFixed(2), label: "rcp", color: [128, 128, 128] },
-        { percent: parseFloat((pct + 0.50) % 1).toFixed(2), label: "rcp", color: [255, 0, 0] },
-        { percent: parseFloat((pct + 0.75) % 1).toFixed(2), label: "web1", color: [255, 128, 0] }
-    ]);
-    screen.render();
-    pct += 0.01;
-}
-
-screen.key(["escape", "q", "C-c"], (ch, key) => {
-    return process.exit(0);
 });

@@ -93,7 +93,7 @@ sprintf.format = (parseTree, argv) => {
                 arg = arg();
             }
 
-            if (re.numericArg.test(match[8]) && (getType(arg) !== "number" && isNaN(arg))) {
+            if (re.numericArg.test(match[8]) && (getType(arg) !== "number" && is.nan(arg))) {
                 throw new TypeError(sprintf("[sprintf] expecting number but found %s", getType(arg)));
             }
 
@@ -103,26 +103,26 @@ sprintf.format = (parseTree, argv) => {
 
             switch (match[8]) {
                 case "b":
-                    arg = parseInt(arg, 10).toString(2);
+                    arg = Number.parseInt(arg, 10).toString(2);
                     break;
                 case "c":
-                    arg = String.fromCharCode(parseInt(arg, 10));
+                    arg = String.fromCharCode(Number.parseInt(arg, 10));
                     break;
                 case "d":
                 case "i":
-                    arg = parseInt(arg, 10);
+                    arg = Number.parseInt(arg, 10);
                     break;
                 case "j":
-                    arg = JSON.stringify(arg, null, match[6] ? parseInt(match[6]) : 0);
+                    arg = JSON.stringify(arg, null, match[6] ? Number.parseInt(match[6]) : 0);
                     break;
                 case "e":
-                    arg = match[7] ? parseFloat(arg).toExponential(match[7]) : parseFloat(arg).toExponential();
+                    arg = match[7] ? Number.parseFloat(arg).toExponential(match[7]) : Number.parseFloat(arg).toExponential();
                     break;
                 case "f":
-                    arg = match[7] ? parseFloat(arg).toFixed(match[7]) : parseFloat(arg);
+                    arg = match[7] ? Number.parseFloat(arg).toFixed(match[7]) : Number.parseFloat(arg);
                     break;
                 case "g":
-                    arg = match[7] ? parseFloat(arg).toPrecision(match[7]) : parseFloat(arg);
+                    arg = match[7] ? Number.parseFloat(arg).toPrecision(match[7]) : Number.parseFloat(arg);
                     break;
                 case "o":
                     arg = arg.toString(8);
@@ -140,17 +140,17 @@ sprintf.format = (parseTree, argv) => {
                     arg = (match[7] ? arg.substring(0, match[7]) : arg);
                     break;
                 case "u":
-                    arg = parseInt(arg, 10) >>> 0;
+                    arg = Number.parseInt(arg, 10) >>> 0;
                     break;
                 case "v":
                     arg = arg.valueOf();
                     arg = (match[7] ? arg.substring(0, match[7]) : arg);
                     break;
                 case "x":
-                    arg = parseInt(arg, 10).toString(16);
+                    arg = Number.parseInt(arg, 10).toString(16);
                     break;
                 case "X":
-                    arg = parseInt(arg, 10).toString(16).toUpperCase();
+                    arg = Number.parseInt(arg, 10).toString(16).toUpperCase();
                     break;
             }
             if (re.json.test(match[8])) {

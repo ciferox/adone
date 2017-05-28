@@ -4852,6 +4852,7 @@ export default class Terminal extends adone.EventEmitter {
         this._exiting = true;
 
         this.styleReset();
+        this.showCursor(); // Restore cursor
 
         // process.removeListener("exit", Terminal._exitHandler);
         // delete Terminal._exitHandler;
