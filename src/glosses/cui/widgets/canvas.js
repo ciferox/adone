@@ -1,5 +1,3 @@
-
-
 const InnerCanvas = require("../graphics/canvas").Canvas;
 
 export default class Canvas extends adone.cui.widget.Element {

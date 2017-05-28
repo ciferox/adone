@@ -93,7 +93,8 @@ sprintf.format = (parseTree, argv) => {
                 arg = arg();
             }
 
-            if (re.numericArg.test(match[8]) && (getType(arg) !== "number" && is.nan(arg))) {
+            // Use isNaN for implicit conversions.
+            if (re.numericArg.test(match[8]) && (getType(arg) !== "number" && isNaN(arg))) {
                 throw new TypeError(sprintf("[sprintf] expecting number but found %s", getType(arg)));
             }
 

@@ -289,14 +289,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         Transform: "./glosses/core/transform",
         text: "./glosses/text",
         Terminal: "./glosses/terminal",
-        terminal: () => {
-            const defaultTerm = new adone.Terminal();
-
-            // defaultTerm.unicode = require("../cui/unicode");
-            // defaultTerm.helpers = require("../cui/helpers");
-            // defaultTerm.helpers.merge(defaultTerm, defaultTerm.helpers);
-            return defaultTerm;
-        },
+        terminal: () => new adone.Terminal(),
         stream: "./glosses/streams",
         transform: "./glosses/core/transforms",
         templating: "./glosses/templating",
