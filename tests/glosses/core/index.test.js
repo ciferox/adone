@@ -1,8 +1,8 @@
-const { Transform, x, core, is } = adone;
-
-const transform = (options) => new Transform(options);
-
 describe("core", () => {
+    const { Transform, x, core, is } = adone;
+
+    const transform = (options) => new Transform(options);
+
     describe("creation", () => {
         it("should have only one transform stream in a chain", () => {
             const c = core();
@@ -217,7 +217,8 @@ describe("core", () => {
 
         it("should emit drain when the writable buffer is empty", () => {
             const c = core();
-            for (; c.write(1);) { 
+            for (; c.write(1);) {
+                //
             }
             const drain = spy();
             c.on("drain", drain);
@@ -570,6 +571,7 @@ describe("core", () => {
                     c.resume();
                     d.pause(); // HA!
                     for (let i = 0; c.write(++i);) {
+                        //
                     }
                     const drain = spy();
                     c.on("drain", drain);
@@ -990,7 +992,7 @@ describe("core", () => {
                     c.resume();
                     d.pause(); // HA!
                     for (let i = 0; c.write(++i);) {
-
+                        //
                     }
                     const drain = spy();
                     c.on("drain", drain);
@@ -1368,10 +1370,10 @@ describe("core", () => {
 
             it("should filter values using a property function", async () => {
                 const a = core([
-                    { a: 1, b: 1 }, 
-                    { a: 1, b: 2 }, 
-                    { a: 2, b: 1 }, 
-                    { a: 2, b: 2 }, 
+                    { a: 1, b: 1 },
+                    { a: 1, b: 2 },
+                    { a: 2, b: 1 },
+                    { a: 2, b: 2 },
                     { a: 3, b: 1 },
                     { a: 3, b: 2 }
                 ]);
@@ -1514,17 +1516,18 @@ describe("core", () => {
                     await adone.promise.delay(2);
                     // resumed
 
-                    for (; a.write(1);) { 
+                    for (; a.write(1);) {
+                        //
                     }
 
                     expect(a.paused).to.be.true;
 
                     expect(c._writableState.buffer.full).to.be.true;
                     expect(c._readableState.buffer.full).to.be.true;
-                    
+
                     expect(a._readableState.buffer.full).to.be.true;
                     expect(a._writableState.buffer.full).to.be.true;
-                    
+
                     expect(b._readableState.buffer.empty).to.be.true;
                     expect(b._writableState.buffer.empty).to.be.true;
 
@@ -1540,7 +1543,9 @@ describe("core", () => {
 
                     c.pause();
 
-                    for (; a.push(1);) { }
+                    for (; a.push(1);) {
+                        //
+                    }
 
                     // it should not touch ended streams
                     a.end();
@@ -1604,9 +1609,9 @@ describe("core", () => {
                 it("should pass options to the source stream", async () => {
                     const a = core([1, 2, 3]);
                     const b = core([4, 5, 6]);
-                    const c = core.merge([a, b], { 
-                        transform(x) { 
-                            this.push(x + 1); 
+                    const c = core.merge([a, b], {
+                        transform(x) {
+                            this.push(x + 1);
                         },
                         flush() {
                             this.push(8);

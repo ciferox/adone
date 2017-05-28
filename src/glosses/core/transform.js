@@ -1,5 +1,4 @@
-
-const { is, EventEmitter } = adone;
+const { is, EventEmitter, x, collection } = adone;
 
 export default class Transform extends EventEmitter {
     constructor({ transform, flush, highWaterMark = 16 } = {}) {
@@ -8,13 +7,13 @@ export default class Transform extends EventEmitter {
             highWaterMark,
             nullPushed: false,
             flowing: false,
-            buffer: new adone.collection.LinkedList()
+            buffer: new collection.LinkedList()
         };
 
         this._writableState = {
             highWaterMark,
             needDrain: false,
-            buffer: new adone.collection.LinkedList()
+            buffer: new collection.LinkedList()
         };
 
         this._transformState = {
@@ -45,7 +44,10 @@ export default class Transform extends EventEmitter {
     }
 
     _afterTransform() {
-        if (!this._writableState.buffer.empty && this._readableState.buffer.length < this._readableState.highWaterMark) {
+        if (
+            !this._writableState.buffer.empty &&
+            this._readableState.buffer.length < this._readableState.highWaterMark
+        ) {
             this._process(this._writableState.buffer.shift());
         } else {
             this._transformState.working = false;
@@ -70,7 +72,7 @@ export default class Transform extends EventEmitter {
                 return;
             }
         } catch (err) {
-            if (err._level === undefined) {
+            if (is.undefined(err._level)) {
                 err._level = 0;
             } else {
                 ++err._level;
@@ -96,11 +98,11 @@ export default class Transform extends EventEmitter {
                     }
                 });
                 return;
-            } 
+            }
             if (!this._readableState.buffer.empty) {
                 return;
             }
-            
+
         }
         this.ending = false;
         this.ended = true;
@@ -109,7 +111,7 @@ export default class Transform extends EventEmitter {
 
     write(chunk) {
         if (this.ending || this.ended) {
-            throw new adone.x.IllegalState("end() was called");
+            throw new x.IllegalState("end() was called");
         }
         if (this._transformState.working || this._readableState.buffer.length >= this._readableState.highWaterMark) {
             this._writableState.buffer.push(chunk);
@@ -220,11 +222,20 @@ export default class Transform extends EventEmitter {
                 break;
             }
             this.emit("data", this._readableState.buffer.shift());
-            if (!this._writableState.buffer.empty && !this._transformState.working && this._readableState.buffer.length < this._readableState.highWaterMark) {
+            if (
+                !this._writableState.buffer.empty &&
+                !this._transformState.working &&
+                this._readableState.buffer.length < this._readableState.highWaterMark
+            ) {
                 this._process(this._writableState.buffer.shift());
             }
         }
-        if (this.ending && !this._transformState.working && this._readableState.buffer.empty && this._writableState.buffer.empty) {
+        if (
+            this.ending &&
+            !this._transformState.working &&
+            this._readableState.buffer.empty &&
+            this._writableState.buffer.empty
+        ) {
             this._end();
         }
         return this;

@@ -1,9 +1,9 @@
-const { is, Transform } = adone;
+const { is, Transform, x } = adone;
 
 class Core extends adone.EventEmitter {
     constructor(source, options) {
         super();
-        this._lastStream = new adone.Transform(options);
+        this._lastStream = new Transform(options);
         this._chain = [this._lastStream];
 
         this._dataListener = (x) => this.emit("data", x);
@@ -110,7 +110,7 @@ class Core extends adone.EventEmitter {
 
     each(callback) {
         if (!is.function(callback)) {
-            throw new adone.x.InvalidArgument("\"callback\" must be a function");
+            throw new x.InvalidArgument('"callback" must be a function');
         }
         this.on("data", (x) => {
             callback(x);
@@ -123,7 +123,7 @@ class Core extends adone.EventEmitter {
 
     toArray(callback) {
         if (!is.function(callback)) {
-            throw new adone.x.InvalidArgument("\"callback\" must be a function");
+            throw new x.InvalidArgument('"callback" must be a function');
         }
         if (this.ended) {
             process.nextTick(() => callback([]));
@@ -141,21 +141,20 @@ class Core extends adone.EventEmitter {
 
     map(callback) {
         if (!is.function(callback)) {
-            throw new adone.x.InvalidArgument("\"callback\" must be a function");
+            throw new x.InvalidArgument('"callback" must be a function');
         }
         return this.through(function (x) {
             const res = callback(x);
             if (is.promise(res)) {
                 return res.then((y) => this.push(y));
-            } 
+            }
             this.push(res);
-            
         });
     }
 
     filter(callback) {
         if (!is.function(callback)) {
-            throw new adone.x.InvalidArgument("\"callback\" must be a function");
+            throw new x.InvalidArgument('"callback" must be a function');
         }
         return this.through(function (x) {
             const res = callback(x);
@@ -180,14 +179,15 @@ class Core extends adone.EventEmitter {
                 streams.splice(i--, 1);
             }
         }
+        const onStreamEnd = () => {
+            if (!--m) {
+                src.end();
+            }
+        };
         for (let i = 0; i < streams.length; ++i) {
             const stream = streams[i];
             if (end) {
-                stream.once("end", () => {
-                    if (!--m) {
-                        src.end();
-                    }
-                });
+                stream.once("end", onStreamEnd);
             }
             stream.on("data", (x) => {
                 if (!src.write(x)) {
@@ -221,7 +221,7 @@ class Core extends adone.EventEmitter {
 
     done(callback, { current = false } = {}) {
         if (!is.function(callback)) {
-            throw new adone.x.InvalidArgument("\"callback\" must be a function");
+            throw new x.InvalidArgument('"callback" must be a function');
         }
         if (current) {
             this._lastStream.once("end", callback);
@@ -233,7 +233,7 @@ class Core extends adone.EventEmitter {
 
     unique(prop = null) {
         if (!is.null(prop) && !is.function(prop)) {
-            throw new adone.x.InvalidArgument("\"prop\" must be a function or null");
+            throw new x.InvalidArgument('"prop" must be a function or null');
         }
         const cache = new Set();
         return this.filter((x) => {
