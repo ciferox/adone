@@ -1,7 +1,7 @@
 adone.run({
     main() {
         const screen = new adone.cui.Screen();
-        const map = new adone.cui.widget.Map({ label: "World Map" });
+        const map = new adone.cui.widget.WorldMap({ label: "World Map" });
 
         screen.append(map);
 

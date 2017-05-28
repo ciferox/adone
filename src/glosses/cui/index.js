@@ -43,7 +43,7 @@ adone.lazify({
         MultiPage: "./widgets/multipage",
         TabBar: "./widgets/tabbar",
         Canvas: "./widgets/canvas",
-        Map: "./widgets/map",
+        WorldMap: "./widgets/world_map",
         Donut: "./widgets/donut",
         Gauge: "./widgets/gauge",
         GaugeList: "./widgets/gaugelist",

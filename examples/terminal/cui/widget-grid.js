@@ -2,7 +2,7 @@ adone.run({
     main() {
         const screen = new adone.cui.Screen();
         const grid = new adone.cui.GridLayout({ rows: 12, cols: 12, screen });
-        // const map = grid.set(0, 0, 12, 12, adone.cui.widget.Map, { label: "World Map" });
+        // const map = grid.set(0, 0, 12, 12, adone.cui.widget.WorldMap, { label: "World Map" });
         grid.set(0, 0, 12, 12, adone.cui.widget.Element, { content: "1" });
         grid.set(0, 4, 4, 4, adone.cui.widget.Element, { content: "2" });
         grid.set(0, 8, 4, 4, adone.cui.widget.Element, { content: "3" });

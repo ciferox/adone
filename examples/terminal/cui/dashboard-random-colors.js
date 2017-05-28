@@ -113,7 +113,7 @@ adone.run({
                 legend: { width: 10 }
             });
 
-        const map = grid.set(6, 0, 6, 6, adone.cui.widget.Map, { label: "Servers Location" });
+        const map = grid.set(6, 0, 6, 6, adone.cui.widget.WorldMap, { label: "Servers Location" });
 
         const log = grid.set(8, 6, 4, 2, adone.cui.widget.ExLog,
             {

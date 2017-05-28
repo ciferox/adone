@@ -18,7 +18,7 @@ adone.run({
                     label: "Stocks"
                 });
 
-            const map = grid.set(1, 2, 2, 2, adone.cui.widget.Map, { label: "Servers Location" });
+            const map = grid.set(1, 2, 2, 2, adone.cui.widget.WorldMap, { label: "Servers Location" });
 
             const elem = new adone.cui.widget.Element({ content: "click right-left arrows or wait 3 seconds for the next layout in the carousel", top: "80%", left: "10%" });
             screen.append(elem);
