@@ -296,7 +296,7 @@ class RedBlackTreeIterator {
         return this._stack.length > 0;
     }
 
-    // Node of the iterator    
+    // Node of the iterator
     get node() {
         if (this._stack.length > 0) {
             return this._stack[this._stack.length - 1];
@@ -792,7 +792,7 @@ export default class RedBlackTree {
         }
         let n = this.root;
         const stack = [];
-        while (true) {
+        for ( ; ; ) {
             stack.push(n);
             if (n.left) {
                 if (idx < n.left._count) {

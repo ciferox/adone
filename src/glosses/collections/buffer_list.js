@@ -1,4 +1,4 @@
-const { std: { stream: { Duplex: DuplexStream } } } = adone;
+const { is, std: { stream: { Duplex: DuplexStream } } } = adone;
 
 export default class BufferList extends DuplexStream {
     constructor(callback) {
@@ -7,15 +7,15 @@ export default class BufferList extends DuplexStream {
         this._bufs = [];
         this.length = 0;
 
-        if (typeof callback === "function") {
+        if (is.function(callback)) {
             this._callback = callback;
 
-            const piper = function piper(err) {
+            const piper = (err) => {
                 if (this._callback) {
                     this._callback(err);
                     this._callback = null;
                 }
-            }.bind(this);
+            };
 
             this.on("pipe", function onPipe(src) {
                 src.on("error", piper);
@@ -26,8 +26,6 @@ export default class BufferList extends DuplexStream {
         } else {
             this.append(callback);
         }
-
-        DuplexStream.call(this);
     }
 
     _offset(offset) {
@@ -49,9 +47,9 @@ export default class BufferList extends DuplexStream {
     append(buf) {
         let i = 0;
 
-        if (Buffer.isBuffer(buf)) {
+        if (is.buffer(buf)) {
             this._appendBuffer(buf);
-        } else if (Array.isArray(buf)) {
+        } else if (is.array(buf)) {
             for (; i < buf.length; i++) {
                 this.append(buf[i]);
             }
@@ -60,14 +58,14 @@ export default class BufferList extends DuplexStream {
             for (; i < buf._bufs.length; i++) {
                 this.append(buf._bufs[i]);
             }
-        } else if (buf !== null && buf !== undefined) {
+        } else if (!is.nil(buf)) {
             // coerce number arguments to strings, since Buffer(number) does
             // uninitialized memory allocationthen
-            if (typeof buf === "number") {
+            if (is.number(buf)) {
                 buf = buf.toString();
             }
 
-            this._appendBuffer(new Buffer(buf));
+            this._appendBuffer(Buffer.from(buf));
         }
 
         return this;
@@ -81,7 +79,7 @@ export default class BufferList extends DuplexStream {
     _write(buf, encoding, callback) {
         this._appendBuffer(buf);
 
-        if (typeof callback === "function") {
+        if (is.function(callback)) {
             callback();
         }
     }
@@ -97,7 +95,7 @@ export default class BufferList extends DuplexStream {
     }
 
     end(chunk) {
-        DuplexStream.prototype.end.call(this, chunk);
+        super.end(chunk);
 
         if (this._callback) {
             this._callback(null, this.slice());
@@ -110,27 +108,27 @@ export default class BufferList extends DuplexStream {
     }
 
     slice(start, end) {
-        if (typeof start === "number" && start < 0) {
+        if (is.number(start) && start < 0) {
             start += this.length;
         }
-        if (typeof end === "number" && end < 0) {
+        if (is.number(end) && end < 0) {
             end += this.length;
         }
         return this.copy(null, 0, start, end);
     }
 
     copy(dst, dstStart, srcStart, srcEnd) {
-        if (typeof srcStart !== "number" || srcStart < 0) {
+        if (!is.number(srcStart) || srcStart < 0) {
             srcStart = 0;
         }
-        if (typeof srcEnd !== "number" || srcEnd > this.length) {
+        if (!is.number(srcEnd) || srcEnd > this.length) {
             srcEnd = this.length;
         }
         if (srcStart >= this.length) {
-            return dst || new Buffer(0);
+            return dst || Buffer.alloc(0);
         }
         if (srcEnd <= 0) {
-            return dst || new Buffer(0);
+            return dst || Buffer.alloc(0);
         }
 
         const copy = Boolean(dst);
@@ -167,7 +165,7 @@ export default class BufferList extends DuplexStream {
         }
 
         if (!copy) { // a slice, we need something to copy in to
-            dst = new Buffer(len);
+            dst = Buffer.alloc(len);
         }
 
         for (i = off[0]; i < this._bufs.length; i++) {

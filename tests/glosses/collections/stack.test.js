@@ -1,4 +1,4 @@
-describe("Stack", () => {
+describe("collections", "Stack", () => {
     it("should work as expected", () => {
         const s = new adone.collection.Stack();
         s.push(1);

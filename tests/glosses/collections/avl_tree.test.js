@@ -1,35 +1,34 @@
-const AVLTree = adone.collection.AVLTree;
+describe("collections", "AVL tree", () => {
+    const { is, collection: { AVLTree } } = adone;
 
-function getRandomArray(n) {
-    if (n === 0) {
-        return [];
-    }
-    if (n === 1) {
-        return [0];
-    }
+    const getRandomArray = (n) => {
+        if (n === 0) {
+            return [];
+        }
+        if (n === 1) {
+            return [0];
+        }
 
-    const res = getRandomArray(n - 1);
-    const next = Math.floor(Math.random() * n);
-    res.splice(next, 0, n - 1); // Add n-1 at a random position in the array
+        const res = getRandomArray(n - 1);
+        const next = Math.floor(Math.random() * n);
+        res.splice(next, 0, n - 1); // Add n-1 at a random position in the array
 
-    return res;
-}
-
-describe("AVL tree", () => {
+        return res;
+    };
 
     describe("Sanity checks", () => {
 
         it("Checking that all nodes heights are correct", () => {
-            let _AVLTree = AVLTree._AVLTree,
-                avlt = new _AVLTree({ key: 10 }),
-                l = new _AVLTree({ key: 5 }),
-                r = new _AVLTree({ key: 15 }),
-                ll = new _AVLTree({ key: 3 }),
-                lr = new _AVLTree({ key: 8 }),
-                rl = new _AVLTree({ key: 13 }),
-                rr = new _AVLTree({ key: 18 }),
-                lrl = new _AVLTree({ key: 7 }),
-                lrll = new _AVLTree({ key: 6 });
+            const _AVLTree = AVLTree._AVLTree;
+            const avlt = new _AVLTree({ key: 10 });
+            const l = new _AVLTree({ key: 5 });
+            const r = new _AVLTree({ key: 15 });
+            const ll = new _AVLTree({ key: 3 });
+            const lr = new _AVLTree({ key: 8 });
+            const rl = new _AVLTree({ key: 13 });
+            const rr = new _AVLTree({ key: 18 });
+            const lrl = new _AVLTree({ key: 7 });
+            const lrll = new _AVLTree({ key: 6 });
 
             // With a balanced tree
             avlt.left = l;
@@ -137,16 +136,16 @@ describe("AVL tree", () => {
         });
 
         it("Calculate the balance factor", () => {
-            let _AVLTree = AVLTree._AVLTree,
-                avlt = new _AVLTree({ key: 10 }),
-                l = new _AVLTree({ key: 5 }),
-                r = new _AVLTree({ key: 15 }),
-                ll = new _AVLTree({ key: 3 }),
-                lr = new _AVLTree({ key: 8 }),
-                rl = new _AVLTree({ key: 13 }),
-                rr = new _AVLTree({ key: 18 }),
-                lrl = new _AVLTree({ key: 7 }),
-                lrll = new _AVLTree({ key: 6 });
+            const _AVLTree = AVLTree._AVLTree;
+            const avlt = new _AVLTree({ key: 10 });
+            const l = new _AVLTree({ key: 5 });
+            const r = new _AVLTree({ key: 15 });
+            const ll = new _AVLTree({ key: 3 });
+            const lr = new _AVLTree({ key: 8 });
+            const rl = new _AVLTree({ key: 13 });
+            const rr = new _AVLTree({ key: 18 });
+            const lrl = new _AVLTree({ key: 7 });
+            const lrll = new _AVLTree({ key: 6 });
 
             // With a balanced tree
             avlt.left = l;
@@ -183,14 +182,14 @@ describe("AVL tree", () => {
         });
 
         it("Can check that a tree is balanced", () => {
-            let _AVLTree = AVLTree._AVLTree,
-                avlt = new _AVLTree({ key: 10 }),
-                l = new _AVLTree({ key: 5 }),
-                r = new _AVLTree({ key: 15 }),
-                ll = new _AVLTree({ key: 3 }),
-                lr = new _AVLTree({ key: 8 }),
-                rl = new _AVLTree({ key: 13 }),
-                rr = new _AVLTree({ key: 18 });
+            const _AVLTree = AVLTree._AVLTree;
+            const avlt = new _AVLTree({ key: 10 });
+            const l = new _AVLTree({ key: 5 });
+            const r = new _AVLTree({ key: 15 });
+            const ll = new _AVLTree({ key: 3 });
+            const lr = new _AVLTree({ key: 8 });
+            const rl = new _AVLTree({ key: 13 });
+            const rr = new _AVLTree({ key: 18 });
 
             avlt.left = l;
             avlt.right = r;
@@ -337,9 +336,9 @@ describe("AVL tree", () => {
         });
 
         it("Auto-balancing insertions", () => {
-            let avlt = new AVLTree(),
-                avlt2 = new AVLTree(),
-                avlt3 = new AVLTree();
+            const avlt = new AVLTree();
+            const avlt2 = new AVLTree();
+            const avlt3 = new AVLTree();
 
             // Balancing insertions on the left
             expect(avlt.tree.getNumberOfKeys()).to.be.equal(0);
@@ -452,8 +451,8 @@ describe("AVL tree", () => {
     describe("Search", () => {
 
         it("Can find data in an AVLT", () => {
-            let avlt = new AVLTree(),
-                i;
+            const avlt = new AVLTree();
+            let i;
 
             getRandomArray(100).forEach((n) => {
                 avlt.insert(n, `some data for ${n}`);
@@ -526,8 +525,8 @@ describe("AVL tree", () => {
     describe("Deletion", () => {
 
         it("Deletion does nothing on an empty tree", () => {
-            let avlt = new AVLTree(),
-                avltu = new AVLTree({ unique: true });
+            const avlt = new AVLTree();
+            const avltu = new AVLTree({ unique: true });
 
             expect(avlt.getNumberOfKeys()).to.be.equal(0);
             expect(avltu.getNumberOfKeys()).to.be.equal(0);
@@ -550,11 +549,11 @@ describe("AVL tree", () => {
                 avlt.insert(k, `some ${k}`);
             });
 
-            function checkavlt() {
+            const checkavlt = () => {
                 [10, 5, 3, 8, 15, 12, 37].forEach((k) => {
                     expect(avlt.search(k)).to.be.deep.equal([`some ${k}`]);
                 });
-            }
+            };
 
             checkavlt();
             expect(avlt.getNumberOfKeys()).to.be.equal(7);
@@ -604,7 +603,7 @@ describe("AVL tree", () => {
 
             // This will create an AVL tree with leaves 3, 8, 12, 37
             // (do a pretty print to see this)
-            function recreateavlt() {
+            const recreateavlt = () => {
                 avlt = new AVLTree();
 
                 [10, 5, 3, 8, 15, 12, 37].forEach((k) => {
@@ -612,10 +611,10 @@ describe("AVL tree", () => {
                 });
 
                 expect(avlt.getNumberOfKeys()).to.be.equal(7);
-            }
+            };
 
             // Check that only keys in array theRemoved were removed
-            function checkRemoved(theRemoved) {
+            const checkRemoved = (theRemoved) => {
                 [10, 5, 3, 8, 15, 12, 37].forEach((k) => {
                     if (theRemoved.indexOf(k) !== -1) {
                         expect(avlt.search(k).length).to.be.equal(0);
@@ -625,7 +624,7 @@ describe("AVL tree", () => {
                 });
 
                 expect(avlt.getNumberOfKeys()).to.be.equal(7 - theRemoved.length);
-            }
+            };
 
             recreateavlt();
             avlt.delete(3);
@@ -707,12 +706,12 @@ describe("AVL tree", () => {
         });
 
         it("Able to delete non root nodes that have only one child", () => {
-            let avlt = new AVLTree(),
-                firstSet = [10, 5, 15, 3, 1, 4, 20],
-                secondSet = [10, 5, 15, 3, 1, 4, 20, 17, 25];
+            let avlt = new AVLTree();
+            const firstSet = [10, 5, 15, 3, 1, 4, 20];
+            const secondSet = [10, 5, 15, 3, 1, 4, 20, 17, 25];
 
             // Check that only keys in array theRemoved were removed
-            function checkRemoved(set, theRemoved) {
+            const checkRemoved = (set, theRemoved) => {
                 set.forEach((k) => {
                     if (theRemoved.indexOf(k) !== -1) {
                         expect(avlt.search(k).length).to.be.equal(0);
@@ -722,7 +721,7 @@ describe("AVL tree", () => {
                 });
 
                 expect(avlt.getNumberOfKeys()).to.be.equal(set.length - theRemoved.length);
-            }
+            };
 
             // First set: no rebalancing necessary
             firstSet.forEach((k) => {
@@ -963,14 +962,14 @@ describe("AVL tree", () => {
 
 
     it("Can use undefined as key and value", () => {
-        function compareKeys(a, b) {
-            if (a === undefined && b === undefined) {
+        const compareKeys = (a, b) => {
+            if (is.undefined(a) && is.undefined(b)) {
                 return 0;
             }
-            if (a === undefined) {
+            if (is.undefined(a)) {
                 return -1;
             }
-            if (b === undefined) {
+            if (is.undefined(b)) {
                 return 1;
             }
 
@@ -983,7 +982,7 @@ describe("AVL tree", () => {
             if (a === b) {
                 return 0;
             }
-        }
+        };
 
         const avlt = new AVLTree({ compareKeys });
 
@@ -1050,14 +1049,14 @@ describe("AVL tree", () => {
     });
 
     it("Can use null as key and value", () => {
-        function compareKeys(a, b) {
-            if (a === null && b === null) {
+        const compareKeys = (a, b) => {
+            if (is.null(a) && is.null(b)) {
                 return 0;
             }
-            if (a === null) {
+            if (is.null(a)) {
                 return -1;
             }
-            if (b === null) {
+            if (is.null(b)) {
                 return 1;
             }
 
@@ -1070,7 +1069,7 @@ describe("AVL tree", () => {
             if (a === b) {
                 return 0;
             }
-        }
+        };
 
         const avlt = new AVLTree({ compareKeys });
 
@@ -1139,9 +1138,9 @@ describe("AVL tree", () => {
     describe("Execute on every node (=tree traversal)", () => {
 
         it("Can execute a function on every node", () => {
-            let avlt = new AVLTree(),
-                keys = [],
-                executed = 0;
+            const avlt = new AVLTree();
+            const keys = [];
+            let executed = 0;
 
             avlt.insert(10, "yes");
             avlt.insert(5, "hello");
@@ -1170,11 +1169,22 @@ describe("AVL tree", () => {
     describe("Randomized test (takes much longer than the rest of the test suite)", function () {
         this.timeout(30000);
 
-        let avlt = new AVLTree(),
-            data = {};
+        const avlt = new AVLTree();
+        const data = {};
+
+        // Check two pieces of data coming from the avlt and data are the same
+        const checkDataEquality = (fromavlt, fromData) => {
+            if (fromavlt.length === 0) {
+                if (fromData) {
+                    expect(fromData.length).to.be.equal(0);
+                }
+            }
+
+            assert.deepEqual(fromavlt, fromData);
+        };
 
         // Check a avlt against a simple key => [data] object
-        function checkDataIsTheSame(avlt, data) {
+        const checkDataIsTheSame = (avlt, data) => {
             const avltDataElems = [];
 
             // avltDataElems is a simple array containing every piece of data in the tree
@@ -1188,32 +1198,24 @@ describe("AVL tree", () => {
             // Number of key and number of pieces of data match
             expect(avlt.getNumberOfKeys()).to.be.equal(Object.keys(data).length);
 
-            expect([...adone.util.entries(data)].map((d) => d[1].length).reduce((memo, n) => memo + n, 0)).to.be.equal(avltDataElems.length);
+            expect([...adone.util.entries(data)].map((d) => d[1].length).reduce((memo, n) => memo + n, 0)).
+                to.be.equal(avltDataElems.length);
 
             // Compare data
             Object.keys(data).forEach((key) => {
                 checkDataEquality(avlt.search(key), data[key]);
             });
-        }
-
-        // Check two pieces of data coming from the avlt and data are the same
-        function checkDataEquality(fromavlt, fromData) {
-            if (fromavlt.length === 0) {
-                if (fromData) {
-                    expect(fromData.length).to.be.equal(0);
-                }
-            }
-
-            assert.deepEqual(fromavlt, fromData);
-        }
+        };
 
         // Tests the tree structure (deletions concern the whole tree, deletion of some data in a node is well tested above)
         it("Inserting and deleting entire nodes", () => {
             // You can skew to be more insertive or deletive, to test all cases
-            function launchRandomTest(nTests, proba) {
-                let i, key, dataPiece, possibleKeys;
+            const launchRandomTest = (nTests, proba) => {
+                let key;
+                let dataPiece;
+                let possibleKeys;
 
-                for (i = 0; i < nTests; i += 1) {
+                for (let i = 0; i < nTests; i += 1) {
                     if (Math.random() > proba) {
                         // Deletion
                         possibleKeys = Object.keys(data);
@@ -1243,7 +1245,7 @@ describe("AVL tree", () => {
                     avlt.checkIsAVLT();
                     checkDataIsTheSame(avlt, data);
                 }
-            }
+            };
 
             launchRandomTest(1000, 0.65);
             launchRandomTest(2000, 0.35);

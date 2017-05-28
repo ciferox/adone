@@ -1,4 +1,4 @@
-describe("glosses", "collections", "array set", () => {
+describe("collections", "array set", () => {
     const { collection: { ArraySet } } = adone;
 
     const makeTestSet = () => {

@@ -1,134 +1,63 @@
+const { is, collection, x } = adone;
 
-
-/**
- * Self-balancing binary search tree using the AVL implementation
- */
-
-/**
- * Constructor
- * We can't use a direct pointer to the root node (as in the simple binary search tree)
- * as the root will change during tree rotations
- * @param {Boolean}  options.unique Whether to enforce a 'unique' constraint on the key or not
- * @param {Function} options.compareKeys Initialize this BST's compareKeys
- */
-
-export default class AVLTree {
-    constructor(options) {
-        this.tree = new _AVLTree(options);
-    }
-
-    checkIsAVLT() { 
-        this.tree.checkIsAVLT(); 
-    }
-
-    insert(key, value) {
-        const newTree = this.tree.insert(key, value);
-
-        // If newTree is undefined, that means its structure was not modified
-        if (newTree) { 
-            this.tree = newTree; 
-        }
-    }
-
-    // Delete a value
-    delete(key, value) {
-        const newTree = this.tree.delete(key, value);
-
-        // If newTree is undefined, that means its structure was not modified
-        if (newTree) { 
-            this.tree = newTree; 
-        }
-    }
-}
-
-
-/**
- * Constructor of the internal AVLTree
- * @param {Object} options Optional
- * @param {Boolean}  options.unique Whether to enforce a 'unique' constraint on the key or not
- * @param {Key}      options.key Initialize this BST's key with key
- * @param {Value}    options.value Initialize this BST's data with [value]
- * @param {Function} options.compareKeys Initialize this BST's compareKeys
- */
-
-class _AVLTree extends adone.collection.BinarySearchTree {
-
-    /**
-     * Return the balance factor
-     */
+class _AVLTree extends collection.BinarySearchTree {
     balanceFactor() {
         const leftH = this.left ? this.left.height : 0;
         const rightH = this.right ? this.right.height : 0;
         return leftH - rightH;
     }
 
-    /**
-     * Check the recorded height is correct for every node
-     * Throws if one height doesn't match
-     */
     checkHeightCorrect() {
         if (!this.hasOwnProperty("key")) {  // Empty tree
-            return; 
-        }   
+            return;
+        }
 
-        if (this.left && this.left.height === undefined) { 
-            throw new Error(`Undefined height for node ${this.left.key}`); 
+        if (this.left && is.undefined(this.left.height)) {
+            throw new x.IllegalState(`Undefined height for node ${this.left.key}`);
         }
-        if (this.right && this.right.height === undefined) { 
-            throw new Error(`Undefined height for node ${this.right.key}`); 
+        if (this.right && is.undefined(this.right.height)) {
+            throw new x.IllegalState(`Undefined height for node ${this.right.key}`);
         }
-        if (this.height === undefined) { 
-            throw new Error(`Undefined height for node ${this.key}`); 
+        if (is.undefined(this.height)) {
+            throw new x.IllegalState(`Undefined height for node ${this.key}`);
         }
 
         const leftH = this.left ? this.left.height : 0;
         const rightH = this.right ? this.right.height : 0;
 
-        if (this.height !== 1 + Math.max(leftH, rightH)) { 
-            throw new Error(`Height constraint failed for node ${this.key}`); 
+        if (this.height !== 1 + Math.max(leftH, rightH)) {
+            throw new x.IllegalState(`Height constraint failed for node ${this.key}`);
         }
-        if (this.left) { 
-            this.left.checkHeightCorrect(); 
+        if (this.left) {
+            this.left.checkHeightCorrect();
         }
-        if (this.right) { 
-            this.right.checkHeightCorrect(); 
+        if (this.right) {
+            this.right.checkHeightCorrect();
         }
     }
 
-    /**
-     * Check that the balance factors are all between -1 and 1
-     */
     checkBalanceFactors() {
-        if (Math.abs(this.balanceFactor()) > 1) { 
-            throw new Error(`Tree is unbalanced at node ${this.key}`); 
+        if (Math.abs(this.balanceFactor()) > 1) {
+            throw new x.IllegalState(`Tree is unbalanced at node ${this.key}`);
         }
 
-        if (this.left) { 
-            this.left.checkBalanceFactors(); 
+        if (this.left) {
+            this.left.checkBalanceFactors();
         }
-        if (this.right) { 
-            this.right.checkBalanceFactors(); 
+        if (this.right) {
+            this.right.checkBalanceFactors();
         }
     }
 
-    /**
-     * When checking if the BST conditions are met, also check that the heights are correct
-     * and the tree is balanced
-     */
     checkIsAVLT() {
         super.checkIsBST();
         this.checkHeightCorrect();
         this.checkBalanceFactors();
     }
 
-    /**
-     * Perform a right rotation of the tree if possible
-     * and return the root of the resulting tree
-     * The resulting tree's nodes' heights are also updated
-     */
     rightRotation() {
         const p = this.left;
-        if (!p) { 
+        if (!p) {
             return this;
         }   // No change
 
@@ -138,10 +67,10 @@ class _AVLTree extends adone.collection.BinarySearchTree {
         // Alter tree structure
         if (q.parent) {
             p.parent = q.parent;
-            if (q.parent.left === q) { 
-                q.parent.left = p; 
-            } else { 
-                q.parent.right = p; 
+            if (q.parent.left === q) {
+                q.parent.left = p;
+            } else {
+                q.parent.right = p;
             }
         } else {
             p.parent = null;
@@ -149,8 +78,8 @@ class _AVLTree extends adone.collection.BinarySearchTree {
         p.right = q;
         q.parent = p;
         q.left = b;
-        if (b) { 
-            b.parent = q; 
+        if (b) {
+            b.parent = q;
         }
 
         // Update heights
@@ -163,15 +92,10 @@ class _AVLTree extends adone.collection.BinarySearchTree {
         return p;
     }
 
-    /**
-     * Perform a left rotation of the tree if possible
-     * and return the root of the resulting tree
-     * The resulting tree's nodes' heights are also updated
-     */
     leftRotation() {
         const q = this.right;
-        if (!q) { 
-            return this; 
+        if (!q) {
+            return this;
         }   // No change
 
         const b = q.left;
@@ -179,10 +103,10 @@ class _AVLTree extends adone.collection.BinarySearchTree {
         // Alter tree structure
         if (p.parent) {
             q.parent = p.parent;
-            if (p.parent.left === p) { 
-                p.parent.left = q; 
-            } else { 
-                p.parent.right = q; 
+            if (p.parent.left === p) {
+                p.parent.left = q;
+            } else {
+                p.parent.right = q;
             }
         } else {
             q.parent = null;
@@ -190,8 +114,8 @@ class _AVLTree extends adone.collection.BinarySearchTree {
         q.left = p;
         p.parent = q;
         p.right = b;
-        if (b) { 
-            b.parent = p; 
+        if (b) {
+            b.parent = p;
         }
 
         // Update heights
@@ -204,13 +128,9 @@ class _AVLTree extends adone.collection.BinarySearchTree {
         return q;
     }
 
-    /**
-     * Modify the tree if its right subtree is too small compared to the left
-     * Return the new root if any
-     */
     rightTooSmall() {
         if (this.balanceFactor() <= 1) {
-            return this; 
+            return this;
         }   // Right is not too small, don't change
 
         if (this.left.balanceFactor() < 0) {
@@ -220,13 +140,9 @@ class _AVLTree extends adone.collection.BinarySearchTree {
         return this.rightRotation();
     }
 
-    /**
-     * Modify the tree if its left subtree is too small compared to the right
-     * Return the new root if any
-     */
     leftTooSmall() {
-        if (this.balanceFactor() >= -1) { 
-            return this; 
+        if (this.balanceFactor() >= -1) {
+            return this;
         }   // Left is not too small, don't change
 
         if (this.right.balanceFactor() > 0) {
@@ -236,15 +152,9 @@ class _AVLTree extends adone.collection.BinarySearchTree {
         return this.leftRotation();
     }
 
-    /**
-     * Rebalance the tree along the given path. The path is given reversed (as he was calculated
-     * in the insert and delete functions).
-     * Returns the new root of the tree
-     * Of course, the first element of the path must be the root of the tree
-     */
     rebalanceAlongPath(path) {
-        if (!this.hasOwnProperty("key")) { 
-            delete this.height; 
+        if (!this.hasOwnProperty("key")) {
+            delete this.height;
             return this;
         }   // Empty tree
 
@@ -252,19 +162,22 @@ class _AVLTree extends adone.collection.BinarySearchTree {
         let rotated;
         // Rebalance the tree and update all heights
         for (let i = path.length - 1; i >= 0; --i) {
-            path[i].height = 1 + Math.max(path[i].left ? path[i].left.height : 0, path[i].right ? path[i].right.height : 0);
+            path[i].height = 1 + Math.max(
+                path[i].left ? path[i].left.height : 0,
+                path[i].right ? path[i].right.height : 0
+            );
 
             if (path[i].balanceFactor() > 1) {
                 rotated = path[i].rightTooSmall();
-                if (i === 0) { 
-                    newRoot = rotated; 
+                if (i === 0) {
+                    newRoot = rotated;
                 }
             }
 
             if (path[i].balanceFactor() < -1) {
                 rotated = path[i].leftTooSmall();
-                if (i === 0) { 
-                    newRoot = rotated; 
+                if (i === 0) {
+                    newRoot = rotated;
                 }
             }
         }
@@ -272,10 +185,6 @@ class _AVLTree extends adone.collection.BinarySearchTree {
         return newRoot;
     }
 
-    /**
-     * Insert a key, value pair in the tree while maintaining the AVL tree height constraint
-     * Return a pointer to the root node, which may have changed
-     */
     insert(key, value) {
         // Empty tree, insert as root
         if (!this.hasOwnProperty("key")) {
@@ -284,15 +193,15 @@ class _AVLTree extends adone.collection.BinarySearchTree {
             this.height = 1;
             return this;
         }
-        
+
         const insertPath = [];
         let currentNode = this;
         // Insert new leaf at the right place
-        while (true) {
+        for ( ; ; ) {
             // Same key: no change in the tree structure
             if (currentNode.compareKeys(currentNode.key, key) === 0) {
                 if (currentNode.unique) {
-                    const err = new Error(`Can't insert key ${key}, it violates the unique constraint`);
+                    const err = new x.IllegalState(`Can't insert key ${key}, it violates the unique constraint`);
                     err.key = key;
                     err.errorType = "uniqueViolated";
                     throw err;
@@ -324,23 +233,18 @@ class _AVLTree extends adone.collection.BinarySearchTree {
         return this.rebalanceAlongPath(insertPath);
     }
 
-    /**
-     * Delete a key or just a value and return the new root of the tree
-     * @param {Key} key
-     * @param {Value} value Optional. If not set, the whole key is deleted. If set, only this value is deleted
-     */
     delete(key, value) {
-        if (!this.hasOwnProperty("key")) { 
-            return this; 
+        if (!this.hasOwnProperty("key")) {
+            return this;
         }   // Empty tree
 
         const deletePath = [];
         let currentNode = this;
         // Either no match is found and the function will return from within the loop
         // Or a match is found and deletePath will contain the path from the root to the node to delete after the loop
-        while (true) {
-            if (currentNode.compareKeys(key, currentNode.key) === 0) { 
-                break; 
+        for ( ; ; ) {
+            if (currentNode.compareKeys(key, currentNode.key) === 0) {
+                break;
             }
 
             deletePath.push(currentNode);
@@ -362,10 +266,10 @@ class _AVLTree extends adone.collection.BinarySearchTree {
         }
         const newData = [];
         // Delete only a value (no tree modification)
-        if (currentNode.data.length > 1 && value !== undefined) {
+        if (currentNode.data.length > 1 && !is.undefined(value)) {
             currentNode.data.forEach((d) => {
-                if (!currentNode.checkValueEquality(d, value)) { 
-                    newData.push(d); 
+                if (!currentNode.checkValueEquality(d, value)) {
+                    newData.push(d);
                 }
             });
             currentNode.data = newData;
@@ -381,14 +285,14 @@ class _AVLTree extends adone.collection.BinarySearchTree {
                 currentNode.data = [];
                 delete currentNode.height;
                 return this;
-            } 
+            }
             if (currentNode.parent.left === currentNode) {
                 currentNode.parent.left = null;
             } else {
                 currentNode.parent.right = null;
             }
             return this.rebalanceAlongPath(deletePath);
-            
+
         }
 
         let replaceWith;
@@ -399,7 +303,7 @@ class _AVLTree extends adone.collection.BinarySearchTree {
             if (currentNode === this) {   // This node is also the root
                 replaceWith.parent = null;
                 return replaceWith;   // height of replaceWith is necessarily 1 because the tree was balanced before deletion
-            } 
+            }
             if (currentNode.parent.left === currentNode) {
                 currentNode.parent.left = replaceWith;
                 replaceWith.parent = currentNode.parent;
@@ -409,9 +313,8 @@ class _AVLTree extends adone.collection.BinarySearchTree {
             }
 
             return this.rebalanceAlongPath(deletePath);
-            
-        }
 
+        }
 
         // Node with two children
         // Use the in-order predecessor (no need to randomize since we actively rebalance)
@@ -423,15 +326,15 @@ class _AVLTree extends adone.collection.BinarySearchTree {
             currentNode.key = replaceWith.key;
             currentNode.data = replaceWith.data;
             currentNode.left = replaceWith.left;
-            if (replaceWith.left) { 
-                replaceWith.left.parent = currentNode; 
+            if (replaceWith.left) {
+                replaceWith.left.parent = currentNode;
             }
             return this.rebalanceAlongPath(deletePath);
         }
 
         // After this loop, replaceWith is the right-most leaf in the left subtree
         // and deletePath the path from the root (inclusive) to replaceWith (exclusive)
-        while (true) {
+        for ( ; ; ) {
             if (replaceWith.right) {
                 deletePath.push(replaceWith);
                 replaceWith = replaceWith.right;
@@ -444,25 +347,47 @@ class _AVLTree extends adone.collection.BinarySearchTree {
         currentNode.data = replaceWith.data;
 
         replaceWith.parent.right = replaceWith.left;
-        if (replaceWith.left) { 
-            replaceWith.left.parent = replaceWith.parent; 
+        if (replaceWith.left) {
+            replaceWith.left.parent = replaceWith.parent;
         }
 
         return this.rebalanceAlongPath(deletePath);
     }
 }
 
+export default class AVLTree {
+    constructor(options) {
+        this.tree = new _AVLTree(options);
+    }
+
+    checkIsAVLT() {
+        this.tree.checkIsAVLT();
+    }
+
+    insert(key, value) {
+        const newTree = this.tree.insert(key, value);
+
+        // If newTree is undefined, that means its structure was not modified
+        if (newTree) {
+            this.tree = newTree;
+        }
+    }
+
+    delete(key, value) {
+        const newTree = this.tree.delete(key, value);
+
+        // If newTree is undefined, that means its structure was not modified
+        if (newTree) {
+            this.tree = newTree;
+        }
+    }
+}
+
 AVLTree._AVLTree = _AVLTree;
-
-
-
-
-/**
- * Other functions we want to use on an AVLTree as if it were the internal _AVLTree
- */
 
 for (const m of ["getNumberOfKeys", "search", "betweenBounds", "prettyPrint", "executeOnEveryNode"]) {
     AVLTree.prototype[m] = function (...args) {
-        return this.tree[m].apply(this.tree, arguments);
+        return this.tree[m](...args);
     };
 }
+

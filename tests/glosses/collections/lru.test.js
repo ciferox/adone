@@ -1,6 +1,6 @@
-const { LRU } = adone.collection;
-
 describe("collections", "lru", () => {
+    const { collection: { LRU } } = adone;
+
     describe("basic", () => {
         it("basic", () => {
             const cache = new LRU({ max: 10 });
@@ -464,9 +464,7 @@ describe("collections", "lru", () => {
             assert.equal(l.get(1), 1);
             l.set(0, 1);
             assert.equal(l.itemCount, 2);
-            l.lengthCalculator = function (key, val) {
-                return key;
-            };
+            l.lengthCalculator = (key) => key;
             assert.equal(l.lengthCalculator(1, 10), 1);
             assert.equal(l.lengthCalculator(10, 1), 10);
             l.lengthCalculator = { not: "a function" };
@@ -628,7 +626,7 @@ describe("collections", "lru", () => {
 
                 setTimeout(() => {
                     let count = 0;
-                    l.forEach((val, key, cache) => {
+                    l.forEach(() => {
                         count++;
                     });
                     assert.equal(0, count);

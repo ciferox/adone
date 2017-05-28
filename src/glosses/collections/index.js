@@ -7,7 +7,7 @@ adone.lazify({
     LRU: "./lru",
     LinkedList: "./linked_list",
     BQueue: "./bqueue",
-    BinarySearchTree: "./bst",
+    BinarySearchTree: "./binary_search_tree",
     AVLTree: "./avl_tree",
     RedBlackTree: "./rb_tree",
     Stack: "./stack",

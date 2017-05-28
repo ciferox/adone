@@ -1,3 +1,5 @@
+const { x } = adone;
+
 const empty = Symbol.for("linkedlist:empty");
 
 class Node {
@@ -37,14 +39,6 @@ export default class LinkedList {
         return this.length === 0;
     }
 
-    /**
-     * изменить размер списка
-     * 
-     * @param {any} newLength
-     * @returns
-     * 
-     * @memberOf LinkedList
-     */
     resize(newLength) {
         if (newLength === this.maxLength) {
             return;
@@ -81,20 +75,12 @@ export default class LinkedList {
         this.maxLength = newLength;
     }
 
-    /**
-     * добавить элемент в конец списка
-     * 
-     * @param {any} value
-     * @returns
-     * 
-     * @memberOf LinkedList
-     */
     push(value) {
         if (this.full) {
             if (this.autoresize) {
                 this.resize(this.maxLength * 2);
             } else {
-                throw new adone.x.Exception("Full");
+                throw new x.IllegalState("Full");
             }
         }
         this.tail = this.tail.next;
@@ -104,13 +90,6 @@ export default class LinkedList {
         return this.tail;
     }
 
-    /**
-     * забрать элемент из конца списка
-     * 
-     * @returns
-     * 
-     * @memberOf LinkedList
-     */
     pop() {
         if (this.empty) {
             return;
@@ -122,13 +101,6 @@ export default class LinkedList {
         return value;
     }
 
-    /**
-     * забрать элемент из начала списка
-     * 
-     * @returns
-     * 
-     * @memberOf LinkedList
-     */
     shift() {
         if (this.empty) {
             return;
@@ -140,20 +112,12 @@ export default class LinkedList {
         return value;
     }
 
-    /**
-     * добавить элемент в начало списка
-     * 
-     * @param {any} value
-     * @returns
-     * 
-     * @memberOf LinkedList
-     */
     unshift(value) {
         if (this.full) {
             if (this.autoresize) {
                 this.resize(this.maxLength * 2);
             } else {
-                throw new adone.x.Exception("Full");
+                throw new x.IllegalState("Full");
             }
         }
         this.head = this.head.prev;
@@ -162,14 +126,6 @@ export default class LinkedList {
         return this.head;
     }
 
-    /**
-     * передвинуть узел в конец списка
-     * 
-     * @param {any} node
-     * @returns
-     * 
-     * @memberOf LinkedList
-     */
     pushNode(node) {
         if (node === this.tail) {
             return;
@@ -187,14 +143,6 @@ export default class LinkedList {
         this.tail.next = node;
     }
 
-    /**
-     * передвинуть узел в начало списка
-     * 
-     * @param {any} node
-     * @returns
-     * 
-     * @memberOf LinkedList
-     */
     unshiftNode(node) {
         if (node === this.head) {
             return;
@@ -214,14 +162,6 @@ export default class LinkedList {
         this.head = node;
     }
 
-    /**
-     * удалить узел из списка
-     * 
-     * @param {any} node
-     * @returns
-     * 
-     * @memberOf LinkedList
-     */
     removeNode(node) {
         if (node === this.tail) {
             // this.tail.value = empty;
@@ -234,13 +174,6 @@ export default class LinkedList {
         --this.length;
     }
 
-    /**
-     * очистить список
-     * 
-     * @param {boolean} [strong=false] затереть все элементы
-     * 
-     * @memberOf LinkedList
-     */
     clear(strong = false) {
         if (strong) {
             for (let i = 0, n = this.length, cursor = this.head; i < n; ++i, cursor = cursor.next) {
@@ -262,14 +195,14 @@ export default class LinkedList {
 
     get front() {
         if (this.length === 0) {
-            throw new adone.x.Exception("Empty");
+            throw new x.IllegalState("Empty");
         }
         return this.head.value;
     }
 
     get back() {
         if (this.length === 0) {
-            throw new adone.x.Exception("Empty");
+            throw new x.IllegalState("Empty");
         }
         return this.tail.value;
     }

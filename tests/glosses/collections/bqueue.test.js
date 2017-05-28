@@ -1,6 +1,6 @@
-const BQueue = adone.collection.BQueue;
+describe("collections", "Blocking queue", () => {
+    const { collection: { BQueue } } = adone;
 
-describe("Blocking queue", () => {
     it("should block until an element comes", async () => {
         const q = new BQueue();
         const p = q.shift();

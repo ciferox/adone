@@ -1,9 +1,10 @@
+const { x } = adone;
+
 export default class ArraySet {
     constructor() {
         this._array = [];
         this._map = new Map();
     }
-
 
     static fromArray(other, allowDuplicates) {
         const set = new ArraySet();
@@ -34,9 +35,8 @@ export default class ArraySet {
 
     indexOf(value) {
         if (!this._map.has(value)) {
-            throw new Error(`"${value} is not in the set.`);
+            throw new x.Unknown(`"${value} is not in the set.`);
         }
-        // $FlowIgnore: it will always be a number
         return this._map.get(value);
     }
 
@@ -44,7 +44,7 @@ export default class ArraySet {
         if (idx >= 0 && idx < this._array.length) {
             return this._array[idx];
         }
-        throw new Error(`No element indexed by ${idx}`);
+        throw new x.Unknown(`No element indexed by ${idx}`);
     }
 
     toArray() {

@@ -1,13 +1,9 @@
+const { collection } = adone;
 
-
-/**
- * Тот же список, но shift возвращает промис, если элементов в списке нет
- * и разрешает их при push'е элементов
- */
-export default class BQueue extends adone.collection.LinkedList {
+export default class BQueue extends collection.LinkedList {
     constructor() {
         super();
-        this.awaiters = new adone.collection.LinkedList();
+        this.awaiters = new collection.LinkedList();
     }
 
     push(v) {

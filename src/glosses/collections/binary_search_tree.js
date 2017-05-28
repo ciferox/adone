@@ -1,12 +1,14 @@
+const { is } = adone;
+
 const defaultCompareKeysFunction = (a, b) => {
-    if (a < b) { 
-        return -1; 
+    if (a < b) {
+        return -1;
     }
-    if (a > b) { 
-        return 1; 
+    if (a > b) {
+        return 1;
     }
-    if (a === b) { 
-        return 0; 
+    if (a === b) {
+        return 0;
     }
 
     const err = new Error("Couldn't compare elements");
@@ -17,21 +19,12 @@ const defaultCompareKeysFunction = (a, b) => {
 
 const defaultCheckValueEquality = (a, b) => a === b;
 
-/**
- * Constructor
- * @param {Object} options Optional
- * @param {Boolean}  options.unique Whether to enforce a 'unique' constraint on the key or not
- * @param {Key}      options.key Initialize this BST's key with key
- * @param {Value}    options.value Initialize this BST's data with [value]
- * @param {Function} options.compareKeys Initialize this BST's compareKeys
- */
-
 export default class BinarySearchTree {
     constructor(options = {}) {
         this.left = this.right = null;
-        this.parent = options.parent !== undefined ? options.parent : null;
-        if (options.hasOwnProperty("key")) { 
-            this.key = options.key; 
+        this.parent = !is.undefined(options.parent) ? options.parent : null;
+        if (options.hasOwnProperty("key")) {
+            this.key = options.key;
         }
         this.data = options.hasOwnProperty("value") ? [options.value] : [];
         this.unique = options.unique || false;
@@ -40,9 +33,6 @@ export default class BinarySearchTree {
         this.checkValueEquality = options.checkValueEquality || defaultCheckValueEquality;
     }
 
-    /**
-     * Get the descendant with max key
-     */
     getMaxKeyDescendant() {
         if (this.right) {
             return this.right.getMaxKeyDescendant();
@@ -50,16 +40,10 @@ export default class BinarySearchTree {
         return this;
     }
 
-    /**
-     * Get the maximum key
-     */
     getMaxKey() {
         return this.getMaxKeyDescendant().key;
     }
 
-    /**
-     * Get the descendant with min key
-     */
     getMinKeyDescendant() {
         if (this.left) {
             return this.left.getMinKeyDescendant();
@@ -67,39 +51,28 @@ export default class BinarySearchTree {
         return this;
     }
 
-    /**
-     * Get the minimum key
-     */
     getMinKey() {
         return this.getMinKeyDescendant().key;
     }
 
-    /**
-     * Check that all nodes (incl. leaves) fullfil condition given by fn
-     * test is a function passed every (key, data) and which throws if the condition is not met
-     */
     checkAllNodesFullfillCondition(test) {
-        if (!this.hasOwnProperty("key")) { 
-            return; 
+        if (!this.hasOwnProperty("key")) {
+            return;
         }
 
         test(this.key, this.data);
 
-        if (this.left) { 
-            this.left.checkAllNodesFullfillCondition(test); 
+        if (this.left) {
+            this.left.checkAllNodesFullfillCondition(test);
         }
-        if (this.right) { 
-            this.right.checkAllNodesFullfillCondition(test); 
+        if (this.right) {
+            this.right.checkAllNodesFullfillCondition(test);
         }
     }
 
-    /**
-     * Check that the core BST properties on node ordering are verified
-     * Throw if they aren't
-     */
     checkNodeOrdering() {
-        if (!this.hasOwnProperty("key")) { 
-            return; 
+        if (!this.hasOwnProperty("key")) {
+            return;
         }
 
         if (this.left) {
@@ -121,64 +94,46 @@ export default class BinarySearchTree {
         }
     }
 
-    /**
-     * Check that all pointers are coherent in this tree
-     */
     checkInternalPointers() {
         if (this.left) {
-            if (this.left.parent !== this) { 
-                throw new Error(`Parent pointer broken for key ${this.key}`); 
+            if (this.left.parent !== this) {
+                throw new Error(`Parent pointer broken for key ${this.key}`);
             }
             this.left.checkInternalPointers();
         }
 
         if (this.right) {
-            if (this.right.parent !== this) { 
-                throw new Error(`Parent pointer broken for key ${this.key}`); 
+            if (this.right.parent !== this) {
+                throw new Error(`Parent pointer broken for key ${this.key}`);
             }
             this.right.checkInternalPointers();
         }
     }
 
-    /**
-     * Check that a tree is a BST as defined here (node ordering and pointer references)
-     */
     checkIsBST() {
         this.checkNodeOrdering();
         this.checkInternalPointers();
-        if (this.parent) { 
-            throw new Error("The root shouldn't have a parent"); 
+        if (this.parent) {
+            throw new Error("The root shouldn't have a parent");
         }
     }
 
-    /**
-     * Get number of keys inserted
-     */
     getNumberOfKeys() {
-        if (!this.hasOwnProperty("key")) { 
-            return 0; 
+        if (!this.hasOwnProperty("key")) {
+            return 0;
         }
 
         let res = 1;
-        if (this.left) { 
-            res += this.left.getNumberOfKeys(); 
+        if (this.left) {
+            res += this.left.getNumberOfKeys();
         }
-        if (this.right) { 
-            res += this.right.getNumberOfKeys(); 
+        if (this.right) {
+            res += this.right.getNumberOfKeys();
         }
 
         return res;
     }
 
-    // ============================================
-    // Methods used to actually work on the tree
-    // ============================================
-
-    /**
-     * Create a BST similar (i.e. same options except for key and value) to the current one
-     * Use the same constructor (i.e. BinarySearchTree, AVLTree etc)
-     * @param {Object} options see constructor
-     */
     createSimilar(options = {}) {
         options.unique = this.unique;
         options.compareKeys = this.compareKeys;
@@ -187,9 +142,6 @@ export default class BinarySearchTree {
         return new this.constructor(options);
     }
 
-    /**
-     * Create the left child of this BST and return it
-     */
     createLeftChild(options) {
         const leftChild = this.createSimilar(options);
         leftChild.parent = this;
@@ -198,9 +150,6 @@ export default class BinarySearchTree {
         return leftChild;
     }
 
-    /**
-     * Create the right child of this BST and return it
-     */
     createRightChild(options) {
         const rightChild = this.createSimilar(options);
         rightChild.parent = this;
@@ -209,9 +158,6 @@ export default class BinarySearchTree {
         return rightChild;
     }
 
-    /**
-     * Insert a new element
-     */
     insert(key, value) {
         // Empty tree, insert as root
         if (!this.hasOwnProperty("key")) {
@@ -250,22 +196,19 @@ export default class BinarySearchTree {
         }
     }
 
-    /**
-     * Search for all data corresponding to a key
-     */
     search(key) {
-        if (!this.hasOwnProperty("key")) { 
-            return []; 
+        if (!this.hasOwnProperty("key")) {
+            return [];
         }
 
-        if (this.compareKeys(this.key, key) === 0) { 
-            return this.data; 
+        if (this.compareKeys(this.key, key) === 0) {
+            return this.data;
         }
 
         if (this.compareKeys(key, this.key) < 0) {
             if (this.left) {
                 return this.left.search(key);
-            }    
+            }
             return [];
         }
         if (this.right) {
@@ -274,9 +217,6 @@ export default class BinarySearchTree {
         return [];
     }
 
-    /**
-     * Return a function that tells whether a given key matches a lower bound
-     */
     getLowerBoundMatcher(query) {
         // No lower bound
         if (!query.hasOwnProperty("$gt") && !query.hasOwnProperty("$gte")) {
@@ -295,13 +235,10 @@ export default class BinarySearchTree {
 
         if (query.hasOwnProperty("$gt")) {
             return (key) => this.compareKeys(key, query.$gt) > 0;
-        } 
+        }
         return (key) => this.compareKeys(key, query.$gte) >= 0;
     }
 
-    /**
-     * Return a function that tells whether a given key matches an upper bound
-     */
     getUpperBoundMatcher(query) {
         // No lower bound
         if (!query.hasOwnProperty("$lt") && !query.hasOwnProperty("$lte")) {
@@ -324,41 +261,31 @@ export default class BinarySearchTree {
         return (key) => this.compareKeys(key, query.$lte) <= 0;
     }
 
-    /**
-     * Get all data for a key between bounds
-     * Return it in key order
-     * @param {Object} query Mongo-style query where keys are $lt, $lte, $gt or $gte (other keys are not considered)
-     * @param {Functions} lbm/ubm matching functions calculated at the first recursive step
-     */
     betweenBounds(query, lbm, ubm) {
-        if (!this.hasOwnProperty("key")) {  // Empty tree 
-            return []; 
-        }   
+        if (!this.hasOwnProperty("key")) {  // Empty tree
+            return [];
+        }
 
         lbm = lbm || this.getLowerBoundMatcher(query);
         ubm = ubm || this.getUpperBoundMatcher(query);
 
         const res = [];
-        if (lbm(this.key) && this.left) { 
-            res.push(...this.left.betweenBounds(query, lbm, ubm)); 
+        if (lbm(this.key) && this.left) {
+            res.push(...this.left.betweenBounds(query, lbm, ubm));
         }
-        if (lbm(this.key) && ubm(this.key)) { 
-            res.push(...this.data); 
+        if (lbm(this.key) && ubm(this.key)) {
+            res.push(...this.data);
         }
-        if (ubm(this.key) && this.right) { 
-            res.push(...this.right.betweenBounds(query, lbm, ubm)); 
+        if (ubm(this.key) && this.right) {
+            res.push(...this.right.betweenBounds(query, lbm, ubm));
         }
 
         return res;
     }
 
-    /**
-     * Delete the current node if it is a leaf
-     * Return true if it was deleted
-     */
     deleteIfLeaf() {
-        if (this.left || this.right) { 
-            return false; 
+        if (this.left || this.right) {
+            return false;
         }
 
         // The leaf is itself a root
@@ -377,21 +304,17 @@ export default class BinarySearchTree {
         return true;
     }
 
-    /**
-     * Delete the current node if it has only one child
-     * Return true if it was deleted
-     */
     deleteIfOnlyOneChild() {
         let child;
 
-        if (this.left && !this.right) { 
-            child = this.left; 
+        if (this.left && !this.right) {
+            child = this.left;
         }
-        if (!this.left && this.right) { 
-            child = this.right; 
+        if (!this.left && this.right) {
+            child = this.right;
         }
-        if (!child) { 
-            return false; 
+        if (!child) {
+            return false;
         }
 
         // Root
@@ -425,38 +348,33 @@ export default class BinarySearchTree {
         return true;
     }
 
-    /**
-     * Delete a key or just a value
-     * @param {Key} key
-     * @param {Value} value Optional. If not set, the whole key is deleted. If set, only this value is deleted
-     */
     delete(key, value) {
-        if (!this.hasOwnProperty("key")) { 
-            return; 
+        if (!this.hasOwnProperty("key")) {
+            return;
         }
 
         if (this.compareKeys(key, this.key) < 0) {
-            if (this.left) { 
-                this.left.delete(key, value); 
+            if (this.left) {
+                this.left.delete(key, value);
             }
             return;
         }
 
         if (this.compareKeys(key, this.key) > 0) {
-            if (this.right) { 
-                this.right.delete(key, value); 
+            if (this.right) {
+                this.right.delete(key, value);
             }
             return;
         }
 
-        if (!this.compareKeys(key, this.key) === 0) { 
-            return; 
+        if (!this.compareKeys(key, this.key) === 0) {
+            return;
         }
 
         const newData = [];
 
         // Delete only a value
-        if (this.data.length > 1 && value !== undefined) {
+        if (this.data.length > 1 && !is.undefined(value)) {
             for (const i of this.data) {
                 if (!this.checkValueEquality(i, value)) {
                     newData.push(i);
@@ -484,13 +402,13 @@ export default class BinarySearchTree {
 
             if (this === replaceWith.parent) {   // Special case
                 this.left = replaceWith.left;
-                if (replaceWith.left) { 
-                    replaceWith.left.parent = replaceWith.parent; 
+                if (replaceWith.left) {
+                    replaceWith.left.parent = replaceWith.parent;
                 }
             } else {
                 replaceWith.parent.right = replaceWith.left;
-                if (replaceWith.left) { 
-                    replaceWith.left.parent = replaceWith.parent; 
+                if (replaceWith.left) {
+                    replaceWith.left.parent = replaceWith.parent;
                 }
             }
         } else {
@@ -502,46 +420,38 @@ export default class BinarySearchTree {
 
             if (this === replaceWith.parent) {   // Special case
                 this.right = replaceWith.right;
-                if (replaceWith.right) { 
-                    replaceWith.right.parent = replaceWith.parent; 
+                if (replaceWith.right) {
+                    replaceWith.right.parent = replaceWith.parent;
                 }
             } else {
                 replaceWith.parent.left = replaceWith.right;
                 if (replaceWith.right) {
-                    replaceWith.right.parent = replaceWith.parent; 
+                    replaceWith.right.parent = replaceWith.parent;
                 }
             }
         }
     }
 
-    /**
-     * Execute a function on every node of the tree, in key order
-     * @param {Function} fn Signature: node. Most useful will probably be node.key and node.data
-     */
     executeOnEveryNode(fn) {
-        if (this.left) { 
-            this.left.executeOnEveryNode(fn); 
+        if (this.left) {
+            this.left.executeOnEveryNode(fn);
         }
         fn(this);
-        if (this.right) { 
-            this.right.executeOnEveryNode(fn); 
+        if (this.right) {
+            this.right.executeOnEveryNode(fn);
         }
     }
 
-    /**
-     * Pretty print a tree
-     * @param {Boolean} printData To print the nodes' data along with the key
-     */
     prettyPrint(printData, spacing) {
         spacing = spacing || "";
 
         console.log(`${spacing}* ${this.key}`);
-        if (printData) { 
-            console.log(`${spacing}* ${this.data}`); 
+        if (printData) {
+            console.log(`${spacing}* ${this.data}`);
         }
 
         if (!this.left && !this.right) {
-            return; 
+            return;
         }
 
         if (this.left) {

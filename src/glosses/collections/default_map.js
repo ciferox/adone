@@ -1,4 +1,3 @@
-
 const { is } = adone;
 
 const noValue = Symbol("noValue");
@@ -9,7 +8,7 @@ export default class DefaultMap extends Map {
     constructor(factory, ...args) {
         super(...args);
         if (!is.function(factory)) {
-            // an object
+            // object
             if (!factory) {
                 this.factory = noGetter;
             } else {

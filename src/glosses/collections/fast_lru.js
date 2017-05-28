@@ -1,6 +1,8 @@
+const { collection } = adone;
+
 export default class FastLRU {
     constructor(size, { dispose = null } = {}) {
-        this.queue = new adone.collection.LinkedList(size);
+        this.queue = new collection.LinkedList(size);
         this.cache = new Map();
         this.dispose = dispose;
     }

@@ -1,23 +1,20 @@
-const BinarySearchTree = adone.collection.BinarySearchTree;
+describe("collections", "Binary search tree", () => {
+    const { is, collection: { BinarySearchTree } } = adone;
 
-function getRandomArray(n) {
-    let res, next;
+    const getRandomArray = (n) => {
+        if (n === 0) {
+            return [];
+        }
+        if (n === 1) {
+            return [0];
+        }
 
-    if (n === 0) {
-        return [];
-    }
-    if (n === 1) {
-        return [0];
-    }
+        const res = getRandomArray(n - 1);
+        const next = Math.floor(Math.random() * n);
+        res.splice(next, 0, n - 1); // Add n-1 at a random position in the array
 
-    res = getRandomArray(n - 1);
-    next = Math.floor(Math.random() * n);
-    res.splice(next, 0, n - 1); // Add n-1 at a random position in the array
-
-    return res;
-}
-
-describe("Binary search tree", () => {
+        return res;
+    };
 
     it("Upon creation, left, right are null, key and data can be set", () => {
         let bst = new BinarySearchTree();
@@ -38,13 +35,13 @@ describe("Binary search tree", () => {
     describe("Sanity checks", () => {
 
         it("Can get maxkey and minkey descendants", () => {
-            let t = new BinarySearchTree({ key: 10 }),
-                l = new BinarySearchTree({ key: 5 }),
-                r = new BinarySearchTree({ key: 15 }),
-                ll = new BinarySearchTree({ key: 3 }),
-                lr = new BinarySearchTree({ key: 8 }),
-                rl = new BinarySearchTree({ key: 11 }),
-                rr = new BinarySearchTree({ key: 42 });
+            const t = new BinarySearchTree({ key: 10 });
+            const l = new BinarySearchTree({ key: 5 });
+            const r = new BinarySearchTree({ key: 15 });
+            const ll = new BinarySearchTree({ key: 3 });
+            const lr = new BinarySearchTree({ key: 8 });
+            const rl = new BinarySearchTree({ key: 11 });
+            const rr = new BinarySearchTree({ key: 42 });
 
             t.left = l; t.right = r;
             l.left = ll; l.right = lr;
@@ -73,23 +70,23 @@ describe("Binary search tree", () => {
         });
 
         it("Can check a condition against every node in a tree", () => {
-            let t = new BinarySearchTree({ key: 10 }),
-                l = new BinarySearchTree({ key: 6 }),
-                r = new BinarySearchTree({ key: 16 }),
-                ll = new BinarySearchTree({ key: 4 }),
-                lr = new BinarySearchTree({ key: 8 }),
-                rl = new BinarySearchTree({ key: 12 }),
-                rr = new BinarySearchTree({ key: 42 });
+            const t = new BinarySearchTree({ key: 10 });
+            const l = new BinarySearchTree({ key: 6 });
+            const r = new BinarySearchTree({ key: 16 });
+            const ll = new BinarySearchTree({ key: 4 });
+            const lr = new BinarySearchTree({ key: 8 });
+            const rl = new BinarySearchTree({ key: 12 });
+            const rr = new BinarySearchTree({ key: 42 });
 
             t.left = l; t.right = r;
             l.left = ll; l.right = lr;
             r.left = rl; r.right = rr;
 
-            function test(k, v) {
+            const test = (k) => {
                 if (k % 2 !== 0) {
-                    throw "Key is not even";
+                    throw new Error("Key is not even");
                 }
-            }
+            };
 
             t.checkAllNodesFullfillCondition(test);
 
@@ -106,13 +103,13 @@ describe("Binary search tree", () => {
         });
 
         it("Can check that a tree verifies node ordering", () => {
-            let t = new BinarySearchTree({ key: 10 }),
-                l = new BinarySearchTree({ key: 5 }),
-                r = new BinarySearchTree({ key: 15 }),
-                ll = new BinarySearchTree({ key: 3 }),
-                lr = new BinarySearchTree({ key: 8 }),
-                rl = new BinarySearchTree({ key: 11 }),
-                rr = new BinarySearchTree({ key: 42 });
+            const t = new BinarySearchTree({ key: 10 });
+            const l = new BinarySearchTree({ key: 5 });
+            const r = new BinarySearchTree({ key: 15 });
+            const ll = new BinarySearchTree({ key: 3 });
+            const lr = new BinarySearchTree({ key: 8 });
+            const rl = new BinarySearchTree({ key: 11 });
+            const rr = new BinarySearchTree({ key: 42 });
 
             t.left = l; t.right = r;
             l.left = ll; l.right = lr;
@@ -192,13 +189,13 @@ describe("Binary search tree", () => {
         });
 
         it("Checking if a tree's internal pointers (i.e. parents) are correct", () => {
-            let t = new BinarySearchTree({ key: 10 }),
-                l = new BinarySearchTree({ key: 5 }),
-                r = new BinarySearchTree({ key: 15 }),
-                ll = new BinarySearchTree({ key: 3 }),
-                lr = new BinarySearchTree({ key: 8 }),
-                rl = new BinarySearchTree({ key: 11 }),
-                rr = new BinarySearchTree({ key: 42 });
+            const t = new BinarySearchTree({ key: 10 });
+            const l = new BinarySearchTree({ key: 5 });
+            const r = new BinarySearchTree({ key: 15 });
+            const ll = new BinarySearchTree({ key: 3 });
+            const lr = new BinarySearchTree({ key: 8 });
+            const rl = new BinarySearchTree({ key: 11 });
+            const rr = new BinarySearchTree({ key: 42 });
 
             t.left = l; t.right = r;
             l.left = ll; l.right = lr;
@@ -462,8 +459,8 @@ describe("Binary search tree", () => {
     describe("Search", () => {
 
         it("Can find data in a BST", () => {
-            let bst = new BinarySearchTree(),
-                i;
+            const bst = new BinarySearchTree();
+            let i;
 
             getRandomArray(100).forEach((n) => {
                 bst.insert(n, `some data for ${n}`);
@@ -536,8 +533,8 @@ describe("Binary search tree", () => {
     describe("Deletion", () => {
 
         it("Deletion does nothing on an empty tree", () => {
-            let bst = new BinarySearchTree(),
-                bstu = new BinarySearchTree({ unique: true });
+            const bst = new BinarySearchTree();
+            const bstu = new BinarySearchTree({ unique: true });
 
             expect(bst.getNumberOfKeys()).to.be.equal(0);
             expect(bstu.getNumberOfKeys()).to.be.equal(0);
@@ -561,11 +558,11 @@ describe("Binary search tree", () => {
                 bst.insert(k, `some ${k}`);
             });
 
-            function checkBst() {
+            const checkBst = () => {
                 [10, 5, 3, 8, 15, 12, 37].forEach((k) => {
                     expect(bst.search(k)).to.be.deep.equal([`some ${k}`]);
                 });
-            }
+            };
 
             checkBst();
             expect(bst.getNumberOfKeys()).to.be.equal(7);
@@ -615,7 +612,7 @@ describe("Binary search tree", () => {
         it("Able to delete leaf nodes that are non-root", () => {
             let bst;
 
-            function recreateBst() {
+            const recreateBst = () => {
                 bst = new BinarySearchTree();
 
                 // With this insertion order the tree is well balanced
@@ -625,9 +622,9 @@ describe("Binary search tree", () => {
                 });
 
                 expect(bst.getNumberOfKeys()).to.be.equal(7);
-            }
+            };
 
-            function checkOnlyOneWasRemoved(theRemoved) {
+            const checkOnlyOneWasRemoved = (theRemoved) => {
                 [10, 5, 3, 8, 15, 12, 37].forEach((k) => {
                     if (k === theRemoved) {
                         expect(bst.search(k).length).to.be.equal(0);
@@ -637,7 +634,7 @@ describe("Binary search tree", () => {
                 });
 
                 expect(bst.getNumberOfKeys()).to.be.equal(6);
-            }
+            };
 
             recreateBst();
             bst.delete(3);
@@ -704,7 +701,7 @@ describe("Binary search tree", () => {
         it("Able to delete non root nodes that have only one child", () => {
             let bst;
 
-            function recreateBst() {
+            const recreateBst = () => {
                 bst = new BinarySearchTree();
 
                 [10, 5, 15, 3, 1, 4, 20, 17, 25].forEach((k) => {
@@ -712,9 +709,9 @@ describe("Binary search tree", () => {
                 });
 
                 expect(bst.getNumberOfKeys()).to.be.equal(9);
-            }
+            };
 
-            function checkOnlyOneWasRemoved(theRemoved) {
+            const checkOnlyOneWasRemoved = (theRemoved) => {
                 [10, 5, 15, 3, 1, 4, 20, 17, 25].forEach((k) => {
                     if (k === theRemoved) {
                         expect(bst.search(k).length).to.be.equal(0);
@@ -724,7 +721,7 @@ describe("Binary search tree", () => {
                 });
 
                 expect(bst.getNumberOfKeys()).to.be.equal(8);
-            }
+            };
 
             recreateBst();
             bst.delete(5);
@@ -738,9 +735,7 @@ describe("Binary search tree", () => {
         });
 
         it("Can delete the root if it has 2 children", () => {
-            let bst;
-
-            bst = new BinarySearchTree();
+            const bst = new BinarySearchTree();
             [10, 5, 3, 8, 15, 12, 37].forEach((k) => {
                 bst.insert(k, `some ${k}`);
             });
@@ -902,14 +897,14 @@ describe("Binary search tree", () => {
 
 
     it("Can use undefined as key and value", () => {
-        function compareKeys(a, b) {
-            if (a === undefined && b === undefined) {
+        const compareKeys = (a, b) => {
+            if (is.undefined(a) && is.undefined(b)) {
                 return 0;
             }
-            if (a === undefined) {
+            if (is.undefined(a)) {
                 return -1;
             }
-            if (b === undefined) {
+            if (is.undefined(b)) {
                 return 1;
             }
 
@@ -922,7 +917,7 @@ describe("Binary search tree", () => {
             if (a === b) {
                 return 0;
             }
-        }
+        };
 
         const bst = new BinarySearchTree({ compareKeys });
 
@@ -989,14 +984,14 @@ describe("Binary search tree", () => {
     });
 
     it("Can use null as key and value", () => {
-        function compareKeys(a, b) {
-            if (a === null && b === null) {
+        const compareKeys = (a, b) => {
+            if (is.null(a) && is.null(b)) {
                 return 0;
             }
-            if (a === null) {
+            if (is.null(a)) {
                 return -1;
             }
-            if (b === null) {
+            if (is.null(b)) {
                 return 1;
             }
 
@@ -1009,7 +1004,7 @@ describe("Binary search tree", () => {
             if (a === b) {
                 return 0;
             }
-        }
+        };
 
         const bst = new BinarySearchTree({ compareKeys });
 
@@ -1078,9 +1073,9 @@ describe("Binary search tree", () => {
     describe("Execute on every node (=tree traversal)", () => {
 
         it("Can execute a function on every node", () => {
-            let bst = new BinarySearchTree(),
-                keys = [],
-                executed = 0;
+            const bst = new BinarySearchTree();
+            const keys = [];
+            let executed = 0;
 
             bst.insert(10, "yes");
             bst.insert(5, "hello");
@@ -1108,11 +1103,22 @@ describe("Binary search tree", () => {
     // effect begins to be felt only after several operations etc.)
     describe("Randomized test (takes much longer than the rest of the test suite)", function () {
         this.timeout(30000);
-        let bst = new BinarySearchTree(),
-            data = {};
+        const bst = new BinarySearchTree();
+        const data = {};
+
+        // Check two pieces of data coming from the bst and data are the same
+        const checkDataEquality = (fromBst, fromData) => {
+            if (fromBst.length === 0) {
+                if (fromData) {
+                    expect(fromData.length).to.be.equal(0);
+                }
+            }
+
+            assert.deepEqual(fromBst, fromData);
+        };
 
         // Check a bst against a simple key => [data] object
-        function checkDataIsTheSame(bst, data) {
+        const checkDataIsTheSame = (bst, data) => {
             const bstDataElems = [];
 
             // bstDataElems is a simple array containing every piece of data in the tree
@@ -1127,31 +1133,23 @@ describe("Binary search tree", () => {
             expect(bst.getNumberOfKeys()).to.be.equal(Object.keys(data).length);
 
 
-            expect([...adone.util.entries(data)].map((d) => d[1].length).reduce((memo, n) => memo + n, 0)).to.be.equal(bstDataElems.length);
+            expect([...adone.util.entries(data)].map((d) => d[1].length).reduce((memo, n) => memo + n, 0))
+                .to.be.equal(bstDataElems.length);
             // Compare data
             Object.keys(data).forEach((key) => {
                 checkDataEquality(bst.search(key), data[key]);
             });
-        }
-
-        // Check two pieces of data coming from the bst and data are the same
-        function checkDataEquality(fromBst, fromData) {
-            if (fromBst.length === 0) {
-                if (fromData) {
-                    expect(fromData.length).to.be.equal(0);
-                }
-            }
-
-            assert.deepEqual(fromBst, fromData);
-        }
+        };
 
         // Tests the tree structure (deletions concern the whole tree, deletion of some data in a node is well tested above)
         it("Inserting and deleting entire nodes", () => {
             // You can skew to be more insertive or deletive, to test all cases
-            function launchRandomTest(nTests, proba) {
-                let i, key, dataPiece, possibleKeys;
+            const launchRandomTest = (nTests, proba) => {
+                let key;
+                let dataPiece;
+                let possibleKeys;
 
-                for (i = 0; i < nTests; i += 1) {
+                for (let i = 0; i < nTests; i += 1) {
                     if (Math.random() > proba) {
                         // Deletion
                         possibleKeys = Object.keys(data);
@@ -1180,7 +1178,7 @@ describe("Binary search tree", () => {
                     bst.checkIsBST();
                     checkDataIsTheSame(bst, data);
                 }
-            }
+            };
 
             launchRandomTest(1000, 0.65);
             launchRandomTest(2000, 0.35);

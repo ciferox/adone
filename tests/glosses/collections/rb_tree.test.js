@@ -1,65 +1,60 @@
-const iota = (n) => {
-    const result = new Array(n);
-    for (let i = 0; i < n; ++i) {
-        result[i] = i;
-    }
-    return result;
-};
 
-const COLORS = ["r", "b", "bb"];
+describe("collections", "Red black tree", () => {
+    const iota = (n) => [...new Array(n)].map((_, i) => i);
 
-const printTree = (tree) => {
-    if (!tree) {
-        return [];
-    }
-    return [COLORS[tree._color], tree.key, printTree(tree.left), printTree(tree.right)];
-};
+    const COLORS = ["r", "b", "bb"];
 
-// Ensures the red black axioms are satisfied by tree
-const checkTree = (tree) => {
-    if (!tree.root) {
-        return;
-    }
-    assert.equal(tree.root._color, 1, "root is black");
-    const checkNode = (node) => {
-        if (!node) {
-            return [1, 0];
+    const printTree = (tree) => {
+        if (!tree) {
+            return [];
         }
-        if (node._color === 0) {
-            assert.isOk(!node.left || node.left._color === 1, "children of red node must be black");
-            assert.isOk(!node.right || node.right._color === 1, "children of red node must be black");
-        } else {
-            assert.equal(node._color, 1, "node color must be red or black");
-        }
-        if (node.left) {
-            assert.isOk(tree._compare(node.left.key, node.key) <= 0, "left tree order invariant");
-        }
-        if (node.right) {
-            assert.isOk(tree._compare(node.right.key, node.key) >= 0, "right tree order invariant");
-        }
-        const cl = checkNode(node.left);
-        const cr = checkNode(node.right);
-        assert.equal(cl[0], cr[0], "number of black nodes along all paths to root must be constant");
-        assert.equal(cl[1] + cr[1] + 1, node._count, "item count consistency");
-        return [cl[0] + node._color, cl[1] + cr[1] + 1];
+        return [COLORS[tree._color], tree.key, printTree(tree.left), printTree(tree.right)];
     };
-    const r = checkNode(tree.root);
-    assert.equal(r[1], tree.length, "tree length");
-};
 
-const compareIterators = (a, b) => {
-    assert.equal(a.tree, b.tree, "iter trees");
-    assert.equal(a.valid, b.valid, "iter validity");
-    if (!b.valid) {
-        return;
-    }
-    assert.equal(a.node, b.node, "iter node");
-    assert.equal(a.key, b.key, "iter key");
-    assert.equal(a.value, b.value, "iter value");
-    assert.equal(a.index, b.index, "iter index");
-};
+    // Ensures the red black axioms are satisfied by tree
+    const checkTree = (tree) => {
+        if (!tree.root) {
+            return;
+        }
+        assert.equal(tree.root._color, 1, "root is black");
+        const checkNode = (node) => {
+            if (!node) {
+                return [1, 0];
+            }
+            if (node._color === 0) {
+                assert.isOk(!node.left || node.left._color === 1, "children of red node must be black");
+                assert.isOk(!node.right || node.right._color === 1, "children of red node must be black");
+            } else {
+                assert.equal(node._color, 1, "node color must be red or black");
+            }
+            if (node.left) {
+                assert.isOk(tree._compare(node.left.key, node.key) <= 0, "left tree order invariant");
+            }
+            if (node.right) {
+                assert.isOk(tree._compare(node.right.key, node.key) >= 0, "right tree order invariant");
+            }
+            const cl = checkNode(node.left);
+            const cr = checkNode(node.right);
+            assert.equal(cl[0], cr[0], "number of black nodes along all paths to root must be constant");
+            assert.equal(cl[1] + cr[1] + 1, node._count, "item count consistency");
+            return [cl[0] + node._color, cl[1] + cr[1] + 1];
+        };
+        const r = checkNode(tree.root);
+        assert.equal(r[1], tree.length, "tree length");
+    };
 
-describe("Red black tree", () => {
+    const compareIterators = (a, b) => {
+        assert.equal(a.tree, b.tree, "iter trees");
+        assert.equal(a.valid, b.valid, "iter validity");
+        if (!b.valid) {
+            return;
+        }
+        assert.equal(a.node, b.node, "iter node");
+        assert.equal(a.key, b.key, "iter key");
+        assert.equal(a.value, b.value, "iter value");
+        assert.equal(a.index, b.index, "iter index");
+    };
+
     it("insert()", () => {
         const t1 = new adone.collection.RedBlackTree();
 
@@ -83,7 +78,7 @@ describe("Red black tree", () => {
                 return a - b;
             });
             let ptr = 0;
-            u.forEach((k, v) => {
+            u.forEach((k) => {
                 assert.equal(k, arr[ptr++]);
             });
             assert.equal(ptr, arr.length);
@@ -238,7 +233,6 @@ describe("Red black tree", () => {
             return u.insert(k, v);
         }, new adone.collection.RedBlackTree());
         for (let iter = u.begin; iter.hasNext; iter.next()) {
-            const p = iter.value;
             const updated = iter.update(1000);
             assert.equal(iter.value, iter.key, "ensure no mutation");
             assert.equal(updated.find(iter.key).value, 1000, "ensure update applied");
