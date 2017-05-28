@@ -3,7 +3,7 @@ const { lazify } = adone;
 const util = lazify({
     pathval: "./pathval",
     test: "./test",
-    expectTypes: "./expectTypes",
+    expectTypes: "./expect_types",
     getMessage: "./get_message",
     inspect: "./inspect",
     objDisplay: "./obj_display",
