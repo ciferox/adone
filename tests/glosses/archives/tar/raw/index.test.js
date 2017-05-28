@@ -1,4 +1,4 @@
-const { archive: { tar }, stream: { concat }, std } = adone;
+const { is, archive: { tar }, stream: { concat }, std } = adone;
 
 describe("glosses", "archives", "tar", "raw", () => {
     const fixtures = new adone.fs.Directory(std.path.join(__dirname, "fixtures"));
@@ -176,9 +176,9 @@ describe("glosses", "archives", "tar", "raw", () => {
         });
     });
 
-    describe("extract", () => {
+    describe("unpack", () => {
         const clamp = function (index, len, defaultValue) {
-            if (typeof index !== "number") {
+            if (!is.number(index)) {
                 return defaultValue;
             }
             index = ~~index;  // Coerce to integer.
@@ -686,6 +686,32 @@ describe("glosses", "archives", "tar", "raw", () => {
             expect(entries).to.have.lengthOf(1);
             expect(entries[0].header.uid).to.be.equal(116435139);
             expect(entries[0].header.gid).to.be.equal(1876110778);
+        });
+
+        specify("base 256 size", async () => {
+            const extract = new tar.RawExtractStream();
+            const p = new Promise((resolve) => {
+                extract.on("entry", (header, stream, callback) => {
+                    expect(header).to.be.deep.equal({
+                        name: "test.txt",
+                        mode: parseInt("644", 8),
+                        uid: 501,
+                        gid: 20,
+                        size: 12,
+                        mtime: new Date(1387580181000),
+                        type: "file",
+                        linkname: null,
+                        uname: "maf",
+                        gname: "staff",
+                        devmajor: 0,
+                        devminor: 0
+                    });
+                    callback();
+                });
+                extract.on("finish", resolve);
+            });
+            extract.end(await fixtures.getVirtualFile("base-256-size.tar").content(null));
+            await p;
         });
     });
 });

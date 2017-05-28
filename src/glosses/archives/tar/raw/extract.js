@@ -1,4 +1,3 @@
-
 import * as headers from "./headers";
 const { std: { stream: { Writable, PassThrough } } } = adone;
 
@@ -175,7 +174,7 @@ export default class RawExtractStream extends Writable {
 
             self._locked = true;
 
-            if (!header.size) {
+            if (!header.size || header.type === "directory") {
                 self._parse(512, onheader);
                 self.emit("entry", header, emptyStream(self, offset), onunlock);
                 return;

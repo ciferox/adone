@@ -1,4 +1,4 @@
-const { is, x, promise: { promisify } } = adone;
+const { is, x, promise: { promisify }, std } = adone;
 
 const fs = adone.lazify({
     readlink: () => promisify(adone.std.fs.readlink),
@@ -708,4 +708,29 @@ export const lookup = async (path) => {
     }
 
     throw new adone.x.NotFound(path);
+};
+
+export const chownr = async (path, uid, gid) => {
+    let children;
+    try {
+        children = await fs.readdir(path);
+    } catch (err) {
+        // any error other than ENOTDIR means it's not readable, or
+        // doesn't exist.  give up.
+        if (err.code !== "ENOTDIR") {
+            throw err;
+        }
+        return fs.chown(path, uid, gid);
+    }
+    if (children.length === 0) {
+        return fs.chown(path, uid, gid);
+    }
+    await Promise.all(children.map(async (p) => {
+        const childPath = std.path.resolve(path, p);
+        const stat = await fs.lstat(childPath);
+        if (!stat.isSymbolicLink()) {
+            await chownr(childPath, uid, gid);
+        }
+    }));
+    await fs.chown(path, uid, gid);
 };

@@ -166,6 +166,13 @@ export const packStream = (cwd = process.cwd(), opts = {}) => {
     return pack;
 };
 
+const mkdirfix = async (name, opts) => {
+    const made = await adone.fs.mkdir(name);
+    if (made && opts.own) {
+        await adone.fs.chownr(made, opts.uid, opts.gid);
+    }
+};
+
 export const extractStream = (cwd = process.cwd(), opts = {}) => {
     const ignore = opts.ignore || adone.noop;
     let map = opts.map || adone.noop;
@@ -320,7 +327,7 @@ export const extractStream = (cwd = process.cwd(), opts = {}) => {
             return adone.fs.mkdir(name).then(stat, stat);
         }
 
-        adone.fs.mkdir(path.dirname(name)).then(() => {
+        mkdirfix(path.dirname(name), { own, uid: header.uid, gid: header.gid }).then(() => {
             switch (header.type) {
                 case "file": return onfile();
                 case "link": return onlink();

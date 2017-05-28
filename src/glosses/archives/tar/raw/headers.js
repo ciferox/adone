@@ -149,11 +149,13 @@ const parse256 = (buf) => {
     return positive ? sum : -1 * sum;
 };
 
-const decodeOct = (val, offset) => {
+const decodeOct = (val, offset, length) => {
+    val = val.slice(offset, offset + length);
+    offset = 0;
     // If prefixed with 0x80 then parse as a base-256 integer
     if (val[offset] & 0x80) {
-        return parse256(val.slice(offset, offset + 8));
-    } 
+        return parse256(val);
+    }
         // Older versions of tar can prefix with spaces
     while (offset < val.length && val[offset] === 32) {
         offset++;
@@ -166,7 +168,7 @@ const decodeOct = (val, offset) => {
         return 0;
     }
     return parseInt(val.slice(offset, end).toString(), 8);
-    
+
 };
 
 const decodeStr = (val, offset, length) => val.slice(offset, indexOf(val, 0, offset, offset + length)).toString();
@@ -290,17 +292,17 @@ export const decode = (buf) => {
     let typeflag = buf[156] === 0 ? 0 : buf[156] - ZERO_OFFSET;
 
     let name = decodeStr(buf, 0, 100);
-    const mode = decodeOct(buf, 100);
-    const uid = decodeOct(buf, 108);
-    const gid = decodeOct(buf, 116);
-    const size = decodeOct(buf, 124);
-    const mtime = decodeOct(buf, 136);
+    const mode = decodeOct(buf, 100, 8);
+    const uid = decodeOct(buf, 108, 8);
+    const gid = decodeOct(buf, 116, 8);
+    const size = decodeOct(buf, 124, 12);
+    const mtime = decodeOct(buf, 136, 12);
     const type = toType(typeflag);
     const linkname = buf[157] === 0 ? null : decodeStr(buf, 157, 100);
     const uname = decodeStr(buf, 265, 32);
     const gname = decodeStr(buf, 297, 32);
-    const devmajor = decodeOct(buf, 329);
-    const devminor = decodeOct(buf, 337);
+    const devmajor = decodeOct(buf, 329, 8);
+    const devminor = decodeOct(buf, 337, 8);
 
     if (buf[345]) {
         name = `${decodeStr(buf, 345, 155)}/${name}`;
@@ -319,7 +321,7 @@ export const decode = (buf) => {
     }
 
     // valid checksum
-    if (c !== decodeOct(buf, 148)) {
+    if (c !== decodeOct(buf, 148, 8)) {
         throw new x.IllegalState("Invalid tar header. Maybe the tar is corrupted or it needs to be gunzipped?");
     }
 
