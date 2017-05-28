@@ -1,4 +1,4 @@
-describe("glosses", "crypto", "asn.1", "ber", "writer", () => {
+describe("crypto", "asn.1", "ber", "writer", () => {
     const { crypto: { asn1: { ber: { Writer: BerWriter } } } } = adone;
 
     it("load library", () => {

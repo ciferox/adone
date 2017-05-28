@@ -1,4 +1,4 @@
-describe("glosses", "crypto", "crc32", () => {
+describe("crypto", "crc32", () => {
     const { crypto: { crc32 } } = adone;
 
     specify("simple", () => {

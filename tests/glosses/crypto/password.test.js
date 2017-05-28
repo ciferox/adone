@@ -1,19 +1,19 @@
-const { crypto: { password } } = adone;
+describe("crypto", "Password hash and salt", () => {
+    const { crypto: { password } } = adone;
 
-const splitHash = function (hash) {
-    const opt = hash.split("$");
-    if (opt.length !== 4) {
-        throw new Error("Hash expected to have four parts");
-    }
-    return {
-        algorithm: opt[0],
-        iterations: opt[1],
-        hash: opt[2],
-        salt: opt[3]
+    const splitHash = function (hash) {
+        const opt = hash.split("$");
+        if (opt.length !== 4) {
+            throw new Error("Hash expected to have four parts");
+        }
+        return {
+            algorithm: opt[0],
+            iterations: opt[1],
+            hash: opt[2],
+            salt: opt[3]
+        };
     };
-};
 
-describe("Password hash and salt", () => {
     describe("Hash creation", () => {
         it("should not hash empty passwords", async () => {
             let isOK = false;

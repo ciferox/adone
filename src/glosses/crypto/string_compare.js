@@ -1,4 +1,4 @@
-export default function (a, b) {
+export default function stringCompare(a, b) {
     [a, b] = [String(a), String(b)];
     const length = a.length;
     if (length !== b.length) {

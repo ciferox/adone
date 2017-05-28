@@ -1,4 +1,4 @@
-export default (password, keyLength, ivLength) => {
+export default function EVPBytesToKey(password, keyLength, ivLength) {
     password = Buffer.from(password);
     let m = [];
     for (let i = 0, length = 0; length < keyLength + ivLength; ++i) {
@@ -8,4 +8,4 @@ export default (password, keyLength, ivLength) => {
     }
     m = Buffer.concat(m, keyLength + ivLength);
     return { key: m.slice(0, keyLength), iv: m.slice(keyLength, keyLength + ivLength) };
-};
+}

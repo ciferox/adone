@@ -1,4 +1,4 @@
-const { x, is, crypto: { asn1 } } = adone;
+const { x, is, crypto } = adone;
 
 const DEFAULT_OPTS = {
     size: 1024,
@@ -58,7 +58,7 @@ export default class Writer {
         this._buf[this._offset++] = b;
     }
 
-    writeInt(i, tag = asn1.type.Integer) {
+    writeInt(i, tag = crypto.asn1.type.Integer) {
         if (!is.number(i)) {
             throw new x.InvalidArgument("argument must be a Number");
         }
@@ -84,18 +84,18 @@ export default class Writer {
     }
 
     writeNull() {
-        this.writeByte(asn1.type.Null);
+        this.writeByte(crypto.asn1.type.Null);
         this.writeByte(0x00);
     }
 
-    writeEnumeration(i, tag = asn1.type.Enumeration) {
+    writeEnumeration(i, tag = crypto.asn1.type.Enumeration) {
         if (!is.number(i)) {
             throw new x.InvalidArgument("argument must be a Number");
         }
         return this.writeInt(i, tag);
     }
 
-    writeBoolean(b, tag = asn1.type.Boolean) {
+    writeBoolean(b, tag = crypto.asn1.type.Boolean) {
         if (!is.boolean(b)) {
             throw new x.InvalidArgument("argument must be a Boolean");
         }
@@ -105,7 +105,7 @@ export default class Writer {
         this._buf[this._offset++] = b ? 0xff : 0x00;
     }
 
-    writeString(s, tag = asn1.type.OctetString) {
+    writeString(s, tag = crypto.asn1.type.OctetString) {
         if (!is.string(s)) {
             throw new x.InvalidArgument("argument must be a string");
         }
@@ -146,7 +146,7 @@ export default class Writer {
     }
 
     // This is really to solve DER cases, but whatever for now
-    writeOID(s, tag = asn1.type.OID) {
+    writeOID(s, tag = crypto.asn1.type.OID) {
         if (!is.string(s)) {
             throw new x.InvalidArgument("argument must be a string");
         }
@@ -195,7 +195,7 @@ export default class Writer {
         }
     }
 
-    startSequence(tag = asn1.type.Sequence | asn1.type.Constructor) {
+    startSequence(tag = crypto.asn1.type.Sequence | crypto.asn1.type.Constructor) {
         this.writeByte(tag);
         this._seq.push(this._offset);
         this._ensure(3);
