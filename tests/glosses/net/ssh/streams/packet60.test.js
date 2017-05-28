@@ -12,7 +12,7 @@ const CLIENT_PRV_KEY = fs.readFileSync(`${__dirname}/fixtures/id_rsa`);
 const PARSED_CLIENT_PRV_KEY = parseKey(CLIENT_PRV_KEY);
 const PARSED_CLIENT_PUB_KEY = genPubKey(PARSED_CLIENT_PRV_KEY);
 
-function makePair(cb, doneFunc) {
+const makePair = (cb, doneFunc) => {
     const server = new SSH2Stream({
         server: true,
         hostKeys: {
@@ -26,13 +26,13 @@ function makePair(cb, doneFunc) {
 
     const done = [];
 
-    function tryDone(who) {
+    const tryDone = (who) => {
         done.push(who);
         if (done.length !== 2) {
             return;
         }
         cb(server, client, doneFunc);
-    }
+    };
 
     server.on("NEWKEYS", () => {
         tryDone("server");
@@ -41,17 +41,17 @@ function makePair(cb, doneFunc) {
         tryDone("client");
     });
     server.pipe(client).pipe(server);
-}
+};
 
-function signWithClientKey(blob, syncCb) {
+const signWithClientKey = (blob, syncCb) => {
     const signType = `${PARSED_CLIENT_PRV_KEY.type === "rsa" ? "R" : "D"}SA-SHA1`;
     let signature = crypto.createSign(signType);
     signature.update(blob);
     signature = signature.sign(PARSED_CLIENT_PRV_KEY.privateOrig);
     syncCb(signature);
-}
+};
 
-function bufferEqual(a, b) {
+const bufferEqual = (a, b) => {
     if (a.length !== b.length) {
         return false;
     }
@@ -61,9 +61,9 @@ function bufferEqual(a, b) {
         }
     }
     return true;
-}
+};
 
-function publickey(server, client, done) {
+const publickey = (server, client, done) => {
     server.on("USERAUTH_REQUEST", (user, service, method, data) => {
         assert.equal(user, "bob");
         assert.equal(service, "ssh-connection");
@@ -77,9 +77,9 @@ function publickey(server, client, done) {
     client.on("USERAUTH_PK_OK", () => {
         done();
     }).authPK("bob", PARSED_CLIENT_PUB_KEY);
-}
+};
 
-function keyboardInteractive(server, client, done) {
+const keyboardInteractive = (server, client, done) => {
     let infoReqsRxed = 0;
 
     server.on("USERAUTH_REQUEST", (user, service, method, data) => {
@@ -147,9 +147,9 @@ function keyboardInteractive(server, client, done) {
             throw new Error(`Received too many info reqs: ${infoReqsRxed}`);
         }
     }).authKeyboard("bob");
-}
+};
 
-function mixedMethods(server, client, done) {
+const mixedMethods = (server, client, done) => {
     const expectedStages = [
         "SERVER_SEES_PK_CHECK",
         "SERVER_SEES_PK_REQUEST",
@@ -246,20 +246,18 @@ function mixedMethods(server, client, done) {
     client.authPK("bob", PARSED_CLIENT_PUB_KEY, signWithClientKey);
     client.authPassword("bob", "seekrit");
     client.authKeyboard("bob");
-}
+};
 
-describe("SSH-Streams", () => {
-    describe("packet60", () => {
-        it("publickey", (done) => {
-            makePair(publickey, done);
-        });
+describe("net", "ssh", "streams", "packet60", () => {
+    it("publickey", (done) => {
+        makePair(publickey, done);
+    });
 
-        it("keyboardInteractive", (done) => {
-            makePair(keyboardInteractive, done);
-        });
+    it("keyboardInteractive", (done) => {
+        makePair(keyboardInteractive, done);
+    });
 
-        it("mixedMethods", (done) => {
-            makePair(mixedMethods, done);
-        });
+    it("mixedMethods", (done) => {
+        makePair(mixedMethods, done);
     });
 });

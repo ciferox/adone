@@ -34,8 +34,8 @@ if (semver.gte(process.version, "5.2.0")) {
     );
 }
 
-describe("SSH", () => {
-    function setup(self, clientcfg, servercfg, done) {
+describe("net", "ssh", () => {
+    const setup = (self, clientcfg, servercfg, done) => {
         self.state = {
             clientReady: false,
             serverReady: false,
@@ -45,6 +45,37 @@ describe("SSH", () => {
 
         const client = new Client();
         const server = new Server(servercfg);
+
+        const onError = function (err) {
+            const which = (this === client ? "client" : "server");
+            assert.fail(`Unexpected ${which} error: ${err}`);
+        };
+
+        const onReady = function () {
+            if (this === client) {
+                assert(!self.state.clientReady, "Received multiple ready events for client");
+                self.state.clientReady = true;
+            } else {
+                assert(!self.state.serverReady, "Received multiple ready events for server");
+                self.state.serverReady = true;
+            }
+            if (self.state.clientReady && self.state.serverReady) {
+                self.onReady && self.onReady();
+            }
+        };
+
+        const onClose = function () {
+            if (this === client) {
+                assert(!self.state.clientClose, "Received multiple close events for client");
+                self.state.clientClose = true;
+            } else {
+                assert(!self.state.serverClose, "Received multiple close events for server");
+                self.state.serverClose = true;
+            }
+            if (self.state.clientClose && self.state.serverClose) {
+                done();
+            }
+        };
 
         server.on("error", onError)
             .on("connection", (conn) => {
@@ -58,35 +89,6 @@ describe("SSH", () => {
             .on("ready", onReady)
             .on("close", onClose);
 
-        function onError(err) {
-            const which = (this === client ? "client" : "server");
-            assert.fail(`Unexpected ${which} error: ${err}`);
-        }
-        function onReady() {
-            if (this === client) {
-                assert(!self.state.clientReady, "Received multiple ready events for client");
-                self.state.clientReady = true;
-            } else {
-                assert(!self.state.serverReady, "Received multiple ready events for server");
-                self.state.serverReady = true;
-            }
-            if (self.state.clientReady && self.state.serverReady) {
-                self.onReady && self.onReady();
-            }
-        }
-        function onClose() {
-            if (this === client) {
-                assert(!self.state.clientClose, "Received multiple close events for client");
-                self.state.clientClose = true;
-            } else {
-                assert(!self.state.serverClose, "Received multiple close events for server");
-                self.state.serverClose = true;
-            }
-            if (self.state.clientClose && self.state.serverClose) {
-                done();
-            }
-        }
-
         process.nextTick(() => {
             server.listen(0, "localhost", () => {
                 if (clientcfg.sock) {
@@ -99,7 +101,7 @@ describe("SSH", () => {
             });
         });
         return { client, server };
-    }
+    };
 
     it("Authenticate with an RSA key", function (done) {
         const r = setup(this, {
@@ -136,10 +138,7 @@ describe("SSH", () => {
     });
 
     it("Authenticate with an encrypted RSA key", function (done) {
-        let server;
-        let r;
-
-        r = setup(
+        const r = setup(
             this,
             {
                 username: USER,
@@ -149,7 +148,7 @@ describe("SSH", () => {
             { hostKeys: [HOST_KEY_RSA] },
             done
         );
-        server = r.server;
+        const server = r.server;
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
@@ -176,10 +175,7 @@ describe("SSH", () => {
     });
 
     it("Authenticate with an RSA key (PPK)", function (done) {
-        let server;
-        let r;
-
-        r = setup(
+        const r = setup(
             this,
             {
                 username: USER,
@@ -188,7 +184,7 @@ describe("SSH", () => {
             { hostKeys: [HOST_KEY_RSA] },
             done
         );
-        server = r.server;
+        const server = r.server;
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
@@ -214,10 +210,7 @@ describe("SSH", () => {
     });
 
     it("Authenticate with a DSA key", function (done) {
-        let server;
-        let r;
-
-        r = setup(
+        const r = setup(
             this,
             {
                 username: USER,
@@ -226,7 +219,7 @@ describe("SSH", () => {
             { hostKeys: [HOST_KEY_RSA] },
             done
         );
-        server = r.server;
+        const server = r.server;
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
@@ -261,8 +254,8 @@ describe("SSH", () => {
             username: USER,
             privateKey: CLIENT_KEY_ECDSA
         }, {
-            hostKeys: [HOST_KEY_RSA]
-        }, done);
+                hostKeys: [HOST_KEY_RSA]
+            }, done);
         const server = r.server;
 
         server.on("connection", (conn) => {
@@ -297,8 +290,8 @@ describe("SSH", () => {
                 serverHostKey: ["ssh-dss"]
             }
         }, {
-            hostKeys: [HOST_KEY_DSA]
-        }, done);
+                hostKeys: [HOST_KEY_DSA]
+            }, done);
         const server = r.server;
 
         server.on("connection", (conn) => {
@@ -320,10 +313,8 @@ describe("SSH", () => {
         if (semver.lt(process.version, "5.2.0")) {
             return done();
         }
-        let server;
-        let r;
 
-        r = setup(
+        const r = setup(
             this,
             {
                 username: USER,
@@ -332,7 +323,7 @@ describe("SSH", () => {
             { hostKeys: [HOST_KEY_ECDSA] },
             done
         );
-        server = r.server;
+        const server = r.server;
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
@@ -350,10 +341,7 @@ describe("SSH", () => {
     });
 
     it("Server with multiple host keys (RSA selected)", function (done) {
-        let server;
-        let r;
-
-        r = setup(
+        const r = setup(
             this,
             {
                 username: USER,
@@ -365,7 +353,7 @@ describe("SSH", () => {
             { hostKeys: [HOST_KEY_RSA, HOST_KEY_DSA] },
             done
         );
-        server = r.server;
+        const server = r.server;
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
@@ -383,10 +371,7 @@ describe("SSH", () => {
     });
 
     it("Server with multiple host keys (DSA selected)", function (done) {
-        let server;
-        let r;
-
-        r = setup(
+        const r = setup(
             this,
             {
                 username: USER,
@@ -398,7 +383,7 @@ describe("SSH", () => {
             { hostKeys: [HOST_KEY_RSA, HOST_KEY_DSA] },
             done
         );
-        server = r.server;
+        const server = r.server;
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
@@ -416,12 +401,10 @@ describe("SSH", () => {
     });
 
     it("Authenticate with hostbased", function (done) {
-        let server;
-        let r;
         const hostname = "foo";
         const username = "bar";
 
-        r = setup(
+        const r = setup(
             this,
             {
                 username: USER,
@@ -432,7 +415,7 @@ describe("SSH", () => {
             { hostKeys: [HOST_KEY_RSA] },
             done
         );
-        server = r.server;
+        const server = r.server;
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
@@ -458,10 +441,7 @@ describe("SSH", () => {
     });
 
     it("Authenticate with a password", function (done) {
-        let server;
-        let r;
-
-        r = setup(
+        const r = setup(
             this,
             {
                 username: USER,
@@ -470,7 +450,7 @@ describe("SSH", () => {
             { hostKeys: [HOST_KEY_RSA] },
             done
         );
-        server = r.server;
+        const server = r.server;
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
@@ -488,11 +468,9 @@ describe("SSH", () => {
     });
 
     it("Verify host fingerprint", function (done) {
-        let server;
-        let r;
         let verified = false;
 
-        r = setup(
+        const r = setup(
             this,
             {
                 username: USER,
@@ -506,7 +484,7 @@ describe("SSH", () => {
             { hostKeys: [HOST_KEY_RSA] },
             done
         );
-        server = r.server;
+        const server = r.server;
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
@@ -520,15 +498,12 @@ describe("SSH", () => {
     });
 
     it("Simple exec", function (done) {
-        let client;
-        let server;
-        let r;
         let out = "";
         let outErr = "";
         let exitArgs;
         let closeArgs;
 
-        r = setup(
+        const r = setup(
             this,
             {
                 username: USER,
@@ -537,8 +512,8 @@ describe("SSH", () => {
             { hostKeys: [HOST_KEY_RSA] },
             done
         );
-        client = r.client;
-        server = r.server;
+        const client = r.client;
+        const server = r.server;
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
@@ -586,14 +561,10 @@ describe("SSH", () => {
     });
 
     it("Exec with environment set", function (done) {
-        let client;
-        let server;
-        let r;
-        const out = "";
         const serverEnv = {};
         const clientEnv = { SSH2NODETEST: "foo" };
 
-        r = setup(
+        const r = setup(
             this,
             {
                 username: USER,
@@ -602,8 +573,8 @@ describe("SSH", () => {
             { hostKeys: [HOST_KEY_RSA] },
             done
         );
-        client = r.client;
-        server = r.server;
+        const client = r.client;
+        const server = r.server;
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
@@ -638,12 +609,9 @@ describe("SSH", () => {
     });
 
     it("Exec with pty set", function (done) {
-        let client;
-        let server;
-        let r;
         let out = "";
 
-        r = setup(
+        const r = setup(
             this,
             {
                 username: USER,
@@ -652,8 +620,8 @@ describe("SSH", () => {
             { hostKeys: [HOST_KEY_RSA] },
             done
         );
-        client = r.client;
-        server = r.server;
+        const client = r.client;
+        const server = r.server;
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
@@ -700,12 +668,9 @@ describe("SSH", () => {
     });
 
     it("Exec with OpenSSH agent forwarding", function (done) {
-        let client;
-        let server;
-        let r;
         let out = "";
 
-        r = setup(
+        const r = setup(
             this,
             {
                 username: USER,
@@ -715,8 +680,8 @@ describe("SSH", () => {
             { hostKeys: [HOST_KEY_RSA] },
             done
         );
-        client = r.client;
-        server = r.server;
+        const client = r.client;
+        const server = r.server;
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
@@ -755,12 +720,9 @@ describe("SSH", () => {
     });
 
     it("Exec with X11 forwarding", function (done) {
-        let client;
-        let server;
-        let r;
         let out = "";
 
-        r = setup(
+        const r = setup(
             this,
             {
                 username: USER,
@@ -769,8 +731,8 @@ describe("SSH", () => {
             { hostKeys: [HOST_KEY_RSA] },
             done
         );
-        client = r.client;
-        server = r.server;
+        const client = r.client;
+        const server = r.server;
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
@@ -809,12 +771,9 @@ describe("SSH", () => {
     });
 
     it("Simple shell", function (done) {
-        let client;
-        let server;
-        let r;
         let out = "";
 
-        r = setup(
+        const r = setup(
             this,
             {
                 username: USER,
@@ -823,8 +782,8 @@ describe("SSH", () => {
             { hostKeys: [HOST_KEY_RSA] },
             done
         );
-        client = r.client;
-        server = r.server;
+        const client = r.client;
+        const server = r.server;
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
@@ -858,14 +817,11 @@ describe("SSH", () => {
     });
 
     it("Shell with environment set", function (done) {
-        let client;
-        let server;
-        let r;
         const serverEnv = {};
         const clientEnv = { SSH2NODETEST: "foo" };
         let sawPty = false;
 
-        r = setup(
+        const r = setup(
             this,
             {
                 username: USER,
@@ -874,8 +830,8 @@ describe("SSH", () => {
             { hostKeys: [HOST_KEY_RSA] },
             done
         );
-        client = r.client;
-        server = r.server;
+        const client = r.client;
+        const server = r.server;
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
@@ -909,15 +865,12 @@ describe("SSH", () => {
     });
 
     it("Simple SFTP", function (done) {
-        let client;
-        let server;
-        let r;
-        const expHandle = new Buffer([1, 2, 3, 4]);
+        const expHandle = Buffer.from([1, 2, 3, 4]);
         let sawOpenS = false;
         let sawCloseS = false;
         let sawOpenC = false;
 
-        r = setup(
+        const r = setup(
             this,
             {
                 username: USER,
@@ -926,8 +879,8 @@ describe("SSH", () => {
             { hostKeys: [HOST_KEY_RSA] },
             done
         );
-        client = r.client;
-        server = r.server;
+        const client = r.client;
+        const server = r.server;
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
@@ -996,17 +949,18 @@ describe("SSH", () => {
         client = new Client(),
             server = new Server(servercfg);
 
-        function onReady() {
+        const onReady = () => {
             assert(++state.readies <= 4, `Wrong ready count: ${state.readies}`);
-        }
-        function onClose() {
+        };
+
+        const onClose = () => {
             assert(++state.closes <= 3, `Wrong close count: ${state.closes}`);
             if (state.closes === 2) {
                 server.close();
             } else if (state.closes === 3) {
                 done();
             }
-        }
+        };
 
         server.listen(0, "localhost", () => {
             clientcfg.host = "localhost";
@@ -1045,12 +999,9 @@ describe("SSH", () => {
     });
 
     it("Outstanding callbacks called on disconnect", function (done) {
-        let client;
-        let server;
-        let r;
         let calledBack = 0;
 
-        r = setup(
+        const r = setup(
             this,
             {
                 username: USER,
@@ -1059,8 +1010,8 @@ describe("SSH", () => {
             { hostKeys: [HOST_KEY_RSA] },
             done
         );
-        client = r.client;
-        server = r.server;
+        const client = r.client;
+        const server = r.server;
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
@@ -1068,11 +1019,11 @@ describe("SSH", () => {
             });
         });
         client.on("ready", () => {
-            function callback(err, stream) {
+            const callback = (err, stream) => {
                 assert(err, "Expected error");
                 assert(err.message === "No response from server", `Wrong error message: ${err.message}`);
                 ++calledBack;
-            }
+            };
             client.exec("uptime", callback);
             client.shell(callback);
             client.sftp(callback);
@@ -1102,12 +1053,9 @@ describe("SSH", () => {
     });
 
     it("Pipelined requests", function (done) {
-        let client;
-        let server;
-        let r;
         let calledBack = 0;
 
-        r = setup(
+        const r = setup(
             this,
             {
                 username: USER,
@@ -1116,8 +1064,8 @@ describe("SSH", () => {
             { hostKeys: [HOST_KEY_RSA] },
             done
         );
-        client = r.client;
-        server = r.server;
+        const client = r.client;
+        const server = r.server;
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
@@ -1134,13 +1082,13 @@ describe("SSH", () => {
             });
         });
         client.on("ready", () => {
-            function callback(err, stream) {
+            const callback = (err, stream) => {
                 assert.ifError(err);
                 stream.resume();
                 if (++calledBack === 3) {
                     client.end();
                 }
-            }
+            };
             client.exec("foo", callback);
             client.exec("bar", callback);
             client.exec("baz", callback);
@@ -1150,12 +1098,9 @@ describe("SSH", () => {
     });
 
     it("Pipelined requests with intermediate rekeying", function (done) {
-        let client;
-        let server;
-        let r;
         let calledBack = 0;
 
-        r = setup(
+        const r = setup(
             this,
             {
                 username: USER,
@@ -1164,8 +1109,8 @@ describe("SSH", () => {
             { hostKeys: [HOST_KEY_RSA] },
             done
         );
-        client = r.client;
-        server = r.server;
+        const client = r.client;
+        const server = r.server;
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
@@ -1191,13 +1136,13 @@ describe("SSH", () => {
             });
         });
         client.on("ready", () => {
-            function callback(err, stream) {
+            const callback = (err, stream) => {
                 assert.ifError(err);
                 stream.resume();
                 if (++calledBack === 3) {
                     client.end();
                 }
-            }
+            };
             client.exec("foo", callback);
             client.exec("bar", callback);
             client.exec("baz", callback);
@@ -1207,11 +1152,7 @@ describe("SSH", () => {
     });
 
     it("Ignore outgoing after stream close", function (done) {
-        let client;
-        let server;
-        let r;
-
-        r = setup(
+        const r = setup(
             this,
             {
                 username: USER,
@@ -1220,8 +1161,8 @@ describe("SSH", () => {
             { hostKeys: [HOST_KEY_RSA] },
             done
         );
-        client = r.client;
-        server = r.server;
+        const client = r.client;
+        const server = r.server;
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
@@ -1248,11 +1189,7 @@ describe("SSH", () => {
     });
 
     it("SFTP server aborts with exit-status", function (done) {
-        let client;
-        let server;
-        let r;
-
-        r = setup(
+        const r = setup(
             this,
             {
                 username: USER,
@@ -1261,8 +1198,8 @@ describe("SSH", () => {
             { hostKeys: [HOST_KEY_RSA] },
             done
         );
-        client = r.client;
-        server = r.server;
+        const client = r.client;
+        const server = r.server;
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
@@ -1297,11 +1234,7 @@ describe("SSH", () => {
     });
 
     it("Double pipe on unconnected, passed in net.Socket", function (done) {
-        let client;
-        let server;
-        let r;
-
-        r = setup(
+        const r = setup(
             this,
             {
                 username: USER,
@@ -1311,8 +1244,8 @@ describe("SSH", () => {
             { hostKeys: [HOST_KEY_RSA] },
             done
         );
-        client = r.client;
-        server = r.server;
+        const client = r.client;
+        const server = r.server;
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
@@ -1325,18 +1258,14 @@ describe("SSH", () => {
     });
 
     it("Client auto-rejects unrequested, allows requested forwarded-tcpip", function (done) {
-        let client;
-        let server;
-        let r;
-
-        r = setup(
+        const r = setup(
             this,
             { username: USER },
             { hostKeys: [HOST_KEY_RSA] },
             done
         );
-        client = r.client;
-        server = r.server;
+        const client = r.client;
+        const server = r.server;
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
@@ -1370,11 +1299,7 @@ describe("SSH", () => {
     });
 
     it("Server greeting", function (done) {
-        let client;
-        let server;
-        let r;
-
-        r = setup(
+        const r = setup(
             this,
             {
                 username: USER,
@@ -1386,8 +1311,8 @@ describe("SSH", () => {
             },
             done
         );
-        client = r.client;
-        server = r.server;
+        const client = r.client;
+        const server = r.server;
 
         let sawGreeting = false;
 
@@ -1416,11 +1341,7 @@ describe("SSH", () => {
     });
 
     it("Server banner", function (done) {
-        let client;
-        let server;
-        let r;
-
-        r = setup(
+        const r = setup(
             this,
             {
                 username: USER,
@@ -1432,8 +1353,8 @@ describe("SSH", () => {
             },
             done
         );
-        client = r.client;
-        server = r.server;
+        const client = r.client;
+        const server = r.server;
 
         let sawBanner = false;
 
@@ -1462,27 +1383,24 @@ describe("SSH", () => {
     });
 
     it("Server responds to global requests in the right order", function (done) {
-        let client;
-        let server;
-        let r;
         let fastRejectSent = false;
 
-        function sendAcceptLater(accept) {
+        const sendAcceptLater = (accept) => {
             if (fastRejectSent) {
                 accept();
             } else {
                 setImmediate(sendAcceptLater, accept);
             }
-        }
+        };
 
-        r = setup(
+        const r = setup(
             this,
             { username: USER },
             { hostKeys: [HOST_KEY_RSA] },
             done
         );
-        client = r.client;
-        server = r.server;
+        const client = r.client;
+        const server = r.server;
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
@@ -1522,11 +1440,7 @@ describe("SSH", () => {
     });
 
     it("Cleanup outstanding channel requests on channel close", function (done) {
-        let client;
-        let server;
-        let r;
-
-        r = setup(
+        const r = setup(
             this,
             {
                 username: USER,
@@ -1535,8 +1449,8 @@ describe("SSH", () => {
             { hostKeys: [HOST_KEY_RSA] },
             done
         );
-        client = r.client;
-        server = r.server;
+        const client = r.client;
+        const server = r.server;
 
         let timer;
         server.on("connection", (conn) => {
@@ -1570,11 +1484,7 @@ describe("SSH", () => {
     });
 
     it("Channel emits close prematurely", function (done) {
-        let client;
-        let server;
-        let r;
-
-        r = setup(
+        const r = setup(
             this,
             {
                 username: USER,
@@ -1583,8 +1493,8 @@ describe("SSH", () => {
             { hostKeys: [HOST_KEY_RSA] },
             done
         );
-        client = r.client;
-        server = r.server;
+        const client = r.client;
+        const server = r.server;
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
@@ -1610,14 +1520,14 @@ describe("SSH", () => {
             client.exec("foo", (err, stream) => {
                 let sawClose = false;
                 assert(!err, "Unexpected error");
-                client._sshstream.on(`CHANNEL_CLOSE:${stream.incoming.id}`, onClose);
-                function onClose() {
+                const onClose = () => {
                     // This handler gets called *after* the internal handler, so we
                     // should have seen `stream`"s `close` event already if the bug
                     // exists
                     assert(!sawClose, "Premature close event");
                     client.end();
-                }
+                };
+                client._sshstream.on(`CHANNEL_CLOSE:${stream.incoming.id}`, onClose);
                 stream.on("close", () => {
                     sawClose = true;
                 });
@@ -1666,13 +1576,10 @@ describe("SSH", () => {
     });
 
     it("Handshake errors are emitted", function (done) {
-        let client;
-        let server;
-        let r;
         let srvError;
         let cliError;
 
-        r = setup(
+        const r = setup(
             this,
             {
                 username: USER,
@@ -1688,14 +1595,14 @@ describe("SSH", () => {
             },
             done
         );
-        client = r.client;
-        server = r.server;
+        const client = r.client;
+        const server = r.server;
 
         // Remove default client error handler added by `setup()` since we are
         // expecting an error in this case
         client.removeAllListeners("error");
 
-        function onError(err) {
+        const onError = function (err) {
             if (this === client) {
                 assert(!cliError, "Unexpected multiple client errors");
                 cliError = err;
@@ -1704,16 +1611,16 @@ describe("SSH", () => {
                 srvError = err;
             }
             assert(/handshake failed/i.test(err.message), "Wrong error message");
-        }
+        };
 
         server.on("connection", (conn) => {
             // Remove default server connection error handler added by `setup()`
             // since we are expecting an error in this case
             conn.removeAllListeners("error");
 
-            function onGoodHandshake() {
+            const onGoodHandshake = () => {
                 assert(false, "Handshake should have failed");
-            }
+            };
             conn.on("authentication", onGoodHandshake);
             conn.on("ready", onGoodHandshake);
 
@@ -1731,19 +1638,16 @@ describe("SSH", () => {
     });
 
     it("Client signing errors are caught and emitted", function (done) {
-        let client;
-        let server;
-        let r;
         let cliError;
 
-        r = setup(
+        const r = setup(
             this,
             { username: USER, privateKey: KEY_RSA_BAD },
             { hostKeys: [HOST_KEY_RSA] },
             done
         );
-        client = r.client;
-        server = r.server;
+        const client = r.client;
+        const server = r.server;
 
         // Remove default client error handler added by `setup()` since we are
         // expecting an error in this case
@@ -1782,20 +1686,17 @@ describe("SSH", () => {
     });
 
     it("Server signing errors are caught and emitted", function (done) {
-        let client;
-        let server;
-        let r;
         let srvError;
         let cliError;
 
-        r = setup(
+        const r = setup(
             this,
             { username: USER, password: "foo" },
             { hostKeys: [KEY_RSA_BAD] },
             done
         );
-        client = r.client;
-        server = r.server;
+        const client = r.client;
+        const server = r.server;
 
         // Remove default client error handler added by `setup()` since we are
         // expecting an error in this case
@@ -1835,19 +1736,16 @@ describe("SSH", () => {
 
 
     it("Empty username string works", function (done) {
-        let client;
-        let server;
-        let r;
         let sawReady = false;
 
-        r = setup(
+        const r = setup(
             this,
             { username: "", password: "foo" },
             { hostKeys: [HOST_KEY_RSA] },
             done
         );
-        client = r.client;
-        server = r.server;
+        const client = r.client;
+        const server = r.server;
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {
@@ -1866,19 +1764,16 @@ describe("SSH", () => {
     });
 
     it("Empty user string works", function (done) {
-        let client;
-        let server;
-        let r;
         let sawReady = false;
 
-        r = setup(
+        const r = setup(
             this,
             { user: "", password: "foo" },
             { hostKeys: [HOST_KEY_RSA] },
             done
         );
-        client = r.client;
-        server = r.server;
+        const client = r.client;
+        const server = r.server;
 
         server.on("connection", (conn) => {
             conn.on("authentication", (ctx) => {

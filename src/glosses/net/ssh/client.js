@@ -45,29 +45,10 @@ const openChannel = (self, type, opts, cb) => {
         return cb(new Error("No free channels available"));
     }
 
-    if (is.function(opts)) {
-        cb = opts;
-        opts = {};
-    }
-
-    self._channels[localChan] = true;
-
     const sshstream = self._sshstream;
-    sshstream.once(`CHANNEL_OPEN_CONFIRMATION:${localChan}`, onSuccess)
-        .once(`CHANNEL_OPEN_FAILURE:${localChan}`, onFailure)
-        .once(`CHANNEL_CLOSE:${localChan}`, onFailure);
 
-    if (type === "session") {
-        ret = sshstream.session(localChan, initWindow, maxPacket);
-    } else if (type === "direct-tcpip") {
-        ret = sshstream.directTcpip(localChan, initWindow, maxPacket, opts);
-    } else if (type === "direct-streamlocal@openssh.com") {
-        ret = sshstream.openssh_directStreamLocal(localChan, initWindow, maxPacket, opts);
-    }
-
-    return ret;
-
-    function onSuccess(info) {
+    let onFailure = null;
+    const onSuccess = (info) => {
         sshstream.removeListener(`CHANNEL_OPEN_FAILURE:${localChan}`, onFailure);
         sshstream.removeListener(`CHANNEL_CLOSE:${localChan}`, onFailure);
 
@@ -87,9 +68,9 @@ const openChannel = (self, type, opts, cb) => {
             }
         };
         cb(undefined, new Channel(chaninfo, self));
-    }
+    };
 
-    function onFailure(info) {
+    onFailure = (info) => {
         sshstream.removeListener(`CHANNEL_OPEN_CONFIRMATION:${localChan}`, onSuccess);
         sshstream.removeListener(`CHANNEL_OPEN_FAILURE:${localChan}`, onFailure);
         sshstream.removeListener(`CHANNEL_CLOSE:${localChan}`, onFailure);
@@ -99,7 +80,7 @@ const openChannel = (self, type, opts, cb) => {
         let err;
         if (info instanceof Error) {
             err = info;
-        } else if (typeof info === "object" && info !== null) {
+        } else if (is.plainObject(info) && !is.null(info)) {
             err = new Error(`(SSH) Channel open failure: ${info.description}`);
             err.reason = info.reason;
             err.lang = info.lang;
@@ -110,7 +91,28 @@ const openChannel = (self, type, opts, cb) => {
             err.reason = err.lang = "";
         }
         cb(err);
+    };
+
+    if (is.function(opts)) {
+        cb = opts;
+        opts = {};
     }
+
+    self._channels[localChan] = true;
+
+    sshstream.once(`CHANNEL_OPEN_CONFIRMATION:${localChan}`, onSuccess)
+        .once(`CHANNEL_OPEN_FAILURE:${localChan}`, onFailure)
+        .once(`CHANNEL_CLOSE:${localChan}`, onFailure);
+
+    if (type === "session") {
+        ret = sshstream.session(localChan, initWindow, maxPacket);
+    } else if (type === "direct-tcpip") {
+        ret = sshstream.directTcpip(localChan, initWindow, maxPacket, opts);
+    } else if (type === "direct-streamlocal@openssh.com") {
+        ret = sshstream.opensshDirectStreamLocal(localChan, initWindow, maxPacket, opts);
+    }
+
+    return ret;
 };
 
 const reqX11 = (chan, screen, cb) => {
@@ -232,7 +234,7 @@ const reqAgentFwd = (chan, cb) => {
         wantReply && cb();
     });
 
-    return chan._client._sshstream.openssh_agentForward(chan.outgoing.id, true);
+    return chan._client._sshstream.opensshAgentForward(chan.outgoing.id, true);
 };
 
 const reqShell = (chan, cb) => {
@@ -302,7 +304,7 @@ const reqSubsystem = (chan, name, cb) => {
     return chan._client._sshstream.subsystem(chan.outgoing.id, name, true);
 };
 
-function onCHANNEL_OPEN(self, info) {
+const onCHANNEL_OPEN = (self, info) => {
     // the server is trying to open a channel with us, this is usually when
     // we asked the server to forward us connections on some port and now they
     // are asking us to accept/deny an incoming connection on their side
@@ -310,7 +312,7 @@ function onCHANNEL_OPEN(self, info) {
     let localChan = false;
     let reason;
 
-    function accept() {
+    const accept = () => {
         const chaninfo = {
             type: info.type,
             incoming: {
@@ -334,9 +336,9 @@ function onCHANNEL_OPEN(self, info) {
             Channel.PACKET_SIZE
         );
         return stream;
-    }
+    };
 
-    function reject() {
+    const reject = () => {
         if (is.undefined(reason)) {
             if (localChan === false) {
                 reason = adone.net.ssh.c.CHANNEL_OPEN_FAILURE.RESOURCE_SHORTAGE;
@@ -346,14 +348,11 @@ function onCHANNEL_OPEN(self, info) {
         }
 
         self._sshstream.channelOpenFail(info.sender, reason, "", "");
-    }
+    };
 
     if (info.type === "forwarded-tcpip" || info.type === "x11" || info.type === "auth-agent@openssh.com") {
         // check for conditions for automatic rejection
-        let rejectConn = ((info.type === "forwarded-tcpip" &&
-            self._forwarding[`${info.data.destIP
-            }:${
-            info.data.destPort}`] === undefined) ||
+        let rejectConn = ((info.type === "forwarded-tcpip" && is.undefined(self._forwarding[`${info.data.destIP}:${info.data.destPort}`])) ||
             (info.type === "x11" && self._acceptX11 === 0) ||
             (info.type === "auth-agent@openssh.com" &&
                 !self._agentFwdEnabled));
@@ -397,15 +396,15 @@ function onCHANNEL_OPEN(self, info) {
         reason = adone.net.ssh.c.CHANNEL_OPEN_FAILURE.UNKNOWN_CHANNEL_TYPE;
         reject();
     }
-}
+};
 
-function trySign(sig, key) {
+const trySign = (sig, key) => {
     try {
         return sig.sign(key);
     } catch (err) {
         return err;
     }
-}
+};
 
 export default class Client extends adone.EventEmitter {
     constructor() {
@@ -470,7 +469,7 @@ export default class Client extends adone.EventEmitter {
             compressBuf: undefined
         };
         let i;
-        if (typeof options.algorithms === "object" && options.algorithms !== null) {
+        if (is.plainObject(options.algorithms) && !is.null(options.algorithms)) {
             let algosSupported;
             let algoList;
 
@@ -609,15 +608,14 @@ export default class Client extends adone.EventEmitter {
         let kacount = 0;
         let katimer;
 
-        const self = this;
-
-        function sendKA() {
+        let resetKA = null;
+        const sendKA = () => {
             if (++kacount > kacountmax) {
                 clearInterval(katimer);
                 if (sock.readable) {
                     const err = new Error("Keepalive timeout");
                     err.level = "client-timeout";
-                    self.emit("error", err);
+                    this.emit("error", err);
                     sock.destroy();
                 }
                 return;
@@ -629,9 +627,9 @@ export default class Client extends adone.EventEmitter {
             } else {
                 clearInterval(katimer);
             }
-        }
+        };
 
-        function resetKA() {
+        resetKA = () => {
             if (kainterval > 0) {
                 kacount = 0;
                 clearInterval(katimer);
@@ -639,7 +637,8 @@ export default class Client extends adone.EventEmitter {
                     katimer = setInterval(sendKA, kainterval);
                 }
             }
-        }
+        };
+
         this._resetKA = resetKA;
 
         stream.on("USERAUTH_BANNER", (msg) => {
@@ -714,7 +713,7 @@ export default class Client extends adone.EventEmitter {
             stream.once("fingerprint", (key, verify) => {
                 hasher.update(key);
                 const ret = hashCb(hasher.digest("hex"), verify);
-                if (ret !== undefined) {
+                if (!is.undefined(ret)) {
                     verify(ret);
                 }
             });
@@ -725,28 +724,30 @@ export default class Client extends adone.EventEmitter {
         let curAuth;
         let agentKeys;
         let agentKeyPos = 0;
-        if (this.config.password !== undefined) {
+        if (!is.undefined(this.config.password)) {
             auths.push("password");
         }
-        if (this.config.publicKey !== undefined) {
+        if (!is.undefined(this.config.publicKey)) {
             auths.push("publickey");
         }
-        if (this.config.agent !== undefined) {
+        if (!is.undefined(this.config.agent)) {
             auths.push("agent");
         }
         if (this.config.tryKeyboard) {
             auths.push("keyboard-interactive");
         }
-        if (this.config.publicKey !== undefined &&
-            this.config.localHostname !== undefined &&
-            this.config.localUsername !== undefined) {
+        if (!is.undefined(this.config.publicKey) && !is.undefined(this.config.localHostname) && !is.undefined(this.config.localUsername)) {
             auths.push("hostbased");
         }
 
-        function tryNextAuth() {
-            function hostbasedCb(buf, cb) {
+        let onUSERAUTH_PK_OK = null;
+        let onUSERAUTH_INFO_REQUEST = null;
+        let onUSERAUTH_FAILURE = null;
+
+        const tryNextAuth = () => {
+            const hostbasedCb = (buf, cb) => {
                 let algo;
-                switch (self.config.privateKey.fulltype) {
+                switch (this.config.privateKey.fulltype) {
                     case "ssh-rsa":
                         algo = "RSA-SHA1";
                         break;
@@ -765,17 +766,17 @@ export default class Client extends adone.EventEmitter {
                 }
                 let signature = crypto.createSign(algo);
                 signature.update(buf);
-                signature = trySign(signature, self.config.privateKey.privateOrig);
+                signature = trySign(signature, this.config.privateKey.privateOrig);
                 if (signature instanceof Error) {
                     signature.message = `Error while signing data with privateKey: ${
                         signature.message}`;
                     signature.level = "client-authentication";
-                    self.emit("error", signature);
+                    this.emit("error", signature);
                     return tryNextAuth();
                 }
 
                 cb(signature);
-            }
+            };
 
             // TODO: better shutdown
             if (!auths.length) {
@@ -783,9 +784,9 @@ export default class Client extends adone.EventEmitter {
                 stream.removeListener("USERAUTH_PK_OK", onUSERAUTH_PK_OK);
                 const err = new Error("All configured authentication methods failed");
                 err.level = "client-authentication";
-                self.emit("error", err);
+                this.emit("error", err);
                 if (stream.writable) {
-                    self.end();
+                    this.end();
                 }
                 return;
             }
@@ -793,25 +794,25 @@ export default class Client extends adone.EventEmitter {
             curAuth = auths.shift();
             switch (curAuth) {
                 case "password":
-                    stream.authPassword(self.config.username, self.config.password);
+                    stream.authPassword(this.config.username, this.config.password);
                     break;
                 case "publickey":
-                    stream.authPK(self.config.username, self.config.publicKey);
+                    stream.authPK(this.config.username, this.config.publicKey);
                     stream.once("USERAUTH_PK_OK", onUSERAUTH_PK_OK);
                     break;
                 case "hostbased":
-                    stream.authHostbased(self.config.username,
-                        self.config.publicKey,
-                        self.config.localHostname,
-                        self.config.localUsername,
+                    stream.authHostbased(this.config.username,
+                        this.config.publicKey,
+                        this.config.localHostname,
+                        this.config.localUsername,
                         hostbasedCb
                     );
                     break;
                 case "agent":
-                    agentQuery(self.config.agent, (err, keys) => {
+                    agentQuery(this.config.agent, (err, keys) => {
                         if (err) {
                             err.level = "agent";
-                            self.emit("error", err);
+                            this.emit("error", err);
                             agentKeys = undefined;
                             return tryNextAuth();
                         } else if (keys.length === 0) {
@@ -823,21 +824,21 @@ export default class Client extends adone.EventEmitter {
                         agentKeys = keys;
                         agentKeyPos = 0;
 
-                        stream.authPK(self.config.username, keys[0]);
+                        stream.authPK(this.config.username, keys[0]);
                         stream.once("USERAUTH_PK_OK", onUSERAUTH_PK_OK);
                     });
                     break;
                 case "keyboard-interactive":
-                    stream.authKeyboard(self.config.username);
+                    stream.authKeyboard(this.config.username);
                     stream.on("USERAUTH_INFO_REQUEST", onUSERAUTH_INFO_REQUEST);
                     break;
                 case "none":
-                    stream.authNone(self.config.username);
+                    stream.authNone(this.config.username);
                     break;
             }
-        }
+        };
 
-        function tryNextAgentKey() {
+        const tryNextAgentKey = () => {
             if (curAuth === "agent") {
                 if (agentKeyPos >= agentKeys.length) {
                     return;
@@ -849,13 +850,13 @@ export default class Client extends adone.EventEmitter {
                     tryNextAuth();
                 } else {
                     debug(`DEBUG: Agent: Trying key #${agentKeyPos + 1}`);
-                    stream.authPK(self.config.username, agentKeys[agentKeyPos]);
+                    stream.authPK(this.config.username, agentKeys[agentKeyPos]);
                     stream.once("USERAUTH_PK_OK", onUSERAUTH_PK_OK);
                 }
             }
-        }
+        };
 
-        function onUSERAUTH_INFO_REQUEST(name, instructions, lang, prompts) {
+        onUSERAUTH_INFO_REQUEST = (name, instructions, lang, prompts) => {
             const nprompts = (is.array(prompts) ? prompts.length : 0);
             if (nprompts === 0) {
                 debug("DEBUG: Client: Sending automatic USERAUTH_INFO_RESPONSE");
@@ -863,7 +864,7 @@ export default class Client extends adone.EventEmitter {
             }
             // we sent a keyboard-interactive user authentication request and now the
             // server is sending us the prompts we need to present to the user
-            self.emit("keyboard-interactive",
+            this.emit("keyboard-interactive",
                 name,
                 instructions,
                 lang,
@@ -872,9 +873,9 @@ export default class Client extends adone.EventEmitter {
                     stream.authInfoRes(answers);
                 }
             );
-        }
+        };
 
-        function onUSERAUTH_PK_OK() {
+        onUSERAUTH_PK_OK = () => {
             if (curAuth === "agent") {
                 const agentKey = agentKeys[agentKeyPos];
                 const keyLen = agentKey.readUInt32BE(0, true);
@@ -889,44 +890,41 @@ export default class Client extends adone.EventEmitter {
                     case "ecdsa-sha2-nistp521":
                         break;
                     default:
-                        debug(`DEBUG: Agent: Skipping unsupported key type: ${
-                            pubKeyFullType}`);
+                        debug(`DEBUG: Agent: Skipping unsupported key type: ${pubKeyFullType}`);
                         return tryNextAgentKey();
                 }
-                stream.authPK(self.config.username,
-                    agentKey,
-                    (buf, cb) => {
-                        agentQuery(self.config.agent, agentKey, pubKeyType, buf,
-                            (err, signed) => {
-                                if (err) {
-                                    err.level = "agent";
-                                    self.emit("error", err);
-                                } else {
-                                    const sigFullTypeLen = signed.readUInt32BE(0, true);
-                                    if (4 + sigFullTypeLen + 4 < signed.length) {
-                                        const sigFullType = signed.toString("ascii", 4, 4 + sigFullTypeLen);
-                                        if (sigFullType !== pubKeyFullType) {
-                                            err = new Error("Agent key/signature type mismatch");
-                                            err.level = "agent";
-                                            self.emit("error", err);
-                                        } else {
-                                            // skip algoLen + algo + sigLen
-                                            return cb(signed.slice(4 + sigFullTypeLen + 4));
-                                        }
+                stream.authPK(this.config.username, agentKey, (buf, cb) => {
+                    agentQuery(this.config.agent, agentKey, pubKeyType, buf,
+                        (err, signed) => {
+                            if (err) {
+                                err.level = "agent";
+                                this.emit("error", err);
+                            } else {
+                                const sigFullTypeLen = signed.readUInt32BE(0, true);
+                                if (4 + sigFullTypeLen + 4 < signed.length) {
+                                    const sigFullType = signed.toString("ascii", 4, 4 + sigFullTypeLen);
+                                    if (sigFullType !== pubKeyFullType) {
+                                        err = new Error("Agent key/signature type mismatch");
+                                        err.level = "agent";
+                                        this.emit("error", err);
+                                    } else {
+                                        // skip algoLen + algo + sigLen
+                                        return cb(signed.slice(4 + sigFullTypeLen + 4));
                                     }
                                 }
-
-                                tryNextAgentKey();
                             }
-                        );
-                    }
+
+                            tryNextAgentKey();
+                        }
+                    );
+                }
                 );
             } else if (curAuth === "publickey") {
-                stream.authPK(self.config.username,
-                    self.config.publicKey,
+                stream.authPK(this.config.username,
+                    this.config.publicKey,
                     (buf, cb) => {
                         let algo;
-                        switch (self.config.privateKey.fulltype) {
+                        switch (this.config.privateKey.fulltype) {
                             case "ssh-rsa":
                                 algo = "RSA-SHA1";
                                 break;
@@ -945,20 +943,19 @@ export default class Client extends adone.EventEmitter {
                         }
                         let signature = crypto.createSign(algo);
                         signature.update(buf);
-                        signature = trySign(signature, self.config.privateKey.privateOrig);
+                        signature = trySign(signature, this.config.privateKey.privateOrig);
                         if (signature instanceof Error) {
-                            signature.message = `Error while signing data with privateKey: ${
-                                signature.message}`;
+                            signature.message = `Error while signing data with privateKey: ${signature.message}`;
                             signature.level = "client-authentication";
-                            self.emit("error", signature);
+                            this.emit("error", signature);
                             return tryNextAuth();
                         }
                         cb(signature);
                     });
             }
-        }
+        };
 
-        function onUSERAUTH_FAILURE(authsLeft, partial) {
+        onUSERAUTH_FAILURE = (authsLeft, partial) => {
             stream.removeListener("USERAUTH_PK_OK", onUSERAUTH_PK_OK);
             stream.removeListener("USERAUTH_INFO_REQUEST", onUSERAUTH_INFO_REQUEST);
             if (curAuth === "agent") {
@@ -969,7 +966,8 @@ export default class Client extends adone.EventEmitter {
 
 
             tryNextAuth();
-        }
+        };
+
         stream.once("USERAUTH_SUCCESS", () => {
             auths = undefined;
             stream.removeListener("USERAUTH_FAILURE", onUSERAUTH_FAILURE);
@@ -980,9 +978,9 @@ export default class Client extends adone.EventEmitter {
             // start keepalive mechanism
             resetKA();
 
-            clearTimeout(self._readyTimeout);
+            clearTimeout(this._readyTimeout);
 
-            self.emit("ready");
+            this.emit("ready");
         }).on("USERAUTH_FAILURE", onUSERAUTH_FAILURE);
         // end authentication handling ===============================================
 
@@ -999,7 +997,7 @@ export default class Client extends adone.EventEmitter {
         // handle incoming requests from server, typically a forwarded TCP or X11
         // connection
         stream.on("CHANNEL_OPEN", (info) => {
-            onCHANNEL_OPEN(self, info);
+            onCHANNEL_OPEN(this, info);
         });
 
         // handle responses for tcpip-forward and other global requests
@@ -1021,6 +1019,17 @@ export default class Client extends adone.EventEmitter {
             }
         });
 
+        const startTimeout = () => {
+            if (this.config.readyTimeout > 0) {
+                this._readyTimeout = setTimeout(() => {
+                    const err = new Error("Timed out while waiting for handshake");
+                    err.level = "client-timeout";
+                    this.emit("error", err);
+                    sock.destroy();
+                }, this.config.readyTimeout);
+            }
+        };
+
         if (!options.sock) {
             let host = this.config.hostname;
             const forceIPv4 = this.config.forceIPv4;
@@ -1033,13 +1042,13 @@ export default class Client extends adone.EventEmitter {
                 } ...`
             );
 
-            function doConnect() {
+            const doConnect = () => {
                 startTimeout();
-                self._sock.connect(self.config.port, host);
-                self._sock.setNoDelay(true);
-                self._sock.setMaxListeners(0);
-                self._sock.setTimeout(is.number(options.timeout) ? options.timeout : 0);
-            }
+                this._sock.connect(this.config.port, host);
+                this._sock.setNoDelay(true);
+                this._sock.setMaxListeners(0);
+                this._sock.setTimeout(is.number(options.timeout) ? options.timeout : 0);
+            };
 
             if ((!forceIPv4 && !forceIPv6) || (forceIPv4 && forceIPv6)) {
                 doConnect();
@@ -1051,10 +1060,10 @@ export default class Client extends adone.EventEmitter {
                             } address for host ${
                             host
                             }: ${err}`);
-                        clearTimeout(self._readyTimeout);
+                        clearTimeout(this._readyTimeout);
                         error.level = "client-dns";
-                        self.emit("error", error);
-                        self.emit("close");
+                        this.emit("error", error);
+                        this.emit("close");
                         return;
                     }
                     host = address;
@@ -1064,17 +1073,6 @@ export default class Client extends adone.EventEmitter {
         } else {
             startTimeout();
             stream.pipe(sock).pipe(stream);
-        }
-
-        function startTimeout() {
-            if (self.config.readyTimeout > 0) {
-                self._readyTimeout = setTimeout(() => {
-                    const err = new Error("Timed out while waiting for handshake");
-                    err.level = "client-timeout";
-                    self.emit("error", err);
-                    sock.destroy();
-                }, self.config.readyTimeout);
-            }
         }
     }
 
@@ -1254,8 +1252,6 @@ export default class Client extends adone.EventEmitter {
             throw new Error("Not connected");
         }
 
-        const self = this;
-
         // start an SFTP session
         return openChannel(this, "session", (err, chan) => {
             if (err) {
@@ -1267,25 +1263,28 @@ export default class Client extends adone.EventEmitter {
                     return cb(err);
                 }
 
-                const serverIdentRaw = self._sshstream._state.incoming.identRaw;
+                const serverIdentRaw = this._sshstream._state.incoming.identRaw;
                 const cfg = {
-                    debug: self.config.debug
+                    debug: this.config.debug
                 };
                 const sftp = new SFTPStream(cfg, serverIdentRaw);
 
-                function onError(err) {
+                let onReady = null;
+                let onExit = null;
+
+                const onError = (err) => {
                     sftp.removeListener("ready", onReady);
                     stream.removeListener("exit", onExit);
                     cb(err);
-                }
+                };
 
-                function onReady() {
+                onReady = () => {
                     sftp.removeListener("error", onError);
                     stream.removeListener("exit", onExit);
                     cb(undefined, new SFTPWrapper(sftp));
-                }
+                };
 
-                function onExit(code, signal) {
+                onExit = (code, signal) => {
                     sftp.removeListener("ready", onReady);
                     sftp.removeListener("error", onError);
                     let msg;
@@ -1298,7 +1297,7 @@ export default class Client extends adone.EventEmitter {
                     err.code = code;
                     err.signal = signal;
                     cb(err);
-                }
+                };
 
                 sftp.once("error", onError)
                     .once("ready", onReady)
@@ -1396,7 +1395,7 @@ export default class Client extends adone.EventEmitter {
         return openChannel(this, "direct-tcpip", cfg, cb);
     }
 
-    openssh_noMoreSessions(cb) {
+    opensshNoMoreSessions(cb) {
         if (!this._sock ||
             !this._sock.writable ||
             !this._sshstream ||
@@ -1418,7 +1417,7 @@ export default class Client extends adone.EventEmitter {
                 });
             }
 
-            return this._sshstream.openssh_noMoreSessions(wantReply);
+            return this._sshstream.opensshNoMoreSessions(wantReply);
         } else if (wantReply) {
             process.nextTick(() => {
                 cb(new Error("strictVendor enabled and server is not OpenSSH or compatible version"));
@@ -1428,77 +1427,73 @@ export default class Client extends adone.EventEmitter {
         return true;
     }
 
-    openssh_forwardInStreamLocal(socketPath, cb) {
+    // openssh_forwardInStreamLocal(socketPath, cb) {
+    //     if (!this._sock || !this._sock.writable || !this._sshstream || !this._sshstream.writable) {
+    //         throw new Error("Not connected");
+    //     }
+
+    //     const wantReply = is.function(cb);
+
+    //     if (!this.config.strictVendor ||
+    //         (this.config.strictVendor && RE_OPENSSH.test(this._remoteVer))) {
+    //         if (wantReply) {
+    //             this._callbacks.push((hadErr) => {
+    //                 if (hadErr) {
+    //                     return cb(hadErr !== true ? hadErr : new Error(`Unable to bind to ${socketPath}`));
+    //                 }
+
+    //                 cb();
+    //             });
+    //         }
+
+    //         return this._sshstream.openssh_streamLocalForward(socketPath, wantReply);
+    //     } else if (wantReply) {
+    //         process.nextTick(() => {
+    //             cb(new Error("strictVendor enabled and server is not OpenSSH or compatible version"));
+    //         });
+    //     }
+
+    //     return true;
+    // }
+
+    // openssh_unforwardInStreamLocal(socketPath, cb) {
+    //     if (!this._sock ||
+    //         !this._sock.writable ||
+    //         !this._sshstream ||
+    //         !this._sshstream.writable) {
+    //         throw new Error("Not connected");
+    //     }
+
+    //     const wantReply = is.function(cb);
+
+    //     if (!this.config.strictVendor ||
+    //         (this.config.strictVendor && RE_OPENSSH.test(this._remoteVer))) {
+    //         if (wantReply) {
+    //             this._callbacks.push((hadErr) => {
+    //                 if (hadErr) {
+    //                     return cb(hadErr !== true ? hadErr : new Error(`Unable to unbind on ${socketPath}`));
+    //                 }
+
+    //                 cb();
+    //             });
+    //         }
+
+    //         return this._sshstream.openssh_cancelStreamLocalForward(socketPath, wantReply);
+    //     } else if (wantReply) {
+    //         process.nextTick(() => {
+    //             cb(new Error("strictVendor enabled and server is not OpenSSH or compatible version"));
+    //         });
+    //     }
+
+    //     return true;
+    // }
+
+    opensshForwardOutStreamLocal(socketPath, cb) {
         if (!this._sock || !this._sock.writable || !this._sshstream || !this._sshstream.writable) {
             throw new Error("Not connected");
         }
 
-        const wantReply = is.function(cb);
-
-        if (!this.config.strictVendor ||
-            (this.config.strictVendor && RE_OPENSSH.test(this._remoteVer))) {
-            if (wantReply) {
-                this._callbacks.push((hadErr) => {
-                    if (hadErr) {
-                        return cb(hadErr !== true ? hadErr : new Error(`Unable to bind to ${socketPath}`));
-                    }
-
-                    cb();
-                });
-            }
-
-            return this._sshstream.openssh_streamLocalForward(socketPath, wantReply);
-        } else if (wantReply) {
-            process.nextTick(() => {
-                cb(new Error("strictVendor enabled and server is not OpenSSH or compatible version"));
-            });
-        }
-
-        return true;
-    }
-
-    openssh_unforwardInStreamLocal(socketPath, cb) {
-        if (!this._sock ||
-            !this._sock.writable ||
-            !this._sshstream ||
-            !this._sshstream.writable) {
-            throw new Error("Not connected");
-        }
-
-        const wantReply = is.function(cb);
-
-        if (!this.config.strictVendor ||
-            (this.config.strictVendor && RE_OPENSSH.test(this._remoteVer))) {
-            if (wantReply) {
-                this._callbacks.push((hadErr) => {
-                    if (hadErr) {
-                        return cb(hadErr !== true ? hadErr : new Error(`Unable to unbind on ${socketPath}`));
-                    }
-
-                    cb();
-                });
-            }
-
-            return this._sshstream.openssh_cancelStreamLocalForward(socketPath, wantReply);
-        } else if (wantReply) {
-            process.nextTick(() => {
-                cb(new Error("strictVendor enabled and server is not OpenSSH or compatible version"));
-            });
-        }
-
-        return true;
-    }
-
-    openssh_forwardOutStreamLocal(socketPath, cb) {
-        if (!this._sock ||
-            !this._sock.writable ||
-            !this._sshstream ||
-            !this._sshstream.writable) {
-            throw new Error("Not connected");
-        }
-
-        if (!this.config.strictVendor ||
-            (this.config.strictVendor && RE_OPENSSH.test(this._remoteVer))) {
+        if (!this.config.strictVendor || (this.config.strictVendor && RE_OPENSSH.test(this._remoteVer))) {
             const cfg = {
                 socketPath
             };

@@ -129,7 +129,7 @@ const tryCreateBuffer = (size) => {
 };
 
 const modeNum = (mode) => {
-    if (is.number(mode) && !isNaN(mode)) {
+    if (is.number(mode) && !is.nan(mode)) {
         return mode;
     } else if (is.string(mode)) {
         return modeNum(parseInt(mode, 8));
@@ -283,7 +283,7 @@ const fastXfer = (src, dst, srcPath, dstPath, opts, cb) => {
                     return onerror(readbuf);
                 }
 
-                if (mode !== undefined) {
+                if (!is.undefined(mode)) {
                     dst.fchmod(dstHandle, mode, function tryAgain(err) {
                         if (err) {
                             // Try chmod() for sftp servers that may not support fchmod() for
@@ -514,7 +514,7 @@ const readAttrs = (buf, p, stream, callback) => {
 };
 
 const toUnixTimestamp = (time) => {
-    if (is.number(time) && !isNaN(time)) {
+    if (is.number(time) && !is.nan(time)) {
         return time;
     } else if (isDate(time)) {
         return parseInt(time.getTime() / 1000, 10);
@@ -593,7 +593,7 @@ const stringFlagMapKeys = adone.util.keys(stringFlagMap);
 
 const stringToFlags = (str) => {
     const flags = stringFlagMap[str];
-    if (flags !== undefined) {
+    if (!is.undefined(flags)) {
         return flags;
     }
     return null;
@@ -650,7 +650,7 @@ class ReadStream extends ReadableStream {
         this.pos = 0;
         this.sftp = sftp;
 
-        if (this.start !== undefined) {
+        if (!is.undefined(this.start)) {
             if (!is.number(this.start)) {
                 throw new TypeError("start must be a Number");
             }
@@ -675,7 +675,7 @@ class ReadStream extends ReadableStream {
             }
         });
 
-        if (!Buffer.isBuffer(this.handle)) {
+        if (!is.buffer(this.handle)) {
             this.open();
         }
     }
@@ -698,7 +698,7 @@ class ReadStream extends ReadableStream {
     }
 
     _read(n) {
-        if (!Buffer.isBuffer(this.handle)) {
+        if (!is.buffer(this.handle)) {
             return this.once("open", function () {
                 this._read(n);
             });
@@ -736,7 +736,7 @@ class ReadStream extends ReadableStream {
             }
         };
 
-        if (this.end !== undefined) {
+        if (!is.undefined(this.end)) {
             toRead = Math.min(this.end - this.pos + 1, toRead);
         }
 
@@ -759,7 +759,7 @@ class ReadStream extends ReadableStream {
             return;
         }
         this.destroyed = true;
-        if (Buffer.isBuffer(this.handle)) {
+        if (is.buffer(this.handle)) {
             this.close();
         }
     }
@@ -779,8 +779,8 @@ class ReadStream extends ReadableStream {
         if (cb) {
             this.once("close", cb);
         }
-        if (this.closed || !Buffer.isBuffer(this.handle)) {
-            if (!Buffer.isBuffer(this.handle)) {
+        if (this.closed || !is.buffer(this.handle)) {
+            if (!is.buffer(this.handle)) {
                 this.once("open", close);
                 return;
             }
@@ -818,7 +818,7 @@ class WriteStream extends WritableStream {
         this.bytesWritten = 0;
         this.sftp = sftp;
 
-        if (this.start !== undefined) {
+        if (!is.undefined(this.start)) {
             if (!is.number(this.start)) {
                 throw new TypeError("start must be a Number");
             }
@@ -833,7 +833,7 @@ class WriteStream extends WritableStream {
             this.setDefaultEncoding(options.encoding);
         }
 
-        if (!Buffer.isBuffer(this.handle)) {
+        if (!is.buffer(this.handle)) {
             this.open();
         }
 
@@ -897,11 +897,11 @@ class WriteStream extends WritableStream {
     }
 
     _write(data, encoding, cb) {
-        if (!Buffer.isBuffer(data)) {
+        if (!is.buffer(data)) {
             return this.emit("error", new Error("Invalid data"));
         }
 
-        if (!Buffer.isBuffer(this.handle)) {
+        if (!is.buffer(this.handle)) {
             return this.once("open", function () {
                 this._write(data, encoding, cb);
             });
@@ -928,7 +928,7 @@ class WriteStream extends WritableStream {
     }
 
     _writev(data, cb) {
-        if (!Buffer.isBuffer(this.handle)) {
+        if (!is.buffer(this.handle)) {
             return this.once("open", function () {
                 this._writev(data, cb);
             });
@@ -1089,7 +1089,7 @@ export default class SFTPStream extends TransformStream {
                     pktLeft -= chunkLeft;
                     break;
                 }
-            } else if (pktBuf !== undefined) {
+            } else if (!is.undefined(pktBuf)) {
                 chunkLeft = (chunkLen - chunkPos);
                 if (pktLeft <= chunkLeft) {
                     chunk.copy(pktBuf,
@@ -1119,7 +1119,7 @@ export default class SFTPStream extends TransformStream {
                         if (is.undefined(version) && pktType !== REQUEST.INIT) {
                             debug("DEBUG[SFTP]: Parser: Unexpected packet before init");
                             status = "bad_pkt";
-                        } else if (version !== undefined && pktType === REQUEST.INIT) {
+                        } else if (!is.undefined(version) && pktType === REQUEST.INIT) {
                             debug("DEBUG[SFTP]: Parser: Unexpected duplicate init");
                             status = "bad_pkt";
                         } else if (pktLeft > MAX_PKT_LEN) {
@@ -1138,7 +1138,7 @@ export default class SFTPStream extends TransformStream {
                     } else if (is.undefined(version) && pktType !== RESPONSE.VERSION) {
                         debug("DEBUG[SFTP]: Parser: Unexpected packet before version");
                         status = "bad_pkt";
-                    } else if (version !== undefined && pktType === RESPONSE.VERSION) {
+                    } else if (!is.undefined(version) && pktType === RESPONSE.VERSION) {
                         debug("DEBUG[SFTP]: Parser: Unexpected duplicate version");
                         status = "bad_pkt";
                     } else if (is.undefined(RESPONSE[pktType])) {
@@ -1711,7 +1711,7 @@ export default class SFTPStream extends TransformStream {
     close(handle, cb) {
         if (this.server) {
             throw new Error("Client-only method called in server mode");
-        } else if (!Buffer.isBuffer(handle)) {
+        } else if (!is.buffer(handle)) {
             throw new Error("handle is not a Buffer");
         }
 
@@ -1744,9 +1744,9 @@ export default class SFTPStream extends TransformStream {
     readData(handle, buf, off, len, position, cb) {
         if (this.server) {
             throw new Error("Client-only method called in server mode");
-        } else if (!Buffer.isBuffer(handle)) {
+        } else if (!is.buffer(handle)) {
             throw new Error("handle is not a Buffer");
-        } else if (!Buffer.isBuffer(buf)) {
+        } else if (!is.buffer(buf)) {
             throw new Error("buffer is not a Buffer");
         } else if (off >= buf.length) {
             throw new Error("offset is out of bounds");
@@ -1800,9 +1800,9 @@ export default class SFTPStream extends TransformStream {
     writeData(handle, buf, off, len, position, cb) {
         if (this.server) {
             throw new Error("Client-only method called in server mode");
-        } else if (!Buffer.isBuffer(handle)) {
+        } else if (!is.buffer(handle)) {
             throw new Error("handle is not a Buffer");
-        } else if (!Buffer.isBuffer(buf)) {
+        } else if (!is.buffer(buf)) {
             throw new Error("buffer is not a Buffer");
         } else if (off > buf.length) {
             throw new Error("offset is out of bounds");
@@ -2065,7 +2065,7 @@ export default class SFTPStream extends TransformStream {
             if (openErr) {
                 callback && callback(openErr);
             } else {
-                const buffer = (Buffer.isBuffer(data) ? data : Buffer.from(`${data}`, options.encoding || "utf8"));
+                const buffer = (is.buffer(data) ? data : Buffer.from(`${data}`, options.encoding || "utf8"));
                 const position = (/a/.test(flag) ? null : 0);
 
                 // SFTPv3 does not support the notion of "current position"
@@ -2310,7 +2310,7 @@ export default class SFTPStream extends TransformStream {
 
         const doFilter = (opts && opts.full ? false : true);
 
-        if (!Buffer.isBuffer(where) && !is.string(where)) {
+        if (!is.buffer(where) && !is.string(where)) {
             throw new Error("missing directory handle or path");
         }
 
@@ -2391,7 +2391,7 @@ export default class SFTPStream extends TransformStream {
     fstat(handle, cb) {
         if (this.server) {
             throw new Error("Client-only method called in server mode");
-        } else if (!Buffer.isBuffer(handle)) {
+        } else if (!is.buffer(handle)) {
             throw new Error("handle is not a Buffer");
         }
 
@@ -2569,7 +2569,7 @@ export default class SFTPStream extends TransformStream {
     fsetstat(handle, attrs, cb) {
         if (this.server) {
             throw new Error("Client-only method called in server mode");
-        } else if (!Buffer.isBuffer(handle)) {
+        } else if (!is.buffer(handle)) {
             throw new Error("handle is not a Buffer");
         }
 
@@ -2780,7 +2780,7 @@ export default class SFTPStream extends TransformStream {
     }
 
     // extended requests
-    ext_openssh_rename(oldPath, newPath, cb) {
+    extOpensshRename(oldPath, newPath, cb) {
         const state = this._state;
 
         if (this.server) {
@@ -2821,7 +2821,7 @@ export default class SFTPStream extends TransformStream {
         return this.push(buf);
     }
 
-    ext_openssh_statvfs(path, cb) {
+    extOpensshStatvfs(path, cb) {
         const state = this._state;
 
         if (this.server) {
@@ -2859,7 +2859,7 @@ export default class SFTPStream extends TransformStream {
         return this.push(buf);
     }
 
-    ext_openssh_fstatvfs(handle, cb) {
+    extOpensshFstatvfs(handle, cb) {
         const state = this._state;
 
         if (this.server) {
@@ -2867,7 +2867,7 @@ export default class SFTPStream extends TransformStream {
         } else if (!state.extensions["fstatvfs@openssh.com"] ||
             state.extensions["fstatvfs@openssh.com"].indexOf("2") === -1) {
             throw new Error("Server does not support this extended request");
-        } else if (!Buffer.isBuffer(handle)) {
+        } else if (!is.buffer(handle)) {
             throw new Error("handle is not a Buffer");
         }
 
@@ -2899,7 +2899,7 @@ export default class SFTPStream extends TransformStream {
         return this.push(buf);
     }
 
-    ext_openssh_hardlink(oldPath, newPath, cb) {
+    extOpensshHardlink(oldPath, newPath, cb) {
         const state = this._state;
 
         if (this.server) {
@@ -2940,7 +2940,7 @@ export default class SFTPStream extends TransformStream {
         return this.push(buf);
     }
 
-    ext_openssh_fsync(handle, cb) {
+    extOpensshFsync(handle, cb) {
         const state = this._state;
 
         if (this.server) {
@@ -2948,7 +2948,7 @@ export default class SFTPStream extends TransformStream {
         } else if (!state.extensions["fsync@openssh.com"] ||
             state.extensions["fsync@openssh.com"].indexOf("1") === -1) {
             throw new Error("Server does not support this extended request");
-        } else if (!Buffer.isBuffer(handle)) {
+        } else if (!is.buffer(handle)) {
             throw new Error("handle is not a Buffer");
         }
 
@@ -3021,7 +3021,7 @@ export default class SFTPStream extends TransformStream {
             throw new Error("Server-only method called in client mode");
         }
 
-        if (!Buffer.isBuffer(handle)) {
+        if (!is.buffer(handle)) {
             throw new Error("handle is not a Buffer");
         }
 
@@ -3051,7 +3051,7 @@ export default class SFTPStream extends TransformStream {
             throw new Error("Server-only method called in client mode");
         }
 
-        const isBuffer = Buffer.isBuffer(data);
+        const isBuffer = is.buffer(data);
 
         if (!isBuffer && !is.string(data)) {
             throw new Error("data is not a Buffer or string");
@@ -3088,7 +3088,7 @@ export default class SFTPStream extends TransformStream {
 
         if (!is.array(names) && is.object(names)) {
             names = [names];
-        } else if (!Array.isArray(names)) {
+        } else if (!is.array(names)) {
             throw new Error("names is not an object or array");
         }
 

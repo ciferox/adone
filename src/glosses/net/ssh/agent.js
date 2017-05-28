@@ -18,7 +18,7 @@ module.exports = (sockPath, key, keyType, data, cb) => {
     let sig;
     let datalen;
     let keylen = 0;
-    const isSigning = Buffer.isBuffer(key);
+    const isSigning = is.buffer(key);
     let type;
     let count = 0;
     let siglen = 0;

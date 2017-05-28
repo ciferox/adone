@@ -514,7 +514,7 @@ const openChannel = (self, type, opts, cb) => {
     } else if (type === "x11") {
         ret = sshstream.x11(localChan, initWindow, maxPacket, opts);
     } else if (type === "forwarded-streamlocal@openssh.com") {
-        ret = sshstream.openssh_forwardedStreamLocal(localChan,
+        ret = sshstream.opensshForwardedStreamLocal(localChan,
             initWindow,
             maxPacket,
             opts);
@@ -891,7 +891,7 @@ class Client extends adone.EventEmitter {
         return openChannel(this, "forwarded-tcpip", opts, cb);
     }
 
-    openssh_forwardOutStreamLocal(socketPath, cb) {
+    opensshForwardOutStreamLocal(socketPath, cb) {
         const opts = {
             socketPath
         };
@@ -945,7 +945,7 @@ export default class Server extends adone.EventEmitter {
         let i;
         for (i = 0; i < hostKeys_.length; ++i) {
             let privateKey;
-            if (Buffer.isBuffer(hostKeys_[i]) || is.string(hostKeys_[i])) {
+            if (is.buffer(hostKeys_[i]) || is.string(hostKeys_[i])) {
                 privateKey = parseKey(hostKeys_[i]);
             } else {
                 privateKey = parseKey(hostKeys_[i].key);
@@ -983,7 +983,7 @@ export default class Server extends adone.EventEmitter {
             compress: undefined,
             compressBuf: undefined
         };
-        if (is.plainObject(cfg.algorithms) && cfg.algorithms !== null) {
+        if (is.plainObject(cfg.algorithms) && !is.null(cfg.algorithms)) {
             let algosSupported;
             let algoList;
 

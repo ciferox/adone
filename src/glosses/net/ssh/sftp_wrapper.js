@@ -154,23 +154,23 @@ export default class SFTPWrapper extends adone.std.events.EventEmitter {
     }
     
     // extended requests
-    ext_openssh_rename(oldPath, newPath, cb) {
-        return this._stream.ext_openssh_rename(oldPath, newPath, cb);
+    extOpensshRename(oldPath, newPath, cb) {
+        return this._stream.extOpensshRename(oldPath, newPath, cb);
     }
     
-    ext_openssh_statvfs(path, cb) {
-        return this._stream.ext_openssh_statvfs(path, cb);
+    extOpensshStatvfs(path, cb) {
+        return this._stream.extOpensshStatvfs(path, cb);
     }
     
-    ext_openssh_fstatvfs(handle, cb) {
-        return this._stream.ext_openssh_fstatvfs(handle, cb);
+    extOpensshFstatvfs(handle, cb) {
+        return this._stream.extOpensshFstatvfs(handle, cb);
     }
     
-    ext_openssh_hardlink(oldPath, newPath, cb) {
-        return this._stream.ext_openssh_hardlink(oldPath, newPath, cb);
+    extOpensshHardlink(oldPath, newPath, cb) {
+        return this._stream.extOpensshHardlink(oldPath, newPath, cb);
     }
 
-    ext_openssh_fsync(handle, cb) {
-        return this._stream.ext_openssh_fsync(handle, cb);
+    extOpensshFsync(handle, cb) {
+        return this._stream.extOpensshFsync(handle, cb);
     }
 }

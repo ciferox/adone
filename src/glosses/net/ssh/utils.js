@@ -29,8 +29,8 @@ const RE_HEADER_OPENSSH = /^([^:]+):\s*([\S].*)?$/i;
 const RE_HEADER_RFC4716 = /^([^:]+): (.*)?$/i;
 
 
-module.exports.parseKey = (data) => {
-    if (Buffer.isBuffer(data)) {
+export const parseKey = (data) => {
+    if (is.buffer(data)) {
         data = data.toString("utf8");
     } else if (!is.string(data)) {
         return new Error("Key data must be a Buffer or string");
@@ -63,8 +63,7 @@ module.exports.parseKey = (data) => {
 
     const orig = data.join("\n");
 
-    if ((m = RE_HEADER_OPENSSH_PRIV.exec(data[0])) &&
-        RE_FOOTER_OPENSSH_PRIV.test(data.slice(-1))) {
+    if ((m = RE_HEADER_OPENSSH_PRIV.exec(data[0])) && RE_FOOTER_OPENSSH_PRIV.test(data.slice(-1))) {
         // OpenSSH private key
         let keyType = m[1].toLowerCase();
         if (keyType === "dsa") {
@@ -90,7 +89,7 @@ module.exports.parseKey = (data) => {
                 asnReader.readString(asn1.type.OctetString, true);
                 asnReader.readByte(); // Skip "complex" context type byte
                 const offset = asnReader.readLength(); // Skip context length
-                if (offset !== null) {
+                if (!is.null(offset)) {
                     asnReader._offset = offset;
                     switch (asnReader.readOID()) {
                         case "1.2.840.10045.3.1.7":
@@ -298,7 +297,7 @@ export const readInt = (buffer, start, stream, cb) => {
 };
 
 export const readString = (buffer, start, encoding, stream, cb, maxLen) => {
-    if (encoding && !Buffer.isBuffer(encoding) && !is.string(encoding)) {
+    if (encoding && !is.buffer(encoding) && !is.string(encoding)) {
         if (is.number(cb)) {
             maxLen = cb;
         }
@@ -326,7 +325,7 @@ export const readString = (buffer, start, encoding, stream, cb, maxLen) => {
     buffer._pos = end;
 
     if (encoding) {
-        if (Buffer.isBuffer(encoding)) {
+        if (is.buffer(encoding)) {
             buffer.copy(encoding, 0, start, end);
             return encoding;
         }
@@ -440,7 +439,7 @@ export const convertPPKPrivate = (keyInfo) => {
 };
 
 export const verifyPPKMAC = (keyInfo, passphrase, privateKey) => {
-    if (keyInfo._macresult !== undefined) {
+    if (!is.undefined(keyInfo._macresult)) {
         return keyInfo._macresult;
     } else if (!keyInfo.ppk) {
         throw new Error("Key isn't a PPK");
@@ -835,7 +834,7 @@ export const decryptKey = (keyInfo, passphrase) => {
         asnReader.readString(asn1.type.OctetString, true);
         asnReader.readByte(); // Skip "complex" context type byte
         const offset = asnReader.readLength(); // Skip context length
-        if (offset !== null) {
+        if (!is.null(offset)) {
             asnReader._offset = offset;
             switch (asnReader.readOID()) {
                 case "1.2.840.10045.3.1.7":
