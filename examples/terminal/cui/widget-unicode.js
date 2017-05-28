@@ -1,4 +1,4 @@
-const { std: { fs }, text: { unicode } } = adone.std.fs;
+const { std: { fs } } = adone;
 
 adone.run({
     main() {
@@ -16,10 +16,10 @@ adone.run({
          */
 
         // var DU = '杜';
-        const DU = unicode.fromCodePoint(0x675C);
+        const DU = String.fromCodePoint(0x675C);
 
         // var JUAN = '鹃';
-        const JUAN = unicode.fromCodePoint(0x9E43);
+        const JUAN = String.fromCodePoint(0x9E43);
 
         // one flew over the 杜鹃's nest.
         // var DOUBLE = '杜鹃';
@@ -27,23 +27,23 @@ adone.run({
 
         // var SURROGATE_DOUBLE = '𰀀';
         // var SURROGATE_DOUBLE = String.fromCharCode(0xD880, 0xDC00);
-        // var SURROGATE_DOUBLE = unicode.fromCodePoint(0x30000);
+        // var SURROGATE_DOUBLE = --(0x30000);
 
         // var SURROGATE_DOUBLE = '𠀀';
         // var SURROGATE_DOUBLE = String.fromCharCode(0xd840, 0xdc00);
-        const SURROGATE_DOUBLE = unicode.fromCodePoint(0x20000);
+        const SURROGATE_DOUBLE = String.fromCodePoint(0x20000);
 
         // var SURROGATE_DOUBLE = '🉐';
         // var SURROGATE_DOUBLE = String.fromCharCode(0xD83C, 0xDE50);
-        // var SURROGATE_DOUBLE = unicode.fromCodePoint(0x1F250);
+        // var SURROGATE_DOUBLE = String.fromCodePoint(0x1F250);
 
         // var SURROGATE_SINGLE = '𝌆';
         // var SURROGATE_SINGLE = String.fromCharCode(0xD834, 0xDF06);
-        const SURROGATE_SINGLE = unicode.fromCodePoint(0x1D306);
+        const SURROGATE_SINGLE = String.fromCodePoint(0x1D306);
 
         // var COMBINE = 's𐨁'.substring(1); // s + combining
         // var COMBINE = String.fromCharCode(0xD802, 0xDE01);
-        const COMBINE = unicode.fromCodePoint(0x10A01);
+        const COMBINE = String.fromCodePoint(0x10A01);
 
         /**
          * Content
@@ -69,7 +69,7 @@ adone.run({
             // These are technically single-width,
             // but they _look_ like they should be
             // double-width in gnome-terminal (they overlap).
-            const emoticon = unicode.fromCodePoint(point);
+            const emoticon = String.fromCodePoint(point);
             lorem += `${emoticon} `;
         }
 

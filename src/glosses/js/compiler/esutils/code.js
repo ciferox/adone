@@ -77,15 +77,6 @@ export function isLineTerminator(ch) {
 
 // 7.6 Identifier Names and Identifiers
 
-function fromCodePoint(cp) {
-    if (cp <= 0xFFFF) {
-        return String.fromCharCode(cp); 
-    }
-    const cu1 = String.fromCharCode(Math.floor((cp - 0x10000) / 0x400) + 0xD800);
-    const cu2 = String.fromCharCode(((cp - 0x10000) % 0x400) + 0xDC00);
-    return cu1 + cu2;
-}
-
 IDENTIFIER_START = new Array(0x80);
 for (ch = 0; ch < 0x80; ++ch) {
     IDENTIFIER_START[ch] =
@@ -104,17 +95,17 @@ for (ch = 0; ch < 0x80; ++ch) {
 }
 
 export function isIdentifierStartES5(ch) {
-    return ch < 0x80 ? IDENTIFIER_START[ch] : ES5Regex.NonAsciiIdentifierStart.test(fromCodePoint(ch));
+    return ch < 0x80 ? IDENTIFIER_START[ch] : ES5Regex.NonAsciiIdentifierStart.test(String.fromCodePoint(ch));
 }
 
 export function isIdentifierPartES5(ch) {
-    return ch < 0x80 ? IDENTIFIER_PART[ch] : ES5Regex.NonAsciiIdentifierPart.test(fromCodePoint(ch));
+    return ch < 0x80 ? IDENTIFIER_PART[ch] : ES5Regex.NonAsciiIdentifierPart.test(String.fromCodePoint(ch));
 }
 
 export function isIdentifierStartES6(ch) {
-    return ch < 0x80 ? IDENTIFIER_START[ch] : ES6Regex.NonAsciiIdentifierStart.test(fromCodePoint(ch));
+    return ch < 0x80 ? IDENTIFIER_START[ch] : ES6Regex.NonAsciiIdentifierStart.test(String.fromCodePoint(ch));
 }
 
 export function isIdentifierPartES6(ch) {
-    return ch < 0x80 ? IDENTIFIER_PART[ch] : ES6Regex.NonAsciiIdentifierPart.test(fromCodePoint(ch));
+    return ch < 0x80 ? IDENTIFIER_PART[ch] : ES6Regex.NonAsciiIdentifierPart.test(String.fromCodePoint(ch));
 }

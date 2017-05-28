@@ -1,5 +1,4 @@
 // @flow
-import fromCodePoint from "./from_code_point";
 
 import XHTMLEntities from "./xhtml";
 import { TokenType, types as tt } from "../../tokenizer/types";
@@ -139,12 +138,12 @@ pp.jsxReadEntity = function () {
                 if (str[1] === "x") {
                     str = str.substr(2);
                     if (HEX_NUMBER.test(str)) {
-                        entity = fromCodePoint(parseInt(str, 16)); 
+                        entity = String.fromCodePoint(parseInt(str, 16)); 
                     }
                 } else {
                     str = str.substr(1);
                     if (DECIMAL_NUMBER.test(str)) {
-                        entity = fromCodePoint(parseInt(str, 10));
+                        entity = String.fromCodePoint(parseInt(str, 10));
                     }
                 }
             } else {
