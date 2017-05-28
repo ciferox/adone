@@ -70,11 +70,12 @@ export default function (lib, util) {
     const isDeepIncluded = (arr, val) => arr.some((arrVal) => util.eql(arrVal, val));
 
     const include = function (val, msg) {
-        util.expectTypes(this, ["array", "object", "string"]);
-
         if (msg) {
             flag(this, "message", msg);
         }
+
+        util.expectTypes(this, ["array", "object", "string"]);
+
         const obj = flag(this, "object");
         const objType = util.type(obj).toLowerCase();
         const isDeep = flag(this, "deep");
@@ -90,7 +91,8 @@ export default function (lib, util) {
 
             for (const prop of props) {
                 const propAssertion = getAssertion(obj);
-                util.transferFlags(this, propAssertion);
+                util.transferFlags(this, propAssertion, true);
+                flag(propAssertion, "lockSsfi", true);
 
                 if (!negate || props.length === 1) {
                     propAssertion.property(prop, val[prop]);
@@ -103,7 +105,7 @@ export default function (lib, util) {
                     if (!util.checkError.compatibleConstructor(err, AssertionError)) {
                         throw err;
                     }
-                    if (firstErr === null) {
+                    if (is.null(firstErr)) {
                         firstErr = err;
                     }
                     numErrs++;
@@ -160,7 +162,7 @@ export default function (lib, util) {
 
     Assertion.addProperty("null", function _null() {
         this.assert(
-            flag(this, "object") === null,
+            is.null(flag(this, "object")),
             "expected #{this} to be null",
             "expected #{this} not to be null"
         );
@@ -168,7 +170,7 @@ export default function (lib, util) {
 
     Assertion.addProperty("undefined", function _undefined() {
         this.assert(
-            flag(this, "object") === undefined,
+            is.undefined(flag(this, "object")),
             "expected #{this} to be undefined",
             "expected #{this} not to be undefined"
         );
@@ -176,7 +178,7 @@ export default function (lib, util) {
 
     Assertion.addProperty("NaN", function NaN() {
         this.assert(
-            Number.isNaN(flag(this, "object")),
+            is.nan(flag(this, "object")),
             "expected #{this} to be NaN",
             "expected #{this} not to be NaN"
         );
@@ -185,7 +187,7 @@ export default function (lib, util) {
     Assertion.addProperty("exist", function exist() {
         const val = flag(this, "object");
         this.assert(
-            val !== null && val !== undefined,
+            !is.nil(val),
             "expected #{this} to exist",
             "expected #{this} to not exist"
         );
@@ -194,6 +196,9 @@ export default function (lib, util) {
 
     Assertion.addProperty("empty", function empty() {
         const val = flag(this, "object");
+        const ssfi = flag(this, "ssfi");
+        let flagMsg = flag(this, "message");
+        flagMsg = flagMsg ? `${flagMsg}: ` : "";
         let itemsCount;
 
         switch (util.type(val).toLowerCase()) {
@@ -209,15 +214,15 @@ export default function (lib, util) {
             }
             case "weakmap":
             case "weakset": {
-                throw new TypeError(".empty was passed a weak collection");
+                throw new AssertionError(`${flagMsg}.empty was passed a weak collection`, undefined, ssfi);
             }
             case "function": {
-                const msg = `.empty was passed a function ${util.getName(val)}`;
-                throw new TypeError(msg.trim());
+                const msg = `${flagMsg}.empty was passed a function ${util.getName(val)}`;
+                throw new AssertionError(msg.trim(), undefined, ssfi);
             }
             default: {
                 if (val !== Object(val)) {
-                    throw new TypeError(`.empty was passed non-string primitive ${util.inspect(val)}`);
+                    throw new TypeError(`${flagMsg}.empty was passed non-string primitive ${util.inspect(val)}`);
                 }
                 itemsCount = adone.util.keys(val).length;
             }
@@ -288,15 +293,18 @@ export default function (lib, util) {
         }
         const obj = flag(this, "object");
         const doLength = flag(this, "doLength");
+        let flagMsg = flag(this, "message");
+        const ssfi = flag(this, "ssfi");
 
         if (doLength) {
-            getAssertion(obj, msg).to.have.property("length");
+            getAssertion(obj, flagMsg, ssfi, true).to.have.property("length");
         } else {
-            getAssertion(obj, msg).is.a("number");
+            getAssertion(obj, flagMsg, ssfi, true).is.a("number");
         }
 
         if (!is.number(n)) {
-            throw new x.InvalidArgument("the argument to above must be a number");
+            flagMsg = flagMsg ? `${flagMsg}: ` : "";
+            throw new AssertionError(`${flagMsg}the argument to above must be a number`, undefined, ssfi);
         }
 
         if (doLength) {
@@ -327,15 +335,18 @@ export default function (lib, util) {
         }
         const obj = flag(this, "object");
         const doLength = flag(this, "doLength");
+        let flagMsg = flag(this, "message");
+        const ssfi = flag(this, "ssfi");
 
         if (doLength) {
-            getAssertion(obj, msg).to.have.property("length");
+            getAssertion(obj, flagMsg, ssfi, true).to.have.property("length");
         } else {
-            getAssertion(obj, msg).is.a("number");
+            getAssertion(obj, flagMsg, ssfi, true).is.a("number");
         }
 
         if (!is.number(n)) {
-            throw new x.InvalidArgument("the argument to least must be a number");
+            flagMsg = flagMsg ? `${flagMsg}: ` : "";
+            throw new AssertionError(`${flagMsg}the argument to least must be a number`, undefined, ssfi);
         }
 
         if (doLength) {
@@ -365,15 +376,18 @@ export default function (lib, util) {
         }
         const obj = flag(this, "object");
         const doLength = flag(this, "doLength");
+        let flagMsg = flag(this, "message");
+        const ssfi = flag(this, "ssfi");
 
         if (doLength) {
-            getAssertion(obj, msg).to.have.property("length");
+            getAssertion(obj, flagMsg, ssfi, true).to.have.property("length");
         } else {
-            getAssertion(obj, msg).is.a("number");
+            getAssertion(obj, flagMsg, ssfi, true).is.a("number");
         }
 
         if (!is.number(n)) {
-            throw new x.InvalidArgument("the argument to below must be a number");
+            flagMsg = flagMsg ? `${flagMsg}: ` : "";
+            throw new AssertionError(`${flagMsg}the argument to below must be a number`, undefined, ssfi);
         }
 
         if (doLength) {
@@ -404,15 +418,18 @@ export default function (lib, util) {
         }
         const obj = flag(this, "object");
         const doLength = flag(this, "doLength");
+        let flagMsg = flag(this, "message");
+        const ssfi = flag(this, "ssfi");
 
         if (doLength) {
-            getAssertion(obj, msg).to.have.property("length");
+            getAssertion(obj, flagMsg, ssfi, true).to.have.property("length");
         } else {
-            getAssertion(obj, msg).is.a("number");
+            getAssertion(obj, flagMsg, ssfi, true).is.a("number");
         }
 
         if (!is.number(n)) {
-            throw new x.InvalidArgument("the argument to most must be a number");
+            flagMsg = flagMsg ? `${flagMsg}: ` : "";
+            throw new x.InvalidArgument(`${flagMsg}the argument to most must be a number`);
         }
 
         if (doLength) {
@@ -436,36 +453,43 @@ export default function (lib, util) {
     Assertion.addMethod("most", assertMost);
     Assertion.addMethod("lte", assertMost);
 
-    Assertion.addMethod("within", function within(start, finish, msg) {
+    Assertion.addMethod("within", function (start, finish, msg) {
         if (msg) {
             flag(this, "message", msg);
         }
         const obj = flag(this, "object");
         const range = `${start}..${finish}`;
         const doLength = flag(this, "doLength");
+        let flagMsg = flag(this, "message");
+        const ssfi = flag(this, "ssfi");
 
         if (doLength) {
-            getAssertion(obj, msg).to.have.property("length");
+            getAssertion(obj, flagMsg, ssfi, true).to.have.property("length");
         } else {
-            getAssertion(obj, msg).is.a("number");
+            getAssertion(obj, flagMsg, ssfi, true).is.a("number");
         }
 
         if (!is.number(start) || !is.number(finish)) {
-            throw new x.InvalidArgument("the arguments to within must be numbers");
+            flagMsg = flagMsg ? `${flagMsg}: ` : "";
+            throw new AssertionError(
+                `${flagMsg}the arguments to within must be numbers`,
+                undefined,
+                ssfi
+            );
         }
 
         if (doLength) {
             const len = obj.length;
             this.assert(
-                len >= start && len <= finish,
-                `expected #{this} to have a length within ${range}`,
-                `expected #{this} to not have a length within ${range}`
+                len >= start && len <= finish
+                , `expected #{this} to have a length within ${range}`
+                , `expected #{this} to not have a length within ${range}`
             );
         } else {
             this.assert(
-                obj >= start && obj <= finish,
-                `expected #{this} to be within ${range}`,
-                `expected #{this} to not be within ${range}`
+                obj >= start && obj <= finish
+                , `expected #{this} to be within ${range}`
+                , `expected #{this} to not be within ${range}`
             );
         }
     });
@@ -474,11 +498,32 @@ export default function (lib, util) {
         if (msg) {
             flag(this, "message", msg);
         }
-        const name = util.getName(constructor);
+
+        const target = flag(this, "object");
+        const ssfi = flag(this, "ssfi");
+        let flagMsg = flag(this, "message");
+        const validInstanceOfTarget =
+            constructor === Object(constructor) &&
+            (is.function(constructor) || Symbol.hasInstance in constructor);
+
+        if (!validInstanceOfTarget) {
+            flagMsg = flagMsg ? `${flagMsg}: ` : "";
+            const constructorType = is.null(constructor) ? "null" : typeof constructor;
+            throw new AssertionError(
+                `${flagMsg}The instanceof assertion needs a constructor but ${constructorType} was given.`,
+                undefined,
+                ssfi
+            );
+        }
+        const isInstanceOf = target instanceof constructor;
+
+        let name = util.getName(constructor);
+        if (is.null(name)) {
+            name = "an unnamed constructor";
+        }
+
         this.assert(
-            flag(this, "object") instanceof constructor,
-            `expected #{this} to be an instance of ${name}`,
-            `expected #{this} to not be an instance of ${name}`
+            isInstanceOf, `expected #{this} to be an instance of ${name}`, `expected #{this} to not be an instance of ${name}`
         );
     };
 
@@ -492,9 +537,12 @@ export default function (lib, util) {
 
         const isNested = flag(this, "nested");
         const isOwn = flag(this, "own");
+        let flagMsg = flag(this, "message");
+        const ssfi = flag(this, "ssfi");
 
         if (isNested && isOwn) {
-            throw new x.IllegalState("The \"nested\" and \"own\" flags cannot be combined.");
+            flagMsg = flagMsg ? `${flagMsg}: ` : "";
+            throw new AssertionError(`${flagMsg}The "nested" and "own" flags cannot be combined.`, undefined, ssfi);
         }
 
         const isDeep = flag(this, "deep");
@@ -600,7 +648,9 @@ export default function (lib, util) {
             flag(this, "message", msg);
         }
         const obj = flag(this, "object");
-        getAssertion(obj, msg).to.have.property("length");
+        const flagMsg = flag(this, "message");
+        const ssfi = flag(this, "ssfi");
+        getAssertion(obj, flagMsg, ssfi, true).to.have.property("length");
         const len = obj.length;
 
         this.assert(
@@ -613,7 +663,7 @@ export default function (lib, util) {
     };
 
     Assertion.addChainableMethod("length", assertLength, assertLengthChain);
-    Assertion.addMethod("lengthOf", assertLength);
+    Assertion.addChainableMethod("lengthOf", assertLength, assertLengthChain);
 
     const assertMatch = function (re, msg) {
         if (msg) {
@@ -635,7 +685,9 @@ export default function (lib, util) {
             flag(this, "message", msg);
         }
         const obj = flag(this, "object");
-        getAssertion(obj, msg).is.a("string");
+        const flagMsg = flag(this, "message");
+        const ssfi = flag(this, "ssfi");
+        getAssertion(obj, flagMsg, ssfi, true).is.a("string");
 
         this.assert(
             obj.includes(str),
@@ -649,12 +701,15 @@ export default function (lib, util) {
         const obj = flag(this, "object");
         const objType = util.type(obj);
         const keysType = util.type(keys);
+        const ssfi = flag(this, "ssfi");
         const isDeep = flag(this, "deep");
         let str;
         let deepStr = "";
         let ok = true;
         let actual;
-        const mixedArgsMsg = "when testing keys against an object or an array you must give a single Array|Object|String argument or multiple String arguments";
+        let flagMsg = flag(this, "message");
+        flagMsg = flagMsg ? `${flagMsg}: ` : "";
+        const mixedArgsMsg = `${flagMsg}when testing keys against an object or an array you must give a single Array|Object|String argument or multiple String arguments`;
 
         if (objType === "Map" || objType === "Set") {
             deepStr = isDeep ? "deeply " : "";
@@ -674,13 +729,13 @@ export default function (lib, util) {
             switch (keysType) {
                 case "Array": {
                     if (args.length > 1) {
-                        throw new x.IllegalState(mixedArgsMsg);
+                        throw new AssertionError(mixedArgsMsg, undefined, ssfi);
                     }
                     break;
                 }
                 case "Object": {
                     if (args.length > 1) {
-                        throw new x.IllegalState(mixedArgsMsg);
+                        throw new AssertionError(mixedArgsMsg, undefined, ssfi);
                     }
                     keys = adone.util.keys(keys);
                     break;
@@ -695,7 +750,7 @@ export default function (lib, util) {
         }
 
         if (!keys.length) {
-            throw new x.InvalidArgument("keys required");
+            throw new AssertionError(`${flagMsg}keys required`, undefined, ssfi);
         }
 
         const { length } = keys;
@@ -720,7 +775,7 @@ export default function (lib, util) {
                 return isDeep ? util.eql(expectedKey, actualKey) : expectedKey === actualKey;
             }));
 
-            if (!flag(this, "negate") && !flag(this, "contains")) {
+            if (!flag(this, "contains")) {
                 ok = ok && keys.length === actual.length;
             }
         }
@@ -764,8 +819,10 @@ export default function (lib, util) {
             flag(this, "message", msg);
         }
         const obj = flag(this, "object");
+        const ssfi = flag(this, "ssfi");
         const negate = flag(this, "negate") || false;
-        getAssertion(obj, msg).is.a("function");
+        const flagMsg = flag(this, "message");
+        getAssertion(obj, flagMsg, ssfi, true).is.a("function");
 
         if (is.regexp(errorLike) || is.string(errorLike)) {
             errMsgMatcher = errorLike;
@@ -797,9 +854,11 @@ export default function (lib, util) {
                     `expected #{this} to throw ${errorLikeString}`,
                     "expected #{this} to not throw an error but #{act} was thrown",
                     errorLike && errorLike.toString(),
-                    (caughtErr instanceof Error ? caughtErr.toString() :
-                        (typeof caughtErr === "string" ? caughtErr :
-                            caughtErr && util.checkError.getConstructorName(caughtErr)))
+                    (caughtErr instanceof Error
+                        ? caughtErr.toString()
+                        : (is.string(caughtErr)
+                            ? caughtErr
+                            : caughtErr && util.checkError.getConstructorName(caughtErr)))
                 );
             }
 
@@ -953,10 +1012,13 @@ export default function (lib, util) {
             flag(this, "message", msg);
         }
         const obj = flag(this, "object");
+        let flagMsg = flag(this, "message");
+        const ssfi = flag(this, "ssfi");
 
-        getAssertion(obj, msg).is.a("number");
+        getAssertion(obj, flagMsg, ssfi, true).is.a("number");
         if (!is.number(expected) || !is.number(delta)) {
-            throw new x.InvalidArgument("the arguments to closeTo or approximately must be numbers");
+            flagMsg = flagMsg ? `${flagMsg}: ` : "";
+            throw new AssertionError(`${flagMsg}the arguments to closeTo or approximately must be numbers`, undefined, ssfi);
         }
 
         this.assert(
@@ -1015,9 +1077,11 @@ export default function (lib, util) {
             flag(this, "message", msg);
         }
         const obj = flag(this, "object");
+        const flagMsg = flag(this, "message");
+        const ssfi = flag(this, "ssfi");
 
-        getAssertion(obj).to.be.an("array");
-        getAssertion(subset).to.be.an("array");
+        getAssertion(obj, flagMsg, ssfi, true).to.be.an("array");
+        getAssertion(subset, flagMsg, ssfi, true).to.be.an("array");
 
         const contains = flag(this, "contains");
         const ordered = flag(this, "ordered");
@@ -1053,7 +1117,9 @@ export default function (lib, util) {
             flag(this, "message", msg);
         }
         const expected = flag(this, "object");
-        getAssertion(list).to.be.an("array");
+        const flagMsg = flag(this, "message");
+        const ssfi = flag(this, "ssfi");
+        getAssertion(list, flagMsg, ssfi, true).to.be.an("array");
 
         this.assert(
             list.includes(expected),
@@ -1067,25 +1133,27 @@ export default function (lib, util) {
     Assertion.addMethod("oneOf", oneOf);
 
 
-    const assertChanges = function (target, prop, msg) {
+    const assertChanges = function (subject, prop, msg) {
         if (msg) {
             flag(this, "message", msg);
         }
         const fn = flag(this, "object");
-        getAssertion(fn).is.a("function");
+        const flagMsg = flag(this, "message");
+        const ssfi = flag(this, "ssfi");
+        getAssertion(fn, flagMsg, ssfi, true).is.a("function");
 
         let initial;
         if (!prop) {
-            getAssertion(target).is.a("function");
-            initial = target();
+            getAssertion(subject, flagMsg, ssfi, true).is.a("function");
+            initial = subject();
         } else {
-            getAssertion(target, msg).to.have.property(prop);
-            initial = target[prop];
+            getAssertion(subject, flagMsg, ssfi, true).to.have.property(prop);
+            initial = subject[prop];
         }
 
         fn();
 
-        const final = is.nil(prop) ? target() : target[prop];
+        const final = is.nil(prop) ? subject() : subject[prop];
         const msgObj = is.nil(prop) ? initial : `.${prop}`;
 
         // This gets flagged because of the .by(delta) assertion
@@ -1096,37 +1164,39 @@ export default function (lib, util) {
         flag(this, "realDelta", final !== initial);
 
         this.assert(
-            initial !== final,
-            `expected ${msgObj} to change`,
-            `expected ${msgObj} to not change`
+            initial !== final
+            , `expected ${msgObj} to change`
+            , `expected ${msgObj} to not change`
         );
     };
 
-    Assertion.addChainableMethod("change", assertChanges);
-    Assertion.addChainableMethod("changes", assertChanges);
+    Assertion.addMethod("change", assertChanges);
+    Assertion.addMethod("changes", assertChanges);
 
-    const assertIncreases = function (target, prop, msg) {
+    const assertIncreases = function (subject, prop, msg) {
         if (msg) {
             flag(this, "message", msg);
         }
         const fn = flag(this, "object");
-        getAssertion(fn).is.a("function");
+        const ssfi = flag(this, "ssfi");
+        const flagMsg = flag(this, "message");
+        getAssertion(fn, flagMsg, ssfi, true).is.a("function");
 
         let initial;
         if (!prop) {
-            getAssertion(target).is.a("function");
-            initial = target();
+            getAssertion(subject, flagMsg, ssfi, true).is.a("function");
+            initial = subject();
         } else {
-            getAssertion(target, msg).to.have.property(prop);
-            initial = target[prop];
+            getAssertion(subject, flagMsg, ssfi, true).to.have.property(prop);
+            initial = subject[prop];
         }
 
         // Make sure that the target is a number
-        getAssertion(initial).is.a("number");
+        getAssertion(initial, flagMsg, ssfi, true).is.a("number");
 
         fn();
 
-        const final = is.nil(prop) ? target() : target[prop];
+        const final = is.nil(prop) ? subject() : subject[prop];
         const msgObj = is.nil(prop) ? initial : `.${prop}`;
 
         flag(this, "deltaMsgObj", msgObj);
@@ -1142,31 +1212,33 @@ export default function (lib, util) {
         );
     };
 
-    Assertion.addChainableMethod("increase", assertIncreases);
-    Assertion.addChainableMethod("increases", assertIncreases);
+    Assertion.addMethod("increase", assertIncreases);
+    Assertion.addMethod("increases", assertIncreases);
 
-    const assertDecreases = function (target, prop, msg) {
+    const assertDecreases = function (subject, prop, msg) {
         if (msg) {
             flag(this, "message", msg);
         }
         const fn = flag(this, "object");
-        getAssertion(fn).is.a("function");
+        const flagMsg = flag(this, "message");
+        const ssfi = flag(this, "ssfi");
+        getAssertion(fn, flagMsg, ssfi, true).is.a("function");
 
         let initial;
         if (!prop) {
-            getAssertion(target).is.a("function");
-            initial = target();
+            getAssertion(subject, flagMsg, ssfi, true).is.a("function");
+            initial = subject();
         } else {
-            getAssertion(target, msg).to.have.property(prop);
-            initial = target[prop];
+            getAssertion(subject, flagMsg, ssfi, true).to.have.property(prop);
+            initial = subject[prop];
         }
 
         // Make sure that the target is a number
-        getAssertion(initial).is.a("number");
+        getAssertion(initial, flagMsg, ssfi, true).is.a("number");
 
         fn();
 
-        const final = is.nil(prop) ? target() : target[prop];
+        const final = is.nil(prop) ? subject() : subject[prop];
         const msgObj = is.nil(prop) ? initial : `.${prop}`;
 
         flag(this, "deltaMsgObj", msgObj);
@@ -1182,10 +1254,13 @@ export default function (lib, util) {
         );
     };
 
-    Assertion.addChainableMethod("decrease", assertDecreases);
-    Assertion.addChainableMethod("decreases", assertDecreases);
+    Assertion.addMethod("decrease", assertDecreases);
+    Assertion.addMethod("decreases", assertDecreases);
 
-    const assertDelta = function (delta) {
+    const assertDelta = function (delta, msg) {
+        if (msg) {
+            flag(this, "message", msg);
+        }
         const msgObj = flag(this, "deltaMsgObj");
         const initial = flag(this, "initialDeltaValue");
         const final = flag(this, "finalDeltaValue");
@@ -1247,90 +1322,4 @@ export default function (lib, util) {
             "expected #{this} to not be a finite number"
         );
     });
-
-    {
-        // wrap everything and support promises
-
-        Assertion.addProperty("eventually", function eventually() {
-            flag(this, "eventually", true);
-        });
-
-        const properties = Object.getOwnPropertyNames(Assertion.prototype);
-
-        const descriptors = {};
-        for (const prop of properties) {
-            descriptors[prop] = Object.getOwnPropertyDescriptor(Assertion.prototype, prop);
-        }
-        const methodNames = properties.filter((x) => {
-            return x !== "assert" && x !== "constructor" && is.function(descriptors[x].value);
-        });
-
-        const eventuallyHandler = (context, original, args = []) => {
-            if (!flag(context, "eventually")) {
-                original.apply(context, args);
-                return;
-            }
-
-            context._obj = Promise.resolve(context._obj).then((value) => {
-                context._obj = value;
-                return original.apply(context, args);
-            }).then(() => {
-                // console.log(cotnext._obj);
-                // context._obj = Promise.resolve(context._obj);
-                return context._obj;
-            });
-        };
-
-        for (const methodName of methodNames) {
-            Assertion.overwriteMethod(methodName, (original) => {
-                return function (...args) {
-                    eventuallyHandler(this, original, args);
-                };
-            });
-        }
-
-        const getterNames = properties.filter((x) => {
-            return x !== "_obj" && is.function(descriptors[x].get);
-        });
-
-        for (const getterName of getterNames) {
-            // Chainable methods are things like `an`, which can work both for `.should.be.an.instanceOf` and as
-            // `should.be.an("object")`. We need to handle those specially.
-            const isChainableMethod = Assertion.prototype.__methods.hasOwnProperty(getterName);
-
-            if (isChainableMethod) {
-                Assertion.overwriteChainableMethod(
-                    getterName,
-                    function method(original) {
-                        return function (...args) {
-                            eventuallyHandler(this, original, args);
-                        };
-                    },
-                    function getter(original) {
-                        return function () {
-                            eventuallyHandler(this, original);
-                        };
-                    }
-                );
-            } else {
-                Assertion.overwriteProperty(getterName, function getter(original) {
-                    return function () {
-                        eventuallyHandler(this, original);
-                    };
-                });
-            }
-        }
-
-        Assertion.addMethod("then", function _then(onResolve, onReject) {
-            const obj = flag(this, "object");
-            const o = is.promise(obj) ? obj : Promise.resolve(obj);
-            return o.then(onResolve, onReject);
-        });
-
-        Assertion.addMethod("catch", function _catch(onReject) {
-            const obj = flag(this, "object");
-            const o = is.promise(obj) ? obj : Promise.resolve(obj);
-            return o.catch(onReject);
-        });
-    }
 }

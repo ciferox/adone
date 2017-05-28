@@ -1,24 +1,24 @@
 const { lazify } = adone;
 
-const lazy = lazify({
-    assertion: "./lib/assertion",
-    core: "./lib/core/assertions",
-    assertInterface: "./lib/interface/assert",
-    expectInterface: "./lib/interface/expect",
-    mockInterface: "./lib/interface/mock"
-}, null, require);
-
 const assertion = lazify({
-    util: "./lib/utils",
-    config: "./lib/config",
-    AssertionError: "./assertion_error"
+    AssertionError: "./assertion_error",
+    config: "./config"
 }, exports, require);
+
+export const __ = lazify({
+    util: "./__/utils",
+    assertion: "./__/assertion",
+    core: "./__/core/assertions",
+    assertInterface: "./__/interface/assert",
+    expectInterface: "./__/interface/expect",
+    mockInterface: "./__/interface/mock"
+}, null, require);
 
 export const used = new Set();
 
 export const use = (fn) => {
     if (!used.has(fn)) {
-        fn(assertion, assertion.util);
+        fn(assertion, __.util);
         used.add(fn);
     }
     return assertion;
@@ -26,21 +26,21 @@ export const use = (fn) => {
 
 export const loadMockInterface = () => {
     return assertion
-        .use(lazy.assertion)
-        .use(lazy.core)
-        .use(lazy.mockInterface);
+        .use(__.assertion)
+        .use(__.core)
+        .use(__.mockInterface);
 };
 
 export const loadAssertInterface = () => {
     return assertion
-        .use(lazy.assertion)
-        .use(lazy.core)
-        .use(lazy.assertInterface);
+        .use(__.assertion)
+        .use(__.core)
+        .use(__.assertInterface);
 };
 
 export const loadExpectInterface = () => {
     return assertion
-        .use(lazy.assertion)
-        .use(lazy.core)
-        .use(lazy.expectInterface);
+        .use(__.assertion)
+        .use(__.core)
+        .use(__.expectInterface);
 };

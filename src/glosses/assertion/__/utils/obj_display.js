@@ -1,30 +1,8 @@
-/*!
- * Flag utility
- * Copyright(c) 2012-2014 Jake Luer <jake@alogicalparadox.com>
- * MIT Licensed
- */
+const { assertion: $assert } = adone;
+const { __: { util }, config } = $assert;
 
-/*!
- * Module dependancies
- */
-import inspect from "./inspect";
-import config from "../config";
-
-/**
- * ### .objDisplay (object)
- *
- * Determines if an object or an array matches
- * criteria to be inspected in-line for error
- * messages or should be truncated.
- *
- * @param {Mixed} javascript object to inspect
- * @name objDisplay
- * @namespace Utils
- * @api public
- */
-
-export default function (obj) {
-    const str = inspect(obj);
+export default function objDisplay(obj) {
+    const str = util.inspect(obj);
     const type = Object.prototype.toString.call(obj);
 
     if (config.truncateThreshold && str.length >= config.truncateThreshold) {
@@ -40,10 +18,10 @@ export default function (obj) {
                     ? `${keys.splice(0, 2).join(", ")}, ...`
                     : keys.join(", ");
             return `{ Object (${kstr}) }`;
-        } 
+        }
         return str;
-        
-    } 
+
+    }
     return str;
-    
+
 }

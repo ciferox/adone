@@ -1,10 +1,10 @@
 const { assertion } = adone;
 assertion.loadExpectInterface();
-const { util, expect, AssertionError } = assertion;
+const { __: { util }, expect, AssertionError } = assertion;
 
 export function err(fn, val) {
     if (util.type(fn) !== "function") {
-        throw new AssertionError("Invalid fn"); 
+        throw new AssertionError("Invalid fn");
     }
 
     try {

@@ -4,8 +4,9 @@ export default function (lib, util) {
     const { flag } = util;
 
     class Assertion {
-        constructor(object, msg, stack) {
+        constructor(object, msg, stack, lockSsfi) {
             flag(this, "ssfi", stack || Assertion);
+            flag(this, "lockSsfi", lockSsfi);
             flag(this, "object", object);
             flag(this, "message", msg);
         }
@@ -68,5 +69,5 @@ export default function (lib, util) {
     }
 
     lib.Assertion = Assertion;
-    lib.getAssertion = (obj, msg, stack) => util.proxify(new Assertion(obj, msg, stack));
+    lib.getAssertion = (obj, msg, stack, lockSsfi) => util.proxify(new Assertion(obj, msg, stack, lockSsfi));
 }

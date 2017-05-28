@@ -2,11 +2,11 @@ const { assertion } = adone;
 
 assertion.loadExpectInterface();
 
-describe("plugins", () => {
+describe("assertion", "plugins", () => {
 
     function plugin(assertion) {
         if (assertion.Assertion.prototype.testing) {
-            return; 
+            return;
         }
 
         Object.defineProperty(assertion.Assertion.prototype, "testing", {

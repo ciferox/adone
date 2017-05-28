@@ -190,8 +190,8 @@ export const unixifyPath = (filePath, unescape = false) => {
 };
 
 export const functionName = (fn) => {
-    if (typeof fn !== "function") {
-        throw new TypeError("expected a function");
+    if (!is.function(fn)) {
+        return null;
     }
 
     let fnName = fn.displayName || fn.name || (/function ([^\(]+)?\(/.exec(fn.toString()) || [])[1] || null;

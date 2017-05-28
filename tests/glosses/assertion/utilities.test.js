@@ -1,10 +1,10 @@
 const { assertion } = adone;
 assertion.loadExpectInterface();
-const { util: { pathval } } = assertion;
+const { __: { util: { pathval, flag } } } = assertion;
 
-describe("utilities", () => {
-    const flags = Symbol.for("shani:assert:flags");
+describe("assertion", "utilities", () => {
     const expect = assertion.expect;
+    // const assert = assertion.assert;
 
     after(() => {
         // Some clean-up so we can run tests in a --watch
@@ -38,7 +38,7 @@ describe("utilities", () => {
         });
     });
 
-    it.skip("transferFlags, includeAll = false", () => {
+    it("transferFlags, includeAll = false", () => {
         assertion.use((_assertion, utils) => {
             const obj = {};
             const test = function () { };
@@ -51,6 +51,29 @@ describe("utilities", () => {
             expect(utils.flag(obj, "object")).to.equal(undefined);
             expect(utils.flag(obj, "message")).to.equal(undefined);
             expect(utils.flag(obj, "ssfi")).to.equal(undefined);
+            expect(utils.flag(obj, "negate")).to.equal(true);
+            expect(utils.flag(obj, "flagMe")).to.equal(flag);
+        });
+    });
+
+    it("transferFlags, includeAll = true", () => {
+        const foo = "bar";
+
+        assertion.use((_assertion, utils) => {
+            const target = {};
+            const test = function () { };
+
+            const assertion = _assertion.getAssertion(target, "message", test, true);
+            const flag = {};
+            utils.flag(assertion, "flagMe", flag);
+            utils.flag(assertion, "negate", true);
+            const obj = {};
+            utils.transferFlags(assertion, obj, true);
+
+            expect(utils.flag(obj, "object")).to.equal(target);
+            expect(utils.flag(obj, "message")).to.equal("message");
+            expect(utils.flag(obj, "ssfi")).to.equal(test);
+            expect(utils.flag(obj, "lockSsfi")).to.equal(true);
             expect(utils.flag(obj, "negate")).to.equal(true);
             expect(utils.flag(obj, "flagMe")).to.equal(flag);
         });
@@ -130,6 +153,28 @@ describe("utilities", () => {
             const anotherAssertion = expect([1, 2, 3]).to.have.a.lengthOf(3).and.to.be.ok;
             expect(anotherAssertion.length.constructor).to.equal(assertionConstructor);
         });
+
+        it("addMethod sets `ssfi` when `lockSsfi` isn't set", () => {
+            const origAssertion = expect(1);
+            const origSsfi = flag(origAssertion, "ssfi");
+
+            const newAssertion = origAssertion.eqqqual(1);
+            const newSsfi = flag(newAssertion, "ssfi");
+
+            expect(origSsfi).to.not.equal(newSsfi);
+        });
+
+        it("addMethod doesn't set `ssfi` when `lockSsfi` is set", () => {
+            const origAssertion = expect(1);
+            const origSsfi = flag(origAssertion, "ssfi");
+
+            flag(origAssertion, "lockSsfi", true);
+
+            const newAssertion = origAssertion.eqqqual(1);
+            const newSsfi = flag(newAssertion, "ssfi");
+
+            expect(origSsfi).to.equal(newSsfi);
+        });
     });
 
     describe("overwriteMethod", () => {
@@ -197,9 +242,9 @@ describe("utilities", () => {
             });
 
             const vege = expect("cucumber").to.eqqqual("cucumber");
-            expect(vege[flags]).to.not.have.property("cucumber");
+            expect(vege.__flags).to.not.have.property("cucumber");
             const cuke = expect("cucumber").to.eqqqual("cuke");
-            expect(cuke[flags]).to.have.property("cucumber");
+            expect(cuke.__flags).to.have.property("cucumber");
 
             assertion.use((_assertion, _) => {
                 expect(_assertion.Assertion).to.not.respondTo("doesnotexist");
@@ -212,7 +257,7 @@ describe("utilities", () => {
             });
 
             const dne = expect("something").to.doesnotexist();
-            expect(dne[flags]).to.have.property("doesnt");
+            expect(dne.__flags).to.have.property("doesnt");
 
             assertion.use((_assertion, _) => {
                 expect(_assertion.Assertion).to.not.respondTo("doesnotexistfail");
@@ -232,7 +277,7 @@ describe("utilities", () => {
             } catch (e) {
                 dneError = e;
             }
-            expect(dneFail[flags]).to.have.property("doesnt");
+            expect(dneFail.__flags).to.have.property("doesnt");
             expect(dneError.message).to.eql("doesnotexistfail is not a function");
         });
 
@@ -295,17 +340,41 @@ describe("utilities", () => {
             // Ensure that foo returns an Assertion (not a function)
             expect(expect("four").four()).to.be.an.instanceOf(assertionConstructor);
         });
+
+        it("overwriteMethod sets `ssfi` when `lockSsfi` isn't set", () => {
+            const origAssertion = expect(4);
+            const origSsfi = flag(origAssertion, "ssfi");
+
+            const newAssertion = origAssertion.four();
+            const newSsfi = flag(newAssertion, "ssfi");
+
+            expect(origSsfi).to.not.equal(newSsfi);
+        });
+
+        it("overwriteMethod doesn't set `ssfi` when `lockSsfi` is set", () => {
+            const origAssertion = expect(4);
+            const origSsfi = flag(origAssertion, "ssfi");
+
+            flag(origAssertion, "lockSsfi", true);
+
+            const newAssertion = origAssertion.four();
+            const newSsfi = flag(newAssertion, "ssfi");
+
+            expect(origSsfi).to.equal(newSsfi);
+        });
     });
 
     describe("addProperty", () => {
-        let assertionConstructor = assertion.Assertion;
+        let assertionConstructor;
+        let utils;
 
         before(() => {
-            assertion.use((_assertion, utils) => {
+            assertion.use((_assertion, _utils) => {
+                utils = _utils;
                 assertionConstructor = _assertion.Assertion;
 
                 _assertion.Assertion.addProperty("tea", function () {
-                    utils.flag(this, "tea", "assertion");
+                    utils.flag(this, "tea", "chai");
                 });
 
                 _assertion.Assertion.addProperty("result", () => {
@@ -336,8 +405,8 @@ describe("utilities", () => {
         });
 
         it("addProperty", () => {
-            const assert = expect("assertion").to.be.tea;
-            expect(assert[flags].tea).to.equal("assertion");
+            const assert = expect("chai").to.be.tea;
+            expect(assert.__flags.tea).to.equal("chai");
         });
 
         it("addProperty returning result", () => {
@@ -360,12 +429,34 @@ describe("utilities", () => {
             // Checking if it's really an instance of an Assertion
             expect(assertion2).to.be.instanceOf(assertionConstructor);
 
-            // Test assertionning `.length` after a property to guarantee it is not a function's `length`
+            // Test chaining `.length` after a property to guarantee it is not a function's `length`
             expect([1, 2, 3]).to.be.a.thing.with.length.above(2);
             expect([1, 2, 3]).to.be.an.instanceOf(Array).and.have.length.below(4);
 
             expect(expect([1, 2, 3]).be).to.be.an.instanceOf(assertionConstructor);
             expect(expect([1, 2, 3]).thing).to.be.an.instanceOf(assertionConstructor);
+        });
+
+        it("addProperty sets `ssfi` when `lockSsfi` isn't set", () => {
+            const origAssertion = expect(1);
+            const origSsfi = utils.flag(origAssertion, "ssfi");
+
+            const newAssertion = origAssertion.to.be.tea;
+            const newSsfi = utils.flag(newAssertion, "ssfi");
+
+            expect(origSsfi).to.not.equal(newSsfi);
+        });
+
+        it("addProperty doesn't set `ssfi` when `lockSsfi` is set", () => {
+            const origAssertion = expect(1);
+            const origSsfi = utils.flag(origAssertion, "ssfi");
+
+            utils.flag(origAssertion, "lockSsfi", true);
+
+            const newAssertion = origAssertion.to.be.tea;
+            const newSsfi = utils.flag(newAssertion, "ssfi");
+
+            expect(origSsfi).to.equal(newSsfi);
         });
     });
 
@@ -444,9 +535,9 @@ describe("utilities", () => {
 
         it("overwriteProperty", () => {
             const matcha = expect("matcha").to.be.tea;
-            expect(matcha[flags].tea).to.equal("matcha");
+            expect(matcha.__flags.tea).to.equal("matcha");
             const assert = expect("something").to.be.tea;
-            expect(assert[flags].tea).to.equal("assertion");
+            expect(assert.__flags.tea).to.equal("assertion");
         });
 
         it("overwriteProperty returning result", () => {
@@ -503,6 +594,28 @@ describe("utilities", () => {
 
             expect(expect([1, 2, 3]).be).to.be.an.instanceOf(assertionConstructor);
             expect(expect([1, 2, 3]).foo).to.be.an.instanceOf(assertionConstructor);
+        });
+
+        it("overwriteProperty sets `ssfi` when `lockSsfi` isn't set", () => {
+            const origAssertion = expect(4);
+            const origSsfi = flag(origAssertion, "ssfi");
+
+            const newAssertion = origAssertion.to.be.four;
+            const newSsfi = flag(newAssertion, "ssfi");
+
+            expect(origSsfi).to.not.equal(newSsfi);
+        });
+
+        it("overwriteProperty doesn't set `ssfi` when `lockSsfi` is set", () => {
+            const origAssertion = expect(4);
+            const origSsfi = flag(origAssertion, "ssfi");
+
+            flag(origAssertion, "lockSsfi", true);
+
+            const newAssertion = origAssertion.to.be.four;
+            const newSsfi = flag(newAssertion, "ssfi");
+
+            expect(origSsfi).to.equal(newSsfi);
         });
     });
 
@@ -733,9 +846,31 @@ describe("utilities", () => {
             // Ensure that foo returns an Assertion (not a function)
             expect(expect("bar").foo("bar")).to.be.an.instanceOf(assertionConstructor);
         });
+
+        it("addChainableMethod sets `ssfi` when `lockSsfi` isn't set", () => {
+            const origAssertion = expect({ a: "x" });
+            const origSsfi = flag(origAssertion, "ssfi");
+
+            const newAssertion = origAssertion.to.be.x();
+            const newSsfi = flag(newAssertion, "ssfi");
+
+            expect(origSsfi).to.not.equal(newSsfi);
+        });
+
+        it("addChainableMethod doesn't set `ssfi` when `lockSsfi` is set", () => {
+            const origAssertion = expect({ a: "x" });
+            const origSsfi = flag(origAssertion, "ssfi");
+
+            flag(origAssertion, "lockSsfi", true);
+
+            const newAssertion = origAssertion.to.be.x();
+            const newSsfi = flag(newAssertion, "ssfi");
+
+            expect(origSsfi).to.equal(newSsfi);
+        });
     });
 
-    describe("overwriteassertionnableMethod", () => {
+    describe("overwriteChainableMethod", () => {
         let assertionConstructor;
         let utils;
 
@@ -836,6 +971,28 @@ describe("utilities", () => {
                 expect(expect({ a: "x" }).x).to.be.an.instanceOf(assertionConstructor);
             }
         });
+
+        it("overwriteChainableMethod sets `ssfi` when `lockSsfi` isn't set", () => {
+            const origAssertion = expect({ a: "x" });
+            const origSsfi = utils.flag(origAssertion, "ssfi");
+
+            const newAssertion = origAssertion.to.be.x();
+            const newSsfi = utils.flag(newAssertion, "ssfi");
+
+            expect(origSsfi).to.not.equal(newSsfi);
+        });
+
+        it("overwriteChainableMethod doesn't set `ssfi` when `lockSsfi` is set", () => {
+            const origAssertion = expect({ a: "x" });
+            const origSsfi = utils.flag(origAssertion, "ssfi");
+
+            utils.flag(origAssertion, "lockSsfi", true);
+
+            const newAssertion = origAssertion.to.be.x();
+            const newSsfi = utils.flag(newAssertion, "ssfi");
+
+            expect(origSsfi).to.equal(newSsfi);
+        });
     });
 
     it("compareByInspect", () => {
@@ -930,7 +1087,7 @@ describe("utilities", () => {
 
         it("returns enumerable property names and symbols", () => {
             if (typeof Symbol !== "function") {
-                return; 
+                return;
             }
 
             const cat = Symbol("cat");
@@ -960,7 +1117,7 @@ describe("utilities", () => {
 
     describe("proxified object", () => {
         if (typeof Proxy === "undefined" || typeof Reflect === "undefined") {
-            return; 
+            return;
         }
 
         let proxify;
@@ -1038,7 +1195,7 @@ describe("utilities", () => {
     });
 
     describe("pathval", () => {
-        const assert = assertion.assert;
+        const assert = adone.std.assert;
 
         describe("hasProperty", () => {
             it("should handle array index", () => {
@@ -1260,6 +1417,118 @@ describe("utilities", () => {
                 const valueReturned = pathval.setPathValue(obj, "hello[2]", 3);
                 assert(obj === valueReturned);
             });
+        });
+    });
+
+    describe("addLengthGuard", () => {
+        const fnLengthDesc = Object.getOwnPropertyDescriptor(() => { }, "length");
+        if (!fnLengthDesc.configurable) {
+            return;
+        }
+
+        let addLengthGuard;
+
+        beforeEach(() => {
+            assertion.use((__, _) => {
+                addLengthGuard = _.addLengthGuard;
+            });
+        });
+
+        it("throws invalid use error if `.length` is read when `methodName` is defined and `isChainable` is false", () => {
+            const hoagie = addLengthGuard({}, "hoagie", false);
+
+            expect(() => {
+                hoagie.length;
+            }).to.throw('Invalid property: hoagie.length. See docs for proper usage of "hoagie".');
+        });
+
+        it("throws incompatible `.length` error if `.length` is read when `methodName` is defined and `isChainable` is true", () => {
+            const hoagie = addLengthGuard({}, "hoagie", true);
+
+            expect(() => {
+                hoagie.length;
+            }).to.throw('Invalid property: hoagie.length. Due to a compatibility issue, "length" cannot directly follow "hoagie". Use "hoagie.lengthOf" instead.');
+        });
+    });
+
+    describe("isProxyEnabled", () => {
+        if (typeof Proxy === "undefined" || typeof Reflect === "undefined") {
+            return;
+        }
+
+        let origProxy, origReflect, origUseProxy, isProxyEnabled;
+
+        before(() => {
+            assertion.use((__, _) => {
+                isProxyEnabled = _.isProxyEnabled;
+            });
+
+            origProxy = Proxy;
+            origReflect = Reflect;
+            origUseProxy = assertion.config.useProxy;
+        });
+
+        beforeEach(() => {
+            Proxy = origProxy;
+            Reflect = origReflect;
+            assertion.config.useProxy = true;
+        });
+
+        after(() => {
+            Proxy = origProxy;
+            Reflect = origReflect;
+            assertion.config.useProxy = origUseProxy;
+        });
+
+        it("returns true if Proxy is defined, Reflect is defined, and useProxy is true", () => {
+            expect(isProxyEnabled()).to.be.true;
+        });
+
+        it("returns false if Proxy is defined, Reflect is defined, and useProxy is false", () => {
+            assertion.config.useProxy = false;
+
+            expect(isProxyEnabled()).to.be.false;
+        });
+
+        it("returns false if Proxy is defined, Reflect is undefined, and useProxy is true", () => {
+            Reflect = undefined;
+
+            expect(isProxyEnabled()).to.be.false;
+        });
+
+        it("returns false if Proxy is defined, Reflect is undefined, and useProxy is false", () => {
+            Reflect = undefined;
+            assertion.config.useProxy = false;
+
+            expect(isProxyEnabled()).to.be.false;
+        });
+
+        it("returns false if Proxy is undefined, Reflect is defined, and useProxy is true", () => {
+            Proxy = undefined;
+
+            expect(isProxyEnabled()).to.be.false;
+        });
+
+        it("returns false if Proxy is undefined, Reflect is defined, and useProxy is false", () => {
+            Proxy = undefined;
+            assertion.config.useProxy = false;
+
+            expect(isProxyEnabled()).to.be.false;
+        });
+
+        it("returns false if Proxy is undefined, Reflect is undefined, and useProxy is true", () => {
+            Proxy = undefined;
+            Reflect = undefined;
+
+            expect(isProxyEnabled()).to.be.false;
+        });
+
+        it("returns false if Proxy is undefined, Reflect is undefined, and useProxy is false", () => {
+            Proxy = undefined;
+            Reflect = undefined;
+            assertion.config.useProxy = false;
+
+            expect(isProxyEnabled()).to.be.false;
         });
     });
 });
