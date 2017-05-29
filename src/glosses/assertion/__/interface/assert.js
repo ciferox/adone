@@ -56,6 +56,10 @@ export default function (lib, util) {
         getAssertion(act, msg, assert.deepEqual, true).to.eql(exp);
     };
 
+    assert.equalArrays = (act, exp, msg) => {
+        getAssertion(act, msg, assert.equalArrays, true).to.eqlArray(exp);
+    };
+
     assert.notDeepEqual = (act, exp, msg) => {
         getAssertion(act, msg, assert.notDeepEqual, true).to.not.eql(exp);
     };

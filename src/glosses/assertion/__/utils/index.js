@@ -27,6 +27,7 @@ const util = lazify({
     getProperties: "./get_properties",
     type: () => adone.util.typeOf,
     eql: () => adone.is.deepEqual,
+    eqlArray: () => adone.is.equalArrays,
     getPathInfo: () => util.pathval.getPathInfo,
     hasProperty: () => util.pathval.hasProperty,
     getName: () => adone.util.functionName

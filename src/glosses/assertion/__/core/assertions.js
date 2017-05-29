@@ -287,6 +287,20 @@ export default function (lib, util) {
     Assertion.addMethod("eql", assertEql);
     Assertion.addMethod("eqls", assertEql);
 
+    Assertion.addMethod("eqlArray", function (obj, msg) {
+        if (msg) {
+            flag(this, "message", msg);
+        }
+        this.assert(
+            util.eqlArray(obj, flag(this, "object")),
+            "expected #{this} to deeply equal #{exp}",
+            "expected #{this} to not deeply equal #{exp}",
+            obj,
+            this._obj,
+            true
+        );
+    });
+
     const assertAbove = function (n, msg) {
         if (msg) {
             flag(this, "message", msg);

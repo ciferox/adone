@@ -353,6 +353,18 @@ const is = {
     sameType: (value, other) => (typeof value === typeof other && getTag(value) === getTag(other)),
     // Checks whether given value is a primitive.
     primitive: (value) => (is.nil(value) || is.number(value) || is.string(value) || is.boolean(value) || is.symbol(value)),
+    equalArrays: (arr1, arr2) => {
+        const length = arr1.length;
+        if (length !== arr2.length) {
+            return false;
+        }
+        for (let i = 0; i < length; i++) {
+            if (arr1[i] !== arr2[i]) {
+                return false;
+            }
+        }
+        return true;
+    },
     deepEqual: (leftHandOperand, rightHandOperand, options) => {
         const memoizeCompare = (leftHandOperand, rightHandOperand, memoizeMap) => {
             if (!memoizeMap || is.primitive(leftHandOperand) || is.primitive(rightHandOperand)) {
