@@ -1,3 +1,5 @@
+require("../../../../..");  // adone
+
 process.on("message", (data) => {
     if (data === "graceful") {
         if (process.platform === "win32") {
@@ -9,4 +11,4 @@ process.on("message", (data) => {
 });
 
 process.argv[1] = process.env.pm_exec_path;
-require("module")._load(process.env.pm_exec_path, null, true);
+adone.require(process.env.pm_exec_path);

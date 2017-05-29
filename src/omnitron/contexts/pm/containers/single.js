@@ -22,11 +22,16 @@ class Container {
         }
     }
 
-    start(path, args = []) {
+    start(path, args = [], { sourcemaps = false } = {}) {
         process.argv = [process.argv[0], path, ...args];
         master.unref();
         started = true;
-        adone.std.module._load(path, null, true);
+
+        if (sourcemaps) {
+            adone.sourcemap.support(Error).install();
+        }
+
+        adone.require(path);
     }
 }
 

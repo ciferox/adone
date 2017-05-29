@@ -814,8 +814,8 @@ describe("Process manager", () => {
                     await p.reload({ graceful: false });
                     let data = await adone.fs.readFile(stdout, { encoding: "utf-8" });
                     data = data.split("\n").slice(4, -1);  // first 4 are "start"
-                    const s = data.filter((_, i) => i % 2);
-                    const f = data.filter((_, i) => !(i % 2));
+                    const s = data.filter((x) => x.includes("start"));
+                    const f = data.filter((x) => x.includes("shutdown"));
                     expect(s.length).to.be.equal(f.length);
                     for (let i = 0; i < s.length; ++i) {
                         const a = s[i].split(" ");
@@ -847,8 +847,8 @@ describe("Process manager", () => {
                     await p.reload({ graceful: true });
                     let data = await adone.fs.readFile(stdout, { encoding: "utf-8" });
                     data = data.split("\n").slice(4, -1);  // first 4 are "start"
-                    const s = data.filter((_, i) => i % 2);
-                    const f = data.filter((_, i) => !(i % 2));
+                    const s = data.filter((x) => x.includes("start"));
+                    const f = data.filter((x) => x.includes("shutdown"));
                     expect(s.length).to.be.equal(f.length);
                     for (let i = 0; i < s.length; ++i) {
                         const a = s[i].split(" ");

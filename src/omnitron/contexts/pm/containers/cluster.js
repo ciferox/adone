@@ -18,7 +18,7 @@ class Container {
         this._scheduledExit = null;
         this._configuration = {
             noWorkersTimeout: 5000,
-            workersStartTimeout: 100
+            workersStartTimeout: 1000
         };
         this.env = {};
     }
@@ -91,7 +91,7 @@ class Container {
             };
             worker.once("online", online).once("error", error).once("exit", exit);
         });
-        // it can send "online" but and fail due some js error o_O
+        // it can send "online" and fail due some js error o_O
         await new Promise((resolve, reject) => {
             const exit = (code, signal) => {
                 if (timer) {

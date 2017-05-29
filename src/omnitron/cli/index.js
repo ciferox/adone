@@ -201,7 +201,9 @@ export default class extends adone.application.Subsystem {
                                 { name: "--autorestart" },
                                 { name: "--max-restarts", type: Number },
                                 { name: "--restart-delay", type: Number },
-                                { name: "--normal-start", type: Number }
+                                { name: "--normal-start", type: Number },
+                                { name: "--mode", choices: ["single", "cluster"] },
+                                { name: "--instances", type: Number }
                             ]
                         },
                         {
@@ -707,7 +709,7 @@ export default class extends adone.application.Subsystem {
                 }
 
                 const service = new runtime.Service(config);
-                await service.install();                
+                await service.install();
             } else {
                 await this.dispatcher.enable(name, { enableDeps: opts.has("deps") });
                 adone.log(adone.ok);
@@ -898,6 +900,13 @@ export default class extends adone.application.Subsystem {
             config.normalStart = opts.get("normal-start");
         }
 
+        if (opts.has("mode")) {
+            config.mode = opts.get("mode");
+        }
+
+        if (opts.has("instances")) {
+            config.instances = opts.get("instances");
+        }
 
         if (await pm.hasApplication(id, { checkID: false })) {
             // todo: change app name using --name
