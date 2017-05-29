@@ -2,7 +2,8 @@ adone.lazify({
     Long: "./long",
     BitSet: "./bitset",
     BigNumber: "./bignumber",
-    simd: "./simd"
+    simd: "./simd",
+    matrix: "./matrix"
 }, exports, require);
 
 export const random = (min = 0, max = 0xFFFFFFFF) => {

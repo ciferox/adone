@@ -1,8 +1,7 @@
 const Canvas = require("./basecanvas");
-const glMatrix = require("./gl-matrix");
 const x256 = require("x256");
-const mat2d = glMatrix.mat2d;
-const vec2 = glMatrix.vec2;
+const mat2d = adone.math.matrix.mat2d;
+const vec2 = adone.math.matrix.vec2;
 const bresenham = function (x0, y0, x1, y1, fn) {
     if (!fn) {
         var arr = [];
