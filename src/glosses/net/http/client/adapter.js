@@ -188,7 +188,7 @@ export default function adapter(options) {
 
                 stream.on("error", function handleStreamError(err) {
                     if (aborted) {
-                        return; 
+                        return;
                     }
                     reject(imports.enhanceError(err, options));
                 });

@@ -183,14 +183,13 @@ export default function prettyTable(data, {
                         break;
                     }
                     case "function": {
-                        str = `${style(val)}${str}{/}`;
+                        str = `${style(val, str)}${str}{/}`;
                         break;
                     }
                 }
 
                 str = terminal.parse(str);
-
-                if (m.wordwrap && !is.null(m.colWidth)) {
+                if (str && m.wordwrap && !is.null(m.colWidth)) {
                     str = str.toString();
                     const maxLen = m.colWidth - padLeft - padRight;
                     if (m.colWidth && str.length > maxLen) {
