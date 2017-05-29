@@ -1,6 +1,4 @@
 const { is } = adone;
-const x256 = require("x256");
-
 
 const map = [
     [0x1, 0x8],
@@ -21,11 +19,12 @@ const colors = {
     normal: 9
 };
 
+
 const getFgCode = (color) => {
     if (is.string(color) && color !== "normal") { // String Value
         return `\x1B[3${colors[color]}m`;
     } else if (is.array(color) && color.length === 3) { // RGB Value
-        return `\x1B[38;5;${x256(color[0], color[1], color[2])}m`;
+        return adone.terminal.parse(adone.sprintf("{#%02x%02x%02x-fg}", color[0], color[1], color[2]));
     } else if (is.number(color)) { // Number
         return `\x1B[38;5;${color}m`;
     }  // Default
@@ -36,7 +35,7 @@ const getBgCode = (color) => {
     if (is.string(color) && color !== "normal") { // String Value
         return `\x1B[4${colors[color]}m`;
     } else if (is.array(color) && color.length === 3) { // RGB Value
-        return `\x1B[48;5;${x256(color[0], color[1], color[2])}m`;
+        return adone.terminal.parse(adone.sprintf("{#%02x%02x%02x-bg}", color[0], color[1], color[2]));
     } else if (is.number(color)) { // Number
         return `\x1B[48;5;${color}m`;
     }  // Default

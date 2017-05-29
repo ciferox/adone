@@ -1,12 +1,10 @@
-const utils = require("../utils");
-
 const widgetSpacing = 0;
 
 export default class Grid {
     constructor(options) {
         if (!options.screen) {
-            throw "Error: A screen property must be specified in the grid options.\r\n" +
-            "Note: Release 2.0.0 has breaking changes. Please refer to the README or to https://github.com/yaronn/blessed-contrib/issues/39";
+            throw new Error("A screen property must be specified in the grid options.\r\n" +
+            "Note: Release 2.0.0 has breaking changes. Please refer to the README or to https://github.com/yaronn/blessed-contrib/issues/39");
         }
         this.options = options;
         this.options.dashboardMargin = this.options.dashboardMargin || 0;
@@ -16,8 +14,8 @@ export default class Grid {
 
     set(row, col, rowSpan, colSpan, obj, opts) {
         if (obj instanceof Grid) {
-            throw "Error: A Grid is not allowed to be nested inside another grid.\r\n" +
-            "Note: Release 2.0.0 has breaking changes. Please refer to the README or to https://github.com/yaronn/blessed-contrib/issues/39";
+            throw new Error("A Grid is not allowed to be nested inside another grid.\r\n" +
+            "Note: Release 2.0.0 has breaking changes. Please refer to the README or to https://github.com/yaronn/blessed-contrib/issues/39");
         }
 
         const top = row * this.cellHeight + this.options.dashboardMargin;
@@ -25,7 +23,7 @@ export default class Grid {
 
         //var options = JSON.parse(JSON.stringify(opts));   
         let options = {};
-        options = utils.MergeRecursive(options, opts);
+        options = adone.vendor.lodash.merge(options, opts);
         options.top = `${top}%`;
         options.left = `${left}%`;
         options.width = `${this.cellWidth * colSpan - widgetSpacing}%`;

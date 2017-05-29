@@ -1,6 +1,11 @@
-const { is } = adone;
-const utils = require("../../utils.js");
-const { lodash: _ } = adone.vendor;
+const { is, vendor: { lodash: _ } } = adone;
+
+function getColorCode(color) {
+    if (is.array(color) && color.length === 3) {
+        return adone.terminal.parse(adone.sprintf("{#%02x%02x%02x-fg}", color[0], color[1], color[2]));
+    } 
+    return color;    
+}
 
 export default class Line extends adone.cui.widget.Canvas {
     constructor(options) {
@@ -69,7 +74,7 @@ export default class Line extends adone.cui.widget.Canvas {
             const maxChars = legendWidth - 2;
             for (let i = 0; i < data.length; i++) {
                 const style = data[i].style || {};
-                const color = utils.getColorCode(style.line || this.options.style.line);
+                const color = getColorCode(style.line || this.options.style.line);
                 legandText += `{${color}-fg}${data[i].title.substring(0, maxChars)}{/${color}-fg}\r\n`;
             }
             this.legend.setContent(legandText);
@@ -110,9 +115,9 @@ export default class Line extends adone.cui.widget.Canvas {
         };
 
         const formatYLabel = (value, max, min, numLabels, wholeNumbersOnly, abbreviate) => {
-            const fixed = (max / numLabels < 1 && value != 0 && !wholeNumbersOnly) ? 2 : 0;
+            const fixed = (max / numLabels < 1 && value !== 0 && !wholeNumbersOnly) ? 2 : 0;
             const res = value.toFixed(fixed);
-            return abbreviate ? utils.abbreviateNumber(res) : res;
+            return abbreviate ? adone.util.humanizeSize(Number.parseInt(res), "") : res;
         };
 
         const getMaxXLabelPadding = (numLabels, wholeNumbersOnly, abbreviate, min) => {
@@ -133,7 +138,7 @@ export default class Line extends adone.cui.widget.Canvas {
             let maxLength = 0;
 
             for (let i = 0; i < labels.length; i++) {
-                if (labels[i] === undefined) {
+                if (is.undefined(labels[i])) {
                     console.log(`label[${i}] is undefined`);
                 } else if (labels[i].length > maxLength) {
                     maxLength = labels[i].length;
@@ -187,7 +192,7 @@ export default class Line extends adone.cui.widget.Canvas {
 
         //yLabelIncrement = Math.max(yLabelIncrement, 1) // should not be zero
 
-        if (yLabelIncrement == 0) {
+        if (yLabelIncrement === 0) {
             yLabelIncrement = 1;
         }
 

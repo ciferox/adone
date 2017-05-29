@@ -1,4 +1,11 @@
-const utils = require("../../utils.js");
+const { is } = adone;
+
+function getColorCode(color) {
+    if (is.array(color) && color.length === 3) {
+        return adone.terminal.parse(adone.sprintf("{#%02x%02x%02x-fg}", color[0], color[1], color[2]));
+    } 
+    return color;    
+}
 
 export default class StackedBar extends adone.cui.widget.Canvas {
     constructor(options) {
@@ -141,11 +148,8 @@ export default class StackedBar extends adone.cui.widget.Canvas {
                 c.fillStyle = this.options.barFgColor;
             }
             if (this.options.showText) {
-                const str = utils.abbreviateNumber(data.toString());
-                c.fillText(
-                    str,
-                    Math.floor(x + this.options.barWidth / 2 + str.length / 2),
-                    calcY + Math.round(calcHeight / 2));
+                const str = adone.util.humanizeSize(Number.parseInt(data.toString()), "");
+                c.fillText(str, Math.floor(x + this.options.barWidth / 2 + str.length / 2), calcY + Math.round(calcHeight / 2));
             }
         }
 
@@ -196,7 +200,7 @@ export default class StackedBar extends adone.cui.widget.Canvas {
         let legandText = "";
         const maxChars = legendWidth - 2;
         for (let i = 0; i < bars.stackedCategory.length; i++) {
-            const color = utils.getColorCode(this.options.barBgColor[i]);
+            const color = getColorCode(this.options.barBgColor[i]);
             legandText += `{${color}-fg}${bars.stackedCategory[i].substring(0, maxChars)}{/${color}-fg}\r\n`;
         }
         this.legend.setContent(legandText);
