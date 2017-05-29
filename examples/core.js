@@ -31,7 +31,7 @@ const screen = new adone.cui.Screen;
 const transforms = stream._transforms.slice(1);
 const rows = 24;
 const cols = 3 + transforms.length * 3 - 2;
-const grid = new adone.cui.GridLayout({ rows, cols, screen });
+const grid = new adone.cui.layout.Grid({ rows, cols, screen });
 const logger = grid.set(0, 0, rows, 3, adone.cui.widget.Log);
 let i = 2;
 for (const t of transforms) {

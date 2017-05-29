@@ -3,7 +3,7 @@ adone.run({
         const screen = new adone.cui.Screen();
 
         const page1 = (screen) => {
-            const grid = new adone.cui.GridLayout({ rows: 4, cols: 4, screen });
+            const grid = new adone.cui.layout.Grid({ rows: 4, cols: 4, screen });
 
             const line = grid.set(1, 0, 2, 2, adone.cui.widget.LineChart,
                 {
@@ -63,7 +63,7 @@ adone.run({
             return process.exit(0);
         });
 
-        const carousel = new adone.cui.CarouselLayout([page1, page2], {
+        const carousel = new adone.cui.layout.Carousel([page1, page2], {
             screen,
             interval: 3000,
             controlKeys: true

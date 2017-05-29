@@ -345,7 +345,7 @@ const CharacterMasks = (function () {
 
 export default class LCD extends adone.cui.widget.Canvas {
     constructor(options = {}) {
-        super(options);
+        super(options, adone.cui.canvas.Canvas1);
 
         this.options = options;
 

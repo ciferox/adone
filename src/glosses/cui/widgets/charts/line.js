@@ -1,4 +1,3 @@
-
 const { is } = adone;
 const utils = require("../../utils.js");
 const { lodash: _ } = adone.vendor;
@@ -16,7 +15,7 @@ export default class Line extends adone.cui.widget.Canvas {
         options.legend = options.legend || {};
         options.wholeNumbersOnly = options.wholeNumbersOnly || false;
         options.minY = options.minY || 0;
-        super(options);
+        super(options, adone.cui.canvas.Canvas1);
     }
 
     calcSize() {
@@ -25,7 +24,7 @@ export default class Line extends adone.cui.widget.Canvas {
 
     setData(data) {
         if (!this.ctx) {
-            throw "error: canvas context does not exist. setData() for line charts must be called after the chart has been added to the screen via screen.append()";
+            throw new Error("Canvas context does not exist. setData() for line charts must be called after the chart has been added to the screen via screen.append()");
         }
 
         //compatability with older api

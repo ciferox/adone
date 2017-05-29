@@ -284,7 +284,7 @@ async function main(type) {
 
     // chat
 
-    const grid = new adone.cui.GridLayout({ rows: 12, cols: 12, screen });
+    const grid = new adone.cui.layout.Grid({ rows: 12, cols: 12, screen });
 
     const logger = grid.set(0, 0, 11, 12, adone.cui.widget.Log, {
         top: 0,

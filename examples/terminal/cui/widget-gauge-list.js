@@ -1,7 +1,7 @@
 adone.run({
     main() {
         const screen = new adone.cui.Screen();
-        const grid = new adone.cui.GridLayout({ rows: 2, cols: 2, hideBorder: true, screen });
+        const grid = new adone.cui.layout.Grid({ rows: 2, cols: 2, hideBorder: true, screen });
         grid.set(0, 0, 1, 2, adone.cui.widget.GaugeList, {
             gaugeSpacing: 0,
             gaugeHeight: 1,

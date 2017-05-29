@@ -6,7 +6,7 @@ const pi = 3.141592635;
 
 export default class Donut extends adone.cui.widget.Canvas {
     constructor(options = {}) {
-        super(options);
+        super(options, adone.cui.canvas.Canvas1);
 
         this.options.stroke = options.stroke || "magenta";
         this.options.fill = options.fill || "white";

@@ -4,7 +4,7 @@ adone.run({
 
         //create layout and widgets
 
-        const grid = new adone.cui.GridLayout({ rows: 12, cols: 12, screen });
+        const grid = new adone.cui.layout.Grid({ rows: 12, cols: 12, screen });
 
         /**
          * Donut Options

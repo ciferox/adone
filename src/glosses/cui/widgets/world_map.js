@@ -296,7 +296,7 @@ class InnerMap {
 
 export default class WorldMap extends adone.cui.widget.Canvas {
     constructor(options = {}) {
-        super(options);
+        super(options, adone.cui.canvas.Canvas1);
         this.on("attach", () => {
             options.style = options.style || {};
             const opts = {

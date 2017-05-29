@@ -2,11 +2,13 @@ adone.lazify({
     EventEmitter: "./events",
     Node: "./node",
     Screen: "./screen",
-    GridLayout: "./layout/grid",
-    CarouselLayout: "./layout/carousel",
+    canvas: () => adone.lazify({
+        Canvas1: "./canvases/canvas1",
+        Canvas2: "./canvases/canvas2"
+    }, null, require),
     layout: () => adone.lazify({
-        Grid: "./layout/grid",
-        Carousel: "./layout/carousel"
+        Grid: "./layouts/grid",
+        Carousel: "./layouts/carousel"
     }, null, require),
     widget: () => adone.lazify({
         Element: "./widgets/element",

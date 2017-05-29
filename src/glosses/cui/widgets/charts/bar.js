@@ -1,8 +1,6 @@
-
-
 export default class Bar extends adone.cui.widget.Canvas {
     constructor(options) {
-        super(options, require("ansi-term"));
+        super(options, adone.cui.canvas.Canvas2);
 
         this.options.barWidth = this.options.barWidth || 6;
         this.options.barSpacing = this.options.barSpacing || 9;
@@ -31,7 +29,7 @@ export default class Bar extends adone.cui.widget.Canvas {
 
     setData(bar) {
         if (!this.ctx) {
-            throw "error: canvas context does not exist. setData() for bar charts must be called after the chart has been added to the screen via screen.append()";
+            throw new Error("Canvas context does not exist. setData() for bar charts must be called after the chart has been added to the screen via screen.append()");
         }
 
         this.clear();

@@ -2,7 +2,7 @@
 
 export default class GaugeList extends adone.cui.widget.Canvas {
     constructor(options) {
-        super(options, require("ansi-term"));
+        super(options, adone.cui.canvas.Canvas2);
         options = options || {};
         this.options = options;
         this.options.stroke = options.stroke || "magenta";

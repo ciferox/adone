@@ -5,7 +5,7 @@ adone.run({
         const screen = new adone.cui.Screen();
 
         //create layout and widgets
-        const grid = new adone.cui.GridLayout({ rows: 1, cols: 2, screen });
+        const grid = new adone.cui.layout.Grid({ rows: 1, cols: 2, screen });
 
         const tree = grid.set(0, 0, 1, 1, adone.cui.widget.Tree,
             {

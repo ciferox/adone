@@ -227,6 +227,13 @@ export const namespaces = [
         ]
     },
     {
+        name: "adone.math.matrix",
+        description: "Implementation of vector and matrix math",
+        paths: [
+            "glosses/math/matrix/index"
+        ]
+    },
+    {
         name: "adone.meta",
         description: "Meta utilites and implementation of adone-specific inspection",
         paths: [
