@@ -146,10 +146,11 @@ class Container {
     }
 
     @Public
-    async start(path, args = []) {
+    async start(path, args = [], { sourcemaps = false } = {}) {
         // really ?
         started = true;
         this.env.pm_exec_path = path;
+        this.env.pm_sourcemaps = sourcemaps;
         cluster.setupMaster({
             exec: adone.std.path.join(__dirname, "cluster_fork_container.js"),
             args

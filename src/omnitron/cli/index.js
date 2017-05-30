@@ -203,7 +203,9 @@ export default class extends adone.application.Subsystem {
                                 { name: "--restart-delay", type: Number },
                                 { name: "--normal-start", type: Number },
                                 { name: "--mode", choices: ["single", "cluster"] },
-                                { name: "--instances", type: Number }
+                                { name: "--instances", type: Number },
+                                "--sourcemaps",
+                                "--no-sourcemaps"
                             ]
                         },
                         {
@@ -906,6 +908,14 @@ export default class extends adone.application.Subsystem {
 
         if (opts.has("instances")) {
             config.instances = opts.get("instances");
+        }
+
+        if (opts.has("sourcemaps")) {
+            config.sourcemaps = true;
+        }
+
+        if (opts.has("no-sourcemaps")) {
+            config.sourcemaps = false;
         }
 
         if (await pm.hasApplication(id, { checkID: false })) {

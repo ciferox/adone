@@ -1,5 +1,5 @@
 const {
-    is, std, AsyncEmitter, util,
+    is, std, AsyncEmitter, util, x, fs,
     netron: { Netron, decorator: { Description, Contextable, Public, Private, Type } },
     collection: { DefaultMap }
 } = adone;
@@ -194,10 +194,10 @@ export class Process extends AsyncEmitter {
     async _write(path, ...args) {
         const timestamp = adone.datetime().format("DD.MM.YYYY hh:mm:ss");
         const message = adone.std.util.format(...args);
-        if (!(await adone.fs.exists(std.path.dirname(path)))) {
-            await adone.fs.mkdir(std.path.dirname(path));
+        if (!(await fs.exists(std.path.dirname(path)))) {
+            await fs.mkdir(std.path.dirname(path));
         }
-        await adone.fs.appendFile(path, `[${timestamp}][MASTER] ${message}\n`);
+        await fs.appendFile(path, `[${timestamp}][MASTER] ${message}\n`);
     }
 
     writeToStdout(...args) {
@@ -213,17 +213,17 @@ export class Process extends AsyncEmitter {
         const stdoutDir = std.path.dirname(config.stdout);
         const stderrDir = std.path.dirname(config.stderr);
 
-        await adone.fs.mkdir(stdoutDir);
-        await adone.fs.mkdir(stderrDir);
+        await fs.mkdir(stdoutDir);
+        await fs.mkdir(stderrDir);
 
-        this.fd.stdout = await adone.fs.fd.open(config.stdout, "a");
-        this.fd.stderr = await adone.fs.fd.open(config.stderr, "a");
+        this.fd.stdout = await fs.fd.open(config.stdout, "a");
+        this.fd.stderr = await fs.fd.open(config.stderr, "a");
     }
 
     async closeStdStreams() {
-        await adone.fs.fd.close(this.fd.stdout);
+        await fs.fd.close(this.fd.stdout);
         delete this.fd.stdout;
-        await adone.fs.fd.close(this.fd.stderr);
+        await fs.fd.close(this.fd.stderr);
         delete this.fd.stderr;
     }
 
@@ -235,7 +235,7 @@ export class Process extends AsyncEmitter {
         const container = this.constructor.containerPath;
         const { port } = config;
 
-        await adone.fs.rm(port).catch(adone.noop);
+        await fs.rm(port).catch(adone.noop);
         this.process = std.child_process.spawn(config.interpreter, [container, port], {
             detached: true,
             stdio: ["ignore", this.fd.stdout, this.fd.stderr]
@@ -252,17 +252,19 @@ export class Process extends AsyncEmitter {
         } catch (err) {
             this.process.kill("SIGKILL");
             this.netron = null;
-            throw new adone.x.Exception(`Failed to connect to the container: ${err.message}`);
+            throw new x.Exception(`Failed to connect to the container: ${err.message}`);
         }
         this.container = this.peer.getInterfaceByName("container");
         try {
-            await this.container.start(config.path, config.args);
+            await this.container.start(config.path, config.args, {
+                sourcemaps: config.sourcemaps
+            });
         } catch (err) {
             this.process.kill("SIGKILL");
             this.netron = this.container = null;
 
-            if (!(err instanceof adone.x.NetronPeerDisconnected)) {  // may be a sync task
-                throw new adone.x.Exception(`Failed to start the application: ${err.stack || err.message || err}`);
+            if (!(err instanceof x.NetronPeerDisconnected)) {  // may be a sync task
+                throw new x.Exception(`Failed to start the application: ${err.stack || err.message || err}`);
             }
         }
 
@@ -290,7 +292,7 @@ export class Process extends AsyncEmitter {
 
     async kill(signal = "SIGKILL") {
         if (!this.process || this.meta.exited) {
-            throw new adone.x.IllegalState("The process is not running");
+            throw new x.IllegalState("The process is not running");
         }
         this.process.kill(signal);
     }
@@ -309,7 +311,7 @@ export class Process extends AsyncEmitter {
             this.peer = await this.netron.connect({ port: this.config.port });
         } catch (err) {
             this.netron = null;
-            throw new adone.x.Exception(`Failed to connect to the container: ${err.message}`);
+            throw new x.Exception(`Failed to connect to the container: ${err.message}`);
         }
 
         this.container = this.peer.getInterfaceByName("container");
@@ -322,7 +324,7 @@ export class Process extends AsyncEmitter {
 
     waitForExit() {
         if (this.meta.exited) {
-            return Promise.reject(new adone.x.IllegalState("Has already exited"));
+            return Promise.reject(new x.IllegalState("Has already exited"));
         }
         return new Promise((resolve) => {
             this.on("exit", (code, signal) => resolve({ code, signal }));
@@ -331,7 +333,7 @@ export class Process extends AsyncEmitter {
 
     async ping() {
         if (!this.peer) {
-            throw new adone.x.IllegalState("No connection with the peer");
+            throw new x.IllegalState("No connection with the peer");
         }
         return this.container.ping();
     }
@@ -667,7 +669,8 @@ export default class ProcessManager {
                 maxRestarts: 3,
                 restartDelay: 0,
                 killTimeout: 1600,
-                normalStart: 1000
+                normalStart: 1000,
+                sourcemaps: false
             }
         };
         this.omnitron = omnitron;
@@ -846,7 +849,7 @@ export default class ProcessManager {
 
     prepareConfig(config) {
         if (!config.path) {
-            throw new adone.x.InvalidArgument("Path is required");
+            throw new x.InvalidArgument("Path is required");
         }
         const ext = std.path.extname(config.path);
         if (!config.name) {
@@ -854,15 +857,20 @@ export default class ProcessManager {
         }
         if (!config.interpreter) {
             switch (ext) {
-                case ".js":
+                case ".js": {
                     config.interpreter = "node";
                     break;
-                default:
-                    throw new adone.x.Exception(`Unknown file extension: ${ext}. You have to specify the interpreter manually`);
+                }
+                default: {
+                    throw new x.Exception(`Unknown file extension: ${ext}. You have to specify the interpreter manually`);
+                }
             }
         }
         if (config.interpreter !== "node" && config.mode === "cluster") {
-            throw new adone.x.IllegalState("Cluster mode is supported only for NodeJS applications");
+            throw new x.IllegalState("Cluster mode is supported only for NodeJS applications");
+        }
+        if (config.interpreter !== "node" && config.sourcemaps) {
+            throw new x.IllegalState("Sourcemaps are supported only for NodeJS applications");
         }
         delete config.id;
         config = util.assignDeep({}, this.options.defaultProcessConfig, config);
@@ -924,18 +932,18 @@ export default class ProcessManager {
                 const name = config;
                 config = await this.getConfigFor(name);
                 if (is.null(config)) {
-                    throw new adone.x.NotExists("There is no such application");
+                    throw new x.NotExists("There is no such application");
                 }
             }
         } else if (is.number(config)) {
             const id = config;
             config = await this.getConfigByID(id);
             if (is.null(config)) {
-                throw new adone.x.NotExists("There is no such application");
+                throw new x.NotExists("There is no such application");
             }
         }
         if (config.interpreter !== "node") {
-            throw new adone.x.Exception("Not supported yet");
+            throw new x.Exception("Not supported yet");
         }
         return config;
     }
@@ -956,7 +964,7 @@ export default class ProcessManager {
         const currentState = appmeta.get("state");
         const restarting = currentState === STATES.RESTARTING;
         if (!restarting && (currentState !== STATES.STOPPED && currentState !== STATES.FAILED)) {
-            throw new adone.x.IllegalState("Stop the process first");
+            throw new x.IllegalState("Stop the process first");
         }
         if (store && !stored) {
             await this.updateDBConfig(config);
@@ -1016,9 +1024,9 @@ export default class ProcessManager {
                         `Failed to start the app after ${config.maxRestarts} attempts`,
                         `The last error: ${err.stack || err.message || err}`
                     ].join("\n");
-                    throw new adone.x.Exception(message);
+                    throw new x.Exception(message);
                 } else {
-                    throw new adone.x.Exception("Was stopped while starting");
+                    throw new x.Exception("Was stopped while starting");
                 }
             }
         }
@@ -1242,14 +1250,14 @@ export default class ProcessManager {
         config = await this.deriveConfig(config);
         const { name, id } = config;
         if (!this.appmeta.has(id)) {
-            throw new adone.x.IllegalState("Has not been started");
+            throw new x.IllegalState("Has not been started");
         }
         const appmeta = this.appmeta.get(id);
         const state = appmeta.get("state");
         logger.log(`stopping ${name}`);
         if (state === STATES.STOPPING || state === STATES.STOPPED) {
             logger.log(`${name} has been already stopped`);
-            throw new adone.x.IllegalState("Has been already stopped");  // or just return?
+            throw new x.IllegalState("Has been already stopped");  // or just return?
         }
         const p = this.processes.get(id);
         if (state === STATES.STARTED) {
@@ -1278,11 +1286,11 @@ export default class ProcessManager {
         config = await this.deriveConfig(config);
         const { mode, id } = config;
         if (mode !== "cluster") {
-            throw new adone.x.IllegalState("Reloading is supported only in cluster mode");
+            throw new x.IllegalState("Reloading is supported only in cluster mode");
         }
         const appmeta = this.appmeta.get(id);
         if (appmeta.get("state") !== STATES.RUNNING) {
-            throw new adone.x.IllegalState("The application must be started");
+            throw new x.IllegalState("The application must be started");
         }
         const { process } = this.processes.get(id);
         appmeta.set("state", STATES.RELOADING);
@@ -1299,14 +1307,14 @@ export default class ProcessManager {
         config = await this.deriveConfig(config);
         const { mode, id } = config;
         if (mode !== "cluster") {
-            throw new adone.x.IllegalState("Scaling is supported only in cluster mode");
+            throw new x.IllegalState("Scaling is supported only in cluster mode");
         }
         if (!is.number(instances) || instances <= 0) {
-            throw new adone.x.InvalidArgument("'instances' must be a non-negative integer");
+            throw new x.InvalidArgument("'instances' must be a non-negative integer");
         }
         const appmeta = this.appmeta.get(id);
         if (appmeta.get("state") !== STATES.RUNNING) {
-            throw new adone.x.IllegalState("The application must be started");
+            throw new x.IllegalState("The application must be started");
         }
         const { process } = this.processes.get(id);
         appmeta.set("state", STATES.SCALING);
@@ -1326,10 +1334,10 @@ export default class ProcessManager {
         config = await this.deriveConfig(config);
         const { name, mode, id: appid } = config;
         if (mode !== "cluster") {
-            throw new adone.x.IllegalState("Non clsuter applications have no workers");
+            throw new x.IllegalState("Non clsuter applications have no workers");
         }
         if (!(await this.started(name))) {
-            throw new adone.x.IllegalState("Has not been started");
+            throw new x.IllegalState("Has not been started");
         }
         const { process } = this.processes.get(appid);
         await process.killWorker(id, { graceful, timeout });
@@ -1340,10 +1348,10 @@ export default class ProcessManager {
         config = await this.deriveConfig(config);
         const { name, mode, id: appid } = config;
         if (mode !== "cluster") {
-            throw new adone.x.IllegalState("Non cluster applications have no workers");
+            throw new x.IllegalState("Non cluster applications have no workers");
         }
         if (!(await this.started(name))) {
-            throw new adone.x.IllegalState("Has not been started");
+            throw new x.IllegalState("Has not been started");
         }
         const workermeta = this.appmeta.get(appid).get("workers").get(id);
         const { process } = this.processes.get(appid);
@@ -1361,10 +1369,10 @@ export default class ProcessManager {
         config = await this.deriveConfig(config);
         const { name, mode, id } = config;
         if (mode !== "cluster") {
-            throw new adone.x.IllegalState("Non clsuter applications have no workers");
+            throw new x.IllegalState("Non clsuter applications have no workers");
         }
         if (!(await this.started(name))) {
-            throw new adone.x.IllegalState("Has not been started");
+            throw new x.IllegalState("Has not been started");
         }
         const { process } = this.processes.get(id);
         return process.workers;
@@ -1387,7 +1395,7 @@ export default class ProcessManager {
     async getProcess(config) {
         const { id } = await this.deriveConfig(config);
         if (!this.processes.has(id)) {
-            throw new adone.x.Exception("Has not been started");
+            throw new x.Exception("Has not been started");
         }
         const { iProcess } = this.processes.get(id);
         return iProcess;
@@ -1403,14 +1411,14 @@ export default class ProcessManager {
     @Description("Get the rest of the stdout")
     async tailStdout(config, lines = 10) {
         config = await this.deriveConfig(config);
-        return adone.fs.tail(config.stdout, lines);
+        return fs.tail(config.stdout, lines);
     }
 
     @Public
     @Description("Get the rest of the stderr")
     async tailStderr(config, lines = 10) {
         config = await this.deriveConfig(config);
-        return adone.fs.tail(config.stderr, lines);
+        return fs.tail(config.stderr, lines);
     }
 
     @Public
@@ -1514,13 +1522,13 @@ export default class ProcessManager {
     async updateConfig(oldConfig, newConfig) {
         oldConfig = await this.deriveConfig(oldConfig);
         if (!is.object(newConfig)) {
-            throw new adone.x.InvalidArgument("Should be an object");
+            throw new x.InvalidArgument("Should be an object");
         }
         delete newConfig.id;  // prevent id changing
         if ("name" in newConfig) {
             const { name } = newConfig;
             if (await this.hasApplication(name, { checkID: false })) {
-                throw new adone.x.IllegalState("An application with that name already exists");
+                throw new x.IllegalState("An application with that name already exists");
             }
         }
         newConfig = util.assignDeep({}, oldConfig, newConfig);
