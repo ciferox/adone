@@ -236,10 +236,19 @@ export class Process extends AsyncEmitter {
         const { port } = config;
 
         await fs.rm(port).catch(adone.noop);
-        this.process = std.child_process.spawn(config.interpreter, [container, port], {
-            detached: true,
-            stdio: ["ignore", this.fd.stdout, this.fd.stderr]
-        });
+        try {
+            this.process = std.child_process.spawn(config.interpreter, [container, port], {
+                detached: true,
+                stdio: ["ignore", this.fd.stdout, this.fd.stderr],
+                cwd: config.cwd
+            });
+        } catch (err) {
+            if (err.code === "ENOTDIR") {
+                // ok ?
+                throw new x.Exception(`Failed to spawn the process: cwd "${config.cwd}" is not a directory`);
+            }
+            throw new x.Exception(`Failed to spawn the process: ${err.message}`);
+        }
         this.meta.started = true;
         this.process.on("exit", (code, signal) => {
             this.meta.exited = true;
@@ -248,11 +257,25 @@ export class Process extends AsyncEmitter {
         });
         this.netron = new Netron(netronOptions);
         try {
-            this.peer = await this.netron.connect({ port: this.config.port });
+            this.peer = await Promise.race([
+                this.netron.connect({ port: this.config.port }),
+                new Promise((resolve) => this.process.once("error", resolve))
+            ]);
         } catch (err) {
+            // netron threw an error
             this.process.kill("SIGKILL");
             this.netron = null;
             throw new x.Exception(`Failed to connect to the container: ${err.message}`);
+        }
+        if (is.error(this.peer)) {
+            const err = this.peer;
+            // error event fired, spawn failed
+            this.netron = null;
+            if (err.code === "ENOENT") {
+                // ok ?
+                throw new x.Exception(`Failed to spawn the process: cwd "${config.cwd}" does not exist`);
+            }
+            throw new x.Exception(`Failed to spawn the process: ${err.message}`);
         }
         this.container = this.peer.getInterfaceByName("container");
         try {
@@ -417,10 +440,8 @@ export class MainProcess extends Process {
         this.reemitter = new ReEmitter(this);  // listening to exit events
         await this.container.register(this.reemitter);
         try {
-            for (let i = 0; i < config.instances; ++i) {
-                await this.createNewWorker();
-            }
             this.on("workerExit", (id) => this._onWorkerExit(id));
+            await Promise.all(util.range(config.instances).map((i) => this.createNewWorker(i)));
         } catch (err) {
             this.kill("SIGKILL");
             throw err;
@@ -881,6 +902,16 @@ export default class ProcessManager {
         if (config.mode === "cluster" && !is.number(config.instances)) {
             config.instances = adone.std.os.cpus().length;
         }
+        if ("cwd" in config) {
+            if (!config.cwd) {
+                throw new x.IllegalState("cwd cannot be empty");
+            }
+            if (!std.path.isAbsolute(config.cwd)) {
+                throw new x.IllegalState("cwd must be absolute");
+            }
+        } else {
+            config.cwd = process.cwd();  // ?
+        }
         return config;
     }
 
@@ -1058,6 +1089,7 @@ export default class ProcessManager {
         } else {
             proc.on("exit", () => this._onProcessExit(config.id));  // unhandled rejection
             if (isCluster) {
+                // if we are here and some worker is dead, the result is strange
                 const workers = appmeta.get("workers");
                 const pworkers = proc.workers;
                 for (const id of util.keys(pworkers)) {

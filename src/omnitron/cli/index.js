@@ -1,4 +1,4 @@
-const { is, text: { pretty } } = adone;
+const { is, text: { pretty }, std } = adone;
 const { STATUSES } = adone.omnitron.const;
 
 const runtime = adone.lazify({
@@ -204,8 +204,9 @@ export default class extends adone.application.Subsystem {
                                 { name: "--normal-start", type: Number },
                                 { name: "--mode", choices: ["single", "cluster"] },
                                 { name: "--instances", type: Number },
-                                "--sourcemaps",
-                                "--no-sourcemaps"
+                                { name: "--sourcemaps" },
+                                { name: "--no-sourcemaps" },
+                                { name: "--cwd", type: String }
                             ]
                         },
                         {
@@ -918,13 +919,17 @@ export default class extends adone.application.Subsystem {
             config.sourcemaps = false;
         }
 
+        if (opts.has("cwd")) {
+            config.cwd = std.path.resolve(opts.get("cwd"));
+        }
+
         if (await pm.hasApplication(id, { checkID: false })) {
             // todo: change app name using --name
             config.name = id;
         } else if (await pm.hasApplication(Number(id), { checkID: true })) {
             config.id = Number(id);
         } else {
-            config.path = adone.std.path.resolve(id);
+            config.path = std.path.resolve(id);
         }
 
         await pm.start(config);

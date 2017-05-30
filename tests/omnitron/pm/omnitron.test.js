@@ -54,7 +54,7 @@ describe("Process manager", function () {
                 await omnitronRunner.stopOmnitron();
             });
 
-            async function restartOmnitron() {
+            const restartOmnitron = async () => {
                 await omnitronRunner.restartOmnitron({ clean: false, killChildren: false });
                 pm = await omnitronRunner.context("pm");
                 idb = await omnitronRunner.context("db");
@@ -64,7 +64,7 @@ describe("Process manager", function () {
                 db.runtime = await idb.getDatastore({
                     filename: "pm-runtime"
                 });
-            }
+            };
 
             for (const mode of ["single", "cluster"]) {
                 const isCluster = mode === "cluster";
@@ -378,6 +378,54 @@ describe("Process manager", function () {
                             } finally {
                                 await pm.stop("test");
                             }
+                        });
+
+                        describe("cwd", () => {
+                            it("should set the process cwd", async () => {
+                                const cwd = adone.std.os.tmpdir();
+                                await pm.start({
+                                    name: "test",
+                                    path: fixture("print_cwd.js"),
+                                    mode,
+                                    instances: 4,
+                                    cwd
+                                });
+                                if (mode === "cluster") {
+                                    await pm.stop("test");
+                                }
+                                const stdout = await pm.stdoutPath("test");
+                                const data = (await adone.fs.readFile(stdout, { encoding: "utf-8" })).split("\n");
+                                data.pop();
+                                if (mode === "cluster") {
+                                    expect(data).to.be.deep.equal([cwd, cwd, cwd, cwd]);
+                                } else {
+                                    expect(data).to.be.deep.equal([cwd]);
+                                }
+                            });
+
+                            it("should throw if the cwd is empty", async () => {
+                                await assert.throws(async () => {
+                                    await pm.start({
+                                        name: "test",
+                                        path: fixture("print_cwd.js"),
+                                        mode,
+                                        instances: 4,
+                                        cwd: ""
+                                    });
+                                }, x.Exception, "cwd cannot be empty");
+                            });
+
+                            it("should throw if the cwd is not absolute", async () => {
+                                await assert.throws(async () => {
+                                    await pm.start({
+                                        name: "test",
+                                        path: fixture("print_cwd.js"),
+                                        mode,
+                                        instances: 4,
+                                        cwd: "hello"
+                                    });
+                                }, x.Exception, "cwd must be absolute");
+                            });
                         });
                     });
 

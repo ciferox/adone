@@ -813,18 +813,15 @@ describe("Process manager", () => {
                 try {
                     await p.reload({ graceful: false });
                     let data = await adone.fs.readFile(stdout, { encoding: "utf-8" });
-                    data = data.split("\n").slice(4, -1);  // first 4 are "start"
-                    const s = data.filter((x) => x.includes("start"));
-                    const f = data.filter((x) => x.includes("shutdown"));
-                    expect(s.length).to.be.equal(f.length);
-                    for (let i = 0; i < s.length; ++i) {
-                        const a = s[i].split(" ");
-                        const b = f[i].split(" ");
-                        expect(a[0]).to.be.equal("start");
-                        expect(b[0]).to.be.equal("shutdown");
-                        expect(Number(a[1])).to.be.equal(4 + Number(b[1]));  // shutdown i, fork i + 4
+                    data = data.split("\n").map((x) => x.split(" ")[0]);
+                    data.pop();
+                    for (let i = 0; i < 4; ++i) {
+                        expect(data.shift()).to.be.equal("start");
                     }
-
+                    for (let i = 0; i < 4; ++i) {
+                        expect(data.shift()).to.be.equal("shutdown");
+                        expect(data.shift()).to.be.equal("start");
+                    }
                 } finally {
                     p.kill("SIGKILL");
                     await p.waitForExit();
@@ -834,7 +831,7 @@ describe("Process manager", () => {
             it("should gracefully reload the workers", async () => {
                 const { stdout, port, stderr } = processFiles(storage);
                 const p = new stuff.MainProcess({}, {
-                    path: fixture("reload.js"),
+                    path: fixture("graceful_reload.js"),
                     mode: "cluster",
                     interpreter: "node",
                     instances: 4,
@@ -846,16 +843,14 @@ describe("Process manager", () => {
                 try {
                     await p.reload({ graceful: true });
                     let data = await adone.fs.readFile(stdout, { encoding: "utf-8" });
-                    data = data.split("\n").slice(4, -1);  // first 4 are "start"
-                    const s = data.filter((x) => x.includes("start"));
-                    const f = data.filter((x) => x.includes("shutdown"));
-                    expect(s.length).to.be.equal(f.length);
-                    for (let i = 0; i < s.length; ++i) {
-                        const a = s[i].split(" ");
-                        const b = f[i].split(" ");
-                        expect(a[0]).to.be.equal("start");
-                        expect(b[0]).to.be.equal("shutdown");
-                        expect(Number(a[1])).to.be.equal(4 + Number(b[1]));  // shutdown i, fork i + 4
+                    data = data.split("\n").map((x) => x.split(" ")[0]);
+                    data.pop();
+                    for (let i = 0; i < 4; ++i) {
+                        expect(data.shift()).to.be.equal("start");
+                    }
+                    for (let i = 0; i < 4; ++i) {
+                        expect(data.shift()).to.be.equal("shutdown");
+                        expect(data.shift()).to.be.equal("start");
                     }
                 } finally {
                     p.kill("SIGKILL");
@@ -896,6 +891,57 @@ describe("Process manager", () => {
                 await p.exit({ graceful: true });
                 const data = await adone.fs.readFile(stdout, { encoding: "utf-8" });
                 expect(data).to.be.equal("shutting down\n".repeat(4));
+            });
+
+            it("should set cwd", async () => {
+                const { stdout, port, stderr } = processFiles(storage);
+                const cwd = adone.std.os.tmpdir();
+                const p = new stuff.MainProcess({}, {
+                    path: fixture("print_cwd.js"),
+                    mode: "cluster",
+                    instances: 4,
+                    interpreter: "node",
+                    stdout, stderr, storage, port,
+                    cwd
+                });
+                await p.start();
+                await adone.promise.delay(100);
+                p.kill("SIGKILL");
+                const data = (await adone.fs.readFile(stdout, { encoding: "utf-8" })).split("\n");
+                data.pop();  // an empty string at the end
+                expect(data).to.be.deep.equal([cwd, cwd, cwd, cwd]);
+            });
+
+            it("should throw if the cwd does not exist", async () => {
+                const { stdout, port, stderr } = processFiles(storage);
+                const cwd = adone.std.path.resolve(__dirname, "does_not_exist");
+                const p = new stuff.MainProcess({}, {
+                    path: fixture("print_cwd.js"),
+                    mode: "cluster",
+                    instances: 4,
+                    interpreter: "node",
+                    stdout, stderr, storage, port,
+                    cwd
+                });
+                await assert.throws(async () => {
+                    await p.start();
+                }, x.Exception, `Failed to spawn the process: cwd "${cwd}" does not exist`);
+            });
+
+            it("should throw if the cwd is not a directory", async () => {
+                const { stdout, port, stderr } = processFiles(storage);
+                const cwd = __filename;
+                const p = new stuff.MainProcess({}, {
+                    path: fixture("print_cwd.js"),
+                    mode: "cluster",
+                    instances: 4,
+                    interpreter: "node",
+                    stdout, stderr, storage, port,
+                    cwd
+                });
+                await assert.throws(async () => {
+                    await p.start();
+                }, x.Exception, `Failed to spawn the process: cwd "${cwd}" is not a directory`);
             });
 
             describe("attaching", () => {

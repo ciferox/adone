@@ -398,6 +398,52 @@ describe("Process manager", () => {
                 expect(new Date().getTime() - t).to.be.at.least(1000);
             });
 
+            it("should set cwd", async () => {
+                const { stdout, port, stderr } = processFiles(storage);
+                const cwd = adone.std.os.tmpdir();
+                const p = new stuff.Process({}, {
+                    path: fixture("print_cwd.js"),
+                    mode: "single",
+                    interpreter: "node",
+                    stdout, stderr, storage, port,
+                    cwd
+                });
+                await p.start();
+                p.kill("SIGKILL");
+                const data = await adone.fs.readFile(stdout, { encoding: "utf-8" });
+                expect(data).to.be.equal(`${cwd}\n`);
+            });
+
+            it("should throw if the cwd does not exist", async () => {
+                const { stdout, port, stderr } = processFiles(storage);
+                const cwd = adone.std.path.resolve(__dirname, "does_not_exist");
+                const p = new stuff.Process({}, {
+                    path: fixture("print_cwd.js"),
+                    mode: "single",
+                    interpreter: "node",
+                    stdout, stderr, storage, port,
+                    cwd
+                });
+                await assert.throws(async () => {
+                    await p.start();
+                }, x.Exception, `Failed to spawn the process: cwd "${cwd}" does not exist`);
+            });
+
+            it("should throw if the cwd is not a directory", async () => {
+                const { stdout, port, stderr } = processFiles(storage);
+                const cwd = __filename;
+                const p = new stuff.Process({}, {
+                    path: fixture("print_cwd.js"),
+                    mode: "single",
+                    interpreter: "node",
+                    stdout, stderr, storage, port,
+                    cwd
+                });
+                await assert.throws(async () => {
+                    await p.start();
+                }, x.Exception, `Failed to spawn the process: cwd "${cwd}" is not a directory`);
+            });
+
             describe("attaching", () => {
                 it("should attach to a process", async () => {
                     const { stdout, port, stderr } = processFiles(storage);
