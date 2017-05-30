@@ -67,7 +67,7 @@ const server = new MqttSecureServer({
     });
 }).listen(port);
 
-describe("MqttSecureClient", () => {
+describe("net", "mqtt", "client", "MqttSecureClient", () => {
     const config = { protocol: "mqtts", port, rejectUnauthorized: false };
     abstractClientTests(server, config);
 

@@ -1,7 +1,7 @@
 const { std: { fs, path } } = adone;
 const { connect, Client } = adone.net.mqtt.client;
 
-describe("mqtt", () => {
+describe("net", "mqtt", "client", () => {
     describe("#connect", () => {
         it("should return an MqttClient when connect is called with mqtt:/ url", () => {
             const c = connect("mqtt://localhost:1883");

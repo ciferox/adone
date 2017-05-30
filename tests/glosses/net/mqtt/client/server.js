@@ -1,9 +1,7 @@
-const Connection = require("mqtt-connection");
-
 const { is, std: { tls, net } } = adone;
 
 const setupConnection = function (duplex) {
-    const connection = new Connection(duplex);
+    const connection = new adone.net.mqtt.connection.Connection(duplex);
     this.emit("client", connection);
 };
 

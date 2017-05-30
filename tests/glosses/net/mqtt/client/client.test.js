@@ -1,7 +1,6 @@
 const { stream: { eos }, std: { path, net, child_process: { fork } } } = adone;
 const { connect, Client } = adone.net.mqtt.client;
 const abstractClientTests = require("./abstract_client");
-const Connection = require("mqtt-connection");
 import { MqttServer } from "./server";
 const port = 9876;
 
@@ -66,7 +65,7 @@ function buildServer() {
 
 const server = buildServer().listen(port);
 
-describe("MqttClient", () => {
+describe("net", "mqtt", "client", "MqttClient", () => {
     describe("creating", () => {
         it("should allow instantiation of MqttClient without the 'new' operator", (done) => {
             assert.doesNotThrow(() => {
@@ -320,7 +319,7 @@ describe("MqttClient", () => {
             const port2 = port + 48;
 
             const server2 = net.createServer((stream) => {
-                const client = new Connection(stream);
+                const client = new adone.net.mqtt.connection.Connection(stream);
 
                 client.on("error", () => { });
                 client.on("connect", (packet) => {
@@ -361,7 +360,7 @@ describe("MqttClient", () => {
             });
 
             const server2 = net.createServer(function (stream) {
-                const client = new Connection(stream);
+                const client = new adone.net.mqtt.connection.Connection(stream);
                 client.on("error", () => { });
                 client.on("connect", (packet) => {
                     if (packet.clientId === "invalid") {

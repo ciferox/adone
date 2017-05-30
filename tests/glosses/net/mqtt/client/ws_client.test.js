@@ -1,4 +1,3 @@
-const Connection = require("mqtt-connection");
 // const abstractClientTests = require("./abstract_client"); !!! Temporarily disabled !!!
 const port = 9999;
 const server = adone.std.http.createServer();
@@ -8,7 +7,7 @@ const attachWebsocketServer = (wsServer) => {
 
     wss.on("connection", (ws) => {
         const stream = adone.net.ws.stream.createClient(ws);
-        const connection = new Connection(stream);
+        const connection = new adone.net.mqtt.connection.Connection(stream);
 
         wsServer.emit("client", connection);
         stream.on("error", () => { });
@@ -75,7 +74,7 @@ server.on("client", (client) => {
     });
 }).listen(port);
 
-describe("Websocket Client", () => {
+describe("net", "mqtt", "client", "Websocket Client", () => {
     const baseConfig = { protocol: "ws", port };
 
     const makeOptions = (custom) => Object.assign({}, baseConfig, custom || {});
