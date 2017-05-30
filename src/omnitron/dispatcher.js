@@ -15,6 +15,10 @@ export default class Dispatcher {
         };
     }
 
+    get connected() {
+        return !is.null(this.netron);  // or peer?
+    }
+
     configurator() {
         if (is.null(this._configurator)) {
             this._configurator = new adone.omnitron.Configurator(this.app);
@@ -33,7 +37,7 @@ export default class Dispatcher {
 
     async connectLocal(options, forceStart = true, _counter = 0) {
         let status = 0;
-        if (is.null(this.netron)) {
+        if (!this.connected) {
             const configurator = await this.configurator();
             const gates = configurator.gates;
             const localGate = gates.getGate({ id: (is.plainObject(options) && is.string(options.gateId) ? options.gateId : "local") });
@@ -62,7 +66,7 @@ export default class Dispatcher {
                 const pid = await this.spawn();
                 if (is.number(pid)) {
                     return this.connectLocal(options, forceStart, ++_counter);
-                };
+                }
             }
             this.netron = netron;
             this.peer = peer;
@@ -72,7 +76,7 @@ export default class Dispatcher {
     }
 
     async disconnect() {
-        if (!is.null(this.netron)) {
+        if (this.connected) {
             await this.netron.disconnect();
             await this.netron.unbind();
             this.netron = null;
@@ -199,7 +203,7 @@ export default class Dispatcher {
     }
 
     async getService(name) {
-        await this.connectLocal();
+        await this.connectLocal(undefined, false);
         return this.getInterface(name);
     }
 
@@ -208,7 +212,7 @@ export default class Dispatcher {
     }
 
     async ping() {
-        await this.connectLocal();
+        await this.connectLocal(undefined, false);
         return this.netron.ping();
     }
 
