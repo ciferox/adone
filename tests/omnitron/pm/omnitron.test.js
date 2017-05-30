@@ -28,13 +28,13 @@ describe("Process manager", function () {
             let pm = null;
             let idb = null;
 
-            before(async () => {
+            before("create runner", async () => {
                 omnitronRunner = new OmnitronRunner();
                 omnitronRunner.createDispatcher();
                 await omnitronRunner.run();
             });
 
-            beforeEach(async function () {
+            beforeEach("start omnitron", async function () {
                 this.timeout(60000);
                 await omnitronRunner.startOmnitron();
                 await adone.promise.delay(100);
@@ -49,7 +49,7 @@ describe("Process manager", function () {
                 });
             });
 
-            afterEach(async function () {
+            afterEach("stop omnitron", async function () {
                 this.timeout(60000);
                 await omnitronRunner.stopOmnitron();
             });

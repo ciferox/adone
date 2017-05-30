@@ -1,6 +1,8 @@
-const { Contextable, Description, Public, Private, Type } = adone.netron.decorator;
-const { is, vendor: { lodash: _ }, std, netron: { Netron }, AsyncEmitter } = adone;
-const { DefaultMap } = adone.collection;
+const {
+    is, std, AsyncEmitter, util,
+    netron: { Netron, decorator: { Description, Contextable, Public, Private, Type } },
+    collection: { DefaultMap }
+} = adone;
 
 // a tmp solution(i hope)
 class Logger {
@@ -474,7 +476,7 @@ export class MainProcess extends Process {
     }
 
     exit({ graceful = true, timeout = 2000 } = {}) {
-        return Promise.all(_.entries(this.workers).map(([id, { alive }]) => {
+        return Promise.all(util.entries(this.workers).map(([id, { alive }]) => {
             if (alive) {
                 return this.deleteWorker(Number(id), { graceful, timeout });
             }
@@ -581,12 +583,12 @@ export class IMainProcess extends IProcess {
     }
 }
 
-function getProcessInterface(pm, process) {
+const getProcessInterface = (pm, process) => {
     if (process instanceof MainProcess) {
         return new IMainProcess(pm, process);
     }
     return new IProcess(pm, process);
-}
+};
 
 export class UsageProvider {
     constructor(os) {
@@ -641,9 +643,7 @@ const STATES = {
 };
 
 // slow, debug
-function humanizeState(s) {
-    return _.entries(STATES).find((x) => x[1] === s)[0];
-}
+const humanizeState = (s) => util.entries(STATES).find((x) => x[1] === s)[0];
 
 @Contextable
 @Private
@@ -769,7 +769,7 @@ export default class ProcessManager {
                         if (proc.cluster) {
                             const workers = proc.workers;
                             const workersmeta = appmeta.get("workers");
-                            for (const [id, { alive }] of _.entries(workers)) {
+                            for (const [id, { alive }] of util.entries(workers)) {
                                 const workermeta = workersmeta.get(Number(id));
                                 if (alive) {
                                     workermeta.set("state", STATES.RUNNING);
@@ -865,7 +865,7 @@ export default class ProcessManager {
             throw new adone.x.IllegalState("Cluster mode is supported only for NodeJS applications");
         }
         delete config.id;
-        config = _.defaultsDeep(config, this.options.defaultProcessConfig);
+        config = util.assignDeep({}, this.options.defaultProcessConfig, config);
         config.storage = std.path.join(this.basePath, config.name);
         config.stdout = config.stdout || std.path.join(config.storage, "logs", "stdout.log");
         config.stderr = config.stderr || std.path.join(config.storage, "logs", "stderr.log");
@@ -889,13 +889,7 @@ export default class ProcessManager {
     }
 
     /**
-     * преобразует то что отдаётся в config в реальный конфиг приложения
-     *
-     * @param {any} config
-     * @param {boolean} [update=true]
-     * @returns
-     *
-     * @memberOf ProcessManager
+     * transforms config into the real config
      */
     async deriveConfig(config, store = false) {
         if (config instanceof IProcess) {
@@ -911,7 +905,7 @@ export default class ProcessManager {
                 currentConfig = await this.getConfigFor(config.name);
             }
             if (currentConfig) {
-                config = _.defaultsDeep(config, currentConfig);
+                config = util.assignDeep({}, currentConfig, config);
                 if (store) {
                     await this.updateDBConfig(config);
                 }
@@ -1058,7 +1052,7 @@ export default class ProcessManager {
             if (isCluster) {
                 const workers = appmeta.get("workers");
                 const pworkers = proc.workers;
-                for (const id of _.keys(pworkers)) {
+                for (const id of util.keys(pworkers)) {
                     const worker = workers.get(Number(id));
                     worker.set("state", STATES.STARTED);
                     worker.set("startingTimer", setTimeout(() => {
@@ -1126,7 +1120,11 @@ export default class ProcessManager {
             // the omnitron is stopping
             return;
         }
-        if (config.autorestart && (appstate === STATES.RUNNING || appstate === STATES.STARTED) && immediateRestarts < config.maxRestarts) {
+        if (
+            config.autorestart &&
+            (appstate === STATES.RUNNING || appstate === STATES.STARTED)
+            && immediateRestarts < config.maxRestarts
+        ) {
             l.log("wait", config.restartDelay);
             workermeta.set("state", STATES.WAITING_FOR_RESTART);
             await adone.promise.delay(config.restartDelay);
@@ -1185,7 +1183,7 @@ export default class ProcessManager {
 
         const l = logger.contextify(config.name);
 
-        if (exitCode !== null) {
+        if (!is.null(exitCode)) {
             l.log(`The process exited with code ${exitCode}`);
         } else {
             l.log(`The process was terminated by signal ${exitSignal}`);
@@ -1430,7 +1428,7 @@ export default class ProcessManager {
             return { main };
         }
         const workers = {};
-        for (const [id, { pid, alive }] of _.entries(process.workers)) {
+        for (const [id, { pid, alive }] of util.entries(process.workers)) {
             if (!alive) {
                 workers[id] = { cpu: null, memory: null };
             } else {
@@ -1456,7 +1454,7 @@ export default class ProcessManager {
         }
         const workers = {};
         const now = new Date().getTime();
-        for (const [id, { appeared, alive }] of _.entries(process.workers)) {
+        for (const [id, { appeared, alive }] of util.entries(process.workers)) {
             workers[id] = alive ? now - appeared : null;
         }
         return { main, workers };
@@ -1492,7 +1490,7 @@ export default class ProcessManager {
                     const _workers = process.workers;
                     const workersmeta = appmeta.get("workers");
                     const workers = [];
-                    const ids = _.keys(_workers).map(Number).sort((a, b) => a - b);
+                    const ids = util.keys(_workers).map(Number).sort((a, b) => a - b);
                     for (const id of ids) {
                         const workermeta = workersmeta.get(Number(id));
                         const worker = _workers[id];
@@ -1525,7 +1523,7 @@ export default class ProcessManager {
                 throw new adone.x.IllegalState("An application with that name already exists");
             }
         }
-        newConfig = _.defaultsDeep(newConfig, oldConfig);
+        newConfig = util.assignDeep({}, oldConfig, newConfig);
         await this.updateDBConfig(newConfig);
     }
 
