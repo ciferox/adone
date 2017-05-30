@@ -1,13 +1,10 @@
-const {
-    std: { util },
-    database: { local: { Model: model, Datastore } }
-} = adone;
-
-
-describe("Model", () => {
+describe("databases", "local", "Model", () => {
+    const {
+        std: { util },
+        database: { local: { Model: model, Datastore } }
+    } = adone;
 
     describe("Serialization, deserialization", () => {
-
         let tmpdir;
 
         before(async () => {
@@ -156,9 +153,9 @@ describe("Model", () => {
 
             model.serialize(o);
         });
-    }); // ==== End of 'Serialization, deserialization' ==== //
-    describe("Object checking", () => {
+    });
 
+    describe("Object checking", () => {
         it("Field names beginning with a $ sign are forbidden", () => {
             expect(model.checkObject).to.be.ok;
 
@@ -208,9 +205,9 @@ describe("Model", () => {
             expect(model.isPrimitiveType({})).to.be.false;
             expect(model.isPrimitiveType({ a: 42 })).to.be.false;
         });
-    }); // ==== End of 'Object checking' ==== //
-    describe("Deep copying", () => {
+    });
 
+    describe("Deep copying", () => {
         it("Should be able to deep copy any serializable model", () => {
             const d = new Date();
             const obj = { a: ["ee", "ff", 42], date: d, subobj: { a: "b", b: "c" } };
@@ -247,19 +244,47 @@ describe("Model", () => {
         });
 
         it("Without the strictKeys option, everything gets deep copied", () => {
-            const a = { a: 4, $e: "rrr", "eee.rt": 42, nested: { yes: 1, "tt.yy": 2, $nopenope: 3 }, array: [{ "rr.hh": 1 }, { yes: true }, { $yes: false }] };
+            const a = {
+                a: 4,
+                $e: "rrr",
+                "eee.rt": 42,
+                nested: {
+                    yes: 1,
+                    "tt.yy": 2,
+                    $nopenope: 3
+                },
+                array: [
+                    { "rr.hh": 1 },
+                    { yes: true },
+                    { $yes: false }
+                ]
+            };
             const b = model.deepCopy(a);
             expect(a).to.be.deep.equal(b);
         });
 
         it("With the strictKeys option, only valid keys gets deep copied", () => {
-            const a = { a: 4, $e: "rrr", "eee.rt": 42, nested: { yes: 1, "tt.yy": 2, $nopenope: 3 }, array: [{ "rr.hh": 1 }, { yes: true }, { $yes: false }] };
+            const a = {
+                a: 4,
+                $e: "rrr",
+                "eee.rt": 42,
+                nested: {
+                    yes: 1,
+                    "tt.yy": 2,
+                    $nopenope: 3
+                },
+                array: [
+                    { "rr.hh": 1 },
+                    { yes: true },
+                    { $yes: false }
+                ]
+            };
             const b = model.deepCopy(a, true);
             expect(b).to.be.deep.equal({ a: 4, nested: { yes: 1 }, array: [{}, { yes: true }, {}] });
         });
-    }); // ==== End of 'Deep copying' ==== //
-    describe("Modifying documents", () => {
+    });
 
+    describe("Modifying documents", () => {
         it("Queries not containing any modifier just replace the document by the contents of the query but keep its _id", () => {
             const obj = { some: "thing", _id: "keepit" };
             const updateQuery = { replace: "done", bloup: [1, 8] };
@@ -338,7 +363,10 @@ describe("Model", () => {
                 const obj = { yup: { subfield: "bloup" } };
                 const updateQuery = { $set: { "yup.subfield": "changed", "yup.yop": "yes indeed", "totally.doesnt.exist": "now it does" } };
                 const modified = model.modify(obj, updateQuery);
-                expect(modified).to.be.deep.equal({ yup: { subfield: "changed", yop: "yes indeed" }, totally: { doesnt: { exist: "now it does" } } });
+                expect(modified).to.be.deep.equal({
+                    yup: { subfield: "changed", yop: "yes indeed" },
+                    totally: { doesnt: { exist: "now it does" } }
+                });
             });
 
             it("Doesn't replace a falsy field by an object when recursively following dot notation", () => {
@@ -347,10 +375,9 @@ describe("Model", () => {
                 const modified = model.modify(obj, updateQuery);
                 expect(modified).to.be.deep.equal({ nested: false }); // Object not modified as the nested field doesn't exist
             });
-        }); // End of '$set modifier'
+        });
 
         describe("$unset modifier", () => {
-
             it("Can delete a field, not throwing an error if the field doesnt exist", () => {
                 let obj;
                 let updateQuery;
@@ -401,7 +428,7 @@ describe("Model", () => {
                 obj = model.modify({ argh: true, bad: {} }, { $unset: { "bad.worse": true } });
                 expect(obj).to.be.deep.equal({ argh: true, bad: {} });
             });
-        }); // End of '$unset modifier'
+        });
 
         describe("$inc modifier", () => {
             it("Throw an error if you try to use it with a non-number or on a non number field", () => {
@@ -434,10 +461,9 @@ describe("Model", () => {
                 const modified = model.modify(obj, { $inc: { "nay.nope": -2, "blip.blop": 123 } });
                 expect(modified).to.be.deep.equal({ some: "thing", nay: { nope: 38 }, blip: { blop: 123 } });
             });
-        }); // End of '$inc modifier'
+        });
 
         describe("$push modifier", () => {
-
             it("Can push an element to the end of an array", () => {
                 const obj = { arr: ["hello"] };
                 const modified = model.modify(obj, { $push: { arr: "world" } });
@@ -527,10 +553,9 @@ describe("Model", () => {
                     modified = model.modify(obj, { $push: { arr: { $each: [], unauthorized: true } } });
                 }).to.throw();
             });
-        }); // End of '$push modifier'
+        });
 
         describe("$addToSet modifier", () => {
-
             it("Can add an element to a set", () => {
                 let obj = { arr: ["hello"] };
                 let modified;
@@ -580,10 +605,9 @@ describe("Model", () => {
                     modified = model.modify(obj, { $addToSet: { arr: { $each: ["world"], unauthorized: true } } });
                 }).to.throw();
             });
-        }); // End of '$addToSet modifier'
+        });
 
         describe("$pop modifier", () => {
-
             it("Throw if called on a non array, a non defined field or a non integer", () => {
                 let obj = { arr: "hello" };
                 expect(() => {
@@ -617,10 +641,9 @@ describe("Model", () => {
                 modified = model.modify(obj, { $pop: { arr: -1 } });
                 expect(modified).to.be.deep.equal({ arr: [] });
             });
-        }); // End of '$pop modifier'
+        });
 
         describe("$pull modifier", () => {
-
             it("Can remove an element from a set", () => {
                 let obj = { arr: ["hello", "world"] };
                 let modified;
@@ -666,7 +689,7 @@ describe("Model", () => {
                 modified = model.modify(obj, { $pull: { arr: { b: { $gte: 5 } } } });
                 expect(modified).to.be.deep.equal({ arr: [{ b: 4 }, { b: 1 }], other: "yeah" });
             });
-        }); // End of '$pull modifier'
+        });
 
         describe("$max modifier", () => {
             it("Will set the field to the updated value if value is greater than current one, without modifying the original object", () => {
@@ -697,7 +720,7 @@ describe("Model", () => {
                 const modified = model.modify(obj, updateQuery);
                 expect(modified).to.be.deep.equal({ some: "thing", somethingElse: { number: 12 } });
             });
-        }); // End of '$max modifier'
+        });
 
         describe("$min modifier", () => {
             it("Will set the field to the updated value if value is smaller than current one, without modifying the original object", () => {
@@ -728,12 +751,27 @@ describe("Model", () => {
                 const modified = model.modify(obj, updateQuery);
                 expect(modified).to.be.deep.equal({ some: "thing", somethingElse: { number: 8 } });
             });
-        }); // End of '$min modifier'
-    }); // ==== End of 'Modifying documents' ==== //
-    describe("Comparing things", () => {
+        });
+    });
 
+    describe("Comparing things", () => {
         it("undefined is the smallest", () => {
-            const otherStuff = [null, "string", "", -1, 0, 5.3, 12, true, false, new Date(12345), {}, { hello: "world" }, [], ["quite", 5]];
+            const otherStuff = [
+                null,
+                "string",
+                "",
+                -1,
+                0,
+                5.3,
+                12,
+                true,
+                false,
+                new Date(12345),
+                {},
+                { hello: "world" },
+                [],
+                ["quite", 5]
+            ];
 
             expect(model.compareThings(undefined, undefined)).to.be.equal(0);
 
@@ -744,7 +782,21 @@ describe("Model", () => {
         });
 
         it("Then null", () => {
-            const otherStuff = ["string", "", -1, 0, 5.3, 12, true, false, new Date(12345), {}, { hello: "world" }, [], ["quite", 5]];
+            const otherStuff = [
+                "string",
+                "",
+                -1,
+                0,
+                5.3,
+                12,
+                true,
+                false,
+                new Date(12345),
+                {},
+                { hello: "world" },
+                [],
+                ["quite", 5]
+            ];
 
             expect(model.compareThings(null, null)).to.be.equal(0);
 
@@ -858,15 +910,14 @@ describe("Model", () => {
                 return a > b ? -1 : 1;
             })).to.be.equal(-1);
         });
-    }); // ==== End of 'Comparing things' ==== //
+    });
+
     describe("Querying", () => {
-
         describe("Comparing things", () => {
-
             it("Two things of different types cannot be equal, two identical native things are equal", () => {
                 const toTest = [null, "somestring", 42, true, new Date(72998322), { hello: "world" }];
                 const toTestAgainst = [null, "somestring", 42, true, new Date(72998322), { hello: "world" }] // Use another array so that we don't test pointer equality
-                ;
+                    ;
                 let i;
                 let j;
                 for (i = 0; i < toTest.length; i += 1) {
@@ -901,15 +952,23 @@ describe("Model", () => {
                 expect(model.areThingsEqual({ hello: "world" }, {})).to.be.false;
                 expect(model.areThingsEqual({ hello: "world" }, { hello: "mars" })).to.be.false;
                 expect(model.areThingsEqual({ hello: "world" }, { hello: "world", temperature: 42 })).to.be.false;
-                expect(model.areThingsEqual({ hello: "world", other: { temperature: 42 } }, { hello: "world", other: { temperature: 42 } })).to.be.true;
+                expect(model.areThingsEqual({
+                    hello: "world",
+                    other: { temperature: 42 }
+                }, {
+                    hello: "world",
+                    other: { temperature: 42 }
+                })).to.be.true;
             });
         });
 
         describe("Getting a fields value in dot notation", () => {
-
             it("Return first-level and nested values", () => {
                 expect(model.getDotValue({ hello: "world" }, "hello")).to.be.equal("world");
-                expect(model.getDotValue({ hello: "world", type: { planet: true, blue: true } }, "type.planet")).to.be.true;
+                expect(model.getDotValue({
+                    hello: "world",
+                    type: { planet: true, blue: true }
+                }, "type.planet")).to.be.true;
             });
 
             it("Return undefined if the field cannot be found in the object", () => {
@@ -921,16 +980,40 @@ describe("Model", () => {
                 let dv;
 
                 // Simple array of subdocuments
-                dv = model.getDotValue({ planets: [{ name: "Earth", number: 3 }, { name: "Mars", number: 2 }, { name: "Pluton", number: 9 }] }, "planets.name");
+                dv = model.getDotValue({
+                    planets: [
+                        { name: "Earth", number: 3 },
+                        { name: "Mars", number: 2 },
+                        { name: "Pluton", number: 9 }
+                    ]
+                }, "planets.name");
                 expect(dv).to.be.deep.equal(["Earth", "Mars", "Pluton"]);
 
                 // Nested array of subdocuments
-                dv = model.getDotValue({ nedb: true, data: { planets: [{ name: "Earth", number: 3 }, { name: "Mars", number: 2 }, { name: "Pluton", number: 9 }] } }, "data.planets.number");
+                dv = model.getDotValue({
+                    nedb: true,
+                    data: {
+                        planets: [
+                            { name: "Earth", number: 3 },
+                            { name: "Mars", number: 2 },
+                            { name: "Pluton", number: 9 }
+                        ]
+                    }
+                }, "data.planets.number");
                 expect(dv).to.be.deep.equal([3, 2, 9]);
 
                 // Nested array in a subdocument of an array (yay, inception!)
                 // TODO: make sure MongoDB doesn't flatten the array (it wouldn't make sense)
-                dv = model.getDotValue({ nedb: true, data: { planets: [{ name: "Earth", numbers: [1, 3] }, { name: "Mars", numbers: [7] }, { name: "Pluton", numbers: [9, 5, 1] }] } }, "data.planets.numbers");
+                dv = model.getDotValue({
+                    nedb: true,
+                    data: {
+                        planets: [
+                            { name: "Earth", numbers: [1, 3] },
+                            { name: "Mars", numbers: [7] },
+                            { name: "Pluton", numbers: [9, 5, 1] }
+                        ]
+                    }
+                }, "data.planets.numbers");
                 expect(dv).to.be.deep.equal([[1, 3], [7], [9, 5, 1]]);
             });
 
@@ -938,25 +1021,54 @@ describe("Model", () => {
                 let dv;
 
                 // Simple index in dot notation
-                dv = model.getDotValue({ planets: [{ name: "Earth", number: 3 }, { name: "Mars", number: 2 }, { name: "Pluton", number: 9 }] }, "planets.1");
+                dv = model.getDotValue({
+                    planets: [
+                        { name: "Earth", number: 3 },
+                        { name: "Mars", number: 2 },
+                        { name: "Pluton", number: 9 }
+                    ]
+                }, "planets.1");
                 expect(dv).to.be.deep.equal({ name: "Mars", number: 2 });
 
                 // Out of bounds index
-                dv = model.getDotValue({ planets: [{ name: "Earth", number: 3 }, { name: "Mars", number: 2 }, { name: "Pluton", number: 9 }] }, "planets.3");
+                dv = model.getDotValue({
+                    planets: [
+                        { name: "Earth", number: 3 },
+                        { name: "Mars", number: 2 },
+                        { name: "Pluton", number: 9 }
+                    ]
+                }, "planets.3");
                 expect(dv).to.be.undefined;
 
                 // Index in nested array
-                dv = model.getDotValue({ nedb: true, data: { planets: [{ name: "Earth", number: 3 }, { name: "Mars", number: 2 }, { name: "Pluton", number: 9 }] } }, "data.planets.2");
+                dv = model.getDotValue({
+                    nedb: true,
+                    data: {
+                        planets: [
+                            { name: "Earth", number: 3 },
+                            { name: "Mars", number: 2 },
+                            { name: "Pluton", number: 9 }
+                        ]
+                    }
+                }, "data.planets.2");
                 expect(dv).to.be.deep.equal({ name: "Pluton", number: 9 });
 
                 // Dot notation with index in the middle
-                dv = model.getDotValue({ nedb: true, data: { planets: [{ name: "Earth", number: 3 }, { name: "Mars", number: 2 }, { name: "Pluton", number: 9 }] } }, "data.planets.0.name");
+                dv = model.getDotValue({
+                    nedb: true,
+                    data: {
+                        planets: [
+                            { name: "Earth", number: 3 },
+                            { name: "Mars", number: 2 },
+                            { name: "Pluton", number: 9 }
+                        ]
+                    }
+                }, "data.planets.0.name");
                 expect(dv).to.be.equal("Earth");
             });
         });
 
         describe("Field equality", () => {
-
             it("Can find documents with simple fields", () => {
                 expect(model.match({ test: "yeah" }, { test: "yea" })).to.be.false;
                 expect(model.match({ test: "yeah" }, { test: "yeahh" })).to.be.false;
@@ -993,7 +1105,6 @@ describe("Model", () => {
         });
 
         describe("Regular expression matching", () => {
-
             it("Matching a non-string to a regular expression always yields false", () => {
                 const d = new Date();
                 const r = new RegExp(d.getTime());
@@ -1042,7 +1153,6 @@ describe("Model", () => {
         });
 
         describe("$lt", () => {
-
             it("Cannot compare a field to an object, an array, null or a boolean, it will return false", () => {
                 expect(model.match({ a: 5 }, { a: { $lt: { a: 6 } } })).to.be.false;
                 expect(model.match({ a: 5 }, { a: { $lt: [6, 7] } })).to.be.false;
@@ -1154,31 +1264,141 @@ describe("Model", () => {
         });
 
         describe("Comparing on arrays", () => {
-
             it("Can perform a direct array match", () => {
-                expect(model.match({ planets: ["Earth", "Mars", "Pluto"], something: "else" }, { planets: ["Earth", "Mars"] })).to.be.false;
-                expect(model.match({ planets: ["Earth", "Mars", "Pluto"], something: "else" }, { planets: ["Earth", "Mars", "Pluto"] })).to.be.true;
-                expect(model.match({ planets: ["Earth", "Mars", "Pluto"], something: "else" }, { planets: ["Earth", "Pluto", "Mars"] })).to.be.false;
+                expect(model.match({
+                    planets: ["Earth", "Mars", "Pluto"],
+                    something: "else"
+                }, {
+                    planets: ["Earth", "Mars"]
+                })).to.be.false;
+                expect(model.match({
+                    planets: ["Earth", "Mars", "Pluto"],
+                    something: "else"
+                }, {
+                    planets: ["Earth", "Mars", "Pluto"]
+                })).to.be.true;
+                expect(model.match({
+                    planets: ["Earth", "Mars", "Pluto"],
+                    something: "else"
+                }, {
+                    planets: ["Earth", "Pluto", "Mars"]
+                })).to.be.false;
             });
 
             it("Can query on the size of an array field", () => {
                 // Non nested documents
-                expect(model.match({ childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] }, { childrens: { $size: 0 } })).to.be.false;
-                expect(model.match({ childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] }, { childrens: { $size: 1 } })).to.be.false;
-                expect(model.match({ childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] }, { childrens: { $size: 2 } })).to.be.false;
-                expect(model.match({ childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] }, { childrens: { $size: 3 } })).to.be.true;
+                expect(model.match({
+                    childrens: [
+                        { name: "Huey", age: 3 },
+                        { name: "Dewey", age: 7 },
+                        { name: "Louie", age: 12 }
+                    ]
+                }, {
+                    childrens: { $size: 0 }
+                })).to.be.false;
+                expect(model.match({
+                    childrens: [
+                        { name: "Huey", age: 3 },
+                        { name: "Dewey", age: 7 },
+                        { name: "Louie", age: 12 }
+                    ]
+                }, {
+                    childrens: { $size: 1 }
+                })).to.be.false;
+                expect(model.match({
+                    childrens: [
+                        { name: "Huey", age: 3 },
+                        { name: "Dewey", age: 7 },
+                        { name: "Louie", age: 12 }
+                    ]
+                }, {
+                    childrens: { $size: 2 }
+                })).to.be.false;
+                expect(model.match({
+                    childrens: [
+                        { name: "Huey", age: 3 },
+                        { name: "Dewey", age: 7 },
+                        { name: "Louie", age: 12 }
+                    ]
+                }, {
+                    childrens: { $size: 3 }
+                })).to.be.true;
 
                 // Nested documents
-                expect(model.match({ hello: "world", description: { satellites: ["Moon", "Hubble"], diameter: 6300 } }, { "description.satellites": { $size: 0 } })).to.be.false;
-                expect(model.match({ hello: "world", description: { satellites: ["Moon", "Hubble"], diameter: 6300 } }, { "description.satellites": { $size: 1 } })).to.be.false;
-                expect(model.match({ hello: "world", description: { satellites: ["Moon", "Hubble"], diameter: 6300 } }, { "description.satellites": { $size: 2 } })).to.be.true;
-                expect(model.match({ hello: "world", description: { satellites: ["Moon", "Hubble"], diameter: 6300 } }, { "description.satellites": { $size: 3 } })).to.be.false;
+                expect(model.match({
+                    hello: "world",
+                    description: {
+                        satellites: ["Moon", "Hubble"],
+                        diameter: 6300
+                    }
+                }, {
+                    "description.satellites": { $size: 0 }
+                })).to.be.false;
+                expect(model.match({
+                    hello: "world",
+                    description: {
+                        satellites: ["Moon", "Hubble"],
+                        diameter: 6300
+                    }
+                }, {
+                    "description.satellites": { $size: 1 }
+                })).to.be.false;
+                expect(model.match({
+                    hello: "world",
+                    description: {
+                        satellites: ["Moon", "Hubble"],
+                        diameter: 6300
+                    }
+                }, {
+                    "description.satellites": { $size: 2 }
+                })).to.be.true;
+                expect(model.match({
+                    hello: "world",
+                    description: {
+                        satellites: ["Moon", "Hubble"],
+                        diameter: 6300
+                    }
+                }, {
+                    "description.satellites": { $size: 3 }
+                })).to.be.false;
 
                 // Using a projected array
-                expect(model.match({ childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] }, { "childrens.names": { $size: 0 } })).to.be.false;
-                expect(model.match({ childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] }, { "childrens.names": { $size: 1 } })).to.be.false;
-                expect(model.match({ childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] }, { "childrens.names": { $size: 2 } })).to.be.false;
-                expect(model.match({ childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] }, { "childrens.names": { $size: 3 } })).to.be.true;
+                expect(model.match({
+                    childrens: [
+                        { name: "Huey", age: 3 },
+                        { name: "Dewey", age: 7 },
+                        { name: "Louie", age: 12 }
+                    ]
+                }, {
+                    "childrens.names": { $size: 0 }
+                })).to.be.false;
+                expect(model.match({
+                    childrens: [
+                        { name: "Huey", age: 3 },
+                        { name: "Dewey", age: 7 },
+                        { name: "Louie", age: 12 }
+                    ]
+                }, {
+                    "childrens.names": { $size: 1 }
+                })).to.be.false;
+                expect(model.match({
+                    childrens: [
+                        { name: "Huey", age: 3 },
+                        { name: "Dewey", age: 7 },
+                        { name: "Louie", age: 12 }
+                    ]
+                }, {
+                    "childrens.names": { $size: 2 }
+                })).to.be.false;
+                expect(model.match({
+                    childrens: [
+                        { name: "Huey", age: 3 },
+                        { name: "Dewey", age: 7 },
+                        { name: "Louie", age: 12 }
+                    ]
+                }, {
+                    "childrens.names": { $size: 3 }
+                })).to.be.true;
             });
 
             it("$size operator works with empty arrays", () => {
@@ -1210,14 +1430,68 @@ describe("Model", () => {
 
             it("Can query array documents with multiple simultaneous conditions", () => {
                 // Non nested documents
-                expect(model.match({ childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] }, { childrens: { $elemMatch: { name: "Dewey", age: 7 } } })).to.be.true;
-                expect(model.match({ childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] }, { childrens: { $elemMatch: { name: "Dewey", age: 12 } } })).to.be.false;
-                expect(model.match({ childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] }, { childrens: { $elemMatch: { name: "Louie", age: 3 } } })).to.be.false;
+                expect(model.match({
+                    childrens: [
+                        { name: "Huey", age: 3 },
+                        { name: "Dewey", age: 7 },
+                        { name: "Louie", age: 12 }
+                    ]
+                }, { childrens: {
+                    $elemMatch: { name: "Dewey", age: 7 } }
+                })).to.be.true;
+                expect(model.match({
+                    childrens: [
+                        { name: "Huey", age: 3 },
+                        { name: "Dewey", age: 7 },
+                        { name: "Louie", age: 12 }
+                    ]
+                }, { childrens: {
+                    $elemMatch: { name: "Dewey", age: 12 } }
+                })).to.be.false;
+                expect(model.match({
+                    childrens: [
+                        { name: "Huey", age: 3 },
+                        { name: "Dewey", age: 7 },
+                        { name: "Louie", age: 12 }
+                    ]
+                }, { childrens: {
+                    $elemMatch: { name: "Louie", age: 3 } }
+                })).to.be.false;
 
                 // Nested documents
-                expect(model.match({ outer: { childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] } }, { "outer.childrens": { $elemMatch: { name: "Dewey", age: 7 } } })).to.be.true;
-                expect(model.match({ outer: { childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] } }, { "outer.childrens": { $elemMatch: { name: "Dewey", age: 12 } } })).to.be.false;
-                expect(model.match({ outer: { childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] } }, { "outer.childrens": { $elemMatch: { name: "Louie", age: 3 } } })).to.be.false;
+                expect(model.match({
+                    outer: {
+                        childrens: [
+                            { name: "Huey", age: 3 },
+                            { name: "Dewey", age: 7 },
+                            { name: "Louie", age: 12 }
+                        ]
+                    }
+                }, {
+                    "outer.childrens": { $elemMatch: { name: "Dewey", age: 7 } }
+                })).to.be.true;
+                expect(model.match({
+                    outer: {
+                        childrens: [
+                            { name: "Huey", age: 3 },
+                            { name: "Dewey", age: 7 },
+                            { name: "Louie", age: 12 }
+                        ]
+                    }
+                }, {
+                    "outer.childrens": { $elemMatch: { name: "Dewey", age: 12 } }
+                })).to.be.false;
+                expect(model.match({
+                    outer: {
+                        childrens: [
+                            { name: "Huey", age: 3 },
+                            { name: "Dewey", age: 7 },
+                            { name: "Louie", age: 12 }
+                        ]
+                    }
+                }, {
+                    "outer.childrens": { $elemMatch: { name: "Louie", age: 3 } }
+                })).to.be.false;
             });
 
             it("$elemMatch operator works with empty arrays", () => {
@@ -1226,15 +1500,66 @@ describe("Model", () => {
             });
 
             it("Can use more complex comparisons inside nested query documents", () => {
-                expect(model.match({ childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] }, { childrens: { $elemMatch: { name: "Dewey", age: { $gt: 6, $lt: 8 } } } })).to.be.true;
-                expect(model.match({ childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] }, { childrens: { $elemMatch: { name: "Dewey", age: { $in: [6, 7, 8] } } } })).to.be.true;
-                expect(model.match({ childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] }, { childrens: { $elemMatch: { name: "Dewey", age: { $gt: 6, $lt: 7 } } } })).to.be.false;
-                expect(model.match({ childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] }, { childrens: { $elemMatch: { name: "Louie", age: { $gt: 6, $lte: 7 } } } })).to.be.false;
+                expect(model.match({
+                    childrens: [
+                        { name: "Huey", age: 3 },
+                        { name: "Dewey", age: 7 },
+                        { name: "Louie", age: 12 }
+                    ]
+                }, {
+                    childrens: {
+                        $elemMatch: {
+                            name: "Dewey",
+                            age: { $gt: 6, $lt: 8 }
+                        }
+                    }
+                })).to.be.true;
+                expect(model.match({
+                    childrens: [
+                        { name: "Huey", age: 3 },
+                        { name: "Dewey", age: 7 },
+                        { name: "Louie", age: 12 }
+                    ]
+                }, {
+                    childrens: {
+                        $elemMatch: {
+                            name: "Dewey",
+                            age: { $in: [6, 7, 8] }
+                        }
+                    }
+                })).to.be.true;
+                expect(model.match({
+                    childrens: [
+                        { name: "Huey", age: 3 },
+                        { name: "Dewey", age: 7 },
+                        { name: "Louie", age: 12 }
+                    ]
+                }, {
+                    childrens: {
+                        $elemMatch: {
+                            name: "Dewey",
+                            age: { $gt: 6, $lt: 7 }
+                        }
+                    }
+                })).to.be.false;
+                expect(model.match({
+                    childrens: [
+                        { name: "Huey", age: 3 },
+                        { name: "Dewey", age: 7 },
+                        { name: "Louie", age: 12 }
+                    ]
+                }, {
+                    childrens: {
+                        $elemMatch: {
+                            name: "Louie",
+                            age: { $gt: 6, $lte: 7 }
+                        }
+                    }
+                })).to.be.false;
             });
         });
 
         describe("Logical operators $or, $and, $not", () => {
-
             it("Any of the subqueries should match for an $or to match", () => {
                 expect(model.match({ hello: "world" }, { $or: [{ hello: "pluton" }, { hello: "world" }] })).to.be.true;
                 expect(model.match({ hello: "pluton" }, { $or: [{ hello: "pluton" }, { hello: "world" }] })).to.be.true;
@@ -1263,8 +1588,26 @@ describe("Model", () => {
             });
 
             it("Logical operators can be combined as long as they are on top of the decision tree", () => {
-                expect(model.match({ a: 5, b: 7, c: 12 }, { $or: [{ $and: [{ a: 5 }, { b: 8 }] }, { $and: [{ a: 5 }, { c: { $lt: 40 } }] }] })).to.be.true;
-                expect(model.match({ a: 5, b: 7, c: 12 }, { $or: [{ $and: [{ a: 5 }, { b: 8 }] }, { $and: [{ a: 5 }, { c: { $lt: 10 } }] }] })).to.be.false;
+                expect(model.match({
+                    a: 5,
+                    b: 7,
+                    c: 12
+                }, {
+                    $or: [
+                        { $and: [{ a: 5 }, { b: 8 }] },
+                        { $and: [{ a: 5 }, { c: { $lt: 40 } }] }
+                    ]
+                })).to.be.true;
+                expect(model.match({
+                    a: 5,
+                    b: 7,
+                    c: 12
+                }, {
+                    $or: [
+                        { $and: [{ a: 5 }, { b: 8 }] },
+                        { $and: [{ a: 5 }, { c: { $lt: 10 } }] }
+                    ]
+                })).to.be.false;
             });
 
             it("Should throw an error if a logical operator is used without an array or if an unknown logical operator is used", () => {
@@ -1281,14 +1624,17 @@ describe("Model", () => {
         });
 
         describe("Comparison operator $where", () => {
-
             it("Function should match and not match correctly", () => {
-                expect(model.match({ a: 4 }, { $where() {
-                    return this.a === 4;
-                } })).to.be.true;
-                expect(model.match({ a: 4 }, { $where() {
-                    return this.a === 5;
-                } })).to.be.false;
+                expect(model.match({ a: 4 }, {
+                    $where() {
+                        return this.a === 4;
+                    }
+                })).to.be.true;
+                expect(model.match({ a: 4 }, {
+                    $where() {
+                        return this.a === 5;
+                    }
+                })).to.be.false;
             });
 
             it("Should throw an error if the $where function is not, in fact, a function", () => {
@@ -1299,9 +1645,11 @@ describe("Model", () => {
 
             it("Should throw an error if the $where function returns a non-boolean", () => {
                 expect(() => {
-                    model.match({ a: 4 }, { $where() {
-                        return "not a boolean";
-                    } });
+                    model.match({ a: 4 }, {
+                        $where() {
+                            return "not a boolean";
+                        }
+                    });
                 }).to.throw();
             });
 
@@ -1312,16 +1660,34 @@ describe("Model", () => {
                     }
                     return `${this.firstName.toLowerCase()}.${this.lastName.toLowerCase()}@gmail.com` === this.email;
                 };
-                expect(model.match({ firstName: "John", lastName: "Doe", email: "john.doe@gmail.com" }, { $where: checkEmail })).to.be.true;
-                expect(model.match({ firstName: "john", lastName: "doe", email: "john.doe@gmail.com" }, { $where: checkEmail })).to.be.true;
-                expect(model.match({ firstName: "Jane", lastName: "Doe", email: "john.doe@gmail.com" }, { $where: checkEmail })).to.be.false;
-                expect(model.match({ firstName: "John", lastName: "Deere", email: "john.doe@gmail.com" }, { $where: checkEmail })).to.be.false;
-                expect(model.match({ lastName: "Doe", email: "john.doe@gmail.com" }, { $where: checkEmail })).to.be.false;
+                expect(model.match({
+                    firstName: "John",
+                    lastName: "Doe",
+                    email: "john.doe@gmail.com"
+                }, { $where: checkEmail })).to.be.true;
+                expect(model.match({
+                    firstName: "john",
+                    lastName: "doe",
+                    email: "john.doe@gmail.com"
+                }, { $where: checkEmail })).to.be.true;
+                expect(model.match({
+                    firstName: "Jane",
+                    lastName: "Doe",
+                    email: "john.doe@gmail.com"
+                }, { $where: checkEmail })).to.be.false;
+                expect(model.match({
+                    firstName: "John",
+                    lastName: "Deere",
+                    email: "john.doe@gmail.com"
+                }, { $where: checkEmail })).to.be.false;
+                expect(model.match({
+                    lastName: "Doe",
+                    email: "john.doe@gmail.com"
+                }, { $where: checkEmail })).to.be.false;
             });
         });
 
         describe("Array fields", () => {
-
             it("Field equality", () => {
                 expect(model.match({ tags: ["node", "js", "db"] }, { tags: "python" })).to.be.false;
                 expect(model.match({ tags: ["node", "js", "db"] }, { tagss: "js" })).to.be.false;
@@ -1353,22 +1719,94 @@ describe("Model", () => {
             });
 
             it("Can query inside arrays thanks to dot notation", () => {
-                expect(model.match({ childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] }, { "childrens.age": { $lt: 2 } })).to.be.false;
-                expect(model.match({ childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] }, { "childrens.age": { $lt: 3 } })).to.be.false;
-                expect(model.match({ childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] }, { "childrens.age": { $lt: 4 } })).to.be.true;
-                expect(model.match({ childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] }, { "childrens.age": { $lt: 8 } })).to.be.true;
-                expect(model.match({ childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] }, { "childrens.age": { $lt: 13 } })).to.be.true;
+                expect(model.match({
+                    childrens: [
+                        { name: "Huey", age: 3 },
+                        { name: "Dewey", age: 7 },
+                        { name: "Louie", age: 12 }
+                    ]
+                }, { "childrens.age": { $lt: 2 } })).to.be.false;
+                expect(model.match({
+                    childrens: [
+                        { name: "Huey", age: 3 },
+                        { name: "Dewey", age: 7 },
+                        { name: "Louie", age: 12 }
+                    ]
+                }, { "childrens.age": { $lt: 3 } })).to.be.false;
+                expect(model.match({
+                    childrens: [
+                        { name: "Huey", age: 3 },
+                        { name: "Dewey", age: 7 },
+                        { name: "Louie", age: 12 }
+                    ]
+                }, { "childrens.age": { $lt: 4 } })).to.be.true;
+                expect(model.match({
+                    childrens: [
+                        { name: "Huey", age: 3 },
+                        { name: "Dewey", age: 7 },
+                        { name: "Louie", age: 12 }
+                    ]
+                }, { "childrens.age": { $lt: 8 } })).to.be.true;
+                expect(model.match({
+                    childrens: [
+                        { name: "Huey", age: 3 },
+                        { name: "Dewey", age: 7 },
+                        { name: "Louie", age: 12 }
+                    ]
+                }, { "childrens.age": { $lt: 13 } })).to.be.true;
 
-                expect(model.match({ childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] }, { "childrens.name": "Louis" })).to.be.false;
-                expect(model.match({ childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] }, { "childrens.name": "Louie" })).to.be.true;
-                expect(model.match({ childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] }, { "childrens.name": "Lewi" })).to.be.false;
+                expect(model.match({
+                    childrens: [
+                        { name: "Huey", age: 3 },
+                        { name: "Dewey", age: 7 },
+                        { name: "Louie", age: 12 }
+                    ]
+                }, { "childrens.name": "Louis" })).to.be.false;
+                expect(model.match({
+                    childrens: [
+                        { name: "Huey", age: 3 },
+                        { name: "Dewey", age: 7 },
+                        { name: "Louie", age: 12 }
+                    ]
+                }, { "childrens.name": "Louie" })).to.be.true;
+                expect(model.match({
+                    childrens: [
+                        { name: "Huey", age: 3 },
+                        { name: "Dewey", age: 7 },
+                        { name: "Louie", age: 12 }
+                    ]
+                }, { "childrens.name": "Lewi" })).to.be.false;
             });
 
             it("Can query for a specific element inside arrays thanks to dot notation", () => {
-                expect(model.match({ childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] }, { "childrens.0.name": "Louie" })).to.be.false;
-                expect(model.match({ childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] }, { "childrens.1.name": "Louie" })).to.be.false;
-                expect(model.match({ childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] }, { "childrens.2.name": "Louie" })).to.be.true;
-                expect(model.match({ childrens: [{ name: "Huey", age: 3 }, { name: "Dewey", age: 7 }, { name: "Louie", age: 12 }] }, { "childrens.3.name": "Louie" })).to.be.false;
+                expect(model.match({
+                    childrens: [
+                        { name: "Huey", age: 3 },
+                        { name: "Dewey", age: 7 },
+                        { name: "Louie", age: 12 }
+                    ]
+                }, { "childrens.0.name": "Louie" })).to.be.false;
+                expect(model.match({
+                    childrens: [
+                        { name: "Huey", age: 3 },
+                        { name: "Dewey", age: 7 },
+                        { name: "Louie", age: 12 }
+                    ]
+                }, { "childrens.1.name": "Louie" })).to.be.false;
+                expect(model.match({
+                    childrens: [
+                        { name: "Huey", age: 3 },
+                        { name: "Dewey", age: 7 },
+                        { name: "Louie", age: 12 }
+                    ]
+                }, { "childrens.2.name": "Louie" })).to.be.true;
+                expect(model.match({
+                    childrens: [
+                        { name: "Huey", age: 3 },
+                        { name: "Dewey", age: 7 },
+                        { name: "Louie", age: 12 }
+                    ]
+                }, { "childrens.3.name": "Louie" })).to.be.false;
             });
 
             it("A single array-specific operator and the query is treated as array specific", () => {
@@ -1378,14 +1816,32 @@ describe("Model", () => {
             });
 
             it("Can mix queries on array fields and non array filds with array specific operators", () => {
-                expect(model.match({ uncle: "Donald", nephews: ["Riri", "Fifi", "Loulou"] }, { nephews: { $size: 2 }, uncle: "Donald" })).to.be.false;
-                expect(model.match({ uncle: "Donald", nephews: ["Riri", "Fifi", "Loulou"] }, { nephews: { $size: 3 }, uncle: "Donald" })).to.be.true;
-                expect(model.match({ uncle: "Donald", nephews: ["Riri", "Fifi", "Loulou"] }, { nephews: { $size: 4 }, uncle: "Donald" })).to.be.false;
+                expect(model.match({
+                    uncle: "Donald",
+                    nephews: ["Riri", "Fifi", "Loulou"]
+                }, { nephews: { $size: 2 }, uncle: "Donald" })).to.be.false;
+                expect(model.match({
+                    uncle: "Donald",
+                    nephews: ["Riri", "Fifi", "Loulou"]
+                }, { nephews: { $size: 3 }, uncle: "Donald" })).to.be.true;
+                expect(model.match({
+                    uncle: "Donald",
+                    nephews: ["Riri", "Fifi", "Loulou"]
+                }, { nephews: { $size: 4 }, uncle: "Donald" })).to.be.false;
 
-                expect(model.match({ uncle: "Donals", nephews: ["Riri", "Fifi", "Loulou"] }, { nephews: { $size: 3 }, uncle: "Picsou" })).to.be.false;
-                expect(model.match({ uncle: "Donald", nephews: ["Riri", "Fifi", "Loulou"] }, { nephews: { $size: 3 }, uncle: "Donald" })).to.be.true;
-                expect(model.match({ uncle: "Donald", nephews: ["Riri", "Fifi", "Loulou"] }, { nephews: { $size: 3 }, uncle: "Daisy" })).to.be.false;
+                expect(model.match({
+                    uncle: "Donals",
+                    nephews: ["Riri", "Fifi", "Loulou"]
+                }, { nephews: { $size: 3 }, uncle: "Picsou" })).to.be.false;
+                expect(model.match({
+                    uncle: "Donald",
+                    nephews: ["Riri", "Fifi", "Loulou"]
+                }, { nephews: { $size: 3 }, uncle: "Donald" })).to.be.true;
+                expect(model.match({
+                    uncle: "Donald",
+                    nephews: ["Riri", "Fifi", "Loulou"]
+                }, { nephews: { $size: 3 }, uncle: "Daisy" })).to.be.false;
             });
         });
-    }); // ==== End of 'Querying' ==== //
+    });
 });

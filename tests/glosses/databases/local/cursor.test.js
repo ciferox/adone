@@ -1,7 +1,6 @@
-const { Datastore, Cursor } = adone.database.local;
+describe("databases", "local", "Cursor", () => {
+    const { Datastore, Cursor } = adone.database.local;
 
-
-describe("Cursor", () => {
     let tmpdir;
     let d;
     let dbFile;
@@ -30,7 +29,6 @@ describe("Cursor", () => {
     });
 
     describe("Without sorting", () => {
-
         beforeEach(async () => {
             await d.insert({ age: 5 });
             await d.insert({ age: 57 });
@@ -101,11 +99,9 @@ describe("Cursor", () => {
             // No way to predict which results are returned of course ...
         });
 
-    });   // ===== End of 'Without sorting' =====
-
+    });
 
     describe("Sorting of the results", () => {
-
         beforeEach(async () => {
             // We don't know the order in which docs wil be inserted but we ensure correctness by testing both sort orders
             await d.insert({ age: 5 });
@@ -382,7 +378,7 @@ describe("Cursor", () => {
             }
         });
 
-    });   // ===== End of 'Sorting' =====
+    });
 
 
     describe("Projections", () => {
@@ -538,9 +534,7 @@ describe("Cursor", () => {
                 {}
             ]);
         });
-
-    });   // ==== End of 'Projections' ====
-
+    });
 });
 
 

@@ -1,4 +1,3 @@
-
 const { collection, is } = adone;
 
 export default class Executor {

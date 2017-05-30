@@ -1,7 +1,4 @@
-
 const { is, x, util } = adone;
-
-// Document modificators
 
 const lastStepModifierFunctions = {
     $set: (obj, field, value) => {
@@ -10,10 +7,12 @@ const lastStepModifierFunctions = {
     $unset: (obj, field) => {
         delete obj[field];
     },
-    // Push an element to the end of an array field
-    // Optional modifier $each instead of value to push several values
-    // Optional modifier $slice to slice the resulting array, see https://docs.mongodb.org/manual/reference/operator/update/slice/
-    // Différeence with MongoDB: if $slice is specified and not $each, we act as if value is an empty array
+    /*
+     * Push an element to the end of an array field
+     * Optional modifier $each instead of value to push several values
+     * Optional modifier $slice to slice the resulting array, see https://docs.mongodb.org/manual/reference/operator/update/slice/
+     * Différeence with MongoDB: if $slice is specified and not $each, we act as if value is an empty array
+     */
     $push: (obj, field, value) => {
         // Create the array if it doesn't exist
         if (!obj.hasOwnProperty(field)) {
@@ -26,13 +25,13 @@ const lastStepModifierFunctions = {
 
         const valueIsObject = is.object(value);
 
-        if (value !== null && valueIsObject && value.$slice && is.undefined(value.$each)) {
+        if (!is.null(value) && valueIsObject && value.$slice && is.undefined(value.$each)) {
             value.$each = [];
         }
 
         if (!is.null(value) && valueIsObject && value.$each) {
             const valueKeys = util.keys(value);
-            if (valueKeys.length >= 3 || (valueKeys.length === 2 && value.$slice === undefined)) {
+            if (valueKeys.length >= 3 || (valueKeys.length === 2 && is.undefined(value.$slice))) {
                 throw new x.IllegalState("Can only use $slice in cunjunction with $each when $push to array");
             }
             if (!is.array(value.$each)) {
@@ -66,9 +65,11 @@ const lastStepModifierFunctions = {
             obj[field].push(value);
         }
     },
-    // Add an element to an array field only if it is not already in it
-    // No modification if the element is already in the array
-    // Note that it doesn't check whether the original array contains duplicates
+    /*
+     * Add an element to an array field only if it is not already in it
+     * No modification if the element is already in the array
+     * Note that it doesn't check whether the original array contains duplicates
+     */
     $addToSet: (obj, field, value) => {
         if (!obj.hasOwnProperty(field)) {
             obj[field] = [];
@@ -105,7 +106,9 @@ const lastStepModifierFunctions = {
             }
         }
     },
-    // Remove the first or last element of an array
+    /*
+     * Remove the first or last element of an array
+     */
     $pop: (obj, field, value) => {
         if (!is.array(obj[field])) {
             throw new x.IllegalState("Can't $pop an element from non-array values");
@@ -123,7 +126,9 @@ const lastStepModifierFunctions = {
             obj[field] = obj[field].slice(1);
         }
     },
-    // Removes all instances of a value from an existing array
+    /*
+     * Removes all instances of a value from an existing array
+     */
     $pull: (obj, field, value) => {
         if (!is.array(obj[field])) {
             throw new x.IllegalState("Can't $pull an element from non-array values");
@@ -137,7 +142,9 @@ const lastStepModifierFunctions = {
             }
         }
     },
-    // Increment a numeric field's value
+    /*
+     * Increment a numeric field's value
+     */
     $inc: (obj, field, value) => {
         if (!is.number(value)) {
             throw new x.IllegalState(`${value} must be a number`);
@@ -192,8 +199,6 @@ for (const modifier of util.keys(lastStepModifierFunctions)) {
     };
 }
 
-// Document finding
-
 const areComparable = (a, b) => {
     if (!is.string(a) && !is.number(a) && !is.date(a) && !is.string(b) && !is.number(b) && !is.date(b)) {
         return false;
@@ -240,8 +245,10 @@ const comparisonFunctions = {
         return b.test(a);
     },
     $exists: (value, exists) => {
-        if (exists || exists === "") {   // This will be true for all values of exists except false, null, undefined and 0
-            exists = true;               // That's strange behaviour (we should only use true/false) but that's the way Mongo does it...
+        // This will be true for all values of exists except false, null, undefined and 0
+        if (exists || exists === "") {
+            // That's strange behaviour (we should only use true/false) but that's the way Mongo does it...
+            exists = true;
         } else {
             exists = false;
         }
@@ -251,9 +258,6 @@ const comparisonFunctions = {
         }
         return exists;
     },
-
-    // Array specific
-
     $size: (obj, value) => {
         if (!is.array(obj)) {
             return false;
@@ -319,10 +323,10 @@ const logicalOperators = {
     }
 };
 
-
-
-// Match an object against a specific { key: value } part of a query
-// if the treatObjAsValue flag is set, don't try to match every part separately, but the array as a whole
+/*
+ * Match an object against a specific { key: value } part of a query
+ * if the treatObjAsValue flag is set, don't try to match every part separately, but the array as a whole
+ */
 const matchQueryPart = (obj, queryKey, queryValue, treatObjAsValue) => {
     const objValue = Model.getDotValue(obj, queryKey);  // eslint-disable-line no-use-before-define
 
@@ -427,11 +431,13 @@ const compareArrays = (a, b) => {
 };
 
 export default class Model {
-     // Serialize an object to be persisted to a one-line string
-     // For serialization/deserialization, we use the native JSON parser and not eval or Function
-     // That gives us less freedom but data entered in the database may come from users so eval and the like are not safe
-     // Accepted primitive types: Number, String, Boolean, Date, null
-     // Accepted secondary types: Objects, Arrays
+     /*
+      * Serialize an object to be persisted to a one-line string
+      * For serialization/deserialization, we use the native JSON parser and not eval or Function
+      * That gives us less freedom but data entered in the database may come from users so eval and the like are not safe
+      * Accepted primitive types: Number, String, Boolean, Date, null
+      * Accepted secondary types: Objects, Arrays
+      */
     static serialize(obj) {
         return JSON.stringify(obj, function replacer(k, v) {
             checkKey(k, v);
@@ -508,8 +514,10 @@ export default class Model {
         }
     }
 
-    // Tells if an object is a primitive type or a "real" object
-    // Arrays and dates are considered primitive
+    /*
+     * Tells if an object is a primitive type or a "real" object
+     * Arrays and dates are considered primitive
+     */
     static isPrimitiveType(obj) {
         return is.primitive(obj) || is.date(obj) || is.array(obj);
     }
@@ -582,7 +590,7 @@ export default class Model {
         if (is.array(obj[fieldParts[0]])) {
             // If the next field is an integer, return only this item of the array
             const i = parseInt(fieldParts[1], 10);
-            if (is.number(i) && !isNaN(i)) {
+            if (is.number(i) && !is.nan(i)) {
                 return Model.getDotValue(obj[fieldParts[0]][i], fieldParts.slice(2));
             }
 
@@ -665,12 +673,13 @@ export default class Model {
         return true;
     }
 
-    // Compare
-    // Things are defined as any native types (string, number, boolean, null, date) and objects
-    // We need to compare with undefined as it will be used in indexes
-    // In the case of objects and arrays, we deep-compare
-    // If two objects dont have the same type, the (arbitrary) type hierarchy is: undefined, null, number, strings, boolean, dates, arrays, objects
-    // Return -1 if a < b, 1 if a > b and 0 if a = b (note that equality here is NOT the same as defined in areThingsEqual!)
+    /*
+     * Things are defined as any native types (string, number, boolean, null, date) and objects
+     * We need to compare with undefined as it will be used in indexes
+     * In the case of objects and arrays, we deep-compare
+     * If two objects dont have the same type, the (arbitrary) type hierarchy is: undefined, null, number, strings, boolean, dates, arrays, objects
+     * Return -1 if a < b, 1 if a > b and 0 if a = b (note that equality here is NOT the same as defined in areThingsEqual!)
+     */
     static compareThings(a, b, compareStrings = compareNSB) {
         if (is.undefined(a)) {
             return is.undefined(b) ? 0 : -1;

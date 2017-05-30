@@ -1,4 +1,3 @@
-
 const { database: { local: { Model } }, x, is, util } = adone;
 
 export default class Cursor {
@@ -115,7 +114,11 @@ export default class Cursor {
             res.sort((a, b) => {
                 for (let i = 0; i < criteria.length; ++i) {
                     const criterion = criteria[i];
-                    const compare = criterion.direction * Model.compareThings(Model.getDotValue(a, criterion.key), Model.getDotValue(b, criterion.key), this.db.compareStrings);
+                    const compare = criterion.direction * Model.compareThings(
+                        Model.getDotValue(a, criterion.key),
+                        Model.getDotValue(b, criterion.key),
+                        this.db.compareStrings
+                    );
                     if (compare !== 0) {
                         return compare;
                     }

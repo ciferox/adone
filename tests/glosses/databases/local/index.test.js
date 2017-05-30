@@ -1,9 +1,7 @@
-const { Index } = adone.database.local;
-
-describe("Indexes", () => {
+describe("databases", "local", "Indexes", () => {
+    const { database: { local: { Index } } } = adone;
 
     describe("Insertion", () => {
-
         it("Can insert pointers to documents in the index correctly when they have the field", () => {
             const idx = new Index({ fieldName: "tf" });
             const doc1 = { a: 5, tf: "hello" };
@@ -61,7 +59,6 @@ describe("Indexes", () => {
             const doc2 = { a: 8, tf: { nested: "world", additional: true } };
             const doc3 = { a: 2, tf: { nested: "bloup", age: 42 } };
 
-
             idx.insert(doc1);
             idx.insert(doc2);
             idx.insert(doc3);
@@ -109,9 +106,7 @@ describe("Indexes", () => {
             expect(idx.tree.search("bloup")).to.be.empty;
         });
 
-
         describe("Array fields", () => {
-
             it("Inserts one entry per array element in the index", () => {
                 const obj = { tf: ["aa", "bb"], really: "yeah" };
                 const obj2 = { tf: "normal", yes: "indeed" };
@@ -207,21 +202,16 @@ describe("Indexes", () => {
                 expect(idx.getMatching("dd")).to.be.empty;
                 expect(idx.getMatching("ee")).to.be.empty;
             });
-
-        });   // ==== End of 'Array fields' ==== //
-
-    });   // ==== End of 'Insertion' ==== //
-
+        });
+    });
 
     describe("Removal", () => {
-
         it("Can remove pointers from the index, even when multiple documents have the same key", () => {
             const idx = new Index({ fieldName: "tf" });
             const doc1 = { a: 5, tf: "hello" };
             const doc2 = { a: 8, tf: "world" };
             const doc3 = { a: 2, tf: "bloup" };
             const doc4 = { a: 23, tf: "world" };
-
 
             idx.insert(doc1);
             idx.insert(doc2);
@@ -244,7 +234,6 @@ describe("Indexes", () => {
             const doc1 = { a: 5, tf: "hello" };
             const doc2 = { a: 5, tf: "world" };
 
-
             idx.insert(doc1);
             idx.insert(doc2);
             expect(idx.tree.getNumberOfKeys()).to.be.equal(0);
@@ -259,7 +248,6 @@ describe("Indexes", () => {
             const doc2 = { a: 8, tf: { nested: "world", additional: true } };
             const doc3 = { a: 2, tf: { nested: "bloup", age: 42 } };
             const doc4 = { a: 2, tf: { nested: "world", fruits: ["apple", "carrot"] } };
-
 
             idx.insert(doc1);
             idx.insert(doc2);
@@ -283,7 +271,6 @@ describe("Indexes", () => {
             const doc2 = { a: 8, tf: "world" };
             const doc3 = { a: 2, tf: "bloup" };
 
-
             idx.insert([doc1, doc2, doc3]);
             expect(idx.tree.getNumberOfKeys()).to.be.equal(3);
             idx.remove([doc1, doc3]);
@@ -292,12 +279,9 @@ describe("Indexes", () => {
             expect(idx.tree.search("world")).to.be.deep.equal([doc2]);
             expect(idx.tree.search("bloup")).to.be.empty;
         });
-
-    });   // ==== End of 'Removal' ==== //
-
+    });
 
     describe("Update", () => {
-
         it("Can update a document whose key did or didnt change", () => {
             const idx = new Index({ fieldName: "tf" });
             const doc1 = { a: 5, tf: "hello" };
@@ -305,7 +289,6 @@ describe("Indexes", () => {
             const doc3 = { a: 2, tf: "bloup" };
             const doc4 = { a: 23, tf: "world" };
             const doc5 = { a: 1, tf: "changed" };
-
 
             idx.insert(doc1);
             idx.insert(doc2);
@@ -329,7 +312,6 @@ describe("Indexes", () => {
             const doc2 = { a: 8, tf: "world" };
             const doc3 = { a: 2, tf: "bloup" };
             const bad = { a: 23, tf: "world" };
-
 
             idx.insert(doc1);
             idx.insert(doc2);
@@ -362,13 +344,21 @@ describe("Indexes", () => {
             const doc2b = { a: 1, tf: "changed" };
             const doc3b = { a: 44, tf: "bloup" };
 
-
             idx.insert(doc1);
             idx.insert(doc2);
             idx.insert(doc3);
             expect(idx.tree.getNumberOfKeys()).to.be.equal(3);
 
-            idx.update([{ oldDoc: doc1, newDoc: doc1b }, { oldDoc: doc2, newDoc: doc2b }, { oldDoc: doc3, newDoc: doc3b }]);
+            idx.update([{
+                oldDoc: doc1,
+                newDoc: doc1b
+            }, {
+                oldDoc: doc2,
+                newDoc: doc2b
+            }, {
+                oldDoc: doc3,
+                newDoc: doc3b
+            }]);
 
             expect(idx.tree.getNumberOfKeys()).to.be.equal(3);
             expect(idx.getMatching("world")).to.have.lengthOf(1);
@@ -388,14 +378,22 @@ describe("Indexes", () => {
             const doc2b = { a: 1, tf: "changed" };   // Will violate the constraint (first try)
             const doc3b = { a: 44, tf: "alsochanged" };
 
-
             idx.insert(doc1);
             idx.insert(doc2);
             idx.insert(doc3);
             expect(idx.tree.getNumberOfKeys()).to.be.equal(3);
 
             try {
-                idx.update([{ oldDoc: doc1, newDoc: doc1b }, { oldDoc: doc2, newDoc: doc2b }, { oldDoc: doc3, newDoc: doc3b }]);
+                idx.update([{
+                    oldDoc: doc1,
+                    newDoc: doc1b
+                }, {
+                    oldDoc: doc2,
+                    newDoc: doc2b
+                }, {
+                    oldDoc: doc3,
+                    newDoc: doc3b
+                }]);
             } catch (e) {
                 expect(e.errorType).to.be.equal("uniqueViolated");
             }
@@ -409,7 +407,16 @@ describe("Indexes", () => {
             expect(idx.getMatching("bloup")[0]).to.be.equal(doc3);
 
             try {
-                idx.update([{ oldDoc: doc1, newDoc: doc1b }, { oldDoc: doc2, newDoc: doc2b }, { oldDoc: doc3, newDoc: doc3b }]);
+                idx.update([{
+                    oldDoc: doc1,
+                    newDoc: doc1b
+                }, {
+                    oldDoc: doc2,
+                    newDoc: doc2b
+                }, {
+                    oldDoc: doc3,
+                    newDoc: doc3b
+                }]);
             } catch (e) {
                 expect(e.errorType).to.be.equal("uniqueViolated");
             }
@@ -430,7 +437,6 @@ describe("Indexes", () => {
             const doc3 = { a: 2, tf: "bloup" };
             const noChange = { a: 8, tf: "world" };
 
-
             idx.insert(doc1);
             idx.insert(doc2);
             idx.insert(doc3);
@@ -450,8 +456,16 @@ describe("Indexes", () => {
             const doc1b = { a: 23, tf: "world" };
             const doc2b = { a: 1, tf: "changed" };
             const doc3b = { a: 44, tf: "bloup" };
-            const batchUpdate = [{ oldDoc: doc1, newDoc: doc1b }, { oldDoc: doc2, newDoc: doc2b }, { oldDoc: doc3, newDoc: doc3b }];
-
+            const batchUpdate = [{
+                oldDoc: doc1,
+                newDoc: doc1b
+            }, {
+                oldDoc: doc2,
+                newDoc: doc2b
+            }, {
+                oldDoc: doc3,
+                newDoc: doc3b
+            }];
 
             idx.insert(doc1);
             idx.insert(doc2);
@@ -499,19 +513,15 @@ describe("Indexes", () => {
             expect(idx.getMatching("bloup")).to.have.lengthOf(1);
             expect(idx.getMatching("bloup")[0]).to.be.equal(doc3);
         });
-
-    });   // ==== End of 'Update' ==== //
-
+    });
 
     describe("Get matching documents", () => {
-
         it("Get all documents where fieldName is equal to the given value, or an empty array if no match", () => {
             const idx = new Index({ fieldName: "tf" });
             const doc1 = { a: 5, tf: "hello" };
             const doc2 = { a: 8, tf: "world" };
             const doc3 = { a: 2, tf: "bloup" };
             const doc4 = { a: 23, tf: "world" };
-
 
             idx.insert(doc1);
             idx.insert(doc2);
@@ -529,7 +539,6 @@ describe("Indexes", () => {
             const doc2 = { a: 8, tf: "world" };
             const doc3 = { a: 2, tf: "bloup" };
 
-
             idx.insert(doc1);
             idx.insert(doc2);
             idx.insert(doc3);
@@ -545,7 +554,6 @@ describe("Indexes", () => {
             const doc2 = { a: 2, nottf: "bloup" };
             const doc3 = { a: 8, tf: "world" };
             const doc4 = { a: 7, nottf: "yes" };
-
 
             idx.insert(doc1);
             idx.insert(doc2);
@@ -573,7 +581,6 @@ describe("Indexes", () => {
             const doc3 = { a: 8, tf: "world" };
             const doc4 = { a: 7, tf: null };
 
-
             idx.insert(doc1);
             idx.insert(doc2);
             idx.insert(doc3);
@@ -600,7 +607,6 @@ describe("Indexes", () => {
             const doc3 = { a: 8, tf: "world" };
             const doc4 = { a: 7, nottf: "yes" };
 
-
             idx.insert(doc1);
             idx.insert(doc2);
             idx.insert(doc3);
@@ -625,7 +631,6 @@ describe("Indexes", () => {
             const doc4 = { a: 7, tf: "yes", _id: "4" };
             const doc5 = { a: 7, tf: "yes", _id: "5" };
 
-
             idx.insert(doc1);
             idx.insert(doc2);
             idx.insert(doc3);
@@ -647,7 +652,6 @@ describe("Indexes", () => {
             const doc4 = { a: 7, tf: "yes" };
             const doc5 = { a: 10, tf: "yes" };
 
-
             idx.insert(doc1);
             idx.insert(doc2);
             idx.insert(doc3);
@@ -658,18 +662,14 @@ describe("Indexes", () => {
             expect(idx.getBetweenBounds({ $lte: 8 })).to.be.deep.equal([doc2, doc1, doc4, doc3]);
             expect(idx.getBetweenBounds({ $gt: 7 })).to.be.deep.equal([doc3, doc5]);
         });
-
-    });   // ==== End of 'Get matching documents' ==== //
-
+    });
 
     describe("Resetting", () => {
-
         it("Can reset an index without any new data, the index will be empty afterwards", () => {
             const idx = new Index({ fieldName: "tf" });
             const doc1 = { a: 5, tf: "hello" };
             const doc2 = { a: 8, tf: "world" };
             const doc3 = { a: 2, tf: "bloup" };
-
 
             idx.insert(doc1);
             idx.insert(doc2);
@@ -693,7 +693,6 @@ describe("Indexes", () => {
             const doc2 = { a: 8, tf: "world" };
             const doc3 = { a: 2, tf: "bloup" };
             const newDoc = { a: 555, tf: "new" };
-
 
             idx.insert(doc1);
             idx.insert(doc2);
@@ -719,7 +718,6 @@ describe("Indexes", () => {
             const doc3 = { a: 2, tf: "bloup" };
             const newDocs = [{ a: 555, tf: "new" }, { a: 666, tf: "again" }];
 
-
             idx.insert(doc1);
             idx.insert(doc2);
             idx.insert(doc3);
@@ -737,15 +735,13 @@ describe("Indexes", () => {
             expect(idx.getMatching("new")[0].a).to.be.equal(555);
             expect(idx.getMatching("again")[0].a).to.be.equal(666);
         });
-
-    });   // ==== End of 'Resetting' ==== //
+    });
 
     it("Get all elements in the index", () => {
         const idx = new Index({ fieldName: "a" });
         const doc1 = { a: 5, tf: "hello" };
         const doc2 = { a: 8, tf: "world" };
         const doc3 = { a: 2, tf: "bloup" };
-
 
         idx.insert(doc1);
         idx.insert(doc2);

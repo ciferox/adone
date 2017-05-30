@@ -1,6 +1,5 @@
-const { Datastore } = adone.database.local;
-
-describe("Executor", () => {
+describe("databases", "local", "Executor", () => {
+    const { database: { local: { Datastore } } } = adone;
 
     describe("With persistent database", () => {
         let tmpdir;
@@ -53,8 +52,7 @@ describe("Executor", () => {
             expect(doc1.createdAt.getTime()).to.be.at.most(doc2.createdAt.getTime());
         });
 
-    });   // ==== End of 'With persistent database' ====
-
+    });
 
     describe("With non persistent database", () => {
         let d;
@@ -89,7 +87,5 @@ describe("Executor", () => {
             expect(docs).to.have.lengthOf(2);
             expect(doc1.createdAt.getTime()).to.be.at.most(doc2.createdAt.getTime());
         });
-
-    });   // ==== End of 'With non persistent database' ====
-
+    });
 });

@@ -1,8 +1,7 @@
-const { Model: model, Datastore } = adone.database.local;
+describe("databases", "local", "Datastore", () => {
+    const { database: { local: { Model: model, Datastore } } } = adone;
 
-const reloadTimeUpperBound = 60;
-
-describe("Database", () => {
+    const reloadTimeUpperBound = 60;
     let tmpdir;
     let d;
     let dbFile;
@@ -31,7 +30,6 @@ describe("Database", () => {
     });
 
     describe("Insert", () => {
-
         it("Able to insert a document in the database, setting an _id if none provided, and retrieve it even after a reload", async () => {
             let docs = await d.find({});
             expect(docs).to.be.empty;
@@ -301,11 +299,10 @@ describe("Database", () => {
             await d.insert({ key: null });
             expect(await d.find({ key: null })).to.have.lengthOf(1);
         });
-    }); // ==== End of 'Insert' ==== //
+    });
 
 
     describe("#getCandidates", () => {
-
         it("Can use an index to get docs with a basic match", async () => {
             await d.ensureIndex({ fieldName: "tf" });
             const _doc1 = await d.insert({ tf: 4 });
@@ -432,11 +429,10 @@ describe("Database", () => {
             expect(docs[0].hello).to.be.not.equal("world1");
             expect(docs[1].hello).to.be.not.equal("world1");
         });
-    }); // ==== End of '#getCandidates' ==== //
+    });
 
 
     describe("Find", () => {
-
         it("Can find all documents if an empty query is used", async () => {
             await d.insert({ somedata: "ok" });
             await d.insert({ somedata: "another", plus: "additional data" });
@@ -637,10 +633,9 @@ describe("Database", () => {
             }
             expect(err).to.be.not.null;
         });
-    }); // ==== End of 'Find' ==== //
+    });
 
     describe("Count", () => {
-
         it("Count all documents if an empty query is used", async () => {
             await d.insert({ somedata: "ok" });
             await d.insert({ somedata: "another", plus: "additional data" });
@@ -683,7 +678,6 @@ describe("Database", () => {
     });
 
     describe("Update", () => {
-
         it("If the query doesn't match anything, database is not modified", async () => {
             await d.insert({ somedata: "ok" });
             await d.insert({ somedata: "again", plus: "additional data" });
@@ -801,7 +795,6 @@ describe("Database", () => {
         });
 
         describe("Upserts", () => {
-
             it("Can perform upserts if needed", async () => {
                 const [numReplaced] = await d.update({ impossible: "db is empty anyway" }, { newDoc: true }, {});
                 expect(numReplaced).to.be.equal(0);
@@ -862,7 +855,7 @@ describe("Database", () => {
                     done();
                 }
             });
-        }); // ==== End of 'Upserts' ==== //
+        });
 
         it("Cannot perform update if the update query is not either registered-modifiers-only or copy-only, or contain badly formatted fields", async () => {
             await d.insert({ something: "yup" });
@@ -1108,17 +1101,37 @@ describe("Database", () => {
         it("If options.returnUpdatedDocs is true, return all matched docs", async () => {
             const docs = await d.insert([{ a: 4 }, { a: 5 }, { a: 6 }]);
             expect(docs).to.have.lengthOf(3);
-            let [num, updatedDocs] = await d.update({ a: 7 }, { $set: { u: 1 } }, { multi: true, returnUpdatedDocs: true });
+            let [num, updatedDocs] = await d.update({
+                a: 7
+            }, {
+                $set: { u: 1 }
+            }, {
+                multi: true, returnUpdatedDocs: true
+            });
             expect(num).to.be.equal(0);
             expect(updatedDocs).to.be.empty;
 
-            [num, updatedDocs] = await d.update({ a: 5 }, { $set: { u: 2 } }, { multi: true, returnUpdatedDocs: true });
+            [num, updatedDocs] = await d.update({
+                a: 5
+            }, {
+                $set: { u: 2 }
+            }, {
+                multi: true,
+                returnUpdatedDocs: true
+            });
             expect(num).to.be.equal(1);
             expect(updatedDocs).to.have.lengthOf(1);
             expect(updatedDocs[0].a).to.be.equal(5);
             expect(updatedDocs[0].u).to.be.equal(2);
 
-            [num, updatedDocs] = await d.update({ a: { $in: [4, 6] } }, { $set: { u: 3 } }, { multi: true, returnUpdatedDocs: true });
+            [num, updatedDocs] = await d.update({
+                a: { $in: [4, 6] }
+            }, {
+                $set: { u: 3 }
+            }, {
+                multi: true,
+                returnUpdatedDocs: true
+            });
             expect(num).to.be.equal(2);
             expect(updatedDocs).to.have.lengthOf(2);
             expect(updatedDocs[0].u).to.be.equal(3);
@@ -1150,7 +1163,6 @@ describe("Database", () => {
         });
 
         describe("Callback signature", () => {
-
             it("Regular update, multi false", async () => {
                 await d.insert({ a: 1 });
                 await d.insert({ a: 2 });
@@ -1162,7 +1174,13 @@ describe("Database", () => {
                 expect(upsert).to.be.undefined;
 
                 // returnUpdatedDocs set to true
-                [numAffected, affectedDocuments, upsert] = await d.update({ a: 1 }, { $set: { b: 21 } }, { returnUpdatedDocs: true });
+                [numAffected, affectedDocuments, upsert] = await d.update({
+                    a: 1
+                }, {
+                    $set: { b: 21 }
+                }, {
+                    returnUpdatedDocs: true
+                });
                 expect(numAffected).to.be.equal(1);
                 expect(affectedDocuments.a).to.be.equal(1);
                 expect(affectedDocuments.b).to.be.equal(21);
@@ -1174,13 +1192,22 @@ describe("Database", () => {
                 await d.insert({ a: 2 });
 
                 // returnUpdatedDocs set to false
-                let [numAffected, affectedDocuments, upsert] = await d.update({}, { $set: { b: 20 } }, { multi: true });
+                let [numAffected, affectedDocuments, upsert] = await d.update({}, {
+                    $set: { b: 20 }
+                }, {
+                    multi: true
+                });
                 expect(numAffected).to.be.equal(2);
                 expect(affectedDocuments).to.be.undefined;
                 expect(upsert).to.be.undefined;
 
                 // returnUpdatedDocs set to true
-                [numAffected, affectedDocuments, upsert] = await d.update({}, { $set: { b: 21 } }, { multi: true, returnUpdatedDocs: true });
+                [numAffected, affectedDocuments, upsert] = await d.update({}, {
+                    $set: { b: 21 }
+                }, {
+                    multi: true,
+                    returnUpdatedDocs: true
+                });
                 expect(numAffected).to.be.equal(2);
                 expect(affectedDocuments).to.have.lengthOf(2);
                 expect(upsert).to.be.undefined;
@@ -1197,7 +1224,13 @@ describe("Database", () => {
                 expect(upsert).to.be.undefined;
 
                 // Upsert flag set
-                [numAffected, affectedDocuments, upsert] = await d.update({ a: 3 }, { $set: { b: 21 } }, { upsert: true });
+                [numAffected, affectedDocuments, upsert] = await d.update({
+                    a: 3
+                }, {
+                    $set: { b: 21 }
+                }, {
+                    upsert: true
+                });
                 expect(numAffected).to.be.equal(1);
                 expect(affectedDocuments.a).to.be.equal(3);
                 expect(affectedDocuments.b).to.be.equal(21);
@@ -1206,12 +1239,11 @@ describe("Database", () => {
                 const docs = await d.find({});
                 expect(docs).to.have.lengthOf(3);
             });
-        }); // ==== End of 'Update - Callback signature' ==== //
-    }); // ==== End of 'Update' ==== //
+        });
+    });
 
 
     describe("Remove", () => {
-
         it("Can remove multiple documents", async () => {
             const doc1 = await d.insert({ somedata: "ok" });
             const id1 = doc1._id;
@@ -1237,7 +1269,6 @@ describe("Database", () => {
             await testPostUpdateState();
         });
 
-        // This tests concurrency issues
         it("Remove can be called multiple times in parallel and everything that needs to be removed will be", async () => {
             await d.insert({ planet: "Earth" });
             await d.insert({ planet: "Mars" });
@@ -1314,13 +1345,11 @@ describe("Database", () => {
             expect(d2).to.be.undefined;
             expect(d3.a).to.be.equal(5);
         });
-    }); // ==== End of 'Remove' ==== //
+    });
 
 
     describe("Using indexes", () => {
-
         describe("ensureIndex and index initialization in database loading", () => {
-
             it("ensureIndex can be called right after a loadDatabase and be initialized and filled correctly", async () => {
                 const now = new Date();
                 const rawData = `${model.serialize({ _id: "aaa", z: "1", a: 2, ages: [1, 5, 12] })}\n${model.serialize({ _id: "bbb", z: "2", hello: "world" })}\n${model.serialize({ _id: "ccc", z: "3", nested: { today: now } })}`;
@@ -1532,11 +1561,9 @@ describe("Database", () => {
                 expect([...d.indexes.keys()]).to.have.lengthOf(1);
                 expect(d.indexes.e).to.be.undefined;
             });
-        }); // ==== End of 'ensureIndex and index initialization in database loading' ==== //
-
+        });
 
         describe("Indexing newly inserted documents", () => {
-
             it("Newly inserted documents are indexed", async () => {
                 await d.ensureIndex({ fieldName: "z" });
                 const z = d.indexes.get("z");
@@ -1728,10 +1755,9 @@ describe("Database", () => {
 
                 expect(a.getMatching(2)).to.be.empty;
             });
-        }); // ==== End of 'Indexing newly inserted documents' ==== //
+        });
 
         describe("Updating indexes upon document update", () => {
-
             it("Updating docs still works as before with indexing", async () => {
                 await d.ensureIndex({ fieldName: "a" });
 
@@ -1910,10 +1936,9 @@ describe("Database", () => {
                 }
                 throw new Error("fail");
             });
-        }); // ==== End of 'Updating indexes upon document update' ==== //
+        });
 
         describe("Updating indexes upon document remove", () => {
-
             it("Removing docs still works as before with indexing", async () => {
                 await d.ensureIndex({ fieldName: "a" });
 
@@ -1979,11 +2004,9 @@ describe("Database", () => {
                 expect(b.tree.getNumberOfKeys()).to.be.equal(0);
                 expect(_id.tree.getNumberOfKeys()).to.be.equal(0);
             });
-        }); // ==== End of 'Updating indexes upon document remove' ==== //
-
+        });
 
         describe("Persisting indexes", () => {
-
             it("Indexes are persisted to a separate file and recreated upon reload", async () => {
                 const persDb = tmpdir.getVirtualFile("persistIndexes.db");
 

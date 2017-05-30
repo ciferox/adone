@@ -1,5 +1,3 @@
-
-
 adone.lazify({
     Datastore: "./datastore",
     Persistence: "./persistence",

@@ -1,9 +1,9 @@
-const {
-    std: { fs, path, child_process: cp },
-    database: { local: { Model: model, Datastore, Persistence, Storage: storage } }
-} = adone;
+describe("databases", "local", "Persistence", () => {
+    const {
+        std: { fs, path, child_process: cp },
+        database: { local: { Model: model, Datastore, Persistence, Storage: storage } }
+    } = adone;
 
-describe("Persistence", () => {
     let d;
     let tmpdir;
     let dbFile;
@@ -330,7 +330,11 @@ describe("Persistence", () => {
 
             let err = null;
             try {
-                const d = new Datastore({ filename: hookFile.path(), afterSerialization: as, beforeDeserialization: (s) => s });
+                const d = new Datastore({
+                    filename: hookFile.path(),
+                    afterSerialization: as,
+                    beforeDeserialization: (s) => s
+                });
                 await d.load();
             } catch (_err) {
                 err = _err;
@@ -491,7 +495,7 @@ describe("Persistence", () => {
             expect(d.indexes.size).to.be.equal(2);
             expect(d.indexes.has("idefix")).to.be.true;
         });
-    }); // ==== End of 'Serialization hooks' ==== //
+    });
 
     describe("Prevent dataloss when persisting data", () => {
 
@@ -748,7 +752,7 @@ describe("Persistence", () => {
 
             // Loading it in a separate process that we will crash before finishing the loadDatabase
             const code = await new Promise((resolve) => {
-                cp.fork(adone.std.path.join(__dirname, "loadAndCrash"), [file.path()]).on("exit", resolve);
+                cp.fork(adone.std.path.join(__dirname, "load_and_crash"), [file.path()]).on("exit", resolve);
             });
 
             expect(code).to.be.equal(1); // See loadAndCrash.js
@@ -771,7 +775,7 @@ describe("Persistence", () => {
                 expect(doc).to.be.deep.equal({ hello: "world", _id: `anid_${i}` });
             }
         });
-    }); // ==== End of 'Prevent dataloss when persisting data' ====
+    });
 
     describe("ensureFileDoesntExist", () => {
 
@@ -788,6 +792,5 @@ describe("Persistence", () => {
             await storage.ensureFileDoesntExist(file.path());
             expect(await file.exists()).to.be.false;
         });
-    }); // ==== End of 'ensureFileDoesntExist' ====
-
+    });
 });

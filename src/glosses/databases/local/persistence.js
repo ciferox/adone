@@ -1,4 +1,3 @@
-
 const {
     database: {
         local: {
@@ -30,8 +29,10 @@ export default class Persistence {
         this.beforeDeserialization = beforeDeserialization || identity;
     }
 
-    // This serves as a compaction function since the cache always contains only the number of documents in the collection
-    // while the data file is append-only so it may grow larger
+    /*
+     * This serves as a compaction function since the cache always contains only the number of documents in the collection
+     * while the data file is append-only so it may grow larger
+     */
     async persistCachedDatabase() {
         if (this.inMemoryOnly) {
             return;
@@ -79,7 +80,6 @@ export default class Persistence {
         }
     }
 
-
     async persistNewState(newDocs) {
         if (this.inMemoryOnly) {
             return;
@@ -98,7 +98,6 @@ export default class Persistence {
         await fs.appendFile(this.filename, toPersist, "utf8");
     }
 
-    // From a database's raw data, return the corresponding machine understandable collection
     treatRawData(rawData) {
         const data = rawData.split("\n");
         let corruptItems = -1;  // Last line of every data file is usually blank so not really corrupt
@@ -140,7 +139,6 @@ export default class Persistence {
      * This means pulling data out of the data file or creating it if it doesn't exist
      * Also, all data is persisted right away, which has the effect of compacting the database file
      * This operation is very quick at startup for a big collection (60ms for ~10k docs)
-     * @param {Function} cb Optional callback, signature: err
      */
     async loadDatabase() {
         this.db.resetIndexes();
@@ -172,7 +170,6 @@ export default class Persistence {
 
         this.db.executor.processBuffer();
     }
-
 
     static ensureDirectoryExists(dir) {
         return adone.fs.mkdir(dir);

@@ -1,14 +1,13 @@
-
 const {
     database: {
         local: {
             Persistence, Executor, Index, Cursor, Model
         }
     },
-    is, x, util
+    is, x, util, text, EventEmitter
 } = adone;
 
-export default class Datastore extends adone.EventEmitter {
+export default class Datastore extends EventEmitter {
     constructor(options) {
         super();
 
@@ -55,7 +54,6 @@ export default class Datastore extends adone.EventEmitter {
         // Load the database from the datafile, and trigger the execution of buffered commands if any
         return new Promise((resolve) => this.executor.push(() => resolve(this.persistence.loadDatabase()), true));
     }
-
 
     getAllData() {
         return this.indexes.get("_id").getAll();
@@ -201,7 +199,11 @@ export default class Datastore extends adone.EventEmitter {
             let valid = true;
             for (let i = 0; i < ttlIndexesFieldNames.length; ++i) {
                 const fieldName = ttlIndexesFieldNames[i];
-                if (!is.undefined(doc) && is.date(doc[fieldName]) && Date.now() > doc[fieldName].getTime() + this.ttlIndexes.get(fieldName) * 1000) {
+                if (
+                    !is.undefined(doc) &&
+                    is.date(doc[fieldName]) &&
+                    Date.now() > doc[fieldName].getTime() + this.ttlIndexes.get(fieldName) * 1000
+                ) {
                     valid = false;
                 }
             }
@@ -225,7 +227,7 @@ export default class Datastore extends adone.EventEmitter {
 
     createNewId() {
         for (; ;) {
-            const id = adone.text.random(16);
+            const id = text.random(16);
             if (this.indexes.get("_id").getMatching(id).length === 0) {
                 return id;
             }
@@ -320,7 +322,6 @@ export default class Datastore extends adone.EventEmitter {
         }
         return cursor;
     }
-
 
     async _update(query, updateQuery, { multi = false, upsert = false, returnUpdatedDocs = false } = {}) {
         const update = async () => {

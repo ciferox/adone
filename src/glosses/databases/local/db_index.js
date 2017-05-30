@@ -1,4 +1,3 @@
-
 const { database: { local: { Model } }, is, collection } = adone;
 
 const projectForUnique = (elt) => {
@@ -20,7 +19,6 @@ const projectForUnique = (elt) => {
 
     return elt;  // Arrays and objects, will check for pointer equality
 };
-
 
 export default class Index {
     constructor({ fieldName, unique = false, sparse = false } = {}) {

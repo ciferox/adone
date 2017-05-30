@@ -1,4 +1,3 @@
-
 const { is, x, identity, fs } = adone;
 
 export default class Storage {
@@ -38,7 +37,9 @@ export default class Storage {
         }
     }
 
-    // Fully write or rewrite the datafile, immune to crashes during the write operation (data will not be lost)
+    /*
+     * Fully write or rewrite the datafile, immune to crashes during the write operation (data will not be lost)
+     */
     static async crashSafeWriteFile(filename, data) {
 
         await Storage.flushToStorage({
