@@ -641,7 +641,11 @@ export default class extends adone.application.Subsystem {
     }
 
     async pingCommand() {
-        adone.log(await this.dispatcher.ping());
+        if (await this.dispatcher.ping()) {
+            adone.log(adone.ok);
+        } else {
+            adone.log(adone.bad);
+        }
         return 0;
     }
 

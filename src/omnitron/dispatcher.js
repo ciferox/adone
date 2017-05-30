@@ -212,8 +212,12 @@ export default class Dispatcher {
     }
 
     async ping() {
-        await this.connectLocal(undefined, false);
-        return this.netron.ping();
+        try {
+            await this.connectLocal(undefined, false);
+            return is.null(await this.netron.ping());
+        } catch (err) {
+            return false;
+        }
     }
 
     async killSelf() {

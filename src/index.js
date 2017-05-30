@@ -10,6 +10,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         truly: () => true,
         falsely: () => false,
         ok: "OK",
+        bad: "BAD",
         exts: [".js", ".tjs", ".ajs"], // .js - es6 js; .tjs - transpiled js, .ajs - adone-specific js
         log: (...args) => adone.defaultLogger.stdoutLogNoFmt(...args),
         fatal: (...args) => adone.defaultLogger.fatal(...args),

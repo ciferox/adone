@@ -2,16 +2,14 @@ const { is, netron: { Investigator, decorator: { Public, Private, Readonly, Cont
 const { format } = adone.std.util;
 
 // Not consider order and keys repetition
-function shallow_equal(array1, array2) {
+const shallowEqual = (array1, array2) => {
     assert.includeMembers(array1, array2);
     assert.includeMembers(array2, array1);
-}
+};
 
-function randomString(N) {
-    return (`${Math.random().toString(36)}00000000000000000`).slice(2, N + 2);
-}
+const randomString = (N) => (`${Math.random().toString(36)}00000000000000000`).slice(2, N + 2);
 
-function* generateArgs(types) {
+const generateArgs = function* (types) {
     for (const [typeName1, type1] of types) {
         for (const [typeName3, type3] of types) {
             for (const [typeName5, type5] of types) {
@@ -28,7 +26,7 @@ function* generateArgs(types) {
             }
         }
     }
-}
+};
 
 @Description("about A class")
 @Property("prop5", { type: Map, readonly: true, description: "some property" })
@@ -90,7 +88,7 @@ class A {
 const a = new A();
 const ia = new Investigator(a);
 
-describe("Meta", () => {
+describe("netron", "meta", () => {
     describe("Single class", () => {
         it("class name", () => {
             expect(ia.getName()).to.be.equal("A");
@@ -289,7 +287,7 @@ describe("Meta", () => {
 
                     assert.includeMembers(allMethods, privateMethods);
                     assert.includeMembers(allMethods, publicMethods);
-                    shallow_equal(allMethods, publicMethods.concat(privateMethods));
+                    shallowEqual(allMethods, publicMethods.concat(privateMethods));
                     assert.equal(inv.hasMethod(allMethods[0]), true);
                     assert.equal(inv.hasMethod(`${allMethods[0]}no`), false);
 
@@ -302,7 +300,7 @@ describe("Meta", () => {
                     assert.includeMembers(allProperties, privateProperties);
                     assert.includeMembers(allProperties, publicProperties);
                     assert.includeMembers(allProperties, readonlyProperties);
-                    shallow_equal(allProperties, publicProperties.concat(privateProperties).concat(readonlyProperties));
+                    shallowEqual(allProperties, publicProperties.concat(privateProperties).concat(readonlyProperties));
                     assert.equal(inv.hasProperty(allProperties[0]), true);
                     assert.equal(inv.hasProperty(`${allProperties[0]}no`), false);
                 });
@@ -330,14 +328,14 @@ describe("Meta", () => {
 
                         // Methods decorators
                         for (const withArgs of [false, true]) {
-                            const returnsDescr = type === null ? "without returns" : `returns ${typeName.toLowerCase()}`;
+                            const returnsDescr = is.null(type) ? "without returns" : `returns ${typeName.toLowerCase()}`;
                             const argsDescr = withArgs === true ? "with args" : "without args";
                             const classes = [];
 
                             const allArgs = withArgs ? generateArgs(types) : [[[null, null, null, null]]];
                             for (const args of allArgs) {
 
-                                const returnDeco = type === null ? Type() : Type(type);
+                                const returnDeco = is.null(type) ? Type() : Type(type);
                                 const argsToDeco = args.map((x) => x[3]);
 
                                 const methodDescr = {
@@ -349,9 +347,9 @@ describe("Meta", () => {
                                 const argsToMeta = args.map((x) => {
                                     if (is.array(x[3]) && x[3].length === 2) {
                                         return x[3];
-                                    } 
+                                    }
                                     return [x[1], x[2]];
-                                    
+
                                 });
 
                                 let signature;
@@ -410,7 +408,7 @@ describe("Meta", () => {
                         }
 
                         // Property decorators
-                        const typeDeco = type === null ? Type() : Type(type);
+                        const typeDeco = is.null(type) ? Type() : Type(type);
                         const propertyDescr = {
                             type,
                             private: privacyDeco === Private,
@@ -433,7 +431,7 @@ describe("Meta", () => {
 
                         const iprop = new Investigator(new MyClass2());
 
-                        const typeDescrProperty = type === null ? "without type" : `of ${typeName.toLowerCase()} type`;
+                        const typeDescrProperty = is.null(type) ? "without type" : `of ${typeName.toLowerCase()} type`;
                         testName = format("%s property %s", privacyName, typeDescrProperty);
 
                         it(testName, () => {

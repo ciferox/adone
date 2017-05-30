@@ -3,7 +3,7 @@ const { is, netron: { Netron, DEFAULT_PORT, ACTION, STATUS, decorator: { Context
 let defaultPort = DEFAULT_PORT;
 let NETRON_PORT = 32348;
 
-describe("WebSocket Netron", () => {
+describe("netron", "websocket", "unit tests", () => {
     let exNetron;
     let superNetron;
     let wsAdapter;
@@ -55,7 +55,7 @@ describe("WebSocket Netron", () => {
 
     describe("Unit tests", function () {
         this.timeout(10 * 1000);
-        
+
         describe("Connect", () => {
             it("right status sequence", async () => {
                 const sequence = [STATUS.OFFLINE, STATUS.CONNECTING, STATUS.HANDSHAKING, STATUS.ONLINE];
@@ -89,28 +89,23 @@ describe("WebSocket Netron", () => {
         });
 
         describe("ping", () => {
-            it("ping()", async () => {
-                const p1 = superNetron.ping().then((r) => {
-                    assert.equal(r, adone.ok);
-                });
-                const p2 = exNetron.ping().then((r) => {
-                    assert.equal(r, adone.ok);
-                });
-                await Promise.all( [p1, p2] );
+            it("ping() local netron should always return true", async () => {
+                assert.isNull(await superNetron.ping());
             });
 
-            it("ping(uid)", async () => {
+            it("ping() unknown netron", async () => {
+                await assert.throws(async () => exNetron.ping(adone.util.uuid.v4()), adone.x.Unknown);
+            });
+
+            it("ping remote netron should", async () => {
                 await superNetron.bind();
                 await exNetron.connect({ port: NETRON_PORT });
 
-                const p1 = superNetron.ping(exNetron.uid).then((r) => {
-                    assert.equal(r, adone.ok);
-                });
-                const p2 = exNetron.ping(superNetron.uid).then((r) => {
-                    assert.equal(r, adone.ok);
-                });
+                let result = await superNetron.ping(exNetron.uid);
+                assert.isNull(result);
 
-                await Promise.all( [p1, p2] );
+                result = await exNetron.ping(superNetron.uid);
+                assert.isNull(result);
             });
         });
 
@@ -230,7 +225,7 @@ describe("WebSocket Netron", () => {
                     });
 
                     const p3 = exNetron.connect({ port: NETRON_PORT });
-                    await Promise.all( [p1, p2, p3] );
+                    await Promise.all([p1, p2, p3]);
                 });
 
                 it("peer connect", async () => {
@@ -258,7 +253,7 @@ describe("WebSocket Netron", () => {
                     });
 
                     const p3 = exNetron.connect({ port: NETRON_PORT });
-                    return Promise.all( [p1, p2, p3] );
+                    return Promise.all([p1, p2, p3]);
                 });
 
                 it("peer online", async () => {
@@ -286,7 +281,7 @@ describe("WebSocket Netron", () => {
                     });
 
                     const p3 = exNetron.connect({ port: NETRON_PORT });
-                    return Promise.all( [p1, p2, p3] );
+                    return Promise.all([p1, p2, p3]);
                 });
 
                 it("peer offline", async () => {
@@ -315,7 +310,7 @@ describe("WebSocket Netron", () => {
                     });
 
                     exNetron.disconnect();
-                    return Promise.all( [p1, p2] );
+                    return Promise.all([p1, p2]);
                 });
             });
 
@@ -338,12 +333,12 @@ describe("WebSocket Netron", () => {
 
             @Contextable
             class A {
-                method() {}
+                method() { }
             }
 
             @Contextable
             class B {
-                method() {}
+                method() { }
             }
 
             it("Peer.getContextNames()", async () => {
@@ -541,7 +536,7 @@ describe("WebSocket Netron", () => {
 
             @Contextable
             class A {
-                method() {}
+                method() { }
             }
 
             let peer;
@@ -602,7 +597,7 @@ describe("WebSocket Netron", () => {
                 }
 
                 voidMethod(increment, secondArgument) {
-                    if (typeof(increment) === "number") {
+                    if (is.number(increment)) {
                         this.counter += increment;
                     }
                     if (secondArgument) {
@@ -732,7 +727,7 @@ describe("WebSocket Netron", () => {
 
             @Contextable
             class A {
-                method() {}
+                method() { }
             }
 
             beforeEach(async () => {
@@ -769,7 +764,7 @@ describe("WebSocket Netron", () => {
 
             @Contextable
             class A {
-                method() {}
+                method() { }
             }
 
             beforeEach(async () => {
@@ -806,7 +801,7 @@ describe("WebSocket Netron", () => {
 
             @Contextable
             class A {
-                method() {}
+                method() { }
             }
 
             superNetron.attachContext(new A(), "a");
@@ -823,7 +818,7 @@ describe("WebSocket Netron", () => {
 
             @Contextable
             class A {
-                method() {}
+                method() { }
             }
 
             let peer;
@@ -1236,9 +1231,9 @@ describe("WebSocket Netron", () => {
                             const data = packet[adone.netron.GenesisNetron._DATA];
                             if (data.secret === "right secret") {
                                 return true;
-                            } 
+                            }
                             return false;
-                            
+
                         }
                     }
 
@@ -1273,9 +1268,9 @@ describe("WebSocket Netron", () => {
 
             describe("customProcessPacket", () => {
                 it.skip("custom action on server", async () => {
-                    const min_action = ACTION.MAX - 20;
-                    const max_action = ACTION.MAX - 1;
-                    const an = Math.round(min_action + Math.random() * (max_action - min_action));
+                    const minAction = ACTION.MAX - 20;
+                    const maxAction = ACTION.MAX - 1;
+                    const an = Math.round(minAction + Math.random() * (maxAction - minAction));
                     const sendData = "hello";
                     const p = new Promise((resolve) => {
                         class ServerNetron extends Netron {

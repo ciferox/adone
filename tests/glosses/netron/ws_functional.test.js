@@ -3,13 +3,13 @@ const { is, x, netron: { DEFAULT_PORT, Netron, decorator: { Private, Readonly, T
 let defaultPort = DEFAULT_PORT;
 let NETRON_PORT = 32348;
 
-describe("WebSocket Netron", () => {
+describe("netron", "websocket", "functional tests", () => {
     let exNetron;
     let superNetron;
     let wsAdapter;
 
     before(async () => {
-        async function isFreePort(port, host = null) {
+        const isFreePort = async (port, host = null) => {
             const checkerSocket = new adone.std.net.Server();
             const p = new Promise((resolve, reject) => {
                 checkerSocket.on("error", (e) => {
@@ -27,11 +27,9 @@ describe("WebSocket Netron", () => {
             });
             checkerSocket.listen(port, host);
             return p;
-        }
+        };
 
-        function getRandomPort() {
-            return 1025 + Math.round(Math.random() * 64510);
-        }
+        const getRandomPort = () => 1025 + Math.round(Math.random() * 64510);
 
         while (!await isFreePort(defaultPort)) {
             defaultPort = getRandomPort();
@@ -136,7 +134,7 @@ describe("WebSocket Netron", () => {
                 await exNetron.connect({ port: NETRON_PORT });
                 exNetron.disconnect();
 
-                return Promise.all( [p1, p2, p3, p4] );
+                return Promise.all([p1, p2, p3, p4]);
             });
 
             it("Client", async () => {
@@ -193,17 +191,13 @@ describe("WebSocket Netron", () => {
                 await exNetron.connect({ port: NETRON_PORT });
                 exNetron.disconnect();
 
-                return Promise.all( [p1, p2, p3, p4] );
+                return Promise.all([p1, p2, p3, p4]);
             });
         });
 
         describe("RPC", () => {
             @Contextable
             class ContextA {
-                constructor() {
-
-                }
-
                 @Private
                 getValue2() {
                     return this.prop2;
@@ -382,9 +376,9 @@ describe("WebSocket Netron", () => {
                 addDocument(name, doc) {
                     if (this._docs.size >= this._totalSize || this._docs.has(name)) {
                         return false;
-                    } 
+                    }
                     this._docs.set(name, doc);
-                    
+
                     return true;
                 }
 
@@ -803,9 +797,9 @@ describe("WebSocket Netron", () => {
                             if (this.keeper) {
                                 depthLabel++;
                                 return (await this.keeper.getCounter()) + 1;
-                            } 
+                            }
                             return 1;
-                            
+
                         }
 
                         async getNextKeeper(keeper) {

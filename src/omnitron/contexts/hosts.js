@@ -65,11 +65,11 @@ export default class Hosts {
     }
 
     async initialize() {
-        this._vault = await (await this.omnitron.vaults()).open("hosts", VAULT_OPTIONS);
+        this._vault = await (await this.omnitron.context("vaults")).open("hosts", VAULT_OPTIONS);
     }
 
     async uninitialize() {
-        await (await this.omnitron.vaults()).close("hosts");
+        await (await this.omnitron.context("vaults")).close("hosts");
     }
 
     @Public

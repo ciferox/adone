@@ -3,7 +3,7 @@ const { is, x, netron: { DEFAULT_PORT, Netron, decorator: { Private, Readonly, T
 let defaultPort = DEFAULT_PORT;
 let NETRON_PORT = 32348;
 
-describe("Netron", () => {
+describe("netron", "native", "functional tests", () => {
     let exNetron;
     let superNetron;
 
@@ -28,9 +28,7 @@ describe("Netron", () => {
             return p;
         }
 
-        function getRandomPort() {
-            return 1025 + Math.round(Math.random() * 64510);
-        }
+        const getRandomPort = () => 1025 + Math.round(Math.random() * 64510);
 
         while (!await isFreePort(defaultPort)) {
             defaultPort = getRandomPort();

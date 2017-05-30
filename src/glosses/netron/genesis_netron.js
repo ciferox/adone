@@ -98,7 +98,6 @@ export default class GenesisNetron extends AsyncEmitter {
             retryTimeout: 300,
             retryMaxTimeout: 3000,
             responseTimeout: 60000 * 3,
-            pingReply: adone.ok,
             acceptTwins: true,
             transpiler: {
                 plugins: [
@@ -419,14 +418,12 @@ export default class GenesisNetron extends AsyncEmitter {
 
     async ping(uid) {
         if (is.nil(uid)) {
-            return this.option.pingReply || adone.ok;
+            return null;
         }
         const peer = this.getPeer(uid);
-        const reply = await (new Promise((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             this.send(peer, 1, peer.streamId.next(), 1, ACTION.PING, null, resolve).catch(reject);
-        }));
-        return reply;
-
+        });
     }
 
     getPeer(uid) {
@@ -717,7 +714,7 @@ export default class GenesisNetron extends AsyncEmitter {
             case ACTION.PING: {
                 if (flags.get(GenesisNetron.FLAG_IMPULSE)) {
                     try {
-                        await this.send(peer, 0, packet[GenesisNetron._STREAM_ID], 1, ACTION.PING, (this.option.pingReply || adone.ok));
+                        await this.send(peer, 0, packet[GenesisNetron._STREAM_ID], 1, ACTION.PING, null);
                     } catch (err) {
                         adone.error(err);
                     }
