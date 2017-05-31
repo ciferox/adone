@@ -39,79 +39,81 @@ const createCallProperties = function () {
     this.lastCall = this.getCall(this.callCount - 1);
 };
 
+const isProxy = Symbol.for("shani:isProxy");
+
 const createProxy = (func, proxyLength) => {
     // Retain the function length:
     let proxy;
     if (proxyLength) {
         switch (proxyLength) {
             case 1: {
-                proxy = function proxy(a) {
-                    return proxy.invoke(func, this, [a]);
+                proxy = function proxy(a, ...args) {
+                    return proxy.invoke(func, this, [a, ...args]);
                 };
                 break;
             }
             case 2: {
-                proxy = function proxy(a, b) {
-                    return proxy.invoke(func, this, [a, b]);
+                proxy = function proxy(a, b, ...args) {
+                    return proxy.invoke(func, this, [a, b, ...args]);
                 }; break;
             }
             case 3: {
-                proxy = function proxy(a, b, c) {
-                    return proxy.invoke(func, this, [a, b, c]);
+                proxy = function proxy(a, b, c, ...args) {
+                    return proxy.invoke(func, this, [a, b, c, ...args]);
                 };
                 break;
             }
             case 4: {
-                proxy = function proxy(a, b, c, d) {
-                    return proxy.invoke(func, this, [a, b, c, d]);
+                proxy = function proxy(a, b, c, d, ...args) {
+                    return proxy.invoke(func, this, [a, b, c, d, ...args]);
                 };
                 break;
             }
             case 5: {
-                proxy = function proxy(a, b, c, d, e) {
-                    return proxy.invoke(func, this, [a, b, c, d, e]);
+                proxy = function proxy(a, b, c, d, e, ...args) {
+                    return proxy.invoke(func, this, [a, b, c, d, e, ...args]);
                 };
                 break;
             }
             case 6: {
-                proxy = function proxy(a, b, c, d, e, f) {
-                    return proxy.invoke(func, this, [a, b, c, d, e, f]);
+                proxy = function proxy(a, b, c, d, e, f, ...args) {
+                    return proxy.invoke(func, this, [a, b, c, d, e, f, ...args]);
                 };
                 break;
             }
             case 7: {
-                proxy = function proxy(a, b, c, d, e, f, g) {
-                    return proxy.invoke(func, this, [a, b, c, d, e, f, g]);
+                proxy = function proxy(a, b, c, d, e, f, g, ...args) {
+                    return proxy.invoke(func, this, [a, b, c, d, e, f, g, ...args]);
                 };
                 break;
             }
             case 8: {
-                proxy = function proxy(a, b, c, d, e, f, g, h) {
-                    return proxy.invoke(func, this, [a, b, c, d, e, f, g, h]);
+                proxy = function proxy(a, b, c, d, e, f, g, h, ...args) {
+                    return proxy.invoke(func, this, [a, b, c, d, e, f, g, h, ...args]);
                 };
                 break;
             }
             case 9: {
-                proxy = function proxy(a, b, c, d, e, f, g, h, i) {
-                    return proxy.invoke(func, this, [a, b, c, d, e, f, g, h, i]);
+                proxy = function proxy(a, b, c, d, e, f, g, h, i, ...args) {
+                    return proxy.invoke(func, this, [a, b, c, d, e, f, g, h, i, ...args]);
                 };
                 break;
             }
             case 10: {
-                proxy = function proxy(a, b, c, d, e, f, g, h, i, j) {
-                    return proxy.invoke(func, this, [a, b, c, d, e, f, g, h, i, j]);
+                proxy = function proxy(a, b, c, d, e, f, g, h, i, j, ...args) {
+                    return proxy.invoke(func, this, [a, b, c, d, e, f, g, h, i, j, ...args]);
                 };
                 break;
             }
             case 11: {
-                proxy = function proxy(a, b, c, d, e, f, g, h, i, j, k) {
-                    return proxy.invoke(func, this, [a, b, c, d, e, f, g, h, i, j, k]);
+                proxy = function proxy(a, b, c, d, e, f, g, h, i, j, k, ...args) {
+                    return proxy.invoke(func, this, [a, b, c, d, e, f, g, h, i, j, k, ...args]);
                 };
                 break;
             }
             case 12: {
-                proxy = function proxy(a, b, c, d, e, f, g, h, i, j, k, l) {
-                    return proxy.invoke(func, this, [a, b, c, d, e, f, g, h, i, j, k, l]);
+                proxy = function proxy(a, b, c, d, e, f, g, h, i, j, k, l, ...args) {
+                    return proxy.invoke(func, this, [a, b, c, d, e, f, g, h, i, j, k, l, ...args]);
                 };
                 break;
             }
@@ -127,7 +129,7 @@ const createProxy = (func, proxyLength) => {
             return proxy.invoke(func, this, args);
         };
     }
-    proxy.isSinonProxy = true;
+    proxy[isProxy] = true;
     return proxy;
 };
 
@@ -427,7 +429,6 @@ const delegateToCalls = (method, matchAny, actual, notCalled) => {
             }
             return false;
         }
-
         let currentCall;
         let matches = 0;
 

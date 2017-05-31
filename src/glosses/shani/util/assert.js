@@ -11,6 +11,8 @@ const {
     match
 } = sutil;
 
+const isProxy = Symbol.for("shani:isProxy");
+
 const verifyIsStub = (...args) => {
     args.forEach((method) => {
         if (!method) {
@@ -18,7 +20,7 @@ const verifyIsStub = (...args) => {
             assert.fail("fake is not a spy");
         }
 
-        if (method.proxy && method.proxy.isSinonProxy) {
+        if (method.proxy && method.proxy[isProxy]) {
             verifyIsStub(method.proxy);
         } else {
             if (!is.function(method)) {
@@ -156,7 +158,6 @@ const mirrorPropAsAssertion = (...args) => {
         let failed = false;
 
         verifyIsValidAssertion(name, args);
-
         if (is.function(method)) {
             failed = !method(fake);
         } else {

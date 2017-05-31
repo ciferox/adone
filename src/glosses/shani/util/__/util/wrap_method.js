@@ -15,6 +15,8 @@ const mirrorProperties = (target, source) => {
     }
 };
 
+const restorable = Symbol.for("shani:restorable");
+
 export default function wrapMethod(object, property, method) {
     if (!object) {
         throw new x.InvalidArgument("Should wrap property of object");
@@ -29,7 +31,7 @@ export default function wrapMethod(object, property, method) {
 
         if (!isFunction(wrappedMethod)) {
             error = new TypeError(`Attempted to wrap ${typeof wrappedMethod} property ${valueToString(property)} as function`);
-        } else if (wrappedMethod.restore && wrappedMethod.restore[Symbol.for("shani:restorable")]) {
+        } else if (wrappedMethod.restore && wrappedMethod.restore[restorable]) {
             error = new TypeError(`Attempted to wrap ${valueToString(property)} which is already wrapped`);
         } else if (wrappedMethod.calledBefore) {
             const verb = wrappedMethod.returns ? "stubbed" : "spied on";
@@ -62,7 +64,7 @@ export default function wrapMethod(object, property, method) {
     let error;
     if (!wrappedMethodDesc) {
         error = new TypeError(`Attempted to wrap ${typeof wrappedMethod} property ${property} as function`);
-    } else if (wrappedMethodDesc.restore && wrappedMethodDesc.restore[Symbol.for("shani:restorable")]) {
+    } else if (wrappedMethodDesc.restore && wrappedMethodDesc.restore[restorable]) {
         error = new TypeError(`Attempted to wrap ${property} which is already wrapped`);
     }
     if (error) {
@@ -122,7 +124,7 @@ export default function wrapMethod(object, property, method) {
 
     method.wrappedMethod = wrappedMethod;
 
-    method.restore[Symbol.for("shani:restorable")] = true;
+    method.restore[restorable] = true;
 
     return method;
 }

@@ -1,5 +1,3 @@
-import nock from "shani/helpers/nock";
-
 const { request, CancelToken } = adone.net.http.client;
 
 describe("glosses", "net", "http", "client", "cancel", () => {

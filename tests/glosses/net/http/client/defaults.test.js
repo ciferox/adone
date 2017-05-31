@@ -1,5 +1,3 @@
-import nock from "shani/helpers/nock";
-
 const { request, create, defaults } = adone.net.http.client;
 
 describe("glosses", "net", "http", "client", "defaults", () => {

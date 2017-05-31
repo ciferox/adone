@@ -778,10 +778,11 @@ export class Engine {
                     expect: () => adone.expect,
                     assert: () => adone.assert,
                     spy: () => shani.util.spy,
-                    stub: () => shani.util.mock.stub,
-                    mock: () => shani.util.mock.mock,
-                    match: () => shani.util.mock.match,
+                    stub: () => shani.util.stub,
+                    mock: () => shani.util.mock,
+                    match: () => shani.util.match,
                     request: () => shani.util.request,
+                    nock: () => shani.util.nock,
                     FS: () => shani.util.FS,
                     include: () => (p) => m.require(p, { cache: false })
                 }, global.$, m.require.bind(m), { configurable: true });
@@ -794,6 +795,7 @@ export class Engine {
                     mock: () => global.$.mock,
                     match: () => global.$.match,
                     request: () => global.$.request,
+                    nock: () => global.$.nock,
                     include: () => global.$.include,
                     FS: () => global.$.FS
                 }, global, null, { configurable: true });
@@ -1019,7 +1021,11 @@ export const consoleReporter = ({
                     log("{red-fg}- actual{/red-fg} {green-fg}+ expected{/green-fg}\n");
                     let msg = "";
                     for (let i = 0; i < diff.length; i++) {
-                        let value = adone.text.splitLines(diff[i].value);
+                        let value = diff[i].value;
+                        if (!is.string(value)) {
+                            value = adone.meta.inspect(diff[i].value, { minimal: true });
+                        }
+                        value = adone.text.splitLines(value);
 
                         if (value[value.length - 1]) {
                             if (i < diff.length - 1) {
@@ -1071,10 +1077,18 @@ export const consoleReporter = ({
                                 )
                             ) {
                                 printColorDiff(adone.diff.lines(err.actual, err.expected));
-                            } else if (adone.is.sameType(err.expected, err.actual)) {
+                            } else if (adone.is.array(err.expected) && adone.is.array(err.actual)) {
+                                printColorDiff(adone.diff.arrays(err.actual, err.expected));
+                            } else if (adone.is.plainObject(err.expected) && adone.is.plainObject(err.actual)) {
                                 printColorDiff(adone.diff.json(err.actual, err.expected));
+                            } else {
+                                printColorDiff([
+                                    { removed: true, value: adone.meta.inspect(err.actual, { minimal: true }) },
+                                    { added: true, value: adone.meta.inspect(err.expected, { minimal: true }) }
+                                ]);
                             }
                         }
+                        log();
                         if (adone.is.string(err.stack)) {
                             const stackMsg = err.stack.split("\n").slice(1).map((x) => `    ${x.trim()}`).join("\n");
                             log(`{grey-fg}{escape}${stackMsg}{/escape}{/}`);
