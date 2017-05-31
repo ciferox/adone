@@ -25,10 +25,12 @@ describe("fs", "is", () => {
             await adone.fs.rm(fixture);
         });
 
-        it("meow async", async () => {
-            assert.isTrue(await adone.fs.is.executable(meow));
-        });
-
+        if (!is.windows) {
+            it("meow async", async () => {
+                assert.isTrue(await adone.fs.is.executable(meow));
+            });
+        }
+        
         it("fail async", async () => {
             assert.isFalse(await adone.fs.is.executable(fail));
         });

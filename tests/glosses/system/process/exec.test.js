@@ -107,7 +107,7 @@ describe("system", "process", () => {
     });
 
     it("exec.sync() throws error if written to stderr", () => {
-        assert.throws(async () => execSync("foo"), process.platform === "win32" ? /'foo' is not recognized as an internal or external command/ : "spawnSync foo ENOENT");
+        assert.throws(async () => execSync("foo"), is.windows ? /'foo' is not recognized as an internal or external command/ : "spawnSync foo ENOENT");
     });
 
     it("shellSync()", () => {
@@ -123,7 +123,7 @@ describe("system", "process", () => {
     it.skip("preferLocal option", async () => {
         assert.isTrue((await exec("cat-names")).stdout.length > 2);
 
-        if (process.platform === "win32") {
+        if (is.windows) {
             // TODO: figure out how to make the below not hang on Windows
             return;
         }
@@ -219,7 +219,7 @@ describe("system", "process", () => {
         assert.equal(stdout, "foo");
     });
 
-    if (process.platform !== "win32") {
+    if (!is.windows) {
         it("exec() rejects if running non-executable", async () => {
             const cp = exec("non-executable");
             await assert.throws(async () => cp);
@@ -251,7 +251,7 @@ describe("system", "process", () => {
         assert.isFalse(err.killed);
     });
 
-    if (process.platform === "darwin") {
+    if (is.darwin) {
         it("sanity check: child_process.exec also has killed.false if killed indirectly", (done) => {
             const cp = adone.std.child_process.exec("forever", (err) => {
                 assert.isTrue(err);
@@ -265,7 +265,7 @@ describe("system", "process", () => {
         });
     }
 
-    if (process.platform !== "win32") {
+    if (!is.windows) {
         it("err.signal is SIGINT", async () => {
             const cp = exec("forever");
 
@@ -389,22 +389,23 @@ describe("system", "process", () => {
     spawnAndKill("SIGINT", true);
     spawnAndKill("SIGTERM", true);
 
-    // if (process.platform !== "win32") {
+    // if (!is.windows) {
     //     // On Windows the subprocesses are actually always killed
     //     spawnAndKill("SIGTERM", false);
     //     spawnAndKill("SIGKILL", false);
     // }
 
-    // See: https://github.com/sindresorhus/exec/issues/56
-    // const onlyWinFailing = test[process.platform === "win32" ? "failing" : "serial"];
-    it("exec.shell() supports the `shell` option", async () => {
-        const { stdout } = await shell("noop foo", {
-            shell: process.platform === "win32" ? "cmd.exe" : "/bin/bash"
+    if (!is.windows) {
+        // See: https://github.com/sindresorhus/exec/issues/56
+        // const onlyWinFailing = test[is.windows ? "failing" : "serial"];
+        it("exec.shell() supports the `shell` option", async () => {
+            // process.env.PATH = path.join(__dirname, "fixtures") + path.delimiter + process.env.PATH;
+            const { stdout } = await shell("noop foo", {
+                shell: is.windows ? "cmd.exe" : "/bin/bash"
+            });
+            assert.equal(stdout, "foo");
         });
-        assert.equal(stdout, "foo");
-    });
 
-    if (process.platform !== "win32") {
         it("write to fast-exit process", async () => {
             // Try-catch here is necessary, because this test is not 100% accurate
             // Sometimes process can manage to accept input before exiting
@@ -448,8 +449,6 @@ describe("system", "process", () => {
     });
 
     describe("errname", () => {
-        const isWin = process.platform === "win32";
-
         // Simulates failure to capture `process.binding('uv');`
         const fallback = (code) => errnameFallback(null, code);
 
@@ -470,7 +469,7 @@ describe("system", "process", () => {
 
         const unknown = "Unknown system error -2";
 
-        makeTests("native", errname, isWin ? unknown : "ENOENT");
+        makeTests("native", errname, is.windows ? unknown : "ENOENT");
         makeTests("fallback", fallback, unknown);
     });
 });
