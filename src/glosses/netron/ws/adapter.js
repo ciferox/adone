@@ -2,8 +2,9 @@ const { is, x } = adone;
 
 export default class Adapter extends adone.netron.Adapter {
     constructor(options) {
-        options.backlog = options.backlog || 511;
-        super(options);
+        super(Object.assign({
+            backlog: 511
+        }, options));
         this._wss = null;
     }
 
@@ -95,7 +96,7 @@ export default class Adapter extends adone.netron.Adapter {
                         peer.emit("disconnect");
                     };
                     ws.onmessage = (msgEvent) => {
-                        peer._onMessage(msgEvent);
+                        peer._onMessage(msgEvent.data);
                     };
                 }
             });

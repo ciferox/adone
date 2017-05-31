@@ -26,7 +26,7 @@ export default class Peer extends GenesisPeer {
                     this.emit("error", new x.Runtime(errEvent.data));
                 };
                 ws.onmessage = (msgEvent) => {
-                    this._onMessage(msgEvent);
+                    this._onMessage(msgEvent.data);
                 };
             });
         }
@@ -87,8 +87,8 @@ export default class Peer extends GenesisPeer {
         return this._remoteAddr;
     }
 
-    _onMessage(msgEvent) {
-        const buffer = ExBuffer.wrap(msgEvent.data);
+    _onMessage(data) {
+        const buffer = ExBuffer.wrap(data);
         const packetSize = buffer.readUInt32BE();
         buffer.compact();
         const result = adone.data.mpak.tryDecode(buffer);

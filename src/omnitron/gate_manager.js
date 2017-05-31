@@ -46,7 +46,7 @@ export default class GateManager extends adone.AsyncEmitter {
     }
 
     getNetronOptions(id) {
-        return _.omit(this._findGate(id), ["id", "type", "enabled"]);
+        return _.omit(this._findGate(id), ["type", "status"]);
     }
 
     setStatus(id, status) {
@@ -57,7 +57,7 @@ export default class GateManager extends adone.AsyncEmitter {
     @Description("Returns gate ")
     @Type(Object)
     getGate({ id = "local", type = null, status = null, contexts = null } = {}) {
-        if (id !== undefined) {
+        if (!is.undefined(id)) {
             for (const gate of this.gates) {
                 if (id === gate.id) {
                     return gate;
@@ -68,7 +68,7 @@ export default class GateManager extends adone.AsyncEmitter {
         const gates = [];
         for (const gate of this.gates) {
             if ((is.null(type) || type === gate.type) && (is.null(status) || status === gate.status)) {
-                if (!is.array(contexts) || gate.access === undefined || !is.array(gate.access.contexts)) {
+                if (!is.array(contexts) || !is.plainObject(gate.access) || !is.array(gate.access.contexts)) {
                     gates.push(gate);
                 } else {
                     for (const svcName of contexts) {
