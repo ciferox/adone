@@ -228,7 +228,7 @@ const is = {
         return typeof Ctor === "function" && Ctor instanceof Ctor && funcToString.call(Ctor) === objectCtorString;
     },
     // Checks whether given value is class
-    class: (value) => (typeof (value) === "function" && is.propertyOwned(value, "prototype") && is.propertyOwned(value.prototype, "constructor") && value.prototype.constructor.toString().substring(0, 5) === "class"),
+    class: (value) => (typeof (value) === "function" && is.propertyOwned(value, "prototype") && value.prototype && is.propertyOwned(value.prototype, "constructor") && value.prototype.constructor.toString().substring(0, 5) === "class"),
     // Checks whether given value is an empty object, i.e, an object without any own, enumerable, string keyed properties.
     emptyObject: (object) => (is.object(object) && Object.keys(object).length === 0),
     // Checks whether `field` is a field owned by `object`.
@@ -576,7 +576,6 @@ const is = {
             }
         };
 
-
         const extensiveDeepEqual = (leftHandOperand, rightHandOperand, options = {}) => {
             options.memoize = options.memoize === false ? false : options.memoize || new WeakMap();
             const comparator = options && options.comparator;
@@ -624,7 +623,6 @@ const is = {
             memoizeSet(leftHandOperand, rightHandOperand, options.memoize, result);
             return result;
         };
-
         if (options && options.comparator) {
             return extensiveDeepEqual(leftHandOperand, rightHandOperand, options);
         }

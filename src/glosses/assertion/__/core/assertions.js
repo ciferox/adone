@@ -920,7 +920,6 @@ export default function (lib, util) {
                     }
                 }
             }
-
             if (caughtErr && !is.nil(errMsgMatcher)) {
                 // Here we check compatible messages
                 let placeholder = "including";
@@ -946,7 +945,6 @@ export default function (lib, util) {
                     }
                 }
             }
-
             // If both assertions failed and both should've matched we throw an error
             if (errorLikeFail && errMsgMatcherFail) {
                 this.assert(

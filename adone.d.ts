@@ -193,6 +193,9 @@ namespace adone {
         namespace timers { export * from "timers"; }
         namespace dgram { export * from "dgram"; }
     }
+
+    const truly = () => true;
+    const falsely = () => false;
 }
 
 module "adone" {

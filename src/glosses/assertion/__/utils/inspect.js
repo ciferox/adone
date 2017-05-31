@@ -10,7 +10,11 @@ const formatPrimitive = (ctx, value) => {
             const simple = `'${JSON.stringify(value).replace(/^"|"$/g, "")
                 .replace(/'/g, "\\'")
                 .replace(/\\"/g, "\"")}'`;
-            return ctx.stylize(simple, "string");
+            const stylized = ctx.stylize(simple, "string");
+            if (!ctx.quoteStrings) {
+                return stylized.slice(1, -1);
+            }
+            return stylized;
         }
         case "number": {
             if (value === 0 && (1 / value) === -Infinity) {
@@ -29,6 +33,7 @@ const formatPrimitive = (ctx, value) => {
     if (is.null(value)) {
         return ctx.stylize("null", "null");
     }
+    return null;
 };
 
 const formatError = (value) => `[${Error.prototype.toString.call(value)}]`;
@@ -183,9 +188,11 @@ const formatValue = (ctx, value, recurseTimes) => {
 
     // Primitive types cannot have properties
     const primitive = formatPrimitive(ctx, value);
-    if (primitive) {
+    if (!is.null(primitive)) {
         return primitive;
     }
+
+    ctx.quoteStrings = true;
 
     // Look up the keys of the object.
     const visibleKeys = util.getEnumerableProperties(value);
@@ -284,8 +291,9 @@ const formatValue = (ctx, value, recurseTimes) => {
     return reduceToSingleString(output, base, braces);
 };
 
-export default function inspect(obj, showHidden, depth = 2) {
+export default function inspect(obj, showHidden, depth = 2, quoteStrings = true) {
     const ctx = {
+        quoteStrings,
         showHidden,
         seen: [],
         stylize: (str) => str

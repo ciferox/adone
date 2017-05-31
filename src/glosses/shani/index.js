@@ -1,10 +1,8 @@
 const { is, x, lazify } = adone;
 
-export const util = lazify({
-    request: "./request",
-    mock: "./mock",
-    FS: "./fs"
-}, null, require);
+const shani = lazify({
+    util: "./util"
+}, exports, require);
 
 const SET_TIMEOUT_MAX = 2 ** 31 - 1;
 
@@ -779,12 +777,12 @@ export class Engine {
                 adone.lazify({
                     expect: () => adone.expect,
                     assert: () => adone.assert,
-                    spy: () => util.mock.spy,
-                    stub: () => util.mock.stub,
-                    mock: () => util.mock.mock,
-                    match: () => util.mock.match,
-                    request: () => util.request,
-                    FS: () => util.FS,
+                    spy: () => shani.util.spy,
+                    stub: () => shani.util.mock.stub,
+                    mock: () => shani.util.mock.mock,
+                    match: () => shani.util.mock.match,
+                    request: () => shani.util.request,
+                    FS: () => shani.util.FS,
                     include: () => (p) => m.require(p, { cache: false })
                 }, global.$, m.require.bind(m), { configurable: true });
 
