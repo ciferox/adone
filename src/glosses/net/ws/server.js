@@ -1,3 +1,4 @@
+const { is } = adone;
 
 const socketError = () => {
     this.destroy();
@@ -56,11 +57,11 @@ export default class Server extends adone.EventEmitter {
             port: null
         }, options);
 
-        if (options.port == null && !options.server && !options.noServer) {
+        if (is.nil(options.port) && !options.server && !options.noServer) {
             throw new TypeError("missing or invalid options");
         }
 
-        if (options.port != null) {
+        if (is.exist(options.port)) {
             this._server = adone.std.http.createServer((req, res) => {
                 const body = adone.std.http.STATUS_CODES[426];
 
@@ -118,7 +119,7 @@ export default class Server extends adone.EventEmitter {
             //
             // Close the http server if it was internally created.
             //
-            if (this.options.port != null) {
+            if (is.exist(this.options.port)) {
                 return server.close(cb);
             }
         }

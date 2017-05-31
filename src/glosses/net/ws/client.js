@@ -277,7 +277,7 @@ export default class Client extends adone.EventEmitter {
                 if (options.checkServerIdentity) {
                     requestOptions.checkServerIdentity = options.checkServerIdentity;
                 }
-                if (options.rejectUnauthorized != null) {
+                if (is.exist(options.rejectUnauthorized)) {
                     requestOptions.rejectUnauthorized = options.rejectUnauthorized;
                 }
 

@@ -1,9 +1,6 @@
-const { is } = adone;
-const AVAILABLE_WINDOW_BITS = [8, 9, 10, 11, 12, 13, 14, 15];
+const { is, std: { zlib } } = adone;
 const TRAILER = Buffer.from([0x00, 0x00, 0xff, 0xff]);
 const EMPTY_BLOCK = Buffer.from([0x00]);
-const DEFAULT_WINDOW_BITS = 15;
-const DEFAULT_MEM_LEVEL = 8;
 
 export default class PerMessageDeflate {
     constructor(options, isServer, maxPayload) {
@@ -34,7 +31,7 @@ export default class PerMessageDeflate {
         }
         if (this._options.clientMaxWindowBits) {
             params.client_max_window_bits = this._options.clientMaxWindowBits;
-        } else if (this._options.clientMaxWindowBits == null) {
+        } else if (is.nil(this._options.clientMaxWindowBits)) {
             params.client_max_window_bits = true;
         }
 
@@ -88,10 +85,7 @@ export default class PerMessageDeflate {
             if (this._options.serverNoContextTakeover || params.server_no_context_takeover) {
                 accepted.server_no_context_takeover = true;
             }
-            if (this._options.clientNoContextTakeover) {
-                accepted.client_no_context_takeover = true;
-            }
-            if (this._options.clientNoContextTakeover !== false && params.client_no_context_takeover) {
+            if (this._options.clientNoContextTakeover || (this._options.clientNoContextTakeover !== false && params.client_no_context_takeover)) {
                 accepted.client_no_context_takeover = true;
             }
             if (is.number(this._options.serverMaxWindowBits)) {
@@ -117,12 +111,12 @@ export default class PerMessageDeflate {
     acceptAsClient(paramsList) {
         const params = paramsList[0];
 
-        if (this._options.clientNoContextTakeover != null) {
+        if (is.exist(this._options.clientNoContextTakeover)) {
             if (this._options.clientNoContextTakeover === false && params.client_no_context_takeover) {
                 throw new Error('Invalid value for "client_no_context_takeover"');
             }
         }
-        if (this._options.clientMaxWindowBits != null) {
+        if (is.exist(this._options.clientMaxWindowBits)) {
             if (this._options.clientMaxWindowBits === false && params.client_max_window_bits) {
                 throw new Error('Invalid value for "client_max_window_bits"');
             }
@@ -156,7 +150,7 @@ export default class PerMessageDeflate {
                     case "client_max_window_bits":
                         if (is.string(value)) {
                             value = parseInt(value, 10);
-                            if (!~AVAILABLE_WINDOW_BITS.indexOf(value)) {
+                            if (is.nan(value) || value < zlib.Z_MIN_WINDOWBITS || value > zlib.Z_MAX_WINDOWBITS) {
                                 throw new Error(`invalid extension parameter value for ${key} (${value})`);
                             }
                         }
@@ -177,10 +171,10 @@ export default class PerMessageDeflate {
         const endpoint = this._isServer ? "client" : "server";
 
         if (!this._inflate) {
-            const maxWindowBits = this.params[`${endpoint}_max_window_bits`];
-            this._inflate = adone.std.zlib.createInflateRaw({
-                windowBits: is.number(maxWindowBits) ? maxWindowBits : DEFAULT_WINDOW_BITS
-            });
+            const key = `${endpoint}_max_window_bits`;
+            const windowBits = !is.number(this.params[key]) ? zlib.Z_DEFAULT_WINDOWBITS : this.params[key];
+
+            this._inflate = zlib.createInflateRaw({ windowBits });
         }
         this._inflate.writeInProgress = true;
 
@@ -248,11 +242,13 @@ export default class PerMessageDeflate {
         const endpoint = this._isServer ? "server" : "client";
 
         if (!this._deflate) {
-            const maxWindowBits = this.params[`${endpoint}_max_window_bits`];
-            this._deflate = adone.std.zlib.createDeflateRaw({
-                flush: adone.std.zlib.Z_SYNC_FLUSH,
-                windowBits: is.number(maxWindowBits) ? maxWindowBits : DEFAULT_WINDOW_BITS,
-                memLevel: this._options.memLevel || DEFAULT_MEM_LEVEL
+            const key = `${endpoint}_max_window_bits`;
+            const windowBits = !is.number(this.params[key]) ? zlib.Z_DEFAULT_WINDOWBITS : this.params[key];
+
+            this._deflate = zlib.createDeflateRaw({
+                memLevel: this._options.memLevel,
+                flush: zlib.Z_SYNC_FLUSH,
+                windowBits
             });
         }
         this._deflate.writeInProgress = true;
@@ -291,7 +287,7 @@ export default class PerMessageDeflate {
 
         this._deflate.on("error", onError).on("data", onData);
         this._deflate.write(data);
-        this._deflate.flush(adone.std.zlib.Z_SYNC_FLUSH, () => {
+        this._deflate.flush(zlib.Z_SYNC_FLUSH, () => {
             cleanup();
             let data = adone.util.buffer.concat(buffers, totalLength);
             if (fin) {
