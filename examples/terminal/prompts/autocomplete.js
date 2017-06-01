@@ -119,7 +119,7 @@ adone.run({
                     });
                 }
             }
-        ], (answers) => {
+        ]).then((answers) => {
             adone.log(JSON.stringify(answers, null, 2));
         });
     }

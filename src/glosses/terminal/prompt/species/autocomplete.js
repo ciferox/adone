@@ -1,4 +1,4 @@
-const { terminal } = adone;
+const { is, terminal } = adone;
 const observe = require("../events");
 const ansiEscapes = require("ansi-escapes");
 
@@ -115,7 +115,7 @@ export default class AutocompletePrompt extends terminal.BasePrompt {
      * When user press `enter` key
      */
     onSubmit(line) {
-        if (typeof this.opt.validate === "function" && this.opt.suggestOnly) {
+        if (is.function(this.opt.validate) && this.opt.suggestOnly) {
             const validationResult = this.opt.validate(line);
             if (validationResult !== true) {
                 this.render(validationResult || "Enter something, tab to autocomplete!");
@@ -131,10 +131,10 @@ export default class AutocompletePrompt extends terminal.BasePrompt {
         }
 
         if (this.opt.suggestOnly) {
-            choice.value = this.rl.line;
-            this.answer = line;
-            this.answerName = line;
-            this.shortAnswer = line;
+            choice.value = line || this.rl.line;
+            this.answer = line || this.rl.line;
+            this.answerName = line || this.rl.line;
+            this.shortAnswer = line || this.rl.line;
             this.rl.line = "";
         } else {
             choice = this.currentChoices.getChoice(this.selected);

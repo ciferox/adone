@@ -351,7 +351,7 @@ describe("util", "Fuzzy", () => {
         const vegetables = ["Onion", "Lettuce", "Broccoli"];
 
         const fuzzy = new Fuzzy(fruits);
-        fuzzy.set(vegetables);
+        fuzzy.setCollection(vegetables);
 
         it('searching for the term "Apple"', () => {
             const result = fuzzy.search("Lettuce");

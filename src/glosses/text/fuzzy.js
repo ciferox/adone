@@ -400,10 +400,10 @@ export default class Fuzzy {
             matchAllTokens
         };
 
-        this.set(list);
+        this.setCollection(list);
     }
 
-    set(list) {
+    setCollection(list) {
         this.list = list;
         return list;
     }
