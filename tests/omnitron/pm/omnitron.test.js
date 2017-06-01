@@ -340,6 +340,7 @@ describe("Process manager", function () {
                             await pm.start({ name: "test2", args: ["bob", f1.path()] });
                             await waitFor(() => pm.started("test"));
                             await waitFor(() => pm.started("test2"));
+                            await adone.promise.delay(2000);
                             const d1 = await f1.content();
                             const d2 = await f2.content();
                             try {
