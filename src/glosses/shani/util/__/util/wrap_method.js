@@ -1,7 +1,4 @@
-const {
-    is, x,
-    shani: { util: { __: { util: { getPropertyDescriptor, valueToString } } } }
-} = adone;
+const { is, x, shani: { util: { __ } } } = adone;
 
 const hasOwn = Object.prototype.hasOwnProperty;
 
@@ -30,12 +27,12 @@ export default function wrapMethod(object, property, method) {
         let error;
 
         if (!isFunction(wrappedMethod)) {
-            error = new TypeError(`Attempted to wrap ${typeof wrappedMethod} property ${valueToString(property)} as function`);
+            error = new TypeError(`Attempted to wrap ${typeof wrappedMethod} property ${__.util.valueToString(property)} as function`);
         } else if (wrappedMethod.restore && wrappedMethod.restore[restorable]) {
-            error = new TypeError(`Attempted to wrap ${valueToString(property)} which is already wrapped`);
+            error = new TypeError(`Attempted to wrap ${__.util.valueToString(property)} which is already wrapped`);
         } else if (wrappedMethod.calledBefore) {
             const verb = wrappedMethod.returns ? "stubbed" : "spied on";
-            error = new TypeError(`Attempted to wrap ${valueToString(property)} which is already ${verb}`);
+            error = new TypeError(`Attempted to wrap ${__.util.valueToString(property)} which is already ${verb}`);
         }
 
         if (error) {
@@ -59,7 +56,7 @@ export default function wrapMethod(object, property, method) {
     const owned = object.hasOwnProperty ? object.hasOwnProperty(property) : hasOwn.call(object, property);
 
     const methodDesc = is.function(method) ? { value: method } : method;
-    const wrappedMethodDesc = getPropertyDescriptor(object, property);
+    const wrappedMethodDesc = __.util.getPropertyDescriptor(object, property);
 
     let error;
     if (!wrappedMethodDesc) {
@@ -116,7 +113,7 @@ export default function wrapMethod(object, property, method) {
             Object.defineProperty(object, property, wrappedMethodDesc);
         }
 
-        const descriptor = getPropertyDescriptor(object, property);
+        const descriptor = __.util.getPropertyDescriptor(object, property);
         if (descriptor && descriptor.value === method) {
             object[property] = wrappedMethod;
         }

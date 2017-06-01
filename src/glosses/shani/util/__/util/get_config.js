@@ -1,11 +1,5 @@
-const { shani: { util: {
-    __: {
-        util: {
-            defaultConfig
-        }
-    }
-} } } = adone;
+const { shani: { util: { __ } } } = adone;
 
 export default function getConfig(custom) {
-    return Object.assign({}, defaultConfig, custom);
+    return Object.assign({}, __.util.defaultConfig, custom);
 }

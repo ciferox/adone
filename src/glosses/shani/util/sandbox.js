@@ -1,4 +1,5 @@
-const { x, shani: { util: { __: { Collection }, match, assert } } } = adone;
+const { x, shani: { util }, lazify } = adone;
+const { __ } = util;
 
 const exposeValue = (sandbox, config, key, value) => {
     if (!value) {
@@ -13,7 +14,7 @@ const exposeValue = (sandbox, config, key, value) => {
     }
 };
 
-class Sandbox extends Collection {
+class Sandbox extends __.Collection {
     constructor(config = {}) {
         super(config);
         this.args = [];
@@ -42,7 +43,7 @@ class Sandbox extends Collection {
             obj.requests = this.server.requests;
         }
 
-        obj.match = match;
+        obj.match = util.match;
 
         return obj;
     }
@@ -78,8 +79,10 @@ class Sandbox extends Collection {
     }
 }
 
-Sandbox.prototype.match = match;
-Sandbox.prototype.assert = assert;
+lazify({
+    match: () => util.match,
+    assert: () => util.assert
+}, Sandbox.prototype);
 
 export default function sandbox(object) {
     return new Sandbox(object);

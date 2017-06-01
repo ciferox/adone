@@ -1,31 +1,23 @@
-const { is, x, shani: { util: sutil } } = adone;
-const {
-    __: {
-        util: {
-            timesInWords,
-            format,
-            valueToString
-        },
-        SpyCall: { toString: SpyCallToString }
-    },
-    spy: { invoke: spyInvoke },
-    match,
-    stub,
-    assert
-} = sutil;
-const deepEqual = sutil.__.util.deepEqual.use(match);
+const { is, x, shani: { util }, lazify } = adone;
+const { __ } = util;
+
+const lazy = lazify({
+    deepEqual: () => __.util.deepEqual.use(util.match)
+}, null, require);
 
 const callCountInWords = (callCount) => {
     if (callCount === 0) {
         return "never called";
     }
 
-    return `called ${timesInWords(callCount)}`;
+    return `called ${__.util.timesInWords(callCount)}`;
 };
 
 const expectedCallCountInWords = (expectation) => {
     const min = expectation.minCalls;
     const max = expectation.maxCalls;
+
+    const { util: { timesInWords } } = __;
 
     if (is.number(min) && is.number(max)) {
         let str = timesInWords(min);
@@ -58,7 +50,7 @@ const receivedMaxCalls = (expectation) => {
 };
 
 const verifyMatcher = (possibleMatcher, arg) => {
-    const isMatcher = match && match.isMatcher(possibleMatcher);
+    const isMatcher = util.match && util.match.isMatcher(possibleMatcher);
 
     return isMatcher && possibleMatcher.test(arg) || true;
 };
@@ -67,7 +59,7 @@ const expectation = {
     minCalls: 1,
     maxCalls: 1,
     create(methodName) {
-        const e = Object.assign(stub.create(), expectation);
+        const e = Object.assign(util.stub.create(), expectation);
         delete e.create;
         e.method = methodName;
 
@@ -77,11 +69,11 @@ const expectation = {
         const [, thisValue, _args] = args;
         this.verifyCallAllowed(thisValue, _args);
 
-        return spyInvoke.apply(this, args);
+        return util.spy.invoke.apply(this, args);
     },
     atLeast(num) {
         if (!is.number(num)) {
-            throw new x.InvalidArgument(`'${valueToString(num)}' is not number`);
+            throw new x.InvalidArgument(`'${__.util.valueToString(num)}' is not number`);
         }
 
         if (!this.limitsSet) {
@@ -95,7 +87,7 @@ const expectation = {
     },
     atMost(num) {
         if (!is.number(num)) {
-            throw new x.InvalidArgument(`'${valueToString(num)}' is not number`);
+            throw new x.InvalidArgument(`'${__.util.valueToString(num)}' is not number`);
         }
 
         if (!this.limitsSet) {
@@ -121,7 +113,7 @@ const expectation = {
     },
     exactly(num) {
         if (!is.number(num)) {
-            throw new x.InvalidArgument(`'${valueToString(num)}' is not a number`);
+            throw new x.InvalidArgument(`'${__.util.valueToString(num)}' is not a number`);
         }
 
         this.atLeast(num);
@@ -135,11 +127,11 @@ const expectation = {
 
         if (receivedMaxCalls(this)) {
             this.failed = true;
-            expectation.fail(`${this.method} already called ${timesInWords(this.maxCalls)}`);
+            expectation.fail(`${this.method} already called ${__.util.timesInWords(this.maxCalls)}`);
         }
 
         if ("expectedThis" in this && this.expectedThis !== thisValue) {
-            expectation.fail(`${this.method} called with ${valueToString(thisValue)} as thisValue, expected ${valueToString(this.expectedThis)}`);
+            expectation.fail(`${this.method} called with ${__.util.valueToString(thisValue)} as thisValue, expected ${__.util.valueToString(this.expectedThis)}`);
         }
 
         if (!("expectedArguments" in this)) {
@@ -147,25 +139,25 @@ const expectation = {
         }
 
         if (!args) {
-            expectation.fail(`${this.method} received no arguments, expected ${format(expectedArguments)}`);
+            expectation.fail(`${this.method} received no arguments, expected ${__.util.format(expectedArguments)}`);
         }
 
         if (args.length < expectedArguments.length) {
-            expectation.fail(`${this.method} received too few arguments (${format(args)}), expected ${format(expectedArguments)}`);
+            expectation.fail(`${this.method} received too few arguments (${__.util.format(args)}), expected ${__.util.format(expectedArguments)}`);
         }
 
         if (this.expectsExactArgCount &&
             args.length !== expectedArguments.length) {
-            expectation.fail(`${this.method} received too many arguments (${format(args)}), expected ${format(expectedArguments)}`);
+            expectation.fail(`${this.method} received too many arguments (${__.util.format(args)}), expected ${__.util.format(expectedArguments)}`);
         }
 
         expectedArguments.forEach(function (expectedArgument, i) {
             if (!verifyMatcher(expectedArgument, args[i])) {
-                expectation.fail(`${this.method} received wrong arguments ${format(args)}, didn't match ${expectedArguments.toString()}`);
+                expectation.fail(`${this.method} received wrong arguments ${__.util.format(args)}, didn't match ${expectedArguments.toString()}`);
             }
 
-            if (!deepEqual(expectedArgument, args[i])) {
-                expectation.fail(`${this.method} received wrong arguments ${format(args)}, expected ${format(expectedArguments)}`);
+            if (!lazy.deepEqual(expectedArgument, args[i])) {
+                expectation.fail(`${this.method} received wrong arguments ${__.util.format(args)}, expected ${__.util.format(expectedArguments)}`);
             }
         }, this);
     },
@@ -200,7 +192,7 @@ const expectation = {
                 return false;
             }
 
-            if (!deepEqual(expectedArgument, args[i])) {
+            if (!lazy.deepEqual(expectedArgument, args[i])) {
                 return false;
             }
 
@@ -227,7 +219,7 @@ const expectation = {
             args.push("[...]");
         }
 
-        const callStr = SpyCallToString.call({
+        const callStr = __.SpyCall.toString.call({
             proxy: this.method || "anonymous mock expectation",
             args
         });
@@ -250,7 +242,7 @@ const expectation = {
         return true;
     },
     pass(message) {
-        assert.pass(message);
+        util.assert.pass(message);
     },
     fail(message) {
         const exception = new x.Exception(message);

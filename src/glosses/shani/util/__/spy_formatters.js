@@ -1,21 +1,12 @@
-const {
-    shani: {
-        util: {
-            __: {
-                util: { timesInWords, format },
-                color
-            },
-            match
-        }
-    }
-} = adone;
+const { shani: { util } } = adone;
+const { __ } = util;
 
 
 const colorSinonMatchText = (matcher, calledArg, calledArgMessage) => {
     if (!matcher.test(calledArg)) {
-        matcher.message = color.red(matcher.message);
+        matcher.message = __.color.red(matcher.message);
         if (calledArgMessage) {
-            calledArgMessage = color.green(calledArgMessage);
+            calledArgMessage = __.color.green(calledArgMessage);
         }
     }
     return `${calledArgMessage} ${matcher.message}`;
@@ -25,9 +16,9 @@ const colorDiffText = (diff) => {
     const objects = diff.map((part) => {
         let text = part.value;
         if (part.added) {
-            text = color.green(text);
+            text = __.color.green(text);
         } else if (part.removed) {
-            text = color.red(text);
+            text = __.color.red(text);
         }
         if (diff.length === 2) {
             text += " "; // format simple diffs
@@ -39,7 +30,7 @@ const colorDiffText = (diff) => {
 
 export default {
     c(spyInstance) {
-        return timesInWords(spyInstance.callCount);
+        return __.util.timesInWords(spyInstance.callCount);
     },
 
     n(spyInstance) {
@@ -60,11 +51,11 @@ export default {
             const calledArgs = spyInstance.getCall(i).args;
             for (let j = 0; j < calledArgs.length || j < args.length; ++j) {
                 message += "\n";
-                const calledArgMessage = j < calledArgs.length ? format(calledArgs[j]) : "";
-                if (match.isMatcher(args[j])) {
+                const calledArgMessage = j < calledArgs.length ? __.util.format(calledArgs[j]) : "";
+                if (util.match.isMatcher(args[j])) {
                     message += colorSinonMatchText(args[j], calledArgs[j], calledArgMessage);
                 } else {
-                    const expectedArgMessage = j < args.length ? format(args[j]) : "";
+                    const expectedArgMessage = j < args.length ? __.util.format(args[j]) : "";
                     const diff = adone.diff.json(calledArgMessage, expectedArgMessage);
                     message += colorDiffText(diff);
                 }
@@ -92,7 +83,7 @@ export default {
         const objects = [];
 
         for (let i = 0, l = spyInstance.callCount; i < l; ++i) {
-            objects.push(format(spyInstance.thisValues[i]));
+            objects.push(__.util.format(spyInstance.thisValues[i]));
         }
 
         return objects.join(", ");
@@ -100,7 +91,7 @@ export default {
 
     "*"(spyInstance, args) {
         return args.map((arg) => {
-            return format(arg);
+            return __.util.format(arg);
         }).join(", ");
     }
 };

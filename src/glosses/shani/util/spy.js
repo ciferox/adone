@@ -1,14 +1,11 @@
-const { is, x, shani: { util: sutil } } = adone;
-const {
-    __: {
-        util: { functionToString, getPropertyDescriptor, wrapMethod, format: sformat, valueToString },
-        spyFormatters: formatters,
-        SpyCall
-    },
-    match
-} = sutil;
+const { is, x, shani: { util }, lazify } = adone;
+const { __ } = util;
 
-const deepEqual = sutil.__.util.deepEqual.use(match);
+const lazy = lazify({
+    deepEqual: () => __.util.deepEqual.use(util.match)
+}, null, require);
+
+// const deepEqual = sutil.__.util.deepEqual.use(match);
 
 let callId = 0;
 const ErrorConstructor = Error.prototype.constructor;
@@ -137,7 +134,7 @@ let uuid = 0;
 
 // Public API
 const proto = {
-    formatters,
+    formatters: __.spyFormatters,
     reset() {
         if (this.invoking) {
             const err = new Error("Cannot reset Sinon function while invoking it. " +
@@ -197,7 +194,7 @@ const proto = {
         proxy.reset();
         proxy.prototype = func.prototype;
         proxy.displayName = name || "spy";
-        proxy.toString = functionToString;
+        proxy.toString = __.util.functionToString;
         proxy.instantiateFake = spy.create;
         proxy.id = `spy#${uuid++}`;
 
@@ -282,12 +279,12 @@ const proto = {
         }, () => calls);
     },
     waitForArg(index, value) {
-        return this.waitFor((call) => deepEqual(call.args[index], value));
+        return this.waitFor((call) => lazy.deepEqual(call.args[index], value));
     },
     waitForArgs(...args) {
         return this.waitFor((call) => {
             for (let i = 0; i < args.length; ++i) {
-                if (!deepEqual(args[i], call.args[i])) {
+                if (!lazy.deepEqual(args[i], call.args[i])) {
                     return false;
                 }
             }
@@ -303,7 +300,7 @@ const proto = {
             return null;
         }
 
-        return new SpyCall(
+        return new __.SpyCall(
             this,
             this.thisValues[i],
             this.args[i],
@@ -397,7 +394,7 @@ const proto = {
         const margs = this.matchingArguments;
 
         if (margs.length <= args.length &&
-            deepEqual(margs, args.slice(0, margs.length))) {
+            lazy.deepEqual(margs, args.slice(0, margs.length))) {
             return !strict || margs.length === args.length;
         }
 
@@ -413,7 +410,7 @@ const proto = {
             if (is.function(formatter)) {
                 return formatter(spyInstance, args);
             } else if (!is.nan(parseInt(specifyer, 10))) {
-                return sformat(args[specifyer - 1]);
+                return __.util.format(args[specifyer - 1]);
             }
 
             return `%${specifyer}`;
@@ -484,10 +481,10 @@ delegateToCalls("yieldOn", false, "yieldOn", function () {
     throw new x.IllegalState(`${this.toString()} cannot yield since it was not yet invoked.`);
 });
 delegateToCalls("yieldTo", false, "yieldTo", function (property) {
-    throw new x.IllegalState(`${this.toString()} cannot yield to '${valueToString(property)}' since it was not yet invoked.`);
+    throw new x.IllegalState(`${this.toString()} cannot yield to '${__.util.valueToString(property)}' since it was not yet invoked.`);
 });
 delegateToCalls("yieldToOn", false, "yieldToOn", function (property) {
-    throw new x.IllegalState(`${this.toString()} cannot yield to '${valueToString(property)}' since it was not yet invoked.`);
+    throw new x.IllegalState(`${this.toString()} cannot yield to '${__.util.valueToString(property)}' since it was not yet invoked.`);
 });
 
 export default function spy(object, property, types) {
@@ -500,19 +497,21 @@ export default function spy(object, property, types) {
     }
 
     if (!types) {
-        return wrapMethod(object, property, spy.create(object[property]));
+        return __.util.wrapMethod(object, property, spy.create(object[property]));
     }
 
     const descriptor = {};
-    const methodDesc = getPropertyDescriptor(object, property);
+    const methodDesc = __.util.getPropertyDescriptor(object, property);
 
     types.forEach((type) => {
         descriptor[type] = spy.create(methodDesc[type]);
     });
 
-    return wrapMethod(object, property, descriptor);
+    return __.util.wrapMethod(object, property, descriptor);
 }
 
 Object.assign(spy, proto);
-spy.SpyCall = SpyCall;
+lazify({
+    SpyCall: () => __.SpyCall
+}, spy);
 

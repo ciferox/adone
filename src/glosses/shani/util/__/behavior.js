@@ -1,7 +1,4 @@
-const {
-    is, x, util,
-    shani: { util: { __: { util: { valueToString } } } }
-} = adone;
+const { is, x, util, shani: { util: { __ } } } = adone;
 
 const useLeftMostCallback = -1;
 const useRightMostCallback = -2;
@@ -45,7 +42,7 @@ const getCallbackError = (behavior, func, args) => {
         let msg;
 
         if (behavior.callArgProp) {
-            msg = `${adone.util.functionName(behavior.stub)} expected to yield to '${valueToString(behavior.callArgProp)}', but no object with such a property was passed.`;
+            msg = `${adone.util.functionName(behavior.stub)} expected to yield to '${__.util.valueToString(behavior.callArgProp)}', but no object with such a property was passed.`;
         } else {
             msg = `${adone.util.functionName(behavior.stub)} expected to yield, but no callback was passed.`;
         }

@@ -1,8 +1,12 @@
-const { is, x, util, shani: { util: sutil } } = adone;
-const { __: { util: { iterableToString, typeOf, valueToString } } } = sutil;
+const { is, x, util: { keys }, shani: { util }, lazify } = adone;
+const { __ } = util;
+
+const lazy = lazify({
+    deepEqual: () => __.util.deepEqual.use(util.match)
+}, null, require);
 
 const assertType = (value, type, name) => {
-    const actual = typeOf(value);
+    const actual = __.util.typeOf(value);
     if (actual !== type) {
         throw new TypeError(`Expected type of ${name} to be ${type}, but was ${actual}`);
     }
@@ -39,7 +43,7 @@ const matchObject = (expectation, actual) => {
         return false;
     }
 
-    return util.keys(expectation).every((key) => {
+    return keys(expectation).every((key) => {
         const exp = expectation[key];
         const act = actual[key];
 
@@ -47,11 +51,11 @@ const matchObject = (expectation, actual) => {
             if (!exp.test(act)) {
                 return false;
             }
-        } else if (typeOf(exp) === "object") {
+        } else if (__.util.typeOf(exp) === "object") {
             if (!matchObject(exp, act)) {
                 return false;
             }
-        } else if (!deepEqual(exp, act)) {  // eslint-disable-line no-use-before-define
+        } else if (!lazy.deepEqual(exp, act)) {  // eslint-disable-line no-use-before-define
             return false;
         }
 
@@ -79,7 +83,7 @@ const TYPE_MAP = {
             return m;
         }
 
-        array = util.keys(expectation).map((key) => `${key}: ${valueToString(expectation[key])}`);
+        array = keys(expectation).map((key) => `${key}: ${__.util.valueToString(expectation[key])}`);
 
         m.test = (actual) => matchObject(expectation, actual);
         m.message = `match(${array.join(", ")})`;
@@ -97,22 +101,20 @@ const TYPE_MAP = {
 
 const match = (expectation, message) => {
     const m = Object.create(matcher);
-    const type = typeOf(expectation);
+    const type = __.util.typeOf(expectation);
 
     if (type in TYPE_MAP) {
         TYPE_MAP[type](m, expectation, message);
     } else {
-        m.test = (actual) => deepEqual(expectation, actual);  // eslint-disable-line no-use-before-define
+        m.test = (actual) => lazy.deepEqual(expectation, actual);  // eslint-disable-line no-use-before-define
     }
 
     if (!m.message) {
-        m.message = `match(${valueToString(expectation)})`;
+        m.message = `match(${__.util.valueToString(expectation)})`;
     }
 
     return m;
 };
-
-const deepEqual = sutil.__.util.deepEqual.use(match);
 
 matcher.or = function (m2) {
     if (!arguments.length) {
@@ -150,11 +152,11 @@ match.truthy = match((actual) => Boolean(actual), "truthy");
 
 match.falsy = match((actual) => !actual, "falsy");
 
-match.same = (expectation) => match((actual) => expectation === actual, `same(${valueToString(expectation)})`);
+match.same = (expectation) => match((actual) => expectation === actual, `same(${__.util.valueToString(expectation)})`);
 
 match.typeOf = (type) => {
     assertType(type, "string", "type");
-    return match((actual) => typeOf(actual) === type, `typeOf("${type}")`);
+    return match((actual) => __.util.typeOf(actual) === type, `typeOf("${type}")`);
 };
 
 match.instanceOf = (type) => {
@@ -169,14 +171,14 @@ const createPropertyMatcher = (propertyTest, messagePrefix) => {
         const onlyProperty = args.length === 1;
         let message = `${messagePrefix}("${property}"`;
         if (!onlyProperty) {
-            message += `, ${valueToString(value)}`;
+            message += `, ${__.util.valueToString(value)}`;
         }
         message += ")";
         return match((actual) => {
             if (is.nil(actual) || !propertyTest(actual, property)) {
                 return false;
             }
-            return onlyProperty || deepEqual(value, actual[property]);
+            return onlyProperty || lazy.deepEqual(value, actual[property]);
         }, message);
     };
 };
@@ -195,50 +197,50 @@ match.array = match.typeOf("array");
 match.array.deepEquals = (expectation) => match((actual) => {
     // Comparing lengths is the fastest way to spot a difference before iterating through every item
     const sameLength = actual.length === expectation.length;
-    return typeOf(actual) === "array" && sameLength && every(actual, (element, index) => expectation[index] === element);
-}, `deepEquals([${iterableToString(expectation)}])`);
+    return __.util.typeOf(actual) === "array" && sameLength && every(actual, (element, index) => expectation[index] === element);
+}, `deepEquals([${__.util.iterableToString(expectation)}])`);
 
 match.array.startsWith = (expectation) => match((actual) => {
-    return typeOf(actual) === "array" && every(expectation, (expectedElement, index) => actual[index] === expectedElement);
-}, `startsWith([${iterableToString(expectation)}])`);
+    return __.util.typeOf(actual) === "array" && every(expectation, (expectedElement, index) => actual[index] === expectedElement);
+}, `startsWith([${__.util.iterableToString(expectation)}])`);
 
 match.array.endsWith = (expectation) => match((actual) => {
     // This indicates the index in which we should start matching
     const offset = actual.length - expectation.length;
-    return typeOf(actual) === "array" && every(expectation, (expectedElement, index) => actual[offset + index] === expectedElement);
-}, `endsWith([${iterableToString(expectation)}])`);
+    return __.util.typeOf(actual) === "array" && every(expectation, (expectedElement, index) => actual[offset + index] === expectedElement);
+}, `endsWith([${__.util.iterableToString(expectation)}])`);
 
 match.array.contains = (expectation) => match((actual) => {
-    return typeOf(actual) === "array" && every(expectation, (expectedElement) => actual.indexOf(expectedElement) !== -1);
-}, `contains([${iterableToString(expectation)}])`);
+    return __.util.typeOf(actual) === "array" && every(expectation, (expectedElement) => actual.indexOf(expectedElement) !== -1);
+}, `contains([${__.util.iterableToString(expectation)}])`);
 
 match.map = match.typeOf("map");
 
 match.map.deepEquals = (expectation) => match((actual) => {
     // Comparing lengths is the fastest way to spot a difference before iterating through every item
     const sameLength = actual.size === expectation.size;
-    return typeOf(actual) === "map" && sameLength && every(actual, (element, key) => {
+    return __.util.typeOf(actual) === "map" && sameLength && every(actual, (element, key) => {
         return expectation.has(key) && expectation.get(key) === element;
     });
-}, `deepEquals(Map[${iterableToString(expectation)}])`);
+}, `deepEquals(Map[${__.util.iterableToString(expectation)}])`);
 
 match.map.contains = (expectation) => match((actual) => {
-    return typeOf(actual) === "map" && every(expectation, (element, key) => {
+    return __.util.typeOf(actual) === "map" && every(expectation, (element, key) => {
         return actual.has(key) && actual.get(key) === element;
     });
-}, `contains(Map[${iterableToString(expectation)}])`);
+}, `contains(Map[${__.util.iterableToString(expectation)}])`);
 
 match.set = match.typeOf("set");
 
 match.set.deepEquals = (expectation) => match((actual) => {
     // Comparing lengths is the fastest way to spot a difference before iterating through every item
     const sameLength = actual.size === expectation.size;
-    return typeOf(actual) === "set" && sameLength && every(actual, (element) => expectation.has(element));
-}, `deepEquals(Set[${iterableToString(expectation)}])`);
+    return __.util.typeOf(actual) === "set" && sameLength && every(actual, (element) => expectation.has(element));
+}, `deepEquals(Set[${__.util.iterableToString(expectation)}])`);
 
 match.set.contains = (expectation) => match((actual) => {
-    return typeOf(actual) === "set" && every(expectation, (element) => actual.has(element));
-}, `contains(Set[${iterableToString(expectation)}])`);
+    return __.util.typeOf(actual) === "set" && every(expectation, (element) => actual.has(element));
+}, `contains(Set[${__.util.iterableToString(expectation)}])`);
 
 match.bool = match.typeOf("boolean");
 match.number = match.typeOf("number");

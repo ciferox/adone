@@ -1,8 +1,5 @@
-const {
-    is, x, util,
-    shani: { util: { __: { util: { wrapMethod } }, spy } }
-} = adone;
-
+const { is, x, util: { keys }, shani: { util } } = adone;
+const { __ } = util;
 
 // This is deprecated and will be removed in a future version.
 // We will only consider pull requests that fix serious bugs in the implementation
@@ -24,15 +21,15 @@ export default function stubDescriptor(object, property, descriptor) {
     }
 
     if (is.function(descriptor)) {
-        wrapper = spy && spy.create ? spy.create(descriptor) : descriptor;
+        wrapper = util.spy && util.spy.create ? util.spy.create(descriptor) : descriptor;
     } else {
         wrapper = descriptor;
-        if (spy && spy.create) {
-            for (const type of util.keys(wrapper)) {
-                wrapper[type] = spy.create(wrapper[type]);
+        if (util.spy && util.spy.create) {
+            for (const type of keys(wrapper)) {
+                wrapper[type] = util.spy.create(wrapper[type]);
             }
         }
     }
 
-    return wrapMethod(object, property, wrapper);
+    return __.util.wrapMethod(object, property, wrapper);
 }

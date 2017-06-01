@@ -1,20 +1,18 @@
-const { is, x, shani: { util: sutil } } = adone;
-const { __: { util: { wrapMethod }, SpyCall: { toString: SpyCallToString } }, expectation, match } = sutil;
+const { is, x, shani: { util }, lazify } = adone;
+const { __ } = util;
+// const { __: { util: { wrapMethod }, SpyCall: { toString: SpyCallToString } }, expectation, match } = util;
 
-
-const deepEqual = sutil.__.util.deepEqual.use(match);
+const lazy = lazify({
+    deepEqual: () => __.util.deepEqual.use(util.match)
+}, null, require);
 
 const arrayEquals = (arr1, arr2, compareLength) => {
     if (compareLength && (arr1.length !== arr2.length)) {
         return false;
     }
 
-    return arr1.every((element, i) => {
-        return deepEqual(element, arr2[i]);
-
-    });
+    return arr1.every((element, i) => lazy.deepEqual(element, arr2[i]));
 };
-
 
 class Mock {
     constructor(object) {
@@ -39,14 +37,14 @@ class Mock {
             this.expectations[method] = [];
             const mockObject = this;
 
-            wrapMethod(this.object, method, function (...args) {
+            __.util.wrapMethod(this.object, method, function (...args) {
                 return mockObject.invokeMethod(method, this, args);
             });
 
             this.proxies.push(method);
         }
 
-        const e = expectation.create(method);
+        const e = util.expectation.create(method);
         this.expectations[method].push(e);
 
         return e;
@@ -85,9 +83,9 @@ class Mock {
         this.restore();
 
         if (messages.length > 0) {
-            expectation.fail(messages.concat(met).join("\n"));
+            util.expectation.fail(messages.concat(met).join("\n"));
         } else if (met.length > 0) {
-            expectation.pass(messages.concat(met).join("\n"));
+            util.expectation.pass(messages.concat(met).join("\n"));
         }
 
         return true;
@@ -132,25 +130,25 @@ class Mock {
             messages.push(`    ${expectation.toString()}`);
         });
 
-        messages.unshift(`Unexpected call: ${SpyCallToString.call({
+        messages.unshift(`Unexpected call: ${__.SpyCall.toString.call({
             proxy: method,
             args
         })}`);
 
         const err = new Error();
-        this.failures.push(`Unexpected call: ${SpyCallToString.call({
+        this.failures.push(`Unexpected call: ${__.SpyCall.toString.call({
             proxy: method,
             args,
             stack: err.stack
         })}`);
 
-        expectation.fail(messages.join("\n"));
+        util.expectation.fail(messages.join("\n"));
     }
 }
 
 export default function mock(object) {
     if (!object) {
-        return expectation.create("Anonymous mock");
+        return util.expectation.create("Anonymous mock");
     }
     return mock.create(object);
 }

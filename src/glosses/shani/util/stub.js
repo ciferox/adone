@@ -1,29 +1,11 @@
-const {
-    is, x, util,
-    shani: { util: sutil }
-} = adone;
-
-const {
-    __: {
-        behavior,
-        defaultBehaviors: behaviors,
-        util: {
-            functionToString,
-            getPropertyDescriptor,
-            wrapMethod
-        },
-        stubDescriptor,
-        stubEntireObject,
-        throwOnFalsyObject
-    },
-    spy
- } = sutil;
+const { is, x, util: { keys }, shani: { util } } = adone;
+const { __ } = util;
 
 // eslint-disable-next-line no-use-before-define
 const getParentBehaviour = (stubInstance) => stubInstance.parent && getCurrentBehavior(stubInstance.parent);
 
 const getDefaultBehavior = (stubInstance) => {
-    return stubInstance.defaultBehavior || getParentBehaviour(stubInstance) || behavior.create(stubInstance);
+    return stubInstance.defaultBehavior || getParentBehaviour(stubInstance) || __.behavior.create(stubInstance);
 };
 
 const getCurrentBehavior = (stubInstance) => {
@@ -41,13 +23,13 @@ const proto = {
 
         functionStub.id = `stub#${uuid++}`;
         const orig = functionStub;
-        functionStub = spy.create(functionStub, stubLength);
+        functionStub = util.spy.create(functionStub, stubLength);
         functionStub.func = orig;
 
         Object.assign(functionStub, stub);
         functionStub.instantiateFake = stub.create;
         functionStub.displayName = "stub";
-        functionStub.toString = functionToString;
+        functionStub.toString = __.util.functionToString;
 
         functionStub.defaultBehavior = null;
         functionStub.behaviors = [];
@@ -70,14 +52,14 @@ const proto = {
             fake.resetBehavior();
         });
     },
-    resetHistory: spy.reset,
+    resetHistory: util.spy.reset,
     reset() {
         this.resetHistory();
         this.resetBehavior();
     },
     onCall(index) {
         if (!this.behaviors[index]) {
-            this.behaviors[index] = behavior.create(this);
+            this.behaviors[index] = __.behavior.create(this);
         }
 
         return this.behaviors[index];
@@ -93,26 +75,26 @@ const proto = {
     }
 };
 
-for (const name of util.keys(behavior)) {
-    if (behavior.hasOwnProperty(name) &&
+for (const name of keys(__.behavior)) {
+    if (__.behavior.hasOwnProperty(name) &&
         !proto.hasOwnProperty(name) &&
         name !== "create" &&
         name !== "withArgs" &&
         name !== "invoke") {
-        proto[name] = behavior.createBehavior(name);
+        proto[name] = __.behavior.createBehavior(name);
     }
 }
 
-for (const name of util.keys(behaviors)) {
-    if (behaviors.hasOwnProperty(name) && !proto.hasOwnProperty(name)) {
-        behavior.addBehavior(stub, name, behaviors[name]);
+for (const name of keys(__.defaultBehaviors)) {
+    if (__.defaultBehaviors.hasOwnProperty(name) && !proto.hasOwnProperty(name)) {
+        __.behavior.addBehavior(stub, name, __.defaultBehaviors[name]);
     }
 }
 
 export default function stub(object, property, descriptor) {
-    throwOnFalsyObject(object, property, descriptor);
+    __.throwOnFalsyObject(object, property, descriptor);
 
-    const actualDescriptor = getPropertyDescriptor(object, property);
+    const actualDescriptor = __.util.getPropertyDescriptor(object, property);
     const isStubbingEntireObject = is.undefined(property) && is.object(object) && !is.function(object);
     const isCreatingNewStub = !object && is.undefined(property);
     const isStubbingDescriptor = object && property && Boolean(descriptor);
@@ -130,11 +112,11 @@ export default function stub(object, property, descriptor) {
     const arity = isStubbingExistingMethod ? object[property].length : 0;
 
     if (isStubbingEntireObject) {
-        return stubEntireObject(stub, object);
+        return __.stubEntireObject(stub, object);
     }
 
     if (isStubbingDescriptor) {
-        return stubDescriptor(object, property, descriptor);
+        return __.stubDescriptor(object, property, descriptor);
     }
 
     if (isCreatingNewStub) {
@@ -153,7 +135,7 @@ export default function stub(object, property, descriptor) {
         delete object[property];
     };
 
-    return isStubbingNonFuncProperty ? s : wrapMethod(object, property, s);
+    return isStubbingNonFuncProperty ? s : __.util.wrapMethod(object, property, s);
 }
 
 stub.createStubInstance = function (constructor) {

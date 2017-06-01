@@ -1,15 +1,5 @@
-const { is, x, util, shani: { util: sutil } } = adone;
-const {
-    __: {
-        util: {
-            calledInOrder,
-            orderByFirstCall,
-            timesInWords,
-            format
-        }
-    },
-    match
-} = sutil;
+const { is, x, util: { keys }, shani: { util } } = adone;
+const { __ } = util;
 
 const isProxy = Symbol.for("shani:isProxy");
 
@@ -80,7 +70,7 @@ const assert = {
         let expected = "";
         let actual = "";
 
-        if (!calledInOrder(args)) {
+        if (!__.util.calledInOrder(args)) {
             try {
                 expected = args.join(", ");
                 const calls = args.slice();
@@ -90,7 +80,7 @@ const assert = {
                         calls.splice(i, 1);
                     }
                 }
-                actual = orderByFirstCall(calls).join(", ");
+                actual = __.util.orderByFirstCall(calls).join(", ");
             } catch (e) {
                 // If this fails, we'll just fall back to the blank string
             }
@@ -104,7 +94,7 @@ const assert = {
         verifyIsStub(method);
 
         if (method.callCount !== count) {
-            const msg = `expected %n to be called ${timesInWords(count)} but was called %c%C`;
+            const msg = `expected %n to be called ${__.util.timesInWords(count)} but was called %c%C`;
             failAssertion(this, method.printf(msg));
         } else {
             assert.pass("callCount");
@@ -120,7 +110,7 @@ const assert = {
         const includeFail = is.undefined(o.includeFail) || Boolean(o.includeFail);
         const instance = this;
 
-        for (const name of util.keys(instance)) {
+        for (const name of keys(instance)) {
             if (name !== "expose" && (includeFail || !/^(fail)/.test(name))) {
                 target[exposedName(prefix, name)] = instance[name];
             }
@@ -129,14 +119,14 @@ const assert = {
         return target;
     },
     match(actual, expectation) {
-        const matcher = match(expectation);
+        const matcher = util.match(expectation);
         if (matcher.test(actual)) {
             assert.pass("match");
         } else {
             const formatted = [
                 "expected value to match",
-                `    expected = ${format(expectation)}`,
-                `    actual = ${format(actual)}`
+                `    expected = ${__.util.format(expectation)}`,
+                `    actual = ${__.util.format(actual)}`
             ];
 
             failAssertion(this, formatted.join("\n"));

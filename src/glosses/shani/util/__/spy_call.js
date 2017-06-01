@@ -1,16 +1,9 @@
-const { is, x, shani: { util: sutil } } = adone;
+const { is, x, shani: { util }, lazify } = adone;
+const { __ } = util;
 
-const {
-    __: {
-        util: {
-            format,
-            valueToString
-        }
-    },
-    match
-} = sutil;
-
-const deepEqual = sutil.__.util.deepEqual.use(match);
+const lazy = lazify({
+    deepEqual: () => __.util.deepEqual.use(util.match)
+}, null, require);
 
 const throwYieldError = (proxy, text, args) => {
     let msg = adone.util.functionName(proxy) + text;
@@ -39,7 +32,7 @@ export default class SpyCall {
     }
 
     calledOn(thisValue) {
-        if (match && match.isMatcher(thisValue)) {
+        if (util.match && util.match.isMatcher(thisValue)) {
             return thisValue.test(this.thisValue);
         }
         return this.thisValue === thisValue;
@@ -51,7 +44,7 @@ export default class SpyCall {
         }
 
         return calledWithArgs.reduce((prev, arg, i) => {
-            return prev && deepEqual(arg, this.args[i]);
+            return prev && lazy.deepEqual(arg, this.args[i]);
         }, true);
     }
 
@@ -63,7 +56,7 @@ export default class SpyCall {
         return calledWithMatchArgs.reduce((prev, expectation, i) => {
             const actual = this.args[i];
 
-            return prev && (match && match(expectation).test(actual));
+            return prev && (util.match && util.match(expectation).test(actual));
         }, true);
     }
 
@@ -80,7 +73,7 @@ export default class SpyCall {
     }
 
     returned(value) {
-        return deepEqual(value, this.returnValue);
+        return lazy.deepEqual(value, this.returnValue);
     }
 
     threw(error) {
@@ -160,7 +153,7 @@ export default class SpyCall {
         const yieldFn = yieldArg && yieldArg[prop];
 
         if (!yieldFn) {
-            throwYieldError(this.proxy, ` cannot yield to '${valueToString(prop)}' since no callback was passed.`, [...this.args]);
+            throwYieldError(this.proxy, ` cannot yield to '${__.util.valueToString(prop)}' since no callback was passed.`, [...this.args]);
         }
         yieldFn.apply(thisValue, args);
     }
@@ -172,12 +165,12 @@ export default class SpyCall {
             return ":(";
         }
 
-        const formattedArgs = [...this.args].map((arg) => format(arg));
+        const formattedArgs = [...this.args].map((arg) => __.util.format(arg));
 
         callStr = `${callStr + formattedArgs.join(", ")})`;
 
         if (!is.undefined(this.returnValue)) {
-            callStr += ` => ${format(this.returnValue)}`;
+            callStr += ` => ${__.util.format(this.returnValue)}`;
         }
 
         if (this.exception) {

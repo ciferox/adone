@@ -1,11 +1,8 @@
-const {
-    is,
-    shani: { util: { __: { util: { walk, getPropertyDescriptor } } } }
-} = adone;
+const { is, shani: { util: { __ } } } = adone;
 
 const collectMethod = (methods, object, prop, propOwner) => {
     if (
-        is.function(getPropertyDescriptor(propOwner, prop).value) &&
+        is.function(__.util.getPropertyDescriptor(propOwner, prop).value) &&
         object.hasOwnProperty(prop)
     ) {
         methods.push(object[prop]);
@@ -16,7 +13,7 @@ const collectMethod = (methods, object, prop, propOwner) => {
 export default function collectOwnMethods(object) {
     const methods = [];
 
-    walk(object, collectMethod.bind(null, methods, object));
+    __.util.walk(object, collectMethod.bind(null, methods, object));
 
     return methods;
 }

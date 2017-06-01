@@ -1,7 +1,5 @@
-const {
-    is,
-    shani: { util: { __: { collectOwnMethods, sandboxStub }, spy, stub, mock } }
-} = adone;
+const { is, shani: { util } } = adone;
+const { __ } = util;
 
 const getFakes = (fakeCollection) => {
     if (!fakeCollection.fakes) {
@@ -67,19 +65,19 @@ export default class Collection {
     }
 
     spy(...args) {
-        return this.add(spy.apply(spy, args));
+        return this.add(util.spy.apply(util.spy, args));
     }
 
     stub(object, property, ...args) {
         if (arguments.length > 2) {
-            return sandboxStub.apply(this, [object, property, ...args]);
+            return __.sandboxStub.apply(this, [object, property, ...args]);
         }
 
-        const stubbed = stub(object, property, ...args);
+        const stubbed = util.stub(object, property, ...args);
         const isStubbingEntireObject = is.undefined(property) && is.object(object);
 
         if (isStubbingEntireObject) {
-            const ownMethods = collectOwnMethods(stubbed);
+            const ownMethods = __.collectOwnMethods(stubbed);
             ownMethods.forEach(this.add.bind(this));
             if (this.promiseLibrary) {
                 ownMethods.forEach(this.addUsingPromise.bind(this));
@@ -95,7 +93,7 @@ export default class Collection {
     }
 
     mock(...args) {
-        return this.add(mock(...args));
+        return this.add(util.mock(...args));
     }
 
     inject(obj) {

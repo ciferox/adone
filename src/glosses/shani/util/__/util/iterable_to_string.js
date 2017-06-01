@@ -1,7 +1,4 @@
-const {
-    is,
-    shani: { util: { __: { util: { typeOf } } } }
-} = adone;
+const { is, shani: { util: { __ } } } = adone;
 
 export default function iterableToString(obj) {
     let representation = "";
@@ -26,7 +23,7 @@ export default function iterableToString(obj) {
         return representation;
     };
 
-    if (typeOf(obj) === "map") {
+    if (__.util.typeOf(obj) === "map") {
         return mapToString(obj);
     }
 
