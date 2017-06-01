@@ -755,10 +755,11 @@ export class Compiler {
         this._compileAsyncLoop(node, frame, true);
     }
 
-    _compileMacro(node) {
+    _compileMacro(node, frame) {
         const args = [];
         let kwargs = null;
         const funcId = `macro_${this.tmpid()}`;
+        const keepFrame = !is.undefined(frame);
 
         const { args: { children } } = node;
         for (let i = 0; i < children.length; ++i) {
@@ -791,15 +792,18 @@ export class Compiler {
                 }
             }
         }
-
-        const frame = new Frame();
+        if (keepFrame) {
+            frame = frame.push(true);
+        } else {
+            frame = new Frame();
+        }
         this.emitLines(
             `var ${funcId} = runtime.makeMacro(`,
             `[${argNames.join(", ")}], `,
             `[${kwargNames.join(", ")}], `,
             `function (${realNames.join(", ")}) {`,
             "var callerFrame = frame;",
-            "frame = new runtime.Frame();",
+            `frame = ${(keepFrame) ? "frame.push(true);" : "new runtime.Frame();"}`,
             "kwargs = kwargs || {};",
             'if (kwargs.hasOwnProperty("caller")) {',
             'frame.set("caller", kwargs.caller); }'
@@ -829,7 +833,7 @@ export class Compiler {
             this.compile(node.body, frame);
         });
 
-        this.emitLine("frame = callerFrame;");
+        this.emitLine(`frame = ${(keepFrame) ? "frame.pop();" : "callerFrame;"}`);
         this.emitLine(`return new runtime.SafeString(${bufferId});`);
         this.emitLine("});");
         this.popBufferId();
@@ -838,7 +842,7 @@ export class Compiler {
     }
 
     compileMacro(node, frame) {
-        const funcId = this._compileMacro(node, frame);
+        const funcId = this._compileMacro(node);
 
         const { name: { value: name } } = node;
         frame.set(name, funcId);
@@ -1007,6 +1011,10 @@ export class Compiler {
     }
 
     compileCapture(node, frame) {
+        // we need to temporarily override the current buffer id as 'output'
+        // so the set block writes to the capture output instead of the buffer
+        const buffer = this.buffer;
+        this.buffer = "output";
         this.emitLine("(function() {");
         this.emitLine('var output = "";');
         this.withScopedSyntax(() => {
@@ -1014,6 +1022,8 @@ export class Compiler {
         });
         this.emitLine("return output;");
         this.emitLine("})()");
+        // and of course, revert back to the old buffer id
+        this.buffer = buffer;
     }
 
     compileOutput(node, frame) {
