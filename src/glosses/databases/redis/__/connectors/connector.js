@@ -1,4 +1,4 @@
-const { database: { redis }, o, x, std } = adone;
+const { database: { redis: { __ } }, o, x, std } = adone;
 
 export default class Connector {
     constructor(options) {
@@ -34,7 +34,7 @@ export default class Connector {
 
         process.nextTick(() => {
             if (!this.connecting) {
-                callback(new x.Exception(redis.util.CONNECTION_CLOSED_ERROR_MSG));
+                callback(new x.Exception(__.util.CONNECTION_CLOSED_ERROR_MSG));
                 return;
             }
             let stream;

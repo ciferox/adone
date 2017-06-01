@@ -33,6 +33,22 @@ describe("glosses", "databases", "redis", "sentinel", () => {
 
         });
 
+        it("should default to the default sentinel port", (done) => {
+            const sentinel = new MockServer(26379);
+            sentinel.once("connect", () => {
+                redis.disconnect();
+                sentinel.disconnect(done);
+            });
+
+            const redis = new Redis({
+                sentinels: [
+                    { host: "127.0.0.1" }
+                ],
+                name: "master"
+            });
+
+        });
+
         it("should try to connect to all sentinel", (done) => {
             const sentinel = new MockServer(27380);
             sentinel.once("connect", () => {
@@ -167,7 +183,7 @@ describe("glosses", "databases", "redis", "sentinel", () => {
             redis.connect().then(() => {
                 throw new Error("Expect `connect` to be thrown");
             }).catch((err) => {
-                expect(err.message).to.eql("All sentinels are unreachable. Last error: just rejected");
+                expect(err.message).to.eql('All sentinels are unreachable and retry is disabled. Last error: just rejected');
                 redis.disconnect();
                 sentinel.disconnect(done);
             });

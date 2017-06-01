@@ -53,7 +53,7 @@ module.exports = {
                 if (err) {
                     res = [
                         `${prefix}*.test.js`,
-                        path.join(prefix, "**", "*.test.js")
+                        path.join(`${prefix}*`, "**", "*.test.js")
                     ];
                 } else {
                     res = `${prefix}.test.js`;

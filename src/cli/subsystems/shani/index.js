@@ -165,6 +165,11 @@ export default class ShaniCLI extends adone.application.Subsystem {
             .on("end after each hook", hookListener("afterEach"))
             .on("error", () => {
                 failed = true;
+            })
+            .on("reporterError", (err) => {
+                adone.error("Reporter failed");
+                adone.error(err);
+                process.exit(1);
             });
 
         await new Promise((resolve) => emitter.once("done", resolve));

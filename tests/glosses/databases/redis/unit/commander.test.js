@@ -1,5 +1,5 @@
 describe("glosses", "databases", "redis", "unit", "Commander", () => {
-    const { database: { redis: { Commander } } } = adone;
+    const { database: { redis: { __: { Commander } } } } = adone;
 
     it("should pass the correct arguments", () => {
         stub(Commander.prototype, "sendCommand").callsFake((command) => {

@@ -3,7 +3,7 @@ import check from "../helpers/check_redis";
 skip(check);
 
 describe("glosses", "databases", "redis", "transaction", () => {
-    const { database: { redis: { Redis, Command } } } = adone;
+    const { database: { redis: { Redis, __: { Command } } } } = adone;
 
     afterEach((done) => {
         const redis = new Redis();

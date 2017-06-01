@@ -5,7 +5,7 @@ skip(check);
 
 
 describe("glosses", "databases", "redis", "cluster", () => {
-    const { database: { redis: { Redis, Cluster, calculateSlot } }, util } = adone;
+    const { database: { redis: { Redis, Cluster, __: { calculateSlot } } }, util } = adone;
 
     afterEach((done) => {
         const redis = new Redis();
@@ -1010,7 +1010,7 @@ describe("glosses", "databases", "redis", "cluster", () => {
                     return Redis.prototype.subscribe.apply(this, ...args);
                 });
                 client.once("end", () => {
-                    client.connect();
+                    client.connect().catch(adone.noop);
                 });
                 client.disconnect();
             });

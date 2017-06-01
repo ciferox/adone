@@ -964,8 +964,16 @@ export const consoleReporter = ({
 
         let firstBlock = true;
 
+        const reportOnThrow = (f) => function (...args) {
+            try {
+                return f.apply(this, args);
+            } catch (err) {
+                emitter.emit("reporterError", err);
+            }
+        };
+
         emitter
-            .on("enter block", ({ block }) => {
+            .on("enter block", reportOnThrow(({ block }) => {
                 if (firstBlock) {
                     adone.log();
                     firstBlock = false;
@@ -976,18 +984,18 @@ export const consoleReporter = ({
                     log(`${"    ".repeat(blockLevel)} {escape}${block.name}{/escape}`);
                 }
                 ++blockLevel;
-            })
+            }))
             .on("exit block", () => {
                 --blockLevel;
             })
-            .on("start test", ({ test }) => {
+            .on("start test", reportOnThrow(({ test }) => {
                 bar = createTestBar(test);
                 bar.update(0, {
                     color: "grey",
                     suffix: timers ? " (:elapsed)" : ""
                 });
-            })
-            .on("end test", ({ test, meta: { err, elapsed, skipped } }) => {
+            }))
+            .on("end test", reportOnThrow(({ test, meta: { err, elapsed, skipped } }) => {
                 if (skipped) {
                     // shouldn't be handled here
                     return;
@@ -1005,8 +1013,8 @@ export const consoleReporter = ({
                 } else {
                     ++passed;
                 }
-            })
-            .on("skip test", ({ test, runtime }) => {
+            }))
+            .on("skip test", reportOnThrow(({ test, runtime }) => {
                 if (!runtime) {
                     bar = createTestBar(test);
                 }
@@ -1015,8 +1023,8 @@ export const consoleReporter = ({
                     suffix: ""
                 });
                 ++pending;
-            })
-            .on("done", () => {
+            }))
+            .on("done", reportOnThrow(() => {
                 const printColorDiff = (diff) => {
                     log("{red-fg}- actual{/red-fg} {green-fg}+ expected{/green-fg}\n");
                     let msg = "";
@@ -1134,7 +1142,7 @@ export const consoleReporter = ({
                 log();
                 log(`{grey-fg}    Total elapsed: ${totalElapsed}{/}`);
                 log();
-            })
+            }))
             .on("error", (err) => {
                 globalErrors.push(err);
             });

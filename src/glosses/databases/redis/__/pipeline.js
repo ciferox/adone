@@ -1,6 +1,6 @@
-const { database: { redis }, util, promise, is, ExBuffer } = adone;
+const { database: { redis: { __ } }, util, promise, is, ExBuffer } = adone;
 
-export default class Pipeline extends redis.Commander {
+export default class Pipeline extends __.Commander {
     constructor(redis) {
         super();
         this.redis = redis;
@@ -23,6 +23,10 @@ export default class Pipeline extends redis.Commander {
         this.promise = defer.promise;
         this.resolve = defer.resolve;
         this.reject = defer.reject;
+    }
+
+    get length() {
+        return this._queue.length;
     }
 
     fillResult(value, position) {
@@ -74,8 +78,8 @@ export default class Pipeline extends redis.Commander {
                         break;
                     }
                 } else if (!inTransaction) {
-                    const isReadOnly = redis.commands.exists(command.name) &&
-                                       redis.commands.hasFlag(command.name, "readonly");
+                    const isReadOnly = __.commands.exists(command.name) &&
+                                       __.commands.hasFlag(command.name, "readonly");
                     if (!isReadOnly) {
                         retriable = false;
                         break;
@@ -91,7 +95,7 @@ export default class Pipeline extends redis.Commander {
                     if (errv[0] === "ASK" && !inTransaction &&
                         queue[i].name !== "asking" &&
                         (!queue[i - 1] || queue[i - 1].name !== "asking")) {
-                        const asking = new redis.Command("asking");
+                        const asking = new __.Command("asking");
                         asking.ignore = true;
                         this.sendCommand(asking);
                     }
@@ -204,7 +208,7 @@ export default class Pipeline extends redis.Commander {
             }
 
             if (sampleKeys.length) {
-                pipelineSlot = redis.calculateSlot.generateMulti(sampleKeys);
+                pipelineSlot = __.calculateSlot.generateMulti(sampleKeys);
                 if (pipelineSlot < 0) {
                     this.reject(new Error("All keys in the pipeline should belong to the same slot"));
                     return this.promise;

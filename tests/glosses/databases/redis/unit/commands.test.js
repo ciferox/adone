@@ -1,5 +1,5 @@
 describe("glosses", "databases", "redis", "unit", "redis-commands", () => {
-    const { database: { redis: { commands } } } = adone;
+    const { database: { redis: { __: { commands } } } } = adone;
 
     describe(".list", () => {
         it("should be an array", () => {

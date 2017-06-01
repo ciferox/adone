@@ -1,4 +1,4 @@
-const { database: { redis }, is, util, promise, identity, noop, ExBuffer } = adone;
+const { database: { redis: { __ } }, is, util, promise, identity, noop, ExBuffer } = adone;
 
 export default class Command {
     constructor(name, args, options, callback) {
@@ -32,7 +32,7 @@ export default class Command {
             this.resolve = this._convertValue(resolve);
             if (this.errorStack) {
                 this.reject = (err) => {
-                    reject(redis.util.optimizeErrorStack(err, this.errorStack, __dirname));
+                    reject(__.util.optimizeErrorStack(err, this.errorStack, __dirname));
                 };
             } else {
                 this.reject = reject;
@@ -44,7 +44,7 @@ export default class Command {
         if (is.undefined(this._slot)) {
             const key = this.getKeys()[0];
             if (key) {
-                this.slot = redis.calculateSlot(key);
+                this.slot = __.calculateSlot(key);
             } else {
                 this.slot = null;
             }
@@ -62,8 +62,8 @@ export default class Command {
                 transform = identity;
             }
             this._keys = [];
-            if (redis.commands.exists(this.name)) {
-                const keyIndexes = redis.commands.getKeyIndexes(this.name, this.args);
+            if (__.commands.exists(this.name)) {
+                const keyIndexes = __.commands.getKeyIndexes(this.name, this.args);
                 for (const index of keyIndexes) {
                     this.args[index] = transform(this.args[index]);
                     this._keys.push(this.args[index]);
@@ -114,7 +114,7 @@ export default class Command {
     stringifyArguments() {
         for (let i = 0; i < this.args.length; ++i) {
             if (!is.buffer(this.args[i]) && !is.string(this.args[i])) {
-                this.args[i] = redis.util.toArg(this.args[i]);
+                this.args[i] = __.util.toArg(this.args[i]);
             }
         }
     }
@@ -132,7 +132,7 @@ export default class Command {
 
     transformReply(result) {
         if (this.replyEncoding) {
-            result = redis.util.convertBufferToString(result, this.replyEncoding);
+            result = __.util.convertBufferToString(result, this.replyEncoding);
         }
         const transformer = Command._transformer.reply[this.name];
         if (transformer) {
@@ -184,10 +184,10 @@ Command._transformer = {
 const msetArgumentTransformer = (args) => {
     if (args.length === 1) {
         if (is.map(args[0])) {
-            return redis.util.convertMapToArray(args[0]);
+            return __.util.convertMapToArray(args[0]);
         }
         if (is.object(args[0])) {
-            return redis.util.convertObjectToArray(args[0]);
+            return __.util.convertObjectToArray(args[0]);
         }
     }
     return args;
@@ -199,10 +199,10 @@ Command.setArgumentTransformer("msetnx", msetArgumentTransformer);
 Command.setArgumentTransformer("hmset", (args) => {
     if (args.length === 2) {
         if (is.map(args[1])) {
-            return [args[0], ...redis.util.convertMapToArray(args[1])];
+            return [args[0], ...__.util.convertMapToArray(args[1])];
         }
         if (is.object(args[1])) {
-            return [args[0], ...redis.util.convertObjectToArray(args[1])];
+            return [args[0], ...__.util.convertObjectToArray(args[1])];
         }
     }
     return args;

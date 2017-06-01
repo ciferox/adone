@@ -1,4 +1,5 @@
 const { database: { redis }, EventEmitter, o, noop, util, is, x } = adone;
+const { __ } = redis;
 
 const setKey = (node = {}) => {
     node.port = node.port || 6379;
@@ -81,7 +82,7 @@ export default class ConnectionPool extends EventEmitter {
             if (is.object(node)) {
                 options = o(node, options);
             } else if (is.string(node)) {
-                options = o(redis.util.parseURL(node), options);
+                options = o(__.util.parseURL(node), options);
             } else if (is.number(node)) {
                 options.port = node;
             } else {

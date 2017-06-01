@@ -1,8 +1,9 @@
 const { database: { redis }, o, is, x, noop, collection, promise, util, EventEmitter } = adone;
+const { __ } = redis;
 
 const isRejectOverwritten = Symbol("is reject overwritten");
 
-export default class Cluster extends redis.Commander.mixin(EventEmitter) {
+export default class Cluster extends __.Commander.mixin(EventEmitter) {
     constructor(startupNodes, options) {
         super();
         this.options = o(Cluster.defaultOptions, options);
@@ -16,7 +17,7 @@ export default class Cluster extends redis.Commander.mixin(EventEmitter) {
             throw new x.Exception(`Invalid option scaleReads ${this.options.scaleReads}. Expected "all", "master", "slave" or a custom function`);
         }
 
-        this.connectionPool = new redis.cluster.ConnectionPool(this.options.redisOptions);
+        this.connectionPool = new __.ConnectionPool(this.options.redisOptions);
         this.startupNodes = startupNodes;
 
         this.connectionPool.on("-node", (instance) => {
@@ -39,7 +40,7 @@ export default class Cluster extends redis.Commander.mixin(EventEmitter) {
         this.retryAttempts = 0;
 
         this.resetOfflineQueue();
-        this.delayQueue = new redis.cluster.DelayQueue();
+        this.delayQueue = new __.DelayQueue();
 
         this.subscriber = null;
 
@@ -298,12 +299,12 @@ export default class Cluster extends redis.Commander.mixin(EventEmitter) {
             this.connect().catch(noop);
         }
         if (this.status === "end") {
-            command.reject(new x.Exception(redis.util.CONNECTION_CLOSED_ERROR_MSG));
+            command.reject(new x.Exception(__.util.CONNECTION_CLOSED_ERROR_MSG));
             return command.promise;
         }
         let to = this.options.scaleReads;
         if (to !== "master") {
-            const isCommandReadOnly = redis.commands.exists(command.name) && redis.commands.hasFlag(command.name, "readonly");
+            const isCommandReadOnly = __.commands.exists(command.name) && __.commands.hasFlag(command.name, "readonly");
             if (!isCommandReadOnly) {
                 to = "master";
             }
@@ -320,8 +321,8 @@ export default class Cluster extends redis.Commander.mixin(EventEmitter) {
             if (this.status === "ready" || (command.name === "cluster")) {
                 if (node && node.redis) {
                     instance = node.redis;
-                } else if (redis.Command.checkFlag("ENTER_SUBSCRIBER_MODE", command.name) ||
-                    redis.Command.checkFlag("EXIT_SUBSCRIBER_MODE", command.name)) {
+                } else if (__.Command.checkFlag("ENTER_SUBSCRIBER_MODE", command.name) ||
+                    __.Command.checkFlag("EXIT_SUBSCRIBER_MODE", command.name)) {
                     instance = this.subscriber;
                 } else {
                     if (!random) {
@@ -440,7 +441,7 @@ export default class Cluster extends redis.Commander.mixin(EventEmitter) {
                 timeout: this.options.retryDelayOnClusterDown,
                 callback: this.refreshSlotsCache.bind(this)
             });
-        } else if (error.message === redis.util.CONNECTION_CLOSED_ERROR_MSG &&
+        } else if (error.message === __.util.CONNECTION_CLOSED_ERROR_MSG &&
                    this.options.retryDelayOnFailover > 0) {
             this.delayQueue.push("failover", handlers.connectionClosed, {
                 timeout: this.options.retryDelayOnFailover,
@@ -455,7 +456,7 @@ export default class Cluster extends redis.Commander.mixin(EventEmitter) {
         if (!instance) {
             return callback(new x.Exception("Node is disconnected"));
         }
-        instance.cluster("slots", redis.util.timeout((err, result) => {
+        instance.cluster("slots", __.util.timeout((err, result) => {
             if (err) {
                 instance.disconnect();
                 return callback(err);
@@ -482,7 +483,7 @@ export default class Cluster extends redis.Commander.mixin(EventEmitter) {
 
             this.connectionPool.reset(nodes);
             callback();
-        }, 1000));
+        }, this.options.slotsRefreshTimeout));
     }
 
     _readyCheck(callback) {
@@ -522,12 +523,13 @@ Cluster.defaultOptions = {
     maxRedirections: 16,
     retryDelayOnFailover: 100,
     retryDelayOnClusterDown: 100,
-    retryDelayOnTryAgain: 100
+    retryDelayOnTryAgain: 100,
+    slotsRefreshTimeout: 1000
 };
 
 for (const command of ["sscan", "hscan", "zscan", "sscanBuffer", "hscanBuffer", "zscanBuffer"]) {
     Cluster.prototype[`${command}Stream`] = function (key, options) {
-        return new redis.ScanStream(o({
+        return new __.ScanStream(o({
             objectMode: true,
             key,
             redis: this,

@@ -1,8 +1,9 @@
 const { database: { redis }, x, is, std, util, noop } = adone;
+const { __ } = redis;
 
-const isSentinelEql = (a, b) => ((a.host || "127.0.0.1") === (b.host || "127.0.0.1")) && ((a.port || 6379) === (b.port || 6379));
+const isSentinelEql = (a, b) => ((a.host || "127.0.0.1") === (b.host || "127.0.0.1")) && ((a.port || 26379) === (b.port || 26379));
 
-export default class SentinelConnector extends redis.Connector {
+export default class SentinelConnector extends __.Connector {
     constructor(options) {
         super(options);
         if (this.options.sentinels.length === 0) {
@@ -20,7 +21,7 @@ export default class SentinelConnector extends redis.Connector {
         return true;
     }
 
-    connect(callback) {
+    connect(callback, eventEmitter) {
         this.connecting = true;
         this.retryAttempts = 0;
 
@@ -38,34 +39,48 @@ export default class SentinelConnector extends redis.Connector {
             if (this.currentPoint === this.sentinels.length) {
                 this.currentPoint = -1;
 
-                let retryDelay;
-                if (is.function(this.options.sentinelRetryStrategy)) {
-                    retryDelay = this.options.sentinelRetryStrategy(++this.retryAttempts);
+                const retryDelay = is.function(this.options.sentinelRetryStrategy)
+                    ? this.options.sentinelRetryStrategy(++this.retryAttempts)
+                    : null;
+
+                let errorMsg = !is.number(retryDelay)
+                    ? "All sentinels are unreachable and retry is disabled."
+                    : `All sentinels are unreachable. Retrying from scratch after ${retryDelay}ms`;
+
+                if (lastError) {
+                    errorMsg += ` Last error: ${lastError.message}`;
                 }
-                if (!is.number(retryDelay)) {
-                    let error = "All sentinels are unreachable.";
-                    if (lastError) {
-                        error += ` Last error: ${lastError.message}`;
-                    }
-                    return callback(new x.Exception(error));
+
+                const error = new Error(errorMsg);
+                if (is.number(retryDelay)) {
+                    setTimeout(connectToNext, retryDelay);
+                    eventEmitter("error", error);
+                } else {
+                    callback(error);
                 }
-                setTimeout(connectToNext, retryDelay);
                 return;
             }
 
             const endpoint = this.sentinels[this.currentPoint];
             this.resolve(endpoint, (err, resolved) => {
                 if (!this.connecting) {
-                    callback(new x.Exception(redis.util.CONNECTION_CLOSED_ERROR_MSG));
+                    callback(new x.Exception(__.util.CONNECTION_CLOSED_ERROR_MSG));
                     return;
                 }
                 if (resolved) {
                     this.stream = std.net.createConnection(resolved);
                     callback(null, this.stream);
-                } else if (err) {
-                    lastError = err;
-                    connectToNext();
                 } else {
+                    const endpointAddress = `${endpoint.host}:${endpoint.port}`;
+                    const errorMsg = err
+                        ? `failed to connect to sentinel ${endpointAddress} because ${err.message}`
+                        : `connected to sentinel ${endpointAddress} successfully, but got an invalid reply: ${resolved}`;
+
+                    eventEmitter("sentinelError", new Error(errorMsg));
+
+                    if (err) {
+                        lastError = err;
+                    }
                     connectToNext();
                 }
             });
@@ -82,7 +97,7 @@ export default class SentinelConnector extends redis.Connector {
             }
             if (is.array(result)) {
                 for (let i = 0; i < result.length; ++i) {
-                    const sentinel = redis.util.packObject(result[i]);
+                    const sentinel = __.util.packObject(result[i]);
                     const flags = sentinel.flags ? sentinel.flags.split(",") : [];
                     if (!flags.includes("disconnected") && sentinel.ip && sentinel.port) {
                         const endpoint = { host: sentinel.ip, port: parseInt(sentinel.port, 10) };
@@ -123,7 +138,7 @@ export default class SentinelConnector extends redis.Connector {
             if (is.array(result)) {
                 const availableSlaves = [];
                 for (let i = 0; i < result.length; ++i) {
-                    const slave = redis.util.packObject(result[i]);
+                    const slave = __.util.packObject(result[i]);
                     if (slave.flags && !slave.flags.match(/(disconnected|s_down|o_down)/)) {
                         availableSlaves.push(slave);
                     }
@@ -193,8 +208,9 @@ export default class SentinelConnector extends redis.Connector {
 
     resolve(endpoint, callback) {
         const client = new redis.Redis({
-            port: endpoint.port,
+            port: endpoint.port || 26379,
             host: endpoint.host,
+            family: endpoint.family || this.options.family,
             retryStrategy: null,
             enableReadyCheck: false,
             connectTimeout: this.options.connectTimeout,

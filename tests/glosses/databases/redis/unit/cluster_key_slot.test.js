@@ -1,5 +1,5 @@
 describe("glosses", "databases", "redis", "unit", "cluster key slot", () => {
-    const { database: { redis: { calculateSlot } } } = adone;
+    const { database: { redis: { __: { calculateSlot } } } } = adone;
     const { generateMulti } = calculateSlot;
 
     const tests = {

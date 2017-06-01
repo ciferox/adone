@@ -1,4 +1,4 @@
-const { is, diff: { _: { Diff, lineDiff } } } = adone;
+const { is, util, diff: { _: { Diff, lineDiff } } } = adone;
 
 // This function handles the presence of circular references by bailing out when encountering an
 // object that is already on the "stack" of items being processed.
@@ -31,14 +31,7 @@ export const canonicalizeObject = (obj, stack = [], replacementStack = []) => {
         stack.push(obj);
         canonicalizedObj = {};
         replacementStack.push(canonicalizedObj);
-        const sortedKeys = [];
-
-        for (const key in obj) {
-            /* istanbul ignore else */
-            if (obj.hasOwnProperty(key)) {
-                sortedKeys.push(key);
-            }
-        }
+        const sortedKeys = util.keys(obj).sort();
         sortedKeys.sort();
         for (let i = 0; i < sortedKeys.length; i += 1) {
             const key = sortedKeys[i];

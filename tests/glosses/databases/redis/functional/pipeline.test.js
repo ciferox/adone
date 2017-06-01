@@ -237,4 +237,19 @@ describe("glosses", "databases", "redis", "pipeline", () => {
             });
         });
     });
+
+    describe("length", () => {
+        it("return the command count", () => {
+            const redis = new Redis();
+
+            const pipeline1 = redis.pipeline().multi().set("foo", "bar").get("foo").exec();
+            expect(pipeline1.length).to.eql(4);
+
+            const pipeline2 = redis.pipeline([
+                ["set", "foo", "bar"],
+                ["get", "foo"]
+            ]);
+            expect(pipeline2.length).to.eql(2);
+        });
+    });
 });

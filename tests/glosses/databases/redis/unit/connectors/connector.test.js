@@ -1,5 +1,5 @@
 describe("glosses", "databases", "redis", "unit", "Connector", () => {
-    const { std: { net, tls }, database: { redis: { Connector } } } = adone;
+    const { std: { net, tls }, database: { redis: { __: { Connector } } } } = adone;
 
     describe("connect()", () => {
         it("first tries path", (done) => {

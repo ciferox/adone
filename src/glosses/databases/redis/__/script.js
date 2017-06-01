@@ -1,4 +1,4 @@
-const { database: { redis }, is, std, promise } = adone;
+const { database: { redis: { __ } }, is, std, promise } = adone;
 
 export default class Script {
     constructor(lua, numberOfKeys, keyPrefix = "") {
@@ -16,7 +16,7 @@ export default class Script {
             options.keyPrefix = this.keyPrefix;
         }
 
-        const evalsha = new redis.Command("evalsha", [this.sha, ...args], options);
+        const evalsha = new __.Command("evalsha", [this.sha, ...args], options);
         evalsha.isCustomCommand = true;
         const result = container.sendCommand(evalsha);
         if (is.promise(result)) {
@@ -24,7 +24,7 @@ export default class Script {
                 if (!err.toString().includes("NOSCRIPT")) {
                     throw err;
                 }
-                return container.sendCommand(new redis.Command("eval", [this.lua, ...args], options));
+                return container.sendCommand(new __.Command("eval", [this.lua, ...args], options));
             }), callback);
         }
 

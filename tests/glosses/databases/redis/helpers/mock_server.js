@@ -1,7 +1,6 @@
-import * as utils from "adone/glosses/databases/redis/util";
 import enableDestroy from "./server_destroy";
 const { std: { net }, EventEmitter } = adone;
-const { database: { redis: { parser: { createParser } } } } = adone;
+const { database: { redis: { __: { util, parser: { createParser } } } } } = adone;
 
 export default class MockServer extends EventEmitter {
     constructor(port, handler) {
@@ -26,7 +25,7 @@ export default class MockServer extends EventEmitter {
                 name: "javascript",
                 returnBuffers: true,
                 returnReply(reply) {
-                    reply = utils.convertBufferToString(reply);
+                    reply = util.convertBufferToString(reply);
                     _this.write(c, _this.handler && _this.handler(reply));
                 },
                 returnError() { }

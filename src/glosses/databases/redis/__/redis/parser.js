@@ -1,4 +1,5 @@
 const { database: { redis }, is, x, lazify } = adone;
+const { __ } = redis;
 
 const parser = lazify({
     createParser: "./libparser"
@@ -10,7 +11,7 @@ export const initParser = function () {
         stringNumbers: this.options.stringNumbers,
         returnBuffers: !this.options.dropBufferSupport,
         returnError: (err) => {
-            this.returnError(new redis.ReplyError(err.message));
+            this.returnError(new redis.x.ReplyError(err.message));
         },
         returnReply: (reply) => {
             this.returnReply(reply);
@@ -174,14 +175,14 @@ export const returnReply = function (reply) {
             const err = new x.Exception(`Command queue state error. Last reply: ${reply.toString()}`);
             return this.emit("error", err);
         }
-        if (redis.Command.checkFlag("ENTER_SUBSCRIBER_MODE", item.command.name)) {
-            this.condition.subscriber = new redis.SubscriptionSet();
+        if (__.Command.checkFlag("ENTER_SUBSCRIBER_MODE", item.command.name)) {
+            this.condition.subscriber = new __.SubscriptionSet();
             this.condition.subscriber.add(item.command.name, reply[1].toString());
 
             if (!fillSubCommand(item.command, reply[2])) {
                 this.commandQueue.unshift(item);
             }
-        } else if (redis.Command.checkFlag("EXIT_SUBSCRIBER_MODE", item.command.name)) {
+        } else if (__.Command.checkFlag("EXIT_SUBSCRIBER_MODE", item.command.name)) {
             if (!fillUnsubCommand(item.command, reply[2])) {
                 this.commandQueue.unshift(item);
             }

@@ -1,8 +1,8 @@
-const { database: { redis }, is, promise } = adone;
+const { database: { redis: { __ } }, is, promise } = adone;
 
 export const addTransactionSupport = (instance) => {
     instance.pipeline = function (commands) {
-        const pipeline = new redis.Pipeline(this);
+        const pipeline = new __.Pipeline(this);
         if (is.array(commands)) {
             pipeline.addBatch(commands);
         }
@@ -17,7 +17,7 @@ export const addTransactionSupport = (instance) => {
         if (options && options.pipeline === false) {
             return multi.call(this);
         }
-        const pipeline = new redis.Pipeline(this);
+        const pipeline = new __.Pipeline(this);
         pipeline.multi();
         if (is.array(commands)) {
             pipeline.addBatch(commands);
@@ -38,7 +38,7 @@ export const addTransactionSupport = (instance) => {
                     }
                     throw execResult[0];
                 }
-                return redis.util.wrapMultiResult(execResult[1]);
+                return __.util.wrapMultiResult(execResult[1]);
             }), callback);
         };
 
@@ -56,7 +56,7 @@ export const addTransactionSupport = (instance) => {
     instance.exec = function (callback) {
         return promise.nodeify(exec.call(this).then((results) => {
             if (is.array(results)) {
-                results = redis.util.wrapMultiResult(results);
+                results = __.util.wrapMultiResult(results);
             }
             return results;
         }), callback);

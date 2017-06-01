@@ -1,7 +1,7 @@
-const { database: { redis }, o, x, is, promise, lazify } = adone;
+const { database: { redis: { __ } }, o, x, is, promise, lazify } = adone;
 
 const lazy = lazify({
-    commands: ["./commands", (x) => ["sentinel", ...x.list.filter((x) => x !== "monitor")]]
+    commands: () => ["sentinel", ...__.commands.list.filter((x) => x !== "monitor")]
 }, null, require);
 
 const DROP_BUFFER_SUPPORT_ERROR = "*Buffer methods are not available because \"dropBufferSupport\" option is enabled.";
@@ -13,7 +13,7 @@ const generateFunction = (_commandName, _encoding) => {
     return function (...args) {
         let firstArgIndex = 0;
         let commandName = _commandName;
-        if (commandName === null) {
+        if (is.null(commandName)) {
             commandName = args[0];
             firstArgIndex = 1;
         }
@@ -47,7 +47,7 @@ const generateFunction = (_commandName, _encoding) => {
         if (this.options.keyPrefix) {
             options.keyPrefix = this.options.keyPrefix;
         }
-        return this.sendCommand(new redis.Command(commandName, args, options, callback));
+        return this.sendCommand(new __.Command(commandName, args, options, callback));
     };
 };
 
@@ -105,7 +105,7 @@ const mixin = (Sup) => {
         }
 
         defineCommand(name, definition) {
-            const script = new redis.Script(
+            const script = new __.Script(
                 definition.lua,
                 definition.numberOfKeys,
                 this.options.keyPrefix

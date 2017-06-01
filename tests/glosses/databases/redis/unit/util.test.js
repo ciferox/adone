@@ -1,12 +1,12 @@
 describe("glosses", "databases", "redis", "unit", "util", () => {
-    const { x, database: { redis: { util } } } = adone;
+    const { x, database: { redis: { __: { util } } } } = adone;
 
     describe(".convertBufferToString", () => {
         it("should return correctly", () => {
-            expect(util.convertBufferToString(new Buffer("123"))).to.eql("123");
-            expect(util.convertBufferToString([new Buffer("abc"), new Buffer("abc")])).to.eql(["abc", "abc"]);
-            expect(util.convertBufferToString([new Buffer("abc"), [[new Buffer("abc")]]])).to.eql(["abc", [["abc"]]]);
-            expect(util.convertBufferToString([new Buffer("abc"), 5, "b", [[new Buffer("abc"), 4]]]))
+            expect(util.convertBufferToString(Buffer.from("123"))).to.eql("123");
+            expect(util.convertBufferToString([Buffer.from("abc"), Buffer.from("abc")])).to.eql(["abc", "abc"]);
+            expect(util.convertBufferToString([Buffer.from("abc"), [[Buffer.from("abc")]]])).to.eql(["abc", [["abc"]]]);
+            expect(util.convertBufferToString([Buffer.from("abc"), 5, "b", [[Buffer.from("abc"), 4]]]))
                 .to.eql(["abc", 5, "b", [["abc", 4]]]);
         });
     });
@@ -42,7 +42,7 @@ describe("glosses", "databases", "redis", "unit", "util", () => {
             wrappedCallback1();
 
             let invokedTimes = 0;
-            var wrappedCallback2 = util.timeout((err) => {
+            const wrappedCallback2 = util.timeout((err) => {
                 expect(err).to.be.instanceOf(x.Timeout);
                 invokedTimes += 1;
                 wrappedCallback2();
@@ -65,11 +65,9 @@ describe("glosses", "databases", "redis", "unit", "util", () => {
 
     describe(".convertMapToArray", () => {
         it("should return correctly", () => {
-            if (typeof Map !== "undefined") {
-                expect(util.convertMapToArray(new Map([["1", 2]]))).to.eql(["1", 2]);
-                expect(util.convertMapToArray(new Map([[1, 2]]))).to.eql([1, 2]);
-                expect(util.convertMapToArray(new Map([[1, "2"], ["abc", "def"]]))).to.eql([1, "2", "abc", "def"]);
-            }
+            expect(util.convertMapToArray(new Map([["1", 2]]))).to.eql(["1", 2]);
+            expect(util.convertMapToArray(new Map([[1, 2]]))).to.eql([1, 2]);
+            expect(util.convertMapToArray(new Map([[1, "2"], ["abc", "def"]]))).to.eql([1, "2", "abc", "def"]);
         });
     });
 
