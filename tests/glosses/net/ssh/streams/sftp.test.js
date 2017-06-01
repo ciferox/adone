@@ -774,6 +774,60 @@ describe("net", "ssh", "streams", "SFTP", () => {
         };
     });
 
+    it("readFile (no size from fstat)", function (done) {
+        setup(this, done);
+
+        const client = this.client;
+        const server = this.server;
+
+        this.onReady = function () {
+            const path_ = "/foo/bar/baz";
+            const handle_ = Buffer.from("hi mom!");
+            const data_ = Buffer.from("hello world");
+            let reads = 0;
+            server.once("OPEN", (id, path, pflags, attrs) => {
+                assert(id === 0, `Wrong request id: ${id}`);
+                assert(path === path_, `Wrong path: ${path}`);
+                assert(pflags === OPEN_MODE.READ, `Wrong flags: ${flagsToHuman(pflags)}`);
+                server.handle(id, handle_);
+            }).once("FSTAT", (id, handle) => {
+                assert(id === 1, `Wrong request id: ${id}`);
+                const attrs = new Stats({
+                    uid: 9001,
+                    gid: 9001,
+                    atime: (Date.now() / 1000) | 0,
+                    mtime: (Date.now() / 1000) | 0
+                });
+                server.attrs(id, attrs);
+            }).on("READ", (id, handle, offset, len) => {
+                assert(++reads <= 2, "Saw too many READs");
+                assert(id === 2 || id === 3, `Wrong request id: ${id}`);
+                assert.deepEqual(handle, handle_, "handle mismatch");
+                switch (id) {
+                    case 2:
+                        assert(offset === 0, `Wrong read offset for first read: ${offset}`);
+                        server.data(id, data_);
+                        break;
+                    case 3:
+                        assert(offset === data_.length, `Wrong read offset for second read: ${offset}`);
+                        server.status(id, STATUS_CODE.EOF);
+                        break;
+                }
+            }).once("CLOSE", (id, handle) => {
+                ++this.state.requests;
+                assert(id === 4, `Wrong request id: ${id}`);
+                assert.deepEqual(handle, handle_, "handle mismatch");
+                server.status(id, STATUS_CODE.OK);
+                server.end();
+            });
+            client.readFile(path_, (err, buf) => {
+                ++this.state.responses;
+                assert(!err, `Unexpected error: ${err}`);
+                assert.deepEqual(buf, data_, "data mismatch");
+            });
+        };
+    });
+
     it("ReadStream", function (done) {
         setup(this, done);
 
@@ -1024,6 +1078,42 @@ describe("net", "ssh", "streams", "SFTP", () => {
             0, 0, 0, 5,
             2,
             0, 0, 0, 3
+        ]));
+    });
+
+    it("End SFTP stream on bad handshake (client)", (done) => {
+        let err;
+        const client = new SFTPStream();
+        client.once("ready", () => {
+            assert(false, "Handshake should not succeed");
+        }).once("error", (err_) => {
+            err = err_;
+        }).once("end", () => {
+            assert.strictEqual(err && err.message, "Unexpected packet before version");
+            done();
+        });
+        client.write(Buffer.from([
+            1, 2, 3, 4,
+            5,
+            6, 7, 8, 9
+        ]));
+    });
+
+    it("End SFTP stream on bad handshake (server)", (done) => {
+        let err;
+        const client = new SFTPStream({ server: true });
+        client.once("ready", () => {
+            assert(false, "Handshake should not succeed");
+        }).once("error", (err_) => {
+            err = err_;
+        }).once("end", () => {
+            assert.strictEqual(err && err.message, "Unexpected packet before init");
+            done();
+        });
+        client.write(Buffer.from([
+            1, 2, 3, 4,
+            5,
+            6, 7, 8, 9
         ]));
     });
 });

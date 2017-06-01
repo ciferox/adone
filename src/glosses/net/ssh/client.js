@@ -350,24 +350,21 @@ const onCHANNEL_OPEN = (self, info) => {
         self._sshstream.channelOpenFail(info.sender, reason, "", "");
     };
 
-    if (info.type === "forwarded-tcpip" || info.type === "x11" || info.type === "auth-agent@openssh.com") {
+    if (info.type === "forwarded-tcpip" || info.type === "x11" || info.type === "auth-agent@openssh.com" || info.type === "forwarded-streamlocal@openssh.com") {
+
         // check for conditions for automatic rejection
-        let rejectConn = ((info.type === "forwarded-tcpip" && is.undefined(self._forwarding[`${info.data.destIP}:${info.data.destPort}`])) ||
-            (info.type === "x11" && self._acceptX11 === 0) ||
-            (info.type === "auth-agent@openssh.com" &&
-                !self._agentFwdEnabled));
+        let rejectConn = ((info.type === "forwarded-tcpip" && is.undefined(self._forwarding[`${info.data.destIP}:${info.data.destPort}`])) || (info.type === "forwarded-streamlocal@openssh.com" && is.undefined(self._forwardingUnix[info.data.socketPath])) || (info.type === "x11" && self._acceptX11 === 0) || (info.type === "auth-agent@openssh.com" && !self._agentFwdEnabled));
+
         if (!rejectConn) {
             localChan = nextChannel(self);
 
             if (localChan === false) {
-                self.config.debug("DEBUG: Client: Automatic rejection of incoming channel open: no channels available");
                 rejectConn = true;
             } else {
                 self._channels[localChan] = true;
             }
         } else {
             reason = adone.net.ssh.c.CHANNEL_OPEN_FAILURE.ADMINISTRATIVELY_PROHIBITED;
-            self.config.debug(`DEBUG: Client: Automatic rejection of incoming channel open: unexpected channel open for: ${info.type}`);
         }
 
         // TODO: automatic rejection after some timeout?
@@ -386,6 +383,8 @@ const onCHANNEL_OPEN = (self, info) => {
                 self.emit("tcp connection", info.data, accept, reject);
             } else if (info.type === "x11") {
                 self.emit("x11", info.data, accept, reject);
+            } else if (info.type === "forwarded-streamlocal@openssh.com") {
+                self.emit("unix connection", info.data, accept, reject);
             } else {
                 agentQuery(self.config.agent, accept, reject);
             }
@@ -437,6 +436,7 @@ export default class Client extends adone.EventEmitter {
         this._channels = undefined;
         this._callbacks = undefined;
         this._forwarding = undefined;
+        this._forwardingUnix = undefined;
         this._acceptX11 = undefined;
         this._agentFwdEnabled = undefined;
         this._curChan = undefined;
@@ -568,6 +568,7 @@ export default class Client extends adone.EventEmitter {
         let callbacks = this._callbacks = [];
         this._channels = {};
         this._forwarding = {};
+        this._forwardingUnix = {};
         this._acceptX11 = 0;
         this._agentFwdEnabled = false;
         this._curChan = -1;
@@ -1427,66 +1428,62 @@ export default class Client extends adone.EventEmitter {
         return true;
     }
 
-    // openssh_forwardInStreamLocal(socketPath, cb) {
-    //     if (!this._sock || !this._sock.writable || !this._sshstream || !this._sshstream.writable) {
-    //         throw new Error("Not connected");
-    //     }
+    opensshForwardInStreamLocal(socketPath, cb) {
+        if (!this._sock || !this._sock.writable || !this._sshstream || !this._sshstream.writable) {
+            throw new Error("Not connected");
+        }
 
-    //     const wantReply = is.function(cb);
+        const wantReply = is.function(cb);
 
-    //     if (!this.config.strictVendor ||
-    //         (this.config.strictVendor && RE_OPENSSH.test(this._remoteVer))) {
-    //         if (wantReply) {
-    //             this._callbacks.push((hadErr) => {
-    //                 if (hadErr) {
-    //                     return cb(hadErr !== true ? hadErr : new Error(`Unable to bind to ${socketPath}`));
-    //                 }
+        if (!this.config.strictVendor || (this.config.strictVendor && RE_OPENSSH.test(this._remoteVer))) {
+            if (wantReply) {
+                this._callbacks.push((hadErr) => {
+                    if (hadErr) {
+                        return cb(hadErr !== true ? hadErr : new Error(`Unable to bind to ${socketPath}`));
+                    }
+                    this._forwardingUnix[socketPath] = true;
+                    cb();
+                });
+            }
 
-    //                 cb();
-    //             });
-    //         }
+            return this._sshstream.opensshStreamLocalForward(socketPath, wantReply);
+        } else if (wantReply) {
+            process.nextTick(() => {
+                cb(new Error("strictVendor enabled and server is not OpenSSH or compatible version"));
+            });
+        }
 
-    //         return this._sshstream.openssh_streamLocalForward(socketPath, wantReply);
-    //     } else if (wantReply) {
-    //         process.nextTick(() => {
-    //             cb(new Error("strictVendor enabled and server is not OpenSSH or compatible version"));
-    //         });
-    //     }
+        return true;
+    }
 
-    //     return true;
-    // }
+    opensshUnforwardInStreamLocal(socketPath, cb) {
+        if (!this._sock || !this._sock.writable || !this._sshstream || !this._sshstream.writable) {
+            throw new Error("Not connected");
+        }
 
-    // openssh_unforwardInStreamLocal(socketPath, cb) {
-    //     if (!this._sock ||
-    //         !this._sock.writable ||
-    //         !this._sshstream ||
-    //         !this._sshstream.writable) {
-    //         throw new Error("Not connected");
-    //     }
+        const wantReply = is.function(cb);
 
-    //     const wantReply = is.function(cb);
+        if (!this.config.strictVendor ||
+            (this.config.strictVendor && RE_OPENSSH.test(this._remoteVer))) {
+            if (wantReply) {
+                this._callbacks.push((hadErr) => {
+                    if (hadErr) {
+                        return cb(hadErr !== true ? hadErr : new Error(`Unable to unbind on ${socketPath}`));
+                    }
+                    delete this._forwardingUnix[socketPath];
+                    cb();
+                });
+            }
 
-    //     if (!this.config.strictVendor ||
-    //         (this.config.strictVendor && RE_OPENSSH.test(this._remoteVer))) {
-    //         if (wantReply) {
-    //             this._callbacks.push((hadErr) => {
-    //                 if (hadErr) {
-    //                     return cb(hadErr !== true ? hadErr : new Error(`Unable to unbind on ${socketPath}`));
-    //                 }
+            return this._sshstream.opensshCancelStreamLocalForward(socketPath, wantReply);
+        } else if (wantReply) {
+            process.nextTick(() => {
+                cb(new Error("strictVendor enabled and server is not OpenSSH or compatible version"));
+            });
+        }
 
-    //                 cb();
-    //             });
-    //         }
-
-    //         return this._sshstream.openssh_cancelStreamLocalForward(socketPath, wantReply);
-    //     } else if (wantReply) {
-    //         process.nextTick(() => {
-    //             cb(new Error("strictVendor enabled and server is not OpenSSH or compatible version"));
-    //         });
-    //     }
-
-    //     return true;
-    // }
+        return true;
+    }
 
     opensshForwardOutStreamLocal(socketPath, cb) {
         if (!this._sock || !this._sock.writable || !this._sshstream || !this._sshstream.writable) {

@@ -125,6 +125,11 @@ export default class Hosts {
     }
 
     @Public
+    async tags() {
+        return this._vault.tags();
+    }
+
+    @Public
     async list() {
         const entries = await this._vault.entries();
         const result = [];

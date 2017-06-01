@@ -4243,48 +4243,47 @@ export default class SSH2Stream extends TransformStream {
         return send(this, buf);
     }
 
-    // openssh_streamLocalForward(socketPath, wantReply) {
-    //     if (this.server) {
-    //         throw new Error("Client-only method called in server mode");
-    //     }
+    opensshStreamLocalForward(socketPath, wantReply) {
+        if (this.server) {
+            throw new Error("Client-only method called in server mode");
+        }
 
-    //     const pathlen = Buffer.byteLength(pathlen);
-    //     const buf = Buffer.allocUnsafe(1 + 4 + 31 + 1 + 4 + pathlen);
+        const pathlen = Buffer.byteLength(socketPath);
+        const buf = Buffer.allocUnsafe(1 + 4 + 31 + 1 + 4 + pathlen);
 
-    //     buf[0] = MESSAGE.GLOBAL_REQUEST;
+        buf[0] = MESSAGE.GLOBAL_REQUEST;
 
-    //     buf.writeUInt32BE(31, 1, true);
-    //     buf.write("streamlocal-forward@openssh.com", 5, 31, "ascii");
+        buf.writeUInt32BE(31, 1, true);
+        buf.write("streamlocal-forward@openssh.com", 5, 31, "ascii");
 
-    //     buf[36] = (is.undefined(wantReply) || wantReply === true ? 1 : 0);
+        buf[36] = (is.undefined(wantReply) || wantReply === true ? 1 : 0);
 
-    //     buf.writeUInt32BE(pathlen, 37, true);
-    //     buf.write(socketPath, 41, pathlen, "utf8");
+        buf.writeUInt32BE(pathlen, 37, true);
+        buf.write(socketPath, 41, pathlen, "utf8");
 
-    //     return send(this, buf);
-    // }
+        return send(this, buf);
+    }
 
-    // openssh_cancelStreamLocalForward(socketPath,
-    //     wantReply) {
-    //     if (this.server) {
-    //         throw new Error("Client-only method called in server mode");
-    //     }
+    opensshCancelStreamLocalForward(socketPath, wantReply) {
+        if (this.server) {
+            throw new Error("Client-only method called in server mode");
+        }
 
-    //     const pathlen = Buffer.byteLength(pathlen);
-    //     const buf = new Buffer(1 + 4 + 38 + 1 + 4 + pathlen);
+        const pathlen = Buffer.byteLength(socketPath);
+        const buf = Buffer.allocUnsafe(1 + 4 + 38 + 1 + 4 + pathlen);
 
-    //     buf[0] = MESSAGE.GLOBAL_REQUEST;
+        buf[0] = MESSAGE.GLOBAL_REQUEST;
 
-    //     buf.writeUInt32BE(38, 1, true);
-    //     buf.write("cancel-streamlocal-forward@openssh.com", 5, 38, "ascii");
+        buf.writeUInt32BE(38, 1, true);
+        buf.write("cancel-streamlocal-forward@openssh.com", 5, 38, "ascii");
 
-    //     buf[43] = (wantReply === undefined || wantReply === true ? 1 : 0);
+        buf[43] = (is.undefined(wantReply) || wantReply === true ? 1 : 0);
 
-    //     buf.writeUInt32BE(pathlen, 44, true);
-    //     buf.write(socketPath, 48, pathlen, "utf8");
+        buf.writeUInt32BE(pathlen, 44, true);
+        buf.write(socketPath, 48, pathlen, "utf8");
 
-    //     return send(this, buf);
-    // }
+        return send(this, buf);
+    }
 
     directTcpip(chan, initWindow, maxPacket, cfg) {
         if (this.server) {

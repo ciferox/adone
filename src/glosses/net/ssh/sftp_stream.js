@@ -681,19 +681,18 @@ class ReadStream extends ReadableStream {
     }
 
     open() {
-        const self = this;
         this.sftp.open(this.path, this.flags, this.mode, (er, handle) => {
             if (er) {
-                self.emit("error", er);
-                self.destroyed = self.closed = true;
-                self.emit("close");
+                this.emit("error", er);
+                this.destroyed = this.closed = true;
+                this.emit("close");
                 return;
             }
 
-            self.handle = handle;
-            self.emit("open", handle);
+            this.handle = handle;
+            this.emit("open", handle);
             // start the flow of data.
-            self.read();
+            this.read();
         });
     }
 
@@ -846,39 +845,38 @@ class WriteStream extends WritableStream {
     }
 
     open() {
-        const self = this;
-        this.sftp.open(this.path, this.flags, this.mode, function (er, handle) {
+        this.sftp.open(this.path, this.flags, this.mode, (er, handle) => {
             if (er) {
-                self.emit("error", er);
+                this.emit("error", er);
                 if (this.autoClose) {
                     this.destroyed = this.closed = true;
-                    self.emit("close");
+                    this.emit("close");
                 }
                 return;
             }
 
-            self.handle = handle;
+            this.handle = handle;
 
-            self.sftp.fchmod(handle, self.mode, function tryAgain(err) {
+            const tryAgain = (err) => {
                 if (err) {
                     // Try chmod() for sftp servers that may not support fchmod() for
                     // whatever reason
-                    self.sftp.chmod(self.path, self.mode, (err_) => {
+                    this.sftp.chmod(this.path, this.mode, (err_) => {
                         tryAgain();
                     });
                     return;
                 }
 
                 // SFTPv3 requires absolute offsets, no matter the open flag used
-                if (self.flags[0] === "a") {
-                    self.sftp.fstat(handle, function tryStat(err, st) {
+                if (this.flags[0] === "a") {
+                    const tryStat = (err, st) => {
                         if (err) {
                             // Try stat() for sftp servers that may not support fstat() for
                             // whatever reason
-                            self.sftp.stat(self.path, (err_, st_) => {
+                            this.sftp.stat(this.path, (err_, st_) => {
                                 if (err_) {
-                                    self.destroy();
-                                    self.emit("error", err);
+                                    this.destroy();
+                                    this.emit("error", err);
                                     return;
                                 }
                                 tryStat(null, st_);
@@ -886,13 +884,16 @@ class WriteStream extends WritableStream {
                             return;
                         }
 
-                        self.pos = st.size;
-                        self.emit("open", handle);
-                    });
+                        this.pos = st.size;
+                        this.emit("open", handle);
+                    };
+                    this.sftp.fstat(handle, tryStat);
                     return;
                 }
-                self.emit("open", handle);
-            });
+                this.emit("open", handle);
+            };
+
+            this.sftp.fchmod(handle, this.mode, tryAgain);
         });
     }
 
@@ -907,22 +908,16 @@ class WriteStream extends WritableStream {
             });
         }
 
-        const self = this;
-        this.sftp.writeData(this.handle,
-            data,
-            0,
-            data.length,
-            this.pos,
-            (er, bytes) => {
-                if (er) {
-                    if (self.autoClose) {
-                        self.destroy();
-                    }
-                    return cb(er);
+        this.sftp.writeData(this.handle, data, 0, data.length, this.pos, (er, bytes) => {
+            if (er) {
+                if (this.autoClose) {
+                    this.destroy();
                 }
-                self.bytesWritten += bytes;
-                cb();
-            });
+                return cb(er);
+            }
+            this.bytesWritten += bytes;
+            cb();
+        });
 
         this.pos += data.length;
     }
@@ -1050,7 +1045,8 @@ export default class SFTPStream extends TransformStream {
 
         if (this.readable) {
             this.push(null);
-        } else if (!this._readableState.endEmitted && !this._readableState.flowing) {
+        }
+        if (!this._readableState.endEmitted && !this._readableState.flowing) {
             // Ugh!
             this.resume();
         }
@@ -1118,17 +1114,16 @@ export default class SFTPStream extends TransformStream {
                     if (server) {
                         if (is.undefined(version) && pktType !== REQUEST.INIT) {
                             debug("DEBUG[SFTP]: Parser: Unexpected packet before init");
-                            status = "bad_pkt";
+                            this._cleanup(false);
+                            return callback(new Error("Unexpected packet before init"));
                         } else if (!is.undefined(version) && pktType === REQUEST.INIT) {
                             debug("DEBUG[SFTP]: Parser: Unexpected duplicate init");
                             status = "bad_pkt";
                         } else if (pktLeft > MAX_PKT_LEN) {
-                            debug(`DEBUG[SFTP]: Parser: Packet length (${
-                                pktLeft
-                                }) exceeds max length (${
-                                MAX_PKT_LEN
-                                })`);
-                            status = "bad_pkt";
+                            const msg = `Packet length (${pktLeft}) exceeds max length (${MAX_PKT_LEN})`;
+                            debug(`DEBUG[SFTP]: Parser: ${msg}`);
+                            this._cleanup(false);
+                            return callback(new Error(msg));
                         } else if (pktType === REQUEST.EXTENDED) {
                             status = "bad_pkt";
                         } else if (is.undefined(REQUEST[pktType])) {
@@ -1137,7 +1132,8 @@ export default class SFTPStream extends TransformStream {
                         }
                     } else if (is.undefined(version) && pktType !== RESPONSE.VERSION) {
                         debug("DEBUG[SFTP]: Parser: Unexpected packet before version");
-                        status = "bad_pkt";
+                        this._cleanup(false);
+                        return callback(new Error("Unexpected packet before version"));
                     } else if (!is.undefined(version) && pktType === RESPONSE.VERSION) {
                         debug("DEBUG[SFTP]: Parser: Unexpected duplicate version");
                         status = "bad_pkt";
@@ -1168,7 +1164,7 @@ export default class SFTPStream extends TransformStream {
                         return;
                     }
                     if (version < 3) {
-                        this._cleanup();
+                        this._cleanup(false);
                         return callback(new Error(`Incompatible SFTP version: ${version}`));
                     } else if (server) {
                         this.push(SERVER_VERSION_BUFFER);
@@ -1822,9 +1818,7 @@ export default class SFTPStream extends TransformStream {
             return;
         }
 
-        const overflow = (len > state.maxDataLen ?
-            len - state.maxDataLen :
-            0);
+        const overflow = (len > state.maxDataLen ? len - state.maxDataLen : 0);
         const origPosition = position;
 
         if (overflow) {
@@ -1906,8 +1900,6 @@ export default class SFTPStream extends TransformStream {
             options = undefined;
         }
 
-        const self = this;
-
         if (is.string(options)) {
             options = {
                 encoding: options,
@@ -1940,7 +1932,7 @@ export default class SFTPStream extends TransformStream {
         let read = null;
 
         const close = () => {
-            self.close(handle, (er) => {
+            this.close(handle, (er) => {
                 if (size === 0) {
                     // collected the data into the buffers list.
                     buffer = Buffer.concat(buffers, pos);
@@ -1957,7 +1949,7 @@ export default class SFTPStream extends TransformStream {
 
         const afterRead = (er, nbytes) => {
             if (er) {
-                return self.close(handle, () => {
+                return this.close(handle, () => {
                     return callback && callback(er);
                 });
             }
@@ -1984,9 +1976,9 @@ export default class SFTPStream extends TransformStream {
         read = () => {
             if (size === 0) {
                 buffer = Buffer.allocUnsafe(8192);
-                self.readData(handle, buffer, 0, 8192, bytesRead, afterRead);
+                this.readData(handle, buffer, 0, 8192, bytesRead, afterRead);
             } else {
-                self.readData(handle, buffer, pos, size - pos, bytesRead, afterRead);
+                this.readData(handle, buffer, pos, size - pos, bytesRead, afterRead);
             }
         };
 
@@ -1997,13 +1989,13 @@ export default class SFTPStream extends TransformStream {
             }
             handle = handle_;
 
-            self.fstat(handle, function tryStat(er, st) {
+            this.fstat(handle, function tryStat(er, st) {
                 if (er) {
                     // Try stat() for sftp servers that may not support fstat() for
                     // whatever reason
-                    self.stat(path, (er_, st_) => {
+                    this.stat(path, (er_, st_) => {
                         if (er_) {
-                            return self.close(handle, () => {
+                            return this.close(handle, () => {
                                 callback && callback(er);
                             });
                         }
@@ -2012,7 +2004,7 @@ export default class SFTPStream extends TransformStream {
                     return;
                 }
 
-                size = st.size;
+                size = st.size || 0;
                 if (size === 0) {
                     // the kernel lies about many files.
                     // Go ahead and try to read some bytes.
