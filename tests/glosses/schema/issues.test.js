@@ -538,15 +538,5 @@ describe("glosses", "schema", "issues", () => {
             checkErrors(["type", "required"]);
 
         });
-
-        it('should validate type only once when "type" is "integer"', () => {
-            const instance = new Validator();
-            const validate = instance.compile({
-                type: "integer",
-                minimum: 2
-            });
-            const code = validate.toString();
-            expect(code.match(/typeof\s+/g)).to.have.lengthOf(1);
-        });
     });
 });

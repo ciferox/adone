@@ -540,6 +540,114 @@ describe("glosses", "schema", "validation errors", () => {
         });
     });
 
+    describe("type errors", () => {
+        describe("integer", () => {
+            it("should have only one error in {allErrors: false} mode", () => {
+                test(instance);
+            });
+
+            it("should return all errors in {allErrors: true} mode", () => {
+                test(fullInstance, 2);
+            });
+
+            function test(_instance, numErrors) {
+                const schema = {
+                    type: "integer",
+                    minimum: 5
+                };
+
+
+                const validate = _instance.compile(schema);
+                shouldBeValid(validate, 5);
+                shouldBeInvalid(validate, 5.5);
+                shouldBeInvalid(validate, 4);
+                shouldBeInvalid(validate, "4");
+                shouldBeInvalid(validate, 4.5, numErrors);
+            }
+        });
+
+        describe("keyword for another type", () => {
+            it("should have only one error in {allErrors: false} mode", () => {
+                test(instance);
+            });
+
+            it("should return all errors in {allErrors: true} mode", () => {
+                test(fullInstance, 2);
+            });
+
+            function test(_isntance, numErrors) {
+                const schema = {
+                    type: "array",
+                    minItems: 2,
+                    minimum: 5
+                };
+
+
+                const validate = _isntance.compile(schema);
+                shouldBeValid(validate, [1, 2]);
+                shouldBeInvalid(validate, [1]);
+                shouldBeInvalid(validate, 5);
+                shouldBeInvalid(validate, 4, numErrors);
+            }
+        });
+
+        describe("array of types", () => {
+            it("should have only one error in {allErrors: false} mode", () => {
+                test(instance);
+            });
+
+            it("should return all errors in {allErrors: true} mode", () => {
+                test(fullInstance, 2);
+            });
+
+            function test(_instance, numErrors) {
+                const schema = {
+                    type: ["array", "object"],
+                    minItems: 2,
+                    minProperties: 2,
+                    minimum: 5
+                };
+
+
+                const validate = _instance.compile(schema);
+                shouldBeValid(validate, [1, 2]);
+                shouldBeValid(validate, { foo: 1, bar: 2 });
+                shouldBeInvalid(validate, [1]);
+                shouldBeInvalid(validate, { foo: 1 });
+                shouldBeInvalid(validate, 5);
+                shouldBeInvalid(validate, 4, numErrors);
+            }
+        });
+    });
+
+
+    describe("exclusiveMaximum/Minimum errors", () => {
+        it("should include limits in error message", () => {
+            const schema = {
+                type: "integer",
+                exclusiveMinimum: 2,
+                exclusiveMaximum: 5
+            };
+
+            [instance, fullInstance].forEach((_instance) => {
+                const validate = _instance.compile(schema);
+                shouldBeValid(validate, 3);
+                shouldBeValid(validate, 4);
+
+                shouldBeInvalid(validate, 2);
+                testError("exclusiveMinimum", "should be > 2", { comparison: ">", limit: 2, exclusive: true });
+
+                shouldBeInvalid(validate, 5);
+                testError("exclusiveMaximum", "should be < 5", { comparison: "<", limit: 5, exclusive: true });
+
+                function testError(keyword, message, params) {
+                    const err = validate.errors[0];
+                    shouldBeError(err, keyword, `#/${keyword}`, "", message, params);
+                }
+            });
+        });
+    });
+
     function testSchema1(schema, schemaPathPrefix) {
         _testSchema1(instance, schema, schemaPathPrefix);
         _testSchema1(instanceJP, schema, schemaPathPrefix);
