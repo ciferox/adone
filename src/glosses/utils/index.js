@@ -872,7 +872,6 @@ export const assignDeep = (target, ...sources) => {
 
 adone.lazify({
     match: "./match",
-    throat: "./throat",
     toposort: "./toposort",
     jsesc: "./jsesc",
     typeOf: "./typeof",
@@ -903,5 +902,7 @@ adone.lazify({
         unmask: adone.native.Common.unmaskBuffer
     }),
     shebang: "./shebang",
-    reinterval: "./reinterval"
+    reinterval: "./reinterval",
+    RateLimiter: "./rate_limiter",
+    throttle: "./throttle"
 }, exports, require);

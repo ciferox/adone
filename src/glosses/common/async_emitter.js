@@ -1,4 +1,4 @@
-const { is, util: { throat } } = adone;
+const { is, util } = adone;
 
 export default class AsyncEmitter extends adone.EventEmitter {
     constructor(concurrency = null) {
@@ -11,7 +11,7 @@ export default class AsyncEmitter extends adone.EventEmitter {
 
     setConcurrency(max = null) {
         if (max >= 1) {
-            this.manager = throat(max);
+            this.manager = util.throttle({ max });
         } else {
             this.manager = null;
         }
