@@ -13,38 +13,38 @@ adone.lazify({
         tag: (id) => `t:${id}`,
         vkey: (vid, kid) => `v:${vid}:${kid}`,
         vvalue: (vid, kid) => `v:${vid}:${kid}:`,
-        normalizeTag(tag) {
-            if (adone.is.string(tag)) {
-                return {
-                    name: tag
-                };
-            } else if (adone.is.plainObject(tag)) {
-                return tag;
-            }
-            return undefined;
-        },
-        normalizeTags(tags) {
-            const result = [];
-
-            for (const tag of tags) {
-                if (adone.is.string(tag)) {
-                    result.push({
-                        name: tag
-                    });
-                } else if (adone.is.plainObject(tag)) {
-                    result.push(tag);
-                } else {
-                    result.push({});
-                }
-            }
-
-            return result;
-        },
         hasTag(tags, tag) {
             const tagName = (adone.is.string(tag) ? tag : tag.name);
             return tags.findIndex((t) => t.name === tagName) !== -1;
         }
     }),
+    normalizeTags: () => (tags) => {
+        const result = [];
+
+        for (const tag of tags) {
+            if (adone.is.string(tag)) {
+                result.push({
+                    name: tag
+                });
+            } else if (adone.is.plainObject(tag)) {
+                result.push(tag);
+            } else {
+                result.push({});
+            }
+        }
+
+        return result;
+    },
+    normalizeTag: () => (tag) => {
+        if (adone.is.string(tag)) {
+            return {
+                name: tag
+            };
+        } else if (adone.is.plainObject(tag)) {
+            return tag;
+        }
+        return undefined;
+    },
     Vault: "./vault",
     Valuable: "./valuable"
 }, exports, require);

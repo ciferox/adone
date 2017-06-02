@@ -30,9 +30,9 @@ export default class Vault {
         await this._db.open();
         // Load valuable ids
         try {
-            this.vids = await this.getMeta(VIDS);
+            this.vids = await this._getMeta(VIDS);
             for (const id of this.vids) {
-                const metaData = await this.getMeta(__.valuable(id));
+                const metaData = await this._getMeta(__.valuable(id));
                 this.nameIdMap.set(metaData.name, id);
             }
         } catch (err) {
@@ -41,9 +41,9 @@ export default class Vault {
 
         // Load tag ids
         try {
-            this.tids = await this.getMeta(TIDS);
+            this.tids = await this._getMeta(TIDS);
             for (const id of this.tids) {
-                const tagMetaData = await this.getMeta(__.tag(id));
+                const tagMetaData = await this._getMeta(__.tag(id));
                 this.tagsMap.set(tagMetaData.tag.name, tagMetaData);
             }
         } catch (err) {
@@ -51,13 +51,13 @@ export default class Vault {
         }
 
         try {
-            this.nextValuableId = await this.getMeta(NEXT_VALUABLE_ID);
+            this.nextValuableId = await this._getMeta(NEXT_VALUABLE_ID);
         } catch (err) {
             this.nextValuableId = 1;
         }
 
         try {
-            this.nextTagId = await this.getMeta(NEXT_TAG_ID);
+            this.nextTagId = await this._getMeta(NEXT_TAG_ID);
         } catch (err) {
             this.nextTagId = 1;
         }
@@ -78,16 +78,16 @@ export default class Vault {
 
         const id = await this._getNextId(NEXT_VALUABLE_ID);
         this.vids.push(id);
-        await this.setMeta(VIDS, this.vids);
+        await this._setMeta(VIDS, this.vids);
         this.nameIdMap.set(name, id);
-        const normTags = __.normalizeTags(tags);
+        const normTags = adone.vault.normalizeTags(tags);
         const metaData = {
             name,
             tids: await this._getTids(normTags, id),
             kids: [],
             nextKeyId: 1
         };
-        await this.setMeta(__.valuable(id), metaData);
+        await this._setMeta(__.valuable(id), metaData);
 
         const valuable = new this.Valuable(this, id, metaData, normTags);
         this._vcache.set(id, valuable);
@@ -99,11 +99,11 @@ export default class Vault {
 
         let valuable = this._vcache.get(id);
         if (is.undefined(valuable)) {
-            const metaData = await this.getMeta(__.valuable(id));
+            const metaData = await this._getMeta(__.valuable(id));
             valuable = new this.Valuable(this, id, metaData, await this.tags(metaData.tids));
 
             for (const kid of metaData.kids) {
-                const keyMeta = await this.getMeta(__.vkey(id, kid));
+                const keyMeta = await this._getMeta(__.vkey(id, kid));
                 valuable._keys.set(keyMeta.name, keyMeta);
             }
         }
@@ -120,7 +120,7 @@ export default class Vault {
         await val.clear();
         this.vids.splice(this.vids.indexOf(val.id), 1);
         this.nameIdMap.delete(name);
-        await this.deleteMeta(__.valuable(val.id));
+        await this._deleteMeta(__.valuable(val.id));
     }
 
     has(name) {
@@ -149,6 +149,34 @@ export default class Vault {
         return vaults;
     }
 
+    async addTag(tag) {
+        const tags = this._getTags();
+        if (!__.hasTag(tags, tag)) {
+            await this._getTids([adone.vault.normalizeTag(tag)]);
+            return true;
+        }
+        return false;
+    }
+
+    async deleteTag(tag) {
+        const tags = this._getTags();
+        if (__.hasTag(tags, tag)) {
+            const valuables = await this.values();
+            for (const val of valuables) {
+                await val.deleteTag(tag);
+            }
+            tag = adone.vault.normalizeTag(tag);
+            const tagId = this.tagsMap.get(tag.name).id;
+            this.tids.splice(this.tids.indexOf(tagId), 1);
+            await this._setMeta(TIDS, this.tids);
+            
+            this.tagsMap.delete(tag.name);
+            await this._deleteMeta(__.tag(tagId));
+            return true;
+        }
+        return false;
+    }
+
     tags(ids = null) {
         if (is.array(ids)) {
             return [...this.tagsMap.values()].filter((t) => ids.includes(t.id)).map((t) => t.tag);
@@ -163,27 +191,19 @@ export default class Vault {
         return [...this.tagsMap.values()].map((t) => t.tag.name);
     }
 
-    async _getTagNames(ids) {
-        const names = [];
-        if (ids.length > 0) {
-            for (const [name, metaData] of this.tagsMap.entries()) {
-                if (ids.includes(metaData.id)) {
-                    names.push(name);
-                }
-            }
-        }
-        return names;
+    _getTags() {
+        return [...this.tagsMap.values()].map((meta) => meta.tag);
     }
 
-    getMeta(id) {
+    _getMeta(id) {
         return this._db.get(id);
     }
 
-    setMeta(id, data) {
+    _setMeta(id, data) {
         return this._db.put(id, data);
     }
 
-    deleteMeta(id) {
+    _deleteMeta(id) {
         return this._db.del(id);
     }
 
@@ -201,7 +221,7 @@ export default class Vault {
         return id;
     }
 
-    async _getTids(tags, vid) {
+    async _getTids(tags, vid = null) {
         // tags must be normalized
 
         const ids = [];
@@ -211,24 +231,27 @@ export default class Vault {
             if (!is.string(tag.name)) {
                 throw new adone.x.NotValid("The tag must be a string or an object with at least one property: 'name'");
             }
-            let metaData = this.tagsMap.get(tag.name);
-            if (is.undefined(metaData)) {
+            let tagMetaData = this.tagsMap.get(tag.name);
+            if (is.undefined(tagMetaData)) {
                 needUpdate = true;
                 const id = await this._getNextId(NEXT_TAG_ID);
                 this.tids.push(id);
-                metaData = {
+                tagMetaData = {
                     id,
                     tag,
-                    vids: [vid]
+                    vids: []
                 };
-                this.tagsMap.set(tag.name, metaData);
-                await this.setMeta(__.tag(id), metaData);
+                if (!is.null(vid)) {
+                    tagMetaData.vids.push(vid);
+                }
+                this.tagsMap.set(tag.name, tagMetaData);
+                await this._setMeta(__.tag(id), tagMetaData);
             }
-            ids.push(metaData.id);
+            ids.push(tagMetaData.id);
         }
 
         if (needUpdate) {
-            await this.setMeta(TIDS, this.tids);
+            await this._setMeta(TIDS, this.tids);
         }
         return ids;
     }

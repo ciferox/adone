@@ -573,6 +573,35 @@ export default class extends adone.application.Subsystem {
                             handler: this.hostsDelKeyCommand
                         },
                         {
+                            name: "tags",
+                            help: "show all tags",
+                            handler: this.hostsTagsCommand
+                        },
+                        {
+                            name: "addtag",
+                            help: "add new tag",
+                            arguments: [
+                                {
+                                    name: "tag",
+                                    type: String,
+                                    help: "tag name"
+                                }
+                            ],
+                            handler: this.hostsAddTagCommand
+                        },
+                        {
+                            name: "deltag",
+                            help: "delete existing tag",
+                            arguments: [
+                                {
+                                    name: "tag",
+                                    type: String,
+                                    help: "tag name"
+                                }
+                            ],
+                            handler: this.hostsDelTagCommand
+                        },
+                        {
                             name: "groups",
                             help: "show groups",
                             handler: this.hostsGroupsCommand
@@ -1370,6 +1399,41 @@ export default class extends adone.application.Subsystem {
             const iHosts = await this.dispatcher.context("hosts");
             const iHost = await iHosts.get(args.get("host"));
             await iHost.delete(args.get("key"));
+            adone.log(adone.ok);
+        } catch (err) {
+            adone.error(err.message);
+            return 1;
+        }
+        return 0;
+    }
+
+    async hostsTagsCommand() {
+        try {
+            const iHosts = await this.dispatcher.context("hosts");
+            adone.log(adone.text.pretty.json(await iHosts.tags()));
+        } catch (err) {
+            adone.error(err.message);
+            return 1;
+        }
+        return 0;
+    }
+
+    async hostsAddTagCommand(args) {
+        try {
+            const iHosts = await this.dispatcher.context("hosts");
+            await iHosts.addTag(args.get("tag"));
+            adone.log(adone.ok);
+        } catch (err) {
+            adone.error(err.message);
+            return 1;
+        }
+        return 0;
+    }
+
+    async hostsDelTagCommand(args) {
+        try {
+            const iHosts = await this.dispatcher.context("hosts");
+            await iHosts.deleteTag(args.get("tag"));
             adone.log(adone.ok);
         } catch (err) {
             adone.error(err.message);

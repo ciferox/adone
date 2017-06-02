@@ -71,7 +71,7 @@ describe("Vault", () => {
         assert.lengthOf(vault.vids, 0);
         assert.equal(vault.nextValuableId, 1);
         const tags = ["tag1", "tag3"];
-        const normTags = adone.vault.__.normalizeTags(tags);
+        const normTags = adone.vault.normalizeTags(tags);
         let valuable = await vault.create("v1", tags);
         assert.equal(valuable.id, 1);
         assert.equal(valuable.name(), "v1");
@@ -93,9 +93,9 @@ describe("Vault", () => {
         await openVault();
         assert.equal(vault.location(), location);
         const tags1 = ["tag1", "tag3"];
-        const normTags1 = adone.vault.__.normalizeTags(tags1);
+        const normTags1 = adone.vault.normalizeTags(tags1);
         const tags2 = ["tag2", "tag3"];
-        const normTags2 = adone.vault.__.normalizeTags(tags2);
+        const normTags2 = adone.vault.normalizeTags(tags2);
         let valuable1 = await vault.create("v1", tags1);
         assert.equal(valuable1.id, 1);
         assert.equal(valuable1.name(), "v1");
@@ -157,7 +157,7 @@ describe("Vault", () => {
         const tags = ["tag1", "tag3"];
         let val = await vault.create("val", tags);
         await val.set("num", 17);
-        const allNormTags = adone.vault.__.normalizeTags(["tag1", "tag2", "tag3", "tag4"]);
+        const allNormTags = adone.vault.normalizeTags(["tag1", "tag2", "tag3", "tag4"]);
         assert.equal(await val.get("num"), 17);
         assert.isTrue(await val.addTag("tag2"));
         assert.isFalse(await val.addTag("tag3"));
@@ -191,7 +191,7 @@ describe("Vault", () => {
         const tag4 = {
             name: "tag4"
         };
-        const allNormTags = adone.vault.__.normalizeTags([tag1, tag2, tag3, tag4]);
+        const allNormTags = adone.vault.normalizeTags([tag1, tag2, tag3, tag4]);
         const tags = [tag1, tag3];
         let val = await vault.create("val", tags);
         await val.set("num", 17);
@@ -212,6 +212,34 @@ describe("Vault", () => {
         assert.equal(await val.get("num"), 17);
         assert.sameDeepMembers(await val.tags(), [tag1, { name: tag2 }, tag4]);
         assert.sameDeepMembers(await vault.tags(), allNormTags);
+        await vault.close();
+    });
+
+    it("delete tags at vault side", async () => {
+        await openVault();
+        const tag1 = {
+            name: "tag1"
+        };
+        const tag2 = {
+            name: "tag2"
+        };
+        const tag3 = {
+            name: "tag3"
+        };
+        const tags = [tag1, tag2, tag3];
+        let val = await vault.create("val", tags);        
+        assert.sameDeepMembers(await val.tags(), tags);
+        assert.sameDeepMembers(await vault.tags(), tags);
+        assert.isTrue(await vault.deleteTag("tag2"));
+        assert.sameDeepMembers(await val.tags(), [tag1, tag3]);
+        assert.sameDeepMembers(await vault.tags(), [tag1, tag3]);
+        await vault.close();
+
+        // reopen
+        await openVault(location);
+        val = await vault.get("val");
+        assert.sameDeepMembers(await val.tags(), [tag1, tag3]);
+        assert.sameDeepMembers(await vault.tags(), [tag1, tag3]);
         await vault.close();
     });
 
