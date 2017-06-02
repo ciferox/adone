@@ -323,7 +323,8 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             nowDouble: adone.native.Common.nowDouble,
             nowStruct: adone.native.Common.nowStruct
         }),
-        schema: "./glosses/schema"
+        schema: "./glosses/schema",
+        geoip: "./glosses/geoip"
     }, adone);
 } else {
     exports.default = global.adone;

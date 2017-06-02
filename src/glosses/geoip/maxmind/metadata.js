@@ -1,5 +1,4 @@
-const { x, net: { http: { server: { util: { geoip } } } } } = adone;
-const { _: { Decoder } } = geoip;
+const { x, geoip: { maxmind: { __: { Decoder } } } } = adone;
 
 const METADATA_START_MARKER = Buffer.from("ABCDEF4D61784D696E642E636F6D", "hex");
 const VALID_RECORD_SIZES = new Set([24, 28, 32]);

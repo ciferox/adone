@@ -1,5 +1,5 @@
 describe("glosses", "net", "http", "server", "utils", "geoip", "helpers", () => {
-    const { net: { http: { server: { util: { geoip: { _: { helper: { ip } } } } } } } } = adone;
+    const { geoip: { maxmind: { __: { helper: { ip } } } } } = adone;
 
     describe("parse()", () => {
         describe("ipv4", () => {

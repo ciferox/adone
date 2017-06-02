@@ -1,5 +1,4 @@
-const { x, net: { http: { server: { util: { geoip } } } } } = adone;
-const { _: { helper: { concat2, concat3, concat4 } } } = geoip;
+const { x, geoip: { maxmind: { __: { helper: { concat2, concat3, concat4 } } } } } = adone;
 
 const types = [
     "extended",         //  0

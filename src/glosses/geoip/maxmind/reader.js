@@ -1,5 +1,5 @@
-const { net: { http: { server: { util: { geoip } } } }, collection: { FastLRU } } = adone;
-const { _: { Metadata, Decoder, helper: { concat3, concat4, ip: ipUtil } } } = geoip;
+const { geoip: { maxmind }, collection: { FastLRU } } = adone;
+const { __: { Metadata, Decoder, helper: { concat3, concat4, ip: ipUtil } } } = maxmind;
 
 const DATA_SECTION_SEPARATOR_SIZE = 16;
 

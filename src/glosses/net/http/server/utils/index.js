@@ -1,6 +1,5 @@
 const { lazify } = adone;
 
 lazify({
-    userAgent: "./user_agent",
-    geoip: "./geoip"
+    userAgent: "./user_agent"
 }, exports, require);

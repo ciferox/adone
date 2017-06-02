@@ -1,5 +1,5 @@
 describe("glosses", "net", "http", "server", "utils", "geoip", "reader", () => {
-    const { net: { http: { server: { util: { geoip: { _: { Reader } } } } } } } = adone;
+    const { geoip: { maxmind: { __: { Reader } } } } = adone;
 
     const fixtures = new adone.fs.Directory(__dirname, "fixtures");
 

@@ -1,6 +1,6 @@
-const { is, lazify, x } = adone;
+const { is, x } = adone;
 
-export const _ = lazify({
+export const __ = adone.lazify({
     helper: "./helpers",
     Reader: "./reader",
     Decoder: "./decoder",
@@ -12,7 +12,7 @@ export const open = async (filepath, opts) => {
     // if (is.null(database)) {
     //     throw new x.InvalidArgument("Invalid database file");
     // }
-    return new _.Reader(database, opts);
+    return new __.Reader(database, opts);
 };
 
 export const openSync = (filepath, opts) => {
@@ -20,5 +20,5 @@ export const openSync = (filepath, opts) => {
     if (is.null(database)) {
         throw new x.InvalidArgument("Invalid database file");
     }
-    return new _.Reader(database, opts);
+    return new __.Reader(database, opts);
 };

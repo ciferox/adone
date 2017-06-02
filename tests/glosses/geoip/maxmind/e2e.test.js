@@ -1,11 +1,5 @@
 describe("glosses", "net", "http", "server", "utils", "geoip", () => {
-    const {
-        net: {
-            address: { IP6 },
-            http: { server: { util: { geoip } } }
-        },
-        std: { assert }  // non strict...
-    } = adone;
+    const { geoip: { maxmind }, net: { address: { IP6 } }, std: { assert } } = adone;
 
     const fixtures = new adone.fs.Directory(__dirname, "fixtures");
     const source = fixtures.getVirtualDirectory("source");
@@ -32,11 +26,11 @@ describe("glosses", "net", "http", "server", "utils", "geoip", () => {
     describe("basic functionality", () => {
 
         it("should successfully handle database", () => {
-            assert(geoip.openSync(fixtures.getVirtualFile("GeoIP2-City-Test.mmdb").path()));
+            assert(maxmind.openSync(fixtures.getVirtualFile("GeoIP2-City-Test.mmdb").path()));
         });
 
         it("should fetch geo ip", async () => {
-            const geoIp = await geoip.open(fixtures.getVirtualFile("GeoIP2-City-Test.mmdb").path());
+            const geoIp = await maxmind.open(fixtures.getVirtualFile("GeoIP2-City-Test.mmdb").path());
             const data = await actual("GeoIP2-City-Test.json");
             assert.deepEqual(geoIp.get("1.1.1.1"), null);
 
@@ -53,12 +47,12 @@ describe("glosses", "net", "http", "server", "utils", "geoip", () => {
 
         it("should handle corrupt database", () => {
             assert.throws(function verify() {
-                geoip.openSync(__filename);
+                maxmind.openSync(__filename);
             });
         });
 
         it("should accept cache options", () => {
-            assert(geoip.openSync(fixtures.getVirtualFile("GeoIP2-City-Test.mmdb").path(), {
+            assert(maxmind.openSync(fixtures.getVirtualFile("GeoIP2-City-Test.mmdb").path(), {
                 cache: { max: 1000 }
             }));
         });
@@ -66,11 +60,11 @@ describe("glosses", "net", "http", "server", "utils", "geoip", () => {
 
     describe("section: data", () => {
         it("should decode all possible types - complex", () => {
-            const geoIp = geoip.openSync(fixtures.getVirtualFile("MaxMind-DB-test-decoder.mmdb").path());
+            const geoIp = maxmind.openSync(fixtures.getVirtualFile("MaxMind-DB-test-decoder.mmdb").path());
             assert.deepEqual(geoIp.get("::1.1.1.1"), {
                 array: [1, 2, 3],
                 boolean: true,
-                bytes: new Buffer([0, 0, 0, 42]),
+                bytes: Buffer.from([0, 0, 0, 42]),
                 double: 42.123456,
                 // It should be 1.1, but there's some issue with rounding in v8
                 float: 1.100000023841858,
@@ -85,11 +79,11 @@ describe("glosses", "net", "http", "server", "utils", "geoip", () => {
         });
 
         it("should decode all possible types - zero/empty values", () => {
-            const geoIp = geoip.openSync(fixtures.getVirtualFile("MaxMind-DB-test-decoder.mmdb").path());
+            const geoIp = maxmind.openSync(fixtures.getVirtualFile("MaxMind-DB-test-decoder.mmdb").path());
             assert.deepEqual(geoIp.get("::0.0.0.0"), {
                 array: [],
                 boolean: false,
-                bytes: new Buffer([]),
+                bytes: Buffer.from([]),
                 double: 0,
                 float: 0,
                 int32: 0,
@@ -103,7 +97,7 @@ describe("glosses", "net", "http", "server", "utils", "geoip", () => {
         });
 
         it("should return correct value: string entries", () => {
-            const geoIp = geoip.openSync(fixtures.getVirtualFile("MaxMind-DB-string-value-entries.mmdb").path());
+            const geoIp = maxmind.openSync(fixtures.getVirtualFile("MaxMind-DB-string-value-entries.mmdb").path());
             assert.equal(geoIp.get("1.1.1.1"), "1.1.1.1/32");
             assert.equal(geoIp.get("1.1.1.2"), "1.1.1.2/31");
             assert.equal(geoIp.get("175.2.1.1"), null);
@@ -137,7 +131,7 @@ describe("glosses", "net", "http", "server", "utils", "geoip", () => {
 
         files.forEach((file) => {
             it(`should test everything: ${file}`, async () => {
-                const geoIp = geoip.openSync(fixtures.getVirtualFile(`${file}.mmdb`).path());
+                const geoIp = maxmind.openSync(fixtures.getVirtualFile(`${file}.mmdb`).path());
                 const data = await actual(`${file}.json`);
                 tester(geoIp, data);
             });
