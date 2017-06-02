@@ -239,7 +239,7 @@ describe("utils", "throttle", () => {
             const vals = [];
             const f = throttle((i) => {
                 vals.push(i);
-            }, { interval: 100, max: 10, ordered: true });
+            }, { interval: 100, max: 10, ordered: true, waitForReturn: false });
             await Promise.all(range(50).map(f));
             expect(vals).to.be.deep.equal(range(50));
         });
@@ -249,7 +249,7 @@ describe("utils", "throttle", () => {
             const vals = [];
             const f = throttle((i) => {
                 vals.push(i);
-            }, { interval: 100, max: 10, ordered: false });
+            }, { interval: 100, max: 10, ordered: false, waitForReturn: false });
             await Promise.all(range(100).map(f));
             expect(vals).not.to.be.deep.equal(range(100));
         });

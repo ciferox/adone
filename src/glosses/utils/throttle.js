@@ -61,7 +61,7 @@ export default function throttle(fn, opts = {}) {
     if (is.number(opts)) {
         opts = { interval: opts };
     }
-    const { max = 1, interval = 0, ordered = true, waitForReturn = false } = opts;
+    const { max = 1, interval = 0, ordered = true, waitForReturn = true } = opts;
 
     if (!interval) {
         return throttleNoInterval(max, fn);
