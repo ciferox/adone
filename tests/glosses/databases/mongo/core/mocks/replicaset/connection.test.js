@@ -1349,7 +1349,7 @@ describe("mongodb", function () {
                     }
                 });
 
-                specify.only("Correctly return lastIsMaster when connected to a secondary only for a replicaset connection", async () => {
+                specify("Correctly return lastIsMaster when connected to a secondary only for a replicaset connection", async () => {
                     // Contain mock server
                     let running = true;
                     const electionIds = [new adone.data.bson.ObjectID(), new adone.data.bson.ObjectID()];

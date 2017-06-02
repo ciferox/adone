@@ -656,7 +656,13 @@ describe("mongodb", function () {
                             ]
                         },
                         diff: {
-                            servers: []
+                            servers: [
+                                {
+                                    address: "localhost:32000",
+                                    from: "Unknown",
+                                    to: "RSPrimary"
+                                }
+                            ]
                         }
                     };
 
@@ -711,7 +717,13 @@ describe("mongodb", function () {
                             ]
                         },
                         diff: {
-                            servers: []
+                            servers: [
+                                {
+                                    address: "localhost:32001",
+                                    from: "Unknown",
+                                    to: "RSSecondary"
+                                }
+                            ]
                         }
                     };
 
@@ -790,7 +802,13 @@ describe("mongodb", function () {
                             ]
                         },
                         diff: {
-                            servers: []
+                            servers: [
+                                {
+                                    address: "localhost:32002",
+                                    from: "Unknown",
+                                    to: "RSArbiter"
+                                }
+                            ]
                         }
                     };
 

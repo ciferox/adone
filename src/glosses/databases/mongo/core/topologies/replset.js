@@ -1,12 +1,12 @@
 const {
     database: { mongo: { core: {
         ReadPreference,
-        Cursor: BasicCursor,
-        MongoError,
-        Server,
-        ReplSetState,
-        auth: { MongoCR, X509, Plain, ScramSHA1 },
-        helper
+    Cursor: BasicCursor,
+    MongoError,
+    Server,
+    ReplSetState,
+    auth: { MongoCR, X509, Plain, ScramSHA1 },
+    helper
     } } },
     std: { events: EventEmitter },
     is, util
@@ -74,59 +74,59 @@ const pingServer = (self, server, cb) => {
             return cb(err, r);
         }
 
-        // Calculate latency
+            // Calculate latency
         const latencyMS = new Date().getTime() - start;
-        // Set the last updatedTime
+            // Set the last updatedTime
         const hrTime = process.hrtime();
-        // Calculate the last update time
+            // Calculate the last update time
         server.lastUpdateTime = hrTime[0] * 1000 + Math.round(hrTime[1] / 1000);
 
-        // We had an error, remove it from the state
+            // We had an error, remove it from the state
         if (err) {
-            // Emit the server heartbeat failure
+                // Emit the server heartbeat failure
             helper.emitSDAMEvent(self, "serverHeartbeatFailed", { durationMS: latencyMS, failure: err, connectionId: server.name });
 
-            // Remove server from the state
+                // Remove server from the state
             self.s.replicaSetState.remove(server);
         } else {
-            // Update the server ismaster
+                // Update the server ismaster
             server.ismaster = r.result;
 
-            // Check if we have a lastWriteDate convert it to MS
-            // and store on the server instance for later use
+                // Check if we have a lastWriteDate convert it to MS
+                // and store on the server instance for later use
             if (server.ismaster.lastWrite && server.ismaster.lastWrite.lastWriteDate) {
                 server.lastWriteDate = server.ismaster.lastWrite.lastWriteDate.getTime();
             }
 
-            // Do we have a brand new server
+                // Do we have a brand new server
             if (server.lastIsMasterMS === -1) {
                 server.lastIsMasterMS = latencyMS;
             } else if (server.lastIsMasterMS) {
-                // After the first measurement, average RTT MUST be computed using an
-                // exponentially-weighted moving average formula, with a weighting factor (alpha) of 0.2.
-                // If the prior average is denoted old_rtt, then the new average (new_rtt) is
-                // computed from a new RTT measurement (x) using the following formula:
-                // alpha = 0.2
-                // new_rtt = alpha * x + (1 - alpha) * old_rtt                 server.lastIsMasterMS = 0.2 * latencyMS + (1 - 0.2) * server.lastIsMasterMS;             }
-                server.lastIsMasterMS = 0.2 * latencyMS + (1 - 0.2) * server.lastIsMasterMS;
-            }
+                    // After the first measurement, average RTT MUST be computed using an
+                    // exponentially-weighted moving average formula, with a weighting factor (alpha) of 0.2.
+                    // If the prior average is denoted old_rtt, then the new average (new_rtt) is
+                    // computed from a new RTT measurement (x) using the following formula:
+                    // alpha = 0.2
+                    // new_rtt = alpha * x + (1 - alpha) * old_rtt                 server.lastIsMasterMS = 0.2 * latencyMS + (1 - 0.2) * server.lastIsMasterMS;             }
+                    server.lastIsMasterMS = 0.2 * latencyMS + (1 - 0.2) * server.lastIsMasterMS;
+                }
 
             if (self.s.replicaSetState.update(server)) {
-                // Primary lastIsMaster store it
+                    // Primary lastIsMaster store it
                 if (server.lastIsMaster() && server.lastIsMaster().ismaster) {
-                    self.ismaster = server.lastIsMaster();
-                }
+                        self.ismaster = server.lastIsMaster();
+                    }
             }
 
-            // Server heart beat event
+                // Server heart beat event
             helper.emitSDAMEvent(self, "serverHeartbeatSucceeded", { durationMS: latencyMS, reply: r.result, connectionId: server.name });
         }
 
 
-        // Calculate the stalness for this server
+            // Calculate the stalness for this server
         self.s.replicaSetState.updateServerMaxStaleness(server, self.s.haInterval);
 
-        // Callback
+            // Callback
         cb(err, r);
     });
 };
@@ -206,6 +206,183 @@ const applyAuthenticationContexts = (self, server, callback) => {
     applyAuth(authContexts, server, callback);
 };
 
+
+const topologyMonitor = (self, options) => {
+    if (self.state == DESTROYED || self.state == UNREFERENCED) {
+        return;
+    }
+    options = options || {};
+
+    // Get the servers
+    const servers = util.keys(self.s.replicaSetState.set);
+
+    // Get the haInterval
+    const _process = options.haInterval ? helper.Timeout : helper.Interval;
+    const _haInterval = options.haInterval ? options.haInterval : self.s.haInterval;
+
+    if (_process === helper.Timeout) {
+        return connectNewServers(self, self.s.replicaSetState.unknownServers, (err) => {
+            // Don't emit errors if the connection was already
+            if (self.state === DESTROYED || self.state === UNREFERENCED) {
+                return;
+            }
+
+            if (!self.s.replicaSetState.hasPrimary() && !self.s.options.secondaryOnlyConnectionAllowed) {
+                if (err) {
+                    return self.emit("error", err);
+                }
+                self.emit("error", new MongoError("no primary found in replicaset"));
+                return self.destroy();
+            } else if (!self.s.replicaSetState.hasSecondary() && self.s.options.secondaryOnlyConnectionAllowed) {
+                if (err) {
+                    return self.emit("error", err);
+                }
+                self.emit("error", new MongoError("no secondary found in replicaset"));
+                return self.destroy();
+            }
+
+            for (let i = 0; i < servers.length; i++) {
+                monitorServer(servers[i], self, options);
+            }
+        });
+    }
+    for (let i = 0; i < servers.length; i++) {
+        monitorServer(servers[i], self, options);
+    }
+
+
+    // Run the reconnect process
+    const executeReconnect = (self) => {
+        return function () {
+            if (self.state == DESTROYED || self.state == UNREFERENCED) {
+                return;
+            }
+
+            connectNewServers(self, self.s.replicaSetState.unknownServers, () => {
+                const monitoringFrequencey = self.s.replicaSetState.hasPrimary()
+                    ? _haInterval
+                    : self.s.minHeartbeatFrequencyMS;
+
+                // Create a timeout
+                self.intervalIds.push(new helper.Timeout(executeReconnect(self), monitoringFrequencey).start());
+            });
+        };
+    };
+
+    // Decide what kind of interval to use
+    const intervalTime = !self.s.replicaSetState.hasPrimary()
+        ? self.s.minHeartbeatFrequencyMS
+        : _haInterval;
+
+    self.intervalIds.push(new helper.Timeout(executeReconnect(self), intervalTime).start());
+};
+
+// Each server is monitored in parallel in their own timeout loop
+const monitorServer = function (host, self, options) {
+    // If this is not the initial scan
+    // Is this server already being monitoried, then skip monitoring
+    if (!options.haInterval) {
+        for (let i = 0; i < self.intervalIds.length; i++) {
+            if (self.intervalIds[i].__host === host) {
+                return;
+            }
+        }
+    }
+
+    // Get the haInterval
+    const _process = options.haInterval ? helper.Timeout : helper.Interval;
+    const _haInterval = options.haInterval ? options.haInterval : self.s.haInterval;
+
+    // Create the interval
+    const intervalId = new _process(() => {
+        if (self.state == DESTROYED || self.state == UNREFERENCED) {
+            // clearInterval(intervalId);
+            intervalId.stop();
+            return;
+        }
+
+        // Do we already have server connection available for this host
+        const _server = self.s.replicaSetState.get(host);
+
+        // Check if we have a known server connection and reuse
+        if (_server) {
+            // Ping the server
+            return pingServer(self, _server, () => {
+                if (self.state == DESTROYED || self.state == UNREFERENCED) {
+                    intervalId.stop();
+                    return;
+                }
+
+                // Filter out all called intervaliIds
+                self.intervalIds = self.intervalIds.filter((intervalId) => {
+                    return intervalId.isRunning();
+                });
+
+                // Initial sweep
+                if (_process === helper.Timeout) {
+                    if (
+                        self.state === CONNECTING &&
+                        (
+                            (self.s.replicaSetState.hasSecondary() && self.s.options.secondaryOnlyConnectionAllowed) ||
+                            self.s.replicaSetState.hasPrimary()
+                        )
+                    ) {
+                        self.state = CONNECTED;
+
+                        // Emit connected sign
+                        process.nextTick(() => {
+                            self.emit("connect", self);
+                        });
+
+                        // Start topology interval check
+                        topologyMonitor(self, {});
+                    }
+                } else {
+                    if (
+                        self.state === DISCONNECTED &&
+                        (
+                            (self.s.replicaSetState.hasSecondary() && self.s.options.secondaryOnlyConnectionAllowed) ||
+                            self.s.replicaSetState.hasPrimary()
+                        )
+                    ) {
+                        self.state = CONNECTED;
+
+                        // Rexecute any stalled operation
+                        rexecuteOperations(self);
+
+                        // Emit connected sign
+                        process.nextTick(() => {
+                            self.emit("reconnect", self);
+                        });
+                    }
+                }
+
+                if (
+                    self.initialConnectState.connect &&
+                    !self.initialConnectState.fullsetup &&
+                    self.s.replicaSetState.hasPrimaryAndSecondary()
+                ) {
+                    // Set initial connect state
+                    self.initialConnectState.fullsetup = true;
+                    self.initialConnectState.all = true;
+
+                    process.nextTick(() => {
+                        self.emit("fullsetup", self);
+                        self.emit("all", self);
+                    });
+                }
+            });
+        }
+    }, _haInterval);
+
+    // Start the interval
+    intervalId.start();
+    // Add the intervalId host name
+    intervalId.__host = host;
+    // Add the intervalId to our list of intervalIds
+    self.intervalIds.push(intervalId);
+};
+
 const connectNewServers = (self, servers, callback) => {
     // Count lefts
     let count = servers.length;
@@ -253,6 +430,9 @@ const connectNewServers = (self, servers, callback) => {
                         this.on("close", handleEvent(self, "close"));
                         this.on("timeout", handleEvent(self, "timeout"));
                         this.on("parseError", handleEvent(self, "parseError"));
+
+                        // Enalbe the monitoring of the new server
+                        monitorServer(this.lastIsMaster().me, self, {});
 
                         // Rexecute any stalled operation
                         rexecuteOperations(self);
@@ -327,159 +507,6 @@ const connectNewServers = (self, servers, callback) => {
     for (let i = 0; i < servers.length; i++) {
         execute(servers[i], i);
     }
-};
-
-const topologyMonitor = (self, options = {}) => {
-    if (self.state === DESTROYED || self.state === UNREFERENCED) {
-        return;
-    }
-
-    const servers = util.keys(self.s.replicaSetState.set);
-
-    // Get the haInterval
-    const _process = options.haInterval ? setTimeout : setInterval;
-    const _haInterval = options.haInterval ? options.haInterval : self.s.haInterval;
-
-    // Count of initial sweep servers to check
-    let count = servers.length;
-
-    // Each server is monitored in parallel in their own timeout loop
-    const monitorServer = (_host, _self) => {
-        const intervalId = _process(() => {
-            if (self.state === DESTROYED || self.state === UNREFERENCED) {
-                clearInterval(intervalId);
-                return;
-            }
-
-            // Adjust the count
-            count = count - 1;
-
-            // Do we already have server connection available for this host
-            const _server = _self.s.replicaSetState.get(_host);
-
-            // Check if we have a known server connection and reuse
-            if (_server) {
-                return pingServer(_self, _server, () => {
-                    if (self.state === DESTROYED || self.state === UNREFERENCED) {
-                        clearInterval(intervalId);
-                        return;
-                    }
-
-                    // Initial sweep
-                    if (_process === setTimeout) {
-                        if (
-                            _self.state === CONNECTING &&
-                            (
-                                (
-                                    self.s.replicaSetState.hasSecondary() &&
-                                    self.s.options.secondaryOnlyConnectionAllowed
-                                ) ||
-                                self.s.replicaSetState.hasPrimary()
-                            )
-                        ) {
-                            _self.state = CONNECTED;
-
-                            // Emit connected sign
-                            process.nextTick(() => {
-                                self.emit("connect", self);
-                            });
-
-                            // Start topology interval check
-                            topologyMonitor(_self, {});
-                        }
-                    } else {
-                        if (
-                            _self.state === DISCONNECTED &&
-                            (
-                                (
-                                    self.s.replicaSetState.hasSecondary()
-                                    && self.s.options.secondaryOnlyConnectionAllowed
-                                ) ||
-                                self.s.replicaSetState.hasPrimary()
-                            )
-                        ) {
-                            _self.state = CONNECTED;
-
-                            // Rexecute any stalled operation
-                            rexecuteOperations(self);
-
-                            // Emit connected sign
-                            process.nextTick(() => {
-                                self.emit("reconnect", self);
-                            });
-                        }
-                    }
-
-                    if (
-                        self.initialConnectState.connect &&
-                        !self.initialConnectState.fullsetup &&
-                        self.s.replicaSetState.hasPrimaryAndSecondary()
-                    ) {
-                        // Set initial connect state
-                        self.initialConnectState.fullsetup = true;
-                        self.initialConnectState.all = true;
-
-                        process.nextTick(() => {
-                            self.emit("fullsetup", self);
-                            self.emit("all", self);
-                        });
-                    }
-                });
-            }
-        }, _haInterval);
-        // Add the intervalId to our list of intervalIds
-        self.intervalIds.push(intervalId);
-    };
-
-    if (_process === setTimeout) {
-        return connectNewServers(self, self.s.replicaSetState.unknownServers, (err) => {
-            if (!self.s.replicaSetState.hasPrimary() && !self.s.options.secondaryOnlyConnectionAllowed) {
-                if (err) {
-                    return self.emit("error", err);
-                }
-                self.emit("error", new MongoError("no primary found in replicaset"));
-                return self.destroy();
-            } else if (!self.s.replicaSetState.hasSecondary() && self.s.options.secondaryOnlyConnectionAllowed) {
-                if (err) {
-                    return self.emit("error", err);
-                }
-                self.emit("error", new MongoError("no secondary found in replicaset"));
-                return self.destroy();
-            }
-
-            for (const s of servers) {
-                monitorServer(s, self, options);
-            }
-        });
-    }
-    for (const s of servers) {
-        monitorServer(s, self, options);
-    }
-
-
-    // Run the reconnect process
-    const executeReconnect = (self) => {
-        return () => {
-            if (self.state === DESTROYED || self.state === UNREFERENCED) {
-                return;
-            }
-
-            connectNewServers(self, self.s.replicaSetState.unknownServers, () => {
-                if (self.s.replicaSetState.hasPrimary()) {
-                    self.intervalIds.push(setTimeout(executeReconnect(self), _haInterval));
-                } else {
-                    self.intervalIds.push(setTimeout(executeReconnect(self), self.s.minHeartbeatFrequencyMS));
-                }
-            });
-        };
-    };
-
-    // Decide what kind of interval to use
-    const intervalTime = !self.s.replicaSetState.hasPrimary()
-        ? self.s.minHeartbeatFrequencyMS
-        : _haInterval;
-
-    self.intervalIds.push(setTimeout(executeReconnect(self), intervalTime));
 };
 
 const handleInitialConnectEvent = (self, event) => {
@@ -846,8 +873,7 @@ export default class ReplSet extends EventEmitter {
 
         // Clear out all monitoring
         for (const i of this.intervalIds) {
-            clearInterval(i);
-            clearTimeout(i);
+            i.stop();
         }
 
         // Reset list of intervalIds

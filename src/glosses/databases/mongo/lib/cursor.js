@@ -1063,6 +1063,17 @@ const count = function (self, applySkipLimit, opts, callback) {
         count: self.s.ns.substr(delimiter + 1), query: self.s.cmd.query
     };
 
+    // Apply a readConcern if set
+    if (self.s.cmd.readConcern) {
+        command.readConcern = self.s.cmd.readConcern;
+    }
+
+    // Apply a hint if set
+    if (self.s.cmd.hint) {
+        command.hint = self.s.cmd.hint;
+    }
+
+
     if (typeof opts.maxTimeMS === "number") {
         command.maxTimeMS = opts.maxTimeMS;
     } else if (self.s.cmd && typeof self.s.cmd.maxTimeMS === "number") {

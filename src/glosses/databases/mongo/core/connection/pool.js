@@ -1,10 +1,10 @@
 const {
     database: { mongo: { core: {
         auth: { MongoCR, X509, Plain, ScramSHA1 },
-        Connection,
-        MongoError,
-        Query,
-        CommandResult
+    Connection,
+    MongoError,
+    Query,
+    CommandResult
     } } },
     std: { events: EventEmitter },
     is, x
@@ -358,17 +358,27 @@ const _execute = (self) => {
                         connection.setSocketTimeout(workItem.socketTimeout);
                     }
 
+                    // Capture if write was successful
+                    let writeSuccessful = true;
+
                     // Put operation on the wire
                     if (is.array(buffer)) {
                         for (const b of buffer) {
-                            connection.write(b);
+                            writeSuccessful = connection.write(b);
                         }
                     } else {
-                        connection.write(buffer);
+                        writeSuccessful = connection.write(buffer);
                     }
 
-                    if (workItem.immediateRelease && self.authenticating) {
+                    if (writeSuccessful && workItem.immediateRelease && self.authenticating) {
                         self.nonAuthenticatedConnections.push(connection);
+                    } else if (writeSuccessful === false) {
+                        // If write not successful put back on queue
+                        self.queue.unshift(workItem);
+                        // Remove the disconnected connection
+                        removeConnection(self, connection);
+                        // Flush any monitoring operations in the queue, failing fast
+                        flushMonitoringOperations(self.queue);
                     }
                 } else {
                     // Remove the disconnected connection
@@ -767,9 +777,9 @@ export default class Pool extends EventEmitter {
             size: 5,
             // socket settings
             connectionTimeout: 30000,
-            socketTimeout: 30000,
+            socketTimeout: 360000,
             keepAlive: true,
-            keepAliveInitialDelay: 0,
+            keepAliveInitialDelay: 300000,
             noDelay: true,
             // SSL Settings
             ssl: false, checkServerIdentity: true,

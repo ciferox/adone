@@ -324,6 +324,7 @@ AggregationCursor.prototype.get = AggregationCursor.prototype.toArray;
 define.classMethod("toArray", { callback: true, promise: true });
 define.classMethod("each", { callback: true, promise: false });
 define.classMethod("forEach", { callback: true, promise: false });
+define.classMethod("hasNext", { callback: true, promise: true });
 define.classMethod("next", { callback: true, promise: true });
 define.classMethod("close", { callback: true, promise: true });
 define.classMethod("isClosed", { callback: false, promise: false, returns: [Boolean] });

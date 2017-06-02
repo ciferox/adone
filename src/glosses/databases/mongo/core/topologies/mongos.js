@@ -1,10 +1,10 @@
 const {
     database: { mongo: { core: {
         Cursor: BasicCursor,
-        MongoError,
-        Server,
-        auth: { MongoCR, X509, Plain, ScramSHA1 },
-        helper
+    MongoError,
+    Server,
+    auth: { MongoCR, X509, Plain, ScramSHA1 },
+    helper
     } } },
     std: {
         events: EventEmitter
@@ -83,6 +83,59 @@ const removeProxyFrom = (from, proxy) => {
     }
 };
 
+const emitTopologyDescriptionChanged = (self) => {
+    if (self.listeners("topologyDescriptionChanged").length > 0) {
+        let topology = "Unknown";
+
+        if (self.connectedProxies.length > 0) {
+            topology = "Sharded";
+        }
+
+        // Generate description
+        const description = {
+            topologyType: topology,
+            servers: []
+        };
+
+        // All proxies
+        const proxies = self.disconnectedProxies
+            .concat(self.connectingProxies);
+
+        // Add all the disconnected proxies
+        description.servers = description.servers.concat(proxies.map((x) => {
+            const description = x.getDescription();
+            description.type = "Unknown";
+            return description;
+        }));
+
+        // Add all the connected proxies
+        description.servers = description.servers.concat(self.connectedProxies.map((x) => {
+            const description = x.getDescription();
+            description.type = "Mongos";
+            return description;
+        }));
+
+        // Get the diff
+        const diffResult = helper.diff(self.topologyDescription, description);
+
+        // Create the result
+        const result = {
+            topologyId: self.id,
+            previousDescription: self.topologyDescription,
+            newDescription: description,
+            diff: diffResult
+        };
+
+        // Emit the topologyDescription change
+        if (diffResult.servers.length > 0) {
+            self.emit("topologyDescriptionChanged", result);
+        }
+
+        // Set the new description
+        self.topologyDescription = description;
+    }
+};
+
 const handleEvent = (self) => {
     return function () {
         if (self.state === DESTROYED) {
@@ -90,8 +143,15 @@ const handleEvent = (self) => {
         }
         // Move to list of disconnectedProxies
         moveServerFrom(self.connectedProxies, self.disconnectedProxies, this);
+        // Emit the initial topology
+        emitTopologyDescriptionChanged(self);
         // Emit the left signal
         self.emit("left", "mongos", this);
+        // Emit the sdam event
+        self.emit("serverClosed", {
+            topologyId: self.id,
+            address: this.name
+        });
     };
 };
 
@@ -170,6 +230,7 @@ const reconnectProxies = (self, proxies, callback) => {
             // Destroyed
             if (self.state === DESTROYED || self.state === UNREFERENCED) {
                 moveServerFrom(self.connectingProxies, self.disconnectedProxies, this);
+                // Return destroy
                 return this.destroy();
             }
 
@@ -195,6 +256,8 @@ const reconnectProxies = (self, proxies, callback) => {
 
                     // Move to the connected servers
                     moveServerFrom(self.disconnectedProxies, self.connectedProxies, this);
+                    // Emit topology Change
+                    emitTopologyDescriptionChanged(self);
                     // Emit joined event
                     self.emit("joined", "mongos", this);
                 });
@@ -234,6 +297,17 @@ const reconnectProxies = (self, proxies, callback) => {
                 clientInfo: util.clone(self.s.clientInfo)
             }));
 
+            // Relay the server description change
+            server.on("serverDescriptionChanged", (event) => {
+                self.emit("serverDescriptionChanged", event);
+            });
+
+            // Emit opening server event
+            self.emit("serverOpening", {
+                topologyId: server.s.topologyId !== -1 ? server.s.topologyId : self.id,
+                address: server.name
+            });
+
             // Add temp handlers
             server.once("connect", _handleEvent(self, "connect"));
             server.once("close", _handleEvent(self, "close"));
@@ -241,16 +315,7 @@ const reconnectProxies = (self, proxies, callback) => {
             server.once("error", _handleEvent(self, "error"));
             server.once("parseError", _handleEvent(self, "parseError"));
 
-            // SDAM Monitoring events
-            server.on("serverOpening", (e) => {
-                self.emit("serverOpening", e);
-            });
-            server.on("serverDescriptionChanged", (e) => {
-                self.emit("serverDescriptionChanged", e);
-            });
-            server.on("serverClosed", (e) => {
-                self.emit("serverClosed", e);
-            });
+            // Connect to proxy
             server.connect(self.s.connectOptions);
         }, i);
     };
@@ -382,6 +447,8 @@ const handleInitialConnectEvent = (self, event) => {
     return function () {
         // Destroy the instance
         if (self.state === DESTROYED) {
+            // Emit the initial topology
+            emitTopologyDescriptionChanged(self);
             // Move from connectingProxies
             moveServerFrom(self.connectingProxies, self.disconnectedProxies, this);
             return this.destroy();
@@ -401,6 +468,8 @@ const handleInitialConnectEvent = (self, event) => {
                         if (p.name === this.name) {
                             // Move from connectingProxies
                             moveServerFrom(self.connectingProxies, self.disconnectedProxies, this);
+                            // Emit the initial topology
+                            emitTopologyDescriptionChanged(self);
                             this.destroy();
                             return self.emit("failed", this);
                         }
@@ -438,6 +507,9 @@ const handleInitialConnectEvent = (self, event) => {
             self.emit("failed", this);
         }
 
+        // Emit the initial topology
+        emitTopologyDescriptionChanged(self);
+
         // Trigger topologyMonitor
         if (self.connectingProxies.length === 0) {
             // Emit connected if we are connected
@@ -469,22 +541,21 @@ const connectProxies = (self, servers) => {
 
     const connect = (server, timeoutInterval) => {
         setTimeout(() => {
+            // Emit opening server event
+            self.emit("serverOpening", {
+                topologyId: self.id,
+                address: server.name
+            });
+
+            // Emit the initial topology
+            emitTopologyDescriptionChanged(self);
+
             // Add event handlers
             server.once("close", handleInitialConnectEvent(self, "close"));
             server.once("timeout", handleInitialConnectEvent(self, "timeout"));
             server.once("parseError", handleInitialConnectEvent(self, "parseError"));
             server.once("error", handleInitialConnectEvent(self, "error"));
             server.once("connect", handleInitialConnectEvent(self, "connect"));
-            // SDAM Monitoring events
-            server.on("serverOpening", (e) => {
-                self.emit("serverOpening", e);
-            });
-            server.on("serverDescriptionChanged", (e) => {
-                self.emit("serverDescriptionChanged", e);
-            });
-            server.on("serverClosed", (e) => {
-                self.emit("serverClosed", e);
-            });
             // Start connection
             server.connect(self.s.connectOptions);
         }, timeoutInterval);
@@ -615,6 +686,9 @@ export default class Mongos extends EventEmitter {
         this.haTimeoutId = null;
         // Last ismaster
         this.ismaster = null;
+        this.topologyDescription = {
+            topologyType: "Unknown", servers: []
+        };
     }
 
     get type() {
@@ -639,6 +713,12 @@ export default class Mongos extends EventEmitter {
             }));
         });
 
+        servers.forEach((server) => {
+            server.on("serverDescriptionChanged", (event) => {
+                this.emit("serverDescriptionChanged", event);
+            });
+        });
+
         // Emit the topology opening event
         helper.emitSDAMEvent(this, "topologyOpening", { topologyId: this.id });
 
@@ -654,7 +734,7 @@ export default class Mongos extends EventEmitter {
         // Transition state
         stateTransition(this, UNREFERENCED);
         // Get all proxies
-        for (const l of [this.connectedProxies, this.connectedProxies]) {
+        for (const l of [this.connectedProxies, this.connectingProxies]) {
             for (const p of l) {
                 p.unref();
             }
@@ -673,9 +753,17 @@ export default class Mongos extends EventEmitter {
         this.s.authenticationContexts = [];
 
         // Destroy all connecting servers
-        for (const l of [this.connectedProxies, this.connectedProxies]) {
+        for (const l of [this.connectedProxies, this.connectingProxies]) {
             for (const p of l) {
+                // Emit the sdam event
+                this.emit("serverClosed", {
+                    topologyId: this.id,
+                    address: p.name
+                });
+                // Destroy the server
                 p.destroy(options);
+                // Move to list of disconnectedProxies
+                moveServerFrom(this.connectedProxies, this.disconnectedProxies, p);
             }
         }
         // Emit toplogy closing event

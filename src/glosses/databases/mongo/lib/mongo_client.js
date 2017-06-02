@@ -11,6 +11,9 @@ const MongoError = require("../core").MongoError;
 const Db = require("./db");
 const f = require("util").format;
 const shallowClone = require("./utils").shallowClone;
+const EventEmitter = require("events").EventEmitter;
+const assign = require("./utils").assign;
+const inherits = require("util").inherits;
 const authenticate = require("./authenticate");
 
 /**
@@ -28,7 +31,7 @@ const authenticate = require("./authenticate");
  * });
  */
 const validOptionNames = ["poolSize", "ssl", "sslValidate", "sslCA", "sslCert",
-    "sslKey", "sslPass", "sslCRL", "autoReconnect", "noDelay", "keepAlive", "connectTimeoutMS",
+    "sslKey", "sslPass", "sslCRL", "autoReconnect", "noDelay", "keepAlive", "connectTimeoutMS", "family",
     "socketTimeoutMS", "reconnectTries", "reconnectInterval", "ha", "haInterval",
     "replicaSet", "secondaryAcceptableLatencyMS", "acceptableLatencyMS",
     "connectWithNoPrimary", "authSource", "w", "wtimeout", "j", "forceServerObjectID",
@@ -67,6 +70,12 @@ function validOptions(options) {
  * @return {MongoClient} a MongoClient instance.
  */
 function MongoClient() {
+    if (!(this instanceof MongoClient)) {
+        return new MongoClient();
+    }
+
+    // Set up event emitter
+    EventEmitter.call(this);
     /**
      * The callback format for results
      * @callback MongoClient~connectCallback
@@ -131,6 +140,8 @@ function MongoClient() {
     this.connect = MongoClient.connect;
 }
 
+inherits(MongoClient, EventEmitter);
+
 const define = MongoClient.define = new Define("MongoClient", MongoClient, false);
 
 /**
@@ -193,6 +204,7 @@ MongoClient.connect = function (url, options, callback) {
     callback = typeof args[args.length - 1] === "function" ? args.pop() : null;
     options = args.length ? args.shift() : null;
     options = options || {};
+    const self = this;
 
     // Validate options object
     const err = validOptions(options);
@@ -214,7 +226,7 @@ MongoClient.connect = function (url, options, callback) {
                 return reject(err);
             }
             // Attempt to connect
-            connect(url, options, (err, db) => {
+            connect(self, url, options, (err, db) => {
                 if (err) {
                     return reject(err);
                 }
@@ -228,7 +240,7 @@ MongoClient.connect = function (url, options, callback) {
         return callback(err);
     }
     // Fallback to callback based connect
-    connect(url, options, callback);
+    connect(self, url, options, callback);
 };
 
 define.staticMethod("connect", { callback: true, promise: true });
@@ -248,7 +260,7 @@ const mergeOptions = function (target, source, flatten) {
 const createUnifiedOptions = function (finalOptions, options) {
     const childOptions = ["mongos", "server", "db",
         "replset", "db_options", "server_options", "rs_options", "mongos_options"];
-    const noMerge = [];
+    const noMerge = ["readconcern"];
 
     for (const name in options) {
         if (noMerge.indexOf(name.toLowerCase()) != -1) {
@@ -285,7 +297,7 @@ function translateOptions(options) {
 
     // Set the socket and connection timeouts
     if (options.socketTimeoutMS == null) {
-        options.socketTimeoutMS = 30000;
+        options.socketTimeoutMS = 360000;
     }
     if (options.connectTimeoutMS == null) {
         options.connectTimeoutMS = 30000;
@@ -299,25 +311,81 @@ function translateOptions(options) {
     });
 }
 
-function createReplicaset(options, callback) {
-    // Set default options
-    const servers = translateOptions(options);
-    // Create Db instance
-    new Db(options.dbName, new ReplSet(servers, options), options).open(callback);
+//
+// Collect all events in order from SDAM
+//
+function collectEvents(self, db) {
+    const collectedEvents = [];
+
+    if (self instanceof MongoClient) {
+        const events = ["timeout", "close", "serverOpening", "serverDescriptionChanged", "serverHeartbeatStarted",
+            "serverHeartbeatSucceeded", "serverHeartbeatFailed", "serverClosed", "topologyOpening",
+            "topologyClosed", "topologyDescriptionChanged", "joined", "left", "ping", "ha", "all", "fullsetup"];
+        events.forEach((event) => {
+            db.serverConfig.on(event, (object1, object2) => {
+                collectedEvents.push({
+                    event, object1, object2
+                });
+            });
+        });
+    }
+
+    return collectedEvents;
 }
 
-function createMongos(options, callback) {
-    // Set default options
-    const servers = translateOptions(options);
-    // Create Db instance
-    new Db(options.dbName, new Mongos(servers, options), options).open(callback);
+//
+// Replay any events due to single server connection switching to Mongos
+//
+function replayEvents(self, events) {
+    for (let i = 0; i < events.length; i++) {
+        self.emit(events[i].event, events[i].object1, events[i].object2);
+    }
 }
 
-function createServer(options, callback) {
+function relayEvents(self, db) {
+    if (self instanceof MongoClient) {
+        const events = ["timeout", "close", "serverOpening", "serverDescriptionChanged", "serverHeartbeatStarted",
+            "serverHeartbeatSucceeded", "serverHeartbeatFailed", "serverClosed", "topologyOpening",
+            "topologyClosed", "topologyDescriptionChanged", "joined", "left", "ping", "ha", "all", "fullsetup"];
+        events.forEach((event) => {
+            db.serverConfig.on(event, (object1, object2) => {
+                self.emit(event, object1, object2);
+            });
+        });
+    }
+}
+
+function createReplicaset(self, options, callback) {
     // Set default options
     const servers = translateOptions(options);
     // Create Db instance
-    new Db(options.dbName, servers[0], options).open((err, db) => {
+    const db = new Db(options.dbName, new ReplSet(servers, options), options);
+    // Propegate the events to the client
+    relayEvents(self, db);
+    // Open the connection
+    db.open(callback);
+}
+
+function createMongos(self, options, callback) {
+    // Set default options
+    const servers = translateOptions(options);
+    // Create Db instance
+    const db = new Db(options.dbName, new Mongos(servers, options), options);
+    // Propegate the events to the client
+    relayEvents(self, db);
+    // Open the connection
+    db.open(callback);
+}
+
+function createServer(self, options, callback) {
+    // Set default options
+    const servers = translateOptions(options);
+    // Create db instance
+    const db = new Db(options.dbName, servers[0], options);
+    // Propegate the events to the client
+    const collectedEvents = collectEvents(self, db);
+    // Create Db instance
+    db.open((err, db) => {
         if (err) {
             return callback(err);
         }
@@ -329,9 +397,13 @@ function createServer(options, callback) {
             // Destroy the current connection
             db.close();
             // Create mongos connection instead
-            return createMongos(options, callback);
+            return createMongos(self, options, callback);
         }
 
+        // Fire all the events
+        replayEvents(self, collectedEvents);
+        // Propegate the events to the client
+        relayEvents(self, db);
         // Otherwise callback
         callback(err, db);
     });
@@ -407,7 +479,7 @@ function connectHandler(options, callback) {
 /*
  * Connect using MongoClient
  */
-const connect = function (url, options, callback) {
+const connect = function (self, url, options, callback) {
     options = options || {};
     options = shallowClone(options);
 
@@ -415,6 +487,9 @@ const connect = function (url, options, callback) {
     if (callback == null) {
         throw new Error("no callback function provided");
     }
+
+    // Get a logger for MongoClient
+    const logger = Logger("MongoClient", options);
 
     // Parse the string
     const object = parse(url, options);
@@ -424,7 +499,7 @@ const connect = function (url, options, callback) {
 
     // Check if we have connection and socket timeout set
     if (_finalOptions.socketTimeoutMS == null) {
-        _finalOptions.socketTimeoutMS = 30000;
+        _finalOptions.socketTimeoutMS = 360000;
     }
     if (_finalOptions.connectTimeoutMS == null) {
         _finalOptions.connectTimeoutMS = 30000;
@@ -437,6 +512,10 @@ const connect = function (url, options, callback) {
 
     function connectCallback(err, db) {
         if (err && err.message == "no mongos proxies found in seed list") {
+            if (logger.isWarn()) {
+                logger.warn(f("seed list contains no mongos proxies, replicaset connections requires the parameter replicaSet to be supplied in the URI or options object, mongodb://server:port/db?replicaSet=name"));
+            }
+
             // Return a more specific error message for MongoClient.connect
             return callback(new MongoError("seed list contains no mongos proxies, replicaset connections requires the parameter replicaSet to be supplied in the URI or options object, mongodb://server:port/db?replicaSet=name"));
         }
@@ -447,11 +526,11 @@ const connect = function (url, options, callback) {
 
     // Do we have a replicaset then skip discovery and go straight to connectivity
     if (_finalOptions.replicaSet || _finalOptions.rs_name) {
-        return createReplicaset(_finalOptions, connectHandler(_finalOptions, connectCallback));
+        return createReplicaset(self, _finalOptions, connectHandler(_finalOptions, connectCallback));
     } else if (object.servers.length > 1) {
-        return createMongos(_finalOptions, connectHandler(_finalOptions, connectCallback));
+        return createMongos(self, _finalOptions, connectHandler(_finalOptions, connectCallback));
     }
-    return createServer(_finalOptions, connectHandler(_finalOptions, connectCallback));
+    return createServer(self, _finalOptions, connectHandler(_finalOptions, connectCallback));
 
 };
 

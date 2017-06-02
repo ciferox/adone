@@ -305,11 +305,17 @@ export default class Connection extends EventEmitter {
         // Default options
         this.port = options.port || 27017;
         this.host = options.host || "localhost";
+        this.family = is.number(options.family) ? options.family : 4;
         this.keepAlive = is.boolean(options.keepAlive) ? options.keepAlive : true;
-        this.keepAliveInitialDelay = options.keepAliveInitialDelay || 0;
+        this.keepAliveInitialDelay = is.number(options.keepAliveInitialDelay) ? options.keepAliveInitialDelay : 300000;
         this.noDelay = is.boolean(options.noDelay) ? options.noDelay : true;
-        this.connectionTimeout = options.connectionTimeout || 0;
-        this.socketTimeout = options.socketTimeout || 0;
+        this.connectionTimeout = is.number(options.connectionTimeout) ? options.connectionTimeout : 30000;
+        this.socketTimeout = is.number(options.socketTimeout) ? options.socketTimeout : 360000;
+
+        // Is the keepAliveInitialDelay > socketTimeout set it to half of socketTimeout
+        if (this.keepAliveInitialDelay > this.socketTimeout) {
+            this.keepAliveInitialDelay = Math.round(this.socketTimeout / 2);
+        }
 
         // If connection was destroyed
         this.destroyed = false;
@@ -392,9 +398,10 @@ export default class Connection extends EventEmitter {
         }
 
         // Create new connection instance
-        this.connection = this.domainSocket
-            ? net.createConnection(this.host)
-            : net.createConnection(this.port, this.host);
+        const connectionOptions = this.domainSocket
+            ? { path: this.host }
+            : { port: this.port, host: this.host, family: this.family };
+        this.connection = net.createConnection(connectionOptions);
 
         // Set the options for the connection
         this.connection.setKeepAlive(this.keepAlive, this.keepAliveInitialDelay);
@@ -506,10 +513,23 @@ export default class Connection extends EventEmitter {
         if (!is.array(buffer)) {
             return this.connection.write(buffer, "binary");
         }
-        // Iterate over all buffers and write them in order to the socket
-        for (const b of buffer) {
-            this.connection.write(b, "binary");
+        // Double check that the connection is not destroyed
+        if (this.connection.destroyed === false) {
+            // Write out the command
+            if (!is.array(buffer)) {
+                this.connection.write(buffer, "binary");
+                return true;
+            }
+
+            // Iterate over all buffers and write them in order to the socket
+            for (const b of buffer) {
+                this.connection.write(b, "binary");
+            }
+            return true;
         }
+
+        // Connection is destroyed return write failed
+        return false;
     }
 
     isConnected() {

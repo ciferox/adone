@@ -44,8 +44,8 @@ const legalOptionNames = ["ha", "haInterval", "replicaSet", "rs_name", "secondar
     "connectWithNoPrimary", "poolSize", "ssl", "checkServerIdentity", "sslValidate",
     "sslCA", "sslCert", "sslCRL", "sslKey", "sslPass", "socketOptions", "bufferMaxEntries",
     "store", "auto_reconnect", "autoReconnect", "emitError",
-    "keepAlive", "noDelay", "connectTimeoutMS", "socketTimeoutMS", "strategy", "debug",
-    "reconnectTries", "appname", "domainsEnabled",
+    "keepAlive", "noDelay", "connectTimeoutMS", "socketTimeoutMS", "strategy", "debug", "family",
+    "loggerLevel", "logger", "reconnectTries", "appname", "domainsEnabled",
     "servername", "promoteLongs", "promoteValues", "promoteBuffers", "maxStalenessSeconds"];
 
 // Get package.json variable
@@ -284,69 +284,70 @@ ReplSet.prototype.connect = function (db, _options, callback) {
         };
     };
 
+    // Clear out all the current handlers left over
+    const events = ["timeout", "error", "close", "serverOpening", "serverDescriptionChanged", "serverHeartbeatStarted",
+        "serverHeartbeatSucceeded", "serverHeartbeatFailed", "serverClosed", "topologyOpening",
+        "topologyClosed", "topologyDescriptionChanged", "joined", "left", "ping", "ha"];
+    events.forEach((e) => {
+        self.s.replset.removeAllListeners(e);
+    });
+
+    // relay the event
+    const relay = function (event) {
+        return function (t, server) {
+            self.emit(event, t, server);
+        };
+    };
+
+    // Replset events relay
+    const replsetRelay = function (event) {
+        return function (t, server) {
+            self.emit(event, t, server.lastIsMaster(), server);
+        };
+    };
+
+    // Relay ha
+    const relayHa = function (t, state) {
+        self.emit("ha", t, state);
+
+        if (t == "start") {
+            self.emit("ha_connect", t, state);
+        } else if (t == "end") {
+            self.emit("ha_ismaster", t, state);
+        }
+    };
+
+    // Set up serverConfig listeners
+    self.s.replset.on("joined", replsetRelay("joined"));
+    self.s.replset.on("left", relay("left"));
+    self.s.replset.on("ping", relay("ping"));
+    self.s.replset.on("ha", relayHa);
+
+    // Set up SDAM listeners
+    self.s.replset.on("serverDescriptionChanged", relay("serverDescriptionChanged"));
+    self.s.replset.on("serverHeartbeatStarted", relay("serverHeartbeatStarted"));
+    self.s.replset.on("serverHeartbeatSucceeded", relay("serverHeartbeatSucceeded"));
+    self.s.replset.on("serverHeartbeatFailed", relay("serverHeartbeatFailed"));
+    self.s.replset.on("serverOpening", relay("serverOpening"));
+    self.s.replset.on("serverClosed", relay("serverClosed"));
+    self.s.replset.on("topologyOpening", relay("topologyOpening"));
+    self.s.replset.on("topologyClosed", relay("topologyClosed"));
+    self.s.replset.on("topologyDescriptionChanged", relay("topologyDescriptionChanged"));
+
+    self.s.replset.on("fullsetup", () => {
+        self.emit("fullsetup", self, self);
+    });
+
+    self.s.replset.on("all", () => {
+        self.emit("all", null, self);
+    });
+
     // Connect handler
     const connectHandler = function () {
-        // Clear out all the current handlers left over
-        ["timeout", "error", "close", "serverOpening", "serverDescriptionChanged", "serverHeartbeatStarted",
-            "serverHeartbeatSucceeded", "serverHeartbeatFailed", "serverClosed", "topologyOpening",
-            "topologyClosed", "topologyDescriptionChanged"].forEach((e) => {
-                self.s.replset.removeAllListeners(e);
-            });
-
         // Set up listeners
         self.s.replset.once("timeout", errorHandler("timeout"));
         self.s.replset.once("error", errorHandler("error"));
         self.s.replset.once("close", errorHandler("close"));
-
-        // relay the event
-        const relay = function (event) {
-            return function (t, server) {
-                self.emit(event, t, server);
-            };
-        };
-
-        // Replset events relay
-        const replsetRelay = function (event) {
-            return function (t, server) {
-                self.emit(event, t, server.lastIsMaster(), server);
-            };
-        };
-
-        // Relay ha
-        const relayHa = function (t, state) {
-            self.emit("ha", t, state);
-
-            if (t == "start") {
-                self.emit("ha_connect", t, state);
-            } else if (t == "end") {
-                self.emit("ha_ismaster", t, state);
-            }
-        };
-
-        // Set up serverConfig listeners
-        self.s.replset.on("joined", replsetRelay("joined"));
-        self.s.replset.on("left", relay("left"));
-        self.s.replset.on("ping", relay("ping"));
-        self.s.replset.on("ha", relayHa);
-
-        // Set up SDAM listeners
-        self.s.replset.on("serverDescriptionChanged", relay("serverDescriptionChanged"));
-        self.s.replset.on("serverHeartbeatStarted", relay("serverHeartbeatStarted"));
-        self.s.replset.on("serverHeartbeatSucceeded", relay("serverHeartbeatSucceeded"));
-        self.s.replset.on("serverHeartbeatFailed", relay("serverHeartbeatFailed"));
-        self.s.replset.on("serverOpening", relay("serverOpening"));
-        self.s.replset.on("serverClosed", relay("serverClosed"));
-        self.s.replset.on("topologyOpening", relay("topologyOpening"));
-        self.s.replset.on("topologyClosed", relay("topologyClosed"));
-        self.s.replset.on("topologyDescriptionChanged", relay("topologyDescriptionChanged"));
-
-        self.s.replset.on("fullsetup", () => {
-            self.emit("fullsetup", null, self);
-        });
-
-        self.s.replset.on("all", () => {
-            self.emit("all", null, self);
-        });
 
         // Emit open event
         self.emit("open", null, self);
@@ -362,7 +363,7 @@ ReplSet.prototype.connect = function (db, _options, callback) {
     };
 
     // Error handler
-    const connectErrorHandler = function () {
+    var connectErrorHandler = function () {
         return function (err) {
             ["timeout", "error", "close"].forEach((e) => {
                 self.s.replset.removeListener(e, connectErrorHandler);

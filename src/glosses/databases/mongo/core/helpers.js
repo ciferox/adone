@@ -14,7 +14,7 @@ const architecture = process.arch;
 const release = os.release();
 
 export const createClientInfo = (options) => {
-  // Build default client information
+    // Build default client information
     const clientInfo = options.clientInfo ? util.clone(options.clientInfo) : {
         driver: {
             name: "nodejs-core",
@@ -65,4 +65,135 @@ export const getReadPreference = (cmd, options) => {
     }
 
     return readPreference;
+};
+
+export class Interval {
+    constructor(fn, time) {
+        this.timer = null;
+        this.fn = fn;
+        this.time = time;
+    }
+
+    start() {
+        if (!this.isRunning()) {
+            this.timer = setInterval(this.fn, this.time);
+        }
+        return this;
+    }
+
+    stop() {
+        clearInterval(this.timer);
+        this.timer = null;
+        return this;
+    }
+
+    isRunning() {
+        return !is.null(this.timer);
+    }
+}
+
+export class Timeout {
+    constructor(fn, time) {
+        this.timer = null;
+        this.fn = fn;
+        this.time = time;
+    }
+
+    start() {
+        if (!this.isRunning()) {
+            this.timer = setTimeout(this.fn, this.time);
+        }
+        return this;
+    }
+
+    stop() {
+        clearTimeout(this.timer);
+        this.timer = null;
+        return this;
+    }
+
+    isRunning() {
+        return !is.null(this.timer);
+    }
+}
+
+export const diff = (previous, current) => {
+    // Difference document
+    const diff = {
+        servers: []
+    };
+
+    // Previous entry
+    if (!previous) {
+        previous = { servers: [] };
+    }
+
+    // Check if we have any previous servers missing in the current ones
+    for (let i = 0; i < previous.servers.length; i++) {
+        let found = false;
+
+        for (let j = 0; j < current.servers.length; j++) {
+            if (current.servers[j].address.toLowerCase()
+                === previous.servers[i].address.toLowerCase()) {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            // Add to the diff
+            diff.servers.push({
+                address: previous.servers[i].address,
+                from: previous.servers[i].type,
+                to: "Unknown"
+            });
+        }
+    }
+
+    // Check if there are any severs that don't exist
+    for (let j = 0; j < current.servers.length; j++) {
+        let found = false;
+
+        // Go over all the previous servers
+        for (let i = 0; i < previous.servers.length; i++) {
+            if (previous.servers[i].address.toLowerCase() === current.servers[j].address.toLowerCase()) {
+                found = true;
+                break;
+            }
+        }
+
+        // Add the server to the diff
+        if (!found) {
+            diff.servers.push({
+                address: current.servers[j].address,
+                from: "Unknown",
+                to: current.servers[j].type
+            });
+        }
+    }
+
+    // Got through all the servers
+    for (let i = 0; i < previous.servers.length; i++) {
+        const prevServer = previous.servers[i];
+
+        // Go through all current servers
+        for (let j = 0; j < current.servers.length; j++) {
+            const currServer = current.servers[j];
+
+            // Matching server
+            if (prevServer.address.toLowerCase() === currServer.address.toLowerCase()) {
+                // We had a change in state
+                if (prevServer.type !== currServer.type) {
+                    diff.servers.push({
+                        address: prevServer.address,
+                        from: prevServer.type,
+                        to: currServer.type
+                    });
+                }
+            }
+        }
+    }
+
+    // Return difference
+    return diff;
 };

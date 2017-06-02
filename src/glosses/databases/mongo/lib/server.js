@@ -46,8 +46,8 @@ const legalOptionNames = ["ha", "haInterval", "acceptableLatencyMS",
     "poolSize", "ssl", "checkServerIdentity", "sslValidate",
     "sslCA", "sslCRL", "sslCert", "sslKey", "sslPass", "socketOptions", "bufferMaxEntries",
     "store", "auto_reconnect", "autoReconnect", "emitError",
-    "keepAlive", "noDelay", "connectTimeoutMS", "socketTimeoutMS",
-    "reconnectTries", "reconnectInterval", "monitoring",
+    "keepAlive", "noDelay", "connectTimeoutMS", "socketTimeoutMS", "family",
+    "loggerLevel", "logger", "reconnectTries", "reconnectInterval", "monitoring",
     "appname", "domainsEnabled",
     "servername", "promoteLongs", "promoteValues", "promoteBuffers"];
 
@@ -264,7 +264,7 @@ Server.prototype.connect = function (db, _options, callback) {
     self.s.storeOptions.bufferMaxEntries = db.bufferMaxEntries;
 
     // Error handler
-    const connectErrorHandler = function () {
+    var connectErrorHandler = function () {
         return function (err) {
             // Remove all event handlers
             const events = ["timeout", "error", "close"];
@@ -311,14 +311,19 @@ Server.prototype.connect = function (db, _options, callback) {
         self.s.store.flush();
     };
 
+    // relay the event
+    const relay = function (event) {
+        return function (t, server) {
+            self.emit(event, t, server);
+        };
+    };
+
     // Connect handler
     const connectHandler = function () {
         // Clear out all the current handlers left over
-        ["timeout", "error", "close", "serverOpening", "serverDescriptionChanged", "serverHeartbeatStarted",
-            "serverHeartbeatSucceeded", "serverHeartbeatFailed", "serverClosed", "topologyOpening",
-            "topologyClosed", "topologyDescriptionChanged"].forEach((e) => {
-                self.s.server.removeAllListeners(e);
-            });
+        ["timeout", "error", "close", "destroy"].forEach((e) => {
+            self.s.server.removeAllListeners(e);
+        });
 
         // Set up listeners
         self.s.server.on("timeout", errorHandler("timeout"));
@@ -326,26 +331,6 @@ Server.prototype.connect = function (db, _options, callback) {
         self.s.server.on("close", errorHandler("close"));
         // Only called on destroy
         self.s.server.on("destroy", destroyHandler);
-
-        // relay the event
-        const relay = function (event) {
-            return function (t, server) {
-                self.emit(event, t, server);
-            };
-        };
-
-        // Set up SDAM listeners
-        self.s.server.on("serverDescriptionChanged", relay("serverDescriptionChanged"));
-        self.s.server.on("serverHeartbeatStarted", relay("serverHeartbeatStarted"));
-        self.s.server.on("serverHeartbeatSucceeded", relay("serverHeartbeatSucceeded"));
-        self.s.server.on("serverHeartbeatFailed", relay("serverHeartbeatFailed"));
-        self.s.server.on("serverOpening", relay("serverOpening"));
-        self.s.server.on("serverClosed", relay("serverClosed"));
-        self.s.server.on("topologyOpening", relay("topologyOpening"));
-        self.s.server.on("topologyClosed", relay("topologyClosed"));
-        self.s.server.on("topologyDescriptionChanged", relay("topologyDescriptionChanged"));
-        self.s.server.on("attemptReconnect", relay("attemptReconnect"));
-        self.s.server.on("monitoring", relay("monitoring"));
 
         // Emit open event
         self.emit("open", null, self);
@@ -362,11 +347,18 @@ Server.prototype.connect = function (db, _options, callback) {
     };
 
     // Set up listeners
-    const connectHandlers = {
+    var connectHandlers = {
         timeout: connectErrorHandler("timeout"),
         error: connectErrorHandler("error"),
         close: connectErrorHandler("close")
     };
+
+    // Clear out all the current handlers left over
+    ["timeout", "error", "close", "serverOpening", "serverDescriptionChanged", "serverHeartbeatStarted",
+        "serverHeartbeatSucceeded", "serverHeartbeatFailed", "serverClosed", "topologyOpening",
+        "topologyClosed", "topologyDescriptionChanged"].forEach((e) => {
+            self.s.server.removeAllListeners(e);
+        });
 
     // Add the event handlers
     self.s.server.once("timeout", connectHandlers.timeout);
@@ -376,6 +368,19 @@ Server.prototype.connect = function (db, _options, callback) {
     // Reconnect server
     self.s.server.on("reconnect", reconnectHandler);
     self.s.server.on("reconnectFailed", reconnectFailedHandler);
+
+    // Set up SDAM listeners
+    self.s.server.on("serverDescriptionChanged", relay("serverDescriptionChanged"));
+    self.s.server.on("serverHeartbeatStarted", relay("serverHeartbeatStarted"));
+    self.s.server.on("serverHeartbeatSucceeded", relay("serverHeartbeatSucceeded"));
+    self.s.server.on("serverHeartbeatFailed", relay("serverHeartbeatFailed"));
+    self.s.server.on("serverOpening", relay("serverOpening"));
+    self.s.server.on("serverClosed", relay("serverClosed"));
+    self.s.server.on("topologyOpening", relay("topologyOpening"));
+    self.s.server.on("topologyClosed", relay("topologyClosed"));
+    self.s.server.on("topologyDescriptionChanged", relay("topologyDescriptionChanged"));
+    self.s.server.on("attemptReconnect", relay("attemptReconnect"));
+    self.s.server.on("monitoring", relay("monitoring"));
 
     // Start connection
     self.s.server.connect(_options);

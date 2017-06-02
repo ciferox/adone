@@ -125,7 +125,7 @@ describe("mongodb", function () {
                     }
                 });
 
-                it("Should correctly recover from an immediate shutdown mid insert", async () => {
+                it.skip("Should correctly recover from an immediate shutdown mid insert", async () => {
                     // Contain mock server
                     let running = true;
                     // Current index for the ismaster

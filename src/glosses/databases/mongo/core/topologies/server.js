@@ -1,12 +1,12 @@
 const {
     database: { mongo: { core: {
         ReadPreference,
-        Pool,
-        Query,
-        MongoError,
-        wireProtocol,
-        Cursor: BasicCursor,
-        helper
+    Pool,
+    Query,
+    MongoError,
+    wireProtocol,
+    Cursor: BasicCursor,
+    helper
     } } },
     std: { events: EventEmitter },
     is, x, util
@@ -30,7 +30,7 @@ const getPreviousDescription = (self) => {
 
 const emitServerDescriptionChanged = (self, description) => {
     if (self.listeners("serverDescriptionChanged").length > 0) {
-    // Emit the server description changed events
+        // Emit the server description changed events
         self.emit("serverDescriptionChanged", {
             topologyId: self.s.topologyId !== -1 ? self.s.topologyId : self.id, address: self.name,
             previousDescription: getPreviousDescription(self),
@@ -141,11 +141,11 @@ const getTopologyType = function (self, ismaster) {
     if (!ismaster) {
         return "Unknown";
     }
-    if (ismaster.ismaster && !ismaster.hosts) {
-        return "Standalone";
-    }
     if (ismaster.ismaster && ismaster.msg === "isdbgrid") {
         return "Mongos";
+    }
+    if (ismaster.ismaster && !ismaster.hosts) {
+        return "Standalone";
     }
     if (ismaster.ismaster) {
         return "RSPrimary";
@@ -208,20 +208,22 @@ const eventHandler = (self, event) => {
                     arbiters: [],
                     hosts: [],
                     passives: [],
-                    type: !self.s.inTopology ? "Standalone" : getTopologyType(self)
+                    type: getTopologyType(self)
                 });
 
-                // Emit topology description changed if something listening
-                emitTopologyDescriptionChanged(self, {
-                    topologyType: "Single",
-                    servers: [{
-                        address: self.name,
-                        arbiters: [],
-                        hosts: [],
-                        passives: [],
-                        type: "Standalone"
-                    }]
-                });
+                if (!self.s.inTopology) {
+                    // Emit topology description changed if something listening
+                    emitTopologyDescriptionChanged(self, {
+                        topologyType: "Single",
+                        servers: [{
+                            address: self.name,
+                            arbiters: [],
+                            hosts: [],
+                            passives: [],
+                            type: "Standalone"
+                        }]
+                    });
+                }
 
                 // Emit connect
                 self.emit("connect", self);
@@ -420,7 +422,7 @@ export default class Server extends EventEmitter {
 
         // Do not allow connect to be called on anything that's not disconnected
         if (this.s.pool && !this.s.pool.isDisconnected() && !this.s.pool.isDestroyed()) {
-            throw MongoError.create(`server instance in invalid state ${this.s.state}`);
+            throw MongoError.create(`server instance in invalid state ${this.s.pool.state}`);
         }
 
         // Create a pool

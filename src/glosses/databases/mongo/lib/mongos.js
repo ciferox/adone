@@ -249,7 +249,7 @@ Mongos.prototype.connect = function (db, _options, callback) {
     self.s.storeOptions.bufferMaxEntries = db.bufferMaxEntries;
 
     // Error handler
-    const connectErrorHandler = function () {
+    var connectErrorHandler = function () {
         return function (err) {
             // Remove all event handlers
             const events = ["timeout", "error", "close"];
@@ -348,6 +348,7 @@ Mongos.prototype.connect = function (db, _options, callback) {
     // Start connection
     self.s.mongos.connect(_options);
 };
+
 
 // Server capabilities
 Mongos.prototype.capabilities = function () {

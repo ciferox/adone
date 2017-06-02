@@ -131,7 +131,7 @@ class CommandCursor extends CoreCursor {
 inherits(CommandCursor, Readable);
 
 // Set the methods to inherit from prototype
-const methodsToInherit = ["_next", "next", "each", "forEach", "toArray",
+const methodsToInherit = ["_next", "next", "hasNext", "each", "forEach", "toArray",
     "rewind", "bufferedCount", "readBufferedDocuments", "close", "isClosed", "kill", "setCursorBatchSize",
     "_find", "_getmore", "_killcursor", "isDead", "explain", "isNotified", "isKilled"];
 
@@ -217,6 +217,7 @@ define.classMethod("toArray", { callback: true, promise: true });
 define.classMethod("each", { callback: true, promise: false });
 define.classMethod("forEach", { callback: true, promise: false });
 define.classMethod("next", { callback: true, promise: true });
+define.classMethod("hasNext", { callback: true, promise: true });
 define.classMethod("close", { callback: true, promise: true });
 define.classMethod("isClosed", { callback: false, promise: false, returns: [Boolean] });
 define.classMethod("rewind", { callback: false, promise: false });

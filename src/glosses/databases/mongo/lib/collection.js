@@ -1,3 +1,5 @@
+const { is } = adone;
+
 const checkCollectionName = require("./utils").checkCollectionName;
 const ObjectID = adone.data.bson.ObjectID;
 const Long = adone.data.bson.Long;
@@ -572,7 +574,7 @@ Collection.prototype.insertMany = function (docs, options, callback) {
     if (forceServerObjectID !== true) {
         // Add _id if not specified
         for (let i = 0; i < docs.length; i++) {
-            if (docs[i]._id == null) {
+            if (is.undefined(docs[i]._id)) {
                 docs[i]._id = self.s.pkFactory.createPk();
             }
         }
@@ -2364,7 +2366,7 @@ const count = function (self, query, options, callback) {
         cmd.maxTimeMS = maxTimeMS;
     }
     if (hint) {
-        options.hint = hint;
+        cmd.hint = hint;
     }
 
     options = shallowClone(options);

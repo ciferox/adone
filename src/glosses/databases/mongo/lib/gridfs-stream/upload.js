@@ -33,6 +33,8 @@ function GridFSBucketWriteStream(bucket, filename, options) {
     this.filename = filename;
     this.files = bucket.s._filesCollection;
     this.options = options;
+    // Signals the write is all done
+    this.done = false;
 
     this.id = options.id ? options.id : new adone.data.bson.ObjectID();
     this.chunkSizeBytes = this.options.chunkSizeBytes;
@@ -121,7 +123,7 @@ GridFSBucketWriteStream.prototype.abort = function (callback) {
     this.state.aborted = true;
     this.chunks.deleteMany({ files_id: this.id }, (error) => {
         if (typeof callback === "function") {
-            callback(error); 
+            callback(error);
         }
     });
 };
@@ -257,6 +259,9 @@ function checkDone(_this, callback) {
     if (_this.state.streamEnd &&
         _this.state.outstandingRequests === 0 &&
         !_this.state.errored) {
+        // Set done so we dont' trigger duplicate createFilesDoc
+        _this.done = true;
+        // Create a new files doc
         const filesDoc = createFilesDoc(_this.id, _this.length, _this.chunkSizeBytes,
             _this.md5.digest("hex"), _this.filename, _this.options.contentType,
             _this.options.aliases, _this.options.metadata);

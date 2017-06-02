@@ -1,5 +1,5 @@
 const {
-    database: { mongo: { core: { MongoError, ReadPreference } } },
+    database: { mongo: { core: { MongoError, ReadPreference, helper } } },
     std: { events: EventEmitter },
     is, util
 } = adone;
@@ -197,35 +197,6 @@ const removeFrom = (server, list) => {
     return false;
 };
 
-const diff = (previous, current) => {
-    // Difference document
-    const diff = {
-        servers: []
-    };
-
-    // Previous entry
-    if (!previous) {
-        previous = { servers: [] };
-    }
-
-    for (const prevServer of previous.servers) {
-        for (const currServer of current.servers) {
-            // Matching server
-            if (prevServer.address.toLowerCase() === currServer.address.toLowerCase()) {
-                // We had a change in state
-                if (prevServer.type !== currServer.type) {
-                    diff.servers.push({
-                        address: prevServer.address,
-                        from: prevServer.type,
-                        to: currServer.type
-                    });
-                }
-            }
-        }
-    }
-    return diff;
-};
-
 const emitTopologyDescriptionChanged = (self) => {
     if (self.listeners("topologyDescriptionChanged").length > 0) {
         let topology = "Unknown";
@@ -272,12 +243,15 @@ const emitTopologyDescriptionChanged = (self) => {
             return description;
         }));
 
+        // Get the diff
+        const diffResult = helper.diff(self.replicasetDescription, description);
+
         // Create the result
         const result = {
             topologyId: self.id,
             previousDescription: self.replicasetDescription,
             newDescription: description,
-            diff: diff(self.replicasetDescription, description)
+            diff: diffResult
         };
 
         // Emit the topologyDescription change
@@ -391,6 +365,9 @@ export default class ReplSetState extends EventEmitter {
         this.ghosts = [];
         this.unknownServers = [];
         this.set = {};
+        this.primary = null;
+        // Emit the topology changed
+        emitTopologyDescriptionChanged(this);
     }
 
     remove(server, options = {}) {
@@ -810,6 +787,7 @@ export default class ReplSetState extends EventEmitter {
                 this.emit("left", "primary", server);
             }
 
+            // Emit secondary joined replicaset
             this.emit("joined", "secondary", server);
             emitTopologyDescriptionChanged(this);
             return true;

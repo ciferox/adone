@@ -58,8 +58,8 @@ const formatSortValue = exports.formatSortValue = function (sortDirection) {
             return -1;
         default:
             throw new Error("Illegal sort clause, must be of the form "
-                    + "[['field1', '(ascending|descending)'], "
-                    + "['field2', '(ascending|descending)']]");
+                + "[['field1', '(ascending|descending)'], "
+                + "['field2', '(ascending|descending)']]");
     }
 };
 
@@ -86,7 +86,7 @@ const formattedOrderClause = exports.formattedOrderClause = function (sortValue)
         orderBy[sortValue] = 1;
     } else {
         throw new Error("Illegal sort clause, must be of the form " +
-      "[['field1', '(ascending|descending)'], ['field2', '(ascending|descending)']]");
+            "[['field1', '(ascending|descending)'], ['field2', '(ascending|descending)']]");
     }
 
     return orderBy;
@@ -94,25 +94,25 @@ const formattedOrderClause = exports.formattedOrderClause = function (sortValue)
 
 const checkCollectionName = function checkCollectionName(collectionName) {
     if (typeof collectionName !== "string") {
-        throw Error("collection name must be a String");
+        throw new MongoError("collection name must be a String");
     }
 
     if (!collectionName || collectionName.indexOf("..") != -1) {
-        throw Error("collection names cannot be empty");
+        throw new MongoError("collection names cannot be empty");
     }
 
     if (collectionName.indexOf("$") != -1 &&
-      collectionName.match(/((^\$cmd)|(oplog\.\$main))/) == null) {
-        throw Error("collection names must not contain '$'");
+        collectionName.match(/((^\$cmd)|(oplog\.\$main))/) == null) {
+        throw new MongoError("collection names must not contain '$'");
     }
 
     if (collectionName.match(/^\.|\.$/) != null) {
-        throw Error("collection names must not start or end with '.'");
+        throw new MongoError("collection names must not start or end with '.'");
     }
 
-  // Validate that we are not passing 0x00 in the colletion name
+    // Validate that we are not passing 0x00 in the colletion name
     if ((~collectionName.indexOf("\x00"))) {
-        throw new Error("collection names cannot contain a null character");
+        throw new MongoError("collection names cannot contain a null character");
     }
 };
 
@@ -147,16 +147,16 @@ const toError = function (error) {
     const msg = error.err || error.errmsg || error.errMessage || error;
     const e = MongoError.create({ message: msg, driver: true });
 
-  // Get all object keys
+    // Get all object keys
     const keys = typeof error === "object"
-    ? Object.keys(error)
-    : [];
+        ? Object.keys(error)
+        : [];
 
     for (let i = 0; i < keys.length; i++) {
         try {
             e[keys[i]] = error[keys[i]];
         } catch (err) {
-      // continue
+            // continue
         }
     }
 
@@ -198,34 +198,34 @@ const parseIndexOptions = function (fieldOrSpec) {
     const indexes = [];
     let keys;
 
-  // Get all the fields accordingly
+    // Get all the fields accordingly
     if (typeof fieldOrSpec === "string") {
-    // 'type'
+        // 'type'
         indexes.push(`${fieldOrSpec}_${1}`);
         fieldHash[fieldOrSpec] = 1;
     } else if (Array.isArray(fieldOrSpec)) {
         fieldOrSpec.forEach((f) => {
             if (typeof f === "string") {
-        // [{location:'2d'}, 'type']
+                // [{location:'2d'}, 'type']
                 indexes.push(`${f}_${1}`);
                 fieldHash[f] = 1;
             } else if (Array.isArray(f)) {
-        // [['location', '2d'],['type', 1]]
+                // [['location', '2d'],['type', 1]]
                 indexes.push(`${f[0]}_${f[1] || 1}`);
                 fieldHash[f[0]] = f[1] || 1;
             } else if (isObject(f)) {
-        // [{location:'2d'}, {type:1}]
+                // [{location:'2d'}, {type:1}]
                 keys = Object.keys(f);
                 keys.forEach((k) => {
                     indexes.push(`${k}_${f[k]}`);
                     fieldHash[k] = f[k];
                 });
             } else {
-        // undefined (ignore)
+                // undefined (ignore)
             }
         });
     } else if (isObject(fieldOrSpec)) {
-    // {location:'2d', type:1}
+        // {location:'2d', type:1}
         keys = Object.keys(fieldOrSpec);
         keys.forEach((key) => {
             indexes.push(`${key}_${fieldOrSpec[key]}`);
@@ -272,15 +272,15 @@ const mergeOptions = function (target, source) {
 // Merge options with translation
 const translateOptions = function (target, source) {
     const translations = {
-    // SSL translation options
+        // SSL translation options
         sslCA: "ca", sslCRL: "crl", sslValidate: "rejectUnauthorized", sslKey: "key",
         sslCert: "cert", sslPass: "passphrase",
-    // SocketTimeout translation options
+        // SocketTimeout translation options
         socketTimeoutMS: "socketTimeout", connectTimeoutMS: "connectionTimeout",
-    // Replicaset options
+        // Replicaset options
         replicaSet: "setName", rs_name: "setName", secondaryAcceptableLatencyMS: "acceptableLatency",
         connectWithNoPrimary: "secondaryOnlyConnectionAllowed",
-    // Mongos options
+        // Mongos options
         acceptableLatencyMS: "localThresholdMS"
     };
 
@@ -304,7 +304,7 @@ const filterOptions = function (options, names) {
         }
     }
 
-  // Filtered options
+    // Filtered options
     return filterOptions;
 };
 
@@ -339,19 +339,19 @@ const writeConcernKeys = ["w", "j", "wtimeout", "fsync"];
 
 // Merge the write concern options
 const mergeOptionsAndWriteConcern = function (targetOptions, sourceOptions, keys, mergeWriteConcern) {
-  // Mix in any allowed options
+    // Mix in any allowed options
     for (var i = 0; i < keys.length; i++) {
         if (!targetOptions[keys[i]] && sourceOptions[keys[i]] != undefined) {
             targetOptions[keys[i]] = sourceOptions[keys[i]];
         }
     }
 
-  // No merging of write concern
+    // No merging of write concern
     if (!mergeWriteConcern) {
         return targetOptions;
     }
 
-  // Found no write Concern options
+    // Found no write Concern options
     let found = false;
     for (var i = 0; i < writeConcernKeys.length; i++) {
         if (targetOptions[writeConcernKeys[i]]) {

@@ -247,8 +247,8 @@ describe("mongodb", function () {
                         ok: 1
                     }];
 
-                    const mongos1 = await mockupdb.createServer(52000, "localhost");
-                    const mongos2 = await mockupdb.createServer(52001, "localhost");
+                    const mongos1 = await mockupdb.createServer(11000, "localhost");
+                    const mongos2 = await mockupdb.createServer(11001, "localhost");
                     (async () => {
                         while (running) {
                             const request = await mongos1.receive();
@@ -284,11 +284,11 @@ describe("mongodb", function () {
                     })().catch(adone.noop);
                     const server = new Mongos([{
                         host: "localhost",
-                        port: 52000
+                        port: 11000
                     },
                     {
                         host: "localhost",
-                        port: 52001
+                        port: 11001
                     }
                     ], {
                         connectionTimeout: 3000,
@@ -307,14 +307,14 @@ describe("mongodb", function () {
                         let r = await insert("test.test", [{
                             created: new Date()
                         }]);
-                        expect(r.connection.port).to.be.oneOf([52000, 52001]);
-                        let pport = r.connection.port === 52000 ? 52001 : 52000;
+                        expect(r.connection.port).to.be.oneOf([11000, 11001]);
+                        let pport = r.connection.port === 11000 ? 11001 : 11000;
 
                         r = await insert("test.test", [{
                             created: new Date()
                         }]);
                         expect(pport).to.be.equal(r.connection.port);
-                        pport = r.connection.port === 52000 ? 52001 : 52000;
+                        pport = r.connection.port === 11000 ? 11001 : 11000;
 
                         r = await insert("test.test", [{
                             created: new Date()
@@ -340,8 +340,8 @@ describe("mongodb", function () {
                         minWireVersion: 0,
                         ok: 1
                     }];
-                    const mongos1 = await mockupdb.createServer(52000, "localhost");
-                    const mongos2 = await mockupdb.createServer(52001, "localhost");
+                    const mongos1 = await mockupdb.createServer(11002, "localhost");
+                    const mongos2 = await mockupdb.createServer(11003, "localhost");
                     let running = true;
                     (async () => {
                         while (running) {
@@ -385,11 +385,11 @@ describe("mongodb", function () {
                     // Attempt to connect
                     const server = new Mongos([{
                         host: "localhost",
-                        port: 52000
+                        port: 11002
                     },
                     {
                         host: "localhost",
-                        port: 52001
+                        port: 11003
                     }
                     ], {
                         connectionTimeout: 3000,
@@ -411,23 +411,23 @@ describe("mongodb", function () {
                             let r = await insert("test.test", [{
                                 created: new Date()
                             }]);
-                            expect(r.connection.port).to.be.equal(52000);
+                            expect(r.connection.port).to.be.equal(11002);
 
                             r = await insert("test.test", [{
                                 created: new Date()
                             }]);
-                            expect(r.connection.port).to.be.equal(52000);
+                            expect(r.connection.port).to.be.equal(11002);
                         } finally {
                             server.destroy();
                         }
 
                         const server2 = new Mongos([{
                             host: "localhost",
-                            port: 52000
+                            port: 11002
                         },
                         {
                             host: "localhost",
-                            port: 52001
+                            port: 11003
                         }
                         ], {
                             connectionTimeout: 3000,
@@ -445,11 +445,11 @@ describe("mongodb", function () {
                             let r = await insert2("test.test", [{
                                 created: new Date()
                             }]);
-                            expect(r.connection.port).to.be.equal(52000);
+                            expect(r.connection.port).to.be.equal(11002);
                             r = await insert2("test.test", [{
                                 created: new Date()
                             }]);
-                            expect(r.connection.port).to.be.equal(52001);
+                            expect(r.connection.port).to.be.equal(11003);
                         } finally {
                             server2.destroy();
                         }

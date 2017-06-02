@@ -254,6 +254,157 @@ describe("mongodb", function () {
                         expect(Connection.connections()).to.be.empty;
                     }
                 });
+
+                it.skip("Should correctly prune intervalIds array", async () => {
+                    // Contain mock server
+                    let running = true;
+                    const electionIds = [new adone.data.bson.ObjectID(), new adone.data.bson.ObjectID()];
+                    // Current index for the ismaster
+                    const currentIsMasterState = 0;
+                    // Primary stop responding
+
+                    // Extend the object
+                    const extend = function (template, fields) {
+                        for (const name in template) {
+                            fields[name] = template[name];
+                        }
+                        return fields;
+                    };
+
+                    // Default message fields
+                    const defaultFields = {
+                        setName: "rs",
+                        setVersion: 1,
+                        electionId: electionIds[currentIsMasterState],
+                        maxBsonObjectSize: 16777216,
+                        maxMessageSizeBytes: 48000000,
+                        maxWriteBatchSize: 1000,
+                        localTime: new Date(),
+                        maxWireVersion: 3,
+                        minWireVersion: 0,
+                        ok: 1,
+                        hosts: [
+                            "localhost:32000",
+                            "localhost:32001",
+                            "localhost:32002"
+                        ]
+                    };
+
+                    // Primary server states
+                    const primary = [
+                        extend(defaultFields, {
+                            ismaster: true,
+                            secondary: false,
+                            me: "localhost:32000",
+                            primary: "localhost:32000"
+                        }),
+                        extend(defaultFields, {
+                            ismaster: false,
+                            secondary: true,
+                            me: "localhost:32000",
+                            primary: "localhost:32001"
+                        })
+                    ];
+
+                    // Primary server states
+                    const firstSecondary = [
+                        Object.assign({}, defaultFields, {
+                            ismaster: false,
+                            secondary: true,
+                            me: "localhost:32001",
+                            primary: "localhost:32000"
+                        }),
+                        Object.assign({}, defaultFields, {
+                            ismaster: true,
+                            secondary: false,
+                            me: "localhost:32001",
+                            primary: "localhost:32001"
+                        })
+                    ];
+
+                    // Primary server states
+                    const secondSecondary = [
+                        Object.assign({}, defaultFields, {
+                            ismaster: false,
+                            secondary: true,
+                            me: "localhost:32002",
+                            primary: "localhost:32000"
+                        }),
+                        Object.assign({}, defaultFields, {
+                            ismaster: false,
+                            secondary: true,
+                            me: "localhost:32002",
+                            primary: "localhost:32001"
+                        })
+                    ];
+
+                    const primaryServer = await mockupdb.createServer(32000, "localhost");
+                    const firstSecondaryServer = await mockupdb.createServer(32001, "localhost");
+                    const secondSecondaryServer = await mockupdb.createServer(32002, "localhost");
+                    // Primary state machine
+                    (async () => {
+                        while (running) {
+                            const request = await primaryServer.receive();
+
+                            // Get the document
+                            const doc = request.document;
+                            if (doc.ismaster && currentIsMasterState == 0) {
+                                request.reply(primary[currentIsMasterState]);
+                            }
+                        }
+                    })();
+
+                    // First secondary state machine
+                    (async () => {
+                        while (running) {
+                            const request = await firstSecondaryServer.receive();
+                            const doc = request.document;
+
+                            if (doc.ismaster) {
+                                request.reply(firstSecondary[currentIsMasterState]);
+                            }
+                        }
+                    })();
+
+                    // Second secondary state machine
+                    (async () => {
+                        while (running) {
+                            const request = await secondSecondaryServer.receive();
+                            const doc = request.document;
+
+                            if (doc.ismaster) {
+                                request.reply(secondSecondary[currentIsMasterState]);
+                            }
+                        }
+                    })();
+
+                    // Attempt to connect
+                    const server = new ReplSet([
+                        { host: "localhost", port: 32000 },
+                        { host: "localhost", port: 32001 },
+                        { host: "localhost", port: 32002 }], {
+                            setName: "rs",
+                            connectionTimeout: 5000,
+                            socketTimeout: 60000,
+                            haInterval: 200,
+                            size: 1
+                        });
+
+                    adone.promise.delay(100).then(() => server.connect());
+                    const _server = await waitFor(server, "connect");
+                    await adone.promise.delay(1000);
+
+                    expect(_server.intervalIds).to.have.length.below(5);
+
+                    // Destroy mock
+                    primaryServer.destroy();
+                    firstSecondaryServer.destroy();
+                    secondSecondaryServer.destroy();
+                    server.destroy();
+                    running = false;
+
+                    expect(_server.intervalIds).to.be.empty;
+                });
             });
         });
     });
