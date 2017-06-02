@@ -2,7 +2,7 @@
 // implementation of http://dev.mysql.com/doc/internals/en/compression.html
 
 const { util } = adone;
-const { database: { mysql }, compressor: { deflate } } = adone;
+const { database: { mysql: { __ } }, compressor: { deflate } } = adone;
 
 const MAX_COMPRESSED_LENGTH = 16777210;
 
@@ -91,11 +91,11 @@ export default function enableCompression(connection) {
     connection._lastReceivedPacketId = 0;
 
     connection._handleCompressedPacket = handleCompressedPacket;
-    connection._inflatedPacketsParser = new mysql.PacketParser((p) => {
+    connection._inflatedPacketsParser = new __.PacketParser((p) => {
         connection.handlePacket(p);
     }, 4);
     connection._inflatedPacketsParser._lastPacket = 0;
-    connection.packetParser = new mysql.PacketParser((packet) => {
+    connection.packetParser = new __.PacketParser((packet) => {
         connection._handleCompressedPacket(packet);
     }, 7);
 

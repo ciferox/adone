@@ -1,4 +1,4 @@
-const { is, x, util, EventEmitter, database: { mysql: { PoolConfig, Pool } } } = adone;
+const { is, x, util, EventEmitter, database: { mysql } } = adone;
 
 const selector = {
     RR: () => {
@@ -29,7 +29,7 @@ class PoolNamespace {
     getConnection(cb) {
         const clusterNode = this._getClusterNode();
 
-        if (clusterNode === null) {
+        if (is.null(clusterNode)) {
             return cb(new x.NotExists("Pool does Not exists."));
         }
 
@@ -100,7 +100,7 @@ export default class PoolCluster extends EventEmitter {
             this._nodes[id] = {
                 id,
                 errorCount: 0,
-                pool: new Pool({ config: new PoolConfig(config) })
+                pool: new mysql.Pool({ config: new mysql.__.PoolConfig(config) })
             };
 
             this._serviceableNodeIds.push(id);
@@ -198,12 +198,12 @@ export default class PoolCluster extends EventEmitter {
                 if (self._canRetry) {
                     adone.warn(`[Error] PoolCluster : ${err}`);
                     return cb(null, "retry");
-                } 
+                }
                 return cb(err);
-                
-            } 
+
+            }
             self._decreaseErrorCount(node);
-            
+
 
             connection._clusterId = node.id;
 

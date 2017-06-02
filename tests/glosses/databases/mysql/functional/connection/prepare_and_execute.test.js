@@ -15,11 +15,7 @@ describe("glosses", "databases", "mysql", "functional", "connection", "prepare a
 
     it("should work", async () => {
         const s = await connection.prepare("select 1 + ? + ? as test");
-        const [rows, columns] = await new Promise((resolve, reject) => {
-            s.execute([111, 123], (err, rows, columns) => {
-                err ? reject(err) : resolve([rows, columns]);
-            });
-        });
+        const [rows, columns] = await s.execute([111, 123]);
         expect(s.columns).to.have.lengthOf(1);
         expect(s.parameters).to.have.lengthOf(2);
         expect(rows).to.be.deep.equal([{ test: 235 }]);

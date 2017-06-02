@@ -1,7 +1,5 @@
-import { SqlString } from "../common";
-
 describe("glosses", "databases", "mysql", "unit", "packet parser", () => {
-    const { database: { mysql: { PacketParser, packet: { Packet } } }, is } = adone;
+    const { database: { mysql: { __: { PacketParser, packet: { Packet } } } }, is } = adone;
 
     const splitUP = (arr) => {
         const cases = [[arr]];

@@ -1,10 +1,12 @@
 describe("glosses", "databases", "mysql", "functional", "auth switch", () => {
     const { database: { mysql } } = adone;
     const {
-        command: { Command },
-        packet: {
-            Handshake, HandshakeResponse,
-            AuthSwitchRequest, AuthSwitchResponse, AuthSwitchRequestMoreData
+        __: {
+            command: { Command },
+            packet: {
+                Handshake, HandshakeResponse,
+                AuthSwitchRequest, AuthSwitchResponse, AuthSwitchRequestMoreData
+            }
         }
     } = mysql;
 
@@ -54,10 +56,10 @@ describe("glosses", "databases", "mysql", "functional", "auth switch", () => {
                 const asrmd = new AuthSwitchRequestMoreData(Buffer.from(`hahaha ${count}`));
                 connection.writePacket(asrmd.toPacket());
                 return TestAuthSwitchHandshake.prototype.readClientAuthSwitchResponse;
-            } 
+            }
             connection.writeOk();
             return TestAuthSwitchHandshake.prototype.dispatchCommands;
-            
+
         }
 
         dispatchCommands(packet, connection) {

@@ -1,4 +1,4 @@
-const { EventEmitter, std: { net }, database: { mysql: { Connection, ConnectionConfig } } } = adone;
+const { EventEmitter, std: { net }, database: { mysql } } = adone;
 
 // TODO: inherit Server from net.Server
 export default class Server extends EventEmitter {
@@ -9,8 +9,8 @@ export default class Server extends EventEmitter {
     }
 
     _handleConnection(socket) {
-        const connectionConfig = new ConnectionConfig({ stream: socket, isServer: true });
-        const connection = new Connection({ config: connectionConfig });
+        const connectionConfig = new mysql.__.ConnectionConfig({ stream: socket, isServer: true });
+        const connection = new mysql.Connection({ config: connectionConfig });
         this.emit("connection", connection);
     }
 

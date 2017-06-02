@@ -1,12 +1,9 @@
 const {
-    database: { mysql },
-    util,
+    EventEmitter, is, x, util,
+    database: { mysql: { __, c } },
     std: { net, tls, stream: { Readable } },
-    EventEmitter,
-    is,
-    x
 } = adone;
-const { command, c, packet } = mysql;
+const { packet } = __;
 
 let _connectionId = 0;
 let convertNamedPlaceholders = null;
@@ -76,7 +73,7 @@ export default class Connection extends EventEmitter {
         this.stream.once("error", (err) => this._handleNetworkError(err));
 
         // see https://gist.github.com/khoomeister/4985691#use-that-instead-of-bind
-        this.packetParser = new mysql.PacketParser((p) => {
+        this.packetParser = new __.PacketParser((p) => {
             this.handlePacket(p);
         });
 
@@ -104,7 +101,7 @@ export default class Connection extends EventEmitter {
         });
         let handshakeCommand;
         if (!this.config.isServer) {
-            handshakeCommand = new command.ClientHandshake(this.config.clientFlags);
+            handshakeCommand = new __.command.ClientHandshake(this.config.clientFlags);
             handshakeCommand.on("end", () => {
                 this._handshakePacket = handshakeCommand.handshake;
                 this.threadId = handshakeCommand.handshake.connectionId;
@@ -333,6 +330,7 @@ export default class Connection extends EventEmitter {
         err.code = code || "PROTOCOL_ERROR";
         this.emit("error", err);
     }
+
     handlePacket(packet) {
         if (this._paused) {
             this._pausedPackets.push(packet);
@@ -413,7 +411,7 @@ export default class Connection extends EventEmitter {
         let unnamed;
         if (this.config.namedPlaceholders || options.namedPlaceholders) {
             if (is.null(convertNamedPlaceholders)) {
-                convertNamedPlaceholders = mysql.namedPlaceholders.createCompiler();
+                convertNamedPlaceholders = __.namedPlaceholders.createCompiler();
             }
             unnamed = convertNamedPlaceholders(options.sql, options.values);
             [options.sql, options.values] = unnamed;
@@ -422,7 +420,7 @@ export default class Connection extends EventEmitter {
 
     query(sql, values, cb) {
         let cmdQuery;
-        if (sql instanceof command.Query) {
+        if (sql instanceof __.command.Query) {
             cmdQuery = sql;
         } else {
             cmdQuery = Connection.createQuery(sql, values, cb, this.config);
@@ -464,7 +462,7 @@ export default class Connection extends EventEmitter {
         if (is.string(options)) {
             options = { sql: options };
         }
-        return this.addCommand(new command.Prepare(options, cb));
+        return this.addCommand(new __.command.Prepare(options, cb));
     }
 
     unprepare(sql) {
@@ -505,8 +503,8 @@ export default class Connection extends EventEmitter {
         }
         this._resolveNamedPlaceholders(options);
 
-        const executeCommand = new command.Execute(options, cb);
-        const prepareCommand = new command.Prepare(options, (err, stmt) => {
+        const executeCommand = new __.command.Execute(options, cb);
+        const prepareCommand = new __.command.Prepare(options, (err, stmt) => {
             if (err) {
                 // skip execute command if prepare failed, we have main
                 // combined callback here
@@ -538,12 +536,12 @@ export default class Connection extends EventEmitter {
         let charsetNumber;
 
         if (options.charset) {
-            charsetNumber = mysql.ConnectionConfig.getCharsetNumber(options.charset);
+            charsetNumber = __.ConnectionConfig.getCharsetNumber(options.charset);
         } else {
             charsetNumber = this.config.charsetNumber;
         }
 
-        return this.addCommand(new command.ChangeUser({
+        return this.addCommand(new __.command.ChangeUser({
             user: options.user || this.config.user,
             password: options.password || this.config.password,
             passwordSha1: options.passwordSha1 || this.config.passwordSha1,
@@ -575,15 +573,15 @@ export default class Connection extends EventEmitter {
     }
 
     ping(cb) {
-        return this.addCommand(new command.Ping(cb));
+        return this.addCommand(new __.command.Ping(cb));
     }
 
     _registerSlave(opts, cb) {
-        return this.addCommand(new command.RegisterSlave(opts, cb));
+        return this.addCommand(new __.command.RegisterSlave(opts, cb));
     }
 
     _binlogDump(opts, cb) {
-        return this.addCommand(new command.BinlogDump(opts, cb));
+        return this.addCommand(new __.command.BinlogDump(opts, cb));
     }
 
     // currently just alias to close
@@ -685,7 +683,7 @@ export default class Connection extends EventEmitter {
     serverHandshake(args) {
         this.serverConfig = args;
         this.serverConfig.encoding = c.charsetEncoding[this.serverConfig.characterSet];
-        return this.addCommand(new command.ServerHandshake(args));
+        return this.addCommand(new __.command.ServerHandshake(args));
     }
 
     end(callback) {
@@ -700,7 +698,7 @@ export default class Connection extends EventEmitter {
         }
 
         // trigger error if more commands enqueued after end command
-        const quitCmd = this.addCommand(new command.Quit(callback));
+        const quitCmd = this.addCommand(new __.command.Quit(callback));
         this.addCommand = this._addCommandClosedState;
         return quitCmd;
     }
@@ -727,7 +725,7 @@ export default class Connection extends EventEmitter {
             options.sql = sql;
             options.values = values;
         }
-        return new command.Query(options, cb);
+        return new __.command.Query(options, cb);
     }
 
     static statementKey(options) {

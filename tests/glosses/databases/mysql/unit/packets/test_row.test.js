@@ -1,5 +1,5 @@
 describe("glosses", "databases", "mysql", "unit", "packets", "text row", () => {
-    const { database: { mysql: { packet: { TextRow } } } } = adone;
+    const { database: { mysql: { __: { packet: { TextRow } } } } } = adone;
 
     specify("simple", () => {
         const packet = TextRow.toPacket(["Hello", "World"], "cesu8");

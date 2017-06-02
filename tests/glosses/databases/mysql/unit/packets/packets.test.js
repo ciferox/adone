@@ -1,6 +1,6 @@
 describe("glosses", "databases", "mysql", "unit", "packets", () => {
     describe("column definition", () => {
-        const { database: { mysql: { packet: { ColumnDefinition } } } } = adone;
+        const { database: { mysql: { __: { packet: { ColumnDefinition } } } } } = adone;
         const sequenceId = 5;
 
         specify("simple", () => {

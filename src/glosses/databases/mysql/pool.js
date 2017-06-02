@@ -48,7 +48,7 @@ export default class Pool extends EventEmitter {
             this.config.connectionLimit === 0 ||
             this._allConnections.length < this.config.connectionLimit
         ) {
-            connection = new mysql.PoolConnection(this, { config: this.config.connectionConfig });
+            connection = new mysql.__.PoolConnection(this, { config: this.config.connectionConfig });
 
             this._allConnections.push(connection);
 
@@ -118,7 +118,7 @@ export default class Pool extends EventEmitter {
             if (err || ++closedConnections >= this._allConnections.length) {
                 fired = true;
                 cb(err);
-                
+
             }
         };
 
@@ -186,7 +186,7 @@ export default class Pool extends EventEmitter {
     }
 
     escape(value) {
-        return mysql.escape(
+        return mysql.__.escape(
             value,
             this.config.connectionConfig.stringifyObjects,
             this.config.connectionConfig.timezone
@@ -194,6 +194,6 @@ export default class Pool extends EventEmitter {
     }
 
     escapeId(value) {
-        return mysql.escapeId(value, false);
+        return mysql.__.escapeId(value, false);
     }
 }
