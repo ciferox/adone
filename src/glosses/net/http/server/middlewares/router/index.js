@@ -88,14 +88,20 @@ class Router {
                 ctx.matched = matched.path;
             }
 
+            ctx.router = this;
+
             if (!matched.route) {
                 return next();
             }
 
-            const mostSpecificPath = matched.pathAndMethod[matched.pathAndMethod.length - 1].path;
-            ctx._matchedRoute = mostSpecificPath;
+            const matchedLayers = matched.pathAndMethod;
+            const mostSpecificLayer = matchedLayers[matchedLayers.length - 1];
+            ctx._matchedRoute = mostSpecificLayer.path;
+            if (mostSpecificLayer.name) {
+                ctx._matchedRouteName = mostSpecificLayer.name;
+            }
 
-            const layerChain = matched.pathAndMethod.reduce((memo, layer) => {
+            const layerChain = matchedLayers.reduce((memo, layer) => {
                 memo.push((ctx, next) => {
                     ctx.captures = layer.captures(path, ctx.captures);
                     ctx.params = layer.params(path, ctx.captures, ctx.params);

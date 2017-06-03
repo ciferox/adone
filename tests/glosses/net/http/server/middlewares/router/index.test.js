@@ -51,6 +51,21 @@ describe("glosses", "net", "http", "server", "middlewares", "router", "Router", 
             .expectBody({ n: 1 });
     });
 
+    it("router can be accecced with ctx", async () => {
+        const server = new Server();
+        const router = new Router();
+        router.get("home", "/", (ctx) => {
+            ctx.body = {
+                url: ctx.router.url("home")
+            };
+        });
+        server.use(router.routes());
+        await request(server)
+            .get("/")
+            .expectStatus(200)
+            .expectBody({ url: "/" });
+    });
+
     it("registers multiple middleware for one route", async () => {
         const server = new Server();
         const router = new Router();
@@ -884,7 +899,7 @@ describe("glosses", "net", "http", "server", "middlewares", "router", "Router", 
     });
 
     describe("Router#url()", () => {
-        it("generates URL for given route", async () => {
+        it("generates URL for given route name", async () => {
             const server = new Server();
             const router = new Router();
             server.use(router.routes());
@@ -895,6 +910,26 @@ describe("glosses", "net", "http", "server", "middlewares", "router", "Router", 
             expect(url).to.be.equal("/programming/how%20to%20node");
             url = router.url("books", "programming", "how to node");
             expect(url).to.be.equal("/programming/how%20to%20node");
+        });
+
+        it("generates URL for given route name within embedded routers", () => {
+            const server = new Server();
+            const router = new Router({
+                prefix: "/books"
+            });
+
+            const embeddedRouter = new Router({
+                prefix: "/chapters"
+            });
+            embeddedRouter.get("chapters", "/:chapterName/:pageNumber", (ctx) => {
+                ctx.status = 204;
+            });
+            router.use(embeddedRouter.routes());
+            server.use(router.routes());
+            let url = router.url("chapters", { chapterName: "Learning ECMA6", pageNumber: 123 });
+            expect(url).to.be.equal("/books/chapters/Learning%20ECMA6/123");
+            url = router.url("chapters", "Learning ECMA6", 123);
+            expect(url).to.be.equal("/books/chapters/Learning%20ECMA6/123");
         });
     });
 
@@ -1147,6 +1182,38 @@ describe("glosses", "net", "http", "server", "middlewares", "router", "Router", 
 
             server.use(router.routes());
 
+
+            await request(server)
+                .get("/users/1")
+                .expectStatus(200);
+        });
+
+        it("places a `_matchedRouteName` value on the context for a named route", async () => {
+            const server = new Server();
+            const router = new Router();
+
+            router.get("users#show", "/users/:id", (ctx) => {
+                expect(ctx._matchedRouteName).to.be.equal("users#show");
+                ctx.status = 200;
+            });
+
+            server.use(router.routes());
+
+            await request(server)
+                .get("/users/1")
+                .expectStatus(200);
+        });
+
+        it("does not place a `_matchedRouteName` value on the context for unnamed routes", async () => {
+            const server = new Server();
+            const router = new Router();
+
+            router.get("/users/:id", (ctx) => {
+                expect(ctx._matchedRouteName).to.be.undefined;
+                ctx.status = 200;
+            });
+
+            server.use(router.routes());
 
             await request(server)
                 .get("/users/1")

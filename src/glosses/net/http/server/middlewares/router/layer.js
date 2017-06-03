@@ -61,7 +61,7 @@ export default class Layer {
 
     //  URL for route using given `params`
     url(...args) {
-        const { path: url } = this;
+        const url = this.path.replace("\(\.\*\)", "");
         const toPath = pathToRegexp.compile(url);
 
         if (is.object(args[0])) {
