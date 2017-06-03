@@ -172,7 +172,7 @@
 #            "./src/native/hardware/i2c/win/writePartial.cc",
 #            "./src/native/hardware/i2c/win/writeReadPartial.cc",
 #            "./src/native/hardware/i2c/win/i2c.cc",
-#            "./src/native/hardware/i2c/win/i2c.h" 
+#            "./src/native/hardware/i2c/win/i2c.h"
 #          ],
 #          'msvs_windows_sdk_version': 'v10.0',
 #          'win_delay_load_hook': 'false',
@@ -710,8 +710,8 @@
             "cflags": [ "-g", "-O2", "-std=c++11", ],
         }],
         ["OS=='win'", {
-            "libraries": [ "dbghelp.lib", "Netapi32.lib", "PsApi.lib" ],
-            "dll_files": [ "dbghelp.dll", "Netapi32.dll", "PsApi.dll" ],
+            "libraries": [ "dbghelp.lib", "Netapi32.lib", "PsApi.lib", "Ws2_32.lib" ],
+            "dll_files": [ "dbghelp.dll", "Netapi32.dll", "PsApi.dll", "Ws2_32.dll" ],
         }],
         ],
         "defines": [
@@ -743,7 +743,7 @@
             "link_settings": {
                 "libraries": [
                 "-pthread",
-                
+
                 ]
             }
           }]

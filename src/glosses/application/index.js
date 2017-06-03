@@ -2,7 +2,7 @@ const { is, x, text, lazify, util } = adone;
 
 const lazy = lazify({
     report: "./report"
-}, null, require);
+}, exports, require);
 
 const noStyleLength = (x) => text.ansi.stripEscapeCodes(x).length;
 
