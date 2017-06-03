@@ -324,7 +324,8 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             nowStruct: adone.native.Common.nowStruct
         }),
         schema: "./glosses/schema",
-        geoip: "./glosses/geoip"
+        geoip: "./glosses/geoip",
+        notifier: "./glosses/notifier"
     }, adone);
 } else {
     exports.default = global.adone;
