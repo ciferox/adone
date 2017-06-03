@@ -1,20 +1,17 @@
-
-import initInternals from "./internals";
-
-const { is, x, Transform } = adone;
-
 export default function write(destPath, options) {
+    const { is, x, Transform, util, fast: { plugin: { sourcemaps: { __ } } } } = adone;
+
     if (is.undefined(options) && !is.string(destPath)) {
         options = destPath;
         destPath = undefined;
     }
-    options = adone.o({
+    options = Object.assign({
         includeContent: true,
         addComment: true,
         charset: "utf8"
     }, options);
 
-    const internals = initInternals(destPath, options);
+    const internals = __.write(destPath, options);
 
     return new Transform({
         transform(file) {
@@ -28,7 +25,7 @@ export default function write(destPath, options) {
             }
 
             // fix paths if Windows style paths
-            file.sourceMap.file = adone.util.unixifyPath(file.relative);
+            file.sourceMap.file = util.unixifyPath(file.relative);
 
             internals.setSourceRoot(file);
             internals.loadContent(file);

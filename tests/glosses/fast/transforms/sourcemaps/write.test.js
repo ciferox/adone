@@ -2,7 +2,7 @@ import * as util from "adone/glosses/fast/transforms/sourcemaps/util";
 import generateFixtures from "./generate_fixtures";
 
 const { fast, std: { stream: { Readable } } } = adone;
-const { File, plugin: { sourcemapsWrite } } = fast;
+const { File, plugin: { sourcemaps: { write: sourcemapsWrite } } } = fast;
 
 let sourceContent;
 let mappedContent;

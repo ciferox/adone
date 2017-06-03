@@ -1,9 +1,6 @@
-
-import initInternals from "./internals";
-
-const { x, Transform, is } = adone;
-
 export default function init(options = {}) {
+    const { x, Transform, is, util, fast: { plugin: { sourcemaps: { __ } } }, sourcemap } = adone;
+
     return new Transform({
         transform(file) {
             // pass through if file is null or already has a source map
@@ -19,9 +16,10 @@ export default function init(options = {}) {
             let fileContent = file.contents.toString();
             let sourceMap;
             let preExistingComment;
-            const internals = initInternals(options, file, fileContent);
 
             if (options.loadMaps) {
+                const internals = __.init(options, file, fileContent);
+
                 const result = internals.loadMaps();
                 sourceMap = result.map;
                 fileContent = result.content;
@@ -30,8 +28,8 @@ export default function init(options = {}) {
 
             if (!sourceMap && options.identityMap) {
                 const fileType = file.extname;
-                const source = adone.util.unixifyPath(file.relative);
-                const generator = new adone.sourcemap.Generator({ file: source });
+                const source = util.unixifyPath(file.relative);
+                const generator = new sourcemap.Generator({ file: source });
 
                 if (fileType === ".js") {
                     const tokens = adone.js.compiler.parse(fileContent).tokens;
@@ -62,14 +60,14 @@ export default function init(options = {}) {
                     version: 3,
                     names: [],
                     mappings: "",
-                    sources: [adone.util.unixifyPath(file.relative)],
+                    sources: [util.unixifyPath(file.relative)],
                     sourcesContent: [fileContent]
                 };
             } else if (!is.null(preExistingComment) && !is.undefined(preExistingComment)) {
-                sourceMap.preExistingComment = preExistingComment; 
+                sourceMap.preExistingComment = preExistingComment;
             }
 
-            sourceMap.file = adone.util.unixifyPath(file.relative);
+            sourceMap.file = util.unixifyPath(file.relative);
             file.sourceMap = sourceMap;
 
             this.push(file);

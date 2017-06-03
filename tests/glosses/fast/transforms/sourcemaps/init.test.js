@@ -1,7 +1,7 @@
 import generateFixtures from "./generate_fixtures";
 
 const { std: { stream: { Readable } }, fast } = adone;
-const { File, plugin: { sourcemapsInit } } = fast;
+const { File, plugin: { sourcemaps: { init: sourcemapsInit } } } = fast;
 
 let sourceContent;
 let sourceContentCSS;

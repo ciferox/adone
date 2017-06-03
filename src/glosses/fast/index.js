@@ -13,8 +13,7 @@ export const plugin = lazify({
     rename: "./transforms/rename",
     concat: "./transforms/concat",
     flatten: "./transforms/flatten",
-    sourcemapsInit: "./transforms/sourcemaps/init",
-    sourcemapsWrite: "./transforms/sourcemaps/write",
+    sourcemaps: "./transforms/sourcemaps",
     wrap: "./transforms/wrap",
     replace: "./transforms/replace",
     revisionHash: "./transforms/revision_hash",
@@ -56,11 +55,11 @@ export class Fast extends Core {
     }
 
     sourcemapsInit(options) {
-        return this.pipe(plugin.sourcemapsInit(options));
+        return this.pipe(plugin.sourcemaps.init(options));
     }
 
     sourcemapsWrite(destPath, options) {
-        return this.pipe(plugin.sourcemapsWrite(destPath, options));
+        return this.pipe(plugin.sourcemaps.write(destPath, options));
     }
 
     revisionHash({ manifest } = {}) {
