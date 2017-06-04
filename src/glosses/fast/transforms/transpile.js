@@ -1,5 +1,3 @@
-
-
 const { is, std: { path }, fast: { Fast } } = adone;
 
 const replacer = ({ file, base, map } = {}) => {
@@ -24,7 +22,7 @@ const replacer = ({ file, base, map } = {}) => {
     };
 };
 
-export default (options) => {
+export default function transpile(options) {
     options = adone.o(options);
     const importReplace = options.importReplace;
     delete options.importReplace;
@@ -62,10 +60,10 @@ export default (options) => {
                 }));
 
                 if (!result.ignored) {
-                    file.contents = new Buffer(result.code);
+                    file.contents = Buffer.from(result.code);
                 }
             }
             this.push(file);
         }
     });
-};
+}

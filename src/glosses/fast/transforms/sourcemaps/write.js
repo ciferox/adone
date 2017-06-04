@@ -1,5 +1,5 @@
 export default function write(destPath, options) {
-    const { is, x, Transform, util, fast: { plugin: { sourcemaps: { __ } } } } = adone;
+    const { is, x, Transform, util, fast: { transform: { sourcemaps: { __ } } } } = adone;
 
     if (is.undefined(options) && !is.string(destPath)) {
         options = destPath;

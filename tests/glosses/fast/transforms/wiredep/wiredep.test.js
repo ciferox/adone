@@ -1,54 +1,68 @@
-const { fast, std: { fs } } = adone;
+describe("fast", "transforms", "wiredep", () => {
+    const { fast, std: { fs } } = adone;
 
-const fixturesDir = adone.std.path.resolve(__dirname, "fixture");
+    const fixturesDir = adone.std.path.resolve(__dirname, "fixture");
 
-require.uncache = function (moduleName) {
-    let mod = require.resolve(moduleName);
-    if (mod && ((mod = require.cache[mod]) !== undefined)) {
-        (function run(mod) {
-            mod.children.forEach(function (child) {
-                run(child);
-            });
-            delete require.cache[mod.id];
-        })(mod);
-    }
-
-    const modulePath = adone.std.path.resolve(__dirname, moduleName);
-    for (const cacheKey of module.cache.keys()) {
-        if (cacheKey.includes(modulePath)) {
-            module.cache.delete(cacheKey);
+    require.uncache = function (moduleName) {
+        let mod = require.resolve(moduleName);
+        if (mod && ((mod = require.cache[mod]) !== undefined)) {
+            (function run(mod) {
+                mod.children.forEach((child) => {
+                    run(child);
+                });
+                delete require.cache[mod.id];
+            })(mod);
         }
-    }
-};
 
-describe("wiredep", function () {
+        const modulePath = adone.std.path.resolve(__dirname, moduleName);
+        for (const cacheKey of module.cache.keys()) {
+            if (cacheKey.includes(modulePath)) {
+                module.cache.delete(cacheKey);
+            }
+        }
+    };
+
+    const getFilePaths = (fileName, fileType) => {
+        const extension = fileType.match(/([^/]*)[/]*/)[1];
+        const filePaths = {
+            expected: adone.std.path.resolve(fileType, `${fileName}-expected.${extension}`),
+            actual: adone.std.path.resolve(fileType, `${fileName}-actual.${extension}`),
+            read: (type) => {
+                return fs.readFileSync(filePaths[type], { encoding: "utf8" });
+            }
+        };
+
+        return filePaths;
+    };
+
+
     let wiredep;
     let prevWorkDir;
     let fixturesCopyDir;
 
-    beforeEach(function () {
+    beforeEach(() => {
         // wtf
         wiredep = require("../../../../../lib/glosses/fast/transforms/wiredep").default;
     });
 
-    afterEach(function () {
+    afterEach(() => {
         require.uncache("../../../../../lib/glosses/fast/transforms/wiredep");
     });
 
-    before(async function() {
+    before(async () => {
         fixturesCopyDir = adone.std.path.resolve(__dirname, ".tmp");
-        await fast.src(adone.std.path.join(fixturesDir, "**", "*"), {stream: true, dot: true})
-        .dest(fixturesCopyDir);
+        await fast.src(adone.std.path.join(fixturesDir, "**", "*"), { stream: true, dot: true })
+            .dest(fixturesCopyDir);
         prevWorkDir = process.cwd();
         process.chdir(fixturesCopyDir);
     });
 
-    after(async function () {
+    after(async () => {
         process.chdir(prevWorkDir);
         await adone.fs.rm(fixturesCopyDir);
     });
 
-    describe("replace functionality", function () {
+    describe("replace functionality", () => {
         function testReplace(fileType) {
             return async function () {
                 const filePaths = getFilePaths("index", fileType);
@@ -62,11 +76,11 @@ describe("wiredep", function () {
             };
         }
 
-        it("should work in FAST chains", async function() {
+        it("should work in FAST chains", async () => {
             const filePaths = getFilePaths("index", "html");
 
             await fast.src([filePaths.actual]).wiredep()
-            .dest(adone.std.path.dirname(filePaths.actual));
+                .dest(adone.std.path.dirname(filePaths.actual));
 
             assert.deepEqual(
                 filePaths.read("expected").split("\n"),
@@ -77,7 +91,7 @@ describe("wiredep", function () {
         it("should work with html files", testReplace("html"));
         it("should work with jade files (buffered comments)", testReplace("jade"));
 
-        it("should work with jade files (unbuffered comments)", async function () {
+        it("should work with jade files (unbuffered comments)", async () => {
             const filePaths = getFilePaths("index-unbuffered-comments", "jade");
 
             await wiredep({ src: [filePaths.actual] });
@@ -87,7 +101,7 @@ describe("wiredep", function () {
 
         it("should work with pug files (buffered comments)", testReplace("pug"));
 
-        it("should work with pug files (unbuffered comments)", async function () {
+        it("should work with pug files (unbuffered comments)", async () => {
             const filePaths = getFilePaths("index-unbuffered-comments", "pug");
 
             await wiredep({ src: [filePaths.actual] });
@@ -103,7 +117,7 @@ describe("wiredep", function () {
         it("should work with unrecognized file types", testReplace("unrecognized"));
         it("should correctly handle relative paths", testReplace("html/deep/nested"));
 
-        it("should detect and use quotation marks", async function () {
+        it("should detect and use quotation marks", async () => {
             const filePaths = getFilePaths("index-detect-quotation-marks", "html");
 
             await wiredep({ src: [filePaths.actual] });
@@ -111,7 +125,7 @@ describe("wiredep", function () {
             assert.equal(filePaths.read("expected"), filePaths.read("actual"));
         });
 
-        it("should support globbing", async function () {
+        it("should support globbing", async () => {
             await wiredep({ src: ["html/index-actual.*", "jade/index-actual.*", "slim/index-actual.*", "haml/index-actual.*"] });
 
             [
@@ -131,7 +145,7 @@ describe("wiredep", function () {
                     actual: "haml/index-actual.haml",
                     expected: "haml/index-expected.haml"
                 }
-            ].forEach(function (testObject) {
+            ].forEach((testObject) => {
                 assert.equal(
                     fs.readFileSync(testObject.actual, { encoding: "utf8" }),
                     fs.readFileSync(testObject.expected, { encoding: "utf8" })
@@ -140,7 +154,7 @@ describe("wiredep", function () {
         });
     });
 
-    describe("second run (identical files)", function () {
+    describe("second run (identical files)", () => {
         function testReplaceSecondRun(fileType) {
             return async function () {
                 const filePaths = getFilePaths("index-second-run", fileType);
@@ -162,7 +176,7 @@ describe("wiredep", function () {
         it("should replace haml after second run", testReplaceSecondRun("haml"));
     });
 
-    describe("excludes", function () {
+    describe("excludes", () => {
         function testReplaceWithExcludedSrc(fileType) {
             return async function () {
                 const filePaths = getFilePaths("index-excluded-files", fileType);
@@ -183,8 +197,8 @@ describe("wiredep", function () {
         it("should handle haml with excludes specified", testReplaceWithExcludedSrc("haml"));
     });
 
-    describe("after uninstalls", function () {
-        describe("after uninstalling one package", function () {
+    describe("after uninstalls", () => {
+        describe("after uninstalling one package", () => {
             function testReplaceAfterUninstalledPackage(fileType) {
                 return async function () {
                     const filePaths = getFilePaths("index-after-uninstall", fileType);
@@ -206,7 +220,7 @@ describe("wiredep", function () {
             it("should work with haml", testReplaceAfterUninstalledPackage("haml"));
         });
 
-        describe("after uninstalling all packages", function () {
+        describe("after uninstalling all packages", () => {
             function testReplaceAfterUninstallingAllPackages(fileType) {
                 return async function () {
                     const filePaths = getFilePaths("index-after-uninstall-all", fileType);
@@ -229,7 +243,7 @@ describe("wiredep", function () {
         });
     });
 
-    describe("custom format", function () {
+    describe("custom format", () => {
         function testReplaceWithCustomFormat(fileType, fileTypes) {
             return async function () {
                 const filePaths = getFilePaths("index-custom-format", fileType);
@@ -290,8 +304,8 @@ describe("wiredep", function () {
 
     });
 
-    describe("devDependencies", function () {
-        it("should wire devDependencies if specified", async function () {
+    describe("devDependencies", () => {
+        it("should wire devDependencies if specified", async () => {
             const filePaths = getFilePaths("index-with-dev-dependencies", "html");
 
             await wiredep({
@@ -304,8 +318,8 @@ describe("wiredep", function () {
         });
     });
 
-    describe("overrides", function () {
-        it("should allow configuration overrides to specify a `main`", async function () {
+    describe("overrides", () => {
+        it("should allow configuration overrides to specify a `main`", async () => {
             const filePaths = getFilePaths("index-packages-without-main", "html");
             const bowerJson = JSON.parse(fs.readFileSync("./bower_packages_without_main.json"));
             const overrides = bowerJson.overrides;
@@ -321,7 +335,7 @@ describe("wiredep", function () {
             assert.equal(filePaths.read("expected"), filePaths.read("actual"));
         });
 
-        it("should allow configuration overrides to specify `dependencies`", async function () {
+        it("should allow configuration overrides to specify `dependencies`", async () => {
             const filePaths = getFilePaths("index-override-dependencies", "html");
             const bowerJson = JSON.parse(fs.readFileSync("./bower_packages_without_dependencies.json"));
             const overrides = bowerJson.overrides;
@@ -337,22 +351,22 @@ describe("wiredep", function () {
         });
     });
 
-    describe("events", function() {
+    describe("events", () => {
         const filePath = "html/index-emitter.html";
         let fileData;
 
-        before(function(done) {
-            fs.readFile(filePath, function(err, file) {
+        before((done) => {
+            fs.readFile(filePath, (err, file) => {
                 fileData = file;
                 done(err || null);
             });
         });
 
-        beforeEach(function(done) {
+        beforeEach((done) => {
             fs.writeFile(filePath, fileData, done);
         });
 
-        it("should send injected file data", function(done) {
+        it("should send injected file data", (done) => {
             let injected = 0;
             const paths = ["bootstrap.css", "codecode.css", "bootstrap.js", "codecode.js", "jquery.js"];
 
@@ -370,7 +384,7 @@ describe("wiredep", function () {
             });
         });
 
-        it("should send updated file path", function(done) {
+        it("should send updated file path", (done) => {
             wiredep({
                 src: filePath,
                 onFileUpdated: (path) => {
@@ -380,7 +394,7 @@ describe("wiredep", function () {
             });
         });
 
-        it("should send package name when main is not found", function(done) {
+        it("should send package name when main is not found", (done) => {
             const bowerJson = JSON.parse(fs.readFileSync("./bower_packages_without_main.json"));
             const packageWithoutMain = "fake-package-without-main-and-confusing-file-tree";
 
@@ -394,7 +408,7 @@ describe("wiredep", function () {
             });
         });
 
-        it("should throw an error when component is not found", async function() {
+        it("should throw an error when component is not found", async () => {
             const bowerJson = JSON.parse(fs.readFileSync("./bower_with_missing_component.json"));
             const missingComponent = "missing-component";
 
@@ -406,14 +420,14 @@ describe("wiredep", function () {
             } catch (e) {
                 assert.isOk(e);
                 assert.instanceOf(e, adone.x.NotFound);
-                assert.equal(e.message, missingComponent + " is not installed. Try running `bower install` or remove the component from your bower.json file.");
+                assert.equal(e.message, `${missingComponent} is not installed. Try running \`bower install\` or remove the component from your bower.json file.`);
                 return;
             }
             assert.fail("Didn't throw any exceptions");
         });
     });
 
-    it("should allow specifying a custom replace function", async function () {
+    it("should allow specifying a custom replace function", async () => {
         const filePaths = getFilePaths("index-with-custom-replace-function", "html");
 
         await wiredep({
@@ -422,7 +436,7 @@ describe("wiredep", function () {
                 html: {
                     replace: {
                         js: (filePath) => {
-                            return "<script src=\"" + filePath + "\" class=\"yay\"></script>";
+                            return `<script src="${filePath}" class="yay"></script>`;
                         }
                     }
                 }
@@ -432,7 +446,7 @@ describe("wiredep", function () {
         assert.equal(filePaths.read("expected"), filePaths.read("actual"));
     });
 
-    it("should return a useful object", async function () {
+    it("should return a useful object", async () => {
         const returnedObject = await wiredep();
 
         assert.equal(typeof returnedObject.js, "object");
@@ -443,7 +457,7 @@ describe("wiredep", function () {
         assert.equal(typeof returnedObject.packages, "object");
     });
 
-    it("should respect the directory specified in a `.bowerrc`", function () {
+    it("should respect the directory specified in a `.bowerrc`", () => {
         const filePaths = getFilePaths("index-with-custom-bower-directory", "html");
 
         wiredep({
@@ -455,7 +469,7 @@ describe("wiredep", function () {
         assert.equal(filePaths.read("actual"), filePaths.read("expected"));
     });
 
-    it("should support inclusion of main files from top-level bower.json", async function () {
+    it("should support inclusion of main files from top-level bower.json", async () => {
         const filePaths = getFilePaths("index-include-self", "html");
 
         await wiredep({
@@ -467,7 +481,7 @@ describe("wiredep", function () {
         assert.equal(filePaths.read("actual"), filePaths.read("expected"));
     });
 
-    it("should support inclusion of main files from bower.json in some other dir", async function () {
+    it("should support inclusion of main files from bower.json in some other dir", async () => {
         const filePaths = getFilePaths("index-cwd-include-self", "html");
 
         await wiredep({
@@ -479,7 +493,7 @@ describe("wiredep", function () {
         assert.equal(filePaths.read("actual"), filePaths.read("expected"));
     });
 
-    it("should support inclusion of main files from some other dir with manually loaded bower.json", async function () {
+    it("should support inclusion of main files from some other dir with manually loaded bower.json", async () => {
         const filePaths = getFilePaths("index-cwd-include-self", "html");
 
         await wiredep({
@@ -492,7 +506,7 @@ describe("wiredep", function () {
         assert.equal(filePaths.read("actual"), filePaths.read("expected"));
     });
 
-    it("should support inclusion of glob main files from bower.json", async function () {
+    it("should support inclusion of glob main files from bower.json", async () => {
         const filePaths = getFilePaths("index-include-glob", "html");
 
         await wiredep({
@@ -504,7 +518,7 @@ describe("wiredep", function () {
         assert.equal(filePaths.read("actual"), filePaths.read("expected"));
     });
 
-    it("include-self: true should support inclusion of glob main files from own bower.json", async function () {
+    it("include-self: true should support inclusion of glob main files from own bower.json", async () => {
         const filePaths = getFilePaths("index-include-self-glob", "html");
 
         await wiredep({
@@ -516,16 +530,3 @@ describe("wiredep", function () {
         assert.equal(filePaths.read("actual"), filePaths.read("expected"));
     });
 });
-
-function getFilePaths(fileName, fileType) {
-    const extension = fileType.match(/([^/]*)[/]*/)[1];
-    const filePaths = {
-        expected: adone.std.path.resolve(fileType, fileName + "-expected." + extension),
-        actual: adone.std.path.resolve(fileType, fileName + "-actual." + extension),
-        read: (type) => {
-            return fs.readFileSync(filePaths[type], { encoding: "utf8" });
-        }
-    };
-
-    return filePaths;
-}

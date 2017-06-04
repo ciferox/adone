@@ -1,7 +1,3 @@
-
-/**
- * Constants
- */
 const DEFAULT_TARGET = "html";
 const DEFAULTS = {
     STARTS: {
@@ -30,19 +26,22 @@ const DEFAULTS = {
     }
 };
 
-module.exports = function tags() {
+const { is } = adone;
+
+const getTag = (defaults, targetExt, sourceExt, defaultValue) => {
+    let tag = defaultValue;
+    if (!tag) {
+        tag = defaults[targetExt] || defaults[DEFAULT_TARGET];
+    } else if (is.function(tag)) {
+        tag = tag(targetExt, sourceExt);
+    }
+    return tag;
+};
+
+export default function tags() {
     return {
         start: getTag.bind(null, DEFAULTS.STARTS),
         end: getTag.bind(null, DEFAULTS.ENDS)
     };
-};
-
-function getTag(defaults, targetExt, sourceExt, defaultValue) {
-    let tag = defaultValue;
-    if (!tag) {
-        tag = defaults[targetExt] || defaults[DEFAULT_TARGET];
-    } else if (typeof tag === "function") {
-        tag = tag(targetExt, sourceExt);
-    }
-    return tag;
 }
+

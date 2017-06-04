@@ -1,19 +1,15 @@
-// @flow
+const { x, std: { crypto, path }, is, fast: { Fast, File } } = adone;
 
-
-
-const { x, std: { crypto, path, fs }, is, fast: { Fast, File } } = adone;
-
-function transformFilename(file) {
+const transformFilename = (file) => {
     file.revOrigPath = file.path;
     file.revOrigBase = file.base;
     file.revHash = crypto.createHash("md5").update(file.contents).digest("hex").slice(0, 10);
     const { stem } = file;
     const extindex = stem.indexOf(".");
     file.stem = extindex === -1 ? `${stem}-${file.revHash}` : `${stem.slice(0, extindex)}-${file.revHash}${stem.slice(extindex)}`;
-}
+};
 
-export function rev() {
+export const rev = () => {
     const sourcemaps = [];
     const pathMap = {};
 
@@ -61,9 +57,9 @@ export function rev() {
             }
         }
     });
-}
+};
 
-async function getManifestFile(opts) {
+const getManifestFile = async (opts) => {
     const file = new File(opts);
     try {
         const data = await adone.fs.readFile(opts.path);
@@ -74,9 +70,9 @@ async function getManifestFile(opts) {
         }
     }
     return file;
-}
+};
 
-function relPath(base, filePath) {
+const relPath = (base, filePath) => {
     if (filePath.indexOf(base) !== 0) {
         return filePath.replace(/\\/g, "/");
     }
@@ -87,9 +83,9 @@ function relPath(base, filePath) {
         return newPath.slice(1);
     }
     return newPath;
-}
+};
 
-export function manifest(pth, opts) {
+export const manifest = (pth, opts) => {
     if (is.string(pth)) {
         pth = { path: pth };
     }
@@ -133,4 +129,4 @@ export function manifest(pth, opts) {
             this.push(manifestFile);
         }
     });
-}
+};

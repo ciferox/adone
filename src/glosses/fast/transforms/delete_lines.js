@@ -1,22 +1,18 @@
+export default function deleteLines(filters) {
+    const { x, util, text, fast: { Fast } } = adone;
 
+    filters = util.arrify(filters);
 
-const { fast: { Fast } } = adone;
-
-export default (filters) => {
-    if (!adone.is.array(filters)) {
-        filters = adone.util.arrify(filters);
-    }
-    
     return new Fast(null, {
         transform(file) {
             if (file.isStream()) {
-                throw new adone.x.NotSupported("delete-lines: streams are unsuppored");
+                throw new x.NotSupported("delete-lines: streams are unsuppored");
             }
 
             if (!file.isNull()) {
                 const newLines = [];
 
-                for (const line of adone.text.splitLines(file.contents.toString())) {
+                for (const line of text.splitLines(file.contents.toString())) {
                     let matched = false;
                     for (const filter of filters) {
                         if (line.match(filter)) {
@@ -29,9 +25,9 @@ export default (filters) => {
                     }
                 }
 
-                file.contents = new Buffer(newLines.join(""));
+                file.contents = Buffer.from(newLines.join(""));
             }
             this.push(file);
         }
     });
-};
+}

@@ -1,12 +1,4 @@
-// @flow
-
-
-
-const { fast: { Fast }, vendor: { lodash: _ }, is, std: { path }, util } = adone;
-
-/**
- * "constants"
- */
+const { fast: { Fast }, vendor, is, std: { path }, util } = adone;
 
 const TEMPLATE_HEADER = "angular.module('<%= module %>'<%= standalone %>).run(['$templateCache', function($templateCache) {";
 const TEMPLATE_BODY = "$templateCache.put('<%= url %>','<%= contents %>');";
@@ -21,27 +13,14 @@ const MODULE_TEMPLATES = {
     iife: "(function(){ <%= file.contents %> })();"
 };
 
-/**
- * Add files to templateCache.
- */
-
 const processed = Symbol("processed");
 
-/**
- * templateCache a stream of files.
- */
-
-function templateCacheStream(root, base, templateBody, transformUrl) {
-
-    /**
-     * Set relative base
-     */
-
-    if (typeof base !== "function" && base && base.substr(-1) !== path.sep) {
+const templateCacheStream = (root, base, templateBody, transformUrl) => {
+    if (!is.function(base) && base && !base.endsWith(path.sep)) {
         base += path.sep;
     }
 
-    const template = _.template(templateBody || TEMPLATE_BODY);
+    const template = vendor.lodash.template(templateBody || TEMPLATE_BODY);
 
 
     return new Fast(null, {
@@ -53,10 +32,6 @@ function templateCacheStream(root, base, templateBody, transformUrl) {
             let url;
 
             file.path = path.normalize(file.path);
-
-            /**
-             * Rewrite url
-             */
 
             if (is.function(base)) {
                 url = path.join(root, base(file));
@@ -76,7 +51,7 @@ function templateCacheStream(root, base, templateBody, transformUrl) {
             /**
              * Create buffer
              */
-            file.contents = new Buffer(template({
+            file.contents = Buffer.from(template({
                 url,
                 contents: util.jsesc(file.contents.toString()),
                 file
@@ -88,14 +63,7 @@ function templateCacheStream(root, base, templateBody, transformUrl) {
 
         }
     });
-}
-
-/**
- * Concatenates and registers AngularJS templates in the $templateCache.
- *
- * @param {string} [filename='templates.js']
- * @param {object} [options]
- */
+};
 
 export default function angularTemplateCache(filename, options = {}) {
     if (!is.string(filename)) {

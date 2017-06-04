@@ -1,12 +1,6 @@
+const { fs, vendor, is, std: { path }, x, util } = adone;
 
-
-/**
- * Detect dependencies of the components from `bower.json`.
- *
- * @param    {object} config the global configuration object.
- * @return {object} config
- */
-async function detectDependencies(config) {
+const detectDependencies = async (config) => {
     const allDependencies = {};
 
     if (config.get("dependencies")) {
@@ -38,17 +32,10 @@ async function detectDependencies(config) {
     ));
 
     return config;
-}
+};
 
 
-/**
- * Find the component's JSON configuration file.
- *
- * @param    {object} config         the global configuration object
- * @param    {string} component    the name of the component to dig for
- * @return {object} the component's config file
- */
-async function findComponentConfigFile(config, component) {
+const findComponentConfigFile = async (config, component) => {
     let componentConfigFile;
 
     if (config.get("include-self") && component === config.get("bower.json").name) {
@@ -59,75 +46,54 @@ async function findComponentConfigFile(config, component) {
     for (let configFile of defaultConfigFiles) {
         configFile = adone.std.path.join(config.get("bower-directory"), component, configFile);
 
-        if (await adone.fs.exists(configFile)) {
-            componentConfigFile = JSON.parse(await adone.fs.readFile(configFile));
+        if (await fs.exists(configFile)) {
+            componentConfigFile = JSON.parse(await fs.readFile(configFile));
             break;
         }
     }
 
     return componentConfigFile;
-}
+};
 
 
-/**
- * Find the main file the component refers to. It's not always `main` :(
- *
- * @param    {object} config                the global configuration object
- * @param    {string} component         the name of the component to dig for
- * @param    {componentConfigFile}    the component's config file
- * @return {array} the array of paths to the component's primary file(s)
- */
-async function findMainFiles(config, component, componentConfigFile) {
+const findMainFiles = async (config, component, componentConfigFile) => {
     let filePaths = [];
     const file = {};
     const self = config.get("include-self") && component === config.get("bower.json").name;
     const cwd = self ? config.get("cwd") : adone.std.path.join(config.get("bower-directory"), component);
 
-    if (adone.vendor.lodash.isString(componentConfigFile.main)) {
+    if (vendor.lodash.isString(componentConfigFile.main)) {
         // start by looking for what every component should have: config.main
         filePaths = [componentConfigFile.main];
-    } else if (adone.is.array(componentConfigFile.main)) {
+    } else if (is.array(componentConfigFile.main)) {
         filePaths = componentConfigFile.main;
-    } else if (adone.is.array(componentConfigFile.scripts)) {
+    } else if (is.array(componentConfigFile.scripts)) {
         // still haven't found it. is it stored in config.scripts, then?
         filePaths = componentConfigFile.scripts;
     } else {
         for (const type of ["js", "css"]) {
-            file[type] = adone.std.path.join(config.get("bower-directory"), component, `${componentConfigFile.name}.${type}`);
+            file[type] = path.join(config.get("bower-directory"), component, `${componentConfigFile.name}.${type}`);
 
-            if (await adone.fs.exists(file[type])) {
+            if (await fs.exists(file[type])) {
                 filePaths.push(`${componentConfigFile.name}.${type}`);
             }
         }
     }
 
-    let acc = new Array();
+    let acc = [];
     for (const filePath of filePaths) {
         acc = acc.concat(
-            (await adone.fs.glob(filePath, { cwd, root: "/" }))
-            .map((path) => adone.std.path.join(cwd, path))
+            (await fs.glob(filePath, { cwd, root: "/" }))
+                .map((path) => adone.std.path.join(cwd, path))
         );
     }
 
     return adone.vendor.lodash.uniq(acc);
-}
+};
 
 
-/**
- * Store the information our prioritizer will need to determine rank.
- *
- * @param    {object} config     the global configuration object
- * @return {function} the iterator function, called on every component
- */
-function gatherInfo(config) {
-    /**
-     * The iterator function, which is called on each component.
-     *
-     * @param    {string} version        the version of the component
-     * @param    {string} component    the name of the component
-     * @return {undefined}
-     */
-    return async function (version, component) {
+const gatherInfo = (config) => {
+    return async (version, component) => {
         const dep = config.get("global-dependencies").get(component) || {
             main: "",
             type: "",
@@ -137,7 +103,7 @@ function gatherInfo(config) {
 
         const componentConfigFile = await findComponentConfigFile(config, component);
         if (!componentConfigFile) {
-            const error = new adone.x.NotFound(`${component} is not installed. Try running \`bower install\` or remove the component from your bower.json file.`);
+            const error = new x.NotFound(`${component} is not installed. Try running \`bower install\` or remove the component from your bower.json file.`);
             error.code = "PKG_NOT_INSTALLED";
             throw error;
         }
@@ -155,14 +121,14 @@ function gatherInfo(config) {
         }
 
         const mains = await findMainFiles(config, component, componentConfigFile);
-        const fileTypes = adone.vendor.lodash.chain(mains).map(adone.std.path.extname).uniq().value();
+        const fileTypes = vendor.lodash.chain(mains).map(adone.std.path.extname).uniq().value();
 
         dep.main = mains;
         dep.type = fileTypes;
         dep.name = componentConfigFile.name;
 
-        const depIsExcluded = adone.vendor.lodash.find(config.get("exclude"), (pattern) => {
-            return adone.std.path.join(config.get("bower-directory"), component).match(pattern);
+        const depIsExcluded = vendor.lodash.find(config.get("exclude"), (pattern) => {
+            return path.join(config.get("bower-directory"), component).match(pattern);
         });
 
         if (dep.main.length === 0 && !depIsExcluded) {
@@ -178,51 +144,30 @@ function gatherInfo(config) {
 
         config.get("global-dependencies").set(component, dep);
     };
-}
+};
 
 
-/**
- * Compare two dependencies to determine priority.
- *
- * @param    {object} a    dependency a
- * @param    {object} b    dependency b
- * @return {number} the priority of dependency a in comparison to dependency b
- */
-function dependencyComparator(a, b) {
+const dependencyComparator = (a, b) => {
     let aNeedsB = false;
     let bNeedsA = false;
 
-    aNeedsB = adone.util.keys(a.dependencies)
-        .some((dependency) => {
-            return dependency === b.name;
-        });
+    aNeedsB = util.keys(a.dependencies).some((dependency) => dependency === b.name);
 
     if (aNeedsB) {
         return 1;
     }
 
-    bNeedsA = adone.util.keys(b.dependencies)
-        .some((dependency) => {
-            return dependency === a.name;
-        });
+    bNeedsA = util.keys(b.dependencies).some((dependency) => dependency === a.name);
 
     if (bNeedsA) {
         return -1;
     }
 
     return 0;
-}
+};
 
 
-/**
- * Take two arrays, sort based on their dependency relationship, then merge them
- * together.
- *
- * @param    {array} left
- * @param    {array} right
- * @return {array} the sorted, merged array
- */
-function merge(left, right) {
+const merge = (left, right) => {
     const result = [];
     let leftIndex = 0;
     let rightIndex = 0;
@@ -235,19 +180,11 @@ function merge(left, right) {
         }
     }
 
-    return result.
-        concat(left.slice(leftIndex)).
-        concat(right.slice(rightIndex));
-}
+    return [...result, ...left.slice(leftIndex), ...right.slice(rightIndex)];
+};
 
 
-/**
- * Take an array and slice it in halves, sorting each half along the way.
- *
- * @param    {array} items
- * @return {array} the sorted array
- */
-function mergeSort(items) {
+const mergeSort = (items) => {
     if (items.length < 2) {
         return items;
     }
@@ -258,49 +195,35 @@ function mergeSort(items) {
         mergeSort(items.slice(0, middle)),
         mergeSort(items.slice(middle))
     );
-}
+};
 
 
-/**
- * Sort the dependencies in the order we can best determine they're needed.
- *
- * @param    {object} config        the global configuration object
- * @param    {string} fileType    the type of file to prioritize
- * @return {array} the sorted items of "path/to/main/files.ext" sorted by type
- */
-function prioritizeDependencies(config, fileType) {
-    const globalDependencies = adone.vendor.lodash.toArray(config.get("global-dependencies").get());
+const prioritizeDependencies = (config, fileType) => {
+    const globalDependencies = vendor.lodash.toArray(config.get("global-dependencies").get());
 
     const dependencies = globalDependencies.filter((dependency) => {
-        return adone.vendor.lodash.includes(dependency.type, fileType);
+        return vendor.lodash.includes(dependency.type, fileType);
     });
 
-    return adone.vendor.lodash(mergeSort(dependencies)).
+    return vendor.lodash(mergeSort(dependencies)).
             map((x) => x.main).
             flatten().
             value().
             filter((main) => {
                 return adone.std.path.extname(main) === fileType;
             });
-}
+};
 
 
-/**
- * Excludes dependencies that match any of the patterns.
- *
- * @param    {array} allDependencies    array of dependencies to filter
- * @param    {array} patterns                 array of patterns to match against
- * @return {array} items that don't match any of the patterns
- */
-function filterExcludedDependencies(allDependencies, patterns) {
-    return adone.vendor.lodash.transform(allDependencies, (result, dependencies, fileType) => {
-        result[fileType] = adone.vendor.lodash.reject(dependencies, (dependency) => {
-            return adone.vendor.lodash.find(patterns, (pattern) => {
+const filterExcludedDependencies = (allDependencies, patterns) => {
+    return vendor.lodash.transform(allDependencies, (result, dependencies, fileType) => {
+        result[fileType] = vendor.lodash.reject(dependencies, (dependency) => {
+            return vendor.lodash.find(patterns, (pattern) => {
                 return dependency.replace(/\\/g, "/").match(pattern);
             });
         });
     });
-}
+};
 
 
 export default detectDependencies;

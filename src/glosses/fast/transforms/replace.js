@@ -1,14 +1,14 @@
-const { is, fast: { Fast } } = adone;
+export default function replace(search, replacement) {
+    const { is, x, util, fast: { Fast } } = adone;
 
-export default function (search, replacement) {
     let replacePairs = [];
     if (is.array(search)) {
         if (!is.array(replacement)) {
-            throw new adone.x.InvalidArgument("If 'search' is an array, 'replacement' must be array too");
+            throw new x.InvalidArgument("If 'search' is an array, 'replacement' must be array too");
         }
 
         if (search.length !== replacement.length) {
-            throw new adone.x.InvalidArgument("Arrays length should be equal");
+            throw new x.InvalidArgument("Arrays length should be equal");
         }
 
         for (let i = 0; i < search.length; ++i) {
@@ -18,7 +18,7 @@ export default function (search, replacement) {
         replacePairs = [[search, replacement]];
     } else if (is.object(search)) {
         const replaceObj = search;
-        search = adone.util.keys(replaceObj);
+        search = util.keys(replaceObj);
 
         for (let i = 0; i < search.length; ++i) {
             replacePairs.push([search[i], replaceObj[search[i]]]);
@@ -34,7 +34,7 @@ export default function (search, replacement) {
             }
 
             if (file.isStream()) {
-                throw new adone.x.NotSupported("replace: streams are not supported");
+                throw new x.NotSupported("replace: streams are not supported");
                 // file.contents = file.contents.pipe(rs(search, replacement));
                 // return this.push(file);
             }
@@ -73,7 +73,7 @@ export default function (search, replacement) {
                         contents = result;
                     }
                 }
-                file.contents = new Buffer(contents);
+                file.contents = Buffer.from(contents);
                 return this.push(file);
             }
 

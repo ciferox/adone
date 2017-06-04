@@ -1,5 +1,5 @@
 export default function initInternals(options, file, fileContent) {
-    const { util, sourcemap, fast: { plugin: { sourcemaps: { __ } } }, std: { path, fs } } = adone;
+    const { util, sourcemap, fast: { transform: { sourcemaps: { __ } } }, std: { path, fs } } = adone;
 
     const fixSources = (sources) => {
         // fix source paths and sourceContent for imported source map

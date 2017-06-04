@@ -5,9 +5,11 @@ class ETransform extends adone.Transform {
     }
 }
 
-export default function (condition, trueStream = null, falseStream = null) {
+export default function _if(condition, trueStream = null, falseStream = null) {
+    const { x } = adone;
+
     if (!trueStream && !falseStream) {
-        throw new adone.x.InvalidArgument("You must provide at least one stream");
+        throw new x.InvalidArgument("You must provide at least one stream");
     }
     let outputEnd = null;
     const input = new ETransform({

@@ -1,5 +1,5 @@
 export default function writeInternals(destPath, options) {
-    const { is, util, fast: { plugin: { sourcemaps: { __ } } }, std: { path, fs } } = adone;
+    const { is, util, fast: { transform: { sourcemaps: { __ } } }, std: { path, fs } } = adone;
 
     const setSourceRoot = (file) => {
         const { sourceMap } = file;

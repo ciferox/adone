@@ -37,7 +37,7 @@ export default class AdoneManager {
         if (!(await this.destAdoneDir.exists())) {
             await this.destAdoneDir.create();
             await adone.fast.src(this.getTargets(), { base: this.app.adoneRootPath })
-                .if((f) => f.relative === configRelativePath, adone.fast.plugin.replace(["\"development\"", "\".adone_dev\""], [`"${env}"`, `"${dirName}"`])).dest(this.destAdoneDir.path());
+                .if((f) => f.relative === configRelativePath, adone.fast.transform.replace(["\"development\"", "\".adone_dev\""], [`"${env}"`, `"${dirName}"`])).dest(this.destAdoneDir.path());
 
             await this.installScript(name);
             return true;
@@ -115,7 +115,7 @@ export default class AdoneManager {
     async createArchive(outPath, { env, dirName, type = "gz" } = {}) {
         return adone.fast
             .src(this.getTargets(), { base: this.app.adoneRootPath })
-            .if((f) => f.relative === configRelativePath, adone.fast.plugin.replace(["\"development\"", "\".adone_dev\""], [`"${env}"`, `"${dirName}"`]))
+            .if((f) => f.relative === configRelativePath, adone.fast.transform.replace(["\"development\"", "\".adone_dev\""], [`"${env}"`, `"${dirName}"`]))
             .pack("tar", this.name)
             .compress(type)
             .dest(outPath);

@@ -1,12 +1,8 @@
-// @flow
-
-
 import SASS from "node-sass";
 
-const { std: { path }, x, is, fast: { Fast, File, helpers: { applySourceMap } } } = adone;
-
-
 export default function (options = {}) {
+    const { std: { path }, x, is, fast: { Fast, File, __: { helper: { applySourceMap } } } } = adone;
+
     return new Fast(null, {
         async transform(file) {
             if (file.isNull()) {
@@ -64,7 +60,7 @@ export default function (options = {}) {
             }).catch((err) => {
                 const filePath = err.file === "stdin" ? file.path : err.file;
                 const relativePath = path.relative(file.cwd, filePath);
-                err.messageOriginal = err.message; 
+                err.messageOriginal = err.message;
                 err.message = `${relativePath}\n${err.formatted}`;
                 err.relativePath = relativePath;
                 throw err;
@@ -91,11 +87,7 @@ export default function (options = {}) {
                 }
 
                 // Remove 'stdin' from souces and replace with filenames!
-                sassMap.sources = sassMap.sources.filter((src) => {
-                    if (src !== "stdin") {
-                        return src;
-                    }
-                });
+                sassMap.sources = sassMap.sources.filter((src) => src !== "stdin");
 
                 // Replace the map file with the original file name (but new extension)
                 const t = new File({ path: sassFileSrc });

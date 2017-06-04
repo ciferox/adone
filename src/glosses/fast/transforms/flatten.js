@@ -1,14 +1,12 @@
+const { is, std: { path }, fast: { Fast } } = adone;
 
-
-const { fast: { Fast } } = adone;
-
-function includeParents(dirs, options) {
+const includeParents = (dirs, options) => {
     let topLevels;
     let bottomLevels = 0;
     const topPath = [];
     const bottomPath = [];
 
-    if (adone.is.array(options)) {
+    if (is.array(options)) {
         topLevels = Math.abs(options[0]);
         bottomLevels = Math.abs(options[1]);
     } else if (options >= 0) {
@@ -30,32 +28,25 @@ function includeParents(dirs, options) {
         bottomLevels--;
     }
     return topPath.concat(bottomPath);
-}
+};
 
-function subPath(dirs, options) {
-    if (adone.is.array(options)) {
+const subPath = (dirs, options) => {
+    if (is.array(options)) {
         return dirs.slice(options[0], options[1]);
-    } 
+    }
     return dirs.slice(options);
-    
-}
 
-/**
-* Flatten the path to the desired depth
-*
-* @param {File} file - vinyl file
-* @param {Object} options
-* @return {String}
-*/
-function flattenPath(file, options) {
-    const fileName = adone.std.path.basename(file.path);
+};
+
+const flattenPath = (file, options) => {
+    const fileName = path.basename(file.path);
     let dirs;
 
     if (!options.includeParents && !options.subPath) {
         return fileName;
     }
 
-    dirs = adone.std.path.dirname(file.relative).split(adone.std.path.sep);
+    dirs = path.dirname(file.relative).split(path.sep);
     if (options.includeParents) {
         dirs = includeParents(dirs, options.includeParents);
     }
@@ -64,32 +55,19 @@ function flattenPath(file, options) {
     }
 
     dirs.push(fileName);
-    return adone.std.path.join(...dirs);
-}
+    return path.join(...dirs);
+};
 
-class Flatten extends adone.Transform {
-    constructor(options) {
-        super();
-        this.options = options || {};
-        this.options.newPath = this.options.newPath || "";
-    }
-    _transform(file) {
-        if (!file.isDirectory()) {
-            file.path = adone.std.path.join(file.base, this.options.newPath, flattenPath(file, this.options));
-            this.push(file);
-        }
-    }
-}
-
-export { flattenPath };
-export default (options = {}) => {
+export default function flatten(options = {}) {
     options.newPath = options.newPath || "";
     return new Fast(null, {
         transform(file) {
             if (!file.isDirectory()) {
-                file.path = adone.std.path.join(file.base, options.newPath, flattenPath(file, options));
+                file.path = path.join(file.base, options.newPath, flattenPath(file, options));
                 this.push(file);
             }
         }
     });
-};
+}
+
+flatten.flattenPath = flattenPath;

@@ -1,8 +1,6 @@
+export default function wrap(template, data, options) {
+    const { is, x, std: { fs }, vendor: { lodash: _ }, fast: { Fast } } = adone;
 
-
-const { is, x, std: { fs }, vendor: { lodash: _ }, fast: { Fast } } = adone;
-
-export default function (template, data, options) {
     if (is.object(template) && !is.function(template)) {
         if (!is.string(template.src)) {
             throw new x.InvalidArgument("Expecting `src` option");
@@ -45,10 +43,10 @@ export default function (template, data, options) {
                 contents = file.contents;
             }
             if (is.function(data)) {
-                data = data.call(null, file);
+                data = data(file);
             }
             if (is.function(options)) {
-                options = options.call(null, file);
+                options = options(file);
             }
             data = data || {};
             options = options || {};

@@ -2,14 +2,17 @@ const { lazify, std, util, is, x, core: { Core } } = adone;
 
 const fast = lazify({
     File: "./file",
-    helpers: "./helpers"
 }, exports, require);
 
-// Plugins
-export const plugin = lazify({
+fast.__ = lazify({
+    Concat: "./__/concat",
+    helper: "./__/helpers"
+}, null, require);
+
+export const transform = lazify({
     transpile: "./transforms/transpile",
     if: "./transforms/if",
-    deleteLines: "./transforms/delete-lines",
+    deleteLines: "./transforms/delete_lines",
     rename: "./transforms/rename",
     concat: "./transforms/concat",
     flatten: "./transforms/flatten",
@@ -31,59 +34,59 @@ export const plugin = lazify({
 
 export class Fast extends Core {
     transpile(options) {
-        return this.pipe(plugin.transpile(options));
+        return this.pipe(transform.transpile(options));
     }
 
     deleteLines(options) {
-        return this.pipe(plugin.deleteLines(options));
+        return this.pipe(transform.deleteLines(options));
     }
 
     if(condition, trueStream, falseStream) {
-        return this.pipe(plugin.if(condition, trueStream, falseStream));
+        return this.pipe(transform.if(condition, trueStream, falseStream));
     }
 
     rename(handler) {
-        return this.pipe(plugin.rename(handler));
+        return this.pipe(transform.rename(handler));
     }
 
     concat(file, options) {
-        return this.pipe(plugin.concat(file, options));
+        return this.pipe(transform.concat(file, options));
     }
 
     flatten(file, options) {
-        return this.pipe(plugin.flatten(file, options));
+        return this.pipe(transform.flatten(file, options));
     }
 
     sourcemapsInit(options) {
-        return this.pipe(plugin.sourcemaps.init(options));
+        return this.pipe(transform.sourcemaps.init(options));
     }
 
     sourcemapsWrite(destPath, options) {
-        return this.pipe(plugin.sourcemaps.write(destPath, options));
+        return this.pipe(transform.sourcemaps.write(destPath, options));
     }
 
     revisionHash({ manifest } = {}) {
         if (manifest) {
-            return this.pipe(plugin.revisionHash.manifest(manifest));
+            return this.pipe(transform.revisionHash.manifest(manifest));
         }
-        return this.pipe(plugin.revisionHash.rev());
+        return this.pipe(transform.revisionHash.rev());
     }
 
     revisionHashReplace(options) {
-        return this.pipe(plugin.revisionHashReplace(options));
+        return this.pipe(transform.revisionHashReplace(options));
     }
 
     wrap(template, data, options) {
-        return this.pipe(plugin.wrap(template, data, options));
+        return this.pipe(transform.wrap(template, data, options));
     }
 
     replace(search, replacement) {
-        return this.pipe(plugin.replace(search, replacement));
+        return this.pipe(transform.replace(search, replacement));
     }
 
     stash(name, filter) {
         if (!this._filter) {
-            this._filter = new plugin.Filter();
+            this._filter = new transform.Filter();
         }
         return this.pipe(this._filter.stash(name, filter));
     }
@@ -93,35 +96,35 @@ export class Fast extends Core {
     }
 
     useref(options = {}) {
-        return this.pipe(plugin.useref(options));
+        return this.pipe(transform.useref(options));
     }
 
     sass(options) {
-        return this.pipe(plugin.sass(options));
+        return this.pipe(transform.sass(options));
     }
 
     angularFilesort() {
-        return this.pipe(plugin.angularFilesort());
+        return this.pipe(transform.angularFilesort());
     }
 
     angularTemplateCache(filename, options) {
-        return this.pipe(plugin.angularTemplateCache(filename, options));
+        return this.pipe(transform.angularTemplateCache(filename, options));
     }
 
     inject(sources, options) {
-        return this.pipe(plugin.inject(sources, options));
+        return this.pipe(transform.inject(sources, options));
     }
 
     chmod(mode, dirMode) {
-        return this.pipe(plugin.chmod(mode, dirMode));
+        return this.pipe(transform.chmod(mode, dirMode));
     }
 
     notify(options) {
-        return this.pipe(plugin.notify(options));
+        return this.pipe(transform.notify(options));
     }
 
     wiredep(options) {
-        return this.pipe(plugin.wiredep.stream(options));
+        return this.pipe(transform.wiredep.stream(options));
     }
 
     decompress(compressorName, options = {}) {
@@ -370,7 +373,7 @@ export class FastFS extends Fast {
                 file.cwd = cwd;
                 file.base = dirname;
                 file.path = destPath;
-                await fast.helpers.updateMetadata(fd, file);
+                await fast.__.helper.updateMetadata(fd, file);
             } finally {
                 await adone.fs.fd.close(fd);
             }

@@ -1,6 +1,6 @@
-const { std: { path }, is, fast: { Fast } } = adone;
+export default function rename(handler) {
+    const { std: { path }, is, x, fast: { Fast } } = adone;
 
-export default function (handler) {
     return new Fast(null, {
         transform(file) {
             const obj = {
@@ -22,7 +22,7 @@ export default function (handler) {
                 const extname = "extname" in handler ? handler.extname : obj.extname;
                 p = path.join(dirname, prefix + basename + suffix + extname);
             } else {
-                throw new adone.x.InvalidArgument();
+                throw new x.InvalidArgument();
             }
             file.path = path.join(file.base, p);
 

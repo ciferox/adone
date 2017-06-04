@@ -1,11 +1,8 @@
-// @flow
+import _useref from "useref";
 
+export default function useref(options = {}) {
+    const { x, fast: { Fast } } = adone;
 
-import useref from "useref";
-
-const { x, fast: { Fast } } = adone;
-
-export default function (options = {}) {
     return new Fast(null, {
         transform(file) {
             if (file.isNull()) {
@@ -17,9 +14,9 @@ export default function (options = {}) {
                 throw new x.NotSupported("Streaming is not supported");
             }
 
-            const output = useref(file.contents.toString(), options);
+            const output = _useref(file.contents.toString(), options);
 
-            file.contents = new Buffer(output[0]);
+            file.contents = Buffer.from(output[0]);
             this.push(file);
         }
     });

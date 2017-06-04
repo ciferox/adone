@@ -1,6 +1,6 @@
-const { is, fast } = adone;
+describe("fast", () => {
+    const { is, fast } = adone;
 
-describe("FAST", () => {
     let root;
 
     before(async () => {

@@ -1,8 +1,6 @@
-
-
-const { fast: { Fast } } = adone;
-
 export default function revisionHashReplace(options = {}) {
+    const { x, fast: { Fast }, std: { path } } = adone;
+
     let renames = [];
     const cache = [];
 
@@ -14,20 +12,17 @@ export default function revisionHashReplace(options = {}) {
 
     options.replaceInExtensions = options.replaceInExtensions || [".js", ".css", ".html", ".hbs"];
 
-    function fmtPath(base, filePath) {
-        const newPath = adone.std.path.relative(base, filePath);
-
-        return canonicalizeUri(newPath);
-    }
-
-    function canonicalizeUri(filePath) {
-        if (adone.std.path.sep !== "/" && options.canonicalUris) {
-            filePath = filePath.split(adone.std.path.sep).join("/");
+    const canonicalizeUri = (filePath) => {
+        if (path.sep !== "/" && options.canonicalUris) {
+            filePath = filePath.split(path.sep).join("/");
         }
-
         return filePath;
-    }
+    };
 
+    const fmtPath = (base, filePath) => {
+        const newPath = path.relative(base, filePath);
+        return canonicalizeUri(newPath);
+    };
 
     return new Fast(null, {
         transform(file) {
@@ -37,7 +32,7 @@ export default function revisionHashReplace(options = {}) {
             }
 
             if (file.isStream()) {
-                this.emit("error", new adone.x.NotSupported("Streaming is not supported"));
+                this.emit("error", new x.NotSupported("Streaming is not supported"));
                 return;
             }
             // Collect renames from reved files.
@@ -86,7 +81,7 @@ export default function revisionHashReplace(options = {}) {
                     }
                 }
 
-                file.contents = new Buffer(contents);
+                file.contents = Buffer.from(contents);
                 this.push(file);
             }
         }

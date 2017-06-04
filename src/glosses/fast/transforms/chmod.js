@@ -1,9 +1,9 @@
-const { is, x, fs, fast: { Fast } } = adone;
+const { is, x, fs, fast: { Fast }, util } = adone;
 
 const defaultMode = 0o777 & (~process.umask());
 
-function normalize(mode) {
-    if (mode === null || mode === undefined) {
+const normalize = (mode) => {
+    if (is.nil(mode)) {
         return mode;
     }
     let called = false;
@@ -13,37 +13,37 @@ function normalize(mode) {
         others: {}
     };
 
-    ["read", "write", "execute"].forEach((key) => {
+    for (const key of ["read", "write", "execute"]) {
         if (is.boolean(mode[key])) {
             newMode.owner[key] = mode[key];
             newMode.group[key] = mode[key];
             newMode.others[key] = mode[key];
             called = true;
         }
-    });
+    }
 
     return called ? newMode : mode;
-}
+};
 
-function assign(a, b) {
-    for (const key of Object.keys(b)) {
+const assign = (a, b) => {
+    for (const key of util.keys(b)) {
         if (is.object(b[key])) {
             assign(a[key], b[key]);
         } else if (key in a) {
             a[key] = b[key];
         }
     }
-}
+};
 
 export default function chmod(mode, dirMode) {
-    if (mode !== null && mode !== undefined && !is.number(mode) && !is.object(mode)) {
+    if (!is.nil(mode) && !is.number(mode) && !is.object(mode)) {
         throw new x.InvalidArgument("Expected mode to be null/undefined/number/Object");
     }
 
     if (dirMode === true) {
         dirMode = mode;
     }
-    if (dirMode !== null && dirMode !== undefined && !is.number(dirMode) && !is.object(dirMode)) {
+    if (!is.nil(dirMode) && !is.number(dirMode) && !is.object(dirMode)) {
         throw new TypeError("Expected dirMode to be null/undefined/true/number/Object");
     }
 
@@ -57,7 +57,7 @@ export default function chmod(mode, dirMode) {
                 [curMode, ncurMode] = [dirMode, nDirMode];
             }
 
-            if (curMode === undefined || curMode === null) {
+            if (is.nil(curMode)) {
                 this.push(file);
                 return;
             }

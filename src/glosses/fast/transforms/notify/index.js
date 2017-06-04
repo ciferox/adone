@@ -1,7 +1,3 @@
-// @flow
-
-
-import notifier from "node-notifier";
 import report from "./report";
 
 const { fast: { Fast } } = adone;
@@ -15,9 +11,9 @@ export default function notify(options = {}) {
     if (options.notifier) {
         reporter = options.notifier;
     } else {
-        let n = notifier;
+        let n = adone.notifier;
         if (options.host || options.appName || options.port) {
-            n = new notifier.Notification({
+            n = new adone.notifier.Notification({
                 host: options.host || "localhost",
                 appName: options.appName || "notify",
                 port: options.port || "23053"

@@ -1,9 +1,21 @@
-// @flow
+const { lazify, x, util: { toposort }, fast: { Fast } } = adone;
+
+const lazy = lazify({
+    findDependencies: ["./util", (x) => x.findDependencies]
+}, null, require);
 
 
-import { findDependencies } from "./utils";
-
-const { x, util: { toposort }, fast: { Fast } } = adone;
+const isDependecyUsedInAnyDeclaration = (dependency, ngDeps) => {
+    if (!ngDeps.modules) {
+        return false;
+    }
+    if (dependency in ngDeps.modules) {
+        return true;
+    }
+    return Object.keys(ngDeps.modules).some((module) => {
+        return ngDeps.modules[module].indexOf(dependency) > -1;
+    });
+};
 
 export default function angularFilesort() {
     const files = [];
@@ -25,7 +37,7 @@ export default function angularFilesort() {
 
             let deps;
             try {
-                deps = findDependencies(file.contents.toString());
+                deps = lazy.findDependencies(file.contents.toString());
             } catch (err) {
                 throw new x.Exception(`Error in parsing ${file.relative}: ${err.message}`);
             }
@@ -45,7 +57,7 @@ export default function angularFilesort() {
                 }
                 toSort.push([file, dep]);
             }
-            
+
             files.push(file);
         },
         flush() {
@@ -66,10 +78,10 @@ export default function angularFilesort() {
             // Reverse sorting as it is reversed later on.
             files.sort((a, b) => {
                 if (a.path.toLowerCase().replace(a.extname, "") < b.path.toLowerCase().replace(b.extname, "")) {
-                    return 1; 
+                    return 1;
                 }
                 if (a.path.toLowerCase().replace(a.extname, "") > b.path.toLowerCase().replace(b.extname, "")) {
-                    return -1; 
+                    return -1;
                 }
                 return 0;
             });
@@ -78,17 +90,5 @@ export default function angularFilesort() {
                 this.push(file);
             }
         }
-    });
-}
-
-function isDependecyUsedInAnyDeclaration(dependency, ngDeps) {
-    if (!ngDeps.modules) {
-        return false;
-    }
-    if (dependency in ngDeps.modules) {
-        return true;
-    }
-    return Object.keys(ngDeps.modules).some((module) => {
-        return ngDeps.modules[module].indexOf(dependency) > -1;
     });
 }

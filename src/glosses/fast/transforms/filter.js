@@ -1,13 +1,9 @@
-// @flow
-
-
-
-const { is, core, collection: { LinkedList } } = adone;
+const { is, core, collection } = adone;
 
 export default class Filter {
     constructor() {
         this.named = new Map();
-        this.unnamed = new LinkedList();
+        this.unnamed = new collection.LinkedList();
     }
 
     stash(name, filter) {
@@ -40,7 +36,7 @@ export default class Filter {
     }
 
     unstash(name = null) {
-        if (name === null) {
+        if (is.null(name)) {
             const streams = [...this.unnamed.toArray(), ...this.named.values()];
             if (!streams.length) {
                 return core();

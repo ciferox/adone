@@ -1,18 +1,14 @@
+const { is, x, std, util } = adone;
 
-
-const { is, std } = adone;
-
-function cloneStat(stat) {
+const cloneStat = (stat) => {
     const stub = new std.fs.Stats();
-    for (const key of Object.keys(stat)) {
+    for (const key of util.keys(stat)) {
         stub[key] = stat[key];
     }
     return stub;
-}
+};
 
-const builtInProps = new Set([
-    "contents", "stat", "history", "path", "base", "cwd", "_"
-]);
+const builtInProps = new Set(["contents", "stat", "history", "path", "base", "cwd", "_"]);
 
 export default class File {
     constructor({
@@ -53,7 +49,7 @@ export default class File {
             value = Buffer.from(value);
         }
         if (!is.null(value) && !is.buffer(value) && !is.stream(value)) {
-            throw new adone.x.Exception("Invalid contents value");
+            throw new x.Exception("Invalid contents value");
         }
         this._.set("contents", value);
     }
@@ -61,7 +57,7 @@ export default class File {
     clone({ contents = false, deep = true } = {}) {
         if (contents) {
             if (this.isStream()) {
-                throw new adone.x.NotSupported("You cannot clone a stream yet");
+                throw new x.NotSupported("You cannot clone a stream yet");
             } else if (this.isBuffer()) {
                 contents = Buffer.from(this.contents);
             } else {
@@ -109,7 +105,7 @@ export default class File {
 
     set cwd(value) {
         if (!value || !is.string(value)) {
-            throw new adone.x.Exception("Invalid value");
+            throw new x.Exception("Invalid value");
         }
         // todo filter
         this._.set("cwd", value);
@@ -120,10 +116,10 @@ export default class File {
     }
 
     set base(value) {
-        if (value !== null && (!is.string(value) || !value)) {
-            throw new adone.x.Exception("Invalid value");
+        if (!is.null(value) && (!is.string(value) || !value)) {
+            throw new x.Exception("Invalid value");
         }
-        if (value === null) {
+        if (is.null(value)) {
             this._.delete("base");
             return;
         }
@@ -144,7 +140,7 @@ export default class File {
     get relative() {
         const { path } = this;
         if (!path) {
-            throw new adone.x.Exception("No path - no relative path");
+            throw new x.Exception("No path - no relative path");
         }
         return std.path.relative(this.base, path);
     }
@@ -152,7 +148,7 @@ export default class File {
     get dirname() {
         const { path } = this;
         if (!path) {
-            throw new adone.x.Exception("No path - no dirname");
+            throw new x.Exception("No path - no dirname");
         }
         return std.path.dirname(path);
     }
@@ -160,7 +156,7 @@ export default class File {
     get basename() {
         const { path } = this;
         if (!path) {
-            throw new adone.x.Exception("No path - no basename");
+            throw new x.Exception("No path - no basename");
         }
         return std.path.basename(path);
     }
@@ -168,7 +164,7 @@ export default class File {
     set basename(value) {
         const { path } = this;
         if (!path) {
-            throw new adone.x.Exception("No path - no ability to set the basename");
+            throw new x.Exception("No path - no ability to set the basename");
         }
         this.path = std.path.join(this.dirname, value);
     }
@@ -176,7 +172,7 @@ export default class File {
     get extname() {
         const { path } = this;
         if (!path) {
-            throw new adone.x.Exception("No path - no extname");
+            throw new x.Exception("No path - no extname");
         }
         return std.path.extname(path);
     }
@@ -184,7 +180,7 @@ export default class File {
     set extname(value) {
         const { path } = this;
         if (!path) {
-            throw new adone.x.Exception("No path - no ability to set the extname");
+            throw new x.Exception("No path - no ability to set the extname");
         }
         const t = std.path.basename(path, std.path.extname(path)) + value;
         this.path = std.path.join(this.dirname, t);
@@ -193,7 +189,7 @@ export default class File {
     get stem() {
         const { path } = this;
         if (!path) {
-            throw new adone.x.Exception("No path - no stem");
+            throw new x.Exception("No path - no stem");
         }
         return std.path.basename(this.path, this.extname);
     }
@@ -201,7 +197,7 @@ export default class File {
     set stem(value) {
         const { path } = this;
         if (!path) {
-            throw new adone.x.Exception("No path - no ability to set the stem");
+            throw new x.Exception("No path - no ability to set the stem");
         }
         this.path = std.path.join(this.dirname, value + this.extname);
     }

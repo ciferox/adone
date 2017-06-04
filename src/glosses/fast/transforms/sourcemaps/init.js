@@ -1,5 +1,5 @@
 export default function init(options = {}) {
-    const { x, Transform, is, util, fast: { plugin: { sourcemaps: { __ } } }, sourcemap } = adone;
+    const { x, Transform, is, util, fast: { transform: { sourcemaps: { __ } } }, sourcemap } = adone;
 
     return new Transform({
         transform(file) {

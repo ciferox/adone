@@ -1,10 +1,6 @@
-// @flow
+export default function concat(file, options = {}) {
+    const { is, std: { path }, x, fast: { File, Fast, __ } } = adone;
 
-
-
-const { is, std: { path }, x, fast: { File, Fast, helpers: { Concat } } } = adone;
-
-export default function (file, options = {}) {
     if (!file) {
         throw new x.InvalidArgument("Missing file option");
     }
@@ -24,7 +20,7 @@ export default function (file, options = {}) {
     } else if (is.string(file.path)) {
         fileName = path.basename(file.path);
     } else {
-        throw new adone.x.InvalidArgument("Missing path in file options");
+        throw new x.InvalidArgument("Missing path in file options");
     }
 
     return new Fast(null, {
@@ -33,7 +29,7 @@ export default function (file, options = {}) {
                 return;
             }
             if (file.isStream()) {
-                throw new adone.x.NotSupported("Streaming is not supported");
+                throw new x.NotSupported("Streaming is not supported");
             }
 
             // enable sourcemap support for concat
@@ -50,7 +46,7 @@ export default function (file, options = {}) {
 
             // construct concat instance
             if (!concat) {
-                concat = new Concat(isUsingSourceMaps, fileName, options.newLine);
+                concat = new __.Concat(isUsingSourceMaps, fileName, options.newLine);
             }
 
             // add file to concat instance
