@@ -13,6 +13,10 @@ export default class Valuable {
         return this.meta.name;
     }
 
+    internalId() {
+        return this.id;
+    }
+
     async set(name, value, type) {
         let keyMeta = this._getKeyUnsafe(name);
         let id;
@@ -93,6 +97,16 @@ export default class Valuable {
     }
 
     async addTag(tag) {
+        if (is.array(tag)) {
+            let result = false;
+            for (const t of tag) {
+                if (!__.hasTag(this._tags, t)) {
+                    result = true;
+                    await this.addTag(t);
+                }
+            }
+            return result;
+        }
         if (!__.hasTag(this._tags, tag)) {
             tag = adone.vault.normalizeTag(tag);
             const tids = await this.vault._getTids([tag], this.id);

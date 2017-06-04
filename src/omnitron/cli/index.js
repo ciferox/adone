@@ -430,9 +430,9 @@ export default class extends adone.application.Subsystem {
                             help: "add new host",
                             arguments: [
                                 {
-                                    name: "host",
+                                    name: "name",
                                     type: String,
-                                    help: "ip address/domain/alias of host"
+                                    help: "host's ip address/domain"
                                 }
                             ],
                             options: [
@@ -440,13 +440,13 @@ export default class extends adone.application.Subsystem {
                                     name: "--aliases",
                                     nargs: "*",
                                     type: String,
-                                    help: "host aliases"
+                                    help: "host's aliases"
                                 },
                                 {
-                                    name: "--groups",
+                                    name: "--tags",
                                     nargs: "*",
                                     type: String,
-                                    help: "host aliases"
+                                    help: "host's tags"
                                 },
                                 {
                                     name: "--ssh-port",
@@ -472,8 +472,12 @@ export default class extends adone.application.Subsystem {
                                 {
                                     name: "--netron-port",
                                     type: Number,
-                                    default: adone.netron.DEFAULT_PORT,
                                     help: "netron port number"
+                                },
+                                {
+                                    name: "--netron-private-key",
+                                    type: String,
+                                    help: "path of netron private key"
                                 }
                             ],
                             handler: this.hostsAddCommand
@@ -483,9 +487,9 @@ export default class extends adone.application.Subsystem {
                             help: "set parameters of host",
                             arguments: [
                                 {
-                                    name: "host",
+                                    name: "name",
                                     type: String,
-                                    help: "ip address/domain/alias of host"
+                                    help: "ip address/domain of host"
                                 }
                             ],
                             options: [
@@ -493,13 +497,13 @@ export default class extends adone.application.Subsystem {
                                     name: "--aliases",
                                     nargs: "*",
                                     type: String,
-                                    help: "host aliases"
+                                    help: "host's aliases"
                                 },
                                 {
-                                    name: "--groups",
+                                    name: "--tags",
                                     nargs: "*",
                                     type: String,
-                                    help: "host aliases"
+                                    help: "host's tags"
                                 },
                                 {
                                     name: "--ssh-port",
@@ -527,6 +531,11 @@ export default class extends adone.application.Subsystem {
                                     type: Number,
                                     default: adone.netron.DEFAULT_PORT,
                                     help: "netron port number"
+                                },
+                                {
+                                    name: "--netron-private-key",
+                                    type: String,
+                                    help: "path of netron private key"
                                 }
                             ],
                             handler: this.hostsSetCommand
@@ -536,9 +545,15 @@ export default class extends adone.application.Subsystem {
                             help: "show hosts parameters",
                             arguments: [
                                 {
-                                    name: "host",
+                                    name: "name",
                                     type: String,
                                     help: "ip address/domain/alias of host"
+                                }
+                            ],
+                            options: [
+                                {
+                                    name: "--id",
+                                    help: "return internal host identifier: $id"
                                 }
                             ],
                             handler: this.hostsGetCommand
@@ -548,7 +563,7 @@ export default class extends adone.application.Subsystem {
                             help: "delete host",
                             arguments: [
                                 {
-                                    name: "host",
+                                    name: "name",
                                     type: String,
                                     help: "ip address/domain/alias of host"
                                 }
@@ -575,6 +590,17 @@ export default class extends adone.application.Subsystem {
                         {
                             name: "tags",
                             help: "show all tags",
+                            options: [
+                                {
+                                    name: "--ids",
+                                    type: Array,
+                                    help: "list of tag's private ids"
+                                },
+                                {
+                                    name: "--private",
+                                    help: "return private fields"
+                                }
+                            ],
                             handler: this.hostsTagsCommand
                         },
                         {
@@ -585,6 +611,14 @@ export default class extends adone.application.Subsystem {
                                     name: "tag",
                                     type: String,
                                     help: "tag name"
+                                }
+                            ],
+                            options: [
+                                {
+                                    name: ["-p", "--property"],
+                                    type: /(\w+)=([\w\s\W]+)/,
+                                    nargs: "+",
+                                    help: ""
                                 }
                             ],
                             handler: this.hostsAddTagCommand
@@ -1292,8 +1326,14 @@ export default class extends adone.application.Subsystem {
     async hostsAddCommand(args, opts) {
         try {
             const iHosts = await this.dispatcher.context("hosts");
-            const iHost = await iHosts.add(args.get("host"));
-            await iHost.setMulti(opts.getAll(true));
+            const iHost = await iHosts.add(args.get("name"));
+            const params = opts.getAll(true);
+            if (is.array(params.tags)) {
+                const tags = params.tags;
+                delete params.tags;
+                await iHost.addTag(tags);
+            }
+            await iHost.setMulti(params);
             adone.log(adone.ok);
         } catch (err) {
             adone.error(err.message);
@@ -1330,17 +1370,23 @@ export default class extends adone.application.Subsystem {
                 throw new adone.x.Exists(`Host '${alias}' already exists. Use another alias`);
             }
 
-            const host = args.get("host");
+            const hostName = args.get("name");
             let iHost;
             try {
-                iHost = await iHosts.get(host);
+                iHost = await iHosts.get(hostName);
             } catch (err) {
                 if (err instanceof adone.x.NotExists) {
-                    iHost = await iHosts.add(host);
+                    iHost = await iHosts.add(hostName);
                     params = opts.getAll(true);
                 } else {
                     throw err;
                 }
+            }
+
+            if (is.array(params.tags)) {
+                const tags = params.tags;
+                delete params.tags;
+                await iHost.addTag(tags);
             }
             await iHost.setMulti(params);
             adone.log(adone.ok);
@@ -1351,24 +1397,22 @@ export default class extends adone.application.Subsystem {
         return 0;
     }
 
-    async hostsGetCommand(args) {
+    async hostsGetCommand(args, opts) {
         try {
             const iHosts = await this.dispatcher.context("hosts");
-            const host = args.get("host");
+            const host = args.get("name");
             const iHost = await iHosts.get(host);
             const entries = await iHost.entries();
-            let names;
-            if (is.array(entries.aliases)) {
-                names = entries.aliases.concat(await iHost.name());
-                delete entries.aliases;
-            } else {
-                names = [host];
+
+            entries.name = await iHost.name();
+
+            if (opts.has("id")) {
+                entries.$id = await iHost.internalId();
             }
 
-            entries.names = names.join(", ");
-            const groups = await iHost.tags();
-            if (groups.length > 0) {
-                entries.groups = groups.join(", ");
+            const tags = await iHost.tags();
+            if (tags.length > 0) {
+                entries.tags = tags.map((t) => t.name).join(", ");
             }
             adone.log(adone.text.pretty.json(entries));
         } catch (err) {
@@ -1381,7 +1425,7 @@ export default class extends adone.application.Subsystem {
     async hostsDelCommand(args) {
         try {
             const iHosts = await this.dispatcher.context("hosts");
-            await iHosts.delete(args.get("host"));
+            await iHosts.delete(args.get("name"));
             adone.log(adone.ok);
         } catch (err) {
             adone.error(err.message);
@@ -1407,10 +1451,15 @@ export default class extends adone.application.Subsystem {
         return 0;
     }
 
-    async hostsTagsCommand() {
+    async hostsTagsCommand(args, opts) {
         try {
+            const privateProps = opts.has("private");
+            let ids = null;
+            if (opts.has("ids")) {
+                ids = opts.get("ids");
+            }
             const iHosts = await this.dispatcher.context("hosts");
-            adone.log(adone.text.pretty.json(await iHosts.tags()));
+            adone.log(adone.text.pretty.json(await iHosts.tags(ids, { privateProps })));
         } catch (err) {
             adone.error(err.message);
             return 1;
@@ -1418,10 +1467,22 @@ export default class extends adone.application.Subsystem {
         return 0;
     }
 
-    async hostsAddTagCommand(args) {
+    async hostsAddTagCommand(args, opts) {
         try {
             const iHosts = await this.dispatcher.context("hosts");
-            await iHosts.addTag(args.get("tag"));
+            let tag;
+            if (!opts.has("property")) {
+                tag = args.get("tag");
+            } else {
+                tag = {
+                    name: args.get("tag")
+                };
+
+                for (const prop of opts.get("property")) {
+                    tag[prop[1]] = prop[2];
+                }
+            }
+            await iHosts.addTag(tag);
             adone.log(adone.ok);
         } catch (err) {
             adone.error(err.message);

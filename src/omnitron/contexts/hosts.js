@@ -1,41 +1,43 @@
 const { is } = adone;
 const { Contextable, Private, Public, Description, Method, Type } = adone.netron.decorator;
 
-// Host available properties:
-// - ip4 (String): IPv4 address of host
+// Host reserved properties:
+// - name (String): hosts's IPv4/IPv6/domain
 // - ip6 (String): IPv6 address of host
-// - comment (String): some additional information about host
-// - groups (Array): list of host's groups
-// - aliases (Array): list of host aliaces
+// - tags (Array): list of host's tags/groups
+// - aliases (Array): list of host aliases
 // - sshPort (Number): ssh port number
 // - sshUser (String): ssh user
 // - sshPassword (String): ssh password
-// - sshPrivateKey (String): path of ssh private key
-// - sshOptions (Object): ssh client options
+// - sshPrivateKey (Buffer|String): content of ssh private key
 // - netronPort (Number): netron port number
-// - netronPrivateKey (String): path of netron private key
-// - netronOptions (Object): netron client options.
+// - netronPrivateKey (Buffer|String): content of netron private key
+// - country (String): host's country
+// - countryCode (String): host's country two-chars code
+// - systen (String): system short name (ubuntu, windows, freebsd, raspberry-pi, ...)
+// - systemInfo (String): host's operating system info
+// - notes (String): some additional information about host
 
-const HOST_KEYS = [
-    "ip4",
-    "ip6",
-    "comment",
-    "groups",
-    "aliaces",
+const HOST_RESERVED_KEYS = [
+    "name",
+    "aliases",
     "sshPort",
     "sshUser",
     "sshPassword",
     "sshPrivateKey",
-    "sshOptions",
     "netronPort",
     "netronPrivateKey",
-    "netronOptions"
+    "country",
+    "countryCode",
+    "systemInfo",
+    "notes"
 ];
 
 @Private
 @Contextable
 @Description("Host")
 @Method("name", { private: false })
+@Method("internalId", { private: false })
 @Method("set", { private: false })
 @Method("setMulti", { private: false })
 @Method("get", { private: false })
@@ -141,8 +143,8 @@ export default class Hosts {
     }
 
     @Public
-    async tags() {
-        return this._vault.tags();
+    async tags(ids, options) {
+        return this._vault.tags(ids, options);
     }
 
     @Public

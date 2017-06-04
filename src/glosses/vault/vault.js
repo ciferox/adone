@@ -169,7 +169,7 @@ export default class Vault {
             const tagId = this.tagsMap.get(tag.name).id;
             this.tids.splice(this.tids.indexOf(tagId), 1);
             await this._setMeta(TIDS, this.tids);
-            
+
             this.tagsMap.delete(tag.name);
             await this._deleteMeta(__.tag(tagId));
             return true;
@@ -177,11 +177,19 @@ export default class Vault {
         return false;
     }
 
-    tags(ids = null) {
-        if (is.array(ids)) {
-            return [...this.tagsMap.values()].filter((t) => ids.includes(t.id)).map((t) => t.tag);
+    tags(ids = null, { privateProps = false } = {}) {
+        let factory;
+        if (privateProps) {
+            factory = (t) => Object.assign({
+                $id: t.id,
+                $vids: t.vids
+            }, t.tag);
+        } else {
+            factory = (t) => t.tag;
         }
-        return [...this.tagsMap.values()].map((t) => t.tag);
+
+        const vals = [...this.tagsMap.values()];
+        return (is.array(ids) ? vals.filter((t) => ids.includes(t.id)).map(factory) : vals.map(factory));
     }
 
     tagNames(ids) {
