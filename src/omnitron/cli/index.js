@@ -636,6 +636,11 @@ export default class extends adone.application.Subsystem {
                             handler: this.hostsDelTagCommand
                         },
                         {
+                            name: "deltags",
+                            help: "delete all tags",
+                            handler: this.hostsDelTagsCommand
+                        },
+                        {
                             name: "groups",
                             help: "show groups",
                             handler: this.hostsGroupsCommand
@@ -1495,6 +1500,18 @@ export default class extends adone.application.Subsystem {
         try {
             const iHosts = await this.dispatcher.context("hosts");
             await iHosts.deleteTag(args.get("tag"));
+            adone.log(adone.ok);
+        } catch (err) {
+            adone.error(err.message);
+            return 1;
+        }
+        return 0;
+    }
+
+    async hostsDelTagsCommand() {
+        try {
+            const iHosts = await this.dispatcher.context("hosts");
+            await iHosts.deleteAllTags();
             adone.log(adone.ok);
         } catch (err) {
             adone.error(err.message);

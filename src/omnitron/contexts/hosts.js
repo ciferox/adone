@@ -129,7 +129,7 @@ export default class Hosts {
     @Public
     async addTag(newTag) {
         const result = await this._vault.addTag(newTag);
-        if (!result) {
+        if (is.null(result)) {
             throw new adone.x.Exists(`Tag already exists: ${adone.vault.normalizeTag(newTag).name}`);
         }
     }
@@ -140,6 +140,11 @@ export default class Hosts {
         if (!result) {
             throw new adone.x.NotExists(`Tag not exists: ${adone.vault.normalizeTag(newTag).name}`);
         }
+    }
+
+    @Public
+    async deleteAllTags() {
+        return this._vault.deleteAllTags();
     }
 
     @Public

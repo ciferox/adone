@@ -98,24 +98,22 @@ export default class Valuable {
 
     async addTag(tag) {
         if (is.array(tag)) {
-            let result = false;
+            const result = [];
             for (const t of tag) {
                 if (!__.hasTag(this._tags, t)) {
-                    result = true;
-                    await this.addTag(t);
+                    result.push(await this.addTag(t));
                 }
             }
             return result;
         }
         if (!__.hasTag(this._tags, tag)) {
-            tag = adone.vault.normalizeTag(tag);
-            const tids = await this.vault._getTids([tag], this.id);
-            this.meta.tids.push(tids[0]);
-            this._tags.push(tag);
+            const tagId = await this.vault.addTag(tag, this.id);
+            this.meta.tids.push(tagId);
+            this._tags.push(adone.vault.normalizeTag(tag));
             await this._updateMeta();
-            return true;
+            return tagId;
         }
-        return false;
+        return null;
     }
 
     hasTag(tag) {

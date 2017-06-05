@@ -149,13 +149,13 @@ export default class Vault {
         return vaults;
     }
 
-    async addTag(tag) {
+    async addTag(tag, vid = null) {
         const tags = this._getTags();
         if (!__.hasTag(tags, tag)) {
-            await this._getTids([adone.vault.normalizeTag(tag)]);
-            return true;
+            const tagIds = await this._getTids([adone.vault.normalizeTag(tag)], vid);
+            return tagIds[0];
         }
-        return false;
+        return null;
     }
 
     async deleteTag(tag) {
@@ -175,6 +175,13 @@ export default class Vault {
             return true;
         }
         return false;
+    }
+
+    async deleteAllTags() {
+        const tags = this._getTags();
+        for (const tag of tags) {
+            await this.deleteTag(tag);
+        }
     }
 
     tags(ids = null, { privateProps = false } = {}) {

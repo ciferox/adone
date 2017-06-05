@@ -159,9 +159,9 @@ describe("Vault", () => {
         await val.set("num", 17);
         const allNormTags = adone.vault.normalizeTags(["tag1", "tag2", "tag3", "tag4"]);
         assert.equal(await val.get("num"), 17);
-        assert.isTrue(await val.addTag("tag2"));
-        assert.isFalse(await val.addTag("tag3"));
-        assert.isTrue(await val.addTag("tag4"));
+        assert.isNumber(await val.addTag("tag2"));
+        assert.isNull(await val.addTag("tag3"));
+        assert.isNumber(await val.addTag("tag4"));
         assert.sameDeepMembers(await val.tags(), allNormTags);
         assert.sameDeepMembers(await vault.tags(), allNormTags);
         assert.isTrue(await val.deleteTag("tag3"));
@@ -196,9 +196,9 @@ describe("Vault", () => {
         let val = await vault.create("val", tags);
         await val.set("num", 17);
         assert.equal(await val.get("num"), 17);
-        assert.isTrue(await val.addTag(tag2));
-        assert.isFalse(await val.addTag("tag3"));
-        assert.isTrue(await val.addTag(tag4));
+        assert.isNumber(await val.addTag(tag2));
+        assert.isNull(await val.addTag("tag3"));
+        assert.isNumber(await val.addTag(tag4));
         
         assert.sameDeepMembers(await val.tags(), allNormTags);
         assert.sameDeepMembers(await vault.tags(), allNormTags);
