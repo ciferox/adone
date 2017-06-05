@@ -362,25 +362,185 @@ describe("collections", "LinkedList", () => {
             rolling(list, [1, 2, 3, empty, empty]);
         });
 
-        it("should do autoresizing if the size is not provided", () => {
-            const list = new LinkedList();
-            expect(list.maxLength).to.be.equal(16);  // the default value
-            for (let i = 0; i < 16; ++i) {
-                list.push(i);
-            }
-            expect(list.full).to.be.true;
-            list.push(16);
-            expect(list.length).to.be.equal(17);
-            expect(list.maxLength).to.be.equal(32);  // x2
-            rolling(list, [...new Array(list.maxLength)].map((_, i) => i > 16 ? empty : i));
-            for (let i = 0; i < 15; ++i) {
-                list.push(17 + i);
-            }
-            expect(list.full).to.be.true;
-            list.push(32);
-            expect(list.length).to.be.equal(33);
-            expect(list.maxLength).to.be.equal(64);  // x2
-            rolling(list, [...new Array(list.maxLength)].map((_, i) => i > 32 ? empty : i));
+        describe("autoresize", () => {
+            it("should do autoresizing if the size is not provided", () => {
+                const list = new LinkedList();
+                expect(list.maxLength).to.be.equal(16);  // the default value
+                for (let i = 0; i < 16; ++i) {
+                    list.push(i);
+                }
+                expect(list.full).to.be.true;
+                list.push(16);
+                expect(list.length).to.be.equal(17);
+                expect(list.maxLength).to.be.equal(32);  // x2
+                rolling(list, [...new Array(list.maxLength)].map((_, i) => i > 16 ? empty : i));
+                for (let i = 0; i < 15; ++i) {
+                    list.push(17 + i);
+                }
+                expect(list.full).to.be.true;
+                list.push(32);
+                expect(list.length).to.be.equal(33);
+                expect(list.maxLength).to.be.equal(64);  // x2
+                rolling(list, [...new Array(list.maxLength)].map((_, i) => i > 32 ? empty : i));
+            });
+
+            context("pop", () => {
+                it("should resize when length < maxLength / 2", () => {
+                    const list = new LinkedList();
+                    for (let i = 0; i < 100; ++i) {
+                        list.push(i);
+                    }
+                    expect(list.maxLength).to.be.equal(128);
+                    while (list.length > 64) {
+                        list.pop();
+                    }
+                    expect(list.maxLength).to.be.equal(128);
+                    list.pop();
+                    expect(list.maxLength).to.be.equal(64);
+                });
+
+                it(`should stop resizing when length < DEFAULT_LENGTH = ${LinkedList.DEFAULT_LENGTH}`, () => {
+                    const list = new LinkedList();
+                    for (let i = 0; i < 100; ++i) {
+                        list.push(i);
+                    }
+                    expect(list.maxLength).to.be.equal(128);
+                    while (list.length > LinkedList.DEFAULT_LENGTH) {
+                        list.pop();
+                    }
+                    expect(list.maxLength).to.be.equal(LinkedList.DEFAULT_LENGTH * 2);
+                    list.pop();
+                    expect(list.maxLength).to.be.equal(LinkedList.DEFAULT_LENGTH);
+                    while (!list.empty) {
+                        list.pop();
+                    }
+                    expect(list.maxLength).to.be.equal(LinkedList.DEFAULT_LENGTH);
+                });
+
+                it("should do nothing if autoresize is disabled", () => {
+                    const list = new LinkedList(128);
+                    for (let i = 0; i < 100; ++i) {
+                        list.push(i);
+                    }
+                    expect(list.maxLength).to.be.equal(128);
+                    while (list.length > LinkedList.DEFAULT_LENGTH) {
+                        list.pop();
+                    }
+                    expect(list.maxLength).to.be.equal(128);
+                    list.pop();
+                    expect(list.maxLength).to.be.equal(128);
+                    while (!list.empty) {
+                        list.pop();
+                    }
+                    expect(list.maxLength).to.be.equal(128);
+                });
+            });
+
+            context("shift", () => {
+                it("should resize when length < maxLength / 2", () => {
+                    const list = new LinkedList();
+                    for (let i = 0; i < 100; ++i) {
+                        list.push(i);
+                    }
+                    expect(list.maxLength).to.be.equal(128);
+                    while (list.length > 64) {
+                        list.shift();
+                    }
+                    expect(list.maxLength).to.be.equal(128);
+                    list.shift();
+                    expect(list.maxLength).to.be.equal(64);
+                });
+
+                it("should stop resizing when length < DEFAULT_LENGTH", () => {
+                    const list = new LinkedList();
+                    for (let i = 0; i < 100; ++i) {
+                        list.push(i);
+                    }
+                    expect(list.maxLength).to.be.equal(128);
+                    while (list.length > LinkedList.DEFAULT_LENGTH) {
+                        list.shift();
+                    }
+                    expect(list.maxLength).to.be.equal(LinkedList.DEFAULT_LENGTH * 2);
+                    list.shift();
+                    expect(list.maxLength).to.be.equal(LinkedList.DEFAULT_LENGTH);
+                    while (!list.empty) {
+                        list.shift();
+                    }
+                    expect(list.maxLength).to.be.equal(LinkedList.DEFAULT_LENGTH);
+                });
+
+                it("should do nothing if autoresize is disabled", () => {
+                    const list = new LinkedList(128);
+                    for (let i = 0; i < 100; ++i) {
+                        list.push(i);
+                    }
+                    expect(list.maxLength).to.be.equal(128);
+                    while (list.length > LinkedList.DEFAULT_LENGTH) {
+                        list.shift();
+                    }
+                    expect(list.maxLength).to.be.equal(128);
+                    list.shift();
+                    expect(list.maxLength).to.be.equal(128);
+                    while (!list.empty) {
+                        list.shift();
+                    }
+                    expect(list.maxLength).to.be.equal(128);
+                });
+            });
+
+            context("removeNode", () => {
+                it("should resize when the tail node is removed", () => {
+                    const tailNodes = [];
+                    const list = new LinkedList();
+                    for (let i = 0; i < 100; ++i) {
+                        tailNodes.push(list.push(i));
+                    }
+                    expect(list.maxLength).to.be.equal(128);
+                    while (list.length > 64) {
+                        list.removeNode(tailNodes.pop());
+                    }
+                    expect(list.maxLength).to.be.equal(128);
+                    list.removeNode(tailNodes.pop());
+                    expect(list.maxLength).to.be.equal(64);
+                });
+
+                it("should do nothing if autoresize is disabled", () => {
+                    const tailNodes = [];
+                    const list = new LinkedList(128);
+                    for (let i = 0; i < 100; ++i) {
+                        tailNodes.push(list.push(i));
+                    }
+                    expect(list.maxLength).to.be.equal(128);
+                    while (list.length > 64) {
+                        list.removeNode(tailNodes.pop());
+                    }
+                    expect(list.maxLength).to.be.equal(128);
+                    list.removeNode(tailNodes.pop());
+                    expect(list.maxLength).to.be.equal(128);
+                });
+            });
+
+            context("clear", () => {
+                it("should set maxLength to DEFAULT_LENGTH", () => {
+                    const list = new LinkedList();
+                    for (let i = 0; i < 100; ++i) {
+                        list.push(i);
+                    }
+                    expect(list.maxLength).to.be.equal(128);
+                    list.clear();
+                    expect(list.maxLength).to.be.equal(LinkedList.DEFAULT_LENGTH);
+                });
+
+                it("should do nothing if autoresize is disabled", () => {
+                    const list = new LinkedList(128);
+                    for (let i = 0; i < 100; ++i) {
+                        list.push(i);
+                    }
+                    expect(list.maxLength).to.be.equal(128);
+                    list.clear();
+                    expect(list.maxLength).to.be.equal(128);
+                });
+            });
         });
     });
 
@@ -414,7 +574,7 @@ describe("collections", "LinkedList", () => {
         });
     });
 
-    describe.only("nextNode", () => {
+    describe("nextNode", () => {
         it("should return the next node", () => {
             const list = new LinkedList();
             const a = list.push(1);

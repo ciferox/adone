@@ -61,7 +61,7 @@ export default class FastLRU {
     }
 
     clear() {
-        this.queue.clear({ strong: true });
+        this.queue.clear(true);
         this.cache.clear();
     }
 }

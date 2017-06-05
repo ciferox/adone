@@ -413,8 +413,9 @@ export default class LRU {
             return null;
         }
         const node = priv(this, "lruList").tail;
+        const value = node.value;
         del(this, node);
-        return node.value;
+        return value;
     }
 
     del(key) {

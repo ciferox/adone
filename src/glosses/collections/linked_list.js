@@ -1,4 +1,4 @@
-const { x } = adone;
+const { is, x } = adone;
 
 const empty = Symbol.for("linkedlist:empty");
 
@@ -11,16 +11,16 @@ class Node {
 }
 
 export default class LinkedList {
-    constructor(size) {
-        if (!size) {
-            size = 16;
+    constructor(maxLength) {
+        if (!maxLength || !is.finite(maxLength)) {
+            maxLength = LinkedList.DEFAULT_LENGTH;
             this.autoresize = true;
         }
 
         this.head = new Node();
 
         let cursor = this.head;
-        for (let i = 0; i < size - 1; ++i) {
+        for (let i = 0; i < maxLength - 1; ++i) {
             cursor = cursor.next = new Node(cursor);
         }
         this.tail = cursor;
@@ -28,7 +28,17 @@ export default class LinkedList {
         this.head.prev = this.tail;
         this.tail = this.head.prev;
         this.length = 0;
-        this.maxLength = size;
+        this.maxLength = maxLength;
+    }
+
+    _maybeResize() {
+        if (!this.autoresize || this.maxLength <= LinkedList.DEFAULT_LENGTH) {
+            return;
+        }
+        const l = this.maxLength >>> 1;
+        if (this.length < l) {
+            this.resize(l);
+        }
     }
 
     get full() {
@@ -95,9 +105,10 @@ export default class LinkedList {
             return;
         }
         const value = this.tail.value;
-        // this.tail.value = empty;
+        this.tail.value = empty;
         this.tail = this.tail.prev;
         --this.length;
+        this._maybeResize();
         return value;
     }
 
@@ -106,9 +117,10 @@ export default class LinkedList {
             return;
         }
         const value = this.head.value;
-        // this.head.value = empty;
+        this.head.value = empty;
         this.head = this.head.next;
         --this.length;
+        this._maybeResize();
         return value;
     }
 
@@ -164,12 +176,13 @@ export default class LinkedList {
 
     removeNode(node) {
         if (node === this.tail) {
-            // this.tail.value = empty;
+            this.tail.value = empty;
             this.tail = this.tail.prev;
             --this.length;
+            this._maybeResize();
             return;
         }
-        // node.value = empty;
+        node.value = empty;
         this.pushNode(node);
         --this.length;
     }
@@ -182,6 +195,9 @@ export default class LinkedList {
         }
         this.length = 0;
         this.tail = this.head.prev;
+        if (this.autoresize) {
+            this.resize(LinkedList.DEFAULT_LENGTH);
+        }
     }
 
     toArray() {
@@ -191,7 +207,6 @@ export default class LinkedList {
         }
         return f;
     }
-
 
     get front() {
         if (this.length === 0) {
@@ -240,3 +255,5 @@ export default class LinkedList {
         return res;
     }
 }
+
+LinkedList.DEFAULT_LENGTH = 16;
