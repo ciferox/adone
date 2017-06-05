@@ -762,43 +762,55 @@ module.exports = function (server, config) {
     });
 
     describe("keepalive", () => {
-        it("should checkPing at keepalive interval", async () => {
+        let clock;
+
+        before(() => {
+            clock = fakeClock.install();
+        });
+
+        after(() => {
+            clock.uninstall();
+        });
+
+        it("should checkPing at keepalive interval", (done) => {
             const interval = 3;
             const client = connect({ keepalive: interval });
 
             client._checkPing = spy();
 
-            await new Promise((resolve) => client.once("connect", resolve));
-            const eps = 50;
-            const start = new Date();
-            await client._checkPing.waitForCall();
-            expect(new Date() - start).to.be.at.least(3000 - eps);
-            await client._checkPing.waitForCall();
-            expect(new Date() - start).to.be.at.least(6000 - eps);
-            await client._checkPing.waitForCall();
-            expect(new Date() - start).to.be.at.least(9000 - eps);
-            client.end();
+            client.once("connect", () => {
+                clock.tick(interval * 1000);
+                expect(client._checkPing).to.have.been.calledOnce;
+
+                clock.tick(interval * 1000);
+                expect(client._checkPing).to.have.been.calledTwice;
+
+                clock.tick(interval * 1000);
+                expect(client._checkPing).to.have.been.calledThrice;
+
+                client.end();
+                done();
+            });
         });
 
-        it("should not checkPing if publishing at a higher rate than keepalive", async () => {
+        it("should not checkPing if publishing at a higher rate than keepalive", (done) => {
             const intervalMs = 3000;
             const client = connect({ keepalive: intervalMs / 1000 });
 
             client._checkPing = spy();
 
-            await new Promise((resolve) => client.once("connect", resolve));
-
-            client.publish("foo", "bar");
-            await adone.promise.delay(2000);
-            client.publish("foo", "bar");
-            await adone.promise.delay(2000);
-            client.publish("foo", "bar");
-            await adone.promise.delay(2000);
-            expect(client._checkPing).to.not.have.been.called;
-            client.end();
+            client.once("connect", () => {
+                client.publish("foo", "bar");
+                clock.tick(intervalMs - 1);
+                client.publish("foo", "bar");
+                clock.tick(2);
+                expect(client._checkPing).not.to.have.been.called;
+                client.end();
+                done();
+            });
         });
 
-        it("should checkPing if publishing at a higher rate than keepalive and reschedulePings===false", async () => {
+        it("should checkPing if publishing at a higher rate than keepalive and reschedulePings===false", (done) => {
             const intervalMs = 3000;
             const client = connect({
                 keepalive: intervalMs / 1000,
@@ -806,13 +818,16 @@ module.exports = function (server, config) {
             });
 
             client._checkPing = spy();
-            await new Promise((resolve) => client.once("connect", resolve));
-            client.publish("foo", "bar");
-            await adone.promise.delay(2000);
-            client.publish("foo", "bar");
-            await adone.promise.delay(2000);
-            expect(client._checkPing).to.have.been.calledOnce;
-            client.end();
+
+            client.once("connect", () => {
+                client.publish("foo", "bar");
+                clock.tick(intervalMs - 1);
+                client.publish("foo", "bar");
+                clock.tick(2);
+                expect(client._checkPing).to.have.been.calledOnce;
+                client.end();
+                done();
+            });
         });
     });
 

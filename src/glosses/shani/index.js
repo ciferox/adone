@@ -1,4 +1,4 @@
-const { is, x, lazify } = adone;
+const { is, x, lazify, setTimeout, clearTimeout, hrtime, Date, util } = adone;
 
 const shani = lazify({
     util: "./util"
@@ -42,7 +42,7 @@ class Hook {
     async run() {
         this._fired = true;
         let err = null;
-        let s = adone.hrtime();
+        let s = hrtime();
         let uncaughtException;
         let unhandledRejection;
         try {
@@ -74,7 +74,7 @@ class Hook {
             delete this.runtimeContext.timeout;
             process.removeListener("uncaughtException", uncaughtException);
             process.removeListener("unhandledRejection", unhandledRejection);
-            s = adone.hrtime(s);
+            s = hrtime(s);
         }
         this._failed = err;
         const elapsed = s[0] * 1e3 + s[1] / 1e6;
@@ -244,7 +244,7 @@ class Test {
 
     async run() {
         let err = null;
-        let s = adone.hrtime();
+        let s = hrtime();
         let uncaughtException;
         let unhandledRejection;
         try {
@@ -279,7 +279,7 @@ class Test {
 
             process.removeListener("uncaughtException", uncaughtException);
             process.removeListener("unhandledRejection", unhandledRejection);
-            s = adone.hrtime(s);
+            s = hrtime(s);
         }
         const elapsed = s[0] * 1e3 + s[1] / 1e6;
         const timeout = this.timeout();
@@ -784,7 +784,8 @@ export class Engine {
                     request: () => shani.util.request,
                     nock: () => shani.util.nock,
                     FS: () => shani.util.FS,
-                    include: () => (p) => m.require(p, { cache: false })
+                    include: () => (p) => m.require(p, { cache: false }),
+                    fakeClock: () => util.fakeClock
                 }, global.$, m.require.bind(m), { configurable: true });
 
                 adone.lazify({
@@ -797,7 +798,8 @@ export class Engine {
                     request: () => global.$.request,
                     nock: () => global.$.nock,
                     include: () => global.$.include,
-                    FS: () => global.$.FS
+                    FS: () => global.$.FS,
+                    fakeClock: () => global.$.fakeClock
                 }, global, null, { configurable: true });
 
                 for (const name of topass) {
@@ -877,7 +879,7 @@ export const consoleReporter = ({
         let failed = 0;
         let passed = 0;
         let testsElapsed = 0;
-        let totalElapsed = adone.hrtime();
+        let totalElapsed = hrtime();
         const errors = [];
         const globalErrors = [];
         let bar = null;
@@ -1124,7 +1126,7 @@ export const consoleReporter = ({
                 }
 
                 log();
-                totalElapsed = adone.hrtime(totalElapsed);
+                totalElapsed = hrtime(totalElapsed);
                 testsElapsed = adone.util.humanizeTime(testsElapsed);
                 totalElapsed = adone.util.humanizeTime(
                     totalElapsed[0] * 1e3 + totalElapsed[1] / 1e6
@@ -1178,7 +1180,7 @@ export const simpleReporter = ({
         let failed = 0;
         let passed = 0;
         let testsElapsed = 0;
-        let totalElapsed = adone.hrtime();
+        let totalElapsed = hrtime();
         const errors = [];
         const globalErrors = [];
 
@@ -1370,7 +1372,7 @@ export const simpleReporter = ({
                 }
 
                 log();
-                totalElapsed = adone.hrtime(totalElapsed);
+                totalElapsed = hrtime(totalElapsed);
                 testsElapsed = adone.util.humanizeTime(testsElapsed);
                 totalElapsed = adone.util.humanizeTime(
                     totalElapsed[0] * 1e3 + totalElapsed[1] / 1e6

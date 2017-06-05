@@ -1,12 +1,15 @@
-const { is, util: { fakeClock } } = adone;
-
-global.fakeClock = fakeClock;
-const GlobalDate = Date;
-const NOOP = function NOOP() {
-    return undefined;
-};
-
 describe("util", "fakeClock", () => {
+    const { is, util: { fakeClock }, noop } = adone;
+    const GlobalDate = Date;
+
+    before(() => {
+        global.test = {};
+    });
+
+    after(() => {
+        delete global.test;
+    });
+
     describe("issue #59", () => {
         const context = {
             Date,
@@ -35,11 +38,11 @@ describe("util", "fakeClock", () => {
         describe("setTimeout", () => {
             beforeEach(function () {
                 this.clock = fakeClock.createClock();
-                fakeClock.evalCalled = false;
+                global.test.evalCalled = false;
             });
 
             afterEach(() => {
-                delete fakeClock.evalCalled;
+                delete global.test.evalCalled;
             });
 
             it("throws if no arguments", function () {
@@ -99,10 +102,10 @@ describe("util", "fakeClock", () => {
             });
 
             it("evals non-function callbacks", function () {
-                this.clock.setTimeout("fakeClock.evalCalled = true", 10);
+                this.clock.setTimeout("test.evalCalled = true", 10);
                 this.clock.tick(10);
 
-                assert(fakeClock.evalCalled);
+                assert(global.test.evalCalled);
             });
 
             it("passes setTimeout parameters", () => {
@@ -170,7 +173,7 @@ describe("util", "fakeClock", () => {
             });
 
             it("returns numeric id or object with numeric id", function () {
-                const result = this.clock.setImmediate(NOOP);
+                const result = this.clock.setImmediate(noop);
 
                 if (is.object(result)) {
                     assert.isNumber(result.id);
@@ -879,7 +882,7 @@ describe("util", "fakeClock", () => {
             });
 
             it("the loop limit can be set when installing a clock", function () {
-                this.clock = fakeClock.install(0, null, null, 1);
+                this.clock = fakeClock.install(0, { loopLimit: 1 });
                 const test = this;
 
                 const spies = [spy(), spy()];
@@ -1212,8 +1215,8 @@ describe("util", "fakeClock", () => {
 
             it("creates real Date objects when Date constructor is gone", function () {
                 const realDate = new Date();
-                Date = NOOP; // eslint-disable-line no-native-reassign
-                global.Date = NOOP;
+                Date = noop; // eslint-disable-line no-native-reassign
+                global.Date = noop;
 
                 const date = new this.clock.Date();
 
@@ -1478,7 +1481,7 @@ describe("util", "fakeClock", () => {
 
                 const to = setTimeout(stb, 1000);
 
-                if (is.object(setTimeout(NOOP, 0))) {
+                if (is.object(setTimeout(noop, 0))) {
                     assert.isNumber(to.id);
                     assert.isFunction(to.ref);
                     assert.isFunction(to.unref);
@@ -1600,7 +1603,7 @@ describe("util", "fakeClock", () => {
 
             it("uninstalls global property on uninstall if it is present on the global object itself", function () {
                 // Directly give the global object a tick method
-                global.tick = NOOP;
+                global.tick = noop;
 
                 this.clock = fakeClock.install(0, ["tick"]);
                 assert.isTrue(global.hasOwnProperty("tick"));
@@ -1626,7 +1629,7 @@ describe("util", "fakeClock", () => {
             });
 
             it("decide on Date.now support at call-time when supported", function () {
-                global.Date.now = NOOP;
+                global.Date.now = noop;
                 this.clock = fakeClock.install(0);
 
                 assert.equal(typeof Date.now, "function");

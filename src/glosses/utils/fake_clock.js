@@ -1,24 +1,8 @@
-const { is } = adone;
-
-// node expects setTimeout/setInterval to return a fn object w/ .ref()/.unref()
-// browsers, a number.
-// see https://github.com/cjohansen/Sinon.JS/pull/436
-
-const NOOP = function () {
-    return undefined;
-};
-const timeoutResult = setTimeout(NOOP, 0);
-const addTimerReturnsObject = is.object(timeoutResult);
-clearTimeout(timeoutResult);
+const { is, x, noop } = adone;
 
 const NativeDate = Date;
 let uniqueTimerId = 1;
 
-/**
- * Parse strings like "01:10:00" (meaning 1 hour, 10 minutes, 0 seconds) into
- * number of milliseconds. This is used to support human-readable strings passed
- * to clock.tick()
- */
 const parseTime = (str) => {
     if (!str) {
         return 0;
@@ -47,19 +31,10 @@ const parseTime = (str) => {
     return ms * 1000;
 };
 
-/**
- * Floor function that also works for negative numbers
- */
-const fixedFloor = (n) => (n >= 0 ? Math.floor(n) : Math.ceil(n));
+const fixedFloor = (n) => n >= 0 ? Math.floor(n) : Math.ceil(n);
 
-/**
- * % operator that also works for negative numbers
- */
 const fixedModulo = (n, m) => ((n % m) + m) % m;
 
-/**
- * Used to grok the `now` parameter to createClock.
- */
 const getEpoch = (epoch) => {
     if (!epoch) {
         return 0;
@@ -70,7 +45,7 @@ const getEpoch = (epoch) => {
     if (is.number(epoch)) {
         return epoch;
     }
-    throw new TypeError("now should be milliseconds since UNIX epoch");
+    throw new x.InvalidArgument("now should be milliseconds since UNIX epoch");
 };
 
 const inRange = (from, to, timer) => timer && timer.callAt >= from && timer.callAt <= to;
@@ -85,9 +60,7 @@ const mirrorDateProperties = (target, source) => {
 
     // set special now implementation
     if (source.now) {
-        target.now = function now() {
-            return target.clock.now;
-        };
+        target.now = () => target.clock.now;
     } else {
         delete target.now;
     }
@@ -119,22 +92,30 @@ const createDate = () => {
         // Defensive and verbose to avoid potential harm in passing
         // explicit undefined when user does not pass argument
         switch (arguments.length) {
-            case 0:
+            case 0: {
                 return new NativeDate(ClockDate.clock.now);
-            case 1:
+            }
+            case 1: {
                 return new NativeDate(year);
-            case 2:
+            }
+            case 2: {
                 return new NativeDate(year, month);
-            case 3:
+            }
+            case 3: {
                 return new NativeDate(year, month, date);
-            case 4:
+            }
+            case 4: {
                 return new NativeDate(year, month, date, hour);
-            case 5:
+            }
+            case 5: {
                 return new NativeDate(year, month, date, hour, minute);
-            case 6:
+            }
+            case 6: {
                 return new NativeDate(year, month, date, hour, minute, second);
-            default:
+            }
+            default: {
                 return new NativeDate(year, month, date, hour, minute, second, ms);
+            }
         }
     };
 
@@ -156,18 +137,10 @@ const addTimer = (clock, timer) => {
 
     clock.timers[timer.id] = timer;
 
-    if (addTimerReturnsObject) {
-        return {
-            id: timer.id,
-            ref: NOOP,
-            unref: NOOP
-        };
-    }
-
-    return timer.id;
+    return { id: timer.id, ref: noop, unref: noop };
 };
 
-/* eslint consistent-return: "off" */
+
 const compareTimers = (a, b) => {
     // Sort first by absolute timing
     if (a.callAt < b.callAt) {
@@ -207,12 +180,10 @@ const compareTimers = (a, b) => {
 const firstTimerInRange = (clock, from, to) => {
     const timers = clock.timers;
     let timer = null;
-    let id;
-    let isInRange;
 
-    for (id in timers) {
+    for (const id in timers) {
         if (timers.hasOwnProperty(id)) {
-            isInRange = inRange(from, to, timers[id]);
+            const isInRange = inRange(from, to, timers[id]);
 
             if (isInRange && (!timer || compareTimers(timer, timers[id]) === 1)) {
                 timer = timers[id];
@@ -226,9 +197,8 @@ const firstTimerInRange = (clock, from, to) => {
 const firstTimer = (clock) => {
     const timers = clock.timers;
     let timer = null;
-    let id;
 
-    for (id in timers) {
+    for (const id in timers) {
         if (timers.hasOwnProperty(id)) {
             if (!timer || compareTimers(timer, timers[id]) === 1) {
                 timer = timers[id];
@@ -242,9 +212,8 @@ const firstTimer = (clock) => {
 const lastTimer = (clock) => {
     const timers = clock.timers;
     let timer = null;
-    let id;
 
-    for (id in timers) {
+    for (const id in timers) {
         if (timers.hasOwnProperty(id)) {
             if (!timer || compareTimers(timer, timers[id]) === -1) {
                 timer = timers[id];
@@ -269,6 +238,7 @@ const callTimer = (clock, timer) => {
             timer.func.apply(null, timer.args);
         } else {
             /* eslint no-eval: "off" */
+            // ?
             eval(timer.func);
         }
     } catch (e) {
@@ -310,9 +280,7 @@ const clearTimer = (clock, timerId, ttype) => {
 
     // in Node, timerId is an object with .ref()/.unref(), and
     // its .id field is the actual timer id.
-    if (is.object(timerId)) {
-        timerId = timerId.id;
-    }
+    timerId = timerId.id;
 
     if (clock.timers.hasOwnProperty(timerId)) {
         // check that the ID matches a timer of the correct type
@@ -320,40 +288,13 @@ const clearTimer = (clock, timerId, ttype) => {
         if (timerType(timer) === ttype) {
             delete clock.timers[timerId];
         } else {
-            throw new Error(`Cannot clear timer: timer created with set${timerType(timer)
-                }() but cleared with clear${ttype}()`);
+            throw new Error(`Cannot clear timer: timer created with set${timerType(timer)}() but cleared with clear${ttype}()`);
         }
     }
-};
-
-const uninstall = (clock, target) => {
-    let method;
-    let i;
-    let l;
-    const installedHrTime = "_hrtime";
-
-    for (i = 0, l = clock.methods.length; i < l; i++) {
-        method = clock.methods[i];
-        if (method === "hrtime" && target.process) {
-            target.process.hrtime = clock[installedHrTime];
-        } else {
-            if (target[method] && target[method].hadOwnProperty) {
-                target[method] = clock[`_${method}`];
-            } else {
-                try {
-                    delete target[method];
-                } catch (ignore) { /* eslint empty-block: "off" */ }
-            }
-        }
-    }
-
-    // Prevent multiple executions which will completely remove these props
-    clock.methods = [];
 };
 
 const hijackMethod = (target, method, clock) => {
     let prop;
-
     clock[method].hadOwnProperty = Object.prototype.hasOwnProperty.call(target, method);
     clock[`_${method}`] = target[method];
 
@@ -361,9 +302,7 @@ const hijackMethod = (target, method, clock) => {
         const date = mirrorDateProperties(clock[method], target[method]);
         target[method] = date;
     } else {
-        target[method] = function () {
-            return clock[method].apply(clock, arguments);
-        };
+        target[method] = (...args) => clock[method](...args);
 
         for (prop in clock[method]) {
             if (clock[method].hasOwnProperty(prop)) {
@@ -382,22 +321,8 @@ export const timers = {
     clearImmediate: global.clearImmediate,
     setInterval,
     clearInterval,
-    Date
-};
-
-timers.hrtime = global.process.hrtime;
-
-const keys = Object.keys || function (obj) {
-    const ks = [];
-    let key;
-
-    for (key in obj) {
-        if (obj.hasOwnProperty(key)) {
-            ks.push(key);
-        }
-    }
-
-    return ks;
+    Date,
+    hrtime: global.process.hrtime
 };
 
 export const createClock = (now, loopLimit) => {
@@ -413,44 +338,31 @@ export const createClock = (now, loopLimit) => {
 
     clock.Date.clock = clock;
 
-    clock.setTimeout = function setTimeout(func, timeout) {
-        return addTimer(clock, {
-            func,
-            args: Array.prototype.slice.call(arguments, 2),
-            delay: timeout
-        });
+    clock.setTimeout = function setTimeout(func, timeout, ...args) {
+        return addTimer(clock, { func, args, delay: timeout });
     };
 
     clock.clearTimeout = function clearTimeout(timerId) {
         return clearTimer(clock, timerId, "Timeout");
     };
 
-    clock.setInterval = function setInterval(func, timeout) {
-        return addTimer(clock, {
-            func,
-            args: Array.prototype.slice.call(arguments, 2),
-            delay: timeout,
-            interval: timeout
-        });
+    clock.setInterval = function setInterval(func, timeout, ...args) {
+        return addTimer(clock, { func, args, delay: timeout, interval: timeout });
     };
 
     clock.clearInterval = function clearInterval(timerId) {
         return clearTimer(clock, timerId, "Interval");
     };
 
-    clock.setImmediate = function setImmediate(func) {
-        return addTimer(clock, {
-            func,
-            args: Array.prototype.slice.call(arguments, 1),
-            immediate: true
-        });
+    clock.setImmediate = function setImmediate(func, ...args) {
+        return addTimer(clock, { func, args, immediate: true });
     };
 
     clock.clearImmediate = function clearImmediate(timerId) {
         return clearTimer(clock, timerId, "Immediate");
     };
 
-    clock.tick = function tick(ms) {
+    clock.tick = (ms) => {
         ms = is.number(ms) ? ms : parseTime(ms);
         let tickFrom = clock.now;
         let tickTo = clock.now + ms;
@@ -499,7 +411,7 @@ export const createClock = (now, loopLimit) => {
         return clock.now;
     };
 
-    clock.next = function next() {
+    clock.next = () => {
         const timer = firstTimer(clock);
         if (!timer) {
             return clock.now;
@@ -534,7 +446,7 @@ export const createClock = (now, loopLimit) => {
         throw new Error(`Aborting after running ${clock.loopLimit} timers, assuming an infinite loop!`);
     };
 
-    clock.runToLast = function runToLast() {
+    clock.runToLast = () => {
         const timer = lastTimer(clock);
         if (!timer) {
             return clock.now;
@@ -543,24 +455,22 @@ export const createClock = (now, loopLimit) => {
         return clock.tick(timer.callAt);
     };
 
-    clock.reset = function reset() {
+    clock.reset = () => {
         clock.timers = {};
     };
 
-    clock.setSystemTime = function setSystemTime(systemTime) {
+    clock.setSystemTime = (systemTime) => {
         // determine time difference
         const newNow = getEpoch(systemTime);
         const difference = newNow - clock.now;
-        let id;
-        let timer;
 
         // update 'system clock'
         clock.now = newNow;
 
         // update timers and intervals to keep them stable
-        for (id in clock.timers) {
+        for (const id in clock.timers) {
             if (clock.timers.hasOwnProperty(id)) {
-                timer = clock.timers[id];
+                const timer = clock.timers[id];
                 timer.createdAt += difference;
                 timer.callAt += difference;
             }
@@ -588,20 +498,29 @@ export const createClock = (now, loopLimit) => {
     return clock;
 };
 
-export const install = function (target, now, toFake, loopLimit) {
-    let i;
-    let l;
+export const install = (...args) => {
+    let target = null;
+    let now;
+    let methods = [];
+    let loopLimit = 1000;
 
-    if (target instanceof Date) {
-        toFake = now;
-        now = target.getTime();
-        target = null;
+    if (is.number(args[0])) {
+        now = args.shift();
+    } else if (is.date(args[0])) {
+        now = args[0].getTime();
     }
 
-    if (is.number(target)) {
-        toFake = now;
-        now = target;
-        target = null;
+    if (is.string(args[0])) {
+        methods = args;
+    } else if (is.array(args[0])) {
+        methods = args[0];
+    } else if (is.plainObject(args[0])) {
+        ({
+            target = null,
+            now = now,
+            methods: methods = methods,
+            loopLimit = loopLimit
+        } = args[0]);
     }
 
     if (!target) {
@@ -610,21 +529,36 @@ export const install = function (target, now, toFake, loopLimit) {
 
     const clock = createClock(now, loopLimit);
 
-    clock.uninstall = function () {
-        uninstall(clock, target);
+    clock.uninstall = () => {
+        const installedHrTime = "_hrtime";
+
+        for (let i = 0, l = clock.methods.length; i < l; i++) {
+            const method = clock.methods[i];
+            if (method === "hrtime" && target.process) {
+                target.process.hrtime = clock[installedHrTime];
+            } else {
+                if (target[method] && target[method].hadOwnProperty) {
+                    target[method] = clock[`_${method}`];
+                } else {
+                    try {
+                        delete target[method];
+                    } catch (ignore) { /* eslint empty-block: "off" */ }
+                }
+            }
+        }
+
+        // Prevent multiple executions which will completely remove these props
+        clock.methods = [];
     };
 
-    clock.methods = toFake || [];
+    clock.methods = methods || [];
 
     if (clock.methods.length === 0) {
-        clock.methods = keys(timers);
+        clock.methods = Object.keys(timers);
     }
-
-    for (i = 0, l = clock.methods.length; i < l; i++) {
+    for (let i = 0, l = clock.methods.length; i < l; i++) {
         if (clock.methods[i] === "hrtime") {
-            if (target.process && is.function(target.process.hrtime)) {
-                hijackMethod(target.process, clock.methods[i], clock);
-            }
+            hijackMethod(target.process, clock.methods[i], clock);
         } else {
             hijackMethod(target, clock.methods[i], clock);
         }
