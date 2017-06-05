@@ -430,9 +430,8 @@ export default class Client extends adone.EventEmitter {
         socket.on("end", this._finalize);
 
         // ensure that the head is added to the receiver
-        if (head && head.length > 0) {
+        if (head.length > 0) {
             socket.unshift(head);
-            head = null;
         }
 
         // subsequent packets are pushed to the receiver

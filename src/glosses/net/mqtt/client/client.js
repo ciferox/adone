@@ -532,8 +532,14 @@ export default class MqttClient extends adone.EventEmitter {
 
     _sendPacket(packet, cb) {
         if (!this.connected) {
-            if (packet.qos > 0 || packet.cmd !== "publish" || this.queueQoSZero) {
+            if ((packet.qos === 0 && this.queueQoSZero) || packet.cmd !== "publish") {
                 this.queue.push({ packet, cb });
+            } else if (packet.qos > 0) {
+                this.outgoingStore.put(packet, (err) => {
+                    if (err) {
+                        return cb && cb(err);
+                    }
+                });
             } else if (cb) {
                 cb(new Error("No connection to broker"));
             }

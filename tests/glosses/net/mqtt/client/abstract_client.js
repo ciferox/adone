@@ -377,14 +377,14 @@ module.exports = function (server, config) {
             client.end(true, done);
         });
 
-        it("should still queue qos != 0 messages if queueQoSZero is false", (done) => {
+        it("should not queue qos != 0 messages", (done) => {
             const client = connect({ queueQoSZero: false });
 
             client.publish("test", "test", { qos: 1 });
             client.publish("test", "test", { qos: 2 });
             client.subscribe("test");
             client.unsubscribe("test");
-            assert.equal(client.queue.length, 4);
+            assert.equal(client.queue.length, 2);
             client.end(true, done);
         });
 
