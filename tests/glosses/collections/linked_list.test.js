@@ -323,6 +323,8 @@ describe("collections", "LinkedList", () => {
             list.push(2);
             list.push(3);
             list.resize(4);
+            expect(list.front).to.be.equal(1);
+            expect(list.back).to.be.equal(3);
             expect(list.length).to.be.equal(3);
             expect(list.maxLength).to.be.equal(4);
             rolling(list, [1, 2, 3, empty]);
@@ -335,6 +337,8 @@ describe("collections", "LinkedList", () => {
             list.push(3);
             expect(list.length).to.be.equal(3);
             list.resize(2);
+            expect(list.front).to.be.equal(1);
+            expect(list.back).to.be.equal(2);
             expect(list.length).to.be.equal(2);
             expect(list.maxLength).to.be.equal(2);
             rolling(list, [1, 2]);
@@ -346,6 +350,8 @@ describe("collections", "LinkedList", () => {
             list.push(2);
             list.push(3);
             list.resize(3);
+            expect(list.front).to.be.equal(1);
+            expect(list.back).to.be.equal(3);
             expect(list.length).to.be.equal(3);
             expect(list.maxLength).to.be.equal(3);
             rolling(list, [1, 2, 3]);
@@ -357,6 +363,8 @@ describe("collections", "LinkedList", () => {
             list.push(2);
             list.push(3);
             list.resize(5);
+            expect(list.front).to.be.equal(1);
+            expect(list.back).to.be.equal(3);
             expect(list.length).to.be.equal(3);
             expect(list.maxLength).to.be.equal(5);
             rolling(list, [1, 2, 3, empty, empty]);

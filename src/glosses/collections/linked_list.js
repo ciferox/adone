@@ -61,7 +61,6 @@ export default class LinkedList {
                 }
                 cursor.next = this.head;
                 this.head.prev = cursor;
-                this.tail = cursor;
             } else if (newLength < this.length) {
                 let cursor = this.tail;
                 for (let i = 0, n = this.length - newLength; i < n; ++i) {
@@ -69,6 +68,7 @@ export default class LinkedList {
                 }
                 cursor.next = this.head;
                 this.head.prev = cursor;
+                this.tail = cursor;
                 this.length = newLength;
             } else {
                 this.tail.next = this.head;
