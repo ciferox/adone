@@ -1,4 +1,66 @@
-const { is, Transform, x } = adone;
+const { is, Transform, x, collection } = adone;
+
+class EndingTransform extends Transform {
+    _end() {
+        this.emit("ending");
+        return super._end();
+    }
+}
+
+const sFilter = Symbol("filter");
+
+class Filter {
+    constructor() {
+        this.named = new Map();
+        this.unnamed = new collection.LinkedList();
+    }
+
+    stash(name, filter) {
+        if (is.function(name)) {
+            [name, filter] = [null, name];
+        }
+        const stashStream = new Transform();
+        if (name) {
+            this.named.set(name, stashStream);
+        } else {
+            this.unnamed.push(stashStream);
+        }
+        return new Transform({
+            async transform(x) {
+                const stash = await filter(x);
+                if (stash) {
+                    if (!stashStream.push(x)) {
+                        this.pause();
+                    }
+                } else {
+                    this.push(x);
+                }
+            }
+        });
+    }
+
+    clear() {
+        this.unnamed.clear(true);
+        this.named.clear();
+    }
+
+    unstash(name = null) {
+        if (is.null(name)) {
+            const streams = [...this.unnamed.toArray(), ...this.named.values()];
+            if (!streams.length) {
+                return null;
+            }
+            this.clear();
+            return core.merge(streams, { end: false });
+        }
+        if (!this.named.has(name)) {
+            return null;
+        }
+        const stream = this.named.get(name);
+        this.named.delete(name);
+        return stream;
+    }
+}
 
 class Core extends adone.EventEmitter {
     constructor(source, options) {
@@ -246,6 +308,71 @@ class Core extends adone.EventEmitter {
         }).done(() => cache.clear(), { current: true });
     }
 
+    if(condition, trueStream = null, falseStream = null) {
+        if (!trueStream && !falseStream) {
+            throw new x.InvalidArgument("You must provide at least one stream");
+        }
+
+        let outputEnd = null;
+
+        const input = new EndingTransform({
+            transform: async (x) => {
+                const stream = await condition(x) ? trueStream : falseStream;
+                if (!stream) {
+                    input.push(x);
+                } else if (!stream.write(x)) {
+                    input.pause();
+                    stream.once("drain", () => input.resume());
+                }
+            },
+            flush: () => outputEnd
+        });
+        input.once("ending", () => {
+            trueStream && trueStream.end();
+            falseStream && falseStream.end();
+        });
+
+        for (const stream of [trueStream, falseStream]) {
+            if (!stream) {
+                continue;
+            }
+            stream.on("data", (x) => {
+                if (!input.push(x)) {
+                    stream.pause();
+                    input.once("drain", () => stream.resume());
+                }
+            });
+            if (stream.paused) {
+                process.nextTick(() => stream.resume());
+            }
+        }
+
+        outputEnd = Promise.all([
+            trueStream && new Promise((resolve) => trueStream.once("end", resolve)),
+            falseStream && new Promise((resolve) => falseStream.once("end", resolve))
+        ]);
+
+        return this.pipe(input);
+    }
+
+    stash(name, filter) {
+        if (!this[sFilter]) {
+            this[sFilter] = new Filter();
+        }
+        return this.pipe(this[sFilter].stash(name, filter));
+    }
+
+    unstash(name) {
+        if (!this[sFilter]) {
+            return this;
+        }
+        const unstashed = this[sFilter].unstash(name);
+        if (is.null(unstashed)) {
+            return this;
+        }
+        return this.pipe(unstashed);
+    }
+
     // promise api
 
     then(onResolve, onReject) {
@@ -267,5 +394,6 @@ export default function core(val, options) {
 }
 
 core.Core = Core;
+core.Filter = Filter;
 core.merge = Core.merge;
 adone.tag.set(Core, adone.tag.CORE_STREAM);

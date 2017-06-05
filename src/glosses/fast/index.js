@@ -11,7 +11,6 @@ fast.__ = lazify({
 
 export const transform = lazify({
     transpile: "./transforms/transpile",
-    if: "./transforms/if",
     deleteLines: "./transforms/delete_lines",
     rename: "./transforms/rename",
     concat: "./transforms/concat",
@@ -21,7 +20,6 @@ export const transform = lazify({
     replace: "./transforms/replace",
     revisionHash: "./transforms/revision_hash",
     revisionHashReplace: "./transforms/revision_hash_replace",
-    Filter: "./transforms/filter",
     useref: "./transforms/useref",
     sass: "./transforms/sass",
     angularFilesort: "./transforms/angular/file_sort",
@@ -39,10 +37,6 @@ export class Fast extends Core {
 
     deleteLines(options) {
         return this.pipe(transform.deleteLines(options));
-    }
-
-    if(condition, trueStream, falseStream) {
-        return this.pipe(transform.if(condition, trueStream, falseStream));
     }
 
     rename(handler) {
@@ -82,17 +76,6 @@ export class Fast extends Core {
 
     replace(search, replacement) {
         return this.pipe(transform.replace(search, replacement));
-    }
-
-    stash(name, filter) {
-        if (!this._filter) {
-            this._filter = new transform.Filter();
-        }
-        return this.pipe(this._filter.stash(name, filter));
-    }
-
-    unstash(name) {
-        return this.pipe(this._filter.unstash(name));
     }
 
     useref(options = {}) {

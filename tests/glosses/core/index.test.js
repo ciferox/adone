@@ -1330,7 +1330,6 @@ describe("core", () => {
             });
         });
 
-
         describe("done", () => {
             it("should be the same as once(\"end\", callback) if current = false", () => {
                 const a = core();
@@ -1413,6 +1412,327 @@ describe("core", () => {
                     Set.prototype.clear = orig;
                 }
                 expect(called).to.be.true;
+            });
+        });
+
+        describe("if", () => {
+            it("should pass true values", async () => {
+                const _truev = [];
+                const _falsev = [];
+                const _true = core().map((x) => {
+                    _truev.push(x);
+                    return x;
+                });
+                const _false = core().map((x) => {
+                    _falsev.push(x);
+                    return x;
+                });
+                const s = core().if((x) => x % 2 === 0, _true, _false);
+                for (let i = 0; i < 10; i += 2) {
+                    s.write(i);
+                }
+                s.end();
+                const values = await s;
+                expect(values).to.be.deep.equal([0, 2, 4, 6, 8]);
+                expect(_truev).to.be.deep.equal([0, 2, 4, 6, 8]);
+                expect(_falsev).to.be.empty;
+            });
+
+            it("should pass false values", async () => {
+                const _truev = [];
+                const _falsev = [];
+                const _true = core().map((x) => {
+                    _truev.push(x);
+                    return x;
+                });
+                const _false = core().map((x) => {
+                    _falsev.push(x);
+                    return x;
+                });
+                const s = core().if((x) => x % 2 !== 0, _true, _false);
+                for (let i = 0; i < 10; i += 2) {
+                    s.write(i);
+                }
+                s.end();
+                const values = await s;
+                expect(values).to.be.deep.equal([0, 2, 4, 6, 8]);
+                expect(_falsev).to.be.deep.equal([0, 2, 4, 6, 8]);
+                expect(_truev).to.be.empty;
+            });
+
+            it("should correctly handle true and false values", async () => {
+                const _truev = [];
+                const _falsev = [];
+                const _true = core().map(async (x) => {
+                    _truev.push(x);
+                    return x;
+                });
+                const _false = core().map(async (x) => {
+                    _falsev.push(x);
+                    return x;
+                });
+                const s = core().if((x) => x % 2 === 0, _true, _false);
+                for (let i = 0; i < 10; ++i) {
+                    s.write(i);
+                }
+                s.end();
+                const values = await s;
+                expect(values).to.be.deep.equal([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+                expect(_truev).to.be.deep.equal([0, 2, 4, 6, 8]);
+                expect(_falsev).to.be.deep.equal([1, 3, 5, 7, 9]);
+            });
+
+            it("should support async functions", async () => {
+                const _truev = [];
+                const _falsev = [];
+                const _true = core().map((x) => {
+                    _truev.push(x);
+                    return x;
+                });
+                const _false = core().map((x) => {
+                    _falsev.push(x);
+                    return x;
+                });
+                const s = core().if(async (x) => x % 2 !== 0, _true, _false);
+                for (let i = 0; i < 10; i += 2) {
+                    s.write(i);
+                }
+                s.end();
+                const values = await s;
+                expect(values).to.be.deep.equal([0, 2, 4, 6, 8]);
+                expect(_falsev).to.be.deep.equal([0, 2, 4, 6, 8]);
+                expect(_truev).to.be.empty;
+            });
+
+            it("should handle backpressure", async () => {
+                let _truev = [];
+                let _falsev = [];
+                const _true = core().map((x) => {
+                    _truev.push(x);
+                    return x;
+                });
+                const _false = core().map((x) => {
+                    _falsev.push(x);
+                    return x;
+                });
+                const s = core().if((x) => x % 2 !== 0, _true, _false);
+                let i = 1;
+                let values = [];
+                s.on("data", (x) => values.push(x));
+                while (s.write(i += 2)) {
+                    //
+                }
+                s.resume();
+                await adone.promise.delay(1);
+                s.pause();
+                expect(values).not.to.be.empty;
+                expect(_truev).not.to.be.empty;
+                expect(_falsev).to.be.empty;
+
+                i = 0;
+                values = [];
+                _truev = [];
+                _falsev = [];
+                while (s.write(i += 2)) {
+                    //
+
+                }
+                s.resume();
+                await adone.promise.delay(1);
+                s.pause();
+                expect(values).not.to.be.empty;
+                expect(_truev).to.be.empty;
+                expect(_falsev).not.to.be.empty;
+
+                i = 0;
+                values = [];
+                _truev = [];
+                _falsev = [];
+                while (s.write(++i)) {
+                    //
+                }
+                s.resume();
+                await adone.promise.delay(1);
+                s.pause();
+                expect(values).not.to.be.empty;
+                expect(_truev).not.to.be.empty;
+                expect(_falsev).not.to.be.empty;
+                expect(values).to.have.lengthOf(_truev.length + _falsev.length);
+            });
+
+            it("should write to the output if the false stream is a false value", async () => {
+                const _true = core().map((x) => `true ${x}`);
+                const s = core().if((x) => x % 2 === 0, _true);
+                s.write(1);
+                s.write(2);
+                s.write(3);
+                s.end();
+                const values = await s;
+                expect(values.sort()).to.be.deep.equal([1, 3, "true 2"]);
+            });
+
+            it("should write to the output if the true stream is a false value", async () => {
+                const _false = core().map((x) => `false ${x}`);
+                const s = core().if((x) => x % 2 === 0, null, _false);
+                s.write(1);
+                s.write(2);
+                s.write(3);
+                s.end();
+                const values = await s;
+                expect(values.sort()).to.be.deep.equal([2, "false 1", "false 3"]);
+            });
+
+            it("should throw if no stream is provided", () => {
+                expect(() => {
+                    core().if((x) => x % 2 === 0);
+                }).to.throw(x.InvalidArgument, "You must provide at least one stream");
+            });
+        });
+
+        describe("stash/unstash", () => {
+            const { Filter } = core;
+
+            const write = (stream, iterable) => {
+                for (const i of iterable) {
+                    stream.write(i);
+                }
+                stream.end();
+            };
+
+            const fetch = async (stream) => {
+                const p = Promise.resolve(core(stream));
+                stream.end();
+                return p;
+            };
+
+            it("should stash elements", async () => {
+                const filter = new Filter();
+                const ss = filter.stash((x) => x % 2);
+                write(ss, [0, 1, 2, 3, 4, 5]);
+                expect(await core(ss)).to.be.deep.equal([0, 2, 4]);
+            });
+
+            it("should unstash elements", async () => {
+                const filter = new Filter();
+                const ss = filter.stash((x) => x % 2);
+                const us = filter.unstash();
+                write(ss, [0, 1, 2, 3, 4, 5]);
+                adone.promise.delay(100).then(() => us.end());
+                expect(await core(us)).to.be.deep.equal([1, 3, 5]);
+            });
+
+            it("should use named stream", async () => {
+                const filter = new Filter();
+                const ess = filter.stash("even", (x) => !(x % 2));
+                const oss = filter.stash("odd", (x) => x % 2);
+                write(ess, [0, 1, 2, 3, 4, 5]);
+                write(oss, [0, 1, 2, 3, 4, 5]);
+                expect(await fetch(ess)).to.be.deep.equal([1, 3, 5]);
+                expect(await fetch(oss)).to.be.deep.equal([0, 2, 4]);
+                const esu = filter.unstash("even");
+                const osu = filter.unstash("odd");
+                expect(await fetch(esu)).to.be.deep.equal([0, 2, 4]);
+                expect(await fetch(osu)).to.be.deep.equal([1, 3, 5]);
+            });
+
+            it("should support back pressure", async () => {
+                const filter = new Filter();
+                const ss = filter.stash((x) => x % 2);
+                let i;
+                for (i = 0; ss.write(i); i += 2) {
+                    //
+                }
+                const us = filter.unstash();
+                expect(i >> 1).to.be.equal(us._readableState.highWaterMark);
+                us.resume();
+                await adone.promise.delay(1);
+                us.pause();
+                expect(ss.write(100)).to.be.true;
+            });
+
+            it("should unstash all the streams", async () => {
+                const filter = new Filter();
+                const named1 = filter.stash("hello", (x) => x === "hello");
+                const named2 = filter.stash("world", (x) => x === "world");
+                const unnamed1 = filter.stash((x) => x % 2);
+                const unnamed2 = filter.stash((x) => !(x % 2));
+                write(named1, ["hello", "world"]);
+                write(named2, ["hello", "world"]);
+                write(unnamed1, [0, 1, 2, 3, 4, 5]);
+                write(unnamed2, [0, 1, 2, 3, 4, 5]);
+                const us = filter.unstash();
+                await adone.promise.delay(100).then(() => {
+                    named1.end();
+                    named2.end();
+                    unnamed1.end();
+                    unnamed2.end();
+                    us.end();
+                });
+                const result = await us;
+                expect(result.sort()).to.be.deep.equal([0, 1, 2, 3, 4, 5, "hello", "world"]);
+            });
+
+            it("should return null stream if there is no streams", async () => {
+                const filter = new Filter();
+                expect(filter.unstash()).to.be.null;
+                expect(filter.unstash("hello")).to.be.null;
+            });
+
+            describe("integration", () => {
+                it("should stash even numbers", async () => {
+                    const numbers = await core([1, 2, 3, 4, 5]).stash("even", (x) => x % 2 === 0);
+                    expect(numbers).to.be.deep.equal([1, 3, 5]);
+                });
+
+                it("should unstash even numbers", async () => {
+                    const numbers = await core([1, 2, 3, 4, 5])
+                        .stash("even", (x) => x % 2 === 0)
+                        .map((x) => {
+                            expect(x % 2).to.be.equal(1);
+                            return x;
+                        })
+                        .unstash("even");
+                    expect(numbers).to.be.deep.equal([1, 2, 3, 4, 5]);
+                });
+
+                it("should unstash everything", async () => {
+                    let hadSomething = false;
+                    const values = await core(["string", 1, 2, 3, 4, 5, 6, 7, 8, 9])
+                        .stash("even", (x) => is.number(x) && x % 2 === 0)
+                        .stash("odd", (x) => is.number(x) && x % 2 === 1)
+                        .map((x) => {
+                            hadSomething = true;
+                            expect(x).to.be.equal("string");
+                            return x;
+                        })
+                        .stash(() => true)
+                        .unstash();
+                    expect(hadSomething).to.be.true;
+                    expect(values).to.be.deep.equal(["string", 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+                });
+
+                it("should correctly handle multiple stashes", async () => {
+                    let hadNumbers = false;
+
+                    const values = await core([1, 2, 3, 4, 5, "a", "b", "c", ["key"], ["value"]])
+                        .stash("numbers", (x) => is.number(x))
+                        .stash("strings", (x) => is.string(x))
+                        .map((x) => {
+                            expect(x).to.be.an("array");
+                            return x;
+                        })
+                        .stash("arrays", (x) => is.array(x))
+                        .unstash("numbers")
+                        .map((x) => {
+                            hadNumbers = true;
+                            expect(x).to.be.a("number");
+                            return x;
+                        })
+                        .unstash();
+
+                    expect(hadNumbers).to.be.true;
+                    expect(values).to.be.deep.equal([1, 2, 3, 4, 5, "a", "b", "c", ["key"], ["value"]]);
+                });
             });
         });
 
