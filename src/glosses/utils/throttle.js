@@ -1,4 +1,4 @@
-const { is, x, util } = adone;
+const { is, x, util, collection } = adone;
 
 class Delayed {
     constructor(resolve, fn, self, args) {
@@ -10,7 +10,7 @@ class Delayed {
 }
 
 const throttleNoInterval = (count, fn) => {
-    const queue = [];
+    const queue = new collection.LinkedList();
     let release = null;
 
     const run = (fn, self, args) => {
@@ -29,7 +29,7 @@ const throttleNoInterval = (count, fn) => {
 
     release = () => {
         count++;
-        if (queue.length) {
+        if (!queue.empty) {
             const next = queue.shift();
             next.resolve(run(next.fn, next.self, next.args));
         }
