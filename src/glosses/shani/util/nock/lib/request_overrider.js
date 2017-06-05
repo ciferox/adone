@@ -431,7 +431,7 @@ function RequestOverrider(req, options, interceptors, remove, cb) {
             interceptor.discard();
 
             if (aborted) {
-                return; 
+                return;
             }
 
             /// response.client.authorized = true
@@ -470,7 +470,7 @@ function RequestOverrider(req, options, interceptors, remove, cb) {
             function respond() {
 
                 if (aborted) {
-                    return; 
+                    return;
                 }
 
                 if (interceptor.socketDelayInMs && interceptor.socketDelayInMs > 0) {
@@ -485,7 +485,7 @@ function RequestOverrider(req, options, interceptors, remove, cb) {
 
                 function _respond() {
                     if (aborted) {
-                        return; 
+                        return;
                     }
 
                     debug("emitting response");

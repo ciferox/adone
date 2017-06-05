@@ -18,11 +18,11 @@ export default class TimedoutMap extends Map {
     set(key, value) {
         if (super.has(key)) {
             const oldObj = super.get(key);
-            clearTimeout(oldObj.timer);
+            adone.clearTimeout(oldObj.timer);
         }
         const newObj = { value };
         super.set(key, newObj);
-        newObj.timer = setTimeout(this._callback, this._timeout, key);
+        newObj.timer = adone.setTimeout(this._callback, this._timeout, key);
     }
 
     get(key) {
@@ -60,13 +60,13 @@ export default class TimedoutMap extends Map {
         if (is.undefined(obj)) {
             return false;
         }
-        clearTimeout(obj.timer);
+        adone.clearTimeout(obj.timer);
         return super.delete(key);
     }
 
     clear() {
         super.forEach((obj) => {
-            clearTimeout(obj.timer);
+            adone.clearTimeout(obj.timer);
         });
         super.clear();
     }

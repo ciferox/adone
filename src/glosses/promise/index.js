@@ -19,7 +19,7 @@ export const defer = () => {
 
 export const delay = (ms, value) => {
     return new Promise((resolve) => {
-        setTimeout(resolve, ms, value);
+        adone.setTimeout(resolve, ms, value);
     });
 };
 
@@ -28,20 +28,20 @@ export const timeout = (promise, ms) => {
         throw new adone.x.InvalidArgument("The first argument must be a promise");
     }
     return new Promise((resolve, reject) => {
-        const timestamp = new Date();
-        const timer = setTimeout(() => {
+        const timestamp = new adone.Date();
+        const timer = adone.setTimeout(() => {
             reject(new adone.x.Timeout(`Timeout of ${ms}ms exceeded`));
         }, ms);
         promise.then((x) => {
-            clearTimeout(timer);
-            if (new Date() - timestamp >= ms) {
+            adone.clearTimeout(timer);
+            if (new adone.Date() - timestamp >= ms) {
                 reject(new adone.x.Timeout(`Timeout of ${ms}ms exceeded`));
             } else {
                 resolve(x);
             }
         }, (y) => {
-            clearTimeout(timer);
-            if (new Date() - timestamp >= ms) {
+            adone.clearTimeout(timer);
+            if (new adone.Date() - timestamp >= ms) {
                 const err = new adone.x.Timeout(`Timeout of ${ms}ms exceeded`);
                 err.original = y;
                 reject(err);
@@ -124,9 +124,9 @@ export const promisifyAll = (source, { suffix = "Async", filter = () => true, co
 module.exports.finally = (promise, onFinally) => {
     onFinally = onFinally || adone.noop;
 
-    return promise.then((val) => new Promise(resolve => {
+    return promise.then((val) => new Promise((resolve) => {
         resolve(onFinally());
-    }).then(() => val), err => new Promise(resolve => {
+    }).then(() => val), (err) => new Promise((resolve) => {
         resolve(onFinally());
     }).then(() => {
         throw err;

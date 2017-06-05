@@ -20,6 +20,14 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
         debug: (...args) => adone.defaultLogger.debug(...args),
         trace: (...args) => adone.defaultLogger.trace(...args),
         o: (...props) => Object.assign.apply(null, [Object.create(null)].concat(props)),
+        Date: global.Date,
+        hrtime: process.hrtime,
+        setTimeout: global.setTimeout,
+        clearTimeout: global.clearTimeout,
+        setInterval: global.setInterval,
+        clearInterval: global.clearInterval,
+        setImmediate: global.setImmediate,
+        clearImmediate: global.clearImmediate,
         lazify: (modules, _obj, _require = require, { configurable = false } = {}) => {
             const obj = _obj || {};
             Object.keys(modules).forEach((key) => {

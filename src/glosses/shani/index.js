@@ -42,7 +42,7 @@ class Hook {
     async run() {
         this._fired = true;
         let err = null;
-        let s = process.hrtime();
+        let s = adone.hrtime();
         let uncaughtException;
         let unhandledRejection;
         try {
@@ -74,7 +74,7 @@ class Hook {
             delete this.runtimeContext.timeout;
             process.removeListener("uncaughtException", uncaughtException);
             process.removeListener("unhandledRejection", unhandledRejection);
-            s = process.hrtime(s);
+            s = adone.hrtime(s);
         }
         this._failed = err;
         const elapsed = s[0] * 1e3 + s[1] / 1e6;
@@ -244,7 +244,7 @@ class Test {
 
     async run() {
         let err = null;
-        let s = process.hrtime();
+        let s = adone.hrtime();
         let uncaughtException;
         let unhandledRejection;
         try {
@@ -279,7 +279,7 @@ class Test {
 
             process.removeListener("uncaughtException", uncaughtException);
             process.removeListener("unhandledRejection", unhandledRejection);
-            s = process.hrtime(s);
+            s = adone.hrtime(s);
         }
         const elapsed = s[0] * 1e3 + s[1] / 1e6;
         const timeout = this.timeout();
@@ -877,7 +877,7 @@ export const consoleReporter = ({
         let failed = 0;
         let passed = 0;
         let testsElapsed = 0;
-        let totalElapsed = process.hrtime();
+        let totalElapsed = adone.hrtime();
         const errors = [];
         const globalErrors = [];
         let bar = null;
@@ -1124,7 +1124,7 @@ export const consoleReporter = ({
                 }
 
                 log();
-                totalElapsed = process.hrtime(totalElapsed);
+                totalElapsed = adone.hrtime(totalElapsed);
                 testsElapsed = adone.util.humanizeTime(testsElapsed);
                 totalElapsed = adone.util.humanizeTime(
                     totalElapsed[0] * 1e3 + totalElapsed[1] / 1e6
@@ -1178,7 +1178,7 @@ export const simpleReporter = ({
         let failed = 0;
         let passed = 0;
         let testsElapsed = 0;
-        let totalElapsed = process.hrtime();
+        let totalElapsed = adone.hrtime();
         const errors = [];
         const globalErrors = [];
 
@@ -1370,7 +1370,7 @@ export const simpleReporter = ({
                 }
 
                 log();
-                totalElapsed = process.hrtime(totalElapsed);
+                totalElapsed = adone.hrtime(totalElapsed);
                 testsElapsed = adone.util.humanizeTime(testsElapsed);
                 totalElapsed = adone.util.humanizeTime(
                     totalElapsed[0] * 1e3 + totalElapsed[1] / 1e6

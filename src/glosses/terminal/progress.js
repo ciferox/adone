@@ -149,12 +149,12 @@ export default class ProgressBar {
         this.schema = schema;
 
         if (!is.null(this.spinner.timer)) {
-            clearInterval(this.spinner.timer);
+            adone.clearInterval(this.spinner.timer);
             this.spinner.timer = null;
         }
 
         if (!this.completed && schema.indexOf(":spinner") >= 0) {
-            this.spinner.timer = setInterval(() => {
+            this.spinner.timer = adone.setInterval(() => {
                 this.spinner.frame++;
                 this.compile();
             }, this.spinner.active.interval);
@@ -181,7 +181,7 @@ export default class ProgressBar {
         // }
 
         if (is.null(this.start)) {
-            this.start = new Date();
+            this.start = new adone.Date();
         }
 
         this.current += delta;
@@ -213,7 +213,7 @@ export default class ProgressBar {
         const ratio = Math.min(Math.max(this.current / this.total, 0), 1);
         const chars = this.chars;
         const percent = ratio * 100;
-        const elapsed = new Date() - this.start;
+        const elapsed = new adone.Date() - this.start;
         let eta;
 
         if (this.current <= 0) {
@@ -326,7 +326,7 @@ export default class ProgressBar {
     snoop() {
         if (this.completed) {
             if (!is.null(this.spinner.timer)) {
-                clearInterval(this.spinner.timer);
+                adone.clearInterval(this.spinner.timer);
             }
             this.destroy();
         }

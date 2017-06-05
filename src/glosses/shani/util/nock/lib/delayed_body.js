@@ -53,7 +53,7 @@ function DelayedBody(ms, body) {
 
     if (common.isStream(body)) {
         body.on("data", (chunk) => {
-            data += Buffer.isBuffer(chunk) ? chunk.toString() : chunk;
+            data += adone.is.buffer(chunk) ? chunk.toString() : chunk;
         });
 
         body.once("end", () => {
@@ -63,7 +63,7 @@ function DelayedBody(ms, body) {
         body.resume();
     }
 
-    setTimeout(() => {
+    adone.setTimeout(() => {
         if (common.isStream(body) && !ended) {
             body.once("end", () => {
                 self.end(data);
