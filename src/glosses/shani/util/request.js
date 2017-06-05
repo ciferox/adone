@@ -1,22 +1,11 @@
-const { assert, net, std, is, x, util, compressor, EventEmitter, text, data } = adone;
+const { assert, net, std, is, x, compressor, EventEmitter, text, data } = adone;
 
 class Request extends EventEmitter {
     constructor(server) {
         super();
         this.server = server;
-        if (server instanceof std.http.Server || server instanceof std.https.Server) {
-            const address = server.address();
-            if (address) {
-                this.hostname = address.host;
-                this.port = address.port;
-            } else {
-                server.once("listening", () => {
-                    const address = server.address();
-                    this.hostname = address.address;
-                    this.port = address.port;
-                });
-            }
-        }
+
+        this.isAdoneServer = server instanceof net.http.server.Server;
 
         this.method = null;
         this.path = null;
@@ -168,24 +157,27 @@ class Request extends EventEmitter {
     }
 
     async _process() {
-        let server = this.server;
-        if (server instanceof net.http.server.Server) {
-            server = std.http.createServer(server.callback());
-        }
+        const server = this.server;
 
         let mustBeClosed = false;
         let address = server.address();
-        if (!address) {
+        if (is.null(address)) {
             mustBeClosed = true;
-            await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+            if (this.isAdoneServer) {
+                await server.bind({ port: 0, host: "127.0.0.1" });
+            } else {
+                // assume it is net.http(s) server
+                await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+            }
             address = server.address();
         }
 
-        const protocol = server instanceof std.http.Server ? "http:" : "https:";
+        const protocol = server instanceof std.https.Server || server.secure ? "https:" : "http:";
 
         let response;
         try {
-            let { body, headers } = this;
+            let { body } = this;
+            const { headers } = this;
 
             if (body) {
                 if (is.object(body)) {
@@ -266,7 +258,11 @@ class Request extends EventEmitter {
             }
         } finally {
             if (mustBeClosed) {
-                await new Promise((resolve) => server.close(resolve));
+                if (this.isAdoneServer) {
+                    await server.unbind();
+                } else {
+                    await new Promise((resolve) => server.close(resolve));
+                }
             }
         }
         return response;

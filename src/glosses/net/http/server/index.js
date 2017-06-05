@@ -1,6 +1,6 @@
-const { is, x, std, EventEmitter, net: { http } } = adone;
+const { is, x, std, EventEmitter, net: { http }, lazify } = adone;
 
-adone.lazify({
+lazify({
     Context: "./context",
     Request: "./request",
     Response: "./response",
@@ -41,62 +41,43 @@ adone.lazify({
         basicAuth: "./middlewares/basic_auth",
         rewrite: "./middlewares/rewrite"
     }, null, require)
-
-    // middleware: () => adone.lazify({
-    //     router: "./http/middlewares/router",
-    //     renderer: ["./http/middlewares/renderer", (mod) => adone.lazify({
-    //         Engine: ["./http/middlewares/renderer/engine", (mod) => {
-    //             mod.default.compile = mod.compile;
-    //             mod.default.render = mod.render;
-    //             return mod.default;
-    //         }]
-    //     }, mod.default, require)],
-    //     cookies: "./http/middlewares/cookies",
-    //     body: ["./http/middlewares/body", (mod) => adone.lazify({
-    //         buffer: "./http/middlewares/body/buffer",
-    //         json: "./http/middlewares/body/json",
-    //         multipart: "./http/middlewares/body/multipart",
-    //         text: "./http/middlewares/body/text",
-    //         urlencoded: "./http/middlewares/body/urlencoded"
-    //     }, mod.default, require)],
-    //     session: ["./http/middlewares/session", (mod) => {
-    //         mod.default.Store = mod.Store;
-    //         return mod.default;
-    //     }],
-    //     static: "./http/middlewares/static",
-    //     favicon: "./http/middlewares/favicon",
-    //     logger: "./http/middlewares/logger",
-    //     useragent: "./http/middlewares/useragent",
-    //     geoip: "./http/middlewares/geoip",
-    //     rewrite: "./http/middlewares/rewrite"
-    // })
 }, exports, require);
 
 export class Server extends EventEmitter {
     constructor() {
         super();
 
+        this.secure = null;
         this.server = null;
         this._sockets = [];
         this.proxy = false;
         this.middlewares = [];
     }
 
-    bind(options = {}, listenCallback) {
+    address() {
+        if (is.null(this.server)) {
+            return null;
+        }
+        return this.server.address();
+    }
+
+    bind(options = {}) {
         const callback = this.callback();
         if (is.plainObject(options.secure)) {
+            this.secure = true;
             this.server = std.https.createServer(options.secure, callback);
         } else {
+            this.secure = false;
             this.server = std.http.createServer(callback);
         }
-        
+
         this.server.on("connection", (socket) => {
             this._addSocket(socket);
             socket.on("error", (/*err*/) => {
                 this._removeSocket(socket);
             }).on("close", () => {
                 this._removeSocket(socket);
-            });        
+            });
         });
 
         const port = is.number(options.port) ? options.port : (is.string(options.port) ? options.port : 0);
@@ -107,7 +88,13 @@ export class Server extends EventEmitter {
         } else {
             backlog = 511;
         }
-        return this.server.listen(port, host, backlog, listenCallback);
+        return new Promise((resolve, reject) => {
+            this.server.once("error", reject);
+            this.server.listen(port, host, backlog, () => {
+                this.server.removeListener("error", reject);
+                resolve(this);
+            });
+        });
     }
 
     callback() {
@@ -127,15 +114,18 @@ export class Server extends EventEmitter {
         };
     }
 
-    unbind() {
+    async unbind() {
         if (!is.null(this.server)) {
             // Force close all active connections
             for (const socket of this._sockets) {
                 socket.end();
             }
-            return new Promise((resolve) => {
+
+            await new Promise((resolve) => {
                 this.server.close(resolve);
             });
+
+            this.server = null;
         }
     }
 
@@ -156,8 +146,6 @@ export class Server extends EventEmitter {
         request.ctx = response.ctx = context;
         return context;
     }
-
-    
 
     onerror(err) {
         if (!is.error(err)) {
@@ -244,3 +232,5 @@ export class Server extends EventEmitter {
         res.end(body);
     }
 }
+
+export const create = (...args) => new Server(args);

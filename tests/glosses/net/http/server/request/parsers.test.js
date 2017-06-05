@@ -143,9 +143,9 @@ describe("glosses", "net", "http", "server", "request", "parsers", () => {
             server.use(async (ctx) => {
                 ctx.body = await ctx.request.json();
             });
-            server.bind({}, function onListen() {
+            server.bind({}).then(() => {
                 adone.std.http.request({
-                    port: this.address().port,
+                    port: server.address().port,
                     path: "/",
                     headers: {
                         expect: "100-continue",

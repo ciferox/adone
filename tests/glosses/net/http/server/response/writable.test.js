@@ -21,15 +21,16 @@ describe("glosses", "net", "http", "server", "response", "writable", () => {
                 ctx.body = `request ${count}, writable: ${ctx.writable}`;
             });
 
-            const instance = server.bind();
-
-            requestTwice(instance, (_, datas) => {
-                instance.close();
-                const responses = Buffer.concat(datas).toString();
-                expect(responses).to.match(/request 1, writable: true/);
-                expect(responses).to.match(/request 2, writable: true/);
-                done();
+            server.bind().then(() => {
+                requestTwice(server.server, (_, datas) => {
+                    server.unbind();
+                    const responses = Buffer.concat(datas).toString();
+                    expect(responses).to.match(/request 1, writable: true/);
+                    expect(responses).to.match(/request 2, writable: true/);
+                    done();
+                });
             });
+
         });
     });
 
@@ -48,15 +49,16 @@ describe("glosses", "net", "http", "server", "response", "writable", () => {
             const server = new Server();
             server.use((ctx) => {
                 adone.promise.delay(1000).then(() => {
-                    instance.close();  // eslint-disable-line no-use-before-define
+                    server.unbind();  // eslint-disable-line no-use-before-define
                     if (ctx.writable) {
                         return done(new Error("ctx.writable should not be true"));
                     }
                     done();
                 });
             });
-            const instance = server.bind();
-            requsetClosed(instance);
+            server.bind().then(() => {
+                requsetClosed(server.server);
+            });
         });
     });
 
@@ -76,15 +78,16 @@ describe("glosses", "net", "http", "server", "response", "writable", () => {
         it("should not writable", (done) => {
             const server = new Server();
             server.use((ctx) => {
-                instance.close();  // eslint-disable-line no-use-before-define
+                server.unbind();  // eslint-disable-line no-use-before-define
                 ctx.res.end();
                 if (ctx.writable) {
                     return done(new Error("ctx.writable should not be true"));
                 }
                 done();
             });
-            const instance = server.bind();
-            request(instance);
+            server.bind().then(() => {
+                request(server.server);
+            });
         });
     });
 });

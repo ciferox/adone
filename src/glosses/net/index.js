@@ -16,11 +16,7 @@ adone.lazify({
         shadowsocks: "./proxies/shadowsocks"
     }, null, require),
     ws: "./ws",
-    http: () => adone.lazify({
-        server: "./http/server",
-        client: "./http/client",
-        x: "./http/x"
-    }, null, require),
+    http: "./http",
     mail: "./mail",
     mqtt: "./mqtt"
 }, exports, require);

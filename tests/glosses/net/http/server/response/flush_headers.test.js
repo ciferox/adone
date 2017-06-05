@@ -111,18 +111,14 @@ describe("glosses", "net", "http", "server", "response", "flush headers", () => 
             }, 3500);
         });
 
-        const httpServer = server.bind({}, function onListen(err) {
-            if (err) {
-                return done(err);
-            }
-
-            const port = this.address().port;
+        server.bind({}).then(() => {
+            const port = server.address().port;
 
             http.request({
                 port
             }).on("response", (res) => {
                 const onData = () => {
-                    httpServer.close();
+                    server.unbind();
                     done(new Error("boom"));
                 };
                 res.on("data", onData);
@@ -130,11 +126,11 @@ describe("glosses", "net", "http", "server", "response", "flush headers", () => 
                 // shouldn't receive any data for a while
                 setTimeout(() => {
                     res.removeListener("data", onData);
-                    httpServer.close();
+                    server.unbind();
                     done();
                 }, 1000);
             }).on("error", (err) => {
-                httpServer.close();
+                server.unbind();
                 done(err);
             }).end();
         });

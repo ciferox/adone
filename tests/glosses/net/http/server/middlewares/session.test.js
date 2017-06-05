@@ -83,15 +83,15 @@ describe("glosses", "net", "http", "server", "middlewares", "session", function 
         });
 
         it("should work when multiple clients access", async () => {
-            const instance = server.bind();
+            await server.bind();
 
-            const res1 = await request(instance).get("/set");
+            const res1 = await request(server).get("/set");
             const cookie1 = res1.headers["set-cookie"];
-            const res2 = await request(instance).get("/set");
+            const res2 = await request(server).get("/set");
             const cookie2 = res2.headers["set-cookie"];
             expect(cookie1).not.to.be.deep.equal(cookie2);
 
-            instance.close();
+            await server.unbind();
         });
 
         cookie = `session=${Store.prototype.getID(24)}`;
