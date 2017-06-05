@@ -175,6 +175,7 @@ module.exports = {
         "match": true,
         "FS": true,
         "skip": true,
+        "fakeClock": true,
         "$": true,  // only for tests...
         "request": true,
         "specter": true,
