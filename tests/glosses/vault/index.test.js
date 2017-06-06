@@ -1,3 +1,4 @@
+const { is } = adone;
 let vaultIndex = 0;
 
 describe("Vault", () => {
@@ -174,7 +175,6 @@ describe("Vault", () => {
         assert.equal(await val.get("num"), 17);
         assert.sameDeepMembers(await val.tags(), [{ name: "tag1" }, { name: "tag2" }, { name: "tag4" }]);
         assert.sameDeepMembers(await vault.tags(), allNormTags);
-        await vault.close();
     });
 
     it("valuable add/delete complex tags", async () => {
@@ -199,7 +199,7 @@ describe("Vault", () => {
         assert.isNumber(await val.addTag(tag2));
         assert.isNull(await val.addTag("tag3"));
         assert.isNumber(await val.addTag(tag4));
-        
+
         assert.sameDeepMembers(await val.tags(), allNormTags);
         assert.sameDeepMembers(await vault.tags(), allNormTags);
         assert.isTrue(await val.deleteTag("tag3"));
@@ -212,7 +212,6 @@ describe("Vault", () => {
         assert.equal(await val.get("num"), 17);
         assert.sameDeepMembers(await val.tags(), [tag1, { name: tag2 }, tag4]);
         assert.sameDeepMembers(await vault.tags(), allNormTags);
-        await vault.close();
     });
 
     it("delete tags at vault side", async () => {
@@ -227,7 +226,7 @@ describe("Vault", () => {
             name: "tag3"
         };
         const tags = [tag1, tag2, tag3];
-        let val = await vault.create("val", tags);        
+        let val = await vault.create("val", tags);
         assert.sameDeepMembers(await val.tags(), tags);
         assert.sameDeepMembers(await vault.tags(), tags);
         assert.isTrue(await vault.deleteTag("tag2"));
@@ -240,7 +239,6 @@ describe("Vault", () => {
         val = await vault.get("val");
         assert.sameDeepMembers(await val.tags(), [tag1, tag3]);
         assert.sameDeepMembers(await vault.tags(), [tag1, tag3]);
-        await vault.close();
     });
 
     it("create valuable with name of one existing", async () => {
@@ -296,6 +294,29 @@ describe("Vault", () => {
         assert.lengthOf(val.keys(), 0);
     });
 
+    it("clear all valuables in a vault", async () => {
+        await openVault();
+        await vault.create("val1");
+        await vault.create("val2");
+        await vault.create("val3");
+        await vault.addTag("tag1");
+        await vault.addTag("tag2");
+        assert.lengthOf(vault.keys(), 3);
+        assert.lengthOf(vault.tags(), 2);
+        await vault.clear({
+            hosts: true,
+            tags: true
+        });
+        assert.lengthOf(vault.keys(), 0);
+        assert.lengthOf(vault.tags(), 0);
+        await vault.close();
+
+        // reopen
+        await openVault(location);
+        assert.lengthOf(vault.keys(), 0);
+        assert.lengthOf(vault.tags(), 0);
+    });
+
     it("valuable substitution", async () => {
         class ExValuable extends adone.vault.Valuable {
             constructor(vault, id, metaData, tags) {
@@ -340,5 +361,195 @@ describe("Vault", () => {
         for (const [name, v] of Object.entries(entries)) {
             assert.equal(await v.get(`k${name}`), `v${name}`);
         }
+    });
+
+    describe("Valuable#toJSON()", () => {
+        const createSampleVault = async (tags = null) => {
+            const val = await vault.create("descriptor");
+            await val.set("k1", "adone");
+            await val.set("k2", 2);
+            await val.set("k3", true);
+            await val.set("k4", [1, 2, 3]);
+            if (!is.null(tags)) {
+                await val.addTag(tags);
+            }
+
+            return val;
+        };
+
+        const tags1 = [
+            {
+                name: "tag1",
+                type: "type1"
+            },
+            {
+                name: "tag2",
+                type: "type2"
+            }
+        ];
+
+        it("includeId = false; tags = 'none'", async () => {
+            await openVault();
+            const val = await createSampleVault(tags1);
+            const obj = await val.toJSON({
+                includeId: false,
+                tags: "none"
+            });
+
+            assert.equal(obj.$name, "descriptor");
+            assert.equal(obj.k1, "adone");
+            assert.equal(obj.k2, 2);
+            assert.equal(obj.k3, true);
+            assert.deepEqual(obj.k4, [1, 2, 3]);
+            assert.isUndefined(obj.$id);
+            assert.isUndefined(obj.$tags);
+        });
+
+        it("includeId = true; tags = 'none'", async () => {
+            await openVault();
+            const val = await createSampleVault(tags1);
+            const obj = await val.toJSON({
+                includeId: true,
+                tags: "none"
+            });
+
+            assert.equal(obj.$name, "descriptor");
+            assert.equal(obj.k1, "adone");
+            assert.equal(obj.k2, 2);
+            assert.equal(obj.k3, true);
+            assert.deepEqual(obj.k4, [1, 2, 3]);
+            assert.isNumber(obj.$id);
+            assert.isUndefined(obj.$tags);
+        });
+
+        it("includeId = true; tags = 'normal'", async () => {
+            await openVault();
+            const val = await createSampleVault(tags1);
+            const obj = await val.toJSON({
+                includeId: true,
+                tags: "normal"
+            });
+
+            assert.equal(obj.$name, "descriptor");
+            assert.equal(obj.k1, "adone");
+            assert.equal(obj.k2, 2);
+            assert.equal(obj.k3, true);
+            assert.deepEqual(obj.k4, [1, 2, 3]);
+            assert.isNumber(obj.$id);
+            assert.deepEqual(obj.$tags, tags1);
+        });
+
+        it("includeId = true; tags = 'onlyName'", async () => {
+            await openVault();
+            const val = await createSampleVault(tags1);
+            const obj = await val.toJSON({
+                includeId: true,
+                tags: "onlyName"
+            });
+
+            assert.equal(obj.$name, "descriptor");
+            assert.equal(obj.k1, "adone");
+            assert.equal(obj.k2, 2);
+            assert.equal(obj.k3, true);
+            assert.deepEqual(obj.k4, [1, 2, 3]);
+            assert.isNumber(obj.$id);
+            assert.deepEqual(obj.$tags, tags1.map((t) => t.name));
+        });
+
+        it("includeId = true; tags = 'onlyName'", async () => {
+            await openVault();
+            const val = await createSampleVault(tags1);
+            const obj = await val.toJSON({
+                includeId: true,
+                tags: "onlyId"
+            });
+
+            assert.equal(obj.$name, "descriptor");
+            assert.equal(obj.k1, "adone");
+            assert.equal(obj.k2, 2);
+            assert.equal(obj.k3, true);
+            assert.deepEqual(obj.k4, [1, 2, 3]);
+            assert.isNumber(obj.$id);
+            assert.sameMembers(obj.$tags, [1, 2]);
+        });
+
+        it("includeId = false; tags = 'onlyId' (valuable without tags)", async () => {
+            await openVault();
+            const val = await createSampleVault();
+            const obj = await val.toJSON({
+                includeId: false,
+                tags: "onlyId"
+            });
+
+            assert.equal(obj.$name, "descriptor");
+            assert.equal(obj.k1, "adone");
+            assert.equal(obj.k2, 2);
+            assert.equal(obj.k3, true);
+            assert.deepEqual(obj.k4, [1, 2, 3]);
+            assert.isUndefined(obj.$id);
+            assert.equal(obj.$tags.length, 0);
+        });
+    });
+
+    it("Vault#toJSON()", async () => {
+        const tags1 = [
+            {
+                name: "tag1",
+                type: "type1"
+            },
+            {
+                name: "tag2",
+                type: "type2"
+            }
+        ];
+
+        const tags2 = [
+            {
+                name: "tag3",
+                type: "type3"
+            },
+            {
+                name: "tag4",
+                type: "type5"
+            }
+        ];
+
+        await openVault();
+        const val1 = await vault.create("descriptor1");
+        await val1.set("k11", "adone");
+        await val1.set("k12", 2);
+        await val1.set("k13", true);
+        await val1.set("k14", [1, 2, 3]);
+        await val1.addTag(tags1);
+
+        const val2 = await vault.create("descriptor2");
+        await val2.set("k21", "adone");
+        await val2.set("k22", 2);
+        await val2.set("k23", true);
+        await val2.set("k24", [1, 2, 3]);
+        await val2.addTag(tags2);
+
+        const obj = await vault.toJSON({
+            includeId: true,
+            tags: "normal"
+        });
+
+        assert.equal(obj.length, 2);
+
+        assert.equal(obj[0].$name, "descriptor1");
+        assert.equal(obj[0].k11, "adone");
+        assert.equal(obj[0].k12, 2);
+        assert.equal(obj[0].k13, true);
+        assert.deepEqual(obj[0].k14, [1, 2, 3]);
+        assert.isNumber(obj[0].$id);
+        assert.deepEqual(obj[0].$tags, tags1);
+
+        assert.equal(obj[1].$name, "descriptor2");
+        assert.equal(obj[1].k21, "adone");
+        assert.equal(obj[1].k22, 2);
+        assert.equal(obj[1].k23, true);
+        assert.deepEqual(obj[1].k24, [1, 2, 3]);
+        assert.isNumber(obj[1].$id);
+        assert.deepEqual(obj[1].$tags, tags2);
     });
 });

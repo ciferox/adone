@@ -123,6 +123,22 @@ export default class Vault {
         await this._deleteMeta(__.valuable(val.id));
     }
 
+    async clear({ hosts = true, tags = false } = {}) {
+        if (hosts) {
+            const names = this.keys();
+            for (const name of names) {
+                await this.delete(name);
+            }
+        }
+
+        if (tags) {
+            const tags = this._getTags();
+            for (const tag of tags) {
+                await this.deleteTag(tag);
+            }
+        }
+    }
+
     has(name) {
         return this.nameIdMap.has(name);
     }
@@ -146,6 +162,14 @@ export default class Vault {
             vaults[name] = await this.get(name);
         }
 
+        return vaults;
+    }
+
+    async toJSON(options) {
+        const vaults = [];
+        for (const name of this.nameIdMap.keys()) {
+            vaults.push(await (await this.get(name)).toJSON(options));
+        }
         return vaults;
     }
 
@@ -175,13 +199,6 @@ export default class Vault {
             return true;
         }
         return false;
-    }
-
-    async deleteAllTags() {
-        const tags = this._getTags();
-        for (const tag of tags) {
-            await this.deleteTag(tag);
-        }
     }
 
     tags(ids = null, { privateProps = false } = {}) {

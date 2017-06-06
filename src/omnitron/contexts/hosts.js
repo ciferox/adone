@@ -3,14 +3,12 @@ const { Contextable, Private, Public, Description, Method, Type } = adone.netron
 
 // Host reserved properties:
 // - name (String): hosts's IPv4/IPv6/domain
-// - ip6 (String): IPv6 address of host
-// - tags (Array): list of host's tags/groups
 // - aliases (Array): list of host aliases
 // - sshPort (Number): ssh port number
 // - sshUser (String): ssh user
 // - sshPassword (String): ssh password
 // - sshPrivateKey (Buffer|String): content of ssh private key
-// - netronPort (Number): netron port number
+// - omnitronPort (Number): netron port number
 // - netronPrivateKey (Buffer|String): content of netron private key
 // - country (String): host's country
 // - countryCode (String): host's country two-chars code
@@ -25,7 +23,7 @@ const HOST_RESERVED_KEYS = [
     "sshUser",
     "sshPassword",
     "sshPrivateKey",
-    "netronPort",
+    "omnitronPort",
     "netronPrivateKey",
     "country",
     "countryCode",
@@ -132,14 +130,16 @@ export default class Hosts {
         if (is.null(result)) {
             throw new adone.x.Exists(`Tag already exists: ${adone.vault.normalizeTag(newTag).name}`);
         }
+        return result;
     }
 
     @Public
-    async deleteTag(newTag) {
-        const result = await this._vault.deleteTag(newTag);
+    async deleteTag(tag) {
+        const result = await this._vault.deleteTag(tag);
         if (!result) {
-            throw new adone.x.NotExists(`Tag not exists: ${adone.vault.normalizeTag(newTag).name}`);
+            throw new adone.x.NotExists(`Tag not exists: ${adone.vault.normalizeTag(tag).name}`);
         }
+        return result;
     }
 
     @Public
@@ -153,38 +153,39 @@ export default class Hosts {
     }
 
     @Public
-    async list() {
-        const entries = await this._vault.entries();
-        const result = [];
-        for (const [name, host] of Object.entries(entries)) {
-            result.push(await this._getNames(host));
+    async list(options) {
+        if (!is.string(options.format)) {
+            options.format = "json";
         }
-        return result;
-    }
 
-    @Public
-    async listGroups() {
-        const groups = await this._vault.tags();
-        const hosts = await this._vault.values();
-        const result = {};
-        for (const group of groups) {
-            result[group] = [];
-            for (const host of hosts) {
-                if (host.hasTag(group)) {
-                    result[group].push(await this._getNames(host));
+        let result;
+
+        switch (options.format) {
+            case "names": {
+                const vals = await this._vault.values();
+                result = [];
+                for (const host of vals) {
+                    let names;
+                    if (host.has("aliases")) {
+                        names = await host.get("aliases");
+                    } else {
+                        names = [];
+                    }
+                    names.unshift(host.name());
+                    result.push(names);
                 }
+                break;
+            }
+            case "json": {
+                result = await this._vault.toJSON(options);
             }
         }
 
         return result;
     }
 
-    async _getNames(host) {
-        const name = host.name();
-        if (host.has("aliases")) {
-            return [name].concat(await host.get("aliases")).join(", ");
-        } 
-        return name;
-        
+    @Public
+    clear(options) {
+        return this._vault.clear(options);
     }
 }

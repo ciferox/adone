@@ -75,6 +75,21 @@ export default class Valuable {
         return this._keys.has(name);
     }
 
+    keys() {
+        return [...this._keys.keys()];
+    }
+
+    async entries() {
+        const result = {};
+        const keys = this.keys();
+
+        for (const key of keys) {
+            result[key] = await this.get(key);
+        }
+
+        return result;
+    }
+
     async delete(name) {
         const keyMeta = this._getKey(name);
         const index = this.meta.kids.indexOf(keyMeta.id);
@@ -94,6 +109,32 @@ export default class Valuable {
         for (const name of names) {
             await this.delete(name);
         }
+    }
+
+    // tag formats: 'none', 'normal', 'onlyName', 'onlyId'
+    async toJSON({ includeId = false, tags = "normal" } = {}) {
+        const result = {
+            $name: this.name()
+        };
+        if (includeId) {
+            result.$id = this.internalId();
+        }
+
+        Object.assign(result, await this.entries());
+
+        switch (tags) {
+            case "normal":
+                result.$tags = this._tags;
+                break;
+            case "onlyName":
+                result.$tags = this._tags.map((t) => t.name);
+                break;
+            case "onlyId":
+                result.$tags = this.meta.tids;
+                break;
+        }
+
+        return result;
     }
 
     async addTag(tag) {
@@ -130,21 +171,6 @@ export default class Valuable {
             return true;
         }
         return false;
-    }
-
-    keys() {
-        return [...this._keys.keys()];
-    }
-
-    async entries() {
-        const result = {};
-        const keys = this.keys();
-
-        for (const key of keys) {
-            result[key] = await this.get(key);
-        }
-
-        return result;
     }
 
     tags() {

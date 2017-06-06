@@ -641,9 +641,36 @@ export default class extends adone.application.Subsystem {
                             handler: this.hostsDelTagsCommand
                         },
                         {
-                            name: "groups",
-                            help: "show groups",
-                            handler: this.hostsGroupsCommand
+                            name: "list",
+                            help: "list hosts",
+                            options: [
+                                {
+                                    name: "--format",
+                                    type: String,
+                                    default: "names",
+                                    choices: ["names", "json"]
+                                },
+                                {
+                                    name: "--tags",
+                                    type: String,
+                                    default: "none",
+                                    choices: ["none", "normal", "onlyName", "onlyId"]
+                                }
+                            ],
+                            handler: this.hostsListCommand
+                        },
+                        {
+                            name: "clear",
+                            help: "clear hosts and/or tags",
+                            arguments: [
+                                {
+                                    name: "what",
+                                    default: "all",
+                                    choices: ["hosts", "tags", "all"],
+                                    help: "clear hosts"
+                                },
+                            ],
+                            handler: this.hostsClearCommand
                         },
                         {
                             name: "group",
@@ -685,8 +712,7 @@ export default class extends adone.application.Subsystem {
                                 }
                             ]
                         }
-                    ],
-                    handler: this.hostsListCommand
+                    ]
                 }
             ]
         });
@@ -1320,7 +1346,35 @@ export default class extends adone.application.Subsystem {
     async hostsListCommand(args, opts) {
         try {
             const iHosts = await this.dispatcher.context("hosts");
-            adone.log(adone.text.pretty.json(await iHosts.list()));
+            const format = opts.get("format");
+            const tags = opts.get("tags");
+
+            const result = await iHosts.list({ format, tags });
+
+            switch (format) {
+                case "names":
+                    adone.log(adone.text.pretty.json(result.map((x) => x.join(", "))));
+                    break;
+                case "json":
+                    adone.log(adone.text.pretty.json(result));
+                    break;
+            }
+
+        } catch (err) {
+            adone.error(err.message);
+            return 1;
+        }
+        return 0;
+    }
+
+    async hostsClearCommand(args) {
+        try {
+            const what = args.get("what");
+            const hosts = ["hosts", "all"].includes(what);
+            const tags = ["tags", "all"].includes(what);
+            const iHosts = await this.dispatcher.context("hosts");
+            await iHosts.clear({ hosts, tags });
+            adone.log(adone.ok);
         } catch (err) {
             adone.error(err.message);
             return 1;
@@ -1511,19 +1565,8 @@ export default class extends adone.application.Subsystem {
     async hostsDelTagsCommand() {
         try {
             const iHosts = await this.dispatcher.context("hosts");
-            await iHosts.deleteAllTags();
+            await iHosts.clear({ hosts: false, tags: true });
             adone.log(adone.ok);
-        } catch (err) {
-            adone.error(err.message);
-            return 1;
-        }
-        return 0;
-    }
-
-    async hostsGroupsCommand() {
-        try {
-            const iHosts = await this.dispatcher.context("hosts");
-            adone.log(adone.text.pretty.json(await iHosts.listGroups()));
         } catch (err) {
             adone.error(err.message);
             return 1;
