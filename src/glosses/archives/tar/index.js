@@ -1,6 +1,6 @@
 const { is, std: { path, fs }, x } = adone;
 
-const normalize = !is.windows ? adone.identity : (name) => name.replace(/\\/g, "/").replace(/:/g, "_");
+const normalize = !is.windows ? adone.identity : (name) => name.replace(/\\/g, "/").replace(/[:?<>|]/g, "_");
 
 const head = (list) => list.length ? list[list.length - 1] : null;
 
