@@ -517,6 +517,7 @@ export default class Connection extends EventEmitter {
                 } else {
                     executeCommand.emit("error", err);
                 }
+                executeCommand.emit("end");
                 return;
             }
 

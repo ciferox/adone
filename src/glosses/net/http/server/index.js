@@ -126,6 +126,7 @@ export class Server extends EventEmitter {
             });
 
             this.server = null;
+            this.secure = null;
         }
     }
 

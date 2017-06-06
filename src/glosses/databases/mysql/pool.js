@@ -159,17 +159,16 @@ export default class Pool extends EventEmitter {
     }
 
     execute(sql, values, cb) {
-        const useNamedPlaceholders = this.config.connectionConfig.namedPlaceholders;
+        // const useNamedPlaceholders = this.config.connectionConfig.namedPlaceholders;
 
         this.getConnection((err, conn) => {
             if (err) {
                 return cb(err);
             }
 
-            conn.config.namedPlaceholders = useNamedPlaceholders;
-            return conn.execute(sql, values, function self(...args) {
+            const executeCmd = conn.execute(sql, values, cb);
+            executeCmd.once("end", () => {
                 conn.release();
-                cb.apply(this, args);
             });
         });
     }

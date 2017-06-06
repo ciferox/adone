@@ -27,8 +27,10 @@ export default class Command extends EventEmitter {
             const err = packet.asError(connection.clientEncoding);
             if (this.onResult) {
                 this.onResult(err);
+                this.emit("end");
             } else {
                 this.emit("error", err);
+                this.emit("end");
             }
             return true;
         }
@@ -37,9 +39,9 @@ export default class Command extends EventEmitter {
         this.next = this.next(packet, connection);
         if (this.next) {
             return false;
-        } 
+        }
         this.emit("end");
         return true;
-        
+
     }
 }
