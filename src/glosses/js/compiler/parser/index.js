@@ -11,22 +11,21 @@ import { types as tokTypes } from "./tokenizer/types";
 import "./tokenizer";
 import "./tokenizer/context";
 
+import estreePlugin from "./plugins/estree";
 import flowPlugin from "./plugins/flow";
 import jsxPlugin from "./plugins/jsx";
+plugins.estree = estreePlugin;
 plugins.flow = flowPlugin;
 plugins.jsx = jsxPlugin;
 
-export function parse(input, options) {
-    return new Parser(options, input).parse();
-}
+export const parse = (input, options) => new Parser(options, input).parse();
 
-export function parseExpression(input, options) {
+export const parseExpression = (input, options) => {
     const parser = new Parser(options, input);
     if (parser.options.strictMode) {
         parser.state.strict = true;
     }
     return parser.getExpression();
-}
-
+};
 
 export { tokTypes };

@@ -1,8 +1,5 @@
-/* eslint max-len: 0 */
-// @flow
-
+const { is } = adone;
 import { types as tt } from "../tokenizer/types";
-import { types as ct } from "../tokenizer/context";
 import Parser from "../parser";
 
 const primitiveTypes = [
@@ -27,6 +24,45 @@ pp.flowParseTypeInitialiser = function (tok) {
     const type = this.flowParseType();
     this.state.inType = oldInType;
     return type;
+};
+
+pp.flowParsePredicate = function () {
+    const node = this.startNode();
+    const moduloLoc = this.state.startLoc;
+    const moduloPos = this.state.start;
+    this.expect(tt.modulo);
+    const checksLoc = this.state.startLoc;
+    this.expectContextual("checks");
+    // Force '%' and 'checks' to be adjacent
+    if (moduloLoc.line !== checksLoc.line || moduloLoc.column !== checksLoc.column - 1) {
+        this.raise(moduloPos, "Spaces between ´%´ and ´checks´ are not allowed here.");
+    }
+    if (this.eat(tt.parenL)) {
+        node.expression = this.parseExpression();
+        this.expect(tt.parenR);
+        return this.finishNode(node, "DeclaredPredicate");
+    }
+    return this.finishNode(node, "InferredPredicate");
+
+};
+
+pp.flowParseTypeAndPredicateInitialiser = function () {
+    const oldInType = this.state.inType;
+    this.state.inType = true;
+    this.expect(tt.colon);
+    let type = null;
+    let predicate = null;
+    if (this.match(tt.modulo)) {
+        this.state.inType = oldInType;
+        predicate = this.flowParsePredicate();
+    } else {
+        type = this.flowParseType();
+        this.state.inType = oldInType;
+        if (this.match(tt.modulo)) {
+            predicate = this.flowParsePredicate();
+        }
+    }
+    return [type, predicate];
 };
 
 pp.flowParseDeclareClass = function (node) {
@@ -54,9 +90,10 @@ pp.flowParseDeclareFunction = function (node) {
     typeNode.params = tmp.params;
     typeNode.rest = tmp.rest;
     this.expect(tt.parenR);
-    typeNode.returnType = this.flowParseTypeInitialiser();
-
+    let predicate = null;
+    [typeNode.returnType, predicate] = this.flowParseTypeAndPredicateInitialiser();
     typeContainer.typeAnnotation = this.finishNode(typeNode, "FunctionTypeAnnotation");
+    typeContainer.predicate = predicate;
     id.typeAnnotation = this.finishNode(typeContainer, "TypeAnnotation");
 
     this.finishNode(id, id.type);
@@ -76,16 +113,16 @@ pp.flowParseDeclare = function (node) {
     } else if (this.isContextual("module")) {
         if (this.lookahead().type === tt.dot) {
             return this.flowParseDeclareModuleExports(node);
-        } 
+        }
         return this.flowParseDeclareModule(node);
-        
+
     } else if (this.isContextual("type")) {
         return this.flowParseDeclareTypeAlias(node);
     } else if (this.isContextual("interface")) {
         return this.flowParseDeclareInterface(node);
-    } 
+    }
     this.unexpected();
-    
+
 };
 
 pp.flowParseDeclareVariable = function (node) {
@@ -155,7 +192,7 @@ pp.flowParseDeclareInterface = function (node) {
 
 // Interfaces
 
-pp.flowParseInterfaceish = function (node, allowStatic) {
+pp.flowParseInterfaceish = function (node) {
     node.id = this.parseIdentifier();
 
     if (this.isRelational("<")) {
@@ -180,7 +217,7 @@ pp.flowParseInterfaceish = function (node, allowStatic) {
         } while (this.eat(tt.comma));
     }
 
-    node.body = this.flowParseObjectType(allowStatic);
+    node.body = this.flowParseObjectType(true, false, false);
 };
 
 pp.flowParseInterfaceExtends = function () {
@@ -327,7 +364,7 @@ pp.flowParseObjectTypeMethodish = function (node) {
     }
 
     this.expect(tt.parenL);
-    while (this.match(tt.name)) {
+    while (!this.match(tt.parenR) && !this.match(tt.ellipsis)) {
         node.params.push(this.flowParseFunctionTypeParam());
         if (!this.match(tt.parenR)) {
             this.expect(tt.comma);
@@ -361,7 +398,7 @@ pp.flowParseObjectTypeCallProperty = function (node, isStatic) {
     return this.finishNode(node, "ObjectTypeCallProperty");
 };
 
-pp.flowParseObjectType = function (allowStatic, allowExact) {
+pp.flowParseObjectType = function (allowStatic, allowExact, allowSpread) {
     const oldInType = this.state.inType;
     this.state.inType = true;
 
@@ -409,24 +446,42 @@ pp.flowParseObjectType = function (allowStatic, allowExact) {
             }
             nodeStart.callProperties.push(this.flowParseObjectTypeCallProperty(node, isStatic));
         } else {
-            propertyKey = this.flowParseObjectPropertyKey();
-            if (this.isRelational("<") || this.match(tt.parenL)) {
-                // This is a method property
+            if (this.match(tt.ellipsis)) {
+                if (!allowSpread) {
+                    this.unexpected(
+                        null,
+                        "Spread operator cannot appear in class or interface definitions"
+                    );
+                }
                 if (variance) {
-                    this.unexpected(variancePos);
+                    this.unexpected(variance.start, "Spread properties cannot have variance");
                 }
-                nodeStart.properties.push(this.flowParseObjectTypeMethod(startPos, startLoc, isStatic, propertyKey));
-            } else {
-                if (this.eat(tt.question)) {
-                    optional = true;
-                }
-                node.key = propertyKey;
-                node.value = this.flowParseTypeInitialiser();
-                node.optional = optional;
-                node.static = isStatic;
-                node.variance = variance;
+                this.expect(tt.ellipsis);
+                node.argument = this.flowParseType();
                 this.flowObjectTypeSemicolon();
-                nodeStart.properties.push(this.finishNode(node, "ObjectTypeProperty"));
+                nodeStart.properties.push(this.finishNode(node, "ObjectTypeSpreadProperty"));
+            } else {
+                propertyKey = this.flowParseObjectPropertyKey();
+                if (this.isRelational("<") || this.match(tt.parenL)) {
+                    // This is a method property
+                    if (variance) {
+                        this.unexpected(variance.start);
+                    }
+                    nodeStart.properties.push(
+                        this.flowParseObjectTypeMethod(startPos, startLoc, isStatic, propertyKey)
+                    );
+                } else {
+                    if (this.eat(tt.question)) {
+                        optional = true;
+                    }
+                    node.key = propertyKey;
+                    node.value = this.flowParseTypeInitialiser();
+                    node.optional = optional;
+                    node.static = isStatic;
+                    node.variance = variance;
+                    this.flowObjectTypeSemicolon();
+                    nodeStart.properties.push(this.finishNode(node, "ObjectTypeProperty"));
+                }
             }
         }
 
@@ -532,7 +587,7 @@ pp.reinterpretTypeAsFunctionTypeParam = function (type) {
 
 pp.flowParseFunctionTypeParams = function (params = []) {
     const ret = { params, rest: null };
-    while (this.match(tt.name)) {
+    while (!this.match(tt.parenR) && !this.match(tt.ellipsis)) {
         ret.params.push(this.flowParseFunctionTypeParam());
         if (!this.match(tt.parenR)) {
             this.expect(tt.comma);
@@ -586,19 +641,19 @@ pp.flowParsePrimaryType = function () {
     const oldNoAnonFunctionType = this.state.noAnonFunctionType;
 
     switch (this.state.type) {
-        case tt.name:
+        case tt.name: {
             return this.flowIdentToTypeAnnotation(startPos, startLoc, node, this.parseIdentifier());
-
-        case tt.braceL:
-            return this.flowParseObjectType(false, false);
-
-        case tt.braceBarL:
-            return this.flowParseObjectType(false, true);
-
-        case tt.bracketL:
+        }
+        case tt.braceL: {
+            return this.flowParseObjectType(false, false, true);
+        }
+        case tt.braceBarL: {
+            return this.flowParseObjectType(false, true, true);
+        }
+        case tt.bracketL: {
             return this.flowParseTupleType();
-
-        case tt.relational:
+        }
+        case tt.relational: {
             if (this.state.value === "<") {
                 node.typeParameters = this.flowParseTypeParameterDeclaration();
                 this.expect(tt.parenL);
@@ -614,8 +669,9 @@ pp.flowParsePrimaryType = function () {
                 return this.finishNode(node, "FunctionTypeAnnotation");
             }
             break;
+        }
+        case tt.parenL: {
 
-        case tt.parenL:
             this.next();
 
             // Check to see if this is actually a grouped type
@@ -639,10 +695,10 @@ pp.flowParsePrimaryType = function () {
                         (this.match(tt.parenR) && this.lookahead().type === tt.arrow))) {
                     this.expect(tt.parenR);
                     return type;
-                } 
+                }
                     // Eat a comma if there is one
                 this.eat(tt.comma);
-                
+
             }
 
             if (type) {
@@ -665,65 +721,57 @@ pp.flowParsePrimaryType = function () {
             node.typeParameters = null;
 
             return this.finishNode(node, "FunctionTypeAnnotation");
-
-        case tt.string:
-            node.value = this.state.value;
-            this.addExtra(node, "rawValue", node.value);
-            this.addExtra(node, "raw", this.input.slice(this.state.start, this.state.end));
-            this.next();
-            return this.finishNode(node, "StringLiteralTypeAnnotation");
-
-        case tt._true: case tt._false:
+        }
+        case tt.string: {
+            return this.parseLiteral(this.state.value, "StringLiteralTypeAnnotation");
+        }
+        case tt._true: case tt._false: {
             node.value = this.match(tt._true);
             this.next();
             return this.finishNode(node, "BooleanLiteralTypeAnnotation");
-
-        case tt.plusMin:
+        }
+        case tt.plusMin: {
             if (this.state.value === "-") {
                 this.next();
                 if (!this.match(tt.num)) {
-                    this.unexpected(); 
+                    this.unexpected(null, "Unexpected token, expected number");
                 }
 
-                node.value = -this.state.value;
-                this.addExtra(node, "rawValue", node.value);
-                this.addExtra(node, "raw", this.input.slice(this.state.start, this.state.end));
-                this.next();
-                return this.finishNode(node, "NumericLiteralTypeAnnotation");
+                return this.parseLiteral(-this.state.value, "NumericLiteralTypeAnnotation", node.start, node.loc.start);
             }
 
-        case tt.num:
-            node.value = this.state.value;
-            this.addExtra(node, "rawValue", node.value);
-            this.addExtra(node, "raw", this.input.slice(this.state.start, this.state.end));
-            this.next();
-            return this.finishNode(node, "NumericLiteralTypeAnnotation");
-
-        case tt._null:
+            this.unexpected();
+        }
+        case tt.num: {
+            return this.parseLiteral(this.state.value, "NumericLiteralTypeAnnotation");
+        }
+        case tt._null: {
             node.value = this.match(tt._null);
             this.next();
             return this.finishNode(node, "NullLiteralTypeAnnotation");
-
-        case tt._this:
+        }
+        case tt._this: {
             node.value = this.match(tt._this);
             this.next();
             return this.finishNode(node, "ThisTypeAnnotation");
-
-        case tt.star:
+        }
+        case tt.star: {
             this.next();
             return this.finishNode(node, "ExistentialTypeParam");
-
-        default:
+        }
+        default: {
             if (this.state.type.keyword === "typeof") {
                 return this.flowParseTypeofType();
             }
+        }
     }
 
     this.unexpected();
 };
 
 pp.flowParsePostfixType = function () {
-    const startPos = this.state.start, startLoc = this.state.startLoc;
+    const startPos = this.state.start;
+    const startLoc = this.state.startLoc;
     let type = this.flowParsePrimaryType();
     while (!this.canInsertSemicolon() && this.match(tt.bracketL)) {
         const node = this.startNodeAt(startPos, startLoc);
@@ -740,9 +788,9 @@ pp.flowParsePrefixType = function () {
     if (this.eat(tt.question)) {
         node.typeAnnotation = this.flowParsePrefixType();
         return this.finishNode(node, "NullableTypeAnnotation");
-    } 
+    }
     return this.flowParsePostfixType();
-    
+
 };
 
 pp.flowParseAnonFunctionWithoutParens = function () {
@@ -794,6 +842,12 @@ pp.flowParseTypeAnnotation = function () {
     return this.finishNode(node, "TypeAnnotation");
 };
 
+pp.flowParseTypeAndPredicateAnnotation = function () {
+    const node = this.startNode();
+    [node.typeAnnotation, node.predicate] = this.flowParseTypeAndPredicateInitialiser();
+    return this.finishNode(node, "TypeAnnotation");
+};
+
 pp.flowParseTypeAnnotatableIdentifier = function () {
     const ident = this.flowParseRestrictedIdentifier();
     if (this.match(tt.colon)) {
@@ -834,7 +888,7 @@ export default function (instance) {
             if (this.match(tt.colon) && !allowExpression) {
                 // if allowExpression is true then we're parsing an arrow function and if
                 // there's a return type then it's been handled elsewhere
-                node.returnType = this.flowParseTypeAnnotation();
+                node.returnType = this.flowParseTypeAndPredicateAnnotation();
             }
 
             return inner.call(this, node, allowExpression);
@@ -849,9 +903,9 @@ export default function (instance) {
                 const node = this.startNode();
                 this.next();
                 return this.flowParseInterface(node);
-            } 
+            }
             return inner.call(this, declaration, topLevel);
-            
+
         };
     });
 
@@ -860,7 +914,12 @@ export default function (instance) {
         return function (node, expr) {
             if (expr.type === "Identifier") {
                 if (expr.name === "declare") {
-                    if (this.match(tt._class) || this.match(tt.name) || this.match(tt._function) || this.match(tt._var)) {
+                    if (
+                        this.match(tt._class) ||
+                        this.match(tt.name) ||
+                        this.match(tt._function) ||
+                        this.match(tt._var)
+                    ) {
                         return this.flowParseDeclare(node);
                     }
                 } else if (this.match(tt.name)) {
@@ -885,6 +944,19 @@ export default function (instance) {
         };
     });
 
+    instance.extend("isExportDefaultSpecifier", (inner) => {
+        return function () {
+            if (
+                this.match(tt.name) &&
+                (this.state.value === "type" || this.state.value === "interface")
+            ) {
+                return false;
+            }
+
+            return inner.call(this);
+        };
+    });
+
     instance.extend("parseConditional", (inner) => {
         return function (expr, noIn, startPos, startLoc, refNeedsArrowPos) {
             // only do the expensive clone if there is a question mark
@@ -898,10 +970,10 @@ export default function (instance) {
                         this.state = state;
                         refNeedsArrowPos.start = err.pos || this.state.start;
                         return expr;
-                    } 
+                    }
                         // istanbul ignore next: no such error is expected
                     throw err;
-                    
+
                 }
             }
 
@@ -910,14 +982,14 @@ export default function (instance) {
     });
 
     instance.extend("parseParenItem", (inner) => {
-        return function (node, startLoc, startPos) {
-            node = inner.call(this, node, startLoc, startPos);
+        return function (node, startPos, startLoc) {
+            node = inner.call(this, node, startPos, startLoc);
             if (this.eat(tt.question)) {
                 node.optional = true;
             }
 
             if (this.match(tt.colon)) {
-                const typeCastNode = this.startNodeAt(startLoc, startPos);
+                const typeCastNode = this.startNodeAt(startPos, startLoc);
                 typeCastNode.expression = node;
                 typeCastNode.typeAnnotation = this.flowParseTypeAnnotation();
 
@@ -951,25 +1023,26 @@ export default function (instance) {
                     node.specifiers = this.parseExportSpecifiers();
                     this.parseExportFrom(node);
                     return null;
-                } 
+                }
                     // export type Foo = Bar;
                 return this.flowParseTypeAlias(declarationNode);
-                
+
             } else if (this.isContextual("interface")) {
                 node.exportKind = "type";
                 const declarationNode = this.startNode();
                 this.next();
                 return this.flowParseInterface(declarationNode);
-            } 
+            }
             return inner.call(this, node);
-            
+
         };
     });
 
     instance.extend("parseClassId", (inner) => {
-        return function (node) {
-            inner.apply(this, arguments);
+        return function (...args) {
+            inner.apply(this, args);
             if (this.isRelational("<")) {
+                const [node] = args;
                 node.typeParameters = this.flowParseTypeParameterDeclaration();
             }
         };
@@ -981,9 +1054,9 @@ export default function (instance) {
         return function (name) {
             if (this.state.inType && name === "void") {
                 return false;
-            } 
+            }
             return inner.call(this, name);
-            
+
         };
     });
 
@@ -992,9 +1065,9 @@ export default function (instance) {
         return function (code) {
             if (this.state.inType && (code === 62 || code === 60)) {
                 return this.finishOp(tt.relational, 1);
-            } 
+            }
             return inner.call(this, code);
-            
+
         };
     });
 
@@ -1002,7 +1075,7 @@ export default function (instance) {
     instance.extend("jsx_readToken", (inner) => {
         return function () {
             if (!this.state.inType) {
-                return inner.call(this); 
+                return inner.call(this);
             }
         };
     });
@@ -1011,9 +1084,9 @@ export default function (instance) {
         return function (node, isBinding, contextDescription) {
             if (node.type === "TypeCastExpression") {
                 return inner.call(this, this.typeCastToParameter(node), isBinding, contextDescription);
-            } 
+            }
             return inner.call(this, node, isBinding, contextDescription);
-            
+
         };
     });
 
@@ -1048,24 +1121,25 @@ export default function (instance) {
     // parse an item inside a expression list eg. `(NODE, NODE)` where NODE represents
     // the position where this function is called
     instance.extend("parseExprListItem", (inner) => {
-        return function (allowEmpty, refShorthandDefaultPos) {
+        return function (...args) {
             const container = this.startNode();
-            const node = inner.call(this, allowEmpty, refShorthandDefaultPos);
+            const node = inner.call(this, ...args);
             if (this.match(tt.colon)) {
                 container._exprListItem = true;
                 container.expression = node;
                 container.typeAnnotation = this.flowParseTypeAnnotation();
                 return this.finishNode(container, "TypeCastExpression");
-            } 
+            }
             return node;
-            
+
         };
     });
 
     instance.extend("checkLVal", (inner) => {
-        return function (node) {
+        return function (...args) {
+            const [node] = args;
             if (node.type !== "TypeCastExpression") {
-                return inner.apply(this, arguments);
+                return inner.apply(this, args);
             }
         };
     });
@@ -1081,10 +1155,23 @@ export default function (instance) {
         };
     });
 
+    // determine whether or not we're currently in the position where a class method would appear
+    instance.extend("isClassMethod", (inner) => {
+        return function () {
+            return this.isRelational("<") || inner.call(this);
+        };
+    });
+
     // determine whether or not we're currently in the position where a class property would appear
     instance.extend("isClassProperty", (inner) => {
         return function () {
             return this.match(tt.colon) || inner.call(this);
+        };
+    });
+
+    instance.extend("isNonstaticConstructor", (inner) => {
+        return function (method) {
+            return !this.match(tt.colon) && inner.call(this, method);
         };
     });
 
@@ -1141,7 +1228,8 @@ export default function (instance) {
 
     // parse type parameters for object method shorthand
     instance.extend("parseObjPropValue", (inner) => {
-        return function (prop) {
+        return function (...args) {
+            const [prop] = args;
             if (prop.variance) {
                 this.unexpected(prop.variancePos);
             }
@@ -1158,7 +1246,7 @@ export default function (instance) {
                 }
             }
 
-            inner.apply(this, arguments);
+            inner.apply(this, args);
 
             // add typeParameters if we found them
             if (typeParameters) {
@@ -1230,34 +1318,32 @@ export default function (instance) {
                 specifierTypeKind = "typeof";
             }
 
+            let isBinding = false;
             if (this.isContextual("as")) {
-                const as_ident = this.parseIdentifier(true);
-                if (specifierTypeKind !== null && !this.match(tt.name)) {
+                const asIdent = this.parseIdentifier(true);
+                if (!is.null(specifierTypeKind) && !this.match(tt.name) && !this.state.type.keyword) {
                     // `import {type as ,` or `import {type as }`
-                    specifier.imported = as_ident;
+                    specifier.imported = asIdent;
                     specifier.importKind = specifierTypeKind;
-                    specifier.local = as_ident.__clone();
+                    specifier.local = asIdent.__clone();
                 } else {
                     // `import {type as foo`
                     specifier.imported = firstIdent;
                     specifier.importKind = null;
-                    specifier.local = this.parseIdentifier(false);
+                    specifier.local = this.parseIdentifier();
                 }
-            } else if (specifierTypeKind !== null && this.match(tt.name)) {
+            } else if (!is.null(specifierTypeKind) && (this.match(tt.name) || this.state.type.keyword)) {
                 // `import {type foo`
                 specifier.imported = this.parseIdentifier(true);
                 specifier.importKind = specifierTypeKind;
-                specifier.local =
-                    this.eatContextual("as")
-                        ? this.parseIdentifier(false)
-                        : specifier.imported.__clone();
-            } else {
-                if (firstIdent.name === "typeof") {
-                    this.unexpected(
-                        firstIdentLoc,
-                        "Cannot import a variable named `typeof`"
-                    );
+                if (this.eatContextual("as")) {
+                    specifier.local = this.parseIdentifier();
+                } else {
+                    isBinding = true;
+                    specifier.local = specifier.imported.__clone();
                 }
+            } else {
+                isBinding = true;
                 specifier.imported = firstIdent;
                 specifier.importKind = null;
                 specifier.local = specifier.imported.__clone();
@@ -1268,6 +1354,10 @@ export default function (instance) {
                 (specifier.importKind === "type" || specifier.importKind === "typeof")
             ) {
                 this.raise(firstIdentLoc, "`The `type` and `typeof` keywords on named imports can only be used on regular `import` statements. It cannot be used with `import type` or `import typeof` statements`");
+            }
+
+            if (isBinding) {
+                this.checkReservedWord(specifier.local.name, specifier.start, true, true);
             }
 
             this.checkLVal(specifier.local, true, undefined, "import specifier");
@@ -1337,6 +1427,12 @@ export default function (instance) {
                 } catch (err) {
                     if (err instanceof SyntaxError) {
                         this.state = state;
+
+                        // Remove `tc.j_expr` and `tc.j_oTag` from context added
+                        // by parsing `jsxTagStart` to stop the JSX plugin from
+                        // messing with the tokens
+                        this.state.context.length -= 2;
+
                         jsxError = err;
                     } else {
                         // istanbul ignore next: no such error is expected
@@ -1345,10 +1441,7 @@ export default function (instance) {
                 }
             }
 
-            // Need to push something onto the context to stop
-            // the JSX plugin from messing with the tokens
-            this.state.context.push(ct.parenExpression);
-            if (jsxError != null || this.isRelational("<")) {
+            if (!is.nil(jsxError) || this.isRelational("<")) {
                 let arrowExpression;
                 let typeParameters;
                 try {
@@ -1364,7 +1457,7 @@ export default function (instance) {
 
                 if (arrowExpression.type === "ArrowFunctionExpression") {
                     return arrowExpression;
-                } else if (jsxError != null) {
+                } else if (!is.nil(jsxError)) {
                     throw jsxError;
                 } else {
                     this.raise(
@@ -1373,7 +1466,6 @@ export default function (instance) {
                     );
                 }
             }
-            this.state.context.pop();
 
             return inner.apply(this, args);
         };
@@ -1387,14 +1479,14 @@ export default function (instance) {
                 try {
                     const oldNoAnonFunctionType = this.state.noAnonFunctionType;
                     this.state.noAnonFunctionType = true;
-                    const returnType = this.flowParseTypeAnnotation();
+                    const returnType = this.flowParseTypeAndPredicateAnnotation();
                     this.state.noAnonFunctionType = oldNoAnonFunctionType;
 
                     if (this.canInsertSemicolon()) {
                         this.unexpected();
                     }
                     if (!this.match(tt.arrow)) {
-                        this.unexpected(); 
+                        this.unexpected();
                     }
                     // assign after it is clear it is an arrow
                     node.returnType = returnType;
@@ -1415,16 +1507,6 @@ export default function (instance) {
     instance.extend("shouldParseArrow", (inner) => {
         return function () {
             return this.match(tt.colon) || inner.call(this);
-        };
-    });
-
-    instance.extend("isClassMutatorStarter", (inner) => {
-        return function () {
-            if (this.isRelational("<")) {
-                return true;
-            } 
-            return inner.call(this);
-            
         };
     });
 }

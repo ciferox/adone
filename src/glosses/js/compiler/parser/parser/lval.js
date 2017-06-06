@@ -12,12 +12,12 @@ pp.toAssignable = function (node, isBinding, contextDescription) {
             case "Identifier":
             case "ObjectPattern":
             case "ArrayPattern":
-            case "AssignmentPattern":
+            case "AssignmentPattern": {
                 break;
-
-            case "ObjectExpression":
+            }
+            case "ObjectExpression": {
                 node.type = "ObjectPattern";
-                for (const prop of (node.properties: Object[])) {
+                for (const prop of node.properties) {
                     if (prop.type === "ObjectMethod") {
                         if (prop.kind === "get" || prop.kind === "set") {
                             this.raise(prop.key.start, "Object pattern can't contain getter or setter");
@@ -29,21 +29,23 @@ pp.toAssignable = function (node, isBinding, contextDescription) {
                     }
                 }
                 break;
-
-            case "ObjectProperty":
+            }
+            case "ObjectProperty": {
                 this.toAssignable(node.value, isBinding, contextDescription);
                 break;
-
-            case "SpreadProperty":
+            }
+            case "SpreadProperty": {
                 node.type = "RestProperty";
+                const arg = node.argument;
+                this.toAssignable(arg, isBinding, contextDescription);
                 break;
-
-            case "ArrayExpression":
+            }
+            case "ArrayExpression": {
                 node.type = "ArrayPattern";
                 this.toAssignableList(node.elements, isBinding, contextDescription);
                 break;
-
-            case "AssignmentExpression":
+            }
+            case "AssignmentExpression": {
                 if (node.operator === "=") {
                     node.type = "AssignmentPattern";
                     delete node.operator;
@@ -51,15 +53,14 @@ pp.toAssignable = function (node, isBinding, contextDescription) {
                     this.raise(node.left.end, "Only '=' operator can be used for specifying default value.");
                 }
                 break;
-
-            case "MemberExpression":
+            }
+            case "MemberExpression": {
                 if (!isBinding) {
-                    break; 
+                    break;
                 }
-
+            }
             default: {
-                const message = `Invalid left-hand side${ 
-                    contextDescription ? ` in ${contextDescription}` : /* istanbul ignore next */ "expression"}`;
+                const message = `Invalid left-hand side${contextDescription ? ` in ${contextDescription}` : "expression"}`;
                 this.raise(node.start, message);
             }
         }
@@ -128,25 +129,27 @@ pp.parseBindingIdentifier = function () {
 
 pp.parseBindingAtom = function () {
     switch (this.state.type) {
-        case tt._yield:
+        case tt._yield: {
             if (this.state.strict || this.state.inGenerator) {
                 this.unexpected();
             }
+        }
         // fall-through
-        case tt.name:
+        case tt.name: {
             return this.parseIdentifier(true);
-
-        case tt.bracketL:
+        }
+        case tt.bracketL: {
             const node = this.startNode();
             this.next();
             node.elements = this.parseBindingList(tt.bracketR, true);
             return this.finishNode(node, "ArrayPattern");
-
-        case tt.braceL:
+        }
+        case tt.braceL: {
             return this.parseObj(true);
-
-        default:
+        }
+        default: {
             this.unexpected();
+        }
     }
 };
 
@@ -194,7 +197,7 @@ pp.parseMaybeDefault = function (startPos, startLoc, left) {
     startPos = startPos || this.state.start;
     left = left || this.parseBindingAtom();
     if (!this.eat(tt.eq)) {
-        return left; 
+        return left;
     }
 
     const node = this.startNodeAt(startPos, startLoc);
@@ -208,7 +211,7 @@ pp.parseMaybeDefault = function (startPos, startLoc, left) {
 
 pp.checkLVal = function (expr, isBinding, checkClashes, contextDescription) {
     switch (expr.type) {
-        case "Identifier":
+        case "Identifier": {
             this.checkReservedWord(expr.name, expr.start, false, true);
 
             if (checkClashes) {
@@ -232,46 +235,44 @@ pp.checkLVal = function (expr, isBinding, checkClashes, contextDescription) {
                 }
             }
             break;
-
-        case "MemberExpression":
+        }
+        case "MemberExpression": {
             if (isBinding) {
                 this.raise(expr.start, `${isBinding ? "Binding" : "Assigning to"} member expression`);
             }
             break;
-
-        case "ObjectPattern":
-            for (let prop of (expr.properties: Object[])) {
+        }
+        case "ObjectPattern": {
+            for (let prop of expr.properties) {
                 if (prop.type === "ObjectProperty") {
-                    prop = prop.value; 
+                    prop = prop.value;
                 }
                 this.checkLVal(prop, isBinding, checkClashes, "object destructuring pattern");
             }
             break;
-
-        case "ArrayPattern":
-            for (const elem of (expr.elements: Object[])) {
+        }
+        case "ArrayPattern": {
+            for (const elem of expr.elements) {
                 if (elem) {
-                    this.checkLVal(elem, isBinding, checkClashes, "array destructuring pattern"); 
+                    this.checkLVal(elem, isBinding, checkClashes, "array destructuring pattern");
                 }
             }
             break;
-
-        case "AssignmentPattern":
+        }
+        case "AssignmentPattern": {
             this.checkLVal(expr.left, isBinding, checkClashes, "assignment pattern");
             break;
-
-        case "RestProperty":
+        }
+        case "RestProperty": {
             this.checkLVal(expr.argument, isBinding, checkClashes, "rest property");
             break;
-
-        case "RestElement":
+        }
+        case "RestElement": {
             this.checkLVal(expr.argument, isBinding, checkClashes, "rest element");
             break;
-
+        }
         default: {
-            const message = `${isBinding ? /* istanbul ignore next */ "Binding invalid" : "Invalid" 
-                } left-hand side${ 
-                contextDescription ? ` in ${contextDescription}` : /* istanbul ignore next */ "expression"}`;
+            const message = `${isBinding ? "Binding invalid" : "Invalid"} left-hand side${contextDescription ? ` in ${contextDescription}` : "expression"}`;
             this.raise(expr.start, message);
         }
     }

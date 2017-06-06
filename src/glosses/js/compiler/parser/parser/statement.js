@@ -1,5 +1,4 @@
-/* eslint max-len: 0 */
-
+const { is } = adone;
 import { types as tt } from "../tokenizer/types";
 import Parser from "./index";
 import { lineBreak } from "../util/whitespace";
@@ -25,7 +24,8 @@ pp.parseTopLevel = function (file, program) {
     return this.finishNode(file, "File");
 };
 
-const loopLabel = { kind: "loop" }, switchLabel = { kind: "switch" };
+const loopLabel = { kind: "loop" };
+const switchLabel = { kind: "switch" };
 
 // TODO
 
@@ -66,44 +66,69 @@ pp.parseStatement = function (declaration, topLevel) {
     // complexity.
 
     switch (starttype) {
-        case tt._break: case tt._continue: return this.parseBreakContinueStatement(node, starttype.keyword);
-        case tt._debugger: return this.parseDebuggerStatement(node);
-        case tt._do: return this.parseDoStatement(node);
-        case tt._for: return this.parseForStatement(node);
-        case tt._function:
+        case tt._break:
+        case tt._continue: {
+            return this.parseBreakContinueStatement(node, starttype.keyword);
+        }
+        case tt._debugger: {
+            return this.parseDebuggerStatement(node);
+        }
+        case tt._do: {
+            return this.parseDoStatement(node);
+        }
+        case tt._for: {
+            return this.parseForStatement(node);
+        }
+        case tt._function: {
             if (!declaration) {
                 this.unexpected();
             }
             return this.parseFunctionStatement(node);
-
-        case tt._class:
+        }
+        case tt._class: {
             if (!declaration) {
                 this.unexpected();
             }
-            this.takeDecorators(node);
             return this.parseClass(node, true);
-
-        case tt._if: return this.parseIfStatement(node);
-        case tt._return: return this.parseReturnStatement(node);
-        case tt._switch: return this.parseSwitchStatement(node);
-        case tt._throw: return this.parseThrowStatement(node);
-        case tt._try: return this.parseTryStatement(node);
-
+        }
+        case tt._if: {
+            return this.parseIfStatement(node);
+        }
+        case tt._return: {
+            return this.parseReturnStatement(node);
+        }
+        case tt._switch: {
+            return this.parseSwitchStatement(node);
+        }
+        case tt._throw: {
+            return this.parseThrowStatement(node);
+        }
+        case tt._try: {
+            return this.parseTryStatement(node);
+        }
         case tt._let:
-        case tt._const:
+        case tt._const: {
             if (!declaration) {
-                this.unexpected(); 
+                this.unexpected();
             } // NOTE: falls through to _var
-
-        case tt._var:
+        }
+        case tt._var: {
             return this.parseVarStatement(node, starttype);
-
-        case tt._while: return this.parseWhileStatement(node);
-        case tt._with: return this.parseWithStatement(node);
-        case tt.braceL: return this.parseBlock();
-        case tt.semi: return this.parseEmptyStatement(node);
+        }
+        case tt._while: {
+            return this.parseWhileStatement(node);
+        }
+        case tt._with: {
+            return this.parseWithStatement(node);
+        }
+        case tt.braceL: {
+            return this.parseBlock();
+        }
+        case tt.semi: {
+            return this.parseEmptyStatement(node);
+        }
         case tt._export:
-        case tt._import:
+        case tt._import: {
             if (this.hasPlugin("dynamicImport") && this.lookahead().type === tt.parenL) {
                 break;
             }
@@ -118,8 +143,8 @@ pp.parseStatement = function (declaration, topLevel) {
                 }
             }
             return starttype === tt._import ? this.parseImport(node) : this.parseExport(node);
-
-        case tt.name:
+        }
+        case tt.name: {
             if (this.state.value === "async") {
                 // peek ahead and see if next token is a function
                 const state = this.state.clone();
@@ -127,10 +152,11 @@ pp.parseStatement = function (declaration, topLevel) {
                 if (this.match(tt._function) && !this.canInsertSemicolon()) {
                     this.expect(tt._function);
                     return this.parseFunction(node, true, false, true);
-                } 
+                }
                 this.state = state;
-                
+
             }
+        }
     }
 
     // If the statement does not start with a statement keyword or a
@@ -143,9 +169,9 @@ pp.parseStatement = function (declaration, topLevel) {
 
     if (starttype === tt.name && expr.type === "Identifier" && this.eat(tt.colon)) {
         return this.parseLabeledStatement(node, maybeName, expr);
-    } 
+    }
     return this.parseExpressionStatement(node, expr);
-    
+
 };
 
 pp.takeDecorators = function (node) {
@@ -198,8 +224,8 @@ pp.parseBreakContinueStatement = function (node, keyword) {
     let i;
     for (i = 0; i < this.state.labels.length; ++i) {
         const lab = this.state.labels[i];
-        if (node.label == null || lab.name === node.label.name) {
-            if (lab.kind != null && (isBreak || lab.kind === "loop")) {
+        if (is.nil(node.label) || lab.name === node.label.name) {
+            if (!is.nil(lab.kind) && (isBreak || lab.kind === "loop")) {
                 break;
             }
             if (node.label && isBreak) {
@@ -208,7 +234,7 @@ pp.parseBreakContinueStatement = function (node, keyword) {
         }
     }
     if (i === this.state.labels.length) {
-        this.raise(node.start, `Unsyntactic ${keyword}`); 
+        this.raise(node.start, `Unsyntactic ${keyword}`);
     }
     return this.finishNode(node, isBreak ? "BreakStatement" : "ContinueStatement");
 };
@@ -432,7 +458,7 @@ pp.parseWhileStatement = function (node) {
 
 pp.parseWithStatement = function (node) {
     if (this.state.strict) {
-        this.raise(this.state.start, "'with' in strict mode"); 
+        this.raise(this.state.start, "'with' in strict mode");
     }
     this.next();
     node.object = this.parseParenExpression();
@@ -446,7 +472,7 @@ pp.parseEmptyStatement = function (node) {
 };
 
 pp.parseLabeledStatement = function (node, maybeName, expr) {
-    for (const label of (this.state.labels: Object[])) {
+    for (const label of this.state.labels) {
         if (label.name === maybeName) {
             this.raise(expr.start, `Label '${maybeName}' is already declared`);
         }
@@ -480,7 +506,7 @@ pp.parseExpressionStatement = function (node, expr) {
 // strict"` declarations when `allowStrict` is true (used for
 // function bodies).
 
-pp.parseBlock = function (allowDirectives?) {
+pp.parseBlock = function (allowDirectives) {
     const node = this.startNode();
     this.expect(tt.braceL);
     this.parseBlockBody(node, allowDirectives, false, tt.braceR);
@@ -512,7 +538,7 @@ pp.parseBlockBody = function (node, allowDirectives, topLevel, end) {
             const directive = this.stmtToDirective(stmt);
             node.directives.push(directive);
 
-            if (oldStrict === undefined && directive.value.value === "use strict") {
+            if (is.undefined(oldStrict) && directive.value.value === "use strict") {
                 oldStrict = this.state.strict;
                 this.setStrict(true);
 
@@ -588,7 +614,7 @@ pp.parseVar = function (node, isFor, kind) {
         }
         node.declarations.push(this.finishNode(decl, "VariableDeclarator"));
         if (!this.eat(tt.comma)) {
-            break; 
+            break;
         }
     }
     return node;
@@ -643,6 +669,7 @@ pp.parseFunctionParams = function (node) {
 
 pp.parseClass = function (node, isStatement, optionalId) {
     this.next();
+    this.takeDecorators(node);
     this.parseClassId(node, isStatement, optionalId);
     this.parseClassSuper(node);
     this.parseClassBody(node);
@@ -650,11 +677,18 @@ pp.parseClass = function (node, isStatement, optionalId) {
 };
 
 pp.isClassProperty = function () {
-    return this.match(tt.eq) || this.isLineTerminator();
+    return this.match(tt.eq) || this.match(tt.semi) || this.match(tt.braceR);
 };
 
-pp.isClassMutatorStarter = function () {
-    return false;
+pp.isClassMethod = function () {
+    return this.match(tt.parenL);
+};
+
+pp.isNonstaticConstructor = function (method) {
+    return !method.computed && !method.static && (
+        (method.key.name === "constructor") || // Identifier
+        (method.key.value === "constructor")   // Literal
+    );
 };
 
 pp.parseClassBody = function (node) {
@@ -673,6 +707,9 @@ pp.parseClassBody = function (node) {
 
     while (!this.eat(tt.braceR)) {
         if (this.eat(tt.semi)) {
+            if (decorators.length > 0) {
+                this.raise(this.state.lastTokEnd, "Decorators must not be followed by a semicolon");
+            }
             continue;
         }
 
@@ -689,104 +726,102 @@ pp.parseClassBody = function (node) {
             decorators = [];
         }
 
-        let isConstructorCall = false;
-        const isMaybeStatic = this.match(tt.name) && this.state.value === "static";
-        let isGenerator = this.eat(tt.star);
-        let isGetSet = false;
-        let isAsync = false;
-
-        this.parsePropertyName(method);
-
-        method.static = isMaybeStatic && !this.match(tt.parenL);
-        if (method.static) {
-            isGenerator = this.eat(tt.star);
-            this.parsePropertyName(method);
-        }
-
-        if (!isGenerator) {
-            if (this.isClassProperty()) {
+        method.static = false;
+        if (this.match(tt.name) && this.state.value === "static") {
+            const key = this.parseIdentifier(true); // eats 'static'
+            if (this.isClassMethod()) {
+                // a method named 'static'
+                method.kind = "method";
+                method.computed = false;
+                method.key = key;
+                this.parseClassMethod(classBody, method, false, false);
+                continue;
+            } else if (this.isClassProperty()) {
+                // a property named 'static'
+                method.computed = false;
+                method.key = key;
                 classBody.body.push(this.parseClassProperty(method));
                 continue;
             }
-
-            if (method.key.type === "Identifier" && !method.computed && this.hasPlugin("classConstructorCall") && method.key.name === "call" && this.match(tt.name) && this.state.value === "constructor") {
-                isConstructorCall = true;
-                this.parsePropertyName(method);
-            }
+            // otherwise something static
+            method.static = true;
         }
 
-        const isAsyncMethod = !this.match(tt.parenL) && !method.computed && method.key.type === "Identifier" && method.key.name === "async";
-        if (isAsyncMethod) {
-            if (this.hasPlugin("asyncGenerators") && this.eat(tt.star)) {
-                isGenerator = true; 
-            }
-            isAsync = true;
+        if (this.eat(tt.star)) {
+            // a generator
+            method.kind = "method";
             this.parsePropertyName(method);
-        }
-
-        method.kind = "method";
-
-        if (!method.computed) {
-            let { key } = method;
-
-            // handle get/set methods
-            // eg. class Foo { get bar() {} set bar() {} }
-            if (!isAsync && !isGenerator && !this.isClassMutatorStarter() && key.type === "Identifier" && !this.match(tt.parenL) && (key.name === "get" || key.name === "set")) {
-                isGetSet = true;
+            if (this.isNonstaticConstructor(method)) {
+                this.raise(method.key.start, "Constructor can't be a generator");
+            }
+            if (!method.computed && method.static && (method.key.name === "prototype" || method.key.value === "prototype")) {
+                this.raise(method.key.start, "Classes may not have static property named prototype");
+            }
+            this.parseClassMethod(classBody, method, true, false);
+        } else {
+            const isSimple = this.match(tt.name);
+            const key = this.parsePropertyName(method);
+            if (!method.computed && method.static && (method.key.name === "prototype" || method.key.value === "prototype")) {
+                this.raise(method.key.start, "Classes may not have static property named prototype");
+            }
+            if (this.isClassMethod()) {
+                // a normal method
+                if (this.isNonstaticConstructor(method)) {
+                    if (hadConstructor) {
+                        this.raise(key.start, "Duplicate constructor in the same class");
+                    } else if (method.decorators) {
+                        this.raise(method.start, "You can't attach decorators to a class constructor");
+                    }
+                    hadConstructor = true;
+                    method.kind = "constructor";
+                } else {
+                    method.kind = "method";
+                }
+                this.parseClassMethod(classBody, method, false, false);
+            } else if (this.isClassProperty()) {
+                // a normal property
+                if (this.isNonstaticConstructor(method)) {
+                    this.raise(method.key.start, "Classes may not have a non-static field named 'constructor'");
+                }
+                classBody.body.push(this.parseClassProperty(method));
+            } else if (isSimple && key.name === "async" && !this.isLineTerminator()) {
+                // an async method
+                const isGenerator = this.hasPlugin("asyncGenerators") && this.eat(tt.star);
+                method.kind = "method";
+                this.parsePropertyName(method);
+                if (this.isNonstaticConstructor(method)) {
+                    this.raise(method.key.start, "Constructor can't be an async function");
+                }
+                this.parseClassMethod(classBody, method, isGenerator, true);
+            } else if (isSimple && (key.name === "get" || key.name === "set") && !(this.isLineTerminator() && this.match(tt.star))) { // `get\n*` is an uninitialized property named 'get' followed by a generator.
+                // a getter or setter
                 method.kind = key.name;
-                key = this.parsePropertyName(method);
-            }
-
-            // disallow invalid constructors
-            const isConstructor = !isConstructorCall && !method.static && (
-                (key.name === "constructor") || // Identifier
-                (key.value === "constructor")   // Literal
-            );
-            if (isConstructor) {
-                if (hadConstructor) {
-                    this.raise(key.start, "Duplicate constructor in the same class");
+                this.parsePropertyName(method);
+                if (this.isNonstaticConstructor(method)) {
+                    this.raise(method.key.start, "Constructor can't have get/set modifier");
                 }
-                if (isGetSet) {
-                    this.raise(key.start, "Constructor can't have get/set modifier"); 
+                this.parseClassMethod(classBody, method, false, false);
+                this.checkGetterSetterParamCount(method);
+            } else if (this.hasPlugin("classConstructorCall") && isSimple && key.name === "call" && this.match(tt.name) && this.state.value === "constructor") {
+                // a (deprecated) call constructor
+                if (hadConstructorCall) {
+                    this.raise(method.start, "Duplicate constructor call in the same class");
+                } else if (method.decorators) {
+                    this.raise(method.start, "You can't attach decorators to a class constructor");
                 }
-                if (isGenerator) {
-                    this.raise(key.start, "Constructor can't be a generator"); 
+                hadConstructorCall = true;
+                method.kind = "constructorCall";
+                this.parsePropertyName(method); // consume "constructor" and make it the method's name
+                this.parseClassMethod(classBody, method, false, false);
+            } else if (this.isLineTerminator()) {
+                // an uninitialized class property (due to ASI, since we don't otherwise recognize the next token)
+                if (this.isNonstaticConstructor(method)) {
+                    this.raise(method.key.start, "Classes may not have a non-static field named 'constructor'");
                 }
-                if (isAsync) {
-                    this.raise(key.start, "Constructor can't be an async function"); 
-                }
-                method.kind = "constructor";
-                hadConstructor = true;
+                classBody.body.push(this.parseClassProperty(method));
+            } else {
+                this.unexpected();
             }
-
-            // disallow static prototype method
-            const isStaticPrototype = method.static && (
-                (key.name === "prototype") || // Identifier
-                (key.value === "prototype")   // Literal
-            );
-            if (isStaticPrototype) {
-                this.raise(key.start, "Classes may not have static property named prototype");
-            }
-        }
-
-        // convert constructor to a constructor call
-        if (isConstructorCall) {
-            if (hadConstructorCall) {
-                this.raise(method.start, "Duplicate constructor call in the same class");
-            }
-            method.kind = "constructorCall";
-            hadConstructorCall = true;
-        }
-
-        // disallow decorators on class constructors
-        if ((method.kind === "constructor" || method.kind === "constructorCall") && method.decorators) {
-            this.raise(method.start, "You can't attach decorators to a class constructor");
-        }
-
-        this.parseClassMethod(classBody, method, isGenerator, isAsync);
-
-        if (isGetSet) {
-            this.checkGetterSetterParamCount(method);
         }
     }
 
@@ -800,14 +835,10 @@ pp.parseClassBody = function (node) {
 };
 
 pp.parseClassProperty = function (node) {
-    const noPluginMsg = "You can only use Class Properties when the 'classProperties' plugin is enabled.";
-    if (!node.typeAnnotation && !this.hasPlugin("classProperties")) {
-        this.raise(node.start, noPluginMsg);
-    }
-
+    this.state.inClassProperty = true;
     if (this.match(tt.eq)) {
         if (!this.hasPlugin("classProperties")) {
-            this.raise(this.state.start, noPluginMsg);
+            this.unexpected();
         }
         this.next();
         node.value = this.parseMaybeAssign();
@@ -815,6 +846,7 @@ pp.parseClassProperty = function (node) {
         node.value = null;
     }
     this.semicolon();
+    this.state.inClassProperty = false;
     return this.finishNode(node, "ClassProperty");
 };
 
@@ -876,8 +908,6 @@ pp.parseExport = function (node) {
         let needsSemi = false;
         if (this.eat(tt._function)) {
             expr = this.parseFunction(expr, true, false, false, true);
-        } else if (this.eatContextual("async") && this.eat(tt._function)) {
-            expr = this.parseFunction(expr, true, false, true, true);
         } else if (this.match(tt._class)) {
             expr = this.parseClass(expr, true, true);
         } else {
@@ -886,7 +916,7 @@ pp.parseExport = function (node) {
         }
         node.declaration = expr;
         if (needsSemi) {
-            this.semicolon(); 
+            this.semicolon();
         }
         this.checkExport(node, true, true);
         return this.finishNode(node, "ExportDefaultDeclaration");
@@ -909,9 +939,7 @@ pp.parseExportDeclaration = function () {
 
 pp.isExportDefaultSpecifier = function () {
     if (this.match(tt.name)) {
-        return this.state.value !== "type"
-            && this.state.value !== "async"
-            && this.state.value !== "interface";
+        return this.state.value !== "async";
     }
 
     if (!this.match(tt._default)) {
@@ -928,7 +956,7 @@ pp.parseExportSpecifiersMaybe = function (node) {
     }
 };
 
-pp.parseExportFrom = function (node, expect?) {
+pp.parseExportFrom = function (node, expect) {
     if (this.eatContextual("from")) {
         node.source = this.match(tt.string) ? this.parseExprAtom() : this.unexpected();
         this.checkExport(node);
@@ -943,13 +971,13 @@ pp.parseExportFrom = function (node, expect?) {
     this.semicolon();
 };
 
-pp.shouldParseExportDeclaration = function (): boolean {
-    return this.state.type.keyword === "var"
-        || this.state.type.keyword === "const"
-        || this.state.type.keyword === "let"
-        || this.state.type.keyword === "function"
-        || this.state.type.keyword === "class"
-        || this.isContextual("async");
+pp.shouldParseExportDeclaration = function () {
+    return this.state.type.keyword === "var" ||
+           this.state.type.keyword === "const" ||
+           this.state.type.keyword === "let" ||
+           this.state.type.keyword === "function" ||
+           this.state.type.keyword === "class" ||
+           this.isContextual("async");
 };
 
 pp.checkExport = function (node, checkNames, isDefault) {
@@ -1012,9 +1040,9 @@ pp.checkDuplicateExports = function (node, name) {
 };
 
 pp.raiseDuplicateExportError = function (node, name) {
-    this.raise(node.start, name === "default" ?
-        "Only one default export allowed per module." :
-        `\`${name}\` has already been exported. Exported identifiers must be unique.`
+    this.raise(node.start, name === "default"
+        ? "Only one default export allowed per module."
+        : `\`${name}\` has already been exported. Exported identifiers must be unique.`
     );
 };
 
@@ -1034,13 +1062,13 @@ pp.parseExportSpecifiers = function () {
         } else {
             this.expect(tt.comma);
             if (this.eat(tt.braceR)) {
-                break; 
+                break;
             }
         }
 
         const isDefault = this.match(tt._default);
         if (isDefault && !needsFrom) {
-            needsFrom = true; 
+            needsFrom = true;
         }
 
         const node = this.startNode();
@@ -1086,7 +1114,7 @@ pp.parseImportSpecifiers = function (node) {
         const startLoc = this.state.startLoc;
         node.specifiers.push(this.parseImportSpecifierDefault(this.parseIdentifier(), startPos, startLoc));
         if (!this.eat(tt.comma)) {
-            return; 
+            return;
         }
     }
 
@@ -1112,7 +1140,7 @@ pp.parseImportSpecifiers = function (node) {
 
             this.expect(tt.comma);
             if (this.eat(tt.braceR)) {
-                break; 
+                break;
             }
         }
 
@@ -1123,7 +1151,12 @@ pp.parseImportSpecifiers = function (node) {
 pp.parseImportSpecifier = function (node) {
     const specifier = this.startNode();
     specifier.imported = this.parseIdentifier(true);
-    specifier.local = this.eatContextual("as") ? this.parseIdentifier() : specifier.imported.__clone();
+    if (this.eatContextual("as")) {
+        specifier.local = this.parseIdentifier();
+    } else {
+        this.checkReservedWord(specifier.imported.name, specifier.start, true, true);
+        specifier.local = specifier.imported.__clone();
+    }
     this.checkLVal(specifier.local, true, undefined, "import specifier");
     node.specifiers.push(this.finishNode(specifier, "ImportSpecifier"));
 };

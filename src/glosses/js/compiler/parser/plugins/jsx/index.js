@@ -1,5 +1,3 @@
-// @flow
-
 import XHTMLEntities from "./xhtml";
 import { TokenType, types as tt } from "../../tokenizer/types";
 import { TokContext, types as tc } from "../../tokenizer/context";
@@ -138,7 +136,7 @@ pp.jsxReadEntity = function () {
                 if (str[1] === "x") {
                     str = str.substr(2);
                     if (HEX_NUMBER.test(str)) {
-                        entity = String.fromCodePoint(parseInt(str, 16)); 
+                        entity = String.fromCodePoint(parseInt(str, 16));
                     }
                 } else {
                     str = str.substr(1);
@@ -179,7 +177,7 @@ pp.jsxReadWord = function () {
 
 // Transforms JSX element name to string.
 
-function getQualifiedJSXName(object) {
+const getQualifiedJSXName = (object) => {
     if (object.type === "JSXIdentifier") {
         return object.name;
     }
@@ -191,7 +189,7 @@ function getQualifiedJSXName(object) {
     if (object.type === "JSXMemberExpression") {
         return `${getQualifiedJSXName(object.object)}.${getQualifiedJSXName(object.property)}`;
     }
-}
+};
 
 // Parse next token as JSX identifier
 
@@ -245,22 +243,23 @@ pp.jsxParseElementName = function () {
 pp.jsxParseAttributeValue = function () {
     let node;
     switch (this.state.type) {
-        case tt.braceL:
+        case tt.braceL: {
             node = this.jsxParseExpressionContainer();
             if (node.expression.type === "JSXEmptyExpression") {
                 this.raise(node.start, "JSX attributes must only be assigned a non-empty expression");
             } else {
                 return node;
             }
-
+        }
         case tt.jsxTagStart:
-        case tt.string:
+        case tt.string: {
             node = this.parseExprAtom();
             node.extra = null;
             return node;
-
-        default:
+        }
+        default: {
             this.raise(this.state.start, "JSX value should be either an expression or a quoted JSX text");
+        }
     }
 };
 
@@ -415,16 +414,16 @@ export default function (instance) {
                 return node;
             } else if (this.match(tt.jsxTagStart)) {
                 return this.jsxParseElement();
-            } 
+            }
             return inner.call(this, refShortHandDefaultPos);
-            
+
         };
     });
 
     instance.extend("readToken", (inner) => {
         return function (code) {
             if (this.state.inPropertyName) {
-                return inner.call(this, code); 
+                return inner.call(this, code);
             }
 
             const context = this.curContext();

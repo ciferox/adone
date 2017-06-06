@@ -26,15 +26,13 @@
 
 import Parser from "./index";
 
-function last(stack) {
-    return stack[stack.length - 1];
-}
+const last = (stack) => stack[stack.length - 1];
 
 const pp = Parser.prototype;
 
 pp.addComment = function (comment) {
     if (this.filename) {
-        comment.loc.filename = this.filename; 
+        comment.loc.filename = this.filename;
     }
     this.state.trailingComments.push(comment);
     this.state.leadingComments.push(comment);
@@ -42,12 +40,14 @@ pp.addComment = function (comment) {
 
 pp.processComment = function (node) {
     if (node.type === "Program" && node.body.length > 0) {
-        return; 
+        return;
     }
 
     const stack = this.state.commentStack;
 
-    let lastChild, trailingComments, i, j;
+    let firstChild;
+    let lastChild;
+    let trailingComments;
 
     if (this.state.trailingComments.length > 0) {
         // If the first comment in trailingComments comes after the
@@ -75,8 +75,39 @@ pp.processComment = function (node) {
     }
 
     // Eating the stack.
+    if (stack.length > 0 && last(stack).start >= node.start) {
+        firstChild = stack.pop();
+    }
+
     while (stack.length > 0 && last(stack).start >= node.start) {
         lastChild = stack.pop();
+    }
+
+    if (!lastChild && firstChild) {
+        lastChild = firstChild;
+    }
+
+    // Attach comments that follow a trailing comma on the last
+    // property in an object literal or a trailing comma in function arguments
+    // as trailing comments
+    if (firstChild && (firstChild.type === "ObjectProperty" || (node.type === "CallExpression")) &&
+        this.state.leadingComments.length > 0) {
+        const lastComment = last(this.state.leadingComments);
+        if (lastComment.start >= node.start) {
+            if (this.state.commentPreviousNode) {
+                for (let j = 0; j < this.state.leadingComments.length; j++) {
+                    if (this.state.leadingComments[j].end < this.state.commentPreviousNode.end) {
+                        this.state.leadingComments.splice(j, 1);
+                        j--;
+                    }
+                }
+
+                if (this.state.leadingComments.length > 0) {
+                    firstChild.trailingComments = this.state.leadingComments;
+                    this.state.leadingComments = [];
+                }
+            }
+        }
     }
 
     if (lastChild) {
@@ -88,7 +119,7 @@ pp.processComment = function (node) {
                 // A leading comment for an anonymous class had been stolen by its first ClassMethod,
                 // so this takes back the leading comment.
                 // See also: https://github.com/eslint/espree/issues/158
-                for (i = lastChild.leadingComments.length - 2; i >= 0; --i) {
+                for (let i = lastChild.leadingComments.length - 2; i >= 0; --i) {
                     if (lastChild.leadingComments[i].end <= node.start) {
                         node.leadingComments = lastChild.leadingComments.splice(0, i + 1);
                         break;
@@ -99,7 +130,7 @@ pp.processComment = function (node) {
     } else if (this.state.leadingComments.length > 0) {
         if (last(this.state.leadingComments).end <= node.start) {
             if (this.state.commentPreviousNode) {
-                for (j = 0; j < this.state.leadingComments.length; j++) {
+                for (let j = 0; j < this.state.leadingComments.length; j++) {
                     if (this.state.leadingComments[j].end < this.state.commentPreviousNode.end) {
                         this.state.leadingComments.splice(j, 1);
                         j--;
@@ -122,6 +153,8 @@ pp.processComment = function (node) {
             // This loop figures out the stopping point between the actual
             // leading and trailing comments by finding the location of the
             // first comment that comes after the given node.
+            let i;
+
             for (i = 0; i < this.state.leadingComments.length; i++) {
                 if (this.state.leadingComments[i].end > node.start) {
                     break;
@@ -133,7 +166,7 @@ pp.processComment = function (node) {
             // result in an empty array, and if so, the array must be
             // deleted.
             node.leadingComments = this.state.leadingComments.slice(0, i);
-            if ((node.leadingComments: any[]).length === 0) {
+            if (node.leadingComments.length === 0) {
                 node.leadingComments = null;
             }
 

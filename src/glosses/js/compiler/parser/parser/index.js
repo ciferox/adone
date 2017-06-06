@@ -18,7 +18,7 @@ const frozenDeprecatedWildcardPluginList = [
 ];
 
 export default class Parser extends Tokenizer {
-    constructor(options: Object, input: string) {
+    constructor(options, input) {
         options = getOptions(options);
         super(options, input);
 
@@ -34,15 +34,15 @@ export default class Parser extends Tokenizer {
         }
     }
 
-    isReservedWord(word: string): boolean {
+    isReservedWord(word) {
         if (word === "await") {
             return this.inModule;
-        } 
+        }
         return reservedWords[6](word);
-        
+
     }
 
-    hasPlugin(name: string): boolean {
+    hasPlugin(name) {
         if (this.plugins["*"] && frozenDeprecatedWildcardPluginList.indexOf(name) > -1) {
             return true;
         }
@@ -50,24 +50,24 @@ export default class Parser extends Tokenizer {
         return Boolean(this.plugins[name]);
     }
 
-    extend(name: string, f: Function) {
+    extend(name, f) {
         this[name] = f(this[name]);
     }
 
     loadAllPlugins() {
-        // ensure flow plugin loads last
-        const pluginNames = Object.keys(plugins).filter((name) => name !== "flow");
+        // ensure flow plugin loads last, also ensure estree is not loaded with *
+        const pluginNames = Object.keys(plugins).filter((name) => name !== "flow" && name !== "estree");
         pluginNames.push("flow");
 
         pluginNames.forEach((name) => {
             const plugin = plugins[name];
             if (plugin) {
-                plugin(this); 
+                plugin(this);
             }
         });
     }
 
-    loadPlugins(pluginList: string[]): { [key: string]: boolean } {
+    loadPlugins(pluginList) {
         // TODO: Deprecate "*" option in next major version of Babylon
         if (pluginList.indexOf("*") >= 0) {
             this.loadAllPlugins();
@@ -83,13 +83,19 @@ export default class Parser extends Tokenizer {
             pluginList.push("flow");
         }
 
+        if (pluginList.indexOf("estree") >= 0) {
+            // ensure estree plugin loads first
+            pluginList = pluginList.filter((plugin) => plugin !== "estree");
+            pluginList.unshift("estree");
+        }
+
         for (const name of pluginList) {
             if (!pluginMap[name]) {
                 pluginMap[name] = true;
 
                 const plugin = plugins[name];
                 if (plugin) {
-                    plugin(this); 
+                    plugin(this);
                 }
             }
         }
@@ -97,13 +103,7 @@ export default class Parser extends Tokenizer {
         return pluginMap;
     }
 
-    parse(): {
-        type: "File",
-        program: {
-            type: "Program",
-            body: Object[]
-        }
-    } {
+    parse() {
         const file = this.startNode();
         const program = this.startNode();
         this.nextToken();

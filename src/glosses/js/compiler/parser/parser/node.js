@@ -7,22 +7,17 @@ const pp = Parser.prototype;
 const commentKeys = ["leadingComments", "trailingComments", "innerComments"];
 
 class Node {
-    constructor(pos?: number, loc?: SourceLocation, filename?: string) {
+    constructor(pos, loc, filename) {
         this.type = "";
         this.start = pos;
         this.end = 0;
         this.loc = new SourceLocation(loc);
         if (filename) {
-            this.loc.filename = filename; 
+            this.loc.filename = filename;
         }
     }
 
-    type: string;
-    start: ?number;
-    end: number;
-    loc: SourceLocation;
-
-    __clone(): Node {
+    __clone() {
         const node2 = new Node();
         for (const key in this) {
             // Do not clone comments that are already attached to the node
@@ -43,13 +38,13 @@ pp.startNodeAt = function (pos, loc) {
     return new Node(pos, loc, this.filename);
 };
 
-function finishNodeAt(node, type, pos, loc) {
+const finishNodeAt = function (node, type, pos, loc) {
     node.type = type;
     node.end = pos;
     node.loc.end = loc;
     this.processComment(node);
     return node;
-}
+};
 
 // Finish an AST node, adding `type` and `end` properties.
 

@@ -11,30 +11,27 @@ const save = (test, ast) => {
 };
 
 const ppJSON = (v) => {
-    return v instanceof RegExp ? v.toString() : JSON.stringify(v, null, 2);
+    v = v instanceof RegExp ? v.toString() : v;
+    return JSON.stringify(v, null, 2);
 };
 
 const addPath = (str, pt) => {
     if (str[str.length - 1] === ")") {
         return `${str.slice(0, str.length - 1)}/${pt})`;
-    } 
+    }
     return `${str} (${pt})`;
-    
+
 };
 
 const misMatch = (exp, act) => {
-    if (!exp || !act || (!is.object(exp)) || (!is.object(act))) {
-        if (exp !== act && !is.function(exp)) {
-            return `${ppJSON(exp)} !== ${ppJSON(act)}`;
-        }
-    } else if (is.regexp(exp) || is.regexp(exp)) {
+    if (exp instanceof RegExp || act instanceof RegExp) {
         const left = ppJSON(exp);
         const right = ppJSON(act);
         if (left !== right) {
             return `${left} !== ${right}`;
         }
-    } else if (exp.splice) {
-        if (!act.slice) {
+    } else if (is.array(exp)) {
+        if (!is.array(act)) {
             return `${ppJSON(exp)} != ${ppJSON(act)}`;
         }
         if (act.length !== exp.length) {
@@ -46,6 +43,10 @@ const misMatch = (exp, act) => {
                 return addPath(mis, i);
             }
         }
+    } else if (!exp || !act || (!is.object(exp)) || (!is.object(act))) {
+        if (exp !== act && !is.function(exp)) {
+            return `${ppJSON(exp)} !== ${ppJSON(act)}`;
+        }
     } else {
         for (const prop in exp) {
             const mis = misMatch(exp[prop], act[prop]);
@@ -55,6 +56,7 @@ const misMatch = (exp, act) => {
         }
     }
 };
+
 
 const runTest = (test, parseFunction) => {
     const opts = test.options;
@@ -71,10 +73,10 @@ const runTest = (test, parseFunction) => {
         if (opts.throws) {
             if (err.message === opts.throws) {
                 return;
-            } 
+            }
             err.message = `Expected error message: ${opts.throws}. Got error message: ${err.message}`;
             throw err;
-            
+
         }
 
         throw err;
@@ -116,19 +118,47 @@ const runFixtureTests = (fixtures, parseFunction) => {
     }
 };
 
+const runThrowTestsWithEstree = (fixturesPath, parseFunction) => {
+    const fixtures = getFixtures(fixturesPath);
 
-describe("js", () => {
-    describe("compiler", () => {
-        describe("parser", () => {
-            describe("fixtures", () => {
-                const fixtures = getFixtures(path.join(__dirname, "fixtures"));
-                runFixtureTests(fixtures, adone.js.compiler.parse);
-            });
+    Object.keys(fixtures).forEach((name) => {
+        fixtures[name].forEach((testSuite) => {
+            testSuite.tests.forEach((task) => {
+                if (!task.options.throws) {
+                    return;
+                }
 
-            describe("expressions", () => {
-                const fixtures = getFixtures(path.join(__dirname, "expressions"));
-                runFixtureTests(fixtures, adone.js.compiler.parseExpression);
+                task.options.plugins = task.options.plugins || [];
+                task.options.plugins.push("estree");
+
+                const testFn = task.disabled ? it.skip : task.options.only ? it.only : it;
+
+                testFn(`${name}/${testSuite.title}/${task.title}`, () => {
+                    try {
+                        return runTest(task, parseFunction);
+                    } catch (err) {
+                        err.message = `${task.actual.loc}: ${err.message}`;
+                        throw err;
+                    }
+                });
             });
         });
+    });
+};
+
+describe("js", "compiler", "parser", () => {
+    describe("fixtures", () => {
+        const fixtures = getFixtures(path.join(__dirname, "fixtures"));
+        runFixtureTests(fixtures, adone.js.compiler.parse);
+    });
+
+    describe("expressions", () => {
+        const fixtures = getFixtures(path.join(__dirname, "expressions"));
+        runFixtureTests(fixtures, adone.js.compiler.parseExpression);
+    });
+
+    describe("estree", () => {
+        const fixtures = path.join(__dirname, "fixtures");
+        runThrowTestsWithEstree(fixtures, adone.js.compiler.parse);
     });
 });

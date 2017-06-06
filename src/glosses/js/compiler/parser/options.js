@@ -1,39 +1,34 @@
 // A second optional argument can be given to further configure
 // the parser process. These options are recognized:
 
-export const defaultOptions: {
-    sourceType: string,
-    sourceFilename: any,
-    allowReturnOutsideFunction: boolean,
-    allowImportExportEverywhere: boolean,
-    allowSuperOutsideMethod: boolean,
-    plugins: string[],
-    strictMode: any
-} = {
-        // Source type ("script" or "module") for different semantics
+export const defaultOptions = {
+    // Source type ("script" or "module") for different semantics
     sourceType: "script",
-        // Source filename.
+    // Source filename.
     sourceFilename: undefined,
-        // When enabled, a return at the top level is not considered an
-        // error.
+    // Line from which to start counting source. Useful for
+    // integration with other tools.
+    startLine: 1,
+    // When enabled, a return at the top level is not considered an
+    // error.
     allowReturnOutsideFunction: false,
-        // When enabled, import/export statements are not constrained to
-        // appearing at the top of the program.
+    // When enabled, import/export statements are not constrained to
+    // appearing at the top of the program.
     allowImportExportEverywhere: false,
-        // TODO
+    // TODO
     allowSuperOutsideMethod: false,
-        // An array of plugins to enable
+    // An array of plugins to enable
     plugins: [],
-        // TODO
+    // TODO
     strictMode: null
 };
 
 // Interpret and default an options object
 
-export function getOptions(opts?: Object): Object {
+export const getOptions = (opts) => {
     const options = {};
     for (const key in defaultOptions) {
         options[key] = opts && key in opts ? opts[key] : defaultOptions[key];
     }
     return options;
-}
+};

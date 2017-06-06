@@ -6,27 +6,15 @@ import { types as tt } from "./types";
 import { lineBreak } from "../util/whitespace";
 
 export class TokContext {
-    constructor(
-        token: string,
-        isExpr?: boolean,
-        preserveSpace?: boolean,
-        override?: Function,
-    ) {
+    constructor(token, isExpr, preserveSpace, override) {
         this.token = token;
         this.isExpr = Boolean(isExpr);
         this.preserveSpace = Boolean(preserveSpace);
         this.override = override;
     }
-
-    token: string;
-    isExpr: boolean;
-    preserveSpace: boolean;
-    override: ?Function;
 }
 
-export const types: {
-    [key: string]: TokContext;
-} = {
+export const types = {
     braceStatement: new TokContext("{", false),
     braceExpression: new TokContext("{", true),
     templateQuasi: new TokContext("${", true),

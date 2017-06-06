@@ -1,3 +1,4 @@
+const { is } = adone;
 import { types as tt } from "../tokenizer/types";
 import Parser from "./index";
 import { lineBreak } from "../util/whitespace";
@@ -10,7 +11,7 @@ const pp = Parser.prototype;
 
 pp.addExtra = function (node, key, val) {
     if (!node) {
-        return; 
+        return;
     }
 
     const extra = node.extra = node.extra || {};
@@ -49,7 +50,7 @@ pp.eatContextual = function (name) {
 
 pp.expectContextual = function (name, message) {
     if (!this.eatContextual(name)) {
-        this.unexpected(null, message); 
+        this.unexpected(null, message);
     }
 };
 
@@ -72,7 +73,7 @@ pp.isLineTerminator = function () {
 
 pp.semicolon = function () {
     if (!this.isLineTerminator()) {
-        this.unexpected(null, tt.semi); 
+        this.unexpected(null, tt.semi);
     }
 };
 
@@ -87,8 +88,8 @@ pp.expect = function (type, pos) {
 // instead of a message string.
 
 pp.unexpected = function (pos, messageOrType = "Unexpected token") {
-    if (messageOrType && typeof messageOrType === "object" && messageOrType.label) {
+    if (messageOrType && is.object(messageOrType) && messageOrType.label) {
         messageOrType = `Unexpected token, expected ${messageOrType.label}`;
     }
-    this.raise(pos != null ? pos : this.state.start, messageOrType);
+    this.raise(!is.nil(pos) ? pos : this.state.start, messageOrType);
 };

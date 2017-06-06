@@ -23,7 +23,7 @@ export class SourceLocation {
 // offset. `input` should be the code string that the offset refers
 // into.
 
-export function getLineInfo(input, offset) {
+export const getLineInfo = (input, offset) => {
     for (let line = 1, cur = 0; ;) {
         lineBreakG.lastIndex = cur;
         const match = lineBreakG.exec(input);
@@ -34,4 +34,4 @@ export function getLineInfo(input, offset) {
             return new Position(line, offset - cur);
         }
     }
-}
+};

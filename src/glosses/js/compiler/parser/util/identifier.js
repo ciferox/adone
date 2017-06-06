@@ -9,12 +9,10 @@
 //
 // It starts by sorting the words by length.
 
-function makePredicate(words) {
+const makePredicate = (words) => {
     words = words.split(" ");
-    return function (str) {
-        return words.indexOf(str) >= 0;
-    };
-}
+    return (str) => words.indexOf(str) >= 0;
+};
 
 // Reserved word lists for various dialects of the language
 
@@ -57,7 +55,7 @@ const astralIdentifierCodes = [509, 0, 227, 0, 150, 4, 294, 9, 1368, 2, 2, 1, 6,
 // This has a complexity linear to the value of the code. The
 // assumption is that looking up astral identifier characters is
 // rare.
-function isInAstralSet(code, set) {
+const isInAstralSet = (code, set) => {
     let pos = 0x10000;
     for (let i = 0; i < set.length; i += 2) {
         pos += set[i];
@@ -67,35 +65,35 @@ function isInAstralSet(code, set) {
 
         pos += set[i + 1];
         if (pos >= code) {
-            return true; 
+            return true;
         }
     }
-}
+};
 
 // Test whether a given character code starts an identifier.
 
-export function isIdentifierStart(code) {
+export const isIdentifierStart = (code) => {
     if (code < 65) {
-        return code === 36; 
+        return code === 36;
     }
     if (code < 91) {
-        return true; 
+        return true;
     }
     if (code < 97) {
-        return code === 95; 
+        return code === 95;
     }
     if (code < 123) {
-        return true; 
+        return true;
     }
     if (code <= 0xffff) {
         return code >= 0xaa && nonASCIIidentifierStart.test(String.fromCharCode(code));
     }
     return isInAstralSet(code, astralIdentifierStartCodes);
-}
+};
 
 // Test whether a given character is part of an identifier.
 
-export function isIdentifierChar(code) {
+export const isIdentifierChar = (code) => {
     if (code < 48) {
         return code === 36;
     }
@@ -103,19 +101,19 @@ export function isIdentifierChar(code) {
         return true;
     }
     if (code < 65) {
-        return false; 
+        return false;
     }
     if (code < 91) {
-        return true; 
+        return true;
     }
     if (code < 97) {
         return code === 95;
     }
     if (code < 123) {
-        return true; 
+        return true;
     }
     if (code <= 0xffff) {
-        return code >= 0xaa && nonASCIIidentifier.test(String.fromCharCode(code)); 
+        return code >= 0xaa && nonASCIIidentifier.test(String.fromCharCode(code));
     }
     return isInAstralSet(code, astralIdentifierStartCodes) || isInAstralSet(code, astralIdentifierCodes);
-}
+};
