@@ -1,60 +1,60 @@
 // This file contains methods responsible for dealing with comments.
-//@flow
+
+const { is } = adone;
 
 /**
  * Share comments amongst siblings.
  */
-
-export function shareCommentsWithSiblings() {
+export const shareCommentsWithSiblings = function () {
     // NOTE: this assumes numbered keys
-    if (typeof this.key === "string") {
+    if (is.string(this.key)) {
         return;
     }
 
     const node = this.node;
     if (!node) {
-        return; 
+        return;
     }
 
     const trailing = node.trailingComments;
     const leading = node.leadingComments;
     if (!trailing && !leading) {
-        return; 
+        return;
     }
 
     let prev = this.getSibling(this.key - 1);
     let next = this.getSibling(this.key + 1);
 
     if (!prev.node) {
-        prev = next; 
+        prev = next;
     }
     if (!next.node) {
-        next = prev; 
+        next = prev;
     }
 
     prev.addComments("trailing", leading);
     next.addComments("leading", trailing);
-}
+};
 
-export function addComment(type, content, line?) {
+export const addComment = function (type, content, line) {
     this.addComments(type, [{
         type: line ? "CommentLine" : "CommentBlock",
         value: content
     }]);
-}
+};
 
 /**
  * Give node `comments` of the specified `type`.
  */
 
-export function addComments(type: string, comments: Array) {
+export const addComments = function (type, comments) {
     if (!comments) {
-        return; 
+        return;
     }
 
     const node = this.node;
     if (!node) {
-        return; 
+        return;
     }
 
     const key = `${type}Comments`;
@@ -64,4 +64,4 @@ export function addComments(type: string, comments: Array) {
     } else {
         node[key] = comments;
     }
-}
+};

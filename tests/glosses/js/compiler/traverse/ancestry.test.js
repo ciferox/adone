@@ -1,6 +1,6 @@
 const { parse, traverse } = adone.js.compiler;
 
-describe("path/ancestry", () => {
+describe("js", "compiler", "traverse", "path/ancestry", () => {
     describe("isAncestor", () => {
         const ast = parse("var a = 1; 'a';");
 

@@ -2,7 +2,7 @@
 const { core, transformation: { Plugin } } = adone.js.compiler;
 const transform = core.transform;
 
-describe("traversal path", () => {
+describe("js", "compiler", "core", "traversal path", () => {
     it("replaceWithSourceString", () => {
         const expectCode = "function foo() {}";
 

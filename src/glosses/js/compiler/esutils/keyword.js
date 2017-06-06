@@ -1,30 +1,6 @@
-/*
-  Copyright (C) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
+const { js: { compiler: { esutils } } } = adone;
 
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions are met:
-
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-  ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
-  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-// @flow
-import * as code from "./code";
-
-function isStrictModeReservedWordES6(id) {
+const isStrictModeReservedWordES6 = (id) => {
     switch (id) {
         case "implements":
         case "interface":
@@ -38,17 +14,9 @@ function isStrictModeReservedWordES6(id) {
         default:
             return false;
     }
-}
+};
 
-export function isKeywordES5(id, strict) {
-    // yield should not be treated as keyword under non-strict mode.
-    if (!strict && id === "yield") {
-        return false;
-    }
-    return isKeywordES6(id, strict);
-}
-
-export function isKeywordES6(id, strict) {
+export const isKeywordES6 = (id, strict) => {
     if (strict && isStrictModeReservedWordES6(id)) {
         return true;
     }
@@ -77,61 +45,65 @@ export function isKeywordES6(id, strict) {
         default:
             return false;
     }
-}
+};
 
-export function isReservedWordES5(id, strict) {
-    return id === "null" || id === "true" || id === "false" || isKeywordES5(id, strict);
-}
-
-export function isReservedWordES6(id, strict) {
-    return id === "null" || id === "true" || id === "false" || isKeywordES6(id, strict);
-}
-
-export function isRestrictedWord(id) {
-    return id === "eval" || id === "arguments";
-}
-
-export function isIdentifierNameES5(id) {
-    let i, iz, ch;
-
-    if (id.length === 0) {
-        return false; 
+export const isKeywordES5 = (id, strict) => {
+    // yield should not be treated as keyword under non-strict mode.
+    if (!strict && id === "yield") {
+        return false;
     }
+    return isKeywordES6(id, strict);
+};
 
-    ch = id.charCodeAt(0);
+export const isReservedWordES5 = (id, strict) => {
+    return id === "null" || id === "true" || id === "false" || isKeywordES5(id, strict);
+};
+
+export const isReservedWordES6 = (id, strict) => {
+    return id === "null" || id === "true" || id === "false" || isKeywordES6(id, strict);
+};
+
+export const isRestrictedWord = (id) => {
+    return id === "eval" || id === "arguments";
+};
+
+export const isIdentifierNameES5 = (id) => {
+    if (id.length === 0) {
+        return false;
+    }
+    const { code } = esutils;
+    const ch = id.charCodeAt(0);
     if (!code.isIdentifierStartES5(ch)) {
         return false;
     }
 
-    for (i = 1, iz = id.length; i < iz; ++i) {
-        ch = id.charCodeAt(i);
+    for (let i = 1, iz = id.length; i < iz; ++i) {
+        const ch = id.charCodeAt(i);
         if (!code.isIdentifierPartES5(ch)) {
             return false;
         }
     }
     return true;
-}
+};
 
-function decodeUtf16(lead, trail) {
+const decodeUtf16 = (lead, trail) => {
     return (lead - 0xD800) * 0x400 + (trail - 0xDC00) + 0x10000;
-}
+};
 
-export function isIdentifierNameES6(id) {
-    let i, iz, ch, lowCh, check;
-
+export const isIdentifierNameES6 = (id) => {
     if (id.length === 0) {
-        return false; 
+        return false;
     }
-
-    check = code.isIdentifierStartES6;
-    for (i = 0, iz = id.length; i < iz; ++i) {
-        ch = id.charCodeAt(i);
+    const { code } = esutils;
+    let check = code.isIdentifierStartES6;
+    for (let i = 0, iz = id.length; i < iz; ++i) {
+        let ch = id.charCodeAt(i);
         if (ch >= 0xD800 && ch <= 0xDBFF) {
             ++i;
             if (i >= iz) {
-                return false; 
+                return false;
             }
-            lowCh = id.charCodeAt(i);
+            const lowCh = id.charCodeAt(i);
             if (!(lowCh >= 0xDC00 && lowCh <= 0xDFFF)) {
                 return false;
             }
@@ -143,12 +115,12 @@ export function isIdentifierNameES6(id) {
         check = code.isIdentifierPartES6;
     }
     return true;
-}
+};
 
-export function isIdentifierES5(id, strict) {
+export const isIdentifierES5 = (id, strict) => {
     return isIdentifierNameES5(id) && !isReservedWordES5(id, strict);
-}
+};
 
-export function isIdentifierES6(id, strict) {
+export const isIdentifierES6 = (id, strict) => {
     return isIdentifierNameES6(id) && !isReservedWordES6(id, strict);
-}
+};

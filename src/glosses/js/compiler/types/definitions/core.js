@@ -1,6 +1,3 @@
-/* eslint max-len: "off" */
-//@flow
-
 import * as t from "../index";
 
 import {

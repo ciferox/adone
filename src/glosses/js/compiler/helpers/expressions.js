@@ -1,7 +1,4 @@
-/* eslint max-len: 0 */
-// @flow
-
-const { template } = adone.js.compiler;
+const { js: { compiler: { template } } } = adone;
 
 const helpers = {};
 export default helpers;

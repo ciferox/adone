@@ -39,35 +39,13 @@ const humanize = (val, noext) => {
     return val.replace(/-/g, " ");
 };
 
-type TestFile = {
-    loc: string;
-    code: string;
-    filename: string;
-};
-
-type Test = {
-    title: string;
-    disabled: boolean;
-    options: Object;
-    exec: TestFile;
-    actual: TestFile;
-    expected: TestFile;
-};
-
-type Suite = {
-    options: Object;
-    tests: Test[];
-    title: string;
-    filename: string;
-};
-
 const assertDirectory = (loc) => {
     if (!fs.statSync(loc).isDirectory()) {
         throw new Error(`Expected ${loc} to be a directory.`);
     }
 };
 
-const shouldIgnore = (name, blacklist?: string[]) => {
+const shouldIgnore = (name, blacklist) => {
     if (blacklist && blacklist.indexOf(name) >= 0) {
         return true;
     }
@@ -83,12 +61,11 @@ const readFile = (filename) => {
         let file = lodash.trimEnd(fs.readFileSync(filename, "utf8"));
         file = file.replace(/\r\n/g, "\n");
         return file;
-    } else {
-        return "";
     }
+    return "";
 };
 
-export default function get(entryLoc): Suite[] {
+export default function get(entryLoc) {
     const suites = [];
 
     const rootOptsLoc = resolve(`${entryLoc}/options`);

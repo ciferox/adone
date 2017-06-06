@@ -1,15 +1,13 @@
-// @flow
-
 import { booleanify, list } from "../../../util";
 
 export default {
-    boolean(val: any): boolean {
+    boolean(val) {
         return Boolean(val);
     },
-    booleanString(val: any): boolean | any {
+    booleanString(val) {
         return booleanify(val);
     },
-    list(val: any): string[] {
+    list(val) {
         return list(val);
     }
 };

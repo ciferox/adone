@@ -1,8 +1,4 @@
-// @flow
-
-
-
-const { types: t } = adone.js.compiler;
+const { js: { compiler: { types: t } } } = adone;
 
 export default function () {
     return {
@@ -14,7 +10,7 @@ export default function () {
 
                 const { node } = path;
 
-                for (const directive of (node.directives: Array<Object>)) {
+                for (const directive of node.directives) {
                     if (directive.value.value === "use strict") {
                         return;
                     }

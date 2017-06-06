@@ -1,7 +1,4 @@
-// @flow
-
-
-const { types } = adone.js.compiler;
+const { js: { compiler: { types } } } = adone;
 
 export const ModuleDeclaration = {
     enter(path, file) {
@@ -24,7 +21,7 @@ export const ImportDeclaration = {
             specifiers
         });
 
-        for (const specifier of (path.get("specifiers"): Object[])) {
+        for (const specifier of path.get("specifiers")) {
             const local = specifier.node.local.name;
 
             if (specifier.isImportDefaultSpecifier()) {
@@ -80,7 +77,7 @@ export const ExportDeclaration = (path, file) => {
     }
 
     if (path.isExportNamedDeclaration() && node.specifiers) {
-        for (const specifier of (node.specifiers: Object[])) {
+        for (const specifier of node.specifiers) {
             const exported = specifier.exported.name;
             exports.exported.push(exported);
 

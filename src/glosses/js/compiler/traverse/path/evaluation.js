@@ -1,6 +1,3 @@
-//@flow
-import type NodePath from "./index";
-
 // This file contains Babels metainterpreter that can evaluate static code.
 
 const VALID_CALLEES = ["String", "Number", "Math"];
@@ -24,12 +21,12 @@ const INVALID_METHODS = ["random"];
  *
  */
 
-export function evaluateTruthy(): boolean {
+export const evaluateTruthy = function () {
     const res = this.evaluate();
     if (res.confident) {
         return Boolean(res.value);
     }
-}
+};
 
 /**
  * Walk the input `node` and statically evaluate it.
@@ -46,63 +43,22 @@ export function evaluateTruthy(): boolean {
  *
  */
 
-export function evaluate(): { confident: boolean; value: any } {
+export const evaluate = function () {
     let confident = true;
-    let deoptPath: ?NodePath;
+    let deoptPath;
     const seen = new Map();
 
-    function deopt(path) {
+    const deopt = function (path) {
         if (!confident) {
-            return; 
+            return;
         }
         deoptPath = path;
         confident = false;
-    }
-
-    let value = evaluate(this);
-    if (!confident) {
-        value = undefined;
-    }
-    return {
-        confident,
-        deopt: deoptPath,
-        value
     };
 
-    // we wrap the _evaluate method so we can track `seen` nodes, we push an item
-    // to the map before we actually evaluate it so we can deopt on self recursive
-    // nodes such as:
-    //
-    //   var g = a ? 1 : 2,
-    //       a = g * this.foo
-    //
-    function evaluate(path) {
-        const { node } = path;
-
-        if (seen.has(node)) {
-            const existing = seen.get(node);
-            if (existing.resolved) {
-                return existing.value;
-            } 
-            deopt(path);
-                
-            
-        } else {
-            const item = { resolved: false };
-            seen.set(node, item);
-
-            const val = _evaluate(path);
-            if (confident) {
-                item.resolved = true;
-                item.value = val;
-            }
-            return val;
-        }
-    }
-
-    function _evaluate(path) {
+    const _evaluate = (path) => {
         if (!confident) {
-            return; 
+            return;
         }
 
         const { node } = path;
@@ -126,10 +82,10 @@ export function evaluate(): { confident: boolean; value: any } {
             let i = 0;
             const exprs = path.get("expressions");
 
-            for (const elem of (node.quasis: Object[])) {
+            for (const elem of node.quasi) {
                 // not confident, evaluated an expression we don't like
                 if (!confident) {
-                    break; 
+                    break;
                 }
 
                 // add on cooked element
@@ -155,9 +111,9 @@ export function evaluate(): { confident: boolean; value: any } {
             }
             if (testResult) {
                 return evaluate(path.get("consequent"));
-            } 
+            }
             return evaluate(path.get("alternate"));
-            
+
         }
 
         if (path.isExpressionWrapper()) { // TypeCastExpression, ExpressionStatement etc
@@ -191,22 +147,22 @@ export function evaluate(): { confident: boolean; value: any } {
 
             if (binding && binding.hasValue) {
                 return binding.value;
-            } 
+            }
             if (node.name === "undefined") {
-                return undefined;
+                return binding ? deopt(binding.path) : undefined;
             } else if (node.name === "Infinity") {
-                return Infinity;
+                return binding ? deopt(binding.path) : Infinity;
             } else if (node.name === "NaN") {
-                return NaN;
+                return binding ? deopt(binding.path) : NaN;
             }
 
             const resolved = path.resolve();
             if (resolved === path) {
                 return deopt(path);
-            } 
+            }
             return evaluate(resolved);
-                
-            
+
+
         }
 
         if (path.isUnaryExpression({ prefix: true })) {
@@ -235,7 +191,7 @@ export function evaluate(): { confident: boolean; value: any } {
 
         if (path.isArrayExpression()) {
             const arr = [];
-            const elems: NodePath[] = path.get("elements");
+            const elems = path.get("elements");
             for (let elem of elems) {
                 elem = elem.evaluate();
 
@@ -250,7 +206,7 @@ export function evaluate(): { confident: boolean; value: any } {
 
         if (path.isObjectExpression()) {
             const obj = {};
-            const props: NodePath[] = path.get("properties");
+            const props = path.get("properties");
             for (const prop of props) {
                 if (prop.isObjectMethod() || prop.isSpreadProperty()) {
                     return deopt(prop);
@@ -324,7 +280,7 @@ export function evaluate(): { confident: boolean; value: any } {
             }
             const right = evaluate(path.get("right"));
             if (!confident) {
-                return; 
+                return;
             }
 
             switch (node.operator) {
@@ -391,7 +347,7 @@ export function evaluate(): { confident: boolean; value: any } {
             if (func) {
                 const args = path.get("arguments").map(evaluate);
                 if (!confident) {
-                    return; 
+                    return;
                 }
 
                 return func.apply(context, args);
@@ -399,5 +355,46 @@ export function evaluate(): { confident: boolean; value: any } {
         }
 
         deopt(path);
+    };
+
+    // we wrap the _evaluate method so we can track `seen` nodes, we push an item
+    // to the map before we actually evaluate it so we can deopt on self recursive
+    // nodes such as:
+    //
+    //   var g = a ? 1 : 2,
+    //       a = g * this.foo
+    //
+    const evaluate = (path) => {
+        const { node } = path;
+
+        if (seen.has(node)) {
+            const existing = seen.get(node);
+            if (existing.resolved) {
+                return existing.value;
+            }
+            deopt(path);
+
+
+        } else {
+            const item = { resolved: false };
+            seen.set(node, item);
+
+            const val = _evaluate(path);
+            if (confident) {
+                item.resolved = true;
+                item.value = val;
+            }
+            return val;
+        }
+    };
+
+    let value = evaluate(this);
+    if (!confident) {
+        value = undefined;
     }
-}
+    return {
+        confident,
+        deopt: deoptPath,
+        value
+    };
+};

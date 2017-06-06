@@ -1,8 +1,6 @@
-// @flow
+const { js: { compiler: { types } } } = adone;
 
-const { types } = adone.js.compiler;
-
-export function ImportSpecifier(node: Object) {
+export const ImportSpecifier = function (node) {
     if (node.importKind === "type" || node.importKind === "typeof") {
         this.word(node.importKind);
         this.space();
@@ -15,17 +13,17 @@ export function ImportSpecifier(node: Object) {
         this.space();
         this.print(node.local, node);
     }
-}
+};
 
-export function ImportDefaultSpecifier(node: Object) {
+export const ImportDefaultSpecifier = function (node) {
     this.print(node.local, node);
-}
+};
 
-export function ExportDefaultSpecifier(node: Object) {
+export const ExportDefaultSpecifier = function (node) {
     this.print(node.exported, node);
-}
+};
 
-export function ExportSpecifier(node: Object) {
+export const ExportSpecifier = function (node) {
     this.print(node.local, node);
     if (node.exported && node.local.name !== node.exported.name) {
         this.space();
@@ -33,48 +31,28 @@ export function ExportSpecifier(node: Object) {
         this.space();
         this.print(node.exported, node);
     }
-}
+};
 
-export function ExportNamespaceSpecifier(node: Object) {
+export const ExportNamespaceSpecifier = function (node) {
     this.token("*");
     this.space();
     this.word("as");
     this.space();
     this.print(node.exported, node);
-}
+};
 
-export function ExportAllDeclaration(node: Object) {
+export const ExportAllDeclaration = function (node) {
     this.word("export");
     this.space();
     this.token("*");
-    if (node.exported) {
-        this.space();
-        this.word("as");
-        this.space();
-        this.print(node.exported, node);
-    }
     this.space();
     this.word("from");
     this.space();
     this.print(node.source, node);
     this.semicolon();
-}
+};
 
-export function ExportNamedDeclaration() {
-    this.word("export");
-    this.space();
-    ExportDeclaration.apply(this, arguments);
-}
-
-export function ExportDefaultDeclaration() {
-    this.word("export");
-    this.space();
-    this.word("default");
-    this.space();
-    ExportDeclaration.apply(this, arguments);
-}
-
-function ExportDeclaration(node: Object) {
+const ExportDeclaration = function (node) {
     if (node.declaration) {
         const declar = node.declaration;
         this.print(declar, node);
@@ -124,9 +102,23 @@ function ExportDeclaration(node: Object) {
 
         this.semicolon();
     }
-}
+};
 
-export function ImportDeclaration(node: Object) {
+export const ExportNamedDeclaration = function (...args) {
+    this.word("export");
+    this.space();
+    ExportDeclaration.apply(this, args);
+};
+
+export const ExportDefaultDeclaration = function (...args) {
+    this.word("export");
+    this.space();
+    this.word("default");
+    this.space();
+    ExportDeclaration.apply(this, args);
+};
+
+export const ImportDeclaration = function (node) {
     this.word("import");
     this.space();
 
@@ -166,12 +158,12 @@ export function ImportDeclaration(node: Object) {
 
     this.print(node.source, node);
     this.semicolon();
-}
+};
 
-export function ImportNamespaceSpecifier(node: Object) {
+export const ImportNamespaceSpecifier = function (node) {
     this.token("*");
     this.space();
     this.word("as");
     this.space();
     this.print(node.local, node);
-}
+};

@@ -1,5 +1,3 @@
-// @flow
-
 import * as whitespace from "./whitespace";
 import * as parens from "./parentheses";
 const { types } = adone.js.compiler;
@@ -50,9 +48,9 @@ const isOrHasCallExpression = (node) => {
     if (types.isMemberExpression(node)) {
         return isOrHasCallExpression(node.object) ||
             (!node.computed && isOrHasCallExpression(node.property));
-    } 
+    }
     return false;
-    
+
 };
 
 export const needsWhitespace = (node, parent, type) => {

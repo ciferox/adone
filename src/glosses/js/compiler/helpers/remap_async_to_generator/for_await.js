@@ -1,6 +1,3 @@
-// @flow
-
-
 const { types: t, template, traverse } = adone.js.compiler;
 
 const buildForAwait = template(`

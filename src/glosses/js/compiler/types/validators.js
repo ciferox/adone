@@ -1,40 +1,37 @@
-
 import { getBindingIdentifiers } from "./retrievers";
 import * as t from "./index";
 import { BLOCK_SCOPED_SYMBOL } from "./constants";
 
-const { esutils } = adone.js.compiler;
+const { is, js: { compiler: { esutils } } } = adone;
 
 /**
  * Check if the input `node` is a binding identifier.
  */
-
-export function isBinding(node: Object, parent: Object): boolean {
+export const isBinding = (node, parent) => {
     const keys = getBindingIdentifiers.keys[parent.type];
     if (keys) {
         for (let i = 0; i < keys.length; i++) {
             const key = keys[i];
             const val = parent[key];
-            if (Array.isArray(val)) {
+            if (is.array(val)) {
                 if (val.indexOf(node) >= 0) {
-                    return true; 
+                    return true;
                 }
             } else {
                 if (val === node) {
-                    return true; 
+                    return true;
                 }
             }
         }
     }
 
     return false;
-}
+};
 
 /**
  * Check if the input `node` is a reference to a bound variable.
  */
-
-export function isReferenced(node: Object, parent: Object): boolean {
+export const isReferenced = (node, parent) => {
     switch (parent.type) {
         // yes: object::NODE
         // yes: NODE::callee
@@ -50,9 +47,9 @@ export function isReferenced(node: Object, parent: Object): boolean {
                 return true;
             } else if (parent.object === node) {
                 return true;
-            } 
+            }
             return false;
-            
+
 
         // no: new.NODE
         // no: NODE.target
@@ -77,9 +74,9 @@ export function isReferenced(node: Object, parent: Object): boolean {
         case "ArrowFunctionExpression":
         case "FunctionDeclaration":
         case "FunctionExpression":
-            for (const param of (parent.params: any[])) {
+            for (const param of parent.params) {
                 if (param === node) {
-                    return false; 
+                    return false;
                 }
             }
 
@@ -91,9 +88,9 @@ export function isReferenced(node: Object, parent: Object): boolean {
         case "ExportSpecifier":
             if (parent.source) {
                 return false;
-            } 
+            }
             return parent.local === node;
-            
+
 
         // no: export NODE from "foo";
         // no: export * as NODE from "foo";
@@ -111,9 +108,9 @@ export function isReferenced(node: Object, parent: Object): boolean {
         case "ClassProperty":
             if (parent.key === node) {
                 return parent.computed;
-            } 
+            }
             return parent.value === node;
-            
+
 
         // no: import NODE from "foo";
         // no: import * as NODE from "foo";
@@ -165,94 +162,89 @@ export function isReferenced(node: Object, parent: Object): boolean {
     }
 
     return true;
-}
+};
 
 /**
  * Check if the input `name` is a valid identifier name
  * and isn't a reserved word.
  */
-
-export function isValidIdentifier(name: string): boolean {
-    if (typeof name !== "string" || esutils.keyword.isReservedWordES6(name, true)) {
+export const isValidIdentifier = (name) => {
+    if (!is.string(name) || esutils.keyword.isReservedWordES6(name, true)) {
         return false;
-    } 
+    } else if (name === "await") {
+        // invalid in module, valid in script; better be safe (see #4952)
+        return false;
+    }
     return esutils.keyword.isIdentifierNameES6(name);
-    
-}
+};
+
 
 /**
  * Check if the input `node` is a `let` variable declaration.
  */
-
-export function isLet(node: Object): boolean {
+export const isLet = (node) => {
     return t.isVariableDeclaration(node) && (node.kind !== "var" || node[BLOCK_SCOPED_SYMBOL]);
-}
+};
 
 /**
  * Check if the input `node` is block scoped.
  */
-
-export function isBlockScoped(node: Object): boolean {
+export const isBlockScoped = (node) => {
     return t.isFunctionDeclaration(node) || t.isClassDeclaration(node) || t.isLet(node);
-}
+};
 
 /**
  * Check if the input `node` is a variable declaration.
  */
-
-export function isVar(node: Object): boolean {
+export const isVar = (node) => {
     return t.isVariableDeclaration(node, { kind: "var" }) && !node[BLOCK_SCOPED_SYMBOL];
-}
+};
 
 /**
  * Check if the input `specifier` is a `default` import or export.
  */
-
-export function isSpecifierDefault(specifier: Object): boolean {
+export const isSpecifierDefault = (specifier) => {
     return t.isImportDefaultSpecifier(specifier) ||
         t.isIdentifier(specifier.imported || specifier.exported, { name: "default" });
-}
+};
 
 /**
  * Check if the input `node` is a scope.
  */
-
-export function isScope(node: Object, parent: Object): boolean {
+export const isScope = (node, parent) => {
     if (t.isBlockStatement(node) && t.isFunction(parent, { body: node })) {
         return false;
     }
 
     return t.isScopable(node);
-}
+};
 
 /**
  * Check if the input `node` is definitely immutable.
  */
-
-export function isImmutable(node: Object): boolean {
+export const isImmutable = (node) => {
     if (t.isType(node.type, "Immutable")) {
-        return true; 
+        return true;
     }
 
     if (t.isIdentifier(node)) {
         if (node.name === "undefined") {
             // immutable!
             return true;
-        } 
-            // no idea...
+        }
+        // no idea...
         return false;
-        
+
     }
 
     return false;
-}
+};
 
 /**
  * Check if two nodes are equivalent
  */
-
-export function isNodesEquivalent(a, b) {
-    if (typeof a !== "object" || typeof a !== "object" || a == null || b == null) {
+export const isNodesEquivalent = (a, b) => {
+    if (!is.object(a) || !is.object(a)) {
         return a === b;
     }
 
@@ -263,12 +255,12 @@ export function isNodesEquivalent(a, b) {
     const fields = Object.keys(t.NODE_FIELDS[a.type] || a.type);
 
     for (const field of fields) {
-        if (typeof a[field] !== typeof b[field]) {
+        if (!is.sameType(a[field], b[field])) {
             return false;
         }
 
-        if (Array.isArray(a[field])) {
-            if (!Array.isArray(b[field])) {
+        if (is.array(a[field])) {
+            if (!is.array(b[field])) {
                 return false;
             }
             if (a[field].length !== b[field].length) {
@@ -289,4 +281,4 @@ export function isNodesEquivalent(a, b) {
     }
 
     return true;
-}
+};

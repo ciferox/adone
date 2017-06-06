@@ -1,13 +1,9 @@
-// @flow
-
-
-
-const { vendor: { lodash: _ }, is, std: { path } } = adone;
+const { vendor: { lodash: _ }, is, util, std: { path } } = adone;
 const { escapeRegExp } = _;
 
 export { inherits, inspect } from "util";
 
-export const canCompile = (filename: string, altExts?: string[]): boolean => {
+export const canCompile = (filename, altExts) => {
     const exts = altExts || canCompile.EXTENSIONS;
     const ext = path.extname(filename);
     return exts.includes(ext);
@@ -19,23 +15,23 @@ canCompile.EXTENSIONS = [".js", ".jsx", ".es6", ".es"];
  * Create an array from any value, splitting strings by ",".
  */
 
-export const list = (val?: string): string[] => {
+export const list = (val) => {
     if (!val) {
         return [];
-    } else if (Array.isArray(val)) {
+    } else if (is.array(val)) {
         return val;
-    } else if (typeof val === "string") {
+    } else if (is.string(val)) {
         return val.split(",");
-    } 
+    }
     return [val];
-    
+
 };
 
 /**
  * Create a RegExp from a string, array, or regexp.
  */
 
-export const regexify = (val: any): RegExp => {
+export const regexify = (val) => {
     if (!val) {
         return new RegExp(/.^/);
     }
@@ -44,9 +40,9 @@ export const regexify = (val: any): RegExp => {
         val = new RegExp(val.map(escapeRegExp).join("|"), "i");
     }
 
-    if (typeof val === "string") {
+    if (is.string(val)) {
         // normalise path separators
-        val = adone.util.normalizePath(val);
+        val = util.normalizePath(val);
 
         // remove starting wildcards or relative separator if present
         if (val.startsWith("./") || val.startsWith("*/")) {
@@ -56,7 +52,7 @@ export const regexify = (val: any): RegExp => {
             val = val.slice(3);
         }
 
-        const regex = adone.util.GlobExp.makeRe(val, { nocase: true });
+        const regex = util.GlobExp.makeRe(val, { nocase: true });
         return new RegExp(regex.source.slice(1, -1), "i");
     }
 
@@ -71,7 +67,7 @@ export const regexify = (val: any): RegExp => {
  * Create an array from a boolean, string, or array, mapped by and optional function.
  */
 
-export const arrayify = (val: any, mapFn?: Function): any[] => {
+export const arrayify = (val, mapFn) => {
     if (!val) {
         return [];
     }
@@ -96,7 +92,7 @@ export const arrayify = (val: any, mapFn?: Function): any[] => {
  * Makes boolean-like strings into booleans.
  */
 
-export const booleanify = (val: any): boolean | any => {
+export const booleanify = (val) => {
     // eslint-disable-next-line eqeqeq
     if (val === "true" || val == 1) {
         return true;
@@ -115,23 +111,19 @@ export const booleanify = (val: any): boolean | any => {
  * Otherwise returns result of matching pattern Regex with filename.
  */
 
-const _shouldIgnore = (pattern: Function | RegExp, filename: string) => {
-    if (typeof pattern === "function") {
+const _shouldIgnore = (pattern, filename) => {
+    if (is.function(pattern)) {
         return pattern(filename);
-    } 
+    }
     return pattern.test(filename);
-    
+
 };
 
 /**
  * Tests if a filename should be ignored based on "ignore" and "only" options.
  */
 
-export const shouldIgnore = (
-    filename: string,
-    ignore: Array<RegExp | Function> = [],
-    only?: Array<RegExp | Function>,
-): boolean => {
+export const shouldIgnore = (filename, ignore = [], only) => {
     filename = filename.replace(/\\/g, "/");
 
     if (only) {

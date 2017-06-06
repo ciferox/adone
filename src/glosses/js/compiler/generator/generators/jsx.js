@@ -1,53 +1,53 @@
-// @flow
-export function JSXAttribute(node: Object) {
+
+export const JSXAttribute = function (node) {
     this.print(node.name, node);
     if (node.value) {
         this.token("=");
         this.print(node.value, node);
     }
-}
+};
 
-export function JSXIdentifier(node: Object) {
+export const JSXIdentifier = function (node) {
     this.word(node.name);
-}
+};
 
-export function JSXNamespacedName(node: Object) {
+export const JSXNamespacedName = function (node) {
     this.print(node.namespace, node);
     this.token(":");
     this.print(node.name, node);
-}
+};
 
-export function JSXMemberExpression(node: Object) {
+export const JSXMemberExpression = function (node) {
     this.print(node.object, node);
     this.token(".");
     this.print(node.property, node);
-}
+};
 
-export function JSXSpreadAttribute(node: Object) {
+export const JSXSpreadAttribute = function (node) {
     this.token("{");
     this.token("...");
     this.print(node.argument, node);
     this.token("}");
-}
+};
 
-export function JSXExpressionContainer(node: Object) {
+export const JSXExpressionContainer = function (node) {
     this.token("{");
     this.print(node.expression, node);
     this.token("}");
-}
+};
 
-export function JSXSpreadChild(node: Object) {
+export const JSXSpreadChild = function (node) {
     this.token("{");
     this.token("...");
     this.print(node.expression, node);
     this.token("}");
-}
+};
 
-export function JSXText(node: Object) {
+export const JSXText = function (node) {
     this.token(node.value);
-}
+};
 
-export function JSXElement(node: Object) {
+export const JSXElement = function (node) {
     const open = node.openingElement;
     this.print(open, node);
     if (open.selfClosing) {
@@ -55,19 +55,19 @@ export function JSXElement(node: Object) {
     }
 
     this.indent();
-    for (const child of (node.children: Object[])) {
+    for (const child of node.children) {
         this.print(child, node);
     }
     this.dedent();
 
     this.print(node.closingElement, node);
-}
+};
 
-function spaceSeparator() {
+const spaceSeparator = function () {
     this.space();
-}
+};
 
-export function JSXOpeningElement(node: Object) {
+export const JSXOpeningElement = function (node) {
     this.token("<");
     this.print(node.name, node);
     if (node.attributes.length > 0) {
@@ -80,12 +80,12 @@ export function JSXOpeningElement(node: Object) {
     } else {
         this.token(">");
     }
-}
+};
 
-export function JSXClosingElement(node: Object) {
+export const JSXClosingElement = function (node) {
     this.token("</");
     this.print(node.name, node);
     this.token(">");
-}
+};
 
-export function JSXEmptyExpression() { }
+export const JSXEmptyExpression = function () { };

@@ -1,9 +1,7 @@
+const { js: { compiler: { types: t } } } = adone;
 
-
-const { types: t } = adone.js.compiler;
-
-export default function (node): number {
-    const params: Object[] = node.params;
+export default function (node) {
+    const params = node.params;
     for (let i = 0; i < params.length; i++) {
         const param = params[i];
         if (t.isAssignmentPattern(param) || t.isRestElement(param)) {

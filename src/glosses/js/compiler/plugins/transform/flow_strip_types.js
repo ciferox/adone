@@ -1,5 +1,3 @@
-
-
 export default function ({ types: t }) {
     const FLOW_DIRECTIVE = "@flow";
 
@@ -8,7 +6,7 @@ export default function ({ types: t }) {
 
         visitor: {
             Program(path, { file: { ast: { comments } } }) {
-                for (const comment of (comments: Object[])) {
+                for (const comment of comments) {
                     if (comment.value.indexOf(FLOW_DIRECTIVE) >= 0) {
                         // remove flow directive
                         comment.value = comment.value.replace(FLOW_DIRECTIVE, "");

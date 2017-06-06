@@ -1,16 +1,17 @@
 // This file contains methods responsible for maintaining a TraversalContext.
-//@flow
+
+const { is } = adone;
 
 import traverse from "../index";
 
-export function call(key): boolean {
+export const call = function (key) {
     const opts = this.opts;
 
     this.debug(() => key);
 
     if (this.node) {
         if (this._call(opts[key])) {
-            return true; 
+            return true;
         }
     }
 
@@ -19,16 +20,16 @@ export function call(key): boolean {
     }
 
     return false;
-}
+};
 
-export function _call(fns?: Function[]): boolean {
+export const _call = function (fns) {
     if (!fns) {
         return false;
     }
 
     for (const fn of fns) {
         if (!fn) {
-            continue; 
+            continue;
         }
 
         const node = this.node;
@@ -43,23 +44,23 @@ export function _call(fns?: Function[]): boolean {
 
         // node has been replaced, it will have been requeued
         if (this.node !== node) {
-            return true; 
+            return true;
         }
 
         if (this.shouldStop || this.shouldSkip || this.removed) {
-            return true; 
+            return true;
         }
     }
 
     return false;
-}
+};
 
-export function isBlacklisted(): boolean {
+export const isBlacklisted = function () {
     const blacklist = this.opts.blacklist;
     return blacklist && blacklist.indexOf(this.node.type) > -1;
-}
+};
 
-export function visit(): boolean {
+export const visit = function () {
     if (!this.node) {
         return false;
     }
@@ -83,24 +84,24 @@ export function visit(): boolean {
     this.call("exit");
 
     return this.shouldStop;
-}
+};
 
-export function skip() {
+export const skip = function () {
     this.shouldSkip = true;
-}
+};
 
-export function skipKey(key) {
+export const skipKey = function (key) {
     this.skipKeys[key] = true;
-}
+};
 
-export function stop() {
+export const stop = function () {
     this.shouldStop = true;
     this.shouldSkip = true;
-}
+};
 
-export function setScope() {
+export const setScope = function () {
     if (this.opts && this.opts.noScope) {
-        return; 
+        return;
     }
 
     let target = this.context && this.context.scope;
@@ -109,7 +110,7 @@ export function setScope() {
         let path = this.parentPath;
         while (path && !target) {
             if (path.opts && path.opts.noScope) {
-                return; 
+                return;
             }
 
             target = path.scope;
@@ -121,9 +122,9 @@ export function setScope() {
     if (this.scope) {
         this.scope.init();
     }
-}
+};
 
-export function setContext(context) {
+export const setContext = function (context) {
     this.shouldSkip = false;
     this.shouldStop = false;
     this.removed = false;
@@ -138,7 +139,7 @@ export function setContext(context) {
     this.setScope();
 
     return this;
-}
+};
 
 /**
  * Here we resync the node paths `key` and `container`. If they've changed according
@@ -146,36 +147,36 @@ export function setContext(context) {
  * for the new values.
  */
 
-export function resync() {
+export const resync = function () {
     if (this.removed) {
-        return; 
+        return;
     }
 
     this._resyncParent();
     this._resyncList();
     this._resyncKey();
     //this._resyncRemoved();
-}
+};
 
-export function _resyncParent() {
+export const _resyncParent = function () {
     if (this.parentPath) {
         this.parent = this.parentPath.node;
     }
-}
+};
 
-export function _resyncKey() {
+export const _resyncKey = function () {
     if (!this.container) {
         return;
     }
 
     if (this.node === this.container[this.key]) {
-        return; 
+        return;
     }
 
     // grrr, path key is out of sync. this is likely due to a modification to the AST
     // not done through our path APIs
 
-    if (Array.isArray(this.container)) {
+    if (is.array(this.container)) {
         for (let i = 0; i < this.container.length; i++) {
             if (this.container[i] === this.node) {
                 return this.setKey(i);
@@ -191,11 +192,11 @@ export function _resyncKey() {
 
     // ¯\_(ツ)_/¯ who knows where it's gone lol
     this.key = null;
-}
+};
 
-export function _resyncList() {
+export const _resyncList = function () {
     if (!this.parent || !this.inList) {
-        return; 
+        return;
     }
 
     const newContainer = this.parent[this.listKey];
@@ -205,25 +206,25 @@ export function _resyncList() {
 
     // container is out of sync. this is likely the result of it being reassigned
     this.container = newContainer || null;
-}
+};
 
-export function _resyncRemoved() {
-    if (this.key == null || !this.container || this.container[this.key] !== this.node) {
+export const _resyncRemoved = function () {
+    if (is.nil(this.key) || !this.container || this.container[this.key] !== this.node) {
         this._markRemoved();
     }
-}
+};
 
-export function popContext() {
+export const popContext = function () {
     this.contexts.pop();
     this.setContext(this.contexts[this.contexts.length - 1]);
-}
+};
 
-export function pushContext(context) {
+export const pushContext = function (context) {
     this.contexts.push(context);
     this.setContext(context);
-}
+};
 
-export function setup(parentPath, container, listKey, key) {
+export const setup = function (parentPath, container, listKey, key) {
     this.inList = Boolean(listKey);
     this.listKey = listKey;
     this.parentKey = listKey || key;
@@ -231,17 +232,17 @@ export function setup(parentPath, container, listKey, key) {
 
     this.parentPath = parentPath || this.parentPath;
     this.setKey(key);
-}
+};
 
-export function setKey(key) {
+export const setKey = function (key) {
     this.key = key;
     this.node = this.container[this.key];
     this.type = this.node && this.node.type;
-}
+};
 
-export function requeue(pathToQueue = this) {
+export const requeue = function (pathToQueue = this) {
     if (pathToQueue.removed) {
-        return; 
+        return;
     }
 
     // TODO(loganfsmyth): This should be switched back to queue in parent contexts
@@ -252,9 +253,9 @@ export function requeue(pathToQueue = this) {
     for (const context of contexts) {
         context.maybeQueue(pathToQueue);
     }
-}
+};
 
-export function _getQueueContexts() {
+export const _getQueueContexts = function () {
     let path = this;
     let contexts = this.contexts;
     while (!contexts.length) {
@@ -262,4 +263,4 @@ export function _getQueueContexts() {
         contexts = path.contexts;
     }
     return contexts;
-}
+};

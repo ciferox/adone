@@ -1,4 +1,3 @@
-// @flow
 export default function () {
     const { path } = adone.std;
     return {

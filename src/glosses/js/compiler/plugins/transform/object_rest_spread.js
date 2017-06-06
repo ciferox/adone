@@ -1,9 +1,7 @@
-// @flow
-
-
-
 export default function ({ types: t }) {
-    function hasRestProperty(path) {
+    const { is } = adone;
+
+    const hasRestProperty = (path) => {
         let foundRestProperty = false;
         path.traverse({
             RestProperty() {
@@ -12,18 +10,18 @@ export default function ({ types: t }) {
             }
         });
         return foundRestProperty;
-    }
+    };
 
-    function hasSpread(node) {
+    const hasSpread = (node) => {
         for (const prop of (node.properties)) {
             if (t.isSpreadProperty(prop)) {
                 return true;
             }
         }
         return false;
-    }
+    };
 
-    function createObjectSpread(file, props, objRef) {
+    const createObjectSpread = (file, props, objRef) => {
         const restProperty = props.pop();
 
         const keys = [];
@@ -44,9 +42,9 @@ export default function ({ types: t }) {
                 ]
             )
         ];
-    }
+    };
 
-    function replaceRestProperty(parentPath, paramPath, i, numParams) {
+    const replaceRestProperty = (parentPath, paramPath, i, numParams) => {
         if (paramPath.isAssignmentPattern()) {
             replaceRestProperty(parentPath, paramPath.get("left"), i, numParams);
             return;
@@ -64,7 +62,7 @@ export default function ({ types: t }) {
             parentPath.get("body").unshiftContainer("body", declar);
             paramPath.replaceWith(uid);
         }
-    }
+    };
 
     return {
         inherits: adone.js.compiler.plugin.syntax.objectRestSpread,
@@ -264,22 +262,22 @@ export default function ({ types: t }) {
                 }
 
                 const useBuiltIns = file.opts.useBuiltIns || false;
-                if (typeof useBuiltIns !== "boolean") {
+                if (!is.boolean(useBuiltIns)) {
                     throw new Error("transform-object-rest-spread currently only accepts a boolean option for useBuiltIns (defaults to false)");
                 }
 
                 const args = [];
                 let props = [];
 
-                function push() {
+                const push = () => {
                     if (!props.length) {
                         return;
                     }
                     args.push(t.objectExpression(props));
                     props = [];
-                }
+                };
 
-                for (const prop of (path.node.properties: Array)) {
+                for (const prop of path.node.properties) {
                     if (t.isSpreadProperty(prop)) {
                         push();
                         args.push(prop.argument);

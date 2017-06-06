@@ -1,6 +1,6 @@
 const { transform } = adone.js.compiler.core;
 
-describe("glosses", "js", "compiler", "plugins", "importReplace", () => {
+describe("js", "compiler", "plugins", "importReplace", () => {
     before(() => {
         process.chdir(__dirname);
     });

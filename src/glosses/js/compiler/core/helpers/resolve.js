@@ -1,11 +1,8 @@
-// @flow
-
-
-const { module: Module, path } = adone.std;
+const { std: { module: Module, path } } = adone;
 
 const relativeModules = {};
 
-export default function (loc: string, relative: string = process.cwd()): ?string {
+export default function (loc, relative = process.cwd()) {
     let relativeMod = relativeModules[relative];
 
     if (!relativeMod) {

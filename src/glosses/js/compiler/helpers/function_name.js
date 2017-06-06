@@ -1,9 +1,4 @@
-/* eslint max-len: 0 */
-// @flow
-
-
-
-const { types: t, template, helpers: { getFunctionArity } } = adone.js.compiler;
+const { js: { compiler: { types: t, template, helpers: { getFunctionArity } } } } = adone;
 
 const buildPropertyMethodAssignmentWrapper = template(`
   (function (FUNCTION_KEY) {
@@ -40,7 +35,7 @@ const visitor = {
         // for the wrapper
         const localDeclar = path.scope.getBindingIdentifier(state.name);
         if (localDeclar !== state.outerDeclar) {
-            return; 
+            return;
         }
 
         state.selfReference = true;
@@ -48,7 +43,7 @@ const visitor = {
     }
 };
 
-function wrap(state, method, id, scope) {
+const wrap = (state, method, id, scope) => {
     if (state.selfReference) {
         if (scope.hasBinding(id.name) && !scope.hasGlobal(id.name)) {
             // we can just munge the local binding
@@ -56,7 +51,7 @@ function wrap(state, method, id, scope) {
         } else {
             // we don't currently support wrapping class expressions
             if (!t.isFunction(method)) {
-                return; 
+                return;
             }
 
             // need to add a wrapper since we can't change the references
@@ -84,9 +79,9 @@ function wrap(state, method, id, scope) {
 
     method.id = id;
     scope.getProgramParent().references[id.name] = true;
-}
+};
 
-function visit(node, name, scope) {
+const visit = (node, name, scope) => {
     const state = {
         selfAssignment: false,
         selfReference: false,
@@ -130,12 +125,12 @@ function visit(node, name, scope) {
     }
 
     return state;
-}
+};
 
 export default function ({ node, parent, scope, id }) {
     // has an `id` so we don't need to infer one
     if (node.id) {
-        return; 
+        return;
     }
 
     if ((t.isObjectProperty(parent) || t.isObjectMethod(parent, { kind: "method" })) && (!parent.computed || t.isLiteral(parent.key))) {

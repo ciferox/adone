@@ -1,6 +1,6 @@
 const { types, parse } = adone.js.compiler;
 
-describe("validators", () => {
+describe("js", "compiler", "types", "validators", () => {
     describe("isNodesEquivalent", () => {
         it("should handle simple cases", () => {
             const mem = types.memberExpression(types.identifier("a"), types.identifier("b"));
@@ -23,6 +23,10 @@ describe("validators", () => {
             const program2 = "'use strict'; function lol() { wow();return -1; }";
 
             assert(types.isNodesEquivalent(parse(program), parse(program2)) === false);
+        });
+
+        it("rejects 'await' as an identifier", () => {
+            assert(types.isValidIdentifier("await") === false);
         });
     });
 });

@@ -2,7 +2,7 @@ const { core } = adone.js.compiler;
 const { fs, path } = adone.std;
 
 // Test that plugins & presets are resolved relative to `filename`.
-describe.skip("addon resolution", () => {
+describe.skip("js", "compiler", "core", "addon resolution", () => {
     it("addon resolution", async () => {
         const fixtures = {};
         const paths = {};

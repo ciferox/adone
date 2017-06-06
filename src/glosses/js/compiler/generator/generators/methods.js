@@ -1,8 +1,6 @@
-// @flow
+const { js: { compiler: { types } } } = adone;
 
-const { types } = adone.js.compiler;
-
-export function _params(node: Object) {
+export const _params = function (node) {
     this.print(node.typeParameters, node);
     this.token("(");
     this.printList(node.params, node, {
@@ -18,9 +16,9 @@ export function _params(node: Object) {
     if (node.returnType) {
         this.print(node.returnType, node);
     }
-}
+};
 
-export function _method(node: Object) {
+export const _method = function (node) {
     const kind = node.kind;
     const key = node.key;
 
@@ -51,9 +49,9 @@ export function _method(node: Object) {
     this._params(node);
     this.space();
     this.print(node.body, node);
-}
+};
 
-export function FunctionExpression(node: Object) {
+export const FunctionExpression = function (node) {
     if (node.async) {
         this.word("async");
         this.space();
@@ -73,11 +71,15 @@ export function FunctionExpression(node: Object) {
     this._params(node);
     this.space();
     this.print(node.body, node);
-}
+};
 
 export { FunctionExpression as FunctionDeclaration };
 
-export function ArrowFunctionExpression(node: Object) {
+const hasTypes = (node, param) => {
+    return node.typeParameters || node.returnType || param.typeAnnotation || param.optional || param.trailingComments;
+};
+
+export const ArrowFunctionExpression = function (node) {
     if (node.async) {
         this.word("async");
         this.space();
@@ -96,8 +98,4 @@ export function ArrowFunctionExpression(node: Object) {
     this.space();
 
     this.print(node.body, node);
-}
-
-function hasTypes(node, param) {
-    return node.typeParameters || node.returnType || param.typeAnnotation || param.optional || param.trailingComments;
-}
+};

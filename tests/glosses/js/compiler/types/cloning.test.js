@@ -1,6 +1,6 @@
 const { types, parse } = adone.js.compiler;
 
-describe("cloning", () => {
+describe("js", "compiler", "types", "cloning", () => {
     describe("clone", () => {
         it("should handle undefined", () => {
             const node = undefined;

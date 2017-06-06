@@ -1,4 +1,3 @@
-
 const { template } = adone.js.compiler;
 
 const buildClassDecorator = template(`
@@ -81,7 +80,7 @@ export default function ({ types: t }) {
      * Add a helper to take an initial descriptor, apply some decorators to it, and optionally
      * define the property.
      */
-    function ensureApplyDecoratedDescriptorHelper(path, state) {
+    const ensureApplyDecoratedDescriptorHelper = (path, state) => {
         if (!state.applyDecoratedDescriptor) {
             state.applyDecoratedDescriptor = path.scope.generateUidIdentifier("applyDecoratedDescriptor");
             const helper = buildApplyDecoratedDescriptor({
@@ -91,12 +90,12 @@ export default function ({ types: t }) {
         }
 
         return state.applyDecoratedDescriptor;
-    }
+    };
 
     /**
      * Add a helper to call as a replacement for class property definition.
      */
-    function ensureInitializerDefineProp(path, state) {
+    const ensureInitializerDefineProp = (path, state) => {
         if (!state.initializerDefineProp) {
             state.initializerDefineProp = path.scope.generateUidIdentifier("initDefineProp");
             const helper = buildInitializerDefineProperty({
@@ -106,13 +105,13 @@ export default function ({ types: t }) {
         }
 
         return state.initializerDefineProp;
-    }
+    };
 
     /**
      * Add a helper that will throw a useful error if the transform fails to detect the class
      * property assignment, so users know something failed.
      */
-    function ensureInitializerWarning(path, state) {
+    const ensureInitializerWarning = (path, state) => {
         if (!state.initializerWarningHelper) {
             state.initializerWarningHelper = path.scope.generateUidIdentifier("initializerWarningHelper");
             const helper = buildInitializerWarningHelper({
@@ -122,13 +121,13 @@ export default function ({ types: t }) {
         }
 
         return state.initializerWarningHelper;
-    }
+    };
 
     /**
      * If the decorator expressions are non-identifiers, hoist them to before the class so we can be sure
      * that they are evaluated in order.
      */
-    function applyEnsureOrdering(path) {
+    const applyEnsureOrdering = (path) => {
         // TODO: This should probably also hoist computed properties.
         const decorators = (path.isClass() ? [path].concat(path.get("body.body")) : path.get("properties"))
                 .reduce((acc, prop) => acc.concat(prop.node.decorators || []), []);
@@ -143,13 +142,13 @@ export default function ({ types: t }) {
             const id = decorator.expression = path.scope.generateDeclaredUidIdentifier("dec");
             return t.assignmentExpression("=", id, expression);
         }).concat([path.node]));
-    }
+    };
 
     /**
      * Given a class expression with class-level decorators, create a new expression
      * with the proper decorated behavior.
      */
-    function applyClassDecorators(classPath) {
+    const applyClassDecorators = (classPath) => {
         const decorators = classPath.node.decorators || [];
         classPath.node.decorators = null;
 
@@ -169,44 +168,12 @@ export default function ({ types: t }) {
                     INNER: acc
                 }).expression;
             }, classPath.node);
-    }
-
-    /**
-     * Given a class expression with method-level decorators, create a new expression
-     * with the proper decorated behavior.
-     */
-    function applyMethodDecorators(path, state) {
-        const hasMethodDecorators = path.node.body.body.some((node) => {
-            return (node.decorators || []).length > 0;
-        });
-
-        if (!hasMethodDecorators) {
-            return;
-        }
-
-        return applyTargetDecorators(path, state, path.node.body.body);
-    }
-
-    /**
-     * Given an object expression with property decorators, create a new expression
-     * with the proper decorated behavior.
-     */
-    function applyObjectDecorators(path, state) {
-        const hasMethodDecorators = path.node.properties.some((node) => {
-            return (node.decorators || []).length > 0;
-        });
-
-        if (!hasMethodDecorators) {
-            return;
-        }
-
-        return applyTargetDecorators(path, state, path.node.properties);
-    }
+    };
 
     /**
      * A helper to pull out property decorators into a sequence expression.
      */
-    function applyTargetDecorators(path, state, decoratedProps) {
+    const applyTargetDecorators = (path, state, decoratedProps) => {
         const name = path.scope.generateDeclaredUidIdentifier(path.isClass() ? "class" : "obj");
 
         const exprs = decoratedProps.reduce((acc, node) => {
@@ -252,14 +219,16 @@ export default function ({ types: t }) {
                         target,
                         property,
                         t.arrayExpression(decorators.map((dec) => dec.expression)),
-                        (t.isObjectProperty(node) || t.isClassProperty(node, { static: true })) ? buildGetObjectInitializer({
-                            TEMP: path.scope.generateDeclaredUidIdentifier("init"),
-                            TARGET: target,
-                            PROPERTY: property
-                        }).expression : buildGetDescriptor({
-                            TARGET: target,
-                            PROPERTY: property
-                        }).expression,
+                        (t.isObjectProperty(node) || t.isClassProperty(node, { static: true }))
+                            ? buildGetObjectInitializer({
+                                TEMP: path.scope.generateDeclaredUidIdentifier("init"),
+                                TARGET: target,
+                                PROPERTY: property
+                            }).expression
+                            : buildGetDescriptor({
+                                TARGET: target,
+                                PROPERTY: property
+                            }).expression,
                         target
                     ])
                 );
@@ -273,7 +242,39 @@ export default function ({ types: t }) {
             t.sequenceExpression(exprs),
             name
         ]);
-    }
+    };
+
+    /**
+     * Given a class expression with method-level decorators, create a new expression
+     * with the proper decorated behavior.
+     */
+    const applyMethodDecorators = (path, state) => {
+        const hasMethodDecorators = path.node.body.body.some((node) => {
+            return (node.decorators || []).length > 0;
+        });
+
+        if (!hasMethodDecorators) {
+            return;
+        }
+
+        return applyTargetDecorators(path, state, path.node.body.body);
+    };
+
+    /**
+     * Given an object expression with property decorators, create a new expression
+     * with the proper decorated behavior.
+     */
+    const applyObjectDecorators = (path, state) => {
+        const hasMethodDecorators = path.node.properties.some((node) => {
+            return (node.decorators || []).length > 0;
+        });
+
+        if (!hasMethodDecorators) {
+            return;
+        }
+
+        return applyTargetDecorators(path, state, path.node.properties);
+    };
 
     return {
         inherits: adone.js.compiler.plugin.syntax.decorators,
@@ -304,7 +305,9 @@ export default function ({ types: t }) {
             ClassExpression(path, state) {
                 // Create a replacement for the class node if there is one. We do one pass to replace classes with
                 // class decorators, and a second pass to process method decorators.
-                const decoratedClass = applyEnsureOrdering(path) || applyClassDecorators(path) || applyMethodDecorators(path, state);
+                const decoratedClass = applyEnsureOrdering(path) ||
+                    applyClassDecorators(path) ||
+                    applyMethodDecorators(path, state);
 
                 if (decoratedClass) {
                     path.replaceWith(decoratedClass);

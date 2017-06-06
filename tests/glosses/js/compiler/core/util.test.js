@@ -1,6 +1,6 @@
 const { types, core: { util } } = adone.js.compiler;
 
-describe("util", () => {
+describe("js", "compiler", "core", "util", () => {
     it("canCompile", () => {
         assert.ok(util.canCompile("test.js"));
         assert.ok(util.canCompile("/test.js"));

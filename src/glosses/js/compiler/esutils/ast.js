@@ -1,30 +1,8 @@
-/*
-  Copyright (C) 2013 Yusuke Suzuki <utatane.tea@gmail.com>
+const { is } = adone;
 
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions are met:
-
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
-
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS 'AS IS'
-  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-  ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
-  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
-// @flow
-export function isExpression(node) {
-    if (node == null) {
-        return false; 
+export const isExpression = (node) => {
+    if (is.nil(node)) {
+        return false;
     }
     switch (node.type) {
         case "ArrayExpression":
@@ -46,11 +24,11 @@ export function isExpression(node) {
             return true;
     }
     return false;
-}
+};
 
-export function isIterationStatement(node) {
-    if (node == null) {
-        return false; 
+export const isIterationStatement = (node) => {
+    if (is.nil(node)) {
+        return false;
     }
 
     switch (node.type) {
@@ -61,11 +39,11 @@ export function isIterationStatement(node) {
             return true;
     }
     return false;
-}
+};
 
-export function isStatement(node) {
-    if (node == null) {
-        return false; 
+export const isStatement = (node) => {
+    if (is.nil(node)) {
+        return false;
     }
 
     switch (node.type) {
@@ -90,16 +68,16 @@ export function isStatement(node) {
             return true;
     }
     return false;
-}
+};
 
-export function isSourceElement(node) {
-    return isStatement(node) || node != null && node.type === "FunctionDeclaration";
-}
+export const isSourceElement = (node) => {
+    return isStatement(node) || !is.nil(node) && node.type === "FunctionDeclaration";
+};
 
-export function trailingStatement(node) {
+export const trailingStatement = (node) => {
     switch (node.type) {
         case "IfStatement":
-            if (node.alternate != null) {
+            if (!is.nil(node.alternate)) {
                 return node.alternate;
             }
             return node.consequent;
@@ -112,21 +90,21 @@ export function trailingStatement(node) {
             return node.body;
     }
     return null;
-}
+};
 
-export function isProblematicIfStatement(node) {
+export const isProblematicIfStatement = (node) => {
     let current;
 
     if (node.type !== "IfStatement") {
         return false;
     }
-    if (node.alternate == null) {
+    if (is.nil(node.alternate)) {
         return false;
     }
     current = node.consequent;
     do {
         if (current.type === "IfStatement") {
-            if (current.alternate == null) {
+            if (is.nil(current.alternate)) {
                 return true;
             }
         }
@@ -134,4 +112,4 @@ export function isProblematicIfStatement(node) {
     } while (current);
 
     return false;
-}
+};

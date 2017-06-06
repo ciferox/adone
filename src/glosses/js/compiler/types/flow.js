@@ -1,25 +1,9 @@
 import * as t from "./index";
 
 /**
- * Takes an array of `types` and flattens them, removing duplicates and
- * returns a `UnionTypeAnnotation` node containg them.
- */
-
-export function createUnionTypeAnnotation(types: Object[]) {
-    const flattened = removeTypeDuplicates(types);
-
-    if (flattened.length === 1) {
-        return flattened[0];
-    } 
-    return t.unionTypeAnnotation(flattened);
-    
-}
-
-/**
  * Dedupe type annotations.
  */
-
-export function removeTypeDuplicates(nodes: Object[]): Object[] {
+export const removeTypeDuplicates = (nodes) => {
     const generics = {};
     const bases = {};
 
@@ -31,7 +15,7 @@ export function removeTypeDuplicates(nodes: Object[]): Object[] {
     for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i];
         if (!node) {
-            continue; 
+            continue;
         }
 
         // detect duplicates
@@ -95,13 +79,26 @@ export function removeTypeDuplicates(nodes: Object[]): Object[] {
     }
 
     return types;
-}
+};
+
+/**
+ * Takes an array of `types` and flattens them, removing duplicates and
+ * returns a `UnionTypeAnnotation` node containg them.
+ */
+export const createUnionTypeAnnotation = (types) => {
+    const flattened = removeTypeDuplicates(types);
+
+    if (flattened.length === 1) {
+        return flattened[0];
+    }
+    return t.unionTypeAnnotation(flattened);
+};
 
 /**
  * Create a type anotation based on typeof expression.
  */
 
-export function createTypeAnnotationBasedOnTypeof(type: string) {
+export const createTypeAnnotationBasedOnTypeof = (type) => {
     if (type === "string") {
         return t.stringTypeAnnotation();
     } else if (type === "number") {
@@ -116,7 +113,6 @@ export function createTypeAnnotationBasedOnTypeof(type: string) {
         return t.genericTypeAnnotation(t.identifier("Object"));
     } else if (type === "symbol") {
         return t.genericTypeAnnotation(t.identifier("Symbol"));
-    } 
+    }
     throw new Error("Invalid typeof value");
-    
-}
+};

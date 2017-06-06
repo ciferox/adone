@@ -1,5 +1,3 @@
-
-
 export default function () {
     return {
         inherits: adone.js.compiler.plugin.syntax.asyncFunctions,

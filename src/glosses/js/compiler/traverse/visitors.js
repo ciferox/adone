@@ -1,7 +1,113 @@
-import * as virtualTypes from "./path/lib/virtual-types";
+import * as virtualTypes from "./path/lib/virtual_types";
 
-const { messages, types: t } = adone.js.compiler;
-const { clone } = adone.vendor.lodash;
+const { is, js: { compiler: { messages, types: t } }, vendor: { lodash: { clone } } } = adone;
+
+const shouldIgnoreKey = (key) => {
+    // internal/hidden key
+    if (key[0] === "_") {
+        return true;
+    }
+
+    // ignore function keys
+    if (key === "enter" || key === "exit" || key === "shouldSkip") {
+        return true;
+    }
+
+    // ignore other options
+    if (key === "blacklist" || key === "noScope" || key === "skipKeys") {
+        return true;
+    }
+
+    return false;
+};
+
+const mergePair = (dest, src) => {
+    for (const key in src) {
+        dest[key] = [].concat(dest[key] || [], src[key]);
+    }
+};
+
+const validateVisitorMethods = function (path, val) {
+    const fns = [].concat(val);
+    for (const fn of fns) {
+        if (!is.function(fn)) {
+            throw new TypeError(`Non-function found defined in ${path} with type ${typeof fn}`);
+        }
+    }
+};
+
+
+export const verify = (visitor) => {
+    if (visitor._verified) {
+        return;
+    }
+
+    if (is.function(visitor)) {
+        throw new Error(messages.get("traverseVerifyRootFunction"));
+    }
+
+    for (const nodeType in visitor) {
+        if (nodeType === "enter" || nodeType === "exit") {
+            validateVisitorMethods(nodeType, visitor[nodeType]);
+        }
+
+        if (shouldIgnoreKey(nodeType)) {
+            continue;
+        }
+
+        if (t.TYPES.indexOf(nodeType) < 0) {
+            throw new Error(messages.get("traverseVerifyNodeType", nodeType));
+        }
+
+        const visitors = visitor[nodeType];
+        if (is.object(visitors)) {
+            for (const visitorKey in visitors) {
+                if (visitorKey === "enter" || visitorKey === "exit") {
+                    // verify that it just contains functions
+                    validateVisitorMethods(`${nodeType}.${visitorKey}`, visitors[visitorKey]);
+                } else {
+                    throw new Error(messages.get("traverseVerifyVisitorProperty", nodeType, visitorKey));
+                }
+            }
+        }
+    }
+
+    visitor._verified = true;
+};
+
+const ensureEntranceObjects = function (obj) {
+    for (const key in obj) {
+        if (shouldIgnoreKey(key)) {
+            continue;
+        }
+
+        const fns = obj[key];
+        if (is.function(fns)) {
+            obj[key] = { enter: fns };
+        }
+    }
+};
+
+const ensureCallbackArrays = function (obj) {
+    if (obj.enter && !is.array(obj.enter)) {
+        obj.enter = [obj.enter];
+    }
+    if (obj.exit && !is.array(obj.exit)) {
+        obj.exit = [obj.exit];
+    }
+};
+
+const wrapCheck = (wrapper, fn) => {
+    const newFn = function (...args) {
+        const [path] = args;
+        if (wrapper.checkPath(path)) {
+            return fn.apply(this, args);
+        }
+    };
+    newFn.toString = () => fn.toString();
+    return newFn;
+};
+
 
 /**
  * explode() will take a visitor object with all of the various shorthands
@@ -19,21 +125,21 @@ const { clone } = adone.vendor.lodash;
  * * `enter` and `exit` functions are wrapped in arrays, to ease merging of
  *   visitors
  */
-export function explode(visitor) {
+export const explode = (visitor) => {
     if (visitor._exploded) {
-        return visitor; 
+        return visitor;
     }
     visitor._exploded = true;
 
     // normalise pipes
     for (const nodeType in visitor) {
         if (shouldIgnoreKey(nodeType)) {
-            continue; 
+            continue;
         }
 
-        const parts: string[] = nodeType.split("|");
+        const parts = nodeType.split("|");
         if (parts.length === 1) {
-            continue; 
+            continue;
         }
 
         const fns = visitor[nodeType];
@@ -58,14 +164,14 @@ export function explode(visitor) {
     ensureCallbackArrays(visitor);
 
     // add type wrappers
-    for (const nodeType of (Object.keys(visitor): Array)) {
+    for (const nodeType of Object.keys(visitor)) {
         if (shouldIgnoreKey(nodeType)) {
-            continue; 
+            continue;
         }
 
         const wrapper = virtualTypes[nodeType];
         if (!wrapper) {
-            continue; 
+            continue;
         }
 
         // wrap all the functions
@@ -78,7 +184,7 @@ export function explode(visitor) {
         delete visitor[nodeType];
 
         if (wrapper.types) {
-            for (const type of (wrapper.types: string[])) {
+            for (const type of wrapper.types) {
                 // merge the visitor if necessary or just put it back in
                 if (visitor[type]) {
                     mergePair(visitor[type], fns);
@@ -94,12 +200,12 @@ export function explode(visitor) {
     // add aliases
     for (const nodeType in visitor) {
         if (shouldIgnoreKey(nodeType)) {
-            continue; 
+            continue;
         }
 
         const fns = visitor[nodeType];
 
-        let aliases: ?string[] = t.FLIPPED_ALIAS_KEYS[nodeType];
+        let aliases = t.FLIPPED_ALIAS_KEYS[nodeType];
 
         const deprecratedKey = t.DEPRECATED_KEYS[nodeType];
         if (deprecratedKey) {
@@ -108,7 +214,7 @@ export function explode(visitor) {
         }
 
         if (!aliases) {
-            continue; 
+            continue;
         }
 
         // clear it from the visitor
@@ -126,96 +232,24 @@ export function explode(visitor) {
 
     for (const nodeType in visitor) {
         if (shouldIgnoreKey(nodeType)) {
-            continue; 
+            continue;
         }
 
         ensureCallbackArrays(visitor[nodeType]);
     }
 
     return visitor;
-}
+};
 
-export function verify(visitor) {
-    if (visitor._verified) {
-        return; 
-    }
-
-    if (typeof visitor === "function") {
-        throw new Error(messages.get("traverseVerifyRootFunction"));
-    }
-
-    for (const nodeType in visitor) {
-        if (nodeType === "enter" || nodeType === "exit") {
-            validateVisitorMethods(nodeType, visitor[nodeType]);
-        }
-
-        if (shouldIgnoreKey(nodeType)) {
-            continue; 
-        }
-
-        if (t.TYPES.indexOf(nodeType) < 0) {
-            throw new Error(messages.get("traverseVerifyNodeType", nodeType));
-        }
-
-        const visitors = visitor[nodeType];
-        if (typeof visitors === "object") {
-            for (const visitorKey in visitors) {
-                if (visitorKey === "enter" || visitorKey === "exit") {
-                    // verify that it just contains functions
-                    validateVisitorMethods(`${nodeType}.${visitorKey}`, visitors[visitorKey]);
-                } else {
-                    throw new Error(messages.get("traverseVerifyVisitorProperty", nodeType, visitorKey));
-                }
-            }
-        }
-    }
-
-    visitor._verified = true;
-}
-
-function validateVisitorMethods(path, val) {
-    const fns = [].concat(val);
-    for (const fn of fns) {
-        if (typeof fn !== "function") {
-            throw new TypeError(`Non-function found defined in ${path} with type ${typeof fn}`);
-        }
-    }
-}
-
-export function merge(visitors: Array, states: Array = [], wrapper?: ?Function) {
-    const rootVisitor = {};
-
-    for (let i = 0; i < visitors.length; i++) {
-        const visitor = visitors[i];
-        const state = states[i];
-
-        explode(visitor);
-
-        for (const type in visitor) {
-            let visitorType = visitor[type];
-
-            // if we have state or wrapper then overload the callbacks to take it
-            if (state || wrapper) {
-                visitorType = wrapWithStateOrWrapper(visitorType, state, wrapper);
-            }
-
-            const nodeVisitor = rootVisitor[type] = rootVisitor[type] || {};
-            mergePair(nodeVisitor, visitorType);
-        }
-    }
-
-    return rootVisitor;
-}
-
-function wrapWithStateOrWrapper(oldVisitor, state, wrapper: ?Function) {
+const wrapWithStateOrWrapper = function (oldVisitor, state, wrapper) {
     const newVisitor = {};
 
     for (const key in oldVisitor) {
         let fns = oldVisitor[key];
 
         // not an enter/exit array of callbacks
-        if (!Array.isArray(fns)) {
-            continue; 
+        if (!is.array(fns)) {
+            continue;
         }
 
         fns = fns.map((fn) => {
@@ -238,61 +272,29 @@ function wrapWithStateOrWrapper(oldVisitor, state, wrapper: ?Function) {
     }
 
     return newVisitor;
-}
+};
 
-function ensureEntranceObjects(obj) {
-    for (const key in obj) {
-        if (shouldIgnoreKey(key)) {
-            continue; 
+export const merge = function (visitors, states = [], wrapper) {
+    const rootVisitor = {};
+
+    for (let i = 0; i < visitors.length; i++) {
+        const visitor = visitors[i];
+        const state = states[i];
+
+        explode(visitor);
+
+        for (const type in visitor) {
+            let visitorType = visitor[type];
+
+            // if we have state or wrapper then overload the callbacks to take it
+            if (state || wrapper) {
+                visitorType = wrapWithStateOrWrapper(visitorType, state, wrapper);
+            }
+
+            const nodeVisitor = rootVisitor[type] = rootVisitor[type] || {};
+            mergePair(nodeVisitor, visitorType);
         }
-
-        const fns = obj[key];
-        if (typeof fns === "function") {
-            obj[key] = { enter: fns };
-        }
-    }
-}
-
-function ensureCallbackArrays(obj) {
-    if (obj.enter && !Array.isArray(obj.enter)) {
-        obj.enter = [obj.enter]; 
-    }
-    if (obj.exit && !Array.isArray(obj.exit)) {
-        obj.exit = [obj.exit]; 
-    }
-}
-
-function wrapCheck(wrapper, fn) {
-    const newFn = function (path) {
-        if (wrapper.checkPath(path)) {
-            return fn.apply(this, arguments);
-        }
-    };
-    newFn.toString = () => fn.toString();
-    return newFn;
-}
-
-function shouldIgnoreKey(key) {
-    // internal/hidden key
-    if (key[0] === "_") {
-        return true; 
     }
 
-    // ignore function keys
-    if (key === "enter" || key === "exit" || key === "shouldSkip") {
-        return true; 
-    }
-
-    // ignore other options
-    if (key === "blacklist" || key === "noScope" || key === "skipKeys") {
-        return true; 
-    }
-
-    return false;
-}
-
-function mergePair(dest, src) {
-    for (const key in src) {
-        dest[key] = [].concat(dest[key] || [], src[key]);
-    }
-}
+    return rootVisitor;
+};

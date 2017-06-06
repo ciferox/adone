@@ -4,7 +4,7 @@ const getBody = (program) => {
     return parse(program, { sourceType: "module" }).program.body;
 };
 
-describe("retrievers", () => {
+describe("js", "compiler", "types", "retrievers", () => {
     describe("getBindingIdentifiers", () => {
         it("variable declarations", () => {
             const program = "var a = 1; let b = 2; const c = 3;";

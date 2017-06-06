@@ -1,13 +1,10 @@
-// @flow
-
-
 const { is, js: { compiler: { messages, traverse } }, vendor: { lodash: _ } } = adone;
 import Store from "../store";
 
 const GLOBAL_VISITOR_PROPS = ["enter", "exit"];
 
 export default class Plugin extends Store {
-    constructor(plugin: Object, key?: string) {
+    constructor(plugin, key) {
         super();
 
         this.initialized = false;
@@ -19,13 +16,6 @@ export default class Plugin extends Store {
         this.pre = this.take("pre");
         this.visitor = this.normaliseVisitor(_.clone(this.take("visitor")) || {});
     }
-
-    initialized: boolean;
-    raw: Object;
-    manipulateOptions: ?Function;
-    post: ?Function;
-    pre: ?Function;
-    visitor: Object;
 
     take(key) {
         const val = this.raw[key];
@@ -41,7 +31,7 @@ export default class Plugin extends Store {
             return target[key];
         }
 
-        const fns: ?Function[] = [target[key], this[key]];
+        const fns = [target[key], this[key]];
 
         return function (...args) {
             let val;
@@ -57,7 +47,7 @@ export default class Plugin extends Store {
         };
     }
 
-    maybeInherit(loc: string) {
+    maybeInherit(loc) {
         let inherits = this.take("inherits");
         if (!inherits) {
             return;
@@ -76,7 +66,7 @@ export default class Plugin extends Store {
      * position on disk and how it was specified.
      */
 
-    init(loc: string, i: number) {
+    init(loc, i) {
         if (this.initialized) {
             return;
         }
@@ -89,7 +79,7 @@ export default class Plugin extends Store {
         }
     }
 
-    normaliseVisitor(visitor: Object): Object {
+    normaliseVisitor(visitor) {
         for (const key of GLOBAL_VISITOR_PROPS) {
             if (visitor[key]) {
                 throw new Error("Plugins aren't allowed to specify catch-all enter/exit handlers. Please target individual nodes.");

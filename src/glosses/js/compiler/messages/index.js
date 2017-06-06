@@ -1,12 +1,9 @@
-// @flow
-
-const { util } = adone.std;
+const { is, std: { util } } = adone;
 
 /**
  * Mapping of messages to be used in Babel.
  * Messages can include $0-style placeholders.
  */
-
 export const MESSAGES = {
     tailCallReassignmentDeopt: "Function reference has been reassigned, so it will probably be dereferenced, therefore we can't optimise this with confidence",
     classesIllegalBareSuper: "Illegal use of bare super",
@@ -43,11 +40,29 @@ export const MESSAGES = {
     pluginInvalidProperty: "Plugin $2 specified in $1 provided an invalid property of $3"
 };
 
+
+/**
+ * Stingify arguments to be used inside messages.
+ */
+
+export const parseArgs = (args) => {
+    return args.map((val) => {
+        if (!is.nil(val) && val.inspect) {
+            return val.inspect();
+        }
+        try {
+            return JSON.stringify(val) || `${val}`;
+        } catch (e) {
+            return util.inspect(val);
+        }
+
+    });
+};
+
 /**
  * Get a message with $0 placeholders replaced by arguments.
  */
-
-export function get(key: string, ...args: any[]): string {
+export const get = (key, ...args) => {
     const msg = MESSAGES[key];
     if (!msg) {
         throw new ReferenceError(`Unknown message ${JSON.stringify(key)}`);
@@ -60,22 +75,4 @@ export function get(key: string, ...args: any[]): string {
     return msg.replace(/\$(\d+)/g, (str, i) => {
         return args[i - 1];
     });
-}
-
-/**
- * Stingify arguments to be used inside messages.
- */
-
-export function parseArgs(args: any[]): string[] {
-    return args.map((val) => {
-        if (val != null && val.inspect) {
-            return val.inspect();
-        } 
-        try {
-            return JSON.stringify(val) || `${val}`;
-        } catch (e) {
-            return util.inspect(val);
-        }
-        
-    });
-}
+};

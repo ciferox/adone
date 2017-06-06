@@ -1,53 +1,55 @@
 import * as t from "../index";
 
+const { is } = adone;
+
 export const VISITOR_KEYS = {};
 export const ALIAS_KEYS = {};
 export const NODE_FIELDS = {};
 export const BUILDER_KEYS = {};
 export const DEPRECATED_KEYS = {};
 
-function getType(val) {
-    if (Array.isArray(val)) {
+const getType = (val) => {
+    if (is.array(val)) {
         return "array";
-    } else if (val === null) {
+    } else if (is.null(val)) {
         return "null";
-    } else if (val === undefined) {
+    } else if (is.undefined(val)) {
         return "undefined";
-    } 
+    }
     return typeof val;
-    
-}
 
-export function assertEach(callback: Function): Function {
-    function validator(node, key, val) {
-        if (!Array.isArray(val)) {
-            return; 
+};
+
+export const assertEach = (callback) => {
+    const validator = (node, key, val) => {
+        if (!is.array(val)) {
+            return;
         }
 
         for (let i = 0; i < val.length; i++) {
             callback(node, `${key}[${i}]`, val[i]);
         }
-    }
+    };
     validator.each = callback;
     return validator;
-}
+};
 
-export function assertOneOf(...vals): Function {
-    function validate(node, key, val) {
+export const assertOneOf = (...vals) => {
+    const validate = (node, key, val) => {
         if (vals.indexOf(val) < 0) {
             throw new TypeError(
                 `Property ${key} expected value to be one of ${JSON.stringify(vals)} but got ${JSON.stringify(val)}`
             );
         }
-    }
+    };
 
     validate.oneOf = vals;
 
     return validate;
-}
+};
 
-export function assertNodeType(...types: string[]): Function {
-    function validate(node, key, val) {
+export const assertNodeType = (...types) => {
+    const validate = (node, key, val) => {
         let valid = false;
 
         for (const type of types) {
@@ -63,15 +65,15 @@ export function assertNodeType(...types: string[]): Function {
                 `but instead got ${JSON.stringify(val && val.type)}`
             );
         }
-    }
+    };
 
     validate.oneOfNodeTypes = types;
 
     return validate;
-}
+};
 
-export function assertNodeOrValueType(...types: string[]): Function {
-    function validate(node, key, val) {
+export const assertNodeOrValueType = (...types) => {
+    const validate = (node, key, val) => {
         let valid = false;
 
         for (const type of types) {
@@ -87,48 +89,41 @@ export function assertNodeOrValueType(...types: string[]): Function {
                 `but instead got ${JSON.stringify(val && val.type)}`
             );
         }
-    }
+    };
 
     validate.oneOfNodeOrValueTypes = types;
 
     return validate;
-}
+};
 
-export function assertValueType(type: string): Function {
-    function validate(node, key, val) {
+export const assertValueType = (type) => {
+    const validate = (node, key, val) => {
         const valid = getType(val) === type;
 
         if (!valid) {
             throw new TypeError(`Property ${key} expected type of ${type} but got ${getType(val)}`);
         }
-    }
+    };
 
     validate.type = type;
 
     return validate;
-}
+};
 
-export function chain(...fns: Function[]): Function {
-    function validate(...args) {
+export const chain = (...fns) => {
+    const validate = (...args) => {
         for (const fn of fns) {
             fn(...args);
         }
-    }
+    };
     validate.chainOf = fns;
     return validate;
-}
+};
 
-export default function defineType(
-    type: string,
-    opts: {
-        fields?: Object;
-        visitor?: string[];
-        aliases?: string[];
-        builder?: string[];
-        inherits?: string;
-        deprecatedAlias?: string;
-    } = {},
-) {
+
+const store = {};
+
+export default function defineType(type, opts = {}) {
     const inherits = (opts.inherits && store[opts.inherits]) || {};
 
     opts.fields = opts.fields || inherits.fields || {};
@@ -141,7 +136,7 @@ export default function defineType(
     }
 
     // ensure all field keys are represented in `fields`
-    for (const key of (opts.visitor.concat(opts.builder): string[])) {
+    for (const key of opts.visitor.concat(opts.builder)) {
         opts.fields[key] = opts.fields[key] || {};
     }
 
@@ -151,7 +146,7 @@ export default function defineType(
         if (opts.builder.indexOf(key) === -1) {
             field.optional = true;
         }
-        if (field.default === undefined) {
+        if (is.undefined(field.default)) {
             field.default = null;
         } else if (!field.validate) {
             field.validate = assertValueType(getType(field.default));
@@ -165,5 +160,3 @@ export default function defineType(
 
     store[type] = opts;
 }
-
-const store = {};

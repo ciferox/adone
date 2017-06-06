@@ -1,27 +1,14 @@
-// @flow
-
-
-
 const { js: { compiler: { types } }, is } = adone;
-
-type WhitespaceObject = {
-    before?: boolean;
-    after?: boolean;
-};
 
 /**
  * Crawl a node to test if it contains a CallExpression, a Function, or a Helper.
- *
- * @example
- * crawl(node)
- * // { hasCall: false, hasFunction: true, hasHelper: false }
  */
 
-function crawl(node, state = {}) {
+const crawl = (node, state = {}) => {
     if (types.isMemberExpression(node)) {
         crawl(node.object, state);
         if (node.computed) {
-            crawl(node.property, state); 
+            crawl(node.property, state);
         }
     } else if (types.isBinary(node) || types.isAssignmentExpression(node)) {
         crawl(node.left, state);
@@ -36,13 +23,9 @@ function crawl(node, state = {}) {
     }
 
     return state;
-}
+};
 
-/**
- * Test if a node is or has a helper.
- */
-
-function isHelper(node) {
+const isHelper = (node) => {
     if (types.isMemberExpression(node)) {
         return isHelper(node.object) || isHelper(node.property);
     } else if (types.isIdentifier(node)) {
@@ -51,27 +34,21 @@ function isHelper(node) {
         return isHelper(node.callee);
     } else if (types.isBinary(node) || types.isAssignmentExpression(node)) {
         return (types.isIdentifier(node.left) && isHelper(node.left)) || isHelper(node.right);
-    } 
+    }
     return false;
-    
-}
 
-function isType(node) {
+};
+
+const isType = (node) => {
     return types.isLiteral(node) || types.isObjectExpression(node) || types.isArrayExpression(node) ||
         types.isIdentifier(node) || types.isMemberExpression(node);
-}
+};
 
 /**
  * Tests for node types that need whitespace.
  */
-
 export const nodes = {
-
-    /**
-     * Test if AssignmentExpression needs whitespace.
-     */
-
-    AssignmentExpression(node: Object): ?WhitespaceObject {
+    AssignmentExpression(node) {
         const state = crawl(node.right);
         if ((state.hasCall && state.hasHelper) || state.hasFunction) {
             return {
@@ -80,46 +57,26 @@ export const nodes = {
             };
         }
     },
-
-    /**
-     * Test if SwitchCase needs whitespace.
-     */
-
-    SwitchCase(node: Object, parent: Object): ?WhitespaceObject {
+    SwitchCase(node, parent) {
         return {
             before: node.consequent.length || parent.cases[0] === node
         };
     },
-
-    /**
-     * Test if LogicalExpression needs whitespace.
-     */
-
-    LogicalExpression(node: Object): ?WhitespaceObject {
+    LogicalExpression(node) {
         if (types.isFunction(node.left) || types.isFunction(node.right)) {
             return {
                 after: true
             };
         }
     },
-
-    /**
-     * Test if Literal needs whitespace.
-     */
-
-    Literal(node: Object): ?WhitespaceObject {
+    Literal(node) {
         if (node.value === "use strict") {
             return {
                 after: true
             };
         }
     },
-
-    /**
-     * Test if CallExpression needs whitespace.
-     */
-
-    CallExpression(node: Object): ?WhitespaceObject {
+    CallExpression(node) {
         if (types.isFunction(node.callee) || isHelper(node)) {
             return {
                 before: true,
@@ -127,12 +84,7 @@ export const nodes = {
             };
         }
     },
-
-    /**
-     * Test if VariableDeclaration needs whitespace.
-     */
-
-    VariableDeclaration(node: Object): ?WhitespaceObject {
+    VariableDeclaration(node) {
         for (let i = 0; i < node.declarations.length; i++) {
             const declar = node.declarations[i];
 
@@ -150,12 +102,7 @@ export const nodes = {
             }
         }
     },
-
-    /**
-     * Test if IfStatement needs whitespace.
-     */
-
-    IfStatement(node: Object): ?WhitespaceObject {
+    IfStatement(node) {
         if (types.isBlockStatement(node.consequent)) {
             return {
                 before: true,
@@ -165,45 +112,28 @@ export const nodes = {
     }
 };
 
-/**
- * Test if Property or SpreadProperty needs whitespace.
- */
-
-nodes.ObjectProperty = nodes.ObjectTypeProperty = nodes.ObjectMethod = nodes.SpreadProperty = (node: Object, parent): ?WhitespaceObject => {
-    if (parent.properties[0] === node) {
-        return {
-            before: true
-        };
-    }
-};
+nodes.ObjectProperty =
+    nodes.ObjectTypeProperty =
+    nodes.ObjectMethod =
+    nodes.SpreadProperty = (node, parent) => {
+        if (parent.properties[0] === node) {
+            return {
+                before: true
+            };
+        }
+    };
 
 /**
  * Returns lists from node types that need whitespace.
  */
-
 export const list = {
-
-    /**
-     * Return VariableDeclaration declarations init properties.
-     */
-
-    VariableDeclaration(node: Object): Object[] {
+    VariableDeclaration(node) {
         return node.declarations.map((x) => x.init);
     },
-
-    /**
-     * Return VariableDeclaration elements.
-     */
-
-    ArrayExpression(node: Object): Object[] {
+    ArrayExpression(node) {
         return node.elements;
     },
-
-    /**
-     * Return VariableDeclaration properties.
-     */
-
-    ObjectExpression(node: Object): Object[] {
+    ObjectExpression(node) {
         return node.properties;
     }
 };
@@ -219,6 +149,7 @@ const t = {
     SwitchStatement: true,
     TryStatement: true
 };
+
 for (let [type, amounts] of adone.util.entries(t)) {
     if (is.boolean(amounts)) {
         amounts = { after: amounts, before: amounts };

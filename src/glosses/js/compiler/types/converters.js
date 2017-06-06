@@ -1,15 +1,15 @@
-
-import type { Scope } from "../traverse";
 import * as t from "./index";
 
-export function toComputedKey(node: Object, key: Object = node.key || node.property): Object {
+const { is } = adone;
+
+export const toComputedKey = (node, key = node.key || node.property) => {
     if (!node.computed) {
         if (t.isIdentifier(key)) {
             key = t.stringLiteral(key.name);
         }
     }
     return key;
-}
+};
 
 /**
  * Turn an array of statement `nodes` into a `SequenceExpression`.
@@ -19,41 +19,29 @@ export function toComputedKey(node: Object, key: Object = node.key || node.prope
  *
  * Expression statements are just resolved to their expression.
  */
-
-export function toSequenceExpression(nodes: Object[], scope: Scope): ?Object {
+export const toSequenceExpression = (nodes, scope) => {
     if (!nodes || !nodes.length) {
-        return; 
+        return;
     }
 
     const declars = [];
     let bailed = false;
 
-    const result = convert(nodes);
-    if (bailed) {
-        return; 
-    }
-
-    for (let i = 0; i < declars.length; i++) {
-        scope.push(declars[i]);
-    }
-
-    return result;
-
-    function convert(nodes) {
+    const convert = (nodes) => {
         let ensureLastUndefined = false;
         const exprs = [];
 
-        for (const node of (nodes: Array)) {
+        for (const node of nodes) {
             if (t.isExpression(node)) {
                 exprs.push(node);
             } else if (t.isExpressionStatement(node)) {
                 exprs.push(node.expression);
             } else if (t.isVariableDeclaration(node)) {
                 if (node.kind !== "var") {
-                    return bailed = true; 
+                    return bailed = true;
                 } // bailed
 
-                for (const declar of (node.declarations: Array)) {
+                for (const declar of node.declarations) {
                     const bindings = t.getBindingIdentifiers(declar);
                     for (const key in bindings) {
                         declars.push({
@@ -73,7 +61,7 @@ export function toSequenceExpression(nodes: Object[], scope: Scope): ?Object {
                 const consequent = node.consequent ? convert([node.consequent]) : scope.buildUndefinedNode();
                 const alternate = node.alternate ? convert([node.alternate]) : scope.buildUndefinedNode();
                 if (!consequent || !alternate) {
-                    return bailed = true; 
+                    return bailed = true;
                 }
 
                 exprs.push(t.conditionalExpression(node.test, consequent, alternate));
@@ -99,13 +87,24 @@ export function toSequenceExpression(nodes: Object[], scope: Scope): ?Object {
 
         if (exprs.length === 1) {
             return exprs[0];
-        } 
+        }
         return t.sequenceExpression(exprs);
-        
-    }
-}
 
-export function toKeyAlias(node: Object, key: Object = node.key): string {
+    };
+
+    const result = convert(nodes);
+    if (bailed) {
+        return;
+    }
+
+    for (let i = 0; i < declars.length; i++) {
+        scope.push(declars[i]);
+    }
+
+    return result;
+};
+
+export const toKeyAlias = (node, key = node.key) => {
     let alias;
 
     if (node.kind === "method") {
@@ -127,19 +126,19 @@ export function toKeyAlias(node: Object, key: Object = node.key): string {
     }
 
     return alias;
-}
+};
 
 toKeyAlias.uid = 0;
 
-toKeyAlias.increment = function () {
+toKeyAlias.increment = () => {
     if (toKeyAlias.uid >= Number.MAX_SAFE_INTEGER) {
         return toKeyAlias.uid = 0;
-    } 
+    }
     return toKeyAlias.uid++;
-    
+
 };
 
-export function toIdentifier(name: string): string {
+export const toIdentifier = (name) => {
     name = `${name}`;
 
     // replace all non-valid identifiers with dashes
@@ -158,22 +157,17 @@ export function toIdentifier(name: string): string {
     }
 
     return name || "_";
-}
+};
 
-export function toBindingIdentifierName(name: string): string {
+export const toBindingIdentifierName = (name) => {
     name = toIdentifier(name);
     if (name === "eval" || name === "arguments") {
-        name = `_${name}`; 
+        name = `_${name}`;
     }
     return name;
-}
+};
 
-/**
- * [Please add a description.]
- * @returns {Object|Boolean}
- */
-
-export function toStatement(node: Object, ignore?: boolean) {
+export const toStatement = (node, ignore) => {
     if (t.isStatement(node)) {
         return node;
     }
@@ -198,17 +192,17 @@ export function toStatement(node: Object, ignore?: boolean) {
     if (!newType) {
         if (ignore) {
             return false;
-        } 
+        }
         throw new Error(`cannot turn ${node.type} to a statement`);
-        
+
     }
 
     node.type = newType;
 
     return node;
-}
+};
 
-export function toExpression(node: Object): Object {
+export const toExpression = (node) => {
     if (t.isExpressionStatement(node)) {
         node = node.expression;
     }
@@ -238,9 +232,9 @@ export function toExpression(node: Object): Object {
     }
 
     return node;
-}
+};
 
-export function toBlock(node: Object, parent: Object): Object {
+export const toBlock = (node, parent) => {
     if (t.isBlockStatement(node)) {
         return node;
     }
@@ -249,7 +243,7 @@ export function toBlock(node: Object, parent: Object): Object {
         node = [];
     }
 
-    if (!Array.isArray(node)) {
+    if (!is.array(node)) {
         if (!t.isStatement(node)) {
             if (t.isFunction(parent)) {
                 node = t.returnStatement(node);
@@ -262,48 +256,41 @@ export function toBlock(node: Object, parent: Object): Object {
     }
 
     return t.blockStatement(node);
-}
+};
 
-export function valueToNode(value: any): Object {
-    // undefined
-    if (value === undefined) {
+export const valueToNode = (value) => {
+    if (is.undefined(value)) {
         return t.identifier("undefined");
     }
 
-    // boolean
-    if (value === true || value === false) {
+    if (is.boolean(value)) {
         return t.booleanLiteral(value);
     }
 
-    // null
-    if (value === null) {
+    if (is.null(value)) {
         return t.nullLiteral();
     }
 
-    // strings
-    if (typeof value === "string") {
+    if (is.string(value)) {
         return t.stringLiteral(value);
     }
 
-    // numbers
-    if (typeof value === "number") {
+    if (is.number(value)) {
         return t.numericLiteral(value);
     }
 
-    // regexes
-    if (adone.is.regexp(value)) {
+    if (is.regexp(value)) {
         const pattern = value.source;
         const flags = value.toString().match(/\/([a-z]+|)$/)[1];
         return t.regExpLiteral(pattern, flags);
     }
 
-    // array
-    if (Array.isArray(value)) {
+    if (is.array(value)) {
         return t.arrayExpression(value.map(t.valueToNode));
     }
 
     // object
-    if (adone.is.plainObject(value)) {
+    if (is.plainObject(value)) {
         const props = [];
         for (const key in value) {
             let nodeKey;
@@ -318,4 +305,4 @@ export function valueToNode(value: any): Object {
     }
 
     throw new Error("don't know how to turn this value into a node");
-}
+};

@@ -1,9 +1,10 @@
 // This file contains methods responsible for removing a node.
-//@flow
 
-import { hooks } from "./lib/removal-hooks";
+import { hooks } from "./lib/removal_hooks";
 
-export function remove() {
+const { is } = adone;
+
+export const remove = function () {
     this._assertUnremoved();
 
     this.resync();
@@ -16,33 +17,33 @@ export function remove() {
     this.shareCommentsWithSiblings();
     this._remove();
     this._markRemoved();
-}
+};
 
-export function _callRemovalHooks() {
-    for (const fn of (hooks: Function[])) {
+export const _callRemovalHooks = function () {
+    for (const fn of hooks) {
         if (fn(this, this.parentPath)) {
-            return true; 
+            return true;
         }
     }
-}
+};
 
-export function _remove() {
-    if (Array.isArray(this.container)) {
+export const _remove = function () {
+    if (is.array(this.container)) {
         this.container.splice(this.key, 1);
         this.updateSiblingKeys(this.key, -1);
     } else {
         this._replaceWith(null);
     }
-}
+};
 
-export function _markRemoved() {
+export const _markRemoved = function () {
     this.shouldSkip = true;
     this.removed = true;
     this.node = null;
-}
+};
 
-export function _assertUnremoved() {
+export const _assertUnremoved = function () {
     if (this.removed) {
         throw this.buildCodeFrameError("NodePath has been removed so is read-only.");
     }
-}
+};

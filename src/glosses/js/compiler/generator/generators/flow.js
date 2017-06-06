@@ -1,35 +1,35 @@
-// @flow
-export function AnyTypeAnnotation() {
-    this.word("any");
-}
 
-export function ArrayTypeAnnotation(node: Object) {
+export const AnyTypeAnnotation = function () {
+    this.word("any");
+};
+
+export const ArrayTypeAnnotation = function (node) {
     this.print(node.elementType, node);
     this.token("[");
     this.token("]");
-}
+};
 
-export function BooleanTypeAnnotation() {
+export const BooleanTypeAnnotation = function () {
     this.word("boolean");
-}
+};
 
-export function BooleanLiteralTypeAnnotation(node: Object) {
+export const BooleanLiteralTypeAnnotation = function (node) {
     this.word(node.value ? "true" : "false");
-}
+};
 
-export function NullLiteralTypeAnnotation() {
+export const NullLiteralTypeAnnotation = function () {
     this.word("null");
-}
+};
 
-export function DeclareClass(node: Object) {
+export const DeclareClass = function (node) {
     this.word("declare");
     this.space();
     this.word("class");
     this.space();
     this._interfaceish(node);
-}
+};
 
-export function DeclareFunction(node: Object) {
+export const DeclareFunction = function (node) {
     this.word("declare");
     this.space();
     this.word("function");
@@ -37,15 +37,15 @@ export function DeclareFunction(node: Object) {
     this.print(node.id, node);
     this.print(node.id.typeAnnotation.typeAnnotation, node);
     this.semicolon();
-}
+};
 
-export function DeclareInterface(node: Object) {
+export const DeclareInterface = function (node) {
     this.word("declare");
     this.space();
     this.InterfaceDeclaration(node);
-}
+};
 
-export function DeclareModule(node: Object) {
+export const DeclareModule = function (node) {
     this.word("declare");
     this.space();
     this.word("module");
@@ -53,24 +53,24 @@ export function DeclareModule(node: Object) {
     this.print(node.id, node);
     this.space();
     this.print(node.body, node);
-}
+};
 
-export function DeclareModuleExports(node: Object) {
+export const DeclareModuleExports = function (node) {
     this.word("declare");
     this.space();
     this.word("module");
     this.token(".");
     this.word("exports");
     this.print(node.typeAnnotation, node);
-}
+};
 
-export function DeclareTypeAlias(node: Object) {
+export const DeclareTypeAlias = function (node) {
     this.word("declare");
     this.space();
     this.TypeAlias(node);
-}
+};
 
-export function DeclareVariable(node: Object) {
+export const DeclareVariable = function (node) {
     this.word("declare");
     this.space();
     this.word("var");
@@ -78,13 +78,13 @@ export function DeclareVariable(node: Object) {
     this.print(node.id, node);
     this.print(node.id.typeAnnotation, node);
     this.semicolon();
-}
+};
 
-export function ExistentialTypeParam() {
+export const ExistentialTypeParam = function () {
     this.token("*");
-}
+};
 
-export function FunctionTypeAnnotation(node: Object, parent: Object) {
+export const FunctionTypeAnnotation = function (node, parent) {
     this.print(node.typeParameters, node);
     this.token("(");
     this.printList(node.params, node);
@@ -110,9 +110,9 @@ export function FunctionTypeAnnotation(node: Object, parent: Object) {
 
     this.space();
     this.print(node.returnType, node);
-}
+};
 
-export function FunctionTypeParam(node: Object) {
+export const FunctionTypeParam = function (node) {
     this.print(node.name, node);
     if (node.optional) {
         this.token("?");
@@ -120,16 +120,16 @@ export function FunctionTypeParam(node: Object) {
     this.token(":");
     this.space();
     this.print(node.typeAnnotation, node);
-}
+};
 
-export function InterfaceExtends(node: Object) {
+export const InterfaceExtends = function (node) {
     this.print(node.id, node);
     this.print(node.typeParameters, node);
-}
+};
 
 export { InterfaceExtends as ClassImplements, InterfaceExtends as GenericTypeAnnotation };
 
-export function _interfaceish(node: Object) {
+export const _interfaceish = function (node) {
     this.print(node.id, node);
     this.print(node.typeParameters, node);
     if (node.extends.length) {
@@ -146,75 +146,75 @@ export function _interfaceish(node: Object) {
     }
     this.space();
     this.print(node.body, node);
-}
+};
 
-export function _variance(node) {
+export const _variance = function (node) {
     if (node.variance === "plus") {
         this.token("+");
     } else if (node.variance === "minus") {
         this.token("-");
     }
-}
+};
 
-export function InterfaceDeclaration(node: Object) {
+export const InterfaceDeclaration = function (node) {
     this.word("interface");
     this.space();
     this._interfaceish(node);
-}
+};
 
-function andSeparator() {
+const andSeparator = function () {
     this.space();
     this.token("&");
     this.space();
-}
+};
 
-export function IntersectionTypeAnnotation(node: Object) {
+export const IntersectionTypeAnnotation = function (node) {
     this.printJoin(node.types, node, { separator: andSeparator });
-}
+};
 
-export function MixedTypeAnnotation() {
+export const MixedTypeAnnotation = function () {
     this.word("mixed");
-}
+};
 
-export function EmptyTypeAnnotation() {
+export const EmptyTypeAnnotation = function () {
     this.word("empty");
-}
+};
 
-export function NullableTypeAnnotation(node: Object) {
+export const NullableTypeAnnotation = function (node) {
     this.token("?");
     this.print(node.typeAnnotation, node);
-}
+};
 
 export {
     NumericLiteral as NumericLiteralTypeAnnotation,
     StringLiteral as StringLiteralTypeAnnotation
 } from "./types";
 
-export function NumberTypeAnnotation() {
+export const NumberTypeAnnotation = function () {
     this.word("number");
-}
+};
 
-export function StringTypeAnnotation() {
+export const StringTypeAnnotation = function () {
     this.word("string");
-}
+};
 
-export function ThisTypeAnnotation() {
+export const ThisTypeAnnotation = function () {
     this.word("this");
-}
+};
 
-export function TupleTypeAnnotation(node: Object) {
+export const TupleTypeAnnotation = function (node) {
     this.token("[");
     this.printList(node.types, node);
     this.token("]");
-}
+};
 
-export function TypeofTypeAnnotation(node: Object) {
+export const TypeofTypeAnnotation = function (node) {
     this.word("typeof");
     this.space();
     this.print(node.argument, node);
-}
+};
 
-export function TypeAlias(node: Object) {
+export const TypeAlias = function (node) {
     this.word("type");
     this.space();
     this.print(node.id, node);
@@ -224,18 +224,18 @@ export function TypeAlias(node: Object) {
     this.space();
     this.print(node.right, node);
     this.semicolon();
-}
+};
 
-export function TypeAnnotation(node: Object) {
+export const TypeAnnotation = function (node) {
     this.token(":");
     this.space();
     if (node.optional) {
         this.token("?");
     }
     this.print(node.typeAnnotation, node);
-}
+};
 
-export function TypeParameter(node: Object) {
+export const TypeParameter = function (node) {
     this._variance(node);
 
     this.word(node.name);
@@ -250,17 +250,17 @@ export function TypeParameter(node: Object) {
         this.space();
         this.print(node.default, node);
     }
-}
+};
 
-export function TypeParameterInstantiation(node: Object) {
+export const TypeParameterInstantiation = function (node) {
     this.token("<");
     this.printList(node.params, node, {});
     this.token(">");
-}
+};
 
 export { TypeParameterInstantiation as TypeParameterDeclaration };
 
-export function ObjectTypeAnnotation(node: Object) {
+export const ObjectTypeAnnotation = function (node) {
     if (node.exact) {
         this.token("{|");
     } else {
@@ -300,17 +300,17 @@ export function ObjectTypeAnnotation(node: Object) {
     } else {
         this.token("}");
     }
-}
+};
 
-export function ObjectTypeCallProperty(node: Object) {
+export const ObjectTypeCallProperty = function (node) {
     if (node.static) {
         this.word("static");
         this.space();
     }
     this.print(node.value, node);
-}
+};
 
-export function ObjectTypeIndexer(node: Object) {
+export const ObjectTypeIndexer = function (node) {
     if (node.static) {
         this.word("static");
         this.space();
@@ -325,9 +325,9 @@ export function ObjectTypeIndexer(node: Object) {
     this.token(":");
     this.space();
     this.print(node.value, node);
-}
+};
 
-export function ObjectTypeProperty(node: Object) {
+export const ObjectTypeProperty = function (node) {
     if (node.static) {
         this.word("static");
         this.space();
@@ -340,13 +340,18 @@ export function ObjectTypeProperty(node: Object) {
     this.token(":");
     this.space();
     this.print(node.value, node);
-}
+};
 
-export function QualifiedTypeIdentifier(node: Object) {
+export const ObjectTypeSpreadProperty = function (node) {
+    this.token("...");
+    this.print(node.argument, node);
+};
+
+export const QualifiedTypeIdentifier = function (node) {
     this.print(node.qualification, node);
     this.token(".");
     this.print(node.id, node);
-}
+};
 
 function orSeparator() {
     this.space();
@@ -354,17 +359,17 @@ function orSeparator() {
     this.space();
 }
 
-export function UnionTypeAnnotation(node: Object) {
+export const UnionTypeAnnotation = function (node) {
     this.printJoin(node.types, node, { separator: orSeparator });
-}
+};
 
-export function TypeCastExpression(node: Object) {
+export const TypeCastExpression = function (node) {
     this.token("(");
     this.print(node.expression, node);
     this.print(node.typeAnnotation, node);
     this.token(")");
-}
+};
 
-export function VoidTypeAnnotation() {
+export const VoidTypeAnnotation = function () {
     this.word("void");
-}
+};

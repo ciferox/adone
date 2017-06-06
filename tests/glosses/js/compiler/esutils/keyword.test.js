@@ -47,7 +47,7 @@ const SRW = [
     "let"
 ];
 
-describe("keyword", () => {
+describe("js", "compiler", "esutils", "keyword", () => {
     describe("isKeywordES6", () => {
         it("returns true if provided string is keyword under non-strict mode", () => {
             for (const word of KW) {

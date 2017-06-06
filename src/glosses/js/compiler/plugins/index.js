@@ -1,17 +1,16 @@
-// @flow
-
-
+const { lazify } = adone;
 
 const plugins = {
-    syntax: adone.lazify({
+    syntax: lazify({
         asyncFunctions: "./syntax/async_functions",
+        asyncGenerators: "./syntax/async_generators",
         classProperties: "./syntax/class_properties",
         decorators: "./syntax/decorators",
         flow: "./syntax/flow",
         functionBind: "./syntax/function_bind",
         objectRestSpread: "./syntax/object_rest_spread"
     }, null, require),
-    transform: adone.lazify({
+    transform: lazify({
         asyncToGenerator: "./transform/async_to_generator",
         classProperties: "./transform/class_properties",
         decoratorsLegacy: "./transform/decorators_legacy",
@@ -24,7 +23,7 @@ const plugins = {
     }, null, require)
 };
 
-adone.lazify({
+lazify({
     externalHelpers: "./external_helpers"
 }, plugins, require);
 

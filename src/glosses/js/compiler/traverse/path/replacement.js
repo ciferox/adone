@@ -3,8 +3,7 @@
 import traverse from "../index";
 import NodePath from "./index";
 
-
-const { parse, codeFrame, types: t } = adone.js.compiler;
+const { is, js: { compiler: { parse, codeFrame, types: t } } } = adone;
 
 const hoistVariablesVisitor = {
     Function(path) {
@@ -23,7 +22,7 @@ const hoistVariablesVisitor = {
 
         const exprs = [];
 
-        for (const declar of (path.node.declarations: Object[])) {
+        for (const declar of path.node.declarations) {
             if (declar.init) {
                 exprs.push(t.expressionStatement(
                     t.assignmentExpression("=", declar.id, declar.init)
@@ -43,7 +42,7 @@ const hoistVariablesVisitor = {
  *  - Remove the current node.
  */
 
-export function replaceWithMultiple(nodes: Object[]) {
+export const replaceWithMultiple = function (nodes) {
     this.resync();
 
     nodes = this._verifyNodeList(nodes);
@@ -57,7 +56,7 @@ export function replaceWithMultiple(nodes: Object[]) {
     } else {
         this.remove();
     }
-}
+};
 
 /**
  * Parse a string as an expression and replace the current node with the result.
@@ -67,7 +66,7 @@ export function replaceWithMultiple(nodes: Object[]) {
  * easier to use, your transforms will be extremely brittle.
  */
 
-export function replaceWithSourceString(replacement) {
+export const replaceWithSourceString = function (replacement) {
     this.resync();
 
     try {
@@ -85,13 +84,13 @@ export function replaceWithSourceString(replacement) {
     replacement = replacement.program.body[0].expression;
     traverse.removeProperties(replacement);
     return this.replaceWith(replacement);
-}
+};
 
 /**
  * Replace the current node with another.
  */
 
-export function replaceWith(replacement) {
+export const replaceWith = function (replacement) {
     this.resync();
 
     if (this.removed) {
@@ -114,12 +113,12 @@ export function replaceWith(replacement) {
         throw new Error("You can only replace a Program root node with another Program node");
     }
 
-    if (Array.isArray(replacement)) {
+    if (is.array(replacement)) {
         throw new Error(
             "Don't use `path.replaceWith()` with an array of nodes, use `path.replaceWithMultiple()`");
     }
 
-    if (typeof replacement === "string") {
+    if (is.string(replacement)) {
         throw new Error(
             "Don't use `path.replaceWith()` with a source string, use `path.replaceWithSourceString()`");
     }
@@ -159,13 +158,13 @@ export function replaceWith(replacement) {
 
     // requeue for visiting
     this.requeue();
-}
+};
 
 /**
  * Description
  */
 
-export function _replaceWith(node) {
+export const _replaceWith = function (node) {
     if (!this.container) {
         throw new ReferenceError("Container is falsy");
     }
@@ -179,7 +178,7 @@ export function _replaceWith(node) {
     this.debug(() => `Replace with ${node && node.type}`);
 
     this.node = this.container[this.key] = node;
-}
+};
 
 /**
  * This method takes an array of statements nodes and then explodes it
@@ -187,7 +186,7 @@ export function _replaceWith(node) {
  * extremely important to retain original semantics.
  */
 
-export function replaceExpressionWithStatements(nodes: Object[]) {
+export const replaceExpressionWithStatements = function (nodes) {
     this.resync();
 
     const toSequenceExpression = t.toSequenceExpression(nodes, this.scope);
@@ -215,18 +214,24 @@ export function replaceExpressionWithStatements(nodes: Object[]) {
         this.traverse(hoistVariablesVisitor);
 
         // add implicit returns to all ending expression statements
-        const completionRecords: NodePath[] = this.get("callee").getCompletionRecords();
+        const completionRecords = this.get("callee").getCompletionRecords();
         for (const path of completionRecords) {
             if (!path.isExpressionStatement()) {
-                continue; 
+                continue;
             }
 
             const loop = path.findParent((path) => path.isLoop());
             if (loop) {
-                const callee = this.get("callee");
+                let uid = loop.getData("expressionReplacementReturnUid");
 
-                const uid = callee.scope.generateDeclaredUidIdentifier("ret");
-                callee.get("body").pushContainer("body", t.returnStatement(uid));
+                if (!uid) {
+                    const callee = this.get("callee");
+                    uid = callee.scope.generateDeclaredUidIdentifier("ret");
+                    callee.get("body").pushContainer("body", t.returnStatement(uid));
+                    loop.setData("expressionReplacementReturnUid", uid);
+                } else {
+                    uid = t.identifier(uid.name);
+                }
 
                 path.get("expression").replaceWith(
                     t.assignmentExpression("=", uid, path.node.expression)
@@ -238,20 +243,20 @@ export function replaceExpressionWithStatements(nodes: Object[]) {
 
         return this.node;
     }
-}
+};
 
-export function replaceInline(nodes: Object | Object[]) {
+export const replaceInline = function (nodes) {
     this.resync();
 
-    if (Array.isArray(nodes)) {
-        if (Array.isArray(this.container)) {
+    if (is.array(nodes)) {
+        if (is.array(this.container)) {
             nodes = this._verifyNodeList(nodes);
             this._containerInsertAfter(nodes);
             return this.remove();
-        } 
+        }
         return this.replaceWithMultiple(nodes);
-        
-    } 
+
+    }
     return this.replaceWith(nodes);
-    
-}
+
+};

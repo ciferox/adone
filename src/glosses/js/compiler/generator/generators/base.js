@@ -1,9 +1,8 @@
-// @flow
-export function File(node: Object) {
+export const File = function (node) {
     this.print(node.program, node);
-}
+};
 
-export function Program(node: Object) {
+export const Program = function (node) {
     this.printInnerComments(node, false);
 
     this.printSequence(node.directives, node);
@@ -12,9 +11,9 @@ export function Program(node: Object) {
     }
 
     this.printSequence(node.body, node);
-}
+};
 
-export function BlockStatement(node: Object) {
+export const BlockStatement = function (node) {
     this.token("{");
     this.printInnerComments(node);
 
@@ -42,13 +41,13 @@ export function BlockStatement(node: Object) {
         this.source("end", node.loc);
         this.token("}");
     }
-}
+};
 
-export function Noop() { }
+export const Noop = function () { };
 
-export function Directive(node: Object) {
+export const Directive = function (node) {
     this.print(node.value, node);
     this.semicolon();
-}
+};
 
 export { StringLiteral as DirectiveLiteral } from "./types";

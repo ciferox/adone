@@ -1,9 +1,7 @@
-// @flow
-
-import detectIndent from "./detect-indent";
-import SourceMap from "./source-map";
-const { messages } = adone.js.compiler;
-import Printer, { type Format } from "./printer";
+const { is, js: { compiler: { messages } } } = adone;
+import detectIndent from "./detect_indent";
+import SourceMap from "./source_map";
+import Printer from "./printer";
 
  /**
   * Determine if input code uses more single or double quotes.
@@ -14,7 +12,7 @@ const findCommonStringDelimiter = (code, tokens) => {
         return DEFAULT_STRING_DELIMITER;
     }
 
-    const occurences = {
+    const occurrences = {
         single: 0,
         double: 0
     };
@@ -29,9 +27,9 @@ const findCommonStringDelimiter = (code, tokens) => {
 
         const raw = code.slice(token.start, token.end);
         if (raw[0] === "'") {
-            occurences.single++;
+            occurrences.single++;
         } else {
-            occurences.double++;
+            occurrences.double++;
         }
 
         checked++;
@@ -39,11 +37,11 @@ const findCommonStringDelimiter = (code, tokens) => {
             break;
         }
     }
-    if (occurences.single > occurences.double) {
+    if (occurrences.single > occurrences.double) {
         return "single";
-    } 
+    }
     return "double";
-    
+
 };
 
  /**
@@ -53,9 +51,9 @@ const findCommonStringDelimiter = (code, tokens) => {
   * - If `opts.compact = "auto"` and the code is over 500KB, `compact` will be set to `true`.
   */
 
-const normalizeOptions = (code, opts, tokens): Format => {
+const normalizeOptions = (code, opts, tokens) => {
     let style = "  ";
-    if (code && typeof code === "string") {
+    if (code && is.string(code)) {
         const indent = detectIndent(code).indent;
         if (indent && indent !== " ") {
             style = indent;
@@ -112,9 +110,7 @@ const normalizeOptions = (code, opts, tokens): Format => {
  */
 
 class Generator extends Printer {
-    constructor(ast, opts, code) {
-        opts = opts || {};
-
+    constructor(ast, opts = {}, code) {
         const tokens = ast.tokens || [];
         const format = normalizeOptions(code, opts, tokens);
         const map = opts.sourceMaps ? new SourceMap(opts, code) : null;
@@ -122,8 +118,6 @@ class Generator extends Printer {
 
         this.ast = ast;
     }
-
-    ast: Object;
 
     /**
      * Generate code and sourcemap from ast.
@@ -151,7 +145,7 @@ export class CodeGenerator {
     }
 }
 
-export default function (ast: Object, opts: Object, code: string): Object {
+export default function (ast, opts, code) {
     const gen = new Generator(ast, opts, code);
     return gen.generate();
 }

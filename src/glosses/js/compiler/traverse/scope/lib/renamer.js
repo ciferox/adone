@@ -1,9 +1,7 @@
-//@flow
-
 import Binding from "../binding";
 
 
-const { types: t } = adone.js.compiler;
+const { js: { compiler: { types: t } } } = adone;
 
 const renameVisitor = {
     ReferencedIdentifier({ node }, state) {
@@ -23,27 +21,23 @@ const renameVisitor = {
 
         for (const name in ids) {
             if (name === state.oldName) {
-                ids[name].name = state.newName; 
+                ids[name].name = state.newName;
             }
         }
     }
 };
 
 export default class Renamer {
-    constructor(binding: Binding, oldName: string, newName: string) {
+    constructor(binding, oldName, newName) {
         this.newName = newName;
         this.oldName = oldName;
         this.binding = binding;
     }
 
-    oldName: string;
-    newName: string;
-    binding: Binding;
-
     maybeConvertFromExportDeclaration(parentDeclar) {
         const exportDeclar = parentDeclar.parentPath.isExportDeclaration() && parentDeclar.parentPath;
         if (!exportDeclar) {
-            return; 
+            return;
         }
 
         // build specifiers that point back to this export declaration
@@ -111,7 +105,7 @@ export default class Renamer {
         path.replaceWith(t.assignmentExpression("=", t.identifier(this.newName), path.node));
     }
 
-    rename(block?) {
+    rename(block) {
         const { binding, oldName, newName } = this;
         const { scope, path } = binding;
 

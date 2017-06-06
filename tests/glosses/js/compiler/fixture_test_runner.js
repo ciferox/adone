@@ -113,11 +113,11 @@ const run = (task) => {
 };
 
 export default function (
-    fixturesLoc: string,
-    name: string | Array<string>,
+    fixturesLoc,
+    name,
     suiteOpts = {},
     taskOpts = {},
-    dynamicOpts?: Function,
+    dynamicOpts
 ) {
     if (!adone.is.array(name)) {
         name = adone.util.arrify(name);

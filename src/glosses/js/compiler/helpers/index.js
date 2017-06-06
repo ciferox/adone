@@ -1,14 +1,12 @@
+const { lazify } = adone;
 
-
-// @flow
-
-const e = adone.lazify({
+const e = lazify({
     expressions: "./expressions"
 }, null, require);
 
 const helpers = {
     // expressions
-    get(name: string) {
+    get(name) {
         const fn = e.expressions[name];
         if (!fn) {
             throw new ReferenceError(`Unknown helper ${name}`);
@@ -20,7 +18,7 @@ const helpers = {
 
 export default helpers;
 
-adone.lazify({
+lazify({
     remapAsyncToGenerator: "./remap_async_to_generator",
     functionName: "./function_name",
     getFunctionArity: "./get_function_arity"
@@ -31,8 +29,10 @@ adone.lazify({
 Object.defineProperty(helpers, "list", {
     configurable: true,
     get: () => {
-        const value = Object.keys(e.expressions).map((name) => name.replace(/^_/, "")).filter((name) => !["__esModule", "_filename__"].includes(name));
-        // $FlowIgnore: "list" is not defined yet
+        const value = Object.keys(e.expressions)
+            .map((name) => name.replace(/^_/, ""))
+            .filter((name) => !["__esModule", "_filename__"].includes(name));
+
         Object.defineProperty(helpers, "list", {
             configurable: false,
             value

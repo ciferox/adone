@@ -17,7 +17,7 @@ const generateCode = (path) => {
     return generate(path.node).code;
 };
 
-describe("removal", () => {
+describe("js", "compiler", "traverse", "removal", () => {
     describe("ArrowFunction", () => {
         it("remove body", () => {
             const rootPath = getPath("x = () => b;");

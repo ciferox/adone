@@ -1,14 +1,12 @@
-// @flow
+const { is, vendor: { lodash: { mergeWith } } } = adone;
 
-const { mergeWith } = adone.vendor.lodash;
-
-export default function (dest?: Object, src?: Object): ?Object {
+export default function (dest, src) {
     if (!dest || !src) {
         return;
     }
 
     return mergeWith(dest, src, (a, b) => {
-        if (b && Array.isArray(a)) {
+        if (b && is.array(a)) {
             const newArray = b.slice(0);
 
             for (const item of a) {

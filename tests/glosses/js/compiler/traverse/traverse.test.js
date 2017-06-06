@@ -1,7 +1,7 @@
 const { parse, traverse } = adone.js.compiler;
 const { lodash } = adone.vendor;
 
-describe("traverse", () => {
+describe("js", "compiler", "traverse", "traverse", () => {
     const code = `
     var foo = "bar";
     this.test = "wow";

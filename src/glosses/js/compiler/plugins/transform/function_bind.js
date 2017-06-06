@@ -1,9 +1,5 @@
-// @flow
-
-
-
 export default function ({ types: t }) {
-    function getTempId(scope) {
+    const getTempId = (scope) => {
         let id = scope.path.getData("functionBind");
         if (id) {
             return id;
@@ -11,14 +7,14 @@ export default function ({ types: t }) {
 
         id = scope.generateDeclaredUidIdentifier("context");
         return scope.path.setData("functionBind", id);
-    }
+    };
 
-    function getStaticContext(bind, scope) {
+    const getStaticContext = (bind, scope) => {
         const object = bind.object || bind.callee.object;
         return scope.isStatic(object) && object;
-    }
+    };
 
-    function inferBindContext(bind, scope) {
+    const inferBindContext = (bind, scope) => {
         const staticContext = getStaticContext(bind, scope);
         if (staticContext) {
             return staticContext;
@@ -34,7 +30,7 @@ export default function ({ types: t }) {
             bind.callee.object = t.assignmentExpression("=", tempId, bind.callee.object);
         }
         return tempId;
-    }
+    };
 
     return {
         inherits: adone.js.compiler.plugin.syntax.functionBind,

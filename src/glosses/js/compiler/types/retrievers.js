@@ -3,19 +3,14 @@ import * as t from "./index";
 /**
  * Return a list of binding identifiers associated with the input `node`.
  */
-
-export function getBindingIdentifiers(
-    node: Object,
-    duplicates?: boolean,
-    outerOnly?: boolean
-): Object {
+export const getBindingIdentifiers = (node, duplicates, outerOnly) => {
     let search = [].concat(node);
     const ids = Object.create(null);
 
     while (search.length) {
         const id = search.shift();
         if (!id) {
-            continue; 
+            continue;
         }
 
         const keys = t.getBindingIdentifiers.keys[id.type];
@@ -59,7 +54,7 @@ export function getBindingIdentifiers(
     }
 
     return ids;
-}
+};
 
 /**
  * Mapping of types to their identifier keys.
@@ -107,9 +102,6 @@ getBindingIdentifiers.keys = {
     VariableDeclarator: ["id"]
 };
 
-export function getOuterBindingIdentifiers(
-    node: Object,
-    duplicates?: boolean,
-): Object {
+export const getOuterBindingIdentifiers = (node, duplicates) => {
     return getBindingIdentifiers(node, duplicates, true);
-}
+};

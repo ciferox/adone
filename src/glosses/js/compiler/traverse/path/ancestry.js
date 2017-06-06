@@ -1,59 +1,64 @@
-// This file contains that retrieve or validate anything related to the current paths ancestry.
-//@flow
-
-import NodePath from "./index";
-
-const { types: t } = adone.js.compiler;
+const { is, js: { compiler: { types: t } } } = adone;
 
 /**
  * Call the provided `callback` with the `NodePath`s of all the parents.
  * When the `callback` returns a truthy value, we return that node path.
  */
-
-export function findParent(callback) {
+export const findParent = function (callback) {
     let path = this;
-    while (path = path.parentPath) {
+    for ( ; ; ) {
+        path = path.parentPath;
+        if (!path) {
+            break;
+        }
         if (callback(path)) {
-            return path; 
+            return path;
         }
     }
     return null;
-}
+};
 
 /**
  * Description
  */
-
-export function find(callback) {
+export const find = function (callback) {
     let path = this;
-    do {
+    for ( ; ; ) {
         if (callback(path)) {
-            return path; 
+            return path;
         }
-    } while (path = path.parentPath);
+        path = path.parentPath;
+        if (!path) {
+            break;
+        }
+    }
     return null;
-}
+};
 
 /**
  * Get the parent function of the current path.
  */
 
-export function getFunctionParent() {
+export const getFunctionParent = function () {
     return this.findParent((path) => path.isFunction() || path.isProgram());
-}
+};
 
 /**
  * Walk up the tree until we hit a parent node path in a list.
  */
 
-export function getStatementParent() {
+export const getStatementParent = function () {
     let path = this;
-    do {
-        if (Array.isArray(path.container)) {
+    for ( ; ; ) {
+        if (is.array(path.container)) {
             return path;
         }
-    } while (path = path.parentPath);
-}
+        path = path.parentPath;
+        if (!path) {
+            break;
+        }
+    }
+};
 
 /**
  * Get the deepest common ancestor and then from it, get the earliest relationship path
@@ -62,13 +67,12 @@ export function getStatementParent() {
  * Earliest is defined as being "before" all the other nodes in terms of list container
  * position and visiting key.
  */
-
-export function getEarliestCommonAncestorFrom(paths: NodePath[]): NodePath {
+export const getEarliestCommonAncestorFrom = function (paths) {
     return this.getDeepestCommonAncestorFrom(paths, (deepest, i, ancestries) => {
         let earliest;
         const keys = t.VISITOR_KEYS[deepest.type];
 
-        for (const ancestry of (ancestries: Array)) {
+        for (const ancestry of ancestries) {
             const path = ancestry[i + 1];
 
             // first path
@@ -97,15 +101,14 @@ export function getEarliestCommonAncestorFrom(paths: NodePath[]): NodePath {
 
         return earliest;
     });
-}
+};
 
 /**
  * Get the earliest path in the tree where the provided `paths` intersect.
  *
  * TODO: Possible optimisation target.
  */
-
-export function getDeepestCommonAncestorFrom(paths: NodePath[], filter?: Function): NodePath {
+export const getDeepestCommonAncestorFrom = function (paths, filter) {
     if (!paths.length) {
         return this;
     }
@@ -118,7 +121,8 @@ export function getDeepestCommonAncestorFrom(paths: NodePath[], filter?: Functio
     let minDepth = Infinity;
 
     // last common ancestor
-    let lastCommonIndex, lastCommon;
+    let lastCommonIndex;
+    let lastCommon;
 
     // get the ancestors of the path, breaking when the parent exceeds ourselves
     const ancestries = paths.map((path) => {
@@ -143,7 +147,7 @@ export function getDeepestCommonAncestorFrom(paths: NodePath[], filter?: Functio
     depthLoop: for (let i = 0; i < minDepth; i++) {
         const shouldMatch = first[i];
 
-        for (const ancestry of (ancestries: Array)) {
+        for (const ancestry of ancestries) {
             if (ancestry[i] !== shouldMatch) {
                 // we've hit a snag
                 break depthLoop;
@@ -158,13 +162,13 @@ export function getDeepestCommonAncestorFrom(paths: NodePath[], filter?: Functio
     if (lastCommon) {
         if (filter) {
             return filter(lastCommon, lastCommonIndex, ancestries);
-        } 
+        }
         return lastCommon;
-        
-    } 
+
+    }
     throw new Error("Couldn't find intersection");
-    
-}
+
+};
 
 /**
  * Build an array of node paths containing the entire ancestry of the current node path.
@@ -172,33 +176,37 @@ export function getDeepestCommonAncestorFrom(paths: NodePath[], filter?: Functio
  * NOTE: The current node path is included in this.
  */
 
-export function getAncestry() {
+export const getAncestry = function () {
     let path = this;
     const paths = [];
-    do {
+    for ( ; ; ) {
         paths.push(path);
-    } while (path = path.parentPath);
+        path = path.parentPath;
+        if (!path) {
+            break;
+        }
+    }
     return paths;
-}
+};
 
 /**
  * A helper to find if `this` path is an ancestor of @param maybeDescendant
  */
-export function isAncestor(maybeDescendant) {
+export const isAncestor = function (maybeDescendant) {
     return maybeDescendant.isDescendant(this);
-}
+};
 
 /**
  * A helper to find if `this` path is a descendant of @param maybeAncestor
  */
-export function isDescendant(maybeAncestor) {
+export const isDescendant = function (maybeAncestor) {
     return Boolean(this.findParent((parent) => parent === maybeAncestor));
-}
+};
 
-export function inType() {
+export const inType = function (...args) {
     let path = this;
     while (path) {
-        for (const type of (arguments: Array)) {
+        for (const type of args) {
             if (path.node.type === type) {
                 return true;
             }
@@ -207,7 +215,7 @@ export function inType() {
     }
 
     return false;
-}
+};
 
 /**
  * Checks whether the binding for 'key' is a local binding in its current function context.
@@ -241,11 +249,10 @@ export function inType() {
  * Please Note, these flags are for private internal use only and should be avoided.
  * Only "shadow" is a public property that other transforms may manipulate.
  */
-
-export function inShadow(key?) {
+export const inShadow = function (key) {
     const parentFn = this.isFunction() ? this : this.findParent((p) => p.isFunction());
     if (!parentFn) {
-        return; 
+        return;
     }
 
     if (parentFn.isFunctionExpression() || parentFn.isFunctionDeclaration()) {
@@ -265,4 +272,4 @@ export function inShadow(key?) {
 
     // normal function, we've found our function context
     return null;
-}
+};

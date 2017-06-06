@@ -1,5 +1,3 @@
-// @flow
-
 const {
     vendor: { lodash: { cloneDeep } },
     js: { compiler: { types, traverse, parse } }
@@ -8,7 +6,66 @@ const {
 const FROM_TEMPLATE = "_fromTemplate"; //Symbol(); // todo: probably wont get copied over
 const TEMPLATE_SKIP = Symbol();
 
-export default function (code: string, opts?: Object): Function {
+const templateVisitor = {
+    // 360
+    noScope: true,
+
+    enter(path, args) {
+        let { node } = path;
+        if (node[TEMPLATE_SKIP]) {
+            return path.skip();
+        }
+
+        if (types.isExpressionStatement(node)) {
+            node = node.expression;
+        }
+
+        let replacement;
+
+        if (types.isIdentifier(node) && node[FROM_TEMPLATE]) {
+            if (node.name in args[0]) {
+                replacement = args[0][node.name];
+            } else if (node.name[0] === "$") {
+                const i = Number(node.name.slice(1));
+                if (args[i]) {
+                    replacement = args[i];
+                }
+            }
+        }
+
+        if (replacement === null) {
+            path.remove();
+        }
+
+        if (replacement) {
+            replacement[TEMPLATE_SKIP] = true;
+            path.replaceInline(replacement);
+        }
+    },
+
+    exit({ node }) {
+        if (!node.loc) {
+            traverse.clearNode(node);
+        }
+    }
+};
+
+const useTemplate = (ast, nodes) => {
+    ast = cloneDeep(ast);
+    const { program } = ast;
+
+    if (nodes.length) {
+        traverse(ast, templateVisitor, null, nodes);
+    }
+
+    if (program.body.length > 1) {
+        return program.body;
+    }
+    return program.body[0];
+
+};
+
+export default function (code, opts) {
     // since we lazy parse the template, we get the current stack so we have the
     // original stack to append if it errors when parsing
     let stack;
@@ -55,62 +112,3 @@ export default function (code: string, opts?: Object): Function {
         return useTemplate(getAst(), args);
     };
 }
-
-function useTemplate(ast, nodes?: Object[]) {
-    ast = cloneDeep(ast);
-    const { program } = ast;
-
-    if (nodes.length) {
-        traverse(ast, templateVisitor, null, nodes);
-    }
-
-    if (program.body.length > 1) {
-        return program.body;
-    } 
-    return program.body[0];
-    
-}
-
-const templateVisitor = {
-    // 360
-    noScope: true,
-
-    enter(path, args) {
-        let { node } = path;
-        if (node[TEMPLATE_SKIP]) {
-            return path.skip(); 
-        }
-
-        if (types.isExpressionStatement(node)) {
-            node = node.expression;
-        }
-
-        let replacement;
-
-        if (types.isIdentifier(node) && node[FROM_TEMPLATE]) {
-            if (node.name in args[0]) {
-                replacement = args[0][node.name];
-            } else if (node.name[0] === "$") {
-                const i = Number(node.name.slice(1));
-                if (args[i]) {
-                    replacement = args[i]; 
-                }
-            }
-        }
-
-        if (replacement === null) {
-            path.remove();
-        }
-
-        if (replacement) {
-            replacement[TEMPLATE_SKIP] = true;
-            path.replaceInline(replacement);
-        }
-    },
-
-    exit({ node }) {
-        if (!node.loc) {
-            traverse.clearNode(node); 
-        }
-    }
-};

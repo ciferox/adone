@@ -12,7 +12,7 @@ const getPath = (code) => {
     return path;
 };
 
-describe("evaluation", () => {
+describe("js", "compiler", "traverse", "evaluation", () => {
     describe("evaluateTruthy", () => {
         it("it should work with null", () => {
             assert.strictEqual(
@@ -95,5 +95,23 @@ describe("evaluation", () => {
                 .get("body.0.test").evaluate().confident,
             false
         );
+    });
+
+    it("should evaluate undefined, NaN and Infinity", () => {
+        assert.strictEqual(getPath("undefined").get("body.0.expression").evaluate().confident, true);
+        assert.strictEqual(getPath("NaN").get("body.0.expression").evaluate().confident, true);
+        assert.strictEqual(getPath("Infinity").get("body.0.expression").evaluate().confident, true);
+    });
+
+    it("should deopt redefined primitives - undefined, NaN and Infinity", () => {
+        const evalUndef = getPath("let undefined; undefined;").get("body.1.expression").evaluate();
+        const evalNan = getPath("let NaN; NaN;").get("body.1.expression").evaluate();
+        const evalInf = getPath("let Infinity; Infinity;").get("body.1.expression").evaluate();
+        assert.strictEqual(evalUndef.confident, false);
+        assert.strictEqual(evalNan.confident, false);
+        assert.strictEqual(evalInf.confident, false);
+
+        assert.strictEqual(evalUndef.deopt.type, "VariableDeclarator");
+        assert.strictEqual(evalUndef.deopt.parentPath.node.kind, "let");
     });
 });

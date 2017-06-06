@@ -1,11 +1,6 @@
-/* @nflow */
-
-import type { NodePath } from "../../traverse";
 import rewriteForAwait from "./for_await";
 
-
-const { types: t, template, helpers: { functionName } } = adone.js.compiler;
-
+const { js: { compiler: { types: t, template, helpers: { functionName } } } } = adone;
 
 const buildWrapper = template(`
   (() => {
@@ -77,7 +72,7 @@ const awaitVisitor = {
 
 };
 
-function classOrObjectMethod(path: NodePath, callId: Object) {
+const classOrObjectMethod = (path, callId) => {
     const node = path.node;
     const body = node.body;
 
@@ -95,9 +90,9 @@ function classOrObjectMethod(path: NodePath, callId: Object) {
     // Regardless of whether or not the wrapped function is a an async method
     // or generator the outer function should not be
     node.generator = false;
-}
+};
 
-function plainFunction(path: NodePath, callId: Object) {
+const plainFunction = (path, callId) => {
     const node = path.node;
     const isDeclaration = path.isFunctionDeclaration();
     const asyncFnId = node.id;
@@ -170,9 +165,9 @@ function plainFunction(path: NodePath, callId: Object) {
             path.replaceWith(built);
         }
     }
-}
+};
 
-export default function (path: NodePath, file: Object, helpers: Object) {
+export default function (path, file, helpers) {
     if (!helpers) {
         // bc for 6.15 and earlier
         helpers = { wrapAsync: file };

@@ -1,10 +1,8 @@
 // This file contains methods that convert the path node into another node or some other type of data.
-// @flow 
 
+const { js: { compiler: { types: t } } } = adone;
 
-const { types: t } = adone.js.compiler;
-
-export function toComputedKey(): Object {
+export const toComputedKey = function () {
     const node = this.node;
 
     let key;
@@ -18,21 +16,21 @@ export function toComputedKey(): Object {
 
     if (!node.computed) {
         if (t.isIdentifier(key)) {
-            key = t.stringLiteral(key.name); 
+            key = t.stringLiteral(key.name);
         }
     }
 
     return key;
-}
+};
 
-export function ensureBlock() {
+export const ensureBlock = function () {
     return t.ensureBlock(this.node);
-}
+};
 
-export function arrowFunctionToShadowed() {
+export const arrowFunctionToShadowed = function () {
     // todo: maybe error
     if (!this.isArrowFunctionExpression()) {
-        return; 
+        return;
     }
 
     this.ensureBlock();
@@ -41,4 +39,4 @@ export function arrowFunctionToShadowed() {
     node.expression = false;
     node.type = "FunctionExpression";
     node.shadow = node.shadow || true;
-}
+};

@@ -1,6 +1,6 @@
 const { types } = adone.js.compiler;
 
-describe("converters", () => {
+describe("js", "compiler", "types", "converters", () => {
     describe("valueToNode", () => {
         it("number", () => {
             assert.deepEqual(types.valueToNode(Math.PI), types.numericLiteral(Math.PI));
@@ -44,6 +44,7 @@ describe("converters", () => {
             });
         });
     });
+
     describe("toKeyAlias", () => {
         beforeEach(() => {
             // make tests deterministic
@@ -56,6 +57,7 @@ describe("converters", () => {
             assert.equal(types.toKeyAlias(types.objectMethod("method", types.identifier("a"), [], types.blockStatement([]))), "0");
         });
     });
+
     describe("toStatement", () => {
         it("noop on statements", () => {
             const node = types.emptyStatement();
@@ -102,6 +104,7 @@ describe("converters", () => {
             types.assertYieldExpression(node);
         });
     });
+
     describe("toExpression", () => {
         it("noop on expressions", () => {
             const node = types.identifier("a");

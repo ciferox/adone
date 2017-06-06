@@ -1,18 +1,17 @@
-/* global BabelFileResult, BabelFileMetadata */
-// @flow
+const { js: { compiler: { transformation } } } = adone;
 
 import File from "./file";
 
-import normalizeAst from "../helpers/normalize-ast";
+import normalizeAst from "../helpers/normalize_ast";
 
 export default class Pipeline {
-    lint(code: string, opts?: Object = {}): BabelFileResult {
+    lint(code, opts = {}) {
         opts.code = false;
         opts.mode = "lint";
         return this.transform(code, opts);
     }
 
-    pretransform(code: string, opts?: Object): BabelFileResult {
+    pretransform(code, opts) {
         const file = new File(opts, this);
         return file.wrap(code, () => {
             file.addCode(code);
@@ -21,7 +20,7 @@ export default class Pipeline {
         });
     }
 
-    transform(code: string, opts?: Object): BabelFileResult {
+    transform(code, opts) {
         const file = new File(opts, this);
         return file.wrap(code, () => {
             file.addCode(code);
@@ -30,16 +29,16 @@ export default class Pipeline {
         });
     }
 
-    analyse(code: string, opts: Object = {}, visitor?: Object): ?BabelFileMetadata {
+    analyse(code, opts = {}, visitor) {
         opts.code = false;
         if (visitor) {
             opts.plugins = opts.plugins || [];
-            opts.plugins.push(new adone.js.compiler.transformation.Plugin({ visitor }));
+            opts.plugins.push(new transformation.Plugin({ visitor }));
         }
         return this.transform(code, opts).metadata;
     }
 
-    transformFromAst(ast: Object, code: string, opts: Object): BabelFileResult {
+    transformFromAst(ast, code, opts) {
         ast = normalizeAst(ast);
 
         const file = new File(opts, this);

@@ -1,7 +1,4 @@
-// @flow
-/**
- * Get whitespace around tokens.
- */
+const { is } = adone;
 
 export default class Whitespace {
     constructor(tokens) {
@@ -12,7 +9,6 @@ export default class Whitespace {
     /**
      * Count all the newlines before a node.
      */
-
     getNewlinesBefore(node) {
         let startToken;
         let endToken;
@@ -33,7 +29,6 @@ export default class Whitespace {
     /**
      * Count all the newlines after a node.
      */
-
     getNewlinesAfter(node) {
         let startToken;
         let endToken;
@@ -53,15 +48,14 @@ export default class Whitespace {
 
         if (endToken && endToken.type.label === "eof") {
             return 1;
-        } 
+        }
         return this._getNewlinesBetween(startToken, endToken);
-        
+
     }
 
     /**
      * Count all the newlines between two tokens.
      */
-
     _getNewlinesBetween(startToken, endToken) {
         if (!endToken || !endToken.loc) {
             return 0;
@@ -72,7 +66,7 @@ export default class Whitespace {
         let lines = 0;
 
         for (let line = start; line < end; line++) {
-            if (typeof this.used[line] === "undefined") {
+            if (is.undefined(this.used[line])) {
                 this.used[line] = true;
                 lines++;
             }
@@ -84,13 +78,12 @@ export default class Whitespace {
     /**
      * Find a token between start and end.
      */
-
-    _findToken(test: Function, start: number, end: number): number {
+    _findToken(test, start, end) {
         if (start >= end) {
             return -1;
         }
         const middle = (start + end) >>> 1;
-        const match: number = test(this.tokens[middle]);
+        const match = test(this.tokens[middle]);
         if (match < 0) {
             return this._findToken(test, middle + 1, end);
         } else if (match > 0) {

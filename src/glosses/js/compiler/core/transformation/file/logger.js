@@ -1,35 +1,28 @@
-// @flow
-
-import type File from "./index";
-
 const seenDeprecatedMessages = [];
 
 export default class Logger {
-    constructor(file: File, filename: string) {
+    constructor(file, filename) {
         this.filename = filename;
         this.file = file;
     }
 
-    filename: string;
-    file: File;
-
-    _buildMessage(msg: string): string {
-        let parts = `[BABEL] ${this.filename}`;
+    _buildMessage(msg) {
+        let parts = `[COMPILER] ${this.filename}`;
         if (msg) {
             parts += `: ${msg}`;
         }
         return parts;
     }
 
-    warn(msg: string) {
+    warn(msg) {
         console.warn(this._buildMessage(msg));
     }
 
-    error(msg: string, Constructor: typeof Error = Error): Error {
+    error(msg, Constructor = Error) {
         throw new Constructor(this._buildMessage(msg));
     }
 
-    deprecate(msg: string) {
+    deprecate(msg) {
         if (this.file.opts && this.file.opts.suppressDeprecationMessages) {
             return;
         }
@@ -38,7 +31,7 @@ export default class Logger {
 
         // already seen this message
         if (seenDeprecatedMessages.indexOf(msg) >= 0) {
-            return; 
+            return;
         }
 
         // make sure we don't see it again
@@ -47,15 +40,15 @@ export default class Logger {
         console.error(msg);
     }
 
-    verbose(msg: string) {
+    verbose(msg) {
         // if (verboseDebug.enabled) console.log(this._buildMessage(msg));
     }
 
-    debug(msg: string) {
+    debug(msg) {
         // if (generalDebug.enabled) console.log(this._buildMessage(msg));
     }
 
-    deopt(node: Object, msg: string) {
+    deopt(node, msg) {
         this.debug(msg);
     }
 }

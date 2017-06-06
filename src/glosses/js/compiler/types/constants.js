@@ -1,5 +1,3 @@
-/* eslint max-len: "off" */
-
 export const STATEMENT_OR_BLOCK_KEYS = ["consequent", "body", "alternate"];
 export const FLATTENABLE_KEYS = ["body", "expressions"];
 export const FOR_INIT_KEYS = ["left", "init"];

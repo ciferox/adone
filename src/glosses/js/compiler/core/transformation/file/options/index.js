@@ -1,12 +1,9 @@
-// @flow
-
-import adone from "adone";
 import parsers from "./parsers";
 import config from "./config";
 
 export { config };
 
-export const normaliseOptions = (options: Object = {}): Object => {
+export const normaliseOptions = (options) => {
     for (const key in options) {
         let val = options[key];
         if (adone.is.nil(val)) {

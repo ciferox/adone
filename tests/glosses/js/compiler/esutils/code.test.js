@@ -10,7 +10,7 @@ const __range__ = (left, right, inclusive) => {
     return range;
 };
 
-describe("code", () => {
+describe("js", "compiler", "esutils", "code", () => {
     describe("isDecimalDigit", () => {
         it("returns true if provided code is decimal digit", () =>
             [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((ch) =>

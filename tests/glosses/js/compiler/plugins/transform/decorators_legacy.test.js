@@ -1,4 +1,4 @@
-describe("glosses", "js", "compiler", "plugins", "decorators", () => {
+describe("js", "compiler", "plugins", "decorators", () => {
     describe("class", () => {
         describe("ordering", () => {
             it("should evaluate descriptor expressions in order", () => {

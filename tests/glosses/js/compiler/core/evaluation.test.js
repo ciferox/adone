@@ -1,7 +1,7 @@
 
 const { parse, traverse } = adone.js.compiler;
 
-describe("evaluation", () => {
+describe("js", "compiler", "core", "evaluation", () => {
     const addTest = (code, type, value, notConfident) => {
         it(`${type}: ${code}`, () => {
             const visitor = {};

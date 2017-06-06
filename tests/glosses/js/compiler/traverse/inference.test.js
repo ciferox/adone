@@ -12,7 +12,7 @@ const getPath = (code) => {
     return path;
 };
 
-describe("inference", () => {
+describe("js", "compiler", "traverse", "inference", () => {
     describe("baseTypeStrictlyMatches", () => {
         it("it should work with null", () => {
             const path = getPath("var x = null; x === null").get("body")[1].get("expression");

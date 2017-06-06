@@ -9,11 +9,24 @@ const getPath = (code) => {
             _path.stop();
         }
     });
-    
+
     return path;
 };
 
-describe("scope", () => {
+const getIdentifierPath = (code) => {
+    const ast = parse(code);
+    let nodePath;
+    traverse(ast, {
+        Identifier(path) {
+            nodePath = path;
+            path.stop();
+        }
+    });
+
+    return nodePath;
+};
+
+describe("js", "compiler", "traverse", "scope", () => {
     describe("binding paths", () => {
         it("function declaration id", () => {
             assert.ok(getPath("function foo() {}").scope.getBinding("foo").path.type === "FunctionDeclaration");
@@ -58,6 +71,14 @@ describe("scope", () => {
         _foo1: { }
         _foo2: { }
       `).scope.generateUid("foo"), "_foo3");
+        });
+
+        it("reference paths", () => {
+            const path = getIdentifierPath("function square(n) { return n * n}");
+            const referencePaths = path.context.scope.bindings.n.referencePaths;
+            assert.equal(referencePaths.length, 2);
+            assert.deepEqual(referencePaths[0].node.loc.start, { line: 1, column: 28 });
+            assert.deepEqual(referencePaths[1].node.loc.start, { line: 1, column: 32 });
         });
     });
 });

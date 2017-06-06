@@ -1,18 +1,15 @@
 // This file contains methods that modify the path/node in some ways.
-//@flow
-
 import { path as pathCache } from "../cache";
 import PathHoister from "./lib/hoister";
 import NodePath from "./index";
 
 
-const { types: t } = adone.js.compiler;
+const { is, js: { compiler: { types: t } } } = adone;
 
 /**
  * Insert the provided nodes before the current one.
  */
-
-export function insertBefore(nodes) {
+export const insertBefore = function (nodes) {
     this._assertUnremoved();
 
     nodes = this._verifyNodeList(nodes);
@@ -29,11 +26,11 @@ export function insertBefore(nodes) {
         this.replaceExpressionWithStatements(nodes);
     } else {
         this._maybePopFromStatements(nodes);
-        if (Array.isArray(this.container)) {
+        if (is.array(this.container)) {
             return this._containerInsertBefore(nodes);
         } else if (this.isStatementOrBlock()) {
             if (this.node) {
-                nodes.push(this.node); 
+                nodes.push(this.node);
             }
             this._replaceWith(t.blockStatement(nodes));
         } else {
@@ -43,9 +40,9 @@ export function insertBefore(nodes) {
     }
 
     return [this];
-}
+};
 
-export function _containerInsert(from, nodes) {
+export const _containerInsert = function (from, nodes) {
     this.updateSiblingKeys(from, nodes.length);
 
     const paths = [];
@@ -62,7 +59,7 @@ export function _containerInsert(from, nodes) {
             // will be the active context, because `popContext` may leave a final context in place.
             // We should remove this `if` and always push once #4145 has been resolved.
             if (this.context.queue) {
-                path.pushContext(this.context); 
+                path.pushContext(this.context);
             }
             paths.push(path);
         } else {
@@ -88,17 +85,17 @@ export function _containerInsert(from, nodes) {
     }
 
     return paths;
-}
+};
 
-export function _containerInsertBefore(nodes) {
+export const _containerInsertBefore = function (nodes) {
     return this._containerInsert(this.key, nodes);
-}
+};
 
-export function _containerInsertAfter(nodes) {
+export const _containerInsertAfter = function (nodes) {
     return this._containerInsert(this.key + 1, nodes);
-}
+};
 
-export function _maybePopFromStatements(nodes) {
+export const _maybePopFromStatements = function (nodes) {
     const last = nodes[nodes.length - 1];
     const isIdentifier = t.isIdentifier(last) ||
         (t.isExpressionStatement(last) && t.isIdentifier(last.expression));
@@ -106,14 +103,14 @@ export function _maybePopFromStatements(nodes) {
     if (isIdentifier && !this.isCompletionRecord()) {
         nodes.pop();
     }
-}
+};
 
 /**
  * Insert the provided nodes after the current one. When inserting nodes after an
  * expression, ensure that the completion record is correct by pushing the current node.
  */
 
-export function insertAfter(nodes) {
+export const insertAfter = function (nodes) {
     this._assertUnremoved();
 
     nodes = this._verifyNodeList(nodes);
@@ -132,11 +129,11 @@ export function insertAfter(nodes) {
         this.replaceExpressionWithStatements(nodes);
     } else {
         this._maybePopFromStatements(nodes);
-        if (Array.isArray(this.container)) {
+        if (is.array(this.container)) {
             return this._containerInsertAfter(nodes);
         } else if (this.isStatementOrBlock()) {
             if (this.node) {
-                nodes.unshift(this.node); 
+                nodes.unshift(this.node);
             }
             this._replaceWith(t.blockStatement(nodes));
         } else {
@@ -146,15 +143,14 @@ export function insertAfter(nodes) {
     }
 
     return [this];
-}
+};
 
 /**
  * Update all sibling node paths after `fromIndex` by `incrementBy`.
  */
-
-export function updateSiblingKeys(fromIndex, incrementBy) {
+export const updateSiblingKeys = function (fromIndex, incrementBy) {
     if (!this.parent) {
-        return; 
+        return;
     }
 
     const paths = pathCache.get(this.parent);
@@ -164,9 +160,9 @@ export function updateSiblingKeys(fromIndex, incrementBy) {
             path.key += incrementBy;
         }
     }
-}
+};
 
-export function _verifyNodeList(nodes) {
+export const _verifyNodeList = function (nodes) {
     if (!nodes) {
         return [];
     }
@@ -181,7 +177,7 @@ export function _verifyNodeList(nodes) {
 
         if (!node) {
             msg = "has falsy node";
-        } else if (typeof node !== "object") {
+        } else if (!is.object(node)) {
             msg = "contains a non-object node";
         } else if (!node.type) {
             msg = "without a type";
@@ -190,15 +186,15 @@ export function _verifyNodeList(nodes) {
         }
 
         if (msg) {
-            const type = Array.isArray(node) ? "array" : typeof node;
+            const type = is.array(node) ? "array" : typeof node;
             throw new Error(`Node list ${msg} with the index of ${i} and type of ${type}`);
         }
     }
 
     return nodes;
-}
+};
 
-export function unshiftContainer(listKey, nodes) {
+export const unshiftContainer = function (listKey, nodes) {
     this._assertUnremoved();
 
     nodes = this._verifyNodeList(nodes);
@@ -214,9 +210,9 @@ export function unshiftContainer(listKey, nodes) {
     });
 
     return path.insertBefore(nodes);
-}
+};
 
-export function pushContainer(listKey, nodes) {
+export const pushContainer = function (listKey, nodes) {
     this._assertUnremoved();
 
     nodes = this._verifyNodeList(nodes);
@@ -234,14 +230,13 @@ export function pushContainer(listKey, nodes) {
     });
 
     return path.replaceWithMultiple(nodes);
-}
+};
 
 /**
  * Hoist the current node to the highest scope possible and return a UID
  * referencing it.
  */
-
-export function hoist(scope = this.scope) {
+export const hoist = function (scope = this.scope) {
     const hoister = new PathHoister(this, scope);
     return hoister.run();
-}
+};

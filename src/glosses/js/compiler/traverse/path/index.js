@@ -1,17 +1,11 @@
-/* eslint max-len: 0 */
-// @flow
-
-
-import type Hub from "../hub";
-import type TraversalContext from "../context";
-import * as virtualTypes from "./lib/virtual-types";
+import * as virtualTypes from "./lib/virtual_types";
 import traverse from "../index";
 import Scope from "../scope";
-const { types } = adone.js.compiler;
+const { x, js: { compiler: { types } } } = adone;
 import { path as pathCache } from "../cache";
 
 export default class NodePath {
-    constructor(hub: Hub, parent: Object) {
+    constructor(hub, parent) {
         this.parent = parent;
         this.hub = hub;
         this.contexts = [];
@@ -35,35 +29,13 @@ export default class NodePath {
         this.typeAnnotation = null;
     }
 
-    parent: Object;
-    hub: Hub;
-    contexts: TraversalContext[];
-    data: Object;
-    shouldSkip: boolean;
-    shouldStop: boolean;
-    removed: boolean;
-    state: any;
-    opts: ?Object;
-    skipKeys: ?Object;
-    parentPath: ?NodePath;
-    context: TraversalContext;
-    container: ?Object | Object[];
-    listKey: ?string;
-    inList: boolean;
-    parentKey: ?string;
-    key: ?string;
-    node: ?Object;
-    scope: Scope;
-    type: ?string;
-    typeAnnotation: ?Object;
-
-    static get({ hub, parentPath, parent, container, listKey, key }): NodePath {
+    static get({ hub, parentPath, parent, container, listKey, key }) {
         if (!hub && parentPath) {
             hub = parentPath.hub;
         }
-    
+
         if (!parent) {
-            throw new adone.x.Exception("To get a node path the parent needs to exist");
+            throw new x.Exception("To get a node path the parent needs to exist");
         }
 
         const targetNode = container[key];
@@ -93,7 +65,7 @@ export default class NodePath {
         return path;
     }
 
-    getScope(scope: Scope) {
+    getScope(scope) {
         let ourScope = scope;
 
         // we're entering a new scope so let's construct it!
@@ -104,11 +76,11 @@ export default class NodePath {
         return ourScope;
     }
 
-    setData(key: string, val: any): any {
+    setData(key, val) {
         return this.data[key] = val;
     }
 
-    getData(key: string, def?: any): any {
+    getData(key, def) {
         let val = this.data[key];
         if (!val && def) {
             val = this.data[key] = def;
@@ -116,15 +88,15 @@ export default class NodePath {
         return val;
     }
 
-    buildCodeFrameError(msg: string, Error: typeof Error = SyntaxError): Error {
+    buildCodeFrameError(msg, Error = SyntaxError) {
         return this.hub.file.buildCodeFrameError(this.node, msg, Error);
     }
 
-    traverse(visitor: Object, state?: any) {
+    traverse(visitor, state) {
         traverse(this.node, visitor, this.scope, state, this);
     }
 
-    mark(type: string, message: string) {
+    mark(type, message) {
         this.hub.file.metadata.marked.push({
             type,
             message,
@@ -132,25 +104,29 @@ export default class NodePath {
         });
     }
 
-    set(key: string, node: Object) {
+    set(key, node) {
         types.validate(this.node, key, node);
         this.node[key] = node;
     }
 
-    getPathLocation(): string {
+    getPathLocation() {
         const parts = [];
         let path = this;
-        do {
+        for ( ; ; ) {
             let key = path.key;
             if (path.inList) {
-                key = `${path.listKey}[${key}]`; 
+                key = `${path.listKey}[${key}]`;
             }
             parts.unshift(key);
-        } while (path = path.parentPath);
+            path = path.parentPath;
+            if (!path) {
+                break;
+            }
+        }
         return parts.join(".");
     }
 
-    debug(buildMessage: Function) {
+    debug(buildMessage) {
         // TODO
         // adone.log(`${this.getPathLocation()} ${this.type}: ${buildMessage()}`);
     }
@@ -168,7 +144,7 @@ Object.assign(NodePath.prototype, require("./modification"));
 Object.assign(NodePath.prototype, require("./family"));
 Object.assign(NodePath.prototype, require("./comments"));
 
-for (const type of (types.TYPES: string[])) {
+for (const type of types.TYPES) {
     const typeKey = `is${type}`;
     NodePath.prototype[typeKey] = function (opts) {
         return types[typeKey](this.node, opts);
@@ -183,10 +159,10 @@ for (const type of (types.TYPES: string[])) {
 
 for (const type in virtualTypes) {
     if (type[0] === "_") {
-        continue; 
+        continue;
     }
     if (types.TYPES.indexOf(type) < 0) {
-        types.TYPES.push(type); 
+        types.TYPES.push(type);
     }
 
     const virtualType = virtualTypes[type];

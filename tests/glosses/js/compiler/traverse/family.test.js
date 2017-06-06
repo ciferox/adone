@@ -1,7 +1,7 @@
 const { parse, traverse } = adone.js.compiler;
 const hop = adone.is.propertyOwned;
 
-describe("path/family", () => {
+describe("js", "compiler", "traverse", "path/family", () => {
     describe("getBindingIdentifiers", () => {
         const ast = parse("var a = 1, {b} = c, [d] = e; function f() {}");
         let nodes = {};
@@ -54,6 +54,32 @@ describe("path/family", () => {
             Object.keys(outerNodes).forEach((id) => {
                 assert.strictEqual(outerNodes[id], outerPaths[id].node, "nodes match");
             });
+        });
+    });
+
+    describe("getSibling", () => {
+        const ast = parse("var a = 1, {b} = c, [d] = e; function f() {} function g() {}");
+        let sibling = {};
+        let lastSibling = {};
+        traverse(ast, {
+            VariableDeclaration(path) {
+                sibling = path.getSibling(path.key);
+                lastSibling = sibling.getNextSibling().getNextSibling();
+            }
+        });
+
+        it("should return traverse sibling nodes", () => {
+            assert.ok(sibling.getNextSibling().node, "has property node");
+            assert.ok(lastSibling.getPrevSibling().node, "has property node");
+            assert.equal(Boolean(sibling.getPrevSibling().node), false, "out of scope");
+            assert.equal(Boolean(lastSibling.getNextSibling().node), false, "out of scope");
+        });
+
+        it("should return all preceding and succeeding sibling nodes", () => {
+            assert.ok(sibling.getAllNextSiblings().length, "Has next sibling");
+            assert.ok(lastSibling.getAllPrevSiblings().length, "Has prev sibling");
+            assert.equal(sibling.getAllNextSiblings().length, 2, "Has 2 succeeding sibling");
+            assert.equal(lastSibling.getAllPrevSiblings().length, 2, "Has 2 preceeding sibling");
         });
     });
 });

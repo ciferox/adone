@@ -1,10 +1,8 @@
-// @flow
-
 const { js: { compiler: { types } }, is } = adone;
 import * as n from "../node";
 
 
-export function UnaryExpression(node: Object) {
+export const UnaryExpression = function (node) {
     if (node.operator === "void" || node.operator === "delete" || node.operator === "typeof") {
         this.word(node.operator);
         this.space();
@@ -13,21 +11,21 @@ export function UnaryExpression(node: Object) {
     }
 
     this.print(node.argument, node);
-}
+};
 
-export function DoExpression(node: Object) {
+export const DoExpression = function (node) {
     this.word("do");
     this.space();
     this.print(node.body, node);
-}
+};
 
-export function ParenthesizedExpression(node: Object) {
+export const ParenthesizedExpression = function (node) {
     this.token("(");
     this.print(node.expression, node);
     this.token(")");
-}
+};
 
-export function UpdateExpression(node: Object) {
+export const UpdateExpression = function (node) {
     if (node.prefix) {
         this.token(node.operator);
         this.print(node.argument, node);
@@ -35,9 +33,9 @@ export function UpdateExpression(node: Object) {
         this.print(node.argument, node);
         this.token(node.operator);
     }
-}
+};
 
-export function ConditionalExpression(node: Object) {
+export const ConditionalExpression = function (node) {
     this.print(node.test, node);
     this.space();
     this.token("?");
@@ -47,9 +45,9 @@ export function ConditionalExpression(node: Object) {
     this.token(":");
     this.space();
     this.print(node.alternate, node);
-}
+};
 
-export function NewExpression(node: Object, parent: Object) {
+export const NewExpression = function (node, parent: Object) {
     this.word("new");
     this.space();
     this.print(node.callee, node);
@@ -57,42 +55,42 @@ export function NewExpression(node: Object, parent: Object) {
         !types.isCallExpression(parent, { callee: node }) &&
         !types.isMemberExpression(parent) &&
         !types.isNewExpression(parent)) {
-        return; 
+        return;
     }
 
     this.token("(");
     this.printList(node.arguments, node);
     this.token(")");
-}
+};
 
-export function SequenceExpression(node: Object) {
+export const SequenceExpression = function (node) {
     this.printList(node.expressions, node);
-}
+};
 
-export function ThisExpression() {
+export const ThisExpression = function () {
     this.word("this");
-}
+};
 
-export function Super() {
+export const Super = function () {
     this.word("super");
-}
+};
 
-export function Decorator(node: Object) {
+export const Decorator = function (node) {
     this.token("@");
     this.print(node.expression, node);
     this.newline();
-}
+};
 
-function commaSeparatorNewline() {
+const commaSeparatorNewline = function () {
     this.token(",");
     this.newline();
 
     if (!this.endsWith("\n")) {
-        this.space(); 
+        this.space();
     }
-}
+};
 
-export function CallExpression(node: Object) {
+export const CallExpression = function (node) {
     this.print(node.callee, node);
 
     this.token("(");
@@ -114,14 +112,14 @@ export function CallExpression(node: Object) {
     }
 
     this.token(")");
-}
+};
 
-export function Import() {
+export const Import = function () {
     this.word("import");
-}
+};
 
-function buildYieldAwait(keyword: string) {
-    return function (node: Object) {
+const buildYieldAwait = (keyword) => {
+    return function (node) {
         this.word(keyword);
 
         if (node.delegate) {
@@ -135,33 +133,33 @@ function buildYieldAwait(keyword: string) {
             this.endTerminatorless(terminatorState);
         }
     };
-}
+};
 
 export const YieldExpression = buildYieldAwait("yield");
 export const AwaitExpression = buildYieldAwait("await");
 
-export function EmptyStatement() {
+export const EmptyStatement = function () {
     this.semicolon(true /* force */);
-}
+};
 
-export function ExpressionStatement(node: Object) {
+export const ExpressionStatement = function (node) {
     this.print(node.expression, node);
     this.semicolon();
-}
+};
 
-export function AssignmentPattern(node: Object) {
+export const AssignmentPattern = function (node) {
     this.print(node.left, node);
     if (node.left.optional) {
-        this.token("?"); 
+        this.token("?");
     }
     this.print(node.left.typeAnnotation, node);
     this.space();
     this.token("=");
     this.space();
     this.print(node.right, node);
-}
+};
 
-export function AssignmentExpression(node: Object, parent: Object) {
+export const AssignmentExpression = function (node, parent) {
     // Somewhere inside a for statement `init` node but doesn't usually
     // needs a paren except for `in` expressions: `for (a in b ? a : b;;)`
     const parens = this.inForStatementInitCounter && node.operator === "in" &&
@@ -186,20 +184,20 @@ export function AssignmentExpression(node: Object, parent: Object) {
     if (parens) {
         this.token(")");
     }
-}
+};
 
-export function BindExpression(node: Object) {
+export const BindExpression = function (node) {
     this.print(node.object, node);
     this.token("::");
     this.print(node.callee, node);
-}
+};
 
 export {
     AssignmentExpression as BinaryExpression,
     AssignmentExpression as LogicalExpression
 };
 
-export function MemberExpression(node: Object) {
+export const MemberExpression = function (node) {
     this.print(node.object, node);
 
     if (!node.computed && types.isMemberExpression(node.property)) {
@@ -219,10 +217,10 @@ export function MemberExpression(node: Object) {
         this.token(".");
         this.print(node.property, node);
     }
-}
+};
 
-export function MetaProperty(node: Object) {
+export const MetaProperty = function (node) {
     this.print(node.meta, node);
     this.token(".");
     this.print(node.property, node);
-}
+};

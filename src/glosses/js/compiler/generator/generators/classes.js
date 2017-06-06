@@ -1,5 +1,4 @@
-// @flow
-export function ClassDeclaration(node: Object) {
+export const ClassDeclaration = function (node) {
     this.printJoin(node.decorators, node);
     this.word("class");
 
@@ -27,11 +26,11 @@ export function ClassDeclaration(node: Object) {
 
     this.space();
     this.print(node.body, node);
-}
+};
 
 export { ClassDeclaration as ClassExpression };
 
-export function ClassBody(node: Object) {
+export const ClassBody = function (node) {
     this.token("{");
     this.printInnerComments(node);
     if (node.body.length === 0) {
@@ -49,9 +48,9 @@ export function ClassBody(node: Object) {
 
         this.rightBrace();
     }
-}
+};
 
-export function ClassProperty(node: Object) {
+export const ClassProperty = function (node) {
     this.printJoin(node.decorators, node);
 
     if (node.static) {
@@ -74,9 +73,9 @@ export function ClassProperty(node: Object) {
         this.print(node.value, node);
     }
     this.semicolon();
-}
+};
 
-export function ClassMethod(node: Object) {
+export const ClassMethod = function (node) {
     this.printJoin(node.decorators, node);
 
     if (node.static) {
@@ -90,4 +89,4 @@ export function ClassMethod(node: Object) {
     }
 
     this._method(node);
-}
+};

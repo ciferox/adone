@@ -1,8 +1,5 @@
-/* eslint max-len: 0 */
-// @flow
-
-
 const {
+    is,
     js: { compiler: { types: t, template } },
     std: { path: { basename, extname } }
 } = adone;
@@ -56,7 +53,7 @@ export default function () {
             const name = path.node.name;
             const remap = this.remaps[name];
             if (!remap) {
-                return; 
+                return;
             }
 
             // redeclared in this scope
@@ -83,7 +80,7 @@ export default function () {
 
             const left = path.get("left");
             if (!left.isIdentifier()) {
-                return; 
+                return;
             }
 
             const name = left.node.name;
@@ -94,7 +91,7 @@ export default function () {
 
             // redeclared in this scope
             if (this.scope.getBinding(name) !== path.scope.getBinding(name)) {
-                return; 
+                return;
             }
 
             node[REASSIGN_REMAP_SKIP] = true;
@@ -110,7 +107,7 @@ export default function () {
         UpdateExpression(path) {
             const arg = path.get("argument");
             if (!arg.isIdentifier()) {
-                return; 
+                return;
             }
 
             const name = arg.node.name;
@@ -121,7 +118,7 @@ export default function () {
 
             // redeclared in this scope
             if (this.scope.getBinding(name) !== path.scope.getBinding(name)) {
-                return; 
+                return;
             }
 
             const node = t.assignmentExpression(`${path.node.operator[0]}=`, arg.node, t.numericLiteral(1));
@@ -156,7 +153,7 @@ export default function () {
                 // insert top-level `this` values. This allows the AMD and UMD plugins to
                 // function properly.
                 if (this.ranCommonJS) {
-                    return; 
+                    return;
                 }
 
                 if (
@@ -173,6 +170,7 @@ export default function () {
                     this.ranCommonJS = true;
 
                     const strict = Boolean(this.opts.strict);
+                    const noInterop = Boolean(this.opts.noInterop);
 
                     const { scope } = path;
 
@@ -184,7 +182,7 @@ export default function () {
                     let hasExports = false;
                     let hasImports = false;
 
-                    const body: Object[] = path.get("body");
+                    const body = path.get("body");
                     const imports = Object.create(null);
                     const exports = Object.create(null);
 
@@ -195,10 +193,10 @@ export default function () {
 
                     const requires = Object.create(null);
 
-                    function addRequire(source, blockHoist) {
+                    const addRequire = (source, blockHoist) => {
                         const cached = requires[source];
                         if (cached) {
-                            return cached; 
+                            return cached;
                         }
 
                         const ref = path.scope.generateUidIdentifier(basename(source, extname(source)));
@@ -215,19 +213,19 @@ export default function () {
                             varDecl.loc = imports[source].loc;
                         }
 
-                        if (typeof blockHoist === "number" && blockHoist > 0) {
+                        if (is.number(blockHoist) && blockHoist > 0) {
                             varDecl._blockHoist = blockHoist;
                         }
 
                         topNodes.push(varDecl);
 
                         return requires[source] = ref;
-                    }
+                    };
 
-                    function addTo(obj, key, arr) {
+                    const addTo = (obj, key, arr) => {
                         const existing = obj[key] || [];
                         obj[key] = existing.concat(arr);
-                    }
+                    };
 
                     for (const path of body) {
                         if (path.isExportDeclaration()) {
@@ -254,7 +252,7 @@ export default function () {
 
                             importsEntry.specifiers.push(...path.node.specifiers);
 
-                            if (typeof path.node._blockHoist === "number") {
+                            if (is.number(path.node._blockHoist)) {
                                 importsEntry.maxBlockHoist = Math.max(
                                     path.node._blockHoist,
                                     importsEntry.maxBlockHoist
@@ -353,10 +351,23 @@ export default function () {
                                     } else if (specifier.isExportDefaultSpecifier()) {
                                         // todo
                                     } else if (specifier.isExportSpecifier()) {
-                                        if (specifier.node.local.name === "default") {
-                                            topNodes.push(buildExportsFrom(t.stringLiteral(specifier.node.exported.name), t.memberExpression(t.callExpression(this.addHelper("interopRequireDefault"), [ref]), specifier.node.local)));
+                                        if (!noInterop && specifier.node.local.name === "default") {
+                                            topNodes.push(
+                                                buildExportsFrom(
+                                                    t.stringLiteral(specifier.node.exported.name),
+                                                    t.memberExpression(
+                                                        t.callExpression(this.addHelper("interopRequireDefault"), [ref]),
+                                                        specifier.node.local
+                                                    )
+                                                )
+                                            );
                                         } else {
-                                            topNodes.push(buildExportsFrom(t.stringLiteral(specifier.node.exported.name), t.memberExpression(ref, specifier.node.local)));
+                                            topNodes.push(
+                                                buildExportsFrom(
+                                                    t.stringLiteral(specifier.node.exported.name),
+                                                    t.memberExpression(ref, specifier.node.local)
+                                                )
+                                            );
                                         }
                                         nonHoistedExportNames[specifier.node.exported.name] = true;
                                     }
@@ -366,7 +377,12 @@ export default function () {
                                     if (specifier.isExportSpecifier()) {
                                         addTo(exports, specifier.node.local.name, specifier.node.exported);
                                         nonHoistedExportNames[specifier.node.exported.name] = true;
-                                        nodes.push(buildExportsAssignment(specifier.node.exported, specifier.node.local));
+                                        nodes.push(
+                                            buildExportsAssignment(
+                                                specifier.node.exported,
+                                                specifier.node.local
+                                            )
+                                        );
                                     }
                                 }
                             }
@@ -391,7 +407,7 @@ export default function () {
                             for (let i = 0; i < specifiers.length; i++) {
                                 const specifier = specifiers[i];
                                 if (t.isImportNamespaceSpecifier(specifier)) {
-                                    if (strict) {
+                                    if (strict || noInterop) {
                                         remaps[specifier.local.name] = uid;
                                     } else {
                                         const varDecl = t.variableDeclaration("var", [
@@ -422,7 +438,7 @@ export default function () {
                                     if (specifier.imported.name === "default") {
                                         if (wildcard) {
                                             target = wildcard;
-                                        } else {
+                                        } else if (!noInterop) {
                                             target = wildcard = path.scope.generateUidIdentifier(uid.name);
                                             const varDecl = t.variableDeclaration("var", [
                                                 t.variableDeclarator(
@@ -441,7 +457,10 @@ export default function () {
                                             topNodes.push(varDecl);
                                         }
                                     }
-                                    remaps[specifier.local.name] = t.memberExpression(target, t.cloneWithoutLoc(specifier.imported));
+                                    remaps[specifier.local.name] = t.memberExpression(
+                                        target,
+                                        t.cloneWithoutLoc(specifier.imported)
+                                    );
                                 }
                             }
                         } else {
@@ -467,7 +486,10 @@ export default function () {
                                 currentExportsNodeAssignmentLength + maxHoistedExportsNodeAssignmentLength);
                             let hoistedExportsNode = t.identifier("undefined");
                             nonHoistedExportNamesChunk.forEach((name) => {
-                                hoistedExportsNode = buildExportsAssignment(t.identifier(name), hoistedExportsNode).expression;
+                                hoistedExportsNode = buildExportsAssignment(
+                                    t.identifier(name),
+                                    hoistedExportsNode
+                                ).expression;
                             });
 
                             const node = t.expressionStatement(hoistedExportsNode);

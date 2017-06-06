@@ -1,9 +1,4 @@
-/* eslint max-len: 0 */
-// @flow
-
-
-
-const { template, helpers: { functionName } } = adone.js.compiler;
+const { js: { compiler: { template, helpers: { functionName } } } } = adone;
 
 export default function ({ types: t }) {
     const findBareSupers = {

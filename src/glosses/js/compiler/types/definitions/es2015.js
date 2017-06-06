@@ -1,5 +1,3 @@
-/* eslint max-len: "off" */
-
 import defineType, {
     assertNodeType,
     assertValueType,
