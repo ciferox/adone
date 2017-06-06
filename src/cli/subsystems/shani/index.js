@@ -100,6 +100,8 @@ export default class ShaniCLI extends adone.application.Subsystem {
             engine.include(...tests);
         }
 
+        adone.sourcemap.support(Error).install();
+
         const emitter = engine.start();
 
         let simple = opts.get("simple");
