@@ -10,6 +10,8 @@ ubuntu:
         - npm test omnitron
     tags:
         - ubuntu
+    only:
+        - triggers
 
 debian:
     stage: test
@@ -20,6 +22,8 @@ debian:
         - npm test omnitron
     tags:
         - debian
+    only:
+        - triggers
 
 freebsd:
     stage: test
@@ -30,6 +34,8 @@ freebsd:
         - npm test omnitron
     tags:
         - freebsd
+    only:
+        - triggers
 
 osx:
     stage: test
@@ -40,6 +46,8 @@ osx:
         - npm test omnitron
     tags:
         - osx
+    only:
+        - triggers
 
 windows 7:
     stage: test
@@ -50,6 +58,8 @@ windows 7:
         - call npm test omnitron
     tags:
         - windows 7
+    only:
+        - triggers
 
 windows 8.1:
     stage: test
@@ -60,6 +70,8 @@ windows 8.1:
         - call npm test omnitron
     tags:
         - windows 8.1
+    only:
+        - triggers
 
 windows 10:
     stage: test
@@ -70,3 +82,5 @@ windows 10:
         - call npm test omnitron
     tags:
         - windows 10
+    only:
+        - triggers
