@@ -55,7 +55,10 @@ export default class ShaniCLI extends adone.application.Subsystem {
         const useConfig = !opts.get("dontUseConfig");
         let config = {};
         if (useConfig && await adone.fs.exists(configPath)) {
-            config = require(configPath) || {};
+            config = adone.require(configPath);
+            if (config.__esModule) {  // TODO: fix?
+                config = config.default;
+            }
         }
 
         config.options = config.options || {};
@@ -75,13 +78,12 @@ export default class ShaniCLI extends adone.application.Subsystem {
         if (inclusive.length || exclusive.length) {
             let mapping;
             if (!config.options.dontUseMap && config.mapping) {
-                const configDir = path.dirname(configPath);
                 mapping = async (x) => {
                     let res = await config.mapping(x);
                     if (!is.array(res)) {
                         res = [res];
                     }
-                    return res.map((x) => path.resolve(configDir, x));
+                    return res;
                 };
             } else {
                 mapping = (x) => [path.resolve(x)];
