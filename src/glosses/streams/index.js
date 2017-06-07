@@ -19,5 +19,6 @@ adone.lazify({
     Duplexify: "./duplexify",
     eos: "./eos",
     shift: "./shift",
-    through: "./through"
+    through: "./through",
+    replace: "./replace"
 }, exports, require);
