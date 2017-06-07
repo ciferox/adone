@@ -1,5 +1,5 @@
 describe("glosses", "net", "mail", "JSON Transport Tests", () => {
-    const { net: { mail }, std: { path } } = adone;
+    const { net: { mail }, std: { path, fs }, stream } = adone;
 
     const NODE_TLS_REJECT_UNAUTHORIZED = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
 
@@ -24,9 +24,7 @@ describe("glosses", "net", "mail", "JSON Transport Tests", () => {
             cc: "info@nodemailer.com",
             subject: "Awesome!",
             messageId: "<fede478a-aab9-af02-789c-ad93a76a3548@gmail.com>",
-            html: {
-                path: path.resolve(__dirname, "fixtures", "body.html")
-            },
+            html: fs.createReadStream(path.resolve(__dirname, "fixtures", "body.html")).pipe(stream.replace("\r\n", "\n")),
             text: "hello world",
             attachments: [{
                 filename: "image.png",
@@ -89,7 +87,7 @@ describe("glosses", "net", "mail", "JSON Transport Tests", () => {
             text: "hello world",
             icalEvent: {
                 method: "request",
-                path: path.resolve(__dirname, "fixtures", "event.ics")
+                content: fs.createReadStream(path.resolve(__dirname, "fixtures", "event.ics")).pipe(stream.replace("\r\n", "\n"))
             }
         };
 

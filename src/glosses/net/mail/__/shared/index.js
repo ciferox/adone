@@ -271,7 +271,7 @@ export const resolveContent = (data, key, callback) => {
 
     if (!callback) {
         promise = new Promise((resolve, reject) => {
-            callback = module.exports.callbackPromise(resolve, reject);
+            callback = callbackPromise(resolve, reject);
         });
     }
 
@@ -294,7 +294,11 @@ export const resolveContent = (data, key, callback) => {
                 }
                 // we can't stream twice the same content, so we need
                 // to replace the stream object with the streaming result
-                data[key] = value;
+                if (!is.stream(data[key])) {  // data[key].content is the stream
+                    data[key].content = value;
+                } else {
+                    data[key] = value;
+                }
                 callback(null, value);
             });
         } else if (/^https?:\/\//i.test(content.path || content.href)) {

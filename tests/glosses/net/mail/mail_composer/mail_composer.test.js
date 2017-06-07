@@ -653,7 +653,7 @@ describe("glosses", "net", "mail", "MailComposer unit tests", () => {
             const mail = new MailComposer(data).compile();
             mail.build((err, message) => {
                 expect(err).to.not.exist;
-                expect(message.toString()).to.include("w7VrdmEK");
+                expect(message.toString()).to.include("w7VrdmE");
                 done();
             });
         });

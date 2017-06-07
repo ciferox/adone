@@ -1199,7 +1199,7 @@ describe("glosses", "net", "mail", "MimeNode Tests", () => {
             mb.build((err, msg) => {
                 expect(err).to.not.exist;
                 msg = msg.toString();
-                expect(/^w7VrdmEK$/m.test(msg)).to.be.true;
+                expect(/^w7VrdmE/m.test(msg)).to.be.true;
                 done();
             });
         });

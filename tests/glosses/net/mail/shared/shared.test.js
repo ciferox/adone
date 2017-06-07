@@ -1,5 +1,5 @@
 describe("glosses", "net", "mail", "Shared Funcs Tests", () => {
-    const { net: { mail: { __: { shared } } }, std: { http, fs, zlib, path } } = adone;
+    const { net: { mail: { __: { shared } } }, std: { http, fs, zlib, path }, stream } = adone;
 
     describe("Logger tests", () => {
         it("Should create a logger", () => {
@@ -115,7 +115,9 @@ describe("glosses", "net", "mail", "Shared Funcs Tests", () => {
             };
             shared.resolveContent(mail.data, "html", (err, value) => {
                 expect(err).to.not.exist;
-                expect(value).to.deep.equal(new Buffer("<p>Tere, tere</p><p>vana kere!</p>\n"));
+                expect(value).to.be.instanceOf(Buffer);
+                value = value.toString().replace(/\r\n/g, "\n");
+                expect(value).to.equal("<p>Tere, tere</p><p>vana kere!</p>\n");
                 done();
             });
         });
@@ -168,7 +170,7 @@ describe("glosses", "net", "mail", "Shared Funcs Tests", () => {
         it("should set text from a html stream", (done) => {
             const mail = {
                 data: {
-                    html: fs.createReadStream(path.resolve(__dirname, "fixtures", "message.html"))
+                    html: fs.createReadStream(path.resolve(__dirname, "fixtures", "message.html")).pipe(stream.replace("\r\n", "\n"))
                 }
             };
             shared.resolveContent(mail.data, "html", (err, value) => {

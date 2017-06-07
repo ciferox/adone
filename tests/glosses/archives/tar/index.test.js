@@ -101,7 +101,7 @@ describe("glosses", "archives", "tar", () => {
         expect(await linkA.content()).to.be.equal(await linkB.content());
     });
 
-    specify("follow symlinks", async () => {
+    specify("follow symlinks", async function () {
         if (windows) {  // no symlink support on win32 currently. TODO: test if this can be enabled somehow
             this.skip();
             return;
@@ -218,11 +218,19 @@ describe("glosses", "archives", "tar", () => {
 
     specify("check type while mapping header on packing", (done) => {
         const a = fixtures.getVirtualDirectory("e");
+        let i = 0;
 
         const checkHeaderType = function (header) {
             if (header.name.indexOf(".") === -1) {
-                expect(header.type).to.be.equal(header.name);
-                done();
+                if (windows && header.name === "symlink") {
+                    // ok ?
+                    expect(header.type).to.be.equal("file");
+                } else {
+                    expect(header.type).to.be.equal(header.name);
+                }
+                if (++i === 3) {
+                    done();
+                }
             }
         };
 

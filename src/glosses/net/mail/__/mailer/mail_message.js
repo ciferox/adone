@@ -80,7 +80,6 @@ export default class MailMessage {
                 if (err) {
                     return callback(err);
                 }
-
                 const node = {
                     content: value
                 };
