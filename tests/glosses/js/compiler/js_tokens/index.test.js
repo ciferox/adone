@@ -833,7 +833,7 @@ describe("js", "compiler", "js tokens", () => {
 
     describe("tokenization", () => {
         const testFile = (file) => {
-            const contents = fs.readFileSync(path.resolve(__dirname, `fixtures/${file}.js`)).toString();
+            const contents = fs.readFileSync(path.resolve(__dirname, `fixtures/${file}.js`)).toString().replace(/\r\n/g, "\n");
             const expected = require(path.resolve(__dirname, `./fixtures/${file}.json`));
             const actual = contents.match(jsTokens);
             it(`${file}.js`, () => {
@@ -848,6 +848,3 @@ describe("js", "compiler", "js tokens", () => {
         testFile("division");
     });
 });
-
-
-

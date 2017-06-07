@@ -425,7 +425,7 @@ describe("glosses", "data", "yaml", "issues", () => {
         specify("Duplicated mapping key errors on top level throw at beginning of key", async () => {
             const file = fixtures.getVirtualFile("0243_basic.yml");
             const content = await file.content();
-            const lines = content.split("\n");
+            const lines = content.split(/\r?\n/);
             try {
                 yaml.safeLoad(content);
             } catch (err) {
@@ -438,7 +438,7 @@ describe("glosses", "data", "yaml", "issues", () => {
         specify("Duplicated mapping key errors inside of mapping values throw at beginning of key", async () => {
             const file = fixtures.getVirtualFile("0243_nested.yml");
             const content = await file.content();
-            const lines = content.split("\n");
+            const lines = content.split(/\r?\n/);
             try {
                 yaml.safeLoad(content);
             } catch (err) {

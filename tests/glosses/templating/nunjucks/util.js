@@ -87,7 +87,7 @@ function render(str, ctx, opts, env, cb) {
     const t = new Template(str, e);
 
     if (!cb) {
-        return t.render(ctx);
+        return normEOL(t.render(ctx));
     }
     numAsyncs++;
     t.render(ctx, (err, res) => {
