@@ -234,7 +234,7 @@ export default class BasePrompt {
      * @return {String} prompt question string
      */
     getQuestion() {
-        let message = `${terminal.green("?")} ${terminal.bold(this.opt.message)} `;
+        let message = `${terminal.green("?")} ${terminal.bold(this.opt.message)}${terminal.reset(" ")}`;
 
         // Append the default if available, and if question isn't answered
         if (this.opt.default != null && this.status !== "answered") {

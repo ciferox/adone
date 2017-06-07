@@ -1,31 +1,19 @@
-const {
-    compressor: { brotli },
-    std: {
-        stream: { Writable },
-        fs,
-        path
-    }
-} = adone;
+const { std: { fs, path }, compressor: { brotli } } = adone;
 
-class BufferWriter extends Writable {
+class BufferWriter extends adone.std.stream.Writable {
     constructor() {
         super();
-        this.data = Buffer.alloc(0);
+        this.data = new Buffer(0);
     }
 
-    _write(chunk, enc, callback) {
+    _write(chunk, encoding, next) {
         this.data = Buffer.concat([this.data, chunk], this.data.length + chunk.length);
-        callback();
+        next();
     }
 }
 
-const testStream = (method, bufferFile, resultFile, done, params) => {
+function testStream(method, bufferFile, resultFile, done, params) {
     const writeStream = new BufferWriter();
-
-    const emit = writeStream.emit;
-    writeStream.emit = function (...args) {
-        return emit.apply(this, args);
-    };
 
     fs.createReadStream(path.join(__dirname, "/fixtures/", bufferFile))
         .pipe(method(params))
@@ -33,10 +21,10 @@ const testStream = (method, bufferFile, resultFile, done, params) => {
 
     writeStream.on("finish", () => {
         const result = fs.readFileSync(path.join(__dirname, "/fixtures/", resultFile));
-        expect(Buffer.compare(writeStream.data, result)).to.be.equal(0);
+        expect(writeStream.data).to.deep.equal(result);
         done();
     });
-};
+}
 
 describe("Brotli Stream", () => {
     describe("compress", () => {
@@ -70,8 +58,8 @@ describe("Brotli Stream", () => {
         });
 
         it("should flush data", (done) => {
-            const buf1 = Buffer.from("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
-            const buf2 = Buffer.from("Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.");
+            const buf1 = new Buffer("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
+            const buf2 = new Buffer("Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.");
 
             const stream = brotli.compressStream();
             const writeStream = new BufferWriter();
@@ -115,7 +103,8 @@ describe("Brotli Stream", () => {
             testStream(brotli.decompressStream, "large.compressed", "large", done);
         });
 
-        it("should decompress to another large buffer", (done) => {
+        it("should decompress to another large buffer", function (done) {
+            this.timeout(30000);
             testStream(brotli.decompressStream, "large.txt.compressed", "large.txt", done);
         });
     });

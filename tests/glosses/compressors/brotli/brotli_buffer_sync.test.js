@@ -1,14 +1,11 @@
-const {
-    compressor: { brotli },
-    std: { fs, path }
-} = adone;
+const { std: { fs, path }, compressor: { brotli } } = adone;
 
 const testBufferSync = (method, bufferFile, resultFile, params) => {
     params = params || {};
     const buffer = fs.readFileSync(path.join(__dirname, "/fixtures/", bufferFile));
     const result = fs.readFileSync(path.join(__dirname, "/fixtures/", resultFile));
     const output = method(buffer, params);
-    expect(output).to.eql(result);
+    expect(output).to.deep.equal(result);
 };
 
 describe("Brotli Buffer Sync", () => {
@@ -38,6 +35,10 @@ describe("Brotli Buffer Sync", () => {
         });
 
         it("should compress a large buffer", function () {
+            if (process.env.SKIP_LARGE_BUFFER_TEST) {
+                this.skip();
+            }
+
             this.timeout(30000);
             testBufferSync(brotli.compressSync, "large.txt", "large.txt.compressed");
         });
@@ -65,7 +66,12 @@ describe("Brotli Buffer Sync", () => {
             testBufferSync(brotli.decompressSync, "large.compressed", "large");
         });
 
-        it("should decompress to another large buffer", () => {
+        it("should decompress to another large buffer", function () {
+            if (process.env.SKIP_LARGE_BUFFER_TEST) {
+                this.skip();
+            }
+
+            this.timeout(30000);
             testBufferSync(brotli.decompressSync, "large.txt.compressed", "large.txt");
         });
     });

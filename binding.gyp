@@ -313,12 +313,14 @@
       "sources": [
         "src/native/compressors/brotli/deps/common/dictionary.c",
         "src/native/compressors/brotli/deps/enc/backward_references.c",
+        "src/native/compressors/brotli/deps/enc/backward_references_hq.c",
         "src/native/compressors/brotli/deps/enc/bit_cost.c",
         "src/native/compressors/brotli/deps/enc/block_splitter.c",
         "src/native/compressors/brotli/deps/enc/brotli_bit_stream.c",
         "src/native/compressors/brotli/deps/enc/cluster.c",
         "src/native/compressors/brotli/deps/enc/compress_fragment.c",
         "src/native/compressors/brotli/deps/enc/compress_fragment_two_pass.c",
+        "src/native/compressors/brotli/deps/enc/dictionary_hash.c",
         "src/native/compressors/brotli/deps/enc/encode.c",
         "src/native/compressors/brotli/deps/enc/entropy_encode.c",
         "src/native/compressors/brotli/deps/enc/histogram.c",
@@ -333,7 +335,10 @@
         "src/native/compressors/brotli/deps/dec/state.c",
         "src/native/compressors/brotli/brotli.cc",
       ],
-      "include_dirs": [ "nan" ],
+      "include_dirs": [
+        "nan",
+        "src/native/compressors/brotli/deps/include"
+      ],
       "defines": ["NOMINMAX"],
       "cflags" : ["-O2"],
       "xcode_settings": {

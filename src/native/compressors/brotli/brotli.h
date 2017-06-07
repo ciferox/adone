@@ -1,8 +1,8 @@
 #ifndef __BROTLI_H_
 #define __BROTLI_H_
 
-#include "deps/enc/encode.h"
-#include "deps/dec/decode.h"
+#include "deps/include/brotli/encode.h"
+#include "deps/include/brotli/decode.h"
 
 struct Allocator
 {
@@ -13,7 +13,6 @@ struct Allocator
     struct AllocatedBuffer
     {
         size_t size;
-        size_t available;
         /* char data[...]; */
     };
 
@@ -72,6 +71,9 @@ class StreamEncode : public StreamCoder
   public:
     static void Init(Nan::ADDON_REGISTER_FUNCTION_ARGS_TYPE target);
 
+    const uint8_t *next_in;
+    size_t available_in;
+
     BrotliEncoderState *state;
 
   private:
@@ -79,9 +81,7 @@ class StreamEncode : public StreamCoder
     ~StreamEncode();
 
     static NAN_METHOD(New);
-    static NAN_METHOD(GetBlockSize);
-    static NAN_METHOD(Copy);
-    static NAN_METHOD(Encode);
+    static NAN_METHOD(Transform);
     static NAN_METHOD(Flush);
     static Nan::Persistent<v8::Function> constructor;
 };
@@ -89,7 +89,7 @@ class StreamEncode : public StreamCoder
 class StreamEncodeWorker : public Nan::AsyncWorker
 {
   public:
-    StreamEncodeWorker(Nan::Callback *callback, StreamEncode *obj, bool is_last, bool force_flush);
+    StreamEncodeWorker(Nan::Callback *callback, StreamEncode *obj, BrotliEncoderOperation op);
 
     void Execute();
     void HandleOKCallback();
@@ -97,10 +97,8 @@ class StreamEncodeWorker : public Nan::AsyncWorker
   private:
     ~StreamEncodeWorker();
     StreamEncode *obj;
-
-    bool is_last;
-    bool force_flush;
-    int res;
+    BrotliEncoderOperation op;
+    bool res;
 };
 
 class StreamDecodeWorker : public Nan::AsyncWorker

@@ -18,7 +18,6 @@ void *Allocator::Alloc(size_t size)
     }
 
     buf->size = size;
-    buf->available = size;
     allocated_unreported_memory += size + sizeof(*buf);
     return static_cast<void *>(buf + 1);
 }
@@ -31,7 +30,9 @@ Allocator::AllocatedBuffer *Allocator::GetBufferInfo(void *address)
 void Allocator::Free(void *opaque, void *address)
 {
     if (!address)
+    {
         return;
+    }
 
     AllocatedBuffer *buf = GetBufferInfo(address);
 
@@ -67,7 +68,9 @@ StreamCoder::~StreamCoder()
 {
     size_t n_chunks = pending_output.size();
     for (size_t i = 0; i < n_chunks; i++)
+    {
         alloc.Free(pending_output[i]);
+    }
 
     alloc.ReportMemoryToV8();
 }
@@ -81,27 +84,24 @@ Local<Array> StreamCoder::PendingChunksAsArray()
     {
         uint8_t *current = pending_output[i];
         Allocator::AllocatedBuffer *buf_info = Allocator::GetBufferInfo(current);
-        Nan::Set(chunks, i, Nan::NewBuffer(reinterpret_cast<char *>(current),
-                                           buf_info->size - buf_info->available,
-                                           Allocator::NodeFree,
-                                           NULL)
-                                .ToLocalChecked());
+        Nan::Set(chunks, i, Nan::NewBuffer(reinterpret_cast<char *>(current), buf_info->size, Allocator::NodeFree, NULL).ToLocalChecked());
     }
     pending_output.clear();
 
     return chunks;
 }
 
-StreamDecode::StreamDecode(Local<Object> options) : next_in(NULL), available_in(0)
+StreamDecode::StreamDecode(Local<Object> params) : next_in(NULL), available_in(0)
 {
     state = BrotliDecoderCreateInstance(Allocator::Alloc, Allocator::Free, &alloc);
     alloc.ReportMemoryToV8();
+
     Local<String> key;
 
     key = Nan::New<String>("dictionary").ToLocalChecked();
-    if (Nan::Has(options, key).FromJust())
+    if (Nan::Has(params, key).FromJust())
     {
-        Local<Object> dictionary = Nan::Get(options, key).ToLocalChecked()->ToObject();
+        Local<Object> dictionary = Nan::Get(params, key).ToLocalChecked()->ToObject();
         const size_t dict_size = node::Buffer::Length(dictionary);
         const char *dict_buffer = node::Buffer::Data(dictionary);
 
@@ -147,8 +147,6 @@ NAN_METHOD(StreamDecode::Transform)
     StreamDecodeWorker *worker = new StreamDecodeWorker(callback, obj);
     if (info[2]->BooleanValue())
     {
-        worker->SaveToPersistent(0U, buffer);
-        worker->SaveToPersistent(1U, obj->handle());
         Nan::AsyncQueueWorker(worker);
     }
     else
@@ -164,6 +162,8 @@ NAN_METHOD(StreamDecode::Flush)
     StreamDecode *obj = ObjectWrap::Unwrap<StreamDecode>(info.Holder());
 
     Nan::Callback *callback = new Nan::Callback(info[0].As<Function>());
+    obj->next_in = nullptr;
+    obj->available_in = 0;
     StreamDecodeWorker *worker = new StreamDecodeWorker(callback, obj);
     if (info[1]->BooleanValue())
     {
@@ -214,6 +214,20 @@ StreamEncode::StreamEncode(Local<Object> params)
         BrotliEncoderSetParameter(state, BROTLI_PARAM_LGBLOCK, val);
     }
 
+    key = Nan::New<String>("size_hint").ToLocalChecked();
+    if (Nan::Has(params, key).FromJust())
+    {
+        val = Nan::Get(params, key).ToLocalChecked()->BooleanValue();
+        BrotliEncoderSetParameter(state, BROTLI_PARAM_SIZE_HINT, val);
+    }
+
+    key = Nan::New<String>("disable_literal_context_modeling").ToLocalChecked();
+    if (Nan::Has(params, key).FromJust())
+    {
+        val = Nan::Get(params, key).ToLocalChecked()->Int32Value();
+        BrotliEncoderSetParameter(state, BROTLI_PARAM_DISABLE_LITERAL_CONTEXT_MODELING, val);
+    }
+
     key = Nan::New<String>("dictionary").ToLocalChecked();
     if (Nan::Has(params, key).FromJust())
     {
@@ -236,9 +250,7 @@ void StreamEncode::Init(Nan::ADDON_REGISTER_FUNCTION_ARGS_TYPE target)
     tpl->SetClassName(Nan::New("StreamEncode").ToLocalChecked());
     tpl->InstanceTemplate()->SetInternalFieldCount(1);
 
-    Nan::SetPrototypeMethod(tpl, "getBlockSize", GetBlockSize);
-    Nan::SetPrototypeMethod(tpl, "copy", Copy);
-    Nan::SetPrototypeMethod(tpl, "encode", Encode);
+    Nan::SetPrototypeMethod(tpl, "transform", Transform);
     Nan::SetPrototypeMethod(tpl, "flush", Flush);
 
     constructor.Reset(Nan::GetFunction(tpl).ToLocalChecked());
@@ -253,30 +265,16 @@ NAN_METHOD(StreamEncode::New)
     info.GetReturnValue().Set(info.This());
 }
 
-NAN_METHOD(StreamEncode::GetBlockSize)
-{
-    StreamEncode *obj = ObjectWrap::Unwrap<StreamEncode>(info.Holder());
-    info.GetReturnValue().Set(Nan::New<Number>(BrotliEncoderInputBlockSize(obj->state)));
-}
-
-NAN_METHOD(StreamEncode::Copy)
+NAN_METHOD(StreamEncode::Transform)
 {
     StreamEncode *obj = ObjectWrap::Unwrap<StreamEncode>(info.Holder());
 
     Local<Object> buffer = info[0]->ToObject();
-    const size_t input_size = node::Buffer::Length(buffer);
-    const char *input_buffer = node::Buffer::Data(buffer);
+    obj->next_in = (const uint8_t *)node::Buffer::Data(buffer);
+    obj->available_in = node::Buffer::Length(buffer);
 
-    BrotliEncoderCopyInputToRingBuffer(obj->state, input_size, (const uint8_t *)input_buffer);
-}
-
-NAN_METHOD(StreamEncode::Encode)
-{
-    StreamEncode *obj = ObjectWrap::Unwrap<StreamEncode>(info.Holder());
-
-    bool is_last = info[0]->BooleanValue();
     Nan::Callback *callback = new Nan::Callback(info[1].As<Function>());
-    StreamEncodeWorker *worker = new StreamEncodeWorker(callback, obj, is_last, false);
+    StreamEncodeWorker *worker = new StreamEncodeWorker(callback, obj, BROTLI_OPERATION_PROCESS);
     if (info[2]->BooleanValue())
     {
         Nan::AsyncQueueWorker(worker);
@@ -293,15 +291,27 @@ NAN_METHOD(StreamEncode::Flush)
 {
     StreamEncode *obj = ObjectWrap::Unwrap<StreamEncode>(info.Holder());
 
-    Nan::Callback *callback = new Nan::Callback(info[0].As<Function>());
-    StreamEncodeWorker *worker = new StreamEncodeWorker(callback, obj, false, true);
-    Nan::AsyncQueueWorker(worker);
+    Nan::Callback *callback = new Nan::Callback(info[1].As<Function>());
+    BrotliEncoderOperation op = info[0]->BooleanValue() ? BROTLI_OPERATION_FINISH : BROTLI_OPERATION_FLUSH;
+    obj->next_in = nullptr;
+    obj->available_in = 0;
+    StreamEncodeWorker *worker = new StreamEncodeWorker(callback, obj, op);
+    if (info[2]->BooleanValue())
+    {
+        Nan::AsyncQueueWorker(worker);
+    }
+    else
+    {
+        worker->Execute();
+        worker->WorkComplete();
+        worker->Destroy();
+    }
 }
 
 Nan::Persistent<Function> StreamEncode::constructor;
 
-StreamEncodeWorker::StreamEncodeWorker(Nan::Callback *callback, StreamEncode *obj, bool is_last, bool force_flush)
-    : Nan::AsyncWorker(callback), obj(obj), is_last(is_last), force_flush(force_flush) {}
+StreamEncodeWorker::StreamEncodeWorker(Nan::Callback *callback, StreamEncode *obj, BrotliEncoderOperation op)
+    : Nan::AsyncWorker(callback), obj(obj), op(op) {}
 
 StreamEncodeWorker::~StreamEncodeWorker()
 {
@@ -309,29 +319,37 @@ StreamEncodeWorker::~StreamEncodeWorker()
 
 void StreamEncodeWorker::Execute()
 {
-    uint8_t *buffer = NULL;
-    size_t output_size = 0;
-    res = BrotliEncoderWriteData(obj->state, is_last, force_flush, &output_size, &buffer);
-
-    if (output_size > 0)
+    do
     {
-        uint8_t *output = static_cast<uint8_t *>(obj->alloc.Alloc(output_size));
-        if (!output)
+        size_t available_out = 0;
+        res = BrotliEncoderCompressStream(obj->state, op, &obj->available_in, &obj->next_in, &available_out, NULL, NULL);
+
+        if (res == BROTLI_FALSE)
         {
-            res = 0;
+            return;
+        }
+    } while (obj->available_in > 0);
+
+    while (BrotliEncoderHasMoreOutput(obj->state) == BROTLI_TRUE)
+    {
+        size_t size = 0;
+        const uint8_t *output = BrotliEncoderTakeOutput(obj->state, &size);
+
+        void *buf = obj->alloc.Alloc(size);
+        if (!buf)
+        {
+            res = BROTLI_FALSE;
             return;
         }
 
-        memcpy(output, buffer, output_size);
-        Allocator::AllocatedBuffer *buf_info = Allocator::GetBufferInfo(output);
-        buf_info->available = 0;
-        obj->pending_output.push_back(output);
+        memcpy(buf, output, size);
+        obj->pending_output.push_back(static_cast<uint8_t *>(buf));
     }
 }
 
 void StreamEncodeWorker::HandleOKCallback()
 {
-    if (!res)
+    if (res == BROTLI_FALSE)
     {
         Local<Value> argv[] = {
             Nan::Error("Brotli failed to compress.")};
@@ -357,27 +375,36 @@ StreamDecodeWorker::~StreamDecodeWorker()
 
 void StreamDecodeWorker::Execute()
 {
-    Allocator::AllocatedBuffer *buf_info;
-
     do
     {
-        void *buf = obj->alloc.Alloc(131072);
-        if (!buf)
-        {
-            res = BROTLI_DECODER_RESULT_ERROR;
-            return;
-        }
-
-        uint8_t *next_out = static_cast<uint8_t *>(buf);
-        buf_info = Allocator::GetBufferInfo(buf);
+        size_t available_out = 0;
         res = BrotliDecoderDecompressStream(obj->state,
                                             &obj->available_in,
                                             &obj->next_in,
-                                            &buf_info->available,
-                                            &next_out,
+                                            &available_out,
+                                            NULL,
                                             NULL);
 
-        obj->pending_output.push_back(static_cast<uint8_t *>(buf));
+        if (res == BROTLI_DECODER_RESULT_ERROR)
+        {
+            return;
+        }
+
+        while (BrotliDecoderHasMoreOutput(obj->state) == BROTLI_TRUE)
+        {
+            size_t size = 0;
+            const uint8_t *output = BrotliDecoderTakeOutput(obj->state, &size);
+
+            void *buf = obj->alloc.Alloc(size);
+            if (!buf)
+            {
+                res = BROTLI_DECODER_RESULT_ERROR;
+                return;
+            }
+
+            memcpy(buf, output, size);
+            obj->pending_output.push_back(static_cast<uint8_t *>(buf));
+        }
     } while (res == BROTLI_DECODER_RESULT_NEEDS_MORE_OUTPUT);
 }
 
