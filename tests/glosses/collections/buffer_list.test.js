@@ -1,6 +1,6 @@
-describe("collections", "buffer list", () => {
+describe("collection", "BufferList", () => {
     const { is, std: { crypto }, collection: { BufferList } } = adone;
-    const encodings = "hex utf8 utf-8 ascii binary base64  ucs2 ucs-2 utf16le utf-16le".split(" ");
+    const encodings = "hex utf8 utf-8 ascii binary base64 ucs2 ucs-2 utf16le utf-16le".split(" ");
 
     it("single bytes from single buffer", () => {
         const bl = new BufferList();
@@ -525,6 +525,7 @@ describe("collections", "buffer list", () => {
         const bl = new BufferList(["First", "Second", "Third"]);
 
         assert.equal(bl.shallowSlice(5, 10).toString(), "Secon");
+        assert.equal(bl.shallowSlice(7, 10).toString(), "con");
     });
 
     it("shallow slice single buffer", () => {
