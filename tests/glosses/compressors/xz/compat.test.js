@@ -1,8 +1,8 @@
 import * as helpers from "./helpers";
 
-const { std: { fs, path }, compressor: { xz } } = adone;
+const { is, std: { fs, path }, compressor: { xz } } = adone;
 
-describe("glosses", "compressors", "xz", () => {
+describe("compressor", "xz", () => {
     const commonFixturePath = (relPath) => path.resolve(__dirname, "../..", "fixtures", relPath);
 
     const fixturePath = (relPath) => path.join(__dirname, "fixtures", relPath);
@@ -39,7 +39,7 @@ describe("glosses", "compressors", "xz", () => {
             assert.equal(a.toString("base64"), BananasCompressed);
 
             const b = await xz.decompress(a);
-            assert.isOk(Buffer.isBuffer(b));
+            assert.isOk(is.buffer(b));
             assert.equal(b.toString(), "Bananas");
         });
     });

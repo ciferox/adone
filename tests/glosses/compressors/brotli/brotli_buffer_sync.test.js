@@ -8,7 +8,7 @@ const testBufferSync = (method, bufferFile, resultFile, params) => {
     expect(output).to.deep.equal(result);
 };
 
-describe("Brotli Buffer Sync", () => {
+describe("compressor", "brotli", "sync", () => {
     describe("compress", () => {
         it("should compress binary data", () => {
             testBufferSync(brotli.compressSync, "data10k.bin", "data10k.bin.compressed");

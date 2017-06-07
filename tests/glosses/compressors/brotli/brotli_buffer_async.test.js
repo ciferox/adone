@@ -11,7 +11,7 @@ const testBufferAsync = (method, bufferFile, resultFile, done, params) => {
     });
 };
 
-describe("Brotli Buffer Async", () => {
+describe("compressor", "brotli", "async", () => {
     describe("compress", () => {
         it("should compress binary data", (done) => {
             testBufferAsync(brotli.compress, "data10k.bin", "data10k.bin.compressed", done);

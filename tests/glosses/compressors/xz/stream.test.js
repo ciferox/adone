@@ -2,28 +2,24 @@ const { std: { fs, path }, collection: { BufferList } } = adone;
 const helpers = require("./helpers.js");
 const { lzma, xz } = adone.compressor;
 
-describe("glosses", "compressors", "xz", "stream", () => {
-    function commonFixturePath(relPath) {
-        return path.join(__dirname, "../..", "fixtures", relPath);
-    }
+describe("compressor", "xz", "stream", () => {
+    const commonFixturePath = (relPath) => path.join(__dirname, "../..", "fixtures", relPath);
 
-    function fixturePath(relPath) {
-        return path.join(__dirname, "fixtures", relPath);
-    }
+    const fixturePath = (relPath) => path.join(__dirname, "fixtures", relPath);
 
     let randomData;
     let x86BinaryData;
     let hamlet;
     let largeRandom;
 
-    function encodeAndDecode(enc, dec, done, data) {
+    const encodeAndDecode = (enc, dec, done, data) => {
         data = data || randomData;
 
         data.duplicate().pipe(enc).pipe(dec).pipe(new BufferList((err, buf) => {
             assert.isOk(helpers.bufferEqual(data, buf));
             done(err);
         }));
-    }
+    };
 
     before("read random test data", (done) => {
         randomData = new BufferList(done);

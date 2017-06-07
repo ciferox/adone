@@ -1,10 +1,10 @@
-const { compressor: { lzma } } = adone;
+const { is, compressor: { lzma } } = adone;
 
-describe("glosses", "compressors", "lzma", () => {
+describe("compressor", "lzma", () => {
     describe("compress()/decompress()", () => {
         it("can compress strings to Buffers", async () => {
             const result = await lzma.compress("Banana", { preset: 9 });
-            assert.isOk(Buffer.isBuffer(result));
+            assert.isOk(is.buffer(result));
             assert.isOk(result.length > 0);
         });
     
@@ -15,7 +15,7 @@ describe("glosses", "compressors", "lzma", () => {
                 0x49, 0xc6, 0x24, 0x17, 0x18, 0x93, 0x42, 0x5f,  
                 0xff, 0xfd, 0xa2, 0xd0, 0x00
             ]);
-            assert.isOk(Buffer.isBuffer(result));
+            assert.isOk(is.buffer(result));
             assert.equal(result.toString(), "Banana");
         });
     
@@ -26,7 +26,7 @@ describe("glosses", "compressors", "lzma", () => {
                 0x49, 0xc6, 0x24, 0x17, 0x18, 0x93, 0x42, 0x5f,  
                 0xff, 0xfd, 0xa2, 0xd0, 0x00
             ]));
-            assert.isOk(Buffer.isBuffer(result));
+            assert.isOk(is.buffer(result));
             assert.equal(result.toString(), "Banana");
         });
     
@@ -35,7 +35,7 @@ describe("glosses", "compressors", "lzma", () => {
             assert.equal(a.toString("base64"), "XQAAAAT//////////wAhGEnQgnOEP++//7v9AAA=");
 
             const b = await lzma.decompress(a);
-            assert.isOk(Buffer.isBuffer(b));
+            assert.isOk(is.buffer(b));
             assert.equal(b.toString(), "Bananas");
         });
     });

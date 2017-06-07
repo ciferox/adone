@@ -1,6 +1,6 @@
-const { std: { fs, util, stream } } = adone;
+const { is, std: { fs, stream } } = adone;
 
-export function fsCreateWriteStream(filename) {
+export const fsCreateWriteStream = (filename) => {
     const s = fs.createWriteStream(filename);
     if (process.version.match(/^v0.8/)) {
         s.on("close", () => {
@@ -8,18 +8,18 @@ export function fsCreateWriteStream(filename) {
         });
     }
     return s;
-}
+};
 
-export function bufferEqual(a, b) {
+export const bufferEqual = (a, b) => {
     /* The bl module does not expose array indexing for its instances,
      * however, Buffer.get is deprecated and will be removed.
      * (See https://github.com/nodejs/io.js/blob/60a974d200/lib/buffer.js#L425)
      * => All incoming objects will be coerced to Buffer */
-    if (!Buffer.isBuffer(a)) {
+    if (!is.buffer(a)) {
         a = a.slice();
     }
 
-    if (!Buffer.isBuffer(b)) {
+    if (!is.buffer(b)) {
         b = b.slice();
     }
 
@@ -34,7 +34,7 @@ export function bufferEqual(a, b) {
     }
 
     return true;
-}
+};
 
 export class NullStream extends stream.Writable {
     _write(chunk, encoding, callback) {

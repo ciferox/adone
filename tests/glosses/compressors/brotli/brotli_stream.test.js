@@ -3,7 +3,7 @@ const { std: { fs, path }, compressor: { brotli } } = adone;
 class BufferWriter extends adone.std.stream.Writable {
     constructor() {
         super();
-        this.data = new Buffer(0);
+        this.data = Buffer.allocUnsafe(0);
     }
 
     _write(chunk, encoding, next) {
@@ -12,7 +12,7 @@ class BufferWriter extends adone.std.stream.Writable {
     }
 }
 
-function testStream(method, bufferFile, resultFile, done, params) {
+const testStream = (method, bufferFile, resultFile, done, params) => {
     const writeStream = new BufferWriter();
 
     fs.createReadStream(path.join(__dirname, "/fixtures/", bufferFile))
@@ -24,9 +24,9 @@ function testStream(method, bufferFile, resultFile, done, params) {
         expect(writeStream.data).to.deep.equal(result);
         done();
     });
-}
+};
 
-describe("Brotli Stream", () => {
+describe("compressor", "brotli", "stream", () => {
     describe("compress", () => {
         it("should compress binary data", (done) => {
             testStream(brotli.compressStream, "data10k.bin", "data10k.bin.compressed", done);
@@ -58,8 +58,8 @@ describe("Brotli Stream", () => {
         });
 
         it("should flush data", (done) => {
-            const buf1 = new Buffer("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
-            const buf2 = new Buffer("Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.");
+            const buf1 = Buffer.from("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
+            const buf2 = Buffer.from("Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.");
 
             const stream = brotli.compressStream();
             const writeStream = new BufferWriter();

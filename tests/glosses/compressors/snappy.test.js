@@ -3,7 +3,7 @@ const { compress, decompress, compressSync, isValidCompressedSync, decompressSyn
 const inputString = "beep boop, hello world. OMG OMG OMG";
 const inputBuffer = Buffer.from(inputString);
 
-describe("compressors", "snappy", () => {
+describe("compressor", "snappy", () => {
     it("compress() string", async () => {
         const buffer = await compress(inputString);
         assert.isTrue(is.buffer(buffer));

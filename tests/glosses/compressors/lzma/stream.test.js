@@ -2,7 +2,7 @@ import * as helpers from "./helpers";
 
 const { std: { fs, path }, compressor: { lzma, xz }, collection: { BufferList } } = adone;
 
-describe("glosses", "compressors", "lzma", "stream", () => {
+describe("compressor", "lzma", "stream", () => {
     const commonFixturePath = (relPath) => path.join(__dirname, "../..", "fixtures", relPath);
 
     const fixturePath = (relPath) => path.join(__dirname, "fixtures", relPath);

@@ -1,6 +1,6 @@
 const { compressor: { xz } } = adone;
 
-describe("glosses", "compressors", "xz", "native internals", () => {
+describe("compressor", "xz", "native internals", () => {
     describe("#code", () => {
         it("should fail for non-buffer input", () => {
             const stream = xz.decompressStream({ sync: true });

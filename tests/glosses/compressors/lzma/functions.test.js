@@ -1,6 +1,6 @@
 const { compressor: { lzma } } = adone;
 
-describe("glosses", "compressors", "lzma", () => {
+describe("compressor", "lzma", () => {
     describe("#versionNumber", () => {
         it("should be present and of number type", () => {
             assert.isOk(lzma.versionNumber());

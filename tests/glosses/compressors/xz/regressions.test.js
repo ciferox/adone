@@ -1,6 +1,6 @@
 const { std: { fs, path }, compressor: { lzma }, collection: { BufferList } } = adone;
 
-describe("glosses", "compressors", "xz", "regressions", () => {
+describe("compressor", "xz", "regressions", () => {
     const commonFixturePath = (relPath) => path.join(__dirname, "../..", "fixtures", relPath);
 
     describe("regression-#7", () => {
