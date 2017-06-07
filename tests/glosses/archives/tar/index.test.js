@@ -1,4 +1,4 @@
-const { is: { win32 }, noop, archive: { tar }, std } = adone;
+const { is: { windows }, noop, archive: { tar }, std } = adone;
 
 
 describe("glosses", "archives", "tar", () => {
@@ -69,7 +69,7 @@ describe("glosses", "archives", "tar", () => {
     });
 
     specify("symlink", async function () {
-        if (win32) {  // no symlink support on win32 currently. TODO: test if this can be enabled somehow
+        if (windows) {  // no symlink support on win32 currently. TODO: test if this can be enabled somehow
             this.skip();
             return;
         }
@@ -102,7 +102,7 @@ describe("glosses", "archives", "tar", () => {
     });
 
     specify("follow symlinks", async () => {
-        if (win32) {  // no symlink support on win32 currently. TODO: test if this can be enabled somehow
+        if (windows) {  // no symlink support on win32 currently. TODO: test if this can be enabled somehow
             this.skip();
             return;
         }
@@ -186,7 +186,7 @@ describe("glosses", "archives", "tar", () => {
 
         expect(files).to.have.lengthOf(1);
         const stat = await files[0].stat();
-        if (!win32) {
+        if (!windows) {
             expect(stat.mode & 0o777).to.be.equal(0o700);
         }
     });
