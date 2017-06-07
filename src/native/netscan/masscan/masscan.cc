@@ -13,13 +13,23 @@
 
 extern "C" {
 
+void pcap_init(void);
+
 /*
  * yea I know globals suck
  */
 MasscanWorker *active_worker;
 unsigned control_c_pressed = 0;
 static unsigned control_c_pressed_again = 0;
+
+/*
+ * yea I know globals suck
+ */
+unsigned volatile is_tx_done = 0;
+unsigned volatile is_rx_done = 0;
 time_t global_now;
+
+uint64_t usec_start;
 
 static unsigned hexval(char c)
 {
@@ -143,8 +153,8 @@ get_sources(const struct Masscan *masscan,
     *src_ip = src->ip.first;
     *src_ip_mask = src->ip.last - src->ip.first;
 
-    *src_port = src->port.first;
     *src_port_mask = src->port.last - src->port.first;
+    *src_port = src->port.first;
 }
 
 /***************************************************************************
@@ -343,7 +353,7 @@ infinite:
         /* If the user pressed <ctrl-c>, then we need to exit. but, in case
          * the user wants to --resume the scan later, we save the current
          * state in a file */
-        if (control_c_pressed)
+        if (is_tx_done)
         {
             break;
         }
@@ -353,7 +363,7 @@ infinite:
      * --infinite
      *  For load testing, go around and do this again
      */
-    if (masscan->is_infinite && !control_c_pressed)
+    if (masscan->is_infinite && !is_tx_done)
     {
         seed++;
         repeats++;
@@ -381,7 +391,7 @@ infinite:
      * packets to arrive. Pressing <ctrl-c> a second time will exit this
      * prematurely.
      */
-    while (!control_c_pressed_again)
+    while (!is_rx_done)
     {
         unsigned k;
         uint64_t batch_size;
@@ -519,7 +529,8 @@ receive_thread(void *v)
         tcpcon_set_banner_flags(tcpcon,
                                 masscan->is_capture_cert,
                                 masscan->is_capture_html,
-                                masscan->is_capture_heartbleed);
+                                masscan->is_capture_heartbleed,
+                                masscan->is_capture_ticketbleed);
         if (masscan->http_user_agent_length)
             tcpcon_set_parameter(tcpcon,
                                  "http-user-agent",
@@ -528,6 +539,11 @@ receive_thread(void *v)
         if (masscan->is_heartbleed)
             tcpcon_set_parameter(tcpcon,
                                  "heartbleed",
+                                 1,
+                                 "1");
+        if (masscan->is_ticketbleed)
+            tcpcon_set_parameter(tcpcon,
+                                 "ticketbleed",
                                  1,
                                  "1");
         if (masscan->is_poodle_sslv3)
@@ -571,7 +587,7 @@ receive_thread(void *v)
      */
     if (masscan->is_offline)
     {
-        while (!control_c_pressed_again)
+        while (!is_rx_done)
             pixie_usleep(10000);
         parms->done_receiving = 1;
         goto end;
@@ -582,7 +598,7 @@ receive_thread(void *v)
      * them to the terminal.
      */
     LOG(1, "begin receive thread\n");
-    while (!control_c_pressed_again)
+    while (!is_rx_done)
     {
         int status;
         unsigned length;
@@ -960,10 +976,18 @@ void MasscanWorker::initialize()
 
     global_now = time(0);
 
-    v8::Local<v8::Object> opt = Nan::New<v8::Object>(_options);
-
     /* Set system to report debug information on crash */
-    // pixie_backtrace_init(argv[0]);
+    // {
+    //     int is_backtrace = 1;
+    //     for (i=1; i<(unsigned)argc; i++) {
+    //         if (strcmp(argv[i], "--nobacktrace") == 0)
+    //             is_backtrace = 0;
+    //     }
+    //     if (is_backtrace)
+    //         pixie_backtrace_init(argv[0]);
+    // }
+
+    v8::Local<v8::Object> opt = Nan::New<v8::Object>(_options);
 
     /*
         * Initialize those defaults that aren't zero
@@ -1009,15 +1033,18 @@ void MasscanWorker::initialize()
 
     v8::Local<v8::String> sourceIPStr = NanStr("adapterIP");
 
-    if (opt->Has(sourceIPStr)) {
+    if (opt->Has(sourceIPStr))
+    {
         v8::Local<v8::Value> v8value = opt->Get(sourceIPStr);
-        if (!v8value->IsString()) {
+        if (!v8value->IsString())
+        {
             Nan::ThrowTypeError("String expected for adapterIP param");
             this->Destroy();
             return;
         }
         Range range = range_parse_ipv4(*v8::String::Utf8Value(v8value->ToString()), 0, 0);
-        if (range.begin > range.end) {
+        if (range.begin > range.end)
+        {
             Nan::ThrowTypeError("Range end cannot be greater than range begin");
             this->Destroy();
             return;
@@ -1034,13 +1061,16 @@ void MasscanWorker::initialize()
     if (opt->Has(maxRateStr))
     {
         v8::Local<v8::Value> value = opt->Get(maxRateStr);
-        if (!value->IsNumber()) {
+        if (!value->IsNumber())
+        {
             Nan::ThrowTypeError("Number expected for maxRate param");
             this->Destroy();
             return;
         }
         masscan->max_rate = value->NumberValue();
-    } else {
+    }
+    else
+    {
         // 100 packets per second by default
         masscan->max_rate = 100;
     }
@@ -1190,7 +1220,8 @@ void MasscanWorker::initialize()
     // #endif
 
     /* We need to do a separate "raw socket" initialization step. This is
-                 * for Windows and PF_RING. */
+     * for Windows and PF_RING. */
+    pcap_init();
     rawsock_init();
 
     /* Init some protocol parser data structures */
@@ -1308,6 +1339,9 @@ void MasscanWorker::initialize()
         * hundreds of subranges. This scans through them faster. */
     picker = rangelist_pick2_create(&masscan->targets);
 
+#ifdef __AFL_HAVE_MANUAL_CONTROL
+    __AFL_INIT();
+#endif
     /*
         * Start scanning threats for each adapter
         */
@@ -1477,7 +1511,7 @@ void MasscanWorker::Execute(const Nan::AsyncProgressWorker::ExecutionProgress &p
         {
             /* Note: This is how we can tell the scan has ended */
             _stopped = true;
-            control_c_pressed = 1;
+            is_tx_done = 1;
         }
 
         /*
@@ -1536,29 +1570,53 @@ void MasscanWorker::Execute(const Nan::AsyncProgressWorker::ExecutionProgress &p
                 total_syns += *parms->total_syns;
         }
 
-        // status_print(&status, min_index, range, rate, total_tcbs, total_synacks, total_syns, masscan->wait - (time(0) - now));
-        this->emitStats(progress, &status, min_index, range, rate, total_tcbs, total_synacks, total_syns, masscan->wait - (time(0) - now));
-
         if (time(0) - now >= masscan->wait)
-            control_c_pressed_again = 1;
+            is_rx_done = 1;
 
-        for (i = 0; i < masscan->nic_count; i++)
+        if (masscan->output.is_status_updates)
         {
-            struct ThreadPair *parms = &parms_array[i];
+            status_print(&status, min_index, range, rate,
+                         total_tcbs, total_synacks, total_syns,
+                         masscan->wait - (time(0) - now));
 
-            transmit_count += parms->done_transmitting;
-            receive_count += parms->done_receiving;
+            for (i = 0; i < masscan->nic_count; i++)
+            {
+                struct ThreadPair *parms = &parms_array[i];
+
+                transmit_count += parms->done_transmitting;
+                receive_count += parms->done_receiving;
+            }
+
+            pixie_mssleep(250);
+
+            if (transmit_count < masscan->nic_count)
+                continue;
+            _stopped = true;
+            is_tx_done = 1;
+            is_rx_done = 1;
+            if (receive_count < masscan->nic_count)
+                continue;
+        }
+        else
+        {
+            /* [AFL-fuzz]
+             * Join the threads, which doesn't allow us to print out 
+             * status messages, but allows us to exit cleaningly without
+             * any waiting */
+            for (i = 0; i < masscan->nic_count; i++)
+            {
+                struct ThreadPair *parms = &parms_array[i];
+
+                pixie_thread_join(parms->thread_handle_xmit);
+                parms->thread_handle_xmit = 0;
+                pixie_thread_join(parms->thread_handle_recv);
+                parms->thread_handle_recv = 0;
+            }
+            _stopped = true;
+            is_tx_done = 1;
+            is_rx_done = 1;
         }
 
-        pixie_mssleep(100);
-
-        if (transmit_count < masscan->nic_count)
-            continue;
-        _stopped = true;
-        control_c_pressed = 1;
-        control_c_pressed_again = 1;
-        if (receive_count < masscan->nic_count)
-            continue;
         break;
     }
 
@@ -1748,6 +1806,8 @@ void MasscanWorker::stop()
 {
     _stopped = true;
     control_c_pressed = 1;
+    is_tx_done = 1;
+    is_rx_done = 1; // may be not necessary
 }
 
 void MasscanWorker::drainQueue()

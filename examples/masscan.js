@@ -24,7 +24,7 @@ class ScanApp extends adone.application.Application {
             maxRate: 10
         });
         scanner.on("stats", (stats) => {
-            // adone.log(stats);
+            adone.log(stats);
         });
 
         scanner.on("detect", (info) => {

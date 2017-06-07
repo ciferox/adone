@@ -26,6 +26,10 @@
 #include <ctype.h>
 #include <limits.h>
 
+#ifndef min
+#define min(a,b) ((a)<(b)?(a):(b))
+#endif
+
 /***************************************************************************
  ***************************************************************************/
 /*static struct Range top_ports_tcp[] = {
@@ -290,6 +294,7 @@ static void
 masscan_echo(struct Masscan *masscan, FILE *fp)
 {
     unsigned i;
+    unsigned l = 0;
 
     fprintf(fp, "rate = %10.2f\n", masscan->max_rate);
     fprintf(fp, "randomize-hosts = true\n");
@@ -355,25 +360,44 @@ masscan_echo(struct Masscan *masscan, FILE *fp)
      * Targets
      */
 
-    for (i=0; i<masscan->ports.count; i++) {
-	struct Range range = masscan->ports.list[i];
-	if ( (range.begin == range.end) && (range.begin == Templ_ICMP_echo) )
-		{
-		fprintf(fp,"ping = true\n");
-		break;
-		}
-    }
-
     fprintf(fp, "# TARGET SELECTION (IP, PORTS, EXCLUDES)\n");
+    fprintf(fp, "retries = %u\n", masscan->retries);
     fprintf(fp, "ports = ");
+    /* Disable comma generation for the first element */
+    l = 0;
     for (i=0; i<masscan->ports.count; i++) {
         struct Range range = masscan->ports.list[i];
-        if (range.begin == range.end)
-            fprintf(fp, "%u", range.begin);
-        else
-            fprintf(fp, "%u-%u", range.begin, range.end);
-        if (i+1 < masscan->ports.count)
-            fprintf(fp, ",");
+        do {
+            struct Range rrange = range;
+            unsigned done = 0;
+            if (l)
+                fprintf(fp, ",");
+            l = 1;
+            if (rrange.begin >= Templ_ICMP_echo) {
+                rrange.begin -= Templ_ICMP_echo;
+                rrange.end -= Templ_ICMP_echo;
+                fprintf(fp,"I:");
+                done = 1;
+            } else if (rrange.begin >= Templ_SCTP) {
+                rrange.begin -= Templ_SCTP;
+                rrange.end -= Templ_SCTP;
+                fprintf(fp,"S:");
+                range.begin = Templ_ICMP_echo;
+            } else if (rrange.begin >= Templ_UDP) {
+                rrange.begin -= Templ_UDP;
+                rrange.end -= Templ_UDP;
+                fprintf(fp,"U:");
+                range.begin = Templ_SCTP;
+            } else
+                range.begin = Templ_UDP;
+            rrange.end = min(rrange.end, 65535);
+            if (rrange.begin == rrange.end)
+                fprintf(fp, "%u", rrange.begin);
+            else
+                fprintf(fp, "%u-%u", rrange.begin, rrange.end);
+            if (done)
+                break;
+        } while (range.begin <= range.end);
     }
     fprintf(fp, "\n");
     for (i=0; i<masscan->targets.count; i++) {
@@ -422,6 +446,7 @@ masscan_echo(struct Masscan *masscan, FILE *fp)
     fprintf(fp, "%scapture = cert\n", masscan->is_capture_cert?"":"no");
     fprintf(fp, "%scapture = html\n", masscan->is_capture_html?"":"no");
     fprintf(fp, "%scapture = heartbleed\n", masscan->is_capture_heartbleed?"":"no");
+    fprintf(fp, "%scapture = ticketbleed\n", masscan->is_capture_ticketbleed?"":"no");
 
     /*
      *  TCP payloads
@@ -1046,6 +1071,8 @@ masscan_set_parameter(struct Masscan *masscan,
             masscan->is_capture_html = 1;
         else if (EQUALS("heartbleed", value))
             masscan->is_capture_heartbleed = 1;
+        else if (EQUALS("ticketbleed", value))
+            masscan->is_capture_ticketbleed = 1;
         else {
             fprintf(stderr, "FAIL: %s: unknown capture type\n", value);
             exit(1);
@@ -1057,6 +1084,8 @@ masscan_set_parameter(struct Masscan *masscan,
             masscan->is_capture_html = 0;
         else if (EQUALS("heartbleed", value))
             masscan->is_capture_heartbleed = 0;
+        else if (EQUALS("ticketbleed", value))
+            masscan->is_capture_ticketbleed = 0;
         else {
             fprintf(stderr, "FAIL: %s: unknown capture type\n", value);
             exit(1);
@@ -1180,6 +1209,11 @@ masscan_set_parameter(struct Masscan *masscan,
         masscan_set_parameter(masscan, "no-capture", "cert");
         masscan_set_parameter(masscan, "no-capture", "heartbleed");
         masscan_set_parameter(masscan, "banners", "true");
+    } else if (EQUALS("ticketbleed", name)) {
+        masscan->is_ticketbleed = 1;
+        masscan_set_parameter(masscan, "no-capture", "cert");
+        masscan_set_parameter(masscan, "no-capture", "ticketbleed");
+        masscan_set_parameter(masscan, "banners", "true");
     } else if (EQUALS("hello-file", name)) {
         /* When connecting via TCP, send this file */
         FILE *fp;
@@ -1280,6 +1314,10 @@ masscan_set_parameter(struct Masscan *masscan,
         masscan->output.is_interactive = 1;
     } else if (EQUALS("nointeractive", name)) {
         masscan->output.is_interactive = 0;
+    } else if (EQUALS("status", name)) {
+        masscan->output.is_status_updates = 1;
+    } else if (EQUALS("nostatus", name)) {
+        masscan->output.is_status_updates = 0;
     } else if (EQUALS("ip-options", name)) {
         fprintf(stderr, "nmap(%s): unsupported: maybe soon\n", name);
         exit(1);
@@ -1346,6 +1384,11 @@ masscan_set_parameter(struct Masscan *masscan,
                 masscan->output.is_show_closed = 1;
             else if (EQUALSx("open", val2, val2_len))
                 masscan->output.is_show_host = 1;
+            else if (EQUALSx("all",val2,val2_len)) {
+                masscan->output.is_show_open = 1;
+                masscan->output.is_show_host = 1;
+                masscan->output.is_show_closed = 1;
+            }
             else {
                 LOG(0, "FAIL: unknown 'show' spec: %.*s\n", val2_len, val2);
                 exit(1);
@@ -1493,6 +1536,9 @@ masscan_set_parameter(struct Masscan *masscan,
         if (EQUALS("heartbleed", value)) {
             masscan_set_parameter(masscan, "heartbleed", "true");
             return;
+		} else if (EQUALS("ticketbleed", value)) {
+            masscan_set_parameter(masscan, "ticketbleed", "true");
+            return;
         } else if (EQUALS("poodle", value) || EQUALS("sslv3", value)) {
             masscan->is_poodle_sslv3 = 1;
             masscan_set_parameter(masscan, "no-capture", "cert");
@@ -1569,6 +1615,8 @@ masscan_set_parameter(struct Masscan *masscan,
         masscan->shard.one = one;
         masscan->shard.of = of;
 
+    } else if (EQUALS("nobacktrace", name) || EQUALS("backtrace", name)) {
+        ;
     } else if (EQUALS("no-stylesheet", name)) {
         masscan->output.stylesheet[0] = '\0';
     } else if (EQUALS("stylesheet", name)) {
@@ -1644,12 +1692,12 @@ is_singleton(const char *name)
         "badsum", "reason", "open", "open-only",
         "packet-trace", "release-memory",
         "log-errors", "append-output", "webxml", "no-stylesheet",
-        "no-stylesheet", "heartbleed",
+        "no-stylesheet", "heartbleed", "ticketbleed",
         "send-eth", "send-ip", "iflist", "randomize-hosts",
         "nmap", "trace-packet", "pfring", "sendq",
         "banners", "banner", "nobanners", "nobanner",
-        "offline", "ping", "ping-sweep",
-        "arp",  "infinite", "interactive",
+        "offline", "ping", "ping-sweep", "nobacktrace", "backtrace",
+        "arp",  "infinite", "nointeractive", "interactive", "status", "nostatus",
         "read-range", "read-ranges", "readrange", "read-ranges",
         0};
     size_t i;
@@ -1910,7 +1958,8 @@ masscan_command_line(struct Masscan *masscan, int argc, char *argv[])
                 if (argv[i][2])
                     arg = argv[i]+2;
                 else
-                    arg = argv[++i];
+                   arg = argv[++i]; // Passes a NULL value that breaks rangelist_parse_ports in ranges.c
+		//			fprintf(stderr, "%.*s: empty parameter\n", argv[0], argv[1]);
                 masscan_set_parameter(masscan, "ports", arg);
                 break;
             case 'P':

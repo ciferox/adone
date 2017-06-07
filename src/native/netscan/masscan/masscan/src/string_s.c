@@ -31,7 +31,7 @@ errno_t fopen_s(FILE **pFile, const char *filename, const char *mode)
 /**
  * Case-insensitive memcmp()
  */
-// #ifdef __GNUC__
+#ifdef __GNUC__
 int
 memcasecmp(const void *lhs, const void *rhs, int length)
 {
@@ -42,7 +42,7 @@ memcasecmp(const void *lhs, const void *rhs, int length)
     }
     return 0;
 }
-// #endif
+#endif
 
 /**
  * strcpy

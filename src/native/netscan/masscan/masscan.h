@@ -60,12 +60,11 @@ extern "C" {
 #include "masscan/src/script.h"
 #include "masscan/src/main-readrange.h"
 
-/***************************************************************************
+/****************************************************************************
  * We create a pair of transmit/receive threads for each network adapter.
  * This structure contains the parameters we send to each pair.
  ***************************************************************************/
-struct ThreadPair
-{
+struct ThreadPair {
     /** This points to the central configuration. Note that it's 'const',
      * meaning that the thread cannot change the contents. That'd be
      * unsafe */
@@ -113,6 +112,7 @@ struct ThreadPair
      */
     volatile uint64_t my_index;
 
+
     /* This is used both by the transmit and receive thread for
      * formatting packets */
     struct TemplateSet tmplset[1];
@@ -134,6 +134,9 @@ struct ThreadPair
     uint64_t *total_synacks;
     uint64_t *total_tcbs;
     uint64_t *total_syns;
+
+    size_t thread_handle_xmit;
+    size_t thread_handle_recv;
 };
 }
 

@@ -574,25 +574,10 @@
           ],
           "libraries": [
             "-pthread",
-            "-lpcap",
             "-lm"
           ]
         },
-      }, {
-          'include_dirs': [
-            "<(module_root_dir)\\src\\native\\netscan\\masscan\\deps\\win\\include"
-          ],
-          "link_settings": {
-            "conditions" : [
-              [ 'target_arch=="x64"', {
-                "library_dirs" : ["<(module_root_dir)\\src\\native\\netscan\\masscan\\deps\\win\\lib\\x64"]
-              }, {
-                "library_dirs" : ["<(module_root_dir)\\src\\native\\netscan\\masscan\\deps\\win\\lib\\x32"]
-              } ]
-            ]
-          }
-        }
-      ]
+      }]
     ],
     "sources": [
       "<(path)/crypto-base64.c",
@@ -663,6 +648,7 @@
       "<(path)/rawsock-getroute.c",
       "<(path)/rawsock-pcapfile.c",
       "<(path)/rawsock-pfring.c",
+      "<(path)/rawsock-pcap.c",
       "<(path)/rte-ring.c",
       "<(path)/script-heartbleed.c",
       "<(path)/script-ntp-monlist.c",
