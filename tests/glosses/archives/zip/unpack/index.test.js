@@ -48,6 +48,22 @@ describe("glosses", "archives", "zip", "unpack", () => {
         return fileName;
     };
 
+    const forceLF = (buf) => {
+        const CRLF = Buffer.from("\r\n");
+        const LF = Buffer.from("\n");
+        const res = [];
+        for ( ; ; ) {
+            const i = buf.indexOf(CRLF);
+            if (i === -1) {
+                break;
+            }
+            res.push(buf.slice(0, i), LF);
+            buf = buf.slice(i + 2);
+        }
+        res.push(buf);
+        return Buffer.concat(res);
+    };
+
     describe("success", () => {
         const files = [];
         for (const d of ["success", "wrong-entry-sizes"]) {
@@ -60,7 +76,7 @@ describe("glosses", "archives", "zip", "unpack", () => {
                 { lazyEntries: true },
                 { lazyEntries: true, decodeStrings: false }
             ];
-            if (/\/wrong-entry-sizes\//.test(file.path())) {
+            if (/wrong-entry-sizes/.test(file.path())) {
                 optionConfigurations.forEach((options) => {
                     options.validateEntrySizes = false;
                 });
@@ -86,7 +102,7 @@ describe("glosses", "archives", "zip", "unpack", () => {
                                 const key = addUnicodeSupport(file.relativePath(unpackedDir).replace(/\\/g, "/"));
                                 if (file instanceof adone.fs.File) {
                                     if (file.filename() !== ".git_please_make_this_directory") {
-                                        expectedArchiveContents[key] = file.contentSync(null);
+                                        expectedArchiveContents[key] = forceLF(file.contentSync(null));
                                     }
                                 } else {
                                     expectedArchiveContents[key] = DIRECTORY;
