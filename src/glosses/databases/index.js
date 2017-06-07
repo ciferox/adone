@@ -3,5 +3,6 @@ adone.lazify({
     level: "./level",
     mysql: "./mysql",
     redis: "./redis",
-    mongo: "./mongo"
+    mongo: "./mongo",
+    pouch: "./pouch"
 }, exports, require);

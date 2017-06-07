@@ -50,7 +50,18 @@
     "useref": "^1.2.0",
     "xoauth2": "^1.2.0",
     "yargs": "^6.3.0",
-    "libbase64": "^0.1.0"
+    "libbase64": "^0.1.0",
+    "argsarray": "0.0.1",
+    "clone-buffer": "1.0.0",
+    "seedrandom": "2.4.3",
+    "throw-max-listeners-error": "1.0.1",
+    "double-ended-queue": "2.1.0-0",
+    "buffer-from": "0.1.1", 
+    "ltgt": "^2.2.0",
+    "vuvuzela": "^1.0.3",
+    "level-write-stream": "^1.0.0",
+    "leveldown": "^1.7.1",
+    "memdown": "^1.2.4"
   },
   "optionalDependencies": {
     "fsevents": "^1.0.0"
