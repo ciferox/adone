@@ -2547,5 +2547,23 @@ describe("shani", "util", "stub", () => {
 
             assert.equal(getPropertyDescriptor(obj, "nonExisting"), undefined);
         });
+
+        it("allows stubbing function static properties", () => {
+            const myFunc = function () { };
+            myFunc.prop = "rawString";
+
+            createStub(myFunc, "prop").value("newString");
+            assert.equal(myFunc.prop, "newString");
+        });
+
+        it("allows restoring function static properties", () => {
+            const myFunc = function () { };
+            myFunc.prop = "rawString";
+
+            const stub = createStub(myFunc, "prop").value("newString");
+            stub.restore();
+
+            assert.equal(myFunc.prop, "rawString");
+        });
     });
 });
