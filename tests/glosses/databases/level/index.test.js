@@ -114,7 +114,7 @@ class Manager {
 }
 
 
-describe("Database", "Level", () => {
+describe("databases", "level", () => {
     describe("Initialization", () => {
         let manager;
         beforeEach(() => {

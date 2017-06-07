@@ -4,7 +4,7 @@ const { database: { level: { AbstractBackend, AbstractIterator, AbstractChainedB
 const factory = (location, options) => new AbstractBackend(location, options);
 
 /*** compatibility with basic LevelDOWN API ***/
-describe("Database", "Level", "Abstract", () => {
+describe("databases", "level", "abstract", () => {
     require("./common/backend").args(factory, testCommon);
 
     require("./common/del").setUp(factory, testCommon);
@@ -85,7 +85,7 @@ describe("Database", "Level", "Abstract", () => {
         const _get = stub().yields(null);
         const expectedOptions = { asBuffer: true };
         const expectedKey = "a key";
-            
+
         class Test extends AbstractBackend {}
         Test.prototype._get = _get;
 
@@ -244,7 +244,7 @@ describe("Database", "Level", "Abstract", () => {
 
     it("test write() extensibility", async () => {
         const _write = stub().yields(null);
-        
+
         class Test extends AbstractChainedBatch {}
         Test.prototype._write = _write;
 
@@ -433,7 +433,7 @@ describe("Database", "Level", "Abstract", () => {
                 assert.equal(test.status, "open");
                 return;
             }
-            assert.fail("SHould throw error");            
+            assert.fail("SHould throw error");
         });
 
         it("open", async () => {
@@ -460,7 +460,7 @@ describe("Database", "Level", "Abstract", () => {
             const p = test.close();
             assert.equal(test.status, "closing");
             await p;
-            assert.equal(test.status, "closed");    
+            assert.equal(test.status, "closed");
         });
     });
 });

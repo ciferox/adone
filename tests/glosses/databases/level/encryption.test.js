@@ -10,7 +10,7 @@ const newDB = (opts) => {
     return new adone.database.level.DB(opts);
 };
 
-describe("Database", "Level", "Encryption", () => {
+describe("databases", "level", "encryption", () => {
     it("encrypt/decrypt", async () => {
         const passwordBased = {
             encryption: {

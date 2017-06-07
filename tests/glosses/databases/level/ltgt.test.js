@@ -237,7 +237,7 @@ const ranges = [
 ];
 
 
-describe("ltgt", () => {
+describe("databases", "level", "ltgt", () => {
     it("upperBound", () => {
         assert.equal("b", ltgt.upperBound({ start: "b", reverse: true }));
         assert.equal("b", ltgt.upperBound({ end: "b", reverse: false }));

@@ -3,7 +3,7 @@ const { Memory } = adone.database.level.backend;
 const testCommon = require("../testCommon");
 const testBuffer = require("./testdata_b64");
 
-describe("Database", "Level", "Backend", "Memory", () => {
+describe("databases", "level", "backend", "memory", () => {
     const factory = (location, options) => new Memory(location, options);
 
     require("../common/open").open(factory, testCommon);
@@ -318,7 +318,7 @@ describe("Database", "Level", "Backend", "Memory", () => {
         const db4 = new Memory("other-db");
         try {
             value = await db3.get("key");
-        } catch (err) {            
+        } catch (err) {
             value = await db4.get("key2", { asBuffer: false });
             assert.equal(value, "value2", "should have value2");
             return;

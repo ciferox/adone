@@ -48,7 +48,6 @@ export const args = function () {
                 assert.deepEqual(value, { beep: "boop" });
                 callback();
             };
-            await db.open();
             await db.put({ foo: "bar" }, { beep: "boop" });
         });
     });
