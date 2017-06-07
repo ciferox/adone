@@ -1,5 +1,6 @@
 adone.lazify({
     packet: "./packet",
     connection: "./connection",
-    client: "./client"
+    client: "./client",
+    server: "./server"
 }, exports, require);
