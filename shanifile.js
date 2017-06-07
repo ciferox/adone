@@ -1,7 +1,6 @@
-const path = require("path");
-const fs = require("fs");
+const { std: { path }, fs } = adone;
 
-module.exports = {
+export default {
     options: {
         tests: "tests/{glosses,omnitron,polyfills}/**/*.test.js",
         first: false,
@@ -44,22 +43,25 @@ module.exports = {
         compact: false,
         ignore: /glosses.vendor/
     },
-    mapping: (p) => {
+    mapping: async (p) => {
+        if (await fs.exists(p)) {
+            return p;
+        }
+
         const parts = p.split(".");
-        const prefix = path.join("tests", ...parts);
-        return new Promise((resolve) => {
-            fs.stat(`${prefix}.test.js`, (err) => {
-                let res;
-                if (err) {
-                    res = [
-                        `${prefix}*.test.js`,
-                        path.join(`${prefix}*`, "**", "*.test.js")
-                    ];
-                } else {
-                    res = `${prefix}.test.js`;
-                }
-                resolve(res);
-            });
-        });
+        const prefix = path.resolve(__dirname, "tests", ...parts);
+
+        if (await fs.exists(`${prefix}.test.js`)) {
+            return `${prefix}.test.js`;
+        }
+
+        if (await fs.exists(prefix)) {
+            return path.join(prefix, "**", "*.test.js");
+        }
+
+        return [
+            path.join(`${prefix}*.test.js`),
+            path.join(`${prefix}*`, "**", "*.test.js")
+        ];
     }
 };
