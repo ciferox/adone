@@ -1,6 +1,6 @@
 import * as helpers from "../helpers";
 
-describe("glosses", "net", "http", "server", "request", "path", () => {
+describe("net", "http", "server", "request", "path", () => {
     const { context } = helpers;
     const { net: { http: { server: { helper: { parseURL } } } } } = adone;
 

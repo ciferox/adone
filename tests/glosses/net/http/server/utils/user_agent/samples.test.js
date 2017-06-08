@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "server", "util", "user agent", "samples", () => {
+describe("net", "http", "server", "util", "user agent", "samples", () => {
     const {
         is, fs, util,
         data: { json },

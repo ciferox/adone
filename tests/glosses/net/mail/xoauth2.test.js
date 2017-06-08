@@ -1,6 +1,6 @@
 import mockServer from "./xoauth2_mock_server";
 
-describe("glosses", "net", "mail", "XOAuth2 tests", function () {
+describe("net", "mail", "XOAuth2 tests", function () {
     this.timeout(10000);
 
     const { net: { mail: { __: { XOAuth2 } } } } = adone;

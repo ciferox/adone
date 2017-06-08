@@ -8,7 +8,7 @@ const XOAUTH_PORT = 8497;
 
 const { net: { mail: { __: { SMTPConnection, XOAuth2 } } }, std: { fs, net, path } } = adone;
 
-describe("glosses", "net", "mail", "SMTP-Connection Tests", () => {
+describe("net", "mail", "SMTP-Connection Tests", () => {
 
     const NODE_TLS_REJECT_UNAUTHORIZED = process.env.NODE_TLS_REJECT_UNAUTHORIZED;
 

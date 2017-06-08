@@ -1,4 +1,4 @@
-describe("glosses", "net", "mail", "Well-Known Services Tests", () => {
+describe("net", "mail", "Well-Known Services Tests", () => {
     const { net: { mail: { __: { wellKnown } } } } = adone;
 
     describe("#wellKnown", () => {

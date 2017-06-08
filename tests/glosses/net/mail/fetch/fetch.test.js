@@ -48,7 +48,7 @@ const httpsOptions = {
         "-----END CERTIFICATE-----"
 };
 
-describe("glosses", "net", "mail", "Fetch Tests", () => {
+describe("net", "mail", "Fetch Tests", () => {
     const { net: { mail: { __: { fetch } } }, std: { http, https, zlib, stream: { PassThrough } } } = adone;
 
     let httpServer, httpsServer;

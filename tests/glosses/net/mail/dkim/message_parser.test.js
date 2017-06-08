@@ -1,4 +1,4 @@
-describe("glosses", "net", "mail", "DKIM MessageParser Tests", () => {
+describe("net", "mail", "DKIM MessageParser Tests", () => {
     const { net: { mail: { __: { dkim: { MessageParser } } } } } = adone;
 
     it("should extract header and body", (done) => {

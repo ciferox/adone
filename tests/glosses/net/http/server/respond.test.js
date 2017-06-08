@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "server", "respond", () => {
+describe("net", "http", "server", "respond", () => {
     const { fs, net: { http: { server: { Server, helper: { status } } } } } = adone;
 
     describe("when ctx.respond === false", () => {

@@ -1,6 +1,6 @@
 import { SMTPServer } from "smtp-server";
 
-describe("glosses", "net", "mail", "SMTP Transport Tests", function () {
+describe("net", "mail", "SMTP Transport Tests", function () {
     this.timeout(10000);
 
     const { net: { mail: { __: { SMTPTransport } } }, std: { net, stream: { PassThrough } } } = adone;

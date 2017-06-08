@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "helpers", "accepts", "type", () => {
+describe("net", "http", "helpers", "accepts", "type", () => {
     const { net: { http: { server: { helper: { Accepts } } } } } = adone;
 
     const createRequest = (type) => {

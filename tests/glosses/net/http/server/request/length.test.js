@@ -1,6 +1,6 @@
 import * as helpers from "../helpers";
 
-describe("glosses", "net", "http", "server", "request", "length", () => {
+describe("net", "http", "server", "request", "length", () => {
     const { request } = helpers;
 
     it("should return length in content-length", () => {

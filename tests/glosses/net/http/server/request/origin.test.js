@@ -1,6 +1,6 @@
 import * as helpers from "../helpers";
 
-describe("glosses", "net", "http", "server", "request", "origin", () => {
+describe("net", "http", "server", "request", "origin", () => {
     const { context } = helpers;
     const { std: { stream: { Duplex, Readable } } } = adone;
 

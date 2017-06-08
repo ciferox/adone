@@ -1,4 +1,4 @@
-describe("glosses", "net", "proxy", "shadowsocks", "server", "parser", () => {
+describe("net", "proxy", "shadowsocks", "server", "parser", () => {
     const { net: { proxy: { shadowsocks: { ServerParser: Parser } } }, std: { stream: { PassThrough } } } = adone;
     const IV = "0123456789abcdef";
     const decipher = {

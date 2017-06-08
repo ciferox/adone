@@ -9,7 +9,7 @@ const differentPathHelper = (ctx, next) => {
     });
 };
 
-describe("glosses", "net", "http", "server", "middlewares", "rewrite", () => {
+describe("net", "http", "server", "middlewares", "rewrite", () => {
     it("rewrite /^\/i(\w+)/ -> /items/$1", async () => {
         const server = new Server();
         server.use(differentPathHelper);

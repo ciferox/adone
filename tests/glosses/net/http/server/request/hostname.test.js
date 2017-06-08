@@ -1,6 +1,6 @@
 import * as helpers from "../helpers";
 
-describe("glosses", "net", "http", "server", "request", "hostname", () => {
+describe("net", "http", "server", "request", "hostname", () => {
     const { request } = helpers;
 
     it("should return hostname void of port", () => {

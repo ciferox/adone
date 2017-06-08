@@ -1,6 +1,6 @@
 import * as helpers from "../helpers";
 
-describe("glosses", "net", "http", "server", "response", "redirect", () => {
+describe("net", "http", "server", "response", "redirect", () => {
     const { net: { http: { server: { helper: { escapeHTML } } } } } = adone;
     const { context } = helpers;
 

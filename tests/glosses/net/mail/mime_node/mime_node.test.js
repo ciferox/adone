@@ -1,4 +1,4 @@
-describe("glosses", "net", "mail", "MimeNode Tests", () => {
+describe("net", "mail", "MimeNode Tests", () => {
     const { net: { mail: { __: { MimeNode } } }, std: { http, stream: { Transform, PassThrough }, path } } = adone;
 
     it("should create MimeNode object", () => {

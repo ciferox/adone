@@ -1,6 +1,6 @@
 import * as helpers from "../helpers";
 
-describe("glosses", "net", "http", "server", "response", "attachment", () => {
+describe("net", "http", "server", "response", "attachment", () => {
     const { net: { http: { server: { Server } } } } = adone;
     const { context } = helpers;
 

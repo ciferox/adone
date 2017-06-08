@@ -1,6 +1,6 @@
 import * as helpers from "../helpers";
 
-describe("glosses", "net", "http", "server", "response", "append", () => {
+describe("net", "http", "server", "response", "append", () => {
     const { context } = helpers;
 
     it("should append multiple headers", () => {

@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "server", "utils", "geoip", "helpers", () => {
+describe("geoip", "maxmind", "helpers", () => {
     const { geoip: { maxmind: { __: { helper: { ip } } } } } = adone;
 
     describe("parse()", () => {

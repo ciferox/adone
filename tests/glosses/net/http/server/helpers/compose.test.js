@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "helpers", "compose", () => {
+describe("net", "http", "helpers", "compose", () => {
     const { compose } = adone.net.http.server.helper;
 
     it("should compose middlewares", async () => {

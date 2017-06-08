@@ -1,4 +1,4 @@
-describe("glosses", "net", "mail", "Cookie Tests", () => {
+describe("net", "mail", "Cookie Tests", () => {
     const { net: { mail: { __: { Cookies } } } } = adone;
 
     let biskviit;

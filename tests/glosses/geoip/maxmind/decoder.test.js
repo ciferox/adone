@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "server", "utils", "geoip", "Decoder", () => {
+describe("geoip", "maxmind", "Decoder", () => {
     const { geoip: { maxmind: { __: { Decoder } } } } = adone;
 
     let decoder = null;

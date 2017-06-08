@@ -1,6 +1,6 @@
 import * as helpers from "../helpers";
 
-describe("glosses", "net", "http", "server", "request", "charset", () => {
+describe("net", "http", "server", "request", "charset", () => {
     const { request } = helpers;
 
     describe("with no content-type present", () => {

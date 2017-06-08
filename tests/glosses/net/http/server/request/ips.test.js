@@ -1,6 +1,6 @@
 import * as helpers from "../helpers";
 
-describe("glosses", "net", "http", "server", "request", "ips", () => {
+describe("net", "http", "server", "request", "ips", () => {
     const { request } = helpers;
 
     describe("when X-Forwarded-For is present", () => {

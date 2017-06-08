@@ -1,6 +1,6 @@
 import settle from "adone/glosses/net/http/client/settle";
 
-describe("glosses", "net", "http", "client", "core", "settle", () => {
+describe("net", "http", "client", "core", "settle", () => {
     const resolve = spy();
     const reject = spy();
 

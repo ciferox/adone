@@ -1,6 +1,6 @@
 const { request, create, defaults } = adone.net.http.client;
 
-describe("glosses", "net", "http", "client", "defaults", () => {
+describe("net", "http", "client", "defaults", () => {
     afterEach(() => {
         delete request.options.baseURL;
         delete request.options.headers.get["X-CUSTOM-HEADER"];

@@ -1,6 +1,6 @@
 const { request, create } = adone.net.http.client;
 
-describe("glosses", "net", "http", "client", "instance", () => {
+describe("net", "http", "client", "instance", () => {
     it("should have the same methods as default instance", () => {
         const instance = create();
 

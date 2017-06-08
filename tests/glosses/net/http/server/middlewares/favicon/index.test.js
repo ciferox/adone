@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "server", "middlewares", "favicon()", () => {
+describe("net", "http", "server", "middlewares", "favicon()", () => {
     const { fs, net: { http: { server: { Server, middleware: { favicon } } } }, std: { path: { join } } } = adone;
 
     const path = join(__dirname, "fixtures", "favicon.ico");

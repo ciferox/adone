@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "x", () => {
+describe("net", "http", "x", () => {
     const { net: { http: { x } } } = adone;
 
     it("create(status)", () => {

@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "helpers", "mime types", () => {
+describe("net", "mime", () => {
     const { mime } = adone.net;
 
     describe(".charset(type)", () => {

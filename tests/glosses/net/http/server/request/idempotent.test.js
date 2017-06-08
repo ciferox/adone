@@ -1,6 +1,6 @@
 import * as helpers from "../helpers";
 
-describe("glosses", "net", "http", "server", "request", "idempotent", () => {
+describe("net", "http", "server", "request", "idempotent", () => {
     const { request } = helpers;
 
     describe("when the request method is idempotent", () => {

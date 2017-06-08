@@ -1,6 +1,6 @@
 import * as helpers from "../helpers";
 
-describe("glosses", "net", "http", "server", "request", "stale", () => {
+describe("net", "http", "server", "request", "stale", () => {
     const { context } = helpers;
 
     it("should be the inverse of req.fresh", () => {

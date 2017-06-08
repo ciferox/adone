@@ -1,6 +1,6 @@
 import * as helpers from "../helpers";
 
-describe("glosses", "net", "http", "server", "request", "get", () => {
+describe("net", "http", "server", "request", "get", () => {
     const { context } = helpers;
 
     it("should return the field value", () => {

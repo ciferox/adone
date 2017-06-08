@@ -1,6 +1,6 @@
 import * as helpers from "../helpers";
 
-describe("glosses", "net", "http", "server", "request", "protocol", () => {
+describe("net", "http", "server", "request", "protocol", () => {
     const { request } = helpers;
 
     describe("when encrypted", () => {

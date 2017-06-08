@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "server", "context", () => {
+describe("net", "http", "server", "context", () => {
     const { net: { http: { server: { Context } } } } = adone;
 
     it("should throw an error", () => {

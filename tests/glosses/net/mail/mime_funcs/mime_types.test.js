@@ -1,4 +1,4 @@
-describe("glosses", "net", "mail", "Mime-Type Tests", () => {
+describe("net", "mail", "Mime-Type Tests", () => {
     const { net: { mail: { __: { mimeTypes } } } } = adone;
 
     describe("#detectExtension", () => {

@@ -1,6 +1,6 @@
 import * as helpers from "../helpers";
 
-describe("glosses", "net", "http", "server", "response", "remove", () => {
+describe("net", "http", "server", "response", "remove", () => {
     const { context } = helpers;
 
     it("should remove a field", () => {

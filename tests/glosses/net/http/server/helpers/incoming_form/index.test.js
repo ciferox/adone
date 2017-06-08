@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "helpers", "incoming form", () => {
+describe("net", "http", "helpers", "incoming form", () => {
     const { fs, net: { http: { server: { helper: { IncomingForm } } } }, std: { path, http, net }, util } = adone;
 
     describe("unit", () => {

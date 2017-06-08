@@ -1,4 +1,4 @@
-describe("glosses", "net", "proxy", "shadowsocks", "server", () => {
+describe("net", "proxy", "shadowsocks", "server", () => {
     const { net: { proxy: { shadowsocks } } } = adone;
     let echoServer = null;
     let echoPort = null;

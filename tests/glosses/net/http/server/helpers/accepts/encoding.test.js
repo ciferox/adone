@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "helpers", "accepts", "encoding", () => {
+describe("net", "http", "helpers", "accepts", "encoding", () => {
     const { net: { http: { server: { helper: { Accepts } } } } } = adone;
 
     const createRequest = (encoding) => {

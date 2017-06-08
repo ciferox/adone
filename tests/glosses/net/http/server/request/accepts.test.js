@@ -1,6 +1,6 @@
 import * as helpers from "../helpers";
 
-describe("glosses", "net", "http", "server", "request", "accepts", () => {
+describe("net", "http", "server", "request", "accepts", () => {
     const { context } = helpers;
 
     describe("ctx.accepts(types)", () => {

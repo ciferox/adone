@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "helpers", () => {
+describe("net", "http", "helpers", () => {
     const createReq = (url, originalUrl) => ({ url, originalUrl });
     const { parseURL } = adone.net.http.server.helper;
 

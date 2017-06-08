@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "helpers", "negotiator", () => {
+describe("net", "http", "helpers", "negotiator", () => {
     const { util, net: { http: { server: { helper: { Negotiator } } } } } = adone;
 
     const createRequest = (headers) => {

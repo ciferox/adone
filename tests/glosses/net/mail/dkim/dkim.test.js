@@ -11,7 +11,7 @@ cmDrj/7jJHb+ykFNb7GaEkiSYqzUjKkfpweBDYECMFJUyzuuFJAjq3BXmGJlyykQ
 TweUw+zMVdSXjO+FCPcYNi6CP1t1KoESzGKBVoqA/g==
 -----END RSA PRIVATE KEY-----`;
 
-describe("glosses", "net", "mail", "DKIM Tests", function () {
+describe("net", "mail", "DKIM Tests", function () {
     const { net: { mail: { __: { dkim: { DKIM } } } }, std: { path, fs, crypto, stream: { PassThrough } } } = adone;
 
     this.timeout(100 * 1000);

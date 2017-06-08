@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "server", "util", "user agent", "_", "os", () => {
+describe("net", "http", "server", "util", "user agent", "_", "os", () => {
     const options = {
         usePatchMinor: true
     };

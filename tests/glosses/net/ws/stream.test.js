@@ -1,5 +1,3 @@
-const concat = require("concat-stream");
-
 const { is } = adone;
 let server = null;
 const port = 8343;
@@ -207,10 +205,10 @@ describe("net", "ws", "stream", () => {
     it("stream end", (done) => {
         const server = adone.std.http.createServer();
         adone.net.ws.stream.createServer({ server }, (stream) => {
-            stream.pipe(concat((body) => {
+            stream.pipe(adone.stream.concat()).then((body) => {
                 assert.equal(body.toString(), "pizza cats\n");
                 server.close(done);
-            }));
+            }, done);
         });
 
         server.listen(0, () => {

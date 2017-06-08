@@ -1,4 +1,4 @@
-describe("glosses", "net", "mail", "Sendmail Unix Newlines", () => {
+describe("net", "mail", "Sendmail Unix Newlines", () => {
     const { net: { mail: { __: { LeUnix } } } } = adone;
 
     it("should rewrite all linebreaks (byte by byte)", (done) => {

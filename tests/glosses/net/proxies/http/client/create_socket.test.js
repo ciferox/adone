@@ -1,4 +1,4 @@
-describe("glosses", "net", "proxy", "http", "client", "createSocket", () => {
+describe("net", "proxy", "http", "client", "createSocket", () => {
     const { std: { http }, net: { proxy: { http: { Server: HTTPProxyServer, createSocket } } } } = adone;
 
     it("should connect to a socket through proxy", async () => {

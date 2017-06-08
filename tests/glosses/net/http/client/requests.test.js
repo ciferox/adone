@@ -1,6 +1,6 @@
 const { request } = adone.net.http.client;
 
-describe("glosses", "net", "http", "client", "requests", () => {
+describe("net", "http", "client", "requests", () => {
     it("should treat single string arg as url", (done) => {
         nock("http://example.org")
             .get("/foo")

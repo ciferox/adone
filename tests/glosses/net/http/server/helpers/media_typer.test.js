@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "helpers", "media typer", () => {
+describe("net", "http", "helpers", "media typer", () => {
     const { net: { http: { server: { helper: { mediaTyper } } } } } = adone;
 
     const invalidTypes = [

@@ -1,6 +1,6 @@
 import * as helpers from "../helpers";
 
-describe("glosses", "net", "http", "server", "response", "socket", () => {
+describe("net", "http", "server", "response", "socket", () => {
     const { std: { stream: { Stream } } } = adone;
     const { response } = helpers;
 

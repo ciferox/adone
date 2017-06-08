@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "server", "middlewares", "router", "Layer", () => {
+describe("net", "http", "server", "middlewares", "router", "Layer", () => {
     const { net: { http: { server: { Server, middleware: { router: { Router, Layer } } } } } } = adone;
 
     it("composes multiple callbacks/middlware", async () => {

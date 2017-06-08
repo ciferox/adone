@@ -2214,7 +2214,7 @@ function addressIs(addressString, descriptors) {
                 it("matches the given form via regex", () => {
                     // We can't match addresses like ::192.168.0.1 yet
                     if (address6.is4()) {
-                        return; 
+                        return;
                     }
 
                     expect(re.test(addressString)).to.equal(true);
@@ -2297,765 +2297,768 @@ function loadJsonBatch(addresses, classes, noMerge) {
     });
 }
 
-describe("Valid IPv4 addresses", () => {
-    loadJsonBatch(valid4, ["valid-ipv4"]);
-    loadJsonBatch(valid4, ["invalid-ipv6"], true);
-});
+describe("net", "address", () => {
+    describe("Valid IPv4 addresses", () => {
+        loadJsonBatch(valid4, ["valid-ipv4"]);
+        loadJsonBatch(valid4, ["invalid-ipv6"], true);
+    });
 
-describe("Valid IPv6 addresses", () => {
-    loadJsonBatch(valid6, ["valid-ipv6"]);
-    loadJsonBatch(valid6, ["invalid-ipv4"], true);
-});
+    describe("Valid IPv6 addresses", () => {
+        loadJsonBatch(valid6, ["valid-ipv6"]);
+        loadJsonBatch(valid6, ["invalid-ipv4"], true);
+    });
 
-describe("Invalid IPv4 addresses", () => {
-    loadJsonBatch(invalid4, ["invalid-ipv4"]);
-});
+    describe("Invalid IPv4 addresses", () => {
+        loadJsonBatch(invalid4, ["invalid-ipv4"]);
+    });
 
-describe("Invalid IPv6 addresses", () => {
-    loadJsonBatch(invalid6, ["invalid-ipv6"]);
-});
+    describe("Invalid IPv6 addresses", () => {
+        loadJsonBatch(invalid6, ["invalid-ipv6"]);
+    });
 
 
-describe("Functionality IPv4", () => {
-    // A convenience function to convert a list of IPv4 address notations
-    // to IP4 instances
-    function notationsToAddresseses(notations) {
-        const addresses = [];
+    describe("Functionality IPv4", () => {
+        // A convenience function to convert a list of IPv4 address notations
+        // to IP4 instances
+        function notationsToAddresseses(notations) {
+            const addresses = [];
 
-        notations.forEach((notation) => {
-            addresses.push(new IP4(notation));
-        });
-
-        return addresses;
-    }
-
-    describe("v4", () => {
-        describe("An invalid address", () => {
-            const topic = new IP4("127.0.0");
-
-            it("is invalid", () => {
-                expect(topic.error).to.equal("Invalid IPv4 address.");
-
-                expect(topic.valid).to.equal(false);
-
-                expect(topic.isCorrect()).to.equal(false);
-
-                expect(topic.toBigNumber()).to.equal(null);
+            notations.forEach((notation) => {
+                addresses.push(new IP4(notation));
             });
 
-        });
+            return addresses;
+        }
 
-        describe("A correct address", () => {
-            const topic = new IP4("127.0.0.1");
+        describe("v4", () => {
+            describe("An invalid address", () => {
+                const topic = new IP4("127.0.0");
 
-            it("validates as correct", () => {
-                expect(topic.isCorrect()).to.equal(true);
+                it("is invalid", () => {
+                    expect(topic.error).to.equal("Invalid IPv4 address.");
 
-                expect(topic.correctForm()).to.equal("127.0.0.1");
-            });
-        });
+                    expect(topic.valid).to.equal(false);
 
-        describe("An address with a subnet", () => {
-            const topic = new IP4("127.0.0.1/16");
+                    expect(topic.isCorrect()).to.equal(false);
 
-            it("is contained by an identical address with an identical subnet",
-                () => {
-                    const same = new IP4("127.0.0.1/16");
-
-                    expect(topic.isInSubnet(same)).to.equal(true);
+                    expect(topic.toBigNumber()).to.equal(null);
                 });
-        });
 
-        describe("A small subnet", () => {
-            const topic = new IP4("127.0.0.1/16");
-
-            it("is contained by larger subnets", () => {
-                for (let i = 15; i > 0; i--) {
-                    const larger = new IP4(adone.sprintf("127.0.0.1/%d", i));
-
-                    expect(topic.isInSubnet(larger)).to.equal(true);
-                }
-            });
-        });
-
-        describe("A large subnet", () => {
-            const topic = new IP4("127.0.0.1/8");
-
-            it("is not contained by smaller subnets", () => {
-                for (let i = 9; i <= 32; i++) {
-                    const smaller = new IP4(adone.sprintf("127.0.0.1/%d", i));
-
-                    expect(topic.isInSubnet(smaller)).to.equal(false);
-                }
-            });
-        });
-
-        describe("An integer v4 address", () => {
-            const topic = IP4.fromInteger(432432423);
-
-            it("validates", () => {
-                expect(topic.isValid()).to.equal(true);
             });
 
-            it("parses correctly", () => {
-                expect(topic.address).to.equal("25.198.101.39");
+            describe("A correct address", () => {
+                const topic = new IP4("127.0.0.1");
 
-                expect(topic.subnet).to.equal("/32");
-                expect(topic.subnetMask).to.equal(32);
-            });
+                it("validates as correct", () => {
+                    expect(topic.isCorrect()).to.equal(true);
 
-            it("should match an address from its hex representation", () => {
-                const hex = IP4.fromHex("19c66527");
-
-                expect(hex.address).to.equal("25.198.101.39");
-
-                expect(hex.subnet).to.equal("/32");
-                expect(hex.subnetMask).to.equal(32);
-            });
-        });
-
-        describe("An address with a subnet", () => {
-            const topic = new IP4("127.0.0.1/16");
-
-            it("validates", () => {
-                expect(topic.isValid()).to.equal(true);
-            });
-
-            it("parses the subnet", () => {
-                expect(topic.subnet).to.equal("/16");
-            });
-
-            it("has a correct start address", () => {
-                expect(topic.startAddress().correctForm()).to.equal("127.0.0.0");
-            });
-
-            it("has a correct end address", () => {
-                expect(topic.endAddress().correctForm()).to.equal("127.0.255.255");
-            });
-
-            it("is in its own subnet", () => {
-                expect(topic.isInSubnet(new IP4("127.0.0.1/16"))).to.equal(true);
-            });
-
-            it("is not in another subnet", () => {
-                expect(topic.isInSubnet(new IP4("192.168.0.1/16"))).to.equal(false);
-            });
-        });
-
-        describe("Creating an address from a BigNumber", () => {
-            const topic = IP4.fromBigNumber(2130706433);
-
-            it("should parse correctly", () => {
-                expect(topic.isValid()).to.equal(true);
-                expect(topic.correctForm()).to.equal("127.0.0.1");
-            });
-        });
-
-        describe("Converting an address to a BigNumber", () => {
-            const topic = new IP4("127.0.0.1");
-
-            it("should convert properly", () => {
-                expect(topic.toBigNumber().toNumber()).to.equal(2130706433);
-            });
-        });
-
-        describe("Creating an address from hex", () => {
-            const topic = IP4.fromHex("7f:00:00:01");
-
-            it("should parse correctly", () => {
-                expect(topic.isValid()).to.equal(true);
-                expect(topic.correctForm()).to.equal("127.0.0.1");
-            });
-        });
-
-        describe("Converting an address to hex", () => {
-            const topic = new IP4("127.0.0.1");
-
-            it("should convert correctly", () => {
-                expect(topic.toHex()).to.equal("7f:00:00:01");
-            });
-        });
-
-        describe("Converting an address to an array", () => {
-            const topic = new IP4("127.0.0.1");
-
-            it("should convert correctly", () => {
-                const a = topic.toArray();
-
-                expect(a).to.be.an.instanceOf(Array).and.have.lengthOf(4);
-
-                expect(a[0]).to.equal(127);
-                expect(a[1]).to.equal(0);
-                expect(a[2]).to.equal(0);
-                expect(a[3]).to.equal(1);
-            });
-        });
-
-        describe("A different notation of the same address", () => {
-            const addresses = notationsToAddresseses([
-                "127.0.0.1/32",
-                "127.0.0.1/032",
-                "127.000.000.001/032",
-                "127.000.000.001/32",
-                "127.0.0.1",
-                "127.000.000.001",
-                "127.000.0.1"
-            ]);
-
-            it("is parsed to the same result", () => {
-                addresses.forEach((topic) => {
                     expect(topic.correctForm()).to.equal("127.0.0.1");
+                });
+            });
+
+            describe("An address with a subnet", () => {
+                const topic = new IP4("127.0.0.1/16");
+
+                it("is contained by an identical address with an identical subnet",
+                    () => {
+                        const same = new IP4("127.0.0.1/16");
+
+                        expect(topic.isInSubnet(same)).to.equal(true);
+                    });
+            });
+
+            describe("A small subnet", () => {
+                const topic = new IP4("127.0.0.1/16");
+
+                it("is contained by larger subnets", () => {
+                    for (let i = 15; i > 0; i--) {
+                        const larger = new IP4(adone.sprintf("127.0.0.1/%d", i));
+
+                        expect(topic.isInSubnet(larger)).to.equal(true);
+                    }
+                });
+            });
+
+            describe("A large subnet", () => {
+                const topic = new IP4("127.0.0.1/8");
+
+                it("is not contained by smaller subnets", () => {
+                    for (let i = 9; i <= 32; i++) {
+                        const smaller = new IP4(adone.sprintf("127.0.0.1/%d", i));
+
+                        expect(topic.isInSubnet(smaller)).to.equal(false);
+                    }
+                });
+            });
+
+            describe("An integer v4 address", () => {
+                const topic = IP4.fromInteger(432432423);
+
+                it("validates", () => {
+                    expect(topic.isValid()).to.equal(true);
+                });
+
+                it("parses correctly", () => {
+                    expect(topic.address).to.equal("25.198.101.39");
+
+                    expect(topic.subnet).to.equal("/32");
                     expect(topic.subnetMask).to.equal(32);
                 });
+
+                it("should match an address from its hex representation", () => {
+                    const hex = IP4.fromHex("19c66527");
+
+                    expect(hex.address).to.equal("25.198.101.39");
+
+                    expect(hex.subnet).to.equal("/32");
+                    expect(hex.subnetMask).to.equal(32);
+                });
+            });
+
+            describe("An address with a subnet", () => {
+                const topic = new IP4("127.0.0.1/16");
+
+                it("validates", () => {
+                    expect(topic.isValid()).to.equal(true);
+                });
+
+                it("parses the subnet", () => {
+                    expect(topic.subnet).to.equal("/16");
+                });
+
+                it("has a correct start address", () => {
+                    expect(topic.startAddress().correctForm()).to.equal("127.0.0.0");
+                });
+
+                it("has a correct end address", () => {
+                    expect(topic.endAddress().correctForm()).to.equal("127.0.255.255");
+                });
+
+                it("is in its own subnet", () => {
+                    expect(topic.isInSubnet(new IP4("127.0.0.1/16"))).to.equal(true);
+                });
+
+                it("is not in another subnet", () => {
+                    expect(topic.isInSubnet(new IP4("192.168.0.1/16"))).to.equal(false);
+                });
+            });
+
+            describe("Creating an address from a BigNumber", () => {
+                const topic = IP4.fromBigNumber(2130706433);
+
+                it("should parse correctly", () => {
+                    expect(topic.isValid()).to.equal(true);
+                    expect(topic.correctForm()).to.equal("127.0.0.1");
+                });
+            });
+
+            describe("Converting an address to a BigNumber", () => {
+                const topic = new IP4("127.0.0.1");
+
+                it("should convert properly", () => {
+                    expect(topic.toBigNumber().toNumber()).to.equal(2130706433);
+                });
+            });
+
+            describe("Creating an address from hex", () => {
+                const topic = IP4.fromHex("7f:00:00:01");
+
+                it("should parse correctly", () => {
+                    expect(topic.isValid()).to.equal(true);
+                    expect(topic.correctForm()).to.equal("127.0.0.1");
+                });
+            });
+
+            describe("Converting an address to hex", () => {
+                const topic = new IP4("127.0.0.1");
+
+                it("should convert correctly", () => {
+                    expect(topic.toHex()).to.equal("7f:00:00:01");
+                });
+            });
+
+            describe("Converting an address to an array", () => {
+                const topic = new IP4("127.0.0.1");
+
+                it("should convert correctly", () => {
+                    const a = topic.toArray();
+
+                    expect(a).to.be.an.instanceOf(Array).and.have.lengthOf(4);
+
+                    expect(a[0]).to.equal(127);
+                    expect(a[1]).to.equal(0);
+                    expect(a[2]).to.equal(0);
+                    expect(a[3]).to.equal(1);
+                });
+            });
+
+            describe("A different notation of the same address", () => {
+                const addresses = notationsToAddresseses([
+                    "127.0.0.1/32",
+                    "127.0.0.1/032",
+                    "127.000.000.001/032",
+                    "127.000.000.001/32",
+                    "127.0.0.1",
+                    "127.000.000.001",
+                    "127.000.0.1"
+                ]);
+
+                it("is parsed to the same result", () => {
+                    addresses.forEach((topic) => {
+                        expect(topic.correctForm()).to.equal("127.0.0.1");
+                        expect(topic.subnetMask).to.equal(32);
+                    });
+                });
             });
         });
     });
-});
 
-describe("Functionality IPv4", () => {
-    // A convenience function to convert a list of IPv6 address notations to IP6 instances
-    function notationsToAddresseses(notations) {
-        return notations.map((notation) => {
-            return new IP6(notation);
-        });
-    }
-
-    describe("v6", () => {
-        describe("An invalid address", () => {
-            const topic = new IP6("a:abcde::");
-
-            it("is invalid", () => {
-                expect(topic.error).to.equal("Address failed regex: abcde");
-
-                expect(topic.valid).to.equal(false);
-
-                expect(topic.isCorrect()).to.equal(false);
-
-                expect(topic.canonicalForm()).to.equal(null);
-                expect(topic.decimal()).to.equal(null);
-                expect(topic.toBigNumber()).to.equal(null);
-                expect(topic.to6to4()).to.equal(null);
-
-                expect(topic.isTeredo()).to.equal(false);
+    describe("Functionality IPv4", () => {
+        // A convenience function to convert a list of IPv6 address notations to IP6 instances
+        function notationsToAddresseses(notations) {
+            return notations.map((notation) => {
+                return new IP6(notation);
             });
-        });
+        }
 
-        describe("a fully ellided /0 address", () => {
-            const topic = new IP6("::/0");
+        describe("v6", () => {
+            describe("An invalid address", () => {
+                const topic = new IP6("a:abcde::");
 
-            it("gets the correct reverse from", () => {
-                expect(topic.reverseForm({ omitSuffix: true })).to.equal("");
-                expect(topic.reverseForm()).to.equal("ip6.arpa.");
-            });
-        });
+                it("is invalid", () => {
+                    expect(topic.error).to.equal("Address failed regex: abcde");
 
-        describe("A link local address", () => {
-            const topic = new IP6("fe80::baf6:b1ff:fe15:4885");
+                    expect(topic.valid).to.equal(false);
 
-            it("gets the correct type", () => {
-                expect(topic.getType()).to.equal("Link-local unicast");
+                    expect(topic.isCorrect()).to.equal(false);
 
-                expect(topic.isTeredo()).to.equal(false);
-                expect(topic.isLoopback()).to.equal(false);
-                expect(topic.isMulticast()).to.equal(false);
-                expect(topic.isLinkLocal()).to.equal(true);
-            });
-        });
+                    expect(topic.canonicalForm()).to.equal(null);
+                    expect(topic.decimal()).to.equal(null);
+                    expect(topic.toBigNumber()).to.equal(null);
+                    expect(topic.to6to4()).to.equal(null);
 
-        describe("A correct address", () => {
-            const topic = new IP6("a:b:c:d:e:f:0:1/64");
-
-            it("contains no uppercase letters", () => {
-                expect(/[A-Z]/.test(topic.address)).to.equal(false);
-            });
-
-            it("validates as correct", () => {
-                expect(topic.isCorrect()).to.equal(true);
-
-                expect(topic.correctForm()).to.equal("a:b:c:d:e:f:0:1");
-            });
-
-            it("converts to and from a signed byte array", () => {
-                const bytes = topic.toByteArray();
-                const address = IP6.fromByteArray(bytes);
-
-                expect(address.correctForm()).to.equal(topic.correctForm());
-            });
-
-            it("converts to and from an unsigned byte array", () => {
-                const unsignedBytes = topic.toUnsignedByteArray();
-                const address = IP6.fromUnsignedByteArray(unsignedBytes);
-
-                expect(address.correctForm()).to.equal(topic.correctForm());
-            });
-
-            it("gets the correct type", () => {
-                expect(topic.getType()).to.equal("Global unicast");
-
-                expect(topic.isTeredo()).to.equal(false);
-                expect(topic.isLoopback()).to.equal(false);
-                expect(topic.isMulticast()).to.equal(false);
-                expect(topic.isLinkLocal()).to.equal(false);
-            });
-
-            it("gets the correct reverse from", () => {
-                expect(topic.reverseForm({ omitSuffix: true })).to.equal("d.0.0.0.c.0.0.0.b.0.0.0.a.0.0.0");
-
-                expect(topic.reverseForm()).to.equal("d.0.0.0.c.0.0.0.b.0.0.0.a.0.0.0.ip6.arpa.");
-            });
-
-            it("gets the correct scope", () => {
-                expect(topic.getScope()).to.equal("Global");
-            });
-
-            it("gets the correct is6to4 information", () => {
-                expect(topic.is6to4()).to.equal(false);
-            });
-
-            it("gets the correct microsoft transcription", () => {
-                expect(topic.microsoftTranscription()).to.equal("a-b-c-d-e-f-0-1.ipv6-literal.net");
-            });
-
-            it("has correct bit information", () => {
-                expect(topic.getBitsPastSubnet()).to.equal("0000000000001110000000000000111100000000000000000000000000000001");
-
-                expect(topic.getBitsBase16(0, 64)).to.equal("000a000b000c000d");
-
-                expect(topic.getBitsBase16(0, 128)).to.equal("000a000b000c000d000e000f00000001");
-
-                expect(topic.getBitsBase16(0, 127)).to.equal(null);
-
-                expect(topic.getBitsBase2()).to.equal("00000000000010100000000000001011000000000000110000000000000011010000000000001110000000000000111100000000000000000000000000000001");
-            });
-        });
-
-        describe("An address with a subnet", () => {
-            const topic = new IP6("ffff::/64");
-
-            it("is contained by an identical address with an identical subnet",
-                () => {
-                    const same = new IP6("ffff::/64");
-
-                    expect(topic.isInSubnet(same)).to.equal(true);
-                });
-
-            it("has a correct start address", () => {
-                expect(topic.startAddress().correctForm()).to.equal("ffff::");
-            });
-
-            it("has a correct end address", () => {
-                expect(topic.endAddress().correctForm()).to.equal("ffff::ffff:ffff:ffff:ffff");
-            });
-
-            it("calculates and formats the subnet size", () => {
-                expect(topic.possibleSubnets()).to.equal("18,446,744,073,709,551,616");
-                expect(topic.possibleSubnets(128)).to.equal("18,446,744,073,709,551,616");
-                expect(topic.possibleSubnets(96)).to.equal("4,294,967,296");
-                expect(topic.possibleSubnets(65)).to.equal("2");
-                expect(topic.possibleSubnets(64)).to.equal("1");
-                expect(topic.possibleSubnets(63)).to.equal("0");
-                expect(topic.possibleSubnets(0)).to.equal("0");
-            });
-        });
-
-        describe("Small subnets", () => {
-            const topic = new IP6("ffff::/64");
-
-            it("is contained by larger subnets", () => {
-                for (let i = 63; i > 0; i--) {
-                    const larger = new IP6(adone.sprintf("ffff::/%d", i));
-
-                    expect(topic.isInSubnet(larger)).to.equal(true);
-                }
-            });
-        });
-
-        describe("Large subnets", () => {
-            const topic = new IP6("ffff::/8");
-
-            it("is not contained by smaller subnets", () => {
-                for (let i = 9; i <= 128; i++) {
-                    const smaller = new IP6(adone.sprintf("ffff::/%d", i));
-
-                    expect(topic.isInSubnet(smaller)).to.equal(false);
-                }
-            });
-        });
-
-        describe("A canonical address", () => {
-            const topic = new IP6("000a:0000:0000:0000:0000:0000:0000:000b");
-
-            it("is 39 characters long", () => {
-                expect(topic.address.length).to.equal(39);
-            });
-
-            it("validates as canonical", () => {
-                expect(topic.isCanonical()).to.equal(true);
-
-                expect(topic.canonicalForm()).to.equal("000a:0000:0000:0000:0000:0000:0000:000b");
-            });
-        });
-
-        describe("A v4-in-v6 address", () => {
-            const topic = new IP6("::192.168.0.1");
-
-            it("validates", () => {
-                expect(topic.isValid()).to.equal(true);
-            });
-
-            it("is v4", () => {
-                expect(topic.is4()).to.equal(true);
-            });
-        });
-
-        describe("An address with a subnet", () => {
-            const topic = new IP6("a:b::/48");
-
-            it("validates", () => {
-                expect(topic.isValid()).to.equal(true);
-            });
-
-            it("parses the subnet", () => {
-                expect(topic.subnet).to.equal("/48");
-            });
-
-            it("is in its own subnet", () => {
-                expect(topic.isInSubnet(new IP6("a:b::/48"))).to.equal(true);
-            });
-
-            it("is not in another subnet", () => {
-                expect(topic.isInSubnet(new IP6("a:c::/48"))).to.equal(false);
-            });
-        });
-
-        describe("An address with a zone", () => {
-            const topic = new IP6("a::b%abcdefg");
-
-            it("validates", () => {
-                expect(topic.isValid()).to.equal(true);
-            });
-
-            it("parses the zone", () => {
-                expect(topic.zone).to.equal("%abcdefg");
-            });
-        });
-
-        describe("A teredo address", () => {
-            const topic = new IP6("2001:0000:ce49:7601:e866:efff:62c3:fffe");
-
-            it("validates as Teredo", () => {
-                expect(topic.isTeredo()).to.equal(true);
-            });
-
-            it("contains valid Teredo information", () => {
-                const teredo = topic.inspectTeredo();
-
-                expect(teredo.prefix).to.equal("2001:0000");
-                expect(teredo.server4).to.equal("206.73.118.1");
-                expect(teredo.flags).to.equal("1110100001100110");
-                expect(teredo.udpPort).to.equal("4096");
-                expect(teredo.client4).to.equal("157.60.0.1");
-            });
-        });
-
-        describe("A 6to4 address", () => {
-            const topic = new IP6("2002:ce49:7601:1:2de:adff:febe:eeef");
-
-            it("validates as 6to4", () => {
-                expect(topic.is6to4()).to.equal(true);
-            });
-
-            it("contains valid 6to4 information", () => {
-                const sixToFourProperties = topic.inspect6to4();
-
-                expect(sixToFourProperties.prefix).to.equal("2002");
-                expect(sixToFourProperties.gateway).to.equal("206.73.118.1");
-            });
-        });
-
-        describe("A different notation of the same address", () => {
-            const addresses = notationsToAddresseses([
-                "2001:db8:0:0:1:0:0:1/128",
-                "2001:db8:0:0:1:0:0:1/128%eth0",
-                "2001:db8:0:0:1:0:0:1%eth0",
-                "2001:db8:0:0:1:0:0:1",
-                "2001:0db8:0:0:1:0:0:1",
-                "2001:db8::1:0:0:1",
-                "2001:db8::0:1:0:0:1",
-                "2001:0db8::1:0:0:1",
-                "2001:db8:0:0:1::1",
-                "2001:db8:0000:0:1::1",
-                "2001:DB8:0:0:1::1"
-            ]);
-
-            it("is parsed to the same result", () => {
-                addresses.forEach((topic) => {
-                    expect(topic.correctForm()).to.equal("2001:db8::1:0:0:1");
-                    expect(topic.canonicalForm()).to.equal("2001:0db8:0000:0000:0001:0000:0000:0001");
-                    expect(topic.to4in6()).to.equal("2001:db8::1:0:0.0.0.1");
-                    expect(topic.decimal()).to.equal("08193:03512:00000:00000:00001:00000:00000:00001");
-                    expect(topic.binaryZeroPad()).to.equal("00100000000000010000110110111000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000001");
+                    expect(topic.isTeredo()).to.equal(false);
                 });
             });
-        });
 
-        describe("to4in6", () => {
-            it("to produce a valid 4in6 address", () => {
-                const topic1 = new IP6("1:2:3:4:5:6:7:8");
-                const topic2 = new IP6("1:2:3:4::7:8");
+            describe("a fully ellided /0 address", () => {
+                const topic = new IP6("::/0");
 
-                expect(topic1.to4in6()).to.equal("1:2:3:4:5:6:0.7.0.8");
-                expect(topic2.to4in6()).to.equal("1:2:3:4::0.7.0.8");
-            });
-        });
-
-        describe("Address from an IPv4 address", () => {
-            const obj = IP6.fromIP4("192.168.0.1");
-
-            it("should parse correctly", () => {
-                expect(obj.valid).to.equal(true);
-                expect(obj.correctForm()).to.equal("::ffff:c0a8:1");
-                expect(obj.to4in6()).to.equal("::ffff:192.168.0.1");
+                it("gets the correct reverse from", () => {
+                    expect(topic.reverseForm({ omitSuffix: true })).to.equal("");
+                    expect(topic.reverseForm()).to.equal("ip6.arpa.");
+                });
             });
 
-            it("should generate a 6to4 address", () => {
-                expect(obj.to6to4().correctForm()).to.equal("2002:c0a8:1::");
+            describe("A link local address", () => {
+                const topic = new IP6("fe80::baf6:b1ff:fe15:4885");
+
+                it("gets the correct type", () => {
+                    expect(topic.getType()).to.equal("Link-local unicast");
+
+                    expect(topic.isTeredo()).to.equal(false);
+                    expect(topic.isLoopback()).to.equal(false);
+                    expect(topic.isMulticast()).to.equal(false);
+                    expect(topic.isLinkLocal()).to.equal(true);
+                });
             });
 
-            it("should generate a v4 address", () => {
-                expect(obj.to4().correctForm()).to.equal("192.168.0.1");
-            });
-        });
+            describe("A correct address", () => {
+                const topic = new IP6("a:b:c:d:e:f:0:1/64");
 
-        describe("Address given in ap6.arpa form", () => {
-            const obj = IP6.fromArpa("e.f.f.f.3.c.2.6.f.f.f.e.6.6.8.e.1.0.6.7.9.4.e.c.0.0.0.0.1.0.0.2.ip6.arpa.");
+                it("contains no uppercase letters", () => {
+                    expect(/[A-Z]/.test(topic.address)).to.equal(false);
+                });
 
-            it("should return an Address6 object", () => {
-                expect(obj instanceof IP6).to.equal(true);
-            });
+                it("validates as correct", () => {
+                    expect(topic.isCorrect()).to.equal(true);
 
-            it("should generate a valid v6 address", () => {
-                expect(obj.correctForm()).to.equal("2001:0:ce49:7601:e866:efff:62c3:fffe");
-            });
+                    expect(topic.correctForm()).to.equal("a:b:c:d:e:f:0:1");
+                });
 
-            it("should fail with an invalid ip6.arpa length", () => {
-                const obj = IP6.fromArpa("e.f.f.f.3.c.2.6.f.f.f.e.6.6.8.0.6.7.9.4.e.c.0.0.0.0.1.0.0.2.ip6.arpa.");
+                it("converts to and from a signed byte array", () => {
+                    const bytes = topic.toByteArray();
+                    const address = IP6.fromByteArray(bytes);
 
-                expect(obj.error).to.equal("Not Valid 'ip6.arpa' form");
-                expect(obj.address).to.equal(null);
-            });
-        });
+                    expect(address.correctForm()).to.equal(topic.correctForm());
+                });
 
-        describe("Address inside a URL or inside a URL with a port", () => {
-            it("should work with a host address", () => {
-                const obj = IP6.fromURL("2001:db8::5");
+                it("converts to and from an unsigned byte array", () => {
+                    const unsignedBytes = topic.toUnsignedByteArray();
+                    const address = IP6.fromUnsignedByteArray(unsignedBytes);
 
-                expect(obj.address.valid).to.equal(true);
-                expect(obj.address.address).to.equal("2001:db8::5");
-                expect(obj.port).to.equal(null);
-            });
+                    expect(address.correctForm()).to.equal(topic.correctForm());
+                });
 
-            it("should fail with an invalid URL", () => {
-                const obj = IP6.fromURL("http://zombo/foo");
+                it("gets the correct type", () => {
+                    expect(topic.getType()).to.equal("Global unicast");
 
-                expect(obj.error).to.equal("failed to parse address from URL");
-                expect(obj.address).to.equal(null);
-                expect(obj.port).to.equal(null);
-            });
+                    expect(topic.isTeredo()).to.equal(false);
+                    expect(topic.isLoopback()).to.equal(false);
+                    expect(topic.isMulticast()).to.equal(false);
+                    expect(topic.isLinkLocal()).to.equal(false);
+                });
 
-            it("should work with a basic URL", () => {
-                const obj = IP6.fromURL("http://2001:db8::5/foo");
+                it("gets the correct reverse from", () => {
+                    expect(topic.reverseForm({ omitSuffix: true })).to.equal("d.0.0.0.c.0.0.0.b.0.0.0.a.0.0.0");
 
-                expect(obj.address.isValid()).to.equal(true);
-                expect(obj.address.address).equal("2001:db8::5");
-                expect(obj.port).to.equal(null);
-            });
+                    expect(topic.reverseForm()).to.equal("d.0.0.0.c.0.0.0.b.0.0.0.a.0.0.0.ip6.arpa.");
+                });
 
-            it("should work with a basic URL enclosed in brackets", () => {
-                const obj = IP6.fromURL("http://[2001:db8::5]/foo");
+                it("gets the correct scope", () => {
+                    expect(topic.getScope()).to.equal("Global");
+                });
 
-                expect(obj.address.isValid()).to.equal(true);
-                expect(obj.address.address).equal("2001:db8::5");
-                expect(obj.port).to.equal(null);
-            });
+                it("gets the correct is6to4 information", () => {
+                    expect(topic.is6to4()).to.equal(false);
+                });
 
-            it("should work with a URL with a port", () => {
-                const obj = IP6.fromURL("http://[2001:db8::5]:80/foo");
+                it("gets the correct microsoft transcription", () => {
+                    expect(topic.microsoftTranscription()).to.equal("a-b-c-d-e-f-0-1.ipv6-literal.net");
+                });
 
-                expect(obj.address.isValid()).to.equal(true);
-                expect(obj.address.address).to.equal("2001:db8::5");
-                expect(obj.port).to.equal(80);
-            });
+                it("has correct bit information", () => {
+                    expect(topic.getBitsPastSubnet()).to.equal("0000000000001110000000000000111100000000000000000000000000000001");
 
-            it("should work with a URL with a long port number", () => {
-                const obj = IP6.fromURL("http://[2001:db8::5]:65536/foo");
+                    expect(topic.getBitsBase16(0, 64)).to.equal("000a000b000c000d");
 
-                expect(obj.address.isValid()).to.equal(true);
-                expect(obj.address.address).to.equal("2001:db8::5");
-                expect(obj.port).to.equal(65536);
+                    expect(topic.getBitsBase16(0, 128)).to.equal("000a000b000c000d000e000f00000001");
+
+                    expect(topic.getBitsBase16(0, 127)).to.equal(null);
+
+                    expect(topic.getBitsBase2()).to.equal("00000000000010100000000000001011000000000000110000000000000011010000000000001110000000000000111100000000000000000000000000000001");
+                });
             });
 
-            it("should work with a address with a port", () => {
-                const obj = IP6.fromURL("[2001:db8::5]:80");
+            describe("An address with a subnet", () => {
+                const topic = new IP6("ffff::/64");
 
-                expect(obj.address.isValid()).to.equal(true);
-                expect(obj.address.address).to.equal("2001:db8::5");
-                expect(obj.port).to.equal(80);
+                it("is contained by an identical address with an identical subnet",
+                    () => {
+                        const same = new IP6("ffff::/64");
+
+                        expect(topic.isInSubnet(same)).to.equal(true);
+                    });
+
+                it("has a correct start address", () => {
+                    expect(topic.startAddress().correctForm()).to.equal("ffff::");
+                });
+
+                it("has a correct end address", () => {
+                    expect(topic.endAddress().correctForm()).to.equal("ffff::ffff:ffff:ffff:ffff");
+                });
+
+                it("calculates and formats the subnet size", () => {
+                    expect(topic.possibleSubnets()).to.equal("18,446,744,073,709,551,616");
+                    expect(topic.possibleSubnets(128)).to.equal("18,446,744,073,709,551,616");
+                    expect(topic.possibleSubnets(96)).to.equal("4,294,967,296");
+                    expect(topic.possibleSubnets(65)).to.equal("2");
+                    expect(topic.possibleSubnets(64)).to.equal("1");
+                    expect(topic.possibleSubnets(63)).to.equal("0");
+                    expect(topic.possibleSubnets(0)).to.equal("0");
+                });
             });
 
-            it("should work with an address with a long port", () => {
-                const obj = IP6.fromURL("[2001:db8::5]:65536");
+            describe("Small subnets", () => {
+                const topic = new IP6("ffff::/64");
 
-                expect(obj.address.isValid()).to.equal(true);
-                expect(obj.address.address).to.equal("2001:db8::5");
-                expect(obj.port).to.equal(65536);
+                it("is contained by larger subnets", () => {
+                    for (let i = 63; i > 0; i--) {
+                        const larger = new IP6(adone.sprintf("ffff::/%d", i));
+
+                        expect(topic.isInSubnet(larger)).to.equal(true);
+                    }
+                });
             });
 
-            it("should parse the address but fail with an invalid port", () => {
-                const obj = IP6.fromURL("[2001:db8::5]:65537");
+            describe("Large subnets", () => {
+                const topic = new IP6("ffff::/8");
 
-                expect(obj.address.isValid()).to.equal(true);
-                expect(obj.address.address).to.equal("2001:db8::5");
-                expect(obj.port).to.equal(null);
+                it("is not contained by smaller subnets", () => {
+                    for (let i = 9; i <= 128; i++) {
+                        const smaller = new IP6(adone.sprintf("ffff::/%d", i));
+
+                        expect(topic.isInSubnet(smaller)).to.equal(false);
+                    }
+                });
             });
 
-            it("should fail with an invalid address and not return a port",
-                () => {
-                    const obj = IP6.fromURL("[2001:db8:z:5]:65536");
+            describe("A canonical address", () => {
+                const topic = new IP6("000a:0000:0000:0000:0000:0000:0000:000b");
 
-                    expect(obj.error).to.equal("failed to parse address with port");
+                it("is 39 characters long", () => {
+                    expect(topic.address.length).to.equal(39);
+                });
+
+                it("validates as canonical", () => {
+                    expect(topic.isCanonical()).to.equal(true);
+
+                    expect(topic.canonicalForm()).to.equal("000a:0000:0000:0000:0000:0000:0000:000b");
+                });
+            });
+
+            describe("A v4-in-v6 address", () => {
+                const topic = new IP6("::192.168.0.1");
+
+                it("validates", () => {
+                    expect(topic.isValid()).to.equal(true);
+                });
+
+                it("is v4", () => {
+                    expect(topic.is4()).to.equal(true);
+                });
+            });
+
+            describe("An address with a subnet", () => {
+                const topic = new IP6("a:b::/48");
+
+                it("validates", () => {
+                    expect(topic.isValid()).to.equal(true);
+                });
+
+                it("parses the subnet", () => {
+                    expect(topic.subnet).to.equal("/48");
+                });
+
+                it("is in its own subnet", () => {
+                    expect(topic.isInSubnet(new IP6("a:b::/48"))).to.equal(true);
+                });
+
+                it("is not in another subnet", () => {
+                    expect(topic.isInSubnet(new IP6("a:c::/48"))).to.equal(false);
+                });
+            });
+
+            describe("An address with a zone", () => {
+                const topic = new IP6("a::b%abcdefg");
+
+                it("validates", () => {
+                    expect(topic.isValid()).to.equal(true);
+                });
+
+                it("parses the zone", () => {
+                    expect(topic.zone).to.equal("%abcdefg");
+                });
+            });
+
+            describe("A teredo address", () => {
+                const topic = new IP6("2001:0000:ce49:7601:e866:efff:62c3:fffe");
+
+                it("validates as Teredo", () => {
+                    expect(topic.isTeredo()).to.equal(true);
+                });
+
+                it("contains valid Teredo information", () => {
+                    const teredo = topic.inspectTeredo();
+
+                    expect(teredo.prefix).to.equal("2001:0000");
+                    expect(teredo.server4).to.equal("206.73.118.1");
+                    expect(teredo.flags).to.equal("1110100001100110");
+                    expect(teredo.udpPort).to.equal("4096");
+                    expect(teredo.client4).to.equal("157.60.0.1");
+                });
+            });
+
+            describe("A 6to4 address", () => {
+                const topic = new IP6("2002:ce49:7601:1:2de:adff:febe:eeef");
+
+                it("validates as 6to4", () => {
+                    expect(topic.is6to4()).to.equal(true);
+                });
+
+                it("contains valid 6to4 information", () => {
+                    const sixToFourProperties = topic.inspect6to4();
+
+                    expect(sixToFourProperties.prefix).to.equal("2002");
+                    expect(sixToFourProperties.gateway).to.equal("206.73.118.1");
+                });
+            });
+
+            describe("A different notation of the same address", () => {
+                const addresses = notationsToAddresseses([
+                    "2001:db8:0:0:1:0:0:1/128",
+                    "2001:db8:0:0:1:0:0:1/128%eth0",
+                    "2001:db8:0:0:1:0:0:1%eth0",
+                    "2001:db8:0:0:1:0:0:1",
+                    "2001:0db8:0:0:1:0:0:1",
+                    "2001:db8::1:0:0:1",
+                    "2001:db8::0:1:0:0:1",
+                    "2001:0db8::1:0:0:1",
+                    "2001:db8:0:0:1::1",
+                    "2001:db8:0000:0:1::1",
+                    "2001:DB8:0:0:1::1"
+                ]);
+
+                it("is parsed to the same result", () => {
+                    addresses.forEach((topic) => {
+                        expect(topic.correctForm()).to.equal("2001:db8::1:0:0:1");
+                        expect(topic.canonicalForm()).to.equal("2001:0db8:0000:0000:0001:0000:0000:0001");
+                        expect(topic.to4in6()).to.equal("2001:db8::1:0:0.0.0.1");
+                        expect(topic.decimal()).to.equal("08193:03512:00000:00000:00001:00000:00000:00001");
+                        expect(topic.binaryZeroPad()).to.equal("00100000000000010000110110111000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000001");
+                    });
+                });
+            });
+
+            describe("to4in6", () => {
+                it("to produce a valid 4in6 address", () => {
+                    const topic1 = new IP6("1:2:3:4:5:6:7:8");
+                    const topic2 = new IP6("1:2:3:4::7:8");
+
+                    expect(topic1.to4in6()).to.equal("1:2:3:4:5:6:0.7.0.8");
+                    expect(topic2.to4in6()).to.equal("1:2:3:4::0.7.0.8");
+                });
+            });
+
+            describe("Address from an IPv4 address", () => {
+                const obj = IP6.fromIP4("192.168.0.1");
+
+                it("should parse correctly", () => {
+                    expect(obj.valid).to.equal(true);
+                    expect(obj.correctForm()).to.equal("::ffff:c0a8:1");
+                    expect(obj.to4in6()).to.equal("::ffff:192.168.0.1");
+                });
+
+                it("should generate a 6to4 address", () => {
+                    expect(obj.to6to4().correctForm()).to.equal("2002:c0a8:1::");
+                });
+
+                it("should generate a v4 address", () => {
+                    expect(obj.to4().correctForm()).to.equal("192.168.0.1");
+                });
+            });
+
+            describe("Address given in ap6.arpa form", () => {
+                const obj = IP6.fromArpa("e.f.f.f.3.c.2.6.f.f.f.e.6.6.8.e.1.0.6.7.9.4.e.c.0.0.0.0.1.0.0.2.ip6.arpa.");
+
+                it("should return an Address6 object", () => {
+                    expect(obj instanceof IP6).to.equal(true);
+                });
+
+                it("should generate a valid v6 address", () => {
+                    expect(obj.correctForm()).to.equal("2001:0:ce49:7601:e866:efff:62c3:fffe");
+                });
+
+                it("should fail with an invalid ip6.arpa length", () => {
+                    const obj = IP6.fromArpa("e.f.f.f.3.c.2.6.f.f.f.e.6.6.8.0.6.7.9.4.e.c.0.0.0.0.1.0.0.2.ip6.arpa.");
+
+                    expect(obj.error).to.equal("Not Valid 'ip6.arpa' form");
+                    expect(obj.address).to.equal(null);
+                });
+            });
+
+            describe("Address inside a URL or inside a URL with a port", () => {
+                it("should work with a host address", () => {
+                    const obj = IP6.fromURL("2001:db8::5");
+
+                    expect(obj.address.valid).to.equal(true);
+                    expect(obj.address.address).to.equal("2001:db8::5");
                     expect(obj.port).to.equal(null);
                 });
-        });
 
-        describe("An address from a BigNumber", () => {
-            const topic = IP6.fromBigNumber(new adone.math.BigNumber("51923840109643282840007714694758401"));
+                it("should fail with an invalid URL", () => {
+                    const obj = IP6.fromURL("http://zombo/foo");
 
-            it("should parse correctly", () => {
-                expect(topic.valid).to.equal(true);
+                    expect(obj.error).to.equal("failed to parse address from URL");
+                    expect(obj.address).to.equal(null);
+                    expect(obj.port).to.equal(null);
+                });
 
-                // TODO: Define this behavior
-                // topic.isCorrect().to.equal(true);
+                it("should work with a basic URL", () => {
+                    const obj = IP6.fromURL("http://2001:db8::5/foo");
 
-                expect(topic.correctForm()).to.equal("a:b:c:d:e:f:0:1");
+                    expect(obj.address.isValid()).to.equal(true);
+                    expect(obj.address.address).equal("2001:db8::5");
+                    expect(obj.port).to.equal(null);
+                });
+
+                it("should work with a basic URL enclosed in brackets", () => {
+                    const obj = IP6.fromURL("http://[2001:db8::5]/foo");
+
+                    expect(obj.address.isValid()).to.equal(true);
+                    expect(obj.address.address).equal("2001:db8::5");
+                    expect(obj.port).to.equal(null);
+                });
+
+                it("should work with a URL with a port", () => {
+                    const obj = IP6.fromURL("http://[2001:db8::5]:80/foo");
+
+                    expect(obj.address.isValid()).to.equal(true);
+                    expect(obj.address.address).to.equal("2001:db8::5");
+                    expect(obj.port).to.equal(80);
+                });
+
+                it("should work with a URL with a long port number", () => {
+                    const obj = IP6.fromURL("http://[2001:db8::5]:65536/foo");
+
+                    expect(obj.address.isValid()).to.equal(true);
+                    expect(obj.address.address).to.equal("2001:db8::5");
+                    expect(obj.port).to.equal(65536);
+                });
+
+                it("should work with a address with a port", () => {
+                    const obj = IP6.fromURL("[2001:db8::5]:80");
+
+                    expect(obj.address.isValid()).to.equal(true);
+                    expect(obj.address.address).to.equal("2001:db8::5");
+                    expect(obj.port).to.equal(80);
+                });
+
+                it("should work with an address with a long port", () => {
+                    const obj = IP6.fromURL("[2001:db8::5]:65536");
+
+                    expect(obj.address.isValid()).to.equal(true);
+                    expect(obj.address.address).to.equal("2001:db8::5");
+                    expect(obj.port).to.equal(65536);
+                });
+
+                it("should parse the address but fail with an invalid port", () => {
+                    const obj = IP6.fromURL("[2001:db8::5]:65537");
+
+                    expect(obj.address.isValid()).to.equal(true);
+                    expect(obj.address.address).to.equal("2001:db8::5");
+                    expect(obj.port).to.equal(null);
+                });
+
+                it("should fail with an invalid address and not return a port",
+                    () => {
+                        const obj = IP6.fromURL("[2001:db8:z:5]:65536");
+
+                        expect(obj.error).to.equal("failed to parse address with port");
+                        expect(obj.port).to.equal(null);
+                    });
             });
-        });
 
-        describe("HTML helpers", () => {
-            describe("href", () => {
-                const topic = new IP6("2001:4860:4001:803::1011");
+            describe("An address from a BigNumber", () => {
+                const topic = IP6.fromBigNumber(new adone.math.BigNumber("51923840109643282840007714694758401"));
 
-                it("should generate a URL correctly", () => {
-                    expect(topic.href()).to.equal("http://[2001:4860:4001:803::1011]/");
-                    expect(topic.href(8080)).to.equal("http://[2001:4860:4001:803::1011]:8080/");
+                it("should parse correctly", () => {
+                    expect(topic.valid).to.equal(true);
+
+                    // TODO: Define this behavior
+                    // topic.isCorrect().to.equal(true);
+
+                    expect(topic.correctForm()).to.equal("a:b:c:d:e:f:0:1");
                 });
             });
 
-            describe("link", () => {
-                const topic = new IP6("2001:4860:4001:803::1011");
-
-                it("should generate an anchor correctly", () => {
-                    expect(topic.link()).to.equal("<a href=\"/#address=2001:4860:4001:803::1011\">2001:4860:4001:803::1011</a>");
-
-                    expect(topic.link({ className: "highlight", prefix: "/?address=" })).to.equal("<a href=\"/?address=2001:4860:4001:803::1011\" class=\"highlight\">2001:4860:4001:803::1011</a>");
-                });
-
-                it("should generate a v4inv6 anchor correctly", () => {
-                    const topic4 = new IP6("::ffff:c0a8:1");
-
-                    expect(topic4.link({ v4: true })).to.equal("<a href=\"/#address=::ffff:192.168.0.1\">::ffff:192.168.0.1</a>");
-                });
-            });
-
-            describe("group", () => {
-                it("should group a fully ellided address", () => {
-                    const topic = new IP6("::");
-
-                    expect(topic.group()).to.equal(":<span class=\"hover-group group-0 group-1 group-2 group-3 group-4 group-5 group-6 group-7\"></span>:");
-                });
-
-                it("should group an address with no ellision", () => {
-                    const topic = new IP6("a:b:c:d:1:2:3:4");
-
-                    expect(topic.group()).to.equal(
-                        "<span class=\"hover-group group-0\">a</span>:" +
-                        "<span class=\"hover-group group-1\">b</span>:" +
-                        "<span class=\"hover-group group-2\">c</span>:" +
-                        "<span class=\"hover-group group-3\">d</span>:" +
-                        "<span class=\"hover-group group-4\">1</span>:" +
-                        "<span class=\"hover-group group-5\">2</span>:" +
-                        "<span class=\"hover-group group-6\">3</span>:" +
-                        "<span class=\"hover-group group-7\">4</span>");
-                });
-
-                it("should group an ellided address", () => {
+            describe("HTML helpers", () => {
+                describe("href", () => {
                     const topic = new IP6("2001:4860:4001:803::1011");
 
-                    expect(topic.group()).to.equal(
-                        "<span class=\"hover-group group-0\">2001</span>:" +
-                        "<span class=\"hover-group group-1\">4860</span>:" +
-                        "<span class=\"hover-group group-2\">4001</span>:" +
-                        "<span class=\"hover-group group-3\">803</span>:" +
-                        "<span class=\"hover-group group-4 group-5 " +
-                        "group-6\"></span>:" +
-                        "<span class=\"hover-group group-7\">1011</span>");
+                    it("should generate a URL correctly", () => {
+                        expect(topic.href()).to.equal("http://[2001:4860:4001:803::1011]/");
+                        expect(topic.href(8080)).to.equal("http://[2001:4860:4001:803::1011]:8080/");
+                    });
                 });
 
-                it("should group an IPv4 address", () => {
-                    const topic = new IP6("192.168.0.1");
+                describe("link", () => {
+                    const topic = new IP6("2001:4860:4001:803::1011");
 
-                    expect(topic.group()).to.equal(
-                        "<span class=\"hover-group group-v4 group-6\">192.168</span>." +
-                        "<span class=\"hover-group group-v4 group-7\">0.1</span>");
+                    it("should generate an anchor correctly", () => {
+                        expect(topic.link()).to.equal("<a href=\"/#address=2001:4860:4001:803::1011\">2001:4860:4001:803::1011</a>");
+
+                        expect(topic.link({ className: "highlight", prefix: "/?address=" })).to.equal("<a href=\"/?address=2001:4860:4001:803::1011\" class=\"highlight\">2001:4860:4001:803::1011</a>");
+                    });
+
+                    it("should generate a v4inv6 anchor correctly", () => {
+                        const topic4 = new IP6("::ffff:c0a8:1");
+
+                        expect(topic4.link({ v4: true })).to.equal("<a href=\"/#address=::ffff:192.168.0.1\">::ffff:192.168.0.1</a>");
+                    });
+                });
+
+                describe("group", () => {
+                    it("should group a fully ellided address", () => {
+                        const topic = new IP6("::");
+
+                        expect(topic.group()).to.equal(":<span class=\"hover-group group-0 group-1 group-2 group-3 group-4 group-5 group-6 group-7\"></span>:");
+                    });
+
+                    it("should group an address with no ellision", () => {
+                        const topic = new IP6("a:b:c:d:1:2:3:4");
+
+                        expect(topic.group()).to.equal(
+                            "<span class=\"hover-group group-0\">a</span>:" +
+                            "<span class=\"hover-group group-1\">b</span>:" +
+                            "<span class=\"hover-group group-2\">c</span>:" +
+                            "<span class=\"hover-group group-3\">d</span>:" +
+                            "<span class=\"hover-group group-4\">1</span>:" +
+                            "<span class=\"hover-group group-5\">2</span>:" +
+                            "<span class=\"hover-group group-6\">3</span>:" +
+                            "<span class=\"hover-group group-7\">4</span>");
+                    });
+
+                    it("should group an ellided address", () => {
+                        const topic = new IP6("2001:4860:4001:803::1011");
+
+                        expect(topic.group()).to.equal(
+                            "<span class=\"hover-group group-0\">2001</span>:" +
+                            "<span class=\"hover-group group-1\">4860</span>:" +
+                            "<span class=\"hover-group group-2\">4001</span>:" +
+                            "<span class=\"hover-group group-3\">803</span>:" +
+                            "<span class=\"hover-group group-4 group-5 " +
+                            "group-6\"></span>:" +
+                            "<span class=\"hover-group group-7\">1011</span>");
+                    });
+
+                    it("should group an IPv4 address", () => {
+                        const topic = new IP6("192.168.0.1");
+
+                        expect(topic.group()).to.equal(
+                            "<span class=\"hover-group group-v4 group-6\">192.168</span>." +
+                            "<span class=\"hover-group group-v4 group-7\">0.1</span>");
+                    });
                 });
             });
-        });
 
-        describe("String helpers", () => {
-            describe("spanLeadingZeroes", () => {
-                it("should span leading zeroes", () => {
-                    const topic = v6helpers.spanLeadingZeroes("0000:0000:4444:0001");
+            describe("String helpers", () => {
+                describe("spanLeadingZeroes", () => {
+                    it("should span leading zeroes", () => {
+                        const topic = v6helpers.spanLeadingZeroes("0000:0000:4444:0001");
 
-                    expect(topic).to.equal(
-                        "<span class=\"zero\">0000</span>:" +
-                        "<span class=\"zero\">0000</span>:4444:" +
-                        "<span class=\"zero\">000</span>1");
-                });
-            });
-
-            describe("spanAll", () => {
-                it("should span leading zeroes", () => {
-                    const topic = v6helpers.spanAll("001100");
-
-                    expect(topic).to.equal(
-                        "<span class=\"digit value-0 position-0\">" +
-                        "<span class=\"zero\">0</span></span>" +
-                        "<span class=\"digit value-0 position-1\">" +
-                        "<span class=\"zero\">0</span></span>" +
-                        "<span class=\"digit value-1 position-2\">1</span>" +
-                        "<span class=\"digit value-1 position-3\">1</span>" +
-                        "<span class=\"digit value-0 position-4\">" +
-                        "<span class=\"zero\">0</span></span>" +
-                        "<span class=\"digit value-0 position-5\">" +
-                        "<span class=\"zero\">0</span></span>");
+                        expect(topic).to.equal(
+                            "<span class=\"zero\">0000</span>:" +
+                            "<span class=\"zero\">0000</span>:4444:" +
+                            "<span class=\"zero\">000</span>1");
+                    });
                 });
 
-                it("should span leading zeroes with offset", () => {
-                    const topic = v6helpers.spanAll("001100", 1);
+                describe("spanAll", () => {
+                    it("should span leading zeroes", () => {
+                        const topic = v6helpers.spanAll("001100");
 
-                    expect(topic).to.equal(
-                        "<span class=\"digit value-0 position-1\">" +
-                        "<span class=\"zero\">0</span></span>" +
-                        "<span class=\"digit value-0 position-2\">" +
-                        "<span class=\"zero\">0</span></span>" +
-                        "<span class=\"digit value-1 position-3\">1</span>" +
-                        "<span class=\"digit value-1 position-4\">1</span>" +
-                        "<span class=\"digit value-0 position-5\">" +
-                        "<span class=\"zero\">0</span></span>" +
-                        "<span class=\"digit value-0 position-6\">" +
-                        "<span class=\"zero\">0</span></span>");
+                        expect(topic).to.equal(
+                            "<span class=\"digit value-0 position-0\">" +
+                            "<span class=\"zero\">0</span></span>" +
+                            "<span class=\"digit value-0 position-1\">" +
+                            "<span class=\"zero\">0</span></span>" +
+                            "<span class=\"digit value-1 position-2\">1</span>" +
+                            "<span class=\"digit value-1 position-3\">1</span>" +
+                            "<span class=\"digit value-0 position-4\">" +
+                            "<span class=\"zero\">0</span></span>" +
+                            "<span class=\"digit value-0 position-5\">" +
+                            "<span class=\"zero\">0</span></span>");
+                    });
+
+                    it("should span leading zeroes with offset", () => {
+                        const topic = v6helpers.spanAll("001100", 1);
+
+                        expect(topic).to.equal(
+                            "<span class=\"digit value-0 position-1\">" +
+                            "<span class=\"zero\">0</span></span>" +
+                            "<span class=\"digit value-0 position-2\">" +
+                            "<span class=\"zero\">0</span></span>" +
+                            "<span class=\"digit value-1 position-3\">1</span>" +
+                            "<span class=\"digit value-1 position-4\">1</span>" +
+                            "<span class=\"digit value-0 position-5\">" +
+                            "<span class=\"zero\">0</span></span>" +
+                            "<span class=\"digit value-0 position-6\">" +
+                            "<span class=\"zero\">0</span></span>");
+                    });
                 });
             });
         });
     });
 });
+

@@ -1,4 +1,4 @@
-describe("glosses", "net", "mail", "Shared Funcs Tests", () => {
+describe("net", "mail", "Shared Funcs Tests", () => {
     const { net: { mail: { __: { shared } } }, std: { http, fs, zlib, path }, stream } = adone;
 
     describe("Logger tests", () => {

@@ -1,4 +1,4 @@
-describe("glosses", "net", "mail", "Sendmail Transport Tests", () => {
+describe("net", "mail", "Sendmail Transport Tests", () => {
     const { net: { mail: { __: { SendmailTransport } } }, EventEmitter, std: { stream: { PassThrough } } } = adone;
 
     class MockBuilder {

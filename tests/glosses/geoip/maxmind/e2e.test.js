@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "server", "utils", "geoip", () => {
+describe("geoip", "maxmind", "geoip", () => {
     const { geoip: { maxmind }, net: { address: { IP6 } }, std: { assert } } = adone;
 
     const fixtures = new adone.fs.Directory(__dirname, "fixtures");

@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "helpers", "on finished", () => {
+describe("net", "http", "helpers", "on finished", () => {
     const { net: { http: { server: { helper: { onFinished } } } }, std: { net, http }, noop } = adone;
 
 

@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "server", "utils", "geoip", "reader", () => {
+describe("geoip", "maxmind", "reader", () => {
     const { geoip: { maxmind: { __: { Reader } } } } = adone;
 
     const fixtures = new adone.fs.Directory(__dirname, "fixtures");

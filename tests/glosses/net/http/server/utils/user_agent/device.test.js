@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "server", "util", "user agent", "_", "device", () => {
+describe("net", "http", "server", "util", "user agent", "_", "device", () => {
     const { fs, data: { yaml }, net: { http: { server: { util: { userAgent } } } } } = adone;
     const { _: { Device, PartialParser } } = userAgent;
 

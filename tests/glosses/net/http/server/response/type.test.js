@@ -1,6 +1,6 @@
 import * as helpers from "../helpers";
 
-describe("glosses", "net", "http", "server", "response", "type", () => {
+describe("net", "http", "server", "response", "type", () => {
     const { context } = helpers;
 
     describe("get", () => {

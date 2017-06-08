@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "server", "middlewares", "session", function session() {
+describe("net", "http", "server", "middlewares", "session", function session() {
     this.timeout(10000);
 
     const { net: { http: { server: { Server, middleware: { session } } } }, promise, util } = adone;
@@ -83,15 +83,16 @@ describe("glosses", "net", "http", "server", "middlewares", "session", function 
         });
 
         it("should work when multiple clients access", async () => {
-            await server.bind();
-
-            const res1 = await request(server).get("/set");
-            const cookie1 = res1.headers["set-cookie"];
-            const res2 = await request(server).get("/set");
-            const cookie2 = res2.headers["set-cookie"];
-            expect(cookie1).not.to.be.deep.equal(cookie2);
-
-            await server.unbind();
+            await server.bind({ host: "127.0.0.1" });
+            try {
+                const res1 = await request(server).get("/set");
+                const cookie1 = res1.headers["set-cookie"];
+                const res2 = await request(server).get("/set");
+                const cookie2 = res2.headers["set-cookie"];
+                expect(cookie1).not.to.be.deep.equal(cookie2);
+            } finally {
+                await server.unbind();
+            }
         });
 
         cookie = `session=${Store.prototype.getID(24)}`;

@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "server", "context", "throw", () => {
+describe("net", "http", "server", "context", "throw", () => {
     const { net: { http: { server: { Context } } } } = adone;
 
     const context = () => new Context({}, {}, {});

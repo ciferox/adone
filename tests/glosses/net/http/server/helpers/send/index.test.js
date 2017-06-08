@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "helpers", "send", () => {
+describe("net", "http", "helpers", "send", () => {
     const { net: { http: { server: { Server, helper: { send } } } }, std: { path } } = adone;
 
     const root = new adone.fs.Directory(__dirname);

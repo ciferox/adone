@@ -1,6 +1,6 @@
 import * as helpers from "../helpers";
 
-describe("glosses", "net", "http", "server", "request", "ip", () => {
+describe("net", "http", "server", "request", "ip", () => {
     const { net: { http: { server: { Server } } }, std: { stream: { Duplex } } } = adone;
     const { request } = helpers;
 

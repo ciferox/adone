@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "helpers", "content disposition", () => {
+describe("net", "http", "helpers", "content disposition", () => {
     const { net: { http: { server: { helper: { contentDisposition } } } } } = adone;
 
     describe("contentDisposition()", () => {

@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "helpers", "content type", () => {
+describe("net", "http", "helpers", "content type", () => {
     const { contentType } = adone.net.http.server.helper;
 
     describe("parse", () => {

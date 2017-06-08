@@ -1,4 +1,4 @@
-describe("glosses", "net", "mail", "JSON Transport Tests", () => {
+describe("net", "mail", "JSON Transport Tests", () => {
     const { net: { mail }, std: { path, fs }, stream } = adone;
 
     const NODE_TLS_REJECT_UNAUTHORIZED = process.env.NODE_TLS_REJECT_UNAUTHORIZED;

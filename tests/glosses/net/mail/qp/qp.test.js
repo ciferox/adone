@@ -1,6 +1,6 @@
 import * as libqp from "libqp";
 
-describe("glosses", "net", "mail", "Quoted-Printable Tests", () => {
+describe("net", "mail", "Quoted-Printable Tests", () => {
     const { net: { mail: { __: { qp } } }, std: { crypto, fs, path } } = adone;
 
     const encodeFixtures = [

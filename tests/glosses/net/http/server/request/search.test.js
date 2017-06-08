@@ -1,6 +1,6 @@
 import * as helpers from "../helpers";
 
-describe("glosses", "net", "http", "server", "request", "search", () => {
+describe("net", "http", "server", "request", "search", () => {
     const { context } = helpers;
 
     it("should replace the search", () => {

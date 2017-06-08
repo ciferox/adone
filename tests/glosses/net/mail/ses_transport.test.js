@@ -12,7 +12,7 @@ TweUw+zMVdSXjO+FCPcYNi6CP1t1KoESzGKBVoqA/g==
 -----END RSA PRIVATE KEY-----`;
 
 
-describe("glosses", "net", "mail", "SES Transport Tests", function () {
+describe("net", "mail", "SES Transport Tests", function () {
     this.timeout(50 * 1000);
 
     const { net: { mail }, std: { path } } = adone;

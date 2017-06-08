@@ -1,6 +1,6 @@
 const { request, create, Cancel, CancelToken, isCancel } = adone.net.http.client;
 
-describe("glosses", "net", "http", "client", () => {
+describe("net", "http", "client", () => {
     describe("static api", () => {
         it("should have request method helpers", () => {
             expect(typeof request.get).to.be.equal("function");

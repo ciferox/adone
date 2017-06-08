@@ -1,6 +1,6 @@
 const { request, CancelToken } = adone.net.http.client;
 
-describe("glosses", "net", "http", "client", "cancel", () => {
+describe("net", "http", "client", "cancel", () => {
     describe("when called before sending request", () => {
         it("rejects Promise with a Cancel object", (done) => {
             const source = CancelToken.source();

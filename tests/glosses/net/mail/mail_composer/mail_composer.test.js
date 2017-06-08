@@ -1,4 +1,4 @@
-describe("glosses", "net", "mail", "MailComposer unit tests", () => {
+describe("net", "mail", "MailComposer unit tests", () => {
     const { net: { mail: { __: { MailComposer } } }, std: { path } } = adone;
 
     it("should create new MailComposer", () => {

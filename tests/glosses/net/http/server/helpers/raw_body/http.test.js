@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "helper", "raw body", "using http streams", () => {
+describe("net", "http", "helper", "raw body", "using http streams", () => {
     const { net: { http: { server: { helper: { getRawBody } } } }, std: { net, http } } = adone;
 
     it("should read body streams", async () => {

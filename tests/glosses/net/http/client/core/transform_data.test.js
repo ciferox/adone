@@ -1,6 +1,6 @@
 const { transformData } = adone.net.http.client;
 
-describe("glosses", "net", "http", "client", "core", "transformData", () => {
+describe("net", "http", "client", "core", "transformData", () => {
     it("should support a single transformer", () => {
         let data;
         data = transformData(data, null, (data) => {

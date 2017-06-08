@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "server", "middlewares", "mount", () => {
+describe("net", "http", "server", "middlewares", "mount", () => {
     const { net: { http: { server: { Server, middleware: { mount } } } } } = adone;
 
     it("should mount middleware", async () => {

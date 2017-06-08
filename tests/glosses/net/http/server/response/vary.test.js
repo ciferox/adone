@@ -1,6 +1,6 @@
 import * as helpers from "../helpers";
 
-describe("glosses", "net", "http", "server", "response", "vary", () => {
+describe("net", "http", "server", "response", "vary", () => {
     const { context } = helpers;
 
     describe("when Vary is not set", () => {

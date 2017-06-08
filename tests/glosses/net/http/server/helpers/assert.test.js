@@ -1,8 +1,8 @@
-describe("glosses", "net", "http", "helpers", "assert", () => {
+describe("net", "http", "helpers", "assert", () => {
     const { net: { http: { server: { helper: { assert } } } } } = adone;
 
     describe("assert()", () => {
-        
+
         it("should throw when guard is falsy", () => {
             let err;
 

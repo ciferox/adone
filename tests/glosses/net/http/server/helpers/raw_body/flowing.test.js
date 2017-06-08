@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "helper", "raw body", "stream flowing", () => {
+describe("net", "http", "helper", "raw body", "stream flowing", () => {
     const {
         net: { http: { server: { helper: { getRawBody } } } },
         std: { stream: { Readable, Writable } }
@@ -19,9 +19,9 @@ describe("glosses", "net", "http", "helper", "raw body", "stream flowing", () =>
             return base.repeat(KB_8);
         } else if (rand < 0.75) {
             return base.repeat(KB_16);
-        } 
+        }
         return base.repeat(KB_64);
-        
+
     };
 
     const createBlackholeStream = () => {

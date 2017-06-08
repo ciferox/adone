@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "helpers", "basicAuth", () => {
+describe("net", "http", "helpers", "basicAuth", () => {
     const { net: { http: { server: { helper: { basicAuth } } } } } = adone;
 
     const request = (authorization) => ({

@@ -1,6 +1,6 @@
 import * as helpers from "../helpers";
 
-describe("glosses", "net", "http", "server", "request", "type", () => {
+describe("net", "http", "server", "request", "type", () => {
     const { request } = helpers;
 
     it("should return type void of parameters", () => {

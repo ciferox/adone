@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "helpers", "cookies", "new Cookie(name, value, [options])", () => {
+describe("net", "http", "helpers", "cookies", "new Cookie(name, value, [options])", () => {
     const { net: { http: { server: { helper: { Cookies: { Cookie } } } } } } = adone;
 
     it("should have correct constructor", () => {

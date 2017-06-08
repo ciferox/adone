@@ -1,6 +1,6 @@
 import * as helpers from "../helpers";
 
-describe("glosses", "net", "http", "server", "response", "length", () => {
+describe("net", "http", "server", "response", "length", () => {
     const { response } = helpers;
     const { fs } = adone;
 

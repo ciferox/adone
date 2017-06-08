@@ -1,6 +1,6 @@
 const { request } = adone.net.http.client;
 
-describe("glosses", "net", "http", "client", "promise", () => {
+describe("net", "http", "client", "promise", () => {
     it("should provide succinct object to then", (done) => {
         nock("http://example.org")
             .get("/foo")

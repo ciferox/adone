@@ -1,6 +1,6 @@
 import * as libmime from "libmime";
 
-describe("glosses", "net", "mail", "Mime-Funcs Tests", () => {
+describe("net", "mail", "Mime-Funcs Tests", () => {
     const { net: { mail: { __: { mimeFuncs } } } } = adone;
 
     describe("#isPlainText", () => {

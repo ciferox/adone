@@ -40,7 +40,7 @@ class ServerSocket extends adone.net.Server {
             return socket.disconnect();
         }
         socket.setPacketHandler(this.handler);
-        
+
     }
 }
 
@@ -68,14 +68,15 @@ class ClientSocket extends adone.net.Socket {
     }
 }
 
-describe("TLS Socket", function () {
+describe("net", "Socket", "tls", function () {
     let client;
     let server;
     let defaultPort;
 
-    this.timeout(10000);
+    this.timeout(30000);
 
-    beforeEach(async () => {
+    beforeEach(async function () {
+        this.timeout(30000);
         client = new ClientSocket();
         server = new ServerSocket();
         server.defaults();
@@ -84,7 +85,8 @@ describe("TLS Socket", function () {
         SERVER_PORT === null && (SERVER_PORT = await adone.net.util.getFreePort());
     });
 
-    afterEach(async () => {
+    afterEach(async function () {
+        this.timeout(30000);
         client.disconnect();
         await server.unbind();
     });

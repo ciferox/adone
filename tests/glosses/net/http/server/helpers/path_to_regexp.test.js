@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "helpers", "pathToRegexp", () => {
+describe("net", "http", "helpers", "pathToRegexp", () => {
     const { is, x, net: { http: { server: { helper: { pathToRegexp } } } }, std: { util } } = adone;
 
     const exec = (re, str) => {

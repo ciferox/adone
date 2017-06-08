@@ -1,6 +1,6 @@
 const { request } = adone.net.http.client;
 
-describe("glosses", "net", "http", "client", "transform", () => {
+describe("net", "http", "client", "transform", () => {
     it("should transform JSON to string", (done) => {
         nock("http://example.org")
             .post("/foo", { foo: "bar" })

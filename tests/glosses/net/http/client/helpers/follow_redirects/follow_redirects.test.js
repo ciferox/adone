@@ -1,6 +1,6 @@
 import followRedirects from "adone/glosses/net/http/client/follow_redirects";
 
-describe("glosses", "net", "http", "client", "helpers", "follow-redirects ", () => {
+describe("net", "http", "client", "helpers", "follow-redirects ", () => {
     const express = require("express");
     const assert = require("assert");
     const net = require("net");

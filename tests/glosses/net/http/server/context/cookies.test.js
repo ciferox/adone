@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "server", "context", "cookies", () => {
+describe("net", "http", "server", "context", "cookies", () => {
     const { net: { http: { server: { Server } } } } = adone;
 
     describe("ctx.cookies.set()", () => {

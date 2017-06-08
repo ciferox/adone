@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "helper", "raw body", () => {
+describe("net", "http", "helper", "raw body", () => {
     const {
         net: { http: { server: { helper: { getRawBody } } } },
         std: { fs, stream: { PassThrough, Readable } }

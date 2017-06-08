@@ -1,6 +1,6 @@
 const { request } = adone.net.http.client;
 
-describe("glosses", "net", "http", "client", "headers", () => {
+describe("net", "http", "client", "headers", () => {
     it("should default common headers", (done) => {
         const headers = request.options.headers.common;
 

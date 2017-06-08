@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "server", "middlewares", "views", () => {
+describe("net", "http", "server", "middlewares", "views", () => {
     const { net: { http: { server: { Server, middleware: { views } } } }, templating: { nunjucks } } = adone;
 
     const oldCwd = process.cwd();

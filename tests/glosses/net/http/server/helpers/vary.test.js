@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "helpers", "vary", () => {
+describe("net", "http", "helpers", "vary", () => {
     const { net: { http: { server: { helper: { vary } } } }, std: { http } } = adone;
 
     const alterVary = (header, field) => (req, res) => {

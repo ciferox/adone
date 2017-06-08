@@ -1,6 +1,6 @@
 import * as helpers from "../helpers";
 
-describe("glosses", "net", "http", "server", "request", "fresh", () => {
+describe("net", "http", "server", "request", "fresh", () => {
     const { context } = helpers;
 
     describe("the request method is not GET and HEAD", () => {

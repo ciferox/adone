@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "helpers", "resolve path", () => {
+describe("net", "http", "helpers", "resolve path", () => {
     const {
         std: { path: { sep, basename, join, normalize, resolve } },
         net: { http: { x, server: { helper: { resolvePath } } } }

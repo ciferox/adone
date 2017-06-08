@@ -1,4 +1,4 @@
-describe("glosses", "net", "mail", "addressparser", () => {
+describe("net", "mail", "addressparser", () => {
     const { net: { mail: { __: { addressparser } } } } = adone;
 
     it("should handle single address correctly", () => {

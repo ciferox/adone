@@ -1,6 +1,6 @@
 const { request } = adone.net.http.client;
 
-describe("glosses", "net", "http", "client", "interceptors", () => {
+describe("net", "http", "client", "interceptors", () => {
     afterEach(() => {
         request.interceptors.request.handlers = [];
         request.interceptors.response.handlers = [];

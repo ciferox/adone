@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "helpers", "status", () => {
+describe("net", "http", "helpers", "status", () => {
     const { net: { http: { server: { helper: { status } } } }, std } = adone;
 
     describe("getMessageByCode", () => {

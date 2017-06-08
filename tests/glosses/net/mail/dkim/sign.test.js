@@ -11,7 +11,7 @@ cmDrj/7jJHb+ykFNb7GaEkiSYqzUjKkfpweBDYECMFJUyzuuFJAjq3BXmGJlyykQ
 TweUw+zMVdSXjO+FCPcYNi6CP1t1KoESzGKBVoqA/g==
 -----END RSA PRIVATE KEY-----`;
 
-describe("glosses", "net", "mail", "DKIM Sign Tests", () => {
+describe("net", "mail", "DKIM Sign Tests", () => {
     const { net: { mail: { __: { dkim: { sign } } } } } = adone;
 
     it("should create relaxed headers", () => {

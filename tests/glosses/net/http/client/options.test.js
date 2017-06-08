@@ -1,6 +1,6 @@
 const { request, create } = adone.net.http.client;
 
-describe("glosses", "net", "http", "client", "options", () => {
+describe("net", "http", "client", "options", () => {
     it("should default method to get", (done) => {
         nock("http://example.org")
             .get("/foo")

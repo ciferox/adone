@@ -1,4 +1,4 @@
-describe("glosses", "net", "mail", "Stream Transport Tests", function () {
+describe("net", "mail", "Stream Transport Tests", function () {
     this.timeout(10000);
 
     const { net: { mail: { __: { StreamTransport } } }, std: { stream: { PassThrough } } } = adone;

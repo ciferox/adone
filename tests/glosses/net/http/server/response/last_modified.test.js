@@ -1,6 +1,6 @@
 import * as helpers from "../helpers";
 
-describe("glosses", "net", "http", "server", "response", "last modified", () => {
+describe("net", "http", "server", "response", "last modified", () => {
     const { response } = helpers;
 
     it("should set the header as a UTCString", () => {

@@ -1,5 +1,5 @@
 const {
-    std: { path: { resolve, normalize }, url },
+    std: { path: { resolve, normalize: pNormalize }, url },
     net: { http: { server: { helper: { send } } } },
     is, x, lazify, o
 } = adone;
@@ -7,6 +7,9 @@ const {
 const lazy = lazify({
     ListingTool: "./listing_tool"
 }, null, require);
+
+const BSLAH_RE = /\\/g;
+const normalize = is.windows ? (s) => pNormalize(s).replace(BSLAH_RE, "/") : pNormalize;
 
 const strip = (path, n) => {
     let j = 0;
@@ -108,7 +111,7 @@ export default function serve(root, opts = {}) {
             }
             if (directory && listing) {
                 await handleListing(ctx, path);
-                
+
             }
         };
     }

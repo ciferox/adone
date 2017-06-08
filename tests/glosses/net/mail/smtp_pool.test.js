@@ -1,6 +1,6 @@
 import { SMTPServer } from "smtp-server";
 
-describe("glosses", "net", "mail", "SMTP Pool Tests", function () {
+describe("net", "mail", "SMTP Pool Tests", function () {
     this.timeout(100 * 1000); //eslint-disable-line no-invalid-this
 
     const { net: { mail: { __: { SMTPPool } } }, std: { net, stream: { PassThrough } } } = adone;

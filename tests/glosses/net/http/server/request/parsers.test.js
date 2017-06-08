@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "server", "request", "parsers", () => {
+describe("net", "http", "server", "request", "parsers", () => {
     const { net: { http: { server: { Server } } }, fs, noop } = adone;
 
     describe("json", () => {

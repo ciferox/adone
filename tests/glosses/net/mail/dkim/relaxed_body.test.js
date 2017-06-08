@@ -1,4 +1,4 @@
-describe("glosses", "net", "mail", "DKIM RelaxedBody Tests", () => {
+describe("net", "mail", "DKIM RelaxedBody Tests", () => {
     const { net: { mail: { __: { dkim: { RelaxedBody } } } }, std: { fs, path } } = adone;
 
     it("Should calculate body hash byte by byte", (done) => {

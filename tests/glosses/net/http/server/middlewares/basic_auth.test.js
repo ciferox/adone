@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "server", "middlewares", "basic auth", () => {
+describe("net", "http", "server", "middlewares", "basic auth", () => {
     const { net: { http: { server: { Server, middleware: { basicAuth } } } } } = adone;
 
     it("should throw if no verifier function and creds", () => {

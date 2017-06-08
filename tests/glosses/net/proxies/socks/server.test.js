@@ -1,4 +1,4 @@
-const { std: { net: { Socket }, child_process: { execFile } }, net: { proxy: { socks: { createServer, auth, ServerParser: Parser } } } } = adone;
+const { std: { net: { Socket }, child_process: { execFileSync, execFile } }, net: { proxy: { socks: { createServer, auth, ServerParser: Parser } } } } = adone;
 
 class FakeStream extends adone.EventEmitter {
     pause() {
@@ -337,14 +337,14 @@ describe("net", "proxy", "socks", "Server", () => {
         }
     };
 
-    before((done) => {
-        execFile("curl", ["--help"], (err) => {
-            if (err) {
-                console.error("curl is required to run server tests");
-                return;
-            }
+    describe("with curl", function () {
+        try {
+            execFileSync("curl", ["--help"]);
+        } catch (err) {
+            this.skip();
+        }
 
-            // start an http server for cURL to use when passing connections through
+        before((done) => {
             httpServer = adone.std.http.createServer((req, res) => {
                 req.resume();
                 res.statusCode = 200;
@@ -356,202 +356,201 @@ describe("net", "proxy", "socks", "Server", () => {
                 done();
             });
         });
-    });
 
-    after(() => {
-        destroyHttpServer();
+        after(() => {
+            destroyHttpServer();
 
-        // assert(t === tests.length - 1, makeMsg("_exit", `Only finished ${t + 1}/${tests.length} tests`));
-    });
-
-    it("No authentication, normal accept", (done) => {
-        const conns = [];
-        const server = createServer((info, accept) => {
-            assert(info.cmd === "connect", `Unexpected command: ${info.cmd}`);
-            assert(typeof info.srcAddr === "string" && info.srcAddr.length, "Bad srcAddr");
-            assert(typeof info.srcPort === "number" && info.srcPort > 0, "Bad srcPort");
-            assert(typeof info.dstAddr === "string" && info.dstAddr.length, "Bad dstAddr");
-            assert(typeof info.dstPort === "number" && info.dstPort > 0, "Bad dstPort");
-            conns.push(info);
-            accept();
+            // assert(t === tests.length - 1, makeMsg("_exit", `Only finished ${t + 1}/${tests.length} tests`));
         });
 
-        server.useAuth(auth.None());
+        it("No authentication, normal accept", (done) => {
+            const conns = [];
+            const server = createServer((info, accept) => {
+                assert(info.cmd === "connect", `Unexpected command: ${info.cmd}`);
+                assert(typeof info.srcAddr === "string" && info.srcAddr.length, "Bad srcAddr");
+                assert(typeof info.srcPort === "number" && info.srcPort > 0, "Bad srcPort");
+                assert(typeof info.dstAddr === "string" && info.dstAddr.length, "Bad dstAddr");
+                assert(typeof info.dstPort === "number" && info.dstPort > 0, "Bad dstPort");
+                conns.push(info);
+                accept();
+            });
 
-        server.listen(0, "localhost", function () {
-            const args = ["--socks5",
-                `${this.address().address}:${this.address().port}`,
-                `http://${httpAddr}:${httpPort}`];
-            execFile("curl", args, (err, stdout, stderr) => {
-                server.close();
-                assert(!err, `Unexpected client error: ${
-                    extractCurlError(stderr)}`);
-                assert(stdout === HTTP_RESPONSE, "Response mismatch");
-                assert(conns.length === 1, "Wrong number of connections");
-                done();
+            server.useAuth(auth.None());
+
+            server.listen(0, "localhost", function () {
+                const args = ["--socks5",
+                    `${this.address().address}:${this.address().port}`,
+                    `http://${httpAddr}:${httpPort}`];
+                execFile("curl", args, (err, stdout, stderr) => {
+                    server.close();
+                    assert(!err, `Unexpected client error: ${
+                        extractCurlError(stderr)}`);
+                    assert(stdout === HTTP_RESPONSE, "Response mismatch");
+                    assert(conns.length === 1, "Wrong number of connections");
+                    done();
+                });
             });
         });
-    });
 
-    it("User/Password authentication (valid credentials), normal accept", (done) => {
-        const conns = [];
-        const server = createServer((info, accept) => {
-            assert(info.cmd === "connect", `Unexpected command: ${info.cmd}`);
-            assert(typeof info.srcAddr === "string" && info.srcAddr.length, "Bad srcAddr");
-            assert(typeof info.srcPort === "number" && info.srcPort > 0, "Bad srcPort");
-            assert(typeof info.dstAddr === "string" && info.dstAddr.length, "Bad dstAddr");
-            assert(typeof info.dstPort === "number" && info.dstPort > 0, "Bad dstPort");
-            conns.push(info);
-            accept();
-        });
+        it("User/Password authentication (valid credentials), normal accept", (done) => {
+            const conns = [];
+            const server = createServer((info, accept) => {
+                assert(info.cmd === "connect", `Unexpected command: ${info.cmd}`);
+                assert(typeof info.srcAddr === "string" && info.srcAddr.length, "Bad srcAddr");
+                assert(typeof info.srcPort === "number" && info.srcPort > 0, "Bad srcPort");
+                assert(typeof info.dstAddr === "string" && info.dstAddr.length, "Bad dstAddr");
+                assert(typeof info.dstPort === "number" && info.dstPort > 0, "Bad dstPort");
+                conns.push(info);
+                accept();
+            });
 
-        server.useAuth(auth.UserPassword((user, pass, cb) => {
-            cb(user === "nodejs" && pass === "rules");
-        }));
+            server.useAuth(auth.UserPassword((user, pass, cb) => {
+                cb(user === "nodejs" && pass === "rules");
+            }));
 
-        server.listen(0, "localhost", function () {
-            const args = ["--socks5",
-                `${this.address().address}:${this.address().port}`,
-                "-U",
-                "nodejs:rules",
-                `http://${httpAddr}:${httpPort}`];
-            execFile("curl", args, (err, stdout, stderr) => {
-                server.close();
-                assert(!err, `Unexpected client error: ${
-                    extractCurlError(stderr)}`);
-                assert(stdout === HTTP_RESPONSE, "Response mismatch");
-                assert(conns.length === 1, "Wrong number of connections");
-                done();
+            server.listen(0, "localhost", function () {
+                const args = ["--socks5",
+                    `${this.address().address}:${this.address().port}`,
+                    "-U",
+                    "nodejs:rules",
+                    `http://${httpAddr}:${httpPort}`];
+                execFile("curl", args, (err, stdout, stderr) => {
+                    server.close();
+                    assert(!err, `Unexpected client error: ${
+                        extractCurlError(stderr)}`);
+                    assert(stdout === HTTP_RESPONSE, "Response mismatch");
+                    assert(conns.length === 1, "Wrong number of connections");
+                    done();
+                });
             });
         });
-    });
 
-    it("User/Password authentication (invalid credentials)", (done) => {
-        const conns = [];
-        const server = createServer(() => {
-            assert(false, "Unexpected connection");
-        });
+        it("User/Password authentication (invalid credentials)", (done) => {
+            const conns = [];
+            const server = createServer(() => {
+                assert(false, "Unexpected connection");
+            });
 
-        server.useAuth(auth.UserPassword((user, pass, cb) => {
-            cb(user === "nodejs" && pass === "rules");
-        }));
+            server.useAuth(auth.UserPassword((user, pass, cb) => {
+                cb(user === "nodejs" && pass === "rules");
+            }));
 
-        server.listen(0, "localhost", function () {
-            const args = ["--socks5",
-                `${this.address().address}:${this.address().port}`,
-                "-U",
-                "php:rules",
-                `http://${httpAddr}:${httpPort}`];
-            execFile("curl", args, (err) => {
-                server.close();
-                assert(err, "Expected client error");
-                assert(conns.length === 0, "Unexpected connection(s)");
-                done();
+            server.listen(0, "localhost", function () {
+                const args = ["--socks5",
+                    `${this.address().address}:${this.address().port}`,
+                    "-U",
+                    "php:rules",
+                    `http://${httpAddr}:${httpPort}`];
+                execFile("curl", args, (err) => {
+                    server.close();
+                    assert(err, "Expected client error");
+                    assert(conns.length === 0, "Unexpected connection(s)");
+                    done();
+                });
             });
         });
-    });
 
-    it("No matching authentication method", (done) => {
-        const conns = [];
-        const server = createServer(() => {
-            assert(false, "Unexpected connection");
-        });
+        it("No matching authentication method", (done) => {
+            const conns = [];
+            const server = createServer(() => {
+                assert(false, "Unexpected connection");
+            });
 
-        server.useAuth(auth.UserPassword(() => {
-            assert(false, "Unexpected User/Password auth");
-        }));
+            server.useAuth(auth.UserPassword(() => {
+                assert(false, "Unexpected User/Password auth");
+            }));
 
-        server.listen(0, "localhost", function () {
-            const args = ["--socks5",
-                `${this.address().address}:${this.address().port}`,
-                `http://${httpAddr}:${httpPort}`];
-            execFile("curl", args, (err) => {
-                server.close();
-                assert(err, "Expected client error");
-                assert(conns.length === 0, "Unexpected connection(s)");
-                done();
+            server.listen(0, "localhost", function () {
+                const args = ["--socks5",
+                    `${this.address().address}:${this.address().port}`,
+                    `http://${httpAddr}:${httpPort}`];
+                execFile("curl", args, (err) => {
+                    server.close();
+                    assert(err, "Expected client error");
+                    assert(conns.length === 0, "Unexpected connection(s)");
+                    done();
+                });
             });
         });
-    });
 
-    it("Deny connection", (done) => {
-        const conns = [];
-        const server = createServer((info, accept, deny) => {
-            conns.push(info);
-            deny();
-        });
+        it("Deny connection", (done) => {
+            const conns = [];
+            const server = createServer((info, accept, deny) => {
+                conns.push(info);
+                deny();
+            });
 
-        server.useAuth(auth.None());
+            server.useAuth(auth.None());
 
-        server.listen(0, "localhost", function () {
-            const args = ["--socks5",
-                `${this.address().address}:${this.address().port}`,
-                `http://${httpAddr}:${httpPort}`];
-            execFile("curl", args, (err) => {
-                server.close();
-                assert(err, "Expected client error");
-                assert(conns.length === 1, "Wrong number of connections");
-                done();
+            server.listen(0, "localhost", function () {
+                const args = ["--socks5",
+                    `${this.address().address}:${this.address().port}`,
+                    `http://${httpAddr}:${httpPort}`];
+                execFile("curl", args, (err) => {
+                    server.close();
+                    assert(err, "Expected client error");
+                    assert(conns.length === 1, "Wrong number of connections");
+                    done();
+                });
             });
         });
-    });
+        it("Intercept connection", (done) => {
+            const conns = [];
+            const body = "Interception!";
+            const server = createServer((info, accept) => {
+                conns.push(info);
+                const socket = accept(true);
+                if (socket) {
+                    socket.end([
+                        "HTTP/1.1 200 OK",
+                        "Connection: close",
+                        "Content-Type: text/plain",
+                        `Content-Length: ${Buffer.byteLength(body)}`,
+                        "",
+                        body
+                    ].join("\r\n"));
+                }
+            });
 
-    it("Intercept connection", (done) => {
-        const conns = [];
-        const body = "Interception!";
-        const server = createServer((info, accept) => {
-            conns.push(info);
-            const socket = accept(true);
-            if (socket) {
-                socket.end([
-                    "HTTP/1.1 200 OK",
-                    "Connection: close",
-                    "Content-Type: text/plain",
-                    `Content-Length: ${Buffer.byteLength(body)}`,
-                    "",
-                    body
-                ].join("\r\n"));
-            }
-        });
+            server.useAuth(auth.None());
 
-        server.useAuth(auth.None());
-
-        server.listen(0, "localhost", function () {
-            const args = ["--socks5", `${this.address().address}:${this.address().port}`, `http://${httpAddr}:${httpPort}`];
-            execFile("curl", args, (err, stdout, stderr) => {
-                server.close();
-                assert(!err, `Unexpected client error: ${extractCurlError(stderr)}`);
-                assert(stdout === body, "Response mismatch");
-                assert(conns.length === 1, "Wrong number of connections");
-                done();
+            server.listen(0, "localhost", function () {
+                const args = ["--socks5", `${this.address().address}:${this.address().port}`, `http://${httpAddr}:${httpPort}`];
+                execFile("curl", args, (err, stdout, stderr) => {
+                    server.close();
+                    assert(!err, `Unexpected client error: ${extractCurlError(stderr)}`);
+                    assert(stdout === body, "Response mismatch");
+                    assert(conns.length === 1, "Wrong number of connections");
+                    done();
+                });
             });
         });
-    });
 
-    it("maxConnections", (done) => {
-        const conns = [];
-        const server = createServer((info, accept) => {
-            assert(info.cmd === "connect", `Unexpected command: ${info.cmd}`);
-            assert(typeof info.srcAddr === "string" && info.srcAddr.length, "Bad srcAddr");
-            assert(typeof info.srcPort === "number" && info.srcPort > 0, "Bad srcPort");
-            assert(typeof info.dstAddr === "string" && info.dstAddr.length, "Bad dstAddr");
-            assert(typeof info.dstPort === "number" && info.dstPort > 0, "Bad dstPort");
-            conns.push(info);
-            accept();
-        });
+        it("maxConnections", (done) => {
+            const conns = [];
+            const server = createServer((info, accept) => {
+                assert(info.cmd === "connect", `Unexpected command: ${info.cmd}`);
+                assert(typeof info.srcAddr === "string" && info.srcAddr.length, "Bad srcAddr");
+                assert(typeof info.srcPort === "number" && info.srcPort > 0, "Bad srcPort");
+                assert(typeof info.dstAddr === "string" && info.dstAddr.length, "Bad dstAddr");
+                assert(typeof info.dstPort === "number" && info.dstPort > 0, "Bad dstPort");
+                conns.push(info);
+                accept();
+            });
 
-        server.useAuth(auth.None());
-        server.maxConnections = 0;
+            server.useAuth(auth.None());
+            server.maxConnections = 0;
 
-        server.listen(0, "localhost", function () {
-            const args = ["--socks5",
-                `${this.address().address}:${this.address().port}`,
-                `http://${httpAddr}:${httpPort}`];
-            execFile("curl", args, (err, stdout, stderr) => {
-                server.close();
-                assert(err, "Expected client error");
-                assert(conns.length === 0, "Wrong number of connections");
-                done();
+            server.listen(0, "localhost", function () {
+                const args = ["--socks5",
+                    `${this.address().address}:${this.address().port}`,
+                    `http://${httpAddr}:${httpPort}`];
+                execFile("curl", args, (err, stdout, stderr) => {
+                    server.close();
+                    assert(err, "Expected client error");
+                    assert(conns.length === 0, "Wrong number of connections");
+                    done();
+                });
             });
         });
     });

@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "server", "util", "user agent", "_", () => {
+describe("net", "http", "server", "util", "user agent", "_", () => {
     const { net: { http: { server: { util: { userAgent } } } }, fs } = adone;
     const { _: { UA, PartialParser } } = userAgent;
 

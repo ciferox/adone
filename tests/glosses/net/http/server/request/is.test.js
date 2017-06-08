@@ -1,6 +1,6 @@
 import * as helpers from "../helpers";
 
-describe("glosses", "net", "http", "server", "request", "is", () => {
+describe("net", "http", "server", "request", "is", () => {
     const { context } = helpers;
 
     it("should ignore params", () => {

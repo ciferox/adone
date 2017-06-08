@@ -1,6 +1,6 @@
 import enhanceError from "adone/glosses/net/http/client/enhance_error";
 
-describe("glosses", "net", "http", "client", "core", "enhanceError", () => {
+describe("net", "http", "client", "core", "enhanceError", () => {
     it("should add config and code to error", () => {
         const error = new Error("Boom!");
         enhanceError(error, { foo: "bar" }, "ESOMETHING");

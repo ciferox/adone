@@ -1,4 +1,4 @@
-describe("glosses", "net", "mail", "Sendmail Windows Newlines", () => {
+describe("net", "mail", "Sendmail Windows Newlines", () => {
     const { net: { mail: { __: { LeWindows } } } } = adone;
 
     it("should rewrite all linebreaks (byte by byte)", (done) => {

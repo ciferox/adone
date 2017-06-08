@@ -1,6 +1,6 @@
 import * as helpers from "../helpers";
 
-describe("glosses", "net", "http", "server", "request", "subdomains", () => {
+describe("net", "http", "server", "request", "subdomains", () => {
     const { request } = helpers;
 
     it("should return subdomain array", () => {

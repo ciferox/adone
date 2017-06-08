@@ -1,6 +1,6 @@
 const { Cancel } = adone.net.http.client;
 
-describe("glosses", "net", "http", "client", "Cancel", () => {
+describe("net", "http", "client", "Cancel", () => {
     describe("toString", () => {
         it("returns correct result when message is not specified", () => {
             const cancel = new Cancel();

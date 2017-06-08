@@ -1,4 +1,4 @@
-describe("glosses", "net", "http", "server", "middlewares", "router", "Router", () => {
+describe("net", "http", "server", "middlewares", "router", "Router", () => {
     const { std, net: { http: { server: { Server, middleware: { router: { Router, Layer } } } } }, promise } = adone;
     const methods = std.http.METHODS.map((x) => x.toLowerCase());
 
