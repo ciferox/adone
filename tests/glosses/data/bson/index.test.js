@@ -1,6 +1,6 @@
 import { BinaryParser } from "./binary_parser";
 
-describe("glosses", "data", "bson", () => {
+describe("data", "bson", () => {
     const { is, data: { bson }, std: { fs, vm, path } } = adone;
     const {
         BSON,
@@ -67,7 +67,7 @@ describe("glosses", "data", "bson", () => {
         throw new Error("Invalid ISO 8601 date given.", __filename);
     };
 
-    it("Should Correctly Deserialize object", () => {
+    it("should correctly deserialize object", () => {
         const bytes = [
             95, 0, 0, 0, 2, 110, 115, 0,
             42, 0, 0, 0, 105, 110, 116, 101,
@@ -93,7 +93,7 @@ describe("glosses", "data", "bson", () => {
         expect(1).to.be.equal(object.key.a);
     });
 
-    it("Should Correctly Deserialize object with all types", () => {
+    it("should correctly deserialize object with all types", () => {
         const bytes = [
             26, 1, 0, 0, 7, 95, 105, 100,
             0, 161, 190, 98, 75, 118, 169, 3,
@@ -155,7 +155,7 @@ describe("glosses", "data", "bson", () => {
         expect(object.null === null).to.be.ok;
     });
 
-    it("Should Serialize and Deserialize String", () => {
+    it("should serialize and deserialize String", () => {
         const testString = { hello: "world" };
         const serializedData = new BSON().serialize(testString, {
             checkKeys: false
@@ -168,7 +168,7 @@ describe("glosses", "data", "bson", () => {
         expect(testString).to.be.deep.equal(new BSON().deserialize(serializedData));
     });
 
-    it("Should Serialize and Deserialize Empty String", () => {
+    it("should serialize and deserialize Empty String", () => {
         const testString = { hello: "" };
         const serializedData = new BSON().serialize(testString);
         const serializedData2 = new Buffer(new BSON().calculateObjectSize(testString));
@@ -178,7 +178,7 @@ describe("glosses", "data", "bson", () => {
         expect(testString).to.be.deep.equal(new BSON().deserialize(serializedData));
     });
 
-    it("Should Correctly Serialize and Deserialize Integer", () => {
+    it("should correctly serialize and deserialize Integer", () => {
         const testNumber = { doc: 5 };
 
         const serializedData = new BSON().serialize(testNumber);
@@ -189,7 +189,7 @@ describe("glosses", "data", "bson", () => {
         expect(testNumber).to.be.deep.equal(new BSON().deserialize(serializedData2));
     });
 
-    it("Should Correctly Serialize and Deserialize null value", () => {
+    it("should correctly serialize and deserialize null value", () => {
         const testNull = { doc: null };
         const serializedData = new BSON().serialize(testNull);
 
@@ -201,7 +201,7 @@ describe("glosses", "data", "bson", () => {
         expect(null).to.be.equal(object.doc);
     });
 
-    it("Should Correctly Serialize and Deserialize Number 1", () => {
+    it("should correctly serialize and deserialize Number 1", () => {
         const testNumber = { doc: 5.5 };
         const serializedData = new BSON().serialize(testNumber);
 
@@ -212,7 +212,7 @@ describe("glosses", "data", "bson", () => {
         expect(testNumber).to.be.deep.equal(new BSON().deserialize(serializedData));
     });
 
-    it("Should Correctly Serialize and Deserialize Integer", () => {
+    it("should correctly serialize and deserialize Integer", () => {
         let testInt = { doc: 42 };
         let serializedData = new BSON().serialize(testInt);
 
@@ -246,7 +246,7 @@ describe("glosses", "data", "bson", () => {
         expect(testInt.doc).to.be.deep.equal(new BSON().deserialize(serializedData).doc);
     });
 
-    it("Should Correctly Serialize and Deserialize Object", () => {
+    it("should correctly serialize and deserialize Object", () => {
         const doc = { doc: { age: 42, name: "Spongebob", shoeSize: 9.5 } };
         const serializedData = new BSON().serialize(doc);
 
@@ -261,7 +261,7 @@ describe("glosses", "data", "bson", () => {
         );
     });
 
-    it("Should correctly ignore undefined values in arrays", () => {
+    it("should correctly ignore undefined values in arrays", () => {
         const doc = { doc: { notdefined: undefined } };
         const serializedData = new BSON().serialize(doc, {
             ignoreUndefined: true
@@ -280,7 +280,7 @@ describe("glosses", "data", "bson", () => {
         expect(undefined).to.be.deep.equal(doc1.doc.notdefined);
     });
 
-    it("Should correctly serialize undefined array entries as null values", () => {
+    it("should correctly serialize undefined array entries as null values", () => {
         const doc = { doc: { notdefined: undefined }, a: [1, 2, undefined, 3] };
         const serializedData = new BSON().serialize(doc, {
             ignoreUndefined: true
@@ -297,7 +297,7 @@ describe("glosses", "data", "bson", () => {
         expect(null).to.be.equal(doc1.a[2]);
     });
 
-    it("Should correctly serialize undefined array entries as undefined values", () => {
+    it("should correctly serialize undefined array entries as undefined values", () => {
         const doc = { doc: { notdefined: undefined }, a: [1, 2, undefined, 3] };
         const serializedData = new BSON().serialize(doc, {
             ignoreUndefined: false
@@ -316,7 +316,7 @@ describe("glosses", "data", "bson", () => {
         expect(null).to.be.deep.equal(doc2.doc.notdefined);
     });
 
-    it("Should Correctly Serialize and Deserialize Array", () => {
+    it("should correctly serialize and deserialize Array", () => {
         const doc = { doc: [1, 2, "a", "b"] };
         const serializedData = new BSON().serialize(doc);
 
@@ -331,7 +331,7 @@ describe("glosses", "data", "bson", () => {
         expect(doc.doc[3]).to.be.equal(deserialized.doc[3]);
     });
 
-    it("Should Correctly Serialize and Deserialize Buffer", () => {
+    it("should correctly serialize and deserialize Buffer", () => {
         const doc = { doc: new Buffer("hello world") };
         const serializedData = new BSON().serialize(doc);
 
@@ -344,7 +344,7 @@ describe("glosses", "data", "bson", () => {
         expect("hello world").to.be.equal(deserialized.doc.toString());
     });
 
-    it("Should Correctly Serialize and Deserialize Buffer with promoteBuffers option", () => {
+    it("should correctly serialize and deserialize Buffer with promoteBuffers option", () => {
         const doc = { doc: new Buffer("hello world") };
         const serializedData = new BSON().serialize(doc);
 
@@ -359,7 +359,7 @@ describe("glosses", "data", "bson", () => {
         expect("hello world").to.be.equal(deserialized.doc.toString());
     });
 
-    it("Should Correctly Serialize and Deserialize Number 4", () => {
+    it("should correctly serialize and deserialize Number 4", () => {
         const doc = { doc: bson.c.BSON_INT32_MAX + 10 };
         const serializedData = new BSON().serialize(doc);
 
@@ -372,7 +372,7 @@ describe("glosses", "data", "bson", () => {
         expect(bson.c.BSON_INT32_MAX + 10).to.be.equal(deserialized.doc);
     });
 
-    it("Should Correctly Serialize and Deserialize Array with added on functions", () => {
+    it("should correctly serialize and deserialize Array with added on functions", () => {
         Array.prototype.toXml = function () { };
         try {
             const doc = { doc: [1, 2, "a", "b"] };
@@ -392,7 +392,7 @@ describe("glosses", "data", "bson", () => {
         }
     });
 
-    it("Should correctly deserialize a nested object", () => {
+    it("should correctly deserialize a nested object", () => {
         const doc = { doc: { doc: 1 } };
         const serializedData = new BSON().serialize(doc);
 
@@ -403,7 +403,7 @@ describe("glosses", "data", "bson", () => {
         expect(doc.doc.doc).to.be.deep.equal(new BSON().deserialize(serializedData).doc.doc);
     });
 
-    it("Should Correctly Serialize and Deserialize A Boolean", () => {
+    it("should correctly serialize and deserialize A Boolean", () => {
         const doc = { doc: true };
         const serializedData = new BSON().serialize(doc);
 
@@ -414,7 +414,7 @@ describe("glosses", "data", "bson", () => {
         expect(doc.doc).to.be.equal(new BSON().deserialize(serializedData).doc);
     });
 
-    it("Should Correctly Serialize and Deserialize a Date", () => {
+    it("should correctly serialize and deserialize a Date", () => {
         const date = new Date();
         //(2009, 11, 12, 12, 00, 30)
         date.setUTCDate(12);
@@ -434,7 +434,7 @@ describe("glosses", "data", "bson", () => {
         expect(doc).to.be.deep.equal(doc1);
     });
 
-    it("Should Correctly Serialize and Deserialize a Date from another VM", () => {
+    it("should correctly serialize and deserialize a Date from another VM", () => {
         const script = "date1 = new Date();";
         const ctx = vm.createContext({ date1: null });
         vm.runInContext(script, ctx, "myfile.vm");
@@ -456,7 +456,7 @@ describe("glosses", "data", "bson", () => {
         expect(doc.date).to.be.equal(new BSON().deserialize(serializedData).doc.date);
     });
 
-    it("Should Correctly Serialize nested doc", () => {
+    it("should correctly serialize nested doc", () => {
         const doc = {
             string: "Strings are great",
             decimal: 3.14159265,
@@ -479,7 +479,7 @@ describe("glosses", "data", "bson", () => {
         expect(serializedData).to.be.deep.equal(serializedData2);
     });
 
-    it("Should Correctly Serialize and Deserialize Oid", () => {
+    it("should correctly serialize and deserialize Oid", () => {
         const doc = { doc: new ObjectID() };
         const serializedData = new BSON().serialize(doc);
 
@@ -490,7 +490,7 @@ describe("glosses", "data", "bson", () => {
         expect(doc).to.be.deep.equal(new BSON().deserialize(serializedData));
     });
 
-    it("Should Correctly encode Empty Hash", () => {
+    it("should correctly encode Empty Hash", () => {
         const doc = {};
         const serializedData = new BSON().serialize(doc);
 
@@ -501,7 +501,7 @@ describe("glosses", "data", "bson", () => {
         expect(doc).to.be.deep.equal(new BSON().deserialize(serializedData));
     });
 
-    it("Should Correctly Serialize and Deserialize Ordered Hash", () => {
+    it("should correctly serialize and deserialize Ordered Hash", () => {
         const doc = { doc: { b: 1, a: 2, c: 3, d: 4 } };
         const serializedData = new BSON().serialize(doc);
 
@@ -518,7 +518,7 @@ describe("glosses", "data", "bson", () => {
         expect(["b", "a", "c", "d"]).to.be.deep.equal(keys);
     });
 
-    it("Should Correctly Serialize and Deserialize Regular Expression", () => {
+    it("should correctly serialize and deserialize Regular Expression", () => {
         const doc = { doc: /foobar/mi };
         const serializedData = new BSON().serialize(doc);
 
@@ -531,7 +531,7 @@ describe("glosses", "data", "bson", () => {
         expect(doc.doc.toString()).to.be.deep.equal(doc2.doc.toString());
     });
 
-    it("Should Correctly Serialize and Deserialize a Binary object", () => {
+    it("should correctly serialize and deserialize a Binary object", () => {
         const bin = new Binary();
         const string = "binstring";
         for (let index = 0; index < string.length; index++) {
@@ -550,7 +550,7 @@ describe("glosses", "data", "bson", () => {
         expect(doc.doc.value()).to.be.deep.equal(deserializedData.doc.value());
     });
 
-    it("Should Correctly Serialize and Deserialize a Type 2 Binary object", () => {
+    it("should correctly serialize and deserialize a Type 2 Binary object", () => {
         const bin = new Binary(new Buffer("binstring"), Binary.SUBTYPE_BYTE_ARRAY);
         const string = "binstring";
         for (let index = 0; index < string.length; index++) {
@@ -569,7 +569,7 @@ describe("glosses", "data", "bson", () => {
         expect(doc.doc.value()).to.be.deep.equal(deserializedData.doc.value());
     });
 
-    it("Should Correctly Serialize and Deserialize a big Binary object", () => {
+    it("should correctly serialize and deserialize a big Binary object", () => {
         const data = fs.readFileSync(path.join(__dirname, "data", "test_gs_weird_bug.png"), "binary");
         const bin = new Binary();
         bin.write(data);
@@ -584,7 +584,7 @@ describe("glosses", "data", "bson", () => {
         expect(doc.doc.value()).to.be.deep.equal(deserializedData.doc.value());
     });
 
-    it("Should Correctly Serialize and Deserialize DBRef", () => {
+    it("should correctly serialize and deserialize DBRef", () => {
         const oid = new ObjectID();
         const doc = { dbref: new DBRef("namespace", oid, null) };
         const serializedData = new BSON().serialize(doc);
@@ -598,7 +598,7 @@ describe("glosses", "data", "bson", () => {
         expect(doc2.dbref.oid.toHexString()).to.be.deep.equal(oid.toHexString());
     });
 
-    it("Should Correctly Serialize and Deserialize partial DBRef", () => {
+    it("should correctly serialize and deserialize partial DBRef", () => {
         const id = new ObjectID();
         const doc = { name: "something", user: { $ref: "username", $id: id } };
         const serializedData = new BSON().serialize(doc);
@@ -613,7 +613,7 @@ describe("glosses", "data", "bson", () => {
         expect(id.toString()).to.be.equal(doc2.user.oid.toString());
     });
 
-    it("Should Correctly Serialize and Deserialize simple Int", () => {
+    it("should correctly serialize and deserialize simple Int", () => {
         const doc = { doc: 2147483648 };
         const serializedData = new BSON().serialize(doc);
 
@@ -625,7 +625,7 @@ describe("glosses", "data", "bson", () => {
         expect(doc.doc).to.be.deep.equal(doc2.doc);
     });
 
-    it("Should Correctly Serialize and Deserialize Long Integer", () => {
+    it("should correctly serialize and deserialize Long Integer", () => {
         let doc = { doc: Long.fromNumber(9223372036854775807) };
         let serializedData = new BSON().serialize(doc);
 
@@ -647,7 +647,7 @@ describe("glosses", "data", "bson", () => {
         expect(doc.doc).to.be.deep.equal(deserializedData.doc);
     });
 
-    it("Should Deserialize Large Integers as Number not Long", () => {
+    it("should deserialize Large Integers as Number not Long", () => {
         const roundTrip = (val) => {
             const doc = { doc: val };
             const serializedData = new BSON().serialize(doc);
@@ -673,7 +673,7 @@ describe("glosses", "data", "bson", () => {
         roundTrip(-1234567890123456800);
     });
 
-    it("Should Correctly Serialize and Deserialize Long Integer and Timestamp as different types", () => {
+    it("should correctly serialize and deserialize Long Integer and Timestamp as different types", () => {
         const long = Long.fromNumber(9223372036854775807);
         const timestamp = Timestamp.fromNumber(9223372036854775807);
         expect(long instanceof Long).to.be.ok;
@@ -692,7 +692,7 @@ describe("glosses", "data", "bson", () => {
         expect(testInt.doc).to.be.deep.equal(deserializedData.doc);
     });
 
-    it("Should Always put the id as the first item in a hash", () => {
+    it("should always put the id as the first item in a hash", () => {
         const hash = { doc: { notId: 1, _id: 2 } };
         const serializedData = new BSON().serialize(hash);
 
@@ -710,7 +710,7 @@ describe("glosses", "data", "bson", () => {
         expect(["notId", "_id"]).to.be.deep.equal(keys);
     });
 
-    it("Should Correctly Serialize and Deserialize a User defined Binary object", () => {
+    it("should correctly serialize and deserialize a User defined Binary object", () => {
         const bin = new Binary();
         bin.subType = Binary.BSON_BINARY_SUBTYPE_USER_DEFINED;
         const string = "binstring";
@@ -732,7 +732,7 @@ describe("glosses", "data", "bson", () => {
         expect(doc.doc.value()).to.be.deep.equal(deserializedData.doc.value());
     });
 
-    it("Should Correclty Serialize and Deserialize a Code object", () => {
+    it("should correclty serialize and deserialize a code object", () => {
         const doc = { doc: { doc2: new Code("this.a > i", { i: 1 }) } };
         const serializedData = new BSON().serialize(doc);
         const serializedData2 = new Buffer(new BSON().calculateObjectSize(doc));
@@ -744,7 +744,7 @@ describe("glosses", "data", "bson", () => {
         expect(doc.doc.doc2.scope.i).to.be.deep.equal(deserializedData.doc.doc2.scope.i);
     });
 
-    it("Should Correctly serialize and deserialize and embedded array", () => {
+    it("should correctly serialize and deserialize and embedded array", () => {
         const doc = {
             a: 0,
             b: [
@@ -766,7 +766,7 @@ describe("glosses", "data", "bson", () => {
         expect(doc.b).to.be.deep.equal(deserializedData.b);
     });
 
-    it("Should Correctly Serialize and Deserialize UTF8", () => {
+    it("should correctly serialize and deserialize UTF8", () => {
         const doc = {
             name: "本荘由利地域に洪水警報",
             name1: "öüóőúéáűíÖÜÓŐÚÉÁŰÍ",
@@ -790,7 +790,7 @@ describe("glosses", "data", "bson", () => {
         expect(doc).to.be.deep.equal(deserializedData);
     });
 
-    it("Should Correctly Serialize and Deserialize query object", () => {
+    it("should correctly serialize and deserialize query object", () => {
         const doc = { count: "remove_with_no_callback_bug_test", query: {}, fields: null };
         const serializedData = new BSON().serialize(doc);
 
@@ -802,7 +802,7 @@ describe("glosses", "data", "bson", () => {
         expect(doc).to.be.deep.equal(deserializedData);
     });
 
-    it("Should Correctly Serialize and Deserialize empty query object", () => {
+    it("should correctly serialize and deserialize empty query object", () => {
         const doc = {};
         const serializedData = new BSON().serialize(doc);
 
@@ -814,7 +814,7 @@ describe("glosses", "data", "bson", () => {
         expect(doc).to.be.deep.equal(deserializedData);
     });
 
-    it("Should Correctly Serialize and Deserialize array based doc", () => {
+    it("should correctly serialize and deserialize array based doc", () => {
         const doc = { b: [1, 2, 3], _id: new ObjectID() };
         const serializedData = new BSON().serialize(doc);
 
@@ -827,7 +827,7 @@ describe("glosses", "data", "bson", () => {
         expect(doc).to.be.deep.equal(deserializedData);
     });
 
-    it("Should Correctly Serialize and Deserialize Symbol", () => {
+    it("should correctly serialize and deserialize Symbol", () => {
         const doc = { b: [new Symbol("test")] };
         const serializedData = new BSON().serialize(doc);
 
@@ -841,7 +841,7 @@ describe("glosses", "data", "bson", () => {
         expect(deserializedData.b[0] instanceof Symbol).to.be.ok;
     });
 
-    it("Should handle Deeply nested document", () => {
+    it("should handle Deeply nested document", () => {
         const doc = { a: { b: { c: { d: 2 } } } };
         const serializedData = new BSON().serialize(doc);
 
@@ -853,7 +853,7 @@ describe("glosses", "data", "bson", () => {
         expect(doc).to.be.deep.equal(deserializedData);
     });
 
-    it("Should handle complicated all typed object", () => {
+    it("should handle complicated all typed object", () => {
         // First doc
         const date = new Date();
         let oid = new ObjectID();
@@ -916,7 +916,7 @@ describe("glosses", "data", "bson", () => {
         }
     });
 
-    it("Should Correctly Serialize Complex Nested Object", () => {
+    it("should correctly serialize Complex Nested Object", () => {
         const doc = {
             email: "email@email.com",
             encryptedPassword: "password",
@@ -944,7 +944,7 @@ describe("glosses", "data", "bson", () => {
         }
     });
 
-    it("Should correctly massive doc", () => {
+    it("should correctly massive doc", () => {
         const oid1 = new ObjectID();
         const oid2 = new ObjectID();
 
@@ -967,7 +967,7 @@ describe("glosses", "data", "bson", () => {
         serializedData2 = new BSON().serialize(doc2, false, true);
     });
 
-    it("Should Correctly Serialize/Deserialize regexp object", () => {
+    it("should correctly serialize/deserialize regexp object", () => {
         const doc = { b: /foobaré/ };
 
         const serializedData = new BSON().serialize(doc);
@@ -983,7 +983,7 @@ describe("glosses", "data", "bson", () => {
         }
     });
 
-    it("Should Correctly Serialize/Deserialize complicated object", () => {
+    it("should correctly serialize/deserialize complicated object", () => {
         const doc = { a: { b: { c: [new ObjectID(), new ObjectID()] } }, d: { f: 1332.3323 } };
 
         const serializedData = new BSON().serialize(doc);
@@ -997,7 +997,7 @@ describe("glosses", "data", "bson", () => {
         expect(doc).to.be.deep.equal(doc2);
     });
 
-    it("Should Correctly Serialize/Deserialize nested object", () => {
+    it("should correctly serialize/deserialize nested object", () => {
         const doc = {
             _id: { date: new Date(), gid: "6f35f74d2bea814e21000000" },
             value: {
@@ -1019,7 +1019,7 @@ describe("glosses", "data", "bson", () => {
         expect(doc).to.be.deep.equal(doc2);
     });
 
-    it("Should Correctly Serialize/Deserialize nested object with even more nesting", () => {
+    it("should correctly serialize/deserialize nested object with even more nesting", () => {
         const doc = {
             _id: { date: { a: 1, b: 2, c: new Date() }, gid: "6f35f74d2bea814e21000000" },
             value: {
@@ -1040,7 +1040,7 @@ describe("glosses", "data", "bson", () => {
         expect(doc).to.be.deep.equal(doc2);
     });
 
-    it("Should Correctly Serialize empty name object", () => {
+    it("should correctly serialize empty name object", () => {
         const doc = {
             "": "test",
             bbbb: 1
@@ -1051,7 +1051,7 @@ describe("glosses", "data", "bson", () => {
         expect(doc2.bbbb).to.be.equal(1);
     });
 
-    it("Should Correctly handle Forced Doubles to ensure we allocate enough space for cap collections", () => {
+    it("should correctly handle Forced Doubles to ensure we allocate enough space for cap collections", () => {
         const doubleValue = new Double(100);
         const doc = { value: doubleValue };
 
@@ -1066,7 +1066,7 @@ describe("glosses", "data", "bson", () => {
         expect({ value: 100 }).to.be.deep.equal(doc2);
     });
 
-    it("Should deserialize correctly", () => {
+    it("should deserialize correctly", () => {
         const doc = {
             _id: new ObjectID("4e886e687ff7ef5e00000162"),
             str: "foreign",
@@ -1084,7 +1084,7 @@ describe("glosses", "data", "bson", () => {
         expect(JSON.stringify(doc)).to.be.deep.equal(JSON.stringify(doc2));
     });
 
-    it("Should correctly serialize and deserialize MinKey and MaxKey values", () => {
+    it("should correctly serialize and deserialize MinKey and MaxKey values", () => {
         const doc = {
             _id: new ObjectID("4e886e687ff7ef5e00000162"),
             minKey: new MinKey(),
@@ -1103,7 +1103,7 @@ describe("glosses", "data", "bson", () => {
         expect(doc2.maxKey instanceof MaxKey).to.be.ok;
     });
 
-    it("Should correctly serialize Double value", () => {
+    it("should correctly serialize Double value", () => {
         const doc = {
             value: new Double(34343.2222)
         };
@@ -1135,7 +1135,7 @@ describe("glosses", "data", "bson", () => {
         );
     });
 
-    it("Should Correctly throw error on bsonparser errors", () => {
+    it("should correctly throw error on bsonparser errors", () => {
         let data = new Buffer(3);
         const parser = new BSON();
 
@@ -1158,7 +1158,7 @@ describe("glosses", "data", "bson", () => {
         }
     });
 
-    it("Should correctly calculate the size of a given javascript object", () => {
+    it("should correctly calculate the size of a given javascript object", () => {
         // wtf
         // eslint-disable-next-line
         const doc = { a: 1, func: function () { } };
@@ -1176,7 +1176,7 @@ describe("glosses", "data", "bson", () => {
         expect(37).to.be.equal(size);
     });
 
-    it("Should correctly calculate the size of a given javascript object using instance method", () => {
+    it("should correctly calculate the size of a given javascript object using instance method", () => {
         // wtf
         // eslint-disable-next-line
         const doc = { a: 1, func: function () { } };
@@ -1195,7 +1195,7 @@ describe("glosses", "data", "bson", () => {
         expect(37).to.be.equal(size);
     });
 
-    it("Should correctly serializeWithBufferAndIndex a given javascript object", () => {
+    it("should correctly serializeWithBufferAndIndex a given javascript object", () => {
         // wtf
         // eslint-disable-next-line
         const doc = { a: 1, func: function () { } };
@@ -1232,7 +1232,7 @@ describe("glosses", "data", "bson", () => {
         expect(36).to.be.equal(index);
     });
 
-    it("Should correctly serializeWithBufferAndIndex a given javascript object using a BSON instance", () => {
+    it("should correctly serializeWithBufferAndIndex a given javascript object using a BSON instance", () => {
         // wtf
         // eslint-disable-next-line
         const doc = { a: 1, func: function () { } };
@@ -1268,7 +1268,7 @@ describe("glosses", "data", "bson", () => {
         expect(36).to.be.equal(index);
     });
 
-    it("Should correctly serialize a given javascript object", () => {
+    it("should correctly serialize a given javascript object", () => {
         // wtf
         // eslint-disable-next-line
         const doc = { a: 1, func: function () { } };
@@ -1291,7 +1291,7 @@ describe("glosses", "data", "bson", () => {
         expect(37).to.be.equal(buffer.length);
     });
 
-    it("Should correctly serialize a given javascript object using a bson instance", () => {
+    it("should correctly serialize a given javascript object using a bson instance", () => {
         // wtf
         // eslint-disable-next-line
         const doc = { a: 1, func: function () { } };
@@ -1347,7 +1347,7 @@ describe("glosses", "data", "bson", () => {
         ObjectID.cacheHexString = false;
     });
 
-    it("Should fail to create ObjectID due to illegal hex code", () => {
+    it("should fail to create ObjectID due to illegal hex code", () => {
         try {
             new ObjectID("zzzzzzzzzzzzzzzzzzzzzzzz");
             expect(false).to.be.ok;
@@ -1381,7 +1381,7 @@ describe("glosses", "data", "bson", () => {
         expect(true).to.be.equal(ObjectID.isValid(objectIdLike));
     });
 
-    it("Should correctly serialize the BSONRegExp type", () => {
+    it("should correctly serialize the BSONRegExp type", () => {
         const doc = { regexp: new BSONRegExp("test", "i") };
         let doc1 = { regexp: /test/i };
         const serializedData = new BSON().serialize(doc);
@@ -1395,7 +1395,7 @@ describe("glosses", "data", "bson", () => {
         expect(regexp).to.be.deep.equal(doc1.regexp);
     });
 
-    it("Should correctly deserialize the BSONRegExp type", () => {
+    it("should correctly deserialize the BSONRegExp type", () => {
         const doc = { regexp: new BSONRegExp("test", "i") };
         const serializedData = new BSON().serialize(doc);
 
@@ -1409,7 +1409,7 @@ describe("glosses", "data", "bson", () => {
         expect("i").to.be.equal(doc1.regexp.options);
     });
 
-    it("Should return boolean for ObjectID equality check", () => {
+    it("should return boolean for ObjectID equality check", () => {
         const id = new ObjectID();
         expect(true).to.be.equal(id.equals(new ObjectID(id.toString())));
         expect(true).to.be.equal(id.equals(id.toString()));

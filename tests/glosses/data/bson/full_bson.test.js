@@ -1,6 +1,6 @@
 import { BinaryParser } from "./binary_parser";
 
-describe("glosses", "data", "bson", "full", () => {
+describe("data", "bson", "full", () => {
     const {
         data: { bson: { BSON, ObjectID, Binary, BSONRegExp } },
         std: { fs, assert, path }
@@ -8,7 +8,7 @@ describe("glosses", "data", "bson", "full", () => {
 
     const serializer = new BSON();
 
-    it("Should Correctly Deserialize object", () => {
+    it("should correctly deserialize object", () => {
         const bytes = [
             95, 0, 0, 0, 2, 110, 115, 0,
             42, 0, 0, 0, 105, 110, 116, 101,
@@ -35,7 +35,7 @@ describe("glosses", "data", "bson", "full", () => {
         assert.equal(1, object.key.a);
     });
 
-    it("Should Correctly Deserialize object with all types", () => {
+    it("should correctly deserialize object with all types", () => {
         const bytes = [
             26, 1, 0, 0, 7, 95, 105, 100,
             0, 161, 190, 98, 75, 118, 169, 3,
@@ -96,39 +96,39 @@ describe("glosses", "data", "bson", "full", () => {
         assert.ok(object.null === null);
     });
 
-    it("Should Serialize and Deserialize String", () => {
+    it("should serialize and deserialize String", () => {
         const testЫtring = { hello: "world" };
         const serializedВata = serializer.serialize(testЫtring);
         assert.deepEqual(testЫtring, serializer.deserialize(serializedВata));
     });
 
-    it("Should Correctly Serialize and Deserialize Integer", () => {
+    it("should correctly serialize and deserialize Integer", () => {
         const testNumber = { doc: 5 };
         const serializedData = serializer.serialize(testNumber);
         assert.deepEqual(testNumber, serializer.deserialize(serializedData));
     });
 
-    it("Should Correctly Serialize and Deserialize null value", () => {
+    it("should correctly serialize and deserialize null value", () => {
         const testNull = { doc: null };
         const serializedData = serializer.serialize(testNull);
         const object = serializer.deserialize(serializedData);
         assert.deepEqual(testNull, object);
     });
 
-    it("Should Correctly Serialize and Deserialize undefined value", () => {
+    it("should correctly serialize and deserialize undefined value", () => {
         const testUndefined = { doc: undefined };
         const serializedData = serializer.serialize(testUndefined);
         const object = serializer.deserialize(new Buffer(serializedData, "binary"));
         assert.equal(null, object.doc);
     });
 
-    it("Should Correctly Serialize and Deserialize Number 3", () => {
+    it("should correctly serialize and deserialize Number 3", () => {
         const testNumber = { doc: 5.5 };
         const serializedData = serializer.serialize(testNumber);
         assert.deepEqual(testNumber, serializer.deserialize(serializedData));
     });
 
-    it("Should Correctly Serialize and Deserialize Integer", () => {
+    it("should correctly serialize and deserialize Integer", () => {
         let testInt = { doc: 42 };
         let serializedData = serializer.serialize(testInt);
         assert.deepEqual(testInt, serializer.deserialize(serializedData));
@@ -146,31 +146,31 @@ describe("glosses", "data", "bson", "full", () => {
         assert.deepEqual(testInt, serializer.deserialize(serializedData));
     });
 
-    it("Should Correctly Serialize and Deserialize Object", () => {
+    it("should correctly serialize and deserialize Object", () => {
         const doc = { doc: { age: 42, name: "Spongebob", shoeSize: 9.5 } };
         const serializedData = serializer.serialize(doc);
         assert.deepEqual(doc, serializer.deserialize(serializedData));
     });
 
-    it("Should Correctly Serialize and Deserialize Array", () => {
+    it("should correctly serialize and deserialize Array", () => {
         const doc = { doc: [1, 2, "a", "b"] };
         const serializedData = serializer.serialize(doc);
         assert.deepEqual(doc, serializer.deserialize(serializedData));
     });
 
-    it("Should Correctly Serialize and Deserialize Array with added on functions", () => {
+    it("should correctly serialize and deserialize Array with added on functions", () => {
         const doc = { doc: [1, 2, "a", "b"] };
         const serializedData = serializer.serialize(doc);
         assert.deepEqual(doc, serializer.deserialize(serializedData));
     });
 
-    it("Should Correctly Serialize and Deserialize A Boolean", () => {
+    it("should correctly serialize and deserialize A Boolean", () => {
         const doc = { doc: true };
         const serializedData = serializer.serialize(doc);
         assert.deepEqual(doc, serializer.deserialize(serializedData));
     });
 
-    it("Should Correctly Serialize and Deserialize a Date", () => {
+    it("should correctly serialize and deserialize a Date", () => {
         const date = new Date();
         //(2009, 11, 12, 12, 00, 30)
         date.setUTCDate(12);
@@ -184,7 +184,7 @@ describe("glosses", "data", "bson", "full", () => {
         assert.deepEqual(doc, serializer.deserialize(serializedData));
     });
 
-    it("Should Correctly Serialize and Deserialize Oid", () => {
+    it("should correctly serialize and deserialize Oid", () => {
         const doc = { doc: new ObjectID() };
         const serializedData = serializer.serialize(doc);
         assert.deepEqual(
@@ -193,14 +193,14 @@ describe("glosses", "data", "bson", "full", () => {
         );
     });
 
-    it("Should Correctly Serialize and Deserialize Buffer", () => {
+    it("should correctly serialize and deserialize Buffer", () => {
         const doc = { doc: new Buffer("123451234512345") };
         const serializedData = serializer.serialize(doc);
 
         assert.equal("123451234512345", serializer.deserialize(serializedData).doc.buffer.toString("ascii"));
     });
 
-    it("Should Correctly Serialize and Deserialize Buffer with promoteBuffers option", () => {
+    it("should correctly serialize and deserialize Buffer with promoteBuffers option", () => {
         const doc = { doc: new Buffer("123451234512345") };
         const serializedData = serializer.serialize(doc);
 
@@ -208,13 +208,13 @@ describe("glosses", "data", "bson", "full", () => {
         assert.equal("123451234512345", serializer.deserialize(serializedData, options).doc.toString("ascii"));
     });
 
-    it("Should Correctly encode Empty Hash", () => {
+    it("should correctly encode Empty Hash", () => {
         const testCode = {};
         const serializedData = serializer.serialize(testCode);
         assert.deepEqual(testCode, serializer.deserialize(serializedData));
     });
 
-    it("Should Correctly Serialize and Deserialize Ordered Hash", () => {
+    it("should correctly serialize and deserialize Ordered Hash", () => {
         const doc = { doc: { b: 1, a: 2, c: 3, d: 4 } };
         const serializedData = serializer.serialize(doc);
         const decodedHash = serializer.deserialize(serializedData).doc;
@@ -225,14 +225,14 @@ describe("glosses", "data", "bson", "full", () => {
         assert.deepEqual(["b", "a", "c", "d"], keys);
     });
 
-    it("Should Correctly Serialize and Deserialize Regular Expression", () => {
+    it("should correctly serialize and deserialize Regular Expression", () => {
         const doc = { doc: /foobar/mi };
         const serializedData = serializer.serialize(doc);
         const doc2 = serializer.deserialize(serializedData);
         assert.equal(doc.doc.toString(), doc2.doc.toString());
     });
 
-    it("Should Correctly Serialize and Deserialize a Binary object", () => {
+    it("should correctly serialize and deserialize a Binary object", () => {
         const bin = new Binary();
         const string = "binstring";
         for (let index = 0; index < string.length; index++) {
@@ -244,7 +244,7 @@ describe("glosses", "data", "bson", "full", () => {
         assert.equal(doc.doc.value(), deserializedData.doc.value());
     });
 
-    it("Should Correctly Serialize and Deserialize a big Binary object", () => {
+    it("should correctly serialize and deserialize a big Binary object", () => {
         const data = fs.readFileSync(path.join(__dirname, "data/test_gs_weird_bug.png"), "binary");
         const bin = new Binary();
         bin.write(data);
@@ -254,7 +254,7 @@ describe("glosses", "data", "bson", "full", () => {
         assert.equal(doc.doc.value(), deserializedData.doc.value());
     });
 
-    it("Should Correctly Deserialize bson file from mongodump", () => {
+    it("should correctly deserialize bson file from mongodump", () => {
         const data = fs.readFileSync(path.join(__dirname, "data/test.bson"), { encoding: null });
         const docs = [];
         let bsonIndex = 0;
@@ -272,7 +272,7 @@ describe("glosses", "data", "bson", "full", () => {
         assert.equal(docs.length, 1);
     });
 
-    it("Should Correctly fail due to attempting serialization of illegal key values", () => {
+    it("should correctly fail due to attempting serialization of illegal key values", () => {
         const k = new Buffer(15);
         for (let i = 0; i < 15; i++) {
             k[i] = 0;
@@ -290,7 +290,7 @@ describe("glosses", "data", "bson", "full", () => {
         const doc = {};
         doc[k.toString()] = v.toString();
 
-        // Should throw due to null character
+        // should throw due to null character
         try {
             serializer.serialize(doc, {
                 checkKeys: true
@@ -310,7 +310,7 @@ describe("glosses", "data", "bson", "full", () => {
         }
     });
 
-    it("Should correctly fail to serialize regexp with null bytes", () => {
+    it("should correctly fail to serialize regexp with null bytes", () => {
         const doc = {};
         doc.test = new RegExp("a\0b");  // eslint-disable-line
 
@@ -324,7 +324,7 @@ describe("glosses", "data", "bson", "full", () => {
         }
     });
 
-    it("Should correctly fail to serialize BSONRegExp with null bytes", () => {
+    it("should correctly fail to serialize BSONRegExp with null bytes", () => {
         const doc = {};
         doc.test = new BSONRegExp("a\0b");
 

@@ -1,4 +1,4 @@
-describe("glosses", "data", "bson", "object id", () => {
+describe("data", "bson", "object id", () => {
     const { data: { bson: { ObjectID } } } = adone;
 
     it("should correctly handle objectId timestamps", () => {

@@ -14,7 +14,7 @@ const spec = {
     columnNumber: 5
 };
 
-describe("count-newlines", () => {
+describe("data", "json5", "count-newlines", () => {
     Object.keys(cases).forEach((key) => {
         const str = cases[key];
         it(key, () => {

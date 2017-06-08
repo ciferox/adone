@@ -276,7 +276,7 @@ sub dump_field {
         return 1;
     }
 
-    die "Shouldn't reach here";
+    die "shouldn't reach here";
 }
 
 sub get_length {

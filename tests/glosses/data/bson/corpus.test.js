@@ -1,6 +1,6 @@
 import { deserialize, serialize } from "./extended_json";
 
-describe("glosses", "data", "bson", "corpus", () => {
+describe("data", "bson", "corpus", () => {
     const { data: { bson: { BSON, Decimal128 } }, std: { assert } } = adone;
 
     const bson = new BSON();
@@ -135,76 +135,76 @@ describe("glosses", "data", "bson", "corpus", () => {
     };
 
     describe("corpus", () => {
-        it("Pass all BSON corpus ./specs/bson-corpus/array.json", () => {
+        it("pass all BSON corpus ./specs/bson-corpus/array.json", () => {
             executeAll(require(`${__dirname}/specs/bson-corpus/array`));
         });
 
-        it("Pass all BSON corpus ./specs/bson-corpus/binary.json", () => {
+        it("pass all BSON corpus ./specs/bson-corpus/binary.json", () => {
             executeAll(require(`${__dirname}/specs/bson-corpus/binary`));
         });
 
-        it("Pass all BSON corpus ./specs/bson-corpus/boolean.json", () => {
+        it("pass all BSON corpus ./specs/bson-corpus/boolean.json", () => {
             executeAll(require(`${__dirname}/specs/bson-corpus/boolean`));
         });
 
-        it("Pass all BSON corpus ./specs/bson-corpus/code_w_scope.json", () => {
+        it("pass all BSON corpus ./specs/bson-corpus/code_w_scope.json", () => {
             executeAll(require(`${__dirname}/specs/bson-corpus/code_w_scope`));
         });
 
-        it("Pass all BSON corpus ./specs/bson-corpus/code.json", () => {
+        it("pass all BSON corpus ./specs/bson-corpus/code.json", () => {
             executeAll(require(`${__dirname}/specs/bson-corpus/code`));
         });
 
-        it("Pass all BSON corpus ./specs/bson-corpus/datetime.json", () => {
+        it("pass all BSON corpus ./specs/bson-corpus/datetime.json", () => {
             executeAll(require(`${__dirname}/specs/bson-corpus/datetime`));
         });
 
-        it("Pass all BSON corpus ./specs/bson-corpus/document.json", () => {
+        it("pass all BSON corpus ./specs/bson-corpus/document.json", () => {
             executeAll(require(`${__dirname}/specs/bson-corpus/document`));
         });
 
 
-        it("Pass all BSON corpus ./specs/bson-corpus/int32.json", () => {
+        it("pass all BSON corpus ./specs/bson-corpus/int32.json", () => {
             executeAll(require(`${__dirname}/specs/bson-corpus/int32`));
         });
 
-        it("Pass all BSON corpus ./specs/bson-corpus/int64.json", () => {
+        it("pass all BSON corpus ./specs/bson-corpus/int64.json", () => {
             executeAll(require(`${__dirname}/specs/bson-corpus/int64`));
         });
 
-        it("Pass all BSON corpus ./specs/bson-corpus/maxkey.json", () => {
+        it("pass all BSON corpus ./specs/bson-corpus/maxkey.json", () => {
             executeAll(require(`${__dirname}/specs/bson-corpus/maxkey`));
         });
 
-        it("Pass all BSON corpus ./specs/bson-corpus/minkey.json", () => {
+        it("pass all BSON corpus ./specs/bson-corpus/minkey.json", () => {
             executeAll(require(`${__dirname}/specs/bson-corpus/minkey`));
         });
 
-        it("Pass all BSON corpus ./specs/bson-corpus/null.json", () => {
+        it("pass all BSON corpus ./specs/bson-corpus/null.json", () => {
             executeAll(require(`${__dirname}/specs/bson-corpus/null`));
         });
 
-        it("Pass all BSON corpus ./specs/bson-corpus/oid.json", () => {
+        it("pass all BSON corpus ./specs/bson-corpus/oid.json", () => {
             executeAll(require(`${__dirname}/specs/bson-corpus/oid`));
         });
 
-        it("Pass all BSON corpus ./specs/bson-corpus/regex.json", () => {
+        it("pass all BSON corpus ./specs/bson-corpus/regex.json", () => {
             executeAll(require(`${__dirname}/specs/bson-corpus/regex`));
         });
 
-        it("Pass all BSON corpus ./specs/bson-corpus/string.json", () => {
+        it("pass all BSON corpus ./specs/bson-corpus/string.json", () => {
             executeAll(require(`${__dirname}/specs/bson-corpus/string`));
         });
 
-        it("Pass all BSON corpus ./specs/bson-corpus/symbol.json", () => {
+        it("pass all BSON corpus ./specs/bson-corpus/symbol.json", () => {
             executeAll(require(`${__dirname}/specs/bson-corpus/symbol`));
         });
 
-        it("Pass all BSON corpus ./specs/bson-corpus/timestamp.json", () => {
+        it("pass all BSON corpus ./specs/bson-corpus/timestamp.json", () => {
             executeAll(require(`${__dirname}/specs/bson-corpus/timestamp`));
         });
 
-        it("Pass all BSON corpus ./specs/bson-corpus/top.json", () => {
+        it("pass all BSON corpus ./specs/bson-corpus/top.json", () => {
             executeAll(require(`${__dirname}/specs/bson-corpus/top`));
         });
 

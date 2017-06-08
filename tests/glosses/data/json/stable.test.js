@@ -1,4 +1,4 @@
-describe("glosses", "data", "json", "stable", () => {
+describe("data", "json", "stable", () => {
     const stringify = (x, opts = {}) => {
         opts.stable = true;
         return adone.data.json.encode(x, opts).toString();

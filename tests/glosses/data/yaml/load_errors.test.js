@@ -1,6 +1,6 @@
 import { TEST_SCHEMA } from "./support/schema";
 
-describe("glosses", "data", "yaml", "load errors", () => {
+describe("data", "yaml", "load errors", () => {
     const { fs, data: { yaml } } = adone;
     const fixtures = new fs.Directory(__dirname, "error_samples");
     const files = fs.readdirSync(fixtures.path());

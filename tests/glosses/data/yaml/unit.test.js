@@ -1,4 +1,4 @@
-describe("glosses", "data", "yaml", "unit", () => {
+describe("data", "yaml", "unit", () => {
     const { fs, data: { yaml }, util, x } = adone;
     const fixtures = new fs.Directory(__dirname, "fixtures");
 

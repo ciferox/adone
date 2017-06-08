@@ -1,7 +1,7 @@
-describe("glosses", "data", "bson", "detect cyclic dependency", () => {
+describe("data", "bson", "detect cyclic dependency", () => {
     const { data: { bson: { BSON } } } = adone;
 
-    it("Should correctly detect cyclic dependency in nested objects", () => {
+    it("should correctly detect cyclic dependency in nested objects", () => {
         // Force cyclic dependency
         const a = { b: {} };
         a.b.c = a;
@@ -17,7 +17,7 @@ describe("glosses", "data", "bson", "detect cyclic dependency", () => {
     /**
      * @ignore
      */
-    it("Should correctly detect cyclic dependency in deeploy nested objects", () => {
+    it("should correctly detect cyclic dependency in deeploy nested objects", () => {
         // Force cyclic dependency
         const a = { b: { c: [{ d: {} }] } };
         a.b.c[0].d.a = a;
@@ -34,7 +34,7 @@ describe("glosses", "data", "bson", "detect cyclic dependency", () => {
     /**
      * @ignore
      */
-    it("Should correctly detect cyclic dependency in nested array", () => {
+    it("should correctly detect cyclic dependency in nested array", () => {
         // Force cyclic dependency
         const a = { b: {} };
         a.b.c = [a];

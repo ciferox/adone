@@ -1,4 +1,4 @@
-describe("glosses", "data", "bson", "compliance", () => {
+describe("data", "bson", "compliance", () => {
     const { data: { bson }, is } = adone;
     const {
         BSON,

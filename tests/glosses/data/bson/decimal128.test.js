@@ -1,4 +1,4 @@
-describe("glosses", "data", "bson", "decimal 128", () => {
+describe("data", "bson", "decimal 128", () => {
     const { data: { bson: { Decimal128 } } } = adone;
 
     const NAN = Buffer.from([
@@ -442,7 +442,7 @@ describe("glosses", "data", "bson", "decimal 128", () => {
             expect("0E-600").to.be.equal(decimal.toString());
         });
 
-        it("Serialize and Deserialize tests", () => {
+        it("serialize and deserialize tests", () => {
             const bson = new BSON();
 
             // Test all methods around a simple serialization at object top level

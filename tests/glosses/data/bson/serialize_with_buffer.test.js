@@ -1,4 +1,4 @@
-describe("glosses", "data", "bson", "serialize with buffer", () => {
+describe("data", "bson", "serialize with buffer", () => {
     const { data: { bson: { BSON } } } = adone;
 
     it("correctly serialize into buffer using serializeWithBufferAndIndex", () => {

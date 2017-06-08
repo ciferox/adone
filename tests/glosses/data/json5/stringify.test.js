@@ -6,7 +6,7 @@ const simpleCases = [
     "", "''", "999", "9aa", "aaa", "aa a", "aa\na", "aa\\a", "'", "\\'", '\\"',
     undefined,
     true, false,
-    {}, [], function () {}, adone.noop, 
+    {}, [], function () {}, adone.noop,
     Date.now(), new Date(Date.now())
 ];
 
@@ -22,10 +22,10 @@ const stringifyJSON5 = (obj, replacer, space) => {
 
 const stringifyJSON = (obj, replacer, space) => {
     let res;
-    
+
     try {
         res = JSON.stringify(obj, replacer, space);
-    
+
         // now remove all quotes from keys where appropriate first recursively find all key names
         const keys = [];
 
@@ -62,14 +62,14 @@ const stringifyJSON = (obj, replacer, space) => {
 
         // now replace each key in the result
         let last = 0;
-        for (let i = 0; i < keys.length; i++) {  
-            // not perfect since we can match on parts of the previous value that 
+        for (let i = 0; i < keys.length; i++) {
+            // not perfect since we can match on parts of the previous value that
             // matches the key, but we can design our test around that.
-            last = res.indexOf('"' + keys[i] + '"', last);
+            last = res.indexOf(`"${keys[i] }"`, last);
             if (last === -1) {
                 // problem with test framework
-                console.log("Couldn't find: " + keys[i]);
-                throw new Error("Couldn't find: " + keys[i]);
+                console.log(`Couldn't find: ${keys[i]}`);
+                throw new Error(`Couldn't find: ${keys[i]}`);
             }
             res = res.substring(0, last) + res.substring(last + 1, last + keys[i].length + 1) + res.substring(last + keys[i].length + 2, res.length);
             last += keys[i].length;
@@ -122,7 +122,7 @@ const assertStringify = (obj, replacerTestConstructor, expectError) => {
                 roundTripStr = json5.encode(json5.decode(origStr));
             } catch (e) {
                 console.log(e);
-                console.log(origStr);    
+                console.log(origStr);
                 throw e;
             }
             assert.equal(origStr, roundTripStr);
@@ -130,14 +130,14 @@ const assertStringify = (obj, replacerTestConstructor, expectError) => {
     }
 };
 
-describe("JSON5.encode", function () {
-    it("simple", function () {
+describe("data", "json5", "encode", () => {
+    it("simple", () => {
         for (let i = 0; i < simpleCases.length; i++) {
             assertStringify(simpleCases[i]);
         }
     });
 
-    it("oddities", function () {
+    it("oddities", () => {
         assertStringify(Function);
         assertStringify(Date);
         assertStringify(Object);
@@ -149,7 +149,7 @@ describe("JSON5.encode", function () {
         assertStringify(0x99);
         assertStringify(/aa/);
         assertStringify(new RegExp("aa"));
-        
+
         assertStringify(new Number(7));
         assertStringify(new String(7));
         assertStringify(new String(""));
@@ -159,7 +159,7 @@ describe("JSON5.encode", function () {
         assertStringify(new Boolean());
     });
 
-    it("arrays", function () {
+    it("arrays", () => {
         assertStringify([]);
         assertStringify([""]);
         assertStringify([1, 2]);
@@ -168,43 +168,43 @@ describe("JSON5.encode", function () {
         assertStringify([1, "\n\b\t\f\r'"]);
         assertStringify([1, "fasds", ["fdsafsd"], null]);
         assertStringify([1, "fasds", ["fdsafsd"], null, () => {
-            return 1; 
+            return 1;
         }, false]);
         assertStringify([1, "fasds", ["fdsafsd"], undefined, () => {
-            return 1; 
+            return 1;
         }, false]);
     });
 
-    it("objects", function () {
+    it("objects", () => {
         assertStringify({ a: 1, b: 2 });
         assertStringify({ "": 1, b: 2 });
         assertStringify({ 9: 1, b: 2 });
         assertStringify({ "9aaa": 1, b: 2 });
         assertStringify({ aaaa: 1, bbbb: 2 });
         assertStringify({ a$a_aa: 1, bbbb: 2 });
-        assertStringify({ "a$a_aa": 1, "bbbb": 2 });
-        assertStringify({ "a$a_aa": [1], "bbbb": { a: 2 } });
-        assertStringify({ "a$22222_aa": [1], "bbbb": { aaaa: 2, name(a, n, fh, h) {
-            return "nuthin"; 
+        assertStringify({ a$a_aa: 1, bbbb: 2 });
+        assertStringify({ a$a_aa: [1], bbbb: { a: 2 } });
+        assertStringify({ a$22222_aa: [1], bbbb: { aaaa: 2, name(a, n, fh, h) {
+            return "nuthin";
         }, foo: undefined } });
-        assertStringify({ "a$222222_aa": [1], "bbbb": { aaaa: 2, name: "other", foo: undefined } });
-        assertStringify({ "a$222222_aa": [1, {}, undefined, function () { }, { jjj() { } }], "bbbb": { aaaa: 2, name: "other", foo: undefined } });
-        
+        assertStringify({ a$222222_aa: [1], bbbb: { aaaa: 2, name: "other", foo: undefined } });
+        assertStringify({ a$222222_aa: [1, {}, undefined, function () { }, { jjj() { } }], bbbb: { aaaa: 2, name: "other", foo: undefined } });
+
         // using same obj multiple times
         const innerObj = { a: 9, b: 6 };
         assertStringify({ a: innerObj, b: innerObj, c: [innerObj, innerObj, innerObj] });
     });
 
-    it("oddKeys", function () {
-        assertStringify({ "this is a crazy long key": 1, "bbbb": 2 });
-        assertStringify({ "": 1, "bbbb": 2 });
-        assertStringify({ "s\ns": 1, "bbbb": 2 });
-        assertStringify({ "\n\b\t\f\r'\\": 1, "bbbb": 2 });
-        assertStringify({ undefined: 1, "bbbb": 2 });
+    it("oddKeys", () => {
+        assertStringify({ "this is a crazy long key": 1, bbbb: 2 });
+        assertStringify({ "": 1, bbbb: 2 });
+        assertStringify({ "s\ns": 1, bbbb: 2 });
+        assertStringify({ "\n\b\t\f\r'\\": 1, bbbb: 2 });
+        assertStringify({ undefined: 1, bbbb: 2 });
         assertStringify({ "\x00": "\x00" });
     });
 
-    it("circular", function () {
+    it("circular", () => {
         const obj = { };
         obj.obj = obj;
         assertStringify(obj, null, true);
@@ -218,11 +218,11 @@ describe("JSON5.encode", function () {
         assertStringify(obj3, null, true);
     });
 
-    it("replacerType", function () {
+    it("replacerType", () => {
         const assertStringifyJSON5ThrowsExceptionForReplacer = (replacer) => {
             assert.throws(
                 () => {
-                    json5.encode(null, replacer); 
+                    json5.encode(null, replacer);
                 },
                 /Replacer must be a function or an array/
             );
@@ -232,7 +232,7 @@ describe("JSON5.encode", function () {
         assertStringifyJSON5ThrowsExceptionForReplacer({});
     });
 
-    it("toJSON", function () {
+    it("toJSON", () => {
         const customToJSONObject = {
             name: "customToJSONObject",
             toJSON() {
@@ -265,7 +265,7 @@ describe("JSON5.encode", function () {
         function createObjectSerialisingTo(value) {
             count++;
             return {
-                name: "obj-" + count,
+                name: `obj-${count}`,
                 toJSON() {
                     return value;
                 }
@@ -278,12 +278,12 @@ describe("JSON5.encode", function () {
         assertStringify(createObjectSerialisingTo(12345));
         assertStringify(createObjectSerialisingTo(true));
         assertStringify(createObjectSerialisingTo(new Date()));
-        assertStringify(createObjectSerialisingTo(function () {}));
+        assertStringify(createObjectSerialisingTo(() => {}));
     });
 
-    describe("Replacer", function () {
-        describe("Function", function () {
-            it("simple", function () {
+    describe("Replacer", () => {
+        describe("Function", () => {
+            it("simple", () => {
                 const replacerTestFactory = (expectedValue) => {
                     return () => {
                         let lastKey = null;
@@ -299,11 +299,11 @@ describe("JSON5.encode", function () {
                                 return value;
                             },
                             assert() {
-                                assert.equal(numCalls, 1, "Replacer should be called exactly once for " + expectedValue);
+                                assert.equal(numCalls, 1, `Replacer should be called exactly once for ${expectedValue}`);
                                 assert.equal(lastKey, "");
                                 assert.deepEqual(replacerThis, { "": expectedValue });
                                 let expectedValueToJson = expectedValue;
-                                if (expectedValue && expectedValue["toJSON"]) {
+                                if (expectedValue && expectedValue.toJSON) {
                                     expectedValueToJson = expectedValue.toJSON();
                                 }
                                 assert.equal(lastValue, expectedValueToJson);
@@ -316,7 +316,7 @@ describe("JSON5.encode", function () {
                 }
             });
 
-            it("complexObject", function () {
+            it("complexObject", () => {
                 const obj = {
                     "": "emptyPropertyName",
                     one: "string",
@@ -371,7 +371,7 @@ describe("JSON5.encode", function () {
                             if (typeof(value) === "object") {
                                 return value;
                             }
-                            return "replaced " + (value ? value.toString() : "");
+                            return `replaced ${value ? value.toString() : ""}`;
                         },
                         assert() {
                             assert.deepEqual(seenKeys, expectedKeys);
@@ -382,16 +382,16 @@ describe("JSON5.encode", function () {
                 assertStringify(obj, ReplacerTest);
             });
 
-            it("replacingWithUndefined", function () {
+            it("replacingWithUndefined", () => {
                 const obj = { shouldSurvive: "one", shouldBeRemoved: "two" };
                 const ReplacerTest = () => {
                     return {
                         replacer(key, value) {
                             if (key === "shouldBeRemoved") {
                                 return undefined;
-                            } else {
-                                return value;
                             }
+                            return value;
+
                         },
                         assert() { /* no-op */ }
                     };
@@ -399,16 +399,16 @@ describe("JSON5.encode", function () {
                 assertStringify(obj, ReplacerTest);
             });
 
-            it("replacingArrayValueWithUndefined", function () {
+            it("replacingArrayValueWithUndefined", () => {
                 const obj = ["should survive", "should be removed"];
                 const ReplacerTest = () => {
                     return {
                         replacer(key, value) {
                             if (value === "should be removed") {
                                 return undefined;
-                            } else {
-                                return value;
                             }
+                            return value;
+
                         },
                         assert() { /* no-op */ }
                     };
@@ -417,8 +417,8 @@ describe("JSON5.encode", function () {
             });
         });
 
-        describe("Array", function () {
-            it("simple", function () {
+        describe("Array", () => {
+            it("simple", () => {
                 const ReplacerTest = () => {
                     return {
                         replacer: [],
@@ -430,8 +430,8 @@ describe("JSON5.encode", function () {
                 }
             });
 
-            it("emptyStringProperty", function () {
-                const obj = { "": "keep", "one": "remove" };
+            it("emptyStringProperty", () => {
+                const obj = { "": "keep", one: "remove" };
                 const ReplacerTest = () => {
                     return {
                         replacer: [""],
@@ -441,7 +441,7 @@ describe("JSON5.encode", function () {
                 assertStringify(obj, ReplacerTest);
             });
 
-            it("complexObject", function () {
+            it("complexObject", () => {
                 const obj = {
                     "": "emptyPropertyName",
                     one: "string",

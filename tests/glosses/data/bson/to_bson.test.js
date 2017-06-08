@@ -1,4 +1,4 @@
-describe("glosses", "data", "bson", "to bson", () => {
+describe("data", "bson", "to bson", () => {
     const { data: { bson: { BSON, ObjectID } } } = adone;
 
     it("should correctly handle toBson function for an object", () => {
