@@ -1,5 +1,5 @@
 import commonLocaleTests from "../helpers/common-locale";
-describe("x-pseudo", () => {
+describe("datetime", "locale", "x-pseudo", () => {
     commonLocaleTests("x-pseudo");
 
     beforeEach(() => {

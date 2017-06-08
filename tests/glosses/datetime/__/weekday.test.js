@@ -1,4 +1,4 @@
-describe("week day", () => {
+describe("datetime", "week day", () => {
     before(() => {
         adone.datetime.locale("en");
     });

@@ -1,4 +1,4 @@
-describe("normalize units", () => {
+describe("datetime", "normalize units", () => {
     before(() => {
         adone.datetime.locale("en");
     });

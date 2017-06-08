@@ -1,4 +1,4 @@
-describe("is after", () => {
+describe("datetime", "is after", () => {
     before(() => {
         adone.datetime.locale("en");
     });

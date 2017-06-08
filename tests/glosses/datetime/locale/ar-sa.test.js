@@ -1,5 +1,5 @@
 import commonLocaleTests from "../helpers/common-locale";
-describe("ar-sa", () => {
+describe("datetime", "locale", "ar-sa", () => {
     commonLocaleTests("ar-sa");
 
     before(() => {

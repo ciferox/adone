@@ -1,5 +1,5 @@
 import commonLocaleTests from "../helpers/common-locale";
-describe("km", () => {
+describe("datetime", "locale", "km", () => {
     commonLocaleTests("km");
 
     beforeEach(() => {

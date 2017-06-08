@@ -1,4 +1,4 @@
-describe("duration from moments", () => {
+describe("datetime", "duration from moments", () => {
     before(() => {
         adone.datetime.locale("en");
     });

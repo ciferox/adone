@@ -1,4 +1,4 @@
-describe("getters and setters", () => {
+describe("datetime", "getters and setters", () => {
     before(() => {
         adone.datetime.locale("en");
     });

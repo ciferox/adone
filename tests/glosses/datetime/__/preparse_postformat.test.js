@@ -1,4 +1,4 @@
-describe("preparse and postformat", () => {
+describe("datetime", "preparse and postformat", () => {
     before(() => {
         adone.datetime.locale("symbol", {
             preparse(string) {

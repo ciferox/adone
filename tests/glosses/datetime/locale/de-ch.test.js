@@ -1,5 +1,5 @@
 import commonLocaleTests from "../helpers/common-locale";
-describe("de-ch", () => {
+describe("datetime", "locale", "de-ch", () => {
     commonLocaleTests("de-ch");
 
     before(() => {

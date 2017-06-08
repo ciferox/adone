@@ -1,4 +1,4 @@
-describe("from_to", () => {
+describe("datetime", "from_to", () => {
     before(() => {
         adone.datetime.locale("en");
     });

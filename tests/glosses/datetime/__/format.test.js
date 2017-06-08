@@ -1,4 +1,4 @@
-describe("format", () => {
+describe("datetime", "format", () => {
     before(() => {
         adone.datetime.locale("en");
     });

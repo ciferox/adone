@@ -1,5 +1,5 @@
 import commonLocaleTests from "../helpers/common-locale";
-describe("az", () => {
+describe("datetime", "locale", "az", () => {
     commonLocaleTests("az");
 
     before(() => {

@@ -1,4 +1,4 @@
-describe("locale inheritance", () => {
+describe("datetime", "locale inheritance", () => {
     beforeEach(() => {
         adone.datetime.locale("en");
     });

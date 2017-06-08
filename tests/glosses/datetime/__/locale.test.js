@@ -1,6 +1,6 @@
 const indexOf = Array.prototype.indexOf;
 
-describe("locale", () => {
+describe("datetime", "locale", () => {
     beforeEach(() => {
         [{
             name: "en-gb",

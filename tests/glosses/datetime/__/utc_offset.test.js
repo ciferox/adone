@@ -1,4 +1,4 @@
-describe("utc offset", () => {
+describe("datetime", "utc offset", () => {
     before(() => {
         adone.datetime.locale("en");
     });

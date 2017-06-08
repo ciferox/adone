@@ -1,4 +1,4 @@
-describe("start and end of units", () => {
+describe("datetime", "start and end of units", () => {
     before(() => {
         adone.datetime.locale("en");
     });

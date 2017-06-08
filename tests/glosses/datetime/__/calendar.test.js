@@ -1,6 +1,6 @@
 // These tests are for locale independent features
 // locale dependent tests would be in locale test folder
-describe("calendar", () => {
+describe("datetime", "calendar", () => {
     it("passing a function", () => {
         const a = adone.datetime().hours(13).minutes(0).seconds(0);
         assert.equal(adone.datetime(a).calendar(null, {

@@ -1,4 +1,4 @@
-describe("add and subtract", () => {
+describe("datetime", "add and subtract", () => {
     before(() => {
         adone.datetime.locale("en");
     });

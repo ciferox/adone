@@ -1,4 +1,4 @@
-describe("is valid", () => {
+describe("datetime", "is valid", () => {
     before(() => {
         adone.datetime.locale("en");
     });

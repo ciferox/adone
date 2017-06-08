@@ -1,6 +1,6 @@
 import { isNearSpringDST } from "../helpers/dst";
 
-describe("zone switching", () => {
+describe("datetime", "zone switching", () => {
     before(() => {
         adone.datetime.locale("en");
     });

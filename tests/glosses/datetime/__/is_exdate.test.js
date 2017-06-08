@@ -1,4 +1,4 @@
-describe("adone.is.exdate", () => {
+describe("datetime", "adone.is.exdate", () => {
     before(() => {
         adone.datetime.locale("en");
     });

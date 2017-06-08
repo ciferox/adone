@@ -1,4 +1,4 @@
-describe("string prototype", () => {
+describe("datetime", "string prototype", () => {
     before(() => {
         adone.datetime.locale("en");
     });

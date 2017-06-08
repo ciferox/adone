@@ -1,4 +1,4 @@
-describe("min max", () => {
+describe("datetime", "min max", () => {
     before(() => {
         adone.datetime.locale("en");
     });

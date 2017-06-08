@@ -1,5 +1,5 @@
 import commonLocaleTests from "../helpers/common-locale";
-describe("gom-latn", () => {
+describe("datetime", "locale", "gom-latn", () => {
     commonLocaleTests("gom-latn");
 
     before(() => {

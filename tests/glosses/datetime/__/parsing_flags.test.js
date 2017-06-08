@@ -1,4 +1,4 @@
-describe("parsing flags", () => {
+describe("datetime", "parsing flags", () => {
     before(() => {
         adone.datetime.locale("en");
     });

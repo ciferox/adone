@@ -1,5 +1,5 @@
 import commonLocaleTests from "../helpers/common-locale";
-describe("ru", () => {
+describe("datetime", "locale", "ru", () => {
     commonLocaleTests("ru");
 
     beforeEach(() => {
@@ -358,9 +358,9 @@ describe("ru", () => {
         function makeFormatThis(d) {
             if (d.day() === 2) {
                 return "[Во] dddd [в] LT";
-            } 
+            }
             return "[В] dddd [в] LT";
-            
+
         }
 
         now = adone.datetime().startOf("week");
@@ -411,9 +411,9 @@ describe("ru", () => {
         function makeFormatThis(d) {
             if (d.day() === 2) {
                 return "[Во] dddd [в] LT";
-            } 
+            }
             return "[В] dddd [в] LT";
-            
+
         }
 
         now = adone.datetime().startOf("week");

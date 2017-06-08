@@ -1,4 +1,4 @@
-describe("diff", () => {
+describe("datetime", "diff", () => {
     before(() => {
         adone.datetime.locale("en");
     });

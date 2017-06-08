@@ -1,5 +1,5 @@
 import commonLocaleTests from "../helpers/common-locale";
-describe("kn", () => {
+describe("datetime", "locale", "kn", () => {
     commonLocaleTests("kn");
 
     before(() => {

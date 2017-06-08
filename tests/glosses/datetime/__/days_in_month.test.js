@@ -1,4 +1,4 @@
-describe("days in month", () => {
+describe("datetime", "days in month", () => {
     before(() => {
         adone.datetime.locale("en");
     });

@@ -1,5 +1,5 @@
 import commonLocaleTests from "../helpers/common-locale";
-describe("sd", () => {
+describe("datetime", "locale", "sd", () => {
     commonLocaleTests("sd");
 
     before(() => {

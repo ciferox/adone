@@ -1,5 +1,5 @@
 import commonLocaleTests from "../helpers/common-locale";
-describe("zh-tw", () => {
+describe("datetime", "locale", "zh-tw", () => {
     commonLocaleTests("zh-tw");
 
     beforeEach(() => {
