@@ -110,9 +110,10 @@ describe("Glob", () => {
             "a/symlink/a/b/c/a/b/c/a/b/c//a/b/c////a/b/c/**/b/c/**",
             "{./*/*,/tmp/glob-test/*}",
             "{/tmp/glob-test/*,*}", // evil owl face!    how you taunt me!
-            "a/!(symlink)/**",
-            "a/symlink/a/**/*"
         ];
+        if (!is.windows) {
+            globs.push("a/!(symlink)/**", "a/symlink/a/**/*");
+        }
         const bashOutput = {};
 
         const flatten = (chunks) => {
@@ -1242,7 +1243,7 @@ describe("Glob", () => {
                     "no one here but us chickens"],
 
                 [{ nonull: true },
-                    ["no one here but us chickens", "no one here but us sheep"],
+                ["no one here but us chickens", "no one here but us sheep"],
                     "no one here but us {chickens,sheep}"]
 
                 // В отличии от оригинала, опции nounique + realpath
@@ -1512,14 +1513,19 @@ describe("Glob", () => {
                     "a/c/d/c/b",
                     "a/cb",
                     "a/cb/e",
-                    "a/cb/e/f",
-                    "a/symlink",
-                    "a/symlink/a",
-                    "a/symlink/a/b",
-                    "a/symlink/a/b/c",
-                    "a/x",
-                    "a/z"
+                    "a/cb/e/f"
                 ];
+
+                if (!is.windows) {
+                    expect.push(
+                        "a/symlink",
+                        "a/symlink/a",
+                        "a/symlink/a/b",
+                        "a/symlink/a/b/c",
+                    );
+                }
+
+                expect.push("a/x", "a/z");
 
                 const pattern = "a/**";
                 const matches = await adone.fs.glob(pattern, { cwd: fixtureDir });

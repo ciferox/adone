@@ -1,20 +1,29 @@
-const { fs, path } = adone.std;
+const { is, std: { fs, path } } = adone;
 const lengths = [1, 128, 256];
 const root = `${__dirname}/rptest`;
 
 const clean = () => {
     try {
         fs.unlinkSync(`${root}/a/b`);
-    } catch (e) { }
+    } catch (e) {
+        //
+    }
     try {
         fs.rmdirSync(`${root}/a`);
-    } catch (e) { }
+    } catch (e) {
+        //
+    }
     try {
         fs.rmdirSync(root);
-    } catch (e) { }
+    } catch (e) {
+        //
+    }
 };
 
-describe("fs", "realpath", () => {
+describe("fs", "realpath", function () {
+    if (is.windows) {
+        this.skip();
+    }
     it("setup", () => {
         clean();
 

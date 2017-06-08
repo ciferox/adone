@@ -1,4 +1,4 @@
-describe("glosses", "fs", "watcher", function watcherTests() {
+describe("fs", "watcher", function watcherTests() {
     this.timeout(10000);
 
     const { is, fs: { Watcher, watch } } = adone;
