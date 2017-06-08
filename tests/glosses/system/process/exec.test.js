@@ -106,8 +106,13 @@ describe("system", "process", () => {
         assert.equal(stdout, "foo");
     });
 
-    it("exec.sync() throws error if written to stderr", () => {
-        assert.throws(async () => execSync("foo"), is.windows ? /'foo' is not recognized as an internal or external command/ : "spawnSync foo ENOENT");
+    it("exec.sync() throws error if written to stderr", async () => {
+        assert.throws(() => {
+            execSync("foo");
+        }, is.windows
+            ? /^('|")foo('|")/  // ?
+            : "spawnSync foo ENOENT"
+        );
     });
 
     it("shellSync()", () => {
