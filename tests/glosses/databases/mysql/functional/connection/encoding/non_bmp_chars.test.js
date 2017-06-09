@@ -8,7 +8,6 @@ describe("glosses", "databases", "mysql", "functional", "connection", "encoding"
         const connection = await createConnection({ charset: "UTF8_GENERAL_CI" });
         try {
             const [rows, fields] = await connection.query('select "💩"');
-            console.log(rows, fields);
             assert.equal(fields[0].name, payload);
             assert.equal(rows[0][fields[0].name], payload);
         } finally {

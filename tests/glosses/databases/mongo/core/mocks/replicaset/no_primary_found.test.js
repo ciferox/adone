@@ -162,11 +162,11 @@ describe("mongodb", function () {
                     // Add event listeners
                     await waitFor(server, "connect");
                     // Destroy mock
-                    primaryServer.destroy();
-                    firstSecondaryServer.destroy();
-                    secondSecondaryServer.destroy();
-                    arbiterServer.destroy();
-                    server.destroy();
+                    await primaryServer.destroy();
+                    await firstSecondaryServer.destroy();
+                    await secondSecondaryServer.destroy();
+                    await arbiterServer.destroy();
+                    await server.destroy();
                     running = false;
                     Connection.disableConnectionAccounting();
                 });

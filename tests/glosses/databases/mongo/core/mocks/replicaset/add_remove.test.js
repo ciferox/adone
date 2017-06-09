@@ -261,11 +261,11 @@ describe("mongodb", function () {
                         expect(arbiters).to.have.property("localhost:32002");
                     } finally {
                         running = false;
-                        primaryServer.destroy();
-                        firstSecondaryServer.destroy();
-                        secondSecondaryServer.destroy();
-                        arbiterServer.destroy();
-                        server.destroy();
+                        await primaryServer.destroy();
+                        await firstSecondaryServer.destroy();
+                        await secondSecondaryServer.destroy();
+                        await arbiterServer.destroy();
+                        await server.destroy();
 
                         await adone.promise.delay(3000);
                         expect(Connection.connections()).to.be.empty;
@@ -492,11 +492,11 @@ describe("mongodb", function () {
                         expect(server.s.replicaSetState.primary).not.to.be.null;
                         expect(server.s.replicaSetState.primary.name).to.be.equal("localhost:32000");
                     } finally {
-                        primaryServer.destroy();
-                        firstSecondaryServer.destroy();
-                        secondSecondaryServer.destroy();
-                        arbiterServer.destroy();
-                        server.destroy();
+                        await primaryServer.destroy();
+                        await firstSecondaryServer.destroy();
+                        await secondSecondaryServer.destroy();
+                        await arbiterServer.destroy();
+                        await server.destroy();
                         running = false;
                         await adone.promise.delay(1000);
                         Connection.disableConnectionAccounting();
@@ -745,11 +745,11 @@ describe("mongodb", function () {
                         expect(hosts).to.include("localhost:32002");
                         expect(hosts).to.include("localhost:32003");
                     } finally {
-                        primaryServer.destroy();
-                        firstSecondaryServer.destroy();
-                        secondSecondaryServer.destroy();
-                        arbiterServer.destroy();
-                        server.destroy();
+                        await primaryServer.destroy();
+                        await firstSecondaryServer.destroy();
+                        await secondSecondaryServer.destroy();
+                        await arbiterServer.destroy();
+                        await server.destroy();
                         running = false;
                         await adone.promise.delay(3000);
                         Connection.disableConnectionAccounting();
@@ -961,13 +961,6 @@ describe("mongodb", function () {
                         server.on("serverHeartbeatStarted", (description) => {
                             allservers[description.connectionId] = true;
                             if (allservers["localhost:32003"]) {
-                                // Finish up the test
-                                running = false;
-                                primaryServer.destroy();
-                                firstSecondaryServer.destroy();
-                                secondSecondaryServer.destroy();
-                                arbiterServer.destroy();
-                                server.destroy();
                                 resolve();
                             }
                         });
@@ -1006,10 +999,12 @@ describe("mongodb", function () {
                     expect(arbiters).to.have.property("localhost:32002");
 
                     await heartbeat;
-                    primaryServer.destroy();
-                    firstSecondaryServer.destroy();
-                    secondSecondaryServer.destroy();
-                    arbiterServer.destroy();
+                    running = false;
+                    await primaryServer.destroy();
+                    await firstSecondaryServer.destroy();
+                    await secondSecondaryServer.destroy();
+                    await arbiterServer.destroy();
+                    await server.destroy();
                     await adone.promise.delay(3000);
                     expect(Connection.connections()).to.be.empty;
                 });

@@ -860,7 +860,7 @@ export default class SMTPConnection extends EventEmitter {
             notify = notify.join(",");
         }
 
-        let orcpt = (params.orcpt || params.recipient).toString() || null;
+        let orcpt = (params.orcpt || params.recipient || "").toString() || null;
         if (orcpt && orcpt.indexOf(";") < 0) {
             orcpt = `rfc822;${orcpt}`;
         }

@@ -243,10 +243,10 @@ describe("mongodb", function () {
 
                     } finally {
                         // Destroy mock
-                        primaryServer.destroy();
-                        firstSecondaryServer.destroy();
-                        secondSecondaryServer.destroy();
-                        server.destroy();
+                        await primaryServer.destroy();
+                        await firstSecondaryServer.destroy();
+                        await secondSecondaryServer.destroy();
+                        await server.destroy();
                         running = false;
                         await adone.promise.delay(1000);
 
@@ -397,10 +397,10 @@ describe("mongodb", function () {
                     expect(_server.intervalIds).to.have.length.below(5);
 
                     // Destroy mock
-                    primaryServer.destroy();
-                    firstSecondaryServer.destroy();
-                    secondSecondaryServer.destroy();
-                    server.destroy();
+                    await primaryServer.destroy();
+                    await firstSecondaryServer.destroy();
+                    await secondSecondaryServer.destroy();
+                    await server.destroy();
                     running = false;
 
                     expect(_server.intervalIds).to.be.empty;

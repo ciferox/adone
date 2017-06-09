@@ -176,10 +176,10 @@ describe("mongodb", function () {
                         });
                         expect(r.connection.port === 32002).to.be.ok;
                     } finally {
-                        primaryServer.destroy();
-                        firstSecondaryServer.destroy();
-                        secondSecondaryServer.destroy();
-                        server.destroy();
+                        await primaryServer.destroy();
+                        await firstSecondaryServer.destroy();
+                        await secondSecondaryServer.destroy();
+                        await server.destroy();
                         running = false;
                         await adone.promise.delay(1000);
                         Connection.disableConnectionAccounting();
@@ -329,10 +329,10 @@ describe("mongodb", function () {
                         });
                         expect(r.connection.port).to.be.equal(32000);
                     } finally {
-                        primaryServer.destroy();
-                        firstSecondaryServer.destroy();
-                        secondSecondaryServer.destroy();
-                        server.destroy();
+                        await primaryServer.destroy();
+                        await firstSecondaryServer.destroy();
+                        await secondSecondaryServer.destroy();
+                        await server.destroy();
                         running = false;
                         await adone.promise.delay(1000);
                         Connection.disableConnectionAccounting();
@@ -504,10 +504,10 @@ describe("mongodb", function () {
                         });
                         expect(r.connection.port !== port).to.be.ok;
                     } finally {
-                        primaryServer.destroy();
-                        firstSecondaryServer.destroy();
-                        secondSecondaryServer.destroy();
-                        server.destroy();
+                        await primaryServer.destroy();
+                        await firstSecondaryServer.destroy();
+                        await secondSecondaryServer.destroy();
+                        await server.destroy();
                         running = false;
                         await adone.promise.delay(1000);
                         Connection.disableConnectionAccounting();
@@ -601,11 +601,11 @@ describe("mongodb", function () {
                         },
                         execute() {
                             // method needs to be called, so provide a dummy version
-                            
+
                         },
                         flush() {
                             // method needs to be called, so provide a dummy version
-                            
+
                         }
                     };
 
@@ -642,7 +642,7 @@ describe("mongodb", function () {
                         });
                         expect(r.connection.port).to.be.equal(32000);
 
-                        primaryServer.destroy();
+                        await primaryServer.destroy();
                         await waitFor(_server, "left");
                         r = await command("test.test", {
                             count: "test.test",
@@ -652,9 +652,9 @@ describe("mongodb", function () {
                         });
                         expect(r.connection.port).to.be.equal(32001); // reads from secondary while primary down
                     } finally {
-                        primaryServer.destroy();
-                        firstSecondaryServer.destroy();
-                        _server.destroy();
+                        await primaryServer.destroy();
+                        await firstSecondaryServer.destroy();
+                        await _server.destroy();
                         running = false;
                         await adone.promise.delay(1000);
                         Connection.disableConnectionAccounting();
@@ -822,10 +822,10 @@ describe("mongodb", function () {
                         });
                         expect(r.connection.port !== 32000).to.be.ok;
                     } finally {
-                        primaryServer.destroy();
-                        firstSecondaryServer.destroy();
-                        secondSecondaryServer.destroy();
-                        server.destroy();
+                        await primaryServer.destroy();
+                        await firstSecondaryServer.destroy();
+                        await secondSecondaryServer.destroy();
+                        await server.destroy();
                         running = false;
                         await adone.promise.delay(1000);
                         Connection.disableConnectionAccounting();
@@ -981,10 +981,10 @@ describe("mongodb", function () {
 
                         expect(r.connection.port).to.be.oneOf([3200, 32001]);
                     } finally {
-                        primaryServer.destroy();
-                        firstSecondaryServer.destroy();
-                        secondSecondaryServer.destroy();
-                        server.destroy();
+                        await primaryServer.destroy();
+                        await firstSecondaryServer.destroy();
+                        await secondSecondaryServer.destroy();
+                        await server.destroy();
                         running = false;
                         await adone.promise.delay(1000);
                         Connection.disableConnectionAccounting();
@@ -1140,10 +1140,10 @@ describe("mongodb", function () {
                         });
                         expect(r.connection.port).to.be.oneOf([32001, 32002]);
                     } finally {
-                        primaryServer.destroy();
-                        firstSecondaryServer.destroy();
-                        secondSecondaryServer.destroy();
-                        server.destroy();
+                        await primaryServer.destroy();
+                        await firstSecondaryServer.destroy();
+                        await secondSecondaryServer.destroy();
+                        await server.destroy();
                         running = false;
                         await adone.promise.delay(1000);
                         Connection.disableConnectionAccounting();
@@ -1231,8 +1231,8 @@ describe("mongodb", function () {
                         expect(r.connection.port).to.be.equal(32000);
 
                     } finally {
-                        primaryServer.destroy();
-                        server.destroy();
+                        await primaryServer.destroy();
+                        await server.destroy();
                         running = false;
                         await adone.promise.delay(1000);
                         expect(Connection.connections()).to.be.empty;

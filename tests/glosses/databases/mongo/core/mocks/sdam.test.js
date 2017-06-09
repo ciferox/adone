@@ -189,9 +189,9 @@ describe("mongodb", function () {
                             }
                         }
                     } finally {
-                        server.destroy();
-                        mongos1.destroy();
-                        mongos2.destroy();
+                        await server.destroy();
+                        await mongos1.destroy();
+                        await mongos2.destroy();
                     }
 
                     await adone.promise.delay(1000);
@@ -406,7 +406,7 @@ describe("mongodb", function () {
                             }
                         });
                     } finally {
-                        sserver.destroy();
+                        await sserver.destroy();
                     }
                 });
             });
@@ -1019,7 +1019,7 @@ describe("mongodb", function () {
                         try {
                             expect(responses.serverOpening.length).to.be.at.least(3);
                         } finally {
-                            _server.destroy();
+                            await _server.destroy();
                         }
                         // Wait to ensure all events fired
                         await adone.promise.delay(1000);
@@ -1035,9 +1035,9 @@ describe("mongodb", function () {
                             expect(expectedResults[i]).to.be.deep.equal(responses.topologyDescriptionChanged[i]);
                         }
                     } finally {
-                        primaryServer.destroy();
-                        firstSecondaryServer.destroy();
-                        arbiterServer.destroy();
+                        await primaryServer.destroy();
+                        await firstSecondaryServer.destroy();
+                        await arbiterServer.destroy();
                     }
                 });
             });

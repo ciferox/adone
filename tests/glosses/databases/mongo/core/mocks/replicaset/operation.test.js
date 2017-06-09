@@ -101,8 +101,8 @@ describe("mongodb", function () {
                     try {
                         await promisify(server.command).call(server, "test.test", { count: "test" });
                     } finally {
-                        primaryServer.destroy();
-                        server.destroy();
+                        await primaryServer.destroy();
+                        await server.destroy();
                         running = false;
 
                     }

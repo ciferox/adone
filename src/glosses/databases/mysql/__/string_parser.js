@@ -9,7 +9,10 @@ const NODE_ENCODING = [
     "latin1",
     "binary",
     "hex"
-];
+].reduce((map, item) => {
+    map[item] = Buffer.isEncoding(item);
+    return map;
+}, {});
 
 export const decode = (buffer, encoding, options) => {
     if (NODE_ENCODING[encoding]) {

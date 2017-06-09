@@ -436,7 +436,7 @@ GridStore.prototype.writeFile = function (file, callback) {
     });
 };
 
-const writeFile = function (self, file, callback) {
+var writeFile = function (self, file, callback) {
     if (typeof file === "string") {
         fs.open(file, "r", (err, fd) => {
             if (err) {
@@ -461,8 +461,11 @@ const writeFile = function (self, file, callback) {
             let index = 0;
 
             // Write a chunk
-            const writeChunk = function () {
-                fs.read(file, self.chunkSize, offset, "binary", (err, data, bytesRead) => {
+            var writeChunk = function () {
+                // Allocate the buffer
+                const _buffer = Buffer.alloc(self.chunkSize);
+                // Read the file
+                fs.read(file, _buffer, 0, _buffer.length, offset, (err, bytesRead, data) => {
                     if (err) {
                         return callback(err, self);
                     }
@@ -471,7 +474,7 @@ const writeFile = function (self, file, callback) {
 
                     // Create a new chunk for the data
                     const chunk = new Chunk(self, { n: index++ }, self.writeConcern);
-                    chunk.write(data, (err, chunk) => {
+                    chunk.write(data.slice(0, bytesRead), (err, chunk) => {
                         if (err) {
                             return callback(err, self);
                         }
@@ -481,7 +484,7 @@ const writeFile = function (self, file, callback) {
                                 return callback(err, self);
                             }
 
-                            self.position = self.position + data.length;
+                            self.position = self.position + bytesRead;
 
                             // Point to current chunk
                             self.currentChunk = chunk;

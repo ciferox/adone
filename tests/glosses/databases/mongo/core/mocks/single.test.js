@@ -119,8 +119,8 @@ describe("mongodb", function () {
                             }
                         }
                     } finally {
-                        replset.destroy({ force: true });
-                        sserver.destroy();
+                        await replset.destroy({ force: true });
+                        await sserver.destroy();
                         running = false;
                     }
                 });
@@ -250,7 +250,7 @@ describe("mongodb", function () {
 
                     await promisify(_server.insert).call(_server, "test.test", [{ created: new Date() }]);
                     expect(brokenPipe).to.be.true;
-                    _server.destroy();
+                    await _server.destroy();
                     running = false;
                 });
             });

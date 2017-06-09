@@ -131,8 +131,8 @@ describe("mongodb", function () {
                             await adone.promise.delay(500);
                         }
                     } finally {
-                        server.destroy();
-                        _server.destroy();
+                        await server.destroy();
+                        await _server.destroy();
                     }
                 });
 
@@ -224,8 +224,8 @@ describe("mongodb", function () {
                         await next();
                     } finally {
                         running = false;
-                        server.destroy();
-                        _server.destroy();
+                        await server.destroy();
+                        await _server.destroy();
                     }
                 });
             });
@@ -322,9 +322,9 @@ describe("mongodb", function () {
                         expect(pport).to.be.equal(r.connection.port);
                     } finally {
                         running = false;
-                        server.destroy();
-                        mongos1.destroy();
-                        mongos2.destroy();
+                        await server.destroy();
+                        await mongos1.destroy();
+                        await mongos2.destroy();
                     }
                 });
 
@@ -418,7 +418,7 @@ describe("mongodb", function () {
                             }]);
                             expect(r.connection.port).to.be.equal(11002);
                         } finally {
-                            server.destroy();
+                            await server.destroy();
                         }
 
                         const server2 = new Mongos([{
@@ -451,12 +451,12 @@ describe("mongodb", function () {
                             }]);
                             expect(r.connection.port).to.be.equal(11003);
                         } finally {
-                            server2.destroy();
+                            await server2.destroy();
                         }
 
                     } finally {
-                        mongos1.destroy();
-                        mongos2.destroy();
+                        await mongos1.destroy();
+                        await mongos2.destroy();
                         running = false;
                     }
                 });
@@ -532,8 +532,8 @@ describe("mongodb", function () {
                         expect(command.$readPreference).to.be.ok;
                         expect(command.$readPreference.mode).to.be.equal("secondary");
                     } finally {
-                        server.destroy();
-                        mongos1.destroy();
+                        await server.destroy();
+                        await mongos1.destroy();
                         running = false;
                     }
                 });
@@ -613,8 +613,8 @@ describe("mongodb", function () {
                             db: "sf"
                         }]);
                     } finally {
-                        server.destroy();
-                        mongos1.destroy();
+                        await server.destroy();
+                        await mongos1.destroy();
                         running = false;
                     }
                 });
@@ -684,8 +684,8 @@ describe("mongodb", function () {
                         expect(command.$readPreference).to.be.ok;
                         expect(command.$readPreference.mode).to.be.equal("secondary");
                     } finally {
-                        server.destroy();
-                        mongos1.destroy();
+                        await server.destroy();
+                        await mongos1.destroy();
                         running = false;
                     }
                 });
@@ -752,8 +752,8 @@ describe("mongodb", function () {
                         expect(command.$readPreference.mode).to.be.equal("secondary");
 
                     } finally {
-                        server.destroy();
-                        mongos1.destroy();
+                        await server.destroy();
+                        await mongos1.destroy();
                         running = false;
                     }
                 });
@@ -842,9 +842,9 @@ describe("mongodb", function () {
                             await adone.promise.delay(500);
                         }
                     } finally {
-                        server.destroy();
-                        mongos1.destroy();
-                        mongos2.destroy();
+                        await server.destroy();
+                        await mongos1.destroy();
+                        await mongos2.destroy();
                         running = false;
                     }
                 });
@@ -951,9 +951,9 @@ describe("mongodb", function () {
                             }, adone.noop);
                         }
                     } finally {
-                        server.destroy();
-                        mongos1.destroy();
-                        mongos2.destroy();
+                        await server.destroy();
+                        await mongos1.destroy();
+                        await mongos2.destroy();
                         running = false;
                     }
                 });
@@ -1059,9 +1059,9 @@ describe("mongodb", function () {
                             }, adone.noop);
                         }
                     } finally {
-                        server.destroy();
-                        mongos1.destroy();
-                        mongos2.destroy();
+                        await server.destroy();
+                        await mongos1.destroy();
+                        await mongos2.destroy();
                         running = false;
                     }
                 });

@@ -162,10 +162,10 @@ describe("mongodb", function () {
                         expect(_server.s.replicaSetState.secondaries).to.have.lengthOf(1);
                         expect(_server.s.replicaSetState.arbiters).to.have.lengthOf(1);
                     } finally {
-                        primaryServer.destroy();
-                        firstSecondaryServer.destroy();
-                        arbiterServer.destroy();
-                        server.destroy();
+                        await primaryServer.destroy();
+                        await firstSecondaryServer.destroy();
+                        await arbiterServer.destroy();
+                        await server.destroy();
                         running = false;
                         await adone.promise.delay(1000);
                         Connection.disableConnectionAccounting();
@@ -305,10 +305,10 @@ describe("mongodb", function () {
                         expect(server.s.replicaSetState.arbiters).to.have.lengthOf(1);
                         running = false;
                     } finally {
-                        primaryServer.destroy();
-                        firstSecondaryServer.destroy();
-                        arbiterServer.destroy();
-                        server.destroy();
+                        await primaryServer.destroy();
+                        await firstSecondaryServer.destroy();
+                        await arbiterServer.destroy();
+                        await server.destroy();
                         await adone.promise.delay(1000);
                         Connection.disableConnectionAccounting();
                         expect(Connection.connections()).to.be.empty;

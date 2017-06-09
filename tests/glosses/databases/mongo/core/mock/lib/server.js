@@ -46,11 +46,11 @@ inherits(Server, EventEmitter);
 
 Server.prototype.destroy = function () {
     this.state = "destroyed";
-    this.socket.close();
 
     this.sockets.forEach((x) => {
         x.destroy();
     });
+    return new Promise((resolve) => this.socket.close(resolve));
 };
 
 Server.prototype.start = function () {
@@ -126,7 +126,7 @@ const protocol = function (self, message) {
   // Get the opCode for the message
     const size = message[index++] | message[index++] << 8 | message[index++] << 16 | message[index++] << 24;
     if (size != message.length) {
-        throw new Error("corrupt wire protocol message"); 
+        throw new Error("corrupt wire protocol message");
     }
   // Adjust to opcode
     index = 12;
@@ -137,16 +137,16 @@ const protocol = function (self, message) {
         return new Update(self.bson, message);
     }
     if (type == 2002) {
-        return new Insert(self.bson, message); 
+        return new Insert(self.bson, message);
     }
     if (type == 2004) {
         return new Query(self.bson, message);
     }
     if (type == 2005) {
-        return new GetMore(self.bson, message); 
+        return new GetMore(self.bson, message);
     }
     if (type == 2006) {
-        return new Delete(self.bson, message); 
+        return new Delete(self.bson, message);
     }
     if (type == 2007) {
         return new KillCursor(self.bson, message);

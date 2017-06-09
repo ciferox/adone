@@ -252,10 +252,10 @@ describe("mongodb", function () {
                         expect(server.s.replicaSetState.primary).not.to.be.null;
                         expect(server.s.replicaSetState.primary.name).to.be.equal("localhost:32001");
                     } finally {
-                        primaryServer.destroy();
-                        firstSecondaryServer.destroy();
-                        secondSecondaryServer.destroy();
-                        server.destroy();
+                        await primaryServer.destroy();
+                        await firstSecondaryServer.destroy();
+                        await secondSecondaryServer.destroy();
+                        await server.destroy();
                         running = false;
                         Server.disableServerAccounting();
                         await adone.promise.delay(1000);
@@ -454,10 +454,10 @@ describe("mongodb", function () {
 
                     // Keep the count of joined events
                     await waitFor(server, "reconnect");
-                    primaryServer.destroy();
-                    firstSecondaryServer.destroy();
-                    secondSecondaryServer.destroy();
-                    server.destroy();
+                    await primaryServer.destroy();
+                    await firstSecondaryServer.destroy();
+                    await secondSecondaryServer.destroy();
+                    await server.destroy();
                     running = false;
 
                     Server.disableServerAccounting();

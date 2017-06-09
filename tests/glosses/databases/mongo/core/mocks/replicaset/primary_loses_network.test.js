@@ -189,12 +189,12 @@ describe("mongodb", function () {
                             }
                         });
                     });
-                    primaryServer.destroy();
-                    firstSecondaryServer.destroy();
-                    secondSecondaryServer.destroy();
+                    await primaryServer.destroy();
+                    await firstSecondaryServer.destroy();
+                    await secondSecondaryServer.destroy();
                     running = false;
                     Connection.disableConnectionAccounting();
-                    _server.destroy();
+                    await _server.destroy();
                 });
             });
         });

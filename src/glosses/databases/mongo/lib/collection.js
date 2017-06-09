@@ -549,7 +549,7 @@ Collection.prototype.insertMany = function (docs, options, callback) {
     if (typeof options === "function") {
         callback = options, options = {};
     }
-    options = options || { ordered: true };
+    options = options ? shallowClone(options) : { ordered: true };
     if (!Array.isArray(docs) && typeof callback === "function") {
         return callback(MongoError.create({ message: "docs parameter must be an array of documents", driver: true }));
     } else if (!Array.isArray(docs)) {

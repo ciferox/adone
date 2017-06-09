@@ -221,11 +221,11 @@ describe("mongodb", function () {
                                 }
                             });
                         });
-                        primaryServer.destroy();
-                        firstSecondaryServer.destroy();
-                        secondSecondaryServer.destroy();
-                        arbiterServer.destroy();
-                        server.destroy();
+                        await primaryServer.destroy();
+                        await firstSecondaryServer.destroy();
+                        await secondSecondaryServer.destroy();
+                        await arbiterServer.destroy();
+                        await server.destroy();
                         running = false;
                         await adone.promise.delay(2000);
                         Connection.disableConnectionAccounting();

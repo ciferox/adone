@@ -167,9 +167,8 @@ export default class Pipeline extends __.Commander {
 
     addBatch(commands) {
         for (let i = 0; i < commands.length; ++i) {
-            const command = commands[i];
-            const commandName = command.shift();
-            this[commandName].apply(this, command);
+            const [commandName, ...args] = commands[i];
+            this[commandName].apply(this, args);
         }
 
         return this;
