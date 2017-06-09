@@ -764,6 +764,50 @@ export class Engine {
             };
             adone.assertion.loadMockInterface();
 
+            // stub all the log functions to see the source
+
+            const getSource = () => {
+                const { stack } = new Error();
+                const res = stack.split("\n")[3].trim().match(/\((.+?):(\d+):(\d+)\)/);
+                if (is.null(res)) {
+                    return null;
+                }
+                return {
+                    filename: res[1],
+                    line: Number(res[2]),
+                    column: Number(res[3])
+                };
+            };
+
+            const cwd = process.cwd();
+
+            const stub = (method) => function (...args) {
+                try {
+                    const source = getSource();
+                    if (!is.null(source)) {
+                        args.unshift(`[${adone.std.path.relative(cwd, source.filename)}:${source.line}:${source.column}]`);
+                    }
+                } catch (err) {
+                    // just skip
+                }
+
+                return method.apply(this, args);
+            };
+
+            console.log = stub(console.log);
+            console.error = stub(console.error);
+            console.debug = stub(console.debug);
+            console.info = stub(console.info);
+            console.dir = stub(console.dir);
+            console.warn = stub(console.warn);
+            adone.log = stub(adone.log);
+            adone.fatal = stub(adone.fatal);
+            adone.error = stub(adone.error);
+            adone.warn = stub(adone.warn);
+            adone.info = stub(adone.info);
+            adone.debug = stub(adone.debug);
+            adone.trace = stub(adone.trace);
+
             for (const path of await adone.fs.glob(paths)) {
                 if (stopped) {
                     break;
@@ -987,7 +1031,7 @@ export const consoleReporter = ({
         emitter
             .on("enter block", reportOnThrow(({ block }) => {
                 if (firstBlock) {
-                    adone.log();
+                    log();
                     firstBlock = false;
                 }
                 if (enteredBlocks[blockLevel] !== block.name) {
@@ -1153,6 +1197,214 @@ export const consoleReporter = ({
                 }
                 log();
                 log(`{grey-fg}    Total elapsed: ${totalElapsed}{/}`);
+                log();
+            }))
+            .on("error", (err) => {
+                globalErrors.push(err);
+            });
+    };
+};
+
+export const minimalReporter = () => {
+    const term = adone.terminal;
+
+    const { isTTY } = process.stdout;
+
+    const { text: { unicode: { symbol } } } = adone;
+
+    const ansiRegexp = /[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-PRZcf-nqry=><]/g;
+    const parse = (str) => {
+        str = term.parse(str);
+        if (!isTTY) {
+            str = str.replace(ansiRegexp, "");
+        }
+        return str;
+    };
+
+    const log = (message = "", { newline = true } = {}) => {
+        process.stdout.write(parse(message));
+        if (newline) {
+            process.stdout.write("\n");
+        }
+    };
+
+    return (emitter) => {
+        let pending = 0;
+        let failed = 0;
+        let passed = 0;
+        const errors = [];
+        const globalErrors = [];
+
+        console.log();
+
+        const totalBar = adone.terminal.progress({
+            schema: "    :spinner {green-fg}:passed{/green-fg} {red-fg}:failed{/red-fg} {cyan-fg}:pending{/cyan-fg} :elapsed"
+        });
+
+        const testsBar = adone.terminal.progress({
+            schema: "    :path"
+        });
+
+        totalBar.tick(0, { passed, failed, pending });
+
+        testsBar.tick(0, { path: "" });
+
+        const reportOnThrow = (f) => function (...args) {
+            try {
+                return f.apply(this, args);
+            } catch (err) {
+                emitter.emit("reporterError", err);
+            }
+        };
+
+        // const currentBar = adone.terminal.progress({
+        //     schema: ":path"
+        // });
+
+        const path = [];
+
+        const updatePath = () => {
+            testsBar.tick(0, {
+                path: `{escape}${path.join(` ${symbol.arrowRight}  `)}{/escape}`
+            });
+        };
+
+        emitter
+            .on("enter block", reportOnThrow(({ block }) => {
+                path.push(block.name);
+                updatePath();
+            }))
+            .on("exit block", () => {
+                path.pop();
+                updatePath();
+            })
+            .on("start test", reportOnThrow(({ test }) => {
+                path.push(test.description);
+                updatePath();
+            }))
+            .on("end test", reportOnThrow(({ test, meta: { err, skipped } }) => {
+                path.pop();
+                updatePath();
+                if (skipped) {
+                    // shouldn't be handled here
+                    return;
+                }
+
+                if (err) {
+                    ++failed;
+                    errors.push([test, err]);
+                } else {
+                    ++passed;
+                }
+                totalBar.tick(0, { passed, failed });
+            }))
+            .on("skip test", reportOnThrow(() => {
+                ++pending;
+                totalBar.tick(0, { pending });
+            }))
+            .on("done", reportOnThrow(() => {
+                totalBar.complete(failed === 0 && globalErrors.length === 0);
+                testsBar.complete();
+                const printColorDiff = (diff) => {
+                    log("{red-fg}- actual{/red-fg} {green-fg}+ expected{/green-fg}\n");
+                    let msg = "";
+                    for (let i = 0; i < diff.length; i++) {
+                        let value = diff[i].value;
+                        if (!is.string(value)) {
+                            value = adone.meta.inspect(diff[i].value, { minimal: true });
+                        }
+                        value = adone.text.splitLines(value);
+
+                        if (value[value.length - 1]) {
+                            if (i < diff.length - 1) {
+                                value[value.length - 1] += "\n";
+                            }
+                        } else {
+                            value = value.slice(0, -1);
+                        }
+
+                        if (diff[i].added) {
+                            msg += `{green-fg}{escape}+${value.join("+")}{/escape}{/green-fg}`;
+                        } else if (diff[i].removed) {
+                            msg += `{red-fg}{escape}-${value.join("-")}{/escape}{/red-fg}`;
+                        } else {
+                            msg += `{escape} ${value.join(" ")}{/escape}`;
+                        }
+                    }
+
+                    log(msg);
+                };
+
+                if (errors.length) {
+                    log();
+                    for (const [idx, [failed, err]] of adone.util.enumerate(errors, 1)) {
+                        // print block chain
+                        const stack = new adone.collection.Stack();
+                        let block = failed.block;
+                        do {
+                            stack.push(block.name);
+                            block = block.parent;
+                        } while (block && block.level() >= 0);
+                        log(`${idx}) {escape}${[...stack].join(` ${symbol.arrowRight}  `)} ${symbol.arrowRight}  ${failed.description}{/escape}`);
+                        log();
+
+                        if (err.name && err.message) {
+                            log(`{red-fg}{escape}${err.name}: ${err.message}{/escape}{/}`);
+                        } else {
+                            log(`{red-fg}{escape}${err}{/escape}{/}`);
+                        }
+
+                        if (err.expected && err.actual) {
+                            if (
+                                adone.is.string(err.expected) &&
+                                adone.is.string(err.actual) &&
+                                (
+                                    adone.text.splitLines(err.expected).length > 1 ||
+                                    adone.text.splitLines(err.actual).length > 1
+                                )
+                            ) {
+                                printColorDiff(adone.diff.lines(err.actual, err.expected));
+                            } else if (adone.is.array(err.expected) && adone.is.array(err.actual)) {
+                                printColorDiff(adone.diff.arrays(err.actual, err.expected));
+                            } else if (adone.is.plainObject(err.expected) && adone.is.plainObject(err.actual)) {
+                                printColorDiff(adone.diff.json(err.actual, err.expected));
+                            } else {
+                                printColorDiff([
+                                    { removed: true, value: adone.meta.inspect(err.actual, { minimal: true }) },
+                                    { added: true, value: adone.meta.inspect(err.expected, { minimal: true }) }
+                                ]);
+                            }
+                        }
+                        log();
+                        if (adone.is.string(err.stack)) {
+                            const stackMsg = err.stack.split("\n").slice(1).map((x) => `    ${x.trim()}`).join("\n");
+                            log(`{grey-fg}{escape}${stackMsg}{/escape}{/}`);
+                        }
+                        log();
+                    }
+                }
+
+                if (globalErrors.length) {
+                    log();
+                    log("Global errors:\n");
+                    for (const [idx, err] of adone.util.enumerate(globalErrors, 1)) {
+                        if (err.name && err.message) {
+                            log(`{#ff9500-fg}${idx}) {escape}${err.name}: ${err.message}{/escape}{/}`);
+                        } else {
+                            log(`{#ff9500-fg}${idx}) {escape}${err}{/escape}{/}`);
+                        }
+
+                        if (adone.is.string(err.stack)) {
+                            const stackMsg = err.stack.split("\n").slice(1).map((x) => `    ${x.trim()}`).join("\n");
+                            log(`{grey-fg}{escape}${stackMsg}{/escape}{/}`);
+                        }
+                        log();
+                    }
+                }
+
+                if (globalErrors.length) {
+                    log(`{#ff9500-fg}    ${globalErrors.length} error${globalErrors.length > 1 ? "s" : ""}{/}`);
+                }
                 log();
             }))
             .on("error", (err) => {

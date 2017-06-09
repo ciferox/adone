@@ -1,4 +1,4 @@
-const { shani: { Engine, consoleReporter, simpleReporter }, is, std: { path } } = adone;
+const { shani: { Engine, consoleReporter, simpleReporter, minimalReporter }, is, std: { path } } = adone;
 
 export default class ShaniCLI extends adone.application.Subsystem {
     initialize() {
@@ -30,7 +30,8 @@ export default class ShaniCLI extends adone.application.Subsystem {
                 { name: "--dont-keep-hooks", help: "Dont keep hook info on the screen", group: "output" },
                 { name: "--show-handles", help: "show handles holding the event loop", group: "output" },
                 { name: "--no-ticks", help: "Don't show the test/hook/timers ticks.\nForced to be true if there is no TTY", group: "output" },
-                { name: "--simple", help: "Use simple console reporter", group: "output" }
+                { name: "--simple", help: "Use simple console reporter", group: "output" },
+                { name: ["--minimal", "-m"], help: "Use minimal console reporter", group: "output" }
             ],
             handler: this.main,
             commands: [
@@ -132,7 +133,15 @@ export default class ShaniCLI extends adone.application.Subsystem {
             simple = true;
         }
 
-        const reporter = simple ? simpleReporter : consoleReporter;
+        let reporter;
+
+        if (simple) {
+            reporter = simpleReporter;
+        } else if (opts.get("minimal")) {
+            reporter = minimalReporter;
+        } else {
+            reporter = consoleReporter;
+        }
 
         reporter({
             allTimings: config.options.allTimings,

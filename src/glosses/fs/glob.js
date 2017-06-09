@@ -19,7 +19,7 @@ class CallbackCache {
         if (this._cache.has(key)) {
             this._cache.get(key).push(callback);
             return null;
-        } 
+        }
         this._cache.set(key, [callback]);
         return (...args) => {
             const callbacks = this._cache.get(key);
@@ -30,7 +30,7 @@ class CallbackCache {
 
             this._cache.delete(key);
         };
-        
+
     }
 }
 
@@ -514,7 +514,7 @@ class Glob extends adone.EventEmitter {
 
         this.found.push(e);
         this.emit("match", e, this.statCache.get(abs));
-        
+
     }
 
     _readdirInGlobStar(abs, cb) {
@@ -768,14 +768,14 @@ class Glob extends adone.EventEmitter {
         if (stat !== undefined) {
             if (stat === false) {
                 return cb(null, stat);
-            } 
+            }
             const type = stat.isDirectory() ? "DIR" : "FILE";
             if (needDir && type === "FILE") {
                 return cb();
-            } 
+            }
             return cb(null, type, stat);
-                
-            
+
+
         }
 
         const _lstatcb = (er, lstat) => {
@@ -789,9 +789,9 @@ class Glob extends adone.EventEmitter {
                         this._stat2(f, abs, er, stat, cb);
                     }
                 });
-            } 
+            }
             this._stat2(f, abs, er, lstat, cb);
-            
+
         };
 
         const statcb = this.callbackCache.inflight(`stat\0${abs}`, _lstatcb);
