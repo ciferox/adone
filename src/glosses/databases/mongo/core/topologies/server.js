@@ -220,7 +220,7 @@ const eventHandler = (self, event) => {
                             arbiters: [],
                             hosts: [],
                             passives: [],
-                            type: "Standalone"
+                            type: getTopologyType(self)
                         }]
                     });
                 }

@@ -64,7 +64,13 @@ export default class ShaniCLI extends adone.application.Subsystem {
 
         config.options = config.options || {};
 
-        for (const name of ["tests", "first", "timeout", "showHandles", "dontUseMap", "allTimings", "skip", "timers", "showHooks", "dontKeepHooks", "noTicks"]) {
+        for (const name of [
+            "tests", "first", "timeout",
+            "showHandles", "dontUseMap", "allTimings",
+            "skip", "timers", "showHooks",
+            "dontKeepHooks", "noTicks", "simple",
+            "minimal"
+        ]) {
             if (opts.has(name)) {
                 config.options[name] = opts.get(name);
             }
@@ -107,7 +113,7 @@ export default class ShaniCLI extends adone.application.Subsystem {
 
         const emitter = engine.start();
 
-        let simple = opts.get("simple");
+        let { options: { simple } } = config;
 
         if (process.stdin.isTTY && process.stdout.isTTY) {
             // TODO: fix this
@@ -135,9 +141,11 @@ export default class ShaniCLI extends adone.application.Subsystem {
 
         let reporter;
 
+        const { options: { minimal } } = config;
+
         if (simple) {
             reporter = simpleReporter;
-        } else if (opts.get("minimal")) {
+        } else if (minimal) {
             reporter = minimalReporter;
         } else {
             reporter = consoleReporter;

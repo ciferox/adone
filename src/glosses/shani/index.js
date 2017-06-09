@@ -1263,11 +1263,43 @@ export const minimalReporter = () => {
 
         const path = [];
 
-        const updatePath = () => {
+        const updatePath = (escape) => {
+            const p = path.join(` ${symbol.arrowRight}  `);
             testsBar.tick(0, {
-                path: `{escape}${path.join(` ${symbol.arrowRight}  `)}{/escape}`
+                path: escape ? `{escape}${p}{/escape}` : p
             });
         };
+
+        const colorizeHook = (type) => {
+            return type
+                .replace("before", "{#d9534f-fg}before{/}")
+                .replace("after", "{#0275d8-fg}after{/}")
+                .replace("each", "{#5cb85c-fg}each{/}");
+        };
+
+        const startHookHandler = (type) => {
+            type = colorizeHook(type);
+            return ({ hook }) => {
+                path.push(`${type} hook${hook.description ? ` : {escape}${hook.description}{/escape}` : ""}`);
+                updatePath();
+            };
+        };
+
+        const endHookHandler = () => {
+            return () => {
+                path.pop();
+                updatePath();
+            };
+        };
+        emitter
+            .on("start before hook", startHookHandler("before"))
+            .on("start before each hook", startHookHandler("before each"))
+            .on("start after hook", startHookHandler("after"))
+            .on("start after each hook", startHookHandler("after each"))
+            .on("end before hook", endHookHandler("before"))
+            .on("end before each hook", endHookHandler("before each"))
+            .on("end after hook", endHookHandler("after"))
+            .on("end after each hook", endHookHandler("after each"));
 
         emitter
             .on("enter block", reportOnThrow(({ block }) => {
@@ -1405,7 +1437,6 @@ export const minimalReporter = () => {
                 if (globalErrors.length) {
                     log(`{#ff9500-fg}    ${globalErrors.length} error${globalErrors.length > 1 ? "s" : ""}{/}`);
                 }
-                log();
             }))
             .on("error", (err) => {
                 globalErrors.push(err);
@@ -1502,7 +1533,7 @@ export const simpleReporter = ({
         emitter
             .on("enter block", ({ block }) => {
                 if (firstBlock) {
-                    adone.log();
+                    log();
                     firstBlock = false;
                 }
                 if (enteredBlocks[blockLevel] !== block.name) {

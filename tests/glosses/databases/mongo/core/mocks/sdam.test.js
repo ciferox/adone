@@ -409,6 +409,147 @@ describe("mongodb", function () {
                         await sserver.destroy();
                     }
                 });
+
+                it("Should correctly emit sdam monitoring events for single server, with correct server type", async () => {
+                    let running = true;
+                    // Current index for the ismaster
+
+                    // Default message fields
+                    const defaultFields = {
+                        ismaster: true,
+                        maxBsonObjectSize: 16777216,
+                        maxMessageSizeBytes: 48000000,
+                        maxWriteBatchSize: 1000,
+                        localTime: new Date(),
+                        maxWireVersion: 3,
+                        minWireVersion: 0,
+                        ok: 1,
+                        hosts: ["a:27017", "b:27017"] // <-- this makes it an RSPrimary
+                    };
+
+                    // Primary server states
+                    const serverIsMaster = [Object.assign({}, defaultFields)];
+
+                    // Boot the mock
+                    const mockServer = await mockupdb.createServer(37008, "localhost");
+
+                    // Primary state machine
+                    (async () => {
+                        while (running) {
+                            const request = await mockServer.receive();
+
+                            // Get the document
+                            const doc = request.document;
+                            if (doc.ismaster) {
+                                request.reply(serverIsMaster[0]);
+                            }
+                        }
+                    })();
+
+                    // Attempt to connect
+                    const server = new Server({
+                        host: "localhost",
+                        port: "37008",
+                        connectionTimeout: 3000,
+                        socketTimeout: 1000,
+                        size: 1
+                    });
+
+                    // Results
+                    const flags = [];
+                    let id = null;
+
+                    // Add event listeners
+                    server.once("connect", (_server) => {
+                        id = _server.id;
+                        _server.destroy({ emitClose: true });
+                    });
+
+                    server.on("serverOpening", (event) => {
+                        flags[0] = event;
+                    });
+
+                    server.on("serverClosed", (event) => {
+                        flags[1] = event;
+                    });
+
+                    server.on("serverDescriptionChanged", (event) => {
+                        flags[2] = event;
+                    });
+
+                    server.on("topologyOpening", (event) => {
+                        flags[3] = event;
+                    });
+
+                    server.on("topologyClosed", (event) => {
+                        flags[4] = event;
+                    });
+
+                    server.on("topologyDescriptionChanged", (event) => {
+                        flags[5] = event;
+                    });
+
+                    adone.promise.delay(100).then(() => server.connect());
+
+                    server.on("error", () => { });
+
+                    await new Promise((resolve) => server.on("close", resolve));
+                    await adone.promise.delay(100);
+
+                    try {
+
+                        expect(flags[0]).to.be.deep.equal({ topologyId: id, address: "localhost:37008" });
+                        expect(flags[1]).to.be.deep.equal({ topologyId: id, address: "localhost:37008" });
+                        expect(flags[2]).to.be.deep.equal({
+                            topologyId: id, address: "localhost:37008",
+                            previousDescription: {
+                                address: "localhost:37008",
+                                arbiters: [],
+                                hosts: [],
+                                passives: [],
+                                type: "Unknown"
+                            },
+                            newDescription: {
+                                address: "localhost:37008",
+                                arbiters: [],
+                                hosts: [],
+                                passives: [],
+                                type: "RSPrimary"
+                            }
+                        });
+                        expect(flags[3]).to.be.deep.equal({ topologyId: id });
+                        expect(flags[4]).to.be.deep.equal({ topologyId: id });
+                        expect(flags[5]).to.be.deep.equal({
+                            topologyId: id, address: "localhost:37008",
+                            previousDescription: {
+                                topologyType: "Unknown",
+                                servers: [
+                                    {
+                                        address: "localhost:37008",
+                                        arbiters: [],
+                                        hosts: [],
+                                        passives: [],
+                                        type: "Unknown"
+                                    }
+                                ]
+                            },
+                            newDescription: {
+                                topologyType: "Single",
+                                servers: [
+                                    {
+                                        address: "localhost:37008",
+                                        arbiters: [],
+                                        hosts: [],
+                                        passives: [],
+                                        type: "RSPrimary"
+                                    }
+                                ]
+                            }
+                        });
+                    } finally {
+                        running = false;
+                    }
+                });
             });
 
             context("replica set", () => {

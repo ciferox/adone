@@ -578,7 +578,7 @@ pp.flowParseFunctionTypeParam = function () {
 };
 
 pp.reinterpretTypeAsFunctionTypeParam = function (type) {
-    const node = this.startNodeAt(type.start, type.loc);
+    const node = this.startNodeAt(type.start, type.loc.start);
     node.name = null;
     node.optional = false;
     node.typeAnnotation = type;
@@ -796,7 +796,7 @@ pp.flowParsePrefixType = function () {
 pp.flowParseAnonFunctionWithoutParens = function () {
     const param = this.flowParsePrefixType();
     if (!this.state.noAnonFunctionType && this.eat(tt.arrow)) {
-        const node = this.startNodeAt(param.start, param.loc);
+        const node = this.startNodeAt(param.start, param.loc.start);
         node.params = [this.reinterpretTypeAsFunctionTypeParam(param)];
         node.rest = null;
         node.returnType = this.flowParseType();

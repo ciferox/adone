@@ -13,7 +13,9 @@ export default {
         skip: "glosses.databases.mongo,glosses.databases.mysql",
         timers: false,
         showHooks: false,
-        keepHooks: false
+        keepHooks: false,
+        simple: false,
+        minimal: false
     },
     transpiler: {
         plugins: [
