@@ -119,6 +119,7 @@ export class Server extends EventEmitter {
             // Force close all active connections
             for (const socket of this._sockets) {
                 socket.end();
+                socket.destroy();
             }
 
             await new Promise((resolve) => {
