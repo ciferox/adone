@@ -73,10 +73,6 @@ export class Query {
         this.requestId = _requestId++;
     }
 
-    nextRequestId() {
-        return _requestId + 1;
-    }
-
     toBin() {
         const buffers = [];
         let projection = null;
@@ -209,6 +205,10 @@ export class Query {
 
         // Return the buffers
         return buffers;
+    }
+
+    static nextRequestId() {
+        return _requestId + 1;
     }
 
     static getRequestId() {

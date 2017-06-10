@@ -510,9 +510,9 @@ export class Engine {
                     // there are no inclusive nested nodes, but the parent is inclusive, mark all the nodes
                     (function mark(node) {
                         for (const n of node.children) {
-                            if (n.isExclusive()) {
-                                continue;
-                            }
+                            // if (n.isExclusive()) {
+                            //     continue;
+                            // }
                             n.only();
                             if (n instanceof Block) {
                                 mark(n);
@@ -781,32 +781,36 @@ export class Engine {
 
             const cwd = process.cwd();
 
-            const stub = (method) => function (...args) {
-                try {
-                    const source = getSource();
-                    if (!is.null(source)) {
-                        args.unshift(`[${adone.std.path.relative(cwd, source.filename)}:${source.line}:${source.column}]`);
-                    }
-                } catch (err) {
-                    // just skip
-                }
+            const stub = {
+                wrappers: [],
+                stub(obj, ...props) {
+                    for (const prop of props) {
+                        const method = obj[prop];
+                        obj[prop] = function (...args) {
+                            try {
+                                const source = getSource();
+                                if (!is.null(source)) {
+                                    args.unshift(`[${adone.std.path.relative(cwd, source.filename)}:${source.line}:${source.column}]`);
+                                }
+                            } catch (err) {
+                                // just skip
+                            }
 
-                return method.apply(this, args);
+                            return method.apply(this, args);
+                        };
+                        obj[prop].restore = () => obj[prop] = method;
+                        this.wrappers.push(obj[prop]);
+                    }
+                },
+                restore() {
+                    for (const wrapper of this.wrappers) {
+                        wrapper.restore();
+                    }
+                }
             };
 
-            console.log = stub(console.log);
-            console.error = stub(console.error);
-            console.debug = stub(console.debug);
-            console.info = stub(console.info);
-            console.dir = stub(console.dir);
-            console.warn = stub(console.warn);
-            adone.log = stub(adone.log);
-            adone.fatal = stub(adone.fatal);
-            adone.error = stub(adone.error);
-            adone.warn = stub(adone.warn);
-            adone.info = stub(adone.info);
-            adone.debug = stub(adone.debug);
-            adone.trace = stub(adone.trace);
+            stub.stub(console, "log", "error", "debug", "info", "dir", "warn");
+            stub.stub(adone, "log", "fatal", "error", "warn", "info", "debug", "trace");
 
             for (const path of await adone.fs.glob(paths)) {
                 if (stopped) {
@@ -888,6 +892,8 @@ export class Engine {
                     m.cache.delete(path);
                 }
             }
+
+            stub.restore();
         };
 
         Promise.resolve().then(() => main(this._paths)).catch((err) => {

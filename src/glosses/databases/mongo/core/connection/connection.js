@@ -511,7 +511,8 @@ export default class Connection extends EventEmitter {
     write(buffer) {
         // Write out the command
         if (!is.array(buffer)) {
-            return this.connection.write(buffer, "binary");
+            this.connection.write(buffer, "binary");
+            return true;
         }
         // Double check that the connection is not destroyed
         if (this.connection.destroyed === false) {

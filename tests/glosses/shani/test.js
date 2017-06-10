@@ -649,6 +649,37 @@ describe("Engine", () => {
             assert.deepEqual(calls, ["test1", "test4"]);
             assert.deepEqual(skipped, ["test2", "test3", "test5", "test6", "test7", "test8"]);
         });
+
+        it("should not delete exclusive nodes inside inclusive block", async () => {
+            const engine = new Engine();
+            const { describe, it, start } = engine.context();
+
+            const calls = [];
+
+            describe("/", () => {
+                describe.only("a", () => {
+                    it("test1", () => calls.push("test1"));
+                    it.skip("test2", () => {});
+                    it("test3", () => calls.push("test3"));
+
+                    describe.skip("b", () => {
+                        it("test4", () => {});
+                    })
+                });
+            });
+            const skipped = [];
+
+            const e = start();
+
+            e.on("skip test", ({ test }) => {
+                skipped.push(test.description);
+            });
+
+            await waitFor(e, "done");
+
+            assert.deepEqual(calls, ["test1", "test3"]);
+            assert.deepEqual(skipped, ["test2", "test4"]);
+        });
     });
 
     describe("hooks", () => {

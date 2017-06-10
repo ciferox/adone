@@ -1,6 +1,6 @@
 import Dispatcher from "./dispatcher";
 
-describe("glosses", "databases", "mongo", function () {
+describe("databases", "mongo", function () {
     const { x, database: { mongo } } = adone;
 
     this.tmpdir = null;
@@ -43,17 +43,22 @@ describe("glosses", "databases", "mongo", function () {
             this.db = await this.DB.open();
         });
 
-        afterEach("close connection", async () => {
+        this.closeDB = async () => {
             if (this.db) {
-                await this.db.close();
+                const { db } = this;
                 this.db = null;
+                await db.close();
             }
+        };
+
+        afterEach("close connection", async () => {
+            await this.closeDB();
         });
     };
 
     this.init = {
         single: async () => {
-            beforeEach("create DB instance", async function () {
+            beforeEach("create single db instance", async function () {
                 this.timeout(120000);
 
                 [this.host, this.port] = await this.dispatcher.getSingleServer();
@@ -64,11 +69,12 @@ describe("glosses", "databases", "mongo", function () {
                 }), {
                     w: 1
                 });
+                this.topology = "single";
             });
             initConnection();
         },
         sharded: async () => {
-            beforeEach("create DB instance", async function () {
+            beforeEach("create sharded db instance", async function () {
                 this.timeout(120000);
 
                 [this.host, this.port] = await this.dispatcher.getShardedServer();
@@ -84,11 +90,12 @@ describe("glosses", "databases", "mongo", function () {
                 }), {
                     w: 1
                 });
+                this.topology = "sharded";
             });
             initConnection();
         },
         replicaset: async () => {
-            beforeEach("create DB instance", async function () {
+            beforeEach("create replicaset db instance", async function () {
                 this.timeout(120000);
 
                 [this.host, this.port] = await this.dispatcher.getReplicasetServer();
@@ -105,6 +112,7 @@ describe("glosses", "databases", "mongo", function () {
                 }), {
                     w: 1
                 });
+                this.topology = "replicaset";
             });
             initConnection();
         }
@@ -126,6 +134,7 @@ describe("glosses", "databases", "mongo", function () {
 
                 include("./crud_api");
                 include("./crud");
+                include("./cursor");
             });
         }
     });

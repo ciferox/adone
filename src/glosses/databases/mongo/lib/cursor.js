@@ -1114,7 +1114,7 @@ Cursor.prototype.close = function (callback) {
     // Kill the cursor
     this.kill();
     // Emit the close event for the cursor
-    this.emit("close");
+    // this.emit("close");
     // Callback if provided
     if (typeof callback === "function") {
         return handleCallback(callback, null, this);
@@ -1153,10 +1153,10 @@ define.classMethod("isClosed", { callback: false, promise: false, returns: [Bool
 
 Cursor.prototype.destroy = function (err) {
     if (err) {
-        this.emit("error", err);
+        // this.emit("error", err);
     }
-    this.pause();
-    this.close();
+    // this.pause();
+    // this.close();
 };
 
 define.classMethod("destroy", { callback: false, promise: false });
@@ -1168,13 +1168,32 @@ define.classMethod("destroy", { callback: false, promise: false });
  * @param {function} [options.transform=null] A transformation method applied to each document emitted by the stream.
  * @return {Cursor}
  */
-// TODO, wrapper?
-// Cursor.prototype.stream = function (options) {
-//     this.s.streamOptions = options || {};
-//     return this;
-// };
 
-// define.classMethod("stream", { callback: false, promise: false, returns: [Cursor] });
+class CursorStream extends Readable {
+    constructor(cursor, opts) {
+        super(Object.assign({}, opts, { objectMode: true }));
+        this.cursor = cursor;
+    }
+
+    async _read() {
+        if (this.cursor.isClosed()) {
+            this.push(null);
+        } else {
+            try {
+                const obj = await this.cursor.nextObject();
+                this.push(obj);
+            } catch (err) {
+                process.nextTick(() => this.emit("error", err));
+            }
+        }
+    }
+}
+
+Cursor.prototype.stream = function (options) {
+    return new CursorStream(this, options);
+};
+
+define.classMethod("stream", { callback: false, promise: false, returns: [Cursor] });
 
 /**
  * Execute the explain for the cursor
@@ -1222,7 +1241,7 @@ Cursor.prototype._read = function () {
                 self.emit("error", err);
             }
             if (!self.isDead()) {
-                self.close();
+                // self.close();
             }
 
             // Emit end event

@@ -279,7 +279,9 @@ export class SemVer {
 
     compareMain(_other) {
         const other = _other instanceof SemVer ? _other : SemVer.get(_other, this.loose);
-        return compareIdentifiers(this.major, other.major) || compareIdentifiers(this.minor, other.minor) || compareIdentifiers(this.patch, other.patch);
+        return compareIdentifiers(this.major, other.major) ||
+            compareIdentifiers(this.minor, other.minor) ||
+            compareIdentifiers(this.patch, other.patch);
     }
 
     comparePre(_other) {
@@ -298,11 +300,11 @@ export class SemVer {
         do {
             const a = this.prerelease[i];
             const b = other.prerelease[i];
-            if (a === undefined && b === undefined) {
+            if (is.undefined(a) && is.undefined(b)) {
                 return 0;
-            } else if (b === undefined) {
+            } else if (is.undefined(b)) {
                 return 1;
-            } else if (a === undefined) {
+            } else if (is.undefined(a)) {
                 return -1;
             } else if (a === b) {
                 continue;
@@ -391,7 +393,7 @@ export class SemVer {
                 } else {
                     let i = this.prerelease.length;
                     while (--i >= 0) {
-                        if (typeof this.prerelease[i] === "number") {
+                        if (is.number(this.prerelease[i])) {
                             this.prerelease[i]++;
                             i = -2;
                         }
@@ -405,7 +407,7 @@ export class SemVer {
                     // 1.2.0-beta.1 bumps to 1.2.0-beta.2,
                     // 1.2.0-beta.fooblz or 1.2.0-beta bumps to 1.2.0-beta.0
                     if (this.prerelease[0] === identifier) {
-                        if (isNaN(this.prerelease[1])) {
+                        if (!is.number(this.prerelease[1])) {
                             this.prerelease = [identifier, 0];
                         }
                     } else {
@@ -668,9 +670,9 @@ export class Comparator {
         if (comp instanceof Comparator) {
             if (comp.loose === loose) {
                 return comp;
-            } 
+            }
             comp = comp.value;
-            
+
         }
         return new Comparator(comp, loose);
     }
