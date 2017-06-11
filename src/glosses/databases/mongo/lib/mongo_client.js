@@ -489,7 +489,7 @@ const connect = function (self, url, options, callback) {
     }
 
     // Get a logger for MongoClient
-    const logger = Logger("MongoClient", options);
+    // const logger = Logger("MongoClient", options);
 
     // Parse the string
     const object = parse(url, options);
@@ -512,9 +512,9 @@ const connect = function (self, url, options, callback) {
 
     function connectCallback(err, db) {
         if (err && err.message == "no mongos proxies found in seed list") {
-            if (logger.isWarn()) {
-                logger.warn(f("seed list contains no mongos proxies, replicaset connections requires the parameter replicaSet to be supplied in the URI or options object, mongodb://server:port/db?replicaSet=name"));
-            }
+            // if (logger.isWarn()) {
+                // logger.warn(f("seed list contains no mongos proxies, replicaset connections requires the parameter replicaSet to be supplied in the URI or options object, mongodb://server:port/db?replicaSet=name"));
+            // }
 
             // Return a more specific error message for MongoClient.connect
             return callback(new MongoError("seed list contains no mongos proxies, replicaset connections requires the parameter replicaSet to be supplied in the URI or options object, mongodb://server:port/db?replicaSet=name"));

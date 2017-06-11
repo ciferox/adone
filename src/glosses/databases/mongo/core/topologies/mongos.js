@@ -923,7 +923,7 @@ export default class Mongos extends EventEmitter {
         // Authenticate
         const auth = (server) => {
             const finalArguments = args.slice();
-            finalArguments.push(function (err) {
+            finalArguments.push((err) => {
                 count = count - 1;
                 // Save all the errors
                 if (err) {

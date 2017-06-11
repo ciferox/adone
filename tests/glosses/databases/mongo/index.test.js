@@ -10,6 +10,21 @@ describe("databases", "mongo", function () {
     this.database = "tests";
     this.host = null;
     this.port = null;
+    this.server = null;
+
+    this.url = ({ username, password, db = this.database } = {}) => {
+        let creds = "";
+        if (username && password) {
+            creds = `${username}:${password}@`;
+        }
+        return `mongodb://${creds}${this.host}:${this.port}/${db}`;
+    };
+
+    this.restart = async (opts) => {
+        await this.db.close();
+        await this.server.restart(opts);
+        this.db = await this.DB.open();
+    };
 
     before("create tmpdir", async () => {
         this.tmpdir = await adone.fs.Directory.createTmp();
@@ -61,7 +76,7 @@ describe("databases", "mongo", function () {
             beforeEach("create single db instance", async function () {
                 this.timeout(120000);
 
-                [this.host, this.port] = await this.dispatcher.getSingleServer();
+                [this.host, this.port, this.server] = await this.dispatcher.getSingleServer();
 
                 this.DB = new mongo.Db(this.database, new mongo.Server("localhost", 27017, {
                     poolSize: 1,
@@ -77,7 +92,7 @@ describe("databases", "mongo", function () {
             beforeEach("create sharded db instance", async function () {
                 this.timeout(120000);
 
-                [this.host, this.port] = await this.dispatcher.getShardedServer();
+                [this.host, this.port, this.server] = await this.dispatcher.getShardedServer();
 
                 this.DB = new mongo.Db(this.database, new mongo.Mongos([
                     new mongo.Server("localhost", 51000, {
@@ -98,7 +113,7 @@ describe("databases", "mongo", function () {
             beforeEach("create replicaset db instance", async function () {
                 this.timeout(120000);
 
-                [this.host, this.port] = await this.dispatcher.getReplicasetServer();
+                [this.host, this.port, this.server] = await this.dispatcher.getReplicasetServer();
 
                 this.DB = new mongo.Db(this.database, new mongo.ReplSet([
                     new mongo.Server("localhost", 31000, {
@@ -115,7 +130,23 @@ describe("databases", "mongo", function () {
                 this.topology = "replicaset";
             });
             initConnection();
-        }
+        },
+        auth: async () => {
+            beforeEach("create auth db instance", async function () {
+                this.timeout(120000);
+
+                [this.host, this.port, this.server] = await this.dispatcher.getAuthServer();
+
+                this.DB = new mongo.Db(this.database, new mongo.Server(this.host, this.port, {
+                    poolSize: 1,
+                    autoReconnect: false
+                }), {
+                    w: 1
+                });
+                this.topology = "single";
+            });
+            initConnection();
+        },
     };
 
     describe("core", () => {
@@ -126,15 +157,28 @@ describe("databases", "mongo", function () {
         for (const topology of [
             "single",
             "sharded",
-            "replicaset"
+            "replicaset",
+            "auth"
         ]) {
+            this.topology = topology;
+
             describe(topology, () => {
 
                 this.init[topology]();
 
-                include("./crud_api");
-                include("./crud");
-                include("./cursor");
+                if (topology !== "auth") {
+                    include("./crud_api");
+                    include("./crud");
+                    include("./cursor");
+                    include("./aggregation");
+                    include("./apm");
+                    include("./buffering_proxy");
+                    include("./bulk");
+                    include("./collations");
+                    include("./collection");
+                }
+
+                include("./authentication");
             });
         }
     });

@@ -7,6 +7,7 @@ export default class Dispatcher {
         this._replicaset = null;
         this._single = null;
         this._sharded = null;
+        this._auth = null;
     }
 
     async getVersion() {
@@ -22,7 +23,7 @@ export default class Dispatcher {
             await this._single.purge();
             await this._single.start();
         }
-        return ["localhost", 27017];
+        return ["localhost", 27017, this._single];
     }
 
     async getReplicasetServer() {
@@ -76,7 +77,71 @@ export default class Dispatcher {
             await this._replicaset.purge();
             await this._replicaset.start();
         }
-        return ["localhost", 31000];
+        return ["localhost", 31000, this._replicaset];
+    }
+
+    async getAuthServer() {
+        if (!this._auth) {
+            this._auth = new mongodbTopologyManager.Server("mongod", {
+                dbpath: (await this.tmpdir.addDirectory("27018")).path(),
+                setParameter: ["enableTestCommands=1"],
+                auth: null,
+                port: 27018
+            });
+            await this._auth.purge();
+            await this._auth.start();
+        }
+        return ["localhost", 27018, this._auth];
+    }
+
+    async getReplicasetAuthServer({ start = true , purge = true } = {}) {
+        if (!this._replicasetAuth) {
+            const keyFile = adone.std.path.resolve(__dirname, "data", "keyfile.txt");
+            this._replicasetAuth = new mongodbTopologyManager.ReplSet("mongod", [{
+                tags: { loc: "ny" },
+                // mongod process options
+                options: {
+                    bind_ip: "localhost",
+                    port: 31010,
+                    dbpath: (await this.tmpdir.addDirectory("31010")).path(),
+                    setParameter: ["enableTestCommands=1"],
+                    keyFile,
+                    auth: null,
+                    replSet: "rs"
+                }
+            }, {
+                tags: { loc: "sf" },
+                options: {
+                    bind_ip: "localhost",
+                    port: 31011,
+                    dbpath: (await this.tmpdir.addDirectory("31011")).path(),
+                    setParameter: ["enableTestCommands=1"],
+                    keyFile,
+                    auth: null,
+                    replSet: "rs"
+                }
+            }, {
+                tags: { loc: "sf" },
+                options: {
+                    bind_ip: "localhost",
+                    port: 31012,
+                    dbpath: (await this.tmpdir.addDirectory("31012")).path(),
+                    setParameter: ["enableTestCommands=1"],
+                    keyFile,
+                    auth: null,
+                    replSet: "rs"
+                }
+            }], {
+                replSet: "rs"
+            });
+            if (start) {
+                if (purge) {
+                    await this._replicasetAuth.purge();
+                }
+                await this._replicasetAuth.start();
+            }
+        }
+        return ["localhost", 31010, this._replicasetAuth];
     }
 
     async getShardedServer() {
@@ -182,14 +247,148 @@ export default class Dispatcher {
             await this._sharded.purge();
             await this._sharded.start();
         }
-        return ["localhost", 51000];
+        return ["localhost", 51000, this._sharded];
+    }
+
+    async getShardedAuthServer({ start = true, purge = true } = {}) {
+        if (!this._shardedAuth) {
+            const keyFile = adone.std.path.resolve(__dirname, "data", "keyfile.txt");
+            this._shardedAuth = new mongodbTopologyManager.Sharded({
+                mongod: "mongod",
+                mongos: "mongos"
+            });
+            await this._shardedAuth.addShard([{
+                tags: { loc: "ny" },
+                options: {
+                    bind_ip: "localhost",
+                    port: 31050,
+                    dbpath: (await this.tmpdir.addDirectory("31050")).path(),
+                    shardsvr: null,
+                    auth: null,
+                    keyFile
+                }
+            }, {
+                tags: { loc: "sf" },
+                options: {
+                    bind_ip: "localhost",
+                    port: 31051,
+                    dbpath: (await this.tmpdir.addDirectory("31051")).path(),
+                    shardsvr: null,
+                    auth: null,
+                    keyFile
+                }
+            }, {
+                // Type of node
+                arbiter: true,
+                // mongod process options
+                options: {
+                    bind_ip: "localhost",
+                    port: 31052,
+                    dbpath: (await this.tmpdir.addDirectory("31052")).path(),
+                    shardsvr: null,
+                    auth: null,
+                    keyFile
+                }
+            }], {
+                replSet: "rs1"
+            });
+
+            await this._shardedAuth.addShard([{
+                tags: { loc: "ny" },
+                options: {
+                    bind_ip: "localhost",
+                    port: 31060,
+                    dbpath: (await this.tmpdir.addDirectory("31060")).path(),
+                    shardsvr: null,
+                    auth: null,
+                    keyFile
+                }
+            }, {
+                tags: { loc: "sf" },
+                options: {
+                    bind_ip: "localhost",
+                    port: 31061,
+                    dbpath: (await this.tmpdir.addDirectory("31061")).path(),
+                    shardsvr: null,
+                    auth: null,
+                    keyFile
+                }
+            }, {
+                // Type of node
+                arbiter: true,
+                // mongod process options
+                options: {
+                    bind_ip: "localhost",
+                    port: 31062,
+                    dbpath: (await this.tmpdir.addDirectory("31062")).path(),
+                    shardsvr: null,
+                    auth: null,
+                    keyFile
+                }
+            }], {
+                replSet: "rs2"
+            });
+
+            await this._shardedAuth.addConfigurationServers([{
+                options: {
+                    bind_ip: "localhost",
+                    port: 35040,
+                    dbpath: (await this.tmpdir.addDirectory("35040")).path(),
+                    auth: null,
+                    keyFile
+                }
+            }, {
+                options: {
+                    bind_ip: "localhost",
+                    port: 35041,
+                    dbpath: (await this.tmpdir.addDirectory("35041")).path(),
+                    auth: null,
+                    keyFile
+                }
+            }, {
+                options: {
+                    bind_ip: "localhost",
+                    port: 35042,
+                    dbpath: (await this.tmpdir.addDirectory("35042")).path(),
+                    auth: null,
+                    keyFile
+                }
+            }], {
+                replSet: "rs3"
+            });
+
+            await this._shardedAuth.addProxies([{
+                bind_ip: "localhost",
+                port: 51010,
+                configdb: "localhost:35040,localhost:35041,localhost:35042",
+                keyFile
+            }, {
+                bind_ip: "localhost",
+                port: 51011,
+                configdb: "localhost:35040,localhost:35041,localhost:35042",
+                keyFile
+            }], {
+                binary: "mongos"
+            });
+
+            if (start) {
+                if (purge) {
+                    await this._shardedAuth.purge();
+                }
+                await this._shardedAuth.start();
+            }
+        }
+        return ["localhost", 51010, this._shardedAuth];
     }
 
     async destroy() {
         await Promise.all([
             this._replicaset && this._replicaset.stop(),
             this._single && this._single.stop(),
-            this._sharded && this._sharded.stop()
+            this._sharded && this._sharded.stop(),
+            this._auth && this._auth.stop(),
+            // this._replicasetAuth && this._replicasetAuth.stop(),
+            // this._shardedAuth && this._shardedAuth.stop()
         ]);
     }
 }

@@ -281,7 +281,7 @@ define.classMethod("ping", { callback: true, promise: true });
  * @return {Promise} returns Promise if no callback passed
  */
 Admin.prototype.authenticate = function (username, password, options, callback) {
-    console.warn("Admin.prototype.authenticate method will no longer be available in the next major release 3.x as MongoDB 3.6 will only allow auth against users in the admin db and will no longer allow multiple credentials on a socket. Please authenticate using MongoClient.connect with auth credentials.");
+    // console.warn("Admin.prototype.authenticate method will no longer be available in the next major release 3.x as MongoDB 3.6 will only allow auth against users in the admin db and will no longer allow multiple credentials on a socket. Please authenticate using MongoClient.connect with auth credentials.");
     const finalArguments = [this.s.db];
     if (typeof username === "string") {
         finalArguments.push(username);

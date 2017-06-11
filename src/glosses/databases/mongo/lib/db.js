@@ -1412,7 +1412,7 @@ const _executeAuthCreateUserCommand = function (self, username, password, option
 
     // If not roles defined print deprecated message
     if (roles.length == 0) {
-        console.log("Creating a user without roles is deprecated in MongoDB >= 2.6");
+        // console.log("Creating a user without roles is deprecated in MongoDB >= 2.6");
     }
 
     // Get the error options
@@ -1700,7 +1700,7 @@ Db.prototype.removeUser = function (username, options, callback) {
  * @deprecated This method will no longer be available in the next major release 3.x as MongoDB 3.6 will only allow auth against users in the admin db and will no longer allow multiple credentials on a socket. Please authenticate using MongoClient.connect with auth credentials.
  */
 Db.prototype.authenticate = function (username, password, options, callback) {
-    console.warn("Db.prototype.authenticate method will no longer be available in the next major release 3.x as MongoDB 3.6 will only allow auth against users in the admin db and will no longer allow multiple credentials on a socket. Please authenticate using MongoClient.connect with auth credentials.");
+    // console.warn("Db.prototype.authenticate method will no longer be available in the next major release 3.x as MongoDB 3.6 will only allow auth against users in the admin db and will no longer allow multiple credentials on a socket. Please authenticate using MongoClient.connect with auth credentials.");
     return authenticate.apply(this, [this].concat(Array.prototype.slice.call(arguments)));
 };
 
