@@ -1114,7 +1114,7 @@ Cursor.prototype.close = function (callback) {
     // Kill the cursor
     this.kill();
     // Emit the close event for the cursor
-    // this.emit("close");
+    this.emit("close");
     // Callback if provided
     if (typeof callback === "function") {
         return handleCallback(callback, null, this);
@@ -1173,6 +1173,10 @@ class CursorStream extends Readable {
     constructor(cursor, opts) {
         super(Object.assign({}, opts, { objectMode: true }));
         this.cursor = cursor;
+        this.cursor.once("close", () => {
+            this.emit("close");
+            this.push(null);
+        });
     }
 
     async _read() {
@@ -1183,7 +1187,10 @@ class CursorStream extends Readable {
                 const obj = await this.cursor.nextObject();
                 this.push(obj);
             } catch (err) {
-                process.nextTick(() => this.emit("error", err));
+                process.nextTick(() => {
+                    this.emit("error", err);
+                    this.push(null);  // ?
+                });
             }
         }
     }

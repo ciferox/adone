@@ -57,8 +57,8 @@ function validOptions(options) {
         }
 
         if (legacyOptionNames.indexOf(name) != -1) {
-            console.warn(f("the server/replset/mongos options are deprecated, "
-                + "all their options are supported at the top level of the options object [%s]", validOptionNames));
+            // console.warn(f("the server/replset/mongos options are deprecated, "
+                // + "all their options are supported at the top level of the options object [%s]", validOptionNames));
         }
     }
 }
@@ -260,7 +260,7 @@ const mergeOptions = function (target, source, flatten) {
 const createUnifiedOptions = function (finalOptions, options) {
     const childOptions = ["mongos", "server", "db",
         "replset", "db_options", "server_options", "rs_options", "mongos_options"];
-    const noMerge = ["readconcern"];
+    const noMerge = ["readconcern", "pkfactory"];
 
     for (const name in options) {
         if (noMerge.indexOf(name.toLowerCase()) != -1) {

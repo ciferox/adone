@@ -1,4 +1,4 @@
-const { is, x, database: { mongo: { core: { MongoError } } } } = adone;
+const { is, x, database: { mongo: { core: { MongoError } } }, EventEmitter } = adone;
 
 // Handle callback (including any exceptions thrown)
 const handleCallback = function (callback, err, result) {
@@ -119,8 +119,9 @@ const setCursorNotified = function (self, callback) {
  * @property {number} cursorLimit The current cursorLimit for the cursor
  * @property {number} cursorSkip The current cursorSkip for the cursor
  */
-export default class Cursor {
+export default class Cursor extends EventEmitter {
     constructor(bson, ns, cmd, options = {}, topology, topologyOptions) {
+        super();
         // Cursor pool
         this.pool = null;
         // Cursor server

@@ -1,4 +1,4 @@
-describe.only("collection", function () {
+describe("collection", function () {
     const { data: { bson } } = adone;
 
     it("should correctly execute basic collection methods", async () => {

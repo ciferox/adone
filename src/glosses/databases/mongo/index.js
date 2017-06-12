@@ -39,5 +39,6 @@ const mongo = lazify({
             callback = options, options = {};
         }
         return new mongo.Instrumentation(mongo.core, options, callback);
-    }
+    },
+    parseUrl: "./lib/url_parser"
 }, exports, require);

@@ -226,7 +226,7 @@ describe("authentication", function () {
 
             before("create replicaset auth db server", async function () {
                 this.timeout(300000);
-                [, , manager] = await this.dispatcher.getReplicasetAuthServer({ start: false });
+                ({ server: manager } = await this.dispatcher.getReplicasetAuthServer({ start: false }));
             });
 
             beforeEach("start replicaset auth db server", async function () {
@@ -534,7 +534,7 @@ describe("authentication", function () {
 
             before("create sharded auth db server", async function () {
                 this.timeout(300000);
-                [, , manager] = await this.dispatcher.getShardedAuthServer({ start: false });
+                ({ server: manager } = await this.dispatcher.getShardedAuthServer({ start: false }));
             });
 
             beforeEach("start sharded auth db server", async function () {

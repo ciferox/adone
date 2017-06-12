@@ -1,6 +1,19 @@
 import mongodbVersionManager from "mongodb-version-manager";
 import mongodbTopologyManager from "mongodb-topology-manager";
 
+const url = ({ username, password, host, port, database, search }) => {
+    return adone.std.url.format({
+        protocol: "mongodb:",
+        slashes: true,
+        username,
+        password,
+        hostname: host,
+        port,
+        pathname: `/${database}`,
+        search: new adone.std.url.URLSearchParams(search).toString()
+    });
+};
+
 export default class Dispatcher {
     constructor(tmpdir) {
         this.tmpdir = tmpdir;
@@ -23,7 +36,16 @@ export default class Dispatcher {
             await this._single.purge();
             await this._single.start();
         }
-        return ["localhost", 27017, this._single];
+        return {
+            host: "localhost",
+            port: 27017,
+            server: this._single,
+            url: (opts) => url(Object.assign({
+                host: "localhost",
+                port: 27017,
+                database: "tests"
+            }, opts))
+        };
     }
 
     async getReplicasetServer() {
@@ -77,7 +99,17 @@ export default class Dispatcher {
             await this._replicaset.purge();
             await this._replicaset.start();
         }
-        return ["localhost", 31000, this._replicaset];
+        return {
+            host: "localhost",
+            port: 31000,
+            server: this._replicaset,
+            url: (opts) => url(Object.assign({
+                host: "localhost",
+                port: 31000,
+                database: "tests",
+
+            }, opts))
+        };
     }
 
     async getAuthServer() {
@@ -91,7 +123,16 @@ export default class Dispatcher {
             await this._auth.purge();
             await this._auth.start();
         }
-        return ["localhost", 27018, this._auth];
+        return {
+            host: "localhost",
+            port: 27018,
+            server: this._auth,
+            url: (opts) => url(Object.assign({
+                host: "localhost",
+                port: 27018,
+                database: "tests"
+            }, opts))
+        };
     }
 
     async getReplicasetAuthServer({ start = true , purge = true } = {}) {
@@ -141,7 +182,19 @@ export default class Dispatcher {
                 await this._replicasetAuth.start();
             }
         }
-        return ["localhost", 31010, this._replicasetAuth];
+        return {
+            host: "localhost",
+            port: 31010,
+            server: this._replicasetAuth.addListener,
+            url: (opts) => url(adone.util.assignDeep({
+                host: "localhost",
+                port: 31010,
+                database: "tests",
+                search: {
+                    rs_name: "rs"
+                }
+            }, opts))
+        };
     }
 
     async getShardedServer() {
@@ -247,7 +300,16 @@ export default class Dispatcher {
             await this._sharded.purge();
             await this._sharded.start();
         }
-        return ["localhost", 51000, this._sharded];
+        return {
+            host: "localhost",
+            port: 51000,
+            server: this._sharded,
+            url: (opts) => url(Object.assign({
+                host: "localhost",
+                port: 51000,
+                database: "tests"
+            }, opts))
+        };
     }
 
     async getShardedAuthServer({ start = true, purge = true } = {}) {
@@ -378,7 +440,16 @@ export default class Dispatcher {
                 await this._shardedAuth.start();
             }
         }
-        return ["localhost", 51010, this._shardedAuth];
+        return {
+            host: "localhost",
+            port: 51010,
+            server: this._shardedAuth,
+            url: (opts) => url(Object.assign({
+                host: "localhost",
+                port: 51010,
+                database: "tests"
+            }, opts))
+        };
     }
 
     async destroy() {

@@ -2013,7 +2013,7 @@ Collection.prototype.dropIndexes = function (options, callback) {
 
     // Return a Promise
     return new this.s.promiseLibrary((resolve, reject) => {
-        dropIndexes(self, (err, r) => {
+        dropIndexes(self, options, (err, r) => {
             if (err) {
                 return reject(err);
             }
