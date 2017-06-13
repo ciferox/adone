@@ -197,15 +197,15 @@ function doRead(_this) {
         const expectedLength = Math.min(_this.s.file.chunkSize,
             bytesRemaining);
 
+        let errmsg;
+
         if (doc.n > expectedN) {
-            var errmsg = `ChunkIsMissing: Got unexpected n: ${doc.n
-                }, expected: ${expectedN}`;
+            errmsg = `ChunkIsMissing: Got unexpected n: ${doc.n}, expected: ${expectedN}`;
             return __handleError(_this, new Error(errmsg));
         }
 
         if (doc.n < expectedN) {
-            errmsg = `ExtraChunk: Got unexpected n: ${doc.n
-                }, expected: ${expectedN}`;
+            errmsg = `ExtraChunk: Got unexpected n: ${doc.n}, expected: ${expectedN}`;
             return __handleError(_this, new Error(errmsg));
         }
 
@@ -297,7 +297,6 @@ function init(self) {
             self.emit("close");
             return;
         }
-
         self.s.bytesToSkip = handleStartOption(self, doc, self.s.options);
 
         const filter = { files_id: doc._id };
@@ -348,7 +347,7 @@ function waitForFile(_this, callback) {
  * @ignore
  */
 
-function handleStartOption(stream, doc, cursor, options) {
+function handleStartOption(stream, doc, options) {
     if (options && options.start != null) {
         if (options.start > doc.length) {
             throw new Error(`Stream start (${options.start}) must not be ` +

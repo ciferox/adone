@@ -440,6 +440,10 @@ const executeBatch = function (self, batch, callback) {
         finalOptions.bypassDocumentValidation = true;
     }
 
+    if (self.s.options.ignoreUndefined) {
+        finalOptions.ignoreUndefined = true;
+    }
+
     try {
         if (batch.batchType == common.INSERT) {
             self.s.topology.insert(self.s.collection.namespace, batch.operations, finalOptions, resultHandler);

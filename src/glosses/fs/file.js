@@ -112,4 +112,9 @@ export default class File {
         }
         return fs.symlink(this._path, path).then(() => new adone.fs.SymbolicLinkFile(path));
     }
+
+    async size() {
+        const stat = await this.stat();
+        return stat.size;
+    }
 }

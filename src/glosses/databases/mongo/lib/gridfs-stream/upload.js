@@ -256,7 +256,8 @@ function checkChunksIndex(_this, callback) {
  */
 
 function checkDone(_this, callback) {
-    if (_this.state.streamEnd &&
+    if (!_this.done &&
+        _this.state.streamEnd &&
         _this.state.outstandingRequests === 0 &&
         !_this.state.errored) {
         // Set done so we dont' trigger duplicate createFilesDoc

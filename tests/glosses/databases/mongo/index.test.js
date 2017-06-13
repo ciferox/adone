@@ -201,6 +201,10 @@ describe("databases", "mongo", function () {
                     include("./examples");
                     include("./find_and_modify");
                     include("./find");
+                    include("./gridfs_stream");
+                    include("./gridfs");
+                    include("./ignore_undefined");
+                    include("./index");
                 }
 
                 include("./authentication");
