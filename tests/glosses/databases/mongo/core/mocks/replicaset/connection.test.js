@@ -37,7 +37,7 @@ describe("mongodb", function () {
             context("connection", () => {
                 specify("Successful connection to replicaset of 1 primary, 1 secondary and 1 arbiter", async () => {
                     let running = true;
-                    const electionIds = [new adone.data.bson.ObjectID(), new adone.data.bson.ObjectID()];
+                    const electionIds = [new adone.data.bson.ObjectId(), new adone.data.bson.ObjectId()];
 
                     // Default message fields
                     const defaultFields = {
@@ -170,7 +170,7 @@ describe("mongodb", function () {
 
                 specify("Successful connection to replicaset of 1 primary, 1 secondary and 1 arbiter using arbiter as seed", async () => {
                     let running = true;
-                    const electionIds = [new adone.data.bson.ObjectID(), new adone.data.bson.ObjectID()];
+                    const electionIds = [new adone.data.bson.ObjectId(), new adone.data.bson.ObjectId()];
 
                     // Default message fields
                     const defaultFields = {
@@ -307,7 +307,7 @@ describe("mongodb", function () {
 
                 specify("Successful connection to replicaset of 1 primary, 1 secondary but missing arbiter", async () => {
                     const running = true;
-                    const electionIds = [new adone.data.bson.ObjectID(), new adone.data.bson.ObjectID()];
+                    const electionIds = [new adone.data.bson.ObjectId(), new adone.data.bson.ObjectId()];
 
                     // Default message fields
                     const defaultFields = {
@@ -423,7 +423,7 @@ describe("mongodb", function () {
 
                 specify("Fail to connect due to missing primary", async () => {
                     let running = true;
-                    const electionIds = [new adone.data.bson.ObjectID(), new adone.data.bson.ObjectID()];
+                    const electionIds = [new adone.data.bson.ObjectId(), new adone.data.bson.ObjectId()];
 
                     // Default message fields
                     const defaultFields = {
@@ -491,7 +491,7 @@ describe("mongodb", function () {
 
                 specify("Successful connection to replicaset of 0 primary, 1 secondary and 1 arbiter with secondaryOnlyConnectionAllowed", async () => {
                     let running = true;
-                    const electionIds = [new adone.data.bson.ObjectID(), new adone.data.bson.ObjectID()];
+                    const electionIds = [new adone.data.bson.ObjectId(), new adone.data.bson.ObjectId()];
 
                     // Default message fields
                     const defaultFields = {
@@ -597,7 +597,7 @@ describe("mongodb", function () {
 
                 it("Should print socketTimeout warning due to socketTimeout < haInterval", async () => {
                     let running = true;
-                    const electionIds = [new adone.data.bson.ObjectID(), new adone.data.bson.ObjectID()];
+                    const electionIds = [new adone.data.bson.ObjectId(), new adone.data.bson.ObjectId()];
 
                     // Default message fields
                     const defaultFields = {
@@ -712,7 +712,7 @@ describe("mongodb", function () {
 
                 it("Should connect with a replicaset with a single primary and secondary", async () => {
                     let running = true;
-                    const electionIds = [new adone.data.bson.ObjectID(), new adone.data.bson.ObjectID()];
+                    const electionIds = [new adone.data.bson.ObjectId(), new adone.data.bson.ObjectId()];
 
                     // Default message fields
                     const defaultFields = {
@@ -822,7 +822,7 @@ describe("mongodb", function () {
 
                 specify("Successful connection to replicaset of 1 primary, 1 secondary and 1 arbiter with different seedlist names", async () => {
                     let running = true;
-                    const electionIds = [new adone.data.bson.ObjectID(), new adone.data.bson.ObjectID()];
+                    const electionIds = [new adone.data.bson.ObjectId(), new adone.data.bson.ObjectId()];
 
                     // Default message fields
                     const defaultFields = {
@@ -962,7 +962,7 @@ describe("mongodb", function () {
 
                 specify("Successful connection to replicaset of 1 primary, 0 secondary and 1 arbiter", async () => {
                     let running = true;
-                    const electionIds = [new adone.data.bson.ObjectID(), new adone.data.bson.ObjectID()];
+                    const electionIds = [new adone.data.bson.ObjectId(), new adone.data.bson.ObjectId()];
 
                     // Default message fields
                     const defaultFields = {
@@ -1073,7 +1073,7 @@ describe("mongodb", function () {
 
                 specify("Successful connection to replicaset of 1 primary, 1 secondary and 1 arbiter with single seed should emit fullsetup and all", async () => {
                     let running = true;
-                    const electionIds = [new adone.data.bson.ObjectID(), new adone.data.bson.ObjectID()];
+                    const electionIds = [new adone.data.bson.ObjectId(), new adone.data.bson.ObjectId()];
 
                     // Default message fields
                     const defaultFields = {
@@ -1199,7 +1199,7 @@ describe("mongodb", function () {
                 specify("Successful connection to replicaset of 1 primary, 1 secondary and 1 arbiter with secondaryOnlyConnectionAllowed", async () => {
                     // Contain mock server
                     let running = true;
-                    const electionIds = [new adone.data.bson.ObjectID(), new adone.data.bson.ObjectID()];
+                    const electionIds = [new adone.data.bson.ObjectId(), new adone.data.bson.ObjectId()];
 
                     // Default message fields
                     const defaultFields = {
@@ -1352,7 +1352,7 @@ describe("mongodb", function () {
                 specify("Correctly return lastIsMaster when connected to a secondary only for a replicaset connection", async () => {
                     // Contain mock server
                     let running = true;
-                    const electionIds = [new adone.data.bson.ObjectID(), new adone.data.bson.ObjectID()];
+                    const electionIds = [new adone.data.bson.ObjectId(), new adone.data.bson.ObjectId()];
 
                     // Default message fields
                     const defaultFields = {

@@ -168,7 +168,7 @@ describe("mongodb", function () {
                                         id: adone.data.bson.Long.fromNumber(1),
                                         ns: "test.cursor1",
                                         firstBatch: [{
-                                            _id: new adone.data.bson.ObjectID(),
+                                            _id: new adone.data.bson.ObjectId(),
                                             a: 1
                                         }]
                                     },
@@ -181,7 +181,7 @@ describe("mongodb", function () {
                                         id: adone.data.bson.Long.fromNumber(1),
                                         ns: "test.cursor1",
                                         nextBatch: [{
-                                            _id: new adone.data.bson.ObjectID(),
+                                            _id: new adone.data.bson.ObjectId(),
                                             a: 1
                                         }]
                                     },

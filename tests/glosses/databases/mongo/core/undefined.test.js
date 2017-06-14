@@ -49,7 +49,7 @@ describe("mongodb", function () {
                         server.connect();
                     });
                     try {
-                        const objectId = new adone.data.bson.ObjectID();
+                        const objectId = new adone.data.bson.ObjectId();
                         const ns = `${configuration.db}.insert1`;
                         const results = await promisify(_server.insert).call(_server, ns, [{
                             _id: objectId,
@@ -82,7 +82,7 @@ describe("mongodb", function () {
                         server.connect();
                     });
                     try {
-                        const objectId = new adone.data.bson.ObjectID();
+                        const objectId = new adone.data.bson.ObjectId();
                         const ns = `${configuration.db}.update1`;
                         const results = await promisify(_server.update).call(_server, ns, {
                             q: {
@@ -124,7 +124,7 @@ describe("mongodb", function () {
                         server.connect();
                     });
                     try {
-                        const objectId = new adone.data.bson.ObjectID();
+                        const objectId = new adone.data.bson.ObjectId();
                         const ns = `${configuration.db}.remove1`;
                         let results = await promisify(_server.insert).call(_server, ns, [{
                             id: objectId,

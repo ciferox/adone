@@ -11,7 +11,7 @@ const bson = adone.lazify({
     Map: () => Map,
     MaxKey: "./max_key",
     MinKey: "./min_key",
-    ObjectID: "./objectid",
+    ObjectId: "./objectid",
     BSONRegExp: "./regexp",
     Symbol: "./symbol",
     Timestamp: "./timestamp",
@@ -20,7 +20,7 @@ const bson = adone.lazify({
             bson.Binary, bson.Code, bson.DBRef,
             bson.Decimal128, bson.Double, bson.Int32,
             bson.Long, bson.Map, bson.MaxKey,
-            bson.MinKey, bson.ObjectID, bson.BSONRegExp,
+            bson.MinKey, bson.ObjectId, bson.BSONRegExp,
             bson.Symbol, bson.Timestamp
         ]) {
             super(types);

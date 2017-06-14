@@ -34,7 +34,7 @@ const validOptionNames = ["poolSize", "ssl", "sslValidate", "sslCA", "sslCert",
     "sslKey", "sslPass", "sslCRL", "autoReconnect", "noDelay", "keepAlive", "connectTimeoutMS", "family",
     "socketTimeoutMS", "reconnectTries", "reconnectInterval", "ha", "haInterval",
     "replicaSet", "secondaryAcceptableLatencyMS", "acceptableLatencyMS",
-    "connectWithNoPrimary", "authSource", "w", "wtimeout", "j", "forceServerObjectID",
+    "connectWithNoPrimary", "authSource", "w", "wtimeout", "j", "forceServerObjectId",
     "serializeFunctions", "ignoreUndefined", "raw", "promoteLongs", "bufferMaxEntries",
     "readPreference", "pkFactory", "promiseLibrary", "readConcern", "maxStalenessSeconds",
     "promoteValues", "promoteBuffers", "promoteLongs",
@@ -118,7 +118,7 @@ function MongoClient() {
      * @param {(number|string)} [options.w=null] The write concern.
      * @param {number} [options.wtimeout=null] The write concern timeout.
      * @param {boolean} [options.j=false] Specify a journal write concern.
-     * @param {boolean} [options.forceServerObjectID=false] Force server to assign _id values instead of driver.
+     * @param {boolean} [options.forceServerObjectId=false] Force server to assign _id values instead of driver.
      * @param {boolean} [options.serializeFunctions=false] Serialize functions on any object.
      * @param {Boolean} [options.ignoreUndefined=false] Specify if the BSON serializer should ignore undefined fields.
      * @param {boolean} [options.raw=false] Return document results as raw BSON buffers.
@@ -180,7 +180,7 @@ const define = MongoClient.define = new Define("MongoClient", MongoClient, false
  * @param {(number|string)} [options.w=null] The write concern.
  * @param {number} [options.wtimeout=null] The write concern timeout.
  * @param {boolean} [options.j=false] Specify a journal write concern.
- * @param {boolean} [options.forceServerObjectID=false] Force server to assign _id values instead of driver.
+ * @param {boolean} [options.forceServerObjectId=false] Force server to assign _id values instead of driver.
  * @param {boolean} [options.serializeFunctions=false] Serialize functions on any object.
  * @param {Boolean} [options.ignoreUndefined=false] Specify if the BSON serializer should ignore undefined fields.
  * @param {boolean} [options.raw=false] Return document results as raw BSON buffers.

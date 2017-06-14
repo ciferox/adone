@@ -191,7 +191,7 @@ describe("collection", function () {
 
     it("should correctly update with no docs", async () => {
         const collection = await this.db.createCollection("test_should_correctly_do_update_with_no_docs");
-        const id = new bson.ObjectID(null);
+        const id = new bson.ObjectId(null);
         const doc = { _id: id, a: 1 };
 
         const r = await collection.update({ _id: id }, doc);
@@ -254,7 +254,7 @@ describe("collection", function () {
 
         await collection.save(user);
         const result = await collection.update({
-            _id: new bson.ObjectID(user._id.toString())
+            _id: new bson.ObjectId(user._id.toString())
         }, {
             friends: user.friends
         }, {

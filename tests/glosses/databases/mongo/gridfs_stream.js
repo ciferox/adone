@@ -121,7 +121,7 @@ describe("gridfs stream", function () {
         it("should fail to locate gridfs stream", async () => {
             const { db } = this;
             const bucket = new mongo.GridFSBucket(db, { bucketName: "gridfsdownload" });
-            const downloadStream = bucket.openDownloadStream(new bson.ObjectID());
+            const downloadStream = bucket.openDownloadStream(new bson.ObjectId());
             const err = await new Promise((resolve) => {
                 downloadStream.on("data", () => {
                     //
@@ -470,7 +470,7 @@ describe("gridfs stream", function () {
                                 } else if (!is.undefined(document[name].$minKey)) {
                                     doc[name] = new bson.MinKey();
                                 } else if (!is.undefined(document[name].$oid)) {
-                                    doc[name] = new bson.ObjectID(Buffer.from(document[name].$oid, "hex"));
+                                    doc[name] = new bson.ObjectId(Buffer.from(document[name].$oid, "hex"));
                                 } else if (!is.undefined(document[name].$regex)) {
                                     doc[name] = new bson.BSONRegExp(document[name].$regex, document[name].$options);
                                 } else if (!is.undefined(document[name].$timestamp)) {
@@ -553,7 +553,7 @@ describe("gridfs stream", function () {
 
                         const _runTest = async () => {
                             const bucket = new mongo.GridFSBucket(db, { bucketName: BUCKET_NAME });
-                            const download = bucket.openDownloadStream(new bson.ObjectID(test.act.arguments.id.$oid));
+                            const download = bucket.openDownloadStream(new bson.ObjectId(test.act.arguments.id.$oid));
                             const ret = await new Promise((resolve, reject) => {
                                 let res = Buffer.alloc(0);
                                 download.on("data", (chunk) => {

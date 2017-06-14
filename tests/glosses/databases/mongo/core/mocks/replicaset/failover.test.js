@@ -40,7 +40,7 @@ describe("mongodb", function () {
                     let currentIsMasterIndex = 0;
 
                     // Election Ids
-                    const electionIds = [new adone.data.bson.ObjectID(0), new adone.data.bson.ObjectID(1)];
+                    const electionIds = [new adone.data.bson.ObjectId(0), new adone.data.bson.ObjectId(1)];
                     // Default message fields
                     const defaultFields = {
                         setName: "rs",
@@ -269,7 +269,7 @@ describe("mongodb", function () {
                     let currentIsMasterIndex = 0;
 
                     // Election Ids
-                    const electionIds = [new adone.data.bson.ObjectID(0), new adone.data.bson.ObjectID(1)];
+                    const electionIds = [new adone.data.bson.ObjectId(0), new adone.data.bson.ObjectId(1)];
                     // Default message fields
                     const defaultFields = {
                         setName: "rs",

@@ -37,7 +37,7 @@ describe("mongodb", function () {
             context("all servers close", () => {
                 specify("Successful reconnect when driver looses touch with entire replicaset", async () => {
                     let running = true;
-                    const electionIds = [new adone.data.bson.ObjectID(), new adone.data.bson.ObjectID()];
+                    const electionIds = [new adone.data.bson.ObjectId(), new adone.data.bson.ObjectId()];
                     let die = false;
 
                     // Default message fields
@@ -174,7 +174,7 @@ describe("mongodb", function () {
                 });
 
                 specify("Successfully come back from a dead replicaset that has been unavailable for a long time", async () => {
-                    const electionIds = [new adone.data.bson.ObjectID(), new adone.data.bson.ObjectID()];
+                    const electionIds = [new adone.data.bson.ObjectId(), new adone.data.bson.ObjectId()];
                     let die = false;
                     let running = true;
 

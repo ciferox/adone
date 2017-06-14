@@ -555,7 +555,7 @@ describe("mongodb", function () {
             context("replica set", () => {
                 specify("Successful emit SDAM monitoring events for replicaset", async () => {
                     const running = true;
-                    const electionIds = [new adone.data.bson.ObjectID(), new adone.data.bson.ObjectID()];
+                    const electionIds = [new adone.data.bson.ObjectId(), new adone.data.bson.ObjectId()];
 
                     /// Default message fields
                     const defaultFields = {

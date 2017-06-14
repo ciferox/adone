@@ -15,7 +15,7 @@ const Admin = require("./admin");
 const Code = adone.data.bson.Code;
 const CoreReadPreference = require("../core").ReadPreference;
 const MongoError = require("../core").MongoError;
-const ObjectID = adone.data.bson.ObjectID;
+const ObjectId = adone.data.bson.ObjectId;
 const Define = require("./metadata");
 const Logger = require("../core").Logger;
 const Collection = require("./collection");
@@ -23,7 +23,7 @@ const crypto = require("crypto");
 const mergeOptionsAndWriteConcern = require("./utils").mergeOptionsAndWriteConcern;
 const assign = require("./utils").assign;
 
-const debugFields = ["authSource", "w", "wtimeout", "j", "native_parser", "forceServerObjectID",
+const debugFields = ["authSource", "w", "wtimeout", "j", "native_parser", "forceServerObjectId",
     "serializeFunctions", "raw", "promoteLongs", "promoteValues", "promoteBuffers", "bufferMaxEntries", "numberOfRetries", "retryMiliSeconds",
     "readPreference", "pkFactory", "parentDb", "promiseLibrary", "noListener"];
 
@@ -49,7 +49,7 @@ const illegalCommandFields = ["w", "wtimeout", "j", "fsync", "autoIndexId",
 
 // Allowed parameters
 const legalOptionNames = ["w", "wtimeout", "fsync", "j", "readPreference", "readPreferenceTags", "native_parser",
-    "forceServerObjectID", "pkFactory", "serializeFunctions", "raw", "bufferMaxEntries", "authSource",
+    "forceServerObjectId", "pkFactory", "serializeFunctions", "raw", "bufferMaxEntries", "authSource",
     "ignoreUndefined", "promoteLongs", "promiseLibrary", "readConcern", "retryMiliSeconds", "numberOfRetries",
     "parentDb", "noListener", "promoteBuffers", "promoteLongs", "promoteValues"];
 
@@ -63,7 +63,7 @@ const legalOptionNames = ["w", "wtimeout", "fsync", "j", "readPreference", "read
  * @param {(number|string)} [options.w=null] The write concern.
  * @param {number} [options.wtimeout=null] The write concern timeout.
  * @param {boolean} [options.j=false] Specify a journal write concern.
- * @param {boolean} [options.forceServerObjectID=false] Force server to assign _id values instead of driver.
+ * @param {boolean} [options.forceServerObjectId=false] Force server to assign _id values instead of driver.
  * @param {boolean} [options.serializeFunctions=false] Serialize functions on any object.
  * @param {Boolean} [options.ignoreUndefined=false] Specify if the BSON serializer should ignore undefined fields.
  * @param {boolean} [options.raw=false] Return document results as raw BSON buffers.
@@ -138,8 +138,8 @@ const Db = function (databaseName, topology, options) {
         bufferMaxEntries: typeof options.bufferMaxEntries === "number" ? options.bufferMaxEntries : -1,
         // Parent db (if chained)
         parentDb: options.parentDb || null,
-        // Set up the primary key factory or fallback to ObjectID
-        pkFactory: options.pkFactory || ObjectID,
+        // Set up the primary key factory or fallback to ObjectId
+        pkFactory: options.pkFactory || ObjectId,
         // Get native parser
         nativeParser: options.nativeParser || options.native_parser,
         // Promise library

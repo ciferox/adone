@@ -205,7 +205,7 @@ describe("mongodb", function () {
                 } else {
                     const ismaster = x[1];
                     if (ismaster.electionId) {
-                        ismaster.electionId = new adone.data.bson.ObjectID(ismaster.electionId.$oid);
+                        ismaster.electionId = new adone.data.bson.ObjectId(ismaster.electionId.$oid);
                     }
 
                     state.update({
@@ -225,7 +225,7 @@ describe("mongodb", function () {
             // Validate the state of the final outcome
             for (const name in outcome.servers) {
                 if (outcome.servers[name].electionId) {
-                    outcome.servers[name].electionId = new adone.data.bson.ObjectID(outcome.servers[name].electionId.$oid);
+                    outcome.servers[name].electionId = new adone.data.bson.ObjectId(outcome.servers[name].electionId.$oid);
                 }
                 expect(state.set[name]).to.be.ok;
                 for (const n in outcome.servers[name]) {

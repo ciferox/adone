@@ -9,7 +9,7 @@ describe("data", "bson", () => {
         Binary,
         Timestamp,
         Long,
-        ObjectID,
+        ObjectId,
         Symbol,
         DBRef,
         Double,
@@ -480,7 +480,7 @@ describe("data", "bson", () => {
     });
 
     it("should correctly serialize and deserialize Oid", () => {
-        const doc = { doc: new ObjectID() };
+        const doc = { doc: new ObjectId() };
         const serializedData = new BSON().serialize(doc);
 
         const serializedData2 = new Buffer(new BSON().calculateObjectSize(doc));
@@ -585,7 +585,7 @@ describe("data", "bson", () => {
     });
 
     it("should correctly serialize and deserialize DBRef", () => {
-        const oid = new ObjectID();
+        const oid = new ObjectId();
         const doc = { dbref: new DBRef("namespace", oid, null) };
         const serializedData = new BSON().serialize(doc);
 
@@ -599,7 +599,7 @@ describe("data", "bson", () => {
     });
 
     it("should correctly serialize and deserialize partial DBRef", () => {
-        const id = new ObjectID();
+        const id = new ObjectId();
         const doc = { name: "something", user: { $ref: "username", $id: id } };
         const serializedData = new BSON().serialize(doc);
 
@@ -815,7 +815,7 @@ describe("data", "bson", () => {
     });
 
     it("should correctly serialize and deserialize array based doc", () => {
-        const doc = { b: [1, 2, 3], _id: new ObjectID() };
+        const doc = { b: [1, 2, 3], _id: new ObjectId() };
         const serializedData = new BSON().serialize(doc);
 
         const serializedData2 = new Buffer(new BSON().calculateObjectSize(doc));
@@ -856,7 +856,7 @@ describe("data", "bson", () => {
     it("should handle complicated all typed object", () => {
         // First doc
         const date = new Date();
-        let oid = new ObjectID();
+        let oid = new ObjectId();
         let string = "binstring";
         let bin = new Binary();
         for (let index = 0; index < string.length; index++) {
@@ -880,7 +880,7 @@ describe("data", "bson", () => {
         };
 
         // Second doc
-        oid = ObjectID.createFromHexString(oid.toHexString());
+        oid = ObjectId.createFromHexString(oid.toHexString());
         string = "binstring";
         bin = new Binary();
         for (let index = 0; index < string.length; index++) {
@@ -926,7 +926,7 @@ describe("data", "bson", () => {
             passwordSalt: "salty",
             profileFields: [],
             username: "amit",
-            _id: new ObjectID()
+            _id: new ObjectId()
         };
 
         const serializedData = new BSON().serialize(doc);
@@ -936,7 +936,7 @@ describe("data", "bson", () => {
         expect(serializedData).to.be.deep.equal(serializedData2);
 
         const doc2 = doc;
-        doc2._id = ObjectID.createFromHexString(doc2._id.toHexString());
+        doc2._id = ObjectId.createFromHexString(doc2._id.toHexString());
         serializedData2 = new BSON().serialize(doc2, false, true);
 
         for (let i = 0; i < serializedData2.length; i++) {
@@ -945,8 +945,8 @@ describe("data", "bson", () => {
     });
 
     it("should correctly massive doc", () => {
-        const oid1 = new ObjectID();
-        const oid2 = new ObjectID();
+        const oid1 = new ObjectId();
+        const oid2 = new ObjectId();
 
         const doc = {
             dbref2: new DBRef("namespace", oid1, "integration_tests_"),
@@ -954,8 +954,8 @@ describe("data", "bson", () => {
         };
 
         const doc2 = {
-            dbref2: new DBRef("namespace", ObjectID.createFromHexString(oid1.toHexString()), "integration_tests_"),
-            _id: ObjectID.createFromHexString(oid2.toHexString())
+            dbref2: new DBRef("namespace", ObjectId.createFromHexString(oid1.toHexString()), "integration_tests_"),
+            _id: ObjectId.createFromHexString(oid2.toHexString())
         };
 
         const serializedData = new BSON().serialize(doc);
@@ -984,7 +984,7 @@ describe("data", "bson", () => {
     });
 
     it("should correctly serialize/deserialize complicated object", () => {
-        const doc = { a: { b: { c: [new ObjectID(), new ObjectID()] } }, d: { f: 1332.3323 } };
+        const doc = { a: { b: { c: [new ObjectId(), new ObjectId()] } }, d: { f: 1332.3323 } };
 
         const serializedData = new BSON().serialize(doc);
 
@@ -1068,7 +1068,7 @@ describe("data", "bson", () => {
 
     it("should deserialize correctly", () => {
         const doc = {
-            _id: new ObjectID("4e886e687ff7ef5e00000162"),
+            _id: new ObjectId("4e886e687ff7ef5e00000162"),
             str: "foreign",
             type: 2,
             timestamp: ISODate("2011-10-02T14:00:08.383Z"),
@@ -1086,7 +1086,7 @@ describe("data", "bson", () => {
 
     it("should correctly serialize and deserialize MinKey and MaxKey values", () => {
         const doc = {
-            _id: new ObjectID("4e886e687ff7ef5e00000162"),
+            _id: new ObjectId("4e886e687ff7ef5e00000162"),
             minKey: new MinKey(),
             maxKey: new MaxKey()
         };
@@ -1117,19 +1117,19 @@ describe("data", "bson", () => {
         expect(doc.value.value).to.be.ok;
     });
 
-    it("ObjectID should correctly create objects", () => {
+    it("ObjectId should correctly create objects", () => {
         try {
-            ObjectID.createFromHexString("000000000000000000000001");
-            ObjectID.createFromHexString("00000000000000000000001");
+            ObjectId.createFromHexString("000000000000000000000001");
+            ObjectId.createFromHexString("00000000000000000000001");
             expect(false).to.be.ok;
         } catch (err) {
             expect(err).to.be.ok;
         }
     });
 
-    it("ObjectID should correctly retrieve timestamp", () => {
+    it("ObjectId should correctly retrieve timestamp", () => {
         const testDate = new Date();
-        const object1 = new ObjectID();
+        const object1 = new ObjectId();
         expect(Math.floor(testDate.getTime() / 1000)).to.be.equal(
             Math.floor(object1.getTimestamp().getTime() / 1000)
         );
@@ -1314,24 +1314,24 @@ describe("data", "bson", () => {
         expect(37).to.be.equal(buffer.length);
     });
 
-    it("ObjectID should have a correct cached representation of the hexString", () => {
-        ObjectID.cacheHexString = true;
-        let a = new ObjectID();
+    it("ObjectId should have a correct cached representation of the hexString", () => {
+        ObjectId.cacheHexString = true;
+        let a = new ObjectId();
         let __id = a.__id;
         expect(__id).to.be.equal(a.toHexString());
 
         // hexString
-        a = new ObjectID(__id);
+        a = new ObjectId(__id);
         expect(__id).to.be.equal(a.toHexString());
 
         // fromHexString
-        a = ObjectID.createFromHexString(__id);
+        a = ObjectId.createFromHexString(__id);
         expect(a.__id).to.be.equal(a.toHexString());
         expect(__id).to.be.equal(a.toHexString());
 
         // number
         const genTime = a.generationTime;
-        a = new ObjectID(genTime);
+        a = new ObjectId(genTime);
         __id = a.__id;
         expect(__id).to.be.equal(a.toHexString());
 
@@ -1341,33 +1341,33 @@ describe("data", "bson", () => {
         expect(__id).to.be.equal(a.toHexString());
 
         // createFromTime
-        a = ObjectID.createFromTime(genTime);
+        a = ObjectId.createFromTime(genTime);
         __id = a.__id;
         expect(__id).to.be.equal(a.toHexString());
-        ObjectID.cacheHexString = false;
+        ObjectId.cacheHexString = false;
     });
 
-    it("should fail to create ObjectID due to illegal hex code", () => {
+    it("should fail to create ObjectId due to illegal hex code", () => {
         try {
-            new ObjectID("zzzzzzzzzzzzzzzzzzzzzzzz");
+            new ObjectId("zzzzzzzzzzzzzzzzzzzzzzzz");
             expect(false).to.be.ok;
         } catch (err) {
             //
         }
 
-        expect(false).to.be.equal(ObjectID.isValid(null));
-        expect(false).to.be.equal(ObjectID.isValid({}));
-        expect(false).to.be.equal(ObjectID.isValid({ length: 12 }));
-        expect(false).to.be.equal(ObjectID.isValid([]));
-        expect(false).to.be.equal(ObjectID.isValid(true));
-        expect(true).to.be.equal(ObjectID.isValid(0));
-        expect(false).to.be.equal(ObjectID.isValid("invalid"));
-        expect(true).to.be.equal(ObjectID.isValid("zzzzzzzzzzzz"));
-        expect(false).to.be.equal(ObjectID.isValid("zzzzzzzzzzzzzzzzzzzzzzzz"));
-        expect(true).to.be.equal(ObjectID.isValid("000000000000000000000000"));
-        expect(true).to.be.equal(ObjectID.isValid(new ObjectID("thisis12char")));
+        expect(false).to.be.equal(ObjectId.isValid(null));
+        expect(false).to.be.equal(ObjectId.isValid({}));
+        expect(false).to.be.equal(ObjectId.isValid({ length: 12 }));
+        expect(false).to.be.equal(ObjectId.isValid([]));
+        expect(false).to.be.equal(ObjectId.isValid(true));
+        expect(true).to.be.equal(ObjectId.isValid(0));
+        expect(false).to.be.equal(ObjectId.isValid("invalid"));
+        expect(true).to.be.equal(ObjectId.isValid("zzzzzzzzzzzz"));
+        expect(false).to.be.equal(ObjectId.isValid("zzzzzzzzzzzzzzzzzzzzzzzz"));
+        expect(true).to.be.equal(ObjectId.isValid("000000000000000000000000"));
+        expect(true).to.be.equal(ObjectId.isValid(new ObjectId("thisis12char")));
 
-        const tmp = new ObjectID();
+        const tmp = new ObjectId();
         // Cloning tmp so that instanceof fails to fake import from different version/instance of the same npm package
         const objectIdLike = {
             id: tmp.id,
@@ -1377,8 +1377,8 @@ describe("data", "bson", () => {
         };
 
         expect(true).to.be.equal(tmp.equals(objectIdLike));
-        expect(true).to.be.equal(tmp.equals(new ObjectID(objectIdLike)));
-        expect(true).to.be.equal(ObjectID.isValid(objectIdLike));
+        expect(true).to.be.equal(tmp.equals(new ObjectId(objectIdLike)));
+        expect(true).to.be.equal(ObjectId.isValid(objectIdLike));
     });
 
     it("should correctly serialize the BSONRegExp type", () => {
@@ -1409,9 +1409,9 @@ describe("data", "bson", () => {
         expect("i").to.be.equal(doc1.regexp.options);
     });
 
-    it("should return boolean for ObjectID equality check", () => {
-        const id = new ObjectID();
-        expect(true).to.be.equal(id.equals(new ObjectID(id.toString())));
+    it("should return boolean for ObjectId equality check", () => {
+        const id = new ObjectId();
+        expect(true).to.be.equal(id.equals(new ObjectId(id.toString())));
         expect(true).to.be.equal(id.equals(id.toString()));
         expect(false).to.be.equal(id.equals("1234567890abcdef12345678"));
         expect(false).to.be.equal(id.equals("zzzzzzzzzzzzzzzzzzzzzzzz"));

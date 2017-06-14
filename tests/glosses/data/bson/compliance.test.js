@@ -6,7 +6,7 @@ describe("data", "bson", "compliance", () => {
         Binary,
         Timestamp,
         Long,
-        ObjectID,
+        ObjectId,
         DBRef,
         MinKey,
         MaxKey
@@ -63,7 +63,7 @@ describe("data", "bson", "compliance", () => {
                 } else if (doc[name].$regexp) {
                     object[name] = new RegExp(doc[name].$regexp, doc[name].$options || "");
                 } else if (doc[name].$oid) {
-                    object[name] = new ObjectID(doc[name].$oid);
+                    object[name] = new ObjectId(doc[name].$oid);
                 } else if (doc[name].$binary) {
                     object[name] = new Binary(doc[name].$binary, doc[name].$type || 1);
                 } else if (doc[name].$timestamp) {

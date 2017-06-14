@@ -230,7 +230,7 @@ module.exports = function (url) {
                 replSetServersOptions.poolSize = parseInt(value, 10);
                 break;
             case "appname":
-                object.appname = decodeURIComponent(value);
+                object.appname = decodeURIComponent(value.replace(/\+/g, "%20"));
                 break;
             case "autoReconnect":
             case "auto_reconnect":

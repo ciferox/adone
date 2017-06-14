@@ -9,7 +9,7 @@
  * @example
  * var MongoClient = require('mongodb').MongoClient,
  *   GridStore = require('mongodb').GridStore,
- *   ObjectID = require('mongodb').ObjectID,
+ *   ObjectId = require('mongodb').ObjectId,
  *   test = require('assert');
  *
  * // Connection url
@@ -33,7 +33,7 @@
  * });
  */
 const Chunk = require("./chunk");
-const ObjectID = adone.data.bson.ObjectID;
+const ObjectId = adone.data.bson.ObjectId;
 const ReadPreference = require("../read_preference");
 const Buffer = require("buffer").Buffer;
 const Collection = require("../collection");
@@ -103,7 +103,7 @@ const GridStore = function GridStore(db, id, filename, mode, options) {
         filename = undefined;
     }
 
-    if (id && id._bsontype == "ObjectID") {
+    if (id && id._bsontype == "ObjectId") {
         this.referenceBy = REFERENCE_BY_ID;
         this.fileId = id;
         this.filename = filename;
@@ -111,7 +111,7 @@ const GridStore = function GridStore(db, id, filename, mode, options) {
         this.referenceBy = REFERENCE_BY_FILENAME;
         this.filename = id;
         if (mode.indexOf("w") != null) {
-            this.fileId = new ObjectID();
+            this.fileId = new ObjectId();
         }
     } else {
         this.referenceBy = REFERENCE_BY_ID;
@@ -1079,13 +1079,13 @@ const _open = function (self, options, callback) {
                 self.metadata = doc.metadata;
                 self.internalMd5 = doc.md5;
             } else if (self.mode != "r") {
-                self.fileId = self.fileId == null ? new ObjectID() : self.fileId;
+                self.fileId = self.fileId == null ? new ObjectId() : self.fileId;
                 self.contentType = GridStore.DEFAULT_CONTENT_TYPE;
                 self.internalChunkSize = self.internalChunkSize == null ? Chunk.DEFAULT_CHUNK_SIZE : self.internalChunkSize;
                 self.length = 0;
             } else {
                 self.length = 0;
-                const txtId = self.fileId._bsontype == "ObjectID" ? self.fileId.toHexString() : self.fileId;
+                const txtId = self.fileId._bsontype == "ObjectId" ? self.fileId.toHexString() : self.fileId;
                 return error(MongoError.create({ message: f("file with id %s not opened for writing", (self.referenceBy == REFERENCE_BY_ID ? txtId : self.filename)), driver: true }), self);
             }
 
@@ -1138,7 +1138,7 @@ const _open = function (self, options, callback) {
         });
     } else {
         // Write only mode
-        self.fileId = self.fileId == null ? new ObjectID() : self.fileId;
+        self.fileId = self.fileId == null ? new ObjectId() : self.fileId;
         self.contentType = GridStore.DEFAULT_CONTENT_TYPE;
         self.internalChunkSize = self.internalChunkSize == null ? Chunk.DEFAULT_CHUNK_SIZE : self.internalChunkSize;
         self.length = 0;

@@ -107,7 +107,9 @@ export default class Dispatcher {
                 host: "localhost",
                 port: 31000,
                 database: "tests",
-
+                search: {
+                    rs_name: "rs"
+                }
             }, opts))
         };
     }

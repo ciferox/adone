@@ -5,7 +5,7 @@ let Binary = bson.Binary,
     MinKey = bson.MinKey,
     BSONRegExp = bson.BSONRegExp,
     Timestamp = bson.Timestamp,
-    ObjectID = bson.ObjectID,
+    ObjectId = bson.ObjectId,
     Code = bson.Code,
     Decimal128 = bson.Decimal128;
 
@@ -36,7 +36,7 @@ const serialize = function (document) {
                 } else if (document[name] instanceof Code || document[name]._bsontype == "Code") {
                     doc[name] = { $code: document[name].code };
                     if (document[name].scope) {
-                        doc[name].$scope = document[name].scope; 
+                        doc[name].$scope = document[name].scope;
                     }
                 } else if (document[name] instanceof Date) {
                     doc[name] = { $date: document[name].toISOString() };
@@ -46,7 +46,7 @@ const serialize = function (document) {
                     doc[name] = { $maxKey: true };
                 } else if (document[name] instanceof MinKey || document[name]._bsontype == "MinKey") {
                     doc[name] = { $minKey: true };
-                } else if (document[name] instanceof ObjectID || document[name]._bsontype == "ObjectID") {
+                } else if (document[name] instanceof ObjectId || document[name]._bsontype == "ObjectId") {
                     doc[name] = { $oid: document[name].toString() };
                 } else if (document[name] instanceof BSONRegExp) {
                     doc[name] = { $regex: document[name].pattern, $options: document[name].options };
@@ -108,7 +108,7 @@ const deserialize = function (document) {
                 } else if (document[name].$minKey != undefined) {
                     doc[name] = new MinKey();
                 } else if (document[name].$oid != undefined) {
-                    doc[name] = new ObjectID(new Buffer(document[name].$oid, "hex"));
+                    doc[name] = new ObjectId(new Buffer(document[name].$oid, "hex"));
                 } else if (document[name].$regex != undefined) {
                     doc[name] = new BSONRegExp(document[name].$regex, document[name].$options);
                 } else if (document[name].$timestamp != undefined) {

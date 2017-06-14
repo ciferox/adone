@@ -5,7 +5,7 @@ describe("gridfs", function () {
     it("should create new grid store object", async () => {
         const { db } = this;
         const filename = "test_create_gridstore";
-        const id = new bson.ObjectID();
+        const id = new bson.ObjectId();
         const gs = new GridStore(db, id, filename, "w");
         expect(gs).to.be.instanceOf(GridStore);
         expect(gs.fileId).to.be.equal(id);
@@ -318,7 +318,7 @@ describe("gridfs", function () {
 
     it("should correctly save data by object id", async () => {
         const { db } = this;
-        const id = new bson.ObjectID();
+        const id = new bson.ObjectId();
         const gridStore = new GridStore(db, id, "w");
         await gridStore.open();
         await gridStore.write("bar");
@@ -337,13 +337,13 @@ describe("gridfs", function () {
 
     it("should correctly open grid store with different root", async () => {
         const { db } = this;
-        const store = new GridStore(db, new bson.ObjectID(), "w", { root: "store" });
+        const store = new GridStore(db, new bson.ObjectId(), "w", { root: "store" });
         await store.open();
     });
 
     it("should correctly set filename for grid store open", async () => {
         const { db } = this;
-        const id = new bson.ObjectID();
+        const id = new bson.ObjectId();
         let gridStore = new GridStore(db, id, "test_gs_read_length", "w");
         await gridStore.open();
         await gridStore.write("hello world!");
@@ -356,7 +356,7 @@ describe("gridfs", function () {
 
     it("should correctly save file and then open change content type and save again", async () => {
         const { db } = this;
-        const id = new bson.ObjectID();
+        const id = new bson.ObjectId();
         let gridStore = new GridStore(db, id, "test_gs_read_length", "w", { content_type: "image/jpeg" });
         await gridStore.open();
         await gridStore.write("hello world!");
@@ -376,7 +376,7 @@ describe("gridfs", function () {
 
     it("should correctly save file without filename and then open add filename and save again", async () => {
         const { db } = this;
-        const id = new bson.ObjectID();
+        const id = new bson.ObjectId();
         let gridStore = new GridStore(db, id, "w", { content_type: "image/jpeg" });
         await gridStore.open();
         await gridStore.write("hello world!");
@@ -397,7 +397,7 @@ describe("gridfs", function () {
 
     it("should correctly save file and then open change filename and save again", async () => {
         const { db } = this;
-        const id = new bson.ObjectID();
+        const id = new bson.ObjectId();
         let gridStore = new GridStore(db, id, "test_gs_filename3", "w", { content_type: "image/jpeg" });
         await gridStore.open();
         await gridStore.write("hello world!");
@@ -418,7 +418,7 @@ describe("gridfs", function () {
 
     it("should correctly save file and then append change filename and save again", async () => {
         const { db } = this;
-        const id = new bson.ObjectID();
+        const id = new bson.ObjectId();
         let gridStore = new GridStore(db, id, "test_gs_filename1", "w", { content_type: "image/jpeg" });
         await gridStore.open();
         await gridStore.write("hello world!");
@@ -438,7 +438,7 @@ describe("gridfs", function () {
 
     it("should correctly handle seek with stream", async () => {
         const { db } = this;
-        const id = new bson.ObjectID();
+        const id = new bson.ObjectId();
         let gridStore = new GridStore(db, id, "test_gs_read_length", "w", { content_type: "image/jpeg" });
         await gridStore.open();
         await gridStore.write("hello world!");
@@ -454,7 +454,7 @@ describe("gridfs", function () {
 
     it("should correctly handle seek into second chunk with stream", async () => {
         const { db } = this;
-        const id = new bson.ObjectID();
+        const id = new bson.ObjectId();
         let gridStore = new GridStore(db, id, "test_gs_read_length", "w", { content_type: "image/jpeg", chunk_size: 5 });
         await gridStore.open();
         await gridStore.write("hello world!");
@@ -509,7 +509,7 @@ describe("gridfs", function () {
     it("should fail when attempting to append to a file", async () => {
         const { db } = this;
         const chunkSize = 256 * 1024;  // Standard 256KB chunks
-        const fileId = new bson.ObjectID();
+        const fileId = new bson.ObjectId();
         let gridStore = new GridStore(db, fileId, "w", { chunkSize, root: "chunkCheck" });
         await gridStore.open();
         const buffer = Buffer.alloc(chunkSize);
@@ -570,7 +570,7 @@ describe("gridfs", function () {
 
     it("should correctly write large file string and read back", async () => {
         const { db } = this;
-        const fileId = new bson.ObjectID();
+        const fileId = new bson.ObjectId();
         let gridStore = new GridStore(db, fileId, "w", { root: "fs" });
         gridStore.chunkSize = 5000;
         await gridStore.open();
@@ -598,7 +598,7 @@ describe("gridfs", function () {
 
     it("should correctly write large file buffer and read back", async () => {
         const { db } = this;
-        const fileId = new bson.ObjectID();
+        const fileId = new bson.ObjectId();
         let gridStore = new GridStore(db, fileId, "w", { root: "fs" });
         gridStore.chunkSize = 5000;
         await gridStore.open();
@@ -685,9 +685,9 @@ describe("gridfs", function () {
         const items = await files.find({ filename: "test_gs_small_write4" }).toArray();
         expect(items).to.have.lengthOf(1);
         const [item] = items;
-        expect(item._id._bsontype).to.be.equal("ObjectID");
+        expect(item._id._bsontype).to.be.equal("ObjectId");
         const chunks = db.collection("fs.chunks");
-        const id = bson.ObjectID.createFromHexString(item._id.toHexString());
+        const id = bson.ObjectId.createFromHexString(item._id.toHexString());
         expect(await chunks.find({ files_id: id }).toArray()).to.have.lengthOf(1);
     });
 
@@ -995,7 +995,7 @@ describe("gridfs", function () {
 
     it("should not throw error on close", async () => {
         const { db } = this;
-        const fieldId = new bson.ObjectID();
+        const fieldId = new bson.ObjectId();
         const gridStore = new GridStore(db, fieldId, "w", { root: "fs" });
         gridStore.chunkSize = 1024 * 256;
         await gridStore.open();
@@ -1084,7 +1084,7 @@ describe("gridfs", function () {
 
     it("should correctly handle filename as ObjectId", async () => {
         const { db } = this;
-        const id = new bson.ObjectID();
+        const id = new bson.ObjectId();
         const gridStore = new GridStore(db, id, id, "w");
         await gridStore.open();
         await gridStore.write("hello world!");
@@ -1124,7 +1124,7 @@ describe("gridfs", function () {
     });
 
     it("should correctly seek on file where size of file is a multiple of the chunk size and then stream", async () => {
-        const id = new bson.ObjectID();
+        const id = new bson.ObjectId();
 
         const db = await mongo.connect(this.url(), { server: { sslValidate: false } });
         let gridStore = new GridStore(db, id, "w");
@@ -1145,7 +1145,7 @@ describe("gridfs", function () {
 
     it("should correctly write fake png to gridstore", async () => {
         const db = await mongo.connect(this.url(), { server: { sslValidate: false } });
-        const gridStore = new GridStore(db, new bson.ObjectID(), "w", { content_type: "image/png", chunk_size: 1024 * 4 });
+        const gridStore = new GridStore(db, new bson.ObjectId(), "w", { content_type: "image/png", chunk_size: 1024 * 4 });
         await gridStore.open();
         await gridStore.write(Buffer.allocUnsafe(200033));
         await gridStore.close();
@@ -1154,7 +1154,7 @@ describe("gridfs", function () {
     it("should not attempt to delete chunks when no file exists", async () => {
         const { db } = this;
         const buffer = Buffer.allocUnsafe(2000);
-        const gridStore = new GridStore(db, new bson.ObjectID(), "w", { content_type: "image/png", chunk_size: 1024 * 4 });
+        const gridStore = new GridStore(db, new bson.ObjectId(), "w", { content_type: "image/png", chunk_size: 1024 * 4 });
         await gridStore.open();
         await gridStore.write(buffer);
         await gridStore.close();

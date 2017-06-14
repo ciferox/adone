@@ -205,6 +205,14 @@ describe("databases", "mongo", function () {
                     include("./gridfs");
                     include("./ignore_undefined");
                     include("./index");
+                    include("./insert");
+                    include("./mapreduce");
+                    include("./max_staleness");
+                    include("./maxtimems");
+                    include("./mongo_client_options");
+                    include("./mongo_client");
+                    include("./multiple_db");
+                    include("./object_id");
                 }
 
                 include("./authentication");

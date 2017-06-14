@@ -37,7 +37,7 @@ describe("mongodb", function () {
             context("monitoring", () => {
                 it("Should correctly connect to a replicaset where the primary hangs causing monitoring thread to hang", async () => {
                     let running = true;
-                    const electionIds = [new adone.data.bson.ObjectID(), new adone.data.bson.ObjectID()];
+                    const electionIds = [new adone.data.bson.ObjectId(), new adone.data.bson.ObjectId()];
                     // Current index for the ismaster
                     let currentIsMasterState = 0;
                     // Primary stop responding
@@ -258,7 +258,7 @@ describe("mongodb", function () {
                 it.skip("Should correctly prune intervalIds array", async () => {
                     // Contain mock server
                     let running = true;
-                    const electionIds = [new adone.data.bson.ObjectID(), new adone.data.bson.ObjectID()];
+                    const electionIds = [new adone.data.bson.ObjectId(), new adone.data.bson.ObjectId()];
                     // Current index for the ismaster
                     const currentIsMasterState = 0;
                     // Primary stop responding

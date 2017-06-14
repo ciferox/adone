@@ -238,28 +238,28 @@ describe("find", function () {
         }
     });
 
-    it("should correctly perform find by ObjectID", async () => {
+    it("should correctly perform find by ObjectId", async () => {
         const { db } = this;
         const collection = await db.createCollection("test_find_by_oid");
         const { ops: [doc] } = await collection.save({ hello: "mike" });
-        expect(doc._id).to.be.instanceOf(bson.ObjectID);
+        expect(doc._id).to.be.instanceOf(bson.ObjectId);
         const doc1 = await collection.findOne({ _id: doc._id });
         expect(doc1).to.have.property("hello", "mike");
         const id = doc._id.toString();
-        const doc2 = await collection.findOne({ _id: new bson.ObjectID(id) });
+        const doc2 = await collection.findOne({ _id: new bson.ObjectId(id) });
         expect(doc2).to.have.property("hello", "mike");
     });
 
     it("should correctly return document with original structure", async () => {
         const { db } = this;
         const collection = await db.createCollection("test_find_by_oid_with_subdocs");
-        const c1 = { _id: new bson.ObjectID(), comments: [], title: "number 1" };
-        const c2 = { _id: new bson.ObjectID(), comments: [], title: "number 2" };
+        const c1 = { _id: new bson.ObjectId(), comments: [], title: "number 1" };
+        const c2 = { _id: new bson.ObjectId(), comments: [], title: "number 2" };
         const doc = {
             numbers: [],
             owners: [],
             comments: [c1, c2],
-            _id: new bson.ObjectID()
+            _id: new bson.ObjectId()
         };
 
         await collection.insert(doc);
@@ -282,7 +282,7 @@ describe("find", function () {
         // Try to fetch an object using a totally invalid and wrong hex string... what we're interested in here
         // is the error handling of the findOne Method
         expect(() => {
-            collection.findOne({ _id: bson.ObjectID.createFromHexString("5e9bd59248305adf18ebc15703a1") });
+            collection.findOne({ _id: bson.ObjectId.createFromHexString("5e9bd59248305adf18ebc15703a1") });
         }).to.throw("Argument passed in must be a single String of 12 bytes or a string of 24 hex characters");
     });
 
@@ -441,7 +441,7 @@ describe("find", function () {
     it("should correctly return new modified document", async () => {
         const { db } = this;
         const collection = await db.createCollection("Should_correctly_return_new_modified_document");
-        const id = new bson.ObjectID();
+        const id = new bson.ObjectId();
         const doc = { _id: id, a: 1, b: 1, c: { a: 1, b: 1 } };
 
         await collection.insert(doc);
@@ -457,7 +457,7 @@ describe("find", function () {
     it("should correctly execute findAndModify", async () => {
         const { db } = this;
         const collection = await db.createCollection("shouldCorrectlyExecuteFindAndModify");
-        const self = { _id: new bson.ObjectID() };
+        const self = { _id: new bson.ObjectId() };
         const _uuid = "sddffdss";
 
         await collection.findAndModify(
@@ -471,8 +471,8 @@ describe("find", function () {
     it("should correctly return record with 64-bit id", async () => {
         const { db } = this;
         const collection = await db.createCollection("should_correctly_return_record_with_64bit_id");
-        const _lowerId = new bson.ObjectID();
-        const _higherId = new bson.ObjectID();
+        const _lowerId = new bson.ObjectId();
+        const _higherId = new bson.ObjectId();
         const lowerId = bson.Long.fromString("133118461172916224", 10);
         const higherId = bson.Long.fromString("133118461172916225", 10);
 
@@ -488,7 +488,7 @@ describe("find", function () {
     it("should correctly find a Document using findOne excluding _id field", async () => {
         const { db } = this;
         const collection = await db.createCollection("Should_Correctly_find_a_Document_using_findOne_excluding__id_field");
-        const doc = { _id: new bson.ObjectID(), a: 1, c: 2 };
+        const doc = { _id: new bson.ObjectId(), a: 1, c: 2 };
         await collection.insert(doc);
         const item = await collection.findOne({ a: 1 }, { fields: { _id: 0 } });
         expect(item).not.to.have.property("_id");
@@ -504,7 +504,7 @@ describe("find", function () {
     it("should correctly execute find and findOne queries in the same way", async () => {
         const { db } = this;
         const collection = await db.createCollection("Should_correctly_execute_find_and_findOne_queries_in_the_same_way");
-        const doc = { _id: new bson.ObjectID(), a: 1, c: 2, comments: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] };
+        const doc = { _id: new bson.ObjectId(), a: 1, c: 2, comments: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] };
         await collection.insert(doc);
         const docs = await collection.find({ _id: doc._id }, { comments: { $slice: -5 } }).toArray();
         expect(docs).to.have.lengthOf(1);
@@ -516,7 +516,7 @@ describe("find", function () {
     it("Should correctly execute find and findOne queries with selector set to null", async () => {
         const { db } = this;
         const collection = await db.createCollection("Should_correctly_execute_find_and_findOne_queries_in_the_same_way");
-        const doc = { _id: new bson.ObjectID(), a: 1, c: 2, comments: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] };
+        const doc = { _id: new bson.ObjectId(), a: 1, c: 2, comments: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] };
         await collection.insert(doc);
         const docs = await collection.find(null, { comments: { $slice: -5 } }).toArray();
         expect(docs[0].comments).to.be.deep.equal([5, 6, 7, 8, 9]);
@@ -536,8 +536,8 @@ describe("find", function () {
         const transaction = {};
         transaction.document = {};
         transaction.document.type = "documentType";
-        transaction.document.id = new bson.ObjectID();
-        transaction.transactionId = new bson.ObjectID();
+        transaction.document.id = new bson.ObjectId();
+        transaction.transactionId = new bson.ObjectId();
         transaction.amount = 12.3333;
         const transactions = [];
         transactions.push(transaction);
@@ -593,9 +593,9 @@ describe("find", function () {
         const { db } = this;
         const collection = await db.createCollection("shouldCorrectlyReturnErrorFromMongodbOnFindAndModifyForcedError");
         const q = { x: 1 };
-        const set = { y: 2, _id: new bson.ObjectID() };
+        const set = { y: 2, _id: new bson.ObjectId() };
         const opts = { new: true, upsert: true };
-        const doc = { _id: new bson.ObjectID(), x: 1 };
+        const doc = { _id: new bson.ObjectId(), x: 1 };
 
         await collection.insert(doc);
         await assert.throws(async () => {
@@ -618,7 +618,7 @@ describe("find", function () {
 
         await promise.delay(500);
 
-        const id = new bson.ObjectID();
+        const id = new bson.ObjectId();
         await collection.insert({ _id: id, a: 1 });
         await assert.throws(async () => {
             await collection.insert({ _id: id, a: 1 });

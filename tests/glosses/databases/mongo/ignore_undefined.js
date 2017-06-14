@@ -19,7 +19,7 @@ describe("ignore undefined", function () {
         const db = await mongo.connect(this.url(), { ignoreUndefined: true });
         const collection = db.collection("shouldCorrectlyIgnoreUndefinedValue2");
         {
-            const id = new bson.ObjectID();
+            const id = new bson.ObjectId();
 
             await collection.updateOne({ _id: id, a: 1, b: undefined }, {
                 $set: { a: 1, b: undefined }
@@ -29,7 +29,7 @@ describe("ignore undefined", function () {
             expect(item).not.to.have.property("b");
         }
         {
-            const id = new bson.ObjectID();
+            const id = new bson.ObjectId();
             await collection.updateMany({ _id: id, a: 1, b: undefined }, {
                 $set: { a: 1, b: undefined }
             }, { upsert: true });
@@ -38,7 +38,7 @@ describe("ignore undefined", function () {
             expect(item).not.to.have.property("b");
         }
         {
-            const id = new bson.ObjectID();
+            const id = new bson.ObjectId();
             await collection.update({ _id: id, a: 1, b: undefined }, {
                 $set: { a: 1, b: undefined }
             }, { upsert: true });

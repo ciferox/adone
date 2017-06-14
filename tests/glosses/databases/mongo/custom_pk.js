@@ -3,7 +3,7 @@ describe("custom pk", function () {
 
     it("should create records with custom pk factory", async () => {
         const factory = {
-            createPk: () => new bson.ObjectID("aaaaaaaaaaaa")
+            createPk: () => new bson.ObjectId("aaaaaaaaaaaa")
         };
 
         const client = await mongo.connect(this.url(), { pkFactory: factory, poolSize: 1 });
@@ -12,7 +12,7 @@ describe("custom pk", function () {
         const s = spy(factory, "createPk");
         await collection.insert({ a: 1 }, { w: 1 });
         expect(s).to.have.been.calledOnce;
-        const items = await collection.find({ _id: new bson.ObjectID("aaaaaaaaaaaa") }).toArray();
+        const items = await collection.find({ _id: new bson.ObjectId("aaaaaaaaaaaa") }).toArray();
         expect(items).to.have.lengthOf(1);
         expect(items[0]).to.include({ a: 1 });
     });

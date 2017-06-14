@@ -172,7 +172,7 @@ const addToList = (self, type, ismaster, server, list) => {
     list.push(server);
 };
 
-const compareObjectIDs = (id1, id2) => {
+const compareObjectIds = (id1, id2) => {
     const a = Buffer.from(id1.toHexString(), "hex");
     const b = Buffer.from(id2.toHexString(), "hex");
 
@@ -605,7 +605,7 @@ export default class ReplSetState extends EventEmitter {
             if (!this.maxElectionId && ismasterElectionId) {
                 this.maxElectionId = ismasterElectionId;
             } else if (this.maxElectionId && ismasterElectionId) {
-                const result = compareObjectIDs(this.maxElectionId, ismasterElectionId);
+                const result = compareObjectIds(this.maxElectionId, ismasterElectionId);
                 // Get the electionIds
                 const ismasterSetVersion = server.lastIsMaster().setVersion;
 
@@ -678,7 +678,7 @@ export default class ReplSetState extends EventEmitter {
 
             // Check if we need to replace the server
             if (currentElectionId && ismasterElectionId) {
-                const result = compareObjectIDs(currentElectionId, ismasterElectionId);
+                const result = compareObjectIds(currentElectionId, ismasterElectionId);
 
                 if (result === 1) {
                     return false;
@@ -697,7 +697,7 @@ export default class ReplSetState extends EventEmitter {
             if (!this.maxElectionId && ismasterElectionId) {
                 this.maxElectionId = ismasterElectionId;
             } else if (this.maxElectionId && ismasterElectionId) {
-                const result = compareObjectIDs(this.maxElectionId, ismasterElectionId);
+                const result = compareObjectIds(this.maxElectionId, ismasterElectionId);
 
                 if (result === 1) {
                     return false;

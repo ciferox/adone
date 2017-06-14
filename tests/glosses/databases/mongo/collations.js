@@ -592,7 +592,7 @@ describe("collations", function () {
 
     it("successfully fail bulkWrite due to unsupported collation using replset", async () => {
         let running = true;
-        const electionIds = [new bson.ObjectID(), new bson.ObjectID()];
+        const electionIds = [new bson.ObjectId(), new bson.ObjectId()];
 
         const defaultFields = {
             setName: "rs",

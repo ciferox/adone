@@ -43,7 +43,7 @@ describe("mongodb", function () {
                     const defaultFields = {
                         setName: "rs",
                         setVersion: 1,
-                        electionId: new adone.data.bson.ObjectID(),
+                        electionId: new adone.data.bson.ObjectId(),
                         maxBsonObjectSize: 16777216,
                         maxMessageSizeBytes: 48000000,
                         maxWriteBatchSize: 1000,
@@ -116,7 +116,7 @@ describe("mongodb", function () {
                     const defaultFields = {
                         setName: "rs",
                         setVersion: 1,
-                        electionId: new adone.data.bson.ObjectID(),
+                        electionId: new adone.data.bson.ObjectId(),
                         maxBsonObjectSize: 16777216,
                         maxMessageSizeBytes: 48000000,
                         maxWriteBatchSize: 1000,

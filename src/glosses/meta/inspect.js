@@ -1,6 +1,6 @@
 const { is, identity, terminal: { styles } } = adone;
 
-/*    
+/*
     * style:
         * 'none': (default) normal output suitable for console.log() or writing in a file
         * 'color': colorful output suitable for terminal
@@ -96,9 +96,9 @@ const specialObjectSubstitution = (variable) => {
                 return Array.from(variable);
             }
             break;
-        case "ObjectID":
+        case "ObjectId":
             if (variable._bsontype) {
-                // This is a MongoDB ObjectID, rather boring to display in its original form
+                // This is a MongoDB ObjectId, rather boring to display in its original form
                 // due to esoteric characters that confuse both the user and the terminal displaying it.
                 // Substitute it to its string representation
                 return variable.toString();

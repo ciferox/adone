@@ -9,16 +9,16 @@ for (let i = 0; i < 256; i++) {
     hexTable[i] = (i <= 15 ? "0" : "") + i.toString(16);
 }
 
-export default class ObjectID {
+export default class ObjectId {
     constructor(id) {
-        this._bsontype = "ObjectID";
+        this._bsontype = "ObjectId";
 
         // The most common usecase (blank id, new objectId instance)
         if (is.nil(id) || is.number(id)) {
             // Generate a new id
             this.id = this.generate(id);
             // If we are caching the hex string
-            if (ObjectID.cacheHexString) {
+            if (ObjectId.cacheHexString) {
                 this.__id = this.toString("hex");
             }
             // Return the object
@@ -26,41 +26,41 @@ export default class ObjectID {
         }
 
         // Check if the passed in id is valid
-        const valid = ObjectID.isValid(id);
+        const valid = ObjectId.isValid(id);
 
         // Throw an error if it's not a valid setup
         if (!valid && !is.nil(id)) {
             throw new x.InvalidArgument("Argument passed in must be a single String of 12 bytes or a string of 24 hex characters");
         } else if (valid && is.string(id) && id.length === 24) {
-            return new ObjectID(Buffer.from(id, "hex"));
+            return new ObjectId(Buffer.from(id, "hex"));
         } else if (!is.nil(id) && id.length === 12) {
             // assume 12 byte string
             this.id = id;
         } else if (!is.nil(id) && id.toHexString) {
-            // Duck-typing to support ObjectID from different npm packages
+            // Duck-typing to support ObjectId from different npm packages
             return id;
         } else {
             throw new x.InvalidArgument("Argument passed in must be a single String of 12 bytes or a string of 24 hex characters");
         }
 
-        if (ObjectID.cacheHexString) {
+        if (ObjectId.cacheHexString) {
             this.__id = this.toString("hex");
         }
     }
 
     toHexString() {
-        if (ObjectID.cacheHexString && this.__id) {
+        if (ObjectId.cacheHexString && this.__id) {
             return this.__id;
         }
 
         let hexString = "";
         if (!this.id || !this.id.length) {
-            throw new x.InvalidArgument(`invalid ObjectID, ObjectID.id must be either a string or a Buffer, but is [${JSON.stringify(this.id)}]`);
+            throw new x.InvalidArgument(`invalid ObjectId, ObjectId.id must be either a string or a Buffer, but is [${JSON.stringify(this.id)}]`);
         }
 
         if (is.buffer(this.id)) {
             hexString = this.id.toString("hex");
-            if (ObjectID.cacheHexString) {
+            if (ObjectId.cacheHexString) {
                 this.__id = hexString;
             }
             return hexString;
@@ -70,14 +70,14 @@ export default class ObjectID {
             hexString += hexTable[this.id.charCodeAt(i)];
         }
 
-        if (ObjectID.cacheHexString) {
+        if (ObjectId.cacheHexString) {
             this.__id = hexString;
         }
         return hexString;
     }
 
     getInc() {
-        return ObjectID.index = (ObjectID.index + 1) % 0xFFFFFF;
+        return ObjectId.index = (ObjectId.index + 1) % 0xFFFFFF;
     }
 
     generate(time) {
@@ -121,12 +121,12 @@ export default class ObjectID {
     }
 
     equals(otherId) {
-        if (otherId instanceof ObjectID) {
+        if (otherId instanceof ObjectId) {
             return this.toString() === otherId.toString();
         }
         if (
             is.string(otherId) &&
-            ObjectID.isValid(otherId) &&
+            ObjectId.isValid(otherId) &&
             otherId.length === 12 &&
             is.buffer(this.id)
         ) {
@@ -134,19 +134,19 @@ export default class ObjectID {
         }
         if (
             is.string(otherId) &&
-            ObjectID.isValid(otherId) &&
+            ObjectId.isValid(otherId) &&
             otherId.length === 24
         ) {
             return otherId.toLowerCase() === this.toHexString();
         }
         if (
             is.string(otherId) &&
-            ObjectID.isValid(otherId) &&
+            ObjectId.isValid(otherId) &&
             otherId.length === 12
         ) {
             return otherId === this.id;
         }
-        if (!is.nil(otherId) && (otherId instanceof ObjectID || otherId.toHexString)) {
+        if (!is.nil(otherId) && (otherId instanceof ObjectId || otherId.toHexString)) {
             return otherId.toHexString() === this.toHexString();
         }
 
@@ -161,7 +161,7 @@ export default class ObjectID {
     }
 
     static createPk() {
-        return new ObjectID();
+        return new ObjectId();
     }
 
     static createFromTime(time) {
@@ -172,7 +172,7 @@ export default class ObjectID {
         buffer[1] = (time >> 16) & 0xff;
         buffer[0] = (time >> 24) & 0xff;
         // Return the new objectId
-        return new ObjectID(buffer);
+        return new ObjectId(buffer);
     }
 
     static createFromHexString(string) {
@@ -181,7 +181,7 @@ export default class ObjectID {
             throw new x.InvalidArgument("Argument passed in must be a single String of 12 bytes or a string of 24 hex characters");
         }
 
-        return new ObjectID(Buffer.from(string, "hex"));
+        return new ObjectId(Buffer.from(string, "hex"));
     }
 
     static isValid(id) {
@@ -197,11 +197,11 @@ export default class ObjectID {
             return id.length === 12 || (id.length === 24 && checkForHexRegExp.test(id));
         }
 
-        if (id instanceof ObjectID || is.buffer(id)) {
+        if (id instanceof ObjectId || is.buffer(id)) {
             return true;
         }
 
-        // Duck-Typing detection of ObjectID like objects
+        // Duck-Typing detection of ObjectId like objects
         if (id.toHexString) {
             return id.id.length === 12 ||
                 (id.id.length === 24 && checkForHexRegExp.test(id.id));
@@ -224,4 +224,4 @@ export default class ObjectID {
 
 
 
-ObjectID.index = ~~(Math.random() * 0xFFFFFF);
+ObjectId.index = ~~(Math.random() * 0xFFFFFF);

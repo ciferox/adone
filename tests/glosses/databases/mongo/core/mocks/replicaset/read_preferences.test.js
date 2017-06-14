@@ -37,7 +37,7 @@ describe("mongodb", function () {
             context("read preferences", () => {
                 it("Should correctly connect to a replicaset and select the correct tagged secondary server", async () => {
                     let running = true;
-                    const electionIds = [new adone.data.bson.ObjectID(), new adone.data.bson.ObjectID()];
+                    const electionIds = [new adone.data.bson.ObjectId(), new adone.data.bson.ObjectId()];
 
                     // Default message fields
                     const defaultFields = {
@@ -189,7 +189,7 @@ describe("mongodb", function () {
 
                 it("Should correctly connect to a replicaset and select the primary server", async () => {
                     let running = true;
-                    const electionIds = [new adone.data.bson.ObjectID(), new adone.data.bson.ObjectID()];
+                    const electionIds = [new adone.data.bson.ObjectId(), new adone.data.bson.ObjectId()];
 
                     // Default message fields
                     const defaultFields = {
@@ -342,7 +342,7 @@ describe("mongodb", function () {
 
                 it("Should correctly round robin secondary reads", async () => {
                     let running = true;
-                    const electionIds = [new adone.data.bson.ObjectID(), new adone.data.bson.ObjectID()];
+                    const electionIds = [new adone.data.bson.ObjectId(), new adone.data.bson.ObjectId()];
 
                     // Default message fields
                     const defaultFields = {
@@ -517,7 +517,7 @@ describe("mongodb", function () {
 
                 it("Should correctly fall back to a secondary server if the readPreference is primaryPreferred", async () => {
                     let running = true;
-                    const electionIds = [new adone.data.bson.ObjectID(), new adone.data.bson.ObjectID()];
+                    const electionIds = [new adone.data.bson.ObjectId(), new adone.data.bson.ObjectId()];
 
                     // Default message fields
                     const defaultFields = {
@@ -664,7 +664,7 @@ describe("mongodb", function () {
 
                 it("Should correctly fallback to secondaries when primary not available", async () => {
                     let running = true;
-                    const electionIds = [new adone.data.bson.ObjectID(), new adone.data.bson.ObjectID()];
+                    const electionIds = [new adone.data.bson.ObjectId(), new adone.data.bson.ObjectId()];
 
                     // Default message fields
                     const defaultFields = {
@@ -835,7 +835,7 @@ describe("mongodb", function () {
 
                 it("Should correctly connect to a replicaset and perform correct nearness read", async () => {
                     let running = true;
-                    const electionIds = [new adone.data.bson.ObjectID(), new adone.data.bson.ObjectID()];
+                    const electionIds = [new adone.data.bson.ObjectId(), new adone.data.bson.ObjectId()];
 
                     // Default message fields
                     const defaultFields = {
@@ -994,7 +994,7 @@ describe("mongodb", function () {
 
                 it("Should correctly connect to a replicaset and perform correct nearness read with tag", async () => {
                     let running = true;
-                    const electionIds = [new adone.data.bson.ObjectID(), new adone.data.bson.ObjectID()];
+                    const electionIds = [new adone.data.bson.ObjectId(), new adone.data.bson.ObjectId()];
 
                     // Default message fields
                     const defaultFields = {
@@ -1153,7 +1153,7 @@ describe("mongodb", function () {
 
                 it("Should correctly connect connect to single server replicaset and peform a secondaryPreferred", async () => {
                     let running = true;
-                    const electionIds = [new adone.data.bson.ObjectID(), new adone.data.bson.ObjectID()];
+                    const electionIds = [new adone.data.bson.ObjectId(), new adone.data.bson.ObjectId()];
 
                     // Default message fields
                     const defaultFields = {

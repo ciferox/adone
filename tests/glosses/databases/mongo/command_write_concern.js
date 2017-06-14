@@ -9,7 +9,7 @@ describe("command write concern", function () {
 
     it("successfully pass through writeConcern to aggregate command", async () => {
         let running = true;
-        const electionIds = [new bson.ObjectID(), new bson.ObjectID()];
+        const electionIds = [new bson.ObjectId(), new bson.ObjectId()];
 
         const defaultFields = {
             setName: "rs",
@@ -121,7 +121,7 @@ describe("command write concern", function () {
 
     it("successfully pass through writeConcern to create command", async () => {
         let running = true;
-        const electionIds = [new bson.ObjectID(), new bson.ObjectID()];
+        const electionIds = [new bson.ObjectId(), new bson.ObjectId()];
 
         const defaultFields = {
             setName: "rs",
@@ -239,7 +239,7 @@ describe("command write concern", function () {
 
     it("successfully pass through writeConcern to createIndexes command", async () => {
         let running = true;
-        const electionIds = [new bson.ObjectID(), new bson.ObjectID()];
+        const electionIds = [new bson.ObjectId(), new bson.ObjectId()];
 
         const defaultFields = {
             setName: "rs",
@@ -352,7 +352,7 @@ describe("command write concern", function () {
 
     it("successfully pass through writeConcern to drop command", async () => {
         let running = true;
-        const electionIds = [new bson.ObjectID(), new bson.ObjectID()];
+        const electionIds = [new bson.ObjectId(), new bson.ObjectId()];
 
         const defaultFields = {
             setName: "rs",
@@ -464,7 +464,7 @@ describe("command write concern", function () {
 
     it("successfully pass through writeConcern to dropDatabase command", async () => {
         let running = true;
-        const electionIds = [new bson.ObjectID(), new bson.ObjectID()];
+        const electionIds = [new bson.ObjectId(), new bson.ObjectId()];
 
         const defaultFields = {
             setName: "rs",
@@ -575,7 +575,7 @@ describe("command write concern", function () {
 
     it("successfully pass through writeConcern to dropIndexes command", async () => {
         let running = true;
-        const electionIds = [new bson.ObjectID(), new bson.ObjectID()];
+        const electionIds = [new bson.ObjectId(), new bson.ObjectId()];
 
         const defaultFields = {
             setName: "rs",
@@ -687,7 +687,7 @@ describe("command write concern", function () {
 
     it("successfully pass through writeConcern to dropIndexes command", async () => {
         let running = true;
-        const electionIds = [new bson.ObjectID(), new bson.ObjectID()];
+        const electionIds = [new bson.ObjectId(), new bson.ObjectId()];
 
         const defaultFields = {
             setName: "rs",
@@ -805,7 +805,7 @@ describe("command write concern", function () {
 
     it("successfully pass through writeConcern to createUser command", async () => {
         let running = true;
-        const electionIds = [new bson.ObjectID(), new bson.ObjectID()];
+        const electionIds = [new bson.ObjectId(), new bson.ObjectId()];
 
         const defaultFields = {
             setName: "rs",
@@ -914,7 +914,7 @@ describe("command write concern", function () {
 
     it("successfully pass through writeConcern to dropUser command", async () => {
         let running = true;
-        const electionIds = [new bson.ObjectID(), new bson.ObjectID()];
+        const electionIds = [new bson.ObjectId(), new bson.ObjectId()];
 
         const defaultFields = {
             setName: "rs",
@@ -1023,7 +1023,7 @@ describe("command write concern", function () {
 
     it("successfully pass through writeConcern to findAndModify command", async () => {
         let running = true;
-        const electionIds = [new bson.ObjectID(), new bson.ObjectID()];
+        const electionIds = [new bson.ObjectId(), new bson.ObjectId()];
 
         const defaultFields = {
             setName: "rs",

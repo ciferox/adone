@@ -49,7 +49,7 @@ void die(const char *message) {
 
 // Equality Objects
 static const char* LONG_CLASS_NAME = "Long";
-static const char* OBJECT_ID_CLASS_NAME = "ObjectID";
+static const char* OBJECT_ID_CLASS_NAME = "ObjectId";
 static const char* BINARY_CLASS_NAME = "Binary";
 static const char* CODE_CLASS_NAME = "Code";
 static const char* DBREF_CLASS_NAME = "DBRef";
@@ -1233,7 +1233,7 @@ NAN_METHOD(BSON::New) {
 			// Check if we have the right number of constructors otherwise throw an error
 			if(foundClassesMask != 0x1fff) {
 				delete bson;
-				return Nan::ThrowError("Missing function constructor for either [Long/ObjectID/Binary/Code/DbRef/Symbol/Double/Timestamp/MinKey/MaxKey/BSONRegExp/Decimal128]");
+				return Nan::ThrowError("Missing function constructor for either [Long/ObjectId/Binary/Code/DbRef/Symbol/Double/Timestamp/MinKey/MaxKey/BSONRegExp/Decimal128]");
 			} else {
 				bson->Wrap(info.This());
 				info.GetReturnValue().Set(info.This());

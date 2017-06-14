@@ -1,9 +1,9 @@
 describe("data", "bson", "to bson", () => {
-    const { data: { bson: { BSON, ObjectID } } } = adone;
+    const { data: { bson: { BSON, ObjectId } } } = adone;
 
     it("should correctly handle toBson function for an object", () => {
         const doc = {
-            hello: new ObjectID(),
+            hello: new ObjectId(),
             a: 1
         };
 
@@ -20,7 +20,7 @@ describe("data", "bson", "to bson", () => {
 
     it("should correctly handle embedded toBson function for an object", () => {
         const doc = {
-            hello: new ObjectID(),
+            hello: new ObjectId(),
             a: 1,
             b: {
                 d: 1
@@ -40,7 +40,7 @@ describe("data", "bson", "to bson", () => {
 
     it("should correctly serialize when embedded non object returned by toBSON", () => {
         const doc = {
-            hello: new ObjectID(),
+            hello: new ObjectId(),
             a: 1,
             b: {
                 d: 1
@@ -60,7 +60,7 @@ describe("data", "bson", "to bson", () => {
 
     it("should fail when top level object returns a non object type", () => {
         const doc = {
-            hello: new ObjectID(),
+            hello: new ObjectId(),
             a: 1,
             b: {
                 d: 1

@@ -12,7 +12,7 @@ describe("buffering proxy", function () {
         const currentIsMasterIndex = 0;
 
         // Election Ids
-        const electionIds = [new bson.ObjectID(0), new bson.ObjectID(1)];
+        const electionIds = [new bson.ObjectId(0), new bson.ObjectId(1)];
         // Default message fields
         const defaultFields = {
             setName: "rs",
@@ -226,7 +226,7 @@ describe("buffering proxy", function () {
         const currentIsMasterIndex = 0;
 
         // Election Ids
-        const electionIds = [new bson.ObjectID(0), new bson.ObjectID(1)];
+        const electionIds = [new bson.ObjectId(0), new bson.ObjectId(1)];
         // Default message fields
         const defaultFields = {
             setName: "rs",

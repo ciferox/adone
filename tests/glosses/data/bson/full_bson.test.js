@@ -2,7 +2,7 @@ import { BinaryParser } from "./binary_parser";
 
 describe("data", "bson", "full", () => {
     const {
-        data: { bson: { BSON, ObjectID, Binary, BSONRegExp } },
+        data: { bson: { BSON, ObjectId, Binary, BSONRegExp } },
         std: { fs, assert, path }
     } = adone;
 
@@ -185,7 +185,7 @@ describe("data", "bson", "full", () => {
     });
 
     it("should correctly serialize and deserialize Oid", () => {
-        const doc = { doc: new ObjectID() };
+        const doc = { doc: new ObjectId() };
         const serializedData = serializer.serialize(doc);
         assert.deepEqual(
             doc.doc.toHexString(),

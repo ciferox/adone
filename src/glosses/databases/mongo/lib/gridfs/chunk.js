@@ -1,5 +1,5 @@
 const Binary = adone.data.bson.Binary;
-const ObjectID = adone.data.bson.ObjectID;
+const ObjectId = adone.data.bson.ObjectId;
 
 /**
  * Class for representing a single chunk in GridFS.
@@ -24,7 +24,7 @@ const Chunk = function (file, mongoObject, writeConcern) {
     this.file = file;
     const mongoObjectFinal = mongoObject == null ? {} : mongoObject;
     this.writeConcern = writeConcern || { w: 1 };
-    this.objectId = mongoObjectFinal._id == null ? new ObjectID() : mongoObjectFinal._id;
+    this.objectId = mongoObjectFinal._id == null ? new ObjectId() : mongoObjectFinal._id;
     this.chunkNumber = mongoObjectFinal.n == null ? 0 : mongoObjectFinal.n;
     this.data = new Binary();
 
@@ -162,7 +162,7 @@ Chunk.prototype.save = function (options, callback) {
 
         if (self.data.length() > 0) {
             self.buildMongoObject((mongoObject) => {
-                const options = { forceServerObjectID: true };
+                const options = { forceServerObjectId: true };
                 for (const name in self.writeConcern) {
                     options[name] = self.writeConcern[name];
                 }
@@ -202,7 +202,7 @@ Chunk.prototype.buildMongoObject = function (callback) {
         n: this.chunkNumber,
         data: this.data
     };
-    // If we are saving using a specific ObjectID
+    // If we are saving using a specific ObjectId
     if (this.objectId != null) {
         mongoObject._id = this.objectId;
     }
