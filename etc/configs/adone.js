@@ -45,8 +45,7 @@ const config = {
     environment,
     dirName,
     home,
-    configsPath,
-    configFilePath: join(configsPath, "adone.js")
+    configsPath
 };
 
 module.exports = config;

@@ -368,6 +368,28 @@ export default class Omnitron extends adone.application.Application {
     }
 
     @Public
+    @Description("Updates omnitron's environment variables")
+    setEnvs(envs) {
+        for (const [key, val] of Object.entries(envs)) {
+            process.env[key] = val;
+        }
+    }
+
+    @Public
+    @Description("Updates omnitron's environment variables")
+    updateEnvs(envs) {
+        for (const [key, val] of Object.entries(envs)) {
+            process.env[key] = val;
+        }
+
+        for (const key of Object.keys(process.env)) {
+            if (!is.propertyDefined(envs, key)) {
+                delete process.env[key];
+            }
+        }
+    }
+
+    @Public
     @Description("Version of omnitron")
     @Type(String)
     version() {

@@ -1131,16 +1131,16 @@ class Command {
                         message: arg.getShortHelpMessage()
                     };
                 }), {
-                    model: [
-                        { id: "left-spacing", width: 4 },
-                        { id: "names", maxWidth: 40, wordwrap: true },
-                        { id: "between-cells", width: 2 },
-                        { id: "message", wordwrap: false }
-                    ],
-                    width: "100%",
-                    borderless: true,
-                    noHeader: true
-                }));
+                        model: [
+                            { id: "left-spacing", width: 4 },
+                            { id: "names", maxWidth: 40, wordwrap: true },
+                            { id: "between-cells", width: 2 },
+                            { id: "message", wordwrap: false }
+                        ],
+                        width: "100%",
+                        borderless: true,
+                        noHeader: true
+                    }));
             }
             if (options.length) {
                 if (this.arguments.length) {
@@ -1171,16 +1171,16 @@ class Command {
                             message: opt.getShortHelpMessage()
                         };
                     }), {
-                        model: [
-                            { id: "left-spacing", width: 4 },
-                            { id: "names", maxWidth: 40, wordwrap: true },
-                            { id: "between-cells", width: 2 },
-                            { id: "message", wordwrap: false }
-                        ],
-                        width: "100%",
-                        borderless: true,
-                        noHeader: true
-                    }));
+                            model: [
+                                { id: "left-spacing", width: 4 },
+                                { id: "names", maxWidth: 40, wordwrap: true },
+                                { id: "between-cells", width: 2 },
+                                { id: "message", wordwrap: false }
+                            ],
+                            width: "100%",
+                            borderless: true,
+                            noHeader: true
+                        }));
                 }
             }
             if (commands.length) {
@@ -1212,16 +1212,16 @@ class Command {
                             message: cmd.getShortHelpMessage()
                         };
                     }), {
-                        model: [
-                            { id: "left-spacing", width: 4 },
-                            { id: "names", maxWidth: 40, wordwrap: true },
-                            { id: "between-cells", width: 2 },
-                            { id: "message", wordwrap: true }
-                        ],
-                        width: "100%",
-                        borderless: true,
-                        noHeader: true
-                    }));
+                            model: [
+                                { id: "left-spacing", width: 4 },
+                                { id: "names", maxWidth: 40, wordwrap: true },
+                                { id: "between-cells", width: 2 },
+                                { id: "message", wordwrap: true }
+                            ],
+                            width: "100%",
+                            borderless: true,
+                            noHeader: true
+                        }));
                 }
             }
         }
@@ -1409,15 +1409,19 @@ export class Application extends Subsystem {
         }
     }
 
-    async loadConfig(name, { path = name, defaults = false, ext = "json" } = {}) {
+    async loadConfig(name, { path = name, defaults = false, userConfig = false, ext = "json" } = {}) {
         const basename = `${name}.${ext}`;
         if (defaults) {
             const defaultConfigPath = adone.std.path.join(this.defaultConfigsPath, basename);
             await this.config.load(defaultConfigPath, path);
-            await adone.fs.copy(defaultConfigPath, this.config.adone.configsPath);
+            if (userConfig) {
+                await adone.fs.copy(defaultConfigPath, this.config.adone.configsPath);
+            }
         }
-        const configPath = adone.std.path.join(this.config.adone.configsPath, basename);
-        return this.config.load(configPath, path);
+        if (userConfig) {
+            const configPath = adone.std.path.join(this.config.adone.configsPath, basename);
+            await this.config.load(configPath, path);
+        }
     }
 
     saveConfig(name, { path = name, ext = "json", space = 4 } = {}) {

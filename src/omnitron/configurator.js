@@ -23,7 +23,7 @@ export default class Configurator {
         this.config = this.app.config;
 
         if (is.undefined(this.config.omnitron)) {
-            await this.app.loadConfig("omnitron", { ext: "js", defaults: true });
+            await this.app.loadConfig("omnitron", { ext: "js", defaults: true, userConfig: true });
             // Subconfiguration for services...
             this.config.omnitron.services = {};
 
@@ -42,7 +42,7 @@ export default class Configurator {
 
             // Merge with user-defined configuration.
             try {
-                await this.app.loadConfig("services", { path: "omnitron.services" });
+                await this.app.loadConfig("services", { path: "omnitron.services", userConfig: true });
             } catch (err) {
                 if (!(err instanceof adone.x.NotFound)) {
                     adone.error(err);
@@ -63,7 +63,7 @@ export default class Configurator {
             };
             // Load configuration of gates.
             try {
-                await this.app.loadConfig("gates", { path: "omnitron.gates" });
+                await this.app.loadConfig("gates", { path: "omnitron.gates", userConfig: true });
             } catch (err) {
                 if (err instanceof adone.x.NotFound) {
                     this.config.omnitron.gates = [
