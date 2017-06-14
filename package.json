@@ -93,7 +93,8 @@
     "rimraf": "^2.2.8",
     "tmp": "0.0.24",
     "underscore": "^1.7.0",
-    "ws": "^1.0.1"
+    "ws": "^1.0.1",
+    "lexicographic-integer": "^1.1.0"
   },
   "optionalDependencies": {
     "fsevents": "^1.0.0"

@@ -1,3 +1,4 @@
+const { is } = adone;
 const { Default } = adone.database.level.backend;
 const testCommon = require("../testCommon");
 const cleanup = testCommon.cleanup;
@@ -40,274 +41,237 @@ describe("databases", "level", "backend", "default", () => {
     require("../common/backend").args(factory);
 
 
-    // const iota = require("iota-array");
-    // const lexi = require("lexicographic-integer");
-    // const util = require("util");
-
     require("../common/iterator").all(factory, testCommon);
 
-    // make("iterator throws if key is not a string or buffer", (db, t, done) => {
-    //     let keys = [null, undefined, 1, true, false];
-    //     let pending = keys.length;
+    const lexi = require("lexicographic-integer");
 
-    //     keys.forEach((key) => {
-    //         let error;
-    //         let ite = db.iterator();
+    const not = (n) => {
+        if (is.function(n)) {
+            return function (k) {
+                return !n(k);
+            };
+        }
+        return function (k) {
+            return k !== n;
+        };
+    };
 
-    //         try {
-    //             ite.seek(key);
-    //         } catch (e) {
-    //             error = e;
-    //         }
+    const pairs = (length, opts) => {
+        opts = opts || {};
+        const arr = [];
+        for (let i = 0; i < length; i++) {
+            arr.push(i);
+        }
+        return arr.filter(not(opts.not)).map((k) => {
+            const key = opts.lex ? lexi.pack(k, "hex") : String(k);
+            return { type: "put", key, value: `${k}` };
+        });
+    };
 
-    //         t.ok(error, "had error from seek()");
-    //         ite.end(end);
-    //     });
+    const even = (n) => n % 2 === 0;
 
-    //     function end(err) {
-    //         t.error(err, "no error from end()");
-    //         if (!--pending) { done() };
-    //     }
-    // });
+    makeTest("iterator throws if key is not a string or buffer", async (db, done) => {
+        const keys = [null, undefined, 1, true, false];
+        let pending = keys.length;
 
-    // make("iterator is seekable", (db, t, done) => {
-    //     let ite = db.iterator();
-    //     ite.seek("two");
-    //     ite.next((err, key, value) => {
-    //         t.error(err, "no error");
-    //         t.same(key.toString(), "two", "key matches");
-    //         t.same(value.toString(), "2", "value matches");
-    //         ite.next((err, key, value) => {
-    //             t.error(err, "no error");
-    //             t.same(key, undefined, "end of iterator");
-    //             t.same(value, undefined, "end of iterator");
-    //             ite.end(done);
-    //         });
-    //     });
-    // });
+        for (const key of keys) {
+            let error;
+            const ite = db.iterator();
 
-    // make("iterator is seekable with buffer", (db, t, done) => {
-    //     let ite = db.iterator();
-    //     ite.seek(Buffer("two"));
-    //     ite.next((err, key, value) => {
-    //         t.error(err, "no error from next()");
-    //         t.equal(key.toString(), "two", "key matches");
-    //         t.equal(value.toString(), "2", "value matches");
-    //         ite.next((err, key, value) => {
-    //             t.error(err, "no error from next()");
-    //             t.equal(key, undefined, "end of iterator");
-    //             t.equal(value, undefined, "end of iterator");
-    //             ite.end(done);
-    //         });
-    //     });
-    // });
+            await assert.throws(async () => ite.seek(key));
+            await ite.end();
+            if (!--pending) {
+                await done();
+            }
+        }
+    });
 
-    // make("reverse seek in the middle", (db, t, done) => {
-    //     let ite = db.iterator({ reverse: true, limit: 1 });
-    //     ite.seek("three!");
-    //     ite.next((err, key, value) => {
-    //         t.error(err, "no error");
-    //         t.same(key.toString(), "three", "key matches");
-    //         t.same(value.toString(), "3", "value matches");
-    //         ite.end(done);
-    //     });
-    // });
+    makeTest("iterator is seekable", async (db, done) => {
+        const ite = db.iterator();
+        await ite.seek("two");
+        const { key, value } = await ite.next();
+        assert.equal(key.toString(), "two", "key matches");
+        assert.equal(value.toString(), "2", "value matches");
+        const pair = await ite.next();
+        assert.isUndefined(pair, "end of iterator");
+        return ite.end(done);
+    });
 
-    // make("iterator invalid seek", (db, t, done) => {
-    //     let ite = db.iterator();
-    //     ite.seek("zzz");
-    //     ite.next((err, key, value) => {
-    //         t.error(err, "no error");
-    //         t.same(key, undefined, "end of iterator");
-    //         t.same(value, undefined, "end of iterator");
-    //         ite.end(done);
-    //     });
-    // });
+    makeTest("iterator is seekable with buffer", async (db, done) => {
+        const ite = db.iterator();
+        await ite.seek(Buffer.from("two"));
+        const { key, value } = await ite.next();
+        assert.equal(key.toString(), "two", "key matches");
+        assert.equal(value.toString(), "2", "value matches");
+        const pair = await ite.next();
+        assert.isUndefined(pair, "end of iterator");
+        return ite.end(done);
+    });
 
-    // make("reverse seek from invalid range", (db, t, done) => {
-    //     let ite = db.iterator({ reverse: true });
-    //     ite.seek("zzz");
-    //     ite.next((err, key, value) => {
-    //         t.error(err, "no error");
-    //         t.same(key.toString(), "two", "end of iterator");
-    //         t.same(value.toString(), "2", "end of iterator");
-    //         ite.end(done);
-    //     });
-    // });
+    makeTest("reverse seek in the middle", async (db, done) => {
+        const ite = db.iterator({ reverse: true, limit: 1 });
+        await ite.seek("three!");
+        const { key, value } = await ite.next();
+        assert.equal(key.toString(), "three", "key matches");
+        assert.equal(value.toString(), "3", "value matches");
+        return ite.end(done);
+    });
 
-    // make("iterator optimized for seek", (db, t, done) => {
-    //     let batch = db.batch();
-    //     batch.put("a", 1);
-    //     batch.put("b", 1);
-    //     batch.put("c", 1);
-    //     batch.put("d", 1);
-    //     batch.put("e", 1);
-    //     batch.put("f", 1);
-    //     batch.put("g", 1);
-    //     batch.write((err) => {
-    //         let ite = db.iterator();
-    //         t.error(err, "no error from batch");
-    //         ite.next((err, key, value) => {
-    //             t.error(err, "no error from next()");
-    //             t.equal(key.toString(), "a", "key matches");
-    //             t.equal(ite.cache.length, 0, "no cache");
-    //             ite.next((err, key, value) => {
-    //                 t.error(err, "no error from next()");
-    //                 t.equal(key.toString(), "b", "key matches");
-    //                 t.ok(ite.cache.length > 0, "has cached items");
-    //                 ite.seek("d");
-    //                 t.notOk(ite.cache, "cache is removed");
-    //                 ite.next((err, key, value) => {
-    //                     t.error(err, "no error from next()");
-    //                     t.equal(key.toString(), "d", "key matches");
-    //                     t.equal(ite.cache.length, 0, "no cache");
-    //                     ite.next((err, key, value) => {
-    //                         t.error(err, "no error from next()");
-    //                         t.equal(key.toString(), "e", "key matches");
-    //                         t.ok(ite.cache.length > 0, "has cached items");
-    //                         done();
-    //                     });
-    //                 });
-    //             });
-    //         });
-    //     });
-    // });
+    makeTest("iterator invalid seek", async (db, done) => {
+        const ite = db.iterator();
+        await ite.seek("zzz");
+        const pair = await ite.next();
+        assert.isUndefined(pair, "end of iterator");
+        return ite.end(done);
+    });
 
-    // make("iterator seek before next has completed", (db, t, done) => {
-    //     let ite = db.iterator();
-    //     ite.next((err, key, value) => {
-    //         t.error(err, "no error from end()");
-    //         done();
-    //     });
-    //     let error;
-    //     try {
-    //         ite.seek("two");
-    //     } catch (e) {
-    //         error = e;
-    //     }
-    //     t.ok(error, "had error from seek() before next() has completed");
-    // });
+    makeTest("reverse seek from invalid range", async (db, done) => {
+        const ite = db.iterator({ reverse: true });
+        await ite.seek("zzz");
+        const { key, value } = await ite.next();
+        assert.equal(key.toString(), "two", "end of iterator");
+        assert.equal(value.toString(), "2", "end of iterator");
+        return ite.end(done);
+    });
 
-    // make("iterator seek after end", (db, t, done) => {
-    //     let ite = db.iterator();
-    //     ite.next((err, key, value) => {
-    //         t.error(err, "no error from next()");
-    //         ite.end((err) => {
-    //             t.error(err, "no error from end()");
-    //             let error;
-    //             try {
-    //                 ite.seek("two");
-    //             } catch (e) {
-    //                 error = e;
-    //             }
-    //             t.ok(error, "had error from seek() after end()");
-    //             done();
-    //         });
-    //     });
-    // });
+    makeTest("iterator optimized for seek", async (db, done) => {
+        const batch = db.chainedBatch();
+        batch.put("a", 1);
+        batch.put("b", 1);
+        batch.put("c", 1);
+        batch.put("d", 1);
+        batch.put("e", 1);
+        batch.put("f", 1);
+        batch.put("g", 1);
+        await batch.write();
+        const ite = db.iterator();
+        const pair1 = await ite.next();
+        assert.equal(pair1.key.toString(), "a", "key matches");
+        assert.equal(ite.cache.length, 0, "no cache");
+        const pair2 = await ite.next();
+        assert.equal(pair2.key.toString(), "b", "key matches");
+        assert.isTrue(ite.cache.length > 0, "has cached items");
+        await ite.seek("d");
+        assert.isNotOk(ite.cache, "cache is removed");
+        const pair3 = await ite.next();
+        assert.equal(pair3.key.toString(), "d", "key matches");
+        assert.equal(ite.cache.length, 0, "no cache");
+        const pair4 = await ite.next();
+        assert.equal(pair4.key.toString(), "e", "key matches");
+        assert.isTrue(ite.cache.length > 0, "has cached items");
+        return ite.end(done);
+    });
 
-    // make("iterator seek respects range", (db, t, done) => {
-    //     db.batch(pairs(10), (err) => {
-    //         t.error(err, "no error from batch()");
+    makeTest("iterator seek before next has completed", async (db, done) => {
+        const ite = db.iterator();
+        const { key, value } = await ite.next();
+        await ite.end(done);
+        await assert.throws(async () => ite.seek("two"));
+    });
 
-    //         let pending = 0;
+    makeTest("close db with open iterator", async (db, done) => {
+        const ite = db.iterator();
+        let cnt = 0;
+        let pClose;
+        for (; ;) {
+            let pair;
+            if (cnt++ === 0) {
+                pair = await ite.next();
+                pClose = db.close();
+            } else {
+                await assert.throws(async () => ite.next());
+            }
+            if (is.undefined(pair)) {
+                break;
+            }
+        }
 
-    //         expect({ gt: "5" }, "4", undefined);
-    //         expect({ gt: "5" }, "5", undefined);
-    //         expect({ gt: "5" }, "6", "6");
+        await pClose;
+        return done(false);
+    });
 
-    //         expect({ gte: "5" }, "4", undefined);
-    //         expect({ gte: "5" }, "5", "5");
-    //         expect({ gte: "5" }, "6", "6");
+    makeTest("iterator seek after end", async (db, done) => {
+        const ite = db.iterator();
+        const { key, value } = await ite.next();
+        await ite.end();
+        await assert.throws(async () => ite.seek("two"));
+        return done();
+    });
 
-    //         expect({ start: "5" }, "4", undefined);
-    //         expect({ start: "5" }, "5", "5");
-    //         expect({ start: "5" }, "6", "6");
+    makeTest("iterator seek respects range", async (db, done) => {
+        await db.batch(pairs(10));
+        const expect = async (range, target, expected) => {
+            const ite = db.iterator(range);
 
-    //         expect({ lt: "5" }, "4", "4");
-    //         expect({ lt: "5" }, "5", undefined);
-    //         expect({ lt: "5" }, "6", undefined);
+            await ite.seek(target);
+            const pair = await ite.next();
+            const tpl = "seek(%s) on %s yields %s";
+            const msg = adone.std.util.format(tpl, target, adone.std.util.inspect(range), expected);
 
-    //         expect({ lte: "5" }, "4", "4");
-    //         expect({ lte: "5" }, "5", "5");
-    //         expect({ lte: "5" }, "6", undefined);
+            if (is.undefined(expected)) {
+                assert.equal(pair, undefined, msg);
+            } else {
+                assert.equal(pair.value.toString(), expected, msg);
+            }
 
-    //         expect({ end: "5" }, "4", "4");
-    //         expect({ end: "5" }, "5", "5");
-    //         expect({ end: "5" }, "6", undefined);
+            await ite.end();
+        };
 
-    //         expect({ lt: "5", reverse: true }, "4", "4");
-    //         expect({ lt: "5", reverse: true }, "5", undefined);
-    //         expect({ lt: "5", reverse: true }, "6", undefined);
+        await expect({ gt: "5" }, "4", undefined);
+        await expect({ gt: "5" }, "5", undefined);
+        await expect({ gt: "5" }, "6", "6");
 
-    //         expect({ lte: "5", reverse: true }, "4", "4");
-    //         expect({ lte: "5", reverse: true }, "5", "5");
-    //         expect({ lte: "5", reverse: true }, "6", undefined);
+        await expect({ gte: "5" }, "4", undefined);
+        await expect({ gte: "5" }, "5", "5");
+        await expect({ gte: "5" }, "6", "6");
 
-    //         expect({ start: "5", reverse: true }, "4", "4");
-    //         expect({ start: "5", reverse: true }, "5", "5");
-    //         expect({ start: "5", reverse: true }, "6", undefined);
+        await expect({ start: "5" }, "4", undefined);
+        await expect({ start: "5" }, "5", "5");
+        await expect({ start: "5" }, "6", "6");
 
-    //         expect({ gt: "5", reverse: true }, "4", undefined);
-    //         expect({ gt: "5", reverse: true }, "5", undefined);
-    //         expect({ gt: "5", reverse: true }, "6", "6");
+        await expect({ lt: "5" }, "4", "4");
+        await expect({ lt: "5" }, "5", undefined);
+        await expect({ lt: "5" }, "6", undefined);
 
-    //         expect({ gte: "5", reverse: true }, "4", undefined);
-    //         expect({ gte: "5", reverse: true }, "5", "5");
-    //         expect({ gte: "5", reverse: true }, "6", "6");
+        await expect({ lte: "5" }, "4", "4");
+        await expect({ lte: "5" }, "5", "5");
+        await expect({ lte: "5" }, "6", undefined);
 
-    //         expect({ end: "5", reverse: true }, "4", undefined);
-    //         expect({ end: "5", reverse: true }, "5", "5");
-    //         expect({ end: "5", reverse: true }, "6", "6");
+        await expect({ end: "5" }, "4", "4");
+        await expect({ end: "5" }, "5", "5");
+        await expect({ end: "5" }, "6", undefined);
 
-    //         expect({ gt: "7", lt: "8" }, "7", undefined);
-    //         expect({ gte: "7", lt: "8" }, "7", "7");
-    //         expect({ gte: "7", lt: "8" }, "8", undefined);
-    //         expect({ gt: "7", lte: "8" }, "8", "8");
+        await expect({ lt: "5", reverse: true }, "4", "4");
+        await expect({ lt: "5", reverse: true }, "5", undefined);
+        await expect({ lt: "5", reverse: true }, "6", undefined);
 
-    //         function expect(range, target, expected) {
-    //             pending++;
-    //             let ite = db.iterator(range);
+        await expect({ lte: "5", reverse: true }, "4", "4");
+        await expect({ lte: "5", reverse: true }, "5", "5");
+        await expect({ lte: "5", reverse: true }, "6", undefined);
 
-    //             ite.seek(target);
-    //             ite.next((err, key, value) => {
-    //                 t.error(err, "no error from next()");
+        await expect({ start: "5", reverse: true }, "4", "4");
+        await expect({ start: "5", reverse: true }, "5", "5");
+        await expect({ start: "5", reverse: true }, "6", undefined);
 
-    //                 let tpl = "seek(%s) on %s yields %s";
-    //                 let msg = util.format(tpl, target, util.inspect(range), expected);
+        await expect({ gt: "5", reverse: true }, "4", undefined);
+        await expect({ gt: "5", reverse: true }, "5", undefined);
+        await expect({ gt: "5", reverse: true }, "6", "6");
 
-    //                 if (expected === undefined)
-    //                 { t.equal(value, undefined, msg) };
-    //                 else
-    //                 { t.equal(value.toString(), expected, msg) };
+        await expect({ gte: "5", reverse: true }, "4", undefined);
+        await expect({ gte: "5", reverse: true }, "5", "5");
+        await expect({ gte: "5", reverse: true }, "6", "6");
 
-    //                 ite.end((err) => {
-    //                     t.error(err, "no error from end()");
-    //                     if (!--pending) { done() };
-    //                 });
-    //             });
-    //         }
-    //     });
-    // });
+        await expect({ end: "5", reverse: true }, "4", undefined);
+        await expect({ end: "5", reverse: true }, "5", "5");
+        await expect({ end: "5", reverse: true }, "6", "6");
 
-    // function pairs(length, opts) {
-    //     opts = opts || {};
-    //     return iota(length).filter(not(opts.not)).map((k) => {
-    //         let key = opts.lex ? lexi.pack(k, "hex") : "" + k;
-    //         return { type: "put", key, value: "" + k };
-    //     });
-    // }
+        await expect({ gt: "7", lt: "8" }, "7", undefined);
+        await expect({ gte: "7", lt: "8" }, "7", "7");
+        await expect({ gte: "7", lt: "8" }, "8", undefined);
+        await expect({ gt: "7", lte: "8" }, "8", "8");
 
-    // function not(n) {
-    //     if (typeof n === "function") { return function (k) { return !n(k) } };
-    //     return function (k) {
-    //         return k !== n;
-    //     };
-    // }
-
-    // function even(n) {
-    //     return n % 2 === 0;
-    // }
+        return done();
+    });
 
 
     describe("getProperty()", () => {

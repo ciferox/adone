@@ -3219,9 +3219,10 @@ const parsePacket = (self, callback) => {
         if (is.undefined(wantReply)) {
             return false;
         }
-        let reqData;
 
         wantReply = (wantReply !== 0);
+
+        let reqData;
 
         if (request === "tcpip-forward" || request === "cancel-tcpip-forward") {
             const bindAddr = readString(payload, payload._pos, "ascii", self, callback);
@@ -4326,7 +4327,7 @@ export default class SSH2Stream extends TransformStream {
 
         const pathlen = Buffer.byteLength(cfg.socketPath);
         let p = 47;
-        const buf = Buffer.allocUnsafe(1 + 4 + 30 + 4 + 4 + 4 + 4 + pathlen + 4);
+        const buf = Buffer.allocUnsafe(1 + 4 + 30 + 4 + 4 + 4 + 4 + pathlen + 4 + 4);
 
         buf[0] = MESSAGE.CHANNEL_OPEN;
 
@@ -4341,6 +4342,9 @@ export default class SSH2Stream extends TransformStream {
 
         buf.writeUInt32BE(pathlen, p, true);
         buf.write(cfg.socketPath, p += 4, pathlen, "utf8");
+
+        // reserved fields (string and uint32)
+        buf.fill(0, buf.length - 8);
 
         return send(this, buf);
     }

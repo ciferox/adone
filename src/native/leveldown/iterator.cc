@@ -217,7 +217,6 @@ bool Iterator::IteratorNext(std::vector<std::pair<std::string, std::string>> &re
         if (ok)
         {
             result.push_back(std::make_pair(key, value));
-            size = size + key.size() + value.size();
 
             if (!landed)
             {
@@ -225,6 +224,7 @@ bool Iterator::IteratorNext(std::vector<std::pair<std::string, std::string>> &re
                 return true;
             }
 
+            size = size + key.size() + value.size();
             if (size > highWaterMark)
                 return true;
         }
@@ -362,8 +362,12 @@ NAN_METHOD(Iterator::Next)
 
     v8::Local<v8::Function> callback = info[0].As<v8::Function>();
 
-    NextWorker *worker = new NextWorker(
-        iterator, new Nan::Callback(callback), checkEndCallback);
+    if (iterator->ended)
+    {
+        LD_RETURN_CALLBACK_OR_ERROR(callback, "iterator has ended");
+    }
+
+    NextWorker *worker = new NextWorker(iterator, new Nan::Callback(callback), checkEndCallback);
     // persist to prevent accidental GC
     v8::Local<v8::Object> _this = info.This();
     worker->SaveToPersistent("iterator", _this);
