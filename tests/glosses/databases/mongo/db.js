@@ -105,7 +105,7 @@ describe("db", function () {
     it("should correctly throw when trying ro reppen connection", async () => {
         await assert.throws(async () => {
             await this.db.open();
-        }, "server instance in invalid state connected");
+        }, "connected");
     });
 
     it.skip("should correctly reconnect when error", async () => {

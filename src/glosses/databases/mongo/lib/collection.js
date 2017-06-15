@@ -3094,7 +3094,6 @@ Collection.prototype.aggregate = function (pipeline, options, callback) {
     if (options.cursor) {
         return this.s.topology.cursor(this.s.namespace, command, options);
     }
-
     // Execute the command
     this.s.db.command(command, options, (err, result) => {
         if (err) {

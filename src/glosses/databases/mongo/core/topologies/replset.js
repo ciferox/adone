@@ -33,6 +33,8 @@ const stateTransition = (self, newState) => {
     const legalStates = legalTransitions[self.state];
     if (legalStates && legalStates.includes(newState)) {
         self.state = newState;
+    } else {
+        throw MongoError.create(`Pool with id [${self.id}] failed attempted illegal state transition from [${self.state}] to [${newState}] only following state allowed [${legalStates}]`);
     }
 };
 
@@ -95,13 +97,13 @@ const pingServer = (self, server, cb) => {
                 // Check if we have a lastWriteDate convert it to MS
                 // and store on the server instance for later use
             if (server.ismaster.lastWrite && server.ismaster.lastWrite.lastWriteDate) {
-                server.lastWriteDate = server.ismaster.lastWrite.lastWriteDate.getTime();
-            }
+                    server.lastWriteDate = server.ismaster.lastWrite.lastWriteDate.getTime();
+                }
 
                 // Do we have a brand new server
             if (server.lastIsMasterMS === -1) {
-                server.lastIsMasterMS = latencyMS;
-            } else if (server.lastIsMasterMS) {
+                    server.lastIsMasterMS = latencyMS;
+                } else if (server.lastIsMasterMS) {
                     // After the first measurement, average RTT MUST be computed using an
                     // exponentially-weighted moving average formula, with a weighting factor (alpha) of 0.2.
                     // If the prior average is denoted old_rtt, then the new average (new_rtt) is
@@ -113,10 +115,10 @@ const pingServer = (self, server, cb) => {
 
             if (self.s.replicaSetState.update(server)) {
                     // Primary lastIsMaster store it
-                if (server.lastIsMaster() && server.lastIsMaster().ismaster) {
+                    if (server.lastIsMaster() && server.lastIsMaster().ismaster) {
                         self.ismaster = server.lastIsMaster();
                     }
-            }
+                }
 
                 // Server heart beat event
             helper.emitSDAMEvent(self, "serverHeartbeatSucceeded", { durationMS: latencyMS, reply: r.result, connectionId: server.name });

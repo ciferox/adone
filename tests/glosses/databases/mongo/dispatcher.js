@@ -1,17 +1,24 @@
 import mongodbVersionManager from "mongodb-version-manager";
 import mongodbTopologyManager from "mongodb-topology-manager";
 
+const { database: { mongo } } = adone;
+
 const url = ({ username, password, host, port, database, search }) => {
-    return adone.std.url.format({
+    const url = new adone.std.url.URL(adone.std.url.format({
         protocol: "mongodb:",
         slashes: true,
-        username,
-        password,
         hostname: host,
         port,
         pathname: `/${database}`,
         search: new adone.std.url.URLSearchParams(search).toString()
-    });
+    }));
+    if (username) {
+        url.username = username;
+    }
+    if (password) {
+        url.password = password;
+    }
+    return url.toString();
 };
 
 export default class Dispatcher {
@@ -21,6 +28,7 @@ export default class Dispatcher {
         this._single = null;
         this._sharded = null;
         this._auth = null;
+        this._replicasetAuth = null;
     }
 
     async getVersion() {
@@ -57,7 +65,8 @@ export default class Dispatcher {
                     bind_ip: "localhost",
                     port: 31000,
                     dbpath: (await this.tmpdir.addDirectory("31000")).path(),
-                    setParameter: ["enableTestCommands=1"]
+                    setParameter: ["enableTestCommands=1"],
+                    enableMajorityReadConcern: null
                 }
             }, {
                 tags: { loc: "sf" },
@@ -65,7 +74,8 @@ export default class Dispatcher {
                     bind_ip: "localhost",
                     port: 31001,
                     dbpath: (await this.tmpdir.addDirectory("31001")).path(),
-                    setParameter: ["enableTestCommands=1"]
+                    setParameter: ["enableTestCommands=1"],
+                    enableMajorityReadConcern: null
                 }
             }, {
                 tags: { loc: "sf" },
@@ -73,7 +83,8 @@ export default class Dispatcher {
                     bind_ip: "localhost",
                     port: 31002,
                     dbpath: (await this.tmpdir.addDirectory("31002")).path(),
-                    setParameter: ["enableTestCommands=1"]
+                    setParameter: ["enableTestCommands=1"],
+                    enableMajorityReadConcern: null
                 }
             }, {
                 tags: { loc: "sf" },
@@ -82,7 +93,8 @@ export default class Dispatcher {
                     bind_ip: "localhost",
                     port: 31003,
                     dbpath: (await this.tmpdir.addDirectory("31003")).path(),
-                    setParameter: ["enableTestCommands=1"]
+                    setParameter: ["enableTestCommands=1"],
+                    enableMajorityReadConcern: null
                 }
             }, {
                 arbiter: true,
@@ -90,7 +102,8 @@ export default class Dispatcher {
                     bind_ip: "localhost",
                     port: 31004,
                     dbpath: (await this.tmpdir.addDirectory("31004")).path(),
-                    setParameter: ["enableTestCommands=1"]
+                    setParameter: ["enableTestCommands=1"],
+                    enableMajorityReadConcern: null
                 }
             }], {
                 replSet: "rs"
@@ -187,7 +200,7 @@ export default class Dispatcher {
         return {
             host: "localhost",
             port: 31010,
-            server: this._replicasetAuth.addListener,
+            server: this._replicasetAuth,
             url: (opts) => url(adone.util.assignDeep({
                 host: "localhost",
                 port: 31010,

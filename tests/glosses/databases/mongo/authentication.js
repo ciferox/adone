@@ -11,7 +11,7 @@ describe("authentication", function () {
             await this.restart(true);
             await this.db.admin().addUser("kay:kay", "abc123");
             await this.db.admin().authenticate("kay:kay", "abc123");
-            const client = await mongo.connect(this.url({ username: "kay%3Akay", password: "abc123", db: "admin" }));
+            const client = await mongo.connect(this.url({ username: "kay:kay", password: "abc123", database: "admin" }));
             await client.close();
             await this.restart(true);
         });
@@ -90,7 +90,7 @@ describe("authentication", function () {
             await this.restart(true);
         });
 
-        it("Should correctly authenticate against normal db", async () => {
+        it("should correctly authenticate against normal db", async () => {
             const { db } = this;
             await this.restart(true);
             // An admin user must be defined for db level authentication to work correctly

@@ -51,6 +51,8 @@ const stateTransition = (self, newState) => {
     const legalStates = legalTransitions[self.state];
     if (legalStates && legalStates.includes(newState)) {
         self.state = newState;
+    } else {
+        throw MongoError.create(`Pool with id [${self.id}] failed attempted illegal state transition from [${self.state}] to [${newState}] only following state allowed [${legalStates}]`);
     }
 };
 

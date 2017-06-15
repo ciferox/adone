@@ -3,6 +3,8 @@ import Dispatcher from "./dispatcher";
 describe("databases", "mongo", function () {
     const { x, database: { mongo } } = adone;
 
+    this.timeout(300000);
+
     this.tmpdir = null;
     this.dispatcher = null;
     this.db = null;
@@ -213,6 +215,13 @@ describe("databases", "mongo", function () {
                     include("./mongo_client");
                     include("./multiple_db");
                     include("./object_id");
+                    include("./promote_buffers");
+                    include("./promote_values");
+                    include("./raw");
+                    include("./read_concern");
+                    include("./read_preference");
+                    include("./reconnect");
+                    include("./remove");
                 }
 
                 include("./authentication");

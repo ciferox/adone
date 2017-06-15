@@ -368,7 +368,10 @@ export default class Cursor extends EventEmitter {
         // Default pool
         const pool = this.server.s.pool;
         // Execute command
-        this.server.wireProtocolHandler.killCursor(this.bson, this.ns, this.cursorState.cursorId, pool, callback);
+        this.server.wireProtocolHandler.killCursor(this.bson, this.ns, this.cursorState.cursorId, pool, (err, res) => {
+            this.emit("close");
+            callback && callback(err, res);
+        });
     }
 
     /**

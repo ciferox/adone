@@ -1113,8 +1113,6 @@ Cursor.prototype.close = function (callback) {
     this.s.state = Cursor.CLOSED;
     // Kill the cursor
     this.kill();
-    // Emit the close event for the cursor
-    this.emit("close");
     // Callback if provided
     if (typeof callback === "function") {
         return handleCallback(callback, null, this);

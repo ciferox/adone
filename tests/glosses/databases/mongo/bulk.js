@@ -245,7 +245,7 @@ describe("bulk", function () {
             bulk.insert({ a: 1 });
         }
 
-        bulk.find({ b: 1 }).upsert().update({ b: 1 });
+        bulk.find({ b: 1 }).upsert().update({ $set: { b: 1 } });
         bulk.find({ c: 1 }).remove();
 
         const result = await bulk.execute({ w: 0 });
@@ -528,7 +528,7 @@ describe("bulk", function () {
                 bulk.insert({ a: 1 });
             }
 
-            bulk.find({ b: 1 }).upsert().update({ b: 1 });
+            bulk.find({ b: 1 }).upsert().update({ $set: { b: 1 } });
             bulk.find({ c: 1 }).remove();
 
             const result = await bulk.execute({ w: 0 });
