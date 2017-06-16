@@ -170,7 +170,7 @@ export default class IncomingForm extends EventEmitter {
     }
 
     handlePart(part) {
-        if (is.undefined(part.filename)) {
+        if (!part.filename) {
             let value = "";
             const decoder = new StringDecoder(this.encoding);
 

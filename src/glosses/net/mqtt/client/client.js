@@ -162,6 +162,7 @@ export default class MqttClient extends adone.EventEmitter {
         // resubscribe
         this.on("connect", () => {
             if (!firstConnection && this.options.clean && Object.keys(this._resubscribeTopics).length > 0) {
+                this._resubscribeTopics.resubscribe = true;
                 this.subscribe(this._resubscribeTopics);
             }
 
@@ -332,9 +333,12 @@ export default class MqttClient extends adone.EventEmitter {
         const args = Array.prototype.slice.call(arguments);
         const subs = [];
         let obj = args.shift();
+        const resubscribe = obj.resubscribe;
         let callback = args.pop() || adone.noop;
         let opts = args.pop();
         const that = this;
+
+        delete obj.resubscribe;
 
         if (is.string(obj)) {
             obj = [obj];
@@ -361,20 +365,22 @@ export default class MqttClient extends adone.EventEmitter {
 
         if (is.array(obj)) {
             obj.forEach((topic) => {
-                subs.push({
-                    topic,
-                    qos: opts.qos
-                });
+                if (that._resubscribeTopics[topic] < opts.qos || !that._resubscribeTopics.hasOwnProperty(topic) || resubscribe) {
+                    subs.push({
+                        topic,
+                        qos: opts.qos
+                    });
+                }
             });
         } else {
-            Object
-                .keys(obj)
-                .forEach((k) => {
+            Object.keys(obj).forEach((k) => {
+                if (that._resubscribeTopics[k] < obj[k] || !that._resubscribeTopics.hasOwnProperty(k) || resubscribe) {
                     subs.push({
                         topic: k,
                         qos: obj[k]
                     });
-                });
+                }
+            });
         }
 
         const packet = {
@@ -385,6 +391,11 @@ export default class MqttClient extends adone.EventEmitter {
             dup: false,
             messageId: this._nextId()
         };
+
+        if (!subs.length) {
+            callback(null, []);
+            return;
+        }
 
         // subscriptions to resubscribe to in case of disconnect
         subs.forEach((sub) => {

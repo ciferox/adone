@@ -298,6 +298,22 @@ module.exports = function (server, config) {
             });
         });
 
+        it("should return an empty array for duplicate subs", (done) => {
+            const client = connect();
+            client.subscribe("event", (err, granted1) => {
+                if (err) {
+                    return done();
+                }
+                client.subscribe("event", (err, granted2) => {
+                    if (err) {
+                        return done();
+                    }
+                    assert.isEmpty(granted2);
+                    done();
+                });
+            });
+        });
+
         it("should return an error (via callbacks) for topic #/event", (done) => {
             const client = connect();
             client.subscribe("#/event", (err) => {
@@ -1589,6 +1605,34 @@ module.exports = function (server, config) {
                         // subscribes have taken place, then cleanup and exit
                         if (connectCount >= 2) {
                             assert.equal(subscribeCount, 2);
+                            client.end(true, done);
+                        }
+                    });
+                });
+
+                client.subscribe("hello");
+            });
+
+            it("should resubscribe exactly once", (done) => {
+                const client = adone.net.mqtt.client.connect(Object.assign({ reconnectPeriod: 100 }, config));
+                let subscribeCount = 0;
+
+                server.on("client", (serverClient) => {
+                    serverClient.on("connect", () => {
+                        serverClient.connack({ returnCode: 0 });
+                    });
+
+                    serverClient.on("subscribe", () => {
+                        subscribeCount++;
+
+                        // disconnect before sending the suback on the first subscribe
+                        if (subscribeCount === 1) {
+                            client.stream.end();
+                        }
+
+                        // after the second connection, only two subs
+                        // subscribes have taken place, then cleanup and exit
+                        if (subscribeCount === 2) {
                             client.end(true, done);
                         }
                     });

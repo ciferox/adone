@@ -96,7 +96,7 @@ adapters.forEach((adapter) => {
                 }
             };
             return db.put(doc).then(() => {
-                throw "Should not succeed";
+                throw new Error("Should not succeed");
             }).catch((err) => {
                 assert.equal(err.name, "bad_request");
             });

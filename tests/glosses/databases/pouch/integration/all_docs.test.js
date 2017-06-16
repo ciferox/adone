@@ -144,7 +144,7 @@ adapters.forEach((adapter) => {
         it("Testing allDocs invalid opts.keys", () => {
             const db = new PouchDB(dbs.name);
             return db.allDocs({ keys: 1234 }).then(() => {
-                throw "should not be here";
+                throw new Error("should not be here");
             }).catch((err) => {
                 assert.exists(err);
             });

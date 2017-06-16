@@ -590,6 +590,12 @@ describe("util", "Fuzzy", () => {
             assert.equal(result[0].matches[0].indices[0][0], 0);
             assert.equal(result[0].matches[0].indices[0][1], 0);
         });
+
+        it("the seach pattern is longer than maxPatternLength and contains RegExp special characters", () => {
+            const resultThunk = () => fuzzy.search("searching with a sufficiently long string sprinkled with ([ )] *+^$ etc.");
+
+            assert.doesNotThrow(resultThunk);
+        });
     });
 
     describe("Searching with findallmatches options", () => {

@@ -1,7 +1,9 @@
 const { is } = adone;
 
+const escapeRegExpChars = (string) => string.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+
 const bitapRegexSearch = (text, pattern, tokenSeparator = / +/g) => {
-    const matches = text.match(new RegExp(pattern.replace(tokenSeparator, "|")));
+    const matches = text.match(new RegExp(escapeRegExpChars(pattern).replace(tokenSeparator, "|")));
     const isMatch = Boolean(matches);
     const matchedIndices = [];
 

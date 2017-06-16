@@ -109,7 +109,7 @@ adapters.forEach((adapter) => {
         it("Missing doc should contain ID in error object", () => {
             const db = new PouchDB(dbs.name);
             return db.get("abc-123").then(() => {
-                throw "should not be here";
+                throw new Error("should not be here");
             }).catch((err) => {
                 assert.exists(err);
                 assert.equal(err.requestedDocId, "abc-123");
