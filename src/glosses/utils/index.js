@@ -905,5 +905,6 @@ adone.lazify({
     reinterval: "./reinterval",
     RateLimiter: "./rate_limiter",
     throttle: "./throttle",
-    fakeClock: "./fake_clock"
+    fakeClock: "./fake_clock",
+    ltgt: "./ltgt"
 }, exports, require);

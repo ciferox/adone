@@ -1,4 +1,4 @@
-import ltgt from "ltgt";
+const { util: { ltgt } } = adone;
 
 function isFunction(f) {
     return typeof f === "function";

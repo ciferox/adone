@@ -4,12 +4,12 @@ const { join } = require("path");
 
 const home = process.env.ADONE_HOME;
 
-// Below are configurable options
-
+// Configurable options
 module.exports = {
     logFilePath: join(home, "omnitron.log"),
     errorLogFilePath: join(home, "omnitron-err.log"),
     pidFilePath: join(home, "omnitron.pid"),
+    vaultsPath: join(home, "vaults"),
     servicesPath: join(home, "services"),
     getServicePath(serviceName, dirName) {
         let fullPath;

@@ -1,6 +1,6 @@
 const { is } = adone;
 
-const isBinary = (data) => (data === undefined || data === null || is.buffer(data));
+const isBinary = (data) => (is.undefined(data) || is.null(data) || is.buffer(data));
 
 const encodings = {
     utf8: {

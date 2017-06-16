@@ -14,7 +14,7 @@ export const compare = (a, b) => {
     return a < b ? -1 : a > b ? 1 : 0;
 };
 
-const isDef = (val) => val !== undefined && val !== "";
+const isDef = (val) => !is.undefined(val) && val !== "";
 const hasKey = (range, name) => is.propertyOwned(range, name) && name;
 
 export const lowerBoundKey = (range) => {
@@ -38,9 +38,25 @@ export const upperBoundExclusive = (range) => !upperBoundInclusive(range);
 
 export const upperBoundKey = (range) => (hasKey(range, "lt") || hasKey(range, "lte") || hasKey(range, "max") || (range.reverse ? hasKey(range, "start") : hasKey(range, "end")) || undefined);
 
-export const upperBound = (range) => {
+export const upperBound = (range, def) => {
     const k = upperBoundKey(range);
-    return k && range[k];
+    return k ? range[k] : def;
+};
+
+export const start = function (range, def) {
+    return range.reverse ? upperBound(range, def) : lowerBound(range, def);
+};
+
+export const end = function (range, def) {
+    return range.reverse ? lowerBound(range, def) : upperBound(range, def);
+};
+
+export const startInclusive = function (range) {
+    return (range.reverse ? upperBoundInclusive(range) : lowerBoundInclusive(range));
+};
+
+export const endInclusive = function (range) {
+    return (range.reverse ? lowerBoundInclusive(range) : upperBoundInclusive(range));
 };
 
 export const toLtgt = (range, _range, map, lower, upper) => {

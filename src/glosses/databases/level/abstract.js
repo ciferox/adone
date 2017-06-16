@@ -162,7 +162,7 @@ export class AbstractChainedBatch {
 
 export class AbstractBackend {
     constructor(location) {
-        if (!arguments.length || location === undefined) {
+        if (!arguments.length || is.undefined(location)) {
             throw new Error("constructor requires at least a location argument");
         }
 
@@ -278,7 +278,7 @@ export class AbstractBackend {
 
         for (; i < l; i++) {
             e = array[i];
-            if (typeof e !== "object") {
+            if (!is.object(e)) {
                 continue;
             }
 
@@ -300,18 +300,18 @@ export class AbstractBackend {
 
     //TODO: remove from here, not a necessary primitive
     approximateSize(start, end, callback) {
-        if (start == null || end == null || typeof start === "function" || typeof end === "function") {
+        if (start == null || end == null || is.function(start) || is.function(end)) {
             throw new Error("approximateSize() requires valid `start`, `end` and `callback` arguments");
         }
 
-        if (typeof callback !== "function") {
+        if (!is.function(callback)) {
             throw new Error("approximateSize() requires a callback argument");
         }
 
         start = this._serializeKey(start);
         end = this._serializeKey(end);
 
-        if (typeof this._approximateSize === "function") {
+        if (is.function(this._approximateSize)) {
             return this._approximateSize(start, end, callback);
         }
 
@@ -352,7 +352,7 @@ export class AbstractBackend {
     }
 
     _checkKey(obj, type) {
-        if (obj === null || obj === undefined) {
+        if (is.null(obj) || is.undefined(obj)) {
             throw new Error(`${type} cannot be \`null\` or \`undefined\``);
         }
         if (is.buffer(obj) && obj.length === 0) {

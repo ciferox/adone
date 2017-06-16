@@ -23,7 +23,7 @@ class IteratorStream extends adone.std.stream.Readable {
             if (this._destroyed) {
                 return;
             }
-            if (result === undefined) {
+            if (is.undefined(result)) {
                 this.push(null);
             } else {
                 let value;
@@ -346,7 +346,7 @@ export default class DB extends adone.EventEmitter {
 
         arr = this._codec.encodeBatch(arr_, options);
         arr = arr.map((op) => {
-            if (!op.type && op.key !== undefined && op.value !== undefined) {
+            if (!op.type && !is.undefined(op.key) && !is.undefined(op.value)) {
                 op.type = "put";
             }
             return op;

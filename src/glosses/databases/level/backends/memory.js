@@ -1,4 +1,4 @@
-const { is, database: { level: { AbstractBackend, AbstractIterator, ltgt } } } = adone;
+const { is, util: { ltgt }, database: { level: { AbstractBackend, AbstractIterator } } } = adone;
 let globalStore = {};
 
 const gt = function (value) {
@@ -97,11 +97,11 @@ class MemoryIterator extends AbstractIterator {
         }
 
         if (this.keyAsBuffer) {
-            key = new Buffer(key);
+            key = Buffer.from(key);
         }
 
         if (this.valueAsBuffer) {
-            value = new Buffer(value);
+            value = Buffer.from(value);
         }
 
         this._tree[this._incr]();
@@ -128,7 +128,7 @@ export default class Memory extends AbstractBackend {
     }
 
     _put(key, value, options, callback) {
-        if (is.undefined(value) || value === null) {
+        if (is.undefined(value) || is.null(value)) {
             value = "";
         }
 
@@ -154,7 +154,7 @@ export default class Memory extends AbstractBackend {
         }
 
         if (options.asBuffer !== false && !is.buffer(value)) {
-            value = new Buffer(String(value));
+            value = Buffer.from(String(value));
         }
 
         setImmediate(function callNext() {

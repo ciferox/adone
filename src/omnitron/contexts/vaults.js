@@ -22,7 +22,8 @@ export class Valuable extends adone.vault.Valuable {
 @Private
 @Contextable
 @Description("Omnitron vault")
-@Method("get", { private: false, description: "Returns existing valuable", type: Object })
+@Method("create", { private: false, description: "Creates new valuable", type: Valuable })
+@Method("get", { private: false, description: "Returns existing valuable", type: Valuable })
 @Method("has", { private: false, description: "Checks whether valuable with specified name exists", type: Boolean })
 @Method("delete", { private: false, description: "Deletes valuable", type: Boolean })
 class Vault extends adone.vault.Vault {
@@ -39,9 +40,9 @@ class Vault extends adone.vault.Vault {
     getOrCreate(name) {
         if (this.has(name)) {
             return super.get(name);
-        } 
+        }
         return this.create(name);
-        
+
     }
 
     @Public
@@ -51,7 +52,7 @@ class Vault extends adone.vault.Vault {
         if (is.vaultValuable(name)) {
             valuable = name;
         } else {
-            valuable = await super.get();
+            valuable = await super.get(name);
         }
         super.release(valuable.name);
         return this.omnitron._.netron.releaseContext(valuable);
@@ -68,7 +69,7 @@ export default class Vaults {
     }
 
     async initialize() {
-        this._path = adone.std.path.join(this.omnitron.config.adone.home, "vaults");
+        this._path = this.omnitron.config.omnitron.vaultsPath;
         await adone.fs.mkdir(this._path);
     }
 
@@ -80,9 +81,43 @@ export default class Vaults {
     }
 
     @Public
+    @Description("List vaults")
+    @Type(Array)
+    async list({ state = "all" }) {
+        switch (state) {
+            case "all": {
+                const opened = [...this._vaults.keys()];
+                const names = await adone.fs.readdir(this._path);
+                return names.map((name) => ({
+                    name,
+                    path: adone.std.path.join(this._path, name),
+                    state: (opened.includes(name) ? "open" : "close"),
+                    size: 0
+                }));
+            }
+            case "opened": {
+                return [...this._vaults.entries()].map((v) => ({
+                    name: v.name,
+                    path: v.location(),
+                    size: 0
+                }));
+            }
+            case "closed": {
+                const opened = [...this._vaults.keys()];
+                const names = await adone.fs.readdir(this._path);
+                return names.filter((name) => !opened.includes(name)).map((name) => ({
+                    name,
+                    path: adone.std.path.join(this._path, name),
+                    size: 0
+                }));
+            }
+        }
+    }
+
+    @Public
     @Description("Opens vault with specified name and returns it")
     @Type(Vault)
-    async open(name, options = {}) {    
+    async open(name, options = {}) {
         const location = this._location(name);
         let vault = this._vaults.get(location);
         if (is.undefined(vault)) {
@@ -103,8 +138,7 @@ export default class Vaults {
     @Description("Returns opened vault with specified name")
     @Type(Vault)
     async get(name) {
-        const location = this._location(name);
-        const vault = this._vaults.get(location);
+        const vault = this._get(name);
         if (is.undefined(vault)) {
             throw new adone.x.IllegalState(`Vault '${name}' is not opened`);
         }
@@ -123,6 +157,11 @@ export default class Vaults {
 
         this._vaults.delete(location);
         return vault.close();
+    }
+
+    _get(name) {
+        const location = this._location(name);
+        return this._vaults.get(location);
     }
 
     _location(name) {

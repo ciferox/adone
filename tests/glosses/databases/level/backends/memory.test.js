@@ -148,7 +148,7 @@ describe("databases", "level", "backend", "memory", () => {
         await db.open();
         await db.put(Buffer.from("a0", "hex"), "A");
 
-        const iterator = db.iterator({ valueAsBuffer: false, lt: new Buffer("ff", "hex") });
+        const iterator = db.iterator({ valueAsBuffer: false, lt: Buffer.from("ff", "hex") });
 
         const { key, value } = await iterator.next();
         assert.equal(key.toString("hex"), "a0");
@@ -160,11 +160,11 @@ describe("databases", "level", "backend", "memory", () => {
 
         await db.open();
 
-        const one = new Buffer("80", "hex");
-        const two = new Buffer("c0", "hex");
+        const one = Buffer.from("80", "hex");
+        const two = Buffer.from("c0", "hex");
 
         assert.ok(two.toString() === one.toString(), "would be equal when not buffer-aware");
-        assert.ok(adone.database.level.ltgt.compare(two, one) > 0, "but greater when buffer-aware");
+        assert.ok(adone.util.ltgt.compare(two, one) > 0, "but greater when buffer-aware");
 
         await db.put(one, "one");
         let value = await db.get(one, { asBuffer: false });
@@ -187,12 +187,12 @@ describe("databases", "level", "backend", "memory", () => {
         }, {
             type: "put",
             key: "empty-buffer",
-            value: new Buffer(0)
+            value: Buffer.allocUnsafe(0)
         }]);
         let val = await db.get("empty-string");
-        assert.deepEqual(val, new Buffer(0), "empty string");
+        assert.deepEqual(val, Buffer.allocUnsafe(0), "empty string");
         val = await db.get("empty-buffer");
-        assert.deepEqual(val, new Buffer(0), "empty buffer");
+        assert.deepEqual(val, Buffer.allocUnsafe(0), "empty buffer");
     });
 
     it("empty buffer key in batch", async () => {
@@ -203,7 +203,7 @@ describe("databases", "level", "backend", "memory", () => {
         try {
             await db.batch([{
                 type: "put",
-                key: new Buffer(0),
+                key: Buffer.allocUnsafe(0),
                 value: ""
             }]);
         } catch (err) {
@@ -219,10 +219,10 @@ describe("databases", "level", "backend", "memory", () => {
 
         await db.batch([{
             type: "put",
-            key: new Buffer("foo", "utf8"),
+            key: Buffer.from("foo", "utf8"),
             value: "val1"
         }]);
-        const val = await db.get(new Buffer("foo", "utf8"), { asBuffer: false });
+        const val = await db.get(Buffer.from("foo", "utf8"), { asBuffer: false });
         assert.deepEqual(val, "val1");
     });
 

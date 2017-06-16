@@ -1,5 +1,4 @@
-const { is } = adone;
-const { ltgt } = adone.database.level;
+const { is, util: { ltgt } } = adone;
 
 const clone = (o) => {
     const O = {};
@@ -259,6 +258,34 @@ describe("databases", "level", "ltgt", () => {
 
         assert.equal(ltgt.lowerBoundInclusive({ gt: "b" }), false);
         assert.equal(ltgt.lowerBoundInclusive({ gte: "b" }), true);
+    });
+
+    it("start, end", () => {
+        //  t.equal(ltgt.upperBound({start: 'b', reverse: true}), 'b')
+        //  t.equal(ltgt.upperBoundInclusive({start: 'b', reverse: true}), true)
+        //  t.equal(ltgt.upperBound({end: 'b', reverse: false}), 'b')
+        //
+        //  t.equal(ltgt.lowerBound({start: 'b', reverse: true}), undefined)
+        //  t.equal(ltgt.lowerBound({end: 'b', reverse: false}), undefined)
+        //  t.equal(ltgt.upperBoundInclusive({start: 'b', reverse: true}), true)
+        //  t.equal(ltgt.upperBoundInclusive({end: 'b', reverse: false}), true)
+
+        assert.equal(ltgt.start({ lt: "b", reverse: true }), "b");
+        assert.equal(ltgt.start({ lte: "b", reverse: true }), "b");
+        assert.equal(ltgt.end({ lt: "b", reverse: true }, null), null);
+        assert.equal(ltgt.end({ lte: "b", reverse: true }, null), null);
+
+        assert.equal(ltgt.end({ lt: "b" }), "b");
+        assert.equal(ltgt.end({ lte: "b" }), "b");
+        assert.equal(ltgt.start({ lt: "b" }, undefined), undefined);
+        assert.equal(ltgt.start({ lte: "b" }, undefined), undefined);
+
+        assert.equal(ltgt.endInclusive({ lt: "b" }), false);
+
+        assert.equal(ltgt.endInclusive({ lte: "b" }), true);
+
+        assert.equal(ltgt.startInclusive({ gt: "b" }), false);
+        assert.equal(ltgt.startInclusive({ gte: "b" }), true);
     });
 
     const strings = ["00", "01", "02"];

@@ -1,3 +1,5 @@
+const { is } = adone;
+
 export default class Iterator extends adone.database.level.AbstractIterator {
     constructor(db, options) {
         super(db);
@@ -15,7 +17,7 @@ export default class Iterator extends adone.database.level.AbstractIterator {
             throw new Error("cannot call seek() before next() has completed");
         }
 
-        if (typeof target !== "string" && !Buffer.isBuffer(target)) {
+        if (!is.string(target) && !is.buffer(target)) {
             throw new Error("seek() requires a string or buffer key");
         }
         if (target.length === 0) {

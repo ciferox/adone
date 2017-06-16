@@ -1,3 +1,5 @@
+const { is } = adone;
+
 adone.lazify({
     _: () => adone.lazify({
         native: () => adone.bind("leveldown.node").leveldown
@@ -15,12 +17,11 @@ adone.lazify({
     util: () => {
         return {
             dispatchError: (db, error, callback) => {
-                typeof callback === "function" ? callback(error) : db.emit("error", error);
+                return is.function(callback) ? callback(error) : db.emit("error", error);
             },
             isDefined: (v) => {
-                return typeof v !== "undefined";
+                return !is.undefined(v);
             }
         };
-    },
-    ltgt: "./ltgt"
+    }
 }, exports, require);
