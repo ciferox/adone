@@ -292,33 +292,36 @@ Mongos.prototype.connect = function (db, _options, callback) {
         };
     };
 
+    // Clear out all the current handlers left over
+    ["timeout", "error", "close", "serverOpening", "serverDescriptionChanged", "serverHeartbeatStarted",
+        "serverHeartbeatSucceeded", "serverHeartbeatFailed", "serverClosed", "topologyOpening",
+        "topologyClosed", "topologyDescriptionChanged"].forEach((e) => {
+            self.s.mongos.removeAllListeners(e);
+        });
+
+    // Set up SDAM listeners
+    self.s.mongos.on("serverDescriptionChanged", relay("serverDescriptionChanged"));
+    self.s.mongos.on("serverHeartbeatStarted", relay("serverHeartbeatStarted"));
+    self.s.mongos.on("serverHeartbeatSucceeded", relay("serverHeartbeatSucceeded"));
+    self.s.mongos.on("serverHeartbeatFailed", relay("serverHeartbeatFailed"));
+    self.s.mongos.on("serverOpening", relay("serverOpening"));
+    self.s.mongos.on("serverClosed", relay("serverClosed"));
+    self.s.mongos.on("topologyOpening", relay("topologyOpening"));
+    self.s.mongos.on("topologyClosed", relay("topologyClosed"));
+    self.s.mongos.on("topologyDescriptionChanged", relay("topologyDescriptionChanged"));
+
+    // self.s.mongos.on("fullsetup", relay("fullsetup"));
+    self.s.mongos.on("fullsetup", () => {
+        self.emit("fullsetup", self, self);
+    });
+
     // Connect handler
     const connectHandler = function () {
-        // Clear out all the current handlers left over
-        ["timeout", "error", "close", "serverOpening", "serverDescriptionChanged", "serverHeartbeatStarted",
-            "serverHeartbeatSucceeded", "serverHeartbeatFailed", "serverClosed", "topologyOpening",
-            "topologyClosed", "topologyDescriptionChanged"].forEach((e) => {
-                self.s.mongos.removeAllListeners(e);
-            });
 
         // Set up listeners
         self.s.mongos.once("timeout", errorHandler("timeout"));
         self.s.mongos.once("error", errorHandler("error"));
         self.s.mongos.once("close", errorHandler("close"));
-
-        // Set up SDAM listeners
-        self.s.mongos.on("serverDescriptionChanged", relay("serverDescriptionChanged"));
-        self.s.mongos.on("serverHeartbeatStarted", relay("serverHeartbeatStarted"));
-        self.s.mongos.on("serverHeartbeatSucceeded", relay("serverHeartbeatSucceeded"));
-        self.s.mongos.on("serverHeartbeatFailed", relay("serverHeartbeatFailed"));
-        self.s.mongos.on("serverOpening", relay("serverOpening"));
-        self.s.mongos.on("serverClosed", relay("serverClosed"));
-        self.s.mongos.on("topologyOpening", relay("topologyOpening"));
-        self.s.mongos.on("topologyClosed", relay("topologyClosed"));
-        self.s.mongos.on("topologyDescriptionChanged", relay("topologyDescriptionChanged"));
-
-        // Set up serverConfig listeners
-        self.s.mongos.on("fullsetup", relay("fullsetup"));
 
         // Emit open event
         self.emit("open", null, self);

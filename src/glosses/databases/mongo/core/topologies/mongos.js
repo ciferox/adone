@@ -392,11 +392,13 @@ const topologyMonitor = (self, options = {}) => {
         // No proxies initiate monitor again
         if (proxies.length === 0) {
             // Emit close event if any listeners registered
-            if (self.listeners("close").length > 0 && self.state === CONNECTING) {
-                self.emit("error", new MongoError("no mongos proxy available"));
-            } else {
-                self.emit("close", self);
-            }
+
+            // ???
+            // if (self.listeners("close").length > 0 && self.state === CONNECTING) {
+            //     self.emit("error", new MongoError("no mongos proxy available"));
+            // } else {
+            //     self.emit("close", self);
+            // }
 
             // Attempt to connect to any unknown servers
             return reconnectProxies(self, self.disconnectedProxies, () => {

@@ -222,9 +222,17 @@ describe("databases", "mongo", function () {
                     include("./read_preference");
                     include("./reconnect");
                     include("./remove");
+                    include("./replset_connection");
+                    include("./replset_failover");
+                    include("./replset_operations");
+                    include("./replset_read_preference");
+                    include("./sdam");
+                    include("./sharding_connection");
+                    include("./sharding_failover");
                 }
 
                 include("./authentication");
+                include("./scram");
             });
         }
     });

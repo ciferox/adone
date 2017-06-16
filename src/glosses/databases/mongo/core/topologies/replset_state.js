@@ -72,7 +72,7 @@ const pickNearestMaxStalenessSeconds = (self, readPreference) => {
     }
 
     // Add primary to list if not a secondary read preference
-    if (self.primary && readPreference.preference !== "secondary") {
+    if (self.primary && readPreference.preference !== "secondary" && readPreference.preference !== "secondaryPreferred") {
         servers.push(self.primary);
     }
 
@@ -115,7 +115,7 @@ const pickNearest = (self, readPreference) => {
     let servers = [];
 
     // Add primary to list if not a secondary read preference
-    if (self.primary && readPreference.preference !== "secondary") {
+    if (self.primary && readPreference.preference !== "secondary" && readPreference.preference !== "secondaryPreferred") {
         servers.push(self.primary);
     }
 
@@ -949,7 +949,6 @@ export default class ReplSetState extends EventEmitter {
             readPreference.equals(ReadPreference.secondaryPreferred) ||
             readPreference.equals(ReadPreference.secondary)
         ) {
-
             if (secondaries.length > 0 && is.nil(readPreference.maxStalenessSeconds)) {
                 // Pick nearest of any other servers available
                 const server = pickNearest(this, readPreference);
