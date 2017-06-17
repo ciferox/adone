@@ -29,6 +29,7 @@ export default class Dispatcher {
         this._sharded = null;
         this._auth = null;
         this._replicasetAuth = null;
+        this._ssl = null;
     }
 
     async getVersion() {
@@ -150,7 +151,7 @@ export default class Dispatcher {
         };
     }
 
-    async getReplicasetAuthServer({ start = true , purge = true } = {}) {
+    async getReplicasetAuthServer({ start = true, purge = true } = {}) {
         if (!this._replicasetAuth) {
             const keyFile = adone.std.path.resolve(__dirname, "data", "keyfile.txt");
             this._replicasetAuth = new mongodbTopologyManager.ReplSet("mongod", [{
@@ -467,12 +468,47 @@ export default class Dispatcher {
         };
     }
 
+    async getSSLServer() {
+        if (!this._ssl) {
+            const keys = Object.keys(process.env);
+            for (const key of keys) {
+                if (key.toUpperCase() !== key) {
+                    delete process.env[key];
+                }
+            }
+            // this._ssl = new mongodbTopologyManager.Server("mongod", {
+            //     dbpath: (await this.tmpdir.addDirectory("27019")).path(),
+            //     port: 27019,
+            //     sslOnNormalPorts: null,
+            //     sslPEMKeyFile: adone.std.path.resolve(__dirname, "ssl", "localhost.pem"),
+            //     setParameter: ["enableTestCommands=1"]
+            // });
+            // await this._ssl.purge();
+            // await this._ssl.start();
+        }
+        return {
+            host: "localhost",
+            port: 27019,
+            server: this._ssl,
+            url: (opts) => url(adone.util.assignDeep({
+                host: "localhost",
+                port: 27019,
+                database: "tests",
+                search: {
+                    ssl: true,
+                    sslValidate: false
+                }
+            }, opts))
+        };
+    }
+
     async destroy() {
         await Promise.all([
             this._replicaset && this._replicaset.stop(),
             this._single && this._single.stop(),
             this._sharded && this._sharded.stop(),
             this._auth && this._auth.stop(),
+            this._ssl && this._ssl.stop()
             // this._replicasetAuth && this._replicasetAuth.stop(),
             // this._shardedAuth && this._shardedAuth.stop()
         ]);

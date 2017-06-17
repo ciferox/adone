@@ -40,9 +40,10 @@ describe("databases", "mongo", function () {
         await this.dispatcher.destroy();
     });
 
-    before("mondodb check", async () => {
-        adone.info(`Running tests against MongoDB version ${await this.dispatcher.getVersion()}`);
-    });
+    // before("mondodb check", async () => {
+    //     // const version = await this.dispatcher.getVersion();
+    //     // adone.info(`Running tests against MongoDB version ${version}`);
+    // });
 
     const initConnection = () => {
         beforeEach("open connection", async () => {
@@ -161,6 +162,30 @@ describe("databases", "mongo", function () {
             });
             initConnection();
         },
+        ssl: async () => {
+            beforeEach("create ssl db instance", async function () {
+                this.timeout(120000);
+
+                ({
+                    host: this.host,
+                    port: this.port,
+                    server: this.server,
+                    url: this.url
+                } = await this.dispatcher.getSSLServer());
+
+                // this.DB = new mongo.Db(this.database, new mongo.Server(this.host, this.port, {
+                //     poolSize: 1,
+                //     autoReconnect: false,
+                //     ssl: true,
+                //     sslValidate: false
+                // }), {
+                //     w: 1
+                // });
+                this.DB = null;
+                this.topology = "ssl";
+            });
+            // initConnection();
+        }
     };
 
     describe("core", () => {
@@ -169,10 +194,11 @@ describe("databases", "mongo", function () {
 
     describe("driver", () => {
         for (const topology of [
-            "single",
-            "sharded",
-            "replicaset",
-            "auth"
+            // "single",
+            // "sharded",
+            // "replicaset",
+            // "auth",
+            "ssl"
         ]) {
             this.topology = topology;
 
@@ -180,7 +206,7 @@ describe("databases", "mongo", function () {
 
                 this.init[topology]();
 
-                if (topology !== "auth") {
+                if (topology !== "auth" && topology !== "ssl") {
                     include("./crud_api");
                     include("./crud");
                     include("./cursor");
@@ -229,10 +255,16 @@ describe("databases", "mongo", function () {
                     include("./sdam");
                     include("./sharding_connection");
                     include("./sharding_failover");
+                    include("./sharding_read_preference");
                 }
 
                 include("./authentication");
                 include("./scram");
+                if (this.topology === "ssl") {
+                    include("./ssl_client");
+                    include("./ssl_validation");
+                    include("./ssl_x509");
+                }
             });
         }
     });

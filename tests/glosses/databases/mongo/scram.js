@@ -1,5 +1,5 @@
 describe("scram", function () {
-    if (!this.topology === "auth") {
+    if (this.topology !== "auth") {
         return;
     }
 
