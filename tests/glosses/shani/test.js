@@ -659,12 +659,12 @@ describe("Engine", () => {
             describe("/", () => {
                 describe.only("a", () => {
                     it("test1", () => calls.push("test1"));
-                    it.skip("test2", () => {});
+                    it.skip("test2", () => { });
                     it("test3", () => calls.push("test3"));
 
                     describe.skip("b", () => {
-                        it("test4", () => {});
-                    })
+                        it("test4", () => { });
+                    });
                 });
             });
             const skipped = [];
@@ -697,7 +697,7 @@ describe("Engine", () => {
                         });
                     });
 
-                    it("test", () => {});
+                    it("test", () => { });
                 });
 
                 const e = start();
@@ -727,7 +727,7 @@ describe("Engine", () => {
                         await p;
                     });
 
-                    it("test", () => {});
+                    it("test", () => { });
                 });
 
                 const e = start();
@@ -752,7 +752,7 @@ describe("Engine", () => {
                         Promise.reject(new Error("error1"));
                     });
 
-                    it("test", () => {});
+                    it("test", () => { });
                 });
 
                 const e = start();
@@ -775,10 +775,10 @@ describe("Engine", () => {
                 describe("/1", () => {
                     before(async () => {
                         Promise.reject(new Error("error1"));
-                        await new Promise(() => {});
+                        await new Promise(() => { });
                     });
 
-                    it("test", () => {});
+                    it("test", () => { });
                 });
 
                 const e = start();
@@ -3737,6 +3737,114 @@ describe("Engine", () => {
             assert.equal(errs.length, 0);
 
         });
+    });
+
+    it("should not enter blocks with no children", async () => {
+        const engine = new Engine();
+        const { describe, it, start } = engine.context();
+
+        describe("top", () => {
+            describe("no tests", () => {
+
+            });
+
+            describe("1", () => {
+                it("hello", () => {
+
+                });
+
+                describe("1/1", () => {
+                    describe("1/1/1", () => {
+
+                    });
+
+                    describe("1/1/2", () => {
+                        describe("1/1/2/1", () => {
+
+                        });
+                    });
+                });
+
+                describe("1/2", () => {
+                    describe("1/2/1", () => {
+
+                    });
+
+                    describe("1/2/2", () => {
+                        describe("1/2/2/1", () => {
+
+                        });
+                    });
+
+                    describe("1/2/3", () => {
+                        describe("1/2/3/1", () => {
+                            it("world", () => {
+
+                            });
+                        });
+                    });
+                });
+            });
+
+            describe("2", () => {
+                describe("2/1", () => {
+                    describe("2/1/1", () => {
+
+                    });
+
+                    describe("2/1/2", () => {
+                        describe("1/1/2/1", () => {
+
+                        });
+                    });
+                });
+
+                describe("2/2", () => {
+                    describe("2/2/1", () => {
+
+                    });
+
+                    describe("2/2/2", () => {
+                        describe("2/2/2/1", () => {
+
+                        });
+                    });
+
+                    describe("2/2/3", () => {
+                        describe("2/2/3/1", () => {
+                        });
+                    });
+                });
+            });
+        });
+
+        const chain = [];
+        const emitter = start();
+        emitter.on("enter block", ({ block }) => {
+            chain.push(`enter ${block.name}`);
+        });
+
+        emitter.on("exit block", ({ block }) => {
+            chain.push(`exit ${block.name}`);
+        });
+        emitter.on("end test", ({ test }) => {
+            chain.push(test.description);
+        });
+        await waitFor(emitter, "done");
+        assert.deepEqual(chain, [
+            "enter top",
+            "enter 1",
+            "hello",
+            "enter 1/2",
+            "enter 1/2/3",
+            "enter 1/2/3/1",
+            "world",
+            "exit 1/2/3/1",
+            "exit 1/2/3",
+            "exit 1/2",
+            "exit 1",
+            "exit top"
+        ]);
     });
 });
 

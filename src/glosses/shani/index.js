@@ -564,6 +564,25 @@ export class Engine {
                 })(root);
             }
 
+            (function deleteChildrenWithNoTests(block) {
+                for (let i = 0; i < block.children.length; ++i) {
+                    const child = block.children[i];
+                    if (child instanceof Test) {
+                        continue;
+                    }
+                    // no tests
+                    if (child.children.length === 0) {
+                        block.children.splice(i--, 1);
+                        continue;
+                    }
+                    deleteChildrenWithNoTests(child);
+                    // no tests after reducing
+                    if (child.children.length === 0) {
+                        block.children.splice(i--, 1);
+                    }
+                }
+            })(root);
+
             let stopped = false;
 
             emitter.stop = () => {
