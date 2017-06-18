@@ -194,10 +194,10 @@ describe("databases", "mongo", function () {
 
     describe("driver", () => {
         for (const topology of [
-            // "single",
-            // "sharded",
-            // "replicaset",
-            // "auth",
+            "single",
+            "sharded",
+            "replicaset",
+            "auth",
             "ssl"
         ]) {
             this.topology = topology;
@@ -256,6 +256,10 @@ describe("databases", "mongo", function () {
                     include("./sharding_connection");
                     include("./sharding_failover");
                     include("./sharding_read_preference");
+                    include("./unicode");
+                    include("./uri");
+                    include("./url_parser");
+                    include("./view");
                 }
 
                 include("./authentication");
