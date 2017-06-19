@@ -1,4 +1,4 @@
-describe("glosses", "utils", "iconv", "utf7", () => {
+describe("util", "iconv", "utf7", () => {
     const { util: { iconv } } = adone;
 
     describe("UTF-7 codec", () => {

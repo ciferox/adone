@@ -1,4 +1,4 @@
-describe("glosses", "utils", "iconv", "Full SBCS encoding tests", function () {
+describe("util", "iconv", "Full SBCS encoding tests", function () {
     this.timeout(10000);
 
     const { util: { iconv }, std: { path }, ExBuffer } = adone;
@@ -210,4 +210,3 @@ describe("glosses", "utils", "iconv", "Full SBCS encoding tests", function () {
         }
     }
 });
-

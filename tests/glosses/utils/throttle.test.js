@@ -52,7 +52,7 @@ const worker = (max) => {
     };
 };
 
-describe("utils", "throttle", () => {
+describe("util", "throttle", () => {
     describe("no intervals", () => {
         describe("throttle({ max: n })", () => {
             it("1 acts as a lock", () => {

@@ -1,6 +1,6 @@
 const { util } = adone;
 
-describe("typeOf", () => {
+describe("util", "typeOf", () => {
     it("array", () => {
         assert(util.typeOf([]) === "Array");
         assert(util.typeOf([]) === "Array");

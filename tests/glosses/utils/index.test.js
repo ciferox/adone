@@ -1,4 +1,4 @@
-describe("utils", () => {
+describe("util", () => {
     const { util, is, x } = adone;
 
     describe("arrify", () => {

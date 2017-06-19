@@ -1,4 +1,4 @@
-describe("glosses", "util", "uuid", () => {
+describe("util", "uuid", () => {
     const { util: { uuid } } = adone;
 
     const TIME = 1321644961388; // 2011-11-18 11:36:01.388-08:00

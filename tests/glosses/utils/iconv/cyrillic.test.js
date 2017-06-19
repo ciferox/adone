@@ -1,4 +1,4 @@
-describe("glosses", "utils", "iconv", "Cyrillic encodings", () => {
+describe("util", "iconv", "Cyrillic encodings", () => {
     const { util: { iconv } } = adone;
 
     const baseStrings = {

@@ -1,4 +1,4 @@
-describe("glosses", "utils", "iconv", "Generic UTF8-UCS2 tests", () => {
+describe("util", "iconv", "Generic UTF8-UCS2 tests", () => {
     const { util: { iconv } } = adone;
 
     const testString = "Hello123!";

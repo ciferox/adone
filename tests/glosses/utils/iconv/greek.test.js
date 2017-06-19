@@ -1,4 +1,4 @@
-describe("glosses", "utils", "iconv", "Test Greek encodings", () => {
+describe("util", "iconv", "Test Greek encodings", () => {
     const { util: { iconv } } = adone;
 
     const baseStrings = {

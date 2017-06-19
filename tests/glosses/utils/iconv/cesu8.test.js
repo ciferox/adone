@@ -1,4 +1,4 @@
-describe("glosses", "utils", "iconv", "CESU-8", () => {
+describe("util", "iconv", "CESU-8", () => {
     const { util: { iconv } } = adone;
 
     it("encodes correctly", () => {

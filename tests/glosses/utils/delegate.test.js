@@ -1,4 +1,4 @@
-describe("glosses", "utils", "delegate", () => {
+describe("util", "delegate", () => {
     const { util: { delegate } } = adone;
 
     it("should delegate a method call", () => {

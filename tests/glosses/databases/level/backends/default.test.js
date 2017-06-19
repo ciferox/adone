@@ -27,7 +27,7 @@ const makeTest = (name, testFn) => {
 };
 
 
-describe("databases", "level", "backend", "default", () => {
+describe("db", "level", "backend", "default", () => {
     const factory = (location, options) => new Default(location, options);
 
     require("../common/open").all(factory, testCommon);

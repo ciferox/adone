@@ -1,8 +1,6 @@
-/* global describe it */
-
 const { utou, atoa, atou, utoa } = adone.util.memcpy;
 
-describe("C++ Memory copy", () => {
+describe("util", "memcpy", () => {
     it("copy Buffer to Buffer", () => {
         const str = "test buffer";
         const srcBuf = Buffer.from(str);

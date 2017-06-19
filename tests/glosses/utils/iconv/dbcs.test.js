@@ -1,4 +1,4 @@
-describe("glosses", "utils", "iconv", "Full DBCS encoding tests", function () {
+describe("util", "iconv", "Full DBCS encoding tests", function () {
     this.timeout(10000);
 
     const { util: { iconv }, std: { path }, ExBuffer } = adone;

@@ -1,4 +1,4 @@
-describe("glosses", "utils", "iconv", "big5", () => {
+describe("util", "iconv", "big5", () => {
     const { util: { iconv } } = adone;
 
     const testString = "中文abc"; //unicode contains Big5-code and ascii

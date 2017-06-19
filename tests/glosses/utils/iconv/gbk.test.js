@@ -1,4 +1,4 @@
-describe("glosses", "utils", "iconv", "GBK tests", () => {
+describe("util", "iconv", "GBK tests", () => {
     const { util: { iconv }, std: { path } } = adone;
 
     const fixtures = new adone.fs.Directory(path.resolve(__dirname, "fixtures"));

@@ -4,7 +4,7 @@ const { database: { level: { AbstractBackend, AbstractIterator, AbstractChainedB
 const factory = (location, options) => new AbstractBackend(location, options);
 
 /*** compatibility with basic LevelDOWN API ***/
-describe("databases", "level", "abstract", () => {
+describe("db", "level", "abstract", () => {
     require("./common/backend").args(factory, testCommon);
 
     require("./common/del").setUp(factory, testCommon);

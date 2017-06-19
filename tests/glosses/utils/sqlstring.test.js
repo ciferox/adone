@@ -1,4 +1,4 @@
-describe("glosses", "utils", "sqlstring", () => {
+describe("util", "sqlstring", () => {
     const { util: { sqlstring } } = adone;
 
     describe("escapeId", () => {

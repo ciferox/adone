@@ -1,4 +1,4 @@
-describe("glosses", "utils", "iconv", "bom handling", () => {
+describe("util", "iconv", "bom handling", () => {
     const { util: { iconv } } = adone;
 
     const sampleStr = '<?xml version="1.0" encoding="UTF-8"?>\n<俄语>данные</俄语>';

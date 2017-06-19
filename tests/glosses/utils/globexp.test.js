@@ -5,7 +5,7 @@ const alpha = (a, b) => {
     return a > b ? 1 : -1;
 };
 
-describe("glosses", "utils", "GlobExp", () => {
+describe("util", "GlobExp", () => {
     it("basic tests", () => {
         let files = [
             "a", "b", "c", "d", "abc",

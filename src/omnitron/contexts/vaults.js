@@ -1,6 +1,8 @@
 const { is } = adone;
 const { Contextable, Private, Public, Description, Method, Type } = adone.netron.decorator;
 
+const SEPARATOR = "|";
+
 @Private
 @Contextable
 @Description("The valuable of vault")
@@ -88,44 +90,88 @@ export default class Vaults {
             case "all": {
                 const opened = [...this._vaults.keys()];
                 const names = await adone.fs.readdir(this._path);
-                return names.map((name) => ({
-                    name,
-                    path: adone.std.path.join(this._path, name),
-                    state: (opened.includes(name) ? "open" : "close"),
-                    size: 0
-                }));
+                return names.map((realName) => {
+                    const parts = realName.split(SEPARATOR);
+                    const name = parts[0];
+
+                    return {
+                        name,
+                        path: adone.std.path.join(this._path, adone.std.path.dirname(realName)),
+                        state: (opened.includes(realName) ? "open" : "close"),
+                        encrypted: parts.length > 1 && parts.includes("crypt"),
+                        size: 0
+                    };
+                });
             }
-            case "opened": {
+            case "open": {
                 return [...this._vaults.entries()].map((v) => ({
-                    name: v.name,
-                    path: v.location(),
-                    size: 0
+                    name: v[0],
+                    path: adone.std.path.dirname(v[1].vault.location()),
+                    size: 0,
+                    encrypted: is.plainObject(v[1].oprions.encryption)
                 }));
             }
-            case "closed": {
+            case "close": {
                 const opened = [...this._vaults.keys()];
                 const names = await adone.fs.readdir(this._path);
-                return names.filter((name) => !opened.includes(name)).map((name) => ({
-                    name,
-                    path: adone.std.path.join(this._path, name),
-                    size: 0
-                }));
+                return names.filter((name) => !opened.includes(name.split(SEPARATOR)[0])).map((realName) => {
+                    const parts = realName.split(SEPARATOR);
+                    const name = parts[0];
+                    return {
+                        name,
+                        path: adone.std.path.join(this._path, adone.std.path.dirname(realName)),
+                        size: 0
+                    };
+                });
             }
         }
+    }
+
+    @Public
+    @Description("Creates vault")
+    @Type(Object)
+    async create(name, options = {}) {
+        let vault = this._vaults.get(name);
+        if (!is.undefined(vault)) {
+            throw new adone.x.Exists(`Vault '${name}' already exists`);
+        }
+        const location = this._location(name, options);
+        const names = await adone.fs.readdir(this._path);
+        const index = names.findIndex((fullName) => {
+            const parts = fullName.split(SEPARATOR);
+            return parts[0] === name;
+        });
+        if (index >= 0) {
+            throw new adone.x.Exists(`Vault '${name}' already exists`);
+        }
+        options.location = location;
+        vault = new Vault(this, options);
+        await vault.open();
+        await vault.close();
+
+        return {
+            name,
+            path: this._path,
+            state: "close",
+            encrypted: is.plainObject(options.encryption),
+            size: 0
+        };
     }
 
     @Public
     @Description("Opens vault with specified name and returns it")
     @Type(Vault)
     async open(name, options = {}) {
-        const location = this._location(name);
-        let vault = this._vaults.get(location);
+        let vault = this._vaults.get(name);
         if (is.undefined(vault)) {
             delete options.location;
             vault = new Vault(this, Object.assign({
-                location
+                location: this._location(name, options)
             }, options));
-            this._vaults.set(location, vault);
+            this._vaults.set(name, {
+                vault,
+                options
+            });
         } else {
             throw new adone.x.IllegalState(`Vault '${name}' already opened`);
         }
@@ -138,33 +184,36 @@ export default class Vaults {
     @Description("Returns opened vault with specified name")
     @Type(Vault)
     async get(name) {
-        const vault = this._get(name);
-        if (is.undefined(vault)) {
+        const meta = this._vaults.get(name);
+        if (is.undefined(meta)) {
             throw new adone.x.IllegalState(`Vault '${name}' is not opened`);
         }
-        return vault;
+        return meta.vault;
     }
 
     @Public
     @Description("Closes vault with specified name")
     @Type()
     async close(name) {
-        const location = this._location(name);
-        const vault = this._vaults.get(location);
-        if (is.undefined(vault)) {
+        const meta = this._vaults.get(name);
+        if (is.undefined(meta)) {
             throw new adone.x.IllegalState(`Vault '${name}' is not opened`);
         }
-
-        this._vaults.delete(location);
-        return vault.close();
+        this._vaults.delete(name);
+        return meta.vault.close();
     }
 
-    _get(name) {
-        const location = this._location(name);
-        return this._vaults.get(location);
-    }
+    // format of directory/file name: <name>[<sep><opt[-value]>...]
+    // options:
+    // - crypt
+    // - keyenc: any from db.level supported types
+    // - valenc: any from db.level supported types
+    _location(name, options) {
+        let suffix = "";
 
-    _location(name) {
-        return adone.std.path.join(this._path, name);
+        if (is.plainObject(options.encryption)) {
+            suffix = `${SEPARATOR}crypt`;
+        }
+        return adone.std.path.join(this._path, `${name}${suffix}`);
     }
 }

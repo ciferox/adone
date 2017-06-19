@@ -1,4 +1,4 @@
-describe("glosses", "utils", "iconv", "utf16", () => {
+describe("util", "iconv", "utf16", () => {
     const { util: { iconv } } = adone;
 
     const testStr = "1aя中文☃💩";

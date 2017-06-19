@@ -1,4 +1,4 @@
-describe("glosses", "utils", "iconv", "ShiftJIS tests", () => {
+describe("util", "iconv", "ShiftJIS tests", () => {
     const { util: { iconv } } = adone;
 
     it("ShiftJIS correctly encoded/decoded", () => {

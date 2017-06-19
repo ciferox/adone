@@ -1,6 +1,5 @@
 const { x, database: { level: { DB, Batch, backend: { Default } } } } = adone;
 const delayed = require("delayed").delayed;
-// const msgpack = require("msgpack-js");
 
 let dbidx = 0;
 
@@ -114,7 +113,7 @@ class Manager {
 }
 
 
-describe("databases", "level", () => {
+describe("db", "level", () => {
     describe("Initialization", () => {
         let manager;
         beforeEach(() => {

@@ -191,11 +191,11 @@ export default class DB extends adone.EventEmitter {
                             parts.push(salt);
                         }
 
-                        return adone.data.mpak.encode(parts);
+                        return adone.data.bson.encode(parts);
                     }
 
                     _decryptValue(value) {
-                        const parts = adone.data.mpak.decode(value);
+                        const parts = adone.data.bson.decode(value);
                         let key;
 
                         if (is.undefined(encOptions.key)) {
