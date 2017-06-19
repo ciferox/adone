@@ -72,7 +72,7 @@ const pingServer = (self, server, cb) => {
         socketTimeout: self.s.options.connectionTimeout || 2000
     }, (err, r) => {
         if (self.state === DESTROYED || self.state === UNREFERENCED) {
-            server.destroy();
+            server.destroy({ force: true });
             return cb(err, r);
         }
 
@@ -234,13 +234,13 @@ const topologyMonitor = (self, options) => {
                     return self.emit("error", err);
                 }
                 self.emit("error", new MongoError("no primary found in replicaset"));
-                return self.destroy();
+                return self.destroy({ force: true });
             } else if (!self.s.replicaSetState.hasSecondary() && self.s.options.secondaryOnlyConnectionAllowed) {
                 if (err) {
                     return self.emit("error", err);
                 }
                 self.emit("error", new MongoError("no secondary found in replicaset"));
-                return self.destroy();
+                return self.destroy({ force: true });
             }
 
             for (let i = 0; i < servers.length; i++) {
@@ -397,20 +397,20 @@ const connectNewServers = (self, servers, callback) => {
 
             // Destroyed
             if (self.state === DESTROYED || self.state === UNREFERENCED) {
-                return this.destroy();
+                return this.destroy({ force: true });
             }
 
             if (event === "connect" && !self.authenticating) {
                 // Destroyed
                 if (self.state === DESTROYED || self.state === UNREFERENCED) {
-                    return this.destroy();
+                    return this.destroy({ force: true });
                 }
 
                 // Do we have authentication contexts that need to be applied
                 applyAuthenticationContexts(self, this, () => {
                     // Destroy the instance
                     if (self.state === DESTROYED || self.state === UNREFERENCED) {
-                        return this.destroy();
+                        return this.destroy({ force: true });
                     }
 
                     // Update the state
@@ -439,11 +439,11 @@ const connectNewServers = (self, servers, callback) => {
                         // Rexecute any stalled operation
                         rexecuteOperations(self);
                     } else {
-                        this.destroy();
+                        this.destroy({ force: true });
                     }
                 });
             } else if (event === "connect" && self.authenticating) {
-                this.destroy();
+                this.destroy({ force: true });
             } else if (event === "error") {
                 error = err;
             }
@@ -515,7 +515,7 @@ const handleInitialConnectEvent = (self, event) => {
     return function () {
         // Destroy the instance
         if (self.state === DESTROYED || self.state === UNREFERENCED) {
-            return this.destroy();
+            return this.destroy({ force: true });
         }
 
         // Check the type of server
@@ -524,7 +524,7 @@ const handleInitialConnectEvent = (self, event) => {
             applyAuthenticationContexts(self, this, () => {
                 // Destroy the instance
                 if (self.state === DESTROYED || self.state === UNREFERENCED) {
-                    return this.destroy();
+                    return this.destroy({ force: true });
                 }
                 // Update the state
                 const result = self.s.replicaSetState.update(this);
@@ -564,11 +564,11 @@ const handleInitialConnectEvent = (self, event) => {
                         topologyMonitor(self, {});
                     }
                 } else if (result instanceof MongoError) {
-                    this.destroy();
-                    self.destroy();
+                    this.destroy({ force: true });
+                    self.destroy({ force: true });
                     return self.emit("error", result);
                 } else {
-                    this.destroy();
+                    this.destroy({ force: true });
                 }
             });
         } else {

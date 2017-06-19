@@ -1,4 +1,4 @@
-describe("glosses", "schema", "issues", () => {
+describe("schema", "issues", () => {
     const { schema: { Validator, refs } } = adone;
 
     describe("issue #8: schema with shared references", () => {
@@ -539,4 +539,28 @@ describe("glosses", "schema", "issues", () => {
 
         });
     });
+
+    describe('issue #521, incorrect warning with "id" property', () => {
+        it("should not log warning", () => {
+            const instance = new Validator({ schemaId: "$id" });
+            const consoleWarn = console.warn;
+            console.warn = function () {
+                throw new Error("should not log warning");
+            };
+
+            try {
+                instance.compile({
+                    $id: "http://example.com/schema.json",
+                    type: "object",
+                    properties: {
+                        id: { type: "string" }
+                    },
+                    required: ["id"]
+                });
+            } finally {
+                console.warn = consoleWarn;
+            }
+        });
+    });
+
 });

@@ -1254,6 +1254,14 @@ describe("assertion", "expect", () => {
         err(() => {
             expect({ a: { b: 1 } }, "blah").to.have.own.nested.property("a.b");
         }, "blah: The \"nested\" and \"own\" flags cannot be combined.");
+
+        err(() => {
+            expect(null, "blah").to.have.property("a");
+        }, "blah: Target cannot be null or undefined.");
+
+        err(() => {
+            expect(undefined, "blah").to.have.property("a");
+        }, "blah: Target cannot be null or undefined.");
     });
 
     it("property(name, val)", () => {
@@ -1290,8 +1298,8 @@ describe("assertion", "expect", () => {
         const arr = [
             ["chai", "matcha", "konacha"],
             [{ tea: "chai" },
-                 { tea: "matcha" },
-                 { tea: "konacha" }]
+            { tea: "matcha" },
+            { tea: "konacha" }]
         ];
         expect(arr).to.have.nested.property("[0][1]", "matcha");
         expect(arr).to.have.nested.property("[1][2].tea", "konacha");

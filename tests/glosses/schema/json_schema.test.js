@@ -2,7 +2,7 @@ import getInstances from "./get_instances";
 import options from "./options";
 import jsonSchemaTest from "./json_schema_test";
 
-describe("glosses", "schema", "json schema", () => {
+describe("schema", "json schema", () => {
     const remoteRefs = {
         "http://localhost:1234/integer.json": require("./remotes/integer.json"),
         "http://localhost:1234/subSchemas.json": require("./remotes/sub_schemas.json"),

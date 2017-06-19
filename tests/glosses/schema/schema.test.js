@@ -2,7 +2,7 @@ import getInstances from "./get_instances";
 import options from "./options";
 import jsonSchemaTest from "./json_schema_test";
 
-describe("glosses", "schema", "schema", () => {
+describe("schema", "schema", () => {
     const instances = getInstances(adone.util.clone(options), {
         unknownFormats: ["allowedUnknown"]
     });

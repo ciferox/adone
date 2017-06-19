@@ -3,8 +3,9 @@ const { __: { util } } = $assert;
 
 const vowels = new Set(["a", "e", "i", "o", "u"]);
 
-export default function expectTypes(obj, types, ssfi) {
+export default function expectTypes(obj, types) {
     let flagMsg = util.flag(obj, "message");
+    const ssfi = util.flag(obj, "ssfi");
     flagMsg = flagMsg ? `${flagMsg}: ` : "";
     obj = util.flag(obj, "object");
     types = types.map((t) => t.toLowerCase());

@@ -443,7 +443,8 @@ describe("net", "http", "server", "middlewares", "router", "Router", () => {
             router.put("/users", adone.noop);
             await request(server)
                 .options("/users")
-                .expectStatus(204)
+                .expectStatus(200)
+                .expectHeader("Content-Length", 0)
                 .expectHeader("allow", "HEAD, GET, PUT");
         });
 

@@ -1,7 +1,7 @@
 import getInstances from "./get_instances";
 import customRules from "./custom_rules";
 
-describe("glosses", "schema", "custom keywords", () => {
+describe("schema", "custom keywords", () => {
     let instance;
     let instances;
 

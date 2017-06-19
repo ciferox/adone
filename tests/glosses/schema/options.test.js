@@ -1,6 +1,6 @@
 import getInstances from "./get_instances";
 
-describe("glosses", "schema", "options", () => {
+describe("schema", "options", () => {
     const { schema: { Validator, refs } } = adone;
 
     describe("removeAdditional", () => {

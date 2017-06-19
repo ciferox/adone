@@ -149,7 +149,8 @@ class Router {
                         }
                     } else if (allowedArr.length) {
                         if (ctx.method === "OPTIONS") {
-                            ctx.status = 204;
+                            ctx.status = 200;
+                            ctx.body = "";
                             ctx.set("Allow", allowedArr);
                         } else if (!allowed[ctx.method]) {
                             if (options.throw) {

@@ -274,6 +274,12 @@ describe("mongo client", function () {
         db.close();
     });
 
+    it("should correctly pass through appname in options", async () => {
+        const db = await mongo.connect(this.url(), { appname: "hello world" });
+        expect(db.serverConfig.clientInfo.application.name).to.be.equal("hello world");
+        db.close();
+    });
+
     it("should correctly pass through socketTimeoutMS and connectTimeoutMS", async () => {
         const db = await mongo.connect(this.url(), {
             socketTimeoutMS: 0,

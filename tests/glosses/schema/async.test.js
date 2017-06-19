@@ -1,4 +1,4 @@
-describe("glosses", "schema", "compileAsync method", () => {
+describe("schema", "compileAsync method", () => {
     const { schema: { Validator } } = adone;
 
     let instance;

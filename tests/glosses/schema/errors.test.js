@@ -1,4 +1,4 @@
-describe("glosses", "schema", "validation errors", () => {
+describe("schema", "validation errors", () => {
     const { schema: { Validator } } = adone;
 
     let instance;

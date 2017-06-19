@@ -1,21 +1,7 @@
 const { util: { iconv } } = adone;
 
-const NODE_ENCODING = [
-    "ascii",
-    "utf8",
-    "utf16le",
-    "ucs2",
-    "base64",
-    "latin1",
-    "binary",
-    "hex"
-].reduce((map, item) => {
-    map[item] = Buffer.isEncoding(item);
-    return map;
-}, {});
-
 export const decode = (buffer, encoding, options) => {
-    if (NODE_ENCODING[encoding]) {
+    if (Buffer.isEncoding(encoding)) {
         return buffer.toString(encoding);
     }
 
@@ -28,7 +14,7 @@ export const decode = (buffer, encoding, options) => {
 };
 
 export const encode = (string, encoding, options) => {
-    if (NODE_ENCODING[encoding]) {
+    if (Buffer.isEncoding(encoding)) {
         return Buffer.from(string, encoding);
     }
 

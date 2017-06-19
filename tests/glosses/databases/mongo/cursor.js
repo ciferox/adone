@@ -870,6 +870,26 @@ describe("cursor", function () {
         });
     });
 
+    it("should correctly apply multiple uses of map and apply forEach", async () => {
+        const collection = this.db.collection("mapmap_forEach");
+        await collection.insert(range(1000).map((i) => {
+            return { a: i, createdAt: new Date(new Date().getTime() + i * 1000) };
+        }));
+        // Create a cursor for the content
+        const cursor = collection.find({})
+            .map(() => ({ a: 2 }))
+            .map((x) => ({ a: x.a * x.a }))
+            .batchSize(5)
+            .limit(10);
+        await new Promise((resolve, reject) => {
+            cursor.forEach((doc) => {
+                expect(doc).to.be.deep.equal({ a: 4 });
+            }, (err) => {
+                err ? reject(err) : resolve();
+            });
+        });
+    });
+
     it("should correctly apply skip and limit to large set of documents", async () => {
         const collection = this.db.collection("cursor_limit_skip_correctly");
         const ordered = collection.initializeUnorderedBulkOp();

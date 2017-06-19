@@ -35,7 +35,13 @@ export default class Collection {
     }
 
     resetHistory() {
-        this.each("resetHistory");
+        for (const fake of getFakes(this)) {
+            const method = fake.resetHistory || fake.reset;
+
+            if (method) {
+                method.call(fake);
+            }
+        }
     }
 
     verifyAndRestore() {

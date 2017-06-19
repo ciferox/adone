@@ -143,7 +143,7 @@ export default class InternalCodec {
             this.encoder = InternalEncoderCesu8;
 
             // Add decoder for versions of Node not supporting CESU-8
-            if (Buffer.from("eda080", "hex").toString().length === 3) {
+            if (Buffer.from("eda0bdedb2a9", "hex").toString() !== "💩") {
                 this.decoder = InternalDecoderCesu8;
                 this.defaultCharUnicode = iconv.defaultCharUnicode;
             }

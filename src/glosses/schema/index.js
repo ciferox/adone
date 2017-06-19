@@ -2,7 +2,8 @@ const { is, x, lazify } = adone;
 
 const JSONSchema = lazify({
     x: "./x",
-    $dataMetaSchema: "./data_metaschema"
+    $dataMetaSchema: "./data_metaschema",
+    traverse: "./traverse"
 }, exports, require);
 
 export const __ = lazify({

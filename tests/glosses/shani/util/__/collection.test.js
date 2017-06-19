@@ -335,17 +335,23 @@ describe("shani", "util", "__", "collection", () => {
                 resetHistory: sspy()
             }, {
                 resetHistory: sspy()
+            }, {
+                // this fake pretends to be a spy, which does not have resetHistory method
+                // but has a reset method
+                reset: sspy()
             }];
         });
 
-        it("calls resetHistory on all fakes", function () {
+        it("resets the history on all fakes", function () {
             const fake0 = this.collection.fakes[0];
             const fake1 = this.collection.fakes[1];
+            const fake2 = this.collection.fakes[2];
 
             this.collection.resetHistory();
 
             assert(fake0.resetHistory.called);
             assert(fake1.resetHistory.called);
+            assert(fake2.reset.called);
         });
     });
 

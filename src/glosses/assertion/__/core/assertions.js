@@ -552,6 +552,7 @@ export default function (lib, util) {
         const isNested = flag(this, "nested");
         const isOwn = flag(this, "own");
         let flagMsg = flag(this, "message");
+        const obj = flag(this, "object");
         const ssfi = flag(this, "ssfi");
 
         if (isNested && isOwn) {
@@ -559,9 +560,17 @@ export default function (lib, util) {
             throw new AssertionError(`${flagMsg}The "nested" and "own" flags cannot be combined.`, undefined, ssfi);
         }
 
+        if (is.nil(obj)) {
+            flagMsg = flagMsg ? `${flagMsg}: ` : "";
+            throw new AssertionError(
+                `${flagMsg}Target cannot be null or undefined.`,
+                undefined,
+                ssfi
+            );
+        }
+
         const isDeep = flag(this, "deep");
         const negate = flag(this, "negate");
-        const obj = flag(this, "object");
         const pathInfo = isNested ? util.getPathInfo(obj, name) : null;
         const value = isNested ? pathInfo.value : obj[name];
 

@@ -2,7 +2,7 @@ import getInstances from "./get_instances";
 import options from "./options";
 import jsonSchemaTest from "./json_schema_test";
 
-describe("glosses", "schema", "extras", () => {
+describe("schema", "extras", () => {
     const instances = getInstances(options, {
         $data: true,
         patternGroups: true,

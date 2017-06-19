@@ -161,6 +161,13 @@ export default class Pool extends EventEmitter {
     execute(sql, values, cb) {
         // const useNamedPlaceholders = this.config.connectionConfig.namedPlaceholders;
 
+        // TODO construct execute command first here and pass it to connection.execute
+        // so that polymorphic arguments logic is there in one place
+        if (is.function(values)) {
+            cb = values;
+            values = [];
+        }
+
         this.getConnection((err, conn) => {
             if (err) {
                 return cb(err);

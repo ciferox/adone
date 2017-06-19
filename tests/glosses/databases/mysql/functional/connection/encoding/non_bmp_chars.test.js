@@ -4,7 +4,7 @@ describe("glosses", "databases", "mysql", "functional", "connection", "encoding"
     // 4 bytes in utf8
     const payload = "💩";
 
-    specify.skip("UTF8_GENERAL_CI", async () => {
+    specify("UTF8_GENERAL_CI", async () => {
         const connection = await createConnection({ charset: "UTF8_GENERAL_CI" });
         try {
             const [rows, fields] = await connection.query('select "💩"');

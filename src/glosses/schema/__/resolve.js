@@ -1,4 +1,4 @@
-const { is, x, std: { url }, schema: { __: { util, SchemaObject } } } = adone;
+const { is, x, std: { url }, schema: { traverse, __: { util, SchemaObject } } } = adone;
 
 const _getFullPath = (p) => {
     const protocolSeparator = p.protocol || p.href.startsWith("//") ? "//" : "";
@@ -186,47 +186,51 @@ const resolveRecursive = function (root, ref, parsedRef) {
 };
 
 const resolveIds = function (schema) {
-    /* eslint no-shadow: 0 */
-    /* jshint validthis: true */
-    const id = normalizeId(this._getId(schema));
+    const schemaId = normalizeId(this._getId(schema));
+    const baseIds = { "": schemaId };
+    const fullPaths = { "": getFullPath(schemaId, false) };
     const localRefs = {};
+    const self = this;
 
-    const _resolveIds = (schema, fullPath, baseId) => {
-        if (is.array(schema)) {
-            for (let i = 0; i < schema.length; i++) {
-                _resolveIds(schema[i], `${fullPath}/${i}`, baseId);
+    traverse(schema, {
+        allKeys: true
+    }, (sch, jsonPtr, rootSchema, parentJsonPtr, parentKeyword, parentSchema, keyIndex) => {
+        if (jsonPtr === "") {
+            return;
+        }
+        let id = self._getId(sch);
+        let baseId = baseIds[parentJsonPtr];
+        let fullPath = `${fullPaths[parentJsonPtr]}/${parentKeyword}`;
+        if (!is.undefined(keyIndex)) {
+            fullPath += `/${is.number(keyIndex) ? keyIndex : util.escapeFragment(keyIndex)}`;
+        }
+
+        if (is.string(id)) {
+            id = baseId = normalizeId(baseId ? url.resolve(baseId, id) : id);
+
+            let refVal = self._refs[id];
+            if (is.string(refVal)) {
+                refVal = self._refs[refVal];
             }
-        } else if (schema && is.object(schema)) {
-            let id = this._getId(schema);
-            if (is.string(id)) {
-                id = baseId = normalizeId(baseId ? url.resolve(baseId, id) : id);
-
-                let refVal = this._refs[id];
-                if (is.string(refVal)) {
-                    refVal = this._refs[refVal];
+            if (refVal && refVal.schema) {
+                if (!is.deepEqual(sch, refVal.schema)) {
+                    throw new x.IllegalState(`id "${id}" resolves to more than one schema`);
                 }
-                if (refVal && refVal.schema) {
-                    if (!is.deepEqual(schema, refVal.schema)) {
+            } else if (id !== normalizeId(fullPath)) {
+                if (id[0] === "#") {
+                    if (localRefs[id] && !is.deepEqual(sch, localRefs[id])) {
                         throw new x.IllegalState(`id "${id}" resolves to more than one schema`);
                     }
-                } else if (id !== normalizeId(fullPath)) {
-                    if (id[0] === "#") {
-                        if (localRefs[id] && !is.deepEqual(schema, localRefs[id])) {
-                            throw new x.IllegalState(`id "${id}" resolves to more than one schema`);
-                        }
-                        localRefs[id] = schema;
-                    } else {
-                        this._refs[id] = fullPath;
-                    }
+                    localRefs[id] = sch;
+                } else {
+                    self._refs[id] = fullPath;
                 }
             }
-            for (const key in schema) {
-                _resolveIds(schema[key], `${fullPath}/${util.escapeFragment(key)}`, baseId);
-            }
         }
-    };
+        baseIds[jsonPtr] = baseId;
+        fullPaths[jsonPtr] = fullPath;
+    });
 
-    _resolveIds(schema, getFullPath(id, false), id);
     return localRefs;
 };
 

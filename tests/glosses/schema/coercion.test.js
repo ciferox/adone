@@ -1,4 +1,4 @@
-describe("glosses", "schema", "type coercion", () => {
+describe("schema", "type coercion", () => {
     const { schema: { Validator } } = adone;
 
     const coercionRules = {

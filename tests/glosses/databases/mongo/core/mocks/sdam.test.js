@@ -22,7 +22,6 @@ describe("mongodb", function () {
     before(async function () {
         this.timeout(999999999); // long enough
         // Kill any running MongoDB processes and `install $MONGODB_VERSION` || `use existing installation` || `install stable`
-        await promisify(mongodbVersionManager)();
         const version = await promisify(mongodbVersionManager.current)();
         adone.info(`Running tests against MongoDB version ${version}`);
         return configuration.setup();
@@ -252,7 +251,7 @@ describe("mongodb", function () {
                 });
             });
 
-            context("single", () => {
+            context.only("single", () => {
                 it("Should correctly emit sdam monitoring events for single server", async () => {
                     const running = true;
 
@@ -424,7 +423,7 @@ describe("mongodb", function () {
                         maxWireVersion: 3,
                         minWireVersion: 0,
                         ok: 1,
-                        hosts: ["a:27017", "b:27017"] // <-- this makes it an RSPrimary
+                        hosts: ["localhost:37008"]  // <-- this makes it an RSPrimary
                     };
 
                     // Primary server states

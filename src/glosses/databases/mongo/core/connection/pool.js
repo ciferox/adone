@@ -1131,6 +1131,16 @@ export default class Pool extends EventEmitter {
 
         // Are we force closing
         if (force) {
+            // Flush any remaining work items with
+            // an error
+            const err = new Error("destoyed");
+            while (this.queue.length > 0) {
+                const workItem = this.queue.shift();
+                if (is.function(workItem.cb)) {
+                    workItem.cb(null, err);
+                }
+            }
+
             // Get all the known connections
             return destroy(this, [
                 ...this.availableConnections,

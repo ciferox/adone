@@ -138,6 +138,24 @@ describe("shani", "util", "issues", () => {
         });
     });
 
+    describe("#1372 - sandbox.resetHistory", () => {
+        it("should reset spies", function () {
+            const spy = this.sandbox.spy();
+
+            spy();
+            assert.equal(spy.callCount, 1);
+
+            spy();
+            assert.equal(spy.callCount, 2);
+
+            this.sandbox.resetHistory();
+
+            spy();
+            assert.equal(spy.callCount, 1);  // should not fail but fails
+        });
+    });
+
+
     describe("#1398", () => {
         it("Call order takes into account both calledBefore and callCount", () => {
             const s1 = spy();
