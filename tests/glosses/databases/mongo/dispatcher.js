@@ -159,8 +159,8 @@ export default class Dispatcher {
                 // mongod process options
                 options: {
                     bind_ip: "localhost",
-                    port: 31010,
-                    dbpath: (await this.tmpdir.addDirectory("31010")).path(),
+                    port: 38010,
+                    dbpath: (await this.tmpdir.addDirectory("38010")).path(),
                     setParameter: ["enableTestCommands=1"],
                     keyFile,
                     auth: null,
@@ -170,8 +170,8 @@ export default class Dispatcher {
                 tags: { loc: "sf" },
                 options: {
                     bind_ip: "localhost",
-                    port: 31011,
-                    dbpath: (await this.tmpdir.addDirectory("31011")).path(),
+                    port: 38011,
+                    dbpath: (await this.tmpdir.addDirectory("38011")).path(),
                     setParameter: ["enableTestCommands=1"],
                     keyFile,
                     auth: null,
@@ -181,8 +181,8 @@ export default class Dispatcher {
                 tags: { loc: "sf" },
                 options: {
                     bind_ip: "localhost",
-                    port: 31012,
-                    dbpath: (await this.tmpdir.addDirectory("31012")).path(),
+                    port: 38012,
+                    dbpath: (await this.tmpdir.addDirectory("38012")).path(),
                     setParameter: ["enableTestCommands=1"],
                     keyFile,
                     auth: null,
@@ -200,11 +200,11 @@ export default class Dispatcher {
         }
         return {
             host: "localhost",
-            port: 31010,
+            port: 38010,
             server: this._replicasetAuth,
             url: (opts) => url(adone.util.assignDeep({
                 host: "localhost",
-                port: 31010,
+                port: 38010,
                 database: "tests",
                 search: {
                     rs_name: "rs"

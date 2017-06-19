@@ -234,8 +234,8 @@ describe("authentication", function () {
                 await manager.purge();
                 await manager.start();
                 replset = new mongo.ReplSet([
-                    new mongo.Server("localhost", 31010),
-                    new mongo.Server("localhost", 31011)
+                    new mongo.Server("localhost", 38010),
+                    new mongo.Server("localhost", 38011)
                 ], { rs_name: "rs", poolSize: 1 });
             });
 
@@ -266,7 +266,7 @@ describe("authentication", function () {
                 }).open();
                 await db.admin().addUser("root", "root", { w: 3, wtimeout: 25000 });
                 await db.close();
-                db = await mongo.connect("mongodb://root:root@localhost:31010,localhost:31011,localhost:31012/admin?replicaSet=rs&readPreference=nearest");
+                db = await mongo.connect("mongodb://root:root@localhost:38010,localhost:38011,localhost:38012/admin?replicaSet=rs&readPreference=nearest");
                 await db.collection("replicaset_test_auth").insert({ a: 1 }, { w: 1 });
                 await db.collection("replicaset_test_auth").findOne({});
                 await db.collection("replicaset_test_auth").findOne({});
@@ -282,14 +282,14 @@ describe("authentication", function () {
                 }).open();
                 await db.admin().addUser("root", "root", { w: 3, wtimeout: 25000 });
                 await db.close();
-                db = await mongo.connect("mongodb://root:root@localhost:31010,localhost:31011,localhost:31012/admin?replicaSet=rs&readPreference=secondary");
+                db = await mongo.connect("mongodb://root:root@localhost:38010,localhost:38011,localhost:38012/admin?replicaSet=rs&readPreference=secondary");
                 // Attempt create index
                 await db.db("replicaset_test_auth")
                     .collection("createIndexes1")
                     .ensureIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
                 await db.close();
 
-                db = await mongo.connect("mongodb://root:root@localhost:31012/admin?replicaSet=rs&readPreference=secondary");
+                db = await mongo.connect("mongodb://root:root@localhost:38012/admin?replicaSet=rs&readPreference=secondary");
                 await db.db("replicaset_test_auth")
                     .collection("createIndexes2")
                     .ensureIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
@@ -302,7 +302,7 @@ describe("authentication", function () {
                 await db.admin().authenticate("admin", "admin");
                 await db.addUser("me", "secret", { w: 3, wtimeout: 25000 });
                 await db.close();
-                const client = await mongo.connect("mongodb://me:secret@localhost:31010/node-native-test?replicaSet=rs");
+                const client = await mongo.connect("mongodb://me:secret@localhost:38010/node-native-test?replicaSet=rs");
                 const names = await client.collections();
                 expect(names).to.be.empty;
                 await client.close();
@@ -314,7 +314,7 @@ describe("authentication", function () {
                 await db.admin().authenticate("admin", "admin");
                 await db.addUser("me", "secret", { w: 3, wtimeout: 25000 });
                 await db.close();
-                const client = await mongo.connect("mongodb://me:secret@localhost:31010,localhost:31011/node-native-test?replicaSet=rs");
+                const client = await mongo.connect("mongodb://me:secret@localhost:38010,localhost:38011/node-native-test?replicaSet=rs");
                 const names = await client.collections();
                 expect(names).to.be.empty;
                 client.close();
@@ -327,7 +327,7 @@ describe("authentication", function () {
                 await db.admin().addUser("me", "secret", { w: 3, wtimeout: 25000 });
                 await db.close();
 
-                const client = await mongo.connect("mongodb://me:secret@localhost:31010/node-native-test?authSource=admin&readPreference=secondary&replicaSet=rs&maxPoolSize=1");
+                const client = await mongo.connect("mongodb://me:secret@localhost:38010/node-native-test?authSource=admin&readPreference=secondary&replicaSet=rs&maxPoolSize=1");
                 await client.collection("test").insert({ a: 1 });
                 await client.logout();
                 await assert.throws(async () => {
@@ -473,7 +473,7 @@ describe("authentication", function () {
                 let db = await new mongo.Db("admin", replset, { w: 3 }).open();
                 await db.admin().addUser("me", "secret", { w: 3, wtimeout: 25000 });
                 await db.close();
-                db = await mongo.connect("mongodb://me:secret@localhost:31010/admin?rs_name=rs&readPreference=secondary&w=3");
+                db = await mongo.connect("mongodb://me:secret@localhost:38010/admin?rs_name=rs&readPreference=secondary&w=3");
                 await db.collection("authcollectiontest").insert({ a: 1 }, { w: 3, wtimeout: 25000 });
                 const docs = await db.collection("authcollectiontest").find().toArray();
                 expect(docs).to.have.lengthOf(1);
@@ -487,7 +487,7 @@ describe("authentication", function () {
                 await db.admin().authenticate("admin", "admin");
                 await db.addUser("me", "secret", { w: 3, wtimeout: 25000 });
                 await db.close();
-                db = await mongo.connect("mongodb://me:secret@localhost:31010/foo?rs_name=rs&readPreference=secondary&w=3");
+                db = await mongo.connect("mongodb://me:secret@localhost:38010/foo?rs_name=rs&readPreference=secondary&w=3");
                 await db.collection("authcollectiontest1").insert({ a: 1 }, { w: 3, wtimeout: 25000 });
                 const docs = await db.collection("authcollectiontest1").find().toArray();
                 expect(docs).to.have.lengthOf(1);
@@ -496,13 +496,13 @@ describe("authentication", function () {
             });
 
             it("should correctly reauthenticating against multiple databases", async () => {
-                let db = await new mongo.Db("replicaset_test_auth", replset, { w: 1 }).open();
+                let db = await new mongo.Db("replicaset_test_reauth", replset, { w: 1 }).open();
                 await db.admin().addUser("root", "root", { w: 3, wtimeout: 25000 });
                 expect(await db.admin().authenticate("root", "root")).to.be.ok;
                 await db.db("test").addUser("test", "test", { w: 3, wtimeout: 25000 });
                 await db.db("test2").addUser("test2", "test2", { w: 3, wtimeout: 25000 });
                 await db.close();
-                db = await mongo.connect("mongodb://test:test@localhost:31010,localhost:31011/test?replicaSet=rs");
+                db = await mongo.connect("mongodb://test:test@localhost:38010,localhost:38011/test?replicaSet=rs");
                 expect(await db.db("test2").authenticate("test2", "test2")).to.be.ok;
                 await db.collection("test").findOne({});
                 await db.db("test2").collection("test").findOne({});

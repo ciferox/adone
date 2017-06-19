@@ -109,10 +109,10 @@ describe("replset read preference", function () {
         db.serverConfig.replset.on("pickedServer", (readPreference, server) => {
             viewedServers.add(server.name);
         });
-        await db.collection("nearest_collection_test", { readPreference: "nearest" }).findOne({ a: 1 });
-        await db.collection("nearest_collection_test").findOne({ a: 1 });
-        await db.collection("nearest_collection_test").findOne({ a: 1 });
-        expect(viewedServers).to.have.property("size").at.least(2);
+        while (viewedServers.size < 2) {
+            await db.collection("nearest_collection_test", { readPreference: "nearest" }).findOne({ a: 1 });
+            await db.collection("nearest_collection_test").findOne({ a: 1 });
+        }
         await db.close();
     });
 

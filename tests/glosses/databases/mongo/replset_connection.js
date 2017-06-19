@@ -8,26 +8,6 @@ describe("replset connection", function () {
     const { database: { mongo }, promise, std } = adone;
     const { ReplSet, Server, Mongos, Db } = mongo;
 
-    const enableAccounting = () => {
-        mongo.core.Connection.enableConnectionAccounting();
-        mongo.core.Server.enableServerAccounting();
-    };
-
-    const checkAccounting = () => {
-        expect(mongo.core.Connection.connections()).to.be.empty;
-        expect(mongo.core.Server.servers()).to.be.empty;
-    };
-
-    const disableAccounting = () => {
-        mongo.core.Connection.disableConnectionAccounting();
-        mongo.core.Server.disableServerAccounting();
-    };
-
-    const checkAndDisableAccounting = () => {
-        checkAccounting();
-        disableAccounting();
-    };
-
     const replicaSet = "rs";
 
     it("should throw error due to mongos connection usage", async () => {
@@ -41,7 +21,6 @@ describe("replset connection", function () {
     });
 
     it("should correctly handle error when no server up in replicaset", async () => {
-        enableAccounting();
         const replSet = new ReplSet([
             new Server("localhost", 28390),
             new Server("localhost", 28391),
@@ -53,13 +32,11 @@ describe("replset connection", function () {
             await db.open();
         });
         await promise.delay(1000);
-        checkAndDisableAccounting();
     });
 
     it("should correctly connect with default replicaset", async () => {
         const managers = await this.server.secondaries();
         await managers[0].stop();
-        enableAccounting();
         const replSet = new ReplSet([
             new Server(this.host, this.port),
             new Server(this.host, this.port + 1),
@@ -69,14 +46,12 @@ describe("replset connection", function () {
         await db.open();
         await db.close();
         await promise.delay(1000);
-        checkAndDisableAccounting();
         await this.server.restart();
     });
 
     it("should correctly connect with default replicaset and no setName specified", async () => {
         const managers = await this.server.secondaries();
         await managers[0].stop();
-        enableAccounting();
         const replSet = new ReplSet([
             new Server(this.host, this.port),
             new Server(this.host, this.port + 1),
@@ -86,12 +61,10 @@ describe("replset connection", function () {
         await db.open();
         await db.close();
         await promise.delay(1000);
-        checkAndDisableAccounting();
         await this.server.restart();
     });
 
     it("should correctly connect with default replicaset and socket options set", async () => {
-        enableAccounting();
         const replSet = new ReplSet([
             new Server(this.host, this.port),
             new Server(this.host, this.port + 1),
@@ -103,11 +76,9 @@ describe("replset connection", function () {
         expect(connection.keepAliveInitialDelay).to.be.equal(100);
         await db.close();
         await promise.delay(1000);
-        checkAndDisableAccounting();
     });
 
     it("should emit close", async () => {
-        enableAccounting();
         const replSet = new ReplSet([
             new Server(this.host, this.port),
             new Server(this.host, this.port + 1),
@@ -120,7 +91,6 @@ describe("replset connection", function () {
         await db.close();
         expect(s).to.have.been.calledOnce;
         await promise.delay(1000);
-        checkAndDisableAccounting();
     });
 
     it("should correctly pass error when wrong replicaSet", async () => {
@@ -145,20 +115,22 @@ describe("replset connection", function () {
             ], { replicaSet, socketOptions: { connectTimeoutMS: 1000 } });
             const db = new Db("tests_", replSet, { w: 0 });
             try {
+                // eslint-disable-next-line
                 await db.open();
                 return true;
             } catch (err) {
                 //
             } finally {
+                // eslint-disable-next-line
                 await db.close();
             }
+            // eslint-disable-next-line
             await promise.delay(3000);
         }
         throw new Error("Could not connect");
     };
 
     it("should connect with primary stepped down", async () => {
-        // enableAccounting();
         const replSet = new ReplSet([
             new Server(this.host, this.port),
             new Server(this.host, this.port + 1),
@@ -172,7 +144,6 @@ describe("replset connection", function () {
         expect(connection.isConnected()).to.be.true;
         await db.close();
         // await promise.delay(1000);
-        // checkAndDisableAccounting();
         await this.server.restart();
     });
 
@@ -211,7 +182,6 @@ describe("replset connection", function () {
     });
 
     it("should correctly emit open signal and full set signal", async () => {
-        enableAccounting();
         const replSet = new ReplSet([
             new Server(this.host, this.port),
             new Server(this.host, this.port + 1),
@@ -223,25 +193,25 @@ describe("replset connection", function () {
         db.on("open", open);
         db.on("fullsetup", fullSet);
         await db.open();
-        await fullSet.waitForCall();
+        if (!fullSet.called) {
+            await fullSet.waitForCall();
+        }
         expect(open).to.have.been.calledOnce;
         await db.close();
         await promise.delay(1000);
-        checkAndDisableAccounting();
     });
 
     it("ReplSet honors socketOptions options", async () => {
-        enableAccounting();
         const replSet = new ReplSet([
             new Server(this.host, this.port),
             new Server(this.host, this.port + 1),
             new Server(this.host, this.port + 2)
         ], {
             socketOptions: {
-                    connectTimeoutMS: 1000,
-                    socketTimeoutMS: 3000,
-                    noDelay: false
-                },
+                connectTimeoutMS: 1000,
+                socketTimeoutMS: 3000,
+                noDelay: false
+            },
             replicaSet
         });
         const db = new Db("tests_", replSet, { w: 0 });
@@ -252,11 +222,9 @@ describe("replset connection", function () {
         expect(connection.noDelay).to.be.false;
         await db.close();
         await promise.delay(1000);
-        checkAndDisableAccounting();
     });
 
     it("should correctly emit all signals even if not yet connected", async () => {
-        enableAccounting();
         const replSet = new ReplSet([
             new Server(this.host, this.port),
             new Server(this.host, this.port + 1),
@@ -289,7 +257,6 @@ describe("replset connection", function () {
         expect(open1).to.have.been.calledOnce;
         expect(open2).to.have.been.calledOnce;
         expect(close).to.have.been.calledTwice;
-        checkAndDisableAccounting();
     });
 
     it("should receive all events for primary and secondary leaving", async () => {
@@ -337,7 +304,6 @@ describe("replset connection", function () {
     });
 
     it("should correctly connect to a replicaset with additional options", async () => {
-        enableAccounting();
         const url = std.url.format({
             protocol: "mongodb:",
             slashes: true,
@@ -365,11 +331,9 @@ describe("replset connection", function () {
         expect(r.result.n).to.be.equal(1);
         await db.close();
         await promise.delay(1000);
-        checkAndDisableAccounting();
     });
 
     it("should correctly connect to a replicaset with readPreference set", async () => {
-        enableAccounting();
         const url = std.url.format({
             protocol: "mongodb:",
             slashes: true,
@@ -388,7 +352,6 @@ describe("replset connection", function () {
         await db.collection("replset_correctly_connect_test_collection").insert({ a: 1 });
         await db.close();
         await promise.delay(1000);
-        checkAndDisableAccounting();
     });
 
     it("should give an error for non-existing servers", async () => {
@@ -427,26 +390,27 @@ describe("replset connection", function () {
                 wtimeoutMS: 5000
             }).toString()
         });
-        enableAccounting();
         const db = await mongo.connect(url);
         const gridStore = new mongo.GridStore(db, new mongo.ObjectId());
         expect(gridStore.writeConcern.w).to.be.equal("majority");
         expect(gridStore.writeConcern.wtimeout).to.be.equal(5000);
         await db.close();
         await promise.delay(1000);
-        checkAndDisableAccounting();
     });
 
     it("should correctly remove server going into recovery mode", async () => {
-        enableAccounting();
         const replSet = new ReplSet([
             new Server(this.host, this.port),
             new Server(this.host, this.port + 1),
             new Server(this.host, this.port + 2)
         ], { replicaSet, socketTimeoutMS: 5000 });
         const db = new Db("tests_", replSet, { w: 1 });
+        const fullSet = spy();
+        db.on("fullsetup", fullSet);
         await db.open();
-        await new Promise((resolve) => db.once("fullsetup", resolve));
+        if (!fullSet.called) {
+            await fullSet.waitForCall();
+        }
         const result = await db.command({ ismaster: true });
         const secondaries = [];
         result.hosts.forEach((s) => {
@@ -468,11 +432,9 @@ describe("replset connection", function () {
         await db.close();
         await db1.close();
         await promise.delay(1000);
-        checkAndDisableAccounting();
     });
 
     it("should return single server direct connection when replicaSet not provided", async () => {
-        enableAccounting();
         const url = std.url.format({
             protocol: "mongodb:",
             slashes: true,
@@ -484,7 +446,6 @@ describe("replset connection", function () {
         expect(db.serverConfig).to.be.instanceOf(Server);
         await db.close();
         await promise.delay(1000);
-        checkAndDisableAccounting();
     });
 
     it("should correctly connect to arbiter with single connection", async () => {
@@ -560,7 +521,6 @@ describe("replset connection", function () {
                 replicaSet
             }).toString()
         });
-        enableAccounting();
         const db = await mongo.connect(url, { reconnectTries: 10 });
         const servers = db.serverConfig.s.replset.s.replicaSetState.allServers();
         for (const server of servers) {
@@ -568,7 +528,6 @@ describe("replset connection", function () {
         }
         await db.close();
         await promise.delay(1000);
-        checkAndDisableAccounting();
     });
 
     it("should correctly connect to a replicaset with auth options, bufferMaxEntries and connectWithNoPrimary", async () => {

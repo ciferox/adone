@@ -227,13 +227,15 @@ const reconnectProxies = (self, proxies, callback) => {
     // Handle events
     const _handleEvent = (self, event) => {
         return function () {
-            count = count - 1;
-
             // Destroyed
             if (self.state === DESTROYED || self.state === UNREFERENCED) {
                 moveServerFrom(self.connectingProxies, self.disconnectedProxies, this);
                 // Return destroy
-                return this.destroy();
+                this.destroy();
+                if (--count === 0) {
+                    callback();
+                }
+                return;
             }
 
             if (event === "connect" && !self.authenticating) {
@@ -262,15 +264,18 @@ const reconnectProxies = (self, proxies, callback) => {
                     emitTopologyDescriptionChanged(self);
                     // Emit joined event
                     self.emit("joined", "mongos", this);
+                    if (--count === 0) {
+                        callback();
+                    }
                 });
             } else if (event === "connect" && self.authenticating) {
                 // Move from connectingProxies
                 moveServerFrom(self.connectingProxies, self.disconnectedProxies, this);
                 this.destroy();
-            }
-
-            // Are we done finish up callback
-            if (count === 0) {
+                if (--count === 0) {
+                    callback();
+                }
+            } else if (--count === 0) {
                 callback();
             }
         };
@@ -294,10 +299,10 @@ const reconnectProxies = (self, proxies, callback) => {
                 host: _server.name.split(":")[0],
                 port: parseInt(_server.name.split(":")[1], 10)
             }, {
-                authProviders: self.authProviders, reconnect: false, monitoring: false, inTopology: true
-            }, {
-                clientInfo: util.clone(self.s.clientInfo)
-            }));
+                    authProviders: self.authProviders, reconnect: false, monitoring: false, inTopology: true
+                }, {
+                    clientInfo: util.clone(self.s.clientInfo)
+                }));
 
             // Relay the server description change
             server.on("serverDescriptionChanged", (event) => {
@@ -357,36 +362,36 @@ const topologyMonitor = (self, options = {}) => {
             _server.command("admin.$cmd", {
                 ismaster: true
             }, {
-                monitoring: true,
-                socketTimeout: self.s.options.connectionTimeout || 2000
-            }, (err, r) => {
-                if (self.state === DESTROYED || self.state === UNREFERENCED) {
+                    monitoring: true,
+                    socketTimeout: self.s.options.connectionTimeout || 2000
+                }, (err, r) => {
+                    if (self.state === DESTROYED || self.state === UNREFERENCED) {
                         // Move from connectingProxies
-                    moveServerFrom(self.connectedProxies, self.disconnectedProxies, _server);
-                    _server.destroy();
-                    return cb(err, r);
-                }
+                        moveServerFrom(self.connectedProxies, self.disconnectedProxies, _server);
+                        _server.destroy();
+                        return cb(err, r);
+                    }
 
                     // Calculate latency
-                const latencyMS = new Date().getTime() - start;
+                    const latencyMS = new Date().getTime() - start;
 
                     // We had an error, remove it from the state
-                if (err) {
+                    if (err) {
                         // Emit the server heartbeat failure
-                    helper.emitSDAMEvent(self, "serverHeartbeatFailed", { durationMS: latencyMS, failure: err, connectionId: _server.name });
+                        helper.emitSDAMEvent(self, "serverHeartbeatFailed", { durationMS: latencyMS, failure: err, connectionId: _server.name });
                         // Move from connected proxies to disconnected proxies
-                    moveServerFrom(self.connectedProxies, self.disconnectedProxies, _server);
-                } else {
+                        moveServerFrom(self.connectedProxies, self.disconnectedProxies, _server);
+                    } else {
                         // Update the server ismaster
-                    _server.ismaster = r.result;
-                    _server.lastIsMasterMS = latencyMS;
+                        _server.ismaster = r.result;
+                        _server.lastIsMasterMS = latencyMS;
 
                         // Server heart beat event
-                    helper.emitSDAMEvent(self, "serverHeartbeatSucceeded", { durationMS: latencyMS, reply: r.result, connectionId: _server.name });
-                }
+                        helper.emitSDAMEvent(self, "serverHeartbeatSucceeded", { durationMS: latencyMS, reply: r.result, connectionId: _server.name });
+                    }
 
-                cb(err, r);
-            });
+                    cb(err, r);
+                });
         };
 
         // No proxies initiate monitor again
@@ -713,8 +718,8 @@ export default class Mongos extends EventEmitter {
             return new Server(Object.assign({}, this.s.options, x, {
                 authProviders: this.authProviders, reconnect: false, monitoring: false, inTopology: true
             }, {
-                clientInfo: util.clone(this.s.clientInfo)
-            }));
+                    clientInfo: util.clone(this.s.clientInfo)
+                }));
         });
 
         servers.forEach((server) => {
