@@ -1,6 +1,6 @@
-let shallowClone = require("./utils").shallowClone,
-    handleCallback = require("./utils").handleCallback,
-    MongoError = require("../core").MongoError;
+const shallowClone = require("./utils").shallowClone;
+const handleCallback = require("./utils").handleCallback;
+const MongoError = require("../core").MongoError;
 
 const authenticate = function (self, username, password, options, callback) {
     // Did the user destroy the topology
@@ -112,7 +112,7 @@ module.exports = function (self, username, password, options, callback) {
             if (err && err.message && err.message.indexOf("saslStart") != -1) {
                 err.code = 59;
             }
-        // Reject error
+            // Reject error
             if (err) {
                 return callback(err, r);
             }

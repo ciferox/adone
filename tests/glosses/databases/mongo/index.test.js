@@ -194,10 +194,10 @@ describe("databases", "mongo", function () {
 
     describe("driver", () => {
         for (const topology of [
-            "single",
-            "sharded",
-            "replicaset",
-            "auth",
+            // "single",
+            // "sharded",
+            // "replicaset",
+            // "auth",
             "ssl"
         ]) {
             this.topology = topology;

@@ -1,3 +1,4 @@
+const { is } = adone;
 const f = require("util").format;
 
 const Define = function (name, object, stream) {
@@ -62,3 +63,32 @@ Define.prototype.generate = function () {
 };
 
 module.exports = Define;
+
+const ensureDefine = (cls) => {
+    if (!cls.define) {
+        cls.define = new Define(undefined, cls);
+    }
+};
+
+module.exports.metadata = (name, { stream = false } = {}) => (cls) => {
+    ensureDefine(cls);
+    cls.define.name = name;
+    cls.define.stream = stream;
+};
+
+module.exports.metadata.classMethod = (options) => (target, key, descriptor) => {
+    ensureDefine(target);
+    if (options.fluent) {
+        options.returns = [target];
+    }
+    target.define.classMethod(key, options);
+    return descriptor;
+};
+
+module.exports.metadata.staticMethod = (options) => (target, key, descriptor) => {
+    ensureDefine(target);
+    target.define.staticMethod(key, options);
+    return descriptor;
+};
+
+

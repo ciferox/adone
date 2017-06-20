@@ -205,6 +205,51 @@ module.exports = {
                     }
                 };
             }
+        },
+        "no-is.undefined-or-is.null": {
+            meta: {
+                docs: {
+                    description: "disallow using is.undefined(t) || is.null(t)"
+                }
+            },
+            create(context) {
+                return {
+                    LogicalExpression(node) {
+                        if (node.operator !== "||") {
+                            return;
+                        }
+                        const { left, right } = node;
+                        if (left.type !== "CallExpression" || right.type !== "CallExpression") {
+                            return;
+                        }
+                        if (left.callee.type !== "MemberExpression" || right.callee.type !== "MemberExpression") {
+                            return;
+                        }
+                        const { callee: leftc } = left;
+                        const { callee: rightc } = right;
+                        if (leftc.object.name !== "is" || rightc.object.name !== "is") {
+                            return;
+                        }
+                        if (
+                            (leftc.property.name === "undefined" && rightc.property.name === "null") ||
+                            (leftc.property.name === "null" && rightc.property.name === "undefined")
+                        ) {
+                            if (left.arguments.length !== 1 || right.arguments.length !== 1) {
+                                return;
+                            }
+                            const { arguments: [l] } = left;
+                            const { arguments: [r] } = right;
+                            if (l.type !== "Identifier" || r.type !== "Identifier") {
+                                return;
+                            }
+                            if (l.name !== r.name) {
+                                return;
+                            }
+                            context.report({ node, message: "use adone.is.nil instead" });
+                        }
+                    }
+                };
+            }
         }
     }
 };

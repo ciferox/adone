@@ -1,335 +1,11 @@
+const { is } = adone;
 const toError = require("./utils").toError;
 const Define = require("./metadata");
 const shallowClone = require("./utils").shallowClone;
 const assign = require("./utils").assign;
 const authenticate = require("./authenticate");
-
-/**
- * @fileOverview The **Admin** class is an internal class that allows convenient access to
- * the admin functionality and commands for MongoDB.
- *
- * **ADMIN Cannot directly be instantiated**
- * @example
- * var MongoClient = require('mongodb').MongoClient,
- *   test = require('assert');
- * // Connection url
- * var url = 'mongodb://localhost:27017/test';
- * // Connect using MongoClient
- * MongoClient.connect(url, function(err, db) {
- *   // Use the admin database for the operation
- *   var adminDb = db.admin();
- *
- *   // List all the available databases
- *   adminDb.listDatabases(function(err, dbs) {
- *     test.equal(null, err);
- *     test.ok(dbs.databases.length > 0);
- *     db.close();
- *   });
- * });
- */
-
-/**
- * Create a new Admin instance (INTERNAL TYPE, do not instantiate directly)
- * @class
- * @return {Admin} a collection instance.
- */
-const Admin = function (db, topology, promiseLibrary) {
-    if (!(this instanceof Admin)) {
-        return new Admin(db, topology);
-    }
-
-    // Internal state
-    this.s = {
-        db,
-        topology,
-        promiseLibrary
-    };
-};
-
-const define = Admin.define = new Define("Admin", Admin, false);
-
-/**
- * The callback format for results
- * @callback Admin~resultCallback
- * @param {MongoError} error An error instance representing the error during the execution.
- * @param {object} result The result object if the command was executed successfully.
- */
-
-/**
- * Execute a command
- * @method
- * @param {object} command The command hash
- * @param {object} [options=null] Optional settings.
- * @param {(ReadPreference|string)} [options.readPreference=null] The preferred read preference (ReadPreference.PRIMARY, ReadPreference.PRIMARY_PREFERRED, ReadPreference.SECONDARY, ReadPreference.SECONDARY_PREFERRED, ReadPreference.NEAREST).
- * @param {number} [options.maxTimeMS=null] Number of milliseconds to wait before aborting the query.
- * @param {Admin~resultCallback} [callback] The command result callback
- * @return {Promise} returns Promise if no callback passed
- */
-Admin.prototype.command = function (command, options, callback) {
-    const self = this;
-    const args = Array.prototype.slice.call(arguments, 1);
-    callback = args.pop();
-    if (typeof callback !== "function") {
-        args.push(callback);
-    }
-    options = args.length ? args.shift() : {};
-
-    // Execute using callback
-    if (typeof callback === "function") {
-        return this.s.db.executeDbAdminCommand(command, options, (err, doc) => {
-            return callback != null ? callback(err, doc) : null;
-        });
-    }
-
-    // Return a Promise
-    return new this.s.promiseLibrary((resolve, reject) => {
-        self.s.db.executeDbAdminCommand(command, options, (err, doc) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(doc);
-        });
-    });
-};
-
-define.classMethod("command", { callback: true, promise: true });
-
-/**
- * Retrieve the server information for the current
- * instance of the db client
- *
- * @param {Admin~resultCallback} [callback] The command result callback
- * @return {Promise} returns Promise if no callback passed
- */
-Admin.prototype.buildInfo = function (callback) {
-    const self = this;
-    // Execute using callback
-    if (typeof callback === "function") {
-        return this.serverInfo(callback);
-    }
-
-    // Return a Promise
-    return new this.s.promiseLibrary((resolve, reject) => {
-        self.serverInfo((err, r) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(r);
-        });
-    });
-};
-
-define.classMethod("buildInfo", { callback: true, promise: true });
-
-/**
- * Retrieve the server information for the current
- * instance of the db client
- *
- * @param {Admin~resultCallback} [callback] The command result callback
- * @return {Promise} returns Promise if no callback passed
- */
-Admin.prototype.serverInfo = function (callback) {
-    const self = this;
-    // Execute using callback
-    if (typeof callback === "function") {
-        return this.s.db.executeDbAdminCommand({ buildinfo: 1 }, (err, doc) => {
-            if (err != null) {
-                return callback(err, null);
-            }
-            callback(null, doc);
-        });
-    }
-
-    // Return a Promise
-    return new this.s.promiseLibrary((resolve, reject) => {
-        self.s.db.executeDbAdminCommand({ buildinfo: 1 }, (err, doc) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(doc);
-        });
-    });
-};
-
-define.classMethod("serverInfo", { callback: true, promise: true });
-
-/**
- * Retrieve this db's server status.
- *
- * @param {Admin~resultCallback} [callback] The command result callback
- * @return {Promise} returns Promise if no callback passed
- */
-Admin.prototype.serverStatus = function (callback) {
-    const self = this;
-
-    // Execute using callback
-    if (typeof callback === "function") {
-        return serverStatus(self, callback);
-    }
-
-    // Return a Promise
-    return new this.s.promiseLibrary((resolve, reject) => {
-        serverStatus(self, (err, r) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(r);
-        });
-    });
-};
-
-const serverStatus = function (self, callback) {
-    self.s.db.executeDbAdminCommand({ serverStatus: 1 }, (err, doc) => {
-        if (err == null && doc.ok === 1) {
-            callback(null, doc);
-        } else {
-            if (err) {
-                return callback(err, false);
-            }
-            return callback(toError(doc), false);
-        }
-    });
-};
-
-define.classMethod("serverStatus", { callback: true, promise: true });
-
-/**
- * Retrieve the current profiling Level for MongoDB
- *
- * @param {Admin~resultCallback} [callback] The command result callback
- * @return {Promise} returns Promise if no callback passed
- */
-Admin.prototype.profilingLevel = function (callback) {
-    const self = this;
-
-    // Execute using callback
-    if (typeof callback === "function") {
-        return profilingLevel(self, callback);
-    }
-
-    // Return a Promise
-    return new this.s.promiseLibrary((resolve, reject) => {
-        profilingLevel(self, (err, r) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(r);
-        });
-    });
-};
-
-const profilingLevel = function (self, callback) {
-    self.s.db.executeDbAdminCommand({ profile: -1 }, (err, doc) => {
-        if (err == null && doc.ok === 1) {
-            const was = doc.was;
-            if (was == 0) {
-                return callback(null, "off");
-            }
-            if (was == 1) {
-                return callback(null, "slow_only");
-            }
-            if (was == 2) {
-                return callback(null, "all");
-            }
-            return callback(new Error(`Error: illegal profiling level value ${was}`), null);
-        }
-        err != null ? callback(err, null) : callback(new Error("Error with profile command"), null);
-
-    });
-};
-
-define.classMethod("profilingLevel", { callback: true, promise: true });
-
-/**
- * Ping the MongoDB server and retrieve results
- *
- * @param {Admin~resultCallback} [callback] The command result callback
- * @return {Promise} returns Promise if no callback passed
- */
-Admin.prototype.ping = function (options, callback) {
-    const self = this;
-    const args = Array.prototype.slice.call(arguments, 0);
-    callback = args.pop();
-    if (typeof callback !== "function") {
-        args.push(callback);
-    }
-
-    // Execute using callback
-    if (typeof callback === "function") {
-        return this.s.db.executeDbAdminCommand({ ping: 1 }, callback);
-    }
-
-    // Return a Promise
-    return new this.s.promiseLibrary((resolve, reject) => {
-        self.s.db.executeDbAdminCommand({ ping: 1 }, (err, r) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(r);
-        });
-    });
-};
-
-define.classMethod("ping", { callback: true, promise: true });
-
-/**
- * Authenticate a user against the server.
- * @method
- * @param {string} username The username.
- * @param {string} [password] The password.
- * @param {Admin~resultCallback} [callback] The command result callback
- * @return {Promise} returns Promise if no callback passed
- */
-Admin.prototype.authenticate = function (username, password, options, callback) {
-    // console.warn("Admin.prototype.authenticate method will no longer be available in the next major release 3.x as MongoDB 3.6 will only allow auth against users in the admin db and will no longer allow multiple credentials on a socket. Please authenticate using MongoClient.connect with auth credentials.");
-    const finalArguments = [this.s.db];
-    if (typeof username === "string") {
-        finalArguments.push(username);
-    }
-    if (typeof password === "string") {
-        finalArguments.push(password);
-    }
-    if (typeof options === "function") {
-        finalArguments.push({ authdb: "admin" });
-        finalArguments.push(options);
-    } else {
-        finalArguments.push(assign({}, options, { authdb: "admin" }));
-    }
-
-    if (typeof callback === "function") {
-        finalArguments.push(callback);
-    }
-  // Excute authenticate method
-    return authenticate.apply(this.s.db, finalArguments);
-};
-
-define.classMethod("authenticate", { callback: true, promise: true });
-
-/**
- * Logout user from server, fire off on all connections and remove all auth info
- * @method
- * @param {Admin~resultCallback} [callback] The command result callback
- * @return {Promise} returns Promise if no callback passed
- */
-Admin.prototype.logout = function (callback) {
-    const self = this;
-    // Execute using callback
-    if (typeof callback === "function") {
-        return this.s.db.logout({ dbName: "admin" }, callback);
-    }
-
-    // Return a Promise
-    return new this.s.promiseLibrary((resolve, reject) => {
-        self.s.db.logout({ dbName: "admin" }, (err) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(true);
-        });
-    });
-};
-
-define.classMethod("logout", { callback: true, promise: true });
+const { metadata } = Define;
+const { classMethod } = metadata;
 
 // Get write concern
 const writeConcern = function (options, db) {
@@ -360,315 +36,420 @@ const writeConcern = function (options, db) {
     return options;
 };
 
-/**
- * Add a user to the database.
- * @method
- * @param {string} username The username.
- * @param {string} password The password.
- * @param {object} [options=null] Optional settings.
- * @param {(number|string)} [options.w=null] The write concern.
- * @param {number} [options.wtimeout=null] The write concern timeout.
- * @param {boolean} [options.j=false] Specify a journal write concern.
- * @param {boolean} [options.fsync=false] Specify a file sync write concern.
- * @param {object} [options.customData=null] Custom data associated with the user (only Mongodb 2.6 or higher)
- * @param {object[]} [options.roles=null] Roles associated with the created user (only Mongodb 2.6 or higher)
- * @param {Admin~resultCallback} [callback] The command result callback
- * @return {Promise} returns Promise if no callback passed
- */
-Admin.prototype.addUser = function (username, password, options, callback) {
-    const self = this;
-    const args = Array.prototype.slice.call(arguments, 2);
-    callback = args.pop();
-    if (typeof callback !== "function") {
-        args.push(callback);
-    }
-    options = args.length ? args.shift() : {};
-    options = options || {};
-    // Get the options
-    options = writeConcern(options, self.s.db);
-    // Set the db name to admin
-    options.dbName = "admin";
-
-    // Execute using callback
-    if (typeof callback === "function") {
-        return self.s.db.addUser(username, password, options, callback);
+@metadata("Admin")
+class Admin {
+    constructor(db, topology, promiseLibrary) {
+        // Internal state
+        this.s = {
+            db,
+            topology,
+            promiseLibrary
+        };
     }
 
-    // Return a Promise
-    return new this.s.promiseLibrary((resolve, reject) => {
-        self.s.db.addUser(username, password, options, (err, r) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(r);
-        });
-    });
-};
-
-define.classMethod("addUser", { callback: true, promise: true });
-
-/**
- * Remove a user from a database
- * @method
- * @param {string} username The username.
- * @param {object} [options=null] Optional settings.
- * @param {(number|string)} [options.w=null] The write concern.
- * @param {number} [options.wtimeout=null] The write concern timeout.
- * @param {boolean} [options.j=false] Specify a journal write concern.
- * @param {boolean} [options.fsync=false] Specify a file sync write concern.
- * @param {Admin~resultCallback} [callback] The command result callback
- * @return {Promise} returns Promise if no callback passed
- */
-Admin.prototype.removeUser = function (username, options, callback) {
-    const self = this;
-    const args = Array.prototype.slice.call(arguments, 1);
-    callback = args.pop();
-    if (typeof callback !== "function") {
-        args.push(callback);
-    }
-    options = args.length ? args.shift() : {};
-    options = options || {};
-    // Get the options
-    options = writeConcern(options, self.s.db);
-    // Set the db name
-    options.dbName = "admin";
-
-    // Execute using callback
-    if (typeof callback === "function") {
-        return self.s.db.removeUser(username, options, callback);
-    }
-
-    // Return a Promise
-    return new this.s.promiseLibrary((resolve, reject) => {
-        self.s.db.removeUser(username, options, (err, r) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(r);
-        });
-    });
-};
-
-define.classMethod("removeUser", { callback: true, promise: true });
-
-/**
- * Set the current profiling level of MongoDB
- *
- * @param {string} level The new profiling level (off, slow_only, all).
- * @param {Admin~resultCallback} [callback] The command result callback.
- * @return {Promise} returns Promise if no callback passed
- */
-Admin.prototype.setProfilingLevel = function (level, callback) {
-    const self = this;
-
-    // Execute using callback
-    if (typeof callback === "function") {
-        return setProfilingLevel(self, level, callback);
-    }
-
-    // Return a Promise
-    return new this.s.promiseLibrary((resolve, reject) => {
-        setProfilingLevel(self, level, (err, r) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(r);
-        });
-    });
-};
-
-const setProfilingLevel = function (self, level, callback) {
-    const command = {};
-    let profile = 0;
-
-    if (level == "off") {
-        profile = 0;
-    } else if (level == "slow_only") {
-        profile = 1;
-    } else if (level == "all") {
-        profile = 2;
-    } else {
-        return callback(new Error(`Error: illegal profiling level value ${level}`));
-    }
-
-    // Set up the profile number
-    command.profile = profile;
-
-    self.s.db.executeDbAdminCommand(command, (err, doc) => {
-        if (err == null && doc.ok === 1) {
-            return callback(null, level);
+    @classMethod({ callback: true, promise: true })
+    command(command, ...args) {
+        const self = this;
+        const callback = args.pop();
+        if (!is.function(callback)) {
+            args.push(callback);
         }
-        return err != null ? callback(err, null) : callback(new Error("Error with profile command"), null);
-    });
-};
+        const options = args.length ? args.shift() : {};
 
-define.classMethod("setProfilingLevel", { callback: true, promise: true });
-
-/**
- * Retrive the current profiling information for MongoDB
- *
- * @param {Admin~resultCallback} [callback] The command result callback.
- * @return {Promise} returns Promise if no callback passed
- */
-Admin.prototype.profilingInfo = function (callback) {
-    const self = this;
-
-    // Execute using callback
-    if (typeof callback === "function") {
-        return profilingInfo(self, callback);
-    }
-
-    // Return a Promise
-    return new this.s.promiseLibrary((resolve, reject) => {
-        profilingInfo(self, (err, r) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(r);
-        });
-    });
-};
-
-const profilingInfo = function (self, callback) {
-    try {
-        self.s.topology.cursor("admin.system.profile", { find: "system.profile", query: {} }, {}).toArray(callback);
-    } catch (err) {
-        return callback(err, null);
-    }
-};
-
-define.classMethod("profilingLevel", { callback: true, promise: true });
-
-/**
- * Validate an existing collection
- *
- * @param {string} collectionName The name of the collection to validate.
- * @param {object} [options=null] Optional settings.
- * @param {Admin~resultCallback} [callback] The command result callback.
- * @return {Promise} returns Promise if no callback passed
- */
-Admin.prototype.validateCollection = function (collectionName, options, callback) {
-    const self = this;
-    const args = Array.prototype.slice.call(arguments, 1);
-    callback = args.pop();
-    if (typeof callback !== "function") {
-        args.push(callback);
-    }
-    options = args.length ? args.shift() : {};
-    options = options || {};
-
-    // Execute using callback
-    if (typeof callback === "function") {
-        return validateCollection(self, collectionName, options, callback);
-    }
-
-    // Return a Promise
-    return new this.s.promiseLibrary((resolve, reject) => {
-        validateCollection(self, collectionName, options, (err, r) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(r);
-        });
-    });
-};
-
-const validateCollection = function (self, collectionName, options, callback) {
-    const command = { validate: collectionName };
-    const keys = Object.keys(options);
-
-    // Decorate command with extra options
-    for (let i = 0; i < keys.length; i++) {
-        if (options.hasOwnProperty(keys[i])) {
-            command[keys[i]] = options[keys[i]];
+        if (is.function(callback)) {
+            return this.s.db.executeDbAdminCommand(command, options, callback);
         }
+
+        return new this.s.promiseLibrary((resolve, reject) => {
+            self.s.db.executeDbAdminCommand(command, options, (err, doc) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(doc);
+            });
+        });
     }
 
-    self.s.db.command(command, (err, doc) => {
-        if (err != null) {
+    @classMethod({ callback: true, promise: true })
+    buildInfo(callback) {
+        if (is.function(callback)) {
+            return this.serverInfo(callback);
+        }
+
+        return new this.s.promiseLibrary((resolve, reject) => {
+            this.serverInfo((err, r) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(r);
+            });
+        });
+    }
+
+    @classMethod({ callback: true, promise: true })
+    serverInfo(callback) {
+        if (is.function(callback)) {
+            return this.s.db.executeDbAdminCommand({ buildinfo: 1 }, (err, doc) => {
+                if (err) {
+                    return callback(err, null);
+                }
+                callback(null, doc);
+            });
+        }
+
+        return new this.s.promiseLibrary((resolve, reject) => {
+            this.s.db.executeDbAdminCommand({ buildinfo: 1 }, (err, doc) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(doc);
+            });
+        });
+    }
+
+    _serverStatus(callback) {
+        this.s.db.executeDbAdminCommand({ serverStatus: 1 }, (err, doc) => {
+            if (!err && doc.ok === 1) {
+                callback(null, doc);
+            } else {
+                if (err) {
+                    return callback(err, false);
+                }
+                return callback(toError(doc), false);
+            }
+        });
+    }
+
+    @classMethod({ callback: true, promise: true })
+    serverStatus(callback) {
+        if (is.function(callback)) {
+            return this._serverStatus(callback);
+        }
+
+        return new this.s.promiseLibrary((resolve, reject) => {
+            this._serverStatus((err, r) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(r);
+            });
+        });
+    }
+
+    _profilingLevel(callback) {
+        this.s.db.executeDbAdminCommand({ profile: -1 }, (err, doc) => {
+            if (!err && doc.ok === 1) {
+                const was = doc.was;
+                if (was === 0) {
+                    return callback(null, "off");
+                }
+                if (was === 1) {
+                    return callback(null, "slow_only");
+                }
+                if (was === 2) {
+                    return callback(null, "all");
+                }
+                return callback(new Error(`Error: illegal profiling level value ${was}`), null);
+            }
+            err ? callback(err, null) : callback(new Error("Error with profile command"), null);
+
+        });
+    }
+
+    @classMethod({ callback: true, promise: true })
+    profilingLevel(callback) {
+        if (is.function(callback)) {
+            return this._profilingLevel(callback);
+        }
+
+        return new this.s.promiseLibrary((resolve, reject) => {
+            this._profilingLevel((err, r) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(r);
+            });
+        });
+    }
+
+    @classMethod({ callback: true, promise: true })
+    ping(...args) {
+        const callback = args.pop();
+        if (!is.function(callback)) {
+            args.push(callback);
+        }
+
+        if (is.function(callback)) {
+            return this.s.db.executeDbAdminCommand({ ping: 1 }, callback);
+        }
+
+        // Return a Promise
+        return new this.s.promiseLibrary((resolve, reject) => {
+            this.s.db.executeDbAdminCommand({ ping: 1 }, (err, r) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(r);
+            });
+        });
+    }
+
+    @classMethod({ callback: true, promise: true })
+    authenticate(username, password, options, callback) {
+        // console.warn("Admin.prototype.authenticate method will no longer be available in the next major release 3.x as MongoDB 3.6 will only allow auth against users in the admin db and will no longer allow multiple credentials on a socket. Please authenticate using MongoClient.connect with auth credentials.");
+        const finalArguments = [this.s.db];
+        if (is.string(username)) {
+            finalArguments.push(username);
+        }
+        if (is.string(password)) {
+            finalArguments.push(password);
+        }
+        if (is.function(options)) {
+            finalArguments.push({ authdb: "admin" });
+            finalArguments.push(options);
+        } else {
+            finalArguments.push(assign({}, options, { authdb: "admin" }));
+        }
+
+        if (is.function(callback)) {
+            finalArguments.push(callback);
+        }
+        return authenticate.apply(this.s.db, finalArguments);
+    }
+
+    @classMethod({ callback: true, promise: true })
+    logout(callback) {
+        if (is.function(callback)) {
+            return this.s.db.logout({ dbName: "admin" }, callback);
+        }
+
+        return new this.s.promiseLibrary((resolve, reject) => {
+            this.s.db.logout({ dbName: "admin" }, (err) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(true);
+            });
+        });
+    }
+
+    @classMethod({ callback: true, promise: true })
+    addUser(username, password, ...args) {
+        const callback = args.pop();
+        if (!is.function(callback)) {
+            args.push(callback);
+        }
+        let options = args.length ? args.shift() : {};
+        options = options || {};
+        // Get the options
+        options = writeConcern(options, this.s.db);
+        // Set the db name to admin
+        options.dbName = "admin";
+
+        if (is.function(callback)) {
+            return this.s.db.addUser(username, password, options, callback);
+        }
+
+        return new this.s.promiseLibrary((resolve, reject) => {
+            this.s.db.addUser(username, password, options, (err, r) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(r);
+            });
+        });
+    }
+
+    @classMethod({ callback: true, promise: true })
+    removeUser(username, ...args) {
+        const callback = args.pop();
+        if (!is.function(callback)) {
+            args.push(callback);
+        }
+        let options = args.length ? args.shift() : {};
+        options = options || {};
+        // Get the options
+        options = writeConcern(options, this.s.db);
+        // Set the db name
+        options.dbName = "admin";
+
+        if (is.function(callback)) {
+            return this.s.db.removeUser(username, options, callback);
+        }
+
+        return new this.s.promiseLibrary((resolve, reject) => {
+            this.s.db.removeUser(username, options, (err, r) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(r);
+            });
+        });
+    }
+
+    _setProfilingLevel(level, callback) {
+        const command = {};
+        let profile = 0;
+
+        if (level === "off") {
+            profile = 0;
+        } else if (level === "slow_only") {
+            profile = 1;
+        } else if (level === "all") {
+            profile = 2;
+        } else {
+            return callback(new Error(`Error: illegal profiling level value ${level}`));
+        }
+
+        // Set up the profile number
+        command.profile = profile;
+
+        this.s.db.executeDbAdminCommand(command, (err, doc) => {
+            if (!err && doc.ok === 1) {
+                return callback(null, level);
+            }
+            return err ? callback(err, null) : callback(new Error("Error with profile command"), null);
+        });
+    }
+
+    @classMethod({ callback: true, promise: true })
+    setProfilingLevel(level, callback) {
+        if (is.function(callback)) {
+            return this._setProfilingLevel(level, callback);
+        }
+
+        return new this.s.promiseLibrary((resolve, reject) => {
+            this._setProfilingLevel(level, (err, r) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(r);
+            });
+        });
+    }
+
+    _profilingInfo(callback) {
+        try {
+            this.s.topology.cursor("admin.system.profile", { find: "system.profile", query: {} }, {}).toArray(callback);
+        } catch (err) {
             return callback(err, null);
         }
-
-        if (doc.ok === 0) {
-            return callback(new Error("Error with validate command"), null);
-        }
-        if (doc.result != null && doc.result.constructor != String) {
-            return callback(new Error("Error with validation data"), null);
-        }
-        if (doc.result != null && doc.result.match(/exception|corrupt/) != null) {
-            return callback(new Error(`Error: invalid collection ${collectionName}`), null);
-        }
-        if (doc.valid != null && !doc.valid) {
-            return callback(new Error(`Error: invalid collection ${collectionName}`), null);
-        }
-
-        return callback(null, doc);
-    });
-};
-
-define.classMethod("validateCollection", { callback: true, promise: true });
-
-/**
- * List the available databases
- *
- * @param {Admin~resultCallback} [callback] The command result callback.
- * @return {Promise} returns Promise if no callback passed
- */
-Admin.prototype.listDatabases = function (callback) {
-    const self = this;
-    // Execute using callback
-    if (typeof callback === "function") {
-        return self.s.db.executeDbAdminCommand({ listDatabases: 1 }, {}, callback);
     }
 
-    // Return a Promise
-    return new this.s.promiseLibrary((resolve, reject) => {
-        self.s.db.executeDbAdminCommand({ listDatabases: 1 }, {}, (err, r) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(r);
+    @classMethod({ callback: true, promise: true })
+    profilingInfo(callback) {
+        if (is.function(callback)) {
+            return this._profilingInfo(callback);
+        }
+
+        return new this.s.promiseLibrary((resolve, reject) => {
+            this._profilingInfo((err, r) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(r);
+            });
         });
-    });
-};
-
-define.classMethod("listDatabases", { callback: true, promise: true });
-
-/**
- * Get ReplicaSet status
- *
- * @param {Admin~resultCallback} [callback] The command result callback.
- * @return {Promise} returns Promise if no callback passed
- */
-Admin.prototype.replSetGetStatus = function (callback) {
-    const self = this;
-    // Execute using callback
-    if (typeof callback === "function") {
-        return replSetGetStatus(self, callback);
     }
-    // Return a Promise
-    return new this.s.promiseLibrary((resolve, reject) => {
-        replSetGetStatus(self, (err, r) => {
-            if (err) {
-                return reject(err);
-            }
-            resolve(r);
-        });
-    });
-};
 
-const replSetGetStatus = function (self, callback) {
-    self.s.db.executeDbAdminCommand({ replSetGetStatus: 1 }, (err, doc) => {
-        if (err == null && doc.ok === 1) {
+    _validateCollection(collectionName, options, callback) {
+        const command = { validate: collectionName };
+        const keys = Object.keys(options);
+
+        // Decorate command with extra options
+        for (let i = 0; i < keys.length; i++) {
+            if (options.hasOwnProperty(keys[i])) {
+                command[keys[i]] = options[keys[i]];
+            }
+        }
+
+        this.s.db.command(command, (err, doc) => {
+            if (err) {
+                return callback(err, null);
+            }
+
+            if (doc.ok === 0) {
+                return callback(new Error("Error with validate command"), null);
+            }
+            if (!is.nil(doc.result) && doc.result.constructor !== String) {
+                return callback(new Error("Error with validation data"), null);
+            }
+            if (!is.nil(doc.result) && !is.null(doc.result.match(/exception|corrupt/))) {
+                return callback(new Error(`Error: invalid collection ${collectionName}`), null);
+            }
+            if (!is.nil(doc.valid) && !doc.valid) {
+                return callback(new Error(`Error: invalid collection ${collectionName}`), null);
+            }
+
             return callback(null, doc);
-        }
-        if (err) {
-            return callback(err, false);
-        }
-        callback(toError(doc), false);
-    });
-};
+        });
+    }
 
-define.classMethod("replSetGetStatus", { callback: true, promise: true });
+    @classMethod({ callback: true, promise: true })
+    validateCollection(collectionName, ...args) {
+        const callback = args.pop();
+        if (!is.function(callback)) {
+            args.push(callback);
+        }
+        let options = args.length ? args.shift() : {};
+        options = options || {};
+
+        if (is.function(callback)) {
+            return this._validateCollection(collectionName, options, callback);
+        }
+
+        return new this.s.promiseLibrary((resolve, reject) => {
+            this._validateCollection(collectionName, options, (err, r) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(r);
+            });
+        });
+    }
+
+    @classMethod({ callback: true, promise: true })
+    listDatabases(callback) {
+        if (is.function(callback)) {
+            return this.s.db.executeDbAdminCommand({ listDatabases: 1 }, {}, callback);
+        }
+
+        return new this.s.promiseLibrary((resolve, reject) => {
+            this.s.db.executeDbAdminCommand({ listDatabases: 1 }, {}, (err, r) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(r);
+            });
+        });
+    }
+
+    _replSetGetStatus(callback) {
+        this.s.db.executeDbAdminCommand({ replSetGetStatus: 1 }, (err, doc) => {
+            if (!err && doc.ok === 1) {
+                return callback(null, doc);
+            }
+            if (err) {
+                return callback(err, false);
+            }
+            callback(toError(doc), false);
+        });
+    }
+
+    @classMethod({ callback: true, promise: true })
+    replSetGetStatus(callback) {
+        if (is.function(callback)) {
+            return this._replSetGetStatus(callback);
+        }
+        return new this.s.promiseLibrary((resolve, reject) => {
+            this._replSetGetStatus((err, r) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve(r);
+            });
+        });
+    }
+}
 
 module.exports = Admin;

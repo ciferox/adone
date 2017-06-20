@@ -912,12 +912,12 @@ describe("cursor", function () {
         const s = new Date();
         expect(await new Promise((resolve) => {
             cursor.each((err, result) => {
-                if (result) {
+                if (!result) {
+                    resolve(new Date().getTime() - s.getTime());
+                } else {
                     setTimeout(() => {
                         cursor.kill();
                     }, 300);
-                } else {
-                    resolve(new Date().getTime() - s.getTime());
                 }
             });
         })).to.be.above(500);

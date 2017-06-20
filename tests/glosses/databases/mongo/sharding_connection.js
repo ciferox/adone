@@ -5,7 +5,7 @@ describe("sharding connection", function () {
 
     const { database: { mongo }, std } = adone;
 
-    it("should connect to mongos proxies using connectiong string and options", async () => {
+    it("should connect to mongos proxies using connection string and options", async () => {
         const url = std.url.format({
             protocol: "mongodb:",
             slashes: true,
@@ -25,7 +25,7 @@ describe("sharding connection", function () {
             }
         });
         expect(db.serverConfig.haInterval).to.be.equal(500);
-        const r = await db.collection("replicaset_mongo_client_collection").update({ a: 1 }, { b: 1 }, { upsert: true });
+        const r = await db.collection("replicaset_mongo_client_collection").update({ a: 1 }, { b: 1 }, { upsert: true, w: 2 });
         expect(r.result.n).to.be.equal(1);
         expect(await db.collection("replicaset_mongo_client_collection").findOne()).to.be.ok;
         await db.close();

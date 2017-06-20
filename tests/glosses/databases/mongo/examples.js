@@ -1648,7 +1648,7 @@ describe("examples", function () {
             });
         }
 
-        it("should correctly call validate collection   ", async () => {
+        it("should correctly call validate collection", async () => {
             const db = await mongo.connect(this.url());
             const collection = db.collection("test_with_promise5");
             await collection.insertOne({ a: 1 }, { w: 1 });

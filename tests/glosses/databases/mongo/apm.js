@@ -167,6 +167,11 @@ describe("apm", function () {
     }
 
     describe("JSON APM Tests", () => {
+        before(async function () {
+            this.timeout(300000);
+            await this.server.restart(true);
+        });
+
         const validateExpecations = (expectation, results) => {
             if (expectation.command_started_event) {
                 // Get the command
@@ -422,7 +427,7 @@ describe("apm", function () {
             }
         });
 
-        const collection = this.db.collection("apm_test_2");
+        const collection = this.db.collection("apm_test_0");
 
         await collection.drop().catch(() => { });
 
@@ -492,9 +497,9 @@ describe("apm", function () {
             }
         });
 
-        const collection = this.db.collection("apm_test_2");
+        const collection = this.db.collection("apm_test_1");
 
-        await collection.drop().then(() => { });
+        await collection.drop().catch(() => { });
 
         const r = await collection.insertMany([{ a: 1 }, { a: 1 }, { a: 1 }, { a: 1 }, { a: 1 }, { a: 1 }]);
         expect(r.insertedCount).to.be.equal(6);
@@ -534,7 +539,7 @@ describe("apm", function () {
             }
         });
 
-        await this.db.collection("apm_test_3").bulkWrite([
+        await this.db.collection("apm_test_2").bulkWrite([
             { insertOne: { a: 1 } },
             { updateOne: { q: { a: 2 }, u: { $set: { a: 2 } }, upsert: true } },
             { deleteOne: { q: { c: 1 } } }
@@ -588,7 +593,7 @@ describe("apm", function () {
             }
         });
 
-        const collection = this.db.collection("apm_test_2");
+        const collection = this.db.collection("apm_test_3");
 
         await collection.drop().catch(() => { });
 
@@ -607,7 +612,7 @@ describe("apm", function () {
 
         expect(started).to.have.lengthOf(1);
         expect(started[0].commandName).to.be.equal("explain");
-        expect(started[0].command.explain.find).to.be.equal("apm_test_2");
+        expect(started[0].command.explain.find).to.be.equal("apm_test_3");
         expect(succeeded).to.have.lengthOf(1);
         expect(succeeded[0].commandName).to.be.equal("explain");
 
