@@ -91,7 +91,7 @@ class Hook {
 }
 
 class Block {
-    constructor(name, parent = null) {
+    constructor(name, parent = null, options) {
         this.name = name;
         this.hooks = {
             before: [],
@@ -111,6 +111,59 @@ class Block {
         this._only = false;
         this._watch = false;
         this._retries = null;
+        this._options = options;
+    }
+
+    async prepare() {
+        const { _options: options } = this;
+        if (!options) {
+            return;
+        }
+        if (!this.isExclusive() && is.propertyOwned(options, "skip")) { // no explicit skip + skip option provided
+            const { skip } = options;
+            const type = util.typeOf(skip);
+            switch (type) {
+                case "boolean": {
+                    if (skip) {
+                        this.skip();
+                    }
+                    break;
+                }
+                case "function": {
+                    if (await skip()) {
+                        this.skip();
+                    }
+                    break;
+                }
+                default: {
+                    throw new x.InvalidArgument("skip: only functions and booleans are allowed");
+                }
+            }
+        }
+        if (is.propertyOwned(options, "timeout")) {
+            const { timeout } = options;
+            const type = util.typeOf(timeout);
+            switch (type) {
+                case "number": {
+                    if (timeout < 0) {
+                        throw new x.InvalidArgument("timeout: cannot be negative");
+                    }
+                    this.timeout(timeout);
+                    break;
+                }
+                case "function": {
+                    const value = await timeout();
+                    if (value < 0) {
+                        throw new x.InvalidArgument("timeout: cannot be negative");
+                    }
+                    this.timeout(value);
+                    break;
+                }
+                default: {
+                    throw new x.InvalidArgument("timeout: only functions and numbers are allowed");
+                }
+            }
+        }
     }
 
     addChild(child) {
@@ -238,7 +291,7 @@ class TestModule extends adone.js.Module {
 }
 
 class Test {
-    constructor(description, callback, block, runtimeContext) {
+    constructor(description, callback, block, runtimeContext, options = {}) {
         this.description = description;
         this.callback = callback;
         this.block = block;
@@ -250,6 +303,117 @@ class Test {
         this._afterHooks = [];
         this._beforeHooksFired = false;
         this._afterHooksFired = false;
+        this._options = options;
+    }
+
+    async prepare() {
+        const { _options: options } = this;
+        if (!options) {
+            return;
+        }
+        if (!this.isExclusive() && is.propertyOwned(options, "skip")) { // no explicit skip + skip option provided
+            const { skip } = options;
+            const type = util.typeOf(skip);
+            switch (type) {
+                case "boolean": {
+                    if (skip) {
+                        this.skip();
+                    }
+                    break;
+                }
+                case "function": {
+                    if (await skip()) {
+                        this.skip();
+                    }
+                    break;
+                }
+                default: {
+                    throw new x.InvalidArgument("skip: only functions and booleans are allowed");
+                }
+            }
+        }
+        if (is.propertyOwned(options, "timeout")) {
+            const { timeout } = options;
+            const type = util.typeOf(timeout);
+            switch (type) {
+                case "number": {
+                    if (timeout < 0) {
+                        throw new x.InvalidArgument("timeout: cannot be negative");
+                    }
+                    this.timeout(timeout);
+                    break;
+                }
+                case "function": {
+                    const value = await timeout();
+                    if (value < 0) {
+                        throw new x.InvalidArgument("timeout: cannot be negative");
+                    }
+                    this.timeout(value);
+                    break;
+                }
+                default: {
+                    throw new x.InvalidArgument("timeout: only functions and numbers are allowed");
+                }
+            }
+        }
+        const hasBefore = is.propertyOwned(options, "before");
+        const hasAfter = is.propertyOwned(options, "after");
+        if (hasBefore || hasAfter) {
+            const handle = async (hookType) => {
+                const { [hookType]: hook } = options;
+                const type = util.typeOf(hook);
+                switch (type) {
+                    case "function": {
+                        this[hookType](hook);
+                        break;
+                    }
+                    case "Array": {
+                        // supports
+                        // [callback]
+                        // [description, callback]
+                        // [[description, callback] or callback, ...]
+                        const hookWithDescription = (item) => {
+                            if (item.length !== 2) {
+                                throw new x.IllegalState(`${hookType}: not enough arguments for [description, callback]`);
+                            }
+                            if (!is.function(item[1])) {
+                                throw new x.InvalidArgument(`${hookType}: callback must be a function for [description, callback]`);
+                            }
+                            this[hookType](...item);
+                        };
+                        if (hook.length !== 0) {
+                            if (is.string(hook[0])) {
+                                hookWithDescription(hook);
+                            } else {
+                                for (const item of hook) {
+                                    if (is.array(item)) {
+                                        if (is.string(item[0])) {
+                                            hookWithDescription(item);
+                                        } else {
+                                            throw new x.InvalidArgument(`${hookType}: invalid value, must be [description, callback]`);
+                                        }
+                                    } else if (is.function(item)) {
+                                        this[hookType](item);
+                                    } else {
+                                        throw new x.InvalidArgument(`${hookType}: invalid value, must be callback or [description, callback]`);
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    }
+                    default: {
+                        throw new x.InvalidArgument(`${hookType}: only functions and arrays are allowed`);
+                    }
+                }
+            };
+            if (hasBefore) {
+                await handle("before");
+            }
+            if (hasAfter) {
+                await handle("after");
+            }
+        }
     }
 
     async run() {
@@ -351,7 +515,7 @@ class Test {
         if (adone.is.function(description)) {
             [description, callback] = ["", description];
         }
-        this._beforeHooks.push(new Hook(description, callback));
+        this._beforeHooks.push(new Hook(description, callback, this.runtimeContext));
         return this;
     }
 
@@ -359,7 +523,7 @@ class Test {
         if (adone.is.function(description)) {
             [description, callback] = ["", description];
         }
-        this._afterHooks.push(new Hook(description, callback));
+        this._afterHooks.push(new Hook(description, callback, this.runtimeContext));
         return this;
     }
 
@@ -384,7 +548,7 @@ export class Engine {
         transpilerOptions = {},
         watch = false
     } = {}) {
-        this._paths = [];  // path can be a glob or a path
+        this._paths = []; // path can be a glob or a path
         this.defaultTimeout = defaultTimeout;
         this.firstFailExit = firstFailExit;
         this.transpilerOptions = transpilerOptions;
@@ -401,7 +565,7 @@ export class Engine {
 
     context() {
         const root = new Block(null);
-        root.level(-1);  // take care of the nested blocks
+        root.level(-1); // take care of the nested blocks
         root.timeout(this.defaultTimeout);
         root.retries(1);
         const stack = new adone.collection.Stack([root]);
@@ -410,23 +574,29 @@ export class Engine {
 
         const describe = function (...args) {
             const callback = args.pop();
+
             if (!is.function(callback)) {
                 throw new x.InvalidArgument("The last argument must be a function");
             }
+
+            const options = args.length > 0 && is.plainObject(args[args.length - 1]) ? args.pop() : null;
+
             if (args.length === 0) {
                 throw new x.InvalidArgument("A describe must have a name");
             }
-            let block;
-            for (const name of args) {
-                block = new Block(name, stack.top);
+            for (let i = 0; i < args.length - 1; ++i) {
+                const block = new Block(args[i], stack.top);
                 stack.top.addChild(block);
                 stack.push(block);
             }
+            const block = new Block(args[args.length - 1], stack.top, options);
+            stack.top.addChild(block);
+            stack.push(block);
 
             runtimeContext.skip = block.skip.bind(block);
             runtimeContext.timeout = block.timeout.bind(block);
 
-            if (adone.is.promise(callback.call(runtimeContext))) {
+            if (is.promise(callback.call(runtimeContext))) {
                 throw new Error("It is not allowed to use asynchronous functions as a describe callback");
             }
 
@@ -442,8 +612,11 @@ export class Engine {
         describe.skip = (...args) => describe(...args).skip();
         describe.only = (...args) => describe(...args).only();
 
-        const it = function (description, callback) {
-            const test = new Test(description, callback, stack.top, runtimeContext);
+        const it = function (description, options, callback) {
+            if (is.function(options)) {
+                [options, callback] = [null, options];
+            }
+            const test = new Test(description, callback, stack.top, runtimeContext, options);
             stack.top.addChild(test);
             return test;
         };
@@ -491,105 +664,115 @@ export class Engine {
         const start = function () {
             const emitter = new adone.EventEmitter();
 
-            // mark all the skipped nodes
-            (function markSkipped(block) {
-                const exclusive = block.isExclusive();
-                for (const node of block.children) {
-                    if (exclusive && !node.isExclusive()) {
-                        node.skip();
-                    }
-                    if (node instanceof Block) {
-                        markSkipped(node);
-                    }
-                }
-            })(root);
-
-            // mark all the paths to the inclusive nodes if there are
-            const hasInclusive = (function checkInclusive(block) {
-                if (block.isInclusive() && !block.hasInclusive()) {
-                    // there are no inclusive nested nodes, but the parent is inclusive, mark all the nodes
-                    (function mark(node) {
-                        for (const n of node.children) {
-                            // if (n.isExclusive()) {
-                            //     continue;
-                            // }
-                            n.only();
-                            if (n instanceof Block) {
-                                mark(n);
-                            }
-                        }
-                    })(block);
-                    return true;
-                }
-                let hasInclusive = false;
-                for (const node of block.children) {
-                    if (node.isExclusive()) {
-                        // exclusive nodes dont have to be marked
-                        continue;
-                    }
-                    const isBlock = node instanceof Block;
-
-                    if (node.isInclusive()) {
-                        hasInclusive = true;
-                        // the node is an inclusive node, mark the parent
-                        block.only();
-                        if (isBlock) {
-                            // is a block, should check the nested nodes,
-                            checkInclusive(node);
-                        }
-                    } else if (isBlock) {
-                        // is a block, but a non-inclusive, maybe it has some nested inclusive nodes
-                        if (checkInclusive(node)) {
-                            hasInclusive = true;
-                            // it has, mark the parent
-                            block.only();
-                        }
-                    }
-                }
-                return hasInclusive;
-            })(root);
-
-            if (hasInclusive) {
-                // remove all the non-inclusive nodes
-                (function deleteNonInclusive(block) {
-                    block.children = block.children.filter((node) => {
-                        return node.isInclusive();
-                    });
-                    // we have only inclusive nodes, go deeper
-                    for (const node of block.children) {
-                        if (node instanceof Block) {
-                            deleteNonInclusive(node);
-                        }
-                    }
-                })(root);
-            }
-
-            (function deleteChildrenWithNoTests(block) {
-                for (let i = 0; i < block.children.length; ++i) {
-                    const child = block.children[i];
-                    if (child instanceof Test) {
-                        continue;
-                    }
-                    // no tests
-                    if (child.children.length === 0) {
-                        block.children.splice(i--, 1);
-                        continue;
-                    }
-                    deleteChildrenWithNoTests(child);
-                    // no tests after reducing
-                    if (child.children.length === 0) {
-                        block.children.splice(i--, 1);
-                    }
-                }
-            })(root);
-
             let stopped = false;
 
             emitter.stop = () => {
                 stopped = true;
             };
 
-            Promise.resolve().then(async () => {
+            (async () => {
+                // walk through the tree and prepare the nodes, sequentially
+                await (async function prepare(block) {
+                    for (const child of block.children) {
+                        await child.prepare();
+                        if (child instanceof Block) {
+                            await prepare(child);
+                        }
+                    }
+                })(root);
+
+                // mark all the skipped nodes
+                (function markSkipped(block) {
+                    const exclusive = block.isExclusive();
+                    for (const node of block.children) {
+                        if (exclusive && !node.isExclusive()) {
+                            node.skip();
+                        }
+                        if (node instanceof Block) {
+                            markSkipped(node);
+                        }
+                    }
+                })(root);
+
+                // mark all the paths to the inclusive nodes if there are
+                const hasInclusive = (function checkInclusive(block) {
+                    if (block.isInclusive() && !block.hasInclusive()) {
+                        // there are no inclusive nested nodes, but the parent is inclusive, mark all the nodes
+                        (function mark(node) {
+                            for (const n of node.children) {
+                                // if (n.isExclusive()) {
+                                //     continue;
+                                // }
+                                n.only();
+                                if (n instanceof Block) {
+                                    mark(n);
+                                }
+                            }
+                        })(block);
+                        return true;
+                    }
+                    let hasInclusive = false;
+                    for (const node of block.children) {
+                        if (node.isExclusive()) {
+                            // exclusive nodes dont have to be marked
+                            continue;
+                        }
+                        const isBlock = node instanceof Block;
+
+                        if (node.isInclusive()) {
+                            hasInclusive = true;
+                            // the node is an inclusive node, mark the parent
+                            block.only();
+                            if (isBlock) {
+                                // is a block, should check the nested nodes,
+                                checkInclusive(node);
+                            }
+                        } else if (isBlock) {
+                            // is a block, but a non-inclusive, maybe it has some nested inclusive nodes
+                            if (checkInclusive(node)) {
+                                hasInclusive = true;
+                                // it has, mark the parent
+                                block.only();
+                            }
+                        }
+                    }
+                    return hasInclusive;
+                })(root);
+
+                if (hasInclusive) {
+                    // remove all the non-inclusive nodes
+                    (function deleteNonInclusive(block) {
+                        block.children = block.children.filter((node) => {
+                            return node.isInclusive();
+                        });
+                        // we have only inclusive nodes, go deeper
+                        for (const node of block.children) {
+                            if (node instanceof Block) {
+                                deleteNonInclusive(node);
+                            }
+                        }
+                    })(root);
+                }
+
+                (function deleteChildrenWithNoTests(block) {
+                    for (let i = 0; i < block.children.length; ++i) {
+                        const child = block.children[i];
+                        if (child instanceof Test) {
+                            continue;
+                        }
+                        // no tests
+                        if (child.children.length === 0) {
+                            block.children.splice(i--, 1);
+                            continue;
+                        }
+                        deleteChildrenWithNoTests(child);
+                        // no tests after reducing
+                        if (child.children.length === 0) {
+                            block.children.splice(i--, 1);
+                        }
+                    }
+                })(root);
+
                 const executor = async (block) => {
                     if (block !== root) {
                         emitter.emit("enter block", { block });
@@ -599,7 +782,7 @@ export class Engine {
                     if (block.children.every((x) => x.isExclusive())) {
                         for (const node of block.children) {
                             if (node instanceof Block) {
-                                executor(node);  // should skip all nested the tests
+                                executor(node); // should skip all nested the tests
                             } else {
                                 emitter.emit("skip test", { block, test: node });
                             }
@@ -634,7 +817,7 @@ export class Engine {
                                 break;
                             }
                         }
-                        if (!hookFailed) {  // before hook failed?
+                        if (!hookFailed) { // before hook failed?
                             for (const node of block.children) {
                                 if (stopped || hookFailed) {
                                     break;
@@ -674,24 +857,49 @@ export class Engine {
                                         }
                                     }
                                     if (!stopped) {
-                                        emitter.emit("start test", { block, test: node });
-                                        let meta;
-                                        if (!hookFailed) {
+                                        for (const hook of node.beforeHooks()) {
+                                            if (stopped) {
+                                                break;
+                                            }
+                                            emitter.emit("start before test hook", { block, test: node, hook });
                                             // eslint-disable-next-line no-await-in-loop
-                                            meta = await node.run();
-                                        } else {
-                                            meta = { elapsed: 0, err: new Error("Rejected due the hook fail") };
+                                            const meta = await hook.run();
+                                            emitter.emit("end before test hook", { block, test: node, hook });
+                                            if (meta.err) {
+                                                hookFailed = true;
+                                                break;
+                                            }
                                         }
+                                        if (!stopped) {
+                                            emitter.emit("start test", { block, test: node });
+                                            let meta;
+                                            if (!hookFailed) {
+                                                // eslint-disable-next-line no-await-in-loop
+                                                meta = await node.run();
+                                            } else {
+                                                meta = { elapsed: 0, err: new Error("Rejected due the hook fail") };
+                                            }
 
-                                        // it can be skipped in runtime
-                                        meta.skipped = node.isExclusive();
-                                        if (meta.skipped) {
-                                            emitter.emit("skip test", { block, test: node, runtime: true });
+                                            // it can be skipped in runtime
+                                            meta.skipped = node.isExclusive();
+                                            if (meta.skipped) {
+                                                emitter.emit("skip test", { block, test: node, runtime: true });
+                                            }
+
+                                            emitter.emit("end test", { block, test: node, meta });
+                                            if (meta.err) {
+                                                failed = true;
+                                            }
                                         }
-
-                                        emitter.emit("end test", { block, test: node, meta });
-                                        if (meta.err) {
-                                            failed = true;
+                                        for (const hook of node.afterHooks()) {
+                                            emitter.emit("start after test hook", { block, test: node, hook });
+                                            // eslint-disable-next-line no-await-in-loop
+                                            const meta = await hook.run();
+                                            emitter.emit("end after test hook", { block, test: node, hook });
+                                            if (meta.err) {
+                                                hookFailed = true;
+                                                break;
+                                            }
                                         }
                                     }
                                     for (const parentBlock of blocksFired.reverse()) {
@@ -729,11 +937,14 @@ export class Engine {
                 };
 
                 return executor(root);
-            }).catch((err) => {
-                emitter.emit("error", err);
-                return true;
-            }).then(() => emitter.emit("done"));
-
+            })()
+                .catch((err) => {
+                    emitter.emit("error", err);
+                })
+                .catch(() => { })
+                .then(() => {
+                    emitter.emit("done");
+                });
             return emitter;
         };
 
@@ -754,7 +965,8 @@ export class Engine {
 
     start() {
         let executing = null;
-        const executingDone = () => new Promise((resolve) => {
+        const executingDone = () => new Promise((resolve, reject) => {
+            executing.once("error", reject);
             executing.once("done", resolve);
         });
 
@@ -964,7 +1176,7 @@ export const consoleReporter = ({
         let bar = null;
 
         const elapsedToString = (elapsed, timeout, little = true) => {
-            let elapsedString = adone.util.humanizeTime(elapsed);  // ms
+            let elapsedString = adone.util.humanizeTime(elapsed); // ms
 
             const k = elapsed / timeout;
             if (k < 0.25) {
@@ -1503,7 +1715,7 @@ export const simpleReporter = ({
         const globalErrors = [];
 
         const elapsedToString = (elapsed, timeout, little = true) => {
-            let elapsedString = adone.util.humanizeTime(elapsed);  // ms
+            let elapsedString = adone.util.humanizeTime(elapsed); // ms
 
             const k = elapsed / timeout;
             if (k < 0.25) {

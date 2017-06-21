@@ -7,8 +7,8 @@ const { shani: { Engine } } = adone;
 
 // a minimal engine
 
-const blocks = [];  // top-level blocks
-const stack = [];  // describe's stack
+const blocks = []; // top-level blocks
+const stack = []; // describe's stack
 
 function describe(name, callback) {
     const block = { name, tests: [], nested: [] };
@@ -3845,6 +3845,660 @@ describe("Engine", () => {
             "exit 1",
             "exit top"
         ]);
+    });
+
+    describe("options for 'it'", async () => {
+        describe("timeout", () => {
+            it("should accept a number", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                let timeout = null;
+                describe("1", () => {
+                    it("1", { timeout: 123 }, function () {
+                        timeout = this.timeout();
+                    });
+                });
+                const emitter = start();
+                await waitFor(emitter, "done");
+                assert.equal(timeout, 123);
+            });
+
+            it("should accept a function", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                let timeout = null;
+                describe("1", () => {
+                    it("1", { timeout: () => 123 }, function () {
+                        timeout = this.timeout();
+                    });
+                });
+                const emitter = start();
+                await waitFor(emitter, "done");
+                assert.equal(timeout, 123);
+            });
+
+            it("should accept an async function", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                let timeout = null;
+                describe("1", () => {
+                    it("1", { timeout: async () => 123 }, function () {
+                        timeout = this.timeout();
+                    });
+                });
+                const emitter = start();
+                await waitFor(emitter, "done");
+                assert.equal(timeout, 123);
+            });
+
+            it("should throw if the timeout is negative", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                describe("1", () => {
+                    it("1", { timeout: -1 }, () => { });
+                });
+                const emitter = start();
+                const err = await waitFor(emitter, "error");
+                assert.equal(err.message, "timeout: cannot be negative");
+            });
+
+            it("should throw if the timeout is negative: function", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                describe("1", () => {
+                    it("1", { timeout: () => -1 }, () => { });
+                });
+                const emitter = start();
+                const err = await waitFor(emitter, "error");
+                assert.equal(err.message, "timeout: cannot be negative");
+            });
+
+            it("should throw if the timeout is negative: async function", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                describe("1", () => {
+                    it("1", { timeout: async () => -1 }, () => { });
+                });
+                const emitter = start();
+                const err = await waitFor(emitter, "error");
+                assert.equal(err.message, "timeout: cannot be negative");
+            });
+
+            it("should throw if the timeout is not a function or number", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                describe("1", () => {
+                    it("1", { timeout: true }, () => { });
+                });
+                const emitter = start();
+                const err = await waitFor(emitter, "error");
+                assert.equal(err.message, "timeout: only functions and numbers are allowed");
+            });
+        });
+
+        describe("skip", () => {
+            it("should accept a boolean", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                let skipped0 = true;
+                let skipped1 = true;
+                describe("1", () => {
+                    it("1", { skip: true }, () => {
+                        skipped0 = false;
+                    });
+
+                    it("2", { skip: false }, () => {
+                        skipped1 = false;
+                    });
+                });
+                const emitter = start();
+                await waitFor(emitter, "done");
+                assert.equal(skipped0, true);
+                assert.equal(skipped1, false);
+            });
+
+            it("should accept a function", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                let skipped0 = true;
+                let skipped1 = true;
+                describe("1", () => {
+                    it("1", { skip: () => true }, () => {
+                        skipped0 = false;
+                    });
+
+                    it("2", { skip: () => false }, () => {
+                        skipped1 = false;
+                    });
+                });
+                const emitter = start();
+                await waitFor(emitter, "done");
+                assert.equal(skipped0, true);
+                assert.equal(skipped1, false);
+            });
+
+            it("should accept an async function", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                let skipped0 = true;
+                let skipped1 = true;
+                describe("1", () => {
+                    it("1", { skip: async () => true }, () => {
+                        skipped0 = false;
+                    });
+
+                    it("2", { skip: async () => false }, () => {
+                        skipped1 = false;
+                    });
+                });
+                const emitter = start();
+                await waitFor(emitter, "done");
+                assert.equal(skipped0, true);
+                assert.equal(skipped1, false);
+            });
+
+            it("should throw if the skip value is not a function or boolean", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                describe("1", () => {
+                    it("1", { skip: 123 }, () => { });
+                });
+                const emitter = start();
+                const err = await waitFor(emitter, "error");
+                assert.equal(err.message, "skip: only functions and booleans are allowed");
+            });
+        });
+
+        describe("before", () => {
+            it("should add a before hook for a test", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                const chain = [];
+                describe("1", () => {
+                    it("1", {
+                        before() {
+                            chain.push("before 1");
+                        }
+                    }, () => {
+                        chain.push("1");
+                    });
+
+                    it("2", () => {
+                        chain.push("2");
+                    });
+                });
+                const emitter = start();
+                await waitFor(emitter, "done");
+                assert.deepEqual(chain, ["before 1", "1", "2"]);
+            });
+
+            it("should emit 'start before test hook' and 'end before test hook'", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                const chain = [];
+                describe("1", () => {
+                    it("1", {
+                        before() {
+                            chain.push("before 1");
+                        }
+                    }, () => {
+                        chain.push("1");
+                    });
+
+                    it("2", () => {
+                        chain.push("2");
+                    });
+                });
+                const emitter = start();
+                emitter
+                    .on("start before test hook", ({ test, block }) => {
+                        chain.push(["start", test.description, block.name]);
+                    })
+                    .on("end before test hook", ({ test, block }) => {
+                        chain.push(["end", test.description, block.name]);
+                    });
+                await waitFor(emitter, "done");
+                assert.deepEqual(chain, [
+                    ["start", "1", "1"],
+                    "before 1",
+                    ["end", "1", "1"],
+                    "1",
+                    "2"
+                ]);
+            });
+
+            it("should add a before hook with description for a test", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                const chain = [];
+                describe("1", () => {
+                    it("1", {
+                        before: ["descr 1", () => chain.push("before 1")]
+                    }, () => {
+                        chain.push("1");
+                    });
+
+                    it("2", () => {
+                        chain.push("2");
+                    });
+                });
+                const emitter = start();
+                emitter
+                    .on("start before test hook", ({ test, block, hook }) => {
+                        chain.push(["start", test.description, block.name, hook.description]);
+                    })
+                    .on("end before test hook", ({ test, block, hook }) => {
+                        chain.push(["end", test.description, block.name, hook.description]);
+                    });
+                await waitFor(emitter, "done");
+                assert.deepEqual(chain, [
+                    ["start", "1", "1", "descr 1"],
+                    "before 1",
+                    ["end", "1", "1", "descr 1"],
+                    "1",
+                    "2"
+                ]);
+            });
+
+            it("should add before hooks for a test", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                const chain = [];
+                describe("1", () => {
+                    it("1", {
+                        before: [
+                            () => chain.push("before 1"),
+                            () => chain.push("before 2")
+                        ]
+                    }, () => {
+                        chain.push("1");
+                    });
+
+                    it("2", () => {
+                        chain.push("2");
+                    });
+                });
+                const emitter = start();
+                await waitFor(emitter, "done");
+                assert.deepEqual(chain, ["before 1", "before 2", "1", "2"]);
+            });
+
+            it("should add before hooks with descriptions or not a test", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                const chain = [];
+                describe("1", () => {
+                    it("1", {
+                        before: [
+                            ["descr 1", () => chain.push("before 1")],
+                            () => chain.push("before 2"),
+                            ["descr 3", () => chain.push("before 3")]
+                        ]
+                    }, () => {
+                        chain.push("1");
+                    });
+
+                    it("2", () => {
+                        chain.push("2");
+                    });
+                });
+                const emitter = start();
+                emitter
+                    .on("start before test hook", ({ test, block, hook }) => {
+                        chain.push(["start", test.description, block.name, hook.description]);
+                    })
+                    .on("end before test hook", ({ test, block, hook }) => {
+                        chain.push(["end", test.description, block.name, hook.description]);
+                    });
+                await waitFor(emitter, "done");
+                assert.deepEqual(chain, [
+                    ["start", "1", "1", "descr 1"],
+                    "before 1",
+                    ["end", "1", "1", "descr 1"],
+                    ["start", "1", "1", ""],
+                    "before 2",
+                    ["end", "1", "1", ""],
+                    ["start", "1", "1", "descr 3"],
+                    "before 3",
+                    ["end", "1", "1", "descr 3"],
+                    "1",
+                    "2"
+                ]);
+            });
+        });
+
+        describe("after", () => {
+            it("should add an after hook for a test", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                const chain = [];
+                describe("1", () => {
+                    it("1", {
+                        after() {
+                            chain.push("after 1");
+                        }
+                    }, () => {
+                        chain.push("1");
+                    });
+
+                    it("2", () => {
+                        chain.push("2");
+                    });
+                });
+                const emitter = start();
+                await waitFor(emitter, "done");
+                assert.deepEqual(chain, ["1", "after 1", "2"]);
+            });
+
+            it("should emit 'start before test hook' and 'end before test hook'", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                const chain = [];
+                describe("1", () => {
+                    it("1", {
+                        after() {
+                            chain.push("after 1");
+                        }
+                    }, () => {
+                        chain.push("1");
+                    });
+
+                    it("2", () => {
+                        chain.push("2");
+                    });
+                });
+                const emitter = start();
+                emitter
+                    .on("start after test hook", ({ test, block }) => {
+                        chain.push(["start", test.description, block.name]);
+                    })
+                    .on("end after test hook", ({ test, block }) => {
+                        chain.push(["end", test.description, block.name]);
+                    });
+                await waitFor(emitter, "done");
+                assert.deepEqual(chain, [
+                    "1",
+                    ["start", "1", "1"],
+                    "after 1",
+                    ["end", "1", "1"],
+                    "2"
+                ]);
+            });
+
+            it("should add an after hook with description for a test", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                const chain = [];
+                describe("1", () => {
+                    it("1", {
+                        after: ["descr 1", () => chain.push("after 1")]
+                    }, () => {
+                        chain.push("1");
+                    });
+
+                    it("2", () => {
+                        chain.push("2");
+                    });
+                });
+                const emitter = start();
+                emitter
+                    .on("start after test hook", ({ test, block, hook }) => {
+                        chain.push(["start", test.description, block.name, hook.description]);
+                    })
+                    .on("end after test hook", ({ test, block, hook }) => {
+                        chain.push(["end", test.description, block.name, hook.description]);
+                    });
+                await waitFor(emitter, "done");
+                assert.deepEqual(chain, [
+                    "1",
+                    ["start", "1", "1", "descr 1"],
+                    "after 1",
+                    ["end", "1", "1", "descr 1"],
+                    "2"
+                ]);
+            });
+
+            it("should add after hooks for a test", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                const chain = [];
+                describe("1", () => {
+                    it("1", {
+                        after: [
+                            () => chain.push("after 1"),
+                            () => chain.push("after 2")
+                        ]
+                    }, () => {
+                        chain.push("1");
+                    });
+
+                    it("2", () => {
+                        chain.push("2");
+                    });
+                });
+                const emitter = start();
+                await waitFor(emitter, "done");
+                assert.deepEqual(chain, ["1", "after 1", "after 2", "2"]);
+            });
+
+            it("should add before hooks with descriptions or not a test", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                const chain = [];
+                describe("1", () => {
+                    it("1", {
+                        after: [
+                            ["descr 1", () => chain.push("after 1")],
+                            () => chain.push("after 2"),
+                            ["descr 3", () => chain.push("after 3")]
+                        ]
+                    }, () => {
+                        chain.push("1");
+                    });
+
+                    it("2", () => {
+                        chain.push("2");
+                    });
+                });
+                const emitter = start();
+                emitter
+                    .on("start after test hook", ({ test, block, hook }) => {
+                        chain.push(["start", test.description, block.name, hook.description]);
+                    })
+                    .on("end after test hook", ({ test, block, hook }) => {
+                        chain.push(["end", test.description, block.name, hook.description]);
+                    });
+                await waitFor(emitter, "done");
+                assert.deepEqual(chain, [
+                    "1",
+                    ["start", "1", "1", "descr 1"],
+                    "after 1",
+                    ["end", "1", "1", "descr 1"],
+                    ["start", "1", "1", ""],
+                    "after 2",
+                    ["end", "1", "1", ""],
+                    ["start", "1", "1", "descr 3"],
+                    "after 3",
+                    ["end", "1", "1", "descr 3"],
+                    "2"
+                ]);
+            });
+        });
+    });
+
+    describe("options for 'describe'", async () => {
+        describe("timeout", () => {
+            it("should accept a number", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                let timeout = null;
+                describe("1", { timeout: 123 }, () => {
+                    it("1", function () {
+                        timeout = this.timeout();
+                    });
+                });
+                const emitter = start();
+                await waitFor(emitter, "done");
+                assert.equal(timeout, 123);
+            });
+
+            it("should accept a function", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                let timeout = null;
+                describe("1", { timeout: () => 123 }, () => {
+                    it("1", function () {
+                        timeout = this.timeout();
+                    });
+                });
+                const emitter = start();
+                await waitFor(emitter, "done");
+                assert.equal(timeout, 123);
+            });
+
+            it("should accept an async function", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                let timeout = null;
+                describe("1", { timeout: async () => 123 }, () => {
+                    it("1", function () {
+                        timeout = this.timeout();
+                    });
+                });
+                const emitter = start();
+                await waitFor(emitter, "done");
+                assert.equal(timeout, 123);
+            });
+
+            it("should throw if the timeout is negative", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                describe("1", { timeout: -1 }, () => {
+                    it("1", () => { });
+                });
+                const emitter = start();
+                const err = await waitFor(emitter, "error");
+                assert.equal(err.message, "timeout: cannot be negative");
+            });
+
+            it("should throw if the timeout is negative: function", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                describe("1", { timeout: () => -1 }, () => {
+                    it("1", () => { });
+                });
+                const emitter = start();
+                const err = await waitFor(emitter, "error");
+                assert.equal(err.message, "timeout: cannot be negative");
+            });
+
+            it("should throw if the timeout is negative: async function", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                describe("1", { timeout: async () => -1 }, () => {
+                    it("1", () => { });
+                });
+                const emitter = start();
+                const err = await waitFor(emitter, "error");
+                assert.equal(err.message, "timeout: cannot be negative");
+            });
+
+            it("should throw if the timeout is not a function or number", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                describe("1", { timeout: true }, () => {
+                    it("1", () => { });
+                });
+                const emitter = start();
+                const err = await waitFor(emitter, "error");
+                assert.equal(err.message, "timeout: only functions and numbers are allowed");
+            });
+        });
+
+        describe("skip", () => {
+            it("should accept a boolean", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                let skipped0 = true;
+                let skipped1 = true;
+                describe("1", () => {
+                    describe("1/1", { skip: true }, () => {
+                        it("1", () => {
+                            skipped0 = false;
+                        });
+                    });
+
+                    describe("1/2", { skip: false }, () => {
+                        it("2", () => {
+                            skipped1 = false;
+                        });
+                    });
+                });
+                const emitter = start();
+                await waitFor(emitter, "done");
+                assert.equal(skipped0, true);
+                assert.equal(skipped1, false);
+            });
+
+            it("should accept a function", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                let skipped0 = true;
+                let skipped1 = true;
+                describe("1", () => {
+                    describe("1/1", { skip: () => true }, () => {
+                        it("1", () => {
+                            skipped0 = false;
+                        });
+                    });
+
+                    describe("1/2", { skip: () => false }, () => {
+                        it("2", () => {
+                            skipped1 = false;
+                        });
+                    });
+                });
+                const emitter = start();
+                await waitFor(emitter, "done");
+                assert.equal(skipped0, true);
+                assert.equal(skipped1, false);
+            });
+
+            it("should accept an async function", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                let skipped0 = true;
+                let skipped1 = true;
+                describe("1", () => {
+                    describe("1/1", { skip: async () => true }, () => {
+                        it("1", () => {
+                            skipped0 = false;
+                        });
+                    });
+
+                    describe("1/2", { skip: async () => false }, () => {
+                        it("2", () => {
+                            skipped1 = false;
+                        });
+                    });
+                });
+                const emitter = start();
+                await waitFor(emitter, "done");
+                assert.equal(skipped0, true);
+                assert.equal(skipped1, false);
+            });
+
+            it("should throw if the skip value is not a function or boolean", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                describe("1", { skip: 123 }, () => {
+                    it("1", () => { });
+                });
+                const emitter = start();
+                const err = await waitFor(emitter, "error");
+                assert.equal(err.message, "skip: only functions and booleans are allowed");
+            });
+        });
     });
 });
 
