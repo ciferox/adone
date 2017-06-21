@@ -28,6 +28,7 @@ export class Valuable extends adone.vault.Valuable {
 @Method("get", { private: false, description: "Returns existing valuable", type: Valuable })
 @Method("has", { private: false, description: "Checks whether valuable with specified name exists", type: Boolean })
 @Method("delete", { private: false, description: "Deletes valuable", type: Boolean })
+@Method("toJSON", { private: false, description: "Returs array of valuables in json", type: Array })
 class Vault extends adone.vault.Vault {
     constructor(omnitron, options) {
         super(Object.assign({
@@ -193,7 +194,6 @@ export default class Vaults {
 
     @Public
     @Description("Closes vault with specified name")
-    @Type()
     async close(name) {
         const meta = this._vaults.get(name);
         if (is.undefined(meta)) {
@@ -201,6 +201,28 @@ export default class Vaults {
         }
         this._vaults.delete(name);
         return meta.vault.close();
+    }
+
+    @Public
+    @Description("")
+    async delete(name, { force = false } = {}) {
+        const names = await adone.fs.readdir(this._path);
+        const index = names.findIndex((fullName) => {
+            const parts = fullName.split(SEPARATOR);
+            return parts[0] === name;
+        });
+        if (index === -1) {
+            throw new adone.x.NotExists(`Vault '${name}' not exists`);
+        }
+        const meta = this._vaults.get(name);
+        if (!is.undefined(meta)) {
+            if (force) {
+                await this.close(name);
+            } else {
+                throw new adone.x.IllegalState(`Vault '${name}' is open`);
+            }
+        }
+        return adone.fs.rm(adone.std.path.join(this._path, names[index]));
     }
 
     // format of directory/file name: <name>[<sep><opt[-value]>...]

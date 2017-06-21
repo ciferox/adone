@@ -79,12 +79,29 @@ export default class Valuable {
         return [...this._keys.keys()];
     }
 
-    async entries() {
-        const result = {};
+    async entries({ includeEntryId = false, entriesAsArray = false } = {}) {
+        let result;
         const keys = this.keys();
 
-        for (const key of keys) {
-            result[key] = await this.get(key);
+        if (entriesAsArray) {
+            result = [];
+            for (const name of keys) {
+                const entry = {
+                    name,
+                    value: await this.get(name)
+                };
+
+                if (includeEntryId) {
+                    entry.id = this._getKey(name).id;
+                }
+
+                result.push(entry);
+            }
+        } else {
+            result = {};
+            for (const key of keys) {
+                result[key] = await this.get(key);
+            }
         }
 
         return result;
@@ -112,25 +129,28 @@ export default class Valuable {
     }
 
     // tag formats: 'none', 'normal', 'onlyName', 'onlyId'
-    async toJSON({ includeId = false, tags = "normal" } = {}) {
+    async toJSON({ includeId = false, includeEntryId = false, entriesAsArray = false, tags = "normal" } = {}) {
         const result = {
-            $name: this.name()
+            name: this.name()
         };
         if (includeId) {
-            result.$id = this.internalId();
+            result.id = this.internalId();
         }
 
-        Object.assign(result, await this.entries());
+        result.entries = await this.entries({
+            includeEntryId,
+            entriesAsArray
+        });
 
         switch (tags) {
             case "normal":
-                result.$tags = this._tags;
+                result.tags = this._tags;
                 break;
             case "onlyName":
-                result.$tags = this._tags.map((t) => t.name);
+                result.tags = this._tags.map((t) => t.name);
                 break;
             case "onlyId":
-                result.$tags = this.meta.tids;
+                result.tags = this.meta.tids;
                 break;
         }
 

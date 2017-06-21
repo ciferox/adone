@@ -655,6 +655,10 @@ export default class extends adone.application.Subsystem {
                                     type: String,
                                     default: "none",
                                     choices: ["none", "normal", "onlyName", "onlyId"]
+                                },
+                                {
+                                    name: "--ids",
+                                    help: "include internal IDs"
                                 }
                             ],
                             handler: this.hostsListCommand
@@ -1348,8 +1352,9 @@ export default class extends adone.application.Subsystem {
             const iHosts = await this.dispatcher.context("hosts");
             const format = opts.get("format");
             const tags = opts.get("tags");
+            const includeId = opts.has("ids");
 
-            const result = await iHosts.list({ format, tags });
+            const result = await iHosts.list({ format, tags, includeId });
 
             switch (format) {
                 case "names":

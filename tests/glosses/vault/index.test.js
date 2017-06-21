@@ -396,13 +396,13 @@ describe("Vault", () => {
                 tags: "none"
             });
 
-            assert.equal(obj.$name, "descriptor");
-            assert.equal(obj.k1, "adone");
-            assert.equal(obj.k2, 2);
-            assert.equal(obj.k3, true);
-            assert.deepEqual(obj.k4, [1, 2, 3]);
-            assert.isUndefined(obj.$id);
-            assert.isUndefined(obj.$tags);
+            assert.equal(obj.name, "descriptor");
+            assert.equal(obj.entries.k1, "adone");
+            assert.equal(obj.entries.k2, 2);
+            assert.equal(obj.entries.k3, true);
+            assert.deepEqual(obj.entries.k4, [1, 2, 3]);
+            assert.isUndefined(obj.id);
+            assert.isUndefined(obj.tags);
         });
 
         it("includeId = true; tags = 'none'", async () => {
@@ -413,13 +413,13 @@ describe("Vault", () => {
                 tags: "none"
             });
 
-            assert.equal(obj.$name, "descriptor");
-            assert.equal(obj.k1, "adone");
-            assert.equal(obj.k2, 2);
-            assert.equal(obj.k3, true);
-            assert.deepEqual(obj.k4, [1, 2, 3]);
-            assert.isNumber(obj.$id);
-            assert.isUndefined(obj.$tags);
+            assert.equal(obj.name, "descriptor");
+            assert.equal(obj.entries.k1, "adone");
+            assert.equal(obj.entries.k2, 2);
+            assert.equal(obj.entries.k3, true);
+            assert.deepEqual(obj.entries.k4, [1, 2, 3]);
+            assert.isNumber(obj.id);
+            assert.isUndefined(obj.tags);
         });
 
         it("includeId = true; tags = 'normal'", async () => {
@@ -430,13 +430,13 @@ describe("Vault", () => {
                 tags: "normal"
             });
 
-            assert.equal(obj.$name, "descriptor");
-            assert.equal(obj.k1, "adone");
-            assert.equal(obj.k2, 2);
-            assert.equal(obj.k3, true);
-            assert.deepEqual(obj.k4, [1, 2, 3]);
-            assert.isNumber(obj.$id);
-            assert.deepEqual(obj.$tags, tags1);
+            assert.equal(obj.name, "descriptor");
+            assert.equal(obj.entries.k1, "adone");
+            assert.equal(obj.entries.k2, 2);
+            assert.equal(obj.entries.k3, true);
+            assert.deepEqual(obj.entries.k4, [1, 2, 3]);
+            assert.isNumber(obj.id);
+            assert.deepEqual(obj.tags, tags1);
         });
 
         it("includeId = true; tags = 'onlyName'", async () => {
@@ -447,13 +447,13 @@ describe("Vault", () => {
                 tags: "onlyName"
             });
 
-            assert.equal(obj.$name, "descriptor");
-            assert.equal(obj.k1, "adone");
-            assert.equal(obj.k2, 2);
-            assert.equal(obj.k3, true);
-            assert.deepEqual(obj.k4, [1, 2, 3]);
-            assert.isNumber(obj.$id);
-            assert.deepEqual(obj.$tags, tags1.map((t) => t.name));
+            assert.equal(obj.name, "descriptor");
+            assert.equal(obj.entries.k1, "adone");
+            assert.equal(obj.entries.k2, 2);
+            assert.equal(obj.entries.k3, true);
+            assert.deepEqual(obj.entries.k4, [1, 2, 3]);
+            assert.isNumber(obj.id);
+            assert.deepEqual(obj.tags, tags1.map((t) => t.name));
         });
 
         it("includeId = true; tags = 'onlyName'", async () => {
@@ -464,13 +464,13 @@ describe("Vault", () => {
                 tags: "onlyId"
             });
 
-            assert.equal(obj.$name, "descriptor");
-            assert.equal(obj.k1, "adone");
-            assert.equal(obj.k2, 2);
-            assert.equal(obj.k3, true);
-            assert.deepEqual(obj.k4, [1, 2, 3]);
-            assert.isNumber(obj.$id);
-            assert.sameMembers(obj.$tags, [1, 2]);
+            assert.equal(obj.name, "descriptor");
+            assert.equal(obj.entries.k1, "adone");
+            assert.equal(obj.entries.k2, 2);
+            assert.equal(obj.entries.k3, true);
+            assert.deepEqual(obj.entries.k4, [1, 2, 3]);
+            assert.isNumber(obj.id);
+            assert.sameMembers(obj.tags, [1, 2]);
         });
 
         it("includeId = false; tags = 'onlyId' (valuable without tags)", async () => {
@@ -481,13 +481,32 @@ describe("Vault", () => {
                 tags: "onlyId"
             });
 
-            assert.equal(obj.$name, "descriptor");
-            assert.equal(obj.k1, "adone");
-            assert.equal(obj.k2, 2);
-            assert.equal(obj.k3, true);
-            assert.deepEqual(obj.k4, [1, 2, 3]);
-            assert.isUndefined(obj.$id);
-            assert.equal(obj.$tags.length, 0);
+            assert.equal(obj.name, "descriptor");
+            assert.equal(obj.entries.k1, "adone");
+            assert.equal(obj.entries.k2, 2);
+            assert.equal(obj.entries.k3, true);
+            assert.deepEqual(obj.entries.k4, [1, 2, 3]);
+            assert.isUndefined(obj.id);
+            assert.equal(obj.tags.length, 0);
+        });
+
+        it("includeId = false; includeEntryId = true; entriesAsArray = true; tags = 'onlyId' (valuable without tags)", async () => {
+            await openVault();
+            const val = await createSampleVault();
+            const obj = await val.toJSON({
+                includeId: false,
+                includeEntryId: true,
+                entriesAsArray: true,
+                tags: "onlyId"
+            });
+
+            assert.equal(obj.name, "descriptor");
+            assert.deepInclude(obj.entries, { id: 1, name: "k1", value: "adone" });
+            assert.deepInclude(obj.entries, { id: 2, name: "k2", value: 2 });
+            assert.deepInclude(obj.entries, { id: 3, name: "k3", value: true });
+            assert.deepInclude(obj.entries, { id: 4, name: "k4", value: [1, 2, 3] });
+            assert.isUndefined(obj.id);
+            assert.equal(obj.tags.length, 0);
         });
     });
 
@@ -536,20 +555,20 @@ describe("Vault", () => {
 
         assert.equal(obj.length, 2);
 
-        assert.equal(obj[0].$name, "descriptor1");
-        assert.equal(obj[0].k11, "adone");
-        assert.equal(obj[0].k12, 2);
-        assert.equal(obj[0].k13, true);
-        assert.deepEqual(obj[0].k14, [1, 2, 3]);
-        assert.isNumber(obj[0].$id);
-        assert.deepEqual(obj[0].$tags, tags1);
+        assert.equal(obj[0].name, "descriptor1");
+        assert.equal(obj[0].entries.k11, "adone");
+        assert.equal(obj[0].entries.k12, 2);
+        assert.equal(obj[0].entries.k13, true);
+        assert.deepEqual(obj[0].entries.k14, [1, 2, 3]);
+        assert.isNumber(obj[0].id);
+        assert.deepEqual(obj[0].tags, tags1);
 
-        assert.equal(obj[1].$name, "descriptor2");
-        assert.equal(obj[1].k21, "adone");
-        assert.equal(obj[1].k22, 2);
-        assert.equal(obj[1].k23, true);
-        assert.deepEqual(obj[1].k24, [1, 2, 3]);
-        assert.isNumber(obj[1].$id);
-        assert.deepEqual(obj[1].$tags, tags2);
+        assert.equal(obj[1].name, "descriptor2");
+        assert.equal(obj[1].entries.k21, "adone");
+        assert.equal(obj[1].entries.k22, 2);
+        assert.equal(obj[1].entries.k23, true);
+        assert.deepEqual(obj[1].entries.k24, [1, 2, 3]);
+        assert.isNumber(obj[1].id);
+        assert.deepEqual(obj[1].tags, tags2);
     });
 });

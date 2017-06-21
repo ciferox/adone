@@ -166,11 +166,11 @@ export default class Vault {
     }
 
     async toJSON(options) {
-        const vaults = [];
+        const valuables = [];
         for (const name of this.nameIdMap.keys()) {
-            vaults.push(await (await this.get(name)).toJSON(options));
+            valuables.push(await (await this.get(name)).toJSON(options));
         }
-        return vaults;
+        return valuables;
     }
 
     async addTag(tag, vid = null) {
