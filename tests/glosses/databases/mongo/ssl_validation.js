@@ -83,8 +83,15 @@ describe("ssl validation", function () {
         return replicasetManager;
     };
 
-    it("should fail due presenting wrong credentials to server", async () => {
-        const manager = await setup();
+    it("should fail due presenting wrong credentials to server", {
+        async before() {
+            this.timeout(300000);
+            this.manager = await setup();
+        },
+        async after() {
+            this.manager && await this.manager.stop();
+        }
+    }, async () => {
         const replSet = new ReplSet([
             new Server("localhost", 33001, { autoReconnect: true }),
             new Server("localhost", 33000, { autoReconnect: true })
@@ -101,11 +108,17 @@ describe("ssl validation", function () {
         await assert.throws(async () => {
             await db.open();
         });
-        await manager.stop();
     });
 
-    it("should correctly receive ping and ha events using ssl", async () => {
-        const manager = await setup();
+    it("should correctly receive ping and ha events using ssl", {
+        async before() {
+            this.timeout(300000);
+            this.manager = await setup();
+        },
+        async after() {
+            this.manager && await this.manager.stop();
+        }
+    }, async () => {
         const replSet = new ReplSet([
             new Server("localhost", 33001, { autoReconnect: true }),
             new Server("localhost", 33000, { autoReconnect: true })
@@ -124,11 +137,17 @@ describe("ssl validation", function () {
         db.serverConfig.once("serverHeartbeatSucceeded", heartbeat);
         await heartbeat.waitForCall();
         await db.close();
-        await manager.stop();
     });
 
-    it("should fail to validate server ssl certificate", async () => {
-        const manager = await setup();
+    it("should fail to validate server ssl certificate", {
+        async before() {
+            this.timeout(300000);
+            this.manager = await setup();
+        },
+        async after() {
+            this.manager && await this.manager.stop();
+        }
+    }, async () => {
         const replSet = new ReplSet([
             new Server("localhost", 33001, { autoReconnect: true }),
             new Server("localhost", 33000, { autoReconnect: true })
@@ -143,11 +162,17 @@ describe("ssl validation", function () {
         await assert.throws(async () => {
             await db.open();
         });
-        await manager.stop();
     });
 
-    it("should correctly validate and present certificate ReplSet", async () => {
-        const manager = await setup();
+    it("should correctly validate and present certificate ReplSet", {
+        async before() {
+            this.timeout(300000);
+            this.manager = await setup();
+        },
+        async after() {
+            this.manager && await this.manager.stop();
+        }
+    }, async () => {
         const replSet = new ReplSet([
             new Server("localhost", 33001, { autoReconnect: true }),
             new Server("localhost", 33000, { autoReconnect: true })
@@ -166,25 +191,31 @@ describe("ssl validation", function () {
         await collection.insert([{ a: 1 }, { b: 2 }, { c: "hello world" }]);
         expect(await collection.find().toArray()).to.have.lengthOf(3);
         await db.close();
-        await manager.stop();
     });
 
-    it("should correctly connect to ssl based replicaset", async () => {
-        const manager = await setup({
-            server: {
-                sslMode: "requireSSL",
-                sslPEMKeyFile: localhostPEMPath
-            },
-            client: {
-                ssl: true,
-                host: "localhost",
-                replSet: "rs",
-                key: clientKey,
-                ca, clientCert,
-                passphrase: "ciferox",
-                rejectUnauthorized: false
-            }
-        });
+    it("should correctly connect to ssl based replicaset", {
+        async before() {
+            this.timeout(300000);
+            this.manager = await setup({
+                server: {
+                    sslMode: "requireSSL",
+                    sslPEMKeyFile: localhostPEMPath
+                },
+                client: {
+                    ssl: true,
+                    host: "localhost",
+                    replSet: "rs",
+                    key: clientKey,
+                    ca, clientCert,
+                    passphrase: "ciferox",
+                    rejectUnauthorized: false
+                }
+            });
+        },
+        async after() {
+            this.manager && await this.manager.stop();
+        }
+    }, async () => {
         const replSet = new ReplSet([
             new Server("localhost", 33001, { autoReconnect: true }),
             new Server("localhost", 33000, { autoReconnect: true })
@@ -198,11 +229,17 @@ describe("ssl validation", function () {
         await db.open();
         expect(await db.collection("test").count()).to.be.equal(0);
         await db.close();
-        await manager.stop();
     });
 
-    it("should fail to validate server ssl certificate", async () => {
-        const manager = await setup();
+    it("should fail to validate server ssl certificate", {
+        async before() {
+            this.timeout(300000);
+            this.manager = await setup();
+        },
+        async after() {
+            this.manager && await this.manager.stop();
+        }
+    }, async () => {
         const replSet = new ReplSet([
             new Server("localhost", 33001, { autoReconnect: true }),
             new Server("localhost", 33000, { autoReconnect: true })
@@ -217,11 +254,17 @@ describe("ssl validation", function () {
         await assert.throws(async () => {
             await db.open();
         });
-        await manager.stop();
     });
 
-    it("should fail due to not presenting certificate to server", async () => {
-        const manager = await setup();
+    it("should fail due to not presenting certificate to server", {
+        async before() {
+            this.timeout(300000);
+            this.manager = await setup();
+        },
+        async after() {
+            this.manager && await this.manager.stop();
+        }
+    }, async () => {
         const replSet = new ReplSet([
             new Server("localhost", 33001, { autoReconnect: true }),
             new Server("localhost", 33000, { autoReconnect: true })
@@ -237,28 +280,34 @@ describe("ssl validation", function () {
         await assert.throws(async () => {
             await db.open();
         });
-        await manager.stop();
     });
 
-    it("should correctly present password protected certificate", async () => {
-        const manager = await setup({
-            server: {
-                sslPEMKeyFile: localhostPEMPath,
-                sslCAFile: caPath,
-                sslCRLFile: crlPEMPath,
-                sslMode: "requireSSL"
-            },
-            client: {
-                host: "localhost",
-                ssl: true,
-                ca,
-                key: clientKey,
-                cert: clientCert,
-                rejectUnauthorized: true,
-                passphrase: "ciferox",
-                replSet: "rs"
-            }
-        });
+    it("should correctly present password protected certificate", {
+        async before() {
+            this.timeout(300000);
+            this.manager = await setup({
+                server: {
+                    sslPEMKeyFile: localhostPEMPath,
+                    sslCAFile: caPath,
+                    sslCRLFile: crlPEMPath,
+                    sslMode: "requireSSL"
+                },
+                client: {
+                    host: "localhost",
+                    ssl: true,
+                    ca,
+                    key: clientKey,
+                    cert: clientCert,
+                    rejectUnauthorized: true,
+                    passphrase: "ciferox",
+                    replSet: "rs"
+                }
+            });
+        },
+        async after() {
+            this.manager && await this.manager.stop();
+        }
+    }, async () => {
         const replSet = new ReplSet([
             new Server("localhost", 33001, { autoReconnect: true }),
             new Server("localhost", 33000, { autoReconnect: true })
@@ -279,22 +328,28 @@ describe("ssl validation", function () {
         await collection.insert([{ a: 1 }, { b: 2 }, { c: "hello world" }]);
         expect(await collection.find({}).toArray()).to.have.lengthOf(3);
         await db.close();
-        await manager.stop();
     });
 
-    it("should correctly validate server ssl certificate", async () => {
-        const manager = await setup({
-            server: {
-                sslPEMKeyFile: localhostPEMPath,
-                sslMode: "requireSSL"
-            },
-            client: {
-                host: "localhost",
-                ssl: true,
-                rejectUnauthorized: false,
-                replSet: "rs"
-            }
-        });
+    it("should correctly validate server ssl certificate", {
+        async before() {
+            this.timeout(300000);
+            this.manager = await setup({
+                server: {
+                    sslPEMKeyFile: localhostPEMPath,
+                    sslMode: "requireSSL"
+                },
+                client: {
+                    host: "localhost",
+                    ssl: true,
+                    rejectUnauthorized: false,
+                    replSet: "rs"
+                }
+            });
+        },
+        async after() {
+            this.manager && await this.manager.stop();
+        }
+    }, async () => {
         const replSet = new ReplSet([
             new Server("localhost", 33001, { autoReconnect: true }),
             new Server("localhost", 33000, { autoReconnect: true })
@@ -312,6 +367,5 @@ describe("ssl validation", function () {
         await collection.insert([{ a: 1 }, { b: 2 }, { c: "hello world" }]);
         expect(await collection.find({}).toArray()).to.have.lengthOf(3);
         await db.close();
-        await manager.stop();
     });
 });

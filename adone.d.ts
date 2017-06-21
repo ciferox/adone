@@ -1,113 +1,115 @@
-namespace adone {
-    const is = {
-        null: (obj: any) => Boolean,
-        undefined: (obj: any) => Boolean,
-        exist: (obj: any) => Boolean,
-        nil: (obj: any) => Boolean,
-        number: (obj: any) => Boolean,
-        numeral: (obj: any) => Boolean,
-        infinite: (obj: any) => Boolean,
-        odd: (obj: any) => Boolean,
-        even: (obj: any) => Boolean,
-        float: (obj: any) => Boolean,
-        negativeZero: (obj: any) => Boolean,
-        string: (obj: any) => Boolean,
-        emptyString: (obj: any) => Boolean,
-        substring: (substring: string, string: string, offset?: number = 0) => Boolean,
-        prefix: (prefix: string, string: string) => Boolean,
-        suffix: (suffix: string, string: string) => Boolean,
-        Boolean: (obj: any) => Boolean,
-        json: (obj: any) => Boolean,
-        object: (obj: any) => Boolean,
-        plainObject: (obj: any) => Boolean,
-        class: (obj: any) => Boolean,
-        emptyObject: (obj: any) => Boolean,
-        propertyOwned: (obj: any, field: string) => Boolean,
-        propertyDefined: (obj: any, field: string) => Boolean,
-        conforms: (obj: object, schema: object, strict: Boolean) => Boolean,
-        arrayLikeObject: (obj: any) => Boolean,
-        inArray: (value: any, array: any[], offset?: number = 0, comparator?: Function) => Boolean,
-        sameType: (value: any, other: any) => Boolean,
-        primitive: (obj: any) => Boolean,
-        equalArrays: (left: any[], right: any[]) => Boolean,
-        deepEqual: (left: any, right: any) => Boolean,
-        shallowEqual: (left: any, right: any) => Boolean,
-        stream: (obj: any) => Boolean,
-        writableStream: (obj: any) => Boolean,
-        readableStream: (obj: any) => Boolean,
-        duplexStream: (obj: any) => Boolean,
-        transformStream: (obj: any) => Boolean,
-        utf8: (obj: Buffer) => Boolean,
-        win32PathAbsolute: (path: string) => Boolean,
-        posixPathAbsolute: (path: string) => Boolean,
-        pathAbsolute: (path: string) => Boolean,
-        glob: (str: string) => Boolean,
-        dotfile: (str: string) => Boolean,
-        function: (obj: any) => Boolean,
-        asyncFunction: (obj: any) => Boolean,
-        promise: (obj: any) => Boolean,
-        validDate: (str: string) => Boolean,
-        buffer: (obj: any) => Boolean,
-        callback: (obj: any) => Boolean,
-        generator: (obj: any) => Boolean,
-        nan: (obj: any) => Boolean,
-        finite: (obj: any) => Boolean,
-        integer: (obj: any) => Boolean,
-        safeInteger: (obj: any) => Boolean,
-        array: (obj: any) => Boolean,
-        uint8Array: (obj: any) => Boolean,
-        configuration: (obj: any) => Boolean,
-        long: (obj: any) => Boolean,
-        bigNumber: (obj: any) => Boolean,
-        exbuffer: (obj: any) => Boolean,
-        exdate: (obj: any) => Boolean,
-        transform: (obj: any) => Boolean,
-        subsystem: (obj: any) => Boolean,
-        application: (obj: any) => Boolean,
-        logger: (obj: any) => Boolean,
-        coreStream: (obj: any) => Boolean,
-        fastStream: (obj: any) => Boolean,
-        fastFSStream: (obj: any) => Boolean,
-        fastFSMapStream: (obj: any) => Boolean,
-        genesisNetron: (obj: any) => Boolean,
-        genesisPeer: (obj: any) => Boolean,
-        netronAdapter: (obj: any) => Boolean,
-        netron: (obj: any) => Boolean,
-        netronPeer: (obj: any) => Boolean,
-        netronDefinition: (obj: any) => Boolean,
-        netronDefinitions: (obj: any) => Boolean,
-        netronReference: (obj: any) => Boolean,
-        netronInterface: (obj: any) => Boolean,
-        netronContext: (obj: any) => Boolean,
-        netronIMethod: (netronInterface: object, name: string) => Boolean,
-        netronIProperty: (netronInterface: any, name: stirng) => Boolean,
-        netronStub: (obj: any) => Boolean,
-        netronRemoteStub: (obj: any) => Boolean,
-        netronStream: (obj: any) => Boolean,
-        iterable: (obj: any) => Boolean,
-        windows: Boolean,
-        linux: Boolean,
-        freebsd: Boolean,
-        darwin: Boolean,
-        sunos: Boolean,
-        uppercase: (str: string) => Boolean,
-        lowercase: (str: string) => Boolean,
-        digits: (str: string) => Boolean,
-        identifier: (str: string) => Boolean,
-        binaryExtension: (str: string) => Boolean,
-        binaryPath: (str: string) => Boolean,
-        ip4: (str: string) => Boolean,
-        ip6: (str: string) => Boolean,
-        arrayBuffer: (obj: any) => Boolean,
-        arrayBufferView: (obj: any) => Boolean,
-        date: (obj: any) => Boolean,
-        error: (obj: any) => Boolean,
-        map: (obj: any) => Boolean,
-        regexp: (obj: any) => Boolean,
-        set: (obj: any) => Boolean,
-        symbol: (obj: any) => Boolean,
-        validUTF8: (obj: any) => Boolean
+declare namespace adone {
+    interface IS {
+        null: (obj: any) => boolean;
+        undefined: (obj: any) => boolean;
+        exist: (obj: any) => boolean;
+        nil: (obj: any) => boolean;
+        number: (obj: any) => boolean;
+        numeral: (obj: any) => boolean;
+        infinite: (obj: any) => boolean;
+        odd: (obj: any) => boolean;
+        even: (obj: any) => boolean;
+        float: (obj: any) => boolean;
+        negativeZero: (obj: any) => boolean;
+        string: (obj: any) => boolean;
+        emptyString: (obj: any) => boolean;
+        substring: (substring: string, string: string, offset?: number) => boolean;
+        prefix: (prefix: string, string: string) => boolean;
+        suffix: (suffix: string, string: string) => boolean;
+        boolean: (obj: any) => boolean;
+        json: (obj: any) => boolean;
+        object: (obj: any) => boolean;
+        plainObject: (obj: any) => boolean;
+        class: (obj: any) => boolean;
+        emptyObject: (obj: any) => boolean;
+        propertyOwned: (obj: any, field: string) => boolean;
+        propertyDefined: (obj: any, field: string) => boolean;
+        conforms: (obj: object, schema: object, strict: boolean) => boolean;
+        arrayLikeObject: (obj: any) => boolean;
+        inArray: (value: any, array: any[], offset?: number, comparator?: Function) => boolean;
+        sameType: (value: any, other: any) => boolean;
+        primitive: (obj: any) => boolean;
+        equalArrays: (left: any[], right: any[]) => boolean;
+        deepEqual: (left: any, right: any) => boolean;
+        shallowEqual: (left: any, right: any) => boolean;
+        stream: (obj: any) => boolean;
+        writableStream: (obj: any) => boolean;
+        readableStream: (obj: any) => boolean;
+        duplexStream: (obj: any) => boolean;
+        transformStream: (obj: any) => boolean;
+        utf8: (obj: Buffer) => boolean;
+        win32PathAbsolute: (path: string) => boolean;
+        posixPathAbsolute: (path: string) => boolean;
+        pathAbsolute: (path: string) => boolean;
+        glob: (str: string) => boolean;
+        dotfile: (str: string) => boolean;
+        function: (obj: any) => boolean;
+        asyncFunction: (obj: any) => boolean;
+        promise: (obj: any) => boolean;
+        validDate: (str: string) => boolean;
+        buffer: (obj: any) => boolean;
+        callback: (obj: any) => boolean;
+        generator: (obj: any) => boolean;
+        nan: (obj: any) => boolean;
+        finite: (obj: any) => boolean;
+        integer: (obj: any) => boolean;
+        safeInteger: (obj: any) => boolean;
+        array: (obj: any) => boolean;
+        uint8Array: (obj: any) => boolean;
+        configuration: (obj: any) => boolean;
+        long: (obj: any) => boolean;
+        bigNumber: (obj: any) => boolean;
+        exbuffer: (obj: any) => boolean;
+        exdate: (obj: any) => boolean;
+        transform: (obj: any) => boolean;
+        subsystem: (obj: any) => boolean;
+        application: (obj: any) => boolean;
+        logger: (obj: any) => boolean;
+        coreStream: (obj: any) => boolean;
+        fastStream: (obj: any) => boolean;
+        fastFSStream: (obj: any) => boolean;
+        fastFSMapStream: (obj: any) => boolean;
+        genesisNetron: (obj: any) => boolean;
+        genesisPeer: (obj: any) => boolean;
+        netronAdapter: (obj: any) => boolean;
+        netron: (obj: any) => boolean;
+        netronPeer: (obj: any) => boolean;
+        netronDefinition: (obj: any) => boolean;
+        netronDefinitions: (obj: any) => boolean;
+        netronReference: (obj: any) => boolean;
+        netronInterface: (obj: any) => boolean;
+        netronContext: (obj: any) => boolean;
+        netronIMethod: (netronInterface: object, name: string) => boolean;
+        netronIProperty: (netronInterface: any, name: string) => boolean;
+        netronStub: (obj: any) => boolean;
+        netronRemoteStub: (obj: any) => boolean;
+        netronStream: (obj: any) => boolean;
+        iterable: (obj: any) => boolean;
+        windows: boolean;
+        linux: boolean;
+        freebsd: boolean;
+        darwin: boolean;
+        sunos: boolean;
+        uppercase: (str: string) => boolean;
+        lowercase: (str: string) => boolean;
+        digits: (str: string) => boolean;
+        identifier: (str: string) => boolean;
+        binaryExtension: (str: string) => boolean;
+        binaryPath: (str: string) => boolean;
+        ip4: (str: string) => boolean;
+        ip6: (str: string) => boolean;
+        arrayBuffer: (obj: any) => boolean;
+        arrayBufferView: (obj: any) => boolean;
+        date: (obj: any) => boolean;
+        error: (obj: any) => boolean;
+        map: (obj: any) => boolean;
+        regexp: (obj: any) => boolean;
+        set: (obj: any) => boolean;
+        symbol: (obj: any) => boolean;
+        validUTF8: (obj: any) => boolean;
     }
+
+    export var is: IS;
 
     namespace x {
         class Exception extends Error { }
@@ -194,8 +196,8 @@ namespace adone {
         namespace dgram { export * from "dgram"; }
     }
 
-    const truly = () => true;
-    const falsely = () => false;
+    export var truly: () => boolean;
+    export var falsely: () => boolean;
 }
 
 module "adone" {

@@ -19,24 +19,31 @@ describe("ssl x509", function () {
 
     const username = "CN=localhost,OU=heyho,O=Internet Widgits Pty Ltd,ST=Some-State,C=AU";
 
-    it("should correctly authenticate using x509", async () => {
-        const manager = new ServerManager("mongod", {
-            dbpath: (await this.tmpdir.addDirectory("27019")).path(),
-            port: 27019,
-            sslCAFile: caPath,
-            sslPEMKeyFile: localhostPEMPath,
-            sslCRLFile: crlPEMPath,
-            sslMode: "requireSSL",
-            sslWeakCertificateValidation: null
-        }, {
-            ssl: true,
-            host: "localhost",
-            key: clientNoPassPEM,
-            cert: clientNoPassPEM,
-            rejectUnauthorized: false
-        });
-        await manager.purge();
-        await manager.start();
+    it("should correctly authenticate using x509", {
+        async before() {
+            this.manager = new ServerManager("mongod", {
+                dbpath: (await this.tmpdir.addDirectory("27019")).path(),
+                port: 27019,
+                sslCAFile: caPath,
+                sslPEMKeyFile: localhostPEMPath,
+                sslCRLFile: crlPEMPath,
+                sslMode: "requireSSL",
+                sslWeakCertificateValidation: null
+            }, {
+                ssl: true,
+                host: "localhost",
+                key: clientNoPassPEM,
+                cert: clientNoPassPEM,
+                rejectUnauthorized: false
+            });
+
+            await this.manager.purge();
+            await this.manager.start();
+        },
+        async after() {
+            this.manager && await this.manager.stop();
+        }
+    }, async () => {
         let db = await mongo.connect("mongodb://localhost:27019/test?ssl=true&maxPoolSize=1", {
             server: {
                 sslKey: clientNoPassKey,
@@ -48,7 +55,6 @@ describe("ssl x509", function () {
         const version = parseInt(result.versionArray.slice(0, 3).join(""), 10);
         if (version < 253) {
             await db.close();
-            await manager.stop();
             return;
         }
         // Add the X509 auth user to the $external db
@@ -71,27 +77,32 @@ describe("ssl x509", function () {
             }
         });
         await db.close();
-        await manager.stop();
     });
 
-    it("should correctly handle bad x509 certificate", async () => {
-        const manager = new ServerManager("mongod", {
-            dbpath: (await this.tmpdir.addDirectory("27019")).path(),
-            port: 27019,
-            sslCAFile: caPath,
-            sslPEMKeyFile: localhostPEMPath,
-            sslCRLFile: crlPEMPath,
-            sslMode: "requireSSL",
-            sslWeakCertificateValidation: null
-        }, {
-            ssl: true,
-            host: "localhost",
-            key: clientNoPassPEM,
-            cert: clientNoPassPEM,
-            rejectUnauthorized: false
-        });
-        await manager.purge();
-        await manager.start();
+    it("should correctly handle bad x509 certificate", {
+        async before() {
+            this.manager = new ServerManager("mongod", {
+                dbpath: (await this.tmpdir.addDirectory("27019")).path(),
+                port: 27019,
+                sslCAFile: caPath,
+                sslPEMKeyFile: localhostPEMPath,
+                sslCRLFile: crlPEMPath,
+                sslMode: "requireSSL",
+                sslWeakCertificateValidation: null
+            }, {
+                ssl: true,
+                host: "localhost",
+                key: clientNoPassPEM,
+                cert: clientNoPassPEM,
+                rejectUnauthorized: false
+            });
+            await this.manager.purge();
+            await this.manager.start();
+        },
+        async after() {
+            this.manager && await this.manager.stop();
+        }
+    }, async () => {
         const db = await mongo.connect("mongodb://localhost:27019/test?ssl=true&maxPoolSize=1", {
             server: {
                 sslKey: clientNoPassKey,
@@ -103,7 +114,6 @@ describe("ssl x509", function () {
         const version = parseInt(result.versionArray.slice(0, 3).join(""), 10);
         if (version < 253) {
             await db.close();
-            await manager.stop();
             return;
         }
         // Add the X509 auth user to the $external db
@@ -126,27 +136,32 @@ describe("ssl x509", function () {
                 }
             });
         }, "auth failed");
-        await manager.stop();
     });
 
-    it("should give reasonable error on x509 authentication failure", async () => {
-        const manager = new ServerManager("mongod", {
-            dbpath: (await this.tmpdir.addDirectory("27019")).path(),
-            port: 27019,
-            sslCAFile: caPath,
-            sslPEMKeyFile: localhostPEMPath,
-            sslCRLFile: crlPEMPath,
-            sslMode: "requireSSL",
-            sslWeakCertificateValidation: null
-        }, {
-            ssl: true,
-            host: "localhost",
-            key: clientNoPassPEM,
-            cert: clientNoPassPEM,
-            rejectUnauthorized: false
-        });
-        await manager.purge();
-        await manager.start();
+    it("should give reasonable error on x509 authentication failure", {
+        async before() {
+            this.manager = new ServerManager("mongod", {
+                dbpath: (await this.tmpdir.addDirectory("27019")).path(),
+                port: 27019,
+                sslCAFile: caPath,
+                sslPEMKeyFile: localhostPEMPath,
+                sslCRLFile: crlPEMPath,
+                sslMode: "requireSSL",
+                sslWeakCertificateValidation: null
+            }, {
+                ssl: true,
+                host: "localhost",
+                key: clientNoPassPEM,
+                cert: clientNoPassPEM,
+                rejectUnauthorized: false
+            });
+            await this.manager.purge();
+            await this.manager.start();
+        },
+        async after() {
+            this.manager && await this.manager.stop();
+        }
+    }, async () => {
         const db = await mongo.connect("mongodb://localhost:27019/test?ssl=true&maxPoolSize=1", {
             server: {
                 sslKey: clientNoPassKey,
@@ -158,7 +173,6 @@ describe("ssl x509", function () {
         const version = parseInt(result.versionArray.slice(0, 3).join(""), 10);
         if (version < 253) {
             await db.close();
-            await manager.stop();
             return;
         }
         // Add the X509 auth user to the $external db
@@ -181,16 +195,21 @@ describe("ssl x509", function () {
                 }
             });
         }, "auth failed");
-        await manager.stop();
     });
 
-    it("should give helpful error when attempting to use x509 without SSL", async () => {
-        const manager = new ServerManager("mongod", {
-            dbpath: (await this.tmpdir.addDirectory("27019")).path(),
-            port: 27019
-        });
-        await manager.purge();
-        await manager.start();
+    it("should give helpful error when attempting to use x509 without SSL", {
+        async before() {
+            this.manager = new ServerManager("mongod", {
+                dbpath: (await this.tmpdir.addDirectory("27019")).path(),
+                port: 27019
+            });
+            await this.manager.purge();
+            await this.manager.start();
+        },
+        async after() {
+            this.manager && await this.manager.stop();
+        }
+    }, async () => {
         const db = await mongo.connect("mongodb://localhost:27019/test?ssl=false&maxPoolSize=1", {
             server: {
                 sslKey: clientNoPassKey,
@@ -202,7 +221,6 @@ describe("ssl x509", function () {
         const version = parseInt(result.versionArray.slice(0, 3).join(""), 10);
         if (version < 253) {
             await db.close();
-            await manager.stop();
             return;
         }
         // Add the X509 auth user to the $external db
@@ -225,27 +243,32 @@ describe("ssl x509", function () {
                 }
             });
         }, "SSL support is required for the MONGODB-X509 mechanism");
-        await manager.stop();
     });
 
-    it("should correctly reauthenticate against x509", async () => {
-        const manager = new ServerManager("mongod", {
-            dbpath: (await this.tmpdir.addDirectory("27019")).path(),
-            port: 27019,
-            sslCAFile: caPath,
-            sslPEMKeyFile: localhostPEMPath,
-            sslCRLFile: crlPEMPath,
-            sslMode: "requireSSL",
-            sslWeakCertificateValidation: null
-        }, {
-            ssl: true,
-            host: "localhost",
-            key: clientNoPassPEM,
-            cert: clientNoPassPEM,
-            rejectUnauthorized: false
-        });
-        await manager.purge();
-        await manager.start();
+    it("should correctly reauthenticate against x509", {
+        async before() {
+            this.manager = new ServerManager("mongod", {
+                dbpath: (await this.tmpdir.addDirectory("27019")).path(),
+                port: 27019,
+                sslCAFile: caPath,
+                sslPEMKeyFile: localhostPEMPath,
+                sslCRLFile: crlPEMPath,
+                sslMode: "requireSSL",
+                sslWeakCertificateValidation: null
+            }, {
+                ssl: true,
+                host: "localhost",
+                key: clientNoPassPEM,
+                cert: clientNoPassPEM,
+                rejectUnauthorized: false
+            });
+            await this.manager.purge();
+            await this.manager.start();
+        },
+        async after() {
+            this.manager && await this.manager.stop();
+        }
+    }, async () => {
         let db = await mongo.connect("mongodb://localhost:27019/test?ssl=true&maxPoolSize=1", {
             server: {
                 sslKey: clientNoPassKey,
@@ -257,7 +280,6 @@ describe("ssl x509", function () {
         const version = parseInt(result.versionArray.slice(0, 3).join(""), 10);
         if (version < 253) {
             await db.close();
-            await manager.stop();
             return;
         }
         // Add the X509 auth user to the $external db
@@ -292,6 +314,5 @@ describe("ssl x509", function () {
         doc = await collection.findOne();
         expect(doc.a).to.be.equal(1);
         await db.close();
-        await manager.stop();
     });
 });

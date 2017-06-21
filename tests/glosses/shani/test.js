@@ -4165,6 +4165,33 @@ describe("Engine", () => {
                     "2"
                 ]);
             });
+
+            it("should pass metadata", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                const chain = [];
+                describe("1", () => {
+                    it("1", {
+                        before: [
+                            ["descr 1", () => {}],
+                            () => {},
+                            ["descr 3", () => {}]
+                        ]
+                    }, () => {});
+
+                    it("2", () => {});
+                });
+                const emitter = start();
+                emitter
+                    .on("end before test hook", ({ meta }) => {
+                        chain.push([meta]);
+                    });
+                await waitFor(emitter, "done");
+                assert.equal(chain.length, 3);
+                for (const meta of chain) {
+                    assert.ok(meta);
+                }
+            });
         });
 
         describe("after", () => {
@@ -4322,6 +4349,33 @@ describe("Engine", () => {
                     ["end", "1", "1", "descr 3"],
                     "2"
                 ]);
+            });
+
+            it("should pass metadata", async () => {
+                const engine = new Engine();
+                const { describe, it, start } = engine.context();
+                const chain = [];
+                describe("1", () => {
+                    it("1", {
+                        after: [
+                            ["descr 1", () => {}],
+                            () => {},
+                            ["descr 3", () => {}]
+                        ]
+                    }, () => {});
+
+                    it("2", () => {});
+                });
+                const emitter = start();
+                emitter
+                    .on("end after test hook", ({ meta }) => {
+                        chain.push([meta]);
+                    });
+                await waitFor(emitter, "done");
+                assert.equal(chain.length, 3);
+                for (const meta of chain) {
+                    assert.ok(meta);
+                }
             });
         });
     });

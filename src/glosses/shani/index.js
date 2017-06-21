@@ -10,7 +10,7 @@ class Hook {
     constructor(description, callback, runtimeContext) {
         this.description = description;
         this.callback = callback;
-        this._timeout = 5000;  // global hook timeout
+        this._timeout = 5000; // global hook timeout
         this._fired = false;
         this._failed = null;
         this.runtimeContext = runtimeContext;
@@ -864,7 +864,7 @@ export class Engine {
                                             emitter.emit("start before test hook", { block, test: node, hook });
                                             // eslint-disable-next-line no-await-in-loop
                                             const meta = await hook.run();
-                                            emitter.emit("end before test hook", { block, test: node, hook });
+                                            emitter.emit("end before test hook", { block, test: node, hook, meta });
                                             if (meta.err) {
                                                 hookFailed = true;
                                                 break;
@@ -895,7 +895,7 @@ export class Engine {
                                             emitter.emit("start after test hook", { block, test: node, hook });
                                             // eslint-disable-next-line no-await-in-loop
                                             const meta = await hook.run();
-                                            emitter.emit("end after test hook", { block, test: node, hook });
+                                            emitter.emit("end after test hook", { block, test: node, hook, meta });
                                             if (meta.err) {
                                                 hookFailed = true;
                                                 break;
@@ -1107,7 +1107,9 @@ export class Engine {
                         "start before hook", "end before hook",
                         "start after hook", "end after hook",
                         "start before each hook", "end before each hook",
-                        "start after each hook", "end after each hook"
+                        "start before test hook", "end before test hook",
+                        "start after each hook", "end after each hook",
+                        "start after test hook", "end after test hook"
                     ];
                     for (const e of events) {
                         executing.on(e, (...data) => {
@@ -1233,12 +1235,16 @@ export const consoleReporter = ({
             emitter
                 .on("start before hook", startHookHandler("before"))
                 .on("start before each hook", startHookHandler("before each"))
+                .on("start before test hook", startHookHandler("before test"))
                 .on("start after hook", startHookHandler("after"))
                 .on("start after each hook", startHookHandler("after each"))
+                .on("start after test hook", startHookHandler("after test"))
                 .on("end before hook", endHookHandler("before"))
                 .on("end before each hook", endHookHandler("before each"))
+                .on("end before test hook", endHookHandler("before test"))
                 .on("end after hook", endHookHandler("after"))
-                .on("end after each hook", endHookHandler("after each"));
+                .on("end after each hook", endHookHandler("after each"))
+                .on("end after test hook", endHookHandler("after test"));
         }
 
         let enteredBlocks = [];
@@ -1531,12 +1537,16 @@ export const minimalReporter = () => {
         emitter
             .on("start before hook", startHookHandler("before"))
             .on("start before each hook", startHookHandler("before each"))
+            .on("start before test hook", startHookHandler("before test"))
             .on("start after hook", startHookHandler("after"))
             .on("start after each hook", startHookHandler("after each"))
+            .on("start after test hook", startHookHandler("after test"))
             .on("end before hook", endHookHandler("before"))
             .on("end before each hook", endHookHandler("before each"))
+            .on("end before test hook", endHookHandler("before test"))
             .on("end after hook", endHookHandler("after"))
-            .on("end after each hook", endHookHandler("after each"));
+            .on("end after each hook", endHookHandler("after each"))
+            .on("end after test hook", endHookHandler("after test"));
 
         emitter
             .on("enter block", reportOnThrow(({ block }) => {
@@ -1759,8 +1769,10 @@ export const simpleReporter = ({
             emitter
                 .on("end before hook", endHookHandler("before"))
                 .on("end before each hook", endHookHandler("before each"))
+                .on("end before test hook", endHookHandler("before test"))
                 .on("end after hook", endHookHandler("after"))
-                .on("end after each hook", endHookHandler("after each"));
+                .on("end after each hook", endHookHandler("after each"))
+                .on("end after test hook", endHookHandler("after test"));
         }
 
         let enteredBlocks = [];

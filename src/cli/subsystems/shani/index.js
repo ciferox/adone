@@ -183,7 +183,9 @@ export default class ShaniCLI extends adone.application.Subsystem {
             .on("end before hook", hookListener("before"))
             .on("end after hook", hookListener("after"))
             .on("end before each hook", hookListener("beforeEach"))
+            .on("end before test hook", hookListener("beforeTest"))
             .on("end after each hook", hookListener("afterEach"))
+            .on("end after test hook", hookListener("afterTest"))
             .on("error", () => {
                 failed = true;
             })
