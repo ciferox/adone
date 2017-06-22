@@ -1,17 +1,18 @@
 describe("connection", function () {
     const { database: { mongo } } = adone;
+    const { __: { Db, Server } } = mongo;
 
     if (this.topology === "single") {
         const openSocketDb = (opts = {}) => {
             opts = Object.assign({ poolSize: 1 }, opts);
-            return new mongo.Db(this.database, new mongo.Server("/tmp/mongodb-27017.sock", undefined, opts), {
+            return new Db(this.database, new Server("/tmp/mongodb-27017.sock", undefined, opts), {
                 w: 1
             }).open();
         };
 
         const getDb = (opts = {}) => {
             opts = Object.assign({ poolSize: 1 }, opts);
-            return new mongo.Db(this.database, new mongo.Server(this.host, this.port, opts), {
+            return new Db(this.database, new Server(this.host, this.port, opts), {
                 w: 1
             });
         };
@@ -39,7 +40,7 @@ describe("connection", function () {
         });
 
         it("Should correctly connect to server using just events", async () => {
-            const db = new mongo.Db(this.database, new mongo.Server(this.host, this.port, { poolSize: 1 }), {
+            const db = new Db(this.database, new Server(this.host, this.port, { poolSize: 1 }), {
                 w: 1
             });
             const open = new Promise((resolve) => db.on("open", resolve));
@@ -58,7 +59,7 @@ describe("connection", function () {
 
         it("should fail to connect using non-domain socket with undefined port", async () => {
             expect(() => {
-                new mongo.Db("test", new mongo.Server("localhost", undefined), { w: 0 });
+                new Db("test", new Server("localhost", undefined), { w: 0 });
             }).to.throw();
         });
 

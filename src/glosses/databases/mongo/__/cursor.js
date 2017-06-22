@@ -1,21 +1,10 @@
-const { is } = adone;
-const f = require("util").format;
-const formattedOrderClause = require("./utils").formattedOrderClause;
-const handleCallback = require("./utils").handleCallback;
-const ReadPreference = require("./read_preference");
-const MongoError = require("../core").MongoError;
-const Readable = require("stream").Readable;
-const Define = require("./metadata");
-const CoreCursor = require("../core").Cursor;
-const Map = adone.data.bson.Map;
-const CoreReadPreference = require("../core").ReadPreference;
+const { is, database: { mongo }, std: { stream: { Readable } } } = adone;
+const { __, MongoError, core, ReadPreference } = mongo;
+const { metadata, utils: { formattedOrderClause, handleCallback } } = __;
+const { classMethod } = metadata;
 
 const flags = ["tailable", "oplogReplay", "noCursorTimeout", "awaitData", "exhaust", "partial"];
 const fields = ["numberOfRetries", "tailableRetryInterval"];
-const push = Array.prototype.push;
-
-const { metadata } = Define;
-const { classMethod } = metadata;
 
 class CursorStream extends Readable {
     constructor(cursor, opts) {
@@ -53,7 +42,7 @@ class CursorStream extends Readable {
 }
 
 @metadata("Cursor")
-class Cursor extends CoreCursor {
+export default class Cursor extends core.Cursor {
     constructor(bson, ns, cmd, options, topology, topologyOptions) {
         super(bson, ns, cmd, options, topology, topologyOptions);
         const state = Cursor.INIT;
@@ -116,7 +105,7 @@ class Cursor extends CoreCursor {
         }
 
         // Get the next object
-        this._next((err, doc) => {
+        super.next((err, doc) => {
             this.s.state = Cursor.OPEN;
             if (err) {
                 return handleCallback(callback, err);
@@ -272,7 +261,7 @@ class Cursor extends CoreCursor {
             throw MongoError.create({ message: "Cursor is closed", driver: true });
         }
         if (!fields.includes(field)) {
-            throw MongoError.create({ message: f("option %s not a supported option %s", field, fields), driver: true });
+            throw MongoError.create({ message: `option ${field} not a supported option ${fields.join(", ")}`, driver: true });
         }
         this.s[field] = value;
         if (field === "numberOfRetries") {
@@ -287,10 +276,10 @@ class Cursor extends CoreCursor {
             throw MongoError.create({ message: "Cursor is closed", driver: true });
         }
         if (!flags.includes(flag)) {
-            throw MongoError.create({ message: f("flag %s not a supported flag %s", flag, flags), driver: true });
+            throw MongoError.create({ message: `flag ${flag} not a supported flag ${flags.join(", ")}`, driver: true });
         }
         if (!is.boolean(value)) {
-            throw MongoError.create({ message: f("flag %s must be a boolean value", flag), driver: true });
+            throw MongoError.create({ message: `flag ${flag} must be a boolean value`, driver: true });
         }
         this.s.cmd[flag] = value;
         return this;
@@ -302,7 +291,7 @@ class Cursor extends CoreCursor {
             throw MongoError.create({ message: "Cursor is closed", driver: true });
         }
         if (name[0] !== "$") {
-            throw MongoError.create({ message: f("%s is not a valid query modifier"), driver: true });
+            throw MongoError.create({ message: `${name} is not a valid query modifier`, driver: true });
         }
         // Strip of the $
         const field = name.substr(1);
@@ -370,7 +359,7 @@ class Cursor extends CoreCursor {
         // We have an array of arrays, we need to preserve the order of the sort
         // so we will us a Map
         if (is.array(order) && is.array(order[0])) {
-            order = new Map(order.map((x) => {
+            order = new mongo.Map(order.map((x) => {
                 const value = [x[0], null];
                 if (x[1] === "asc") {
                     value[1] = 1;
@@ -467,7 +456,7 @@ class Cursor extends CoreCursor {
 
         if (this.bufferedCount() > 0) {
             do {
-                this._next(callback);
+                super.next(callback);
             } while (this.bufferedCount() !== 0);
             this._each(callback);
         } else {
@@ -520,12 +509,12 @@ class Cursor extends CoreCursor {
             throw MongoError.create({ message: "cannot change cursor readPreference after cursor has been accessed", driver: true });
         }
         if (r instanceof ReadPreference) {
-            this.s.options.readPreference = new CoreReadPreference(r.mode, r.tags, {
+            this.s.options.readPreference = new core.ReadPreference(r.mode, r.tags, {
                 maxStalenessSeconds: r.maxStalenessSeconds
             });
         } else if (is.string(r)) {
-            this.s.options.readPreference = new CoreReadPreference(r);
-        } else if (r instanceof CoreReadPreference) {
+            this.s.options.readPreference = new core.ReadPreference(r);
+        } else if (r instanceof core.ReadPreference) {
             this.s.options.readPreference = r;
         }
 
@@ -541,7 +530,7 @@ class Cursor extends CoreCursor {
 
         // Fetch all the documents
         const fetchDocs = () => {
-            this._next((err, doc) => {
+            super.next((err, doc) => {
                 if (err) {
                     return handleCallback(callback, err);
                 }
@@ -562,7 +551,7 @@ class Cursor extends CoreCursor {
                         docs = docs.map(this.s.transforms.doc);
                     }
 
-                    push.apply(items, docs);
+                    items.push(...docs);
                 }
 
                 // Attempt a fetch
@@ -649,7 +638,7 @@ class Cursor extends CoreCursor {
         this.server = this.topology;
 
         // Execute the command
-        this.topology.command(f("%s.$cmd", this.s.ns.substr(0, delimiter)), command, (err, result) => {
+        this.topology.command(`${this.s.ns.substr(0, delimiter)}.$cmd`, command, (err, result) => {
             callback(err, result ? result.result.n : null);
         }, this.options);
     }
@@ -732,12 +721,12 @@ class Cursor extends CoreCursor {
         }
 
         if (is.function(callback)) {
-            return this._next(callback);
+            return super.next(callback);
         }
 
         // Return a Promise
         return new this.s.promiseLibrary((resolve, reject) => {
-            this._next((err, r) => {
+            super.next((err, r) => {
                 if (err) {
                     return reject(err);
                 }
@@ -775,8 +764,6 @@ class Cursor extends CoreCursor {
     }
 }
 
-CoreCursor.prototype._next = CoreCursor.prototype.next;
-
 Cursor.prototype.maxTimeMs = Cursor.prototype.maxTimeMS;
 Cursor.define.classMethod("maxTimeMs", { callback: false, promise: false, fluent: true });
 
@@ -792,5 +779,3 @@ Cursor.INIT = 0;
 Cursor.OPEN = 1;
 Cursor.CLOSED = 2;
 Cursor.GET_MORE = 3;
-
-module.exports = Cursor;

@@ -14,7 +14,7 @@ describe("connection string", function () {
             for (const { auth, description, hosts, options, uri, valid, warning } of data.tests) {
                 let success = true;
                 try {
-                    mongo.parseUrl(uri);
+                    mongo.__.parseUrl(uri);
                     if (valid === false) {
                         success = false;
                     }

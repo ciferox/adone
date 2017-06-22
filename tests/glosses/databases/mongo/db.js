@@ -1,30 +1,31 @@
 describe("db", function () {
     const { database: { mongo }, data: { bson } } = adone;
+    const { __: { Db } } = mongo;
 
     if (this.topology === "single") {
         it("should correctly handle illegal db names", async () => {
             assert.throws(() => {
-                new mongo.Db(5);
+                new Db(5);
             }, "database name must be a string");
 
             assert.throws(() => {
-                new mongo.Db("");
+                new Db("");
             }, "database name cannot be the empty string");
 
             assert.throws(() => {
-                new mongo.Db("te$t");
+                new Db("te$t");
             }, "database names cannot contain the character '$'");
 
             assert.throws(() => {
-                new mongo.Db(".test");
+                new Db(".test");
             }, "database names cannot contain the character '.'");
 
             assert.throws(() => {
-                new mongo.Db("\\test");
+                new Db("\\test");
             }, "database names cannot contain the character '\\'");
 
             assert.throws(() => {
-                new mongo.Db("test test");
+                new Db("test test");
             }, "database names cannot contain the character ' '");
         });
 

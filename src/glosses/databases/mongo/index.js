@@ -1,25 +1,10 @@
-const { lazify } = adone;
+const { is, lazify } = adone;
 
 const mongo = lazify({
+    __: "./__",
     core: "./core",
-    Instrumentation: "./lib/apm",
-    connect: ["./lib/mongo_client", (x) => x.connect],
-    MongoClient: "./lib/mongo_client",
+    MongoClient: "./client",
     MongoError: () => mongo.core.MongoError,
-    Admin: "./lib/admin",
-    Db: "./lib/db",
-    Collection: "./lib/collection",
-    Server: "./lib/server",
-    ReplSet: "./lib/replset",
-    Mongos: "./lib/mongos",
-    ReadPreference: "./lib/read_preference",
-    GridStore: "./lib/gridfs/grid_store",
-    Chunk: "./lib/gridfs/chunk",
-    Logger: () => mongo.core.Logger,
-    Cursor: "./lib/cursor",
-    GridFSBucket: "./lib/gridfs-stream",
-    CoreServer: () => mongo.core.Server,
-    CoreConnection: () => mongo.core.Connection,
     Binary: () => adone.data.bson.Binary,
     Code: () => adone.data.bson.Code,
     Map: () => adone.data.bson.Map,
@@ -34,11 +19,16 @@ const mongo = lazify({
     Timestamp: () => adone.data.bson.Timestamp,
     Decimal128: () => adone.data.bson.Decimal128,
     BSONRegExp: () => adone.data.bson.BSONRegExp,
-    instrument: () => function (options, callback) {
-        if (typeof options === "function") {
-            callback = options, options = {};
-        }
-        return new mongo.Instrumentation(mongo.core, options, callback);
-    },
-    parseUrl: "./lib/url_parser"
+    ReadPreference: "./read_preference",
+    GridFSBucket: "./gridfs_stream",
+    GridStore: "./grid_store"
 }, exports, require);
+
+export const instrument = (options, callback) => {
+    if (is.function(options)) {
+        [callback, options] = [options, {}];
+    }
+    return new mongo.__.Instrumentation(mongo.core, options, callback);
+};
+
+export const connect = (...args) => new mongo.MongoClient({ relayEvents: false }).connect(...args);

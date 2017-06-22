@@ -1,8 +1,7 @@
-const shallowClone = require("./utils").shallowClone;
-const handleCallback = require("./utils").handleCallback;
-const MongoError = require("../core").MongoError;
+const { is, database: { mongo } } = adone;
+const { MongoError, __: { utils: { shallowClone, handleCallback } } } = mongo;
 
-const authenticate = function (self, username, password, options, callback) {
+const _authenticate = (self, username, password, options, callback) => {
     // Did the user destroy the topology
     if (self.serverConfig && self.serverConfig.isDestroyed()) {
         return callback(new MongoError("topology was destroyed"));
@@ -16,7 +15,7 @@ const authenticate = function (self, username, password, options, callback) {
     authdb = options.authSource ? options.authSource : authdb;
 
     // Callback
-    const _callback = function (err, result) {
+    const _callback = (err, result) => {
         if (self.listeners("authenticated").length > 0) {
             self.emit("authenticated", err, result);
         }
@@ -30,36 +29,36 @@ const authenticate = function (self, username, password, options, callback) {
     authMechanism = authMechanism.toUpperCase();
 
     // If classic auth delegate to auth command
-    if (authMechanism == "MONGODB-CR") {
+    if (authMechanism === "MONGODB-CR") {
         self.s.topology.auth("mongocr", authdb, username, password, (err) => {
             if (err) {
                 return handleCallback(callback, err, false);
             }
             _callback(null, true);
         });
-    } else if (authMechanism == "PLAIN") {
+    } else if (authMechanism === "PLAIN") {
         self.s.topology.auth("plain", authdb, username, password, (err) => {
             if (err) {
                 return handleCallback(callback, err, false);
             }
             _callback(null, true);
         });
-    } else if (authMechanism == "MONGODB-X509") {
+    } else if (authMechanism === "MONGODB-X509") {
         self.s.topology.auth("x509", authdb, username, password, (err) => {
             if (err) {
                 return handleCallback(callback, err, false);
             }
             _callback(null, true);
         });
-    } else if (authMechanism == "SCRAM-SHA-1") {
+    } else if (authMechanism === "SCRAM-SHA-1") {
         self.s.topology.auth("scram-sha-1", authdb, username, password, (err) => {
             if (err) {
                 return handleCallback(callback, err, false);
             }
             _callback(null, true);
         });
-    } else if (authMechanism == "GSSAPI") {
-        if (process.platform == "win32") {
+    } else if (authMechanism === "GSSAPI") {
+        if (process.platform === "win32") {
             self.s.topology.auth("sspi", authdb, username, password, options, (err) => {
                 if (err) {
                     return handleCallback(callback, err, false);
@@ -74,7 +73,7 @@ const authenticate = function (self, username, password, options, callback) {
                 _callback(null, true);
             });
         }
-    } else if (authMechanism == "DEFAULT") {
+    } else if (authMechanism === "DEFAULT") {
         self.s.topology.auth("default", authdb, username, password, (err) => {
             if (err) {
                 return handleCallback(callback, err, false);
@@ -82,12 +81,15 @@ const authenticate = function (self, username, password, options, callback) {
             _callback(null, true);
         });
     } else {
-        handleCallback(callback, MongoError.create({ message: f("authentication mechanism %s not supported", options.authMechanism), driver: true }));
+        handleCallback(callback, MongoError.create({
+            message: `authentication mechanism ${options.authMechanism} not supported`,
+            driver: true
+        }));
     }
 };
 
-module.exports = function (self, username, password, options, callback) {
-    if (typeof options === "function") {
+export default function authenticate(self, username, password, options, callback) {
+    if (is.function(options)) {
         callback = options, options = {};
     }
     // Shallow copy the options
@@ -96,20 +98,25 @@ module.exports = function (self, username, password, options, callback) {
     // Set default mechanism
     if (!options.authMechanism) {
         options.authMechanism = "DEFAULT";
-    } else if (options.authMechanism != "GSSAPI"
-        && options.authMechanism != "DEFAULT"
-        && options.authMechanism != "MONGODB-CR"
-        && options.authMechanism != "MONGODB-X509"
-        && options.authMechanism != "SCRAM-SHA-1"
-        && options.authMechanism != "PLAIN") {
-        return handleCallback(callback, MongoError.create({ message: "only DEFAULT, GSSAPI, PLAIN, MONGODB-X509, SCRAM-SHA-1 or MONGODB-CR is supported by authMechanism", driver: true }));
+    } else if (
+        options.authMechanism !== "GSSAPI" &&
+        options.authMechanism !== "DEFAULT" &&
+        options.authMechanism !== "MONGODB-CR" &&
+        options.authMechanism !== "MONGODB-X509" &&
+        options.authMechanism !== "SCRAM-SHA-1" &&
+        options.authMechanism !== "PLAIN"
+    ) {
+        return handleCallback(callback, MongoError.create({
+            message: "only DEFAULT, GSSAPI, PLAIN, MONGODB-X509, SCRAM-SHA-1 or MONGODB-CR is supported by authMechanism",
+            driver: true
+        }));
     }
 
     // If we have a callback fallback
-    if (typeof callback === "function") {
-        return authenticate(self, username, password, options, (err, r) => {
-        // Support failed auth method
-            if (err && err.message && err.message.indexOf("saslStart") != -1) {
+    if (is.function(callback)) {
+        return _authenticate(self, username, password, options, (err, r) => {
+            // Support failed auth method
+            if (err && err.message && err.message.includes("saslStart")) {
                 err.code = 59;
             }
             // Reject error
@@ -122,9 +129,9 @@ module.exports = function (self, username, password, options, callback) {
 
     // Return a promise
     return new self.s.promiseLibrary((resolve, reject) => {
-        authenticate(self, username, password, options, (err, r) => {
+        _authenticate(self, username, password, options, (err, r) => {
             // Support failed auth method
-            if (err && err.message && err.message.indexOf("saslStart") != -1) {
+            if (err && err.message && err.message.includes("saslStart")) {
                 err.code = 59;
             }
             // Reject error
@@ -134,4 +141,4 @@ module.exports = function (self, username, password, options, callback) {
             resolve(r);
         });
     });
-};
+}

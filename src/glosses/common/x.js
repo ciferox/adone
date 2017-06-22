@@ -4,7 +4,7 @@ export const stdExceptions = [];
 export const adoneExceptions = [];
 
 export class Exception extends Error {
-    constructor(message) {
+    constructor(message, captureStackTrace = true) {
         if (message instanceof Error) {
             super(message.message);
             this.stack = message.stack;
@@ -14,14 +14,17 @@ export class Exception extends Error {
             if (message === null) {
                 return;
             }
-            
+
             this.message = message;
 
-            Error.captureStackTrace(this, this.constructor);
+            if (captureStackTrace) {
+                Error.captureStackTrace(this, this.constructor);
+            }
+
         }
 
         this.id = exceptionIdMap[this.constructor];
-        void this.stack;
+        // void this.stack;
     }
 }
 Exception.prototype.name = "Exception";

@@ -1,17 +1,6 @@
-const { is } = adone;
-
-const parse = require("./url_parser");
-const Server = require("./server");
-const Mongos = require("./mongos");
-const ReplSet = require("./replset");
-const Define = require("./metadata");
-const ReadPreference = require("./read_preference");
-const MongoError = require("../core").MongoError;
-const Db = require("./db");
-const f = require("util").format;
-const shallowClone = require("./utils").shallowClone;
-const EventEmitter = require("events").EventEmitter;
-const authenticate = require("./authenticate");
+const { is, database: { mongo: { __, ReadPreference, MongoError } }, EventEmitter } = adone;
+const { metadata } = __;
+const { classMethod } = metadata;
 
 const validOptionNames = [
     "poolSize",
@@ -73,13 +62,13 @@ const validOptions = (options) => {
         }
 
         if (!_validOptions.includes(name) && options.validateOptions) {
-            return new MongoError(f("option %s is not supported", name));
+            return new MongoError(`option ${name} is not supported`);
         } else if (!_validOptions.includes(name)) {
-            adone.warn(f("the options [%s] is not supported", name));
+            adone.warn(`the options [${name}] is not supported`);
         }
 
         if (legacyOptionNames.includes(name)) {
-            adone.warn(f("the server/replset/mongos options are deprecated, all their options are supported at the top level of the options object [%s]", validOptionNames));
+            // adone.warn(f("the server/replset/mongos options are deprecated, all their options are supported at the top level of the options object [%s]", validOptionNames));
         }
     }
 };
@@ -158,8 +147,8 @@ const translateOptions = (options) => {
     // Create server instances
     return options.servers.map((serverObj) => {
         return serverObj.domain_socket
-            ? new Server(serverObj.domain_socket, 27017, options)
-            : new Server(serverObj.host, serverObj.port, options);
+            ? new __.Server(serverObj.domain_socket, 27017, options)
+            : new __.Server(serverObj.host, serverObj.port, options);
     });
 };
 
@@ -270,7 +259,7 @@ const connectHandler = (options, callback) => (err, db) => {
     }
 
     // Authenticate
-    authenticate(authenticationDb, options.user, options.password, options, (err, success) => {
+    __.authenticate(authenticationDb, options.user, options.password, options, (err, success) => {
         if (success) {
             process.nextTick(() => {
                 try {
@@ -300,9 +289,6 @@ const connectHandler = (options, callback) => (err, db) => {
     });
 };
 
-const { metadata } = Define;
-const { classMethod, staticMethod } = metadata;
-
 @metadata("MongoClient")
 class MongoClient extends EventEmitter {
     constructor({ relayEvents = true } = {}) {
@@ -314,7 +300,7 @@ class MongoClient extends EventEmitter {
         // Set default options
         const servers = translateOptions(options);
         // Create Db instance
-        const db = new Db(options.dbName, new ReplSet(servers, options), options);
+        const db = new __.Db(options.dbName, new __.ReplSet(servers, options), options);
         if (this.relayEvents) {
             // Propegate the events to the client
             relayEvents(this, db);
@@ -327,7 +313,7 @@ class MongoClient extends EventEmitter {
         // Set default options
         const servers = translateOptions(options);
         // Create Db instance
-        const db = new Db(options.dbName, new Mongos(servers, options), options);
+        const db = new __.Db(options.dbName, new __.Mongos(servers, options), options);
         if (this.relayEvents) {
             // Propegate the events to the client
             relayEvents(this, db);
@@ -340,7 +326,7 @@ class MongoClient extends EventEmitter {
         // Set default options
         const servers = translateOptions(options);
         // Create db instance
-        const db = new Db(options.dbName, servers[0], options);
+        const db = new __.Db(options.dbName, servers[0], options);
         // Propegate the events to the client
         const collectedEvents = collectEvents(this, db);
         // Create Db instance
@@ -371,14 +357,14 @@ class MongoClient extends EventEmitter {
 
     _connect(url, options, callback) {
         options = options || {};
-        options = shallowClone(options);
+        options = __.utils.shallowClone(options);
 
         // If callback is null throw an exception
         if (is.nil(callback)) {
             throw new Error("no callback function provided");
         }
 
-        const object = parse(url, options);
+        const object = __.parseUrl(url, options);
         let _finalOptions = createUnifiedOptions({}, object);
         _finalOptions = mergeOptions(_finalOptions, object, false);
         _finalOptions = createUnifiedOptions(_finalOptions, options);
@@ -459,11 +445,6 @@ class MongoClient extends EventEmitter {
         }
         // Fallback to callback based connect
         this._connect(url, options, callback);
-    }
-
-    @staticMethod({ callback: true, promise: true })
-    static connect(...args) {
-        return new MongoClient({ relayEvents: false }).connect(...args);
     }
 }
 

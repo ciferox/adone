@@ -1086,9 +1086,6 @@ describe("command write concern", function () {
             while (running) {
                 const request = await primaryServer.receive();
                 const doc = request.document;
-                // console.log("========================== cmd")
-                // console.dir(doc)
-
                 if (doc.ismaster) {
                     request.reply(primary[0]);
                 } else if (doc.findandmodify) {

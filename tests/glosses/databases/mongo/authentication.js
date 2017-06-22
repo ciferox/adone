@@ -1,5 +1,6 @@
 describe("authentication", function () {
     const { database: { mongo }, util, promise } = adone;
+    const { __: { Db, Mongos, Server, ReplSet } } = mongo;
     const { range } = util;
 
     it.skip("should fail due to illegal authentication mechanism", async () => {
@@ -112,7 +113,7 @@ describe("authentication", function () {
 
         it("should correctly authenticate against normal db with large connection pool", async () => {
             await this.restart(true);
-            const DB = new mongo.Db(this.database, new mongo.Server(this.host, this.port, {
+            const DB = new Db(this.database, new Server(this.host, this.port, {
                 autoReconnect: false,
                 poolSize: 500,
                 socketOptions: {
@@ -141,7 +142,7 @@ describe("authentication", function () {
 
         it("should correctly reapply the authentications", async () => {
             await this.restart(true);
-            const DB = new mongo.Db(this.database, new mongo.Server(this.host, this.port, {
+            const DB = new Db(this.database, new Server(this.host, this.port, {
                 autoReconnect: true
             }), {
                 w: 1
@@ -233,9 +234,9 @@ describe("authentication", function () {
                 this.timeout(300000);
                 await manager.purge();
                 await manager.start();
-                replset = new mongo.ReplSet([
-                    new mongo.Server("localhost", 38010),
-                    new mongo.Server("localhost", 38011)
+                replset = new ReplSet([
+                    new Server("localhost", 38010),
+                    new Server("localhost", 38011)
                 ], { rs_name: "rs", poolSize: 1 });
             });
 
@@ -246,7 +247,7 @@ describe("authentication", function () {
             });
 
             it("should correctly handle replicaset master stepdown and stepup without loosing auth", async () => {
-                const db = await new mongo.Db("replicaset_test_auth", replset, { w: 1 }).open();
+                const db = await new Db("replicaset_test_auth", replset, { w: 1 }).open();
                 await db.admin().addUser("root", "root", { w: 3, wtimeout: 25000 });
                 expect(await db.admin().authenticate("root", "root")).to.be.ok;
                 await manager.stepDownPrimary(false, { stepDownSecs: 1, force: true }, {
@@ -260,7 +261,7 @@ describe("authentication", function () {
             });
 
             it("should correctly perform nearest read from secondaries without auth fail when priamry is first seed", async () => {
-                let db = await new mongo.Db("replicaset_test_auth", replset, {
+                let db = await new Db("replicaset_test_auth", replset, {
                     w: 1,
                     readPreference: mongo.ReadPreference.NEAREST
                 }).open();
@@ -276,7 +277,7 @@ describe("authentication", function () {
             });
 
             it("should correctly create indexes without hanging when different seedlists", async () => {
-                let db = await new mongo.Db("replicaset_test_auth", replset, {
+                let db = await new Db("replicaset_test_auth", replset, {
                     w: 1,
                     readPreference: mongo.ReadPreference.NEAREST
                 }).open();
@@ -297,7 +298,7 @@ describe("authentication", function () {
             });
 
             it("should correctly authenticate using primary", async () => {
-                const db = await new mongo.Db("node-native-test", replset, { w: 1 }).open();
+                const db = await new Db("node-native-test", replset, { w: 1 }).open();
                 await db.admin().addUser("admin", "admin", { w: 3, wtimeout: 25000 });
                 await db.admin().authenticate("admin", "admin");
                 await db.addUser("me", "secret", { w: 3, wtimeout: 25000 });
@@ -309,7 +310,7 @@ describe("authentication", function () {
             });
 
             it("should correctly authenticate with two seeds", async () => {
-                const db = await new mongo.Db("node-native-test", replset, { w: 1 }).open();
+                const db = await new Db("node-native-test", replset, { w: 1 }).open();
                 await db.admin().addUser("admin", "admin", { w: 3, wtimeout: 25000 });
                 await db.admin().authenticate("admin", "admin");
                 await db.addUser("me", "secret", { w: 3, wtimeout: 25000 });
@@ -321,7 +322,7 @@ describe("authentication", function () {
             });
 
             it("should correctly authenticate with only secondary seed", async () => {
-                const db = await new mongo.Db("node-native-test", replset, { w: 1 }).open();
+                const db = await new Db("node-native-test", replset, { w: 1 }).open();
                 await db.admin().addUser("admin", "admin", { w: 3, wtimeout: 25000 });
                 await db.admin().authenticate("admin", "admin");
                 await db.admin().addUser("me", "secret", { w: 3, wtimeout: 25000 });
@@ -345,7 +346,7 @@ describe("authentication", function () {
             });
 
             it("should correctly authenticate with multiple logins and logouts", async () => {
-                const db = await new mongo.Db("foo", replset, { w: 1 }).open();
+                const db = await new Db("foo", replset, { w: 1 }).open();
                 await db.admin().addUser("me", "secret", { w: 3, wtimeout: 25000 });
                 await assert.throws(async () => {
                     await db.collection("stuff").insert({ a: 2 }, { w: 3 });
@@ -364,7 +365,7 @@ describe("authentication", function () {
                     await db.collection("stuff").findOne();
                 });
                 const managers = await manager.secondaries();
-                const slaveDb = await new mongo.Db("foo", new mongo.Server(managers[0].host, managers[0].port, {
+                const slaveDb = await new Db("foo", new Server(managers[0].host, managers[0].port, {
                     auto_reconnect: true,
                     poolSize: 1,
                     rs_name: "rs"
@@ -382,7 +383,7 @@ describe("authentication", function () {
             });
 
             it("should correctly authenticate and ensure index", async () => {
-                const db = await new mongo.Db("foo", replset, { w: 1 }).open();
+                const db = await new Db("foo", replset, { w: 1 }).open();
                 await db.admin().addUser("me", "secret", { w: 3 });
                 await db.admin().authenticate("me", "secret");
                 await db.addUser("test", "test", { w: 3, wtimeout: 25000 });
@@ -396,7 +397,7 @@ describe("authentication", function () {
             });
 
             it("should correctly authenticate and use ReadPreference", async () => {
-                const db = await new mongo.Db("foo", replset, { w: 1 }).open();
+                const db = await new Db("foo", replset, { w: 1 }).open();
                 await db.admin().addUser("me", "secret", { w: 3, wtimeout: 25000 });
                 await db.admin().authenticate("me", "secret");
                 await db.addUser("test", "test", { w: 3, wtimeout: 25000 });
@@ -407,7 +408,7 @@ describe("authentication", function () {
             });
 
             it("should correctly bring replicaset stepdown primary and still read from secondary", async () => {
-                const db = await new mongo.Db("foo", replset, { w: 1 }).open();
+                const db = await new Db("foo", replset, { w: 1 }).open();
                 await db.admin().addUser("me", "secret", { w: 3, wtimeout: 25000 });
                 await db.admin().authenticate("me", "secret");
                 await db.collection("test").insert({ a: 1 }, { w: 1 });
@@ -445,7 +446,7 @@ describe("authentication", function () {
             });
 
             it("should correctly auth with secondary after kill primary", async () => {
-                const db = await new mongo.Db("foo", replset, { w: 1 }).open();
+                const db = await new Db("foo", replset, { w: 1 }).open();
                 await db.admin().addUser("admin", "admin", { w: 3, wtimeout: 25000 });
                 await db.admin().authenticate("admin", "admin");
                 await db.collection("test").insert({ a: 1 }, { w: 1 });
@@ -470,7 +471,7 @@ describe("authentication", function () {
             });
 
             it("should correctly auth against replicaset admin db using client", async () => {
-                let db = await new mongo.Db("admin", replset, { w: 3 }).open();
+                let db = await new Db("admin", replset, { w: 3 }).open();
                 await db.admin().addUser("me", "secret", { w: 3, wtimeout: 25000 });
                 await db.close();
                 db = await mongo.connect("mongodb://me:secret@localhost:38010/admin?rs_name=rs&readPreference=secondary&w=3");
@@ -482,7 +483,7 @@ describe("authentication", function () {
             });
 
             it("should correctly auth against normal db using client", async () => {
-                let db = await new mongo.Db("foo", replset, { w: 3 }).open();
+                let db = await new Db("foo", replset, { w: 3 }).open();
                 await db.admin().addUser("admin", "admin", { w: 3, wtimeout: 25000 });
                 await db.admin().authenticate("admin", "admin");
                 await db.addUser("me", "secret", { w: 3, wtimeout: 25000 });
@@ -496,7 +497,7 @@ describe("authentication", function () {
             });
 
             it("should correctly reauthenticating against multiple databases", async () => {
-                let db = await new mongo.Db("replicaset_test_reauth", replset, { w: 1 }).open();
+                let db = await new Db("replicaset_test_reauth", replset, { w: 1 }).open();
                 await db.admin().addUser("root", "root", { w: 3, wtimeout: 25000 });
                 expect(await db.admin().authenticate("root", "root")).to.be.ok;
                 await db.db("test").addUser("test", "test", { w: 3, wtimeout: 25000 });
@@ -541,8 +542,8 @@ describe("authentication", function () {
                 this.timeout(300000);
                 await manager.purge();
                 await manager.start();
-                mongos = new mongo.Mongos([
-                    new mongo.Server("localhost", 51010)
+                mongos = new Mongos([
+                    new Server("localhost", 51010)
                 ], { poolSize: 1 });
             });
 
@@ -553,7 +554,7 @@ describe("authentication", function () {
             });
 
             it("should correctly connect and authenticate against admin database using mongos", async () => {
-                const db = await new mongo.Db("node-native-test", mongos, { w: 1 }).open();
+                const db = await new Db("node-native-test", mongos, { w: 1 }).open();
                 await db.admin().addUser("admin", "admin", { w: "majority" });
                 await db.admin().authenticate("admin", "admin");
                 await db.addUser("me", "secret", { w: "majority" });
@@ -565,7 +566,7 @@ describe("authentication", function () {
             });
 
             it("should correctly handle proxy stepdown and stepup without loosing auth for sharding", async () => {
-                const db = await new mongo.Db("node-native-test", mongos, { w: 1 }).open();
+                const db = await new Db("node-native-test", mongos, { w: 1 }).open();
                 await db.admin().addUser("admin", "admin", { w: "majority" });
                 await db.admin().authenticate("admin", "admin");
                 await db.addUser("me", "secret", { w: "majority" });

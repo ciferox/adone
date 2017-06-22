@@ -1,10 +1,5 @@
-const { is } = adone;
-const toError = require("./utils").toError;
-const Define = require("./metadata");
-const shallowClone = require("./utils").shallowClone;
-const assign = require("./utils").assign;
-const authenticate = require("./authenticate");
-const { metadata } = Define;
+const { is, database: { mongo: { __ } } } = adone;
+const { utils: { shallowClone, assign, toError }, metadata } = __;
 const { classMethod } = metadata;
 
 // Get write concern
@@ -37,7 +32,7 @@ const writeConcern = function (options, db) {
 };
 
 @metadata("Admin")
-class Admin {
+export default class Admin {
     constructor(db, topology, promiseLibrary) {
         // Internal state
         this.s = {
@@ -214,7 +209,7 @@ class Admin {
         if (is.function(callback)) {
             finalArguments.push(callback);
         }
-        return authenticate.apply(this.s.db, finalArguments);
+        return __.authenticate.apply(this.s.db, finalArguments);
     }
 
     @classMethod({ callback: true, promise: true })
@@ -451,5 +446,3 @@ class Admin {
         });
     }
 }
-
-module.exports = Admin;

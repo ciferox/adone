@@ -204,13 +204,13 @@ describe("collations", function () {
         const db = await mongo.connect("mongodb://localhost:32000/test");
         await db.collection("test")
             .group(
-            [],
-            { a: { $gt: 1 } },
-            { count: 0 },
-            "function (obj, prev) { prev.count++; }",
-            "function (obj, prev) { prev.count++; }"
-            , true,
-            { collation: { caseLevel: true } }
+                [],
+                { a: { $gt: 1 } },
+                { count: 0 },
+                "function (obj, prev) { prev.count++; }",
+                "function (obj, prev) { prev.count++; }"
+                , true,
+                { collation: { caseLevel: true } }
             );
         expect(commandResult.collation).to.be.deep.equal({ caseLevel: true });
 

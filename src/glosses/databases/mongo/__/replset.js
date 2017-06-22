@@ -1,24 +1,7 @@
-const { is } = adone;
-
-const EventEmitter = require("events").EventEmitter;
-const f = require("util").format;
-const Server = require("./server");
-const Cursor = require("./cursor");
-const AggregationCursor = require("./aggregation_cursor");
-const CommandCursor = require("./command_cursor");
-const ReadPreference = require("./read_preference");
-const MongoError = require("../core").MongoError;
-const ServerCapabilities = require("./topology_base").ServerCapabilities;
-const Store = require("./topology_base").Store;
-const Define = require("./metadata");
-const CReplSet = require("../core").ReplSet;
-const CoreReadPreference = require("../core").ReadPreference;
-const MAX_JS_INT = require("./utils").MAX_JS_INT;
-const translateOptions = require("./utils").translateOptions;
-const filterOptions = require("./utils").filterOptions;
-const mergeOptions = require("./utils").mergeOptions;
-const getReadPreference = require("./utils").getReadPreference;
-const os = require("os");
+const { is, EventEmitter, database: { mongo }, std: { os } } = adone;
+const { __, MongoError, core, ReadPreference } = mongo;
+const { metadata, utils: { MAX_JS_INT, translateOptions, filterOptions, mergeOptions, getReadPreference } } = __;
+const { classMethod } = metadata;
 
 // Allowed parameters
 const legalOptionNames = [
@@ -63,30 +46,28 @@ const legalOptionNames = [
 ];
 
 // Get package.json variable
-const driverVersion = "2.2.22";
-const nodejsversion = f("Node.js %s, %s", process.version, os.endianness());
+const driverVersion = "2.2.22 : adone";
+const nodejsversion = `Node.js ${process.version}, ${os.endianness()}`;
 const type = os.type();
 const name = process.platform;
 const architecture = process.arch;
 const release = os.release();
 
-const { metadata } = Define;
-const { classMethod } = metadata;
-
 // Ensure the right read Preference object
 const translateReadPreference = function (options) {
     if (is.string(options.readPreference)) {
-        options.readPreference = new CoreReadPreference(options.readPreference);
+        options.readPreference = new core.ReadPreference(options.readPreference);
     } else if (options.readPreference instanceof ReadPreference) {
-        options.readPreference = new CoreReadPreference(options.readPreference.mode
-            , options.readPreference.tags, { maxStalenessSeconds: options.readPreference.maxStalenessSeconds });
+        options.readPreference = new core.ReadPreference(options.readPreference.mode, options.readPreference.tags, {
+            maxStalenessSeconds: options.readPreference.maxStalenessSeconds
+        });
     }
 
     return options;
 };
 
 @metadata("ReplSet")
-class ReplSet extends EventEmitter {
+export default class ReplSet extends EventEmitter {
     constructor(servers, options) {
         super();
         options = options || {};
@@ -95,7 +76,7 @@ class ReplSet extends EventEmitter {
 
         // Ensure all the instances are Server
         for (let i = 0; i < servers.length; i++) {
-            if (!(servers[i] instanceof Server)) {
+            if (!(servers[i] instanceof __.Server)) {
                 throw MongoError.create({ message: "all seed list instances must be of the Server type", driver: true });
             }
         }
@@ -105,13 +86,13 @@ class ReplSet extends EventEmitter {
             bufferMaxEntries: is.number(options.bufferMaxEntries) ? options.bufferMaxEntries : MAX_JS_INT
         };
 
-        const store = options.store || new Store(this, storeOptions);
+        const store = options.store || new __.Store(this, storeOptions);
 
         const seedlist = servers.map((x) => ({ host: x.host, port: x.port }));
 
         let clonedOptions = mergeOptions({}, {
             disconnectHandler: store,
-            cursorFactory: Cursor,
+            cursorFactory: __.Cursor,
             reconnect: false,
             emitError: is.boolean(options.emitError) ? options.emitError : true,
             size: is.number(options.poolSize) ? options.poolSize : 5
@@ -151,7 +132,7 @@ class ReplSet extends EventEmitter {
             clonedOptions.clientInfo.application = { name: options.appname };
         }
 
-        const replset = new CReplSet(seedlist, clonedOptions);
+        const replset = new core.ReplSet(seedlist, clonedOptions);
 
         replset.on("reconnect", () => {
             this.emit("reconnect");
@@ -337,7 +318,7 @@ class ReplSet extends EventEmitter {
         this.s.replset.connect(_options);
     }
 
-    @classMethod({ callback: false, promise: false, returns: [ServerCapabilities] })
+    @classMethod({ callback: false, promise: false, returns: [__.ServerCapabilities] })
     capabilities() {
         if (this.s.sCapabilities) {
             return this.s.sCapabilities;
@@ -345,7 +326,7 @@ class ReplSet extends EventEmitter {
         if (is.nil(this.s.replset.lastIsMaster())) {
             return null;
         }
-        this.s.sCapabilities = new ServerCapabilities(this.s.replset.lastIsMaster());
+        this.s.sCapabilities = new __.ServerCapabilities(this.s.replset.lastIsMaster());
         return this.s.sCapabilities;
     }
 
@@ -387,7 +368,7 @@ class ReplSet extends EventEmitter {
         return this.s.replset.isConnected(options);
     }
 
-    @classMethod({ callback: false, promise: false, returns: [Cursor, AggregationCursor, CommandCursor] })
+    @classMethod({ callback: false, promise: false, returns: [__.Cursor, __.AggregationCursor, __.CommandCursor] })
     cursor(ns, cmd, options) {
         options = translateReadPreference(options);
         options.disconnectHandler = this.s.store;
@@ -437,5 +418,3 @@ class ReplSet extends EventEmitter {
         return this.s.replset.connections();
     }
 }
-
-module.exports = ReplSet;

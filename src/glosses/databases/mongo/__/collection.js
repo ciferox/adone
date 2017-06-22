@@ -1,32 +1,23 @@
-const { is } = adone;
-
-const checkCollectionName = require("./utils").checkCollectionName;
-const ObjectId = adone.data.bson.ObjectId;
-const Long = adone.data.bson.Long;
-const Code = adone.data.bson.Code;
-const f = require("util").format;
-const AggregationCursor = require("./aggregation_cursor");
-const MongoError = require("../core").MongoError;
-const shallowClone = require("./utils").shallowClone;
-const isObject = require("./utils").isObject;
-const toError = require("./utils").toError;
-const normalizeHintField = require("./utils").normalizeHintField;
-const handleCallback = require("./utils").handleCallback;
-const decorateCommand = require("./utils").decorateCommand;
-const formattedOrderClause = require("./utils").formattedOrderClause;
-const ReadPreference = require("./read_preference");
-const CoreReadPreference = require("../core").ReadPreference;
-const CommandCursor = require("./command_cursor");
-const Define = require("./metadata");
-const Cursor = require("./cursor");
-const unordered = require("./bulk/unordered");
-const ordered = require("./bulk/ordered");
-const assign = require("./utils").assign;
+const { is, database: { mongo } } = adone;
+const { __, ObjectId, Long, Code, MongoError, core, ReadPreference } = mongo;
+const {
+    bulk,
+    metadata,
+    utils: {
+        checkCollectionName,
+        shallowClone,
+        isObject,
+        toError,
+        normalizeHintField,
+        handleCallback,
+        decorateCommand,
+        formattedOrderClause,
+        assign
+    }
+} = __;
+const { classMethod } = metadata;
 
 const mergeKeys = ["readPreference", "ignoreUndefined"];
-
-const { metadata } = Define;
-const { classMethod } = metadata;
 
 // Get write concern
 const writeConcern = function (target, db, col, options) {
@@ -66,13 +57,15 @@ const getReadPreference = function (self, options, db) {
     }
 
     if (r instanceof ReadPreference) {
-        options.readPreference = new CoreReadPreference(r.mode, r.tags, { maxStalenessSeconds: r.maxStalenessSeconds });
+        options.readPreference = new core.ReadPreference(r.mode, r.tags, {
+            maxStalenessSeconds: r.maxStalenessSeconds
+        });
     } else if (is.string(r)) {
-        options.readPreference = new CoreReadPreference(r);
+        options.readPreference = new core.ReadPreference(r);
     } else if (r && !(r instanceof ReadPreference) && is.object(r)) {
         const mode = r.mode || r.preference;
         if (mode && is.string(mode)) {
-            options.readPreference = new CoreReadPreference(mode, r.tags, {
+            options.readPreference = new core.ReadPreference(mode, r.tags, {
                 maxStalenessSeconds: r.maxStalenessSeconds
             });
         }
@@ -190,7 +183,7 @@ const processScope = (scope) => {
 };
 
 @metadata("Collection")
-class Collection {
+export default class Collection {
     constructor(db, topology, dbName, name, pkFactory, options) {
         checkCollectionName(name);
         const internalHint = null;
@@ -214,7 +207,7 @@ class Collection {
             : options.promoteBuffers;
         let readPreference = null;
         const collectionHint = null;
-        const namespace = f("%s.%s", dbName, name);
+        const namespace = `${dbName}.${name}`;
 
         let promiseLibrary = options.promiseLibrary;
 
@@ -289,7 +282,7 @@ class Collection {
         this.s.collectionHint = normalizeHintField(v);
     }
 
-    @classMethod({ callback: false, promise: false, returns: [Cursor] })
+    @classMethod({ callback: false, promise: false, returns: [__.Cursor] })
     find(...args) {
         let options;
         const hasCallback = is.function(args[args.length - 1]);
@@ -507,7 +500,6 @@ class Collection {
 
         // Decorate find command with collation options
         decorateWithCollation(findCommand, this, options);
-
         // Create the cursor
         if (is.function(callback)) {
             return handleCallback(callback, null, this.s.topology.cursor(this.s.namespace, findCommand, newOptions));
@@ -548,7 +540,6 @@ class Collection {
                 }
             }
         }
-
         // File inserts
         this.s.topology.insert(this.s.namespace, docs, finalOptions, (err, result) => {
             if (is.nil(callback)) {
@@ -669,7 +660,7 @@ class Collection {
 
         // Did the user pass in a collation, check if our write server supports it
         if (collation && capabilities && !capabilities.commandsTakeCollation) {
-            return callback(new MongoError(f("server/primary/mongos does not support collation")));
+            return callback(new MongoError("server/primary/mongos does not support collation"));
         }
 
         // Execute the bulk
@@ -714,7 +705,8 @@ class Collection {
                 const errors = r.getWriteErrors();
                 // Return the MongoError object
                 return callback(toError({
-                    message: "write operation failed", code: errors[0].code, writeErrors: errors
+                    message: "write operation failed",
+                    code: errors[0].code, writeErrors: errors
                 }), r);
             }
 
@@ -1329,8 +1321,8 @@ class Collection {
         // Check the collection name
         checkCollectionName(newName);
         // Build the command
-        const renameCollection = f("%s.%s", this.s.dbName, this.s.name);
-        const toCollection = f("%s.%s", this.s.dbName, newName);
+        const renameCollection = `${this.s.dbName}.${this.s.name}`;
+        const toCollection = `${this.s.dbName}.${newName}`;
         const dropTarget = is.boolean(opt.dropTarget) ? opt.dropTarget : false;
         const cmd = { renameCollection, to: toCollection, dropTarget };
 
@@ -1413,7 +1405,10 @@ class Collection {
                 return handleCallback(callback, err);
             }
             if (collections.length === 0) {
-                return handleCallback(callback, MongoError.create({ message: f("collection %s not found", this.s.namespace), driver: true }));
+                return handleCallback(callback, MongoError.create({
+                    message: `collection ${this.s.namespace} not found`,
+                    driver: true
+                }));
             }
 
             handleCallback(callback, err, collections[0].options || null);
@@ -1499,11 +1494,11 @@ class Collection {
 
                 // Did the user pass in a collation, check if our write server supports it
                 if (indexSpecs[i].collation && capabilities && !capabilities.commandsTakeCollation) {
-                    return callback(new MongoError(f("server/primary/mongos does not support collation")));
+                    return callback(new MongoError("server/primary/mongos does not support collation"));
                 }
 
                 for (const name in indexSpecs[i].key) {
-                    keys.push(f("%s_%s", name, indexSpecs[i].key[name]));
+                    keys.push(`${name}_${indexSpecs[i].key[name]}`);
                 }
 
                 // Set the name
@@ -1652,12 +1647,12 @@ class Collection {
         });
     }
 
-    @classMethod({ callback: false, promise: false, returns: [CommandCursor] })
+    @classMethod({ callback: false, promise: false, returns: [__.CommandCursor] })
     listIndexes(options) {
         options = options || {};
         options = shallowClone(options);
         options = getReadPreference(this, options, this.s.db, this);
-        options.cursorFactory = CommandCursor;
+        options.cursorFactory = __.CommandCursor;
         options.promiseLibrary = this.s.promiseLibrary;
 
         if (!this.s.topology.capabilities()) {
@@ -1671,7 +1666,7 @@ class Collection {
             // Build the command
             const command = { listIndexes: this.s.name, cursor };
             // Execute the cursor
-            cursor = this.s.topology.cursor(f("%s.$cmd", this.s.dbName), command, options);
+            cursor = this.s.topology.cursor(`${this.s.dbName}.$cmd`, command, options);
             // Do we have a readPreference, apply it
             if (options.readPreference) {
                 cursor.setReadPreference(options.readPreference);
@@ -1681,7 +1676,7 @@ class Collection {
         }
 
         // Get the namespace
-        const ns = f("%s.system.indexes", this.s.dbName);
+        const ns = `${this.s.dbName}.system.indexes`;
         // Get the query
         let cursor = this.s.topology.cursor(ns, { find: ns, query: { ns: this.s.namespace } }, options);
         // Do we have a readPreference, apply it
@@ -2316,7 +2311,7 @@ class Collection {
         options.promiseLibrary = this.s.promiseLibrary;
 
         // Set the AggregationCursor constructor
-        options.cursorFactory = AggregationCursor;
+        options.cursorFactory = __.AggregationCursor;
         if (!is.function(callback)) {
             if (!this.s.topology.capabilities()) {
                 throw new MongoError("cannot connect to server");
@@ -2827,18 +2822,18 @@ class Collection {
         });
     }
 
-    @classMethod({ callback: false, promise: false, returns: [ordered.UnorderedBulkOperation] })
+    @classMethod({ callback: false, promise: false, returns: [bulk.UnorderedBulkOperation] })
     initializeUnorderedBulkOp(options) {
         options = options || {};
         options.promiseLibrary = this.s.promiseLibrary;
-        return unordered(this.s.topology, this, options);
+        return bulk.initializeUnorderedBulkOp(this.s.topology, this, options);
     }
 
-    @classMethod({ callback: false, promise: false, returns: [ordered.OrderedBulkOperation] })
+    @classMethod({ callback: false, promise: false, returns: [bulk.OrderedBulkOperation] })
     initializeOrderedBulkOp(options) {
         options = options || {};
         options.promiseLibrary = this.s.promiseLibrary;
-        return ordered(this.s.topology, this, options);
+        return bulk.initializeOrderedBulkOp(this.s.topology, this, options);
     }
 }
 
@@ -2850,5 +2845,3 @@ Collection.define.classMethod("removeMany", { callback: true, promise: true });
 
 Collection.prototype.dropAllIndexes = Collection.prototype.dropIndexes;
 Collection.define.classMethod("dropAllIndexes", { callback: true, promise: true });
-
-module.exports = Collection;

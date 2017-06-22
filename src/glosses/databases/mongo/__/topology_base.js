@@ -1,12 +1,9 @@
-const { is } = adone;
-
-const MongoError = require("../core").MongoError;
-const f = require("util").format;
+const { is, database: { mongo: { MongoError } } } = adone;
 
 const primaryOptions = ["primary", "primaryPreferred", "nearest", "secondaryPreferred"];
 const secondaryOptions = ["secondary", "secondaryPreferred"];
 
-class Store {
+export class Store {
     constructor(topology, storeOptions) {
         const storedOps = [];
         storeOptions = storeOptions || { force: false, bufferMaxEntries: -1 };
@@ -29,7 +26,7 @@ class Store {
 
         if (this.s.storeOptions.bufferMaxEntries === 0) {
             return callback(MongoError.create({
-                message: f("no connection available for operation and number of stored operation > %s", this.s.storeOptions.bufferMaxEntries),
+                message: `no connection available for operation and number of stored operation > ${this.s.storeOptions.bufferMaxEntries}`,
                 driver: true
             }));
         }
@@ -41,7 +38,7 @@ class Store {
             while (this.s.storedOps.length > 0) {
                 const op = this.s.storedOps.shift();
                 op.c(MongoError.create({
-                    message: f("no connection available for operation and number of stored operation > %s", this.s.storeOptions.bufferMaxEntries),
+                    message: `no connection available for operation and number of stored operation > ${this.s.storeOptions.bufferMaxEntries}`,
                     driver: true
                 }));
             }
@@ -59,7 +56,7 @@ class Store {
 
         if (this.s.storeOptions.bufferMaxEntries === 0) {
             return callback(MongoError.create({
-                message: f("no connection available for operation and number of stored operation > %s", this.s.storeOptions.bufferMaxEntries),
+                message: `no connection available for operation and number of stored operation > ${this.s.storeOptions.bufferMaxEntries}`,
                 driver: true
             }));
         }
@@ -71,7 +68,7 @@ class Store {
             while (this.s.storedOps.length > 0) {
                 const op = this.s.storedOps.shift();
                 op.c(MongoError.create({
-                    message: f("no connection available for operation and number of stored operation > %s", this.s.storeOptions.bufferMaxEntries),
+                    message: `no connection available for operation and number of stored operation > ${this.s.storeOptions.bufferMaxEntries}`,
                     driver: true
                 }));
             }
@@ -85,7 +82,7 @@ class Store {
     flush(err) {
         while (this.s.storedOps.length > 0) {
             this.s.storedOps.shift().c(err || MongoError.create({
-                message: f("no connection available for operation"),
+                message: "no connection available for operation",
                 driver: true
             }));
         }
@@ -159,7 +156,7 @@ class Store {
     }
 }
 
-class ServerCapabilities {
+export class ServerCapabilities {
     constructor(ismaster) {
         this.ismaster = ismaster;
         this.aggregationCursor = false;
@@ -249,6 +246,3 @@ class ServerCapabilities {
         return this._commandsTakeCollation;
     }
 }
-
-exports.Store = Store;
-exports.ServerCapabilities = ServerCapabilities;

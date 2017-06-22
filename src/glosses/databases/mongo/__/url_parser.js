@@ -1,9 +1,6 @@
-const { is } = adone;
-const ReadPreference = require("./read_preference");
-const parser = require("url");
-const f = require("util").format;
+const { is, database: { mongo: { __, ReadPreference } }, std: { url: parser } } = adone;
 
-module.exports = function (url) {
+export default function parseUrl(url) {
     let connectionPart = "";
     let authPart = "";
     let queryStringPart = "";
@@ -77,7 +74,7 @@ module.exports = function (url) {
     }
 
     for (let i = 0; i < hosts.length; i++) {
-        const r = parser.parse(f("mongodb://%s", hosts[i].trim()));
+        const r = parser.parse(`mongodb://${hosts[i].trim()}`);
         if (r.path && r.path.includes(":")) {
             throw new Error("double colon in host identifier");
         }
@@ -413,7 +410,7 @@ module.exports = function (url) {
                 value = decodeURIComponent(value);
                 // Contains the tag object
                 const tagObject = {};
-                if (is.nil(value) || value == "") {
+                if (is.nil(value) || value === "") {
                     dbOptions.read_preference_tags.push(tagObject);
                     break;
                 }
@@ -457,4 +454,4 @@ module.exports = function (url) {
     object.servers = servers;
     // Returned parsed object
     return object;
-};
+}

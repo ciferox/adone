@@ -1,25 +1,11 @@
-const { is } = adone;
-
-const EventEmitter = require("events").EventEmitter;
-const CServer = require("../core").Server;
-const Cursor = require("./cursor");
-const AggregationCursor = require("./aggregation_cursor");
-const CommandCursor = require("./command_cursor");
-const f = require("util").format;
-const ServerCapabilities = require("./topology_base").ServerCapabilities;
-const Store = require("./topology_base").Store;
-const Define = require("./metadata");
-const MongoError = require("../core").MongoError;
-const MAX_JS_INT = require("./utils").MAX_JS_INT;
-const translateOptions = require("./utils").translateOptions;
-const filterOptions = require("./utils").filterOptions;
-const mergeOptions = require("./utils").mergeOptions;
-const getReadPreference = require("./utils").getReadPreference;
-const os = require("os");
+const { is, EventEmitter, database: { mongo }, std: { os } } = adone;
+const { __, MongoError, core } = mongo;
+const { metadata, utils: { MAX_JS_INT, translateOptions, filterOptions, mergeOptions, getReadPreference } } = __;
+const { classMethod } = metadata;
 
 // Get package.json variable
-const driverVersion = "2.2.22";
-const nodejsversion = f("Node.js %s, %s", process.version, os.endianness());
+const driverVersion = "2.2.22 : adone";
+const nodejsversion = `Node.js ${process.version}, ${os.endianness()}`;
 const type = os.type();
 const name = process.platform;
 const architecture = process.arch;
@@ -61,11 +47,9 @@ const legalOptionNames = [
     "promoteValues",
     "promoteBuffers"
 ];
-const { metadata } = Define;
-const { classMethod } = metadata;
 
 @metadata("Server")
-class Server extends EventEmitter {
+export default class Server extends EventEmitter {
     constructor(host, port, options = {}) {
         super();
         options = filterOptions(options, legalOptionNames);
@@ -75,7 +59,7 @@ class Server extends EventEmitter {
             bufferMaxEntries: is.number(options.bufferMaxEntries) ? options.bufferMaxEntries : MAX_JS_INT
         };
 
-        const store = options.store || new Store(this, storeOptions);
+        const store = options.store || new __.Store(this, storeOptions);
 
         // Detect if we have a socket connection
         if (host.includes("/")) {
@@ -94,7 +78,7 @@ class Server extends EventEmitter {
         // Clone options
         let clonedOptions = mergeOptions({}, {
             host, port, disconnectHandler: store,
-            cursorFactory: Cursor,
+            cursorFactory: __.Cursor,
             reconnect,
             emitError: is.boolean(options.emitError) ? options.emitError : true,
             size: is.number(options.poolSize) ? options.poolSize : 5
@@ -134,7 +118,7 @@ class Server extends EventEmitter {
             clonedOptions.clientInfo.application = { name: options.appname };
         }
 
-        const server = new CServer(clonedOptions);
+        const server = new core.Server(clonedOptions);
         this.s = {
             server,
             sCapabilities: null,
@@ -289,7 +273,7 @@ class Server extends EventEmitter {
         this.s.server.connect(_options);
     }
 
-    @classMethod({ callback: false, promise: false, returns: [ServerCapabilities] })
+    @classMethod({ callback: false, promise: false, returns: [__.ServerCapabilities] })
     capabilities() {
         if (this.s.sCapabilities) {
             return this.s.sCapabilities;
@@ -297,7 +281,7 @@ class Server extends EventEmitter {
         if (is.nil(this.s.server.lastIsMaster())) {
             return null;
         }
-        this.s.sCapabilities = new ServerCapabilities(this.s.server.lastIsMaster());
+        this.s.sCapabilities = new __.ServerCapabilities(this.s.server.lastIsMaster());
         return this.s.sCapabilities;
     }
 
@@ -330,7 +314,7 @@ class Server extends EventEmitter {
         return this.s.server.isDestroyed();
     }
 
-    @classMethod({ callback: false, promise: false, returns: [Cursor, AggregationCursor, CommandCursor] })
+    @classMethod({ callback: false, promise: false, returns: [__.Cursor, __.AggregationCursor, __.CommandCursor] })
     cursor(ns, cmd, options) {
         options.disconnectHandler = this.s.store;
         return this.s.server.cursor(ns, cmd, options);
@@ -369,5 +353,3 @@ class Server extends EventEmitter {
         return this.s.server.connections();
     }
 }
-
-module.exports = Server;

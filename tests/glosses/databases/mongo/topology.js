@@ -140,11 +140,11 @@ export const sharded = () => {
                 poolSize: 1,
                 autoReconnect: false
             })], {
-                w: "majority",
-                wtimeout: 30000
-            }), {
-                w: 1
-            });
+            w: "majority",
+            wtimeout: 30000
+        }), {
+            w: 1
+        });
     });
 
     after("stop mongos", async function () {

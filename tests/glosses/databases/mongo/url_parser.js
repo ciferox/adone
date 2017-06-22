@@ -4,7 +4,7 @@ describe("url parser", function () {
     }
 
     const { database: { mongo } } = adone;
-    const { parseUrl: parse } = mongo;
+    const { __: { parseUrl: parse } } = mongo;
 
     it("should correctly parse mongodb://localhost", () => {
         // console.dir(parse)

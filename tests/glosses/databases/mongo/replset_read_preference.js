@@ -4,7 +4,7 @@ describe("replset read preference", function () {
     }
 
     const { promise, database: { mongo }, fs } = adone;
-    const { ReplSet, Server, Db, ReadPreference } = mongo;
+    const { __: { ReplSet, Server, Db }, ReadPreference } = mongo;
 
     const replicaSet = "rs";
 

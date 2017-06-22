@@ -78,7 +78,7 @@ describe("databases", "mongo", function () {
                     url: this.url
                 } = await this.dispatcher.getSingleServer());
 
-                this.DB = new mongo.Db(this.database, new mongo.Server("localhost", 27017, {
+                this.DB = new mongo.__.Db(this.database, new mongo.__.Server("localhost", 27017, {
                     poolSize: 1,
                     autoReconnect: false
                 }), {
@@ -99,8 +99,8 @@ describe("databases", "mongo", function () {
                     url: this.url
                 } = await this.dispatcher.getShardedServer());
 
-                this.DB = new mongo.Db(this.database, new mongo.Mongos([
-                    new mongo.Server("localhost", 51000, {
+                this.DB = new mongo.__.Db(this.database, new mongo.__.Mongos([
+                    new mongo.__.Server("localhost", 51000, {
                         poolSize: 1,
                         autoReconnect: false
                     })
@@ -125,8 +125,8 @@ describe("databases", "mongo", function () {
                     url: this.url
                 } = await this.dispatcher.getReplicasetServer());
 
-                this.DB = new mongo.Db(this.database, new mongo.ReplSet([
-                    new mongo.Server("localhost", 31000, {
+                this.DB = new mongo.__.Db(this.database, new mongo.__.ReplSet([
+                    new mongo.__.Server("localhost", 31000, {
                         poolSize: 1,
                         autoReconnect: false
                     })
@@ -152,7 +152,7 @@ describe("databases", "mongo", function () {
                     url: this.url
                 } = await this.dispatcher.getAuthServer());
 
-                this.DB = new mongo.Db(this.database, new mongo.Server(this.host, this.port, {
+                this.DB = new mongo.__.Db(this.database, new mongo.__.Server(this.host, this.port, {
                     poolSize: 1,
                     autoReconnect: false
                 }), {
@@ -248,18 +248,18 @@ describe("databases", "mongo", function () {
                     include("./read_preference");
                     include("./reconnect");
                     include("./remove");
-                    include("./replset_connection");
-                    include("./replset_failover");
                     include("./replset_operations");
-                    include("./replset_read_preference");
+                    include("./replset_failover");
                     include("./sdam");
-                    include("./sharding_connection");
-                    include("./sharding_failover");
-                    include("./sharding_read_preference");
                     include("./unicode");
                     include("./uri");
                     include("./url_parser");
                     include("./view");
+                    include("./sharding_connection");
+                    include("./sharding_failover");
+                    include("./sharding_read_preference");
+                    include("./replset_connection");
+                    include("./replset_read_preference");
                 }
 
                 include("./authentication");

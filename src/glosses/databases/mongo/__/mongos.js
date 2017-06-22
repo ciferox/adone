@@ -1,30 +1,14 @@
-const EventEmitter = require("events").EventEmitter;
-const f = require("util").format;
-const ServerCapabilities = require("./topology_base").ServerCapabilities;
-const MongoError = require("../core").MongoError;
-const CMongos = require("../core").Mongos;
-const Cursor = require("./cursor");
-const AggregationCursor = require("./aggregation_cursor");
-const CommandCursor = require("./command_cursor");
-const Define = require("./metadata");
-const Server = require("./server");
-const Store = require("./topology_base").Store;
-const MAX_JS_INT = require("./utils").MAX_JS_INT;
-const translateOptions = require("./utils").translateOptions;
-const filterOptions = require("./utils").filterOptions;
-const mergeOptions = require("./utils").mergeOptions;
-const getReadPreference = require("./utils").getReadPreference;
-const os = require("os");
+const { is, EventEmitter, database: { mongo }, std: { os } } = adone;
+const { __, MongoError, core } = mongo;
+const { metadata, utils: { MAX_JS_INT, translateOptions, filterOptions, mergeOptions, getReadPreference } } = __;
+const { classMethod } = metadata;
 
-// Get package.json variable
-const driverVersion = "2.2.22";
-const nodejsversion = f("Node.js %s, %s", process.version, os.endianness());
+const driverVersion = "2.2.22 : adone"; // adone ver?
+const nodejsversion = `Node.js ${process.version}, ${os.endianness()}`;
 const type = os.type();
 const name = process.platform;
 const architecture = process.arch;
 const release = os.release();
-
-const { is } = adone;
 
 const legalOptionNames = [
     "ha",
@@ -58,11 +42,8 @@ const legalOptionNames = [
     "promoteBuffers"
 ];
 
-const { metadata } = Define;
-const { classMethod } = metadata;
-
 @metadata("Mongos")
-class Mongos extends EventEmitter {
+export default class Mongos extends EventEmitter {
     constructor(servers, options) {
         super();
         options = options || {};
@@ -73,7 +54,7 @@ class Mongos extends EventEmitter {
 
         // Ensure all the instances are Server
         for (let i = 0; i < servers.length; i++) {
-            if (!(servers[i] instanceof Server)) {
+            if (!(servers[i] instanceof __.Server)) {
                 throw MongoError.create({ message: "all seed list instances must be of the Server type", driver: true });
             }
         }
@@ -85,7 +66,7 @@ class Mongos extends EventEmitter {
         };
 
         // Shared global store
-        const store = options.store || new Store(self, storeOptions);
+        const store = options.store || new __.Store(self, storeOptions);
 
         const seedlist = servers.map((x) => {
             return { host: x.host, port: x.port };
@@ -97,7 +78,7 @@ class Mongos extends EventEmitter {
         // Clone options
         let clonedOptions = mergeOptions({}, {
             disconnectHandler: store,
-            cursorFactory: Cursor,
+            cursorFactory: __.Cursor,
             reconnect,
             emitError: is.boolean(options.emitError) ? options.emitError : true,
             size: is.number(options.poolSize) ? options.poolSize : 5
@@ -141,7 +122,7 @@ class Mongos extends EventEmitter {
         }
 
         // Create the Mongos
-        const mongos = new CMongos(seedlist, clonedOptions);
+        const mongos = new core.Mongos(seedlist, clonedOptions);
         // Server capabilities
         const sCapabilities = null;
 
@@ -181,7 +162,6 @@ class Mongos extends EventEmitter {
     }
 
     connect(db, _options, callback) {
-        const self = this;
         if (is.function(_options)) {
             [callback, _options] = [_options, {}];
         }
@@ -191,20 +171,20 @@ class Mongos extends EventEmitter {
         if (!is.function(callback)) {
             callback = null;
         }
-        self.s.options = _options;
+        this.s.options = _options;
 
         // Update bufferMaxEntries
-        self.s.storeOptions.bufferMaxEntries = db.bufferMaxEntries;
+        this.s.storeOptions.bufferMaxEntries = db.bufferMaxEntries;
 
         // Error handler
         const connectErrorHandler = () => (err) => {
             // Remove all event handlers
             const events = ["timeout", "error", "close"];
             events.forEach((e) => {
-                self.removeListener(e, connectErrorHandler);
+                this.removeListener(e, connectErrorHandler);
             });
 
-            self.s.mongos.removeListener("connect", connectErrorHandler);
+            this.s.mongos.removeListener("connect", connectErrorHandler);
 
             // Try to callback
             try {
@@ -219,58 +199,58 @@ class Mongos extends EventEmitter {
         // Actual handler
         const errorHandler = (event) => (err) => {
             if (event !== "error") {
-                self.emit(event, err);
+                this.emit(event, err);
             }
         };
 
         // Error handler
         const reconnectHandler = () => {
-            self.emit("reconnect");
-            self.s.store.execute();
+            this.emit("reconnect");
+            this.s.store.execute();
         };
 
         // relay the event
         const relay = (event) => (t, server) => {
-            self.emit(event, t, server);
+            this.emit(event, t, server);
         };
 
         // Clear out all the current handlers left over
         ["timeout", "error", "close", "serverOpening", "serverDescriptionChanged", "serverHeartbeatStarted",
             "serverHeartbeatSucceeded", "serverHeartbeatFailed", "serverClosed", "topologyOpening",
             "topologyClosed", "topologyDescriptionChanged"].forEach((e) => {
-            self.s.mongos.removeAllListeners(e);
+            this.s.mongos.removeAllListeners(e);
         });
 
         // Set up SDAM listeners
-        self.s.mongos.on("serverDescriptionChanged", relay("serverDescriptionChanged"));
-        self.s.mongos.on("serverHeartbeatStarted", relay("serverHeartbeatStarted"));
-        self.s.mongos.on("serverHeartbeatSucceeded", relay("serverHeartbeatSucceeded"));
-        self.s.mongos.on("serverHeartbeatFailed", relay("serverHeartbeatFailed"));
-        self.s.mongos.on("serverOpening", relay("serverOpening"));
-        self.s.mongos.on("serverClosed", relay("serverClosed"));
-        self.s.mongos.on("topologyOpening", relay("topologyOpening"));
-        self.s.mongos.on("topologyClosed", relay("topologyClosed"));
-        self.s.mongos.on("topologyDescriptionChanged", relay("topologyDescriptionChanged"));
+        this.s.mongos.on("serverDescriptionChanged", relay("serverDescriptionChanged"));
+        this.s.mongos.on("serverHeartbeatStarted", relay("serverHeartbeatStarted"));
+        this.s.mongos.on("serverHeartbeatSucceeded", relay("serverHeartbeatSucceeded"));
+        this.s.mongos.on("serverHeartbeatFailed", relay("serverHeartbeatFailed"));
+        this.s.mongos.on("serverOpening", relay("serverOpening"));
+        this.s.mongos.on("serverClosed", relay("serverClosed"));
+        this.s.mongos.on("topologyOpening", relay("topologyOpening"));
+        this.s.mongos.on("topologyClosed", relay("topologyClosed"));
+        this.s.mongos.on("topologyDescriptionChanged", relay("topologyDescriptionChanged"));
 
         // self.s.mongos.on("fullsetup", relay("fullsetup"));
-        self.s.mongos.on("fullsetup", () => {
-            self.emit("fullsetup", self, self);
+        this.s.mongos.on("fullsetup", () => {
+            this.emit("fullsetup", this, this);
         });
 
         // Connect handler
         const connectHandler = function () {
 
             // Set up listeners
-            self.s.mongos.once("timeout", errorHandler("timeout"));
-            self.s.mongos.once("error", errorHandler("error"));
-            self.s.mongos.once("close", errorHandler("close"));
+            this.s.mongos.once("timeout", errorHandler("timeout"));
+            this.s.mongos.once("error", errorHandler("error"));
+            this.s.mongos.once("close", errorHandler("close"));
 
             // Emit open event
-            self.emit("open", null, self);
+            this.emit("open", null, this);
 
             // Return correctly
             try {
-                callback(null, self);
+                callback(null, this);
             } catch (err) {
                 process.nextTick(() => {
                     throw err;
@@ -279,22 +259,22 @@ class Mongos extends EventEmitter {
         };
 
         // Set up listeners
-        self.s.mongos.once("timeout", connectErrorHandler("timeout"));
-        self.s.mongos.once("error", connectErrorHandler("error"));
-        self.s.mongos.once("close", connectErrorHandler("close"));
-        self.s.mongos.once("connect", connectHandler);
+        this.s.mongos.once("timeout", connectErrorHandler("timeout"));
+        this.s.mongos.once("error", connectErrorHandler("error"));
+        this.s.mongos.once("close", connectErrorHandler("close"));
+        this.s.mongos.once("connect", connectHandler);
         // Join and leave events
-        self.s.mongos.on("joined", relay("joined"));
-        self.s.mongos.on("left", relay("left"));
+        this.s.mongos.on("joined", relay("joined"));
+        this.s.mongos.on("left", relay("left"));
 
         // Reconnect server
-        self.s.mongos.on("reconnect", reconnectHandler);
+        this.s.mongos.on("reconnect", reconnectHandler);
 
         // Start connection
-        self.s.mongos.connect(_options);
+        this.s.mongos.connect(_options);
     }
 
-    @classMethod({ callback: false, promise: false, returns: [ServerCapabilities] })
+    @classMethod({ callback: false, promise: false, returns: [__.ServerCapabilities] })
     capabilities() {
         if (this.s.sCapabilities) {
             return this.s.sCapabilities;
@@ -302,7 +282,7 @@ class Mongos extends EventEmitter {
         if (is.nil(this.s.mongos.lastIsMaster())) {
             return null;
         }
-        this.s.sCapabilities = new ServerCapabilities(this.s.mongos.lastIsMaster());
+        this.s.sCapabilities = new __.ServerCapabilities(this.s.mongos.lastIsMaster());
         return this.s.sCapabilities;
     }
 
@@ -339,7 +319,7 @@ class Mongos extends EventEmitter {
         return this.s.mongos.isConnected();
     }
 
-    @classMethod({ callback: false, promise: false, returns: [Cursor, AggregationCursor, CommandCursor] })
+    @classMethod({ callback: false, promise: false, returns: [__.Cursor, __.AggregationCursor, __.CommandCursor] })
     cursor(ns, cmd, options) {
         options.disconnectHandler = this.s.store;
         return this.s.mongos.cursor(ns, cmd, options);
@@ -381,5 +361,3 @@ class Mongos extends EventEmitter {
         return this.s.mongos.connections();
     }
 }
-
-module.exports = Mongos;

@@ -1,14 +1,10 @@
-const { is } = adone;
-const ReadPreference = require("./read_preference");
-const MongoError = require("../core").MongoError;
-const Define = require("./metadata");
-const CoreCursor = require("./cursor");
-const CoreReadPreference = require("../core").ReadPreference;
-const { metadata } = Define;
+const { is, database: { mongo } } = adone;
+const { __, MongoError, core, ReadPreference } = mongo;
+const { metadata, Cursor } = __;
 const { classMethod } = metadata;
 
 @metadata("CommandCursor")
-class CommandCursor extends CoreCursor {
+export default class CommandCursor extends Cursor {
     constructor(bson, ns, cmd, options, topology, topologyOptions) {
         super(bson, ns, cmd, options, topology, topologyOptions);
         const state = CommandCursor.INIT;
@@ -46,12 +42,12 @@ class CommandCursor extends CoreCursor {
         }
 
         if (r instanceof ReadPreference) {
-            this.s.options.readPreference = new CoreReadPreference(r.mode, r.tags, {
+            this.s.options.readPreference = new core.ReadPreference(r.mode, r.tags, {
                 maxStalenessSeconds: r.maxStalenessSeconds
             });
         } else if (is.string(r)) {
-            this.s.options.readPreference = new CoreReadPreference(r);
-        } else if (r instanceof CoreReadPreference) {
+            this.s.options.readPreference = new core.ReadPreference(r);
+        } else if (r instanceof core.ReadPreference) {
             this.s.options.readPreference = r;
         }
 
@@ -82,18 +78,6 @@ class CommandCursor extends CoreCursor {
     }
 }
 
-// inherits(CommandCursor, Readable);
-
-// Set the methods to inherit from prototype
-// const methodsToInherit = ["_next", "next", "hasNext", "each", "forEach", "toArray",
-//     "rewind", "bufferedCount", "readBufferedDocuments", "close", "isClosed", "kill", "setCursorBatchSize",
-//     "_find", "_getmore", "_killcursor", "isDead", "explain", "isNotified", "isKilled"];
-
-// // Only inherit the types we need
-// for (let i = 0; i < methodsToInherit.length; i++) {
-//     CommandCursor.prototype[methodsToInherit[i]] = CoreCursor.prototype[methodsToInherit[i]];
-// }
-
 CommandCursor.prototype.get = CommandCursor.prototype.toArray;
 CommandCursor.define.classMethod("get", { callback: true, promise: false });
 CommandCursor.define.classMethod("toArray", { callback: true, promise: true });
@@ -110,5 +94,3 @@ CommandCursor.define.classMethod("readBufferedDocuments", { callback: false, pro
 CommandCursor.INIT = 0;
 CommandCursor.OPEN = 1;
 CommandCursor.CLOSED = 2;
-
-module.exports = CommandCursor;

@@ -1,15 +1,10 @@
-const { is } = adone;
-
-const inherits = require("util").inherits;
-const MongoError = require("../core").MongoError;
-const Readable = require("stream").Readable;
-const Define = require("./metadata");
-const CoreCursor = require("./cursor");
-const { metadata } = Define;
+const { is, database: { mongo } } = adone;
+const { MongoError, __ } = mongo;
+const { Cursor, metadata } = __;
 const { classMethod } = metadata;
 
 @metadata("AggregationCursor")
-class AggregationCursor extends CoreCursor {
+export default class AggregationCursor extends Cursor {
     constructor(bson, ns, cmd, options, topology, topologyOptions) {
         super(bson, ns, cmd, options, topology, topologyOptions);
 
@@ -142,5 +137,3 @@ AggregationCursor.define.classMethod("readBufferedDocuments", { callback: false,
 AggregationCursor.INIT = 0;
 AggregationCursor.OPEN = 1;
 AggregationCursor.CLOSED = 2;
-
-module.exports = AggregationCursor;

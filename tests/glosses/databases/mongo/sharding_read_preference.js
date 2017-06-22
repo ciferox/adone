@@ -4,7 +4,7 @@ describe("sharding read preference", function () {
     }
 
     const { database: { mongo } } = adone;
-    const { Mongos, Server, Db, ReadPreference } = mongo;
+    const { __: { Mongos, Server, Db }, ReadPreference } = mongo;
 
     it("should correctly perform a mongos secondary read using the read preferences", async () => {
         const mongos = new Mongos([

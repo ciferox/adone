@@ -2,7 +2,7 @@ describe("find", function () {
     const { is, data: { bson }, util, promise, database: { mongo }, core } = adone;
     const { range, enumerate } = util;
 
-    it("shouldCorrectlyPerformSimpleFind", async () => {
+    it("should correctly perform simple find", async () => {
         const { db } = this;
         const collection = db.collection("test_find_simple");
         const r = await collection.insert([{ a: 2 }, { b: 3 }]);
@@ -73,9 +73,9 @@ describe("find", function () {
         await db.createCollection("test_find_sorting");
         const collection = await db.collection("test_find_sorting");
         await collection.insert([{ a: 1, b: 2 },
-        { a: 2, b: 1 },
-        { a: 3, b: 2 },
-        { a: 4, b: 1 }
+            { a: 2, b: 1 },
+            { a: 3, b: 2 },
+            { a: 4, b: 1 }
         ]);
         {
             const docs = (await collection.find({ a: { $lt: 10 } }, { sort: [["a", 1]] }).toArray()).map((x) => x.a);

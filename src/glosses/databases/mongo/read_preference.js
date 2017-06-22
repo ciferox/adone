@@ -1,6 +1,6 @@
 const { is } = adone;
 
-class ReadPreference {
+export default class ReadPreference {
     constructor(mode, tags, options) {
         this._type = "ReadPreference";
         this.mode = mode;
@@ -61,5 +61,3 @@ ReadPreference.PRIMARY_PREFERRED = "primaryPreferred";
 ReadPreference.SECONDARY = "secondary";
 ReadPreference.SECONDARY_PREFERRED = "secondaryPreferred";
 ReadPreference.NEAREST = "nearest";
-
-module.exports = ReadPreference;

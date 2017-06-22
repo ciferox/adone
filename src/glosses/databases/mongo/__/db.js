@@ -1,50 +1,19 @@
-const { is } = adone;
-const EventEmitter = require("events").EventEmitter;
-const authenticate = require("./authenticate");
-const inherits = require("util").inherits;
-const getSingleProperty = require("./utils").getSingleProperty;
-const shallowClone = require("./utils").shallowClone;
-const parseIndexOptions = require("./utils").parseIndexOptions;
-const debugOptions = require("./utils").debugOptions;
-const CommandCursor = require("./command_cursor");
-const handleCallback = require("./utils").handleCallback;
-const filterOptions = require("./utils").filterOptions;
-const toError = require("./utils").toError;
-const ReadPreference = require("./read_preference");
-const f = require("util").format;
-const Admin = require("./admin");
-const Code = adone.data.bson.Code;
-const CoreReadPreference = require("../core").ReadPreference;
-const MongoError = require("../core").MongoError;
-const ObjectId = adone.data.bson.ObjectId;
-const Define = require("./metadata");
-const Logger = require("../core").Logger;
-const Collection = require("./collection");
-const crypto = require("crypto");
-const mergeOptionsAndWriteConcern = require("./utils").mergeOptionsAndWriteConcern;
-const assign = require("./utils").assign;
-
-const debugFields = [
-    "authSource",
-    "w",
-    "wtimeout",
-    "j",
-    "native_parser",
-    "forceServerObjectId",
-    "serializeFunctions",
-    "raw",
-    "promoteLongs",
-    "promoteValues",
-    "promoteBuffers",
-    "bufferMaxEntries",
-    "numberOfRetries",
-    "retryMiliSeconds",
-    "readPreference",
-    "pkFactory",
-    "parentDb",
-    "promiseLibrary",
-    "noListener"
-];
+const { is, EventEmitter, database: { mongo }, std: { crypto } } = adone;
+const { __, MongoError, ObjectId, Code, core, ReadPreference } = mongo;
+const {
+    utils: {
+        assign,
+        getSingleProperty,
+        shallowClone,
+        parseIndexOptions,
+        handleCallback,
+        filterOptions,
+        toError,
+        mergeOptionsAndWriteConcern
+    },
+    metadata
+} = __;
+const { classMethod } = metadata;
 
 // Filter out any write concern options
 const illegalCommandFields = [
@@ -87,20 +56,18 @@ const legalOptionNames = [
     "promoteValues"
 ];
 
-const { metadata } = Define;
-const { classMethod } = metadata;
 
 const convertReadPreference = (readPreference) => {
     if (readPreference && is.string(readPreference)) {
-        return new CoreReadPreference(readPreference);
+        return new core.ReadPreference(readPreference);
     } else if (readPreference instanceof ReadPreference) {
-        return new CoreReadPreference(readPreference.mode, readPreference.tags, {
+        return new core.ReadPreference(readPreference.mode, readPreference.tags, {
             maxStalenessSeconds: readPreference.maxStalenessSeconds
         });
     } else if (readPreference && is.object(readPreference)) {
         const mode = readPreference.mode || readPreference.preference;
         if (mode && is.string(mode)) {
-            readPreference = new CoreReadPreference(mode, readPreference.tags, {
+            readPreference = new core.ReadPreference(mode, readPreference.tags, {
                 maxStalenessSeconds: readPreference.maxStalenessSeconds
             });
         }
@@ -122,7 +89,7 @@ const collectionKeys = [
 
 // Transformation methods for cursor results
 const listCollectionsTranforms = function (databaseName) {
-    const matching = f("%s.", databaseName);
+    const matching = `${databaseName}.`;
 
     return {
         doc(doc) {
@@ -246,7 +213,7 @@ const createListener = function (self, e, object) {
 };
 
 @metadata("Db")
-class Db extends EventEmitter {
+export default class Db extends EventEmitter {
     constructor(databaseName, topology, options = {}) {
         super();
         let promiseLibrary = options.promiseLibrary;
@@ -383,9 +350,9 @@ class Db extends EventEmitter {
         if (options.readPreference) {
             options.readPreference = convertReadPreference(options.readPreference);
         } else {
-            options.readPreference = CoreReadPreference.primary;
+            options.readPreference = core.ReadPreference.primary;
         }
-        this.s.topology.command(f("%s.$cmd", dbName), command, options, (err, result) => {
+        this.s.topology.command(`${dbName}.$cmd`, command, options, (err, result) => {
             if (err) {
                 return handleCallback(callback, err);
             }
@@ -454,12 +421,12 @@ class Db extends EventEmitter {
         });
     }
 
-    @classMethod({ callback: false, promise: false, returns: [Admin] })
+    @classMethod({ callback: false, promise: false, returns: [__.Admin] })
     admin() {
-        return new Admin(this, this.s.topology, this.s.promiseLibrary);
+        return new __.Admin(this, this.s.topology, this.s.promiseLibrary);
     }
 
-    @classMethod({ callback: true, promise: false, returns: [Collection] })
+    @classMethod({ callback: true, promise: false, returns: [__.Collection] })
     collection(name, options, callback) {
         if (is.function(options)) {
             [callback, options] = [options, {}];
@@ -482,7 +449,14 @@ class Db extends EventEmitter {
 
         if (is.nil(options) || !options.strict) {
             try {
-                const collection = new Collection(this, this.s.topology, this.s.databaseName, name, this.s.pkFactory, options);
+                const collection = new __.Collection(
+                    this,
+                    this.s.topology,
+                    this.s.databaseName,
+                    name,
+                    this.s.pkFactory,
+                    options
+                );
                 if (callback) {
                     callback(null, collection);
                 }
@@ -497,7 +471,7 @@ class Db extends EventEmitter {
 
         // Strict mode
         if (!is.function(callback)) {
-            throw toError(f("A callback is required in strict mode. While getting collection %s.", name));
+            throw toError(`A callback is required in strict mode. While getting collection ${name}.`);
         }
 
         // Did the user destroy the topology
@@ -511,14 +485,14 @@ class Db extends EventEmitter {
                 return handleCallback(callback, err, null);
             }
             if (collections.length === 0) {
-                return handleCallback(callback, toError(f("Collection %s does not exist. Currently in strict mode.", name)), null);
+                return handleCallback(callback, toError(`Collection ${name} does not exist. Currently in strict mode.`), null);
             }
 
             try {
                 return handleCallback(
                     callback,
                     null,
-                    new Collection(
+                    new __.Collection(
                         this,
                         this.s.topology,
                         this.s.databaseName,
@@ -547,13 +521,16 @@ class Db extends EventEmitter {
                     return handleCallback(callback, err, null);
                 }
                 if (collections.length > 0 && finalOptions.strict) {
-                    return handleCallback(callback, MongoError.create({ message: f("Collection %s already exists. Currently in strict mode.", name), driver: true }), null);
+                    return handleCallback(callback, MongoError.create({
+                        message: `Collection ${name} already exists. Currently in strict mode.`,
+                        driver: true
+                    }), null);
                 } else if (collections.length > 0) {
                     try {
                         return handleCallback(
                             callback,
                             null,
-                            new Collection(
+                            new __.Collection(
                                 this,
                                 this.s.topology,
                                 this.s.databaseName,
@@ -590,7 +567,7 @@ class Db extends EventEmitter {
                     handleCallback(
                         callback,
                         null,
-                        new Collection(
+                        new __.Collection(
                             this,
                             this.s.topology,
                             this.s.databaseName,
@@ -654,7 +631,7 @@ class Db extends EventEmitter {
         return this.command(commandObject, options, callback);
     }
 
-    @classMethod({ callback: false, promise: false, returns: [CommandCursor] })
+    @classMethod({ callback: false, promise: false, returns: [__.CommandCursor] })
     listCollections(filter, options) {
         filter = filter || {};
         options = options || {};
@@ -675,9 +652,9 @@ class Db extends EventEmitter {
             // Build the command
             const command = { listCollections: true, filter, cursor };
             // Set the AggregationCursor constructor
-            options.cursorFactory = CommandCursor;
+            options.cursorFactory = __.CommandCursor;
             // Create the cursor
-            cursor = this.s.topology.cursor(f("%s.$cmd", this.s.databaseName), command, options);
+            cursor = this.s.topology.cursor(`${this.s.databaseName}.$cmd`, command, options);
             // Do we have a readPreference, apply it
             if (options.readPreference) {
                 cursor.setReadPreference(options.readPreference);
@@ -691,12 +668,12 @@ class Db extends EventEmitter {
             // If we have legacy mode and have not provided a full db name filter it
             if (is.string(filter.name) && !(new RegExp(`^${this.databaseName}\\.`).test(filter.name))) {
                 filter = shallowClone(filter);
-                filter.name = f("%s.%s", this.s.databaseName, filter.name);
+                filter.name = `${this.s.databaseName}.${filter.name}`;
             }
         }
 
         if (is.nil(filter)) {
-            filter.name = f("/%s/", this.s.databaseName);
+            filter.name = `/${this.s.databaseName}/`;
         }
 
         // Rewrite the filter to use $and to filter out indexes
@@ -750,7 +727,7 @@ class Db extends EventEmitter {
         }
 
         // Set primary read preference
-        options.readPreference = new CoreReadPreference(ReadPreference.PRIMARY);
+        options.readPreference = new core.ReadPreference(ReadPreference.PRIMARY);
 
         // Execute the command
         this.command(cmd, options, (err, result) => {
@@ -761,7 +738,10 @@ class Db extends EventEmitter {
                 return handleCallback(callback, null, result.retval);
             }
             if (result) {
-                return handleCallback(callback, MongoError.create({ message: f("eval failed: %s", result.errmsg), driver: true }), null);
+                return handleCallback(callback, MongoError.create({
+                    message: `eval failed: ${result.errmsg}`,
+                    driver: true
+                }), null);
             }
             handleCallback(callback, err, result);
         });
@@ -929,7 +909,7 @@ class Db extends EventEmitter {
 
             // Return the collection objects
             handleCallback(callback, null, documents.map((d) => {
-                return new Collection(
+                return new __.Collection(
                     this,
                     this.s.topology,
                     this.s.databaseName,
@@ -1022,7 +1002,7 @@ class Db extends EventEmitter {
         // Did the user pass in a collation, check if our write server supports it
         if (indexes[0].collation && capabilities && !capabilities.commandsTakeCollation) {
             // Create a new error
-            const error = new MongoError(f("server/primary/mongos does not support collation"));
+            const error = new MongoError("server/primary/mongos does not support collation");
             error.code = 67;
             // Return the error
             return callback(error);
@@ -1085,7 +1065,7 @@ class Db extends EventEmitter {
             // Set no key checking
             finalOptions.checkKeys = false;
             // Insert document
-            this.s.topology.insert(f("%s.%s", this.s.databaseName, Db.SYSTEM_INDEX_COLLECTION), doc, finalOptions, (err, result) => {
+            this.s.topology.insert(`${this.s.databaseName}.${Db.SYSTEM_INDEX_COLLECTION}`, doc, finalOptions, (err, result) => {
                 if (is.nil(callback)) {
                     return;
                 }
@@ -1487,7 +1467,7 @@ class Db extends EventEmitter {
     @classMethod({ callback: true, promise: true })
     authenticate(...args) {
         // console.warn("Db.prototype.authenticate method will no longer be available in the next major release 3.x as MongoDB 3.6 will only allow auth against users in the admin db and will no longer allow multiple credentials on a socket. Please authenticate using MongoClient.connect with auth credentials.");
-        return authenticate.apply(this, [this, ...args]);
+        return __.authenticate.apply(this, [this, ...args]);
     }
 
     @classMethod({ callback: true, promise: true })
@@ -1595,5 +1575,3 @@ Db.SYSTEM_PROFILE_COLLECTION = "system.profile";
 Db.SYSTEM_USER_COLLECTION = "system.users";
 Db.SYSTEM_COMMAND_COLLECTION = "$cmd";
 Db.SYSTEM_JS_COLLECTION = "system.js";
-
-module.exports = Db;
