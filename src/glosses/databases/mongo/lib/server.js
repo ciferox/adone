@@ -68,7 +68,6 @@ const { classMethod } = metadata;
 class Server extends EventEmitter {
     constructor(host, port, options = {}) {
         super();
-
         options = filterOptions(options, legalOptionNames);
 
         const storeOptions = {
@@ -180,7 +179,6 @@ class Server extends EventEmitter {
     }
 
     connect(db, _options, callback) {
-        const self = this;
         if (is.function(_options)) {
             [callback, _options] = [_options, {}];
         }
@@ -190,17 +188,17 @@ class Server extends EventEmitter {
         if (!is.function(callback)) {
             callback = null;
         }
-        self.s.options = _options;
+        this.s.options = _options;
 
-        self.s.storeOptions.bufferMaxEntries = db.bufferMaxEntries;
+        this.s.storeOptions.bufferMaxEntries = db.bufferMaxEntries;
 
         const connectErrorHandler = () => (err) => {
             ["timeout", "error", "close"].forEach((e) => {
                 // eslint-disable-next-line no-use-before-define
-                self.s.server.removeListener(e, connectHandlers[e]);
+                this.s.server.removeListener(e, connectHandlers[e]);
             });
 
-            self.s.server.removeListener("connect", connectErrorHandler);
+            this.s.server.removeListener("connect", connectErrorHandler);
 
             try {
                 callback(err);
@@ -219,40 +217,40 @@ class Server extends EventEmitter {
 
         const errorHandler = (event) => (err) => {
             if (event !== "error") {
-                self.emit(event, err);
+                this.emit(event, err);
             }
         };
 
         const reconnectHandler = () => {
-            self.emit("reconnect", self);
-            self.s.store.execute();
+            this.emit("reconnect", this);
+            this.s.store.execute();
         };
 
         const reconnectFailedHandler = (err) => {
-            self.emit("reconnectFailed", err);
-            self.s.store.flush(err);
+            this.emit("reconnectFailed", err);
+            this.s.store.flush(err);
         };
 
         const destroyHandler = () => {
-            self.s.store.flush();
+            this.s.store.flush();
         };
 
         const relay = (event) => (t, server) => {
-            self.emit(event, t, server);
+            this.emit(event, t, server);
         };
 
         const connectHandler = () => {
             ["timeout", "error", "close", "destroy"].forEach((e) => {
-                self.s.server.removeAllListeners(e);
+                this.s.server.removeAllListeners(e);
             });
 
-            self.s.server.on("timeout", errorHandler("timeout"));
-            self.s.server.once("error", errorHandler("error"));
-            self.s.server.on("close", errorHandler("close"));
-            self.s.server.on("destroy", destroyHandler);
-            self.emit("open", null, self);
+            this.s.server.on("timeout", errorHandler("timeout"));
+            this.s.server.once("error", errorHandler("error"));
+            this.s.server.on("close", errorHandler("close"));
+            this.s.server.on("destroy", destroyHandler);
+            this.emit("open", null, this);
             try {
-                callback(null, self);
+                callback(null, this);
             } catch (err) {
                 process.nextTick(() => {
                     throw err;
@@ -263,32 +261,32 @@ class Server extends EventEmitter {
         ["timeout", "error", "close", "serverOpening", "serverDescriptionChanged", "serverHeartbeatStarted",
             "serverHeartbeatSucceeded", "serverHeartbeatFailed", "serverClosed", "topologyOpening",
             "topologyClosed", "topologyDescriptionChanged"].forEach((e) => {
-            self.s.server.removeAllListeners(e);
+            this.s.server.removeAllListeners(e);
         });
 
-        self.s.server.once("timeout", connectHandlers.timeout);
-        self.s.server.once("error", connectHandlers.error);
-        self.s.server.once("close", connectHandlers.close);
-        self.s.server.once("connect", connectHandler);
+        this.s.server.once("timeout", connectHandlers.timeout);
+        this.s.server.once("error", connectHandlers.error);
+        this.s.server.once("close", connectHandlers.close);
+        this.s.server.once("connect", connectHandler);
 
         // Reconnect server
-        self.s.server.on("reconnect", reconnectHandler);
-        self.s.server.on("reconnectFailed", reconnectFailedHandler);
+        this.s.server.on("reconnect", reconnectHandler);
+        this.s.server.on("reconnectFailed", reconnectFailedHandler);
 
         // Set up SDAM listeners
-        self.s.server.on("serverDescriptionChanged", relay("serverDescriptionChanged"));
-        self.s.server.on("serverHeartbeatStarted", relay("serverHeartbeatStarted"));
-        self.s.server.on("serverHeartbeatSucceeded", relay("serverHeartbeatSucceeded"));
-        self.s.server.on("serverHeartbeatFailed", relay("serverHeartbeatFailed"));
-        self.s.server.on("serverOpening", relay("serverOpening"));
-        self.s.server.on("serverClosed", relay("serverClosed"));
-        self.s.server.on("topologyOpening", relay("topologyOpening"));
-        self.s.server.on("topologyClosed", relay("topologyClosed"));
-        self.s.server.on("topologyDescriptionChanged", relay("topologyDescriptionChanged"));
-        self.s.server.on("attemptReconnect", relay("attemptReconnect"));
-        self.s.server.on("monitoring", relay("monitoring"));
+        this.s.server.on("serverDescriptionChanged", relay("serverDescriptionChanged"));
+        this.s.server.on("serverHeartbeatStarted", relay("serverHeartbeatStarted"));
+        this.s.server.on("serverHeartbeatSucceeded", relay("serverHeartbeatSucceeded"));
+        this.s.server.on("serverHeartbeatFailed", relay("serverHeartbeatFailed"));
+        this.s.server.on("serverOpening", relay("serverOpening"));
+        this.s.server.on("serverClosed", relay("serverClosed"));
+        this.s.server.on("topologyOpening", relay("topologyOpening"));
+        this.s.server.on("topologyClosed", relay("topologyClosed"));
+        this.s.server.on("topologyDescriptionChanged", relay("topologyDescriptionChanged"));
+        this.s.server.on("attemptReconnect", relay("attemptReconnect"));
+        this.s.server.on("monitoring", relay("monitoring"));
 
-        self.s.server.connect(_options);
+        this.s.server.connect(_options);
     }
 
     @classMethod({ callback: false, promise: false, returns: [ServerCapabilities] })

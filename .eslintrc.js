@@ -151,7 +151,9 @@ module.exports = {
         "no-path-concat": "error",  // disallow string concatenation with __dirname and __filename
         "callback-return": "warn",  // require return statements after callbacks
         "adone/no-number-methods": "error",  // disallow Number.isNaN, Number.isFinite etc
-        "adone/no-is.undefined-or-is.null": "error" // disallow is.undefined(t) || is.null(t)
+        "adone/no-is.undefined-or-is.null": "error", // disallow is.undefined(t) || is.null(t)
+        "adone/no-function-expression-class-property": "error", // disallow properties like a = function () {
+        "adone/indexof": "warn"  // warnings for include-like indexOf usages
     },
     "plugins": [
         "adone",

@@ -1,12 +1,12 @@
 const {
     database: { mongo: { core: {
         ReadPreference,
-    Cursor: BasicCursor,
-    MongoError,
-    Server,
-    ReplSetState,
-    auth: { MongoCR, X509, Plain, ScramSHA1 },
-    helper
+        Cursor: BasicCursor,
+        MongoError,
+        Server,
+        ReplSetState,
+        auth: { MongoCR, X509, Plain, ScramSHA1 },
+        helper
     } } },
     std: { events: EventEmitter },
     is, util
@@ -76,59 +76,59 @@ const pingServer = (self, server, cb) => {
             return cb(err, r);
         }
 
-            // Calculate latency
+        // Calculate latency
         const latencyMS = new Date().getTime() - start;
-            // Set the last updatedTime
+        // Set the last updatedTime
         const hrTime = process.hrtime();
-            // Calculate the last update time
+        // Calculate the last update time
         server.lastUpdateTime = hrTime[0] * 1000 + Math.round(hrTime[1] / 1000);
 
-            // We had an error, remove it from the state
+        // We had an error, remove it from the state
         if (err) {
-                // Emit the server heartbeat failure
+            // Emit the server heartbeat failure
             helper.emitSDAMEvent(self, "serverHeartbeatFailed", { durationMS: latencyMS, failure: err, connectionId: server.name });
 
-                // Remove server from the state
+            // Remove server from the state
             self.s.replicaSetState.remove(server);
         } else {
-                // Update the server ismaster
+            // Update the server ismaster
             server.ismaster = r.result;
 
-                // Check if we have a lastWriteDate convert it to MS
-                // and store on the server instance for later use
+            // Check if we have a lastWriteDate convert it to MS
+            // and store on the server instance for later use
             if (server.ismaster.lastWrite && server.ismaster.lastWrite.lastWriteDate) {
-                    server.lastWriteDate = server.ismaster.lastWrite.lastWriteDate.getTime();
-                }
+                server.lastWriteDate = server.ismaster.lastWrite.lastWriteDate.getTime();
+            }
 
-                // Do we have a brand new server
+            // Do we have a brand new server
             if (server.lastIsMasterMS === -1) {
-                    server.lastIsMasterMS = latencyMS;
-                } else if (server.lastIsMasterMS) {
-                    // After the first measurement, average RTT MUST be computed using an
-                    // exponentially-weighted moving average formula, with a weighting factor (alpha) of 0.2.
-                    // If the prior average is denoted old_rtt, then the new average (new_rtt) is
-                    // computed from a new RTT measurement (x) using the following formula:
-                    // alpha = 0.2
-                    // new_rtt = alpha * x + (1 - alpha) * old_rtt                 server.lastIsMasterMS = 0.2 * latencyMS + (1 - 0.2) * server.lastIsMasterMS;             }
-                    server.lastIsMasterMS = 0.2 * latencyMS + (1 - 0.2) * server.lastIsMasterMS;
-                }
+                server.lastIsMasterMS = latencyMS;
+            } else if (server.lastIsMasterMS) {
+                // After the first measurement, average RTT MUST be computed using an
+                // exponentially-weighted moving average formula, with a weighting factor (alpha) of 0.2.
+                // If the prior average is denoted old_rtt, then the new average (new_rtt) is
+                // computed from a new RTT measurement (x) using the following formula:
+                // alpha = 0.2
+                // new_rtt = alpha * x + (1 - alpha) * old_rtt                 server.lastIsMasterMS = 0.2 * latencyMS + (1 - 0.2) * server.lastIsMasterMS;             }
+                server.lastIsMasterMS = 0.2 * latencyMS + (1 - 0.2) * server.lastIsMasterMS;
+            }
 
             if (self.s.replicaSetState.update(server)) {
-                    // Primary lastIsMaster store it
-                    if (server.lastIsMaster() && server.lastIsMaster().ismaster) {
-                        self.ismaster = server.lastIsMaster();
-                    }
+                // Primary lastIsMaster store it
+                if (server.lastIsMaster() && server.lastIsMaster().ismaster) {
+                    self.ismaster = server.lastIsMaster();
                 }
+            }
 
-                // Server heart beat event
+            // Server heart beat event
             helper.emitSDAMEvent(self, "serverHeartbeatSucceeded", { durationMS: latencyMS, reply: r.result, connectionId: server.name });
         }
 
 
-            // Calculate the stalness for this server
+        // Calculate the stalness for this server
         self.s.replicaSetState.updateServerMaxStaleness(server, self.s.haInterval);
 
-            // Callback
+        // Callback
         cb(err, r);
     });
 };
@@ -393,24 +393,36 @@ const connectNewServers = (self, servers, callback) => {
     // Handle events
     const _handleEvent = (self, event) => {
         return function (err) {
-            count = count - 1;
+            // count = count - 1;
 
             // Destroyed
             if (self.state === DESTROYED || self.state === UNREFERENCED) {
-                return this.destroy({ force: true });
+                this.destroy({ force: true });
+                if (--count === 0) {
+                    callback(error);
+                }
+                return;
             }
 
             if (event === "connect" && !self.authenticating) {
                 // Destroyed
                 if (self.state === DESTROYED || self.state === UNREFERENCED) {
-                    return this.destroy({ force: true });
+                    this.destroy({ force: true });
+                    if (--count === 0) {
+                        callback(error);
+                    }
+                    return;
                 }
 
                 // Do we have authentication contexts that need to be applied
                 applyAuthenticationContexts(self, this, () => {
                     // Destroy the instance
                     if (self.state === DESTROYED || self.state === UNREFERENCED) {
-                        return this.destroy({ force: true });
+                        this.destroy({ force: true });
+                        if (--count === 0) {
+                            callback(error);
+                        }
+                        return;
                     }
 
                     // Update the state
@@ -441,20 +453,31 @@ const connectNewServers = (self, servers, callback) => {
                     } else {
                         this.destroy({ force: true });
                     }
+                    if (--count === 0) {
+                        callback(error);
+                    }
                 });
             } else if (event === "connect" && self.authenticating) {
                 this.destroy({ force: true });
+                if (--count === 0) {
+                    callback(error);
+                }
             } else if (event === "error") {
                 error = err;
+                if (--count === 0) {
+                    callback(error);
+                }
+            } else if (--count === 0) {
+                callback(error);
             }
 
             // Rexecute any stalled operation
-            rexecuteOperations(self);
+            // rexecuteOperations(self);
 
             // Are we done finish up callback
-            if (count === 0) {
-                callback(error);
-            }
+            // if (count === 0) {
+            //     callback(error);
+            // }
         };
     };
 
@@ -1112,7 +1135,7 @@ export default class ReplSet extends EventEmitter {
             return this.s.disconnectHandler.add("auth", db, args, {}, callback);
         }
 
-        args.pop();  // remove the callback
+        args.pop(); // remove the callback
 
         // Set to authenticating
         this.authenticating = true;

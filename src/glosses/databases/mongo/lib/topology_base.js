@@ -1,193 +1,254 @@
+const { is } = adone;
+
 const MongoError = require("../core").MongoError;
 const f = require("util").format;
-
-// The store of ops
-const Store = function (topology, storeOptions) {
-    const self = this;
-    const storedOps = [];
-    storeOptions = storeOptions || { force: false, bufferMaxEntries: -1 };
-
-    // Internal state
-    this.s = {
-        storedOps,
-        storeOptions,
-        topology
-    };
-
-    Object.defineProperty(this, "length", {
-        enumerable: true, get() {
-            return self.s.storedOps.length;
-        }
-    });
-};
-
-Store.prototype.add = function (opType, ns, ops, options, callback) {
-    if (this.s.storeOptions.force) {
-        return callback(MongoError.create({ message: "db closed by application", driver: true }));
-    }
-
-    if (this.s.storeOptions.bufferMaxEntries == 0) {
-        return callback(MongoError.create({ message: f("no connection available for operation and number of stored operation > %s", this.s.storeOptions.bufferMaxEntries), driver: true }));
-    }
-
-    if (this.s.storeOptions.bufferMaxEntries > 0 && this.s.storedOps.length > this.s.storeOptions.bufferMaxEntries) {
-        while (this.s.storedOps.length > 0) {
-            const op = this.s.storedOps.shift();
-            op.c(MongoError.create({ message: f("no connection available for operation and number of stored operation > %s", this.s.storeOptions.bufferMaxEntries), driver: true }));
-        }
-
-        return;
-    }
-
-    this.s.storedOps.push({ t: opType, n: ns, o: ops, op: options, c: callback });
-};
-
-Store.prototype.addObjectAndMethod = function (opType, object, method, params, callback) {
-    if (this.s.storeOptions.force) {
-        return callback(MongoError.create({ message: "db closed by application", driver: true }));
-    }
-
-    if (this.s.storeOptions.bufferMaxEntries == 0) {
-        return callback(MongoError.create({ message: f("no connection available for operation and number of stored operation > %s", this.s.storeOptions.bufferMaxEntries), driver: true }));
-    }
-
-    if (this.s.storeOptions.bufferMaxEntries > 0 && this.s.storedOps.length > this.s.storeOptions.bufferMaxEntries) {
-        while (this.s.storedOps.length > 0) {
-            const op = this.s.storedOps.shift();
-            op.c(MongoError.create({ message: f("no connection available for operation and number of stored operation > %s", this.s.storeOptions.bufferMaxEntries), driver: true }));
-        }
-
-        return;
-    }
-
-    this.s.storedOps.push({ t: opType, m: method, o: object, p: params, c: callback });
-};
-
-Store.prototype.flush = function (err) {
-    while (this.s.storedOps.length > 0) {
-        this.s.storedOps.shift().c(err || MongoError.create({ message: f("no connection available for operation"), driver: true }));
-    }
-};
 
 const primaryOptions = ["primary", "primaryPreferred", "nearest", "secondaryPreferred"];
 const secondaryOptions = ["secondary", "secondaryPreferred"];
 
-Store.prototype.execute = function (options) {
-    options = options || {};
-    // Get current ops
-    const ops = this.s.storedOps;
-    // Reset the ops
-    this.s.storedOps = [];
+class Store {
+    constructor(topology, storeOptions) {
+        const storedOps = [];
+        storeOptions = storeOptions || { force: false, bufferMaxEntries: -1 };
 
-    // Unpack options
-    const executePrimary = typeof options.executePrimary === "boolean"
-        ? options.executePrimary : true;
-    const executeSecondary = typeof options.executeSecondary === "boolean"
-        ? options.executeSecondary : true;
+        this.s = {
+            storedOps,
+            storeOptions,
+            topology
+        };
+    }
 
-    // Execute all the stored ops
-    while (ops.length > 0) {
-        const op = ops.shift();
+    get length() {
+        return this.s.storedOps.length;
+    }
 
-        if (op.t == "cursor") {
-            if (executePrimary && executeSecondary) {
-                op.o[op.m].apply(op.o, op.p);
-            } else if (executePrimary && op.o.options
-                && op.o.options.readPreference
-                && primaryOptions.indexOf(op.o.options.readPreference.mode) != -1) {
-                op.o[op.m].apply(op.o, op.p);
-            } else if (!executePrimary && executeSecondary && op.o.options
-                && op.o.options.readPreference
-                && secondaryOptions.indexOf(op.o.options.readPreference.mode) != -1) {
-                op.o[op.m].apply(op.o, op.p);
+    add(opType, ns, ops, options, callback) {
+        if (this.s.storeOptions.force) {
+            return callback(MongoError.create({ message: "db closed by application", driver: true }));
+        }
+
+        if (this.s.storeOptions.bufferMaxEntries === 0) {
+            return callback(MongoError.create({
+                message: f("no connection available for operation and number of stored operation > %s", this.s.storeOptions.bufferMaxEntries),
+                driver: true
+            }));
+        }
+
+        if (
+            this.s.storeOptions.bufferMaxEntries > 0 &&
+            this.s.storedOps.length > this.s.storeOptions.bufferMaxEntries
+        ) {
+            while (this.s.storedOps.length > 0) {
+                const op = this.s.storedOps.shift();
+                op.c(MongoError.create({
+                    message: f("no connection available for operation and number of stored operation > %s", this.s.storeOptions.bufferMaxEntries),
+                    driver: true
+                }));
             }
-        } else if (op.t == "auth") {
-            this.s.topology[op.t].apply(this.s.topology, op.o);
-        } else {
-            if (executePrimary && executeSecondary) {
-                this.s.topology[op.t](op.n, op.o, op.op, op.c);
-            } else if (executePrimary && op.op && op.op.readPreference
-                && primaryOptions.indexOf(op.op.readPreference.mode) != -1) {
-                this.s.topology[op.t](op.n, op.o, op.op, op.c);
-            } else if (!executePrimary && executeSecondary && op.op && op.op.readPreference
-                && secondaryOptions.indexOf(op.op.readPreference.mode) != -1) {
-                this.s.topology[op.t](op.n, op.o, op.op, op.c);
+
+            return;
+        }
+
+        this.s.storedOps.push({ t: opType, n: ns, o: ops, op: options, c: callback });
+    }
+
+    addObjectAndMethod(opType, object, method, params, callback) {
+        if (this.s.storeOptions.force) {
+            return callback(MongoError.create({ message: "db closed by application", driver: true }));
+        }
+
+        if (this.s.storeOptions.bufferMaxEntries === 0) {
+            return callback(MongoError.create({
+                message: f("no connection available for operation and number of stored operation > %s", this.s.storeOptions.bufferMaxEntries),
+                driver: true
+            }));
+        }
+
+        if (
+            this.s.storeOptions.bufferMaxEntries > 0 &&
+            this.s.storedOps.length > this.s.storeOptions.bufferMaxEntries
+        ) {
+            while (this.s.storedOps.length > 0) {
+                const op = this.s.storedOps.shift();
+                op.c(MongoError.create({
+                    message: f("no connection available for operation and number of stored operation > %s", this.s.storeOptions.bufferMaxEntries),
+                    driver: true
+                }));
+            }
+
+            return;
+        }
+
+        this.s.storedOps.push({ t: opType, m: method, o: object, p: params, c: callback });
+    }
+
+    flush(err) {
+        while (this.s.storedOps.length > 0) {
+            this.s.storedOps.shift().c(err || MongoError.create({
+                message: f("no connection available for operation"),
+                driver: true
+            }));
+        }
+    }
+
+    execute(options) {
+        options = options || {};
+        // Get current ops
+        const ops = this.s.storedOps;
+        // Reset the ops
+        this.s.storedOps = [];
+
+        // Unpack options
+        const executePrimary = is.boolean(options.executePrimary)
+            ? options.executePrimary
+            : true;
+        const executeSecondary = is.boolean(options.executeSecondary)
+            ? options.executeSecondary
+            : true;
+
+        // Execute all the stored ops
+        while (ops.length > 0) {
+            const op = ops.shift();
+
+            if (op.t === "cursor") {
+                if (executePrimary && executeSecondary) {
+                    op.o[op.m].apply(op.o, op.p);
+                } else if (
+                    executePrimary &&
+                    op.o.options &&
+                    op.o.options.readPreference &&
+                    primaryOptions.includes(op.o.options.readPreference.mode)
+                ) {
+                    op.o[op.m].apply(op.o, op.p);
+                } else if (
+                    !executePrimary &&
+                    executeSecondary &&
+                    op.o.options &&
+                    op.o.options.readPreference &&
+                    secondaryOptions.includes(op.o.options.readPreference.mode)
+                ) {
+                    op.o[op.m].apply(op.o, op.p);
+                }
+            } else if (op.t === "auth") {
+                this.s.topology[op.t].apply(this.s.topology, op.o);
+            } else {
+                if (executePrimary && executeSecondary) {
+                    this.s.topology[op.t](op.n, op.o, op.op, op.c);
+                } else if (
+                    executePrimary &&
+                    op.op &&
+                    op.op.readPreference &&
+                    primaryOptions.includes(op.op.readPreference.mode)
+                ) {
+                    this.s.topology[op.t](op.n, op.o, op.op, op.c);
+                } else if (
+                    !executePrimary &&
+                    executeSecondary &&
+                    op.op &&
+                    op.op.readPreference &&
+                    secondaryOptions.includes(op.op.readPreference.mode)
+                ) {
+                    this.s.topology[op.t](op.n, op.o, op.op, op.c);
+                }
             }
         }
     }
-};
 
-Store.prototype.all = function () {
-    return this.s.storedOps;
-};
+    all() {
+        return this.s.storedOps;
+    }
+}
 
-// Server capabilities
-const ServerCapabilities = function (ismaster) {
-    const setup_get_property = function (object, name, value) {
-        Object.defineProperty(object, name, {
-            enumerable: true,
-            get() {
-                return value;
-            }
-        });
-    };
+class ServerCapabilities {
+    constructor(ismaster) {
+        this.ismaster = ismaster;
+        this.aggregationCursor = false;
+        this.writeCommands = false;
+        this.textSearch = false;
+        this.authCommands = false;
+        this.listCollections = false;
+        this.listIndexes = false;
+        this._maxNumberOfDocsInBatch = ismaster.maxWriteBatchSize || 1000;
+        this._commandsTakeWriteConcern = false;
+        this._commandsTakeCollation = false;
 
-    // Capabilities
-    let aggregationCursor = false;
-    let writeCommands = false;
-    let textSearch = false;
-    let authCommands = false;
-    let listCollections = false;
-    let listIndexes = false;
-    const maxNumberOfDocsInBatch = ismaster.maxWriteBatchSize || 1000;
-    let commandsTakeWriteConcern = false;
-    let commandsTakeCollation = false;
+        if (ismaster.minWireVersion >= 0) {
+            this.textSearch = true;
+        }
 
-    if (ismaster.minWireVersion >= 0) {
-        textSearch = true;
+        if (ismaster.maxWireVersion >= 1) {
+            this.aggregationCursor = true;
+            this.authCommands = true;
+        }
+
+        if (ismaster.maxWireVersion >= 2) {
+            this.writeCommands = true;
+        }
+
+        if (ismaster.maxWireVersion >= 3) {
+            this.listCollections = true;
+            this.listIndexes = true;
+        }
+
+        if (ismaster.maxWireVersion >= 5) {
+            this._commandsTakeWriteConcern = true;
+            this._commandsTakeCollation = true;
+        }
+
+        // If no min or max wire version set to 0
+        if (is.nil(ismaster.minWireVersion)) {
+            ismaster.minWireVersion = 0;
+        }
+
+        if (is.nil(ismaster.maxWireVersion)) {
+            ismaster.maxWireVersion = 0;
+        }
     }
 
-    if (ismaster.maxWireVersion >= 1) {
-        aggregationCursor = true;
-        authCommands = true;
+    get hasAggregationCursor() {
+        return this.aggregationCursor;
     }
 
-    if (ismaster.maxWireVersion >= 2) {
-        writeCommands = true;
+    get hasWriteCommands() {
+        return this.writeCommands;
     }
 
-    if (ismaster.maxWireVersion >= 3) {
-        listCollections = true;
-        listIndexes = true;
+    get hasTextSearch() {
+        return this.textSearch;
     }
 
-    if (ismaster.maxWireVersion >= 5) {
-        commandsTakeWriteConcern = true;
-        commandsTakeCollation = true;
+    get hasAuthCommands() {
+        return this.authCommands;
     }
 
-    // If no min or max wire version set to 0
-    if (ismaster.minWireVersion == null) {
-        ismaster.minWireVersion = 0;
+    get hasListCollectionsCommand() {
+        return this.listCollections;
     }
 
-    if (ismaster.maxWireVersion == null) {
-        ismaster.maxWireVersion = 0;
+    get hasListIndexesCommand() {
+        return this.listIndexes;
     }
 
-    // Map up read only parameters
-    setup_get_property(this, "hasAggregationCursor", aggregationCursor);
-    setup_get_property(this, "hasWriteCommands", writeCommands);
-    setup_get_property(this, "hasTextSearch", textSearch);
-    setup_get_property(this, "hasAuthCommands", authCommands);
-    setup_get_property(this, "hasListCollectionsCommand", listCollections);
-    setup_get_property(this, "hasListIndexesCommand", listIndexes);
-    setup_get_property(this, "minWireVersion", ismaster.minWireVersion);
-    setup_get_property(this, "maxWireVersion", ismaster.maxWireVersion);
-    setup_get_property(this, "maxNumberOfDocsInBatch", maxNumberOfDocsInBatch);
-    setup_get_property(this, "commandsTakeWriteConcern", commandsTakeWriteConcern);
-    setup_get_property(this, "commandsTakeCollation", commandsTakeCollation);
-};
+    get minWireVersion() {
+        return this.ismaster.minWireVersion;
+    }
+
+    get maxWireVersion() {
+        return this.ismaster.maxWireVersion;
+    }
+
+    get maxNumberOfDocsInBatch() {
+        return this._maxNumberOfDocsInBatch;
+    }
+
+    get commandsTakeWriteConcern() {
+        return this._commandsTakeWriteConcern;
+    }
+
+    get commandsTakeCollation() {
+        return this._commandsTakeCollation;
+    }
+}
 
 exports.Store = Store;
 exports.ServerCapabilities = ServerCapabilities;

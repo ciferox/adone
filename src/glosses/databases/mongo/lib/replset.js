@@ -1,7 +1,6 @@
-
+const { is } = adone;
 
 const EventEmitter = require("events").EventEmitter;
-const inherits = require("util").inherits;
 const f = require("util").format;
 const Server = require("./server");
 const Cursor = require("./cursor");
@@ -20,33 +19,48 @@ const filterOptions = require("./utils").filterOptions;
 const mergeOptions = require("./utils").mergeOptions;
 const getReadPreference = require("./utils").getReadPreference;
 const os = require("os");
-/**
- * @fileOverview The **ReplSet** class is a class that represents a Replicaset topology and is
- * used to construct connections.
- *
- * **ReplSet Should not be used, use MongoClient.connect**
- * @example
- * var Db = require('mongodb').Db,
- *   ReplSet = require('mongodb').ReplSet,
- *   Server = require('mongodb').Server,
- *   test = require('assert');
- * // Connect using ReplSet
- * var server = new Server('localhost', 27017);
- * var db = new Db('test', new ReplSet([server]));
- * db.open(function(err, db) {
- *   // Get an additional db
- *   db.close();
- * });
- */
 
 // Allowed parameters
-const legalOptionNames = ["ha", "haInterval", "replicaSet", "rs_name", "secondaryAcceptableLatencyMS",
-    "connectWithNoPrimary", "poolSize", "ssl", "checkServerIdentity", "sslValidate",
-    "sslCA", "sslCert", "sslCRL", "sslKey", "sslPass", "socketOptions", "bufferMaxEntries",
-    "store", "auto_reconnect", "autoReconnect", "emitError",
-    "keepAlive", "noDelay", "connectTimeoutMS", "socketTimeoutMS", "strategy", "debug", "family",
-    "loggerLevel", "logger", "reconnectTries", "appname", "domainsEnabled",
-    "servername", "promoteLongs", "promoteValues", "promoteBuffers", "maxStalenessSeconds"];
+const legalOptionNames = [
+    "ha",
+    "haInterval",
+    "replicaSet",
+    "rs_name",
+    "secondaryAcceptableLatencyMS",
+    "connectWithNoPrimary",
+    "poolSize",
+    "ssl",
+    "checkServerIdentity",
+    "sslValidate",
+    "sslCA",
+    "sslCert",
+    "sslCRL",
+    "sslKey",
+    "sslPass",
+    "socketOptions",
+    "bufferMaxEntries",
+    "store",
+    "auto_reconnect",
+    "autoReconnect",
+    "emitError",
+    "keepAlive",
+    "noDelay",
+    "connectTimeoutMS",
+    "socketTimeoutMS",
+    "strategy",
+    "debug",
+    "family",
+    "loggerLevel",
+    "logger",
+    "reconnectTries",
+    "appname",
+    "domainsEnabled",
+    "servername",
+    "promoteLongs",
+    "promoteValues",
+    "promoteBuffers",
+    "maxStalenessSeconds"
+];
 
 // Get package.json variable
 const driverVersion = "2.2.22";
@@ -56,199 +70,12 @@ const name = process.platform;
 const architecture = process.arch;
 const release = os.release();
 
-/**
- * Creates a new ReplSet instance
- * @class
- * @deprecated
- * @param {Server[]} servers A seedlist of servers participating in the replicaset.
- * @param {object} [options=null] Optional settings.
- * @param {booelan} [options.ha=true] Turn on high availability monitoring.
- * @param {number} [options.haInterval=10000] Time between each replicaset status check.
- * @param {string} [options.replicaSet] The name of the replicaset to connect to.
- * @param {number} [options.secondaryAcceptableLatencyMS=15] Sets the range of servers to pick when using NEAREST (lowest ping ms + the latency fence, ex: range of 1 to (1 + 15) ms)
- * @param {boolean} [options.connectWithNoPrimary=false] Sets if the driver should connect even if no primary is available
- * @param {number} [options.poolSize=5] Number of connections in the connection pool for each server instance, set to 5 as default for legacy reasons.
- * @param {boolean} [options.ssl=false] Use ssl connection (needs to have a mongod server with ssl support)
- * @param {boolean|function} [options.checkServerIdentity=true] Ensure we check server identify during SSL, set to false to disable checking. Only works for Node 0.12.x or higher. You can pass in a boolean or your own checkServerIdentity override function.
- * @param {object} [options.sslValidate=true] Validate mongod server certificate against ca (needs to have a mongod server with ssl support, 2.4 or higher)
- * @param {array} [options.sslCA=null] Array of valid certificates either as Buffers or Strings (needs to have a mongod server with ssl support, 2.4 or higher)
- * @param {array} [options.sslCRL=null] Array of revocation certificates either as Buffers or Strings (needs to have a mongod server with ssl support, 2.4 or higher)
- * @param {(Buffer|string)} [options.sslCert=null] String or buffer containing the certificate we wish to present (needs to have a mongod server with ssl support, 2.4 or higher)
- * @param {(Buffer|string)} [options.sslKey=null] String or buffer containing the certificate private key we wish to present (needs to have a mongod server with ssl support, 2.4 or higher)
- * @param {(Buffer|string)} [options.sslPass=null] String or buffer containing the certificate password (needs to have a mongod server with ssl support, 2.4 or higher)
- * @param {string} [options.servername=null] String containing the server name requested via TLS SNI.
- * @param {object} [options.socketOptions=null] Socket options
- * @param {boolean} [options.socketOptions.noDelay=true] TCP Socket NoDelay option.
- * @param {number} [options.socketOptions.keepAlive=0] TCP KeepAlive on the socket with a X ms delay before start.
- * @param {number} [options.socketOptions.connectTimeoutMS=10000] TCP Connection timeout setting
- * @param {number} [options.socketOptions.socketTimeoutMS=0] TCP Socket timeout setting
- * @param {boolean} [options.domainsEnabled=false] Enable the wrapping of the callback in the current domain, disabled by default to avoid perf hit.
- * @param {number} [options.maxStalenessSeconds=undefined] The max staleness to secondary reads (values under 10 seconds cannot be guaranteed);
- * @fires ReplSet#connect
- * @fires ReplSet#ha
- * @fires ReplSet#joined
- * @fires ReplSet#left
- * @fires ReplSet#fullsetup
- * @fires ReplSet#open
- * @fires ReplSet#close
- * @fires ReplSet#error
- * @fires ReplSet#timeout
- * @fires ReplSet#parseError
- * @property {string} parserType the parser type used (c++ or js).
- * @return {ReplSet} a ReplSet instance.
- */
-const ReplSet = function (servers, options) {
-    if (!(this instanceof ReplSet)) {
-        return new ReplSet(servers, options);
-    }
-    options = options || {};
-    const self = this;
-    // Set up event emitter
-    EventEmitter.call(this);
-
-    // Filter the options
-    options = filterOptions(options, legalOptionNames);
-
-    // Ensure all the instances are Server
-    for (let i = 0; i < servers.length; i++) {
-        if (!(servers[i] instanceof Server)) {
-            throw MongoError.create({ message: "all seed list instances must be of the Server type", driver: true });
-        }
-    }
-
-    // Stored options
-    const storeOptions = {
-        force: false,
-        bufferMaxEntries: typeof options.bufferMaxEntries === "number" ? options.bufferMaxEntries : MAX_JS_INT
-    };
-
-    // Shared global store
-    const store = options.store || new Store(self, storeOptions);
-
-    // Build seed list
-    const seedlist = servers.map((x) => {
-        return { host: x.host, port: x.port };
-    });
-
-    // Clone options
-    let clonedOptions = mergeOptions({}, {
-        disconnectHandler: store,
-        cursorFactory: Cursor,
-        reconnect: false,
-        emitError: typeof options.emitError === "boolean" ? options.emitError : true,
-        size: typeof options.poolSize === "number" ? options.poolSize : 5
-    });
-
-    // Translate any SSL options and other connectivity options
-    clonedOptions = translateOptions(clonedOptions, options);
-
-    // Socket options
-    const socketOptions = options.socketOptions && Object.keys(options.socketOptions).length > 0
-        ? options.socketOptions : options;
-
-    // Translate all the options to the mongodb-core ones
-    clonedOptions = translateOptions(clonedOptions, socketOptions);
-    if (typeof clonedOptions.keepAlive === "number") {
-        clonedOptions.keepAliveInitialDelay = clonedOptions.keepAlive;
-        clonedOptions.keepAlive = clonedOptions.keepAlive > 0;
-    }
-
-    // Client info
-    this.clientInfo = {
-        driver: {
-            name: "nodejs",
-            version: driverVersion
-        },
-        os: {
-            type,
-            name,
-            architecture,
-            version: release
-        },
-        platform: nodejsversion
-    };
-
-    // Build default client information
-    clonedOptions.clientInfo = this.clientInfo;
-    // Do we have an application specific string
-    if (options.appname) {
-        clonedOptions.clientInfo.application = { name: options.appname };
-    }
-
-    // Create the ReplSet
-    const replset = new CReplSet(seedlist, clonedOptions);
-
-    // Listen to reconnect event
-    replset.on("reconnect", () => {
-        self.emit("reconnect");
-        store.execute();
-    });
-
-    // Internal state
-    this.s = {
-        // Replicaset
-        replset,
-        // Server capabilities
-        sCapabilities: null,
-        // Debug tag
-        tag: options.tag,
-        // Store options
-        storeOptions,
-        // Cloned options
-        clonedOptions,
-        // Store
-        store,
-        // Options
-        options
-    };
-
-    // Debug
-    if (clonedOptions.debug) {
-        // Last ismaster
-        Object.defineProperty(this, "replset", {
-            enumerable: true, get() {
-                return replset;
-            }
-        });
-    }
-};
-
-/**
- * @ignore
- */
-inherits(ReplSet, EventEmitter);
-
-// Last ismaster
-Object.defineProperty(ReplSet.prototype, "isMasterDoc", {
-    enumerable: true, get() {
-        return this.s.replset.lastIsMaster();
-    }
-});
-
-Object.defineProperty(ReplSet.prototype, "parserType", {
-    enumerable: true, get() {
-        return this.s.replset.parserType;
-    }
-});
-
-// BSON property
-Object.defineProperty(ReplSet.prototype, "bson", {
-    enumerable: true, get() {
-        return this.s.replset.s.bson;
-    }
-});
-
-Object.defineProperty(ReplSet.prototype, "haInterval", {
-    enumerable: true, get() {
-        return this.s.replset.s.haInterval;
-    }
-});
-
-const define = ReplSet.define = new Define("ReplSet", ReplSet, false);
+const { metadata } = Define;
+const { classMethod } = metadata;
 
 // Ensure the right read Preference object
 const translateReadPreference = function (options) {
-    if (typeof options.readPreference === "string") {
+    if (is.string(options.readPreference)) {
         options.readPreference = new CoreReadPreference(options.readPreference);
     } else if (options.readPreference instanceof ReadPreference) {
         options.readPreference = new CoreReadPreference(options.readPreference.mode
@@ -258,348 +85,357 @@ const translateReadPreference = function (options) {
     return options;
 };
 
-// Connect method
-ReplSet.prototype.connect = function (db, _options, callback) {
-    const self = this;
-    if (typeof _options === "function") {
-        callback = _options, _options = {};
-    }
-    if (_options == null) {
-        _options = {};
-    }
-    if (!(typeof callback === "function")) {
-        callback = null;
-    }
-    self.s.options = _options;
+@metadata("ReplSet")
+class ReplSet extends EventEmitter {
+    constructor(servers, options) {
+        super();
+        options = options || {};
+        // Filter the options
+        options = filterOptions(options, legalOptionNames);
 
-    // Update bufferMaxEntries
-    self.s.storeOptions.bufferMaxEntries = db.bufferMaxEntries;
+        // Ensure all the instances are Server
+        for (let i = 0; i < servers.length; i++) {
+            if (!(servers[i] instanceof Server)) {
+                throw MongoError.create({ message: "all seed list instances must be of the Server type", driver: true });
+            }
+        }
 
-    // Actual handler
-    const errorHandler = function (event) {
-        return function (err) {
-            if (event != "error") {
-                self.emit(event, err);
+        const storeOptions = {
+            force: false,
+            bufferMaxEntries: is.number(options.bufferMaxEntries) ? options.bufferMaxEntries : MAX_JS_INT
+        };
+
+        const store = options.store || new Store(this, storeOptions);
+
+        const seedlist = servers.map((x) => ({ host: x.host, port: x.port }));
+
+        let clonedOptions = mergeOptions({}, {
+            disconnectHandler: store,
+            cursorFactory: Cursor,
+            reconnect: false,
+            emitError: is.boolean(options.emitError) ? options.emitError : true,
+            size: is.number(options.poolSize) ? options.poolSize : 5
+        });
+
+        // Translate any SSL options and other connectivity options
+        clonedOptions = translateOptions(clonedOptions, options);
+
+        const socketOptions = options.socketOptions && !is.emptyObject(options.socketOptions)
+            ? options.socketOptions
+            : options;
+
+        // Translate all the options to the mongodb-core ones
+        clonedOptions = translateOptions(clonedOptions, socketOptions);
+        if (is.number(clonedOptions.keepAlive)) {
+            clonedOptions.keepAliveInitialDelay = clonedOptions.keepAlive;
+            clonedOptions.keepAlive = clonedOptions.keepAlive > 0;
+        }
+
+        this.clientInfo = {
+            driver: {
+                name: "nodejs",
+                version: driverVersion
+            },
+            os: {
+                type,
+                name,
+                architecture,
+                version: release
+            },
+            platform: nodejsversion
+        };
+
+        clonedOptions.clientInfo = this.clientInfo;
+        // Do we have an application specific string
+        if (options.appname) {
+            clonedOptions.clientInfo.application = { name: options.appname };
+        }
+
+        const replset = new CReplSet(seedlist, clonedOptions);
+
+        replset.on("reconnect", () => {
+            this.emit("reconnect");
+            store.execute();
+        });
+
+        this.s = {
+            replset,
+            sCapabilities: null,
+            tag: options.tag,
+            storeOptions,
+            clonedOptions,
+            store,
+            options
+        };
+
+        if (clonedOptions.debug) {
+            Object.defineProperty(this, "replset", {
+                enumerable: true,
+                get() {
+                    return replset;
+                }
+            });
+        }
+    }
+
+    get isMasterDoc() {
+        return this.s.replset.lastIsMaster();
+    }
+
+    get parserType() {
+        return this.s.replset.parserType;
+    }
+
+    get bson() {
+        return this.s.replset.s.bson;
+    }
+
+    get haInterval() {
+        return this.s.replset.s.haInterval;
+    }
+
+    connect(db, _options, callback) {
+        if (is.function(_options)) {
+            callback = _options, _options = {};
+        }
+        if (is.nil(_options)) {
+            _options = {};
+        }
+        if (!(is.function(callback))) {
+            callback = null;
+        }
+        this.s.options = _options;
+
+        // Update bufferMaxEntries
+        this.s.storeOptions.bufferMaxEntries = db.bufferMaxEntries;
+
+        // Actual handler
+        const errorHandler = (event) => (err) => {
+            if (event !== "error") {
+                this.emit(event, err);
             }
         };
-    };
 
-    // Clear out all the current handlers left over
-    const events = ["timeout", "error", "close", "serverOpening", "serverDescriptionChanged", "serverHeartbeatStarted",
-        "serverHeartbeatSucceeded", "serverHeartbeatFailed", "serverClosed", "topologyOpening",
-        "topologyClosed", "topologyDescriptionChanged", "joined", "left", "ping", "ha"];
-    events.forEach((e) => {
-        self.s.replset.removeAllListeners(e);
-    });
+        // Clear out all the current handlers left over
+        const events = [
+            "timeout",
+            "error",
+            "close",
+            "serverOpening",
+            "serverDescriptionChanged",
+            "serverHeartbeatStarted",
+            "serverHeartbeatSucceeded",
+            "serverHeartbeatFailed",
+            "serverClosed",
+            "topologyOpening",
+            "topologyClosed",
+            "topologyDescriptionChanged",
+            "joined",
+            "left",
+            "ping",
+            "ha"
+        ];
+        events.forEach((e) => {
+            this.s.replset.removeAllListeners(e);
+        });
 
-    // relay the event
-    const relay = function (event) {
-        return function (t, server) {
-            self.emit(event, t, server);
+        // relay the event
+        const relay = (event) => (t, server) => {
+            this.emit(event, t, server);
         };
-    };
 
-    // Replset events relay
-    const replsetRelay = function (event) {
-        return function (t, server) {
-            self.emit(event, t, server.lastIsMaster(), server);
+        // Replset events relay
+        const replsetRelay = (event) => (t, server) => {
+            this.emit(event, t, server.lastIsMaster(), server);
         };
-    };
 
-    // Relay ha
-    const relayHa = function (t, state) {
-        self.emit("ha", t, state);
+        // Relay ha
+        const relayHa = (t, state) => {
+            this.emit("ha", t, state);
 
-        if (t == "start") {
-            self.emit("ha_connect", t, state);
-        } else if (t == "end") {
-            self.emit("ha_ismaster", t, state);
-        }
-    };
+            if (t === "start") {
+                this.emit("ha_connect", t, state);
+            } else if (t === "end") {
+                this.emit("ha_ismaster", t, state);
+            }
+        };
 
-    // Set up serverConfig listeners
-    self.s.replset.on("joined", replsetRelay("joined"));
-    self.s.replset.on("left", relay("left"));
-    self.s.replset.on("ping", relay("ping"));
-    self.s.replset.on("ha", relayHa);
+        // Set up serverConfig listeners
+        this.s.replset.on("joined", replsetRelay("joined"));
+        this.s.replset.on("left", relay("left"));
+        this.s.replset.on("ping", relay("ping"));
+        this.s.replset.on("ha", relayHa);
 
-    // Set up SDAM listeners
-    self.s.replset.on("serverDescriptionChanged", relay("serverDescriptionChanged"));
-    self.s.replset.on("serverHeartbeatStarted", relay("serverHeartbeatStarted"));
-    self.s.replset.on("serverHeartbeatSucceeded", relay("serverHeartbeatSucceeded"));
-    self.s.replset.on("serverHeartbeatFailed", relay("serverHeartbeatFailed"));
-    self.s.replset.on("serverOpening", relay("serverOpening"));
-    self.s.replset.on("serverClosed", relay("serverClosed"));
-    self.s.replset.on("topologyOpening", relay("topologyOpening"));
-    self.s.replset.on("topologyClosed", relay("topologyClosed"));
-    self.s.replset.on("topologyDescriptionChanged", relay("topologyDescriptionChanged"));
+        // Set up SDAM listeners
+        this.s.replset.on("serverDescriptionChanged", relay("serverDescriptionChanged"));
+        this.s.replset.on("serverHeartbeatStarted", relay("serverHeartbeatStarted"));
+        this.s.replset.on("serverHeartbeatSucceeded", relay("serverHeartbeatSucceeded"));
+        this.s.replset.on("serverHeartbeatFailed", relay("serverHeartbeatFailed"));
+        this.s.replset.on("serverOpening", relay("serverOpening"));
+        this.s.replset.on("serverClosed", relay("serverClosed"));
+        this.s.replset.on("topologyOpening", relay("topologyOpening"));
+        this.s.replset.on("topologyClosed", relay("topologyClosed"));
+        this.s.replset.on("topologyDescriptionChanged", relay("topologyDescriptionChanged"));
 
-    self.s.replset.on("fullsetup", () => {
-        self.emit("fullsetup", self, self);
-    });
+        this.s.replset.on("fullsetup", () => {
+            this.emit("fullsetup", this, this);
+        });
 
-    self.s.replset.on("all", () => {
-        self.emit("all", null, self);
-    });
+        this.s.replset.on("all", () => {
+            this.emit("all", null, this);
+        });
 
-    // Connect handler
-    const connectHandler = function () {
-        // Set up listeners
-        self.s.replset.once("timeout", errorHandler("timeout"));
-        self.s.replset.once("error", errorHandler("error"));
-        self.s.replset.once("close", errorHandler("close"));
+        // Connect handler
+        const connectHandler = () => {
+            // Set up listeners
+            this.s.replset.once("timeout", errorHandler("timeout"));
+            this.s.replset.once("error", errorHandler("error"));
+            this.s.replset.once("close", errorHandler("close"));
 
-        // Emit open event
-        self.emit("open", null, self);
+            // Emit open event
+            this.emit("open", null, this);
 
-        // Return correctly
-        try {
-            callback(null, self);
-        } catch (err) {
-            process.nextTick(() => {
-                throw err;
-            });
-        }
-    };
+            // Return correctly
+            try {
+                callback(null, this);
+            } catch (err) {
+                process.nextTick(() => {
+                    throw err;
+                });
+            }
+        };
 
-    // Error handler
-    var connectErrorHandler = function () {
-        return function (err) {
+        // Error handler
+        const connectErrorHandler = () => (err) => {
             ["timeout", "error", "close"].forEach((e) => {
-                self.s.replset.removeListener(e, connectErrorHandler);
+                this.s.replset.removeListener(e, connectErrorHandler);
             });
 
-            self.s.replset.removeListener("connect", connectErrorHandler);
+            this.s.replset.removeListener("connect", connectErrorHandler);
             // Destroy the replset
-            self.s.replset.destroy();
+            this.s.replset.destroy();
 
             // Try to callback
             try {
                 callback(err);
             } catch (err) {
-                if (!self.s.replset.isConnected()) {
+                if (!this.s.replset.isConnected()) {
                     process.nextTick(() => {
                         throw err;
                     });
                 }
             }
         };
-    };
 
-    // Set up listeners
-    self.s.replset.once("timeout", connectErrorHandler("timeout"));
-    self.s.replset.once("error", connectErrorHandler("error"));
-    self.s.replset.once("close", connectErrorHandler("close"));
-    self.s.replset.once("connect", connectHandler);
+        // Set up listeners
+        this.s.replset.once("timeout", connectErrorHandler("timeout"));
+        this.s.replset.once("error", connectErrorHandler("error"));
+        this.s.replset.once("close", connectErrorHandler("close"));
+        this.s.replset.once("connect", connectHandler);
 
-    // Start connection
-    self.s.replset.connect(_options);
-};
+        // Start connection
+        this.s.replset.connect(_options);
+    }
 
-// Server capabilities
-ReplSet.prototype.capabilities = function () {
-    if (this.s.sCapabilities) {
+    @classMethod({ callback: false, promise: false, returns: [ServerCapabilities] })
+    capabilities() {
+        if (this.s.sCapabilities) {
+            return this.s.sCapabilities;
+        }
+        if (is.nil(this.s.replset.lastIsMaster())) {
+            return null;
+        }
+        this.s.sCapabilities = new ServerCapabilities(this.s.replset.lastIsMaster());
         return this.s.sCapabilities;
     }
-    if (this.s.replset.lastIsMaster() == null) {
-        return null;
-    }
-    this.s.sCapabilities = new ServerCapabilities(this.s.replset.lastIsMaster());
-    return this.s.sCapabilities;
-};
 
-define.classMethod("capabilities", { callback: false, promise: false, returns: [ServerCapabilities] });
-
-// Command
-ReplSet.prototype.command = function (ns, cmd, options, callback) {
-    this.s.replset.command(ns, cmd, getReadPreference(options), callback);
-};
-
-define.classMethod("command", { callback: true, promise: false });
-
-// Insert
-ReplSet.prototype.insert = function (ns, ops, options, callback) {
-    this.s.replset.insert(ns, ops, options, callback);
-};
-
-define.classMethod("insert", { callback: true, promise: false });
-
-// Update
-ReplSet.prototype.update = function (ns, ops, options, callback) {
-    this.s.replset.update(ns, ops, options, callback);
-};
-
-define.classMethod("update", { callback: true, promise: false });
-
-// Remove
-ReplSet.prototype.remove = function (ns, ops, options, callback) {
-    this.s.replset.remove(ns, ops, options, callback);
-};
-
-define.classMethod("remove", { callback: true, promise: false });
-
-// Destroyed
-ReplSet.prototype.isDestroyed = function () {
-    return this.s.replset.isDestroyed();
-};
-
-// IsConnected
-ReplSet.prototype.isConnected = function (options) {
-    options = options || {};
-
-    // If we passed in a readPreference, translate to
-    // a CoreReadPreference instance
-    if (options.readPreference) {
-        options.readPreference = translateReadPreference(options.readPreference);
+    @classMethod({ callback: true, promise: false })
+    command(ns, cmd, options, callback) {
+        this.s.replset.command(ns, cmd, getReadPreference(options), callback);
     }
 
-    return this.s.replset.isConnected(options);
-};
 
-define.classMethod("isConnected", { callback: false, promise: false, returns: [Boolean] });
-
-// Insert
-ReplSet.prototype.cursor = function (ns, cmd, options) {
-    options = translateReadPreference(options);
-    options.disconnectHandler = this.s.store;
-    return this.s.replset.cursor(ns, cmd, options);
-};
-
-define.classMethod("cursor", { callback: false, promise: false, returns: [Cursor, AggregationCursor, CommandCursor] });
-
-ReplSet.prototype.lastIsMaster = function () {
-    return this.s.replset.lastIsMaster();
-};
-
-/**
- * Unref all sockets
- * @method
- */
-ReplSet.prototype.unref = function () {
-    return this.s.replset.unref();
-};
-
-ReplSet.prototype.close = function (forceClosed) {
-    const self = this;
-    // Call destroy on the topology
-    this.s.replset.destroy({
-        force: typeof forceClosed === "boolean" ? forceClosed : false
-    });
-    // We need to wash out all stored processes
-    if (forceClosed == true) {
-        this.s.storeOptions.force = forceClosed;
-        this.s.store.flush();
+    @classMethod({ callback: true, promise: false })
+    insert(ns, ops, options, callback) {
+        this.s.replset.insert(ns, ops, options, callback);
     }
 
-    const events = ["timeout", "error", "close", "joined", "left"];
-    events.forEach((e) => {
-        self.removeAllListeners(e);
-    });
-};
+    @classMethod({ callback: true, promise: false })
+    update(ns, ops, options, callback) {
+        this.s.replset.update(ns, ops, options, callback);
+    }
 
-define.classMethod("close", { callback: false, promise: false });
+    @classMethod({ callback: true, promise: false })
+    remove(ns, ops, options, callback) {
+        this.s.replset.remove(ns, ops, options, callback);
+    }
 
-ReplSet.prototype.auth = function () {
-    const args = Array.prototype.slice.call(arguments, 0);
-    this.s.replset.auth.apply(this.s.replset, args);
-};
+    isDestroyed() {
+        return this.s.replset.isDestroyed();
+    }
 
-define.classMethod("auth", { callback: true, promise: false });
+    @classMethod({ callback: false, promise: false, returns: [Boolean] })
+    isConnected(options) {
+        options = options || {};
 
-ReplSet.prototype.logout = function () {
-    const args = Array.prototype.slice.call(arguments, 0);
-    this.s.replset.logout.apply(this.s.replset, args);
-};
+        // If we passed in a readPreference, translate to
+        // a CoreReadPreference instance
+        if (options.readPreference) {
+            options.readPreference = translateReadPreference(options.readPreference);
+        }
 
-define.classMethod("logout", { callback: true, promise: false });
+        return this.s.replset.isConnected(options);
+    }
 
-/**
- * All raw connections
- * @method
- * @return {array}
- */
-ReplSet.prototype.connections = function () {
-    return this.s.replset.connections();
-};
+    @classMethod({ callback: false, promise: false, returns: [Cursor, AggregationCursor, CommandCursor] })
+    cursor(ns, cmd, options) {
+        options = translateReadPreference(options);
+        options.disconnectHandler = this.s.store;
+        return this.s.replset.cursor(ns, cmd, options);
+    }
 
-define.classMethod("connections", { callback: false, promise: false, returns: [Array] });
+    lastIsMaster() {
+        return this.s.replset.lastIsMaster();
+    }
 
-/**
- * A replset connect event, used to verify that the connection is up and running
- *
- * @event ReplSet#connect
- * @type {ReplSet}
- */
+    unref() {
+        return this.s.replset.unref();
+    }
 
-/**
- * The replset high availability event
- *
- * @event ReplSet#ha
- * @type {function}
- * @param {string} type The stage in the high availability event (start|end)
- * @param {boolean} data.norepeat This is a repeating high availability process or a single execution only
- * @param {number} data.id The id for this high availability request
- * @param {object} data.state An object containing the information about the current replicaset
- */
+    @classMethod({ callback: false, promise: false })
+    close(forceClosed) {
+        // Call destroy on the topology
+        this.s.replset.destroy({
+            force: is.boolean(forceClosed) ? forceClosed : false
+        });
+        // We need to wash out all stored processes
+        if (forceClosed === true) {
+            this.s.storeOptions.force = forceClosed;
+            this.s.store.flush();
+        }
 
-/**
- * A server member left the replicaset
- *
- * @event ReplSet#left
- * @type {function}
- * @param {string} type The type of member that left (primary|secondary|arbiter)
- * @param {Server} server The server object that left
- */
+        const events = ["timeout", "error", "close", "joined", "left"];
+        events.forEach((e) => {
+            this.removeAllListeners(e);
+        });
+    }
 
-/**
- * A server member joined the replicaset
- *
- * @event ReplSet#joined
- * @type {function}
- * @param {string} type The type of member that joined (primary|secondary|arbiter)
- * @param {Server} server The server object that joined
- */
+    @classMethod({ callback: true, promise: false })
+    auth(...args) {
+        this.s.replset.auth(...args);
+    }
 
-/**
- * ReplSet open event, emitted when replicaset can start processing commands.
- *
- * @event ReplSet#open
- * @type {Replset}
- */
 
-/**
- * ReplSet fullsetup event, emitted when all servers in the topology have been connected to.
- *
- * @event ReplSet#fullsetup
- * @type {Replset}
- */
+    @classMethod({ callback: true, promise: false })
+    logout(...args) {
+        this.s.replset.logout(...args);
+    }
 
-/**
- * ReplSet close event
- *
- * @event ReplSet#close
- * @type {object}
- */
 
-/**
- * ReplSet error event, emitted if there is an error listener.
- *
- * @event ReplSet#error
- * @type {MongoError}
- */
-
-/**
- * ReplSet timeout event
- *
- * @event ReplSet#timeout
- * @type {object}
- */
-
-/**
- * ReplSet parseError event
- *
- * @event ReplSet#parseError
- * @type {object}
- */
+    @classMethod({ callback: false, promise: false, returns: [Array] })
+    connections() {
+        return this.s.replset.connections();
+    }
+}
 
 module.exports = ReplSet;
