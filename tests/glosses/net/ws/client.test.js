@@ -1397,6 +1397,32 @@ describe("net", "ws", "WebSocket", () => {
             wss.on("connection", (client) => client.close(1000));
         });
 
+        it("should assign 'true' to wasClean when server closes with code 3000", (done) => {
+            const wss = new Server({ port: ++port }, () => {
+                const ws = new Client(`ws://localhost:${port}`);
+
+                ws.addEventListener("close", (closeEvent) => {
+                    assert.ok(closeEvent.wasClean);
+                    wss.close(done);
+                });
+            });
+
+            wss.on("connection", (client) => client.close(3000));
+        });
+
+        it("should assign 'true' to wasClean when server closes with code 4999", (done) => {
+            const wss = new Server({ port: ++port }, () => {
+                const ws = new Client(`ws://localhost:${port}`);
+
+                ws.addEventListener("close", (closeEvent) => {
+                    assert.ok(closeEvent.wasClean);
+                    wss.close(done);
+                });
+            });
+
+            wss.on("connection", (client) => client.close(4999));
+        });
+
         it("should receive valid CloseEvent when server closes with code 1001", (done) => {
             const wss = new Server({ port: ++port }, () => {
                 const ws = new Client(`ws://localhost:${port}`);
