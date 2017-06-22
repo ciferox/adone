@@ -33,7 +33,7 @@ sprintfFormat = (parseTree, argv) => {
     let output = "";
     let i;
     let k;
-    let match;
+    let ph;
     let pad;
     let padCharacter;
     let padLength;
@@ -42,35 +42,35 @@ sprintfFormat = (parseTree, argv) => {
     for (i = 0; i < treeLength; i++) {
         if (is.string(parseTree[i])) {
             output += parseTree[i];
-        } else if (is.array(parseTree[i])) {
-            match = parseTree[i]; // convenience purposes only
-            if (match[2]) { // keyword argument
+        } else if (typeof (parseTree[i]) === "object") {
+            ph = parseTree[i]; // convenience purposes only
+            if (ph.keys) { // keyword argument
                 arg = argv[cursor];
-                for (k = 0; k < match[2].length; k++) {
-                    if (!arg.hasOwnProperty(match[2][k])) {
-                        throw new Error(`Property ${match[2][k]} does not exist`);
+                for (k = 0; k < ph.keys.length; k++) {
+                    if (!arg.hasOwnProperty(ph.keys[k])) {
+                        throw new Error(sprintf('[sprintf] property "%s" does not exist', ph.keys[k]));
                     }
-                    arg = arg[match[2][k]];
+                    arg = arg[ph.keys[k]];
                 }
-            } else if (match[1]) { // positional argument (explicit)
-                arg = argv[match[1]];
+            } else if (ph.paramNo) { // positional argument (explicit)
+                arg = argv[ph.paramNo];
             } else { // positional argument (implicit)
                 arg = argv[cursor++];
             }
 
-            if (re.notType.test(match[8]) && re.notPrimitive.test(match[8]) && arg instanceof Function) {
+            if (re.notType.test(ph.type) && re.notPrimitive.test(ph.type) && arg instanceof Function) {
                 arg = arg();
             }
 
-            if (re.numericArg.test(match[8]) && (!is.number(arg) && isNaN(arg))) {
+            if (re.numericArg.test(ph.type) && (!is.number(arg) && isNaN(arg))) {
                 throw new TypeError(sprintf("[sprintf] expecting number but found %T", arg));
             }
 
-            if (re.number.test(match[8])) {
+            if (re.number.test(ph.type)) {
                 isPositive = arg >= 0;
             }
 
-            switch (match[8]) {
+            switch (ph.type) {
                 case "b":
                     arg = parseInt(arg, 10).toString(2);
                     break;
@@ -82,38 +82,38 @@ sprintfFormat = (parseTree, argv) => {
                     arg = parseInt(arg, 10);
                     break;
                 case "j":
-                    arg = JSON.stringify(arg, null, match[6] ? parseInt(match[6]) : 0);
+                    arg = JSON.stringify(arg, null, ph.width ? parseInt(ph.width) : 0);
                     break;
                 case "e":
-                    arg = match[7] ? parseFloat(arg).toExponential(match[7]) : parseFloat(arg).toExponential();
+                    arg = ph.precision ? parseFloat(arg).toExponential(ph.precision) : parseFloat(arg).toExponential();
                     break;
                 case "f":
-                    arg = match[7] ? parseFloat(arg).toFixed(match[7]) : parseFloat(arg);
+                    arg = ph.precision ? parseFloat(arg).toFixed(ph.precision) : parseFloat(arg);
                     break;
                 case "g":
-                    arg = match[7] ? String(Number(arg.toPrecision(match[7]))) : parseFloat(arg);
+                    arg = ph.precision ? String(Number(arg.toPrecision(ph.precision))) : parseFloat(arg);
                     break;
                 case "o":
                     arg = (parseInt(arg, 10) >>> 0).toString(8);
                     break;
                 case "s":
                     arg = String(arg);
-                    arg = (match[7] ? arg.substring(0, match[7]) : arg);
+                    arg = (ph.precision ? arg.substring(0, ph.precision) : arg);
                     break;
                 case "t":
                     arg = String(Boolean(arg));
-                    arg = (match[7] ? arg.substring(0, match[7]) : arg);
+                    arg = (ph.precision ? arg.substring(0, ph.precision) : arg);
                     break;
                 case "T":
                     arg = Object.prototype.toString.call(arg).slice(8, -1).toLowerCase();
-                    arg = (match[7] ? arg.substring(0, match[7]) : arg);
+                    arg = (ph.precision ? arg.substring(0, ph.precision) : arg);
                     break;
                 case "u":
                     arg = parseInt(arg, 10) >>> 0;
                     break;
                 case "v":
                     arg = arg.valueOf();
-                    arg = (match[7] ? arg.substring(0, match[7]) : arg);
+                    arg = (ph.precision ? arg.substring(0, ph.precision) : arg);
                     break;
                 case "x":
                     arg = (parseInt(arg, 10) >>> 0).toString(16);
@@ -122,19 +122,19 @@ sprintfFormat = (parseTree, argv) => {
                     arg = (parseInt(arg, 10) >>> 0).toString(16).toUpperCase();
                     break;
             }
-            if (re.json.test(match[8])) {
+            if (re.json.test(ph.type)) {
                 output += arg;
             } else {
-                if (re.number.test(match[8]) && (!isPositive || match[3])) {
+                if (re.number.test(ph.type) && (!isPositive || ph.sign)) {
                     sign = isPositive ? "+" : "-";
                     arg = arg.toString().replace(re.sign, "");
                 } else {
                     sign = "";
                 }
-                padCharacter = match[4] ? match[4] === "0" ? "0" : match[4].charAt(1) : " ";
-                padLength = match[6] - (sign + arg).length;
-                pad = match[6] ? (padLength > 0 ? padCharacter.repeat(padLength) : "") : "";
-                output += match[5] ? sign + arg + pad : (padCharacter === "0" ? sign + pad + arg : pad + sign + arg);
+                padCharacter = ph.padChar ? ph.padChar === "0" ? "0" : ph.padChar.charAt(1) : " ";
+                padLength = ph.width - (sign + arg).length;
+                pad = ph.width ? (padLength > 0 ? padCharacter.repeat(padLength) : "") : "";
+                output += ph.align ? sign + arg + pad : (padCharacter === "0" ? sign + pad + arg : pad + sign + arg);
             }
         }
     }
@@ -184,7 +184,17 @@ sprintfParse = (fmt) => {
             if (argNames === 3) {
                 throw new Error("[sprintf] mixing positional and named placeholders is not (yet) supported");
             }
-            parseTree.push(match);
+            parseTree.push({
+                placeholder: match[0],
+                paramNo: match[1],
+                keys: match[2],
+                sign: match[3],
+                padChar: match[4],
+                align: match[5],
+                width: match[6],
+                precision: match[7],
+                type: match[8]
+            });
         } else {
             throw new SyntaxError("[sprintf] unexpected placeholder");
         }

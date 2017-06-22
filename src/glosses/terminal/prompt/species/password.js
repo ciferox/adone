@@ -85,12 +85,8 @@ export default class PasswordPrompt extends terminal.BasePrompt {
 
     onError(state) {
         this.render(state.isValid);
-        terminal.readline.output.unmute();
     }
 
-    /**
-     * When user type
-     */
     onKeypress() {
         this.render();
     }
