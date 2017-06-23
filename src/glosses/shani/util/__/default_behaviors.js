@@ -1,4 +1,4 @@
-const { is, util, x } = adone;
+const { is, util, x, shani: { util: { __ } } } = adone;
 
 const useLeftMostCallback = -1;
 const useRightMostCallback = -2;
@@ -14,6 +14,12 @@ const throwsException = (fake, error, message) => {
     } else {
         fake.exception = error;
     }
+};
+
+const isPropertyConfigurable = (obj, propName) => {
+    const propertyDescriptor = __.util.getPropertyDescriptor(obj, propName);
+
+    return propertyDescriptor ? propertyDescriptor.configurable : true;
 };
 
 const behaviors = {
@@ -167,7 +173,7 @@ const behaviors = {
 
         Object.defineProperty(rootStub.rootObj, rootStub.propName, {
             get: getterFunction,
-            configurable: true
+            configurable: isPropertyConfigurable(rootStub.rootObj, rootStub.propName)
         });
 
         return fake;
@@ -177,7 +183,7 @@ const behaviors = {
 
         Object.defineProperty(rootStub.rootObj, rootStub.propName, {
             set: setterFunction,
-            configurable: true
+            configurable: isPropertyConfigurable(rootStub.rootObj, rootStub.propName)
         });
 
         return fake;
@@ -188,7 +194,7 @@ const behaviors = {
         Object.defineProperty(rootStub.rootObj, rootStub.propName, {
             value: newVal,
             enumerable: true,
-            configurable: true
+            configurable: isPropertyConfigurable(rootStub.rootObj, rootStub.propName)
         });
 
         return fake;

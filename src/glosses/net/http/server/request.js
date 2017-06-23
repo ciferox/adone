@@ -2,7 +2,7 @@ const {
     net: { http: { server: { helper } } },
     std: {
         net: { isIP },
-        url: { format },
+        url: { format, URL },
         querystring: qs
     },
     is
@@ -26,9 +26,16 @@ export default class Request {
         return this.req.headers;
     }
 
+    set header(val) {
+        this.req.headers = val;
+    }
+
     get headers() {
-        // header alias
         return this.header;
+    }
+
+    set headers(val) {
+        this.req.headers = val;
     }
 
     get url() {
@@ -136,7 +143,24 @@ export default class Request {
         if (!host) {
             return "";
         }
+        if (host[0] === "[") {
+            return this.URL.hostname || "";
+        } // IPv6
         return host.split(":")[0];
+    }
+
+    get URL() {
+        if (!this.memoizedURL) {
+            const protocol = this.protocol;
+            const host = this.host;
+            const originalUrl = this.originalUrl || ""; // avoid undefined in template string
+            try {
+                this.memoizedURL = new URL(`${protocol}://${host}${originalUrl}`);
+            } catch (err) {
+                this.memoizedURL = Object.create(null);
+            }
+        }
+        return this.memoizedURL;
     }
 
     // Check if the request is fresh, aka Last-Modified and/or the ETag still match.
@@ -262,7 +286,7 @@ export default class Request {
         if (!type) {
             return "";
         }
-        return type.split(";")[0];  // get rid of parameters
+        return type.split(";")[0]; // get rid of parameters
     }
 
     // Return request header.

@@ -7,16 +7,20 @@ export default function mock(lib, utils) {
         is.function(s.calledWithExactly);
 
     const timesInWords = (count) => {
-        if (count === 1) {
-            return "once";
+        switch (count) {
+            case 1: {
+                return "once";
+            }
+            case 2: {
+                return "twice";
+            }
+            case 3: {
+                return "thrice";
+            }
+            default: {
+                return `${count || 0} times`;
+            }
         }
-        if (count === 2) {
-            return "twice";
-        }
-        if (count === 3) {
-            return "thrice";
-        }
-        return `${count || 0} times`;
     };
 
     const isCall = (s) => s && isSpy(s.proxy);
@@ -81,11 +85,11 @@ export default function mock(lib, utils) {
 
         const alwaysMockMethod = `always${mockName[0].toUpperCase()}${mockName.substring(1)}`;
         const shouldBeAlways = utils.flag(this, "always") && is.function(this._obj[alwaysMockMethod]);
-        const mockMethod = shouldBeAlways ? alwaysMockMethod : mockName;
+        const mockMethodName = shouldBeAlways ? alwaysMockMethod : mockName;
 
         const messages = getMessages(this._obj, action, nonNegatedSuffix, shouldBeAlways, args);
         this.assert(
-            this._obj[mockMethod](...args),
+            this._obj[mockMethodName](...args),
             messages.affirmative,
             messages.negative
         );
@@ -117,6 +121,8 @@ export default function mock(lib, utils) {
     mockMethodAsProperty("calledWithNew", "been called with new");
     mockMethod("calledBefore", "been called before %1");
     mockMethod("calledAfter", "been called after %1");
+    mockMethod("calledImmediatelyBefore", "been called immediately before %1");
+    mockMethod("calledImmediatelyAfter", "been called immediately after %1");
     mockMethod("calledOn", "been called with %1 as this", ", but it was called with %t instead");
     mockMethod("calledWith", "been called with arguments %*", "%C");
     mockMethod("calledWithExactly", "been called with exact arguments %*", "%C");

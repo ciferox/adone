@@ -2619,11 +2619,11 @@ describe("assertion", "expect", () => {
 
         err(() => {
             expect(Foo).to.respondTo("baz", "constructor");
-        }, /^(constructor: expected)(.*)(\[Function: Foo\])(.*)(to respond to \'baz\')$/);
+        }, /^(constructor: expected)(.*)(function Foo)(.*)(to respond to \'baz\')$/);
 
         err(() => {
             expect(Foo, "constructor").to.respondTo("baz");
-        }, /^(constructor: expected)(.*)(\[Function: Foo\])(.*)(to respond to \'baz\')$/);
+        }, /^(constructor: expected)(.*)(function Foo)(.*)(to respond to \'baz\')$/);
 
         err(() => {
             expect(bar).to.respondTo("baz", "object");

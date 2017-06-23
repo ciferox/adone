@@ -704,6 +704,13 @@ describe("shani", "util", "spy", () => {
             assert(this.spy.calledWithNew());
         });
 
+        it("is true if called with new", function () {
+            const spy = createSpy();
+            new spy(); // eslint-disable-line no-unused-vars, new-cap
+
+            assert(spy.calledWithNew());
+        });
+
         it("is true if called with new on custom constructor", () => {
             function MyThing() { }
             MyThing.prototype = {};
@@ -719,20 +726,6 @@ describe("shani", "util", "spy", () => {
 
             assert.isFalse(this.spy.calledWithNew());
         });
-
-        if (typeof window !== "undefined") {
-            describe("in browser", () => {
-                it("is true if called with new at least once", function () {
-                    const object = {};
-                    this.spy();
-                    const a = new this.spy(); // eslint-disable-line no-unused-vars, new-cap
-                    this.spy(object);
-                    this.spy(window);
-
-                    assert(this.spy.calledWithNew());
-                });
-            });
-        }
 
         it("is true newed constructor returns object", () => {
             function MyThing() {

@@ -1,5 +1,5 @@
 describe("shani", "util", "stub", () => {
-    const { x } = adone;
+    const { is, x } = adone;
     const {
         stub: createStub,
         spy: createSpy,
@@ -44,7 +44,7 @@ describe("shani", "util", "stub", () => {
     });
 
     it("throws a readable error if stubbing Symbol on null", () => {
-        if (typeof Symbol === "function") {
+        if (is.function(Symbol)) {
             assert.throws(
                 () => {
                     createStub(null, Symbol());
@@ -348,9 +348,9 @@ describe("shani", "util", "stub", () => {
             assert.equal(instance.stub(), instance);
         });
 
-        const strictMode = (function () {
+        const strictMode = is.undefined(function () {
             return this;
-        }()) === undefined;
+        }());
         if (strictMode) {
             it("stub returns undefined when detached", () => {
                 const stub = createStub.create();
@@ -877,7 +877,7 @@ describe("shani", "util", "stub", () => {
         });
 
         it("stubs prototype methods", () => {
-            function Obj() { }
+            const Obj = function () { };
             Obj.prototype.func1 = function () { };
             const obj = new Obj();
 
@@ -919,7 +919,7 @@ describe("shani", "util", "stub", () => {
         });
 
         it("handles non-enumerable properties on prototypes", () => {
-            function Obj() { }
+            const Obj = function () { };
             Object.defineProperty(Obj.prototype, "func1", {
                 value() { },
                 writable: true,
@@ -1299,7 +1299,7 @@ describe("shani", "util", "stub", () => {
         });
 
         it("throws understandable error if failing to yield callback by symbol", () => {
-            if (typeof Symbol === "function") {
+            if (is.function(Symbol)) {
                 const symbol = Symbol();
 
                 const stub = createStub().yieldsTo(symbol);
@@ -1559,7 +1559,7 @@ describe("shani", "util", "stub", () => {
             const array = [];
             this.stub.callsArgWithAsync(1, object, array);
 
-            var callback = createSpy(() => {
+            const callback = createSpy(() => {
                 assert(callback.calledWith(object, array));
                 done();
             });
@@ -1582,7 +1582,7 @@ describe("shani", "util", "stub", () => {
             const context = this.fakeContext;
             this.stub.callsArgOnAsync(2, context);
 
-            var callback = createSpy(() => {
+            const callback = createSpy(() => {
                 assert(callback.calledOn(context));
                 done();
             });
@@ -1604,7 +1604,7 @@ describe("shani", "util", "stub", () => {
             const context = this.fakeContext;
             this.stub.callsArgOnWithAsync(1, context, object);
 
-            var callback = createSpy(() => {
+            const callback = createSpy(() => {
                 assert(callback.calledOn(context));
                 assert(callback.calledWith(object));
                 done();
@@ -1638,7 +1638,7 @@ describe("shani", "util", "stub", () => {
             const context = this.fakeContext;
             this.stub.yieldsOnAsync(context);
 
-            var spy = createSpy(() => {
+            const spy = createSpy(() => {
                 assert(spy.calledOnce);
                 assert(spy.calledOn(context));
                 assert.equal(spy.args[0].length, 0);
@@ -1655,7 +1655,7 @@ describe("shani", "util", "stub", () => {
         it("asynchronously yields to property of object argument", (done) => {
             const stub = createStub().yieldsToAsync("success");
 
-            var callback = createSpy(() => {
+            const callback = createSpy(() => {
                 assert(callback.calledOnce);
                 assert.equal(callback.args[0].length, 0);
                 done();
@@ -1677,7 +1677,7 @@ describe("shani", "util", "stub", () => {
             const context = this.fakeContext;
             this.stub.yieldsToOnAsync("success", context);
 
-            var callback = createSpy(() => {
+            const callback = createSpy(() => {
                 assert(callback.calledOnce);
                 assert(callback.calledOn(context));
                 assert.equal(callback.args[0].length, 0);
@@ -2188,7 +2188,7 @@ describe("shani", "util", "stub", () => {
         it("has no side effects on the prototype", () => {
             const proto = {
                 method() {
-                    throw "error";
+                    throw new Error("error");
                 }
             };
             const Class = function () { };
@@ -2202,7 +2202,7 @@ describe("shani", "util", "stub", () => {
         it("throws exception for non function params", () => {
             const types = [{}, 3, "hi!"];
 
-            for (var i = 0; i < types.length; i++) {
+            for (let i = 0; i < types.length; i++) {
                 // yes, it's silly to create functions in a loop, it's also a test
                 assert.throws(() => { // eslint-disable-line no-loop-func
                     createStubInstance(types[i]);
@@ -2215,7 +2215,7 @@ describe("shani", "util", "stub", () => {
         it("does not call original function when arguments match conditional stub", () => {
             // We need a function here because we can't wrap properties that are already stubs
             let callCount = 0;
-            const originalFunc = function increaseCallCount() {
+            const originalFunc = function () {
                 callCount++;
             };
 
@@ -2237,7 +2237,7 @@ describe("shani", "util", "stub", () => {
             // We need a function here because we can't wrap properties that are already stubs
             let callCount = 0;
 
-            const originalFunc = function increaseCallCount() {
+            const originalFunc = function () {
                 callCount++;
                 return 1337;
             };
@@ -2260,8 +2260,8 @@ describe("shani", "util", "stub", () => {
             // We need a function here because we can't wrap properties that are already stubs
             let callArgs = [];
 
-            const originalFunc = function increaseCallCount() {
-                callArgs = arguments;
+            const originalFunc = function () {
+                callArgs = arguments; // eslint-disable-line prefer-rest-params
             };
 
             const myObj = {
@@ -2282,7 +2282,7 @@ describe("shani", "util", "stub", () => {
             // We need a function here because we can't wrap properties that are already stubs
             let reference = {};
 
-            const originalFunc = function increaseCallCount() {
+            const originalFunc = function () {
                 reference = this;
             };
 
@@ -2315,7 +2315,7 @@ describe("shani", "util", "stub", () => {
 
         it("allows users to stub getter functions for functions", () => {
             const myObj = {
-                prop: function propGetter() {
+                prop() {
                     return "foo";
                 }
             };
@@ -2421,7 +2421,7 @@ describe("shani", "util", "stub", () => {
 
         it("allows users to stub setter functions for functions", () => {
             const myObj = {
-                prop: function propSetter() {
+                prop() {
                     return "foo";
                 }
             };
@@ -2564,6 +2564,19 @@ describe("shani", "util", "stub", () => {
             stub.restore();
 
             assert.equal(myFunc.prop, "rawString");
+        });
+
+        it("allows stubbing object props with configurable false", () => {
+            const myObj = {};
+            Object.defineProperty(myObj, "prop", {
+                configurable: false,
+                enumerable: true,
+                writable: true,
+                value: "static"
+            });
+
+            createStub(myObj, "prop").value("newString");
+            assert.equal(myObj.prop, "newString");
         });
     });
 });

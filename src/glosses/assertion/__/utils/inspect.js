@@ -280,6 +280,8 @@ const formatValue = (ctx, value, recurseTimes) => {
         output = formatArray(ctx, value, recurseTimes, visibleKeys, keys);
     } else if (typedArray) {
         return formatTypedArray(value);
+    } else if (is.function(value.toString) && value.toString !== Object.prototype.toString) {
+        return value.toString();
     } else {
         output = keys.map((key) => {
             return formatProperty(ctx, value, recurseTimes, visibleKeys, key, array);

@@ -493,7 +493,8 @@ export default function spy(object, property, types) {
     }
 
     if (!object && !property) {
-        return spy.create(() => { });
+        // eslint-disable-next-line prefer-arrow-callback
+        return spy.create(function () { }); // to have a context
     }
 
     if (!types) {
