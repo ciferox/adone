@@ -104,7 +104,7 @@ export default class Chunk {
                         options[name] = this.writeConcern[name];
                     }
 
-                    collection.replaceOne({ _id: this.objectId }, mongoObject, writeOptions, (err) => {
+                    adone.promise.nodeify(collection.replaceOne({ _id: this.objectId }, mongoObject, writeOptions), (err) => {
                         callback(err, this);
                     });
                 });

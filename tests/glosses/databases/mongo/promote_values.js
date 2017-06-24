@@ -59,7 +59,7 @@ describe("promote values", function () {
             double: 2.2222,
             array: [[bson.Long.fromNumber(10)]]
         });
-        const doc = await collection.aggregate([{ $match: {} }], { promoteValues: false }).next();
+        const doc = await collection.aggregate([{ $match: {} }], { promoteValues: false, cursor: true }).next();
         expect(doc.doc).to.be.deep.equal(bson.Long.fromNumber(10));
         expect(doc.int).to.be.deep.equal(new bson.Int32(10));
         expect(doc.double).to.be.deep.equal(new bson.Double(2.2222));

@@ -168,13 +168,6 @@ export default class OrderedBulkOperation {
         // Get the write concern
         const writeConcern = bulk.writeConcern(shallowClone(options), collection, options);
 
-        // Get the promiseLibrary
-        let promiseLibrary = options.promiseLibrary;
-
-        if (!promiseLibrary) {
-            promiseLibrary = Promise;
-        }
-
         // Final results
         const bulkResult = {
             ok: 1,
@@ -217,8 +210,6 @@ export default class OrderedBulkOperation {
             executed,
             // Collection
             collection,
-            // Promise Library
-            promiseLibrary,
             // Fundamental error
             err: null,
             // Bypass validation
@@ -430,7 +421,7 @@ export default class OrderedBulkOperation {
         }
 
         // Return a Promise
-        return new this.s.promiseLibrary((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             this._executeCommands((err, r) => {
                 if (err) {
                     return reject(err);

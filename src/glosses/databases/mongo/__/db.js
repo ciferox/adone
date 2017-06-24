@@ -2,7 +2,6 @@ const { is, EventEmitter, database: { mongo }, std: { crypto } } = adone;
 const { __, MongoError, ObjectId, Code, core, ReadPreference } = mongo;
 const {
     utils: {
-        assign,
         getSingleProperty,
         shallowClone,
         parseIndexOptions,
@@ -45,7 +44,6 @@ const legalOptionNames = [
     "authSource",
     "ignoreUndefined",
     "promoteLongs",
-    "promiseLibrary",
     "readConcern",
     "retryMiliSeconds",
     "numberOfRetries",
@@ -142,7 +140,7 @@ const createCreateIndexCommand = function (db, name, fieldOrSpec, options) {
 };
 
 // Validate the database name
-const validateDatabaseName = function (databaseName) {
+const validateDatabaseName = (databaseName) => {
     if (!is.string(databaseName)) {
         throw MongoError.create({ message: "database name must be a string", driver: true });
     }
@@ -162,7 +160,7 @@ const validateDatabaseName = function (databaseName) {
 };
 
 // Get write concern
-const writeConcern = function (target, db, options) {
+const writeConcern = (target, db, options) => {
     if (!is.nil(options.w) || !is.nil(options.j) || !is.nil(options.fsync)) {
         const opts = {};
         if (options.w) {
@@ -198,8 +196,8 @@ const decorateWithWriteConcern = (command, self, options) => {
 };
 
 // Add listeners to topology
-const createListener = function (self, e, object) {
-    const listener = function (err) {
+const createListener = (self, e, object) => {
+    const listener = (err) => {
         if (object.listeners(e).length > 0) {
             object.emit(e, err, self);
 
@@ -216,16 +214,9 @@ const createListener = function (self, e, object) {
 export default class Db extends EventEmitter {
     constructor(databaseName, topology, options = {}) {
         super();
-        let promiseLibrary = options.promiseLibrary;
-        if (!promiseLibrary) {
-            promiseLibrary = Promise;
-        }
 
         // Filter the options
         options = filterOptions(options, legalOptionNames);
-
-        // Ensure we put the promiseLib in the options
-        options.promiseLibrary = promiseLibrary;
 
         this.s = {
             databaseName,
@@ -240,7 +231,6 @@ export default class Db extends EventEmitter {
             parentDb: options.parentDb || null,
             pkFactory: options.pkFactory || ObjectId,
             nativeParser: options.nativeParser || options.native_parser,
-            promiseLibrary,
             noListener: is.boolean(options.noListener) ? options.noListener : false,
             readConcern: options.readConcern
         };
@@ -302,41 +292,24 @@ export default class Db extends EventEmitter {
         return ops;
     }
 
-    _open(callback) {
-        this.s.topology.connect(this, this.s.options, (err) => {
-            if (is.nil(callback)) {
-                return;
-            }
-            const internalCallback = callback;
-
-            if (err) {
-                this.close();
-                return internalCallback(err);
-            }
-
-            internalCallback(null, this);
-        });
-    }
-
     @classMethod({ callback: true, promise: true })
-    open(callback) {
-        if (is.function(callback)) {
-            return this._open(callback);
-        }
-        return new this.s.promiseLibrary((resolve, reject) => {
-            this._open((err, db) => {
+    async open() {
+        return new Promise((resolve, reject) => {
+            this.s.topology.connect(this, this.s.options, (err) => {
                 if (err) {
+                    this.close();
                     return reject(err);
                 }
-                resolve(db);
+                resolve(this);
             });
         });
     }
 
-    _executeCommand(command, options, callback) {
+    @classMethod({ callback: true, promise: true })
+    async command(command, options = {}) {
         // Did the user destroy the topology
         if (this.serverConfig && this.serverConfig.isDestroyed()) {
-            return callback(new MongoError("topology was destroyed"));
+            throw new MongoError("topology was destroyed");
         }
         // Get the db name we are executing against
         const dbName = options.dbName || options.authdb || this.s.databaseName;
@@ -352,44 +325,18 @@ export default class Db extends EventEmitter {
         } else {
             options.readPreference = core.ReadPreference.primary;
         }
-        this.s.topology.command(`${dbName}.$cmd`, command, options, (err, result) => {
-            if (err) {
-                return handleCallback(callback, err);
-            }
-            if (options.full) {
-                return handleCallback(callback, null, result);
-            }
-            handleCallback(callback, null, result.result);
-        });
-    }
-
-    @classMethod({ callback: true, promise: true })
-    command(command, options, callback) {
-        // Change the callback
-        if (is.function(options)) {
-            [callback, options] = [options, {}];
-        }
-        // Clone the options
-        options = shallowClone(options);
-
-        if (is.function(callback)) {
-            return this._executeCommand(command, options, callback);
-        }
-        return new this.s.promiseLibrary((resolve, reject) => {
-            this._executeCommand(command, options, (err, r) => {
+        return new Promise((resolve, reject) => {
+            this.s.topology.command(`${dbName}.$cmd`, command, options, (err, result) => {
                 if (err) {
                     return reject(err);
                 }
-                resolve(r);
+                resolve(options.full ? result : result.result);
             });
         });
     }
 
     @classMethod({ callback: true, promise: true })
-    close(force, callback) {
-        if (is.function(force)) {
-            [callback, force] = [force, false];
-        }
+    close(force) {
         this.s.topology.close(force);
 
         if (this.listeners("close").length > 0) {
@@ -410,20 +357,11 @@ export default class Db extends EventEmitter {
         if (this.s.parentDb) {
             this.s.parentDb.close();
         }
-        if (is.function(callback)) {
-            return process.nextTick(() => {
-                handleCallback(callback, null);
-            });
-        }
-
-        return new this.s.promiseLibrary((resolve) => {
-            resolve();
-        });
     }
 
     @classMethod({ callback: false, promise: false, returns: [__.Admin] })
     admin() {
-        return new __.Admin(this, this.s.topology, this.s.promiseLibrary);
+        return new __.Admin(this, this.s.topology);
     }
 
     @classMethod({ callback: true, promise: false, returns: [__.Collection] })
@@ -433,9 +371,6 @@ export default class Db extends EventEmitter {
         }
         options = options || {};
         options = shallowClone(options);
-        // Set the promise library
-        options.promiseLibrary = this.s.promiseLibrary;
-
         // If we have not set a collection level readConcern set the db level one
         options.readConcern = options.readConcern || this.s.readConcern;
 
@@ -480,7 +415,7 @@ export default class Db extends EventEmitter {
         }
 
         // Strict mode
-        this.listCollections({ name }, options).toArray((err, collections) => {
+        adone.promise.nodeify(this.listCollections({ name }, options).toArray(), (err, collections) => {
             if (!is.nil(err)) {
                 return handleCallback(callback, err, null);
             }
@@ -507,113 +442,55 @@ export default class Db extends EventEmitter {
         });
     }
 
-    _createCollection(name, options, callback) {
-        const finalOptions = writeConcern(shallowClone(options), this, options);
-
+    @classMethod({ callback: true, promise: true })
+    async createCollection(name, options = {}) {
         if (this.serverConfig && this.serverConfig.isDestroyed()) {
-            return callback(new MongoError("topology was destroyed"));
+            throw new MongoError("topology was destroyed");
         }
-
-        this.listCollections({ name })
+        const finalOptions = writeConcern(shallowClone(options), this, options);
+        const collections = await this.listCollections({ name })
             .setReadPreference(ReadPreference.PRIMARY)
-            .toArray((err, collections) => {
-                if (!is.nil(err)) {
-                    return handleCallback(callback, err, null);
-                }
-                if (collections.length > 0 && finalOptions.strict) {
-                    return handleCallback(callback, MongoError.create({
-                        message: `Collection ${name} already exists. Currently in strict mode.`,
-                        driver: true
-                    }), null);
-                } else if (collections.length > 0) {
-                    try {
-                        return handleCallback(
-                            callback,
-                            null,
-                            new __.Collection(
-                                this,
-                                this.s.topology,
-                                this.s.databaseName,
-                                name,
-                                this.s.pkFactory,
-                                options
-                            )
-                        );
-                    } catch (err) {
-                        return handleCallback(callback, err);
-                    }
-                }
-
-                // Create collection command
-                const cmd = { create: name };
-
-                // Decorate command with writeConcern if supported
-                decorateWithWriteConcern(cmd, this, options);
-                // Add all optional parameters
-                for (const n in options) {
-                    if (!is.nil(options[n]) && !is.function(options[n]) && !illegalCommandFields.includes(n)) {
-                        cmd[n] = options[n];
-                    }
-                }
-
-                // Force a primary read Preference
-                finalOptions.readPreference = ReadPreference.PRIMARY;
-
-                // Execute command
-                this.command(cmd, finalOptions, (err) => {
-                    if (err) {
-                        return handleCallback(callback, err);
-                    }
-                    handleCallback(
-                        callback,
-                        null,
-                        new __.Collection(
-                            this,
-                            this.s.topology,
-                            this.s.databaseName,
-                            name,
-                            this.s.pkFactory,
-                            options
-                        )
-                    );
-                });
+            .toArray();
+        if (collections.length > 0 && finalOptions.strict) {
+            throw MongoError.create({
+                message: `Collection ${name} already exists. Currently in strict mode.`,
+                driver: true
             });
+        } else if (collections.length > 0) {
+            return new __.Collection(
+                this,
+                this.s.topology,
+                this.s.databaseName,
+                name,
+                this.s.pkFactory,
+                options
+            );
+        }
+        // Create collection command
+        const cmd = { create: name };
+        // Decorate command with writeConcern if supported
+        decorateWithWriteConcern(cmd, this, options);
+
+        // Add all optional parameters
+        for (const n in options) {
+            if (!is.nil(options[n]) && !is.function(options[n]) && !illegalCommandFields.includes(n)) {
+                cmd[n] = options[n];
+            }
+        }
+        finalOptions.readPreference = ReadPreference.PRIMARY;
+        await this.command(cmd, finalOptions);
+        return new __.Collection(
+            this,
+            this.s.topology,
+            this.s.databaseName,
+            name,
+            this.s.pkFactory,
+            options
+        );
     }
 
     @classMethod({ callback: true, promise: true })
-    createCollection(...args) {
-        const callback = args.pop();
-        if (!is.function(callback)) {
-            args.push(callback);
-        }
-        let name = args.length ? args.shift() : null;
-        const options = args.length ? args.shift() || {} : {};
-
-        options.promiseLibrary = options.promiseLibrary || this.s.promiseLibrary;
-
-        if (is.string(callback)) {
-            name = callback;
-        }
-
-        // Execute the fallback callback
-        if (is.function(callback)) {
-            return this._createCollection(name, options, callback);
-        }
-        return new this.s.promiseLibrary((resolve, reject) => {
-            this._createCollection(name, options, (err, r) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(r);
-            });
-        });
-    }
-
-    @classMethod({ callback: true, promise: true })
-    stats(options, callback) {
-        if (is.function(options)) {
-            [callback, options] = [options, {}];
-        }
+    async stats(options) {
         options = options || {};
         // Build command object
         const commandObject = { dbStats: true };
@@ -628,7 +505,7 @@ export default class Db extends EventEmitter {
         }
 
         // Execute the command
-        return this.command(commandObject, options, callback);
+        return this.command(commandObject, options);
     }
 
     @classMethod({ callback: false, promise: false, returns: [__.CommandCursor] })
@@ -638,8 +515,6 @@ export default class Db extends EventEmitter {
 
         // Shallow clone the object
         options = shallowClone(options);
-        // Set the promise library
-        options.promiseLibrary = this.s.promiseLibrary;
 
         // Ensure valid readPreference
         if (options.readPreference) {
@@ -699,13 +574,14 @@ export default class Db extends EventEmitter {
         return cursor;
     }
 
-    _evaluate(code, parameters, options, callback) {
+    @classMethod({ callback: true, promise: true })
+    async eval(code, parameters, options = {}) {
         let finalCode = code;
         let finalParameters = [];
 
         // Did the user destroy the topology
         if (this.serverConfig && this.serverConfig.isDestroyed()) {
-            return callback(new MongoError("topology was destroyed"));
+            throw new MongoError("topology was destroyed");
         }
 
         // If not a code object translate to one
@@ -730,75 +606,26 @@ export default class Db extends EventEmitter {
         options.readPreference = new core.ReadPreference(ReadPreference.PRIMARY);
 
         // Execute the command
-        this.command(cmd, options, (err, result) => {
-            if (err) {
-                return handleCallback(callback, err, null);
-            }
-            if (result && result.ok === 1) {
-                return handleCallback(callback, null, result.retval);
-            }
-            if (result) {
-                return handleCallback(callback, MongoError.create({
-                    message: `eval failed: ${result.errmsg}`,
-                    driver: true
-                }), null);
-            }
-            handleCallback(callback, err, result);
-        });
-    }
+        const result = await this.command(cmd, options);
 
-    @classMethod({ callback: true, promise: true })
-    eval(code, ...args) {
-        const callback = args.pop();
-        if (!is.function(callback)) {
-            args.push(callback);
+        if (result && result.ok === 1) {
+            return result.retval;
         }
-        const parameters = args.length ? args.shift() : [];
-        const options = args.length ? args.shift() || {} : {};
-
-        if (is.function(callback)) {
-            return this._evaluate(code, parameters, options, callback);
-        }
-        // Execute the command
-        return new this.s.promiseLibrary((resolve, reject) => {
-            this._evaluate(code, parameters, options, (err, r) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(r);
+        if (result) {
+            throw MongoError.create({
+                message: `eval failed: ${result.errmsg}`,
+                driver: true
             });
-        });
+        }
     }
 
     @classMethod({ callback: true, promise: true })
-    renameCollection(fromCollection, toCollection, options, callback) {
-        if (is.function(options)) {
-            [callback, options] = [options, {}];
-        }
-        options = options || {};
-        // Add return new collection
-        options.new_collection = true;
-
-        if (is.function(callback)) {
-            return this.collection(fromCollection).rename(toCollection, options, callback);
-        }
-
-        // Return a promise
-        return new this.s.promiseLibrary((resolve, reject) => {
-            this.collection(fromCollection).rename(toCollection, options, (err, r) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(r);
-            });
-        });
+    async renameCollection(fromCollection, toCollection, options) {
+        return this.collection(fromCollection).rename(toCollection, options);
     }
 
     @classMethod({ callback: true, promise: true })
-    dropCollection(name, options, callback) {
-        if (is.function(options)) {
-            [callback, options] = [options, {}];
-        }
+    async dropCollection(name, options) {
         options = options || {};
 
         // Command to execute
@@ -808,51 +635,19 @@ export default class Db extends EventEmitter {
         decorateWithWriteConcern(cmd, this, options);
 
         // options
-        options = assign({}, this.s.options, { readPreference: ReadPreference.PRIMARY });
+        options = { ...this.s.options, readPreference: ReadPreference.PRIMARY };
 
-        if (is.function(callback)) {
-            return this.command(cmd, options, (err, result) => {
-                // Did the user destroy the topology
-                if (this.serverConfig && this.serverConfig.isDestroyed()) {
-                    return callback(new MongoError("topology was destroyed"));
-                }
-                if (err) {
-                    return handleCallback(callback, err);
-                }
-                if (result.ok) {
-                    return handleCallback(callback, null, true);
-                }
-                handleCallback(callback, null, false);
-            });
+        const result = await this.command(cmd, options);
+
+        if (this.serverConfig && this.serverConfig.isDestroyed()) {
+            throw new MongoError("topology was destroyed");
         }
 
-        // Clone the options
-        options = shallowClone(this.s.options);
-        // Set readPreference PRIMARY
-        options.readPreference = ReadPreference.PRIMARY;
-
-        return new this.s.promiseLibrary((resolve, reject) => {
-            this.command(cmd, options, (err, result) => {
-                // Did the user destroy the topology
-                if (this.serverConfig && this.serverConfig.isDestroyed()) {
-                    return reject(new MongoError("topology was destroyed"));
-                }
-                if (err) {
-                    return reject(err);
-                }
-                if (result.ok) {
-                    return resolve(true);
-                }
-                resolve(false);
-            });
-        });
+        return Boolean(result.ok);
     }
 
     @classMethod({ callback: true, promise: true })
-    dropDatabase(options, callback) {
-        if (is.function(options)) {
-            [callback, options] = [options, {}];
-        }
+    async dropDatabase(options) {
         options = options || {};
         // Drop database command
         const cmd = { dropDatabase: 1 };
@@ -861,107 +656,38 @@ export default class Db extends EventEmitter {
         decorateWithWriteConcern(cmd, this, options);
 
         // Ensure primary only
-        options = assign({}, this.s.options, { readPreference: ReadPreference.PRIMARY });
+        options = { ...this.s.options, readPreference: ReadPreference.PRIMARY };
 
-        if (is.function(callback)) {
-            return this.command(cmd, options, (err, result) => {
-                // Did the user destroy the topology
-                if (this.serverConfig && this.serverConfig.isDestroyed()) {
-                    return callback(new MongoError("topology was destroyed"));
-                }
-                if (is.nil(callback)) {
-                    return;
-                }
-                if (err) {
-                    return handleCallback(callback, err, null);
-                }
-                handleCallback(callback, null, result.ok ? true : false);
-            });
+        const result = await this.command(cmd, options);
+
+        if (this.serverConfig && this.serverConfig.isDestroyed()) {
+            throw new MongoError("topology was destroyed");
         }
 
-        return new this.s.promiseLibrary((resolve, reject) => {
-            this.command(cmd, options, (err, result) => {
-                // Did the user destroy the topology
-                if (this.serverConfig && this.serverConfig.isDestroyed()) {
-                    return reject(new MongoError("topology was destroyed"));
-                }
-                if (err) {
-                    return reject(err);
-                }
-                if (result.ok) {
-                    return resolve(true);
-                }
-                resolve(false);
-            });
-        });
-    }
-
-    _collections(callback) {
-        // Let's get the collection names
-        this.listCollections().toArray((err, documents) => {
-            if (!is.nil(err)) {
-                return handleCallback(callback, err, null);
-            }
-            // Filter collections removing any illegal ones
-            documents = documents.filter((doc) => {
-                return !doc.name.includes("$");
-            });
-
-            // Return the collection objects
-            handleCallback(callback, null, documents.map((d) => {
-                return new __.Collection(
-                    this,
-                    this.s.topology,
-                    this.s.databaseName,
-                    d.name,
-                    this.s.pkFactory,
-                    this.s.options
-                );
-            }));
-        });
+        return Boolean(result.ok);
     }
 
     @classMethod({ callback: true, promise: true })
-    collections(callback) {
-        if (is.function(callback)) {
-            return this._collections(callback);
-        }
-        return new this.s.promiseLibrary((resolve, reject) => {
-            this._collections((err, r) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(r);
-            });
-        });
+    async collections() {
+        const documents = await this.listCollections().toArray();
+        return documents.filter((x) => !x.name.includes("$")).map((x) => new __.Collection(
+            this,
+            this.s.topology,
+            this.s.databaseName,
+            x.name,
+            this.s.pkFactory,
+            this.s.options
+        ));
+
     }
 
     @classMethod({ callback: true, promise: true })
-    executeDbAdminCommand(selector, options, callback) {
-        if (is.function(options)) {
-            [callback, options] = [options, {}];
-        }
-        options = options || {};
-
-        if (is.function(callback)) {
-            // Convert read preference
-            if (options.readPreference) {
-                options.readPreference = convertReadPreference(options.readPreference);
-            }
-
-            return this.s.topology.command("admin.$cmd", selector, options, (err, result) => {
-                // Did the user destroy the topology
-                if (this.serverConfig && this.serverConfig.isDestroyed()) {
-                    return callback(new MongoError("topology was destroyed"));
-                }
-                if (err) {
-                    return handleCallback(callback, err);
-                }
-                handleCallback(callback, null, result.result);
-            });
+    async executeDbAdminCommand(selector, options = {}) {
+        if (options.readPreference) {
+            options.readPreference = convertReadPreference(options.readPreference);
         }
 
-        return new this.s.promiseLibrary((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             this.s.topology.command("admin.$cmd", selector, options, (err, result) => {
                 // Did the user destroy the topology
                 if (this.serverConfig && this.serverConfig.isDestroyed()) {
@@ -975,7 +701,15 @@ export default class Db extends EventEmitter {
         });
     }
 
-    _createIndexUsingCreateIndexes(name, fieldOrSpec, options, callback) {
+    @classMethod({ callback: true, promise: true })
+    async createIndex(name, fieldOrSpec, options = {}) {
+        // Did the user destroy the topology
+        if (this.serverConfig && this.serverConfig.isDestroyed()) {
+            throw new MongoError("topology was destroyed");
+        }
+        const finalOptions = writeConcern({}, this, options, { readPreference: ReadPreference.PRIMARY });
+        // Run only against primary
+        options.readPreference = ReadPreference.PRIMARY;
         // Build the index
         const indexParameters = parseIndexOptions(fieldOrSpec);
         // Generate the index name
@@ -988,24 +722,20 @@ export default class Db extends EventEmitter {
             if (!keysToOmit.includes(optionName)) {
                 indexes[0][optionName] = options[optionName];
             }
-
             // Remove any write concern operations
             const removeKeys = ["w", "wtimeout", "j", "fsync", "readPreference"];
             for (let i = 0; i < removeKeys.length; i++) {
                 delete indexes[0][removeKeys[i]];
             }
         }
-
         // Get capabilities
         const capabilities = this.s.topology.capabilities();
-
         // Did the user pass in a collation, check if our write server supports it
         if (indexes[0].collation && capabilities && !capabilities.commandsTakeCollation) {
             // Create a new error
             const error = new MongoError("server/primary/mongos does not support collation");
             error.code = 67;
-            // Return the error
-            return callback(error);
+            throw error;
         }
 
         // Create command, apply write concern to command
@@ -1018,39 +748,13 @@ export default class Db extends EventEmitter {
         options.readPreference = ReadPreference.PRIMARY;
 
         // Build the command
-        this.command(cmd, options, (err, result) => {
-            if (err) {
-                return handleCallback(callback, err, null);
-            }
+        try {
+            const result = await this.command(cmd, options);
             if (result.ok === 0) {
-                return handleCallback(callback, toError(result), null);
+                throw toError(result);
             }
-            // Return the indexName for backward compatibility
-            handleCallback(callback, null, indexName);
-        });
-    }
-
-    _createIndex(name, fieldOrSpec, options, callback) {
-        // Get the write concern options
-        const finalOptions = writeConcern({}, this, options, { readPreference: ReadPreference.PRIMARY });
-        // Ensure we have a callback
-        if (finalOptions.writeConcern && !is.function(callback)) {
-            throw MongoError.create({ message: "Cannot use a writeConcern without a provided callback", driver: true });
-        }
-
-        // Run only against primary
-        options.readPreference = ReadPreference.PRIMARY;
-
-        // Did the user destroy the topology
-        if (this.serverConfig && this.serverConfig.isDestroyed()) {
-            return callback(new MongoError("topology was destroyed"));
-        }
-
-        this._createIndexUsingCreateIndexes(name, fieldOrSpec, options, (err, result) => {
-            if (is.nil(err)) {
-                return handleCallback(callback, err, result);
-            }
-
+            return indexName;
+        } catch (err) {
             // 67 = 'CannotCreateIndex' (malformed index options)
             // 85 = 'IndexOptionsConflict' (index already exists with different options)
             // 11000 = 'DuplicateKey' (couldn't build unique index because of dupes)
@@ -1058,103 +762,57 @@ export default class Db extends EventEmitter {
             // These errors mean that the server recognized `createIndex` as a command
             // and so we don't need to fallback to an insert.
             if (err.code === 67 || err.code === 11000 || err.code === 85 || err.code === 11600) {
-                return handleCallback(callback, err, result);
+                throw err;
             }
-            // Create command
-            const doc = createCreateIndexCommand(this, name, fieldOrSpec, options);
-            // Set no key checking
-            finalOptions.checkKeys = false;
-            // Insert document
+        }
+
+        const doc = createCreateIndexCommand(this, name, fieldOrSpec, options);
+        // Set no key checking
+        finalOptions.checkKeys = false;
+        // Insert document
+        return new Promise((resolve, reject) => {
             this.s.topology.insert(`${this.s.databaseName}.${Db.SYSTEM_INDEX_COLLECTION}`, doc, finalOptions, (err, result) => {
-                if (is.nil(callback)) {
-                    return;
-                }
                 if (err) {
-                    return handleCallback(callback, err);
+                    return reject(err);
                 }
                 if (is.nil(result)) {
-                    return handleCallback(callback, null, null);
+                    return resolve();
                 }
                 if (result.result.writeErrors) {
-                    return handleCallback(callback, MongoError.create(result.result.writeErrors[0]), null);
+                    return reject(MongoError.create(result.result.writeErrors[0]));
                 }
-                handleCallback(callback, null, doc.name);
+                resolve(doc.name);
             });
         });
     }
 
     @classMethod({ callback: true, promise: true })
-    createIndex(name, fieldOrSpec, ...args) {
-        const callback = args.pop();
-        if (!is.function(callback)) {
-            args.push(callback);
+    async ensureIndex(name, fieldOrSpec, options = {}) {
+        // Did the user destroy the topology
+        if (this.serverConfig && this.serverConfig.isDestroyed()) {
+            throw new MongoError("topology was destroyed");
         }
-        let options = args.length ? args.shift() || {} : {};
-        options = shallowClone(options);
 
-        if (is.function(callback)) {
-            return this._createIndex(name, fieldOrSpec, options, callback);
-        }
-        return new this.s.promiseLibrary((resolve, reject) => {
-            this._createIndex(name, fieldOrSpec, options, (err, r) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(r);
-            });
-        });
-    }
-
-    _ensureIndex(name, fieldOrSpec, options, callback) {
-        // Get the write concern options
         const finalOptions = writeConcern({}, this, options);
-        // Create command
         const selector = createCreateIndexCommand(this, name, fieldOrSpec, options);
         const indexName = selector.name;
 
-        // Did the user destroy the topology
-        if (this.serverConfig && this.serverConfig.isDestroyed()) {
-            return callback(new MongoError("topology was destroyed"));
-        }
-
-        // Merge primary readPreference
         finalOptions.readPreference = ReadPreference.PRIMARY;
 
-        // Check if the index allready exists
-        this.indexInformation(name, finalOptions, (err, indexInformation) => {
-            if (!is.nil(err) && err.code !== 26) {
-                return handleCallback(callback, err, null);
+        let indexInformation;
+        try {
+            indexInformation = await this.indexInformation(name, finalOptions);
+        } catch (err) {
+            if (err.code !== 26) {
+                throw err;
             }
-            // If the index does not exist, create it
-            if (is.nil(indexInformation) || !indexInformation[indexName]) {
-                this.createIndex(name, fieldOrSpec, options, callback);
-            } else {
-                if (is.function(callback)) {
-                    return handleCallback(callback, null, indexName);
-                }
-            }
-        });
-    }
-
-    @classMethod({ callback: true, promise: true })
-    ensureIndex(name, fieldOrSpec, options, callback) {
-        if (is.function(options)) {
-            [callback, options] = [options, {}];
-        }
-        options = options || {};
-
-        if (is.function(callback)) {
-            return this._ensureIndex(name, fieldOrSpec, options, callback);
         }
 
-        return new this.s.promiseLibrary((resolve, reject) => {
-            this._ensureIndex(name, fieldOrSpec, options, (err, r) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(r);
-            });
-        });
+        // If the index does not exist, create it
+        if (is.nil(indexInformation) || !indexInformation[indexName]) {
+            await this.createIndex(name, fieldOrSpec, options);
+        }
+        return indexName;
     }
 
     addChild(db) {
@@ -1169,7 +827,7 @@ export default class Db extends EventEmitter {
         options = options || {};
 
         // Copy the options and add out internal override of the not shared flag
-        const finalOptions = assign({}, this.options, options);
+        const finalOptions = { ...this.options, ...options };
 
         // Do we have the db in the cache already
         if (this.s.dbCache[dbName] && finalOptions.returnNonCachedInstance !== true) {
@@ -1180,9 +838,6 @@ export default class Db extends EventEmitter {
         if (is.nil(finalOptions.noListener) || finalOptions.noListener === false) {
             finalOptions.parentDb = this;
         }
-
-        // Add promiseLibrary
-        finalOptions.promiseLibrary = this.s.promiseLibrary;
 
         // Return the db object
         const db = new Db(dbName, this.s.topology, finalOptions);
@@ -1198,14 +853,14 @@ export default class Db extends EventEmitter {
         return db;
     }
 
-    _executeAuthCreateUserCommand(username, password, options, callback) {
+    @classMethod({ callback: true, promise: true })
+    async addUser(username, password, options = {}) {
+        if (this.serverConfig && this.serverConfig.isDestroyed()) {
+            throw new MongoError("topology was destroyed");
+        }
         // Special case where there is no password ($external users)
         if (is.string(username) && is.object(password)) {
             [options, password] = [password, null];
-        }
-
-        if (is.function(options)) {
-            [callback, options] = [options, {}];
         }
 
         // Error out if we digestPassword set
@@ -1267,115 +922,49 @@ export default class Db extends EventEmitter {
         commandOptions.readPreference = ReadPreference.primary;
 
         // Execute the command
-        this.command(command, commandOptions, (err, result) => {
-            if (err && err.ok === 0 && is.nil(err.code)) {
-                return handleCallback(callback, { code: -5000 }, null);
+        let r;
+        try {
+            r = await this.command(command, commandOptions);
+            if (!r.ok) {
+                throw toError(r);
             }
-            if (err) {
-                return handleCallback(callback, err, null);
+            return [{ user: username, pwd: "" }];
+        } catch (err) {
+            if (err.ok !== 0 || !is.nil(err.code)) {
+                throw err;
             }
-            handleCallback(
-                callback,
-                !result.ok ? toError(result) : null,
-                result.ok ? [{ user: username, pwd: "" }] : null
-            );
-        });
-    }
-
-    _addUser(username, password, options, callback) {
-        // Did the user destroy the topology
-        if (this.serverConfig && this.serverConfig.isDestroyed()) {
-            return callback(new MongoError("topology was destroyed"));
         }
-        // Attempt to execute auth command
-        this._executeAuthCreateUserCommand(username, password, options, (err, r) => {
-            // We need to perform the backward compatible insert operation
-            if (err && err.code === -5000) {
-                const finalOptions = writeConcern(shallowClone(options), this, options);
-                // Use node md5 generator
-                const md5 = crypto.createHash("md5");
-                // Generate keys used for authentication
-                md5.update(`${username}:mongo:${password}`);
-                const userPassword = md5.digest("hex");
+        // We need to perform the backward compatible insert operation
+        const finalOptions = writeConcern(shallowClone(options), this, options);
 
-                // If we have another db set
-                const db = options.dbName ? this.db(options.dbName) : this;
+        // If we have another db set
+        const db = options.dbName ? this.db(options.dbName) : this;
 
-                // Fetch a user collection
-                const collection = db.collection(Db.SYSTEM_USER_COLLECTION);
+        // Fetch a user collection
+        const collection = db.collection(Db.SYSTEM_USER_COLLECTION);
 
-                // Check if we are inserting the first user
-                collection.count({}, (err, count) => {
-                    // We got an error (f.ex not authorized)
-                    if (!is.nil(err)) {
-                        return handleCallback(callback, err, null);
-                    }
-                    // Check if the user exists and update i
-                    collection.find({ user: username }, { dbName: options.dbName }).toArray((err) => {
-                        // We got an error (f.ex not authorized)
-                        if (!is.nil(err)) {
-                            return handleCallback(callback, err, null);
-                        }
-                        // Add command keys
-                        finalOptions.upsert = true;
+        // Check if we are inserting the first user
+        const count = await collection.count();
+        await collection.find({ user: username }, { dbName: options.dbName }).toArray();
+        // Add command keys
+        finalOptions.upsert = true;
 
-                        // We have a user, let's update the password or upsert if not
-                        collection.update({ user: username }, {
-                            $set: { user: username, pwd: userPassword }
-                        }, finalOptions, (err) => {
-                            if (count === 0 && err) {
-                                return handleCallback(callback, null, [{ user: username, pwd: userPassword }]);
-                            }
-                            if (err) {
-                                return handleCallback(callback, err, null);
-                            }
-                            handleCallback(callback, null, [{ user: username, pwd: userPassword }]);
-                        });
-                    });
-                });
-
-                return;
-            }
-
-            if (err) {
-                return handleCallback(callback, err);
-            }
-            handleCallback(callback, err, r);
-        });
+        // We have a user, let's update the password or upsert if not
+        const err = await collection.update({ user: username }, {
+            $set: { user: username, pwd: userPassword }
+        }, finalOptions).then(adone.noop, adone.identity);
+        if (err && count !== 0) {
+            throw err;
+        }
+        return [{ user: username, pwd: userPassword }];
     }
 
     @classMethod({ callback: true, promise: true })
-    addUser(username, password, ...args) {
-        const callback = args.pop();
-        if (!is.function(callback)) {
-            args.push(callback);
-        }
-        const options = args.length ? args.shift() || {} : {};
-
-        if (is.function(callback)) {
-            return this._addUser(username, password, options, callback);
-        }
-
-        // Return a promise
-        return new this.s.promiseLibrary((resolve, reject) => {
-            this._addUser(username, password, options, (err, r) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(r);
-            });
-        });
-    }
-
-    _executeAuthRemoveUserCommand(username, options, callback) {
-        if (is.function(options)) {
-            [callback, options] = [options, {}];
-        }
-        // Did the user destroy the topology
+    async removeUser(username, options = {}) {
         if (this.serverConfig && this.serverConfig.isDestroyed()) {
-            return callback(new MongoError("topology was destroyed"));
+            throw new MongoError("topology was destroyed");
         }
-        // Get the error options
+
         const commandOptions = { writeCommand: true };
         if (options.dbName) {
             commandOptions.dbName = options.dbName;
@@ -1401,67 +990,28 @@ export default class Db extends EventEmitter {
         commandOptions.readPreference = ReadPreference.primary;
 
         // Execute the command
-        this.command(command, commandOptions, (err, result) => {
-            if (err && !err.ok && is.nil(err.code)) {
-                return handleCallback(callback, { code: -5000 });
+        try {
+            return Boolean((await this.command(command, commandOptions)).ok);
+        } catch (err) {
+            if (err.ok !== 0 || !is.nil(err.code)) {
+                throw err;
             }
-            if (err) {
-                return handleCallback(callback, err, null);
-            }
-            handleCallback(callback, null, result.ok ? true : false);
-        });
-    }
-
-    _removeUser(username, options, callback) {
-        this._executeAuthRemoveUserCommand(username, options, (err, result) => {
-            if (err && err.code === -5000) {
-                const finalOptions = writeConcern(shallowClone(options), this, options);
-                // If we have another db set
-                const db = options.dbName ? this.db(options.dbName) : this;
-
-                // Fetch a user collection
-                const collection = db.collection(Db.SYSTEM_USER_COLLECTION);
-
-                // Locate the user
-                collection.findOne({ user: username }, {}, (err, user) => {
-                    if (is.nil(user)) {
-                        return handleCallback(callback, err, false);
-                    }
-                    collection.remove({ user: username }, finalOptions, (err) => {
-                        handleCallback(callback, err, true);
-                    });
-                });
-
-                return;
-            }
-
-            if (err) {
-                return handleCallback(callback, err);
-            }
-            handleCallback(callback, err, result);
-        });
-    }
-
-    @classMethod({ callback: true, promise: true })
-    removeUser(username, ...args) {
-        const callback = args.pop();
-        if (!is.function(callback)) {
-            args.push(callback);
         }
-        const options = args.length ? args.shift() || {} : {};
+        // fallback
+        const finalOptions = writeConcern(shallowClone(options), this, options);
+        // If we have another db set
+        const db = options.dbName ? this.db(options.dbName) : this;
 
-        if (is.function(callback)) {
-            return this._removeUser(username, options, callback);
+        // Fetch a user collection
+        const collection = db.collection(Db.SYSTEM_USER_COLLECTION);
+
+        // Locate the user
+        const user = await collection.findOne({ user: username }, {});
+        if (!user) {
+            return false;
         }
-
-        return new this.s.promiseLibrary((resolve, reject) => {
-            this._removeUser(username, options, (err, r) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(r);
-            });
-        });
+        await collection.remove({ user: username }, finalOptions);
+        return true;
     }
 
     @classMethod({ callback: true, promise: true })
@@ -1471,28 +1021,12 @@ export default class Db extends EventEmitter {
     }
 
     @classMethod({ callback: true, promise: true })
-    logout(options, callback) {
-        if (is.function(options)) {
-            [callback, options] = [options, {}];
-        }
-        options = options || {};
-
+    async logout(options = {}) {
         // Establish the correct database name
         let dbName = this.s.authSource ? this.s.authSource : this.s.databaseName;
         dbName = options.dbName ? options.dbName : dbName;
 
-        // If we have a callback
-        if (is.function(callback)) {
-            return this.s.topology.logout(dbName, (err) => {
-                if (err) {
-                    return callback(err);
-                }
-                callback(null, true);
-            });
-        }
-
-        // Return a promise
-        return new this.s.promiseLibrary((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             this.s.topology.logout(dbName, (err) => {
                 if (err) {
                     return reject(err);
@@ -1502,65 +1036,34 @@ export default class Db extends EventEmitter {
         });
     }
 
-    _indexInformation(name, options, callback) {
+    @classMethod({ callback: true, promise: true })
+    async indexInformation(name, options = {}) {
+        if (this.serverConfig && this.serverConfig.isDestroyed()) {
+            throw new MongoError("topology was destroyed");
+        }
+
         const full = is.nil(options.full) ? false : options.full;
 
-        // Did the user destroy the topology
-        if (this.serverConfig && this.serverConfig.isDestroyed()) {
-            return callback(new MongoError("topology was destroyed"));
+        const indexes = await this.collection(name).listIndexes(options).toArray();
+
+        if (!is.array(indexes)) {
+            return [];
         }
-        // Process all the results from the index command and collection
-        const processResults = function (indexes) {
-            // Contains all the information
-            const info = {};
-            // Process all the indexes
-            for (let i = 0; i < indexes.length; i++) {
-                const index = indexes[i];
-                // Let's unpack the object
-                info[index.name] = [];
-                for (const name in index.key) {
-                    info[index.name].push([name, index.key[name]]);
-                }
-            }
-
-            return info;
-        };
-
-        // Get the list of indexes of the specified collection
-        this.collection(name).listIndexes(options).toArray((err, indexes) => {
-            if (err) {
-                return callback(toError(err));
-            }
-            if (!is.array(indexes)) {
-                return handleCallback(callback, null, []);
-            }
-            if (full) {
-                return handleCallback(callback, null, indexes);
-            }
-            handleCallback(callback, null, processResults(indexes));
-        });
-    }
-
-    @classMethod({ callback: true, promise: true })
-    indexInformation(name, options, callback) {
-        if (is.function(options)) {
-            callback = options, options = {};
+        if (full) {
+            return indexes;
         }
-        options = options || {};
-
-        if (is.function(callback)) {
-            return this._indexInformation(name, options, callback);
+        const info = {};
+        // Process all the indexes
+        for (let i = 0; i < indexes.length; i++) {
+            const index = indexes[i];
+            // Let's unpack the object
+            info[index.name] = [];
+            for (const name in index.key) {
+                info[index.name].push([name, index.key[name]]);
+            }
         }
 
-        // Return a promise
-        return new this.s.promiseLibrary((resolve, reject) => {
-            this._indexInformation(name, options, (err, r) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(r);
-            });
-        });
+        return info;
     }
 
     unref() {

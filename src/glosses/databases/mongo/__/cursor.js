@@ -1,4 +1,4 @@
-const { is, database: { mongo }, std: { stream: { Readable } } } = adone;
+const { is, database: { mongo }, std: { stream: { Readable } }, promise } = adone;
 const { __, MongoError, core, ReadPreference } = mongo;
 const { metadata, utils: { formattedOrderClause, handleCallback } } = __;
 const { classMethod } = metadata;
@@ -24,7 +24,7 @@ class CursorStream extends Readable {
         }
 
         try {
-            const obj = await this.cursor.nextObject();
+            const obj = await this.cursor.next();
             if (is.function(cursor.s.streamOptions.transform) && !is.null(obj)) {
                 return this.push(cursor.s.streamOptions.transform(obj));
             }
@@ -53,12 +53,6 @@ export default class Cursor extends core.Cursor {
         const tailableRetryInterval = options.tailableRetryInterval || 500;
         const currentNumberOfRetries = numberOfRetries;
 
-        let promiseLibrary = options.promiseLibrary;
-
-        if (!promiseLibrary) {
-            promiseLibrary = Promise;
-        }
-
         this.s = {
             numberOfRetries,
             tailableRetryInterval,
@@ -71,7 +65,6 @@ export default class Cursor extends core.Cursor {
             options,
             topology,
             topologyOptions,
-            promiseLibrary,
             currentDoc: null
         };
 
@@ -92,68 +85,49 @@ export default class Cursor extends core.Cursor {
         this.setCursorBatchSize(batchSize);
     }
 
-    _nextObject(callback) {
-        if (this.s.state === Cursor.CLOSED || this.isDead && this.isDead()) {
-            return handleCallback(callback, MongoError.create({ message: "Cursor is closed", driver: true }));
-        }
-        if (this.s.state === Cursor.INIT && this.s.cmd.sort) {
-            try {
+    _nextObject() {
+        return new Promise((resolve, reject) => {
+            if (this.s.state === Cursor.CLOSED || this.isDead && this.isDead()) {
+                return reject(MongoError.create({ message: "Cursor is closed", driver: true }));
+            }
+            if (this.s.state === Cursor.INIT && this.s.cmd.sort) {
                 this.s.cmd.sort = formattedOrderClause(this.s.cmd.sort);
-            } catch (err) {
-                return handleCallback(callback, err);
             }
-        }
 
-        // Get the next object
-        super.next((err, doc) => {
-            this.s.state = Cursor.OPEN;
-            if (err) {
-                return handleCallback(callback, err);
-            }
-            handleCallback(callback, null, doc);
+            // Get the next object
+            super.next((err, doc) => {
+                this.s.state = Cursor.OPEN;
+                if (err) {
+                    return reject(err);
+                }
+                resolve(doc);
+            });
         });
     }
 
     @classMethod({ callback: true, promise: true })
-    hasNext(callback) {
-        if (is.function(callback)) {
-            if (this.s.currentDoc) {
-                return callback(null, true);
-            }
-            return this._nextObject((err, doc) => {
-                if (!doc) {
-                    return callback(null, false);
-                }
-                this.s.currentDoc = doc;
-                callback(null, true);
-            });
-
+    async hasNext() {
+        if (this.s.currentDoc) {
+            return true;
         }
-
-        // Return a Promise
-        return new this.s.promiseLibrary((resolve, reject) => {
-            if (this.s.currentDoc) {
-                resolve(true);
-            } else {
-                this._nextObject((err, doc) => {
-                    if (this.s.state === Cursor.CLOSED || this.isDead()) {
-                        return resolve(false);
-                    }
-                    if (err) {
-                        return reject(err);
-                    }
-                    if (!doc) {
-                        return resolve(false);
-                    }
-                    this.s.currentDoc = doc;
-                    resolve(true);
-                });
+        try {
+            const doc = await this._nextObject();
+            if (!doc) {
+                return false;
             }
-        });
+            this.s.currentDoc = doc;
+            return true;
+        } catch (err) {
+            if (this.s.state === Cursor.CLOSED || this.isDead()) {
+                return false;
+            }
+            throw err;
+        }
     }
 
     @classMethod({ callback: true, promise: true })
     next(callback) {
+        // have to have callback support for the core
         if (is.function(callback)) {
             // Return the currentDoc if someone called hasNext first
             if (this.s.currentDoc) {
@@ -163,23 +137,17 @@ export default class Cursor extends core.Cursor {
             }
 
             // Return the next object
-            return this._nextObject(callback);
+            return this._nextObject().then((r) => callback(null, r), callback);
         }
 
-        return new this.s.promiseLibrary((resolve, reject) => {
+        return new Promise((resolve) => {
             // Return the currentDoc if someone called hasNext first
             if (this.s.currentDoc) {
                 const doc = this.s.currentDoc;
                 this.s.currentDoc = null;
                 return resolve(doc);
             }
-
-            this._nextObject((err, r) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(r);
-            });
+            resolve(this._nextObject());
         });
     }
 
@@ -485,21 +453,27 @@ export default class Cursor extends core.Cursor {
     }
 
     @classMethod({ callback: true, promise: false })
-    forEach(iterator, callback) {
-        this.each((err, doc) => {
-            if (err) {
-                callback(err); return false;
-            }
-            if (!is.nil(doc)) {
-                iterator(doc);
-                return true;
-            }
-            if (is.nil(doc) && callback) {
-                const internalCallback = callback;
-                callback = null;
-                internalCallback(null);
-                return false;
-            }
+    forEach(iterator) {
+        return new Promise((resolve, reject) => {
+            this.each((err, doc) => {
+                if (err) {
+                    reject(err);
+                    return false;
+                }
+                if (!is.nil(doc)) {
+                    try {
+                        iterator(doc);
+                    } catch (err) {
+                        reject(err);
+                        return false;
+                    }
+                    return true;
+                }
+                if (is.nil(doc)) {
+                    resolve();
+                    return false;
+                }
+            });
         });
     }
 
@@ -521,81 +495,66 @@ export default class Cursor extends core.Cursor {
         return this;
     }
 
-    _toArray(callback) {
-        const items = [];
+    @classMethod({ callback: true, promise: true })
+    toArray() {
+        return new Promise((resolve, reject) => {
+            if (this.s.options.tailable) {
+                return reject(MongoError.create({ message: "Tailable cursor cannot be converted to array", driver: true }));
+            }
 
-        // Reset cursor
-        this.rewind();
-        this.s.state = Cursor.INIT;
+            const items = [];
 
-        // Fetch all the documents
-        const fetchDocs = () => {
-            super.next((err, doc) => {
-                if (err) {
-                    return handleCallback(callback, err);
-                }
-                if (is.nil(doc)) {
-                    this.s.state = Cursor.CLOSED;
-                    return handleCallback(callback, null, items);
-                }
+            // Reset cursor
+            this.rewind();
+            this.s.state = Cursor.INIT;
 
-                // Add doc to items
-                items.push(doc);
-
-                // Get all buffered objects
-                if (this.bufferedCount() > 0) {
-                    let docs = this.readBufferedDocuments(this.bufferedCount());
-
-                    // Transform the doc if transform method added
-                    if (this.s.transforms && is.function(this.s.transforms.doc)) {
-                        docs = docs.map(this.s.transforms.doc);
+            // Fetch all the documents
+            const fetchDocs = () => {
+                super.next((err, doc) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    if (is.nil(doc)) {
+                        this.s.state = Cursor.CLOSED;
+                        return resolve(items);
                     }
 
-                    items.push(...docs);
-                }
+                    // Add doc to items
+                    items.push(doc);
 
-                // Attempt a fetch
-                fetchDocs();
-            });
-        };
+                    // Get all buffered objects
+                    if (this.bufferedCount() > 0) {
+                        let docs = this.readBufferedDocuments(this.bufferedCount());
 
-        fetchDocs();
-    }
+                        // Transform the doc if transform method added
+                        if (this.s.transforms && is.function(this.s.transforms.doc)) {
+                            docs = docs.map(this.s.transforms.doc);
+                        }
 
-    @classMethod({ callback: true, promise: true })
-    toArray(callback) {
-        if (this.s.options.tailable) {
-            throw MongoError.create({ message: "Tailable cursor cannot be converted to array", driver: true });
-        }
+                        items.push(...docs);
+                    }
 
-        // Execute using callback
-        if (is.function(callback)) {
-            return this._toArray(callback);
-        }
+                    // Attempt a fetch
+                    fetchDocs();
+                });
+            };
 
-        // Return a Promise
-        return new this.s.promiseLibrary((resolve, reject) => {
-            this._toArray((err, r) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(r);
-            });
+            fetchDocs();
         });
     }
 
-    _count(applySkipLimit, opts, callback) {
-        if (is.function(applySkipLimit)) {
-            callback = applySkipLimit;
-            applySkipLimit = true;
+    @classMethod({ callback: true, promise: true })
+    async count(applySkipLimit = true, options = {}) {
+        if (is.nil(this.s.cmd.query)) {
+            throw MongoError.create({ message: "count can only be used with find command", driver: true });
         }
 
         if (applySkipLimit) {
             if (is.number(this.cursorSkip())) {
-                opts.skip = this.cursorSkip();
+                options.skip = this.cursorSkip();
             }
             if (is.number(this.cursorLimit())) {
-                opts.limit = this.cursorLimit();
+                options.limit = this.cursorLimit();
             }
         }
 
@@ -617,18 +576,18 @@ export default class Cursor extends core.Cursor {
         }
 
 
-        if (is.number(opts.maxTimeMS)) {
-            command.maxTimeMS = opts.maxTimeMS;
+        if (is.number(options.maxTimeMS)) {
+            command.maxTimeMS = options.maxTimeMS;
         } else if (this.s.cmd && is.number(this.s.cmd.maxTimeMS)) {
             command.maxTimeMS = this.s.cmd.maxTimeMS;
         }
 
         // Merge in any options
-        if (opts.skip) {
-            command.skip = opts.skip;
+        if (options.skip) {
+            command.skip = options.skip;
         }
-        if (opts.limit) {
-            command.limit = opts.limit;
+        if (options.limit) {
+            command.limit = options.limit;
         }
         if (this.s.options.hint) {
             command.hint = this.s.options.hint;
@@ -637,48 +596,17 @@ export default class Cursor extends core.Cursor {
         // Set cursor server to the same as the topology
         this.server = this.topology;
 
-        // Execute the command
-        this.topology.command(`${this.s.ns.substr(0, delimiter)}.$cmd`, command, (err, result) => {
-            callback(err, result ? result.result.n : null);
-        }, this.options);
-    }
-
-    @classMethod({ callback: true, promise: true })
-    count(applySkipLimit = true, opts, callback) {
-        if (is.nil(this.s.cmd.query)) {
-            throw MongoError.create({ message: "count can only be used with find command", driver: true });
-        }
-        if (is.function(opts)) {
-            [callback, opts] = [opts, {}];
-        }
-        opts = opts || {};
-
-        if (is.function(callback)) {
-            return this._count(applySkipLimit, opts, callback);
-        }
-
-        // Return a Promise
-        return new this.s.promiseLibrary((resolve, reject) => {
-            this._count(applySkipLimit, opts, (err, r) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(r);
-            });
+        return new Promise((resolve, reject) => {
+            this.topology.command(`${this.s.ns.substr(0, delimiter)}.$cmd`, command, (err, result) => {
+                err ? reject(err) : resolve(result ? result.result.n : null);
+            }, this.options);
         });
     }
 
     @classMethod({ callback: true, promise: true })
-    close(callback) {
+    close() {
         this.s.state = Cursor.CLOSED;
         this.kill();
-        if (is.function(callback)) {
-            return handleCallback(callback, null, this);
-        }
-        // Return a Promise
-        return new this.s.promiseLibrary((resolve) => {
-            resolve();
-        });
     }
 
     @classMethod({ callback: false, promise: false, fluent: true })
@@ -712,7 +640,7 @@ export default class Cursor extends core.Cursor {
     }
 
     @classMethod({ callback: true, promise: true })
-    explain(callback) {
+    explain() {
         this.s.cmd.explain = true;
 
         // Do we have a readConcern
@@ -720,12 +648,7 @@ export default class Cursor extends core.Cursor {
             delete this.s.cmd.readConcern;
         }
 
-        if (is.function(callback)) {
-            return super.next(callback);
-        }
-
-        // Return a Promise
-        return new this.s.promiseLibrary((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             super.next((err, r) => {
                 if (err) {
                     return reject(err);
@@ -770,8 +693,6 @@ Cursor.define.classMethod("maxTimeMs", { callback: false, promise: false, fluent
 Cursor.prototype.nextObject = Cursor.prototype.next;
 
 Cursor.define.classMethod("nextObject", { callback: true, promise: true });
-
-Cursor.prototype.next = Cursor.prototype.nextObject;
 
 Cursor.define.classMethod("next", { callback: true, promise: true });
 

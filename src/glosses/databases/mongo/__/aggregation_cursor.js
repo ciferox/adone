@@ -11,12 +11,6 @@ export default class AggregationCursor extends Cursor {
         const state = AggregationCursor.INIT;
         const streamOptions = {};
 
-        let promiseLibrary = options.promiseLibrary;
-
-        if (!promiseLibrary) {
-            promiseLibrary = Promise;
-        }
-
         this.s = {
             maxTimeMS: null,
             state,
@@ -26,8 +20,7 @@ export default class AggregationCursor extends Cursor {
             cmd,
             options,
             topology,
-            topologyOptions,
-            promiseLibrary
+            topologyOptions
         };
     }
 

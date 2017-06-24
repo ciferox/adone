@@ -110,7 +110,7 @@ describe("collations", function () {
         await db.collection("test").aggregate([
             { $match: {} },
             { $out: "readConcernCollectionAggregate1Output" }
-        ], { collation: { caseLevel: true } }).toArray();
+        ], { collation: { caseLevel: true } });
 
         expect(commandResult.collation).to.be.deep.equal({ caseLevel: true });
 

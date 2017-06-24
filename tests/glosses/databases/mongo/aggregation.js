@@ -13,25 +13,21 @@ describe("aggregation", function () {
                 { author: "sam", text: "this is bad" }
             ]
         }]);
-        const result = await new Promise((resolve, reject) => {
-            collection.aggregate([
-                {
-                    $project: {
-                        author: 1,
-                        tags: 1
-                    }
-                },
-                { $unwind: "$tags" },
-                {
-                    $group: {
-                        _id: { tags: "$tags" },
-                        authors: { $addToSet: "$author" }
-                    }
+        const result = await collection.aggregate([
+            {
+                $project: {
+                    author: 1,
+                    tags: 1
                 }
-            ], (err, result) => {
-                err ? reject(err) : resolve(result);
-            });
-        });
+            },
+            { $unwind: "$tags" },
+            {
+                $group: {
+                    _id: { tags: "$tags" },
+                    authors: { $addToSet: "$author" }
+                }
+            }
+        ]);
         expect(result).to.be.deep.equal([
             { _id: { tags: "good" }, authors: ["bob"] },
             { _id: { tags: "fun" }, authors: ["bob"] }
@@ -54,23 +50,18 @@ describe("aggregation", function () {
         }], { w: 1 });
         // Execute aggregate, notice the pipeline is expressed as function call parameters
         // instead of an Array.
-        const result = await new Promise((resolve, reject) => {
-            collection.aggregate(
-                {
-                    $project: {
-                        author: 1,
-                        tags: 1
-                    }
-                },
-                { $unwind: "$tags" },
-                {
-                    $group: {
-                        _id: { tags: "$tags" },
-                        authors: { $addToSet: "$author" }
-                    }
-                }, (err, result) => {
-                    err ? reject(err) : resolve(result);
-                });
+        const result = await collection.aggregate({
+            $project: {
+                author: 1,
+                tags: 1
+            }
+        }, {
+            $unwind: "$tags"
+        }, {
+            $group: {
+                _id: { tags: "$tags" },
+                authors: { $addToSet: "$author" }
+            }
         });
         expect(result).to.be.deep.equal([
             { _id: { tags: "good" }, authors: ["bob"] },
@@ -110,7 +101,7 @@ describe("aggregation", function () {
                     authors: { $addToSet: "$author" }
                 }
             }
-        ]);
+        ], { cursor: true });
 
         expect(await cursor.toArray()).to.be.deep.equal([
             { _id: { tags: "good" }, authors: ["bob"] },
@@ -209,26 +200,22 @@ describe("aggregation", function () {
         }], { w: 1 });
 
         // Execute aggregate, notice the pipeline is expressed as an Array
-        const results = await new Promise((resolve, reject) => {
-            collection.aggregate([
-                {
-                    $project: {
-                        author: 1,
-                        tags: 1
-                    }
-                },
-                { $unwind: "$tags" },
-                {
-                    $group: {
-                        _id: { tags: "$tags" },
-                        authors: { $addToSet: "$author" }
-                    }
+        const results = await collection.aggregate([
+            {
+                $project: {
+                    author: 1,
+                    tags: 1
                 }
-            ], {
-                out: "testingOutCollectionForAggregation"
-            }, (err, result) => {
-                err ? reject(err) : resolve(result);
-            });
+            },
+            { $unwind: "$tags" },
+            {
+                $group: {
+                    _id: { tags: "$tags" },
+                    authors: { $addToSet: "$author" }
+                }
+            }
+        ], {
+            out: "testingOutCollectionForAggregation"
         });
         expect(results).to.be.empty;
     });
@@ -249,26 +236,22 @@ describe("aggregation", function () {
         }], { w: 1 });
 
         // Execute aggregate, notice the pipeline is expressed as an Array
-        const result = await new Promise((resolve, reject) => {
-            collection.aggregate([
-                {
-                    $project: {
-                        author: 1,
-                        tags: 1
-                    }
-                },
-                { $unwind: "$tags" },
-                {
-                    $group: {
-                        _id: { tags: "$tags" },
-                        authors: { $addToSet: "$author" }
-                    }
+        const result = await collection.aggregate([
+            {
+                $project: {
+                    author: 1,
+                    tags: 1
                 }
-            ], {
-                allowDiskUse: true
-            }, (err, result) => {
-                err ? reject(err) : resolve(result);
-            });
+            },
+            { $unwind: "$tags" },
+            {
+                $group: {
+                    _id: { tags: "$tags" },
+                    authors: { $addToSet: "$author" }
+                }
+            }
+        ], {
+            allowDiskUse: true
         });
         expect(result).to.be.deep.equal([
             { _id: { tags: "good" }, authors: ["bob"] },
@@ -286,7 +269,7 @@ describe("aggregation", function () {
                 $group:
                 { _id: "$a", total: { $sum: "$a" } }
             }
-        ]);
+        ], { cursor: true });
 
         expect(await cursor.toArray()).to.be.deep.equal([{
             _id: 1,
@@ -298,60 +281,16 @@ describe("aggregation", function () {
         const collection = this.db.collection("te.st");
         const r = await collection.insert([{ a: 1 }, { a: 1 }, { a: 1 }]);
         expect(r.result.n).to.be.equal(3);
-        const result = await new Promise((resolve, reject) => {
-            collection.aggregate([
-                { $project: { a: 1 } }
-            ], (err, result) => {
-                err ? reject(err) : resolve(result);
-            });
-        });
+        const result = await collection.aggregate([
+            { $project: { a: 1 } }
+        ]);
         expect(result).to.be.have.lengthOf(3);
-        expect(await new Promise((resolve, reject) => {
-            let count = 0;
-            collection.aggregate([
-                { $project: { a: 1 } }
-            ], { cursor: { batchSize: 10000 } }).forEach(() => {
+        let count = 0;
+        await collection.aggregate([{ $project: { a: 1 } }], { cursor: { batchSize: 10000 } })
+            .forEach(() => {
                 ++count;
-            }, (err) => {
-                err ? reject(err) : resolve(count);
             });
-        })).to.be.equal(3);
-    });
-
-    it("should fail aggregation due to illegal cursor option and streams", async () => {
-        const collection = this.db.collection("shouldCorrectlyDoAggWithCursorGetStream");
-        await collection.insert([{
-            title: "this is my title",
-            author: "bob",
-            posted: new Date(),
-            pageViews: 5,
-            tags: ["fun", "good", "fun"],
-            other: { foo: 5 },
-            comments: [
-                { author: "joe", text: "this is cool" },
-                { author: "sam", text: "this is bad" }
-            ]
-        }], { w: 1 });
-        expect(() => {
-            // Execute aggregate, notice the pipeline is expressed as an Array
-            collection.aggregate([
-                {
-                    $project: {
-                        author: 1,
-                        tags: 1
-                    }
-                },
-                { $unwind: "$tags" },
-                {
-                    $group: {
-                        _id: { tags: "$tags" },
-                        authors: { $addToSet: "$author" }
-                    }
-                }
-            ], {
-                cursor: 1
-            });
-        }).to.throw();
+        expect(count).to.be.equal(3);
     });
 
     it("ensure maxTimeMS is correctly passed down into command execution when using a cursor", async () => {
@@ -370,26 +309,22 @@ describe("aggregation", function () {
         }], { w: 1 });
         const s = spy(this.db, "command");
         // Execute aggregate, notice the pipeline is expressed as an Array
-        await new Promise((resolve, reject) => {
-            collection.aggregate([
-                {
-                    $project: {
-                        author: 1,
-                        tags: 1
-                    }
-                },
-                { $unwind: "$tags" },
-                {
-                    $group: {
-                        _id: { tags: "$tags" },
-                        authors: { $addToSet: "$author" }
-                    }
+        await collection.aggregate([
+            {
+                $project: {
+                    author: 1,
+                    tags: 1
                 }
-            ], {
-                maxTimeMS: 1000
-            }, (err) => {
-                err ? reject(err) : resolve();
-            });
+            },
+            { $unwind: "$tags" },
+            {
+                $group: {
+                    _id: { tags: "$tags" },
+                    authors: { $addToSet: "$author" }
+                }
+            }
+        ], {
+            maxTimeMS: 1000
         });
         expect(s).to.have.been.calledOnce;
         expect(s.getCall(0).args[0]).to.include({ maxTimeMS: 1000 });
@@ -411,7 +346,7 @@ describe("aggregation", function () {
             $match: {
                 a: new Date(date1.toISOString())
             }
-        }]);
+        }], { cursor: true });
 
 
         expect(await cursor.next()).to.include({ b: 1 });
@@ -426,7 +361,7 @@ describe("aggregation", function () {
 
         const cursor = collection.aggregate([{
             $match: {}
-        }]);
+        }], { cursor: true });
 
         expect(await cursor.hasNext()).to.be.true;
         expect(await cursor.next()).to.include({ a: 1 });

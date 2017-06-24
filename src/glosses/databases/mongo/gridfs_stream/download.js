@@ -76,7 +76,7 @@ export default class GridFSBucketReadStream extends Readable {
             findOneOptions.skip = this.s.options.skip;
         }
 
-        this.s.files.findOne(this.s.filter, findOneOptions, (error, doc) => {
+        adone.promise.nodeify(this.s.files.findOne(this.s.filter, findOneOptions), (error, doc) => {
             if (error) {
                 return this._handleError(error);
             }

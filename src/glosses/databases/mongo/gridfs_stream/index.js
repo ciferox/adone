@@ -84,12 +84,12 @@ export default class GridFSBucket extends EventEmitter {
     }
 
     _delete(id, callback) {
-        this.s._filesCollection.deleteOne({ _id: id }, (error, res) => {
+        adone.promise.nodeify(this.s._filesCollection.deleteOne({ _id: id }), (error, res) => {
             if (error) {
                 return callback(error);
             }
 
-            this.s._chunksCollection.deleteMany({ files_id: id }, (error) => {
+            adone.promise.nodeify(this.s._chunksCollection.deleteMany({ files_id: id }), (error) => {
                 if (error) {
                     return callback(error);
                 }
@@ -180,7 +180,7 @@ export default class GridFSBucket extends EventEmitter {
     _rename(id, filename, callback) {
         const filter = { _id: id };
         const update = { $set: { filename } };
-        this.s._filesCollection.updateOne(filter, update, (error, res) => {
+        adone.promise.nodeify(this.s._filesCollection.updateOne(filter, update), (error, res) => {
             if (error) {
                 return callback(error);
             }
@@ -208,11 +208,11 @@ export default class GridFSBucket extends EventEmitter {
     }
 
     _drop(callback) {
-        this.s._filesCollection.drop((error) => {
+        adone.promise.nodeify(this.s._filesCollection.drop(), (error) => {
             if (error) {
                 return callback(error);
             }
-            this.s._chunksCollection.drop((error) => {
+            adone.promise.nodeify(this.s._chunksCollection.drop(), (error) => {
                 if (error) {
                     return callback(error);
                 }

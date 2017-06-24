@@ -1,4 +1,4 @@
-const { is, util, database: { mongo: { core, MongoError, __, ReadPreference } } } = adone;
+const { is, util, database: { mongo: { core, MongoError, ReadPreference } } } = adone;
 
 export const shallowClone = (obj) => {
     const copy = {};
@@ -298,10 +298,6 @@ export const filterOptions = (options, names) => {
     // Filtered options
     return filterOptions;
 };
-
-// Object.assign method or polyfille
-export const assign = Object.assign;
-
 
 // Write concern keys
 const writeConcernKeys = ["w", "j", "wtimeout", "fsync"];

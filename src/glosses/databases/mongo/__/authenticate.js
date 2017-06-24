@@ -128,7 +128,7 @@ export default function authenticate(self, username, password, options, callback
     }
 
     // Return a promise
-    return new self.s.promiseLibrary((resolve, reject) => {
+    return new Promise((resolve, reject) => {
         _authenticate(self, username, password, options, (err, r) => {
             // Support failed auth method
             if (err && err.message && err.message.includes("saslStart")) {

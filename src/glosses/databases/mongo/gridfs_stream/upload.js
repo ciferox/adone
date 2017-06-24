@@ -94,12 +94,12 @@ export default class GridFSBucketWriteStream extends Writable {
     }
 
     _checkChunksIndex(callback) {
-        this.chunks.listIndexes().toArray((error, indexes) => {
+        adone.promise.nodeify(this.chunks.listIndexes().toArray(), (error, indexes) => {
             if (error) {
                 // Collection doesn't exist so create index
                 if (error.code === ERROR_NAMESPACE_NOT_FOUND) {
                     const index = { files_id: 1, n: 1 };
-                    this.chunks.createIndex(index, { background: false, unique: true }, (error) => {
+                    adone.promise.nodeify(this.chunks.createIndex(index, { background: false, unique: true }), (error) => {
                         if (error) {
                             return callback(error);
                         }
@@ -131,7 +131,7 @@ export default class GridFSBucketWriteStream extends Writable {
                 indexOptions.background = false;
                 indexOptions.unique = true;
 
-                this.chunks.createIndex(index, indexOptions, (error) => {
+                adone.promise.nodeify(this.chunks.createIndex(index, indexOptions), (error) => {
                     if (error) {
                         return callback(error);
                     }
@@ -143,7 +143,7 @@ export default class GridFSBucketWriteStream extends Writable {
     }
 
     _checkIndexes(callback) {
-        this.files.findOne({}, { _id: 1 }, (error, doc) => {
+        adone.promise.nodeify(this.files.findOne({}, { _id: 1 }), (error, doc) => {
             if (error) {
                 return callback(error);
             }
@@ -151,12 +151,12 @@ export default class GridFSBucketWriteStream extends Writable {
                 return callback();
             }
 
-            this.files.listIndexes().toArray((error, indexes) => {
+            adone.promise.nodeify(this.files.listIndexes().toArray(), (error, indexes) => {
                 if (error) {
                     // Collection doesn't exist so create index
                     if (error.code === ERROR_NAMESPACE_NOT_FOUND) {
                         const index = { filename: 1, uploadDate: 1 };
-                        this.files.createIndex(index, { background: false }, (error) => {
+                        adone.promise.nodeify(this.files.createIndex(index, { background: false }), (error) => {
                             if (error) {
                                 return callback(error);
                             }
@@ -186,7 +186,7 @@ export default class GridFSBucketWriteStream extends Writable {
 
                     indexOptions.background = false;
 
-                    this.files.createIndex(index, indexOptions, (error) => {
+                    adone.promise.nodeify(this.files.createIndex(index, indexOptions), (error) => {
                         if (error) {
                             return callback(error);
                         }
@@ -238,7 +238,7 @@ export default class GridFSBucketWriteStream extends Writable {
                 return false;
             }
 
-            this.files.insert(filesDoc, this._getWriteOptions(), (error) => {
+            adone.promise.nodeify(this.files.insert(filesDoc, this._getWriteOptions()), (error) => {
                 if (error) {
                     return this._handleError(error, callback);
                 }
@@ -295,7 +295,7 @@ export default class GridFSBucketWriteStream extends Writable {
                     return false;
                 }
 
-                this.chunks.insert(doc, this._getWriteOptions(), (error) => {
+                adone.promise.nodeify(this.chunks.insert(doc, this._getWriteOptions()), (error) => {
                     if (error) {
                         return this._handleError(error);
                     }
@@ -371,7 +371,7 @@ export default class GridFSBucketWriteStream extends Writable {
             return false;
         }
 
-        this.chunks.insert(doc, this._getWriteOptions(), (error) => {
+        adone.promise.nodeify(this.chunks.insert(doc, this._getWriteOptions()), (error) => {
             if (error) {
                 return this._handleError(error);
             }

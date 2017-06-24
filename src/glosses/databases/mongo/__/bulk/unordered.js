@@ -175,14 +175,6 @@ export default class UnorderedBulkOperation {
         // Get the write concern
         const writeConcern = bulk.writeConcern(shallowClone(options), collection, options);
 
-        // Get the promiseLibrary
-        let promiseLibrary = options.promiseLibrary;
-
-        // No promise library selected fall back
-        if (!promiseLibrary) {
-            promiseLibrary = Promise;
-        }
-
         // Final results
         const bulkResult = {
             ok: 1,
@@ -227,8 +219,6 @@ export default class UnorderedBulkOperation {
             executed,
             // Collection
             collection,
-            // Promise Library
-            promiseLibrary,
             // Bypass validation
             bypassDocumentValidation: is.boolean(options.bypassDocumentValidation)
                 ? options.bypassDocumentValidation
@@ -443,7 +433,7 @@ export default class UnorderedBulkOperation {
         }
 
         // Return a Promise
-        return new this.s.promiseLibrary((resolve, reject) => {
+        return new Promise((resolve, reject) => {
             this._executeBatches((err, r) => {
                 if (err) {
                     return reject(err);

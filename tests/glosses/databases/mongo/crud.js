@@ -20,7 +20,7 @@ describe("CRUD specs", function () {
                             }
                             switch (test.operation.name) {
                                 case "aggregate": {
-                                    const options = {};
+                                    const options = { cursor: true };
                                     if (test.operation.arguments.collation) {
                                         options.collation = test.operation.arguments.collation;
                                     }

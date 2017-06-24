@@ -12,12 +12,6 @@ export default class CommandCursor extends Cursor {
 
         const maxTimeMS = null;
 
-        let promiseLibrary = options.promiseLibrary;
-
-        if (!promiseLibrary) {
-            promiseLibrary = Promise;
-        }
-
         this.s = {
             maxTimeMS,
             state,
@@ -27,8 +21,7 @@ export default class CommandCursor extends Cursor {
             cmd,
             options,
             topology,
-            topologyOptions,
-            promiseLibrary
+            topologyOptions
         };
     }
 

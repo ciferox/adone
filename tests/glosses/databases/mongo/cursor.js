@@ -861,12 +861,8 @@ describe("cursor", function () {
             .map(() => ({ a: 1 }))
             .batchSize(5)
             .limit(10);
-        await new Promise((resolve, reject) => {
-            cursor.forEach((doc) => {
-                expect(doc).to.be.deep.equal({ a: 1 });
-            }, (err) => {
-                err ? reject(err) : resolve();
-            });
+        await cursor.forEach((doc) => {
+            expect(doc).to.be.deep.equal({ a: 1 });
         });
     });
 
@@ -881,12 +877,8 @@ describe("cursor", function () {
             .map((x) => ({ a: x.a * x.a }))
             .batchSize(5)
             .limit(10);
-        await new Promise((resolve, reject) => {
-            cursor.forEach((doc) => {
-                expect(doc).to.be.deep.equal({ a: 4 });
-            }, (err) => {
-                err ? reject(err) : resolve();
-            });
+        await cursor.forEach((doc) => {
+            expect(doc).to.be.deep.equal({ a: 4 });
         });
     });
 

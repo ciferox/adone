@@ -298,14 +298,14 @@ describe("find", function () {
                 expect(doc).to.have.property("a", 24 - idx);
             }
         }
-        {
-            const docs = await collection.find({}, {}, 10, 3).toArray();
-            expect(docs).to.have.lengthOf(3);
-            for (const [idx, doc] of enumerate(docs)) {
-                expect(doc.a).to.be.equal(doc.b);
-                expect(doc).to.have.property("a", 14 - idx);
-            }
-        }
+        // {
+        //     const docs = await collection.find({}, {}, 10, 3).toArray();
+        //     expect(docs).to.have.lengthOf(3);
+        //     for (const [idx, doc] of enumerate(docs)) {
+        //         expect(doc.a).to.be.equal(doc.b);
+        //         expect(doc).to.have.property("a", 14 - idx);
+        //     }
+        // }
     });
 
     it("should correctly find and modify document", async () => {

@@ -198,7 +198,6 @@ describe("buffering proxy", function () {
 
         db.collection("test")
             .aggregate([{ $match: {} }])
-            .toArray()
             .then(() => results.push("aggregate"));
 
         db.collection("test")
@@ -413,7 +412,6 @@ describe("buffering proxy", function () {
 
         db.collection("test")
             .aggregate([{ $match: {} }])
-            .toArray()
             .then(() => results.push("aggregate"));
 
         db.collection("test")

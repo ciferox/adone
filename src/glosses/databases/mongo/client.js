@@ -306,7 +306,7 @@ class MongoClient extends EventEmitter {
             relayEvents(this, db);
         }
         // Open the connection
-        db.open(callback);
+        adone.promise.nodeify(db.open(), callback);
     }
 
     _createMongos(options, callback) {
@@ -319,7 +319,7 @@ class MongoClient extends EventEmitter {
             relayEvents(this, db);
         }
         // Open the connection
-        db.open(callback);
+        adone.promise.nodeify(db.open(), callback);
     }
 
     _createServer(options, callback) {
@@ -330,7 +330,7 @@ class MongoClient extends EventEmitter {
         // Propegate the events to the client
         const collectedEvents = collectEvents(this, db);
         // Create Db instance
-        db.open((err, db) => {
+        adone.promise.nodeify(db.open(), (err, db) => {
             if (err) {
                 return callback(err);
             }

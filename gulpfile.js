@@ -10,7 +10,7 @@ const chmod = require("gulp-chmod");
 const path = require("path");
 const dot = require("dot");
 const through2 = require("through2");
-const importReplace = function () {  // ... gulp
+const importReplace = function () { // ... gulp
     return {
         visitor: {
             ImportDeclaration(p, state) {
@@ -63,106 +63,106 @@ const paths = {
     }
 };
 
-function errorHandler() {
-    return plumber({
-        errorHandler: (err) => {
-            gutil.log(`${err}\n${err.codeFrame}`);
-            notify.onError("Error: <%= error.message %>")(err);
+const errorHandler = () => plumber({
+    errorHandler: (err) => {
+        gutil.log(`${err}\n${err.codeFrame}`);
+        notify.onError("Error: <%= error.message %>")(err);
+    }
+});
+
+const transform = () => babel({
+    compact: false,
+    only: /\.js$/,
+    sourceMaps: true,
+    plugins: [
+        "transform-flow-strip-types",
+        "transform-decorators-legacy",
+        "transform-class-properties",
+        "transform-es2015-modules-commonjs",
+        "transform-function-bind",
+        "transform-object-rest-spread",
+        [importReplace, {
+            old: "adone",
+            new: path.resolve(__dirname, "lib")
+        }],
+        [importReplace, {
+            old: "omnitron",
+            new: path.resolve(__dirname, "lib", "omnitron")
+        }]
+    ]
+});
+
+const buildBin = () => gulp.src(paths.bin.from)
+    .pipe(errorHandler())
+    .pipe(cache("bin"))
+    .pipe(sourcemaps.init())
+    .pipe(transform())
+    .pipe(sourcemaps.mapSources((sourcePath, file) => {
+        return path.relative(path.dirname(path.resolve(paths.bin.to, file.relative)), file.path);
+    }))
+    .pipe(sourcemaps.write("."))
+    .pipe(chmod({
+        owner: {
+            read: true,
+            write: true,
+            execute: true
+        },
+        group: {
+            read: true,
+            write: false,
+            execute: true
+        },
+        others: {
+            read: true,
+            write: false,
+            execute: true
         }
-    });
-}
+    }))
+    .pipe(notify({ message: "Done: bin", onLast: true }))
+    .pipe(gulp.dest(paths.bin.to));
 
-function transform() {
-    return babel({
-        compact: false,
-        only: /\.js$/,
-        sourceMaps: true,
-        plugins: [
-            "transform-flow-strip-types",
-            "transform-decorators-legacy",
-            "transform-class-properties",
-            "transform-es2015-modules-commonjs",
-            "transform-function-bind",
-            "transform-object-rest-spread",
-            [importReplace, {
-                old: "adone",
-                new: path.resolve(__dirname, "lib")
-            }],
-            [importReplace, {
-                old: "omnitron",
-                new: path.resolve(__dirname, "lib", "omnitron")
-            }]
-        ]
-    });
-}
+const buildOmnitron = () => gulp.src(paths.omnitron.from)
+    .pipe(errorHandler())
+    .pipe(cache("omnitron"))
+    .pipe(sourcemaps.init())
+    .pipe(transform())
+    .pipe(sourcemaps.mapSources((sourcePath, file) => {
+        return path.relative(path.dirname(path.resolve(paths.omnitron.to, file.relative)), file.path);
+    }))
+    .pipe(sourcemaps.write("."))
+    .pipe(notify({ message: "Done: omnitron", onLast: true }))
+    .pipe(gulp.dest(paths.omnitron.to));
 
-function buildBin() {
-    return gulp.src(paths.bin.from)
-        .pipe(errorHandler())
-        .pipe(cache("bin"))
-        .pipe(sourcemaps.init())
-        .pipe(transform())
-        .pipe(sourcemaps.write("."))
-        .pipe(chmod({
-            owner: {
-                read: true,
-                write: true,
-                execute: true
-            },
-            group: {
-                read: true,
-                write: false,
-                execute: true
-            },
-            others: {
-                read: true,
-                write: false,
-                execute: true
-            }
-        }))
-        .pipe(notify({ message: "Done: bin", onLast: true }))
-        .pipe(gulp.dest(paths.bin.to));
-}
+const buildIndex = () => gulp.src(paths.index.from)
+    .pipe(errorHandler())
+    .pipe(cache("index"))
+    .pipe(sourcemaps.init())
+    .pipe(transform())
+    .pipe(sourcemaps.mapSources((sourcePath, file) => {
+        return path.relative(path.dirname(path.resolve(paths.index.to, file.relative)), file.path);
+    }))
+    .pipe(sourcemaps.write("."))
+    .pipe(notify({ message: "Done: index", onLast: true }))
+    .pipe(gulp.dest(paths.index.to));
 
-function buildOmnitron() {
-    return gulp.src(paths.omnitron.from)
-        .pipe(errorHandler())
-        .pipe(cache("omnitron"))
-        .pipe(sourcemaps.init())
-        .pipe(transform())
-        .pipe(sourcemaps.write("."))
-        .pipe(notify({ message: "Done: omnitron", onLast: true }))
-        .pipe(gulp.dest(paths.omnitron.to));
-}
+const buildGlosses = () => gulp.src(paths.glosses.from)
+    .pipe(errorHandler())
+    .pipe(cache("glosses"))
+    .pipe(sourcemaps.init())
+    .pipe(transform())
+    .pipe(sourcemaps.mapSources((sourcePath, file) => {
+        return path.relative(path.dirname(path.resolve(paths.glosses.to, file.relative)), file.path);
+    }))
+    .pipe(sourcemaps.write("."))
+    .pipe(notify({ message: "Done: glosses", onLast: true }))
+    .pipe(gulp.dest(paths.glosses.to));
 
-function buildIndex() {
-    return gulp.src(paths.index.from)
-        .pipe(errorHandler())
-        .pipe(cache("index"))
-        .pipe(sourcemaps.init())
-        .pipe(transform())
-        .pipe(sourcemaps.write("."))
-        .pipe(notify({ message: "Done: index", onLast: true }))
-        .pipe(gulp.dest(paths.index.to));
-}
-
-function buildGlosses() {
-    return gulp.src(paths.glosses.from)
-        .pipe(errorHandler())
-        .pipe(cache("glosses"))
-        .pipe(sourcemaps.init())
-        .pipe(transform())
-        .pipe(sourcemaps.write("."))
-        .pipe(notify({ message: "Done: glosses", onLast: true }))
-        .pipe(gulp.dest(paths.glosses.to));
-}
-
-function buildSchemaTemplates(cb) {
+const buildSchemaTemplates = (cb) => {
     // shit..
     const defs = {};
     const FUNCTION_NAME = /function\s+anonymous\s*\(it[^)]*\)\s*{/;
     const OUT_EMPTY_STRING = /out\s*\+=\s*'\s*';/g;
-    const ISTANBUL = /\'(istanbul[^']+)\';/g;
+    const ISTANBUL = /'(istanbul[^']+)';/g;
     const ERROR_KEYWORD = /\$errorKeyword/g;
     const ERROR_KEYWORD_OR = /\$errorKeyword\s+\|\|/g;
     const VARS = [
@@ -193,14 +193,14 @@ function buildSchemaTemplates(cb) {
                     const occurrences = (regexp) => (code.match(regexp) || []).length;
                     const countUsed = occurrences(ERROR_KEYWORD);
                     const countOr = occurrences(ERROR_KEYWORD_OR);
-                    if (countUsed == countOr + 1) {
+                    if (countUsed === countOr + 1) {
                         code = code.replace(ERROR_KEYWORD_OR, "");
                     }
                     VARS.forEach(function removeUnusedVar(v) {
                         v = v.replace(/\$/g, "\\$$");
                         let regexp = new RegExp(`${v}[^A-Za-z0-9_$]`, "g");
                         const count = occurrences(regexp);
-                        if (count == 1) {
+                        if (count === 1) {
                             regexp = new RegExp(`var\\s+${v}\\s*=[^;]+;|var\\s+${v};`);
                             code = code.replace(regexp, "");
                         }
@@ -215,37 +215,37 @@ function buildSchemaTemplates(cb) {
                 .once("error", cb)
                 .on("end", cb);
         });
-}
+};
 
-function buildTests() {
-    return gulp.src(paths.tests.from)
-        .pipe(errorHandler())
-        .pipe(cache("tests"))
-        .pipe(sourcemaps.init())
-        .pipe(transform())
-        .pipe(sourcemaps.write("."))
-        .pipe(notify({ message: "Done: tests", onLast: true }))
-        .pipe(gulp.dest(paths.tests.to));
-}
+const buildTests = () => gulp.src(paths.tests.from)
+    .pipe(errorHandler())
+    .pipe(cache("tests"))
+    .pipe(sourcemaps.init())
+    .pipe(transform())
+    .pipe(sourcemaps.mapSources((sourcePath, file) => {
+        return path.relative(path.dirname(path.resolve(paths.tests.to, file.relative)), file.path);
+    }))
+    .pipe(sourcemaps.write("."))
+    .pipe(notify({ message: "Done: tests", onLast: true }))
+    .pipe(gulp.dest(paths.tests.to));
 
-function buildExamples() {
-    return gulp.src(paths.examples.from)
-        .pipe(errorHandler())
-        .pipe(cache("examples"))
-        .pipe(sourcemaps.init())
-        .pipe(transform())
-        .pipe(sourcemaps.write("."))
-        .pipe(notify({ message: "Done: examples", onLast: true }))
-        .pipe(gulp.dest(paths.examples.to));
-}
+const buildExamples = () => gulp.src(paths.examples.from)
+    .pipe(errorHandler())
+    .pipe(cache("examples"))
+    .pipe(sourcemaps.init())
+    .pipe(transform())
+    .pipe(sourcemaps.mapSources((sourcePath, file) => {
+        return path.relative(path.dirname(path.resolve(paths.examples.to, file.relative)), file.path);
+    }))
+    .pipe(sourcemaps.write("."))
+    .pipe(notify({ message: "Done: examples", onLast: true }))
+    .pipe(gulp.dest(paths.examples.to));
 
-function copyVendor() {
-    return gulp.src(paths.vendor.from)
-        .pipe(errorHandler())
-        .pipe(cache("vendor"))
-        .pipe(notify({ message: "Done: vendor", onLast: true }))
-        .pipe(gulp.dest(paths.vendor.to));
-}
+const copyVendor = () => gulp.src(paths.vendor.from)
+    .pipe(errorHandler())
+    .pipe(cache("vendor"))
+    .pipe(notify({ message: "Done: vendor", onLast: true }))
+    .pipe(gulp.dest(paths.vendor.to));
 
 gulp.task("clean-bin", () => del(paths.bin.to));
 gulp.task("build-bin", ["clean-bin"], buildBin);

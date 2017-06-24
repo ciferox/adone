@@ -32,7 +32,7 @@ describe("promote buffers", function () {
         const db = await mongo.connect(this.url());
         const collection = db.collection("shouldCorrectlyHonorPromoteBuffer5");
         await collection.insert({ doc: Buffer.alloc(256) });
-        const doc = await collection.aggregate([{ $match: {} }], { promoteBuffers: true }).next();
+        const doc = await collection.aggregate([{ $match: {} }], { promoteBuffers: true, cursor: true }).next();
         expect(doc.doc).to.be.instanceOf(Buffer);
         await db.close();
     });

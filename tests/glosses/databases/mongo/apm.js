@@ -759,7 +759,7 @@ describe("apm", function () {
 
         await collection.insertMany(range(2500).map((i) => ({ a: i })));
 
-        await collection.aggregate([{ $match: {} }]).toArray();
+        await collection.aggregate([{ $match: {} }], { cursor: true }).toArray();
 
         expect(started).to.have.lengthOf(3);
         expect(succeeded).to.have.lengthOf(3);

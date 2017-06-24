@@ -109,7 +109,7 @@ describe("command write concern", function () {
         await db.collection("test").aggregate([
             { $match: {} },
             { $out: "readConcernCollectionAggregate1Output" }
-        ], { w: 2, wtimeout: 1000 }).toArray();
+        ], { w: 2, wtimeout: 1000 });
 
         expect(commandResult.writeConcern).to.be.deep.equal({ w: 2, wtimeout: 1000 });
 

@@ -137,7 +137,7 @@ describe("read concern", function () {
                 succeeded.push(event);
             }
         });
-        await collection.aggregate([{ $match: {} }]).toArray();
+        await collection.aggregate([{ $match: {} }]);
         expect(started).to.have.lengthOf(1);
         expect(started[0].commandName).to.be.equal("aggregate");
         expect(succeeded[0].commandName).to.be.equal("aggregate");
@@ -164,12 +164,12 @@ describe("read concern", function () {
                 succeeded.push(event);
             }
         });
-        await collection.aggregate([{ $match: {} }, { $out: "readConcernCollectionAggregate1Output" }]).toArray();
+        await collection.aggregate([{ $match: {} }, { $out: "readConcernCollectionAggregate1Output" }]);
         expect(started).to.have.lengthOf(1);
         expect(started[0].commandName).to.be.equal("aggregate");
         expect(succeeded[0].commandName).to.be.equal("aggregate");
         expect(started[0].command.readConcern).to.be.undefined;
-        await collection.aggregate([{ $match: {} }], { out: "readConcernCollectionAggregate2Output" }).toArray();
+        await collection.aggregate([{ $match: {} }], { out: "readConcernCollectionAggregate2Output" });
         expect(started).to.have.lengthOf(2);
         expect(started[1].commandName).to.be.equal("aggregate");
         expect(succeeded[1].commandName).to.be.equal("aggregate");

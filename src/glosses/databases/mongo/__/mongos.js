@@ -238,7 +238,7 @@ export default class Mongos extends EventEmitter {
         });
 
         // Connect handler
-        const connectHandler = function () {
+        const connectHandler = () => {
 
             // Set up listeners
             this.s.mongos.once("timeout", errorHandler("timeout"));

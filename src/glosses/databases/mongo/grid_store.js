@@ -310,7 +310,7 @@ export default class GridStore {
         // Fetch the chunks
         if (!is.nil(query)) {
             // only pass error to callback once
-            collection.findOne(query, options, (err, doc) => {
+            adone.promise.nodeify(collection.findOne(query, options), (err, doc) => {
                 if (err) {
                     return error(err);
                 }
@@ -482,14 +482,14 @@ export default class GridStore {
             // Get files collection
             const collection = this.collection();
             // Put index on filename
-            collection.ensureIndex([["filename", 1]], writeConcern, () => {
+            adone.promise.nodeify(collection.ensureIndex([["filename", 1]], writeConcern), () => {
                 // Get chunk collection
                 const chunkCollection = this.chunkCollection();
                 // Make an unique index for compatibility with mongo-cxx-driver:legacy
                 const chunkIndexOptions = shallowClone(writeConcern);
                 chunkIndexOptions.unique = true;
                 // Ensure index on chunk collection
-                chunkCollection.ensureIndex([["files_id", 1], ["n", 1]], chunkIndexOptions, () => {
+                adone.promise.nodeify(chunkCollection.ensureIndex([["files_id", 1], ["n", 1]], chunkIndexOptions), () => {
                     // Open the connection
                     this.__open(writeConcern, (err, r) => {
                         if (err) {
@@ -823,7 +823,7 @@ export default class GridStore {
         };
 
         const md5Command = { filemd5: this.fileId, root: this.root };
-        this.db.command(md5Command, (err, results) => {
+        adone.promise.nodeify(this.db.command(md5Command), (err, results) => {
             if (err) {
                 return callback(err);
             }
@@ -858,7 +858,7 @@ export default class GridStore {
                                     } throw err;
                                 }
 
-                                files.save(mongoObject, options, (err) => {
+                                adone.promise.nodeify(files.save(mongoObject, options), (err) => {
                                     if (is.function(callback)) {
                                         callback(err, mongoObject);
                                     }
@@ -873,7 +873,7 @@ export default class GridStore {
                                     } throw err;
                                 }
 
-                                files.save(mongoObject, options, (err) => {
+                                adone.promise.nodeify(files.save(mongoObject, options), (err) => {
                                     if (is.function(callback)) {
                                         callback(err, mongoObject);
                                     }
@@ -896,7 +896,7 @@ export default class GridStore {
                             } throw err;
                         }
 
-                        files.save(mongoObject, options, (err) => {
+                        adone.promise.nodeify(files.save(mongoObject, options), (err) => {
                             if (is.function(callback)) {
                                 callback(err, mongoObject);
                             }
@@ -949,7 +949,7 @@ export default class GridStore {
         options = options || this.writeConcern;
 
         if (!is.nil(this.fileId)) {
-            this.chunkCollection().remove({ files_id: this.fileId }, options, (err) => {
+            adone.promise.nodeify(this.chunkCollection().remove({ files_id: this.fileId }, options), (err) => {
                 if (err) {
                     return callback(err, false);
                 }
@@ -973,7 +973,7 @@ export default class GridStore {
                     return callback(err);
                 }
 
-                collection.remove({ _id: this.fileId }, this.writeConcern, (err) => {
+                adone.promise.nodeify(collection.remove({ _id: this.fileId }, this.writeConcern), (err) => {
                     callback(err, this);
                 });
             });
@@ -1101,7 +1101,7 @@ export default class GridStore {
         options = options || this.writeConcern;
         options.readPreference = this.readPreference;
         // Get the nth chunk
-        this.chunkCollection().findOne({ files_id: this.fileId, n: chunkNumber }, options, (err, chunk) => {
+        adone.promise.nodeify(this.chunkCollection().findOne({ files_id: this.fileId, n: chunkNumber }, options), (err, chunk) => {
             if (err) {
                 return callback(err);
             }
@@ -1278,7 +1278,7 @@ export default class GridStore {
             }
 
             // Check if the entry exists
-            collection.findOne(query, { readPreference }, (err, item) => {
+            adone.promise.nodeify(collection.findOne(query, { readPreference }), (err, item) => {
                 if (err) {
                     return callback(err);
                 }
@@ -1339,18 +1339,13 @@ export default class GridStore {
                 return callback(err);
             }
 
-            collection.find({}, { readPreference }, (err, cursor) => {
-                if (err) {
-                    return callback(err);
+            const cursor = collection.find({}, { readPreference });
+            cursor.each((err, item) => {
+                if (!is.nil(item)) {
+                    items.push(byId ? item._id : item.filename);
+                } else {
+                    callback(err, items);
                 }
-
-                cursor.each((err, item) => {
-                    if (!is.nil(item)) {
-                        items.push(byId ? item._id : item.filename);
-                    } else {
-                        callback(err, items);
-                    }
-                });
             });
         });
     }
@@ -1523,7 +1518,7 @@ export default class GridStore {
                         if (err) {
                             return callback(err);
                         }
-                        collection.remove({ _id: gridStore.fileId }, writeConcern, (err) => {
+                        adone.promise.nodeify(collection.remove({ _id: gridStore.fileId }, writeConcern), (err) => {
                             callback(err, this);
                         });
                     });

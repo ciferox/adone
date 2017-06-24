@@ -601,7 +601,7 @@ class Instrumentation extends EventEmitter {
                         // Get the promise
                         const promise = func.apply(this, args);
                         // Return a new promise
-                        return new cursor.s.promiseLibrary((resolve, reject) => {
+                        return new Promise((resolve, reject) => {
                             const startTime = timestampGenerator.current();
                             // Emit the started event
                             self.emit("started", command);
