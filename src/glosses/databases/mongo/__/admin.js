@@ -1,6 +1,5 @@
 const { is, database: { mongo: { __ } } } = adone;
-const { utils: { shallowClone, toError }, metadata } = __;
-const { classMethod } = metadata;
+const { utils: { shallowClone, toError } } = __;
 
 // Get write concern
 const writeConcern = function (options, db) {
@@ -31,28 +30,23 @@ const writeConcern = function (options, db) {
     return options;
 };
 
-@metadata("Admin")
 export default class Admin {
     constructor(db, topology) {
         this.s = { db, topology };
     }
 
-    @classMethod({ callback: true, promise: true })
     async command(command, options = {}) {
         return this.s.db.executeDbAdminCommand(command, options);
     }
 
-    @classMethod({ callback: true, promise: true })
     async buildInfo() {
         return this.serverInfo();
     }
 
-    @classMethod({ callback: true, promise: true })
     async serverInfo() {
         return this.s.db.executeDbAdminCommand({ buildinfo: 1 });
     }
 
-    @classMethod({ callback: true, promise: true })
     async serverStatus() {
         const doc = await this.s.db.executeDbAdminCommand({ serverStatus: 1 });
         if (!doc.ok) {
@@ -61,7 +55,6 @@ export default class Admin {
         return doc;
     }
 
-    @classMethod({ callback: true, promise: true })
     async profilingLevel() {
         const doc = await this.s.db.executeDbAdminCommand({ profile: -1 });
         if (!doc.ok) {
@@ -80,46 +73,39 @@ export default class Admin {
         throw toError(`Error: illegal profiling level value ${was}`);
     }
 
-    @classMethod({ callback: true, promise: true })
     async ping() {
         return this.s.db.executeDbAdminCommand({ ping: 1 });
     }
 
-    @classMethod({ callback: true, promise: true })
     async authenticate(username, password, options = {}) {
-        // console.warn("Admin.prototype.authenticate method will no longer be available in the next major release 3.x as MongoDB 3.6 will only allow auth against users in the admin db and will no longer allow multiple credentials on a socket. Please authenticate using MongoClient.connect with auth credentials.");
-        const finalArguments = [this.s.db];
+        const args = [this.s.db];
         if (is.string(username)) {
-            finalArguments.push(username);
+            args.push(username);
         }
         if (is.string(password)) {
-            finalArguments.push(password);
+            args.push(password);
         }
-        finalArguments.push({ ...options, authdb: "admin" });
+        args.push({ ...options, authdb: "admin" });
 
-        return __.authenticate.apply(this.s.db, finalArguments);
+        return __.authenticate.apply(this.s.db, args);
     }
 
-    @classMethod({ callback: true, promise: true })
     async logout() {
         return this.s.db.logout({ dbName: "admin" });
     }
 
-    @classMethod({ callback: true, promise: true })
     async addUser(username, password, options = {}) {
         options = writeConcern(options, this.s.db);
         options.dbName = "admin";
         return this.s.db.addUser(username, password, options);
     }
 
-    @classMethod({ callback: true, promise: true })
     async removeUser(username, options = {}) {
         options = writeConcern(options, this.s.db);
         options.dbName = "admin";
         return this.s.db.removeUser(username, options);
     }
 
-    @classMethod({ callback: true, promise: true })
     async setProfilingLevel(level) {
         const command = {};
         let profile = 0;
@@ -144,7 +130,6 @@ export default class Admin {
         throw toError("Error with profile command");
     }
 
-    @classMethod({ callback: true, promise: true })
     async profilingInfo() {
         return new Promise((resolve, reject) => {
             this.s.topology.cursor("admin.system.profile", { find: "system.profile", query: {} }, {})
@@ -154,7 +139,6 @@ export default class Admin {
         });
     }
 
-    @classMethod({ callback: true, promise: true })
     async validateCollection(collectionName, options = {}) {
         const command = { validate: collectionName };
         const keys = Object.keys(options);
@@ -180,12 +164,10 @@ export default class Admin {
         return doc;
     }
 
-    @classMethod({ callback: true, promise: true })
     async listDatabases() {
         return this.s.db.executeDbAdminCommand({ listDatabases: 1 }, {});
     }
 
-    @classMethod({ callback: true, promise: true })
     async replSetGetStatus() {
         const doc = await this.s.db.executeDbAdminCommand({ replSetGetStatus: 1 });
         if (!doc.ok) {

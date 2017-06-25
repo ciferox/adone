@@ -48,7 +48,7 @@ describe("unicode", function () {
         };
         const collection = await db.createCollection("test_should_correctly_save_unicode_containing_document");
         doc._id = "felixge";
-        collection.save(doc, { w: 1 });
+        await collection.save(doc, { w: 1 });
         expect(await collection.findOne()).to.be.deep.equal(doc);
     });
 

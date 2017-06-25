@@ -16,12 +16,11 @@ describe("replset read preference", function () {
         ], { secondaryAcceptableLatencyMS: 5, replicaSet, debug: true });
 
         const db = new Db("tests_", replSet, { w: 1 });
-        const fullSetup = spy();
-        db.on("fullsetup", fullSetup);
+        const joined = spy();
+        db.serverConfig.on("joined", joined);
+        const allJoined = joined.waitForNCalls(3);
         await db.open();
-        if (!fullSetup.called) {
-            await fullSetup.waitForCall();
-        }
+        await allJoined;
 
         let time = 10;
         const byTime = db.serverConfig.replset.getServers({ ignoreArbiters: true });

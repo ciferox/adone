@@ -83,48 +83,16 @@ export default class GridFSBucket extends EventEmitter {
         );
     }
 
-    _delete(id, callback) {
-        adone.promise.nodeify(this.s._filesCollection.deleteOne({ _id: id }), (error, res) => {
-            if (error) {
-                return callback(error);
-            }
-
-            adone.promise.nodeify(this.s._chunksCollection.deleteMany({ files_id: id }), (error) => {
-                if (error) {
-                    return callback(error);
-                }
-
-                // Delete orphaned chunks before returning FileNotFound
-                if (!res.result.n) {
-                    const errmsg = `FileNotFound: no file with id ${id} found`;
-                    return callback(new Error(errmsg));
-                }
-
-                callback();
-            });
-        });
-    }
-
-    delete(id, callback) {
-        if (is.function(callback)) {
-            return this._delete(id, callback);
+    async delete(id) {
+        const result = await this.s._filesCollection.deleteOne({ _id: id });
+        await this.s._chunksCollection.deleteMany({ files_id: id });
+        // Delete orphaned chunks before returning FileNotFound
+        if (!result.result.n) {
+            throw toError(`FileNotFound: no file with id ${id} found`);
         }
-
-        return new this.s.promiseLibrary((resolve, reject) => {
-            this._delete(id, (error, res) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve(res);
-                }
-            });
-        });
     }
 
-    find(filter, options) {
-        filter = filter || {};
-        options = options || {};
-
+    find(filter = {}, options = {}) {
         const cursor = this.s._filesCollection.find(filter);
 
         if (!is.nil(options.batchSize)) {
@@ -177,64 +145,17 @@ export default class GridFSBucket extends EventEmitter {
         );
     }
 
-    _rename(id, filename, callback) {
+    async rename(id, filename) {
         const filter = { _id: id };
         const update = { $set: { filename } };
-        adone.promise.nodeify(this.s._filesCollection.updateOne(filter, update), (error, res) => {
-            if (error) {
-                return callback(error);
-            }
-            if (!res.result.n) {
-                return callback(toError(`File with id ${id} not found`));
-            }
-            callback();
-        });
-    }
-
-    rename(id, filename, callback) {
-        if (is.function(callback)) {
-            return this._rename(id, filename, callback);
+        const result = await this.s._filesCollection.updateOne(filter, update);
+        if (!result.result.n) {
+            throw toError(`File with id ${id} not found`);
         }
-
-        return new this.s.promiseLibrary((resolve, reject) => {
-            this._rename(id, filename, (error, res) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve(res);
-                }
-            });
-        });
     }
 
-    _drop(callback) {
-        adone.promise.nodeify(this.s._filesCollection.drop(), (error) => {
-            if (error) {
-                return callback(error);
-            }
-            adone.promise.nodeify(this.s._chunksCollection.drop(), (error) => {
-                if (error) {
-                    return callback(error);
-                }
-
-                return callback();
-            });
-        });
-    }
-
-    drop(callback) {
-        if (is.function(callback)) {
-            return this._drop(callback);
-        }
-
-        return new this.s.promiseLibrary((resolve, reject) => {
-            this._drop((error, res) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve(res);
-                }
-            });
-        });
+    async drop() {
+        await this.s._filesCollection.drop();
+        await this.s._chunksCollection.drop();
     }
 }

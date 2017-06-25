@@ -9,10 +9,8 @@ const {
         filterOptions,
         toError,
         mergeOptionsAndWriteConcern
-    },
-    metadata
+    }
 } = __;
-const { classMethod } = metadata;
 
 // Filter out any write concern options
 const illegalCommandFields = [
@@ -210,7 +208,6 @@ const createListener = (self, e, object) => {
     return listener;
 };
 
-@metadata("Db")
 export default class Db extends EventEmitter {
     constructor(databaseName, topology, options = {}) {
         super();
@@ -292,20 +289,16 @@ export default class Db extends EventEmitter {
         return ops;
     }
 
-    @classMethod({ callback: true, promise: true })
     async open() {
-        return new Promise((resolve, reject) => {
-            this.s.topology.connect(this, this.s.options, (err) => {
-                if (err) {
-                    this.close();
-                    return reject(err);
-                }
-                resolve(this);
-            });
-        });
+        try {
+            await this.s.topology.connect(this, this.s.options);
+            return this;
+        } catch (err) {
+            this.close();
+            throw err;
+        }
     }
 
-    @classMethod({ callback: true, promise: true })
     async command(command, options = {}) {
         // Did the user destroy the topology
         if (this.serverConfig && this.serverConfig.isDestroyed()) {
@@ -325,17 +318,10 @@ export default class Db extends EventEmitter {
         } else {
             options.readPreference = core.ReadPreference.primary;
         }
-        return new Promise((resolve, reject) => {
-            this.s.topology.command(`${dbName}.$cmd`, command, options, (err, result) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(options.full ? result : result.result);
-            });
-        });
+        const result = await this.s.topology.command(`${dbName}.$cmd`, command, options);
+        return options.full ? result : result.result;
     }
 
-    @classMethod({ callback: true, promise: true })
     close(force) {
         this.s.topology.close(force);
 
@@ -359,12 +345,10 @@ export default class Db extends EventEmitter {
         }
     }
 
-    @classMethod({ callback: false, promise: false, returns: [__.Admin] })
     admin() {
         return new __.Admin(this, this.s.topology);
     }
 
-    @classMethod({ callback: true, promise: false, returns: [__.Collection] })
     collection(name, options, callback) {
         if (is.function(options)) {
             [callback, options] = [options, {}];
@@ -442,7 +426,6 @@ export default class Db extends EventEmitter {
         });
     }
 
-    @classMethod({ callback: true, promise: true })
     async createCollection(name, options = {}) {
         if (this.serverConfig && this.serverConfig.isDestroyed()) {
             throw new MongoError("topology was destroyed");
@@ -489,7 +472,6 @@ export default class Db extends EventEmitter {
         );
     }
 
-    @classMethod({ callback: true, promise: true })
     async stats(options) {
         options = options || {};
         // Build command object
@@ -508,7 +490,6 @@ export default class Db extends EventEmitter {
         return this.command(commandObject, options);
     }
 
-    @classMethod({ callback: false, promise: false, returns: [__.CommandCursor] })
     listCollections(filter, options) {
         filter = filter || {};
         options = options || {};
@@ -574,7 +555,6 @@ export default class Db extends EventEmitter {
         return cursor;
     }
 
-    @classMethod({ callback: true, promise: true })
     async eval(code, parameters, options = {}) {
         let finalCode = code;
         let finalParameters = [];
@@ -619,12 +599,10 @@ export default class Db extends EventEmitter {
         }
     }
 
-    @classMethod({ callback: true, promise: true })
     async renameCollection(fromCollection, toCollection, options) {
         return this.collection(fromCollection).rename(toCollection, options);
     }
 
-    @classMethod({ callback: true, promise: true })
     async dropCollection(name, options) {
         options = options || {};
 
@@ -646,7 +624,6 @@ export default class Db extends EventEmitter {
         return Boolean(result.ok);
     }
 
-    @classMethod({ callback: true, promise: true })
     async dropDatabase(options) {
         options = options || {};
         // Drop database command
@@ -667,7 +644,6 @@ export default class Db extends EventEmitter {
         return Boolean(result.ok);
     }
 
-    @classMethod({ callback: true, promise: true })
     async collections() {
         const documents = await this.listCollections().toArray();
         return documents.filter((x) => !x.name.includes("$")).map((x) => new __.Collection(
@@ -681,27 +657,21 @@ export default class Db extends EventEmitter {
 
     }
 
-    @classMethod({ callback: true, promise: true })
     async executeDbAdminCommand(selector, options = {}) {
         if (options.readPreference) {
             options.readPreference = convertReadPreference(options.readPreference);
         }
-
-        return new Promise((resolve, reject) => {
-            this.s.topology.command("admin.$cmd", selector, options, (err, result) => {
-                // Did the user destroy the topology
-                if (this.serverConfig && this.serverConfig.isDestroyed()) {
-                    return reject(new MongoError("topology was destroyed"));
-                }
-                if (err) {
-                    return reject(err);
-                }
-                resolve(result.result);
-            });
-        });
+        try {
+            const result = await this.s.topology.command("admin.$cmd", selector, options);
+            return result.result;
+        } catch (err) {
+            if (this.serverConfig && this.serverConfig.isDestroyed()) {
+                throw new MongoError("topology was destroyed");
+            }
+            throw err;
+        }
     }
 
-    @classMethod({ callback: true, promise: true })
     async createIndex(name, fieldOrSpec, options = {}) {
         // Did the user destroy the topology
         if (this.serverConfig && this.serverConfig.isDestroyed()) {
@@ -761,7 +731,7 @@ export default class Db extends EventEmitter {
             // 11600 = 'InterruptedAtShutdown' (interrupted at shutdown)
             // These errors mean that the server recognized `createIndex` as a command
             // and so we don't need to fallback to an insert.
-            if (err.code === 67 || err.code === 11000 || err.code === 85 || err.code === 11600) {
+            if (err.code === 67 || err.code === 85 || err.code === 11000 || err.code === 11600) {
                 throw err;
             }
         }
@@ -770,23 +740,16 @@ export default class Db extends EventEmitter {
         // Set no key checking
         finalOptions.checkKeys = false;
         // Insert document
-        return new Promise((resolve, reject) => {
-            this.s.topology.insert(`${this.s.databaseName}.${Db.SYSTEM_INDEX_COLLECTION}`, doc, finalOptions, (err, result) => {
-                if (err) {
-                    return reject(err);
-                }
-                if (is.nil(result)) {
-                    return resolve();
-                }
-                if (result.result.writeErrors) {
-                    return reject(MongoError.create(result.result.writeErrors[0]));
-                }
-                resolve(doc.name);
-            });
-        });
+        const result = await this.s.topology.insert(`${this.s.databaseName}.${Db.SYSTEM_INDEX_COLLECTION}`, doc, finalOptions);
+        if (is.nil(result)) {
+            return null;
+        }
+        if (result.result.writeErrors) {
+            throw MongoError.create(result.result.writeErrors[0]);
+        }
+        return doc.name;
     }
 
-    @classMethod({ callback: true, promise: true })
     async ensureIndex(name, fieldOrSpec, options = {}) {
         // Did the user destroy the topology
         if (this.serverConfig && this.serverConfig.isDestroyed()) {
@@ -822,7 +785,6 @@ export default class Db extends EventEmitter {
         this.s.children.push(db);
     }
 
-    @classMethod({ callback: false, promise: false, fluent: true }) // fluent?
     db(dbName, options) {
         options = options || {};
 
@@ -853,7 +815,6 @@ export default class Db extends EventEmitter {
         return db;
     }
 
-    @classMethod({ callback: true, promise: true })
     async addUser(username, password, options = {}) {
         if (this.serverConfig && this.serverConfig.isDestroyed()) {
             throw new MongoError("topology was destroyed");
@@ -959,7 +920,6 @@ export default class Db extends EventEmitter {
         return [{ user: username, pwd: userPassword }];
     }
 
-    @classMethod({ callback: true, promise: true })
     async removeUser(username, options = {}) {
         if (this.serverConfig && this.serverConfig.isDestroyed()) {
             throw new MongoError("topology was destroyed");
@@ -1014,13 +974,11 @@ export default class Db extends EventEmitter {
         return true;
     }
 
-    @classMethod({ callback: true, promise: true })
-    authenticate(...args) {
+    async authenticate(...args) {
         // console.warn("Db.prototype.authenticate method will no longer be available in the next major release 3.x as MongoDB 3.6 will only allow auth against users in the admin db and will no longer allow multiple credentials on a socket. Please authenticate using MongoClient.connect with auth credentials.");
         return __.authenticate.apply(this, [this, ...args]);
     }
 
-    @classMethod({ callback: true, promise: true })
     async logout(options = {}) {
         // Establish the correct database name
         let dbName = this.s.authSource ? this.s.authSource : this.s.databaseName;
@@ -1036,7 +994,6 @@ export default class Db extends EventEmitter {
         });
     }
 
-    @classMethod({ callback: true, promise: true })
     async indexInformation(name, options = {}) {
         if (this.serverConfig && this.serverConfig.isDestroyed()) {
             throw new MongoError("topology was destroyed");
@@ -1070,7 +1027,6 @@ export default class Db extends EventEmitter {
         this.s.topology.unref();
     }
 }
-
 
 Db.SYSTEM_NAMESPACE_COLLECTION = "system.namespaces";
 Db.SYSTEM_INDEX_COLLECTION = "system.indexes";

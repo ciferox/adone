@@ -262,8 +262,7 @@ describe("authentication", function () {
 
             it("should correctly perform nearest read from secondaries without auth fail when priamry is first seed", async () => {
                 let db = await new Db("replicaset_test_auth", replset, {
-                    w: 1,
-                    readPreference: mongo.ReadPreference.NEAREST
+                    w: 1
                 }).open();
                 await db.admin().addUser("root", "root", { w: 3, wtimeout: 25000 });
                 await db.close();

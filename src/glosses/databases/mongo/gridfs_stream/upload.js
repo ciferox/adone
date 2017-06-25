@@ -35,9 +35,8 @@ const createFilesDoc = (_id, length, chunkSize, md5, filename, contentType, alia
 };
 
 export default class GridFSBucketWriteStream extends Writable {
-    constructor(bucket, filename, options) {
+    constructor(bucket, filename, options = {}) {
         super();
-        options = options || {};
         this.bucket = bucket;
         this.chunks = bucket.s._chunksCollection;
         this.filename = filename;
@@ -64,11 +63,12 @@ export default class GridFSBucketWriteStream extends Writable {
         if (!this.bucket.s.calledOpenUploadStream) {
             this.bucket.s.calledOpenUploadStream = true;
 
-            this._checkIndexes(() => {
+            this._checkIndexes().then(() => {
                 this.bucket.s.checkedIndexes = true;
                 this.bucket.emit("index");
-            });
+            }, this.__handleError);
         }
+        this.__handleError = (err, cb) => this._handleError(err, cb);
     }
 
     _handleError(error, callback) {
@@ -93,109 +93,69 @@ export default class GridFSBucketWriteStream extends Writable {
         return obj;
     }
 
-    _checkChunksIndex(callback) {
-        adone.promise.nodeify(this.chunks.listIndexes().toArray(), (error, indexes) => {
-            if (error) {
-                // Collection doesn't exist so create index
-                if (error.code === ERROR_NAMESPACE_NOT_FOUND) {
-                    const index = { files_id: 1, n: 1 };
-                    adone.promise.nodeify(this.chunks.createIndex(index, { background: false, unique: true }), (error) => {
-                        if (error) {
-                            return callback(error);
-                        }
-
-                        callback();
-                    });
+    async _checkChunksIndex() {
+        let indexes;
+        try {
+            indexes = await this.chunks.listIndexes().toArray();
+        } catch (err) {
+            if (err.code !== ERROR_NAMESPACE_NOT_FOUND) {
+                throw err;
+            }
+            const index = { files_id: 1, n: 1 };
+            await this.chunks.createIndex(index, { background: false, unique: true });
+            return;
+        }
+        for (const index of indexes) {
+            if (index.key) {
+                const keys = Object.keys(index.key);
+                if (keys.length === 2 && index.key.files_id === 1 && index.key.n === 1) {
+                    // has chunk index
                     return;
                 }
-                return callback(error);
             }
+        }
+        const index = { files_id: 1, n: 1 };
+        const indexOptions = this._getWriteOptions();
 
-            let hasChunksIndex = false;
-            indexes.forEach((index) => {
-                if (index.key) {
-                    const keys = Object.keys(index.key);
-                    if (keys.length === 2 && index.key.files_id === 1 &&
-                        index.key.n === 1) {
-                        hasChunksIndex = true;
-                    }
-                }
-            });
+        indexOptions.background = false;
+        indexOptions.unique = true;
 
-            if (hasChunksIndex) {
-                callback();
-            } else {
-                const index = { files_id: 1, n: 1 };
-                const indexOptions = this._getWriteOptions();
-
-                indexOptions.background = false;
-                indexOptions.unique = true;
-
-                adone.promise.nodeify(this.chunks.createIndex(index, indexOptions), (error) => {
-                    if (error) {
-                        return callback(error);
-                    }
-
-                    callback();
-                });
-            }
-        });
+        await this.chunks.createIndex(index, indexOptions);
     }
 
-    _checkIndexes(callback) {
-        adone.promise.nodeify(this.files.findOne({}, { _id: 1 }), (error, doc) => {
-            if (error) {
-                return callback(error);
+    async _checkIndexes() {
+        const doc = await this.files.findOne({}, { _id: 1 });
+        if (doc) {
+            return;
+        }
+        let indexes;
+        try {
+            indexes = await this.files.listIndexes().toArray();
+        } catch (err) {
+            if (err.code !== ERROR_NAMESPACE_NOT_FOUND) {
+                throw err;
             }
-            if (doc) {
-                return callback();
+            const index = { filename: 1, uploadDate: 1 };
+            await this.files.createIndex(index, { background: false });
+            await this._checkChunksIndex();
+            return;
+        }
+
+        let hasFileIndex;
+        for (const index of indexes) {
+            const keys = Object.keys(index.key);
+            if (keys.length === 2 && index.key.filename === 1 && index.key.uploadDate === 1) {
+                hasFileIndex = true;
+                break;
             }
-
-            adone.promise.nodeify(this.files.listIndexes().toArray(), (error, indexes) => {
-                if (error) {
-                    // Collection doesn't exist so create index
-                    if (error.code === ERROR_NAMESPACE_NOT_FOUND) {
-                        const index = { filename: 1, uploadDate: 1 };
-                        adone.promise.nodeify(this.files.createIndex(index, { background: false }), (error) => {
-                            if (error) {
-                                return callback(error);
-                            }
-
-                            this._checkChunksIndex(callback);
-                        });
-                        return;
-                    }
-                    return callback(error);
-                }
-
-                let hasFileIndex = false;
-                indexes.forEach((index) => {
-                    const keys = Object.keys(index.key);
-                    if (keys.length === 2 && index.key.filename === 1 &&
-                        index.key.uploadDate === 1) {
-                        hasFileIndex = true;
-                    }
-                });
-
-                if (hasFileIndex) {
-                    this._checkChunksIndex(callback);
-                } else {
-                    const index = { filename: 1, uploadDate: 1 };
-
-                    const indexOptions = this._getWriteOptions();
-
-                    indexOptions.background = false;
-
-                    adone.promise.nodeify(this.files.createIndex(index, indexOptions), (error) => {
-                        if (error) {
-                            return callback(error);
-                        }
-
-                        this._checkChunksIndex(callback);
-                    });
-                }
-            });
-        });
+        }
+        if (!hasFileIndex) {
+            const index = { filename: 1, uploadDate: 1 };
+            const indexOptions = this._getWriteOptions();
+            indexOptions.background = false;
+            await this.files.createIndex(index, indexOptions);
+        }
+        await this._checkChunksIndex();
     }
 
     _waitForIndexes(callback) {
@@ -210,17 +170,15 @@ export default class GridFSBucketWriteStream extends Writable {
         return true;
     }
 
-    _checkAborted(callback) {
+    _checkAborted(callback = adone.noop) {
         if (this.state.aborted) {
-            if (is.function(callback)) {
-                callback(new Error("this stream has been aborted"));
-            }
+            callback(new Error("this stream has been aborted"));
             return true;
         }
         return false;
     }
 
-    _checkDone(callback) {
+    _checkDone(callback = adone.noop) {
         if (
             !this.done &&
             this.state.streamEnd &&
@@ -234,29 +192,25 @@ export default class GridFSBucketWriteStream extends Writable {
                 this.md5.digest("hex"), this.filename, this.options.contentType,
                 this.options.aliases, this.options.metadata);
 
-            if (this._checkAborted(this, callback)) {
+            if (this._checkAborted(callback)) {
                 return false;
             }
 
-            adone.promise.nodeify(this.files.insert(filesDoc, this._getWriteOptions()), (error) => {
-                if (error) {
-                    return this._handleError(error, callback);
-                }
+            this.files.insert(filesDoc, this._getWriteOptions()).then(() => {
                 this.emit("finish", filesDoc);
-            });
-
+            }, (err) => this._handleError(err, callback));
             return true;
         }
 
         return false;
     }
 
-    _doWrite(chunk, encoding, callback) {
+    _doWrite(chunk, encoding, callback = adone.noop) {
         if (this._checkAborted(callback)) {
             return false;
         }
 
-        const inputBuf = (is.buffer(chunk)) ? chunk : Buffer.from(chunk, encoding);
+        const inputBuf = is.buffer(chunk) ? chunk : Buffer.from(chunk, encoding);
 
         this.length += inputBuf.length;
 
@@ -281,8 +235,7 @@ export default class GridFSBucketWriteStream extends Writable {
         let outstandingRequests = 0;
         while (inputBufRemaining > 0) {
             const inputBufPos = inputBuf.length - inputBufRemaining;
-            inputBuf.copy(this.bufToStore, this.pos,
-                inputBufPos, inputBufPos + numToCopy);
+            inputBuf.copy(this.bufToStore, this.pos, inputBufPos, inputBufPos + numToCopy);
             this.pos += numToCopy;
             spaceRemaining -= numToCopy;
             if (spaceRemaining === 0) {
@@ -295,18 +248,15 @@ export default class GridFSBucketWriteStream extends Writable {
                     return false;
                 }
 
-                adone.promise.nodeify(this.chunks.insert(doc, this._getWriteOptions()), (error) => {
-                    if (error) {
-                        return this._handleError(error);
-                    }
+                this.chunks.insert(doc, this._getWriteOptions()).then(() => {
                     --this.state.outstandingRequests;
                     --outstandingRequests;
                     if (!outstandingRequests) {
                         this.emit("drain", doc);
-                        callback && callback();
+                        callback();
                         this._checkDone();
                     }
-                });
+                }, this.__handleError);
 
                 spaceRemaining = this.chunkSizeBytes;
                 this.pos = 0;
@@ -328,27 +278,15 @@ export default class GridFSBucketWriteStream extends Writable {
         });
     }
 
-    abort(callback) {
+    async abort() {
         if (this.state.streamEnd) {
-            const error = new Error("Cannot abort a stream that has already completed");
-            if (is.function(callback)) {
-                return callback(error);
-            }
-            return this.state.promiseLibrary.reject(error);
+            throw new Error("Cannot abort a stream that has already completed");
         }
         if (this.state.aborted) {
-            const error = new Error("Cannot call abort() on a stream twice");
-            if (is.function(callback)) {
-                return callback(error);
-            }
-            return this.state.promiseLibrary.reject(error);
+            throw new Error("Cannot call abort() on a stream twice");
         }
         this.state.aborted = true;
-        this.chunks.deleteMany({ files_id: this.id }, (error) => {
-            if (is.function(callback)) {
-                callback(error);
-            }
-        });
+        await this.chunks.deleteMany({ files_id: this.id });
     }
 
     _writeRemnant(callback) {
@@ -371,20 +309,17 @@ export default class GridFSBucketWriteStream extends Writable {
             return false;
         }
 
-        adone.promise.nodeify(this.chunks.insert(doc, this._getWriteOptions()), (error) => {
-            if (error) {
-                return this._handleError(error);
-            }
+        this.chunks.insert(doc, this._getWriteOptions()).then(() => {
             --this.state.outstandingRequests;
             this._checkDone();
-        });
+        }, this.__handleError);
     }
 
     end(chunk, encoding, callback) {
         if (is.function(chunk)) {
-            callback = chunk, chunk = null, encoding = null;
+            [callback, chunk, encoding] = [chunk, undefined, undefined];
         } else if (is.function(encoding)) {
-            callback = encoding, encoding = null;
+            [callback, encoding] = [encoding, undefined];
         }
 
         if (this._checkAborted(callback)) {

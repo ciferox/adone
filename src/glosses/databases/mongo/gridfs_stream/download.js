@@ -16,6 +16,7 @@ export default class GridFSBucketReadStream extends Readable {
             options,
             readPreference
         };
+        this.__handleError = (err) => this._handleError(err);
     }
 
     _handleStartOption(doc, options) {
@@ -47,16 +48,15 @@ export default class GridFSBucketReadStream extends Readable {
                 throw new Error(`Stream end (${options.end}) must not be negative`);
             }
 
-            const start = !is.nil(options.start) ?
-                Math.floor(options.start / doc.chunkSize) :
-                0;
+            const start = !is.nil(options.start)
+                ? Math.floor(options.start / doc.chunkSize)
+                : 0;
 
             cursor.limit(Math.ceil(options.end / doc.chunkSize) - start);
 
             this.s.expectedEnd = Math.ceil(options.end / doc.chunkSize);
 
-            return (Math.ceil(options.end / doc.chunkSize) * doc.chunkSize) -
-                options.end;
+            return (Math.ceil(options.end / doc.chunkSize) * doc.chunkSize) - options.end;
         }
     }
 
@@ -76,17 +76,15 @@ export default class GridFSBucketReadStream extends Readable {
             findOneOptions.skip = this.s.options.skip;
         }
 
-        adone.promise.nodeify(this.s.files.findOne(this.s.filter, findOneOptions), (error, doc) => {
-            if (error) {
-                return this._handleError(error);
-            }
+        this.s.files.findOne(this.s.filter, findOneOptions).then((doc) => {
             if (!doc) {
                 const identifier = this.s.filter._id ?
                     this.s.filter._id.toString() : this.s.filter.filename;
                 const errmsg = `FileNotFound: file ${identifier} was not found`;
                 const err = new Error(errmsg);
                 err.code = "ENOENT";
-                return this._handleError(err);
+                this._handleError(err);
+                return;
             }
 
             // If document is empty, kill the stream immediately and don't
@@ -126,7 +124,7 @@ export default class GridFSBucketReadStream extends Readable {
             this.s.file = doc;
             this.s.bytesToTrim = this._handleEndOption(doc, this.s.cursor, this.s.options);
             this.emit("file", doc);
-        });
+        }, this.__handleError);
     }
 
     _waitForFile(callback) {
@@ -256,21 +254,18 @@ export default class GridFSBucketReadStream extends Readable {
         return this;
     }
 
-    abort(callback) {
+    async abort() {
         this.push(null);
         this.destroyed = true;
         if (this.s.cursor) {
-            this.s.cursor.close((error) => {
-                this.emit("close");
-                callback && callback(error);
-            });
+            await this.s.cursor.close();
+            this.emit("close");
         } else {
             if (!this.s.init) {
                 // If not initialized, fire close event because we will never
                 // get a cursor
                 this.emit("close");
             }
-            callback && callback();
         }
     }
 }

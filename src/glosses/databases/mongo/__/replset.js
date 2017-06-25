@@ -1,7 +1,6 @@
 const { is, EventEmitter, database: { mongo }, std: { os } } = adone;
 const { __, MongoError, core, ReadPreference } = mongo;
-const { metadata, utils: { MAX_JS_INT, translateOptions, filterOptions, mergeOptions, getReadPreference } } = __;
-const { classMethod } = metadata;
+const { utils: { MAX_JS_INT, translateOptions, filterOptions, mergeOptions, getReadPreference } } = __;
 
 // Allowed parameters
 const legalOptionNames = [
@@ -66,7 +65,6 @@ const translateReadPreference = function (options) {
     return options;
 };
 
-@metadata("ReplSet")
 export default class ReplSet extends EventEmitter {
     constructor(servers, options) {
         super();
@@ -175,150 +173,127 @@ export default class ReplSet extends EventEmitter {
         return this.s.replset.s.haInterval;
     }
 
-    connect(db, _options, callback) {
-        if (is.function(_options)) {
-            callback = _options, _options = {};
-        }
-        if (is.nil(_options)) {
-            _options = {};
-        }
-        if (!(is.function(callback))) {
-            callback = null;
-        }
-        this.s.options = _options;
+    connect(db, options) {
+        return new Promise((resolve, reject) => {
 
-        // Update bufferMaxEntries
-        this.s.storeOptions.bufferMaxEntries = db.bufferMaxEntries;
+            this.s.options = options;
 
-        // Actual handler
-        const errorHandler = (event) => (err) => {
-            if (event !== "error") {
-                this.emit(event, err);
-            }
-        };
+            // Update bufferMaxEntries
+            this.s.storeOptions.bufferMaxEntries = db.bufferMaxEntries;
 
-        // Clear out all the current handlers left over
-        const events = [
-            "timeout",
-            "error",
-            "close",
-            "serverOpening",
-            "serverDescriptionChanged",
-            "serverHeartbeatStarted",
-            "serverHeartbeatSucceeded",
-            "serverHeartbeatFailed",
-            "serverClosed",
-            "topologyOpening",
-            "topologyClosed",
-            "topologyDescriptionChanged",
-            "joined",
-            "left",
-            "ping",
-            "ha"
-        ];
-        events.forEach((e) => {
-            this.s.replset.removeAllListeners(e);
-        });
+            // Actual handler
+            const errorHandler = (event) => (err) => {
+                if (event !== "error") {
+                    this.emit(event, err);
+                }
+            };
 
-        // relay the event
-        const relay = (event) => (t, server) => {
-            this.emit(event, t, server);
-        };
-
-        // Replset events relay
-        const replsetRelay = (event) => (t, server) => {
-            this.emit(event, t, server.lastIsMaster(), server);
-        };
-
-        // Relay ha
-        const relayHa = (t, state) => {
-            this.emit("ha", t, state);
-
-            if (t === "start") {
-                this.emit("ha_connect", t, state);
-            } else if (t === "end") {
-                this.emit("ha_ismaster", t, state);
-            }
-        };
-
-        // Set up serverConfig listeners
-        this.s.replset.on("joined", replsetRelay("joined"));
-        this.s.replset.on("left", relay("left"));
-        this.s.replset.on("ping", relay("ping"));
-        this.s.replset.on("ha", relayHa);
-
-        // Set up SDAM listeners
-        this.s.replset.on("serverDescriptionChanged", relay("serverDescriptionChanged"));
-        this.s.replset.on("serverHeartbeatStarted", relay("serverHeartbeatStarted"));
-        this.s.replset.on("serverHeartbeatSucceeded", relay("serverHeartbeatSucceeded"));
-        this.s.replset.on("serverHeartbeatFailed", relay("serverHeartbeatFailed"));
-        this.s.replset.on("serverOpening", relay("serverOpening"));
-        this.s.replset.on("serverClosed", relay("serverClosed"));
-        this.s.replset.on("topologyOpening", relay("topologyOpening"));
-        this.s.replset.on("topologyClosed", relay("topologyClosed"));
-        this.s.replset.on("topologyDescriptionChanged", relay("topologyDescriptionChanged"));
-
-        this.s.replset.on("fullsetup", () => {
-            this.emit("fullsetup", this, this);
-        });
-
-        this.s.replset.on("all", () => {
-            this.emit("all", null, this);
-        });
-
-        // Connect handler
-        const connectHandler = () => {
-            // Set up listeners
-            this.s.replset.once("timeout", errorHandler("timeout"));
-            this.s.replset.once("error", errorHandler("error"));
-            this.s.replset.once("close", errorHandler("close"));
-
-            // Emit open event
-            this.emit("open", null, this);
-
-            // Return correctly
-            try {
-                callback(null, this);
-            } catch (err) {
-                process.nextTick(() => {
-                    throw err;
-                });
-            }
-        };
-
-        // Error handler
-        const connectErrorHandler = () => (err) => {
-            ["timeout", "error", "close"].forEach((e) => {
-                this.s.replset.removeListener(e, connectErrorHandler);
+            // Clear out all the current handlers left over
+            const events = [
+                "timeout",
+                "error",
+                "close",
+                "serverOpening",
+                "serverDescriptionChanged",
+                "serverHeartbeatStarted",
+                "serverHeartbeatSucceeded",
+                "serverHeartbeatFailed",
+                "serverClosed",
+                "topologyOpening",
+                "topologyClosed",
+                "topologyDescriptionChanged",
+                "joined",
+                "left",
+                "ping",
+                "ha"
+            ];
+            events.forEach((e) => {
+                this.s.replset.removeAllListeners(e);
             });
 
-            this.s.replset.removeListener("connect", connectErrorHandler);
-            // Destroy the replset
-            this.s.replset.destroy();
+            // relay the event
+            const relay = (event) => (t, server) => {
+                this.emit(event, t, server);
+            };
 
-            // Try to callback
-            try {
-                callback(err);
-            } catch (err) {
-                if (!this.s.replset.isConnected()) {
-                    process.nextTick(() => {
-                        throw err;
-                    });
+            // Replset events relay
+            const replsetRelay = (event) => (t, server) => {
+                this.emit(event, t, server.lastIsMaster(), server);
+            };
+
+            // Relay ha
+            const relayHa = (t, state) => {
+                this.emit("ha", t, state);
+
+                if (t === "start") {
+                    this.emit("ha_connect", t, state);
+                } else if (t === "end") {
+                    this.emit("ha_ismaster", t, state);
                 }
-            }
-        };
+            };
 
-        // Set up listeners
-        this.s.replset.once("timeout", connectErrorHandler("timeout"));
-        this.s.replset.once("error", connectErrorHandler("error"));
-        this.s.replset.once("close", connectErrorHandler("close"));
-        this.s.replset.once("connect", connectHandler);
+            // Set up serverConfig listeners
+            this.s.replset.on("joined", replsetRelay("joined"));
+            this.s.replset.on("left", relay("left"));
+            this.s.replset.on("ping", relay("ping"));
+            this.s.replset.on("ha", relayHa);
 
-        // Start connection
-        this.s.replset.connect(_options);
+            // Set up SDAM listeners
+            this.s.replset.on("serverDescriptionChanged", relay("serverDescriptionChanged"));
+            this.s.replset.on("serverHeartbeatStarted", relay("serverHeartbeatStarted"));
+            this.s.replset.on("serverHeartbeatSucceeded", relay("serverHeartbeatSucceeded"));
+            this.s.replset.on("serverHeartbeatFailed", relay("serverHeartbeatFailed"));
+            this.s.replset.on("serverOpening", relay("serverOpening"));
+            this.s.replset.on("serverClosed", relay("serverClosed"));
+            this.s.replset.on("topologyOpening", relay("topologyOpening"));
+            this.s.replset.on("topologyClosed", relay("topologyClosed"));
+            this.s.replset.on("topologyDescriptionChanged", relay("topologyDescriptionChanged"));
+
+            this.s.replset.on("fullsetup", () => {
+                this.emit("fullsetup", this, this);
+            });
+
+            this.s.replset.on("all", () => {
+                this.emit("all", null, this);
+            });
+
+            // Connect handler
+            const connectHandler = () => {
+                // Set up listeners
+                this.s.replset.once("timeout", errorHandler("timeout"));
+                this.s.replset.once("error", errorHandler("error"));
+                this.s.replset.once("close", errorHandler("close"));
+
+                // Emit open event
+                this.emit("open", null, this);
+
+                resolve(this);
+            };
+
+            // Error handler
+            const connectErrorHandler = () => (err) => {
+                ["timeout", "error", "close"].forEach((e) => {
+                    this.s.replset.removeListener(e, connectErrorHandler);
+                });
+
+                this.s.replset.removeListener("connect", connectErrorHandler);
+                // Destroy the replset
+                this.s.replset.destroy();
+
+                reject(err);
+            };
+
+            // Set up listeners
+            this.s.replset.once("timeout", connectErrorHandler("timeout"));
+            this.s.replset.once("error", connectErrorHandler("error"));
+            this.s.replset.once("close", connectErrorHandler("close"));
+            this.s.replset.once("connect", connectHandler);
+
+            // Start connection
+            this.s.replset.connect(options);
+        });
     }
 
-    @classMethod({ callback: false, promise: false, returns: [__.ServerCapabilities] })
     capabilities() {
         if (this.s.sCapabilities) {
             return this.s.sCapabilities;
@@ -330,35 +305,56 @@ export default class ReplSet extends EventEmitter {
         return this.s.sCapabilities;
     }
 
-    @classMethod({ callback: true, promise: false })
     command(ns, cmd, options, callback) {
-        this.s.replset.command(ns, cmd, getReadPreference(options), callback);
+        if (is.function(callback)) {
+            return this.s.replset.command(ns, cmd, getReadPreference(options), callback);
+        }
+        return new Promise((resolve, reject) => {
+            this.s.replset.command(ns, cmd, getReadPreference(options), (err, result) => {
+                err ? reject(err) : resolve(result);
+            });
+        });
     }
 
 
-    @classMethod({ callback: true, promise: false })
     insert(ns, ops, options, callback) {
-        this.s.replset.insert(ns, ops, options, callback);
+        if (is.function(callback)) {
+            return this.s.replset.insert(ns, ops, options, callback);
+        }
+        return new Promise((resolve, reject) => {
+            this.s.replset.insert(ns, ops, options, (err, result) => {
+                err ? reject(err) : resolve(result);
+            });
+        });
     }
 
-    @classMethod({ callback: true, promise: false })
     update(ns, ops, options, callback) {
-        this.s.replset.update(ns, ops, options, callback);
+        if (is.function(callback)) {
+            return this.s.replset.update(ns, ops, options, callback);
+        }
+        return new Promise((resolve, reject) => {
+            this.s.replset.update(ns, ops, options, (err, result) => {
+                err ? reject(err) : resolve(result);
+            });
+        });
     }
 
-    @classMethod({ callback: true, promise: false })
     remove(ns, ops, options, callback) {
-        this.s.replset.remove(ns, ops, options, callback);
+        if (is.function(callback)) {
+            return this.s.replset.remove(ns, ops, options, callback);
+        }
+        return new Promise((resolve, reject) => {
+            this.s.replset.remove(ns, ops, options, (err, result) => {
+                err ? reject(err) : resolve(result);
+            });
+        });
     }
 
     isDestroyed() {
         return this.s.replset.isDestroyed();
     }
 
-    @classMethod({ callback: false, promise: false, returns: [Boolean] })
-    isConnected(options) {
-        options = options || {};
-
+    isConnected(options = {}) {
         // If we passed in a readPreference, translate to
         // a CoreReadPreference instance
         if (options.readPreference) {
@@ -368,7 +364,6 @@ export default class ReplSet extends EventEmitter {
         return this.s.replset.isConnected(options);
     }
 
-    @classMethod({ callback: false, promise: false, returns: [__.Cursor, __.AggregationCursor, __.CommandCursor] })
     cursor(ns, cmd, options) {
         options = translateReadPreference(options);
         options.disconnectHandler = this.s.store;
@@ -383,7 +378,6 @@ export default class ReplSet extends EventEmitter {
         return this.s.replset.unref();
     }
 
-    @classMethod({ callback: false, promise: false })
     close(forceClosed) {
         // Call destroy on the topology
         this.s.replset.destroy({
@@ -401,19 +395,30 @@ export default class ReplSet extends EventEmitter {
         });
     }
 
-    @classMethod({ callback: true, promise: false })
     auth(...args) {
-        this.s.replset.auth(...args);
+        if (is.function(args[args.length - 1])) {
+            return this.s.replset.auth(...args);
+        }
+        return new Promise((resolve, reject) => {
+            this.s.replset.auth(...args, (err, result) => {
+                err ? reject(err) : resolve(result);
+            });
+        });
     }
 
 
-    @classMethod({ callback: true, promise: false })
     logout(...args) {
-        this.s.replset.logout(...args);
+        if (is.function(args[args.length - 1])) {
+            return this.s.replset.logout(...args);
+        }
+        return new Promise((resolve, reject) => {
+            this.s.replset.logout(...args, (err, result) => {
+                err ? reject(err) : resolve(result);
+            });
+        });
     }
 
 
-    @classMethod({ callback: false, promise: false, returns: [Array] })
     connections() {
         return this.s.replset.connections();
     }

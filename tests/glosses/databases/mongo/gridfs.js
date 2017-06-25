@@ -74,7 +74,7 @@ describe("gridfs", function () {
             expect(data.toString()).to.be.equal("world");
         }
         {
-            const data = await GridStore.read(db, "test_gs_read_with_offset", null, 7);
+            const data = await GridStore.read(db, "test_gs_read_with_offset", undefined, 7);
             expect(data.toString()).to.be.equal("world!");
         }
     });

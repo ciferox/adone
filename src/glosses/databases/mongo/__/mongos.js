@@ -1,7 +1,6 @@
 const { is, EventEmitter, database: { mongo }, std: { os } } = adone;
 const { __, MongoError, core } = mongo;
-const { metadata, utils: { MAX_JS_INT, translateOptions, filterOptions, mergeOptions, getReadPreference } } = __;
-const { classMethod } = metadata;
+const { utils: { MAX_JS_INT, translateOptions, filterOptions, mergeOptions, getReadPreference } } = __;
 
 const driverVersion = "2.2.22 : adone"; // adone ver?
 const nodejsversion = `Node.js ${process.version}, ${os.endianness()}`;
@@ -42,7 +41,6 @@ const legalOptionNames = [
     "promoteBuffers"
 ];
 
-@metadata("Mongos")
 export default class Mongos extends EventEmitter {
     constructor(servers, options) {
         super();
@@ -161,120 +159,98 @@ export default class Mongos extends EventEmitter {
         return this.s.mongos.s.haInterval;
     }
 
-    connect(db, _options, callback) {
-        if (is.function(_options)) {
-            [callback, _options] = [_options, {}];
-        }
-        if (is.nil(_options)) {
-            _options = {};
-        }
-        if (!is.function(callback)) {
-            callback = null;
-        }
-        this.s.options = _options;
+    connect(db, options) {
+        return new Promise((resolve, reject) => {
+            this.s.options = options;
 
-        // Update bufferMaxEntries
-        this.s.storeOptions.bufferMaxEntries = db.bufferMaxEntries;
+            // Update bufferMaxEntries
+            this.s.storeOptions.bufferMaxEntries = db.bufferMaxEntries;
 
-        // Error handler
-        const connectErrorHandler = () => (err) => {
-            // Remove all event handlers
-            const events = ["timeout", "error", "close"];
-            events.forEach((e) => {
-                this.removeListener(e, connectErrorHandler);
+            // Error handler
+            const connectErrorHandler = () => (err) => {
+                // Remove all event handlers
+                const events = ["timeout", "error", "close"];
+                events.forEach((e) => {
+                    this.removeListener(e, connectErrorHandler);
+                });
+
+                this.s.mongos.removeListener("connect", connectErrorHandler);
+
+                reject(err);
+            };
+
+            // Actual handler
+            const errorHandler = (event) => (err) => {
+                if (event !== "error") {
+                    this.emit(event, err);
+                }
+            };
+
+            // Error handler
+            const reconnectHandler = () => {
+                this.emit("reconnect");
+                this.s.store.execute();
+            };
+
+            // relay the event
+            const relay = (event) => (t, server) => {
+                this.emit(event, t, server);
+            };
+
+            // Clear out all the current handlers left over
+            ["timeout", "error", "close", "serverOpening", "serverDescriptionChanged", "serverHeartbeatStarted",
+                "serverHeartbeatSucceeded", "serverHeartbeatFailed", "serverClosed", "topologyOpening",
+                "topologyClosed", "topologyDescriptionChanged"].forEach((e) => {
+                this.s.mongos.removeAllListeners(e);
             });
 
-            this.s.mongos.removeListener("connect", connectErrorHandler);
+            // Set up SDAM listeners
+            this.s.mongos.on("serverDescriptionChanged", relay("serverDescriptionChanged"));
+            this.s.mongos.on("serverHeartbeatStarted", relay("serverHeartbeatStarted"));
+            this.s.mongos.on("serverHeartbeatSucceeded", relay("serverHeartbeatSucceeded"));
+            this.s.mongos.on("serverHeartbeatFailed", relay("serverHeartbeatFailed"));
+            this.s.mongos.on("serverOpening", relay("serverOpening"));
+            this.s.mongos.on("serverClosed", relay("serverClosed"));
+            this.s.mongos.on("topologyOpening", relay("topologyOpening"));
+            this.s.mongos.on("topologyClosed", relay("topologyClosed"));
+            this.s.mongos.on("topologyDescriptionChanged", relay("topologyDescriptionChanged"));
 
-            // Try to callback
-            try {
-                callback(err);
-            } catch (err) {
-                process.nextTick(() => {
-                    throw err;
-                });
-            }
-        };
+            // self.s.mongos.on("fullsetup", relay("fullsetup"));
+            this.s.mongos.on("fullsetup", () => {
+                this.emit("fullsetup", this, this);
+            });
 
-        // Actual handler
-        const errorHandler = (event) => (err) => {
-            if (event !== "error") {
-                this.emit(event, err);
-            }
-        };
+            // Connect handler
+            const connectHandler = () => {
 
-        // Error handler
-        const reconnectHandler = () => {
-            this.emit("reconnect");
-            this.s.store.execute();
-        };
+                // Set up listeners
+                this.s.mongos.once("timeout", errorHandler("timeout"));
+                this.s.mongos.once("error", errorHandler("error"));
+                this.s.mongos.once("close", errorHandler("close"));
 
-        // relay the event
-        const relay = (event) => (t, server) => {
-            this.emit(event, t, server);
-        };
+                // Emit open event
+                this.emit("open", null, this);
 
-        // Clear out all the current handlers left over
-        ["timeout", "error", "close", "serverOpening", "serverDescriptionChanged", "serverHeartbeatStarted",
-            "serverHeartbeatSucceeded", "serverHeartbeatFailed", "serverClosed", "topologyOpening",
-            "topologyClosed", "topologyDescriptionChanged"].forEach((e) => {
-            this.s.mongos.removeAllListeners(e);
-        });
-
-        // Set up SDAM listeners
-        this.s.mongos.on("serverDescriptionChanged", relay("serverDescriptionChanged"));
-        this.s.mongos.on("serverHeartbeatStarted", relay("serverHeartbeatStarted"));
-        this.s.mongos.on("serverHeartbeatSucceeded", relay("serverHeartbeatSucceeded"));
-        this.s.mongos.on("serverHeartbeatFailed", relay("serverHeartbeatFailed"));
-        this.s.mongos.on("serverOpening", relay("serverOpening"));
-        this.s.mongos.on("serverClosed", relay("serverClosed"));
-        this.s.mongos.on("topologyOpening", relay("topologyOpening"));
-        this.s.mongos.on("topologyClosed", relay("topologyClosed"));
-        this.s.mongos.on("topologyDescriptionChanged", relay("topologyDescriptionChanged"));
-
-        // self.s.mongos.on("fullsetup", relay("fullsetup"));
-        this.s.mongos.on("fullsetup", () => {
-            this.emit("fullsetup", this, this);
-        });
-
-        // Connect handler
-        const connectHandler = () => {
+                resolve(this);
+            };
 
             // Set up listeners
-            this.s.mongos.once("timeout", errorHandler("timeout"));
-            this.s.mongos.once("error", errorHandler("error"));
-            this.s.mongos.once("close", errorHandler("close"));
+            this.s.mongos.once("timeout", connectErrorHandler("timeout"));
+            this.s.mongos.once("error", connectErrorHandler("error"));
+            this.s.mongos.once("close", connectErrorHandler("close"));
+            this.s.mongos.once("connect", connectHandler);
+            // Join and leave events
+            this.s.mongos.on("joined", relay("joined"));
+            this.s.mongos.on("left", relay("left"));
 
-            // Emit open event
-            this.emit("open", null, this);
+            // Reconnect server
+            this.s.mongos.on("reconnect", reconnectHandler);
 
-            // Return correctly
-            try {
-                callback(null, this);
-            } catch (err) {
-                process.nextTick(() => {
-                    throw err;
-                });
-            }
-        };
-
-        // Set up listeners
-        this.s.mongos.once("timeout", connectErrorHandler("timeout"));
-        this.s.mongos.once("error", connectErrorHandler("error"));
-        this.s.mongos.once("close", connectErrorHandler("close"));
-        this.s.mongos.once("connect", connectHandler);
-        // Join and leave events
-        this.s.mongos.on("joined", relay("joined"));
-        this.s.mongos.on("left", relay("left"));
-
-        // Reconnect server
-        this.s.mongos.on("reconnect", reconnectHandler);
-
-        // Start connection
-        this.s.mongos.connect(_options);
+            // Start connection
+            this.s.mongos.connect(options);
+        });
     }
 
-    @classMethod({ callback: false, promise: false, returns: [__.ServerCapabilities] })
     capabilities() {
         if (this.s.sCapabilities) {
             return this.s.sCapabilities;
@@ -286,40 +262,59 @@ export default class Mongos extends EventEmitter {
         return this.s.sCapabilities;
     }
 
-    @classMethod({ callback: true, promise: false })
     command(ns, cmd, options, callback) {
-        this.s.mongos.command(ns, cmd, getReadPreference(options), callback);
+        if (is.function(callback)) {
+            return this.s.mongos.command(ns, cmd, getReadPreference(options), callback);
+        }
+        return new Promise((resolve, reject) => {
+            this.s.mongos.command(ns, cmd, getReadPreference(options), (err, result) => {
+                err ? reject(err) : resolve(result);
+            });
+        });
     }
 
-    @classMethod({ callback: true, promise: false })
     insert(ns, ops, options, callback) {
-        this.s.mongos.insert(ns, ops, options, (e, m) => {
-            callback(e, m);
+        if (is.function(callback)) {
+            return this.s.mongos.insert(ns, ops, options, callback);
+        }
+        return new Promise((resolve, reject) => {
+            this.s.mongos.insert(ns, ops, options, (err, result) => {
+                err ? reject(err) : resolve(result);
+            });
         });
     }
 
 
-    @classMethod({ callback: true, promise: false })
     update(ns, ops, options, callback) {
-        this.s.mongos.update(ns, ops, options, callback);
+        if (is.function(callback)) {
+            return this.s.mongos.update(ns, ops, options, callback);
+        }
+        return new Promise((resolve, reject) => {
+            this.s.mongos.update(ns, ops, options, (err, result) => {
+                err ? reject(err) : resolve(result);
+            });
+        });
     }
 
-    @classMethod({ callback: true, promise: false })
     remove(ns, ops, options, callback) {
-        this.s.mongos.remove(ns, ops, options, callback);
+        if (is.function(callback)) {
+            return this.s.mongos.remove(ns, ops, options, callback);
+        }
+        return new Promise((resolve, reject) => {
+            this.s.mongos.remove(ns, ops, options, (err, result) => {
+                err ? reject(err) : resolve(result);
+            });
+        });
     }
 
-    @classMethod({ callback: false, promise: false, returns: [Boolean] })
     isDestroyed() {
         return this.s.mongos.isDestroyed();
     }
 
-    @classMethod({ callback: false, promise: false, returns: [Boolean] })
     isConnected() {
         return this.s.mongos.isConnected();
     }
 
-    @classMethod({ callback: false, promise: false, returns: [__.Cursor, __.AggregationCursor, __.CommandCursor] })
     cursor(ns, cmd, options) {
         options.disconnectHandler = this.s.store;
         return this.s.mongos.cursor(ns, cmd, options);
@@ -333,7 +328,6 @@ export default class Mongos extends EventEmitter {
         return this.s.mongos.unref();
     }
 
-    @classMethod({ callback: false, promise: false })
     close(forceClosed) {
         this.s.mongos.destroy({
             force: is.boolean(forceClosed) ? forceClosed : false
@@ -345,18 +339,29 @@ export default class Mongos extends EventEmitter {
         }
     }
 
-    @classMethod({ callback: true, promise: false })
     auth(...args) {
-        this.s.mongos.auth(...args);
+        if (is.function(args[args.length - 1])) {
+            return this.s.mongos.auth(...args);
+        }
+        return new Promise((resolve, reject) => {
+            this.s.mongos.auth(...args, (err, result) => {
+                err ? reject(err) : resolve(result);
+            });
+        });
     }
 
-    @classMethod({ callback: true, promise: false })
     logout(...args) {
-        this.s.mongos.logout(...args);
+        if (is.function(args[args.length - 1])) {
+            return this.s.mongos.logout(...args);
+        }
+        return new Promise((resolve, reject) => {
+            this.s.mongos.logout(...args, (err, result) => {
+                err ? reject(err) : resolve(result);
+            });
+        });
     }
 
 
-    @classMethod({ callback: false, promise: false, returns: [Array] })
     connections() {
         return this.s.mongos.connections();
     }

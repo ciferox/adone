@@ -1,7 +1,6 @@
 const { is, EventEmitter, database: { mongo }, std: { os } } = adone;
 const { __, MongoError, core } = mongo;
-const { metadata, utils: { MAX_JS_INT, translateOptions, filterOptions, mergeOptions, getReadPreference } } = __;
-const { classMethod } = metadata;
+const { utils: { MAX_JS_INT, translateOptions, filterOptions, mergeOptions, getReadPreference } } = __;
 
 // Get package.json variable
 const driverVersion = "2.2.22 : adone";
@@ -48,7 +47,6 @@ const legalOptionNames = [
     "promoteBuffers"
 ];
 
-@metadata("Server")
 export default class Server extends EventEmitter {
     constructor(host, port, options = {}) {
         super();
@@ -162,118 +160,96 @@ export default class Server extends EventEmitter {
         return this.s.port;
     }
 
-    connect(db, _options, callback) {
-        if (is.function(_options)) {
-            [callback, _options] = [_options, {}];
-        }
-        if (is.nil(_options)) {
-            _options = {};
-        }
-        if (!is.function(callback)) {
-            callback = null;
-        }
-        this.s.options = _options;
+    connect(db, options) {
+        return new Promise((resolve, reject) => {
+            this.s.options = options;
 
-        this.s.storeOptions.bufferMaxEntries = db.bufferMaxEntries;
+            this.s.storeOptions.bufferMaxEntries = db.bufferMaxEntries;
 
-        const connectErrorHandler = () => (err) => {
-            ["timeout", "error", "close"].forEach((e) => {
-                // eslint-disable-next-line no-use-before-define
-                this.s.server.removeListener(e, connectHandlers[e]);
-            });
-
-            this.s.server.removeListener("connect", connectErrorHandler);
-
-            try {
-                callback(err);
-            } catch (err) {
-                process.nextTick(() => {
-                    throw err;
+            const connectErrorHandler = () => (err) => {
+                ["timeout", "error", "close"].forEach((e) => {
+                    // eslint-disable-next-line no-use-before-define
+                    this.s.server.removeListener(e, connectHandlers[e]);
                 });
-            }
-        };
+                this.s.server.removeListener("connect", connectErrorHandler);
+                reject(err);
+            };
 
-        const connectHandlers = {
-            timeout: connectErrorHandler("timeout"),
-            error: connectErrorHandler("error"),
-            close: connectErrorHandler("close")
-        };
+            const connectHandlers = {
+                timeout: connectErrorHandler("timeout"),
+                error: connectErrorHandler("error"),
+                close: connectErrorHandler("close")
+            };
 
-        const errorHandler = (event) => (err) => {
-            if (event !== "error") {
-                this.emit(event, err);
-            }
-        };
+            const errorHandler = (event) => (err) => {
+                if (event !== "error") {
+                    this.emit(event, err);
+                }
+            };
 
-        const reconnectHandler = () => {
-            this.emit("reconnect", this);
-            this.s.store.execute();
-        };
+            const reconnectHandler = () => {
+                this.emit("reconnect", this);
+                this.s.store.execute();
+            };
 
-        const reconnectFailedHandler = (err) => {
-            this.emit("reconnectFailed", err);
-            this.s.store.flush(err);
-        };
+            const reconnectFailedHandler = (err) => {
+                this.emit("reconnectFailed", err);
+                this.s.store.flush(err);
+            };
 
-        const destroyHandler = () => {
-            this.s.store.flush();
-        };
+            const destroyHandler = () => {
+                this.s.store.flush();
+            };
 
-        const relay = (event) => (t, server) => {
-            this.emit(event, t, server);
-        };
+            const relay = (event) => (t, server) => {
+                this.emit(event, t, server);
+            };
 
-        const connectHandler = () => {
-            ["timeout", "error", "close", "destroy"].forEach((e) => {
+            const connectHandler = () => {
+                ["timeout", "error", "close", "destroy"].forEach((e) => {
+                    this.s.server.removeAllListeners(e);
+                });
+
+                this.s.server.on("timeout", errorHandler("timeout"));
+                this.s.server.once("error", errorHandler("error"));
+                this.s.server.on("close", errorHandler("close"));
+                this.s.server.on("destroy", destroyHandler);
+                this.emit("open", null, this);
+                resolve(this);
+            };
+
+            ["timeout", "error", "close", "serverOpening", "serverDescriptionChanged", "serverHeartbeatStarted",
+                "serverHeartbeatSucceeded", "serverHeartbeatFailed", "serverClosed", "topologyOpening",
+                "topologyClosed", "topologyDescriptionChanged"].forEach((e) => {
                 this.s.server.removeAllListeners(e);
             });
 
-            this.s.server.on("timeout", errorHandler("timeout"));
-            this.s.server.once("error", errorHandler("error"));
-            this.s.server.on("close", errorHandler("close"));
-            this.s.server.on("destroy", destroyHandler);
-            this.emit("open", null, this);
-            try {
-                callback(null, this);
-            } catch (err) {
-                process.nextTick(() => {
-                    throw err;
-                });
-            }
-        };
+            this.s.server.once("timeout", connectHandlers.timeout);
+            this.s.server.once("error", connectHandlers.error);
+            this.s.server.once("close", connectHandlers.close);
+            this.s.server.once("connect", connectHandler);
 
-        ["timeout", "error", "close", "serverOpening", "serverDescriptionChanged", "serverHeartbeatStarted",
-            "serverHeartbeatSucceeded", "serverHeartbeatFailed", "serverClosed", "topologyOpening",
-            "topologyClosed", "topologyDescriptionChanged"].forEach((e) => {
-            this.s.server.removeAllListeners(e);
+            // Reconnect server
+            this.s.server.on("reconnect", reconnectHandler);
+            this.s.server.on("reconnectFailed", reconnectFailedHandler);
+
+            // Set up SDAM listeners
+            this.s.server.on("serverDescriptionChanged", relay("serverDescriptionChanged"));
+            this.s.server.on("serverHeartbeatStarted", relay("serverHeartbeatStarted"));
+            this.s.server.on("serverHeartbeatSucceeded", relay("serverHeartbeatSucceeded"));
+            this.s.server.on("serverHeartbeatFailed", relay("serverHeartbeatFailed"));
+            this.s.server.on("serverOpening", relay("serverOpening"));
+            this.s.server.on("serverClosed", relay("serverClosed"));
+            this.s.server.on("topologyOpening", relay("topologyOpening"));
+            this.s.server.on("topologyClosed", relay("topologyClosed"));
+            this.s.server.on("topologyDescriptionChanged", relay("topologyDescriptionChanged"));
+            this.s.server.on("attemptReconnect", relay("attemptReconnect"));
+            this.s.server.on("monitoring", relay("monitoring"));
+
+            this.s.server.connect(options);
         });
-
-        this.s.server.once("timeout", connectHandlers.timeout);
-        this.s.server.once("error", connectHandlers.error);
-        this.s.server.once("close", connectHandlers.close);
-        this.s.server.once("connect", connectHandler);
-
-        // Reconnect server
-        this.s.server.on("reconnect", reconnectHandler);
-        this.s.server.on("reconnectFailed", reconnectFailedHandler);
-
-        // Set up SDAM listeners
-        this.s.server.on("serverDescriptionChanged", relay("serverDescriptionChanged"));
-        this.s.server.on("serverHeartbeatStarted", relay("serverHeartbeatStarted"));
-        this.s.server.on("serverHeartbeatSucceeded", relay("serverHeartbeatSucceeded"));
-        this.s.server.on("serverHeartbeatFailed", relay("serverHeartbeatFailed"));
-        this.s.server.on("serverOpening", relay("serverOpening"));
-        this.s.server.on("serverClosed", relay("serverClosed"));
-        this.s.server.on("topologyOpening", relay("topologyOpening"));
-        this.s.server.on("topologyClosed", relay("topologyClosed"));
-        this.s.server.on("topologyDescriptionChanged", relay("topologyDescriptionChanged"));
-        this.s.server.on("attemptReconnect", relay("attemptReconnect"));
-        this.s.server.on("monitoring", relay("monitoring"));
-
-        this.s.server.connect(_options);
     }
 
-    @classMethod({ callback: false, promise: false, returns: [__.ServerCapabilities] })
     capabilities() {
         if (this.s.sCapabilities) {
             return this.s.sCapabilities;
@@ -285,27 +261,50 @@ export default class Server extends EventEmitter {
         return this.s.sCapabilities;
     }
 
-    @classMethod({ callback: true, promise: false })
     command(ns, cmd, options, callback) {
-        this.s.server.command(ns, cmd, getReadPreference(options), callback);
+        if (is.function(callback)) {
+            return this.s.server.command(ns, cmd, getReadPreference(options), callback);
+        }
+        return new Promise((resolve, reject) => {
+            this.s.server.command(ns, cmd, getReadPreference(options), (err, result) => {
+                err ? reject(err) : resolve(result);
+            });
+        });
     }
 
-    @classMethod({ callback: true, promise: false })
     insert(ns, ops, options, callback) {
-        this.s.server.insert(ns, ops, options, callback);
+        if (is.function(callback)) {
+            return this.s.server.insert(ns, ops, options, callback);
+        }
+        return new Promise((resolve, reject) => {
+            this.s.server.insert(ns, ops, options, (err, result) => {
+                err ? reject(err) : resolve(result);
+            });
+        });
     }
 
-    @classMethod({ callback: true, promise: false })
     update(ns, ops, options, callback) {
-        this.s.server.update(ns, ops, options, callback);
+        if (is.function(callback)) {
+            return this.s.server.update(ns, ops, options, callback);
+        }
+        return new Promise((resolve, reject) => {
+            this.s.server.update(ns, ops, options, (err, result) => {
+                err ? reject(err) : resolve(result);
+            });
+        });
     }
 
-    @classMethod({ callback: true, promise: false })
     remove(ns, ops, options, callback) {
-        this.s.server.remove(ns, ops, options, callback);
+        if (is.function(callback)) {
+            return this.s.server.remove(ns, ops, options, callback);
+        }
+        return new Promise((resolve, reject) => {
+            this.s.server.remove(ns, ops, options, (err, result) => {
+                err ? reject(err) : resolve(result);
+            });
+        });
     }
 
-    @classMethod({ callback: false, promise: false, returns: [Boolean] })
     isConnected() {
         return this.s.server.isConnected();
     }
@@ -314,7 +313,6 @@ export default class Server extends EventEmitter {
         return this.s.server.isDestroyed();
     }
 
-    @classMethod({ callback: false, promise: false, returns: [__.Cursor, __.AggregationCursor, __.CommandCursor] })
     cursor(ns, cmd, options) {
         options.disconnectHandler = this.s.store;
         return this.s.server.cursor(ns, cmd, options);
@@ -328,7 +326,6 @@ export default class Server extends EventEmitter {
         this.s.server.unref();
     }
 
-    @classMethod({ callback: false, promise: false })
     close(forceClosed) {
         this.s.server.destroy();
         // We need to wash out all stored processes
@@ -338,17 +335,28 @@ export default class Server extends EventEmitter {
         }
     }
 
-    @classMethod({ callback: true, promise: false })
     auth(...args) {
-        this.s.server.auth.apply(this.s.server, args);
+        if (is.function(args[args.length - 1])) {
+            return this.s.server.auth(...args);
+        }
+        return new Promise((resolve, reject) => {
+            this.s.server.auth(...args, (err, result) => {
+                err ? reject(err) : resolve(result);
+            });
+        });
     }
 
-    @classMethod({ callback: true, promise: false })
     logout(...args) {
-        this.s.server.logout.apply(this.s.server, args);
+        if (is.function(args[args.length - 1])) {
+            return this.s.server.logout(...args);
+        }
+        return new Promise((resolve, reject) => {
+            this.s.server.logout(...args, (err, result) => {
+                err ? reject(err) : resolve(result);
+            });
+        });
     }
 
-    @classMethod({ callback: false, promise: false, returns: [Array] })
     connections() {
         return this.s.server.connections();
     }

@@ -2,7 +2,6 @@ const { is, database: { mongo }, util } = adone;
 const { __, ObjectId, Long, Code, MongoError, core, ReadPreference } = mongo;
 const {
     bulk,
-    metadata,
     utils: {
         checkCollectionName,
         shallowClone,
@@ -13,7 +12,6 @@ const {
         formattedOrderClause
     }
 } = __;
-const { classMethod } = metadata;
 
 const mergeKeys = ["readPreference", "ignoreUndefined"];
 
@@ -200,7 +198,6 @@ const processScope = (scope) => {
     return newScope;
 };
 
-@metadata("Collection")
 export default class Collection {
     constructor(db, topology, dbName, name, pkFactory, options) {
         checkCollectionName(name);
@@ -293,7 +290,6 @@ export default class Collection {
         this.s.collectionHint = normalizeHintField(v);
     }
 
-    @classMethod({ callback: false, promise: false, returns: [__.Cursor] })
     find(selector = {}, fields, options) {
         if (is.undefined(options) && !is.undefined(fields) && !is.array(fields)) {
             const fieldKeys = Object.keys(fields);
@@ -492,7 +488,7 @@ export default class Collection {
         return this.s.topology.cursor(this.s.namespace, findCommand, newOptions);
     }
 
-    _insertDocuments(docs, options) {
+    async _insertDocuments(docs, options) {
         // Ensure we are operating on an array op docs
         docs = is.array(docs) ? docs : [docs];
 
@@ -521,28 +517,21 @@ export default class Collection {
                 }
             }
         }
-        return new Promise((resolve, reject) => {
-            this.s.topology.insert(this.s.namespace, docs, finalOptions, (err, result) => {
-                if (err) {
-                    return reject(err);
-                }
-                if (is.nil(result)) {
-                    return resolve(null);
-                }
-                if (result.result.code) {
-                    return reject(toError(result.result));
-                }
-                if (result.result.writeErrors) {
-                    return reject(toError(result.result.writeErrors[0]));
-                }
-                // Add docs to the list
-                result.ops = docs;
-                resolve(result);
-            });
-        });
+        const result = await this.s.topology.insert(this.s.namespace, docs, finalOptions);
+        if (is.nil(result)) {
+            return null;
+        }
+        if (result.result.code) {
+            throw toError(result.result);
+        }
+        if (result.result.writeErrors) {
+            throw toError(result.result.writeErrors[0]);
+        }
+        // Add docs to the list
+        result.ops = docs;
+        return result;
     }
 
-    @classMethod({ callback: true, promise: true })
     async insertOne(doc, options = {}) {
         if (is.array(doc)) {
             throw MongoError.create({ message: "doc parameter must be an object", driver: true });
@@ -667,7 +656,6 @@ export default class Collection {
         });
     }
 
-    @classMethod({ callback: true, promise: true })
     async insertMany(docs, options) {
         if (!is.array(docs)) {
             throw MongoError.create({ message: "docs parameter must be an array of documents", driver: true });
@@ -704,7 +692,6 @@ export default class Collection {
         return mapInsertManyResults(docs, await this._bulkWrite(operations, options));
     }
 
-    @classMethod({ callback: true, promise: true })
     async bulkWrite(operations, options = { ordered: true }) {
         if (!is.array(operations)) {
             throw MongoError.create({ message: "operations must be an array of documents", driver: true });
@@ -717,7 +704,6 @@ export default class Collection {
         });
     }
 
-    @classMethod({ callback: true, promise: true })
     async insert(docs, options = { ordered: true }) {
         if (options.keepGoing === true) {
             options.ordered = false;
@@ -751,25 +737,18 @@ export default class Collection {
         // Have we specified collation
         decorateWithCollation(finalOptions, this, options);
 
-        return new Promise((resolve, reject) => {
-            // Update options
-            this.s.topology.update(this.s.namespace, [op], finalOptions, (err, result) => {
-                if (err) {
-                    return reject(err);
-                }
-                if (is.nil(result)) {
-                    return resolve(null);
-                }
-                if (result.result.code) {
-                    return reject(toError(result.result));
-                }
-                if (result.result.writeErrors) {
-                    return reject(toError(result.result.writeErrors[0]));
-                }
-                // Return the results
-                resolve(result);
-            });
-        });
+        // Update options
+        const result = await this.s.topology.update(this.s.namespace, [op], finalOptions);
+        if (is.nil(result)) {
+            return null;
+        }
+        if (result.result.code) {
+            throw toError(result.result);
+        }
+        if (result.result.writeErrors) {
+            throw toError(result.result.writeErrors[0]);
+        }
+        return result;
     }
 
     async _updateOne(filter, update, options) {
@@ -801,7 +780,6 @@ export default class Collection {
         return r;
     }
 
-    @classMethod({ callback: true, promise: true })
     async updateOne(filter, update, options = {}) {
         options = shallowClone(options);
 
@@ -814,7 +792,6 @@ export default class Collection {
         return this._updateOne(filter, update, options);
     }
 
-    @classMethod({ callback: true, promise: true })
     async replaceOne(filter, doc, options = {}) {
         options = shallowClone(options);
 
@@ -841,7 +818,6 @@ export default class Collection {
         return r;
     }
 
-    @classMethod({ callback: true, promise: true })
     async updateMany(filter, update, options = {}) {
         options = shallowClone(options);
 
@@ -868,7 +844,6 @@ export default class Collection {
         return r;
     }
 
-    @classMethod({ callback: true, promise: true })
     async update(selector, document, options = {}) {
         if (this.s.options.ignoreUndefined) {
             options = shallowClone(options);
@@ -878,7 +853,7 @@ export default class Collection {
         return this._updateDocuments(selector, document, options);
     }
 
-    _removeDocuments(selector = {}, options = {}) {
+    async _removeDocuments(selector = {}, options = {}) {
         // Get the write concern options
         const finalOptions = writeConcern(shallowClone(options), this.s.db, this, options);
 
@@ -897,24 +872,18 @@ export default class Collection {
         decorateWithCollation(finalOptions, this, options);
 
         // Execute the remove
-        return new Promise((resolve, reject) => {
-            this.s.topology.remove(this.s.namespace, [op], finalOptions, (err, result) => {
-                if (err) {
-                    return reject(err);
-                }
-                if (is.nil(result)) {
-                    return resolve(null);
-                }
-                if (result.result.code) {
-                    return reject(toError(result.result));
-                }
-                if (result.result.writeErrors) {
-                    return reject(toError(result.result.writeErrors[0]));
-                }
-                // Return the results
-                resolve(result);
-            });
-        });
+        const result = await this.s.topology.remove(this.s.namespace, [op], finalOptions);
+        if (is.nil(result)) {
+            return null;
+        }
+        if (result.result.code) {
+            throw toError(result.result);
+        }
+        if (result.result.writeErrors) {
+            throw toError(result.result.writeErrors[0]);
+        }
+        // Return the results
+        return result;
     }
 
     async _deleteOne(filter, options) {
@@ -927,7 +896,6 @@ export default class Collection {
         return r;
     }
 
-    @classMethod({ callback: true, promise: true })
     async deleteOne(filter, options = {}) {
         options = shallowClone(options);
 
@@ -940,7 +908,6 @@ export default class Collection {
         return this._deleteOne(filter, options);
     }
 
-    @classMethod({ callback: true, promise: true })
     async deleteMany(filter, options = {}) {
         options = shallowClone(options);
 
@@ -960,7 +927,6 @@ export default class Collection {
         return r;
     }
 
-    @classMethod({ callback: true, promise: true })
     async remove(selector, options = {}) {
         // Add ignoreUndfined
         if (this.s.options.ignoreUndefined) {
@@ -971,7 +937,6 @@ export default class Collection {
         return this._removeDocuments(selector, options);
     }
 
-    @classMethod({ callback: true, promise: true })
     async save(doc, options = {}) {
         // Add ignoreUndfined
         if (this.s.options.ignoreUndefined) {
@@ -991,13 +956,11 @@ export default class Collection {
         return this._insertDocuments([doc], options);
     }
 
-    @classMethod({ callback: true, promise: true })
     async findOne(selector, fields, options) {
         const cursor = this.find(selector, fields, options).limit(-1).batchSize(1);
         return cursor.next();
     }
 
-    @classMethod({ callback: true, promise: true })
     async rename(newName, options = {}) {
         checkCollectionName(newName);
         options = { ...options, readPreference: ReadPreference.PRIMARY };
@@ -1022,12 +985,10 @@ export default class Collection {
         );
     }
 
-    @classMethod({ callback: true, promise: true })
     async drop(options = {}) {
         return this.s.db.dropCollection(this.s.name, options);
     }
 
-    @classMethod({ callback: true, promise: true })
     async options() {
         const collections = await this.s.db.listCollections({ name: this.s.name }).toArray();
         if (collections.length === 0) {
@@ -1039,18 +1000,15 @@ export default class Collection {
         return collections[0].options || null;
     }
 
-    @classMethod({ callback: true, promise: true })
     async isCapped() {
         const options = await this.options();
         return options && options.capped;
     }
 
-    @classMethod({ callback: true, promise: true })
     async createIndex(fieldOrSpec, options = {}) {
         return this.s.db.createIndex(this.s.name, fieldOrSpec, options);
     }
 
-    @classMethod({ callback: true, promise: true })
     async createIndexes(indexSpecs) {
         const capabilities = this.s.topology.capabilities();
 
@@ -1079,7 +1037,6 @@ export default class Collection {
         }, { readPreference: ReadPreference.PRIMARY });
     }
 
-    @classMethod({ callback: true, promise: true })
     async dropIndex(indexName, options = {}) {
         // Run only against primary
         options.readPreference = ReadPreference.PRIMARY;
@@ -1090,13 +1047,11 @@ export default class Collection {
         return this.s.db.command(cmd, options);
     }
 
-    @classMethod({ callback: true, promise: true })
     async dropIndexes(options = {}) {
         await this.dropIndex("*", options);
         return true;
     }
 
-    @classMethod({ callback: true, promise: true })
     async reIndex(options = {}) {
         const cmd = { reIndex: this.s.name };
         decorateWithWriteConcern(cmd, this, options);
@@ -1104,7 +1059,6 @@ export default class Collection {
         return Boolean(result.ok);
     }
 
-    @classMethod({ callback: false, promise: false, returns: [__.CommandCursor] })
     listIndexes(options = {}) {
         options = shallowClone(options);
         options = getReadPreference(this, options, this.s.db, this);
@@ -1146,12 +1100,10 @@ export default class Collection {
         return cursor;
     }
 
-    @classMethod({ callback: true, promise: true })
     async ensureIndex(fieldOrSpec, options = {}) {
         return this.s.db.ensureIndex(this.s.name, fieldOrSpec, options);
     }
 
-    @classMethod({ callback: true, promise: true })
     async indexExists(indexes) {
         const indexInformation = await this.indexInformation();
         // Let's check for the index names
@@ -1168,12 +1120,10 @@ export default class Collection {
         return true;
     }
 
-    @classMethod({ callback: true, promise: true })
     async indexInformation(options = {}) {
         return this.s.db.indexInformation(this.s.name, options);
     }
 
-    @classMethod({ callback: true, promise: true })
     async count(query = {}, options = {}) {
         const { skip, limit, hint, maxTimeMS } = options;
 
@@ -1212,7 +1162,6 @@ export default class Collection {
         return result.n;
     }
 
-    @classMethod({ callback: true, promise: true })
     async distinct(key, query = {}, options = {}) {
         const { maxTimeMS } = options;
 
@@ -1244,12 +1193,10 @@ export default class Collection {
         return result.values;
     }
 
-    @classMethod({ callback: true, promise: true })
     async indexes() {
         return this.s.db.indexInformation(this.s.name, { full: true });
     }
 
-    @classMethod({ callback: true, promise: true })
     async stats(options = {}) {
         // Build command object
         const commandObject = {
@@ -1268,7 +1215,6 @@ export default class Collection {
         return this.s.db.command(commandObject, options);
     }
 
-    @classMethod({ callback: true, promise: true })
     async findOneAndDelete(filter, options = {}) {
         if (is.nil(filter) || !is.object(filter)) {
             throw toError("filter parameter must be an object");
@@ -1282,7 +1228,6 @@ export default class Collection {
         return this.findAndModify(filter, options.sort, null, finalOptions);
     }
 
-    @classMethod({ callback: true, promise: true })
     async findOneAndReplace(filter, replacement, options = {}) {
         if (is.nil(filter) || !is.object(filter)) {
             throw toError("filter parameter must be an object");
@@ -1300,7 +1245,6 @@ export default class Collection {
         return this.findAndModify(filter, options.sort, replacement, finalOptions);
     }
 
-    @classMethod({ callback: true, promise: true })
     async findOneAndUpdate(filter, update, options = {}) {
         if (is.nil(filter) || !is.object(filter)) {
             throw toError("filter parameter must be an object");
@@ -1317,8 +1261,10 @@ export default class Collection {
         return this.findAndModify(filter, options.sort, update, finalOptions);
     }
 
-    @classMethod({ callback: true, promise: true })
     async findAndModify(query, sort, doc = null, options = {}) {
+        options = shallowClone(options);
+        options.readPreference = ReadPreference.PRIMARY;
+
         const queryObject = {
             findandmodify: this.s.name,
             query
@@ -1376,7 +1322,6 @@ export default class Collection {
         return this.s.db.command(queryObject, options);
     }
 
-    @classMethod({ callback: true, promise: true })
     async findAndRemove(query, sort = [], options = {}) {
         // Add the remove option
         options.remove = true;
@@ -1384,7 +1329,6 @@ export default class Collection {
         return this.findAndModify(query, sort, null, options);
     }
 
-    @classMethod({ callback: true, promise: false })
     aggregate(...args) {
         let pipeline;
         let options;
@@ -1496,7 +1440,6 @@ export default class Collection {
         });
     }
 
-    @classMethod({ callback: true, promise: true })
     async parallelCollectionScan(options = {}) {
         options = shallowClone(options);
         options.numCursors = options.numCursors || 1;
@@ -1541,7 +1484,6 @@ export default class Collection {
         return cursors;
     }
 
-    @classMethod({ callback: true, promise: true })
     async geoNear(x, y, options = {}) {
         let point;
         if (is.object(x)) {
@@ -1586,7 +1528,6 @@ export default class Collection {
         return result;
     }
 
-    @classMethod({ callback: true, promise: true })
     async geoHaystackSearch(x, y, options = {}) {
         // Build command object
         let commandObject = {
@@ -1616,7 +1557,6 @@ export default class Collection {
         return result;
     }
 
-    @classMethod({ callback: true, promise: true })
     async group(keys, condition, initial, reduce = null, finalize = null, command = null, options = {}) {
         // Make sure we are backward compatible
         if (!is.function(finalize)) {
@@ -1705,7 +1645,6 @@ export default class Collection {
         return results.result || results;
     }
 
-    @classMethod({ callback: true, promise: true })
     async mapReduce(map, reduce, options = {}) {
         // Out must allways be defined (make sure we don't break weirdly on pre 1.8+ servers)
         if (is.nil(options.out)) {
@@ -1820,13 +1759,11 @@ export default class Collection {
         return { results: collection, stats };
     }
 
-    @classMethod({ callback: false, promise: false, returns: [bulk.UnorderedBulkOperation] })
     initializeUnorderedBulkOp(options) {
         options = options || {};
         return bulk.initializeUnorderedBulkOp(this.s.topology, this, options);
     }
 
-    @classMethod({ callback: false, promise: false, returns: [bulk.OrderedBulkOperation] })
     initializeOrderedBulkOp(options) {
         options = options || {};
         return bulk.initializeOrderedBulkOp(this.s.topology, this, options);
@@ -1834,10 +1771,5 @@ export default class Collection {
 }
 
 Collection.prototype.removeOne = Collection.prototype.deleteOne;
-Collection.define.classMethod("removeOne", { callback: true, promise: true });
-
 Collection.prototype.removeMany = Collection.prototype.deleteMany;
-Collection.define.classMethod("removeMany", { callback: true, promise: true });
-
 Collection.prototype.dropAllIndexes = Collection.prototype.dropIndexes;
-Collection.define.classMethod("dropAllIndexes", { callback: true, promise: true });

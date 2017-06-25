@@ -1,7 +1,6 @@
-const { is, database: { mongo }, std: { fs, stream: { Duplex } } } = adone;
+const { is, database: { mongo }, fs, std: { stream: { Duplex } } } = adone;
 const { __, ObjectId, MongoError, ReadPreference } = mongo;
-const { metadata, utils: { shallowClone } } = __;
-const { classMethod, staticMethod } = metadata;
+const { utils: { shallowClone } } = __;
 
 const REFERENCE_BY_FILENAME = 0;
 const REFERENCE_BY_ID = 1;
@@ -90,13 +89,10 @@ class GridStoreStream extends Duplex {
 
     pipe(destination) {
         if (!this.gs.isOpen) {
-            this.gs.open((err) => {
-                if (err) {
-                    return this.emit("error", err);
-                }
+            this.gs.open().then(() => {
                 this.totalBytesToRead = this.gs.length - this.gs.position;
                 super.pipe(destination);
-            });
+            }, (err) => this.emit("error", err));
         } else {
             this.totalBytesToRead = this.gs.length - this.gs.position;
             super.pipe(destination);
@@ -105,45 +101,32 @@ class GridStoreStream extends Duplex {
         return destination;
     }
 
-    __read(length) {
-        this.gs.read(length, (err, buffer) => {
-            if (err && !this.endCalled) {
-                return this.emit("error", err);
-            }
-
-            // Stream is closed
+    async _read() {
+        // Set read length
+        const length = this.gs.length < this.gs.chunkSize ? this.gs.length - this.seekPosition : this.gs.chunkSize;
+        if (!this.gs.isOpen) {
+            await this.gs.open();
+            this.totalBytesToRead = this.gs.length - this.gs.position;
+        }
+        if (this.totalBytesToRead <= 0) {
+            this.push(null);
+            return;
+        }
+        try {
+            const buffer = await this.gs.read(length);
             if (this.endCalled || is.nil(buffer)) {
                 return this.push(null);
             }
             // Remove bytes read
             if (buffer.length <= this.totalBytesToRead) {
-                this.totalBytesToRead = this.totalBytesToRead - buffer.length;
+                this.totalBytesToRead -= buffer.length;
                 this.push(buffer);
             } else if (buffer.length > this.totalBytesToRead) {
-                this.totalBytesToRead = this.totalBytesToRead - buffer._index;
+                this.totalBytesToRead -= buffer._index;
                 this.push(buffer.slice(0, buffer._index));
             }
-
-            // Finished reading
-            if (this.totalBytesToRead <= 0) {
-                this.endCalled = true;
-            }
-        });
-    }
-
-    _read() {
-        // Set read length
-        const length = this.gs.length < this.gs.chunkSize ? this.gs.length - this.seekPosition : this.gs.chunkSize;
-        if (!this.gs.isOpen) {
-            this.gs.open((err) => {
-                this.totalBytesToRead = this.gs.length - this.gs.position;
-                if (err) {
-                    return this.emit("error", err);
-                }
-                this.__read(length);
-            });
-        } else {
-            this.__read(length);
+        } catch (err) {
+            this.emit("error", err);
         }
     }
 
@@ -163,51 +146,46 @@ class GridStoreStream extends Duplex {
         }
         // Do we have to open the gridstore
         if (!this.gs.isOpen) {
-            this.gs.open(() => {
-                this.gs.isOpen = true;
-                this.gs.write(chunk, () => {
-                    process.nextTick(() => {
-                        this.emit("drain");
-                    });
+            this.gs.open().then(() => {
+                this.gs.write(chunk).then(() => {
+                    this.emit("drain");
                 });
             });
             return false;
         }
-        this.gs.write(chunk, () => {
+        this.gs.write(chunk).then(() => {
             this.emit("drain");
         });
         return true;
     }
 
-    end(...args) {
-        const callback = args.pop();
-        if (!is.function(callback)) {
-            args.push(callback);
+    end(chunk, callback) {
+        if (is.function(chunk)) {
+            [chunk, callback] = [undefined, chunk];
         }
-        const chunk = args.length ? args.shift() : null;
         this.endCalled = true;
-
+        const err = (err) => this.emit("error", err);
         if (chunk) {
-            this.gs.write(chunk, () => {
-                this.gs.close(() => {
+            this.gs.write(chunk).then(() => {
+                this.gs.close().then(() => {
                     if (is.function(callback)) {
                         callback();
                     }
                     this.emit("end");
-                });
-            });
+                }, err);
+            }, err);
+            return;
         }
 
-        this.gs.close(() => {
+        this.gs.close().then(() => {
             if (is.function(callback)) {
                 callback();
             }
             this.emit("end");
-        });
+        }, err);
     }
 }
 
-@metadata("GridStore", { stream: true })
 export default class GridStore {
     constructor(db, id, filename, mode, options) {
         this.db = db;
@@ -293,129 +271,119 @@ export default class GridStore {
         return Math.floor((this.length ? this.length - 1 : 0) / this.chunkSize);
     }
 
-    __open(options, callback) {
+    async open() {
+        if (this.mode !== "w" && this.mode !== "w+" && this.mode !== "r") {
+            throw MongoError.create({ message: `Illegal mode ${this.mode}`, driver: true });
+        }
+        // Get the write concern
+        const options = _getWriteConcern(this.db, this.options);
+
+        // If we are writing we need to ensure we have the right indexes for md5's
+        if ((this.mode === "w" || this.mode === "w+")) {
+            const collection = this.collection();
+            await collection.ensureIndex([["filename", 1]], options);
+            // Get chunk collection
+            const chunkCollection = this.chunkCollection();
+            // Make an unique index for compatibility with mongo-cxx-driver:legacy
+            const chunkIndexOptions = shallowClone(options);
+            chunkIndexOptions.unique = true;
+            // Ensure index on chunk collection
+            await chunkCollection.ensureIndex([["files_id", 1], ["n", 1]], chunkIndexOptions);
+        }
         const collection = this.collection();
         // Create the query
         let query = this.referenceBy === REFERENCE_BY_ID ? { _id: this.fileId } : { filename: this.filename };
         query = is.nil(this.fileId) && is.nil(this.filename) ? null : query;
         options.readPreference = this.readPreference;
 
-        const error = (err) => {
-            if (error.err) {
-                return;
-            }
-            callback(error.err = err);
-        };
-
         // Fetch the chunks
         if (!is.nil(query)) {
             // only pass error to callback once
-            adone.promise.nodeify(collection.findOne(query, options), (err, doc) => {
-                if (err) {
-                    return error(err);
-                }
+            const doc = await collection.findOne(query, options);
+            // Check if the collection for the files exists otherwise prepare the new one
+            if (!is.nil(doc)) {
+                this.fileId = doc._id;
+                // Prefer a new filename over the existing one if this is a write
+                this.filename = ((this.mode === "r") || (is.nil(this.filename)))
+                    ? doc.filename
+                    : this.filename;
+                this.contentType = doc.contentType;
+                this.internalChunkSize = doc.chunkSize;
+                this.uploadDate = doc.uploadDate;
+                this.aliases = doc.aliases;
+                this.length = doc.length;
+                this.metadata = doc.metadata;
+                this.internalMd5 = doc.md5;
+            } else if (this.mode !== "r") {
+                this.fileId = is.nil(this.fileId) ? new ObjectId() : this.fileId;
+                this.contentType = GridStore.DEFAULT_CONTENT_TYPE;
+                this.internalChunkSize = is.nil(this.internalChunkSize)
+                    ? __.Chunk.DEFAULT_CHUNK_SIZE
+                    : this.internalChunkSize;
+                this.length = 0;
+            } else {
+                this.length = 0;
+                const txtId = this.fileId._bsontype === "ObjectId"
+                    ? this.fileId.toHexString()
+                    : this.fileId;
+                throw MongoError.create({
+                    message: `file with id ${this.referenceBy === REFERENCE_BY_ID ? txtId : this.filename} not opened for writing`,
+                    driver: true
+                });
+            }
 
-                // Check if the collection for the files exists otherwise prepare the new one
-                if (!is.nil(doc)) {
-                    this.fileId = doc._id;
-                    // Prefer a new filename over the existing one if this is a write
-                    this.filename = ((this.mode === "r") || (is.nil(this.filename)))
-                        ? doc.filename
-                        : this.filename;
-                    this.contentType = doc.contentType;
-                    this.internalChunkSize = doc.chunkSize;
-                    this.uploadDate = doc.uploadDate;
-                    this.aliases = doc.aliases;
-                    this.length = doc.length;
-                    this.metadata = doc.metadata;
-                    this.internalMd5 = doc.md5;
-                } else if (this.mode !== "r") {
-                    this.fileId = is.nil(this.fileId) ? new ObjectId() : this.fileId;
-                    this.contentType = GridStore.DEFAULT_CONTENT_TYPE;
-                    this.internalChunkSize = is.nil(this.internalChunkSize)
-                        ? __.Chunk.DEFAULT_CHUNK_SIZE
-                        : this.internalChunkSize;
-                    this.length = 0;
-                } else {
-                    this.length = 0;
-                    const txtId = this.fileId._bsontype === "ObjectId"
-                        ? this.fileId.toHexString()
-                        : this.fileId;
-                    return error(MongoError.create({
-                        message: `file with id ${this.referenceBy === REFERENCE_BY_ID ? txtId : this.filename} not opened for writing`,
-                        driver: true
-                    }), this);
-                }
-
-                // Process the mode of the object
-                if (this.mode === "r") {
-                    this._nthChunk(0, options, (err, chunk) => {
-                        if (err) {
-                            return error(err);
-                        }
-                        this.currentChunk = chunk;
-                        this.position = 0;
-                        callback(null, this);
-                    });
-                } else if (this.mode === "w" && doc) {
-                    // Delete any existing chunks
-                    this._deleteChunks(options, (err) => {
-                        if (err) {
-                            return error(err);
-                        }
-                        this.currentChunk = new __.Chunk(this, { n: 0 }, this.writeConcern);
-                        this.contentType = is.nil(this.options.content_type)
-                            ? this.contentType
-                            : this.options.content_type;
-                        this.internalChunkSize = is.nil(this.options.chunk_size)
-                            ? this.internalChunkSize
-                            : this.options.chunk_size;
-                        this.metadata = is.nil(this.options.metadata)
-                            ? this.metadata
-                            : this.options.metadata;
-                        this.aliases = is.nil(this.options.aliases)
-                            ? this.aliases
-                            : this.options.aliases;
-                        this.position = 0;
-                        callback(null, this);
-                    });
-                } else if (this.mode === "w") {
-                    this.currentChunk = new __.Chunk(this, { n: 0 }, this.writeConcern);
-                    this.contentType = is.nil(this.options.content_type)
-                        ? this.contentType
-                        : this.options.content_type;
-                    this.internalChunkSize = is.nil(this.options.chunk_size)
-                        ? this.internalChunkSize
-                        : this.options.chunk_size;
-                    this.metadata = is.nil(this.options.metadata)
-                        ? this.metadata
-                        : this.options.metadata;
-                    this.aliases = is.nil(this.options.aliases)
-                        ? this.aliases
-                        : this.options.aliases;
-                    this.position = 0;
-                    callback(null, this);
-                } else if (this.mode === "w+") {
-                    this._nthChunk(this._lastChunkNumber(), options, (err, chunk) => {
-                        if (err) {
-                            return error(err);
-                        }
-                        // Set the current chunk
-                        this.currentChunk = is.nil(chunk)
-                            ? new __.Chunk(this, { n: 0 }, this.writeConcern)
-                            : chunk;
-                        this.currentChunk.position = this.currentChunk.data.length();
-                        this.metadata = is.nil(this.options.metadata)
-                            ? this.metadata
-                            : this.options.metadata;
-                        this.aliases = is.nil(this.options.aliases)
-                            ? this.aliases
-                            : this.options.aliases;
-                        this.position = this.length;
-                        callback(null, this);
-                    });
-                }
-            });
+            // Process the mode of the object
+            if (this.mode === "r") {
+                const chunk = await this._nthChunk(0, options);
+                this.currentChunk = chunk;
+                this.position = 0;
+            } else if (this.mode === "w" && doc) {
+                // Delete any existing chunks
+                await this._deleteChunks(options);
+                this.currentChunk = new __.Chunk(this, { n: 0 }, this.writeConcern);
+                this.contentType = is.nil(this.options.content_type)
+                    ? this.contentType
+                    : this.options.content_type;
+                this.internalChunkSize = is.nil(this.options.chunk_size)
+                    ? this.internalChunkSize
+                    : this.options.chunk_size;
+                this.metadata = is.nil(this.options.metadata)
+                    ? this.metadata
+                    : this.options.metadata;
+                this.aliases = is.nil(this.options.aliases)
+                    ? this.aliases
+                    : this.options.aliases;
+                this.position = 0;
+            } else if (this.mode === "w") {
+                this.currentChunk = new __.Chunk(this, { n: 0 }, this.writeConcern);
+                this.contentType = is.nil(this.options.content_type)
+                    ? this.contentType
+                    : this.options.content_type;
+                this.internalChunkSize = is.nil(this.options.chunk_size)
+                    ? this.internalChunkSize
+                    : this.options.chunk_size;
+                this.metadata = is.nil(this.options.metadata)
+                    ? this.metadata
+                    : this.options.metadata;
+                this.aliases = is.nil(this.options.aliases)
+                    ? this.aliases
+                    : this.options.aliases;
+                this.position = 0;
+            } else if (this.mode === "w+") {
+                const chunk = await this._nthChunk(this._lastChunkNumber(), options);
+                // Set the current chunk
+                this.currentChunk = is.nil(chunk)
+                    ? new __.Chunk(this, { n: 0 }, this.writeConcern)
+                    : chunk;
+                this.currentChunk.position = this.currentChunk.data.length();
+                this.metadata = is.nil(this.options.metadata)
+                    ? this.metadata
+                    : this.options.metadata;
+                this.aliases = is.nil(this.options.aliases)
+                    ? this.aliases
+                    : this.options.aliases;
+                this.position = this.length;
+            }
         } else {
             // Write only mode
             this.fileId = is.nil(this.fileId)
@@ -430,280 +398,122 @@ export default class GridStore {
             // No file exists set up write mode
             if (this.mode === "w") {
                 // Delete any existing chunks
-                this._deleteChunks(options, (err) => {
-                    if (err) {
-                        return error(err);
-                    }
-                    this.currentChunk = new __.Chunk(this, { n: 0 }, this.writeConcern);
-                    this.contentType = is.nil(this.options.content_type)
-                        ? this.contentType
-                        : this.options.content_type;
-                    this.internalChunkSize = is.nil(this.options.chunk_size)
-                        ? this.internalChunkSize
-                        : this.options.chunk_size;
-                    this.metadata = is.nil(this.options.metadata)
-                        ? this.metadata
-                        : this.options.metadata;
-                    this.aliases = is.nil(this.options.aliases)
-                        ? this.aliases
-                        : this.options.aliases;
-                    this.position = 0;
-                    callback(null, this);
-                });
+                await this._deleteChunks(options);
+                this.currentChunk = new __.Chunk(this, { n: 0 }, this.writeConcern);
+                this.contentType = is.nil(this.options.content_type)
+                    ? this.contentType
+                    : this.options.content_type;
+                this.internalChunkSize = is.nil(this.options.chunk_size)
+                    ? this.internalChunkSize
+                    : this.options.chunk_size;
+                this.metadata = is.nil(this.options.metadata)
+                    ? this.metadata
+                    : this.options.metadata;
+                this.aliases = is.nil(this.options.aliases)
+                    ? this.aliases
+                    : this.options.aliases;
+                this.position = 0;
             } else if (this.mode === "w+") {
-                this._nthChunk(this._lastChunkNumber(), options, (err, chunk) => {
-                    if (err) {
-                        return error(err);
-                    }
-                    // Set the current chunk
-                    this.currentChunk = is.nil(chunk)
-                        ? new __.Chunk(this, { n: 0 }, this.writeConcern)
-                        : chunk;
-                    this.currentChunk.position = this.currentChunk.data.length();
-                    this.metadata = is.nil(this.options.metadata)
-                        ? this.metadata
-                        : this.options.metadata;
-                    this.aliases = is.nil(this.options.aliases)
-                        ? this.aliases
-                        : this.options.aliases;
-                    this.position = this.length;
-                    callback(null, this);
-                });
+                const chunk = await this._nthChunk(this._lastChunkNumber(), options);
+                // Set the current chunk
+                this.currentChunk = is.nil(chunk)
+                    ? new __.Chunk(this, { n: 0 }, this.writeConcern)
+                    : chunk;
+                this.currentChunk.position = this.currentChunk.data.length();
+                this.metadata = is.nil(this.options.metadata)
+                    ? this.metadata
+                    : this.options.metadata;
+                this.aliases = is.nil(this.options.aliases)
+                    ? this.aliases
+                    : this.options.aliases;
+                this.position = this.length;
             }
         }
+        this.isOpen = true;
+        return this;
     }
 
-    _open(callback) {
-        // Get the write concern
-        const writeConcern = _getWriteConcern(this.db, this.options);
-
-        // If we are writing we need to ensure we have the right indexes for md5's
-        if ((this.mode === "w" || this.mode === "w+")) {
-            // Get files collection
-            const collection = this.collection();
-            // Put index on filename
-            adone.promise.nodeify(collection.ensureIndex([["filename", 1]], writeConcern), () => {
-                // Get chunk collection
-                const chunkCollection = this.chunkCollection();
-                // Make an unique index for compatibility with mongo-cxx-driver:legacy
-                const chunkIndexOptions = shallowClone(writeConcern);
-                chunkIndexOptions.unique = true;
-                // Ensure index on chunk collection
-                adone.promise.nodeify(chunkCollection.ensureIndex([["files_id", 1], ["n", 1]], chunkIndexOptions), () => {
-                    // Open the connection
-                    this.__open(writeConcern, (err, r) => {
-                        if (err) {
-                            return callback(err);
-                        }
-                        this.isOpen = true;
-                        callback(err, r);
-                    });
-                });
-            });
-        } else {
-            // Open the gridstore
-            this.__open(writeConcern, (err, r) => {
-                if (err) {
-                    return callback(err);
-                }
-                this.isOpen = true;
-                callback(err, r);
-            });
-        }
-    }
-
-    @classMethod({ callback: true, promise: true })
-    open(callback) {
-        if (this.mode !== "w" && this.mode !== "w+" && this.mode !== "r") {
-            throw MongoError.create({ message: `Illegal mode ${this.mode}`, driver: true });
-        }
-
-        // We provided a callback leg
-        if (is.function(callback)) {
-            return this._open(callback);
-        }
-        // Return promise
-        return new this.promiseLibrary((resolve, reject) => {
-            this._open((err, store) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(store);
-            });
-        });
-    }
-
-    @classMethod({ callback: false, promise: false, returns: [Boolean] })
     eof() {
         return this.position === this.length ? true : false;
     }
 
-    _eof(callback) {
+    async getc() {
         if (this.eof()) {
-            callback(null, null);
-        } else if (this.currentChunk.eof()) {
-            this._nthChunk(this.currentChunk.chunkNumber + 1, (err, chunk) => {
-                this.currentChunk = chunk;
-                this.position = this.position + 1;
-                callback(err, this.currentChunk.getc());
-            });
-        } else {
+            return null;
+        }
+        if (this.currentChunk.eof()) {
+            const chunk = await this._nthChunk(this.currentChunk.chunkNumber + 1);
+            this.currentChunk = chunk;
             this.position = this.position + 1;
-            callback(null, this.currentChunk.getc());
+            return this.currentChunk.getc();
         }
+        this.position = this.position + 1;
+        return this.currentChunk.getc();
     }
 
-    @classMethod({ callback: true, promise: true })
-    getc(callback) {
-        // We provided a callback leg
-        if (is.function(callback)) {
-            return this._eof(callback);
-        }
-        // Return promise
-        return new this.promiseLibrary((resolve, reject) => {
-            this._eof((err, r) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(r);
-            });
-        });
+    async puts(string) {
+        return this.write(is.nil(string.match(/\n$/)) ? `${string}\n` : string);
     }
 
-    @classMethod({ callback: true, promise: true })
-    puts(string, callback) {
-        const finalString = is.nil(string.match(/\n$/)) ? `${string}\n` : string;
-        // We provided a callback leg
-        if (is.function(callback)) {
-            return this.write(finalString, callback);
-        }
-        // Return promise
-        return new this.promiseLibrary((resolve, reject) => {
-            this.write(finalString, (err, r) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(r);
-            });
-        });
-    }
-
-    @classMethod({ callback: false, promise: false, returns: [GridStoreStream] })
     stream() {
         return new GridStoreStream(this);
     }
 
-    _writeBuffer(buffer, close, callback) {
-        if (is.function(close)) {
-            callback = close; close = null;
+    async write(buffer, close = false) {
+        // If we have a buffer write it using the writeBuffer method
+        if (!is.buffer(buffer)) {
+            buffer = Buffer.from(buffer, "binary");
         }
-        const finalClose = is.boolean(close) ? close : false;
-
         if (this.mode !== "w") {
-            callback(MongoError.create({
+            throw MongoError.create({
                 message: `file with id ${this.referenceBy === REFERENCE_BY_ID ? this.referenceBy : this.filename} not opened for writing`,
                 driver: true
-            }), null);
-        } else {
-            if (this.currentChunk.position + buffer.length >= this.chunkSize) {
-                // Write out the current Chunk and then keep writing until we have less data left than a chunkSize left
-                // to a new chunk (recursively)
-                let previousChunkNumber = this.currentChunk.chunkNumber;
-                const leftOverDataSize = this.chunkSize - this.currentChunk.position;
-                let firstChunkData = buffer.slice(0, leftOverDataSize);
-                let leftOverData = buffer.slice(leftOverDataSize);
-                // A list of chunks to write out
-                const chunksToWrite = [this.currentChunk.write(firstChunkData)];
-                // If we have more data left than the chunk size let's keep writing new chunks
-                while (leftOverData.length >= this.chunkSize) {
-                    // Create a new chunk and write to it
-                    const newChunk = new __.Chunk(this, { n: (previousChunkNumber + 1) }, this.writeConcern);
-                    firstChunkData = leftOverData.slice(0, this.chunkSize);
-                    leftOverData = leftOverData.slice(this.chunkSize);
-                    // Update chunk number
-                    previousChunkNumber = previousChunkNumber + 1;
-                    // Write data
-                    newChunk.write(firstChunkData);
-                    // Push chunk to save list
-                    chunksToWrite.push(newChunk);
-                }
-
-                // Set current chunk with remaining data
-                this.currentChunk = new __.Chunk(this, { n: (previousChunkNumber + 1) }, this.writeConcern);
-                // If we have left over data write it
-                if (leftOverData.length > 0) {
-                    this.currentChunk.write(leftOverData);
-                }
-
-                // Update the position for the gridstore
-                this.position = this.position + buffer.length;
-                // Total number of chunks to write
-                let numberOfChunksToWrite = chunksToWrite.length;
-                const cb = (err) => {
-                    if (err) {
-                        return callback(err);
-                    }
-
-                    numberOfChunksToWrite = numberOfChunksToWrite - 1;
-
-                    if (numberOfChunksToWrite <= 0) {
-                        // We care closing the file before returning
-                        if (finalClose) {
-                            return this.close((err) => {
-                                callback(err, this);
-                            });
-                        }
-
-                        // Return normally
-                        return callback(null, this);
-                    }
-                };
-                for (let i = 0; i < chunksToWrite.length; i++) {
-                    chunksToWrite[i].save({}, cb);
-                }
-            } else {
-                // Update the position for the gridstore
-                this.position = this.position + buffer.length;
-                // We have less data than the chunk size just write it and callback
-                this.currentChunk.write(buffer);
-                // We care closing the file before returning
-                if (finalClose) {
-                    return this.close((err) => {
-                        callback(err, this);
-                    });
-                }
-                // Return normally
-                return callback(null, this);
-            }
-        }
-    }
-
-    _writeNormal(data, close, callback) {
-        // If we have a buffer write it using the writeBuffer method
-        if (is.buffer(data)) {
-            return this._writeBuffer(data, close, callback);
-        }
-        return this._writeBuffer(Buffer.from(data, "binary"), close, callback);
-    }
-
-    @classMethod({ callback: true, promise: true })
-    write(data, close, callback) {
-        // We provided a callback leg
-        if (is.function(callback)) {
-            return this._writeNormal(data, close, callback);
-        }
-        // Return promise
-        return new this.promiseLibrary((resolve, reject) => {
-            this._writeNormal(data, close, (err, r) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(r);
             });
-        });
+        }
+        if (this.currentChunk.position + buffer.length >= this.chunkSize) {
+            // Write out the current Chunk and then keep writing until we have less data left than a chunkSize left
+            // to a new chunk (recursively)
+            let previousChunkNumber = this.currentChunk.chunkNumber;
+            const leftOverDataSize = this.chunkSize - this.currentChunk.position;
+            let firstChunkData = buffer.slice(0, leftOverDataSize);
+            let leftOverData = buffer.slice(leftOverDataSize);
+            // A list of chunks to write out
+            const chunksToWrite = [this.currentChunk.write(firstChunkData)];
+            // If we have more data left than the chunk size let's keep writing new chunks
+            while (leftOverData.length >= this.chunkSize) {
+                // Create a new chunk and write to it
+                const newChunk = new __.Chunk(this, { n: (previousChunkNumber + 1) }, this.writeConcern);
+                firstChunkData = leftOverData.slice(0, this.chunkSize);
+                leftOverData = leftOverData.slice(this.chunkSize);
+                // Update chunk number
+                previousChunkNumber = previousChunkNumber + 1;
+                // Write data
+                newChunk.write(firstChunkData);
+                // Push chunk to save list
+                chunksToWrite.push(newChunk);
+            }
+            // Set current chunk with remaining data
+            this.currentChunk = new __.Chunk(this, { n: (previousChunkNumber + 1) }, this.writeConcern);
+            // If we have left over data write it
+            if (leftOverData.length > 0) {
+                this.currentChunk.write(leftOverData);
+            }
+            // Update the position for the gridstore
+            this.position = this.position + buffer.length;
+            // Total number of chunks to write
+            await Promise.all(chunksToWrite.map((x) => x.save({})));
+        } else {
+            // Update the position for the gridstore
+            this.position = this.position + buffer.length;
+            // We have less data than the chunk size just write it and callback
+            this.currentChunk.write(buffer);
+        }
+        if (close) {
+            await this.close();
+        }
+        return this;
     }
 
-    @classMethod({ callback: false, promise: false })
     destroy() {
         // close and do not emit any more events. queued data is not sent.
         if (!this.writable) {
@@ -717,99 +527,40 @@ export default class GridStore {
         }
     }
 
-    _writeFile(file, callback) {
+    async writeFile(file) {
         if (is.string(file)) {
-            fs.open(file, "r", (err, fd) => {
-                if (err) {
-                    return callback(err);
-                }
-                this.writeFile(fd, callback);
-            });
-            return;
+            const fd = await fs.fd.open(file, "r");
+            return this.writeFile(fd);
         }
+        await this.open();
+        const stats = await fs.fd.stat(file);
+        let offset = 0;
+        let index = 0;
 
-        this.open((err, self) => {
-            if (err) {
-                return callback(err, self);
+        for (; ;) {
+            // Allocate the buffer
+            const _buffer = Buffer.alloc(this.chunkSize);
+            // Read the file
+            const bytesRead = await fs.fd.read(file, _buffer, 0, _buffer.length, offset);
+            offset = offset + bytesRead;
+
+            // Create a new chunk for the data
+            const chunk = new __.Chunk(this, { n: index++ }, this.writeConcern);
+            chunk.write(_buffer.slice(0, bytesRead));
+            await chunk.save({});
+            this.position += bytesRead;
+            this.currentChunk = chunk;
+
+            if (offset >= stats.size) {
+                break;
             }
-
-            fs.fstat(file, (err, stats) => {
-                if (err) {
-                    return callback(err, self);
-                }
-
-                let offset = 0;
-                let index = 0;
-
-                // Write a chunk
-                const writeChunk = () => {
-                    // Allocate the buffer
-                    const _buffer = Buffer.alloc(self.chunkSize);
-                    // Read the file
-                    fs.read(file, _buffer, 0, _buffer.length, offset, (err, bytesRead, data) => {
-                        if (err) {
-                            return callback(err, self);
-                        }
-
-                        offset = offset + bytesRead;
-
-                        // Create a new chunk for the data
-                        const chunk = new __.Chunk(self, { n: index++ }, self.writeConcern);
-                        chunk.write(data.slice(0, bytesRead), (err, chunk) => {
-                            if (err) {
-                                return callback(err, self);
-                            }
-
-                            chunk.save({}, (err) => {
-                                if (err) {
-                                    return callback(err, self);
-                                }
-
-                                self.position = self.position + bytesRead;
-
-                                // Point to current chunk
-                                self.currentChunk = chunk;
-
-                                if (offset >= stats.size) {
-                                    fs.close(file);
-                                    self.close((err) => {
-                                        if (err) {
-                                            return callback(err, self);
-                                        }
-                                        return callback(null, self);
-                                    });
-                                } else {
-                                    return process.nextTick(writeChunk);
-                                }
-                            });
-                        });
-                    });
-                };
-
-                // Process the first write
-                process.nextTick(writeChunk);
-            });
-        });
-    }
-
-    @classMethod({ callback: true, promise: true })
-    writeFile(file, callback) {
-        // We provided a callback leg
-        if (is.function(callback)) {
-            return this._writeFile(file, callback);
         }
-        // Return promise
-        return new this.promiseLibrary((resolve, reject) => {
-            this._writeFile(file, (err, r) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(r);
-            });
-        });
+        await fs.fd.close(file);
+        await this.close();
+        return this;
     }
 
-    _buildMongoObject(callback) {
+    async _buildMongoObject() {
         // Calcuate the length
         const mongoObject = {
             _id: this.fileId,
@@ -823,741 +574,248 @@ export default class GridStore {
         };
 
         const md5Command = { filemd5: this.fileId, root: this.root };
-        adone.promise.nodeify(this.db.command(md5Command), (err, results) => {
-            if (err) {
-                return callback(err);
-            }
-
-            mongoObject.md5 = results.md5;
-            callback(null, mongoObject);
-        });
+        const results = await this.db.command(md5Command);
+        mongoObject.md5 = results.md5;
+        return mongoObject;
     }
 
-    _close(callback) {
+    async close() {
         if (this.mode[0] === "w") {
             // Set up options
             const options = this.writeConcern;
 
             if (!is.nil(this.currentChunk) && this.currentChunk.position > 0) {
-                this.currentChunk.save({}, (err) => {
-                    if (err && is.function(callback)) {
-                        return callback(err);
-                    }
-
-                    this.collection((err, files) => {
-                        if (err && is.function(callback)) {
-                            return callback(err);
-                        }
-
-                        // Build the mongo object
-                        if (!is.nil(this.uploadDate)) {
-                            this._buildMongoObject((err, mongoObject) => {
-                                if (err) {
-                                    if (is.function(callback)) {
-                                        return callback(err);
-                                    } throw err;
-                                }
-
-                                adone.promise.nodeify(files.save(mongoObject, options), (err) => {
-                                    if (is.function(callback)) {
-                                        callback(err, mongoObject);
-                                    }
-                                });
-                            });
-                        } else {
-                            this.uploadDate = new Date();
-                            this._buildMongoObject((err, mongoObject) => {
-                                if (err) {
-                                    if (is.function(callback)) {
-                                        return callback(err);
-                                    } throw err;
-                                }
-
-                                adone.promise.nodeify(files.save(mongoObject, options), (err) => {
-                                    if (is.function(callback)) {
-                                        callback(err, mongoObject);
-                                    }
-                                });
-                            });
-                        }
-                    });
-                });
-            } else {
-                this.collection((err, files) => {
-                    if (err && is.function(callback)) {
-                        return callback(err);
-                    }
-
+                await this.currentChunk.save();
+                const files = this.collection();
+                // Build the mongo object
+                if (is.nil(this.uploadDate)) {
                     this.uploadDate = new Date();
-                    this._buildMongoObject((err, mongoObject) => {
-                        if (err) {
-                            if (is.function(callback)) {
-                                return callback(err);
-                            } throw err;
-                        }
-
-                        adone.promise.nodeify(files.save(mongoObject, options), (err) => {
-                            if (is.function(callback)) {
-                                callback(err, mongoObject);
-                            }
-                        });
-                    });
-                });
-            }
-        } else if (this.mode[0] === "r") {
-            if (is.function(callback)) {
-                callback(null, null);
-            }
-        } else {
-            if (is.function(callback)) {
-                callback(MongoError.create({ message: `Illegal mode ${this.mode}`, driver: true }));
-            }
-        }
-    }
-
-    @classMethod({ callback: true, promise: true })
-    close(callback) {
-        // We provided a callback leg
-        if (is.function(callback)) {
-            return this._close(callback);
-        }
-        // Return promise
-        return new this.promiseLibrary((resolve, reject) => {
-            this._close((err, r) => {
-                if (err) {
-                    return reject(err);
                 }
-                resolve(r);
-            });
-        });
+                const mongoObject = await this._buildMongoObject();
+                await files.save(mongoObject, options);
+                return mongoObject;
+            }
+            const files = this.collection();
+            this.uploadDate = new Date();
+            const mongoObject = await this._buildMongoObject();
+            await files.save(mongoObject, options);
+            return mongoObject;
+
+        } else if (this.mode[0] === "r") {
+            return null;
+        }
+        throw MongoError.create({ message: `Illegal mode ${this.mode}`, driver: true });
     }
 
-    @classMethod({ callback: true, promise: false, returns: [__.Collection] })
-    chunkCollection(callback) {
-        if (is.function(callback)) {
-            return this.db.collection((`${this.root}.chunks`), callback);
-        }
+    chunkCollection() {
         return this.db.collection((`${this.root}.chunks`));
     }
 
-    _deleteChunks(options, callback) {
-        if (is.function(options)) {
-            callback = options;
-            options = {};
+    async _deleteChunks(options = this.writeConcern) {
+        if (!is.undefined(this.fileId)) {
+            await this.chunkCollection().remove({ files_id: this.fileId }, options);
         }
-
-        options = options || this.writeConcern;
-
-        if (!is.nil(this.fileId)) {
-            adone.promise.nodeify(this.chunkCollection().remove({ files_id: this.fileId }, options), (err) => {
-                if (err) {
-                    return callback(err, false);
-                }
-                callback(null, true);
-            });
-        } else {
-            callback(null, true);
-        }
+        return true;
     }
 
-    _unlink(callback) {
-        this._deleteChunks((err) => {
-            if (!is.null(err)) {
-                err.message = `at deleteChunks: ${err.message}`;
-                return callback(err);
-            }
-
-            this.collection((err, collection) => {
-                if (!is.null(err)) {
-                    err.message = `at collection: ${err.message}`;
-                    return callback(err);
-                }
-
-                adone.promise.nodeify(collection.remove({ _id: this.fileId }, this.writeConcern), (err) => {
-                    callback(err, this);
-                });
-            });
-        });
+    async unlink() {
+        await this._deleteChunks();
+        const collection = this.collection();
+        await collection.remove({ _id: this.fileId }, this.writeConcern);
+        return this;
     }
 
-    @classMethod({ callback: true, promise: true })
-    unlink(callback) {
-        // We provided a callback leg
-        if (is.function(callback)) {
-            return this._unlink(callback);
-        }
-        // Return promise
-        return new this.promiseLibrary((resolve, reject) => {
-            this._unlink((err, r) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(r);
-            });
-        });
-    }
-
-    @classMethod({ callback: true, promise: false, returns: [__.Collection] })
-    collection(callback) {
-        if (is.function(callback)) {
-            this.db.collection(`${this.root}.files`, callback);
-        }
+    collection() {
         return this.db.collection(`${this.root}.files`);
     }
 
-    _readlines(separator, callback) {
-        this.read((err, data) => {
-            if (err) {
-                return callback(err);
-            }
-
-            let items = data.toString().split(separator);
-            items = items.length > 0 ? items.splice(0, items.length - 1) : [];
-            for (let i = 0; i < items.length; i++) {
-                items[i] = items[i] + separator;
-            }
-
-            callback(null, items);
-        });
+    async readlines(separator = "\n") {
+        const data = await this.read();
+        let items = data.toString().split(separator);
+        items = items.length > 0 ? items.splice(0, items.length - 1) : [];
+        for (let i = 0; i < items.length; i++) {
+            items[i] = items[i] + separator;
+        }
+        return items;
     }
 
-    @classMethod({ callback: true, promise: true })
-    readlines(...args) {
-        const callback = args.pop();
-        if (!is.function(callback)) {
-            args.push(callback);
-        }
-        let separator = args.length ? args.shift() : "\n";
-        separator = separator || "\n";
-
-        // We provided a callback leg
-        if (is.function(callback)) {
-            return this._readlines(separator, callback);
-        }
-
-        // Return promise
-        return new this.promiseLibrary((resolve, reject) => {
-            this._readlines(separator, (err, r) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(r);
-            });
-        });
-    }
-
-    _rewind(callback) {
+    async rewind() {
         if (this.currentChunk.chunkNumber !== 0) {
             if (this.mode[0] === "w") {
-                this._deleteChunks((err) => {
-                    if (err) {
-                        return callback(err);
-                    }
-                    this.currentChunk = new __.Chunk(this, { n: 0 }, this.writeConcern);
-                    this.position = 0;
-                    callback(null, this);
-                });
+                await this._deleteChunks();
+                this.currentChunk = new __.Chunk(this, { n: 0 }, this.writeConcern);
+                this.position = 0;
             } else {
-                this.currentChunk(0, (err, chunk) => {
-                    if (err) {
-                        return callback(err);
-                    }
-                    this.currentChunk = chunk;
-                    this.currentChunk.rewind();
-                    this.position = 0;
-                    callback(null, this);
-                });
+                const chunk = await this.currentChunk(0);
+                this.currentChunk = chunk;
+                this.currentChunk.rewind();
+                this.position = 0;
             }
         } else {
             this.currentChunk.rewind();
             this.position = 0;
-            callback(null, this);
         }
+        return this;
     }
 
-    @classMethod({ callback: true, promise: true })
-    rewind(callback) {
-        // We provided a callback leg
-        if (is.function(callback)) {
-            return this._rewind(callback);
-        }
-        // Return promise
-        return new this.promiseLibrary((resolve, reject) => {
-            this._rewind((err, r) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(r);
-            });
-        });
-    }
-
-    _nthChunk(chunkNumber, options, callback) {
-        if (is.function(options)) {
-            callback = options;
-            options = {};
-        }
-
-        options = options || this.writeConcern;
+    async _nthChunk(chunkNumber, options = this.writeConcern) {
         options.readPreference = this.readPreference;
-        // Get the nth chunk
-        adone.promise.nodeify(this.chunkCollection().findOne({ files_id: this.fileId, n: chunkNumber }, options), (err, chunk) => {
-            if (err) {
-                return callback(err);
-            }
-
-            const finalChunk = is.nil(chunk) ? {} : chunk;
-            callback(null, new __.Chunk(this, finalChunk, this.writeConcern));
-        });
+        const chunk = await this.chunkCollection().findOne({ files_id: this.fileId, n: chunkNumber }, options);
+        const finalChunk = is.nil(chunk) ? {} : chunk;
+        return new __.Chunk(this, finalChunk, this.writeConcern);
     }
 
-    _read(length, buffer, callback) {
-        // The data is a c-terminated string and thus the length - 1
-        const finalLength = is.nil(length) ? this.length - this.position : length;
-        const finalBuffer = is.nil(buffer) ? Buffer.allocUnsafe(finalLength) : buffer;
-        // Add a index to buffer to keep track of writing position or apply current index
-        finalBuffer._index = !is.nil(buffer) && !is.nil(buffer._index) ? buffer._index : 0;
+    async read(length = this.length - this.position, buffer = Buffer.allocUnsafe(length)) {
+        buffer._index = buffer._index || 0;
 
-        if ((this.currentChunk.length() - this.currentChunk.position + finalBuffer._index) >= finalLength) {
-            const slice = this.currentChunk.readSlice(finalLength - finalBuffer._index);
+        if ((this.currentChunk.length() - this.currentChunk.position + buffer._index) >= length) {
+            const slice = this.currentChunk.readSlice(length - buffer._index);
             // Copy content to final buffer
-            slice.copy(finalBuffer, finalBuffer._index);
+            slice.copy(buffer, buffer._index);
             // Update internal position
-            this.position = this.position + finalBuffer.length;
+            this.position = this.position + buffer.length;
             // Check if we don't have a file at all
-            if (finalLength === 0 && finalBuffer.length === 0) {
-                return callback(MongoError.create({ message: "File does not exist", driver: true }), null);
+            if (buffer === 0 && buffer.length === 0) {
+                throw MongoError.create({ message: "File does not exist", driver: true });
             }
-            // Else return data
-            return callback(null, finalBuffer);
+            return buffer;
         }
 
         // Read the next chunk
         const slice = this.currentChunk.readSlice(this.currentChunk.length() - this.currentChunk.position);
-        // Copy content to final buffer
-        slice.copy(finalBuffer, finalBuffer._index);
+        slice.copy(buffer, buffer._index);
         // Update index position
-        finalBuffer._index += slice.length;
+        buffer._index += slice.length;
 
         // Load next chunk and read more
-        this._nthChunk(this.currentChunk.chunkNumber + 1, (err, chunk) => {
-            if (err) {
-                return callback(err);
-            }
-
-            if (chunk.length() > 0) {
-                this.currentChunk = chunk;
-                this.read(length, finalBuffer, callback);
-            } else {
-                if (finalBuffer._index > 0) {
-                    callback(null, finalBuffer);
-                } else {
-                    callback(MongoError.create({ message: "no chunks found for file, possibly corrupt", driver: true }), null);
-                }
-            }
-        });
+        const chunk = await this._nthChunk(this.currentChunk.chunkNumber + 1);
+        if (chunk.length() > 0) {
+            this.currentChunk = chunk;
+            return this.read(length, buffer);
+        }
+        if (buffer._index > 0) {
+            return buffer;
+        }
+        throw MongoError.create({ message: "no chunks found for file, possibly corrupt", driver: true });
     }
 
-    @classMethod({ callback: true, promise: true })
-    read(...args) {
-        const callback = args.pop();
-        if (!is.function(callback)) {
-            args.push(callback);
-        }
-        const length = args.length ? args.shift() : null;
-        const buffer = args.length ? args.shift() : null;
-        // We provided a callback leg
-        if (is.function(callback)) {
-            return this._read(length, buffer, callback);
-        }
-        // Return promise
-        return new this.promiseLibrary((resolve, reject) => {
-            this._read(length, buffer, (err, r) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(r);
-            });
-        });
+    tell() {
+        return this.position;
     }
 
-    @classMethod({ callback: true, promise: true })
-    tell(callback) {
-        // We provided a callback leg
-        if (is.function(callback)) {
-            return callback(null, this.position);
-        }
-        // Return promise
-        return new this.promiseLibrary((resolve) => {
-            resolve(this.position);
-        });
-    }
-
-    _seek(position, seekLocation, callback) {
+    async seek(position, seekLocation = GridStore.IO_SEEK_SET) {
         // Seek only supports read mode
         if (this.mode !== "r") {
-            return callback(MongoError.create({ message: "seek is only supported for mode r", driver: true }));
+            throw MongoError.create({ message: "seek is only supported for mode r", driver: true });
         }
 
-        const seekLocationFinal = is.nil(seekLocation) ? GridStore.IO_SEEK_SET : seekLocation;
-        const finalPosition = position;
         let targetPosition = 0;
 
         // Calculate the position
-        if (seekLocationFinal === GridStore.IO_SEEK_CUR) {
-            targetPosition = this.position + finalPosition;
-        } else if (seekLocationFinal === GridStore.IO_SEEK_END) {
-            targetPosition = this.length + finalPosition;
+        if (seekLocation === GridStore.IO_SEEK_CUR) {
+            targetPosition = this.position + position;
+        } else if (seekLocation === GridStore.IO_SEEK_END) {
+            targetPosition = this.length + position;
         } else {
-            targetPosition = finalPosition;
+            targetPosition = position;
         }
 
         // Get the chunk
         const newChunkNumber = Math.floor(targetPosition / this.chunkSize);
-        const seekChunk = () => {
-            this._nthChunk(newChunkNumber, (err, chunk) => {
-                if (err) {
-                    return callback(err, null);
-                }
-                if (is.nil(chunk)) {
-                    return callback(new Error("no chunk found"));
-                }
+        const chunk = await this._nthChunk(newChunkNumber);
+        if (is.nil(chunk)) {
+            throw new Error("no chunk found");
+        }
 
-                // Set the current chunk
-                this.currentChunk = chunk;
-                this.position = targetPosition;
-                this.currentChunk.position = (this.position % this.chunkSize);
-                callback(err, this);
-            });
-        };
+        // Set the current chunk
+        this.currentChunk = chunk;
+        this.position = targetPosition;
+        this.currentChunk.position = (this.position % this.chunkSize);
 
-        seekChunk();
+        return this;
     }
 
-    @classMethod({ callback: true, promise: true })
-    seek(position, ...args) {
-        const callback = args.pop();
-        if (!is.function(callback)) {
-            args.push(callback);
+    static async exist(db, fileIdObject, rootCollection = GridStore.DEFAULT_ROOT_COLLECTION, options = {}) {
+        if (is.object(rootCollection)) {
+            [options, rootCollection] = [rootCollection, GridStore.DEFAULT_ROOT_COLLECTION];
         }
-        const seekLocation = args.length ? args.shift() : null;
-
-        // We provided a callback leg
-        if (is.function(callback)) {
-            return this._seek(position, seekLocation, callback);
-        }
-        // Return promise
-        return new this.promiseLibrary((resolve, reject) => {
-            this._seek(position, seekLocation, (err, r) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(r);
-            });
-        });
-    }
-
-    static _exists(db, fileIdObject, rootCollection, options, callback) {
         // Establish read preference
         const readPreference = options.readPreference || ReadPreference.PRIMARY;
         // Fetch collection
-        const rootCollectionFinal = !is.nil(rootCollection) ? rootCollection : GridStore.DEFAULT_ROOT_COLLECTION;
-        db.collection(`${rootCollectionFinal}.files`, (err, collection) => {
-            if (err) {
-                return callback(err);
-            }
+        const collection = db.collection(`${rootCollection}.files`);
+        // Build query
+        let query = (is.string(fileIdObject) || is.regexp(fileIdObject))
+            ? { filename: fileIdObject }
+            : { _id: fileIdObject }; // Attempt to locate file
 
-            // Build query
-            let query = (is.string(fileIdObject) || is.regexp(fileIdObject))
-                ? { filename: fileIdObject }
-                : { _id: fileIdObject }; // Attempt to locate file
+        // We have a specific query
+        if (is.object(fileIdObject) && !is.regexp(fileIdObject)) {
+            query = fileIdObject;
+        }
 
-            // We have a specific query
-            if (is.object(fileIdObject) && !is.regexp(fileIdObject)) {
-                query = fileIdObject;
-            }
-
-            // Check if the entry exists
-            adone.promise.nodeify(collection.findOne(query, { readPreference }), (err, item) => {
-                if (err) {
-                    return callback(err);
-                }
-                callback(null, is.nil(item) ? false : true);
-            });
-        });
+        // Check if the entry exists
+        const item = await collection.findOne(query, { readPreference });
+        return Boolean(item);
     }
 
-    @staticMethod({ callback: true, promise: true })
-    static exist(db, fileIdObject, ...args) {
-        const callback = args.pop();
-        if (!is.function(callback)) {
-            args.push(callback);
+    static async list(db, rootCollection = GridStore.DEFAULT_ROOT_COLLECTION, options = {}) {
+        if (is.object(rootCollection)) {
+            [options, rootCollection] = [rootCollection, GridStore.DEFAULT_ROOT_COLLECTION];
         }
-        const rootCollection = args.length ? args.shift() : null;
-        let options = args.length ? args.shift() : {};
-        options = options || {};
-
-        // Get the promiseLibrary
-        let promiseLibrary = options.promiseLibrary;
-
-        // No promise library selected fall back
-        if (!promiseLibrary) {
-            promiseLibrary = Promise;
-        }
-
-        // We provided a callback leg
-        if (is.function(callback)) {
-            return this._exists(db, fileIdObject, rootCollection, options, callback);
-        }
-        // Return promise
-        return new promiseLibrary((resolve, reject) => {
-            this._exists(db, fileIdObject, rootCollection, options, (err, r) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(r);
-            });
-        });
-    }
-
-    static _list(db, rootCollection, options, callback) {
-        // Ensure we have correct values
-        if (!is.nil(rootCollection) && is.object(rootCollection)) {
-            options = rootCollection;
-            rootCollection = null;
-        }
-
         // Establish read preference
         const readPreference = options.readPreference || ReadPreference.PRIMARY;
         // Check if we are returning by id not filename
         const byId = !is.nil(options.id) ? options.id : false;
         // Fetch item
-        const rootCollectionFinal = !is.nil(rootCollection) ? rootCollection : GridStore.DEFAULT_ROOT_COLLECTION;
-        const items = [];
-        db.collection((`${rootCollectionFinal}.files`), (err, collection) => {
-            if (err) {
-                return callback(err);
-            }
-
-            const cursor = collection.find({}, { readPreference });
-            cursor.each((err, item) => {
-                if (!is.nil(item)) {
-                    items.push(byId ? item._id : item.filename);
-                } else {
-                    callback(err, items);
-                }
-            });
-        });
+        const collection = db.collection(`${rootCollection}.files`);
+        const cursor = collection.find({}, { readPreference });
+        const items = await cursor.toArray();
+        return items.map((item) => byId ? item._id : item.filename);
     }
 
-    @staticMethod({ callback: true, promise: true })
-    static list(db, ...args) {
-        const callback = args.pop();
-        if (!is.function(callback)) {
-            args.push(callback);
+    static async read(db, name, length, offset, options = {}) {
+        if (is.object(offset)) {
+            [options, offset] = [offset, undefined];
         }
-        const rootCollection = args.length ? args.shift() : null;
-        let options = args.length ? args.shift() : {};
-        options = options || {};
-
-        // Get the promiseLibrary
-        let promiseLibrary = options.promiseLibrary;
-
-        // No promise library selected fall back
-        if (!promiseLibrary) {
-            promiseLibrary = Promise;
+        const gridStore = new GridStore(db, name, "r", options);
+        await gridStore.open();
+        // Make sure we are not reading out of bounds
+        if (offset && offset >= gridStore.length) {
+            throw new Error("offset larger than size of file");
+        }
+        if (length && length > gridStore.length) {
+            throw new Error("length is larger than the size of the file");
+        }
+        if (offset && length && (offset + length) > gridStore.length) {
+            throw new Error("offset and length is larger than the size of the file");
         }
 
-        // We provided a callback leg
-        if (is.function(callback)) {
-            return this._list(db, rootCollection, options, callback);
+        if (is.number(offset)) {
+            await gridStore.seek(offset);
         }
-        // Return promise
-        return new promiseLibrary((resolve, reject) => {
-            this._list(db, rootCollection, options, (err, r) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(r);
-            });
-        });
+        return gridStore.read(length);
     }
 
-    static _read(db, name, length, offset, options, callback) {
-        new GridStore(db, name, "r", options).open((err, gridStore) => {
-            if (err) {
-                return callback(err);
-            }
-            // Make sure we are not reading out of bounds
-            if (offset && offset >= gridStore.length) {
-                return callback("offset larger than size of file", null);
-            }
-            if (length && length > gridStore.length) {
-                return callback("length is larger than the size of the file", null);
-            }
-            if (offset && length && (offset + length) > gridStore.length) {
-                return callback("offset and length is larger than the size of the file", null);
-            }
-
-            if (!is.nil(offset)) {
-                gridStore.seek(offset, (err, gridStore) => {
-                    if (err) {
-                        return callback(err);
-                    }
-                    gridStore.read(length, callback);
-                });
-            } else {
-                gridStore.read(length, callback);
-            }
-        });
+    static async readlines(db, name, separator = "\n", options = {}) {
+        if (is.object(separator)) {
+            [options, separator] = [separator, "\n"];
+        }
+        const gridStore = new GridStore(db, name, "r", options);
+        await gridStore.open();
+        return gridStore.readlines(separator);
     }
 
-    @staticMethod({ callback: true, promise: true })
-    static read(db, name, ...args) {
-        const callback = args.pop();
-        if (!is.function(callback)) {
-            args.push(callback);
+    static async unlink(db, names, options = {}) {
+        if (is.array(names)) {
+            await Promise.all(names.map((name) => this.unlink(db, name, options)));
+            return this;
         }
-        const length = args.length ? args.shift() : null;
-        const offset = args.length ? args.shift() : null;
-        let options = args.length ? args.shift() : null;
-        options = options || {};
-
-        // Get the promiseLibrary
-        let promiseLibrary = options ? options.promiseLibrary : null;
-
-        // No promise library selected fall back
-        if (!promiseLibrary) {
-            promiseLibrary = Promise;
-        }
-
-        // We provided a callback leg
-        if (is.function(callback)) {
-            return this._read(db, name, length, offset, options, callback);
-        }
-        // Return promise
-        return new promiseLibrary((resolve, reject) => {
-            this._read(db, name, length, offset, options, (err, r) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(r);
-            });
-        });
-    }
-
-    static _readlines(db, name, separator, options, callback) {
-        const finalSeperator = is.nil(separator) ? "\n" : separator;
-        new GridStore(db, name, "r", options).open((err, gridStore) => {
-            if (err) {
-                return callback(err);
-            }
-            gridStore.readlines(finalSeperator, callback);
-        });
-    }
-
-    @staticMethod({ callback: true, promise: true })
-    static readlines(db, name, ...args) {
-        const callback = args.pop();
-        if (!is.function(callback)) {
-            args.push(callback);
-        }
-        const separator = args.length ? args.shift() : null;
-        let options = args.length ? args.shift() : null;
-        options = options || {};
-
-        // Get the promiseLibrary
-        let promiseLibrary = options ? options.promiseLibrary : null;
-
-        // No promise library selected fall back
-        if (!promiseLibrary) {
-            promiseLibrary = Promise;
-        }
-
-        // We provided a callback leg
-        if (is.function(callback)) {
-            return this._readlines(db, name, separator, options, callback);
-        }
-        // Return promise
-        return new promiseLibrary((resolve, reject) => {
-            this._readlines(db, name, separator, options, (err, r) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(r);
-            });
-        });
-    }
-
-    static _unlink(db, names, options, callback) {
-        // Get the write concern
-        const writeConcern = _getWriteConcern(db, options);
-
-        // List of names
-        if (names.constructor === Array) {
-            let tc = 0;
-            const cb = () => {
-                if (--tc === 0) {
-                    callback(null, this);
-                }
-            };
-            for (let i = 0; i < names.length; i++) {
-                ++tc;
-                GridStore.unlink(db, names[i], options, cb);
-            }
-        } else {
-            new GridStore(db, names, "w", options).open((err, gridStore) => {
-                if (err) {
-                    return callback(err);
-                }
-                gridStore._deleteChunks((err) => {
-                    if (err) {
-                        return callback(err);
-                    }
-                    gridStore.collection((err, collection) => {
-                        if (err) {
-                            return callback(err);
-                        }
-                        adone.promise.nodeify(collection.remove({ _id: gridStore.fileId }, writeConcern), (err) => {
-                            callback(err, this);
-                        });
-                    });
-                });
-            });
-        }
-    }
-
-    @staticMethod({ callback: true, promise: true })
-    static unlink(db, names, ...args) {
-        const callback = args.pop();
-        if (!is.function(callback)) {
-            args.push(callback);
-        }
-        let options = args.length ? args.shift() : {};
-        options = options || {};
-
-        // Get the promiseLibrary
-        let promiseLibrary = options.promiseLibrary;
-
-        // No promise library selected fall back
-        if (!promiseLibrary) {
-            promiseLibrary = Promise;
-        }
-
-        // We provided a callback leg
-        if (is.function(callback)) {
-            return this._unlink(db, names, options, callback);
-        }
-
-        // Return promise
-        return new promiseLibrary((resolve, reject) => {
-            this._unlink(db, names, options, (err, r) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve(r);
-            });
-        });
+        const gridStore = new GridStore(db, names, "w", options);
+        await gridStore.open();
+        await gridStore._deleteChunks();
+        const collection = await gridStore.collection();
+        await collection.remove({ _id: gridStore.fileId }, _getWriteConcern(db, options));
+        return this;
     }
 }
 

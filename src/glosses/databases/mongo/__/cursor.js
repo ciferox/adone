@@ -1,7 +1,6 @@
-const { is, database: { mongo }, std: { stream: { Readable } }, promise } = adone;
+const { is, database: { mongo }, std: { stream: { Readable } } } = adone;
 const { __, MongoError, core, ReadPreference } = mongo;
-const { metadata, utils: { formattedOrderClause, handleCallback } } = __;
-const { classMethod } = metadata;
+const { utils: { formattedOrderClause, handleCallback } } = __;
 
 const flags = ["tailable", "oplogReplay", "noCursorTimeout", "awaitData", "exhaust", "partial"];
 const fields = ["numberOfRetries", "tailableRetryInterval"];
@@ -41,7 +40,6 @@ class CursorStream extends Readable {
     }
 }
 
-@metadata("Cursor")
 export default class Cursor extends core.Cursor {
     constructor(bson, ns, cmd, options, topology, topologyOptions) {
         super(bson, ns, cmd, options, topology, topologyOptions);
@@ -105,7 +103,6 @@ export default class Cursor extends core.Cursor {
         });
     }
 
-    @classMethod({ callback: true, promise: true })
     async hasNext() {
         if (this.s.currentDoc) {
             return true;
@@ -125,7 +122,6 @@ export default class Cursor extends core.Cursor {
         }
     }
 
-    @classMethod({ callback: true, promise: true })
     next(callback) {
         // have to have callback support for the core
         if (is.function(callback)) {
@@ -151,7 +147,6 @@ export default class Cursor extends core.Cursor {
         });
     }
 
-    @classMethod({ callback: false, promise: false, fluent: true })
     filter(filter) {
         if (this.s.state === Cursor.CLOSED || this.s.state === Cursor.OPEN || this.isDead()) {
             throw MongoError.create({ message: "Cursor is closed", driver: true });
@@ -160,7 +155,6 @@ export default class Cursor extends core.Cursor {
         return this;
     }
 
-    @classMethod({ callback: false, promise: false, fluent: true })
     maxScan(maxScan) {
         if (this.s.state === Cursor.CLOSED || this.s.state === Cursor.OPEN || this.isDead()) {
             throw MongoError.create({ message: "Cursor is closed", driver: true });
@@ -169,7 +163,6 @@ export default class Cursor extends core.Cursor {
         return this;
     }
 
-    @classMethod({ callback: false, promise: false, fluent: true })
     hint(hint) {
         if (this.s.state === Cursor.CLOSED || this.s.state === Cursor.OPEN || this.isDead()) {
             throw MongoError.create({ message: "Cursor is closed", driver: true });
@@ -178,7 +171,6 @@ export default class Cursor extends core.Cursor {
         return this;
     }
 
-    @classMethod({ callback: false, promise: false, fluent: true })
     min(min) {
         if (this.s.state === Cursor.CLOSED || this.s.state === Cursor.OPEN || this.isDead()) {
             throw MongoError.create({ message: "Cursor is closed", driver: true });
@@ -187,7 +179,6 @@ export default class Cursor extends core.Cursor {
         return this;
     }
 
-    @classMethod({ callback: false, promise: false, fluent: true })
     max(max) {
         if (this.s.state === Cursor.CLOSED || this.s.state === Cursor.OPEN || this.isDead()) {
             throw MongoError.create({ message: "Cursor is closed", driver: true });
@@ -196,7 +187,6 @@ export default class Cursor extends core.Cursor {
         return this;
     }
 
-    @classMethod({ callback: false, promise: false, fluent: true })
     returnKey(value) {
         if (this.s.state === Cursor.CLOSED || this.s.state === Cursor.OPEN || this.isDead()) {
             throw MongoError.create({ message: "Cursor is closed", driver: true });
@@ -205,7 +195,6 @@ export default class Cursor extends core.Cursor {
         return this;
     }
 
-    @classMethod({ callback: false, promise: false, fluent: true })
     showRecordId(value) {
         if (this.s.state === Cursor.CLOSED || this.s.state === Cursor.OPEN || this.isDead()) {
             throw MongoError.create({ message: "Cursor is closed", driver: true });
@@ -214,7 +203,6 @@ export default class Cursor extends core.Cursor {
         return this;
     }
 
-    @classMethod({ callback: false, promise: false, fluent: true })
     snapshot(value) {
         if (this.s.state === Cursor.CLOSED || this.s.state === Cursor.OPEN || this.isDead()) {
             throw MongoError.create({ message: "Cursor is closed", driver: true });
@@ -223,7 +211,6 @@ export default class Cursor extends core.Cursor {
         return this;
     }
 
-    @classMethod({ callback: false, promise: false, fluent: true })
     setCursorOption(field, value) {
         if (this.s.state === Cursor.CLOSED || this.s.state === Cursor.OPEN || this.isDead()) {
             throw MongoError.create({ message: "Cursor is closed", driver: true });
@@ -238,7 +225,6 @@ export default class Cursor extends core.Cursor {
         return this;
     }
 
-    @classMethod({ callback: false, promise: false, fluent: true })
     addCursorFlag(flag, value) {
         if (this.s.state === Cursor.CLOSED || this.s.state === Cursor.OPEN || this.isDead()) {
             throw MongoError.create({ message: "Cursor is closed", driver: true });
@@ -253,7 +239,6 @@ export default class Cursor extends core.Cursor {
         return this;
     }
 
-    @classMethod({ callback: false, promise: false, fluent: true })
     addQueryModifier(name, value) {
         if (this.s.state === Cursor.CLOSED || this.s.state === Cursor.OPEN || this.isDead()) {
             throw MongoError.create({ message: "Cursor is closed", driver: true });
@@ -272,7 +257,6 @@ export default class Cursor extends core.Cursor {
         return this;
     }
 
-    @classMethod({ callback: false, promise: false, fluent: true })
     comment(value) {
         if (this.s.state === Cursor.CLOSED || this.s.state === Cursor.OPEN || this.isDead()) {
             throw MongoError.create({ message: "Cursor is closed", driver: true });
@@ -281,7 +265,6 @@ export default class Cursor extends core.Cursor {
         return this;
     }
 
-    @classMethod({ callback: false, promise: false, fluent: true })
     maxAwaitTimeMS(value) {
         if (!is.number(value)) {
             throw MongoError.create({ message: "maxAwaitTimeMS must be a number", driver: true });
@@ -293,7 +276,6 @@ export default class Cursor extends core.Cursor {
         return this;
     }
 
-    @classMethod({ callback: false, promise: false, fluent: true })
     maxTimeMS(value) {
         if (!is.number(value)) {
             throw MongoError.create({ message: "maxTimeMS must be a number", driver: true });
@@ -305,7 +287,6 @@ export default class Cursor extends core.Cursor {
         return this;
     }
 
-    @classMethod({ callback: false, promise: false, fluent: true })
     project(value) {
         if (this.s.state === Cursor.CLOSED || this.s.state === Cursor.OPEN || this.isDead()) {
             throw MongoError.create({ message: "Cursor is closed", driver: true });
@@ -314,7 +295,6 @@ export default class Cursor extends core.Cursor {
         return this;
     }
 
-    @classMethod({ callback: false, promise: false, fluent: true })
     sort(keyOrList, direction) {
         if (this.s.options.tailable) {
             throw MongoError.create({ message: "Tailable cursor doesn't support sorting", driver: true });
@@ -352,7 +332,6 @@ export default class Cursor extends core.Cursor {
         return this;
     }
 
-    @classMethod({ callback: false, promise: false, fluent: true })
     batchSize(value) {
         if (this.s.options.tailable) {
             throw MongoError.create({ message: "Tailable cursor doesn't support batchSize", driver: true });
@@ -368,13 +347,11 @@ export default class Cursor extends core.Cursor {
         return this;
     }
 
-    @classMethod({ callback: false, promise: false, fluent: true })
     collation(value) {
         this.s.cmd.collation = value;
         return this;
     }
 
-    @classMethod({ callback: false, promise: false, fluent: true })
     limit(value) {
         if (this.s.options.tailable) {
             throw MongoError.create({ message: "Tailable cursor doesn't support limit", driver: true });
@@ -391,7 +368,6 @@ export default class Cursor extends core.Cursor {
         return this;
     }
 
-    @classMethod({ callback: false, promise: false, fluent: true })
     skip(value) {
         if (this.s.options.tailable) {
             throw MongoError.create({ message: "Tailable cursor doesn't support skip", driver: true });
@@ -445,14 +421,12 @@ export default class Cursor extends core.Cursor {
         }
     }
 
-    @classMethod({ callback: true, promise: false })
     each(callback) {
         this.rewind();
         this.s.state = Cursor.INIT;
         this._each(callback);
     }
 
-    @classMethod({ callback: true, promise: false })
     forEach(iterator) {
         return new Promise((resolve, reject) => {
             this.each((err, doc) => {
@@ -477,7 +451,6 @@ export default class Cursor extends core.Cursor {
         });
     }
 
-    @classMethod({ callback: false, promise: false, fluent: true })
     setReadPreference(r) {
         if (this.s.state !== Cursor.INIT) {
             throw MongoError.create({ message: "cannot change cursor readPreference after cursor has been accessed", driver: true });
@@ -495,7 +468,6 @@ export default class Cursor extends core.Cursor {
         return this;
     }
 
-    @classMethod({ callback: true, promise: true })
     toArray() {
         return new Promise((resolve, reject) => {
             if (this.s.options.tailable) {
@@ -543,7 +515,6 @@ export default class Cursor extends core.Cursor {
         });
     }
 
-    @classMethod({ callback: true, promise: true })
     async count(applySkipLimit = true, options = {}) {
         if (is.nil(this.s.cmd.query)) {
             throw MongoError.create({ message: "count can only be used with find command", driver: true });
@@ -603,13 +574,11 @@ export default class Cursor extends core.Cursor {
         });
     }
 
-    @classMethod({ callback: true, promise: true })
     close() {
         this.s.state = Cursor.CLOSED;
         this.kill();
     }
 
-    @classMethod({ callback: false, promise: false, fluent: true })
     map(transform) {
         if (this.cursorState.transforms && this.cursorState.transforms.doc) {
             const oldTransform = this.cursorState.transforms.doc;
@@ -620,12 +589,10 @@ export default class Cursor extends core.Cursor {
         return this;
     }
 
-    @classMethod({ callback: false, promise: false, returns: [Boolean] })
     isClosed() {
         return this.isDead();
     }
 
-    @classMethod({ callback: false, promise: false })
     destroy(err) {
         if (err) {
             // this.emit("error", err);
@@ -634,12 +601,10 @@ export default class Cursor extends core.Cursor {
         // this.close();
     }
 
-    @classMethod({ callback: false, promise: false, returns: [CursorStream] })
     stream(options) {
         return new CursorStream(this, options);
     }
 
-    @classMethod({ callback: true, promise: true })
     explain() {
         this.s.cmd.explain = true;
 
@@ -688,13 +653,7 @@ export default class Cursor extends core.Cursor {
 }
 
 Cursor.prototype.maxTimeMs = Cursor.prototype.maxTimeMS;
-Cursor.define.classMethod("maxTimeMs", { callback: false, promise: false, fluent: true });
-
 Cursor.prototype.nextObject = Cursor.prototype.next;
-
-Cursor.define.classMethod("nextObject", { callback: true, promise: true });
-
-Cursor.define.classMethod("next", { callback: true, promise: true });
 
 Cursor.INIT = 0;
 Cursor.OPEN = 1;

@@ -1795,7 +1795,7 @@ describe("examples", function () {
             await gridStore.close();
             expect(await GridStore.list(db)).to.include("foobar2");
             {
-                const items = await await GridStore.list(db, { id: true });
+                const items = await GridStore.list(db, { id: true });
                 expect(items).to.be.an("array");
                 expect(items).not.to.be.empty;
                 for (const id of items) {

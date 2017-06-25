@@ -1,6 +1,5 @@
 const { is, database: { mongo: { __, ReadPreference, MongoError } }, EventEmitter } = adone;
-const { metadata } = __;
-const { classMethod } = metadata;
+const { utils: { shallowClone } } = __;
 
 const validOptionNames = [
     "poolSize",
@@ -224,32 +223,9 @@ const relayEvents = (self, db) => {
     }
 };
 
-const connectHandler = (options, callback) => (err, db) => {
-    if (err) {
-        return process.nextTick(() => {
-            try {
-                callback(err, null);
-            } catch (err) {
-                if (db) {
-                    db.close();
-                }
-                throw err;
-            }
-        });
-    }
-
-    // No authentication just reconnect
+const auth = async (options, db) => {
     if (!options.auth) {
-        return process.nextTick(() => {
-            try {
-                callback(err, db);
-            } catch (err) {
-                if (db) {
-                    db.close();
-                }
-                throw err;
-            }
-        });
+        return;
     }
 
     // What db to authenticate against
@@ -259,44 +235,21 @@ const connectHandler = (options, callback) => (err, db) => {
     }
 
     // Authenticate
-    __.authenticate(authenticationDb, options.user, options.password, options, (err, success) => {
-        if (success) {
-            process.nextTick(() => {
-                try {
-                    callback(null, db);
-                } catch (err) {
-                    if (db) {
-                        db.close();
-                    }
-                    throw err;
-                }
-            });
-        } else {
-            if (db) {
-                db.close();
-            }
-            process.nextTick(() => {
-                try {
-                    callback(err ? err : new Error(`Could not authenticate user ${options.auth[0]}`), null);
-                } catch (err) {
-                    if (db) {
-                        db.close();
-                    }
-                    throw err;
-                }
-            });
-        }
-    });
+    const ok = await __.authenticate(authenticationDb, options.user, options.password, options);
+    if (ok) {
+        return;
+    }
+    db.close();
+    throw new Error(`Could not authenticate user ${options.auth[0]}`);
 };
 
-@metadata("MongoClient")
-class MongoClient extends EventEmitter {
+export default class MongoClient extends EventEmitter {
     constructor({ relayEvents = true } = {}) {
         super();
         this.relayEvents = relayEvents;
     }
 
-    _createReplicaset(options, callback) {
+    async _createReplicaset(options) {
         // Set default options
         const servers = translateOptions(options);
         // Create Db instance
@@ -306,10 +259,12 @@ class MongoClient extends EventEmitter {
             relayEvents(this, db);
         }
         // Open the connection
-        adone.promise.nodeify(db.open(), callback);
+        await db.open();
+        await auth(options, db);
+        return db;
     }
 
-    _createMongos(options, callback) {
+    async _createMongos(options) {
         // Set default options
         const servers = translateOptions(options);
         // Create Db instance
@@ -319,10 +274,12 @@ class MongoClient extends EventEmitter {
             relayEvents(this, db);
         }
         // Open the connection
-        adone.promise.nodeify(db.open(), callback);
+        await db.open();
+        await auth(options, db);
+        return db;
     }
 
-    _createServer(options, callback) {
+    async _createServer(options) {
         // Set default options
         const servers = translateOptions(options);
         // Create db instance
@@ -330,39 +287,34 @@ class MongoClient extends EventEmitter {
         // Propegate the events to the client
         const collectedEvents = collectEvents(this, db);
         // Create Db instance
-        adone.promise.nodeify(db.open(), (err, db) => {
-            if (err) {
-                return callback(err);
-            }
-            // Check if we are really speaking to a mongos
-            const ismaster = db.serverConfig.lastIsMaster();
+        await db.open();
+        // Check if we are really speaking to a mongos
+        const ismaster = db.serverConfig.lastIsMaster();
 
-            // Do we actually have a mongos
-            if (ismaster && ismaster.msg === "isdbgrid") {
-                // Destroy the current connection
-                db.close();
-                // Create mongos connection instead
-                return this._createMongos(options, callback);
-            }
-            if (this.relayEvents) {
-                // Fire all the events
-                replayEvents(this, collectedEvents);
-                // Propegate the events to the client
-                relayEvents(this, db);
-            }
-            // Otherwise callback
-            callback(err, db);
-        });
+        // Do we actually have a mongos
+        if (ismaster && ismaster.msg === "isdbgrid") {
+            // Destroy the current connection
+            db.close();
+            // Create mongos connection instead
+            return this._createMongos(options);
+        }
+        if (this.relayEvents) {
+            // Fire all the events
+            replayEvents(this, collectedEvents);
+            // Propegate the events to the client
+            relayEvents(this, db);
+        }
+        await auth(options, db);
+        return db;
     }
 
-    _connect(url, options, callback) {
-        options = options || {};
-        options = __.utils.shallowClone(options);
-
-        // If callback is null throw an exception
-        if (is.nil(callback)) {
-            throw new Error("no callback function provided");
+    async connect(url, options = {}) {
+        const err = validOptions(options);
+        if (err) {
+            throw err;
         }
+        options = options || {};
+        options = shallowClone(options);
 
         const object = __.parseUrl(url, options);
         let _finalOptions = createUnifiedOptions({}, object);
@@ -382,70 +334,12 @@ class MongoClient extends EventEmitter {
             throw new Error("connection string must contain at least one seed host");
         }
 
-        const connectCallback = (err, db) => {
-            if (err && err.message === "no mongos proxies found in seed list") {
-                // if (logger.isWarn()) {
-                // logger.warn(f("seed list contains no mongos proxies, replicaset connections requires the parameter replicaSet to be supplied in the URI or options object, mongodb://server:port/db?replicaSet=name"));
-                // }
-
-                // Return a more specific error message for MongoClient.connect
-                return callback(new MongoError("seed list contains no mongos proxies, replicaset connections requires the parameter replicaSet to be supplied in the URI or options object, mongodb://server:port/db?replicaSet=name"));
-            }
-
-            // Return the error and db instance
-            callback(err, db);
-        };
-
         // Do we have a replicaset then skip discovery and go straight to connectivity
         if (_finalOptions.replicaSet || _finalOptions.rs_name) {
-            return this._createReplicaset(_finalOptions, connectHandler(_finalOptions, connectCallback));
+            return this._createReplicaset(_finalOptions);
         } else if (object.servers.length > 1) {
-            return this._createMongos(_finalOptions, connectHandler(_finalOptions, connectCallback));
+            return this._createMongos(_finalOptions);
         }
-        return this._createServer(_finalOptions, connectHandler(_finalOptions, connectCallback));
-
-    }
-
-    @classMethod({ callback: true, promise: true })
-    connect(url, ...args) {
-        const callback = is.function(args[args.length - 1]) ? args.pop() : null;
-        let options = args.length ? args.shift() : null;
-        options = options || {};
-
-        // Validate options object
-        const err = validOptions(options);
-
-        // Get the promiseLibrary
-        let promiseLibrary = options.promiseLibrary;
-
-        // No promise library selected fall back
-        if (!promiseLibrary) {
-            promiseLibrary = Promise;
-        }
-        // Return a promise
-        if (!is.function(callback)) {
-            return new promiseLibrary((resolve, reject) => {
-                // Did we have a validation error
-                if (err) {
-                    return reject(err);
-                }
-                // Attempt to connect
-                this._connect(url, options, (err, db) => {
-                    if (err) {
-                        return reject(err);
-                    }
-                    resolve(db);
-                });
-            });
-        }
-
-        // Did we have a validation error
-        if (err) {
-            return callback(err);
-        }
-        // Fallback to callback based connect
-        this._connect(url, options, callback);
+        return this._createServer(_finalOptions);
     }
 }
-
-module.exports = MongoClient;

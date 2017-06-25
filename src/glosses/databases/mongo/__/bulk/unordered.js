@@ -1,7 +1,6 @@
 const { is, data, database: { mongo } } = adone;
 const { __, ObjectId } = mongo;
-const { bulk, metadata, utils: { shallowClone, toError, handleCallback } } = __;
-const { classMethod } = metadata;
+const { bulk, utils: { shallowClone, toError, handleCallback } } = __;
 
 const bson = new data.bson.BSON();
 
@@ -147,7 +146,6 @@ class FindOperatorsUnordered {
     }
 }
 
-@metadata("UnorderedBulkOperation")
 export default class UnorderedBulkOperation {
     constructor(topology, collection, options) {
         options = is.nil(options) ? {} : options;
@@ -400,15 +398,14 @@ export default class UnorderedBulkOperation {
         }
     }
 
-    @classMethod({ callback: true, promise: true })
-    execute(_writeConcern, callback) {
+    execute(writeConcern, callback) {
         if (this.s.executed) {
             throw toError("batch cannot be re-executed");
         }
-        if (is.function(_writeConcern)) {
-            callback = _writeConcern;
-        } else if (_writeConcern && is.object(_writeConcern)) {
-            this.s.writeConcern = _writeConcern;
+        if (is.function(writeConcern)) {
+            callback = writeConcern;
+        } else if (writeConcern && is.object(writeConcern)) {
+            this.s.writeConcern = writeConcern;
         }
 
         // If we have current batch
