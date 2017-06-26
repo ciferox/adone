@@ -10,7 +10,7 @@ describe("fs", "watcher", function watcherTests() {
     let watcher2;
     let options;
     let osXFsWatch;
-    let win32Polling;
+    // let win32Polling;
     let slowerDelay;
     let rootFixtures = null;
     let fixtures = null;
@@ -82,7 +82,7 @@ describe("fs", "watcher", function watcherTests() {
         before(() => {
             // flags for bypassing special-case test failures on CI
             osXFsWatch = os === "darwin" && !baseopts.usePolling && !baseopts.useFsEvents;
-            win32Polling = os === "win32" && baseopts.usePolling;
+            // win32Polling = os === "win32" && baseopts.usePolling;
 
             if (osXFsWatch) {
                 slowerDelay = 200;
@@ -746,6 +746,67 @@ describe("fs", "watcher", function watcherTests() {
                 await Promise.all([
                     sleep().then(() => file.write(Date.now())).then(() => sleep()),
                     all.waitForArgs("change", file.path())
+                ]);
+            });
+
+            it("should treat glob-like directory names as literal directory names when globbing is disabled", async () => {
+                options.disableGlobbing = true;
+                const all = spy();
+                const ready = spy();
+                const filePath = fixtures.getVirtualFile("nota[glob]/a.txt").path();
+                const watchPath = fixtures.getVirtualFile("nota[glob]").path();
+                const matchingDir = fixtures.getVirtualFile("notag").path();
+                const matchingFile = fixtures.getVirtualFile("notag/b.txt").path();
+                const matchingFile2 = fixtures.getVirtualFile("notal").path();
+                adone.std.fs.mkdirSync(watchPath, 0x1ed);
+                adone.std.fs.writeFileSync(filePath, "b");
+                adone.std.fs.mkdirSync(matchingDir, 0x1ed);
+                adone.std.fs.writeFileSync(matchingFile, "c");
+                adone.std.fs.writeFileSync(matchingFile2, "d");
+                watcher = watch(watchPath, options)
+                    .on("all", all)
+                    .on("ready", ready);
+                await ready.waitForCall();
+                await sleep(0);
+
+                expect(all).to.have.been.calledWith("add", filePath);
+                expect(all).not.have.been.calledWith("addDir", matchingDir);
+                expect(all).not.have.been.calledWith("add", matchingFile);
+                expect(all).not.have.been.calledWith("add", matchingFile2);
+                await Promise.all([
+                    sleep().then(() => adone.fs.writeFile(filePath, Date.now())).then(() => sleep()),
+                    all.waitForArgs("change", filePath)
+                ]);
+            });
+
+            it("should treat glob-like filenames as literal filenames when globbing is disabled", async () => {
+                options.disableGlobbing = true;
+                const all = spy();
+                const ready = spy();
+                const filePath = fixtures.getVirtualFile("nota[glob]").path();
+                const watchPath = fixtures.getVirtualFile("nota[glob]").path();
+                const matchingDir = fixtures.getVirtualFile("notag").path();
+                const matchingFile = fixtures.getVirtualFile("notag/a.txt").path();
+                const matchingFile2 = fixtures.getVirtualFile("notal").path();
+                adone.std.fs.writeFileSync(filePath, "b");
+                adone.std.fs.mkdirSync(matchingDir, 0x1ed);
+                adone.std.fs.writeFileSync(matchingFile, "c");
+                adone.std.fs.writeFileSync(matchingFile2, "d");
+                watcher = watch(watchPath, options)
+                    .on("all", all)
+                    .on("ready", ready);
+
+                await ready.waitForCall();
+                await sleep(0);
+
+                expect(all).to.have.been.calledWith("add", filePath);
+                expect(all).not.have.been.calledWith("addDir", matchingDir);
+                expect(all).not.have.been.calledWith("add", matchingFile);
+                expect(all).not.have.been.calledWith("add", matchingFile2);
+
+                await Promise.all([
+                    sleep().then(() => adone.fs.writeFile(filePath, Date.now())).then(() => sleep()),
+                    all.waitForArgs("change", filePath)
                 ]);
             });
 

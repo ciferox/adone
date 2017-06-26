@@ -617,6 +617,7 @@ export default class Watcher extends adone.EventEmitter {
         ignorePermissionErrors = false,
         interval = 100,
         binaryInterval = 300,
+        disableGlobbing = false,
         useFsEvents = null,
         usePolling = null,
         atomic = null,
@@ -687,6 +688,7 @@ export default class Watcher extends adone.EventEmitter {
             ignorePermissionErrors,
             interval,
             binaryInterval,
+            disableGlobbing,
             useFsEvents,
             usePolling,
             atomic,
@@ -1122,7 +1124,7 @@ export default class Watcher extends adone.EventEmitter {
      */
     _getWatchHelpers(path, depth) {
         path = path.replace(replacerRe, "");
-        const watchPath = depth || !adone.is.glob(path) ? path : adone.util.globParent(path);
+        const watchPath = depth || this.options.disableGlobbing || !adone.is.glob(path) ? path : adone.util.globParent(path);
         const fullWatchPath = adone.std.path.resolve(watchPath);
         const hasGlob = watchPath !== path;
         const globFilter = hasGlob ? adone.util.match(path) : false;
@@ -1202,7 +1204,7 @@ export default class Watcher extends adone.EventEmitter {
             this._watched.set(dir, {
                 _items: Object.create(null),
                 add(item) {
-                    if (item !== ".") {
+                    if (item !== "." && item !== "..") {
                         this._items[item] = true;
                     }
                 },
