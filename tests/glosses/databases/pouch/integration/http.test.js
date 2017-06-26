@@ -230,4 +230,40 @@ describe("test.http.js", () => {
             });
     });
 
+    it("heartbeart cannot be > request timeout", (done) => {
+        const timeout = 500;
+        const heartbeat = 1000;
+        const CHANGES_TIMEOUT_BUFFER = 5000;
+        const db = new PouchDB(dbs.name, {
+            skipSetup: true,
+            ajax: {
+                timeout
+            }
+        });
+
+        let changes = null;
+
+        const ajax = db._ajax;
+        let ajaxOpts;
+        db._ajax = function (opts) {
+            if (/changes/.test(opts.url)) {
+                ajaxOpts = opts;
+                changes.cancel();
+            }
+            ajax.apply(this, arguments);
+        };
+
+        changes = db.changes({
+            heartbeat
+        });
+
+        changes.on("complete", () => {
+            assert.exists(ajaxOpts);
+            assert.equal(ajaxOpts.timeout, heartbeat + CHANGES_TIMEOUT_BUFFER);
+            assert.notEqual(ajaxOpts.url.indexOf(`heartbeat=${heartbeat}`), -1);
+            db._ajax = ajax;
+            done();
+        });
+
+    });
 });

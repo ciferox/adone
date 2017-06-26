@@ -212,7 +212,7 @@ adapters.forEach((adapters) => {
 
                         try {
                             const numListeners = db.listeners("destroyed").length;
-                            if (typeof originalNumListeners !== "number") {
+                            if (!is.number(originalNumListeners)) {
                                 originalNumListeners = numListeners;
                             } else {
                                 numListeners.should.equal(originalNumListeners,
@@ -286,7 +286,7 @@ adapters.forEach((adapters) => {
 
                         try {
                             const numListeners = remote.listeners("destroyed").length;
-                            if (typeof originalNumListeners !== "number") {
+                            if (!is.number(originalNumListeners)) {
                                 originalNumListeners = numListeners;
                             } else {
                                 // special case for "destroy" - because there are
@@ -371,7 +371,7 @@ adapters.forEach((adapters) => {
 
                             try {
                                 const numListeners = rep.listeners(event).length;
-                                if (typeof originalNumListeners !== "number") {
+                                if (!is.number(originalNumListeners)) {
                                     originalNumListeners = numListeners;
                                 } else {
                                     if (event === "paused") {
@@ -449,7 +449,7 @@ adapters.forEach((adapters) => {
 
                         try {
                             const numListeners = rep.listeners("change").length;
-                            if (typeof originalNumListeners !== "number") {
+                            if (!is.number(originalNumListeners)) {
                                 originalNumListeners = numListeners;
                             } else {
                                 numListeners.should.equal(originalNumListeners,
@@ -541,7 +541,7 @@ adapters.forEach((adapters) => {
 
                             try {
                                 const numListeners = getTotalListeners();
-                                if (typeof originalNumListeners !== "number") {
+                                if (!is.number(originalNumListeners)) {
                                     originalNumListeners = numListeners;
                                 } else {
                                     Math.abs(numListeners - originalNumListeners).should.be.at.most(1);
@@ -643,5 +643,37 @@ adapters.forEach((adapters) => {
             });
         });
 
+        it("6510 no changes live+retry does not call backoff function", () => {
+            const Promise = testUtils.Promise;
+            const db = new PouchDB(dbs.name);
+            const remote = new PouchDB(dbs.remote);
+            let called = false;
+            let replication;
+
+            function replicatePromise(fromDB, toDB) {
+                return new Promise((resolve, reject) => {
+                    replication = fromDB.replicate.to(toDB, {
+                        live: true,
+                        retry: true,
+                        heartbeat: 5,
+                        back_off_function() {
+                            called = true;
+                            replication.cancel();
+                        }
+                    }).on("complete", resolve).on("error", reject);
+                });
+            }
+
+            setTimeout(() => {
+                if (replication) {
+                    replication.cancel();
+                }
+            }, 2000);
+
+            return replicatePromise(remote, db)
+                .then(() => {
+                    called.should.equal(false);
+                });
+        });
     });
 });
