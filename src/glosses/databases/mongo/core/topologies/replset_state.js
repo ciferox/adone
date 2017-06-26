@@ -124,6 +124,11 @@ const pickNearest = (self, readPreference) => {
         servers.push(s);
     }
 
+    // If we have a secondaryPreferred readPreference and no server add the primary
+    if (servers.length === 0 && self.primary && readPreference.preference !== "secondaryPreferred") {
+        servers.push(self.primary);
+    }
+
     // Filter by tags
     servers = filterByTags(readPreference, servers);
 

@@ -1,6 +1,6 @@
 import { err } from "./utils";
 
-const { assertion } = adone;
+const { is, assertion } = adone;
 assertion.loadExpectInterface();
 const { expect, Assertion, __: { util } } = assertion;
 
@@ -53,7 +53,7 @@ describe("assertion", "expect", () => {
         });
 
         describe("proxify", () => {
-            if (typeof Proxy === "undefined" || typeof Reflect === "undefined") {
+            if (is.undefined(Proxy) || is.undefined(Reflect)) {
                 return;
             }
 
@@ -363,7 +363,7 @@ describe("assertion", "expect", () => {
         expect(() => { }).to.be.a("function");
         expect(null).to.be.a("null");
 
-        if (typeof Symbol === "function") {
+        if (is.function(Symbol)) {
             expect(Symbol()).to.be.a("symbol");
         }
 
@@ -408,7 +408,7 @@ describe("assertion", "expect", () => {
             expect(new Foo()).to.an.instanceof(undefined);
         }, "The instanceof assertion needs a constructor but undefined was given.");
 
-        if (typeof Symbol !== "undefined" && typeof Symbol.hasInstance !== "undefined") {
+        if (!is.undefined(Symbol) && !is.undefined(Symbol.hasInstance)) {
             err(() => {
                 expect(new Foo()).to.an.instanceof(Symbol());
             }, "The instanceof assertion needs a constructor but symbol was given.");
@@ -487,11 +487,11 @@ describe("assertion", "expect", () => {
 
         err(() => {
             expect(null).to.be.within(0, 1, "blah");
-        }, "blah: expected null to be a number");
+        }, "blah: expected null to be a number or a date");
 
         err(() => {
             expect(null, "blah").to.be.within(0, 1);
-        }, "blah: expected null to be a number");
+        }, "blah: expected null to be a number or a date");
 
         err(() => {
             expect(1).to.be.within(null, 1, "blah");
@@ -511,7 +511,7 @@ describe("assertion", "expect", () => {
 
         err(() => {
             expect(null).to.not.be.within(0, 1, "blah");
-        }, "blah: expected null to be a number");
+        }, "blah: expected null to be a number or a date");
 
         err(() => {
             expect(1).to.not.be.within(null, 1, "blah");
@@ -532,6 +532,60 @@ describe("assertion", "expect", () => {
         err(() => {
             expect(1).to.have.lengthOf.within(5, 7, "blah");
         }, "blah: expected 1 to have property 'length'");
+    });
+
+    it("within(start, finish) (dates)", () => {
+        const now = new Date();
+        const oneSecondAgo = new Date(now.getTime() - 1000);
+        const oneSecondAfter = new Date(now.getTime() + 1000);
+        const nowUTC = now.toUTCString();
+        const beforeUTC = oneSecondAgo.toUTCString();
+        const afterUTC = oneSecondAfter.toUTCString();
+
+        expect(now).to.be.within(oneSecondAgo, oneSecondAfter);
+        expect(now).to.be.within(now, oneSecondAfter);
+        expect(now).to.be.within(now, now);
+        expect(oneSecondAgo).to.not.be.within(now, oneSecondAfter);
+
+        err(() => {
+            expect(now).to.not.be.within(now, oneSecondAfter, "blah");
+        }, `blah: expected ${nowUTC} to not be within ${nowUTC}..${afterUTC}`);
+
+        err(() => {
+            expect(now, "blah").to.not.be.within(oneSecondAgo, oneSecondAfter);
+        }, `blah: expected ${nowUTC} to not be within ${beforeUTC}..${afterUTC}`);
+
+        err(() => {
+            expect(now).to.have.length.within(5, 7, "blah");
+        }, `blah: expected ${nowUTC} to have property 'length'`);
+
+        err(() => {
+            expect("foo").to.have.lengthOf.within(now, 7, "blah");
+        }, "blah: the arguments to within must be numbers");
+
+        err(() => {
+            expect(now).to.be.within(now, 1, "blah");
+        }, "blah: the arguments to within must be dates");
+
+        err(() => {
+            expect(now).to.be.within(null, now, "blah");
+        }, "blah: the arguments to within must be dates");
+
+        err(() => {
+            expect(now).to.be.within(now, undefined, "blah");
+        }, "blah: the arguments to within must be dates");
+
+        err(() => {
+            expect(now, "blah").to.be.within(1, now);
+        }, "blah: the arguments to within must be dates");
+
+        err(() => {
+            expect(now, "blah").to.be.within(now, 1);
+        }, "blah: the arguments to within must be dates");
+
+        err(() => {
+            expect(null).to.not.be.within(now, oneSecondAfter, "blah");
+        }, "blah: expected null to be a number or a date");
     });
 
     it("above(n)", () => {
@@ -578,11 +632,11 @@ describe("assertion", "expect", () => {
 
         err(() => {
             expect(null).to.be.above(0, "blah");
-        }, "blah: expected null to be a number");
+        }, "blah: expected null to be a number or a date");
 
         err(() => {
             expect(null, "blah").to.be.above(0);
-        }, "blah: expected null to be a number");
+        }, "blah: expected null to be a number or a date");
 
         err(() => {
             expect(1).to.be.above(null, "blah");
@@ -594,7 +648,7 @@ describe("assertion", "expect", () => {
 
         err(() => {
             expect(null).to.not.be.above(0, "blah");
-        }, "blah: expected null to be a number");
+        }, "blah: expected null to be a number or a date");
 
         err(() => {
             expect(1).to.not.be.above(null, "blah");
@@ -611,6 +665,45 @@ describe("assertion", "expect", () => {
         err(() => {
             expect(1).to.have.lengthOf.above(0, "blah");
         }, "blah: expected 1 to have property 'length'");
+    });
+
+    it("above(n) (dates)", () => {
+        const now = new Date();
+        const oneSecondAgo = new Date(now.getTime() - 1000);
+        const oneSecondAfter = new Date(now.getTime() + 1000);
+
+        expect(now).to.be.above(oneSecondAgo);
+        expect(now).to.be.greaterThan(oneSecondAgo);
+        expect(now).to.not.be.above(now);
+        expect(now).to.not.be.above(oneSecondAfter);
+
+        err(() => {
+            expect(now).to.be.above(oneSecondAfter, "blah");
+        }, `blah: expected ${now.toUTCString()} to be above ${oneSecondAfter.toUTCString()}`);
+
+        err(() => {
+            expect(10).to.not.be.above(6, "blah");
+        }, "blah: expected 10 to be at most 6");
+
+        err(() => {
+            expect(now).to.have.length.above(4, "blah");
+        }, `blah: expected ${now.toUTCString()} to have property 'length'`);
+
+        err(() => {
+            expect([1, 2, 3]).to.have.length.above(now, "blah");
+        }, "blah: the argument to above must be a number");
+
+        err(() => {
+            expect(null).to.be.above(now, "blah");
+        }, "blah: expected null to be a number or a date");
+
+        err(() => {
+            expect(now).to.be.above(null, "blah");
+        }, "blah: the argument to above must be a date");
+
+        err(() => {
+            expect(null).to.have.length.above(0, "blah");
+        }, "blah: Target cannot be null or undefined.");
     });
 
     it("least(n)", () => {
@@ -664,11 +757,11 @@ describe("assertion", "expect", () => {
 
         err(() => {
             expect(null).to.be.at.least(0, "blah");
-        }, "blah: expected null to be a number");
+        }, "blah: expected null to be a number or a date");
 
         err(() => {
             expect(null, "blah").to.be.at.least(0);
-        }, "blah: expected null to be a number");
+        }, "blah: expected null to be a number or a date");
 
         err(() => {
             expect(1).to.be.at.least(null, "blah");
@@ -680,7 +773,7 @@ describe("assertion", "expect", () => {
 
         err(() => {
             expect(null).to.not.be.at.least(0, "blah");
-        }, "blah: expected null to be a number");
+        }, "blah: expected null to be a number or a date");
 
         err(() => {
             expect(1).to.not.be.at.least(null, "blah");
@@ -743,11 +836,11 @@ describe("assertion", "expect", () => {
 
         err(() => {
             expect(null).to.be.below(0, "blah");
-        }, "blah: expected null to be a number");
+        }, "blah: expected null to be a number or a date");
 
         err(() => {
             expect(null, "blah").to.be.below(0);
-        }, "blah: expected null to be a number");
+        }, "blah: expected null to be a number or a date");
 
         err(() => {
             expect(1).to.be.below(null, "blah");
@@ -759,7 +852,7 @@ describe("assertion", "expect", () => {
 
         err(() => {
             expect(null).to.not.be.below(0, "blah");
-        }, "blah: expected null to be a number");
+        }, "blah: expected null to be a number or a date");
 
         err(() => {
             expect(1).to.not.be.below(null, "blah");
@@ -778,10 +871,52 @@ describe("assertion", "expect", () => {
         }, "blah: expected 1 to have property 'length'");
     });
 
+    it("below(n) (dates)", () => {
+        const now = new Date();
+        const oneSecondAgo = new Date(now.getTime() - 1000);
+        const oneSecondAfter = new Date(now.getTime() + 1000);
+
+        expect(now).to.be.below(oneSecondAfter);
+        expect(oneSecondAgo).to.be.lessThan(now);
+        expect(now).to.not.be.below(oneSecondAgo);
+        expect(oneSecondAfter).to.not.be.below(oneSecondAgo);
+
+        err(() => {
+            expect(now).to.be.below(oneSecondAgo, "blah");
+        }, `blah: expected ${now.toUTCString()} to be below ${oneSecondAgo.toUTCString()}`);
+
+        err(() => {
+            expect(now).to.not.be.below(oneSecondAfter, "blah");
+        }, `blah: expected ${now.toUTCString()} to be at least ${oneSecondAfter.toUTCString()}`);
+
+        err(() => {
+            expect("foo").to.have.length.below(2, "blah");
+        }, "blah: expected \'foo\' to have a length below 2 but got 3");
+
+        err(() => {
+            expect(null).to.be.below(now, "blah");
+        }, "blah: expected null to be a number or a date");
+
+        err(() => {
+            expect(1).to.be.below(null, "blah");
+        }, "blah: the argument to below must be a number");
+
+        err(() => {
+            expect(now).to.not.be.below(null, "blah");
+        }, "blah: the argument to below must be a date");
+
+        err(() => {
+            expect(now).to.have.length.below(0, "blah");
+        }, `blah: expected ${now.toUTCString()} to have property 'length'`);
+
+        err(() => {
+            expect("asdasd").to.have.length.below(now, "blah");
+        }, "blah: the argument to below must be a number");
+    });
+
     it("most(n)", () => {
         expect(2).to.be.at.most(5);
         expect(2).to.be.at.most(2);
-        expect(2).to.not.be.at.most(1);
         expect(2).to.not.be.at.most(1);
         expect("foo").to.have.length.of.at.most(4);
         expect("foo").to.have.lengthOf.at.most(4);
@@ -830,11 +965,11 @@ describe("assertion", "expect", () => {
 
         err(() => {
             expect(null).to.be.at.most(0, "blah");
-        }, "blah: expected null to be a number");
+        }, "blah: expected null to be a number or a date");
 
         err(() => {
             expect(null, "blah").to.be.at.most(0);
-        }, "blah: expected null to be a number");
+        }, "blah: expected null to be a number or a date");
 
         err(() => {
             expect(1).to.be.at.most(null, "blah");
@@ -846,7 +981,7 @@ describe("assertion", "expect", () => {
 
         err(() => {
             expect(null).to.not.be.at.most(0, "blah");
-        }, "blah: expected null to be a number");
+        }, "blah: expected null to be a number or a date");
 
         err(() => {
             expect(1).to.not.be.at.most(null, "blah");
@@ -863,6 +998,59 @@ describe("assertion", "expect", () => {
         err(() => {
             expect(1).to.have.lengthOf.at.most(0, "blah");
         }, "blah: expected 1 to have property 'length'");
+    });
+
+    it("most(n) (dates)", () => {
+        const now = new Date();
+        const oneSecondBefore = new Date(now.getTime() - 1000);
+        const oneSecondAfter = new Date(now.getTime() + 1000);
+        const nowUTC = now.toUTCString();
+        const beforeUTC = oneSecondBefore.toUTCString();
+        const afterUTC = oneSecondAfter.toUTCString();
+
+        expect(now).to.be.at.most(oneSecondAfter);
+        expect(now).to.be.at.most(now);
+        expect(now).to.not.be.at.most(oneSecondBefore);
+
+        err(() => {
+            expect(now).to.be.at.most(oneSecondBefore, "blah");
+        }, `blah: expected ${nowUTC} to be at most ${beforeUTC}`);
+
+        err(() => {
+            expect(now).to.not.be.at.most(now, "blah");
+        }, `blah: expected ${nowUTC} to be above ${nowUTC}`);
+
+        err(() => {
+            expect(now).to.have.length.of.at.most(2, "blah");
+        }, `blah: expected ${nowUTC} to have property 'length'`);
+
+        err(() => {
+            expect("foo", "blah").to.have.length.of.at.most(now);
+        }, "blah: the argument to most must be a number");
+
+        err(() => {
+            expect([1, 2, 3]).to.not.have.length.of.at.most(now, "blah");
+        }, "blah: the argument to most must be a number");
+
+        err(() => {
+            expect(null).to.be.at.most(now, "blah");
+        }, "blah: expected null to be a number or a date");
+
+        err(() => {
+            expect(now, "blah").to.be.at.most(null);
+        }, "blah: the argument to most must be a date");
+
+        err(() => {
+            expect(1).to.be.at.most(now, "blah");
+        }, "blah: the argument to most must be a number");
+
+        err(() => {
+            expect(now, "blah").to.be.at.most(1);
+        }, "blah: the argument to most must be a date");
+
+        err(() => {
+            expect(now).to.not.be.at.most(undefined, "blah");
+        }, "blah: the argument to most must be a date");
     });
 
     it("match(regexp)", () => {
@@ -922,7 +1110,7 @@ describe("assertion", "expect", () => {
         expect(1).to.eql(1);
         expect("4").to.not.eql(4);
 
-        if (typeof Symbol === "function") {
+        if (is.function(Symbol)) {
             const sym = Symbol();
             expect(sym).to.eql(sym);
         }
@@ -932,7 +1120,7 @@ describe("assertion", "expect", () => {
         }, "blah: expected 4 to deeply equal 3");
     });
 
-    if (typeof Buffer !== "undefined") {
+    if (!is.undefined(Buffer)) {
         it("Buffer eql()", () => {
             expect(new Buffer([1])).to.eql(new Buffer([1]));
 
@@ -946,7 +1134,7 @@ describe("assertion", "expect", () => {
         expect("test").to.equal("test");
         expect(1).to.equal(1);
 
-        if (typeof Symbol === "function") {
+        if (is.function(Symbol)) {
             const sym = Symbol();
             expect(sym).to.equal(sym);
         }
@@ -1002,19 +1190,19 @@ describe("assertion", "expect", () => {
         expect({}).to.be.empty;
         expect({ foo: "bar" }).not.to.be.empty;
 
-        if (typeof WeakMap === "function") {
+        if (is.function(WeakMap)) {
             err(() => {
                 expect(new WeakMap(), "blah").not.to.be.empty;
             }, "blah: .empty was passed a weak collection");
         }
 
-        if (typeof WeakSet === "function") {
+        if (is.function(WeakSet)) {
             err(() => {
                 expect(new WeakSet(), "blah").not.to.be.empty;
             }, "blah: .empty was passed a weak collection");
         }
 
-        if (typeof Map === "function") {
+        if (is.function(Map)) {
             expect(new Map()).to.be.empty;
 
             // Not using Map constructor args because not supported in IE 11.
@@ -1035,7 +1223,7 @@ describe("assertion", "expect", () => {
             }, "expected { key: 'val' } not to be empty");
         }
 
-        if (typeof Set === "function") {
+        if (is.function(Set)) {
             expect(new Set()).to.be.empty;
 
             // Not using Set constructor args because not supported in IE 11.
@@ -1128,7 +1316,7 @@ describe("assertion", "expect", () => {
             expect(false).to.be.empty;
         }, ".empty was passed non-string primitive false");
 
-        if (typeof Symbol !== "undefined") {
+        if (!is.undefined(Symbol)) {
             err(() => {
                 expect(Symbol()).to.be.empty;
             }, ".empty was passed non-string primitive Symbol()");
@@ -1298,8 +1486,8 @@ describe("assertion", "expect", () => {
         const arr = [
             ["chai", "matcha", "konacha"],
             [{ tea: "chai" },
-            { tea: "matcha" },
-            { tea: "konacha" }]
+                { tea: "matcha" },
+                { tea: "konacha" }]
         ];
         expect(arr).to.have.nested.property("[0][1]", "matcha");
         expect(arr).to.have.nested.property("[1][2].tea", "konacha");
@@ -1685,13 +1873,45 @@ describe("assertion", "expect", () => {
         expect({ foo: obj1, bar: obj2 }).to.not.include({ foo: { a: 1 } });
         expect({ foo: obj1, bar: obj2 }).to.not.include({ foo: obj1, bar: { b: 2 } });
 
-        if (typeof Symbol === "function") {
-            let sym1 = Symbol(),
-                sym2 = Symbol(),
-                sym3 = Symbol();
-            expect([sym1, sym2]).to.include(sym1);
-            expect([sym1, sym2]).to.not.include(sym3);
-        }
+        const map = new Map();
+        const val = [{ a: 1 }];
+        map.set("a", val);
+        map.set("b", 2);
+        map.set("c", -0);
+        map.set("d", NaN);
+
+        expect(map).to.include(val);
+        expect(map).to.not.include([{ a: 1 }]);
+        expect(map).to.include(2);
+        expect(map).to.not.include(3);
+        expect(map).to.include(0);
+        expect(map).to.include(NaN);
+
+        const set = new Set();
+        set.add(val);
+        set.add(2);
+        set.add(-0);
+        set.add(NaN);
+
+        expect(set).to.include(val);
+        expect(set).to.not.include([{ a: 1 }]);
+        expect(set).to.include(2);
+        expect(set).to.not.include(3);
+        expect(set).to.include(0);
+        expect(set).to.include(NaN);
+
+        const ws = new WeakSet();
+        ws.add(val);
+
+        expect(ws).to.include(val);
+        expect(ws).to.not.include([{ a: 1 }]);
+        expect(ws).to.not.include({});
+
+        let sym1 = Symbol(),
+            sym2 = Symbol(),
+            sym3 = Symbol();
+        expect([sym1, sym2]).to.include(sym1);
+        expect([sym1, sym2]).to.not.include(sym3);
 
         err(() => {
             expect(["foo"]).to.include("bar", "blah");
@@ -1739,39 +1959,39 @@ describe("assertion", "expect", () => {
 
         err(() => {
             expect(true).to.include(true, "blah");
-        }, "blah: object tested must be an array, an object, or a string, but boolean given");
+        }, "blah: object tested must be an array, a map, an object, a set, a string, or a weakset, but boolean given");
 
         err(() => {
             expect(true, "blah").to.include(true);
-        }, "blah: object tested must be an array, an object, or a string, but boolean given");
+        }, "blah: object tested must be an array, a map, an object, a set, a string, or a weakset, but boolean given");
 
         err(() => {
             expect(42.0).to.include(42);
-        }, "object tested must be an array, an object, or a string, but number given");
+        }, "object tested must be an array, a map, an object, a set, a string, or a weakset, but number given");
 
         err(() => {
             expect(null).to.include(42);
-        }, "object tested must be an array, an object, or a string, but null given");
+        }, "object tested must be an array, a map, an object, a set, a string, or a weakset, but null given");
 
         err(() => {
             expect(undefined).to.include(42);
-        }, "object tested must be an array, an object, or a string, but undefined given");
+        }, "object tested must be an array, a map, an object, a set, a string, or a weakset, but undefined given");
 
         err(() => {
             expect(true).to.not.include(true);
-        }, "object tested must be an array, an object, or a string, but boolean given");
+        }, "object tested must be an array, a map, an object, a set, a string, or a weakset, but boolean given");
 
         err(() => {
             expect(42.0).to.not.include(42);
-        }, "object tested must be an array, an object, or a string, but number given");
+        }, "object tested must be an array, a map, an object, a set, a string, or a weakset, but number given");
 
         err(() => {
             expect(null).to.not.include(42);
-        }, "object tested must be an array, an object, or a string, but null given");
+        }, "object tested must be an array, a map, an object, a set, a string, or a weakset, but null given");
 
         err(() => {
             expect(undefined).to.not.include(42);
-        }, "object tested must be an array, an object, or a string, but undefined given");
+        }, "object tested must be an array, a map, an object, a set, a string, or a weakset, but undefined given");
     });
 
     it("deep.include()", () => {
@@ -1786,6 +2006,20 @@ describe("assertion", "expect", () => {
         expect({ foo: obj1, bar: obj2 }).to.not.deep.include({ foo: { z: 1 } });
         expect({ foo: obj1, bar: obj2 }).to.not.deep.include({ baz: { a: 1 } });
         expect({ foo: obj1, bar: obj2 }).to.not.deep.include({ foo: { a: 1 }, bar: { b: 9 } });
+
+        const map = new Map();
+        map.set(1, [{ a: 1 }]);
+
+        expect(map).to.deep.include([{ a: 1 }]);
+
+        const set = new Set();
+        set.add([{ a: 1 }]);
+
+        expect(set).to.deep.include([{ a: 1 }]);
+
+        err(() => {
+            expect(new WeakSet()).to.deep.include({}, "foo");
+        }, "foo: unable to use .deep.include with WeakSet");
 
         err(() => {
             expect([obj1, obj2]).to.deep.include({ a: 9 }, "blah");
@@ -1986,7 +2220,7 @@ describe("assertion", "expect", () => {
         expect(obj).to.have.all.keys([enumProp1, enumProp2]);
         expect(obj).to.not.have.all.keys([enumProp1, enumProp2, nonEnumProp]);
 
-        if (typeof Symbol === "function") {
+        if (is.function(Symbol)) {
             var sym1 = Symbol("sym1"),
                 sym2 = Symbol("sym2"),
                 sym3 = Symbol("sym3"),
@@ -2006,7 +2240,7 @@ describe("assertion", "expect", () => {
             expect(obj).to.not.have.all.keys([sym1, sym2, sym3, str]);
         }
 
-        if (typeof Map !== "undefined") {
+        if (!is.undefined(Map)) {
             // Not using Map constructor args because not supported in IE 11.
             var aKey = { thisIs: "anExampleObject" },
                 anotherKey = { doingThisBecauseOf: "referential equality" },
@@ -2086,7 +2320,7 @@ describe("assertion", "expect", () => {
             expect(weirdMap).to.have.all.keys([weirdMapKey1, weirdMapKey2]);
             expect(weirdMap).to.not.have.all.keys([weirdMapKey1, weirdMapKey3]);
 
-            if (typeof Symbol === "function") {
+            if (is.function(Symbol)) {
                 let symMapKey1 = Symbol(),
                     symMapKey2 = Symbol(),
                     symMapKey3 = Symbol(),
@@ -2137,7 +2371,7 @@ describe("assertion", "expect", () => {
             // }, 'expected [ { foo: 1 } ] to deeply contain key { iDoNotExist: 0 }');
         }
 
-        if (typeof Set !== "undefined") {
+        if (!is.undefined(Set)) {
             // Not using Set constructor args because not supported in IE 11.
             var aKey = { thisIs: "anExampleObject" },
                 anotherKey = { doingThisBecauseOf: "referential equality" },
@@ -2217,7 +2451,7 @@ describe("assertion", "expect", () => {
             expect(weirdSet).to.have.all.keys([weirdSetKey1, weirdSetKey2]);
             expect(weirdSet).to.not.have.all.keys([weirdSetKey1, weirdSetKey3]);
 
-            if (typeof Symbol === "function") {
+            if (is.function(Symbol)) {
                 let symSetKey1 = Symbol(),
                     symSetKey2 = Symbol(),
                     symSetKey3 = Symbol(),
@@ -3202,7 +3436,7 @@ describe("assertion", "expect", () => {
         expect(false).to.not.be.extensible;
         expect(undefined).to.not.be.extensible;
 
-        if (typeof Symbol === "function") {
+        if (is.function(Symbol)) {
             expect(Symbol()).to.not.be.extensible;
         }
 
@@ -3226,7 +3460,7 @@ describe("assertion", "expect", () => {
             expect(undefined).to.be.extensible;
         }, "expected undefined to be extensible");
 
-        if (typeof Proxy === "function") {
+        if (is.function(Proxy)) {
             const proxy = new Proxy({}, {
                 isExtensible() {
                     throw new TypeError();
@@ -3262,7 +3496,7 @@ describe("assertion", "expect", () => {
         expect(false).to.be.sealed;
         expect(undefined).to.be.sealed;
 
-        if (typeof Symbol === "function") {
+        if (is.function(Symbol)) {
             expect(Symbol()).to.be.sealed;
         }
 
@@ -3286,7 +3520,7 @@ describe("assertion", "expect", () => {
             expect(undefined).to.not.be.sealed;
         }, "expected undefined to not be sealed");
 
-        if (typeof Proxy === "function") {
+        if (is.function(Proxy)) {
             const proxy = new Proxy({}, {
                 ownKeys() {
                     throw new TypeError();
@@ -3325,7 +3559,7 @@ describe("assertion", "expect", () => {
         expect(false).to.be.frozen;
         expect(undefined).to.be.frozen;
 
-        if (typeof Symbol === "function") {
+        if (is.function(Symbol)) {
             expect(Symbol()).to.be.frozen;
         }
 
@@ -3349,7 +3583,7 @@ describe("assertion", "expect", () => {
             expect(undefined).to.not.be.frozen;
         }, "expected undefined to not be frozen");
 
-        if (typeof Proxy === "function") {
+        if (is.function(Proxy)) {
             const proxy = new Proxy({}, {
                 ownKeys() {
                     throw new TypeError();

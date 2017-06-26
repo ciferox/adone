@@ -1,5 +1,5 @@
 export default function (lib, util) {
-    const { is, x } = adone;
+    const { is } = adone;
     const { getAssertion, Assertion, AssertionError } = lib;
     const { flag } = util;
 
@@ -67,19 +67,17 @@ export default function (lib, util) {
         flag(this, "contains", true);
     };
 
-    const isDeepIncluded = (arr, val) => arr.some((arrVal) => util.eql(arrVal, val));
+    const sameValueZero = (a, b) => (is.nan(a) && is.nan(b)) || a === b;
 
     const include = function (val, msg) {
         if (msg) {
             flag(this, "message", msg);
         }
 
-        util.expectTypes(this, ["array", "object", "string"]);
+        util.expectTypes(this, ["array", "object", "string", "map", "set", "weakset"]);
 
         const obj = flag(this, "object");
         const objType = util.type(obj).toLowerCase();
-        const isDeep = flag(this, "deep");
-        const descriptor = isDeep ? "deep " : "";
 
         // This block is for asserting a subset of properties in an object.
         if (objType === "object") {
@@ -123,11 +121,66 @@ export default function (lib, util) {
             return;
         }
 
-        // Assert inclusion in an array or substring in a string.
+        const isDeep = flag(this, "deep");
+        const descriptor = isDeep ? "deep " : "";
+        let included = false;
+
+        switch (objType) {
+            case "string": {
+                included = obj.includes(val);
+                break;
+            }
+            case "weakset": {
+                if (isDeep) {
+                    let flagMsg = flag(this, "message");
+                    const ssfi = flag(this, "ssfi");
+                    flagMsg = flagMsg ? `${flagMsg}: ` : "";
+
+                    throw new AssertionError(
+                        `${flagMsg}unable to use .deep.include with WeakSet`,
+                        undefined,
+                        ssfi
+                    );
+                }
+
+                included = obj.has(val);
+                break;
+            }
+            case "map": {
+                const isEql = isDeep ? is.deepEqual : sameValueZero;
+                obj.forEach((item) => {
+                    included = included || isEql(item, val);
+                });
+                break;
+            }
+            case "set": {
+                if (isDeep) {
+                    obj.forEach((item) => {
+                        included = included || is.deepEqual(item, val);
+                    });
+                } else {
+                    included = obj.has(val);
+                }
+                break;
+            }
+            case "array": {
+                if (isDeep) {
+                    included = obj.some((item) => {
+                        return is.deepEqual(item, val);
+                    });
+                } else {
+                    included = obj.includes(val);
+                }
+                break;
+            }
+        }
+
+        // Assert inclusion in collection or substring in a string.
         this.assert(
-            objType === "string" || !isDeep ? obj.includes(val) : isDeepIncluded(obj, val),
+            included,
             `expected #{this} to ${descriptor}include ${util.inspect(val)}`,
-            `expected #{this} to not ${descriptor}include ${util.inspect(val)}`);
+            `expected #{this} to not ${descriptor}include ${util.inspect(val)}`
+        );
     };
 
     Assertion.addChainableMethod("include", include, includeChainingBehavior);
@@ -307,34 +360,47 @@ export default function (lib, util) {
         }
         const obj = flag(this, "object");
         const doLength = flag(this, "doLength");
-        let flagMsg = flag(this, "message");
+        const flagMsg = flag(this, "message");
+        const msgPrefix = ((flagMsg) ? `${flagMsg}: ` : "");
         const ssfi = flag(this, "ssfi");
+        const objType = adone.util.typeOf(obj).toLowerCase();
+        const nType = adone.util.typeOf(n).toLowerCase();
+        let shouldThrow = true;
 
         if (doLength) {
-            getAssertion(obj, flagMsg, ssfi, true).to.have.property("length");
+            new Assertion(obj, flagMsg, ssfi, true).to.have.property("length");
+        }
+        let errorMessage;
+        if (!doLength && (objType === "date" && nType !== "date")) {
+            errorMessage = `${msgPrefix}the argument to above must be a date`;
+        } else if (nType !== "number" && (doLength || objType === "number")) {
+            errorMessage = `${msgPrefix}the argument to above must be a number`;
+        } else if (!doLength && (objType !== "date" && objType !== "number")) {
+            const printObj = (objType === "string") ? `'${obj}'` : obj;
+            errorMessage = `${msgPrefix}expected ${printObj} to be a number or a date`;
         } else {
-            getAssertion(obj, flagMsg, ssfi, true).is.a("number");
+            shouldThrow = false;
         }
 
-        if (!is.number(n)) {
-            flagMsg = flagMsg ? `${flagMsg}: ` : "";
-            throw new AssertionError(`${flagMsg}the argument to above must be a number`, undefined, ssfi);
+        if (shouldThrow) {
+            throw new AssertionError(errorMessage, undefined, ssfi);
         }
 
         if (doLength) {
-            const { length } = obj;
+            const len = obj.length;
             this.assert(
-                length > n,
+                len > n,
                 "expected #{this} to have a length above #{exp} but got #{act}",
                 "expected #{this} to not have a length above #{exp}",
                 n,
-                length
+                len
             );
         } else {
             this.assert(
                 obj > n,
-                `expected #{this} to be above ${n}`,
-                `expected #{this} to be at most ${n}`
+                "expected #{this} to be above #{exp}",
+                "expected #{this} to be at most #{exp}",
+                n
             );
         }
     };
@@ -349,18 +415,32 @@ export default function (lib, util) {
         }
         const obj = flag(this, "object");
         const doLength = flag(this, "doLength");
-        let flagMsg = flag(this, "message");
+        const flagMsg = flag(this, "message");
+        const msgPrefix = ((flagMsg) ? `${flagMsg}: ` : "");
         const ssfi = flag(this, "ssfi");
+        const objType = adone.util.typeOf(obj).toLowerCase();
+        const nType = adone.util.typeOf(n).toLowerCase();
+        let shouldThrow = true;
 
         if (doLength) {
-            getAssertion(obj, flagMsg, ssfi, true).to.have.property("length");
-        } else {
-            getAssertion(obj, flagMsg, ssfi, true).is.a("number");
+            new Assertion(obj, flagMsg, ssfi, true).to.have.property("length");
         }
 
-        if (!is.number(n)) {
-            flagMsg = flagMsg ? `${flagMsg}: ` : "";
-            throw new AssertionError(`${flagMsg}the argument to least must be a number`, undefined, ssfi);
+        let errorMessage;
+
+        if (!doLength && (objType === "date" && nType !== "date")) {
+            errorMessage = `${msgPrefix}the argument to least must be a date`;
+        } else if (nType !== "number" && (doLength || objType === "number")) {
+            errorMessage = `${msgPrefix}the argument to least must be a number`;
+        } else if (!doLength && (objType !== "date" && objType !== "number")) {
+            const printObj = (objType === "string") ? `'${obj}'` : obj;
+            errorMessage = `${msgPrefix}expected ${printObj} to be a number or a date`;
+        } else {
+            shouldThrow = false;
+        }
+
+        if (shouldThrow) {
+            throw new AssertionError(errorMessage, undefined, ssfi);
         }
 
         if (doLength) {
@@ -375,8 +455,9 @@ export default function (lib, util) {
         } else {
             this.assert(
                 obj >= n,
-                `expected #{this} to be at least ${n}`,
-                `expected #{this} to be below ${n}`
+                "expected #{this} to be at least #{exp}",
+                "expected #{this} to be below #{exp}",
+                n
             );
         }
     };
@@ -390,18 +471,32 @@ export default function (lib, util) {
         }
         const obj = flag(this, "object");
         const doLength = flag(this, "doLength");
-        let flagMsg = flag(this, "message");
+        const flagMsg = flag(this, "message");
+        const msgPrefix = ((flagMsg) ? `${flagMsg}: ` : "");
         const ssfi = flag(this, "ssfi");
+        const objType = adone.util.typeOf(obj).toLowerCase();
+        const nType = adone.util.typeOf(n).toLowerCase();
+        let shouldThrow = true;
 
         if (doLength) {
-            getAssertion(obj, flagMsg, ssfi, true).to.have.property("length");
-        } else {
-            getAssertion(obj, flagMsg, ssfi, true).is.a("number");
+            new Assertion(obj, flagMsg, ssfi, true).to.have.property("length");
         }
 
-        if (!is.number(n)) {
-            flagMsg = flagMsg ? `${flagMsg}: ` : "";
-            throw new AssertionError(`${flagMsg}the argument to below must be a number`, undefined, ssfi);
+        let errorMessage;
+
+        if (!doLength && (objType === "date" && nType !== "date")) {
+            errorMessage = `${msgPrefix}the argument to below must be a date`;
+        } else if (nType !== "number" && (doLength || objType === "number")) {
+            errorMessage = `${msgPrefix}the argument to below must be a number`;
+        } else if (!doLength && (objType !== "date" && objType !== "number")) {
+            const printObj = (objType === "string") ? `'${obj}'` : obj;
+            errorMessage = `${msgPrefix}expected ${printObj} to be a number or a date`;
+        } else {
+            shouldThrow = false;
+        }
+
+        if (shouldThrow) {
+            throw new AssertionError(errorMessage, undefined, ssfi);
         }
 
         if (doLength) {
@@ -416,8 +511,9 @@ export default function (lib, util) {
         } else {
             this.assert(
                 obj < n,
-                `expected #{this} to be below ${n}`,
-                `expected #{this} to be at least ${n}`
+                "expected #{this} to be below #{exp}",
+                "expected #{this} to be at least #{exp}",
+                n
             );
         }
     };
@@ -432,18 +528,32 @@ export default function (lib, util) {
         }
         const obj = flag(this, "object");
         const doLength = flag(this, "doLength");
-        let flagMsg = flag(this, "message");
+        const flagMsg = flag(this, "message");
+        const msgPrefix = ((flagMsg) ? `${flagMsg}: ` : "");
         const ssfi = flag(this, "ssfi");
+        const objType = adone.util.typeOf(obj).toLowerCase();
+        const nType = adone.util.typeOf(n).toLowerCase();
+        let shouldThrow = true;
 
         if (doLength) {
-            getAssertion(obj, flagMsg, ssfi, true).to.have.property("length");
-        } else {
-            getAssertion(obj, flagMsg, ssfi, true).is.a("number");
+            new Assertion(obj, flagMsg, ssfi, true).to.have.property("length");
         }
 
-        if (!is.number(n)) {
-            flagMsg = flagMsg ? `${flagMsg}: ` : "";
-            throw new x.InvalidArgument(`${flagMsg}the argument to most must be a number`);
+        let errorMessage;
+
+        if (!doLength && (objType === "date" && nType !== "date")) {
+            errorMessage = `${msgPrefix}the argument to most must be a date`;
+        } else if (nType !== "number" && (doLength || objType === "number")) {
+            errorMessage = `${msgPrefix}the argument to most must be a number`;
+        } else if (!doLength && (objType !== "date" && objType !== "number")) {
+            const printObj = (objType === "string") ? `'${obj}'` : obj;
+            errorMessage = `${msgPrefix}expected ${printObj} to be a number or a date`;
+        } else {
+            shouldThrow = false;
+        }
+
+        if (shouldThrow) {
+            throw new AssertionError(errorMessage, undefined, ssfi);
         }
 
         if (doLength) {
@@ -458,8 +568,9 @@ export default function (lib, util) {
         } else {
             this.assert(
                 obj <= n,
-                `expected #{this} to be at most ${n}`,
-                `expected #{this} to be above ${n}`
+                "expected #{this} to be at most #{exp}",
+                "expected #{this} to be above #{exp}",
+                n
             );
         }
     };
@@ -472,38 +583,51 @@ export default function (lib, util) {
             flag(this, "message", msg);
         }
         const obj = flag(this, "object");
-        const range = `${start}..${finish}`;
         const doLength = flag(this, "doLength");
-        let flagMsg = flag(this, "message");
+        const flagMsg = flag(this, "message");
+        const msgPrefix = ((flagMsg) ? `${flagMsg}: ` : "");
         const ssfi = flag(this, "ssfi");
+        const objType = adone.util.typeOf(obj).toLowerCase();
+        const startType = adone.util.typeOf(start).toLowerCase();
+        const finishType = adone.util.typeOf(finish).toLowerCase();
+        let shouldThrow = true;
+        const range = (startType === "date" && finishType === "date")
+            ? `${start.toUTCString()}..${finish.toUTCString()}`
+            : `${start}..${finish}`;
 
         if (doLength) {
-            getAssertion(obj, flagMsg, ssfi, true).to.have.property("length");
-        } else {
-            getAssertion(obj, flagMsg, ssfi, true).is.a("number");
+            new Assertion(obj, flagMsg, ssfi, true).to.have.property("length");
         }
 
-        if (!is.number(start) || !is.number(finish)) {
-            flagMsg = flagMsg ? `${flagMsg}: ` : "";
-            throw new AssertionError(
-                `${flagMsg}the arguments to within must be numbers`,
-                undefined,
-                ssfi
-            );
+        let errorMessage;
+
+        if (!doLength && (objType === "date" && (startType !== "date" || finishType !== "date"))) {
+            errorMessage = `${msgPrefix}the arguments to within must be dates`;
+        } else if ((startType !== "number" || finishType !== "number") && (doLength || objType === "number")) {
+            errorMessage = `${msgPrefix}the arguments to within must be numbers`;
+        } else if (!doLength && (objType !== "date" && objType !== "number")) {
+            const printObj = (objType === "string") ? `'${obj}'` : obj;
+            errorMessage = `${msgPrefix}expected ${printObj} to be a number or a date`;
+        } else {
+            shouldThrow = false;
+        }
+
+        if (shouldThrow) {
+            throw new AssertionError(errorMessage, undefined, ssfi);
         }
 
         if (doLength) {
             const len = obj.length;
             this.assert(
-                len >= start && len <= finish
-                , `expected #{this} to have a length within ${range}`
-                , `expected #{this} to not have a length within ${range}`
+                len >= start && len <= finish,
+                `expected #{this} to have a length within ${range}`,
+                `expected #{this} to not have a length within ${range}`
             );
         } else {
             this.assert(
-                obj >= start && obj <= finish
-                , `expected #{this} to be within ${range}`
-                , `expected #{this} to not be within ${range}`
+                obj >= start && obj <= finish,
+                `expected #{this} to be within ${range}`,
+                `expected #{this} to not be within ${range}`
             );
         }
     });

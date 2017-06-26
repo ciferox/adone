@@ -1,5 +1,5 @@
 import { err } from "./utils";
-const { assertion } = adone;
+const { is, assertion } = adone;
 assertion.loadAssertInterface();
 assertion.loadExpectInterface();
 const { assert, expect, AssertionError, getAssertion } = assertion;
@@ -114,7 +114,7 @@ describe("assertion", "assert", () => {
         let foo;
         assert.equal(foo, undefined);
 
-        if (typeof Symbol === "function") {
+        if (is.function(Symbol)) {
             const sym = Symbol();
             assert.equal(sym, sym);
         }
@@ -129,7 +129,7 @@ describe("assertion", "assert", () => {
         assert.typeOf(true, "boolean");
         assert.typeOf(5, "number");
 
-        if (typeof Symbol === "function") {
+        if (is.function(Symbol)) {
             assert.typeOf(Symbol(), "symbol");
         }
 
@@ -175,7 +175,7 @@ describe("assertion", "assert", () => {
             assert.instanceOf(new Foo(), undefined);
         }, "The instanceof assertion needs a constructor but undefined was given.");
 
-        if (typeof Symbol !== "undefined" && typeof Symbol.hasInstance !== "undefined") {
+        if (!is.undefined(Symbol) && !is.undefined(Symbol.hasInstance)) {
             err(() => {
                 assert.instanceOf(new Foo(), Symbol());
             }, "The instanceof assertion needs a constructor but symbol was given.");
@@ -231,7 +231,7 @@ describe("assertion", "assert", () => {
         }, "The instanceof assertion needs a constructor but undefined was given.");
 
 
-        if (typeof Symbol !== "undefined" && typeof Symbol.hasInstance !== "undefined") {
+        if (!is.undefined(Symbol) && !is.undefined(Symbol.hasInstance)) {
             err(() => {
                 assert.notInstanceOf(new Foo(), Symbol());
             }, "The instanceof assertion needs a constructor but symbol was given.");
@@ -282,7 +282,7 @@ describe("assertion", "assert", () => {
     it("notEqual", () => {
         assert.notEqual(3, 4);
 
-        if (typeof Symbol === "function") {
+        if (is.function(Symbol)) {
             let sym1 = Symbol(),
                 sym2 = Symbol();
             assert.notEqual(sym1, sym2);
@@ -296,7 +296,7 @@ describe("assertion", "assert", () => {
     it("strictEqual", () => {
         assert.strictEqual("foo", "foo");
 
-        if (typeof Symbol === "function") {
+        if (is.function(Symbol)) {
             const sym = Symbol();
             assert.strictEqual(sym, sym);
         }
@@ -309,7 +309,7 @@ describe("assertion", "assert", () => {
     it("notStrictEqual", () => {
         assert.notStrictEqual(5, "5");
 
-        if (typeof Symbol === "function") {
+        if (is.function(Symbol)) {
             let sym1 = Symbol(),
                 sym2 = Symbol();
             assert.notStrictEqual(sym1, sym2);
@@ -322,7 +322,7 @@ describe("assertion", "assert", () => {
 
     it("deepEqual", () => {
         assert.deepEqual({ tea: "chai" }, { tea: "chai" });
-        assert.deepStrictEqual({ tea: "chai" }, { tea: "chai" });  // Alias of deepEqual
+        assert.deepStrictEqual({ tea: "chai" }, { tea: "chai" }); // Alias of deepEqual
 
         assert.deepEqual([NaN], [NaN]);
         assert.deepEqual({ tea: NaN }, { tea: NaN });
@@ -625,11 +625,37 @@ describe("assertion", "assert", () => {
         assert.include({ foo: obj1, bar: obj2 }, { foo: obj1 });
         assert.include({ foo: obj1, bar: obj2 }, { foo: obj1, bar: obj2 });
 
-        if (typeof Symbol === "function") {
-            let sym1 = Symbol(),
-                sym2 = Symbol();
-            assert.include([sym1, sym2], sym1);
-        }
+        const map = new Map();
+        const val = [{ a: 1 }];
+        map.set("a", val);
+        map.set("b", 2);
+        map.set("c", -0);
+        map.set("d", NaN);
+
+        assert.include(map, val);
+        assert.include(map, 2);
+        assert.include(map, 0);
+        assert.include(map, NaN);
+
+        const set = new Set();
+        set.add(val);
+        set.add(2);
+        set.add(-0);
+        set.add(NaN);
+
+        assert.include(set, val);
+        assert.include(set, 2);
+        assert.include(set, 0);
+        assert.include(set, NaN);
+
+        const ws = new WeakSet();
+        ws.add(val);
+
+        assert.include(ws, val);
+
+        let sym1 = Symbol(),
+            sym2 = Symbol();
+        assert.include([sym1, sym2], sym1);
 
         err(() => {
             assert.include("foobar", "baz", "blah");
@@ -645,19 +671,19 @@ describe("assertion", "assert", () => {
 
         err(() => {
             assert.include(true, true, "blah");
-        }, "blah: object tested must be an array, an object, or a string, but boolean given");
+        }, "blah: object tested must be an array, a map, an object, a set, a string, or a weakset, but boolean given");
 
         err(() => {
             assert.include(42, "bar");
-        }, "object tested must be an array, an object, or a string, but number given");
+        }, "object tested must be an array, a map, an object, a set, a string, or a weakset, but number given");
 
         err(() => {
             assert.include(null, 42);
-        }, "object tested must be an array, an object, or a string, but null given");
+        }, "object tested must be an array, a map, an object, a set, a string, or a weakset, but null given");
 
         err(() => {
             assert.include(undefined, "bar");
-        }, "object tested must be an array, an object, or a string, but undefined given");
+        }, "object tested must be an array, a map, an object, a set, a string, or a weakset, but undefined given");
     });
 
     it("notInclude", () => {
@@ -670,12 +696,34 @@ describe("assertion", "assert", () => {
         assert.notInclude({ foo: obj1, bar: obj2 }, { foo: { a: 1 } });
         assert.notInclude({ foo: obj1, bar: obj2 }, { foo: obj1, bar: { b: 2 } });
 
-        if (typeof Symbol === "function") {
-            let sym1 = Symbol(),
-                sym2 = Symbol(),
-                sym3 = Symbol();
-            assert.notInclude([sym1, sym2], sym3);
-        }
+        const map = new Map();
+        const val = [{ a: 1 }];
+        map.set("a", val);
+        map.set("b", 2);
+
+        assert.notInclude(map, [{ a: 1 }]);
+        assert.notInclude(map, 3);
+
+        const set = new Set();
+        set.add(val);
+        set.add(2);
+
+        assert.include(set, val);
+        assert.include(set, 2);
+
+        assert.notInclude(set, [{ a: 1 }]);
+        assert.notInclude(set, 3);
+
+        const ws = new WeakSet();
+        ws.add(val);
+
+        assert.notInclude(ws, [{ a: 1 }]);
+        assert.notInclude(ws, {});
+
+        let sym1 = Symbol(),
+            sym2 = Symbol(),
+            sym3 = Symbol();
+        assert.notInclude([sym1, sym2], sym3);
 
         err(() => {
             let obj1 = { a: 1 },
@@ -691,19 +739,19 @@ describe("assertion", "assert", () => {
 
         err(() => {
             assert.notInclude(true, true, "blah");
-        }, "blah: object tested must be an array, an object, or a string, but boolean given");
+        }, "blah: object tested must be an array, a map, an object, a set, a string, or a weakset, but boolean given");
 
         err(() => {
             assert.notInclude(42, "bar");
-        }, "object tested must be an array, an object, or a string, but number given");
+        }, "object tested must be an array, a map, an object, a set, a string, or a weakset, but number given");
 
         err(() => {
             assert.notInclude(null, 42);
-        }, "object tested must be an array, an object, or a string, but null given");
+        }, "object tested must be an array, a map, an object, a set, a string, or a weakset, but null given");
 
         err(() => {
             assert.notInclude(undefined, "bar");
-        }, "object tested must be an array, an object, or a string, but undefined given");
+        }, "object tested must be an array, a map, an object, a set, a string, or a weakset, but undefined given");
 
         err(() => {
             assert.notInclude("foobar", "bar");
@@ -722,6 +770,20 @@ describe("assertion", "assert", () => {
         assert.notDeepInclude({ foo: obj1, bar: obj2 }, { foo: { z: 1 } });
         assert.notDeepInclude({ foo: obj1, bar: obj2 }, { baz: { a: 1 } });
         assert.notDeepInclude({ foo: obj1, bar: obj2 }, { foo: { a: 1 }, bar: { b: 9 } });
+
+        const map = new Map();
+        map.set(1, [{ a: 1 }]);
+
+        assert.deepInclude(map, [{ a: 1 }]);
+
+        const set = new Set();
+        set.add([{ a: 1 }]);
+
+        assert.deepInclude(set, [{ a: 1 }]);
+
+        err(() => {
+            assert.deepInclude(new WeakSet(), {}, "foo");
+        }, "foo: unable to use .deep.include with WeakSet");
 
         err(() => {
             assert.deepInclude([obj1, obj2], { a: 9 }, "blah");
@@ -893,7 +955,7 @@ describe("assertion", "assert", () => {
         assert.hasAllKeys(obj, [enumProp1, enumProp2]);
         assert.doesNotHaveAllKeys(obj, [enumProp1, enumProp2, nonEnumProp]);
 
-        if (typeof Symbol === "function") {
+        if (is.function(Symbol)) {
             var sym1 = Symbol("sym1"),
                 sym2 = Symbol("sym2"),
                 sym3 = Symbol("sym3"),
@@ -913,7 +975,7 @@ describe("assertion", "assert", () => {
             assert.doesNotHaveAllKeys(obj, [sym1, sym2, sym3, str]);
         }
 
-        if (typeof Map !== "undefined") {
+        if (!is.undefined(Map)) {
             // Not using Map constructor args because not supported in IE 11.
             var aKey = { thisIs: "anExampleObject" },
                 anotherKey = { doingThisBecauseOf: "referential equality" },
@@ -980,7 +1042,7 @@ describe("assertion", "assert", () => {
             assert.hasAllKeys(weirdMap, [weirdMapKey1, weirdMapKey2]);
             assert.doesNotHaveAllKeys(weirdMap, [weirdMapKey1, weirdMapKey3]);
 
-            if (typeof Symbol === "function") {
+            if (is.function(Symbol)) {
                 let symMapKey1 = Symbol(),
                     symMapKey2 = Symbol(),
                     symMapKey3 = Symbol(),
@@ -1032,7 +1094,7 @@ describe("assertion", "assert", () => {
             // }, 'expected [ { foo: 1 } ] to deeply contain key { iDoNotExist: 0 }');
         }
 
-        if (typeof Set !== "undefined") {
+        if (!is.undefined(Set)) {
             // Not using Set constructor args because not supported in IE 11.
             var aKey = { thisIs: "anExampleObject" },
                 anotherKey = { doingThisBecauseOf: "referential equality" },
@@ -1099,7 +1161,7 @@ describe("assertion", "assert", () => {
             assert.hasAllKeys(weirdSet, [weirdSetKey1, weirdSetKey2]);
             assert.doesNotHaveAllKeys(weirdSet, [weirdSetKey1, weirdSetKey3]);
 
-            if (typeof Symbol === "function") {
+            if (is.function(Symbol)) {
                 let symSetKey1 = Symbol(),
                     symSetKey2 = Symbol(),
                     symSetKey3 = Symbol(),
@@ -2024,10 +2086,40 @@ describe("assertion", "assert", () => {
 
         err(() => {
             assert.isAbove(null, 1, "blah");
-        }, "blah: expected null to be a number");
+        }, "blah: expected null to be a number or a date");
 
         err(() => {
             assert.isAbove(1, null, "blah");
+        }, "blah: the argument to above must be a number");
+    });
+
+    it("above (dates)", () => {
+        const now = new Date();
+        const oneSecondAgo = new Date(now.getTime() - 1000);
+        assert.isAbove(now, oneSecondAgo, "Now should be above 1 second ago");
+
+        err(() => {
+            assert.isAbove(oneSecondAgo, now, "blah");
+        }, `blah: expected ${oneSecondAgo.toUTCString()} to be above ${now.toUTCString()}`);
+
+        err(() => {
+            assert.isAbove(now, now, "blah");
+        }, `blah: expected ${now.toUTCString()} to be above ${now.toUTCString()}`);
+
+        err(() => {
+            assert.isAbove(null, now);
+        }, "expected null to be a number or a date");
+
+        err(() => {
+            assert.isAbove(now, null, "blah");
+        }, "blah: the argument to above must be a date");
+
+        err(() => {
+            assert.isAbove(now, 1, "blah");
+        }, "blah: the argument to above must be a date");
+
+        err(() => {
+            assert.isAbove(1, now, "blah");
         }, "blah: the argument to above must be a number");
     });
 
@@ -2041,11 +2133,40 @@ describe("assertion", "assert", () => {
 
         err(() => {
             assert.isAtLeast(null, 1, "blah");
-        }, "blah: expected null to be a number");
+        }, "blah: expected null to be a number or a date");
 
         err(() => {
             assert.isAtLeast(1, null, "blah");
         }, "blah: the argument to least must be a number");
+    });
+
+    it("atLeast (dates)", () => {
+        const now = new Date();
+        const oneSecondAgo = new Date(now.getTime() - 1000);
+        const oneSecondAfter = new Date(now.getTime() + 1000);
+
+        assert.isAtLeast(now, oneSecondAgo, "Now should be above one second ago");
+        assert.isAtLeast(now, now, "Now should be equal to now");
+
+        err(() => {
+            assert.isAtLeast(now, oneSecondAfter, "blah");
+        }, `blah: expected ${now.toUTCString()} to be at least ${oneSecondAfter.toUTCString()}`);
+
+        err(() => {
+            assert.isAtLeast(null, now, "blah");
+        }, "blah: expected null to be a number or a date");
+
+        err(() => {
+            assert.isAtLeast(now, null, "blah");
+        }, "blah: the argument to least must be a date");
+
+        err(() => {
+            assert.isAtLeast(1, now, "blah");
+        }, "blah: the argument to least must be a number");
+
+        err(() => {
+            assert.isAtLeast(now, 1, "blah");
+        }, "blah: the argument to least must be a date");
     });
 
     it("below", () => {
@@ -2061,10 +2182,40 @@ describe("assertion", "assert", () => {
 
         err(() => {
             assert.isBelow(null, 1, "blah");
-        }, "blah: expected null to be a number");
+        }, "blah: expected null to be a number or a date");
 
         err(() => {
             assert.isBelow(1, null, "blah");
+        }, "blah: the argument to below must be a number");
+    });
+
+    it("below (dates)", () => {
+        const now = new Date();
+        const oneSecondAgo = new Date(now.getTime() - 1000);
+        assert.isBelow(oneSecondAgo, now, "One second ago should be below now");
+
+        err(() => {
+            assert.isBelow(now, oneSecondAgo, "blah");
+        }, `blah: expected ${now.toUTCString()} to be below ${oneSecondAgo.toUTCString()}`);
+
+        err(() => {
+            assert.isBelow(now, now);
+        }, `expected ${now.toUTCString()} to be below ${now.toUTCString()}`);
+
+        err(() => {
+            assert.isBelow(null, now, "blah");
+        }, "blah: expected null to be a number or a date");
+
+        err(() => {
+            assert.isBelow(now, null, "blah");
+        }, "blah: the argument to below must be a date");
+
+        err(() => {
+            assert.isBelow(now, 1, "blah");
+        }, "blah: the argument to below must be a date");
+
+        err(() => {
+            assert.isBelow(1, now, "blah");
         }, "blah: the argument to below must be a number");
     });
 
@@ -2078,10 +2229,39 @@ describe("assertion", "assert", () => {
 
         err(() => {
             assert.isAtMost(null, 1, "blah");
-        }, "blah: expected null to be a number");
+        }, "blah: expected null to be a number or a date");
 
         err(() => {
             assert.isAtMost(1, null, "blah");
+        }, "blah: the argument to most must be a number");
+    });
+
+    it("atMost (dates)", () => {
+        const now = new Date();
+        const oneSecondAgo = new Date(now.getTime() - 1000);
+        const oneSecondAfter = new Date(now.getTime() + 1000);
+
+        assert.isAtMost(oneSecondAgo, now, "Now should be below one second ago");
+        assert.isAtMost(now, now, "Now should be equal to now");
+
+        err(() => {
+            assert.isAtMost(oneSecondAfter, now, "blah");
+        }, `blah: expected ${oneSecondAfter.toUTCString()} to be at most ${now.toUTCString()}`);
+
+        err(() => {
+            assert.isAtMost(null, now, "blah");
+        }, "blah: expected null to be a number or a date");
+
+        err(() => {
+            assert.isAtMost(now, null, "blah");
+        }, "blah: the argument to most must be a date");
+
+        err(() => {
+            assert.isAtMost(now, 1, "blah");
+        }, "blah: the argument to most must be a date");
+
+        err(() => {
+            assert.isAtMost(1, now, "blah");
         }, "blah: the argument to most must be a number");
     });
 
@@ -2275,7 +2455,7 @@ describe("assertion", "assert", () => {
                 assert[isExtensible](undefined);
             }, "expected undefined to be extensible");
 
-            if (typeof Proxy === "function") {
+            if (is.function(Proxy)) {
                 const proxy = new Proxy({}, {
                     isExtensible() {
                         throw new TypeError();
@@ -2308,11 +2488,11 @@ describe("assertion", "assert", () => {
             assert[isNotExtensible](false);
             assert[isNotExtensible](undefined);
 
-            if (typeof Symbol === "function") {
+            if (is.function(Symbol)) {
                 assert[isNotExtensible](Symbol());
             }
 
-            if (typeof Proxy === "function") {
+            if (is.function(Proxy)) {
                 const proxy = new Proxy({}, {
                     isExtensible() {
                         throw new TypeError();
@@ -2345,11 +2525,11 @@ describe("assertion", "assert", () => {
             assert[isSealed](false);
             assert[isSealed](undefined);
 
-            if (typeof Symbol === "function") {
+            if (is.function(Symbol)) {
                 assert[isSealed](Symbol());
             }
 
-            if (typeof Proxy === "function") {
+            if (is.function(Proxy)) {
                 const proxy = new Proxy({}, {
                     ownKeys() {
                         throw new TypeError();
@@ -2399,7 +2579,7 @@ describe("assertion", "assert", () => {
                 assert[isNotSealed](undefined);
             }, "expected undefined to not be sealed");
 
-            if (typeof Proxy === "function") {
+            if (is.function(Proxy)) {
                 const proxy = new Proxy({}, {
                     ownKeys() {
                         throw new TypeError();
@@ -2435,11 +2615,11 @@ describe("assertion", "assert", () => {
             assert[isFrozen](false);
             assert[isFrozen](undefined);
 
-            if (typeof Symbol === "function") {
+            if (is.function(Symbol)) {
                 assert[isFrozen](Symbol());
             }
 
-            if (typeof Proxy === "function") {
+            if (is.function(Proxy)) {
                 const proxy = new Proxy({}, {
                     ownKeys() {
                         throw new TypeError();
@@ -2489,7 +2669,7 @@ describe("assertion", "assert", () => {
                 assert[isNotFrozen](undefined);
             }, "expected undefined to not be frozen");
 
-            if (typeof Proxy === "function") {
+            if (is.function(Proxy)) {
                 const proxy = new Proxy({}, {
                     ownKeys() {
                         throw new TypeError();
@@ -2517,19 +2697,19 @@ describe("assertion", "assert", () => {
             assert[isEmpty](new FakeArgs());
             assert[isEmpty]({});
 
-            if (typeof WeakMap === "function") {
+            if (is.function(WeakMap)) {
                 err(() => {
                     assert[isEmpty](new WeakMap(), "blah");
                 }, "blah: .empty was passed a weak collection");
             }
 
-            if (typeof WeakSet === "function") {
+            if (is.function(WeakSet)) {
                 err(() => {
                     assert[isEmpty](new WeakSet(), "blah");
                 }, "blah: .empty was passed a weak collection");
             }
 
-            if (typeof Map === "function") {
+            if (is.function(Map)) {
                 assert[isEmpty](new Map());
 
                 const map = new Map();
@@ -2537,7 +2717,7 @@ describe("assertion", "assert", () => {
                 assert[isEmpty](map);
             }
 
-            if (typeof Set === "function") {
+            if (is.function(Set)) {
                 assert[isEmpty](new Set());
 
                 const set = new Set();
@@ -2589,7 +2769,7 @@ describe("assertion", "assert", () => {
                 assert[isEmpty](false);
             }, ".empty was passed non-string primitive false");
 
-            if (typeof Symbol !== "undefined") {
+            if (!is.undefined(Symbol)) {
                 err(() => {
                     assert[isEmpty](Symbol());
                 }, ".empty was passed non-string primitive Symbol()");
@@ -2621,19 +2801,19 @@ describe("assertion", "assert", () => {
             assert[isNotEmpty]({ arguments: 0 });
             assert[isNotEmpty]({ foo: "bar" });
 
-            if (typeof WeakMap === "function") {
+            if (is.function(WeakMap)) {
                 err(() => {
                     assert[isNotEmpty](new WeakMap(), "blah");
                 }, "blah: .empty was passed a weak collection");
             }
 
-            if (typeof WeakSet === "function") {
+            if (is.function(WeakSet)) {
                 err(() => {
                     assert[isNotEmpty](new WeakSet(), "blah");
                 }, "blah: .empty was passed a weak collection");
             }
 
-            if (typeof Map === "function") {
+            if (is.function(Map)) {
                 // Not using Map constructor args because not supported in IE 11.
                 const map = new Map();
                 map.set("a", 1);
@@ -2644,7 +2824,7 @@ describe("assertion", "assert", () => {
                 }, "expected {} not to be empty");
             }
 
-            if (typeof Set === "function") {
+            if (is.function(Set)) {
                 // Not using Set constructor args because not supported in IE 11.
                 const set = new Set();
                 set.add(1);
@@ -2699,7 +2879,7 @@ describe("assertion", "assert", () => {
                 assert[isNotEmpty](false);
             }, ".empty was passed non-string primitive false");
 
-            if (typeof Symbol !== "undefined") {
+            if (!is.undefined(Symbol)) {
                 err(() => {
                     assert[isNotEmpty](Symbol());
                 }, ".empty was passed non-string primitive Symbol()");

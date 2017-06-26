@@ -621,8 +621,8 @@ describe("mongodb", function () {
                         port: 32001
                     }], {
                         setName: "rs",
-                            // connectionTimeout: 10000,
-                            // socketTimeout: 10000,
+                        // connectionTimeout: 10000,
+                        // socketTimeout: 10000,
                         haInterval: 10000,
                         disconnectHandler: mockDisconnectHandler,
                         size: 1
@@ -1238,6 +1238,134 @@ describe("mongodb", function () {
                         expect(Connection.connections()).to.be.empty;
                         Connection.disableConnectionAccounting();
                     }
+                });
+
+                it("Should only read from secondaries when read preference secondaryPreferred is specified", async () => {
+                    let running = true;
+                    const electionIds = [new adone.data.bson.ObjectId(), new adone.data.bson.ObjectId()];
+
+                    const defaultFields = {
+                        setName: "rs",
+                        setVersion: 1,
+                        electionId: electionIds[0],
+                        maxBsonObjectSize: 16777216,
+                        maxMessageSizeBytes: 48000000,
+                        maxWriteBatchSize: 1000,
+                        localTime: new Date(),
+                        maxWireVersion: 4,
+                        minWireVersion: 0,
+                        ok: 1,
+                        hosts: ["localhost:32000", "localhost:32001", "localhost:32002"]
+                    };
+
+                    // Primary server states
+                    const primary = [Object.assign({
+                        ismaster: true,
+                        secondary: false,
+                        me: "localhost:32000",
+                        primary: "localhost:32000",
+                        tags: { loc: "ny" }
+                    }, defaultFields)];
+
+                    // Primary server states
+                    const firstSecondary = [Object.assign({
+                        ismaster: false,
+                        secondary: true,
+                        me: "localhost:32001",
+                        primary: "localhost:32000",
+                        tags: { loc: "sf" }
+                    }, defaultFields)];
+
+                    // Primary server states
+                    const secondSecondary = [Object.assign({
+                        ismaster: false,
+                        secondary: true,
+                        me: "localhost:32002",
+                        primary: "localhost:32000",
+                        tags: { loc: "dc" }
+                    }, defaultFields)];
+
+                    // Boot the mock
+                    const primaryServer = await mockupdb.createServer(32000, "localhost");
+                    const firstSecondaryServer = await mockupdb.createServer(32001, "localhost");
+                    const secondSecondaryServer = await mockupdb.createServer(32002, "localhost");
+
+                    // Primary state machine
+                    (async () => {
+                        while (running) {
+                            const request = await primaryServer.receive();
+                            // Get the document
+                            const doc = request.document;
+                            if (doc.ismaster) {
+                                request.reply(primary[0]);
+                            } else if (doc.count) {
+                                request.reply({ waitedMS: adone.data.bson.Long.ZERO, n: 1, ok: 1 });
+                            }
+                        }
+                    })().catch(() => { });
+
+                    // First secondary state machine
+                    (async () => {
+                        while (running) {
+                            const request = await firstSecondaryServer.receive();
+                            const doc = request.document;
+
+                            if (doc.ismaster) {
+                                request.reply(firstSecondary[0]);
+                            } else if (doc.count) {
+                                request.reply({ waitedMS: adone.data.bson.Long.ZERO, n: 1, ok: 1 });
+                            }
+                        }
+                    })().catch(() => { });
+
+                    // Second secondary state machine
+                    (async () => {
+                        while (running) {
+                            const request = await secondSecondaryServer.receive();
+                            const doc = request.document;
+
+                            if (doc.ismaster) {
+                                request.reply(secondSecondary[0]);
+                            } else if (doc.count) {
+                                request.reply({ waitedMS: adone.data.bson.Long.ZERO, n: 1, ok: 1 });
+                            }
+                        }
+                    })().catch(() => { });
+
+                    const server = new ReplSet([
+                        { host: "localhost", port: 32000 },
+                        { host: "localhost", port: 32001 },
+                        { host: "localhost", port: 32002 }
+                    ], {
+                        setName: "rs",
+                        connectionTimeout: 3000,
+                        socketTimeout: 0,
+                        haInterval: 2000,
+                        size: 1
+                    });
+                    server.connect();
+                    await waitFor(server, "all");
+                    await adone.promise.delay(1000);
+                    const portsSeen = {};
+                    await Promise.all(adone.util.range(50).map(() => new Promise((resolve, reject) => {
+                        server.command("test.test", {
+                            count: "test.test",
+                            batchSize: 2
+                        }, {
+                            readPreference: new ReadPreference("secondaryPreferred")
+                        }, (err, r) => {
+                            portsSeen[r.connection.port] = true;
+                            err ? reject(err) : resolve();
+                        });
+                    })));
+                    expect(portsSeen).to.have.keys("32001", "32002");
+
+                    // Shut down mocks
+                    await primaryServer.destroy();
+                    await firstSecondaryServer.destroy();
+                    await secondSecondaryServer.destroy();
+                    await server.destroy();
+                    running = false;
                 });
             });
         });
