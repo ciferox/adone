@@ -1,49 +1,95 @@
 import protocol from "./constants";
-import numCache from "./numbers";
+import * as numbers from "./numbers";
 const empty = Buffer.allocUnsafe(0);
 const zeroBuf = Buffer.from([0]);
 const nextTick = require("process-nextick-args");
+const { is } = adone;
 
-const uncork = (stream) => {
-    stream.uncork();
+const numCache = numbers.cache;
+const generateNumber = numbers.generateNumber;
+const generateCache = numbers.generateCache;
+
+const writeNumberCached = (stream, number) => stream.write(numCache[number]);
+const writeNumberGenerated = (stream, number) => stream.write(generateNumber(number));
+
+let writeNumber = writeNumberCached;
+let toGenerate = true;
+
+const uncork = (stream) => stream.uncork();
+
+const byteLength = (bufOrString) => {
+    if (!bufOrString) {
+        return 0;
+    } else if (is.buffer(bufOrString)) {
+        return bufOrString.length;
+    }
+    return Buffer.byteLength(bufOrString);
 };
 
-function generate(packet, stream) {
-    if (stream.cork) {
-        stream.cork();
-        nextTick(uncork, stream);
+const calcLengthLength = (length) => {
+    if (length >= 0 && length < 128) {
+        return 1;
+    } else if (length >= 128 && length < 16384) {
+        return 2;
+    } else if (length >= 16384 && length < 2097152) {
+        return 3;
+    } else if (length >= 2097152 && length < 268435456) {
+        return 4;
+    }
+    return 0;
+};
+
+const genBufLength = (length) => {
+    let digit = 0;
+    let pos = 0;
+    const buffer = Buffer.allocUnsafe(calcLengthLength(length));
+
+    do {
+        digit = length % 128 | 0;
+        length = length / 128 | 0;
+        if (length > 0) {
+            digit = digit | 0x80;
+        }
+
+        buffer.writeUInt8(digit, pos++, true);
+    } while (length > 0);
+
+    return buffer;
+};
+
+const lengthCache = {};
+const writeLength = (stream, length) => {
+    let buffer = lengthCache[length];
+
+    if (!buffer) {
+        buffer = genBufLength(length);
+        if (length < 16384) {
+            lengthCache[length] = buffer;
+        }
     }
 
-    switch (packet.cmd) {
-        case "connect":
-            return connect(packet, stream);
-        case "connack":
-            return connack(packet, stream);
-        case "publish":
-            return publish(packet, stream);
-        case "puback":
-        case "pubrec":
-        case "pubrel":
-        case "pubcomp":
-        case "unsuback":
-            return confirmation(packet, stream);
-        case "subscribe":
-            return subscribe(packet, stream);
-        case "suback":
-            return suback(packet, stream);
-        case "unsubscribe":
-            return unsubscribe(packet, stream);
-        case "pingreq":
-        case "pingresp":
-        case "disconnect":
-            return emptyPacket(packet, stream);
-        default:
-            stream.emit("error", new Error("Unknown command"));
-            return false;
-    }
-}
+    stream.write(buffer);
+};
 
-function connect(opts, stream) {
+const writeString = (stream, string) => {
+    const strlen = Buffer.byteLength(string);
+    writeNumber(stream, strlen);
+
+    stream.write(string, "utf8");
+};
+
+const writeStringOrBuffer = (stream, toWrite) => {
+    if (toWrite && is.string(toWrite)) {
+        writeString(stream, toWrite);
+    } else if (toWrite) {
+        writeNumber(stream, toWrite.length);
+        stream.write(toWrite);
+    } else {
+        writeNumber(stream, 0);
+    }
+};
+
+const connect = (opts, stream) => {
     const settings = opts || {};
     const protocolId = settings.protocolId || "MQTT";
     const protocolVersion = settings.protocolVersion || 4;
@@ -54,19 +100,20 @@ function connect(opts, stream) {
     const username = settings.username;
     const password = settings.password;
 
-    if (clean === undefined) {
+    if (is.undefined(clean)) {
         clean = true;
     }
 
     let length = 0;
 
     // Must be a string and non-falsy
-    if (!protocolId || (typeof protocolId !== "string" && !Buffer.isBuffer(protocolId))) {
+    if (!protocolId ||
+        (!is.string(protocolId) && !is.buffer(protocolId))) {
         stream.emit("error", new Error("Invalid protocolId"));
         return false;
-    } else {
-        length += protocolId.length + 2;
     }
+
+    length += protocolId.length + 2;
 
     // Must be 3 or 4
     if (protocolVersion !== 3 && protocolVersion !== 4) {
@@ -75,21 +122,22 @@ function connect(opts, stream) {
     } length += 1;
 
     // ClientId might be omitted in 3.1.1, but only if cleanSession is set to 1
-    if ((typeof clientId === "string" || Buffer.isBuffer(clientId)) && (clientId || protocolVersion === 4) && (clientId || clean)) {
+    if ((is.string(clientId) || is.buffer(clientId)) &&
+        (clientId || protocolVersion === 4) && (clientId || clean)) {
         length += clientId.length + 2;
     } else {
         if (protocolVersion < 4) {
             stream.emit("error", new Error("clientId must be supplied before 3.1.1"));
             return false;
         }
-        if ((clean * 1) === 0) {
+        if ((Number(clean)) === 0) {
             stream.emit("error", new Error("clientId must be given if cleanSession set to 0"));
             return false;
         }
     }
 
     // Must be a two byte number
-    if (typeof keepalive !== "number" ||
+    if (!is.number(keepalive) ||
         keepalive < 0 ||
         keepalive > 65535 ||
         keepalive % 1 !== 0) {
@@ -103,12 +151,12 @@ function connect(opts, stream) {
     // If will exists...
     if (will) {
         // It must be an object
-        if (typeof will !== "object") {
+        if (!is.object(will)) {
             stream.emit("error", new Error("Invalid will"));
             return false;
         }
         // It must have topic typeof string
-        if (!will.topic || typeof will.topic !== "string") {
+        if (!will.topic || !is.string(will.topic)) {
             stream.emit("error", new Error("Invalid will topic"));
             return false;
         }
@@ -118,7 +166,7 @@ function connect(opts, stream) {
         // Payload
         if (will.payload && will.payload) {
             if (will.payload.length >= 0) {
-                if (typeof will.payload === "string") {
+                if (is.string(will.payload)) {
                     length += Buffer.byteLength(will.payload) + 2;
                 } else {
                     length += will.payload.length + 2;
@@ -188,20 +236,24 @@ function connect(opts, stream) {
     }
 
     // Username and password
-    if (username) writeStringOrBuffer(stream, username);
-    if (password) writeStringOrBuffer(stream, password);
+    if (username) {
+        writeStringOrBuffer(stream, username);
+    }
+    if (password) {
+        writeStringOrBuffer(stream, password);
+    }
 
     // This is a small packet that happens only once on a stream
     // We assume the stream is always free to receive more data after this
     return true;
-}
+};
 
-function connack(opts, stream) {
+const connack = (opts, stream) => {
     const settings = opts || {};
     const rc = settings.returnCode;
 
     // Check return code
-    if (typeof rc !== "number") {
+    if (!is.number(rc)) {
         stream.emit("error", new Error("Invalid return code"));
         return false;
     }
@@ -211,9 +263,9 @@ function connack(opts, stream) {
     stream.write(opts.sessionPresent ? protocol.SESSIONPRESENT_HEADER : zeroBuf);
 
     return stream.write(Buffer.from([rc]));
-}
+};
 
-function publish(opts, stream) {
+const publish = (opts, stream) => {
     const settings = opts || {};
     const qos = settings.qos || 0;
     const retain = settings.retain ? protocol.RETAIN_MASK : 0;
@@ -224,9 +276,9 @@ function publish(opts, stream) {
     let length = 0;
 
     // Topic must be a non-empty string or Buffer
-    if (typeof topic === "string") {
+    if (is.string(topic)) {
         length += Buffer.byteLength(topic) + 2;
-    } else if (Buffer.isBuffer(topic)) {
+    } else if (is.buffer(topic)) {
         length += topic.length + 2;
     } else {
         stream.emit("error", new Error("Invalid topic"));
@@ -234,14 +286,14 @@ function publish(opts, stream) {
     }
 
     // Get the payload length
-    if (!Buffer.isBuffer(payload)) {
+    if (!is.buffer(payload)) {
         length += Buffer.byteLength(payload);
     } else {
         length += payload.length;
     }
 
     // Message ID must a number if qos > 0
-    if (qos && typeof id !== "number") {
+    if (qos && !is.number(id)) {
         stream.emit("error", new Error("Invalid messageId"));
         return false;
     } else if (qos) {
@@ -265,37 +317,9 @@ function publish(opts, stream) {
 
     // Payload
     return stream.write(payload);
-}
+};
 
-/* Puback, pubrec, pubrel and pubcomp */
-function confirmation(opts, stream) {
-    const settings = opts || {};
-    const type = settings.cmd || "puback";
-    const id = settings.messageId;
-    const dup = (settings.dup && type === "pubrel") ? protocol.DUP_MASK : 0;
-    let qos = 0;
-
-    if (type === "pubrel") {
-        qos = 1;
-    }
-
-    // Check message ID
-    if (typeof id !== "number") {
-        stream.emit("error", new Error("Invalid messageId"));
-        return false;
-    }
-
-    // Header
-    stream.write(protocol.ACKS[type][qos][dup][0]);
-
-    // Length
-    writeLength(stream, 2);
-
-    // Message ID
-    return writeNumber(stream, id);
-}
-
-function subscribe(opts, stream) {
+const subscribe = (opts, stream) => {
     const settings = opts || {};
     const dup = settings.dup ? protocol.DUP_MASK : 0;
     const id = settings.messageId;
@@ -304,22 +328,22 @@ function subscribe(opts, stream) {
     let length = 0;
 
     // Check message ID
-    if (typeof id !== "number") {
+    if (!is.number(id)) {
         stream.emit("error", new Error("Invalid messageId"));
         return false;
     } length += 2;
 
     // Check subscriptions
-    if (typeof subs === "object" && subs.length) {
+    if (is.object(subs) && subs.length) {
         for (let i = 0; i < subs.length; i += 1) {
             const itopic = subs[i].topic;
             const iqos = subs[i].qos;
 
-            if (typeof itopic !== "string") {
+            if (!is.string(itopic)) {
                 stream.emit("error", new Error("Invalid subscriptions - invalid topic"));
                 return false;
             }
-            if (typeof iqos !== "number") {
+            if (!is.number(iqos)) {
                 stream.emit("error", new Error("Invalid subscriptions - invalid qos"));
                 return false;
             }
@@ -356,9 +380,9 @@ function subscribe(opts, stream) {
     }
 
     return result;
-}
+};
 
-function suback(opts, stream) {
+const suback = (opts, stream) => {
     const settings = opts || {};
     const id = settings.messageId;
     const granted = settings.granted;
@@ -366,15 +390,15 @@ function suback(opts, stream) {
     let length = 0;
 
     // Check message ID
-    if (typeof id !== "number") {
+    if (!is.number(id)) {
         stream.emit("error", new Error("Invalid messageId"));
         return false;
     } length += 2;
 
     // Check granted qos vector
-    if (typeof granted === "object" && granted.length) {
+    if (is.object(granted) && granted.length) {
         for (let i = 0; i < granted.length; i += 1) {
-            if (typeof granted[i] !== "number") {
+            if (!is.number(granted[i])) {
                 stream.emit("error", new Error("Invalid qos vector"));
                 return false;
             }
@@ -395,9 +419,9 @@ function suback(opts, stream) {
     writeNumber(stream, id);
 
     return stream.write(Buffer.from(granted));
-}
+};
 
-function unsubscribe(opts, stream) {
+const unsubscribe = (opts, stream) => {
     const settings = opts || {};
     const id = settings.messageId;
     const dup = settings.dup ? protocol.DUP_MASK : 0;
@@ -406,16 +430,16 @@ function unsubscribe(opts, stream) {
     let length = 0;
 
     // Check message ID
-    if (typeof id !== "number") {
+    if (!is.number(id)) {
         stream.emit("error", new Error("Invalid messageId"));
         return false;
     }
     length += 2;
 
     // Check unsubs
-    if (typeof unsubs === "object" && unsubs.length) {
+    if (is.object(unsubs) && unsubs.length) {
         for (let i = 0; i < unsubs.length; i += 1) {
-            if (typeof unsubs[i] !== "string") {
+            if (!is.string(unsubs[i])) {
                 stream.emit("error", new Error("Invalid unsubscriptions"));
                 return false;
             }
@@ -442,132 +466,97 @@ function unsubscribe(opts, stream) {
     }
 
     return result;
-}
+};
 
-function emptyPacket(opts, stream) {
-    return stream.write(protocol.EMPTY[opts.cmd]);
-}
+/* Puback, pubrec, pubrel and pubcomp */
+const confirmation = (opts, stream) => {
+    const settings = opts || {};
+    const type = settings.cmd || "puback";
+    const id = settings.messageId;
+    const dup = (settings.dup && type === "pubrel") ? protocol.DUP_MASK : 0;
+    let qos = 0;
+
+    if (type === "pubrel") {
+        qos = 1;
+    }
+
+    // Check message ID
+    if (!is.number(id)) {
+        stream.emit("error", new Error("Invalid messageId"));
+        return false;
+    }
+
+    // Header
+    stream.write(protocol.ACKS[type][qos][dup][0]);
+
+    // Length
+    writeLength(stream, 2);
+
+    // Message ID
+    return writeNumber(stream, id);
+};
+
+const emptyPacket = (opts, stream) => stream.write(protocol.EMPTY[opts.cmd]);
+
+const generate = function (packet, stream) {
+    if (stream.cork) {
+        stream.cork();
+        nextTick(uncork, stream);
+    }
+
+    if (toGenerate) {
+        toGenerate = false;
+        generateCache();
+    }
+
+    switch (packet.cmd) {
+        case "connect":
+            return connect(packet, stream);
+        case "connack":
+            return connack(packet, stream);
+        case "publish":
+            return publish(packet, stream);
+        case "puback":
+        case "pubrec":
+        case "pubrel":
+        case "pubcomp":
+        case "unsuback":
+            return confirmation(packet, stream);
+        case "subscribe":
+            return subscribe(packet, stream);
+        case "suback":
+            return suback(packet, stream);
+        case "unsubscribe":
+            return unsubscribe(packet, stream);
+        case "pingreq":
+        case "pingresp":
+        case "disconnect":
+            return emptyPacket(packet, stream);
+        default:
+            stream.emit("error", new Error("Unknown command"));
+            return false;
+    }
+};
 
 /**
- * calcLengthLength - calculate the length of the remaining
- * length field
- *
- * @api private
+ * Controls numbers cache.
+ * Set to "false" to allocate buffers on-the-flight instead of pre-generated cache
  */
-function calcLengthLength(length) {
-    if (length >= 0 && length < 128) {
-        return 1;
-    } else if (length >= 128 && length < 16384) {
-        return 2;
-    } else if (length >= 16384 && length < 2097152) {
-        return 3;
-    } else if (length >= 2097152 && length < 268435456) {
-        return 4;
-    }
-    return 0;
-}
-
-function genBufLength(length) {
-    let digit = 0;
-    let pos = 0;
-    const buffer = Buffer.allocUnsafe(calcLengthLength(length));
-
-    do {
-        digit = length % 128 | 0;
-        length = length / 128 | 0;
-        if (length > 0) {
-            digit = digit | 0x80;
+Object.defineProperty(generate, "cacheNumbers", {
+    get() {
+        return writeNumber === writeNumberCached;
+    },
+    set(value) {
+        if (value) {
+            if (!numCache || Object.keys(numCache).length === 0) {
+                toGenerate = true;
+            }
+            writeNumber = writeNumberCached;
+        } else {
+            toGenerate = false;
+            writeNumber = writeNumberGenerated;
         }
-
-        buffer.writeUInt8(digit, pos++, true);
-    } while (length > 0);
-
-    return buffer;
-}
-
-/**
- * writeLength - write an MQTT style length field to the buffer
- *
- * @param <Buffer> buffer - destination
- * @param <Number> pos - offset
- * @param <Number> length - length (>0)
- * @returns <Number> number of bytes written
- *
- * @api private
- */
-
-const lengthCache = {};
-function writeLength(stream, length) {
-    let buffer = lengthCache[length];
-
-    if (!buffer) {
-        buffer = genBufLength(length);
-        if (length < 16384) {
-            lengthCache[length] = buffer;
-        }
     }
-
-    stream.write(buffer);
-}
-
-/**
- * writeString - write a utf8 string to the buffer
- *
- * @param <Buffer> buffer - destination
- * @param <Number> pos - offset
- * @param <String> string - string to write
- * @return <Number> number of bytes written
- *
- * @api private
- */
-
-function writeString(stream, string) {
-    const strlen = Buffer.byteLength(string);
-    writeNumber(stream, strlen);
-
-    stream.write(string, "utf8");
-}
-
-/**
- * writeNumber - write a two byte number to the buffer
- *
- * @param <Buffer> buffer - destination
- * @param <Number> pos - offset
- * @param <String> number - number to write
- * @return <Number> number of bytes written
- *
- * @api private
- */
-function writeNumber(stream, number) {
-    return stream.write(numCache[number]);
-}
-
-/**
- * writeStringOrBuffer - write a String or Buffer with the its length prefix
- *
- * @param <Buffer> buffer - destination
- * @param <Number> pos - offset
- * @param <String> toWrite - String or Buffer
- * @return <Number> number of bytes written
- */
-function writeStringOrBuffer(stream, toWrite) {
-    if (toWrite && typeof toWrite === "string") {
-        writeString(stream, toWrite);
-    } else if (toWrite) {
-        writeNumber(stream, toWrite.length);
-        stream.write(toWrite);
-    } else {
-        writeNumber(stream, 0);
-    }
-}
-
-function byteLength(bufOrString) {
-    if (!bufOrString) {
-        return 0;
-    } else if (Buffer.isBuffer(bufOrString)) {
-        return bufOrString.length;
-    }
-    return Buffer.byteLength(bufOrString);
-}
+});
 
 export default generate;

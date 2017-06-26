@@ -97,6 +97,39 @@ describe("net", "mqtt", "packet", () => {
         });
     };
 
+    it("disabled numbers cache", () => {
+        const stream = new adone.std.stream.Writable();
+        const message = {
+            cmd: "publish",
+            retain: false,
+            qos: 0,
+            dup: false,
+            length: 10,
+            topic: Buffer.from("test"),
+            payload: Buffer.from("test")
+        };
+        const expected = Buffer.from([
+            48, 10, // Header
+            0, 4, // Topic length
+            116, 101, 115, 116, // Topic (test)
+            116, 101, 115, 116 // Payload (test)
+        ]);
+        let written = Buffer.alloc(0);
+
+        stream.write = (chunk) => {
+            written = Buffer.concat([written, chunk]);
+        };
+        packet.writeToStream.cacheNumbers = false;
+
+        packet.writeToStream(message, stream);
+
+        assert.deepEqual(written, expected, "written buffer is expected");
+
+        packet.writeToStream.cacheNumbers = true;
+
+        stream.end();
+    });
+
     testParseGenerate("minimal connect", {
         cmd: "connect",
         retain: false,
