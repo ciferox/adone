@@ -17,12 +17,20 @@ export default class Valuable {
         return this.id;
     }
 
+    getNotes() {
+        return this.meta.notes;
+    }
+
+    setNotes(notes) {
+        this.meta.notes = notes;
+        return this._updateMeta();
+    }
+
     async set(name, value, type) {
         let keyMeta = this._getKeyUnsafe(name);
         let id;
-        let isNew = false;
         let shouldUpdateMeta = false;
-        type = (type ? type : adone.util.typeOf(value));
+        type = (is.undefined(type) ? adone.util.typeOf(value) : type);
         if (is.undefined(keyMeta)) {
             id = this.meta.nextKeyId++;
             keyMeta = {
@@ -33,7 +41,6 @@ export default class Valuable {
             this.meta.kids.push(id);
             await this._updateMeta();
             this._keys.set(name, keyMeta);
-            isNew = true;
             if (is.number(value.length)) {
                 keyMeta.size = value.length;
             }
@@ -54,11 +61,11 @@ export default class Valuable {
             await this.vault._setMeta(__.vkey(this.id, id), keyMeta);
         }
         await this.vault._setMeta(__.vvalue(this.id, id), value);
-        return isNew;
+        return id;
     }
 
-    async setMulti(pairs) {
-        for (const [name, value] of Object.entries(pairs)) {
+    async setMulti(entries) {
+        for (const [name, value] of Object.entries(entries)) {
             await this.set(name, value);
         }
     }
@@ -88,7 +95,8 @@ export default class Valuable {
             for (const name of keys) {
                 const entry = {
                     name,
-                    value: await this.get(name)
+                    value: await this.get(name),
+                    type: this.type(name)
                 };
 
                 if (includeEntryId) {
@@ -108,30 +116,32 @@ export default class Valuable {
     }
 
     async delete(name) {
-        const keyMeta = this._getKey(name);
-        const index = this.meta.kids.indexOf(keyMeta.id);
-        this.meta.kids.splice(index, 1);
-        this._keys.delete(name);
-
-        // Delete key meta and value from db.
-        await this.vault._deleteMeta(__.vkey(this.id, keyMeta.id));
-        await this.vault._deleteMeta(__.vvalue(this.id, keyMeta.id));
-
-        // Update valuable meta data
+        await this._delete(name);
         return this._updateMeta();
     }
 
-    async clear() {
+    async clear({ includeNotes = true, includeTags = true } = {}) {
         const names = this.keys();
         for (const name of names) {
-            await this.delete(name);
+            await this._delete(name);
         }
+
+        if (includeTags) {
+            this._deleteAllTags();
+        }
+
+        if (includeNotes) {
+            this.meta.notes = "";
+        }
+
+        return this._updateMeta();
     }
 
     // tag formats: 'none', 'normal', 'onlyName', 'onlyId'
     async toJSON({ includeId = false, includeEntryId = false, entriesAsArray = false, tags = "normal" } = {}) {
         const result = {
-            name: this.name()
+            name: this.name(),
+            notes: this.getNotes()
         };
         if (includeId) {
             result.id = this.internalId();
@@ -157,7 +167,33 @@ export default class Valuable {
         return result;
     }
 
-    async addTag(tag) {
+    async fromJSON(json) {
+        await this.clear();
+        if (is.string(json.notes) && json.notes !== this.meta.notes) {
+            this.meta.notes = json.notes;
+        }
+
+        if (is.array(json.entries)) {
+            const order = [];
+            for (const entry of json.entries) {
+                const id = await this.set(entry.name, entry.value);
+                order.push(id);
+            }
+            this.meta.order = order;
+        } else if (is.plainObject(json.entries)) {
+            await this.setMulti(json.entries);
+        }
+
+        if (is.array(json.tags)) {
+            for (const tag of json.tags) {
+                await this.addTag(tag, true);
+            }
+        }
+
+        return this._updateMeta();
+    }
+
+    async addTag(tag, _isWeak = false) {
         if (is.array(tag)) {
             const result = [];
             for (const t of tag) {
@@ -171,7 +207,9 @@ export default class Valuable {
             const tagId = await this.vault.addTag(tag, this.id);
             this.meta.tids.push(tagId);
             this._tags.push(adone.vault.normalizeTag(tag));
-            await this._updateMeta();
+            if (!_isWeak) {
+                await this._updateMeta();
+            }
             return tagId;
         }
         return null;
@@ -193,8 +231,31 @@ export default class Valuable {
         return false;
     }
 
+    async deleteAllTags() {
+        this._deleteAllTags();
+        return this._updateMeta();
+    }
+
     tags() {
         return this._tags;
+    }
+
+    async _delete(name) {
+        const keyMeta = this._getKey(name);
+        const index = this.meta.kids.indexOf(keyMeta.id);
+        this.meta.kids.splice(index, 1);
+        this._keys.delete(name);
+
+        // Delete key meta and value from db.
+        await this.vault._deleteMeta(__.vkey(this.id, keyMeta.id));
+        await this.vault._deleteMeta(__.vvalue(this.id, keyMeta.id));
+    }
+
+    _deleteAllTags() {
+        for (let i = this._tags.length; --i >= 0; ) {
+            this.meta.tids.splice(this.meta.tids.indexOf(this.vault.tagsMap.get(this._tags[i].name).id), 1);
+            this._tags.splice(i, 1);
+        }
     }
 
     _getKeyUnsafe(name) {

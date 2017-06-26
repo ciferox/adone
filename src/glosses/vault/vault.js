@@ -2,6 +2,9 @@ const { is, vault: { __, Valuable } } = adone;
 
 const VIDS = "vids";
 const TIDS = "tids";
+const CREATED = "created";
+const UPDATED = "updated";
+const NOTES = "notes";
 const NEXT_TAG_ID = "nextTagId";
 const NEXT_VALUABLE_ID = "nextValuableId";
 
@@ -10,9 +13,9 @@ export default class Vault {
         this.options = Object.assign({}, options, {
             valueEncoding: "mpak"
         });
-        if (is.class(this.options.valuable)) {
-            this.Valuable = this.options.valuable;
-            delete this.options.valuable;
+        if (is.class(this.options.ValuableClass)) {
+            this.Valuable = this.options.ValuableClass;
+            delete this.options.ValuableClass;
         } else {
             this.Valuable = Valuable;
         }
@@ -24,6 +27,9 @@ export default class Vault {
         this.nextTagId = undefined;
         this.nextValuableId = undefined;
         this._vcache = new Map();
+        this.notes = "";
+        this.created = null;
+        this.updated = null;
     }
 
     async open() {
@@ -48,6 +54,28 @@ export default class Vault {
             }
         } catch (err) {
             this.tids = [];
+        }
+
+        // Load timestamps
+        try {
+            this.created = await this._getMeta(CREATED);
+        } catch (err) {
+            this.created = (new Date()).getTime();
+            await this._setMeta(CREATED, this.created);
+        }
+
+        try {
+            this.updated = await this._getMeta(UPDATED);
+        } catch (err) {
+            this.updated = (new Date()).getTime();
+            await this._setMeta(UPDATED, this.updated);
+        }
+
+        // Load description
+        try {
+            this.notes = await this._getMeta(NOTES);
+        } catch (err) {
+            /* ignore */
         }
 
         try {
@@ -83,6 +111,7 @@ export default class Vault {
         const normTags = adone.vault.normalizeTags(tags);
         const metaData = {
             name,
+            notes: "",
             tids: await this._getTids(normTags, id),
             kids: [],
             nextKeyId: 1
@@ -106,6 +135,7 @@ export default class Vault {
                 const keyMeta = await this._getMeta(__.vkey(id, kid));
                 valuable._keys.set(keyMeta.name, keyMeta);
             }
+            this._vcache.set(id, valuable);
         }
 
         return valuable;
@@ -120,7 +150,7 @@ export default class Vault {
         await val.clear();
         this.vids.splice(this.vids.indexOf(val.id), 1);
         this.nameIdMap.delete(name);
-        await this._deleteMeta(__.valuable(val.id));
+        return this._deleteMeta(__.valuable(val.id));
     }
 
     async clear({ hosts = true, tags = false } = {}) {
@@ -137,6 +167,8 @@ export default class Vault {
                 await this.deleteTag(tag);
             }
         }
+        
+        return this.updated;
     }
 
     has(name) {
@@ -165,12 +197,26 @@ export default class Vault {
         return vaults;
     }
 
-    async toJSON(options) {
-        const valuables = [];
-        for (const name of this.nameIdMap.keys()) {
-            valuables.push(await (await this.get(name)).toJSON(options));
+    async toJSON({ valuable, includeStats = false } = {}) {
+        const result = {};
+
+        if (is.plainObject(valuable)) {
+            const valuables = [];
+            for (const name of this.nameIdMap.keys()) {
+                valuables.push(await (await this.get(name)).toJSON(valuable));
+            }
+            result.valuables = valuables;
         }
-        return valuables;
+
+        if (includeStats) {
+            result.stats = {
+                location: this._db.location,
+                created: this.created,
+                updated: this.updated
+            };
+        }
+
+        return result;
     }
 
     async addTag(tag, vid = null) {
@@ -223,6 +269,15 @@ export default class Vault {
         return [...this.tagsMap.values()].map((t) => t.tag.name);
     }
 
+    getNotes() {
+        return this.notes;
+    }
+
+    async setNotes(descr) {
+        await this._setMeta(NOTES, descr);
+        this.notes = descr;
+    }
+
     _getTags() {
         return [...this.tagsMap.values()].map((meta) => meta.tag);
     }
@@ -231,12 +286,22 @@ export default class Vault {
         return this._db.get(id);
     }
 
-    _setMeta(id, data) {
-        return this._db.put(id, data);
+    async _setMeta(id, data) {
+        this.updated = (new Date()).getTime();
+        await this._db.batch([
+            { type: "put", key: id, value: data },
+            { type: "put", key: UPDATED, value: this.updated }
+        ]);
+        return this.updated;
     }
 
-    _deleteMeta(id) {
-        return this._db.del(id);
+    async _deleteMeta(id) {
+        this.updated = (new Date()).getTime();
+        await this._db.batch([
+            { type: "del", key: id },
+            { type: "put", key: UPDATED, value: this.updated }
+        ]);
+        return this.updated;
     }
 
     _getVid(name) {

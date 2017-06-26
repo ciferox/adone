@@ -66,6 +66,18 @@ describe("Vault", () => {
         assert.lengthOf(valuable.tags(), 0);
     });
 
+    it("vault notes", async () => {
+        const NOTES = "some description!";
+        await openVault();
+        let notes = await vault.getNotes();
+        assert.equal(notes, "");
+
+        await vault.setNotes(NOTES);
+
+        notes = await vault.getNotes();
+        assert.equal(notes, NOTES);
+    });
+
     it("create/get valuable with tags", async () => {
         await openVault();
         assert.equal(vault.location(), location);
@@ -283,15 +295,35 @@ describe("Vault", () => {
         assert.instanceOf(err, adone.x.NotExists);
     });
 
-    it("clear all item in a valuable", async () => {
+    it("set/get notes", async () => {
+        const NOTES = "some notes";
+        await openVault();
+        const val = await vault.create("val");
+
+        assert.equal(val.getNotes(), "");
+        await val.setNotes(NOTES);
+        assert.equal(val.getNotes(), NOTES);
+    });
+
+    it("clear all items and tags in a valuable", async () => {
+        const NOTES = "some notes";
+
         await openVault();
         const val = await vault.create("val");
         await val.set("a b c", "some string value");
         await val.set("num", 17);
         await val.set("buf", Buffer.from("01101010101010101010100101010101010101010101"));
+        await val.setNotes(NOTES);
+        await val.addTag("tag1");
+        await val.addTag("tag2");
+
         assert.lengthOf(val.keys(), 3);
+        assert.equal(val.getNotes(), NOTES);
+        assert.sameDeepMembers(val.tags(), [{ name: "tag1" }, { name: "tag2" }]);
         await val.clear();
         assert.lengthOf(val.keys(), 0);
+        assert.equal(val.getNotes(), "");
+        assert.equal(val.tags().length, 0);
     });
 
     it("clear all valuables in a vault", async () => {
@@ -325,7 +357,7 @@ describe("Vault", () => {
             }
         }
         await openVault(null, {
-            valuable: ExValuable
+            ValuableClass: ExValuable
         });
         const val = await vault.create("val");
         assert.equal(val.exProperty, "extended");
@@ -370,6 +402,11 @@ describe("Vault", () => {
             await val.set("k2", 2);
             await val.set("k3", true);
             await val.set("k4", [1, 2, 3]);
+            await val.set("k5", {
+                a: 1,
+                b: "2",
+                c: false
+            });
             if (!is.null(tags)) {
                 await val.addTag(tags);
             }
@@ -501,16 +538,23 @@ describe("Vault", () => {
             });
 
             assert.equal(obj.name, "descriptor");
-            assert.deepInclude(obj.entries, { id: 1, name: "k1", value: "adone" });
-            assert.deepInclude(obj.entries, { id: 2, name: "k2", value: 2 });
-            assert.deepInclude(obj.entries, { id: 3, name: "k3", value: true });
-            assert.deepInclude(obj.entries, { id: 4, name: "k4", value: [1, 2, 3] });
+            assert.deepInclude(obj.entries, { id: 1, name: "k1", value: "adone", type: "string" });
+            assert.deepInclude(obj.entries, { id: 2, name: "k2", value: 2, type: "number" });
+            assert.deepInclude(obj.entries, { id: 3, name: "k3", value: true, type: "boolean" });
+            assert.deepInclude(obj.entries, { id: 4, name: "k4", value: [1, 2, 3], type: "Array" });
+            assert.deepInclude(obj.entries, {
+                id: 5, name: "k5", value: {
+                    a: 1,
+                    b: "2",
+                    c: false
+                }, type: "Object"
+            });
             assert.isUndefined(obj.id);
             assert.equal(obj.tags.length, 0);
         });
     });
 
-    it("Vault#toJSON()", async () => {
+    describe("Vault#toJSON", () => {
         const tags1 = [
             {
                 name: "tag1",
@@ -533,42 +577,149 @@ describe("Vault", () => {
             }
         ];
 
-        await openVault();
-        const val1 = await vault.create("descriptor1");
-        await val1.set("k11", "adone");
-        await val1.set("k12", 2);
-        await val1.set("k13", true);
-        await val1.set("k14", [1, 2, 3]);
-        await val1.addTag(tags1);
+        beforeEach(async () => {
+            await openVault();
+            const val1 = await vault.create("descriptor1");
+            await val1.set("k11", "adone");
+            await val1.set("k12", 2);
+            await val1.set("k13", true);
+            await val1.set("k14", [1, 2, 3]);
+            await val1.addTag(tags1);
 
-        const val2 = await vault.create("descriptor2");
-        await val2.set("k21", "adone");
-        await val2.set("k22", 2);
-        await val2.set("k23", true);
-        await val2.set("k24", [1, 2, 3]);
-        await val2.addTag(tags2);
-
-        const obj = await vault.toJSON({
-            includeId: true,
-            tags: "normal"
+            const val2 = await vault.create("descriptor2");
+            await val2.set("k21", "adone");
+            await val2.set("k22", 2);
+            await val2.set("k23", true);
+            await val2.set("k24", [1, 2, 3]);
+            await val2.addTag(tags2);
         });
 
-        assert.equal(obj.length, 2);
+        it("Vault#toJSON({ valuable })", async () => {
+            const result = await vault.toJSON({
+                valuable: {
+                    includeId: true,
+                    tags: "normal"
+                }
+            });
 
-        assert.equal(obj[0].name, "descriptor1");
-        assert.equal(obj[0].entries.k11, "adone");
-        assert.equal(obj[0].entries.k12, 2);
-        assert.equal(obj[0].entries.k13, true);
-        assert.deepEqual(obj[0].entries.k14, [1, 2, 3]);
-        assert.isNumber(obj[0].id);
-        assert.deepEqual(obj[0].tags, tags1);
+            const obj = result.valuables;
 
-        assert.equal(obj[1].name, "descriptor2");
-        assert.equal(obj[1].entries.k21, "adone");
-        assert.equal(obj[1].entries.k22, 2);
-        assert.equal(obj[1].entries.k23, true);
-        assert.deepEqual(obj[1].entries.k24, [1, 2, 3]);
-        assert.isNumber(obj[1].id);
-        assert.deepEqual(obj[1].tags, tags2);
+            assert.isUndefined(result.stats);
+
+            assert.equal(obj.length, 2);
+
+            assert.equal(obj[0].name, "descriptor1");
+            assert.equal(obj[0].entries.k11, "adone");
+            assert.equal(obj[0].entries.k12, 2);
+            assert.equal(obj[0].entries.k13, true);
+            assert.deepEqual(obj[0].entries.k14, [1, 2, 3]);
+            assert.isNumber(obj[0].id);
+            assert.deepEqual(obj[0].tags, tags1);
+
+            assert.equal(obj[1].name, "descriptor2");
+            assert.equal(obj[1].entries.k21, "adone");
+            assert.equal(obj[1].entries.k22, 2);
+            assert.equal(obj[1].entries.k23, true);
+            assert.deepEqual(obj[1].entries.k24, [1, 2, 3]);
+            assert.isNumber(obj[1].id);
+            assert.deepEqual(obj[1].tags, tags2);
+        });
+
+        it("Vault#toJSON({ includeStats })", async () => {
+            const result = await vault.toJSON({
+                includeStats: true
+            });
+
+            assert.isUndefined(result.valuables);
+            assert.isNumber(result.stats.created);
+            assert.isNumber(result.stats.updated);
+            assert.isAbove(result.stats.updated, result.stats.created);
+            assert.isString(result.stats.location);
+        });
+    });
+
+    describe("Valuable#fromJSON()", () => {
+        it("entries as array", async () => {
+            await openVault();
+            let val = await vault.create("valuable1");
+            const notes = "some notes";
+            const entries = [
+                {
+                    name: "k1",
+                    value: "v2",
+                    type: "string"
+                },
+                {
+                    name: "k2",
+                    value: 888,
+                    type: "number"
+                },
+                {
+                    name: "k3",
+                    value: true,
+                    type: "boolean"
+                }
+            ];
+            const tags = ["tag1", "tag2", "tag3"];
+            await val.fromJSON({
+                notes,
+                entries,
+                tags
+            });
+            await vault.close();
+
+            await openVault(location);
+            val = await vault.get("valuable1");
+            const jsonData = await val.toJSON({
+                entriesAsArray: true
+            });
+
+            assert.sameDeepMembers(jsonData.tags, tags.map((x) => ({ name: x })));
+            assert.sameDeepMembers(jsonData.entries, entries);
+            assert.equal(val.getNotes(), notes);
+        });
+
+        it("entries as plain object", async () => {
+            await openVault();
+            let val = await vault.create("valuable2");
+            const notes = "some notes";
+            const tags = ["tag1", "tag2", "tag3", "tag4"];
+            await val.fromJSON({
+                notes,
+                entries: {
+                    k1: "v2",
+                    k2: 888,
+                    k3: true
+                },
+                tags
+            });
+            await vault.close();
+
+            await openVault(location);
+            val = await vault.get("valuable2");
+            const jsonData = await val.toJSON({
+                entriesAsArray: true
+            });
+
+            assert.sameDeepMembers(jsonData.tags, tags.map((x) => ({ name: x })));
+            assert.sameDeepMembers(jsonData.entries, [
+                {
+                    name: "k1",
+                    value: "v2",
+                    type: "string"
+                },
+                {
+                    name: "k2",
+                    value: 888,
+                    type: "number"
+                },
+                {
+                    name: "k3",
+                    value: true,
+                    type: "boolean"
+                }
+            ]);
+            assert.equal(val.getNotes(), notes);
+        });
     });
 });

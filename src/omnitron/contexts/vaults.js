@@ -15,6 +15,8 @@ const SEPARATOR = "|";
 @Method("clear", { private: false })
 @Method("keys", { private: false })
 @Method("entries", { private: false })
+@Method("toJSON", { private: false, description: "Returns valuable as json data", type: Object })
+@Method("fromJSON", { private: false, description: "Update valuable within json data" })
 @Method("tags", { private: false })
 @Method("addTag", { private: false })
 @Method("deleteTag", { private: false })
@@ -28,11 +30,13 @@ export class Valuable extends adone.vault.Valuable {
 @Method("get", { private: false, description: "Returns existing valuable", type: Valuable })
 @Method("has", { private: false, description: "Checks whether valuable with specified name exists", type: Boolean })
 @Method("delete", { private: false, description: "Deletes valuable", type: Boolean })
-@Method("toJSON", { private: false, description: "Returs array of valuables in json", type: Array })
+@Method("toJSON", { private: false, description: "Returns array of valuables in json", type: Array })
+@Method("getDescription", { private: false, description: "Returs description", type: String })
+@Method("setDescription", { private: false, description: "Update description" })
 class Vault extends adone.vault.Vault {
     constructor(omnitron, options) {
         super(Object.assign({
-            valuable: Valuable
+            ValuableClass: Valuable
         }, options));
         this.omnitron = omnitron;
     }
