@@ -27,7 +27,7 @@ describe("geoip", "maxmind", "Decoder", () => {
 
     describe("decode()", () => {
         it("should throw when extended type has wrong size", () => {
-            const test = new Decoder(new Buffer([0x00, 0x00]));
+            const test = new Decoder(Buffer.from([0x00, 0x00]));
             assert.throws(() => {
                 test.decode(0);
             }, /Invalid Extended Type at offset 1 val 7/);
@@ -35,7 +35,7 @@ describe("geoip", "maxmind", "Decoder", () => {
     });
 
     describe("sizeFromCtrlByte()", () => {
-        const decoder = new Decoder(new Buffer([0x01, 0x02, 0x03, 0x04]));
+        const decoder = new Decoder(Buffer.from([0x01, 0x02, 0x03, 0x04]));
 
         it("should return correct value (size <29)", () => {
             assert.deepEqual(decoder.sizeFromCtrlByte(60, 0), { value: 28, offset: 0 });
@@ -55,7 +55,7 @@ describe("geoip", "maxmind", "Decoder", () => {
     });
 
     describe("decodePointer()", () => {
-        const decoder = new Decoder(new Buffer([0x01, 0x02, 0x03, 0x04]));
+        const decoder = new Decoder(Buffer.from([0x01, 0x02, 0x03, 0x04]));
 
         it("should return correct value (pointer size = 0)", () => {
             assert.deepEqual(decoder.decodePointer(39, 0), { value: 1793, offset: 1 });

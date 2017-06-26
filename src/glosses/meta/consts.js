@@ -265,7 +265,49 @@ export const namespaces = [
         name: "adone.net",
         description: "Implementation of different network abstractions, protocols and associated stuff",
         paths: [
-            "glosses/net"
+            "glosses/net/index"
+        ]
+    },
+    {
+        name: "adone.net.ws",
+        description: "Implementation of websockets client/server",
+        paths: [
+            "glosses/net/ws/index"
+        ]
+    },
+    {
+        name: "adone.net.address",
+        description: "Some usefull utilites for manipulating of IPv4/IPv6 addresses",
+        paths: [
+            "glosses/net/ssh/index"
+        ]
+    },
+    {
+        name: "adone.net.http",
+        description: "Implementation of http client/server",
+        paths: [
+            "glosses/net/http/index"
+        ]
+    },
+    {
+        name: "adone.net.mail",
+        description: "Implementation of mail client",
+        paths: [
+            "glosses/net/mail/index"
+        ]
+    },
+    {
+        name: "adone.net.mqtt",
+        description: "Implementation of mqtt client/server",
+        paths: [
+            "glosses/net/mail/index"
+        ]
+    },
+    {
+        name: "adone.net.ssh",
+        description: "Implementation of ssh client/server",
+        paths: [
+            "glosses/net/ssh/index"
         ]
     },
     {
@@ -273,6 +315,27 @@ export const namespaces = [
         description: "Different net utilites",
         paths: [
             "glosses/net/utils"
+        ]
+    },
+    {
+        name: "adone.net.util.fakeClock",
+        description: "Fake clock and timers",
+        paths: [
+            "glosses/net/utils/fake_clock"
+        ]
+    },
+    {
+        name: "adone.net.util.iconv",
+        description: "",
+        paths: [
+            "glosses/net/utils/iconv/index"
+        ]
+    },
+    {
+        name: "adone.net.util.ltgt",
+        description: "",
+        paths: [
+            "glosses/net/utils/ltgt"
         ]
     },
     {

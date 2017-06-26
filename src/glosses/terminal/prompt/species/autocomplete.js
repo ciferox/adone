@@ -143,15 +143,32 @@ export default class AutocompletePrompt extends terminal.BasePrompt {
             this.shortAnswer = choice.short;
         }
 
+        if (is.function(this.opt.filter)) {
+            const processResult = (value) => {
+                choice.value = value;
+                this.answer = value;
 
-        this.status = "answered";
+                if (this.opt.suggestOnly) {
+                    this.shortAnswer = value;
+                }
 
-        // Rerender prompt
-        this.render();
+                this.status = "answered";
+                // Rerender prompt
+                this.render();
+                this.screen.done();
+                this.done(choice.value);
+            };
 
-        this.screen.done();
+            const result = this.opt.filter(choice.value);
 
-        this.done(choice.value);
+            if (is.promise(result)) {
+                result.then((value) => {
+                    processResult(value);
+                });
+            } else {
+                processResult(result);
+            }
+        }
     }
 
     search(searchTerm) {

@@ -58,7 +58,7 @@ describe("geoip", "maxmind", "helpers", () => {
 
     describe("bitAt()", () => {
         it("should return correct bit for given offset", () => {
-            const address = new Buffer([0x0a, 0x0a, 0xc8, 0x3b]);
+            const address = Buffer.from([0x0a, 0x0a, 0xc8, 0x3b]);
             assert.strictEqual(ip.bitAt(address, 1), 0);
             assert.strictEqual(ip.bitAt(address, 10), 0);
             assert.strictEqual(ip.bitAt(address, 23), 0);
