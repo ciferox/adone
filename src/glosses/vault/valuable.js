@@ -252,7 +252,7 @@ export default class Valuable {
     }
 
     _deleteAllTags() {
-        for (let i = this._tags.length; --i >= 0; ) {
+        for (let i = this._tags.length; --i >= 0;) {
             this.meta.tids.splice(this.meta.tids.indexOf(this.vault.tagsMap.get(this._tags[i].name).id), 1);
             this._tags.splice(i, 1);
         }
