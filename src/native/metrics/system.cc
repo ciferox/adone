@@ -18,21 +18,22 @@
 #define LOCK_NB 4
 #define LOCK_UN 8
 
-
 static SYSTEM_INFO systemInfo;
 static char version[64];
 static char codeName[128];
 static uint32_t buildNumber;
 
-int fcntl(int fildes, int cmd, ...) {
+int fcntl(int fildes, int cmd, ...)
+{
     return -1;
 }
 
 // Win32_Process class
 
-struct {
-    wchar_t* Name;
-    wchar_t* CommandLine;
+struct
+{
+    wchar_t *Name;
+    wchar_t *CommandLine;
     uint16_t ExecutionState;
     uint32_t ProcessID;
     uint32_t ParentProcessId;
@@ -48,32 +49,29 @@ struct {
 } win32ProcessData;
 
 wmi_class_property_t win32ProcessProps[] = {
-    { 'S', &win32ProcessData.Name, L"Name", "name" },
-    { 'S', &win32ProcessData.CommandLine, L"CommandLine", "commandLine" },
-    { 'w', &win32ProcessData.ExecutionState, L"ExecutionState", "executionState" },
-    { 'u', &win32ProcessData.ProcessID, L"ProcessID", "pid" },
-    { 'u', &win32ProcessData.ParentProcessId, L"ParentProcessId", "parentPid" },
-    { 'u', &win32ProcessData.ThreadCount, L"ThreadCount", "threadCount" },
-    { 'u', &win32ProcessData.Priority, L"Priority", "priority" },
-    { 'q', &win32ProcessData.VirtualSize, L"VirtualSize", "virtualSize" },
-    { 'q', &win32ProcessData.WorkingSetSize, L"WorkingSetSize", "workingSetSize" },
-    { 'q', &win32ProcessData.KernelModeTime, L"KernelModeTime", "kernelTime" },
-    { 'q', &win32ProcessData.UserModeTime, L"UserModeTime", "userTime" },
-    { 'D', &win32ProcessData.CreationDate, L"CreationDate", "creationDate" },
-    { 'q', &win32ProcessData.ReadTransferCount, L"ReadTransferCount", "bytesRead" },
-    { 'q', &win32ProcessData.WriteTransferCount, L"WriteTransferCount", "bytesWritten" },
-    { 0, NULL, NULL }
-};
+    {'S', &win32ProcessData.Name, L"Name", "name"},
+    {'S', &win32ProcessData.CommandLine, L"CommandLine", "commandLine"},
+    {'w', &win32ProcessData.ExecutionState, L"ExecutionState", "executionState"},
+    {'u', &win32ProcessData.ProcessID, L"ProcessID", "pid"},
+    {'u', &win32ProcessData.ParentProcessId, L"ParentProcessId", "parentPid"},
+    {'u', &win32ProcessData.ThreadCount, L"ThreadCount", "threadCount"},
+    {'u', &win32ProcessData.Priority, L"Priority", "priority"},
+    {'q', &win32ProcessData.VirtualSize, L"VirtualSize", "virtualSize"},
+    {'q', &win32ProcessData.WorkingSetSize, L"WorkingSetSize", "workingSetSize"},
+    {'q', &win32ProcessData.KernelModeTime, L"KernelModeTime", "kernelTime"},
+    {'q', &win32ProcessData.UserModeTime, L"UserModeTime", "userTime"},
+    {'D', &win32ProcessData.CreationDate, L"CreationDate", "creationDate"},
+    {'q', &win32ProcessData.ReadTransferCount, L"ReadTransferCount", "bytesRead"},
+    {'q', &win32ProcessData.WriteTransferCount, L"WriteTransferCount", "bytesWritten"},
+    {0, NULL, NULL}};
 
 wmi_class_info_t win32ProcessClassInfo = {
     L"Win32_Process",
     &win32ProcessData,
     sizeof(win32ProcessData),
-    win32ProcessProps
-};
+    win32ProcessProps};
 
-static IDispatch* pWmiService = NULL;
-
+static IDispatch *pWmiService = NULL;
 
 #else
 
@@ -95,16 +93,20 @@ static IDispatch* pWmiService = NULL;
 #include <sys/socket.h>
 #include <libprocstat.h>
 
-Local<Object> createProcessObject(struct procstat* prstat, struct kinfo_proc *p, time_t now) {
+Local<Object> createProcessObject(struct procstat *prstat, struct kinfo_proc *p, time_t now)
+{
     Local<Object> proc = Nan::New<Object>();
     proc->Set(NanStr("pid"), Nan::New<Integer>(p->ki_pid));
     proc->Set(NanStr("parentPid"), Nan::New<Integer>(p->ki_ppid));
     proc->Set(NanStr("name"), NanStr(p->ki_comm));
 
     char pathName[PATH_MAX];
-    if (procstat_getpathname(prstat, p, pathName, sizeof(pathName)) == 0) {
+    if (procstat_getpathname(prstat, p, pathName, sizeof(pathName)) == 0)
+    {
         proc->Set(NanStr("path"), NanStr(pathName));
-    } else {
+    }
+    else
+    {
         proc->Set(NanStr("path"), NanStr(""));
     }
 
@@ -112,30 +114,33 @@ Local<Object> createProcessObject(struct procstat* prstat, struct kinfo_proc *p,
     int state = 6;
     long tdflags = p->ki_tdflags;
 
-    switch (p->ki_stat) {
-        case SSTOP:
-            state = 5; // Process.STOPPED
-            break;
-        case SSLEEP:
-            if (tdflags & TDF_SINTR) {
-                state = 2; // Process.SLEEPING
-            }
-            else {
-                state = 3; // Process.WAITING
-            }
-            break;
-        case SRUN:
-        case SIDL:
-            state = 1; // Process.RUNNING
-            break;
-        case SWAIT:
+    switch (p->ki_stat)
+    {
+    case SSTOP:
+        state = 5; // Process.STOPPED
+        break;
+    case SSLEEP:
+        if (tdflags & TDF_SINTR)
+        {
+            state = 2; // Process.SLEEPING
+        }
+        else
+        {
             state = 3; // Process.WAITING
-            break;
-        case SLOCK:
-            state = 3; // Process.WAITING
-        case SZOMB:
-            state = 4; // Process.ZOMBIE
-            break;
+        }
+        break;
+    case SRUN:
+    case SIDL:
+        state = 1; // Process.RUNNING
+        break;
+    case SWAIT:
+        state = 3; // Process.WAITING
+        break;
+    case SLOCK:
+        state = 3; // Process.WAITING
+    case SZOMB:
+        state = 4; // Process.ZOMBIE
+        break;
     }
     proc->Set(NanStr("state"), Nan::New<Integer>(state));
     proc->Set(NanStr("priority"), Nan::New<Integer>(p->ki_pri.pri_level - PZERO));
@@ -143,11 +148,11 @@ Local<Object> createProcessObject(struct procstat* prstat, struct kinfo_proc *p,
     proc->Set(NanStr("virtualSize"), Nan::New<Number>(static_cast<unsigned long>(p->ki_size)));
     proc->Set(NanStr("residentSetSize"), Nan::New<Number>(p->ki_rssize * 1024));
 
-    const struct rusage& usage = p->ki_rusage;
+    const struct rusage &usage = p->ki_rusage;
     proc->Set(NanStr("kernelTime"), Nan::New<Number>(((usage.ru_stime.tv_sec * 1000000) + usage.ru_stime.tv_usec) / 1000));
     proc->Set(NanStr("userTime"), Nan::New<Number>(((usage.ru_utime.tv_sec * 1000000) + usage.ru_utime.tv_usec) / 1000));
     proc->Set(NanStr("elapsedTime"), Nan::New<Number>((now - p->ki_start.tv_sec) * 1000));
-    
+
     return proc;
 }
 
@@ -164,7 +169,6 @@ static Nan::Persistent<String> f_bfree_symbol;
 static Nan::Persistent<String> f_files_symbol;
 static Nan::Persistent<String> f_favail_symbol;
 static Nan::Persistent<String> f_ffree_symbol;
-
 
 #endif
 
@@ -211,7 +215,7 @@ static void EIO_After(uv_work_t *req)
     if (store_data->result == -1)
     {
         // If the request doesn't have a path parameter set.
-        argv[0] = Nan::ErrnoException(store_data->error);
+        argv[0] = Nan::ErrnoException(store_data->error, "EIO_After", "");
     }
     else
     {
@@ -294,11 +298,13 @@ static void EIO_Seek(uv_work_t *req)
 
     off_t offs = lseek(seek_data->fd, seek_data->offset, seek_data->oper);
 
-    if (offs == -1) {
+    if (offs == -1)
+    {
         seek_data->result = -1;
         seek_data->error = errno;
     }
-    else {
+    else
+    {
         seek_data->offset = offs;
     }
 }
@@ -306,7 +312,28 @@ static void EIO_Seek(uv_work_t *req)
 static void EIO_Fcntl(uv_work_t *req)
 {
     store_data_t *data = static_cast<store_data_t *>(req->data);
-    int result = data->result = fcntl(data->fd, data->oper, data->arg);
+
+    struct flock lk;
+    lk.l_start = 0;
+    lk.l_len = 0;
+    lk.l_type = 0;
+    lk.l_whence = 0;
+    lk.l_pid = 0;
+
+    int result = -1;
+    if (data->oper == F_GETLK || data->oper == F_SETLK || data->oper == F_SETLKW)
+    {
+        if (data->oper == F_SETLK || data->oper == F_SETLKW)
+        {
+            lk.l_whence = SEEK_SET;
+            lk.l_type = data->arg;
+        }
+        data->result = result = fcntl(data->fd, data->oper, &lk);
+    }
+    else
+    {
+        data->result = result = fcntl(data->fd, data->oper, data->arg);
+    }
     if (result == -1)
     {
         data->error = errno;
@@ -429,10 +456,9 @@ static void EIO_UTime(uv_work_t *req)
     }
 }
 
-
 class System : public node::ObjectWrap
 {
-public:
+  public:
     static void Initialize(Handle<Object> target)
     {
         Nan::HandleScope scope;
@@ -452,43 +478,67 @@ public:
         Nan::SetMethod(t, "statVFS", System::StatVFS);
 
 #ifdef SEEK_SET
-    NODE_DEFINE_CONSTANT(target, SEEK_SET);
+        NODE_DEFINE_CONSTANT(target, SEEK_SET);
 #endif
 
 #ifdef SEEK_CUR
-    NODE_DEFINE_CONSTANT(target, SEEK_CUR);
+        NODE_DEFINE_CONSTANT(target, SEEK_CUR);
 #endif
 
 #ifdef SEEK_END
-    NODE_DEFINE_CONSTANT(target, SEEK_END);
+        NODE_DEFINE_CONSTANT(target, SEEK_END);
 #endif
 
 #ifdef LOCK_SH
-    NODE_DEFINE_CONSTANT(target, LOCK_SH);
+        NODE_DEFINE_CONSTANT(target, LOCK_SH);
 #endif
 
 #ifdef LOCK_EX
-    NODE_DEFINE_CONSTANT(target, LOCK_EX);
+        NODE_DEFINE_CONSTANT(target, LOCK_EX);
 #endif
 
 #ifdef LOCK_NB
-    NODE_DEFINE_CONSTANT(target, LOCK_NB);
+        NODE_DEFINE_CONSTANT(target, LOCK_NB);
 #endif
 
 #ifdef LOCK_UN
-    NODE_DEFINE_CONSTANT(target, LOCK_UN);
+        NODE_DEFINE_CONSTANT(target, LOCK_UN);
 #endif
 
 #ifdef F_GETFD
-    NODE_DEFINE_CONSTANT(target, F_GETFD);
+        NODE_DEFINE_CONSTANT(target, F_GETFD);
 #endif
 
 #ifdef F_SETFD
-    NODE_DEFINE_CONSTANT(target, F_SETFD);
+        NODE_DEFINE_CONSTANT(target, F_SETFD);
 #endif
 
 #ifdef FD_CLOEXEC
-    NODE_DEFINE_CONSTANT(target, FD_CLOEXEC);
+        NODE_DEFINE_CONSTANT(target, FD_CLOEXEC);
+#endif
+
+#ifdef F_RDLCK
+        NODE_DEFINE_CONSTANT(target, F_RDLCK);
+#endif
+
+#ifdef F_WRLCK
+        NODE_DEFINE_CONSTANT(target, F_WRLCK);
+#endif
+
+#ifdef F_UNLCK
+        NODE_DEFINE_CONSTANT(target, F_UNLCK);
+#endif
+
+#ifdef F_SETLK
+        NODE_DEFINE_CONSTANT(target, F_SETLK);
+#endif
+
+#ifdef F_GETLK
+        NODE_DEFINE_CONSTANT(target, F_GETLK);
+#endif
+
+#ifdef F_SETLKW
+        NODE_DEFINE_CONSTANT(target, F_SETLKW);
 #endif
 
 #if ADONE_OS_WINDOWS
@@ -500,17 +550,18 @@ public:
 
         Nan::SetMethod(t, "getVersionInfo", System::GetVersionInfo);
         Nan::SetMethod(t, "getLocalVolumes", System::GetLocalVolumes);
-        
+
         HRESULT hres = CoInitializeEx(0, COINIT_MULTITHREADED);
-        if (SUCCEEDED(hres)) {
-            CoGetObject(L"winmgmts:{impersonationLevel=impersonate}!\\\\.\\root\\cimv2", NULL, IID_IDispatch, (void**)&pWmiService);
+        if (SUCCEEDED(hres))
+        {
+            CoGetObject(L"winmgmts:{impersonationLevel=impersonate}!\\\\.\\root\\cimv2", NULL, IID_IDispatch, (void **)&pWmiService);
         }
 
-        // pWmiService should be released on module unload...
-        // if (pWmiService != NULL) {
-        //     pWmiService->Release();
-        // }
-        // CoUninitialize();
+// pWmiService should be released on module unload...
+// if (pWmiService != NULL) {
+//     pWmiService->Release();
+// }
+// CoUninitialize();
 
 #elif ADONE_OS_LINUX
         Nan::SetMethod(t, "diskCheck", System::DiskCheck);
@@ -522,7 +573,7 @@ public:
         Nan::Set(target, Nan::New<String>("System").ToLocalChecked(), t->GetFunction());
     }
 
-protected:
+  protected:
     static NAN_METHOD(New)
     {
         Nan::HandleScope scope;
@@ -544,7 +595,8 @@ protected:
 
         size_t size = 4;
 
-        if (sysctlbyname("hw.pagesize", (void*)&pageSize, &size, NULL, 0) != 0) {                                                                                                                              
+        if (sysctlbyname("hw.pagesize", (void *)&pageSize, &size, NULL, 0) != 0)
+        {
             pageSize = 4096;
         }
 
@@ -568,19 +620,20 @@ protected:
 
 #elif ADONE_OS_FREEBSD
 
-        struct procstat* prstat;
+        struct procstat *prstat;
         struct kinfo_proc *p, *kip;
         unsigned int cnt = 0;
         time_t now;
-        
+
         time(&now);
         prstat = procstat_open_sysctl();
         kip = p = procstat_getprocs(prstat, KERN_PROC_PROC, 0, &cnt);
 
-        for (unsigned int i = 0; i < cnt; ++i, p++) {
+        for (unsigned int i = 0; i < cnt; ++i, p++)
+        {
             processes->Set(Nan::New<Integer>(i), createProcessObject(prstat, p, now));
         }
-        
+
         procstat_freeprocs(prstat, kip);
         procstat_close(prstat);
 
@@ -594,7 +647,8 @@ protected:
         Nan::HandleScope scope;
         Local<Object> process;
 
-        if (info.Length() < 1) {
+        if (info.Length() < 1)
+        {
             info.GetReturnValue().SetUndefined();
             return Nan::ThrowError("Illegal number of arguments");
         }
@@ -612,31 +666,32 @@ protected:
 
 #elif ADONE_OS_FREEBSD
 
-        struct procstat* prstat;
+        struct procstat *prstat;
         struct kinfo_proc *p, *kip;
         unsigned int cnt = 0;
         time_t now;
-        
-        
+
         time(&now);
         prstat = procstat_open_sysctl();
         kip = p = procstat_getprocs(prstat, KERN_PROC_PROC, 0, &cnt);
-        
+
         int pid = info[0]->Uint32Value();
         unsigned int i = 0;
-        
-        
-        for ( ; i < cnt; ++i, p++) {
-            if (pid == p->ki_pid) {
+
+        for (; i < cnt; ++i, p++)
+        {
+            if (pid == p->ki_pid)
+            {
                 process = createProcessObject(prstat, p, now);
                 break;
             }
         }
-        
+
         procstat_freeprocs(prstat, kip);
         procstat_close(prstat);
-        
-        if (i == cnt) {
+
+        if (i == cnt)
+        {
             info.GetReturnValue().SetUndefined();
             return Nan::ThrowError("Unknown process");
         }
@@ -659,8 +714,8 @@ protected:
 
 #elif ADONE_OS_FREEBSD
 
-        struct procstat* prstat;
-        struct kinfo_proc* p;
+        struct procstat *prstat;
+        struct kinfo_proc *p;
 
         prstat = procstat_open_sysctl();
         p = procstat_getprocs(prstat, KERN_PROC_PROC, 0, &processCount);
@@ -690,20 +745,21 @@ protected:
 #elif ADONE_OS_FREEBSD
 
         unsigned int cnt;
-        struct procstat* prstat;
+        struct procstat *prstat;
         struct kinfo_proc *p, *kip;
-        
+
         prstat = procstat_open_sysctl();
         kip = p = procstat_getprocs(prstat, KERN_PROC_PROC, 0, &cnt);
-        for (unsigned int i = 0; i < cnt; ++i, p++) {;
+        for (unsigned int i = 0; i < cnt; ++i, p++)
+        {
+            ;
             threadCount += p->ki_numthreads;
         }
-        
+
         procstat_freeprocs(prstat, kip);
         procstat_close(prstat);
 
 #elif ADONE_OS_LINUX
-
 
 #endif
         info.GetReturnValue().Set(Nan::New<Integer>(threadCount));
@@ -711,7 +767,8 @@ protected:
 
     static NAN_METHOD(Flock)
     {
-        if (info.Length() < 2 || !info[0]->IsInt32() || !info[1]->IsInt32()) {
+        if (info.Length() < 2 || !info[0]->IsInt32() || !info[1]->IsInt32())
+        {
             return THROW_BAD_ARGS;
         }
 
@@ -721,28 +778,32 @@ protected:
         flock_data->fd = info[0]->Int32Value();
         flock_data->oper = info[1]->Int32Value();
 
-        if (info[2]->IsFunction()) {
+        if (info[2]->IsFunction())
+        {
             flock_data->cb = new Nan::Callback((Local<Function>)info[2].As<Function>());
             uv_work_t *req = new uv_work_t;
             req->data = flock_data;
             uv_queue_work(uv_default_loop(), req, EIO_Flock, (uv_after_work_cb)EIO_After);
             info.GetReturnValue().SetUndefined();
         }
-        else {
-    #ifdef _WIN32
+        else
+        {
+#ifdef _WIN32
             int i = _win32_flock(flock_data->fd, flock_data->oper);
-    #else
+#else
             int i = flock(flock_data->fd, flock_data->oper);
-    #endif
+#endif
             delete flock_data;
-            if (i != 0) return Nan::ThrowError(Nan::ErrnoException(errno));
+            if (i != 0)
+                return Nan::ThrowError(Nan::ErrnoException(errno, "Flock", ""));
             info.GetReturnValue().SetUndefined();
         }
     }
 
     static NAN_METHOD(Seek)
     {
-        if (info.Length() < 3 || !info[0]->IsInt32() || !info[2]->IsInt32()) {
+        if (info.Length() < 3 || !info[0]->IsInt32() || !info[2]->IsInt32())
+        {
             return THROW_BAD_ARGS;
         }
 
@@ -751,9 +812,11 @@ protected:
         off_t offs = GET_OFFSET(info[1]);
         int whence = info[2]->Int32Value();
 
-        if (!info[3]->IsFunction()) {
+        if (!info[3]->IsFunction())
+        {
             off_t offs_result = lseek(fd, offs, whence);
-            if (offs_result == -1) return Nan::ThrowError(Nan::ErrnoException(errno));
+            if (offs_result == -1)
+                return Nan::ThrowError(Nan::ErrnoException(errno, "Seek", ""));
             info.GetReturnValue().Set(Nan::New<Number>(offs_result));
             return;
         }
@@ -793,7 +856,9 @@ protected:
         {
             int result = fcntl(fd, cmd, arg);
             if (result == -1)
-                return Nan::ThrowError(Nan::ErrnoException(errno));
+            {
+                return Nan::ThrowError(Nan::ErrnoException(errno, "Fcntl", ""));
+            }
             info.GetReturnValue().Set(Nan::New<Number>(result));
             return;
         }
@@ -818,7 +883,8 @@ protected:
 
     static NAN_METHOD(UTime)
     {
-        if (info.Length() < 3 || info.Length() > 4 || !info[0]->IsString() || !info[1]->IsNumber() || !info[2]->IsNumber()) {
+        if (info.Length() < 3 || info.Length() > 4 || !info[0]->IsString() || !info[1]->IsNumber() || !info[2]->IsNumber())
+        {
             return THROW_BAD_ARGS;
         }
 
@@ -827,7 +893,8 @@ protected:
         time_t mtime = info[2]->IntegerValue();
 
         // Synchronous call needs much less work
-        if (!info[3]->IsFunction()) {
+        if (!info[3]->IsFunction())
+        {
             struct utimbuf buf;
             buf.actime = atime;
             buf.modtime = mtime;
@@ -858,18 +925,21 @@ protected:
 
     static NAN_METHOD(StatVFS)
     {
-        if (info.Length() < 1 || !info[0]->IsString()) {
+        if (info.Length() < 1 || !info[0]->IsString())
+        {
             return THROW_BAD_ARGS;
         }
 
         String::Utf8Value path(info[0]->ToString());
 
         // Synchronous call needs much less work
-        if (!info[1]->IsFunction()) {
-    #ifndef ADONE_OS_WINDOWS
+        if (!info[1]->IsFunction())
+        {
+#ifndef ADONE_OS_WINDOWS
             struct statvfs buf;
             int ret = statvfs(*path, &buf);
-            if (ret != 0) {
+            if (ret != 0)
+            {
                 return Nan::ThrowError(Nan::ErrnoException(errno, "statvfs", "", *path));
             }
             Local<Object> result = Nan::New<Object>();
@@ -885,9 +955,9 @@ protected:
             result->Set(Nan::New<String>(f_favail_symbol), Nan::New<Number>(buf.f_favail));
             result->Set(Nan::New<String>(f_ffree_symbol), Nan::New<Number>(buf.f_ffree));
             info.GetReturnValue().Set(result);
-    #else
+#else
             info.GetReturnValue().SetUndefined();
-    #endif
+#endif
             return;
         }
 
@@ -904,14 +974,14 @@ protected:
         info.GetReturnValue().SetUndefined();
     }
 
-
 #if ADONE_OS_WINDOWS
 
     static NAN_METHOD(GetVersionInfo)
     {
         Nan::HandleScope scope;
 
-        if (version[0] == '\0') {
+        if (version[0] == '\0')
+        {
             OSVERSIONINFOEXA osInfo;
 
             ZeroMemory(&osInfo, sizeof(OSVERSIONINFOEXA));
@@ -923,43 +993,57 @@ protected:
             uint32_t minor = osInfo.dwMinorVersion;
             uint16_t suiteMask = osInfo.wSuiteMask;
 
-            if (major == 10) {
-                if (minor == 0) {
+            if (major == 10)
+            {
+                if (minor == 0)
+                {
                     lstrcpyA(version, ntWorkstation ? "10" : "Server 2016");
                 }
             }
-            else if (major == 6) {
-                if (minor == 3) {
+            else if (major == 6)
+            {
+                if (minor == 3)
+                {
                     lstrcpyA(version, ntWorkstation ? "8.1" : "Server 2012 R2");
                 }
-                else if (minor == 2) {
+                else if (minor == 2)
+                {
                     lstrcpyA(version, ntWorkstation ? "8" : "Server 2012");
                 }
-                else if (minor == 1) {
+                else if (minor == 1)
+                {
                     lstrcpyA(version, ntWorkstation ? "7" : "Server 2008 R2");
                 }
-                else if (minor == 0) {
+                else if (minor == 0)
+                {
                     lstrcpyA(version, ntWorkstation ? "Vista" : "Server 2008");
                 }
             }
-            else if (major == 5) {
-                if (minor == 2) {
-                    if ((suiteMask & 0x8000) != 0) {
+            else if (major == 5)
+            {
+                if (minor == 2)
+                {
+                    if ((suiteMask & 0x8000) != 0)
+                    {
                         lstrcpyA(version, "Home Server");
                     }
-                    else if (ntWorkstation) {
+                    else if (ntWorkstation)
+                    {
                         lstrcpyA(version, "XP"); // 64 bits
                     }
-                    else {
+                    else
+                    {
                         lstrcpyA(version, GetSystemMetrics(SM_SERVERR2) != 0 ? "Server 2003" : "Server 2003 R2");
                     }
                 }
-                else if (minor == 1) {
+                else if (minor == 1)
+                {
                     lstrcpyA(version, "XP"); // 32 bits
                 }
             }
 
-            if (osInfo.wServicePackMajor != 0) {
+            if (osInfo.wServicePackMajor != 0)
+            {
                 char spVer[8];
                 lstrcatA(version, " SP ");
                 wsprintfA(spVer, "%u", (uint32_t)osInfo.wServicePackMajor);
@@ -968,33 +1052,42 @@ protected:
 
             codeName[0] = 0;
 
-            if ((suiteMask & 0x00000002) != 0) {
+            if ((suiteMask & 0x00000002) != 0)
+            {
                 lstrcatA(codeName, "Enterprise,");
             }
-            if ((suiteMask & 0x00000004) != 0) {
+            if ((suiteMask & 0x00000004) != 0)
+            {
                 lstrcatA(codeName, "BackOffice,");
             }
-            if ((suiteMask & 0x00000008) != 0) {
+            if ((suiteMask & 0x00000008) != 0)
+            {
                 lstrcatA(codeName, "Communication Server,");
             }
-            if ((suiteMask & 0x00000080) != 0) {
+            if ((suiteMask & 0x00000080) != 0)
+            {
                 lstrcatA(codeName, "Datacenter,");
             }
-            if ((suiteMask & 0x00000200) != 0) {
+            if ((suiteMask & 0x00000200) != 0)
+            {
                 lstrcatA(codeName, "Home,");
             }
-            if ((suiteMask & 0x00000400) != 0) {
+            if ((suiteMask & 0x00000400) != 0)
+            {
                 lstrcatA(codeName, "Web Server,");
             }
-            if ((suiteMask & 0x00002000) != 0) {
+            if ((suiteMask & 0x00002000) != 0)
+            {
                 lstrcatA(codeName, "Storage Server,");
             }
-            if ((suiteMask & 0x00004000) != 0) {
+            if ((suiteMask & 0x00004000) != 0)
+            {
                 lstrcatA(codeName, "Compute Cluster,");
             }
 
             int len = lstrlenA(codeName);
-            if (len > 0) {
+            if (len > 0)
+            {
                 codeName[len - 1] = '\0';
             }
 
@@ -1016,10 +1109,12 @@ protected:
         char volumeName[BUF_SIZE];
 
         HANDLE hVol = FindFirstVolumeA(volumeName, BUF_SIZE);
-        if (hVol != INVALID_HANDLE_VALUE) {
+        if (hVol != INVALID_HANDLE_VALUE)
+        {
             int i = 0;
 
-            while (true) {
+            while (true)
+            {
                 char fsType[16];
                 char name[BUF_SIZE];
                 char mount[BUF_SIZE];
@@ -1028,7 +1123,8 @@ protected:
                 ULARGE_INTEGER systemFreeBytes;
 
                 int index = lstrlenA(volumeName) - 1;
-                if (volumeName[0] != '\\' || volumeName[1] != '\\' || volumeName[2] != '?' || volumeName[3] != '\\' || volumeName[index] != '\\') {
+                if (volumeName[0] != '\\' || volumeName[1] != '\\' || volumeName[2] != '?' || volumeName[3] != '\\' || volumeName[index] != '\\')
+                {
                     info.GetReturnValue().SetUndefined();
                     char errStr[BUF_SIZE];
                     wsprintfA(errStr, "FindFirstVolume/FindNextVolume returned a bad path: %s", volumeName);
@@ -1042,7 +1138,8 @@ protected:
                 GetVolumePathNamesForVolumeNameA(volumeName, mount, BUF_SIZE, NULL);
                 StrTrimA(mount, "\t ");
 
-                if (lstrlenA(mount) > 0) {
+                if (lstrlenA(mount) > 0)
+                {
                     Local<Object> volume = Nan::New<Object>();
 
                     ZeroMemory(name, BUF_SIZE);
@@ -1055,23 +1152,30 @@ protected:
                     ZeroMemory(&totalBytes, sizeof(totalBytes));
                     ZeroMemory(&systemFreeBytes, sizeof(systemFreeBytes));
                     GetDiskFreeSpaceExA(volumeName, &userFreeBytes, &totalBytes, &systemFreeBytes);
-                    char* description;
+                    char *description;
                     uint32_t type = GetDriveTypeA(mount);
-                    switch (type) {
-                        case 2:
-                            description = "Removable drive"; break;
-                        case 3:
-                            description = "Fixed drive"; break;
-                        case 4:
-                            description = "Network drive"; break;
-                        case 5:
-                            description = "CD-ROM"; break;
-                        case 6:
-                            description = "RAM drive"; break;
-                        default:
-                            description = "Unknown drive type"; break;
+                    switch (type)
+                    {
+                    case 2:
+                        description = "Removable drive";
+                        break;
+                    case 3:
+                        description = "Fixed drive";
+                        break;
+                    case 4:
+                        description = "Network drive";
+                        break;
+                    case 5:
+                        description = "CD-ROM";
+                        break;
+                    case 6:
+                        description = "RAM drive";
+                        break;
+                    default:
+                        description = "Unknown drive type";
+                        break;
                     }
-                    
+
                     volume->Set(NanStr("volume"), NanStr(volumeName));
                     volume->Set(NanStr("name"), NanStr(name));
                     volume->Set(NanStr("mount"), NanStr(mount));
@@ -1080,12 +1184,11 @@ protected:
                     volume->Set(NanStr("freeSpace"), Nan::New<Number>(systemFreeBytes.QuadPart));
                     volume->Set(NanStr("totalSpace"), Nan::New<Number>(totalBytes.QuadPart));
 
-
-                    
                     result->Set(Nan::New<Integer>(i++), volume);
                 }
-                
-                if (!FindNextVolumeA(hVol, volumeName, BUF_SIZE)) {
+
+                if (!FindNextVolumeA(hVol, volumeName, BUF_SIZE))
+                {
                     FindVolumeClose(hVol);
                     break;
                 }
@@ -1099,8 +1202,9 @@ protected:
     static NAN_METHOD(DiskCheck)
     {
         Nan::HandleScope scope;
-        
-        if (info.Length() < 1 || !info[0]->IsString()) {
+
+        if (info.Length() < 1 || !info[0]->IsString())
+        {
             return THROW_BAD_ARGS;
         }
 
@@ -1108,7 +1212,8 @@ protected:
 
         struct statvfs buf;
         int ret = statvfs(*path, &buf);
-        if (ret != 0) {
+        if (ret != 0)
+        {
             return Nan::ThrowError(Nan::ErrnoException(errno, "statvfs", "", *path));
         }
 
@@ -1123,7 +1228,8 @@ protected:
     {
         Nan::HandleScope scope;
         struct sysinfo si;
-        if (sysinfo(&si) != 0) {
+        if (sysinfo(&si) != 0)
+        {
             return Nan::ThrowError(Nan::ErrnoException(errno, "sysinfo"));
         }
 
@@ -1132,7 +1238,8 @@ protected:
         result->Set(NanStr("uptime"), Nan::New<Integer>(static_cast<uint32_t>(si.uptime)));
 
         Local<Array> loads = Nan::New<Array>();
-        for (int i = 0; i < 3; ++i) {
+        for (int i = 0; i < 3; ++i)
+        {
             loads->Set(Nan::New<Integer>(i), Nan::New<Number>(si.loads[i]));
         }
         result->Set(NanStr("loads"), loads);
@@ -1156,29 +1263,32 @@ protected:
     static NAN_METHOD(SysCtl)
     {
         Nan::HandleScope scope;
-        
-        if (info.Length() < 1) {
+
+        if (info.Length() < 1)
+        {
             return THROW_BAD_ARGS;
         }
-        
+
         String::Utf8Value keyNameStr(info[0]);
-        const char* keyName = *keyNameStr;
+        const char *keyName = *keyNameStr;
         size_t size = 0;
-        
-        if (sysctlbyname(keyName, NULL, &size, NULL, 0) != 0) {
+
+        if (sysctlbyname(keyName, NULL, &size, NULL, 0) != 0)
+        {
             info.GetReturnValue().SetUndefined();
             return Nan::ThrowError(Nan::ErrnoException(errno, "sysctlbyname"));
         }
-        
-        char* buff = (char*)calloc(size + 1, 1);
-        
-        if (sysctlbyname(keyName, (void*)buff, &size, NULL, 0) != 0) {
+
+        char *buff = (char *)calloc(size + 1, 1);
+
+        if (sysctlbyname(keyName, (void *)buff, &size, NULL, 0) != 0)
+        {
             info.GetReturnValue().SetUndefined();
             return Nan::ThrowError(Nan::ErrnoException(errno, "sysctlbyname"));
         }
-        
+
         Local<String> result = NanStr(buff);
-        
+
         info.GetReturnValue().Set(result);
     }
 
