@@ -1,6 +1,6 @@
 import * as util from "./util";
 
-describe("glosses", "sourcemap", "node", () => {
+describe("sourcemap", "node", () => {
     const {
         sourcemap: {
             createConsumer,

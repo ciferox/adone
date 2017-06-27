@@ -1,6 +1,6 @@
 import * as util from "./util";
 
-describe("glosses", "sourcemap", "consumer", () => {
+describe("sourcemap", "consumer", () => {
     const {
         sourcemap: { createConsumer, createGenerator, Consumer, IndexedConsumer, BasicConsumer }
     } = adone;

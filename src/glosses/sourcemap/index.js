@@ -9,5 +9,6 @@ adone.lazify({
     Generator: ["./generator", (x) => x.SourceMapGenerator],
     Node: "./node",
     MappingList: "./mapping_list",
-    util: "./util"
+    util: "./util",
+    inline: "./inline"
 }, exports, require);

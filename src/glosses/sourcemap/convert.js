@@ -5,18 +5,14 @@ export const getCommentRegex = () => {
 };
 
 export const getMapFileCommentRegex = () => {
-    return /(?:\/\/[@#][ \t]+sourceMappingURL=([^\s'"]+?)[ \t]*$)|(?:\/\*[@#][ \t]+sourceMappingURL=([^\*]+?)[ \t]*(?:\*\/){1}[ \t]*$)/mg;
+    return /(?:\/\/[@#][ \t]+sourceMappingURL=([^\s'"]+?)[ \t]*$)|(?:\/\*[@#][ \t]+sourceMappingURL=([^*]+?)[ \t]*(?:\*\/){1}[ \t]*$)/mg;
 };
-
-const commentRx = getCommentRegex();
-const mapFileCommentRx = getMapFileCommentRegex();
 
 const decodeBase64 = (base64) => Buffer.from(base64, "base64").toString();
 const stripComment = (sm) => sm.split(",").pop();
 
 const readFromFileMap = (sm, dir) => {
-    const r = mapFileCommentRx.exec(sm);
-    mapFileCommentRx.lastIndex = 0;
+    const r = getMapFileCommentRegex().exec(sm);
 
     // for some odd reason //# .. captures in 1 and /* .. */ in 2
     const filename = r[1] || r[2];
@@ -56,7 +52,7 @@ class Converter {
 
     toComment(options) {
         const base64 = this.toBase64();
-        const data = `sourceMappingURL=data:application/json;base64,${base64}`;
+        const data = `sourceMappingURL=data:application/json;charset=utf-8;base64,${base64}`;
         return options && options.multiline ? `/*# ${data} */` : `//# ${data}`;
 
     }
@@ -101,19 +97,16 @@ export const fromMapFileComment = (comment, dir) => new Converter(comment, {
 });
 
 export const fromMapFileSource = (content, dir) => {
-    const m = content.match(mapFileCommentRx);
-    mapFileCommentRx.lastIndex = 0;
+    const m = content.match(getMapFileCommentRegex());
     return m ? fromMapFileComment(m.pop(), dir) : null;
 };
 
 export const removeComments = (src) => {
-    commentRx.lastIndex = 0;
-    return src.replace(commentRx, "");
+    return src.replace(getCommentRegex(), "");
 };
 
 export const removeMapFileComments = (src) => {
-    mapFileCommentRx.lastIndex = 0;
-    return src.replace(mapFileCommentRx, "");
+    return src.replace(getMapFileCommentRegex(), "");
 };
 
 export const generateMapFileComment = (file, options) => {
@@ -121,26 +114,7 @@ export const generateMapFileComment = (file, options) => {
     return options && options.multiline ? `/*# ${data} */` : `//# ${data}`;
 };
 
-const convertFromLargeSource = (content) => {
-    const lines = content.split("\n");
-    let line;
-    // find first line which contains a source map starting at end of content
-    for (let i = lines.length - 1; i > 0; i--) {
-        line = lines[i];
-        if (!line.includes("sourceMappingURL=data:")) {
-            return fromComment(line);
-        }
-    }
-};
-
-
 export const fromSource = (content, largeSource) => {
-    if (largeSource) {
-        const res = convertFromLargeSource(content);
-        return res ? res : null;
-    }
-
-    const m = content.match(commentRx);
-    commentRx.lastIndex = 0;
+    const m = content.match(getCommentRegex());
     return m ? fromComment(m.pop()) : null;
 };

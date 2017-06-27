@@ -1,4 +1,4 @@
-describe("glosses", "sourcemap", "util", () => {
+describe("sourcemap", "util", () => {
     const { sourcemap: { util } } = adone;
 
     specify("urls", () => {
