@@ -18,7 +18,12 @@ let uuid = 0;
 const proto = {
     create(stubLength) {
         let functionStub = function (...args) {
-            return getCurrentBehavior(functionStub).invoke(this, args);
+            const matchings = functionStub.matchingFakes(args);
+
+            const fnStub = matchings.sort((a, b) => {
+                return a.matchingArguments.length - b.matchingArguments.length;
+            }).pop() || functionStub;
+            return getCurrentBehavior(fnStub).invoke(this, args);
         };
 
         functionStub.id = `stub#${uuid++}`;

@@ -233,7 +233,7 @@ describe("sourcemap", "convert", () => {
             expect(sm.getProperty("sources")).to.be.deep.equal(["foo.js", "bar.js"]);
         });
 
-        expect("return null fromSource when largeSource is true", () => {
+        specify("return null fromSource when largeSource is true", () => {
             const mod = convert.fromSource("", true);
             expect(mod).to.be.null;
         });

@@ -10,16 +10,6 @@ const lazy = lazify({
 let callId = 0;
 const ErrorConstructor = Error.prototype.constructor;
 
-const matchingFake = (fakes, args, strict) => {
-    if (!fakes) {
-        return undefined;
-    }
-
-    const matchingFakes = fakes.filter((fake) => fake.matches(args, strict));
-
-    return matchingFakes.pop();
-};
-
 const incrementCallCount = function () {
     this.called = true;
     this.callCount += 1;
@@ -138,7 +128,7 @@ const proto = {
     reset() {
         if (this.invoking) {
             const err = new Error("Cannot reset Sinon function while invoking it. " +
-                                "Move the call to .reset outside of the callback.");
+                "Move the call to .reset outside of the callback.");
             err.name = "InvalidResetException";
             throw err;
         }
@@ -201,12 +191,18 @@ const proto = {
         return proxy;
     },
     invoke(func, thisValue, args) {
-        const matching = matchingFake(this.fakes, args);
-
+        const matchings = this.matchingFakes(args);
+        const currentCallId = callId++;
         incrementCallCount.call(this);
         this.thisValues.push(thisValue);
         this.args.push(args);
-        this.callIds.push(callId++);
+        this.callIds.push(currentCallId);
+        matchings.forEach((matching) => {
+            incrementCallCount.call(matching);
+            matching.thisValues.push(thisValue);
+            matching.args.push(args);
+            matching.callIds.push(currentCallId);
+        });
 
         // Make call properties available from within the spied function:
         createCallProperties.call(this);
@@ -215,11 +211,7 @@ const proto = {
         try {
             this.invoking = true;
 
-            if (matching) {
-                returnValue = matching.invoke(func, thisValue, args);
-            } else {
-                returnValue = (this.func || func).apply(thisValue, args);
-            }
+            returnValue = (this.func || func).apply(thisValue, args);
 
             const thisCall = this.getCall(this.callCount - 1);
             if (thisCall.calledWithNew() && !is.object(returnValue)) {
@@ -233,6 +225,11 @@ const proto = {
 
         this.exceptions.push(exception);
         this.returnValues.push(returnValue);
+        matchings.forEach((matching) => {
+            matching.exceptions.push(exception);
+            matching.returnValues.push(returnValue);
+        });
+
         const err = new ErrorConstructor();
         // 1. Please do not get stack at this point. It's may be so very slow, and not actually used
         // 2. PhantomJS does not serialize the stack trace until the error has been thrown:
@@ -241,6 +238,9 @@ const proto = {
             throw err;
         } catch (e) { /* empty */ }
         this.errorsWithCallStack.push(err);
+        matchings.forEach((matching) => {
+            matching.errorsWithCallStack.push(err);
+        });
 
         // Make return value and exception available in the calls:
         createCallProperties.call(this);
@@ -354,10 +354,10 @@ const proto = {
     },
     withArgs(...args) {
         if (this.fakes) {
-            const match = matchingFake(this.fakes, args, true);
+            const matching = this.matchingFakes(args, true).pop();
 
-            if (match) {
-                return match;
+            if (matching) {
+                return matching;
             }
         } else {
             this.fakes = [];
@@ -389,6 +389,9 @@ const proto = {
         createCallProperties.call(fake);
 
         return fake;
+    },
+    matchingFakes(args, strict) {
+        return (this.fakes || []).filter((fake) => fake.matches(args, strict));
     },
     matches(args, strict) {
         const margs = this.matchingArguments;

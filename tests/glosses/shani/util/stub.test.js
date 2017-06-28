@@ -84,6 +84,19 @@ describe("shani", "util", "stub", () => {
         assert(callback.called);
     });
 
+    it("should works with combination of withArgs arguments", () => {
+        const stub = createStub();
+        stub.returns(0);
+        stub.withArgs(1, 1).returns(2);
+        stub.withArgs(1).returns(1);
+
+        assert.equal(stub(), 0);
+        assert.equal(stub(1), 1);
+        assert.equal(stub(1, 1), 2);
+        assert.equal(stub(1, 1, 1), 2);
+        assert.equal(stub(2), 0);
+    });
+
     describe(".returns", () => {
         it("returns specified value", () => {
             const stub = createStub.create();

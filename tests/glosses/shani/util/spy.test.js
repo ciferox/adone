@@ -304,6 +304,45 @@ describe("shani", "util", "spy", () => {
         });
     });
 
+    it("counts with combination of withArgs arguments and order of calling withArgs", () => {
+        const object = {
+            f1() { },
+            f2() { }
+        };
+
+        // f1: the order of withArgs(1), withArgs(1, 1)
+        const spy1 = createSpy(object, "f1");
+        assert.equal(spy1.callCount, 0);
+        assert.equal(spy1.withArgs(1).callCount, 0);
+        assert.equal(spy1.withArgs(1, 1).callCount, 0);
+
+        object.f1();
+        object.f1(1);
+        object.f1(1, 1);
+        object.f1(1, 2);
+
+        assert.equal(spy1.callCount, 4);
+        assert.equal(spy1.withArgs(1).callCount, 3);
+        assert.equal(spy1.withArgs(1, 1).callCount, 1);
+        assert.equal(spy1.withArgs(1, 2).callCount, 1);
+
+        // f2: the order of withArgs(1, 1), withArgs(1)
+        const spy2 = createSpy(object, "f2");
+        assert.equal(spy2.callCount, 0);
+        assert.equal(spy2.withArgs(1, 1).callCount, 0);
+        assert.equal(spy2.withArgs(1).callCount, 0);
+
+        object.f2();
+        object.f2(1);
+        object.f2(1, 1);
+        object.f2(1, 2);
+
+        assert.equal(spy2.callCount, 4);
+        assert.equal(spy2.withArgs(1).callCount, 3);
+        assert.equal(spy2.withArgs(1, 1).callCount, 1);
+        assert.equal(spy2.withArgs(1, 2).callCount, 1);
+    });
+
     describe(".named", () => {
         it("sets displayName", () => {
             const spy = createSpy();
@@ -589,20 +628,6 @@ describe("shani", "util", "spy", () => {
             assert(this.spy.calledOn(object));
         });
 
-        if (typeof window !== "undefined") {
-            describe("in browser", () => {
-                it("is true if called on object at least once", function () {
-                    const object = {};
-                    this.spy();
-                    this.spy.call({});
-                    this.spy.call(object);
-                    this.spy.call(window);
-
-                    assert(this.spy.calledOn(object));
-                });
-            });
-        }
-
         it("returns false if not called on object", function () {
             const object = {};
             this.spy.call(object);
@@ -704,7 +729,7 @@ describe("shani", "util", "spy", () => {
             assert(this.spy.calledWithNew());
         });
 
-        it("is true if called with new", function () {
+        it("is true if called with new", () => {
             const spy = createSpy();
             new spy(); // eslint-disable-line no-unused-vars, new-cap
 
@@ -1455,7 +1480,7 @@ describe("shani", "util", "spy", () => {
 
         it("contains the created object for spied constructors that explicitly return primitive values", () => {
             const Spy = createSpy.create(function () {
-                this;  // to stop auto lint
+                this; // to stop auto lint
                 return 10;
             });
 
@@ -2230,16 +2255,14 @@ describe("shani", "util", "spy", () => {
         });
 
         it("throws readable message for symbol when spy was not yet invoked", () => {
-            if (typeof Symbol === "function") {
-                const spy = createSpy();
+            const spy = createSpy();
 
-                assert.throws(
-                    () => {
-                        spy.yieldTo(Symbol());
-                    },
-                    "spy cannot yield to 'Symbol()' since it was not yet invoked."
-                );
-            }
+            assert.throws(
+                () => {
+                    spy.yieldTo(Symbol());
+                },
+                "spy cannot yield to 'Symbol()' since it was not yet invoked."
+            );
         });
 
         it("pass additional arguments", () => {
@@ -2302,17 +2325,15 @@ describe("shani", "util", "spy", () => {
         });
 
         it("throws readable message for symbol when spy was not yet invoked", () => {
-            if (typeof Symbol === "function") {
-                const spy = createSpy();
-                const thisObj = { name1: "value1", name2: "value2" };
+            const spy = createSpy();
+            const thisObj = { name1: "value1", name2: "value2" };
 
-                assert.throws(
-                    () => {
-                        spy.yieldToOn(Symbol(), thisObj);
-                    },
-                    "spy cannot yield to 'Symbol()' since it was not yet invoked."
-                );
-            }
+            assert.throws(
+                () => {
+                    spy.yieldToOn(Symbol(), thisObj);
+                },
+                "spy cannot yield to 'Symbol()' since it was not yet invoked."
+            );
         });
 
         it("pass additional arguments", () => {
@@ -2406,6 +2427,45 @@ describe("shani", "util", "spy", () => {
             const spy = createSpy(api, "someMethod");
 
             assert.equal(spy.length, 3);
+        });
+    });
+
+    describe(".matchingFakes", () => {
+        beforeEach(function () {
+            this.spy = createSpy();
+        });
+
+        it("is function", function () {
+            assert.isFunction(this.spy.matchingFakes);
+        });
+
+        it("returns an empty array by default", function () {
+            assert.deepEqual(this.spy.matchingFakes([]), []);
+            assert.deepEqual(this.spy.matchingFakes([1]), []);
+            assert.deepEqual(this.spy.matchingFakes([1, 1]), []);
+        });
+
+        it("returns one matched fake", function () {
+            this.spy.withArgs(1);
+            this.spy.withArgs(2);
+
+            assert.deepEqual(this.spy.matchingFakes([1]), [this.spy.withArgs(1)]);
+            assert.deepEqual(this.spy.matchingFakes([2]), [this.spy.withArgs(2)]);
+        });
+
+        it("return some matched fake", function () {
+            this.spy.withArgs(1);
+            this.spy.withArgs(1, 1);
+            this.spy.withArgs(2);
+
+            assert.deepEqual(this.spy.matchingFakes([]), []);
+            assert.deepEqual(this.spy.matchingFakes([1]), [
+                this.spy.withArgs(1)
+            ]);
+            assert.deepEqual(this.spy.matchingFakes([1, 1]), [
+                this.spy.withArgs(1),
+                this.spy.withArgs(1, 1)
+            ]);
         });
     });
 

@@ -656,17 +656,15 @@ describe("shani", "util", "__", "SpyCall", () => {
         });
 
         it("throws understandable error if symbol prop is not found", function () {
-            if (typeof Symbol === "function") {
-                const call = this.call;
-                const symbol = Symbol();
+            const call = this.call;
+            const symbol = Symbol();
 
-                assert.throws(
-                    () => {
-                        call.yieldToOn(symbol, {});
-                    },
-                    "spy cannot yield to 'Symbol()' since no callback was passed."
-                );
-            }
+            assert.throws(
+                () => {
+                    call.yieldToOn(symbol, {});
+                },
+                "spy cannot yield to 'Symbol()' since no callback was passed."
+            );
         });
 
         it("includes stub name and actual arguments in error", function () {
@@ -1215,22 +1213,22 @@ describe("shani", "util", "__", "SpyCall", () => {
 
         describe("calls", () => {
             it("oneLine", () => {
-                function test(arg, expected) {
+                const verify = (arg, expected) => {
                     const spy = sspy();
                     spy(arg);
                     assert.equal(spy.printf("%C").replace(/ at.*/g, ""), `\n    ${expected}`);
-                }
+                };
 
-                test(true, "spy(true)");
-                test(false, "spy(false)");
-                test(undefined, "spy(undefined)");
-                test(1, "spy(1)");
-                test(0, "spy(0)");
-                test(-1, "spy(-1)");
-                test(-1.1, "spy(-1.1)");
-                test(Infinity, "spy(Infinity)");
-                test(["a"], "spy([ 'a' ])");
-                test({ a: "a" }, "spy({ a: 'a' })");
+                verify(true, "spy(true)");
+                verify(false, "spy(false)");
+                verify(undefined, "spy(undefined)");
+                verify(1, "spy(1)");
+                verify(0, "spy(0)");
+                verify(-1, "spy(-1)");
+                verify(-1.1, "spy(-1.1)");
+                verify(Infinity, "spy(Infinity)");
+                verify(["a"], "spy([ 'a' ])");
+                verify({ a: "a" }, "spy({ a: 'a' })");
             });
 
             it.skip("multiline", () => {
