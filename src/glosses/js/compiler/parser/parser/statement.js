@@ -139,7 +139,7 @@ pp.parseStatement = function (declaration, topLevel) {
                 }
 
                 if (!this.inModule) {
-                    this.raise(this.state.start, "'import' and 'export' may appear only with 'sourceType: module'");
+                    this.raise(this.state.start, "'import' and 'export' may appear only with 'sourceType: \"module\"'");
                 }
             }
             return starttype === tt._import ? this.parseImport(node) : this.parseExport(node);
