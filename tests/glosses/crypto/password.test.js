@@ -1,4 +1,4 @@
-describe("crypto", "Password hash and salt", () => {
+describe("crypto", "password", () => {
     const { crypto: { password } } = adone;
 
     const splitHash = function (hash) {

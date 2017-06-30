@@ -1,4 +1,4 @@
-describe("glosses", "math", "BitSet", () => {
+describe("math", "BitSet", () => {
     const { math: { BitSet } } = adone;
 
     it("should create a bitset from a dehydrated string", () => {

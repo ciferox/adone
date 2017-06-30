@@ -190,9 +190,9 @@ export const escape = (value, stringifyObjects, timeZone) => {
                 return bufferToString(value);
             } else if (stringifyObjects) {
                 return escapeString(value.toString());
-            } 
+            }
             return objectToValues(value, timeZone);
-            
+
         }
         default: {
             return escapeString(value);

@@ -1,4 +1,4 @@
-describe("databases", "local", "Persistence", () => {
+describe("database", "local", "Persistence", () => {
     const {
         std: { fs, path, child_process: cp },
         database: { local: { Model: model, Datastore, Persistence, Storage: storage } }

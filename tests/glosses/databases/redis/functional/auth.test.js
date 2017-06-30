@@ -1,9 +1,7 @@
 import MockServer from "../helpers/mock_server";
 import check from "../helpers/check_redis";
 
-skip(check);
-
-describe("glosses", "databases", "redis", "auth", () => {
+describe("database", "redis", "auth", { skip: check }, () => {
     const { database: { redis: { Redis } } } = adone;
 
     afterEach((done) => {

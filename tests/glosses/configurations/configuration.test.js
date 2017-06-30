@@ -1,6 +1,6 @@
 const { is } = adone;
 
-describe("Configuration", () => {
+describe("configuration", "Configuration", () => {
     let conf;
     let proto;
 

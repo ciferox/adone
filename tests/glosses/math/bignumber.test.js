@@ -1,6 +1,6 @@
 const { BigNumber } = adone.math;
 
-describe("bignumber", () => {
+describe("math", "bignumber", () => {
     describe("big", () => {
         it("create", () => {
             expect(new BigNumber(1337).toString()).to.be.deep.equal("1337");

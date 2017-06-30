@@ -1,6 +1,6 @@
 import { createConnection, config } from "../../common";
 
-describe("glosses", "databases", "mysql", "functional", "connection", "multiple results", () => {
+describe("database", "mysql", "functional", "connection", "multiple results", () => {
     const { is } = adone;
     let connection = null;
     let q = null;

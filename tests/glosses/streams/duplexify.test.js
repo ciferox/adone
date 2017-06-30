@@ -1,6 +1,6 @@
 const { stream: { concat, through, Duplexify } } = adone;
 
-describe("streams", "Duplexify", () => {
+describe("stream", "Duplexify", () => {
     it("passthrough", async () => {
         const pt = through.base();
         const dup = new Duplexify(pt, pt);
@@ -48,7 +48,7 @@ describe("streams", "Duplexify", () => {
         dup.on("finish", () => {
             assert.isOk(true, "should finish");
         });
-        const c = concat(); 
+        const c = concat();
         dup.pipe(c);
         const data = await c;
         assert.equal(data.toString(), "hello world");

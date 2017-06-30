@@ -1,4 +1,4 @@
-describe("glosses", "databases", "redis", "unit", "util", () => {
+describe("database", "redis", "unit", "util", () => {
     const { x, database: { redis: { __: { util } } } } = adone;
 
     describe(".convertBufferToString", () => {

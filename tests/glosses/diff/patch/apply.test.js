@@ -1,4 +1,4 @@
-describe("glosses", "diff", "patch", "apply", () => {
+describe("diff", "patch", "apply", () => {
     const { diff: { util: { applyPatch, applyPatches, parsePatch, createPatch } } } = adone;
 
     describe("applyPatch", () => {

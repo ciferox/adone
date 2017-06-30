@@ -1,5 +1,5 @@
 const { Inspector } = adone.meta;
-describe("Meta", () => {
+describe("meta", () => {
     describe.skip("Variable expressions", () => {
         const cases = [
             {
@@ -50,7 +50,7 @@ describe("Meta", () => {
                 inspector.analyze();
                 assert.sameMembers(inspector.namespaces, cs.result);
                 assert.sameMembers(inspector.globals, cs.globals);
-            });    
+            });
         }
     });
 });

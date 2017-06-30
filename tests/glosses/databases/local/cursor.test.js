@@ -1,4 +1,4 @@
-describe("databases", "local", "Cursor", () => {
+describe("database", "local", "Cursor", () => {
     const { Datastore, Cursor } = adone.database.local;
 
     let tmpdir;

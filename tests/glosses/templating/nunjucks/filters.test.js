@@ -1,6 +1,6 @@
 import * as util from "./util";
 
-describe("glosses", "templating", "nunjucks", "filter", () => {
+describe("templating", "nunjucks", "filter", () => {
     const { templating: { nunjucks: { runtime: r } } } = adone;
     const { render, equal, finish } = util;
 

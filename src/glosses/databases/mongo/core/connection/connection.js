@@ -251,36 +251,6 @@ const merge = (options1, options2) => {
     }
 };
 
-/**
- * Creates a new Connection instance
- * @class
- * @param {string} options.host The server host
- * @param {number} options.port The server port
- * @param {boolean} [options.keepAlive=true] TCP Connection keep alive enabled
- * @param {number} [options.keepAliveInitialDelay=0] Initial delay before TCP keep alive enabled
- * @param {boolean} [options.noDelay=true] TCP Connection no delay
- * @param {number} [options.connectionTimeout=0] TCP Connection timeout setting
- * @param {number} [options.socketTimeout=0] TCP Socket timeout setting
- * @param {boolean} [options.singleBufferSerializtion=true] Serialize into single buffer, trade of peak memory for serialization speed
- * @param {boolean} [options.ssl=false] Use SSL for connection
- * @param {boolean|function} [options.checkServerIdentity=true] Ensure we check server identify during SSL, set to false to disable checking. Only works for Node 0.12.x or higher. You can pass in a boolean or your own checkServerIdentity override function.
- * @param {Buffer} [options.ca] SSL Certificate store binary buffer
- * @param {Buffer} [options.crl] SSL Certificate revocation store binary buffer
- * @param {Buffer} [options.cert] SSL Certificate binary buffer
- * @param {Buffer} [options.key] SSL Key file binary buffer
- * @param {string} [options.passphrase] SSL Certificate pass phrase
- * @param {boolean} [options.rejectUnauthorized=true] Reject unauthorized server certificates
- * @param {boolean} [options.promoteLongs=true] Convert Long values from the db into Numbers if they fit into 53 bits
- * @param {boolean} [options.promoteValues=true] Promotes BSON values to native types where possible, set to false to only receive wrapper types.
- * @param {boolean} [options.promoteBuffers=false] Promotes Binary BSON values to native Node Buffers.
- * @fires Connection#connect
- * @fires Connection#close
- * @fires Connection#error
- * @fires Connection#timeout
- * @fires Connection#parseError
- * @return {Connection} A cursor instance
- */
-
 export default class Connection extends EventEmitter {
     constructor(messageHandler, options = {}) {
         super();
@@ -321,7 +291,7 @@ export default class Connection extends EventEmitter {
         this.destroyed = false;
 
         // Check if we have a domain socket
-        this.domainSocket = this.host.includes("\/");
+        this.domainSocket = this.host.includes("/");
 
         // Serialize commands using function
         this.singleBufferSerializtion = is.boolean(options.singleBufferSerializtion)

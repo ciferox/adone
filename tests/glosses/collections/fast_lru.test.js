@@ -1,4 +1,4 @@
-describe("collections", "FastLRU", () => {
+describe("collection", "FastLRU", () => {
     const { collection: { FastLRU } } = adone;
 
     const checkQueue = (cache, expected) => {

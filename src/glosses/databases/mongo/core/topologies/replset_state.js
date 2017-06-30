@@ -24,7 +24,6 @@ const ServerType = {
     Unknown: "Unknown"
 };
 
-//
 // Filter serves by tags
 const filterByTags = (readPreference, servers) => {
     if (is.nil(readPreference.tags)) {
@@ -433,9 +432,7 @@ export default class ReplSetState extends EventEmitter {
         // Get the server name and lowerCase it
         const serverName = server.name.toLowerCase();
 
-        //
         // Add any hosts
-        //
         if (ismaster) {
             // Join all the possible new hosts
             let hosts = is.array(ismaster.hosts) ? ismaster.hosts : [];
@@ -463,9 +460,7 @@ export default class ReplSetState extends EventEmitter {
             }
         }
 
-        //
         // Unknown server
-        //
         if (!ismaster && !inList(ismaster, server, this.unknownServers)) {
             this.set[serverName] = {
                 type: ServerType.Unknown,
@@ -488,9 +483,7 @@ export default class ReplSetState extends EventEmitter {
         }
 
 
-        //
         // Is this a mongos
-        //
         if (ismaster && ismaster.msg === "isdbgrid") {
             return false;
         }
@@ -543,9 +536,7 @@ export default class ReplSetState extends EventEmitter {
             return false;
         }
 
-        //
         // Standalone server, destroy and return
-        //
         if (ismaster && ismaster.ismaster && !ismaster.setName) {
             this.topologyType = this.primary
                 ? TopologyType.ReplicaSetWithPrimary
@@ -554,17 +545,13 @@ export default class ReplSetState extends EventEmitter {
             return false;
         }
 
-        //
         // Server in maintanance mode
-        //
         if (ismaster && !ismaster.ismaster && !ismaster.secondary && !ismaster.arbiterOnly) {
             this.remove(server, { force: true });
             return false;
         }
 
-        //
         // If the .me field does not match the passed in server
-        //
         if (ismaster.me && ismaster.me.toLowerCase() !== serverName) {
             // Delete from the set
             delete this.set[serverName];
@@ -597,9 +584,7 @@ export default class ReplSetState extends EventEmitter {
             return false;
         }
 
-        //
         // Primary handling
-        //
         if (!this.primary && ismaster.ismaster && ismaster.setName) {
             const ismasterElectionId = server.lastIsMaster().electionId;
             if (this.setName && this.setName !== ismaster.setName) {
@@ -765,9 +750,7 @@ export default class ReplSetState extends EventEmitter {
             };
         }
 
-        //
         // Secondary handling
-        //
         if (
             ismaster.secondary &&
             ismaster.setName &&
@@ -798,9 +781,7 @@ export default class ReplSetState extends EventEmitter {
             return true;
         }
 
-        //
         // Arbiter handling
-        //
         if (
             ismaster.arbiterOnly &&
             ismaster.setName &&
@@ -822,9 +803,7 @@ export default class ReplSetState extends EventEmitter {
             return true;
         }
 
-        //
         // Passive handling
-        //
         if (
             ismaster.passive &&
             ismaster.setName &&
@@ -854,9 +833,7 @@ export default class ReplSetState extends EventEmitter {
             return true;
         }
 
-        //
         // Remove the primary
-        //
         if (this.set[serverName] && this.set[serverName].type === ServerType.RSPrimary) {
             this.emit("left", "primary", this.primary);
             this.primary.destroy();

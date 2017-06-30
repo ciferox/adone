@@ -5,14 +5,14 @@ const {
         MongoError,
         Server,
         ReplSetState,
-        auth: { MongoCR, X509, Plain, ScramSHA1 },
+        auth,
         helper
     } } },
     std: { events: EventEmitter },
-    is, util
+    data: { bson },
+    is, util, lazify
 } = adone;
 
-//
 // States
 const DISCONNECTED = "disconnected";
 const CONNECTING = "connecting";
@@ -38,7 +38,6 @@ const stateTransition = (self, newState) => {
     }
 };
 
-//
 // ReplSet instance id
 let id = 1;
 const handlers = ["connect", "close", "error", "timeout", "parseError"];
@@ -208,78 +207,6 @@ const applyAuthenticationContexts = (self, server, callback) => {
     applyAuth(authContexts, server, callback);
 };
 
-
-const topologyMonitor = (self, options) => {
-    if (self.state == DESTROYED || self.state == UNREFERENCED) {
-        return;
-    }
-    options = options || {};
-
-    // Get the servers
-    const servers = util.keys(self.s.replicaSetState.set);
-
-    // Get the haInterval
-    const _process = options.haInterval ? helper.Timeout : helper.Interval;
-    const _haInterval = options.haInterval ? options.haInterval : self.s.haInterval;
-
-    if (_process === helper.Timeout) {
-        return connectNewServers(self, self.s.replicaSetState.unknownServers, (err) => {
-            // Don't emit errors if the connection was already
-            if (self.state === DESTROYED || self.state === UNREFERENCED) {
-                return;
-            }
-
-            if (!self.s.replicaSetState.hasPrimary() && !self.s.options.secondaryOnlyConnectionAllowed) {
-                if (err) {
-                    return self.emit("error", err);
-                }
-                self.emit("error", new MongoError("no primary found in replicaset"));
-                return self.destroy({ force: true });
-            } else if (!self.s.replicaSetState.hasSecondary() && self.s.options.secondaryOnlyConnectionAllowed) {
-                if (err) {
-                    return self.emit("error", err);
-                }
-                self.emit("error", new MongoError("no secondary found in replicaset"));
-                return self.destroy({ force: true });
-            }
-
-            for (let i = 0; i < servers.length; i++) {
-                monitorServer(servers[i], self, options);
-            }
-        });
-    }
-    for (let i = 0; i < servers.length; i++) {
-        monitorServer(servers[i], self, options);
-    }
-
-
-    // Run the reconnect process
-    const executeReconnect = (self) => {
-        return function () {
-            if (self.state == DESTROYED || self.state == UNREFERENCED) {
-                return;
-            }
-
-            connectNewServers(self, self.s.replicaSetState.unknownServers, () => {
-                const monitoringFrequencey = self.s.replicaSetState.hasPrimary()
-                    ? _haInterval
-                    : self.s.minHeartbeatFrequencyMS;
-
-                // Create a timeout
-                self.intervalIds.push(new helper.Timeout(executeReconnect(self), monitoringFrequencey).start());
-            });
-        };
-    };
-
-    // Decide what kind of interval to use
-    const intervalTime = !self.s.replicaSetState.hasPrimary()
-        ? self.s.minHeartbeatFrequencyMS
-        : _haInterval;
-
-    self.intervalIds.push(new helper.Timeout(executeReconnect(self), intervalTime).start());
-};
-
-// Each server is monitored in parallel in their own timeout loop
 const monitorServer = function (host, self, options) {
     // If this is not the initial scan
     // Is this server already being monitoried, then skip monitoring
@@ -297,7 +224,7 @@ const monitorServer = function (host, self, options) {
 
     // Create the interval
     const intervalId = new _process(() => {
-        if (self.state == DESTROYED || self.state == UNREFERENCED) {
+        if (self.state === DESTROYED || self.state === UNREFERENCED) {
             // clearInterval(intervalId);
             intervalId.stop();
             return;
@@ -310,7 +237,7 @@ const monitorServer = function (host, self, options) {
         if (_server) {
             // Ping the server
             return pingServer(self, _server, () => {
-                if (self.state == DESTROYED || self.state == UNREFERENCED) {
+                if (self.state === DESTROYED || self.state === UNREFERENCED) {
                     intervalId.stop();
                     return;
                 }
@@ -337,7 +264,7 @@ const monitorServer = function (host, self, options) {
                         });
 
                         // Start topology interval check
-                        topologyMonitor(self, {});
+                        topologyMonitor(self, {}); // eslint-disable-line no-use-before-define
                     }
                 } else {
                     if (
@@ -495,17 +422,16 @@ const connectNewServers = (self, servers, callback) => {
             }
 
             // Create a new server instance
-            const server = new Server(Object.assign({}, self.s.options, {
+            const server = new Server({
+                ...self.s.options,
                 host: _server.split(":")[0],
-                port: parseInt(_server.split(":")[1], 10)
-            }, {
+                port: parseInt(_server.split(":")[1], 10),
                 authProviders: self.authProviders,
                 reconnect: false,
                 monitoring: false,
-                inTopology: true
-            }, {
+                inTopology: true,
                 clientInfo: util.clone(self.s.clientInfo)
-            }));
+            });
 
             // Add temp handlers
             server.once("connect", _handleEvent(self, "connect"));
@@ -533,6 +459,78 @@ const connectNewServers = (self, servers, callback) => {
         execute(servers[i], i);
     }
 };
+
+const topologyMonitor = (self, options) => {
+    if (self.state === DESTROYED || self.state === UNREFERENCED) {
+        return;
+    }
+    options = options || {};
+
+    // Get the servers
+    const servers = util.keys(self.s.replicaSetState.set);
+
+    // Get the haInterval
+    const _process = options.haInterval ? helper.Timeout : helper.Interval;
+    const _haInterval = options.haInterval ? options.haInterval : self.s.haInterval;
+
+    if (_process === helper.Timeout) {
+        return connectNewServers(self, self.s.replicaSetState.unknownServers, (err) => {
+            // Don't emit errors if the connection was already
+            if (self.state === DESTROYED || self.state === UNREFERENCED) {
+                return;
+            }
+
+            if (!self.s.replicaSetState.hasPrimary() && !self.s.options.secondaryOnlyConnectionAllowed) {
+                if (err) {
+                    return self.emit("error", err);
+                }
+                self.emit("error", new MongoError("no primary found in replicaset"));
+                return self.destroy({ force: true });
+            } else if (!self.s.replicaSetState.hasSecondary() && self.s.options.secondaryOnlyConnectionAllowed) {
+                if (err) {
+                    return self.emit("error", err);
+                }
+                self.emit("error", new MongoError("no secondary found in replicaset"));
+                return self.destroy({ force: true });
+            }
+
+            for (let i = 0; i < servers.length; i++) {
+                monitorServer(servers[i], self, options);
+            }
+        });
+    }
+    for (let i = 0; i < servers.length; i++) {
+        monitorServer(servers[i], self, options);
+    }
+
+
+    // Run the reconnect process
+    const executeReconnect = (self) => {
+        return function () {
+            if (self.state === DESTROYED || self.state === UNREFERENCED) {
+                return;
+            }
+
+            connectNewServers(self, self.s.replicaSetState.unknownServers, () => {
+                const monitoringFrequencey = self.s.replicaSetState.hasPrimary()
+                    ? _haInterval
+                    : self.s.minHeartbeatFrequencyMS;
+
+                // Create a timeout
+                self.intervalIds.push(new helper.Timeout(executeReconnect(self), monitoringFrequencey).start());
+            });
+        };
+    };
+
+    // Decide what kind of interval to use
+    const intervalTime = !self.s.replicaSetState.hasPrimary()
+        ? self.s.minHeartbeatFrequencyMS
+        : _haInterval;
+
+    self.intervalIds.push(new helper.Timeout(executeReconnect(self), intervalTime).start());
+};
+
+// Each server is monitored in parallel in their own timeout loop
 
 const handleInitialConnectEvent = (self, event) => {
     return function () {
@@ -693,55 +691,6 @@ const executeWriteOperation = (self, op, ns, ops, options, callback) => {
     self.s.replicaSetState.primary[op](ns, ops, options, callback);
 };
 
-/**
- * Creates a new Replset instance
- * @class
- * @param {array} seedlist A list of seeds for the replicaset
- * @param {boolean} options.setName The Replicaset set name
- * @param {boolean} [options.secondaryOnlyConnectionAllowed=false] Allow connection to a secondary only replicaset
- * @param {number} [options.haInterval=10000] The High availability period for replicaset inquiry
- * @param {boolean} [options.emitError=false] Server will emit errors events
- * @param {Cursor} [options.cursorFactory=Cursor] The cursor factory class used for all query cursors
- * @param {number} [options.size=5] Server connection pool size
- * @param {boolean} [options.keepAlive=true] TCP Connection keep alive enabled
- * @param {number} [options.keepAliveInitialDelay=0] Initial delay before TCP keep alive enabled
- * @param {boolean} [options.noDelay=true] TCP Connection no delay
- * @param {number} [options.connectionTimeout=10000] TCP Connection timeout setting
- * @param {number} [options.socketTimeout=0] TCP Socket timeout setting
- * @param {boolean} [options.singleBufferSerializtion=true] Serialize into single buffer, trade of peak memory for serialization speed
- * @param {boolean} [options.ssl=false] Use SSL for connection
- * @param {boolean|function} [options.checkServerIdentity=true] Ensure we check server identify during SSL, set to false to disable checking. Only works for Node 0.12.x or higher. You can pass in a boolean or your own checkServerIdentity override function.
- * @param {Buffer} [options.ca] SSL Certificate store binary buffer
- * @param {Buffer} [options.cert] SSL Certificate binary buffer
- * @param {Buffer} [options.key] SSL Key file binary buffer
- * @param {string} [options.passphrase] SSL Certificate pass phrase
- * @param {string} [options.servername=null] String containing the server name requested via TLS SNI.
- * @param {boolean} [options.rejectUnauthorized=true] Reject unauthorized server certificates
- * @param {boolean} [options.promoteLongs=true] Convert Long values from the db into Numbers if they fit into 53 bits
- * @param {boolean} [options.promoteValues=true] Promotes BSON values to native types where possible, set to false to only receive wrapper types.
- * @param {boolean} [options.promoteBuffers=false] Promotes Binary BSON values to native Node Buffers.
- * @param {number} [options.pingInterval=5000] Ping interval to check the response time to the different servers
-  * @param {number} [options.localThresholdMS=15] Cutoff latency point in MS for Replicaset member selection
- * @param {boolean} [options.domainsEnabled=false] Enable the wrapping of the callback in the current domain, disabled by default to avoid perf hit.
- * @return {ReplSet} A cursor instance
- * @fires ReplSet#connect
- * @fires ReplSet#ha
- * @fires ReplSet#joined
- * @fires ReplSet#left
- * @fires ReplSet#failed
- * @fires ReplSet#fullsetup
- * @fires ReplSet#all
- * @fires ReplSet#error
- * @fires ReplSet#serverHeartbeatStarted
- * @fires ReplSet#serverHeartbeatSucceeded
- * @fires ReplSet#serverHeartbeatFailed
- * @fires ReplSet#topologyOpening
- * @fires ReplSet#topologyClosed
- * @fires ReplSet#topologyDescriptionChanged
- * @property {string} type the topology type.
- * @property {string} parserType the parser type used (c++ or js).
- */
-
 export default class ReplSet extends EventEmitter {
     constructor(seedlist, options = {}) {
         // Validate seedlist
@@ -773,9 +722,9 @@ export default class ReplSet extends EventEmitter {
 
         // Internal state
         this.s = {
-            options: Object.assign({}, options),
+            options: { ...options },
             // BSON instance
-            bson: options.bson || new adone.data.bson.BSON(),
+            bson: options.bson || new bson.BSON(),
             // Factory overrides
             Cursor: options.cursorFactory || BasicCursor,
             // Seedlist
@@ -812,12 +761,12 @@ export default class ReplSet extends EventEmitter {
         });
 
         // All the authProviders
-        this.authProviders = options.authProviders || {
-            mongocr: new MongoCR(this.s.bson),
-            x509: new X509(this.s.bson),
-            plain: new Plain(this.s.bson),
-            "scram-sha-1": new ScramSHA1(this.s.bson)
-        };
+        this.authProviders = options.authProviders || lazify({
+            mongocr: () => new auth.MongoCR(this.s.bson),
+            x509: () => new auth.X509(this.s.bson),
+            plain: () => new auth.Plain(this.s.bson),
+            "scram-sha-1": () => new auth.ScramSHA1(this.s.bson)
+        });
 
         // Add forwarding of events from state handler
         const types = ["joined", "left"];
@@ -858,14 +807,15 @@ export default class ReplSet extends EventEmitter {
         stateTransition(this, CONNECTING);
         // Create server instances
         const servers = this.s.seedlist.map((x) => {
-            return new Server(Object.assign({}, this.s.options, x, {
+            return new Server({
+                ...this.s.options,
+                ...x,
                 authProviders: this.authProviders,
                 reconnect: false,
                 monitoring: false,
-                inTopology: true
-            }, {
+                inTopology: true,
                 clientInfo: util.clone(this.s.clientInfo)
-            }));
+            });
         });
 
         // Error out as high availbility interval must be < than socketTimeout

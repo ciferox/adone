@@ -1,4 +1,4 @@
-describe("collections", "AVL tree", () => {
+describe("collection", "AVLTree", () => {
     const { is, collection: { AVLTree } } = adone;
 
     const getRandomArray = (n) => {

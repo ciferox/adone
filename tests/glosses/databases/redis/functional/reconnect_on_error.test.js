@@ -1,8 +1,6 @@
 import check from "../helpers/check_redis";
 
-skip(check);
-
-describe("glosses", "databases", "redis", "reconnectOnError", () => {
+describe("database", "redis", "reconnectOnError", { skip: check }, () => {
     const { database: { redis: { Redis } } } = adone;
 
     afterEach((done) => {

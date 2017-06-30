@@ -1,6 +1,6 @@
 import { createConnection } from "../../common";
 
-describe("glosses", "databases", "mysql", "functional", "connection", "decimals as numbers", () => {
+describe("database", "mysql", "functional", "connection", "decimals as numbers", () => {
     let connection = null;
     let connection1 = null;
 

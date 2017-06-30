@@ -1,4 +1,4 @@
-describe("databases", "local", "Indexes", () => {
+describe("database", "local", "Indexes", () => {
     const { database: { local: { Index } } } = adone;
 
     describe("Insertion", () => {

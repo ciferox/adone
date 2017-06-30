@@ -1,4 +1,4 @@
-describe("glosses", "application", () => {
+describe("application", () => {
     const { application: { Application } } = adone;
 
     describe("argv handling", () => {

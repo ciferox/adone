@@ -1,6 +1,6 @@
 import { createConnection } from "../../common";
 
-describe("glosses", "databases", "mysql", "functional", "connection", "type cast parameter", () => {
+describe("database", "mysql", "functional", "connection", "type cast parameter", () => {
     const { is } = adone;
     let connection = null;
 

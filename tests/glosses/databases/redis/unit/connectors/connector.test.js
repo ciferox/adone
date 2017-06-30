@@ -1,4 +1,4 @@
-describe("glosses", "databases", "redis", "unit", "Connector", () => {
+describe("database", "redis", "unit", "Connector", () => {
     const { std: { net, tls }, database: { redis: { __: { Connector } } } } = adone;
 
     describe("connect()", () => {

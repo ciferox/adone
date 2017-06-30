@@ -1,4 +1,4 @@
-describe("glosses", "diff", "arrays", () => {
+describe("diff", "arrays", () => {
     const { diff: { arrays } } = adone;
 
     it("Should diff arrays", () => {

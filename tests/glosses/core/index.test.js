@@ -269,7 +269,7 @@ describe("core", () => {
                 const pipe = spy(a._lastStream, "pipe");
                 a.pipe(b);
                 expect(pipe.calledOnce).to.be.true;
-                expect(pipe.args[0]).to.be.deep.equal([b, { spreadErrors: true }]);  // some defaults
+                expect(pipe.args[0]).to.be.deep.equal([b, { spreadErrors: true }]); // some defaults
             });
 
             it("should pipe the last stream to a new one with options", () => {
@@ -279,7 +279,7 @@ describe("core", () => {
                 const pipe = spy(a._lastStream, "pipe");
                 a.pipe(b, options);
                 expect(pipe.calledOnce).to.be.true;
-                expect(pipe.args[0]).to.be.deep.equal([b, { spreadErrors: true, ...options }]);  // some defaults
+                expect(pipe.args[0]).to.be.deep.equal([b, { spreadErrors: true, ...options }]); // some defaults
             });
 
             it("should add a stream into the chain", () => {
@@ -383,7 +383,7 @@ describe("core", () => {
                 it("should end the first stream", () => {
                     const c = core();
                     const d = transform();
-                    c.pipe(d, { end: false });  // to prevent from ending (pipe)
+                    c.pipe(d, { end: false }); // to prevent from ending (pipe)
                     const end0 = spy(c._chain[0], "end");
                     const end1 = spy(c._chain[1], "end");
                     c.end();
@@ -394,7 +394,7 @@ describe("core", () => {
                 it("should end all streams if force = true", () => {
                     const c = core();
                     const d = transform();
-                    c.pipe(d, { end: false });  // to prevent from ending (pipe)
+                    c.pipe(d, { end: false }); // to prevent from ending (pipe)
                     const end0 = spy(c._chain[0], "end");
                     const end1 = spy(c._chain[1], "end");
                     c.end({ force: true });
@@ -476,7 +476,7 @@ describe("core", () => {
                     const c = core(null, { transform: () => new Promise(() => { /* to stop the stream */ }) });
                     // it will be transforming the first element all the time
                     const d = transform();
-                    c.pipe(d);  // should not affect anyway
+                    c.pipe(d); // should not affect anyway
                     const hwm = c._chain[0]._writableState.highWaterMark;
                     for (let i = 0; i < hwm; ++i) {
                         expect(c.write(i)).to.be.true;
@@ -559,9 +559,9 @@ describe("core", () => {
 
                     expect(data.calledTwice).to.be.true;
                     expect(data.args[1]).to.be.deep.equal(["hello2"]);
-                    expect(cData.calledTwice).to.be.false;  // it really should not be called, push into the last stream = d
+                    expect(cData.calledTwice).to.be.false; // it really should not be called, push into the last stream = d
                     expect(dData.calledTwice).to.be.true;
-                    expect(dData.args[1]).to.be.deep.equal(["hello2"]);  // it also means that the value will not be wrapped
+                    expect(dData.args[1]).to.be.deep.equal(["hello2"]); // it also means that the value will not be wrapped
                 });
 
                 it("should emit drain when the writable buffer is empty", () => {
@@ -644,7 +644,7 @@ describe("core", () => {
                 const pipe = spy(a._lastStream, "pipe");
                 a.pipe(b);
                 expect(pipe.calledOnce).to.be.true;
-                expect(pipe.args[0]).to.be.deep.equal([b, { spreadErrors: true }]);  // some defaults
+                expect(pipe.args[0]).to.be.deep.equal([b, { spreadErrors: true }]); // some defaults
             });
 
             it("should pipe the last stream to a new one with options", () => {
@@ -654,7 +654,7 @@ describe("core", () => {
                 const pipe = spy(a._lastStream, "pipe");
                 a.pipe(b, options);
                 expect(pipe.calledOnce).to.be.true;
-                expect(pipe.args[0]).to.be.deep.equal([b, { spreadErrors: true, ...options }]);  // some defaults
+                expect(pipe.args[0]).to.be.deep.equal([b, { spreadErrors: true, ...options }]); // some defaults
             });
 
             it("should add a stream into the chain", () => {
@@ -804,7 +804,7 @@ describe("core", () => {
                 it("should end the first stream", () => {
                     const c = core();
                     const d = core();
-                    c.pipe(d, { end: false });  // to prevent from ending (pipe)
+                    c.pipe(d, { end: false }); // to prevent from ending (pipe)
                     const end0 = spy(c._chain[0], "end");
                     const end1 = spy(c._chain[1], "end");
                     c.end();
@@ -815,7 +815,7 @@ describe("core", () => {
                 it("should end all stream if force = true", () => {
                     const c = core();
                     const d = core();
-                    c.pipe(d, { end: false });  // to prevent from ending (pipe)
+                    c.pipe(d, { end: false }); // to prevent from ending (pipe)
                     const end0 = spy(c._chain[0], "end");
                     const end1 = spy(c._chain[1], "end");
                     c.end({ force: true });
@@ -897,7 +897,7 @@ describe("core", () => {
                     const c = core(null, { transform: () => new Promise(() => { /* to stop the stream */ }) });
                     // it will be transforming the first element all the time
                     const d = core();
-                    c.pipe(d);  // should not affect anyway
+                    c.pipe(d); // should not affect anyway
                     const hwm = c._chain[0]._writableState.highWaterMark;
                     for (let i = 0; i < hwm; ++i) {
                         expect(c.write(i)).to.be.true;
@@ -980,9 +980,9 @@ describe("core", () => {
 
                     expect(data.calledTwice).to.be.true;
                     expect(data.args[1]).to.be.deep.equal(["hello2"]);
-                    expect(cData.calledTwice).to.be.false;  // it really should not be called, push into the last stream = d
+                    expect(cData.calledTwice).to.be.false; // it really should not be called, push into the last stream = d
                     expect(dData.calledTwice).to.be.true;
-                    expect(dData.args[1]).to.be.deep.equal(["hello2"]);  // it also means that the value will not be wrapped
+                    expect(dData.args[1]).to.be.deep.equal(["hello2"]); // it also means that the value will not be wrapped
                 });
 
                 it("should emit drain when the writable buffer is empty", () => {
@@ -1810,7 +1810,7 @@ describe("core", () => {
                     expect(await c).to.be.deep.equal([4, 5, 6]);
                 });
 
-                it("should not ignore ending streams", async () => {  // a strange one
+                it("should not ignore ending streams", async () => { // a strange one
                     const c = core.merge([
                         core([1, 2, 3], { flush: () => adone.promise.delay(100) }),
                         core([4, 5, 6])
@@ -1852,8 +1852,8 @@ describe("core", () => {
                     expect(b._writableState.buffer.empty).to.be.true;
 
                     expect(b.paused).to.be.false;
-                    expect(b.write(1)).to.be.true;  // b's streams are empty
-                    expect(b.paused).to.be.true;  // but the stream should pause b
+                    expect(b.write(1)).to.be.true; // b's streams are empty
+                    expect(b.paused).to.be.true; // but the stream should pause b
 
                     c.resume();
 

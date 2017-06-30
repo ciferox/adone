@@ -1,4 +1,4 @@
-describe("fast", "transforms", "wiredep", () => {
+describe("fast", "transform", "wiredep", () => {
     const { fast, std: { fs } } = adone;
 
     const fixturesDir = adone.std.path.resolve(__dirname, "fixture");

@@ -1,6 +1,6 @@
 import { createConnection } from "../../common";
 
-describe("glosses", "databases", "mysql", "functional", "connection", "timestamp", () => {
+describe("database", "mysql", "functional", "connection", "timestamp", () => {
     let connection = null;
 
     before(async () => {

@@ -1,6 +1,6 @@
 import { createConnection } from "../common";
 
-describe("glosses", "databases", "mysql", "functional", "rows as array", () => {
+describe("database", "mysql", "functional", "rows as array", () => {
 
     context("enabled", () => {
         let connection = null;

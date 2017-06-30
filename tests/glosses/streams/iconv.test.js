@@ -1,4 +1,4 @@
-describe("streams", "iconv", () => {
+describe("stream", "iconv", () => {
     const { stream: { iconv }, std: { stream: { Readable } }, is } = adone;
 
     // Create a source stream that feeds given array of chunks.

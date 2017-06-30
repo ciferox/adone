@@ -1,7 +1,3 @@
-/* global describe it */
-
-
-// specs
 describe("AsyncEmitter", () => {
     describe(".emitParallel", () => {
         it("should receive the return value of listeners asynchronously", async () => {
@@ -149,7 +145,7 @@ describe("AsyncEmitter", () => {
             emitter.on("square", () => Promise.reject(new Error("foo")));
             emitter.on("square", () => Promise.reject(new Error("bar")));
 
-            try { 
+            try {
                 await emitter.emitReduce("square", [], 1);
             } catch (err) {
                 assert.equal(err.message, "foo");
@@ -183,7 +179,7 @@ describe("AsyncEmitter", () => {
             try {
                 await emitter.once("foo", "bad argument!");
             } catch (err) {
-                assert.equal(err.message, "listener must be a function");                
+                assert.equal(err.message, "listener must be a function");
             }
         });
     });

@@ -1,4 +1,4 @@
-describe("glosses", "templating", "nunjucks", "loader", () => {
+describe("templating", "nunjucks", "loader", () => {
     const { std: { path }, templating: { nunjucks: { Environment } } } = adone;
     const templatesPath = path.resolve(__dirname, "templates");
 

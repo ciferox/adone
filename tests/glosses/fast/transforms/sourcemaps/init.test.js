@@ -1,6 +1,6 @@
 import generateFixtures from "./generate_fixtures";
 
-describe("fast", "transforms", "sourcemaps", "init", () => {
+describe("fast", "transform", "sourcemaps", "init", () => {
     const { std: { stream: { Readable } }, fast } = adone;
     const { File, transform: { sourcemaps: { init: sourcemapsInit } } } = fast;
 

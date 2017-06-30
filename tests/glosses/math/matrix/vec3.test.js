@@ -1,7 +1,7 @@
 import equality from "./equality";
 const { mat4, mat3, vec3 } = adone.math.matrix;
 
-describe("vec3", () => {
+describe("math", "matrix", "vec3", () => {
     let out;
     let vecA;
     let vecB;

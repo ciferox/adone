@@ -1,6 +1,6 @@
 import { createConnection, createServer } from "../../common";
 
-describe("glosses", "databases", "mysql", "functional", "connection", "quit", () => {
+describe("database", "mysql", "functional", "connection", "quit", () => {
     const { promise } = adone;
 
     it("should work", async () => {

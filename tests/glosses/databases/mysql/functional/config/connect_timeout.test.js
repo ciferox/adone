@@ -1,6 +1,6 @@
 import { createConnection } from "../../common";
 
-describe("glosses", "databases", "mysql", "functional", "config", "connect timeout", function connectTimeout() {
+describe("database", "mysql", "functional", "config", "connect timeout", function connectTimeout() {
     this.timeout(180000);
 
     it("should throw ETIMEDOUT error", async () => {

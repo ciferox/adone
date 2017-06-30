@@ -1,4 +1,4 @@
-describe("databases", "local", "Datastore", () => {
+describe("database", "local", "Datastore", () => {
     const { database: { local: { Model: model, Datastore } } } = adone;
 
     const reloadTimeUpperBound = 60;

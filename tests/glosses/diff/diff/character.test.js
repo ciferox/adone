@@ -1,4 +1,4 @@
-describe("glosses", "diff", "chars", () => {
+describe("diff", "chars", () => {
     const { diff: { chars, util: { convertChangesToXML } } } = adone;
 
     it("Should diff chars", () => {

@@ -1,4 +1,4 @@
-describe("glosses", "math", "Long", "special", () => {
+describe("math", "Long", "special", () => {
     const { math: { Long } } = adone;
 
     it("basic", () => {

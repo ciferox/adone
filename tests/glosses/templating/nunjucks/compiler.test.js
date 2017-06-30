@@ -1,6 +1,6 @@
 import * as util from "./util";
 
-describe("glosses", "templating", "nunjucks", "compiler", () => {
+describe("templating", "nunjucks", "compiler", () => {
     const { std: { fs, path }, templating: { nunjucks: { Template } } } = adone;
     const { render, equal, finish } = util;
 

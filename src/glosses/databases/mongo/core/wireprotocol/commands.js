@@ -42,7 +42,7 @@ export class Insert {
         // Header buffer
         const header = Buffer.alloc(
             4 * 4 // Header
-            + 4   // Flags
+            + 4 // Flags
             + Buffer.byteLength(this.ns) + 1 // namespace
         );
 
@@ -158,9 +158,9 @@ export class Update {
         // Header buffer
         const header = Buffer.alloc(
             4 * 4 // Header
-            + 4   // ZERO
+            + 4 // ZERO
             + Buffer.byteLength(this.ns) + 1 // namespace
-            + 4   // Flags
+            + 4 // Flags
         );
 
         // Add header to buffers
@@ -274,9 +274,9 @@ export class Remove {
         // Header buffer
         const header = Buffer.alloc(
             4 * 4 // Header
-            + 4   // ZERO
+            + 4 // ZERO
             + Buffer.byteLength(this.ns) + 1 // namespace
-            + 4   // Flags
+            + 4 // Flags
         );
 
         // Add header to buffers

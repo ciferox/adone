@@ -1,8 +1,6 @@
 import check from "../helpers/check_redis";
 
-skip(check);
-
-describe("glosses", "databases", "redis", "lazy connect", () => {
+describe("database", "redis", "lazy connect", { skip: check }, () => {
     const { database: { redis: { Redis, Cluster } } } = adone;
 
     afterEach((done) => {

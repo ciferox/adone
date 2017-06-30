@@ -1,37 +1,17 @@
 const {
     database: { mongo: { core: {
         Cursor: BasicCursor,
-    MongoError,
-    Server,
-    auth: { MongoCR, X509, Plain, ScramSHA1 },
-    helper
+        MongoError,
+        Server,
+        auth,
+        helper
     } } },
     std: {
         events: EventEmitter
     },
-    is, util
+    is, util, lazify
 } = adone;
 
-/**
- * @fileOverview The **Mongos** class is a class that represents a Mongos Proxy topology and is
- * used to construct connections.
- *
- * @example
- * var Mongos = require('mongodb-core').Mongos
- *   , ReadPreference = require('mongodb-core').ReadPreference
- *   , assert = require('assert');
- *
- * var server = new Mongos([{host: 'localhost', port: 30000}]);
- * // Wait for the connection event
- * server.on('connect', function(server) {
- *   server.destroy();
- * });
- *
- * // Start connecting
- * server.connect();
- */
-//
-// States
 const DISCONNECTED = "disconnected";
 const CONNECTING = "connecting";
 const CONNECTED = "connected";
@@ -56,7 +36,6 @@ const stateTransition = (self, newState) => {
     }
 };
 
-//
 // ReplSet instance id
 let id = 1;
 const handlers = ["connect", "close", "error", "timeout", "parseError"];
@@ -295,14 +274,16 @@ const reconnectProxies = (self, proxies, callback) => {
             }
 
             // Create a new server instance
-            const server = new Server(Object.assign({}, self.s.options, {
+            const server = new Server({
+                ...self.s.options,
                 host: _server.name.split(":")[0],
-                port: parseInt(_server.name.split(":")[1], 10)
-            }, {
-                    authProviders: self.authProviders, reconnect: false, monitoring: false, inTopology: true
-                }, {
-                    clientInfo: util.clone(self.s.clientInfo)
-                }));
+                port: parseInt(_server.name.split(":")[1], 10),
+                authProviders: self.authProviders,
+                reconnect: false,
+                monitoring: false,
+                inTopology: true,
+                clientInfo: util.clone(self.s.clientInfo)
+            });
 
             // Relay the server description change
             server.on("serverDescriptionChanged", (event) => {
@@ -362,36 +343,36 @@ const topologyMonitor = (self, options = {}) => {
             _server.command("admin.$cmd", {
                 ismaster: true
             }, {
-                    monitoring: true,
-                    socketTimeout: self.s.options.connectionTimeout || 2000
-                }, (err, r) => {
-                    if (self.state === DESTROYED || self.state === UNREFERENCED) {
-                        // Move from connectingProxies
-                        moveServerFrom(self.connectedProxies, self.disconnectedProxies, _server);
-                        _server.destroy();
-                        return cb(err, r);
-                    }
+                monitoring: true,
+                socketTimeout: self.s.options.connectionTimeout || 2000
+            }, (err, r) => {
+                if (self.state === DESTROYED || self.state === UNREFERENCED) {
+                    // Move from connectingProxies
+                    moveServerFrom(self.connectedProxies, self.disconnectedProxies, _server);
+                    _server.destroy();
+                    return cb(err, r);
+                }
 
-                    // Calculate latency
-                    const latencyMS = new Date().getTime() - start;
+                // Calculate latency
+                const latencyMS = new Date().getTime() - start;
 
-                    // We had an error, remove it from the state
-                    if (err) {
-                        // Emit the server heartbeat failure
-                        helper.emitSDAMEvent(self, "serverHeartbeatFailed", { durationMS: latencyMS, failure: err, connectionId: _server.name });
-                        // Move from connected proxies to disconnected proxies
-                        moveServerFrom(self.connectedProxies, self.disconnectedProxies, _server);
-                    } else {
-                        // Update the server ismaster
-                        _server.ismaster = r.result;
-                        _server.lastIsMasterMS = latencyMS;
+                // We had an error, remove it from the state
+                if (err) {
+                    // Emit the server heartbeat failure
+                    helper.emitSDAMEvent(self, "serverHeartbeatFailed", { durationMS: latencyMS, failure: err, connectionId: _server.name });
+                    // Move from connected proxies to disconnected proxies
+                    moveServerFrom(self.connectedProxies, self.disconnectedProxies, _server);
+                } else {
+                    // Update the server ismaster
+                    _server.ismaster = r.result;
+                    _server.lastIsMasterMS = latencyMS;
 
-                        // Server heart beat event
-                        helper.emitSDAMEvent(self, "serverHeartbeatSucceeded", { durationMS: latencyMS, reply: r.result, connectionId: _server.name });
-                    }
+                    // Server heart beat event
+                    helper.emitSDAMEvent(self, "serverHeartbeatSucceeded", { durationMS: latencyMS, reply: r.result, connectionId: _server.name });
+                }
 
-                    cb(err, r);
-                });
+                cb(err, r);
+            });
         };
 
         // No proxies initiate monitor again
@@ -590,50 +571,6 @@ const executeWriteOperation = (self, op, ns, ops, options, callback) => {
     server[op](ns, ops, options, callback);
 };
 
-/**
- * Creates a new Mongos instance
- * @class
- * @param {array} seedlist A list of seeds for the replicaset
- * @param {number} [options.haInterval=5000] The High availability period for replicaset inquiry
- * @param {Cursor} [options.cursorFactory=Cursor] The cursor factory class used for all query cursors
- * @param {number} [options.size=5] Server connection pool size
- * @param {boolean} [options.keepAlive=true] TCP Connection keep alive enabled
- * @param {number} [options.keepAliveInitialDelay=0] Initial delay before TCP keep alive enabled
- * @param {number} [options.localThresholdMS=15] Cutoff latency point in MS for MongoS proxy selection
- * @param {boolean} [options.noDelay=true] TCP Connection no delay
- * @param {number} [options.connectionTimeout=1000] TCP Connection timeout setting
- * @param {number} [options.socketTimeout=0] TCP Socket timeout setting
- * @param {boolean} [options.singleBufferSerializtion=true] Serialize into single buffer, trade of peak memory for serialization speed
- * @param {boolean} [options.ssl=false] Use SSL for connection
- * @param {boolean|function} [options.checkServerIdentity=true] Ensure we check server identify during SSL, set to false to disable checking. Only works for Node 0.12.x or higher. You can pass in a boolean or your own checkServerIdentity override function.
- * @param {Buffer} [options.ca] SSL Certificate store binary buffer
- * @param {Buffer} [options.cert] SSL Certificate binary buffer
- * @param {Buffer} [options.key] SSL Key file binary buffer
- * @param {string} [options.passphrase] SSL Certificate pass phrase
- * @param {string} [options.servername=null] String containing the server name requested via TLS SNI.
- * @param {boolean} [options.rejectUnauthorized=true] Reject unauthorized server certificates
- * @param {boolean} [options.promoteLongs=true] Convert Long values from the db into Numbers if they fit into 53 bits
- * @param {boolean} [options.promoteValues=true] Promotes BSON values to native types where possible, set to false to only receive wrapper types.
- * @param {boolean} [options.promoteBuffers=false] Promotes Binary BSON values to native Node Buffers.
- * @param {boolean} [options.domainsEnabled=false] Enable the wrapping of the callback in the current domain, disabled by default to avoid perf hit.
- * @return {Mongos} A cursor instance
- * @fires Mongos#connect
- * @fires Mongos#reconnect
- * @fires Mongos#joined
- * @fires Mongos#left
- * @fires Mongos#failed
- * @fires Mongos#fullsetup
- * @fires Mongos#all
- * @fires Mongos#serverHeartbeatStarted
- * @fires Mongos#serverHeartbeatSucceeded
- * @fires Mongos#serverHeartbeatFailed
- * @fires Mongos#topologyOpening
- * @fires Mongos#topologyClosed
- * @fires Mongos#topologyDescriptionChanged
- * @property {string} type the topology type.
- * @property {string} parserType the parser type used (c++ or js).
- */
-
 export default class Mongos extends EventEmitter {
     constructor(seedlist, options = {}) {
         super();
@@ -642,7 +579,7 @@ export default class Mongos extends EventEmitter {
 
         // Internal state
         this.s = {
-            options: Object.assign({}, options),
+            options: { ...options },
             // BSON instance
             bson: options.bson || new adone.data.bson.BSON(),
             // Factory overrides
@@ -671,12 +608,12 @@ export default class Mongos extends EventEmitter {
         this.s.options.clientInfo = helper.createClientInfo(options);
 
         // All the authProviders
-        this.authProviders = options.authProviders || {
-            mongocr: new MongoCR(this.s.bson),
-            x509: new X509(this.s.bson),
-            plain: new Plain(this.s.bson),
-            "scram-sha-1": new ScramSHA1(this.s.bson)
-        };
+        this.authProviders = options.authProviders || lazify({
+            mongocr: () => new auth.MongoCR(this.s.bson),
+            x509: () => new auth.X509(this.s.bson),
+            plain: () => new auth.Plain(this.s.bson),
+            "scram-sha-1": () => new auth.ScramSHA1(this.s.bson)
+        });
 
         // Disconnected state
         this.state = DISCONNECTED;
@@ -715,11 +652,15 @@ export default class Mongos extends EventEmitter {
         stateTransition(this, CONNECTING);
         // Create server instances
         const servers = this.s.seedlist.map((x) => {
-            return new Server(Object.assign({}, this.s.options, x, {
-                authProviders: this.authProviders, reconnect: false, monitoring: false, inTopology: true
-            }, {
-                    clientInfo: util.clone(this.s.clientInfo)
-                }));
+            return new Server({
+                ...this.s.options,
+                ...x,
+                authProviders: this.authProviders,
+                reconnect: false,
+                monitoring: false,
+                inTopology: true,
+                clientInfo: util.clone(this.s.clientInfo)
+            });
         });
 
         servers.forEach((server) => {

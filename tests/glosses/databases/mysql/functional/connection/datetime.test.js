@@ -1,6 +1,6 @@
 import { createConnection } from "../../common";
 
-describe("glosses", "databases", "mysql", "functional", "connection", "datetime", () => {
+describe("database", "mysql", "functional", "connection", "datetime", () => {
     const date = new Date("1990-01-01 08:15:11");
     const date1 = new Date("2000-03-03 08:15:11");
     const date2 = "2010-12-10 14:12:09.019473";

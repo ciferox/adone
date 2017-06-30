@@ -1,4 +1,4 @@
-describe("glosses", "diff", () => {
+describe("diff", () => {
     const { diff: { _: { wordDiff }, words, wordsWithSpace, util: { convertChangesToXML } } } = adone;
 
     describe("words", () => {

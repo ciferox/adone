@@ -1,8 +1,6 @@
 import check from "../helpers/check_redis";
 
-skip(check);
-
-describe("glosses", "databases", "redis", "transaction", () => {
+describe("database", "redis", "transaction", { skip: check }, () => {
     const { database: { redis: { Redis, __: { Command } } } } = adone;
 
     afterEach((done) => {

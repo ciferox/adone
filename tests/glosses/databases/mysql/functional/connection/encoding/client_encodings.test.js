@@ -1,6 +1,6 @@
 import { createConnection } from "../../../common";
 
-describe("glosses", "databases", "mysql", "functional", "connection", "encoding", "client encodings", () => {
+describe("database", "mysql", "functional", "connection", "encoding", "client encodings", () => {
     specify("UTF8MB4_GENERAL_CI", async () => {
         const connection = await createConnection({ charset: "UTF8MB4_GENERAL_CI" });
         try {

@@ -13,7 +13,7 @@ const singleEscapes = {
 const regexSingleEscape = /["'\\\b\f\n\r\t]/;
 
 const regexDigit = /[0-9]/;
-const regexWhitelist = /[ !#-&\(-\[\]-~]/;
+const regexWhitelist = /[ !#-&(-[\]-~]/;
 
 export default function jsesc(argument, options) {
     let oldIndent = "";

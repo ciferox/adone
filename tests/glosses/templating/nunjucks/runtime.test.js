@@ -1,6 +1,6 @@
 import * as util from "./util";
 
-describe("glosses", "templating", "nunjucks", "runtime", () => {
+describe("templating", "nunjucks", "runtime", () => {
     const { finish, render } = util;
 
     it("should report the failed function calls to symbols", (done) => {

@@ -1,4 +1,4 @@
-describe("glosses", "databases", "redis", "unit", "cluster key slot", () => {
+describe("database", "redis", "unit", "cluster key slot", () => {
     const { database: { redis: { __: { calculateSlot } } } } = adone;
     const { generateMulti } = calculateSlot;
 

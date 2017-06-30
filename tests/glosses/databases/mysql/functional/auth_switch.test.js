@@ -1,4 +1,4 @@
-describe("glosses", "databases", "mysql", "functional", "auth switch", () => {
+describe("database", "mysql", "functional", "auth switch", () => {
     const { database: { mysql } } = adone;
     const {
         __: {

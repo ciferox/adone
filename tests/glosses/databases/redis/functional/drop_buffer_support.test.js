@@ -1,8 +1,6 @@
 import check from "../helpers/check_redis";
 
-skip(check);
-
-describe("glosses", "databases", "redis", "dropBufferSupport", () => {
+describe("database", "redis", "dropBufferSupport", { skip: check }, () => {
     const { database: { redis: { Redis } } } = adone;
 
     afterEach((done) => {

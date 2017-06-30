@@ -1,4 +1,4 @@
-describe("fast", "transforms", "concat", () => {
+describe("fast", "transform", "concat", () => {
     const { fast, std: { path }, x } = adone;
     const { File, transform: { concat } } = fast;
 

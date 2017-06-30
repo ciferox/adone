@@ -1,6 +1,6 @@
 import generateFixtures from "./generate_fixtures";
 
-describe("fast", "transforms", "angular", "fileSort", () => {
+describe("fast", "transform", "angular", "fileSort", () => {
     const { std: { path, fs }, fast } = adone;
     const { File, transform: { angularFilesort } } = fast;
 

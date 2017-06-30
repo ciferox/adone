@@ -1,6 +1,6 @@
 import { createConnection, createPool } from "../common";
 
-describe("glosses", "databases", "mysql", "functional", "pool disconnect", () => {
+describe("database", "mysql", "functional", "pool disconnect", () => {
     it("should disconnect pool connection from using their ids", async () => {
         const conn = createConnection({ multipleStatements: true, promise: false });
         const pool = createPool({ promise: false });

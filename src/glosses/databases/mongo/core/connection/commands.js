@@ -115,7 +115,7 @@ export class Query {
         // Allocate write protocol header buffer
         const header = Buffer.alloc(
             4 * 4 // Header
-            + 4   // Flags
+            + 4 // Flags
             + Buffer.byteLength(this.ns) + 1 // namespace
             + 4 // numberToSkip
             + 4 // numberToReturn
@@ -384,9 +384,7 @@ export class Response {
     constructor(bson, data, opts = { promoteLongs: true, promoteValues: true, promoteBuffers: false }) {
         this.parsed = false;
 
-        //
         // Parse Header
-        //
         this.index = 0;
         this.raw = data;
         this.data = data;
@@ -495,9 +493,7 @@ export class Response {
             promoteBuffers
         };
 
-        //
         // Single document and documentsReturnedIn set
-        //
         if (this.numberReturned === 1 && !is.nil(documentsReturnedIn) && raw) {
             // Calculate the bson size
             const bsonSize = this.data[this.index] |
@@ -530,9 +526,7 @@ export class Response {
             return;
         }
 
-        //
         // Parse Body
-        //
         for (let i = 0; i < this.numberReturned; i++) {
             const bsonSize = this.data[this.index] |
                 this.data[this.index + 1] << 8 |

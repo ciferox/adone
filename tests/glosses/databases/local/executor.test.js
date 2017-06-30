@@ -1,4 +1,4 @@
-describe("databases", "local", "Executor", () => {
+describe("database", "local", "Executor", () => {
     const { database: { local: { Datastore } } } = adone;
 
     describe("With persistent database", () => {

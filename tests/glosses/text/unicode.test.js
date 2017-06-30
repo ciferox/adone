@@ -1,4 +1,4 @@
-describe("adone.text.unicode", () => {
+describe("text", "unicode", () => {
     const { unicode } = adone.text;
     const result = (main, win) => adone.is.windows ? win : main;
 

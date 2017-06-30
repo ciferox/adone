@@ -1,4 +1,4 @@
-describe("collections", "LinkedList", () => {
+describe("collection", "LinkedList", () => {
     const { collection: { LinkedList } } = adone;
     const empty = Symbol.for("linkedlist:empty");
 

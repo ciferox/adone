@@ -42,7 +42,7 @@ const verifyGlobCacheIsAbsolute = (glob) => {
     }
 };
 
-describe("Glob", () => {
+describe("fs", "glob", () => {
     const fixtureDir = path.resolve(__dirname, "fixtures");
 
     before(async () => {

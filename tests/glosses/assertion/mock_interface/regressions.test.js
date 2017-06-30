@@ -1,4 +1,4 @@
-describe("Regressions", () => {
+describe("assertion", "mock interface", "regressions", () => {
     specify("GH-19: functions with `proxy` properties", () => {
         const func = () => {
             // Contents don't matter

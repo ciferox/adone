@@ -1,6 +1,6 @@
 import { createConnection, createServer } from "../../common";
 
-describe("glosses", "databases", "mysql", "functional", "connection", "protocol errors", () => {
+describe("database", "mysql", "functional", "connection", "protocol errors", () => {
     it("should throw unexepcted packet", async () => {
         const server = await createServer((conn) => {
             conn.on("query", () => {

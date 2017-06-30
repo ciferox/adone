@@ -1,8 +1,6 @@
 import check from "../helpers/check_redis";
 
-skip(check);
-
-describe("glosses", "databases", "redis", "ready_check", () => {
+describe("database", "redis", "ready_check", { skip: check }, () => {
     const { database: { redis: { Redis } } } = adone;
 
     afterEach((done) => {
@@ -38,7 +36,7 @@ describe("glosses", "databases", "redis", "ready_check", () => {
             retryStrategy() {
                 redis.disconnect();
                 done();
-                
+
             }
         });
 

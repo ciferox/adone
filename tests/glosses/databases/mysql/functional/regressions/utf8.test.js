@@ -1,6 +1,6 @@
 import { createConnection } from "../../common";
 
-describe("glosses", "databases", "mysql", "functional", "regressions", "utf8", () => {
+describe("database", "mysql", "functional", "regressions", "utf8", () => {
     let connection = null;
 
     const tableName = "商城";

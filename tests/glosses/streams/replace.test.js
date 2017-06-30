@@ -1,4 +1,4 @@
-describe("streams", "replace", () => {
+describe("stream", "replace", () => {
     const script = [
         '<script type="text/javascript">',
         "console.log('hello');",

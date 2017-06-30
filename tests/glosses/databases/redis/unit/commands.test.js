@@ -1,4 +1,4 @@
-describe("glosses", "databases", "redis", "unit", "redis-commands", () => {
+describe("database", "redis", "unit", "redis-commands", () => {
     const { database: { redis: { __: { commands } } } } = adone;
 
     describe(".list", () => {

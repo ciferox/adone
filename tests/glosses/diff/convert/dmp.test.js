@@ -1,4 +1,4 @@
-describe("glosses", "diff", "convert", "convertToDMP", () => {
+describe("diff", "convert", "convertToDMP", () => {
     const { diff: { util: { convertChangesToDMP }, words } } = adone;
 
     it("should output diff-match-patch format", () => {

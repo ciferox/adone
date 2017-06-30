@@ -1,7 +1,7 @@
 import { createConnection } from "../../common";
 import typeCastringTests from "./type_casting_tests";
 
-describe("glosses", "databases", "mysql", "functional", "connection", "execute", () => {
+describe("database", "mysql", "functional", "connection", "execute", () => {
     const { util, is } = adone;
 
     let connection = null;

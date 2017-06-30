@@ -1,4 +1,4 @@
-describe("collections", "Blocking queue", () => {
+describe("collection", "BQueue", () => {
     const { collection: { BQueue } } = adone;
 
     it("should block until an element comes", async () => {

@@ -1,6 +1,6 @@
 import { createConnection, createServer } from "../../common";
 
-describe("glosses", "databases", "mysql", "functional", "connection", "disconnects", () => {
+describe("database", "mysql", "functional", "connection", "disconnects", () => {
     it("should handle disconnects", async () => {
         const connections = [];
         const server = await createServer((conn) => {

@@ -77,7 +77,6 @@ const executeWrite = (pool, bson, type, opsField, ns, ops, options = {}, callbac
     }
 };
 
-
 const executeFindCommand = (bson, ns, cmd, cursorState, topology, options = {}) => {
     // Get the readPreference
     const readPreference = helper.getReadPreference(cmd, options);
@@ -429,7 +428,7 @@ export default class WireProtocol {
         }
     }
 
-    getMore(bson, ns, cursorState, batchSize, raw, connection, options = {}, callback) {
+    getMore(bson, ns, cursorState, batchSize, raw, connection, options = {}, callback) { // eslint-disable-line no-unused-vars
         // Build command namespace
         const parts = ns.split(/\./);
         // Command namespace

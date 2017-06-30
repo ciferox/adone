@@ -1,5 +1,5 @@
 
-describe("fast", "transforms", "angular", "templateCache", () => {
+describe("fast", "transform", "angular", "templateCache", () => {
     const { std: { path }, fast } = adone;
     const { File, transform: { angularTemplateCache: templateCache } } = fast;
 

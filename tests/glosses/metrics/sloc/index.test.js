@@ -19,7 +19,7 @@ const longLine = ((() => {
     return result1;
 })()).join("");
 
-describe("Sloc", () => {
+describe("metrics", "sloc", () => {
 
     it("should be a function", () => {
         expect(sloc).to.be.a("function");

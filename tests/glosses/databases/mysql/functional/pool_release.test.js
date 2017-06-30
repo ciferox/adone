@@ -1,6 +1,6 @@
 import { createPool } from "../common";
 
-describe("glosses", "databases", "mysql", "functional", "pool release", () => {
+describe("database", "mysql", "functional", "pool release", () => {
     it("should release connections", async () => {
         const pool = createPool();
 

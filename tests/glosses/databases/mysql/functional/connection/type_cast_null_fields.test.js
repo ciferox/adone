@@ -1,6 +1,6 @@
 import { createConnection } from "../../common";
 
-describe("glosses", "databases", "mysql", "functional", "connection", "type cast null fields", () => {
+describe("database", "mysql", "functional", "connection", "type cast null fields", () => {
     let connection = null;
 
     before(async () => {

@@ -1,4 +1,4 @@
-describe("glosses", "databases", "mysql", "unit", "packet parser", () => {
+describe("database", "mysql", "unit", "packet parser", () => {
     const { database: { mysql: { __: { PacketParser, packet: { Packet } } } }, is } = adone;
 
     const splitUP = (arr) => {

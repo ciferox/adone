@@ -1,6 +1,6 @@
 import { createConnection } from "../../../common";
 
-describe("glosses", "databases", "mysql", "functional", "connection", "encoding", "charset", () => {
+describe("database", "mysql", "functional", "connection", "encoding", "charset", () => {
     const { database: { mysql } } = adone;
 
     const payload = "привет, мир";

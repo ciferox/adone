@@ -1,6 +1,6 @@
 import { createConnection } from "../../common";
 
-describe("glosses", "databases", "mysql", "functional", "regressions", "koi8r decoding", () => {
+describe("database", "mysql", "functional", "regressions", "koi8r decoding", () => {
     let connection = null;
 
     const tableName = "МояТаблица";

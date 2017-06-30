@@ -32,7 +32,7 @@ class PassThrough extends Stream {
     }
 }
 
-describe("streams", "MuteStream", () => {
+describe("stream", "MuteStream", () => {
     it("incoming", (done) => {
         const ms = new MuteStream();
         const str = new PassThrough();

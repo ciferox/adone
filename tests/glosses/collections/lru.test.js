@@ -1,4 +1,4 @@
-describe("collections", "lru", () => {
+describe("collection", "LRU", () => {
     const { collection: { LRU } } = adone;
 
     describe("basic", () => {

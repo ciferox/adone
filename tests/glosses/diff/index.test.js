@@ -1,4 +1,4 @@
-describe("glosses", "diff", () => {
+describe("diff", () => {
     it("should export APIs", () => {
         expect(adone.diff.chars).to.exist;
         expect(adone.diff.words).to.exist;

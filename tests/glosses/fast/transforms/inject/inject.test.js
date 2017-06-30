@@ -1,4 +1,4 @@
-describe("fast", "transforms", "inject", () => {
+describe("fast", "transform", "inject", () => {
     const { fast, std: { fs, path } } = adone;
     const { transform: { inject }, File } = fast;
 

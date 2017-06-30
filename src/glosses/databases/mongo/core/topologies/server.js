@@ -1,14 +1,15 @@
 const {
     database: { mongo: { core: {
         ReadPreference,
-    Pool,
-    Query,
-    MongoError,
-    wireProtocol,
-    Cursor: BasicCursor,
-    helper
+        Pool,
+        Query,
+        MongoError,
+        wireProtocol,
+        Cursor: BasicCursor,
+        helper
     } } },
     std: { events: EventEmitter },
+    data: { bson },
     is, x, util
 } = adone;
 
@@ -298,55 +299,6 @@ const basicReadValidations = (self, options) => {
 
 const listeners = ["close", "error", "timeout", "parseError", "connect"];
 
-/**
- * Creates a new Server instance
- * @class
- * @param {boolean} [options.reconnect=true] Server will attempt to reconnect on loss of connection
- * @param {number} [options.reconnectTries=30] Server attempt to reconnect #times
- * @param {number} [options.reconnectInterval=1000] Server will wait # milliseconds between retries
- * @param {number} [options.monitoring=true] Enable the server state monitoring (calling ismaster at monitoringInterval)
- * @param {number} [options.monitoringInterval=5000] The interval of calling ismaster when monitoring is enabled.
- * @param {Cursor} [options.cursorFactory=Cursor] The cursor factory class used for all query cursors
- * @param {string} options.host The server host
- * @param {number} options.port The server port
- * @param {number} [options.size=5] Server connection pool size
- * @param {boolean} [options.keepAlive=true] TCP Connection keep alive enabled
- * @param {number} [options.keepAliveInitialDelay=0] Initial delay before TCP keep alive enabled
- * @param {boolean} [options.noDelay=true] TCP Connection no delay
- * @param {number} [options.connectionTimeout=0] TCP Connection timeout setting
- * @param {number} [options.socketTimeout=0] TCP Socket timeout setting
- * @param {boolean} [options.ssl=false] Use SSL for connection
- * @param {boolean|function} [options.checkServerIdentity=true] Ensure we check server identify during SSL, set to false to disable checking. Only works for Node 0.12.x or higher. You can pass in a boolean or your own checkServerIdentity override function.
- * @param {Buffer} [options.ca] SSL Certificate store binary buffer
- * @param {Buffer} [options.crl] SSL Certificate revocation store binary buffer
- * @param {Buffer} [options.cert] SSL Certificate binary buffer
- * @param {Buffer} [options.key] SSL Key file binary buffer
- * @param {string} [options.passphrase] SSL Certificate pass phrase
- * @param {boolean} [options.rejectUnauthorized=true] Reject unauthorized server certificates
- * @param {string} [options.servername=null] String containing the server name requested via TLS SNI.
- * @param {boolean} [options.promoteLongs=true] Convert Long values from the db into Numbers if they fit into 53 bits
- * @param {boolean} [options.promoteValues=true] Promotes BSON values to native types where possible, set to false to only receive wrapper types.
- * @param {boolean} [options.promoteBuffers=false] Promotes Binary BSON values to native Node Buffers.
- * @param {string} [options.appname=null] Application name, passed in on ismaster call and logged in mongod server logs. Maximum size 128 bytes.
- * @param {boolean} [options.domainsEnabled=false] Enable the wrapping of the callback in the current domain, disabled by default to avoid perf hit.
- * @return {Server} A cursor instance
- * @fires Server#connect
- * @fires Server#close
- * @fires Server#error
- * @fires Server#timeout
- * @fires Server#parseError
- * @fires Server#reconnect
- * @fires Server#reconnectFailed
- * @fires Server#serverHeartbeatStarted
- * @fires Server#serverHeartbeatSucceeded
- * @fires Server#serverHeartbeatFailed
- * @fires Server#topologyOpening
- * @fires Server#topologyClosed
- * @fires Server#topologyDescriptionChanged
- * @property {string} type the topology type.
- * @property {string} parserType the parser type used (c++ or js).
- */
-
 export default class Server extends EventEmitter {
     constructor(options = {}) {
         super();
@@ -360,7 +312,7 @@ export default class Server extends EventEmitter {
             // Factory overrides
             Cursor: options.cursorFactory || BasicCursor,
             // BSON instance
-            bson: options.bson || new adone.data.bson.BSON(),
+            bson: options.bson || new bson.BSON(),
             // Pool
             pool: null,
             // Disconnect handler
@@ -426,7 +378,7 @@ export default class Server extends EventEmitter {
         }
 
         // Create a pool
-        this.s.pool = new Pool(Object.assign(this.s.options, options, { bson: this.s.bson }));
+        this.s.pool = new Pool({ ...this.s.options, ...options, bson: this.s.bson });
 
         // Set up listeners
         this.s.pool.on("close", eventHandler(this, "close"));
@@ -512,7 +464,7 @@ export default class Server extends EventEmitter {
         }
 
         // Clone the options
-        options = Object.assign({}, options, { wireProtocolCommand: false });
+        options = { ...options, wireProtocolCommand: false };
 
         // If we are not connected or have a disconnectHandler specified
         if (disconnectHandler(this, "command", ns, cmd, options, callback)) {

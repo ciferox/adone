@@ -1,4 +1,4 @@
-describe("fast", "transforms", "rename", () => {
+describe("fast", "transform", "rename", () => {
     const { is, fast, std: { path } } = adone;
 
     let fromdir;

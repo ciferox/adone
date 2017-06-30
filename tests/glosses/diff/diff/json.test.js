@@ -1,4 +1,4 @@
-describe("glosses", "diff", () => {
+describe("diff", () => {
     const { util, diff: { json, util: { canonicalizeObject, convertChangesToXML } } } = adone;
 
     describe("json", () => {

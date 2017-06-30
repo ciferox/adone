@@ -3,7 +3,7 @@ const { sprintf } = adone;
 const shouldThrow = (format, args, err) => assert.throws(() => sprintf(format, ...args), err);
 const shouldNotThrow = (format, args) => assert.doesNotThrow(() => sprintf(format, ...args));
 
-describe("sprintf", () => {
+describe("text", "sprintf", () => {
     const pi = 3.141592653589793;
 
     it("should return formated strings for simple placeholders", () => {

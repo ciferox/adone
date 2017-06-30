@@ -1,4 +1,4 @@
-describe("fast", "transforms", "wrap", () => {
+describe("fast", "transform", "wrap", () => {
     const { fast } = adone;
     const { File, transform: { wrap } } = fast;
 

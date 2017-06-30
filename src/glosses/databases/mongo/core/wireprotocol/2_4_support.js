@@ -11,11 +11,8 @@ const {
     is, util
 } = adone;
 
-// Write concern fields
 const writeConcernFields = ["w", "wtimeout", "j", "fsync"];
 
-//
-// Execute a find command
 const setupClassicFind = (bson, ns, cmd, cursorState, topology, options = {}) => {
     // Get the readPreference
     const readPreference = helper.getReadPreference(cmd, options);
@@ -147,8 +144,6 @@ const setupClassicFind = (bson, ns, cmd, cursorState, topology, options = {}) =>
     return query;
 };
 
-//
-// Set up a command cursor
 const setupCommand = (bson, ns, cmd, cursorState, topology, options = {}) => {
     // Get the readPreference
     const readPreference = helper.getReadPreference(cmd, options);
@@ -235,9 +230,6 @@ const cloneWriteConcern = (writeConcern) => {
     return wc;
 };
 
-//
-// Aggregate up all the results
-//
 const aggregateWriteOperationResults = (opType, ops, results, connection) => {
     const finalResult = { ok: 1, n: 0 };
     if (opType === "update") {
@@ -319,9 +311,6 @@ const aggregateWriteOperationResults = (opType, ops, results, connection) => {
     return new CommandResult(finalResult, connection);
 };
 
-//
-// Execute all inserts in an ordered manner
-//
 const executeOrdered = (opType, command, ismaster, ns, bson, pool, ops, options, callback) => {
     const _ops = ops.slice();
     // Collect all the getLastErrors

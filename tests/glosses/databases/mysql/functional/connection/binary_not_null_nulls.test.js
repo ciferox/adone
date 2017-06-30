@@ -1,6 +1,6 @@
 import { createConnection } from "../../common";
 
-describe("glosses", "databases", "mysql", "functional", "connection", "binary not null nulls", () => {
+describe("database", "mysql", "functional", "connection", "binary not null nulls", () => {
     const { database: { mysql } } = adone;
 
     let connection = null;

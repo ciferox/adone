@@ -69,8 +69,6 @@ const executeWrite = (pool, bson, type, opsField, ns, ops, options, callback) =>
     }
 };
 
-//
-// Execute a find command
 const setupClassicFind = function (bson, ns, cmd, cursorState, topology, options = {}) {
     // Get the readPreference
     const readPreference = helper.getReadPreference(cmd, options);
@@ -207,9 +205,7 @@ const setupClassicFind = function (bson, ns, cmd, cursorState, topology, options
     return query;
 };
 
-//
-// Set up a command cursor
-const setupCommand = function (bson, ns, cmd, cursorState, topology, options = {}) {
+const setupCommand = (bson, ns, cmd, cursorState, topology, options = {}) => {
     // Get the readPreference
     const readPreference = helper.getReadPreference(cmd, options);
 

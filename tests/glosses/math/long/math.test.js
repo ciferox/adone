@@ -1,4 +1,4 @@
-describe("glosses", "math", "Long", "math", () => {
+describe("math", "Long", "math", () => {
     const { math: { Long } } = adone;
 
     const toInt32s = (arr) => {

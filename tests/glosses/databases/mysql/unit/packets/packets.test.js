@@ -1,4 +1,4 @@
-describe("glosses", "databases", "mysql", "unit", "packets", () => {
+describe("database", "mysql", "unit", "packets", () => {
     describe("column definition", () => {
         const { database: { mysql: { __: { packet: { ColumnDefinition } } } } } = adone;
         const sequenceId = 5;

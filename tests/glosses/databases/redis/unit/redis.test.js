@@ -1,4 +1,4 @@
-describe("glosses", "databases", "redis", "unit", "Redis", () => {
+describe("database", "redis", "unit", "Redis", () => {
     const { database: { redis } } = adone;
     const { Redis } = redis;
 

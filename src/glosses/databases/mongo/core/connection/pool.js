@@ -1,13 +1,13 @@
 const {
     database: { mongo: { core: {
-        auth: { MongoCR, X509, Plain, ScramSHA1 },
-    Connection,
-    MongoError,
-    Query,
-    CommandResult
+        auth,
+        Connection,
+        MongoError,
+        Query,
+        CommandResult
     } } },
     std: { events: EventEmitter },
-    is, x
+    is, x, lazify
 } = adone;
 
 
@@ -199,7 +199,6 @@ const flushMonitoringOperations = (queue) => {
 
 const _execute = (self) => {
     return () => {
-        // console.log("==== _execute")
         if (self.state === DESTROYED) {
             return;
         }
@@ -294,8 +293,6 @@ const _execute = (self) => {
                         // No safe connection found, attempt to grow the connections
                         // if possible and break from the loop
                         if (!foundValidConnection) {
-                            // console.log("!!!!!!!!!!!!!!!!!!!!!! foundValidConnection failed")
-                            // console.log("============== :: " + self.queue.length)
                             // Put workItem back on the queue
                             self.queue.unshift(workItem);
 
@@ -731,45 +728,11 @@ const _createConnection = (self) => {
     connection.connect();
 };
 
-/**
- * Creates a new Pool instance
- * @class
- * @param {string} options.host The server host
- * @param {number} options.port The server port
- * @param {number} [options.size=1] Max server connection pool size
- * @param {boolean} [options.reconnect=true] Server will attempt to reconnect on loss of connection
- * @param {number} [options.reconnectTries=30] Server attempt to reconnect #times
- * @param {number} [options.reconnectInterval=1000] Server will wait # milliseconds between retries
- * @param {boolean} [options.keepAlive=true] TCP Connection keep alive enabled
- * @param {number} [options.keepAliveInitialDelay=0] Initial delay before TCP keep alive enabled
- * @param {boolean} [options.noDelay=true] TCP Connection no delay
- * @param {number} [options.connectionTimeout=0] TCP Connection timeout setting
- * @param {number} [options.socketTimeout=0] TCP Socket timeout setting
- * @param {number} [options.monitoringSocketTimeout=30000] TCP Socket timeout setting for replicaset monitoring socket
- * @param {boolean} [options.ssl=false] Use SSL for connection
- * @param {boolean|function} [options.checkServerIdentity=true] Ensure we check server identify during SSL, set to false to disable checking. Only works for Node 0.12.x or higher. You can pass in a boolean or your own checkServerIdentity override function.
- * @param {Buffer} [options.ca] SSL Certificate store binary buffer
- * @param {Buffer} [options.cert] SSL Certificate binary buffer
- * @param {Buffer} [options.key] SSL Key file binary buffer
- * @param {string} [options.passPhrase] SSL Certificate pass phrase
- * @param {boolean} [options.rejectUnauthorized=false] Reject unauthorized server certificates
- * @param {boolean} [options.promoteLongs=true] Convert Long values from the db into Numbers if they fit into 53 bits
- * @param {boolean} [options.promoteValues=true] Promotes BSON values to native types where possible, set to false to only receive wrapper types.
- * @param {boolean} [options.promoteBuffers=false] Promotes Binary BSON values to native Node Buffers.
- * @param {boolean} [options.domainsEnabled=false] Enable the wrapping of the callback in the current domain, disabled by default to avoid perf hit.
- * @fires Pool#connect
- * @fires Pool#close
- * @fires Pool#error
- * @fires Pool#timeout
- * @fires Pool#parseError
- * @return {Pool} A cursor instance
- */
-
 export default class Pool extends EventEmitter {
     constructor(options) {
         super();
         // Add the options
-        this.options = Object.assign({
+        this.options = {
             // Host and port settings
             host: "localhost",
             port: 27017,
@@ -793,8 +756,9 @@ export default class Pool extends EventEmitter {
             reconnectInterval: 1000,
             reconnectTries: 30,
             // Enable domains
-            domainsEnabled: false
-        }, options);
+            domainsEnabled: false,
+            ...options
+        };
 
         // Identification information
         this.id = _id++;
@@ -821,12 +785,12 @@ export default class Pool extends EventEmitter {
         this.queue = [];
 
         // All the authProviders
-        this.authProviders = options.authProviders || {
-            mongocr: new MongoCR(options.bson),
-            x509: new X509(options.bson),
-            plain: new Plain(options.bson),
-            "scram-sha-1": new ScramSHA1(options.bson)
-        };
+        this.authProviders = options.authProviders || lazify({
+            mongocr: () => new auth.MongoCR(options.bson),
+            x509: () => new auth.X509(options.bson),
+            plain: () => new auth.Plain(options.bson),
+            "scram-sha-1": () => new auth.ScramSHA1(options.bson)
+        });
 
         // Contains the reconnect connection
         this.reconnectConnection = null;
@@ -863,11 +827,6 @@ export default class Pool extends EventEmitter {
         return [...this.availableConnections, ...this.inUseConnections, ...this.connectingConnections];
     }
 
-    /**
-     * Get a pool connection (round-robin)
-     * @method
-     * @return {Connection}
-     */
     get() {
         return this.allConnections()[0];
     }

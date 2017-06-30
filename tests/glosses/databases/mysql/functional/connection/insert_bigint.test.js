@@ -1,6 +1,6 @@
 import { createConnection } from "../../common";
 
-describe("glosses", "databases", "mysql", "functional", "connection", "insert", "bigint", () => {
+describe("database", "mysql", "functional", "connection", "insert", "bigint", () => {
     const { math: { Long } } = adone;
 
     let connection = null;

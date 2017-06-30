@@ -1,4 +1,4 @@
-describe("collections", "Default map", () => {
+describe("collection", "DefaultMap", () => {
     const { collection: { DefaultMap } } = adone;
 
     describe("a function as the factory", () => {

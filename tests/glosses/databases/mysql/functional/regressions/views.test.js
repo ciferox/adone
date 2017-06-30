@@ -1,6 +1,6 @@
 import { createConnection } from "../../common";
 
-describe("glosses", "databases", "mysql", "functional", "regressions", "views", () => {
+describe("database", "mysql", "functional", "regressions", "views", () => {
     let connection = null;
 
     const config = {

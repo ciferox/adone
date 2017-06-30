@@ -1,6 +1,6 @@
 import { createConnection, createServer } from "../../common";
 
-describe("glosses", "databases", "mysql", "functional", "connection", "stream errors", () => {
+describe("database", "mysql", "functional", "connection", "stream errors", () => {
     it("should work", async () => {
         let clientConnection = null;
         const err = new Error("This socket has been ended by the other party");

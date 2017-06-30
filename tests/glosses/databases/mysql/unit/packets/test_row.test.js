@@ -1,4 +1,4 @@
-describe("glosses", "databases", "mysql", "unit", "packets", "text row", () => {
+describe("database", "mysql", "unit", "packets", "text row", () => {
     const { database: { mysql: { __: { packet: { TextRow } } } } } = adone;
 
     specify("simple", () => {

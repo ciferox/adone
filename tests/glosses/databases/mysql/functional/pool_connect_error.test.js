@@ -1,6 +1,6 @@
 import { createConnection, createPool } from "../common";
 
-describe("glosses", "databases", "mysql", "functional", "pool connect error", () => {
+describe("database", "mysql", "functional", "pool connect error", () => {
     const { database: { mysql } } = adone;
 
     let server = null;

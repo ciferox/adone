@@ -1,12 +1,6 @@
-const { std: { stream: { Transform } } } = adone;
+const { std: { stream: { Transform } }, data: { base64 } } = adone;
 
-/**
- * Adds soft line breaks to a base64 string
- *
- * @param {String} str base64 encoded string that might need line wrapping
- * @param {Number} [lineLength=76] Maximum allowed length for a line
- * @returns {String} Soft-wrapped base64 encoded string
- */
+// Adds soft line breaks to a base64 string
 const wrap = (str, lineLength, delimiter) => {
     str = (str || "").toString();
     lineLength = lineLength || 76;
@@ -28,10 +22,9 @@ const wrap = (str, lineLength, delimiter) => {
 };
 
 export class Encode extends Transform {
-    constructor(options) {
-        super();
-        // init Transform
-        this.options = options || {};
+    constructor(options = {}) {
+        super(options);
+        this.options = options;
 
         if (this.options.lineLength !== false) {
             this.options.lineLength = this.options.lineLength || 76;
@@ -70,7 +63,7 @@ export class Encode extends Transform {
             this._remainingBytes = false;
         }
 
-        b64 = this._curLine + adone.data.base64.encode(chunk, { buffer: false });
+        b64 = this._curLine + base64.encode(chunk, { buffer: false });
 
         if (this.options.lineLength) {
             b64 = wrap(b64, this.options.lineLength, this.options.delimiter);
@@ -97,6 +90,58 @@ export class Encode extends Transform {
             this._curLine = wrap(this._curLine, this.options.lineLength, this.options.delimiter);
             this.outputBytes += this._curLine.length;
             this.push(this._curLine, "ascii");
+            this._curLine = "";
+        }
+        done();
+    }
+}
+
+export class Decode extends Transform {
+    constructor(options = {}) {
+        super(options);
+        this._curLine = "";
+        this.inputBytes = 0;
+        this.outputBytes = 0;
+    }
+
+    _transform(chunk, encoding, done) {
+        chunk = chunk.toString("ascii");
+
+        if (!chunk || !chunk.length) {
+            return done();
+        }
+
+        this.inputBytes += chunk.length;
+
+        let b64 = this._curLine + chunk;
+        this._curLine = "";
+
+        b64 = b64.replace(/[^a-zA-Z0-9+/=]/g, "");
+
+        if (b64.length % 4) {
+            this._curLine = b64.substr(-b64.length % 4);
+            if (this._curLine.length === b64.length || this._curLine.length < 4) {
+                this._curLine = b64;
+                b64 = "";
+            } else {
+                b64 = b64.substr(0, this._curLine.length);
+            }
+        }
+
+        if (b64) {
+            const buf = base64.decode(b64, { buffer: true });
+            this.outputBytes += buf.length;
+            this.push(buf);
+        }
+
+        done();
+    }
+
+    _flush(done) {
+        if (this._curLine) {
+            const buf = base64.decode(this._curLine, { buffer: true });
+            this.outputBytes += buf.length;
+            this.push(buf);
             this._curLine = "";
         }
         done();

@@ -1,4 +1,4 @@
-describe("fast", "transforms", "replace", () => {
+describe("fast", "transform", "replace", () => {
     const { fast } = adone;
     const { File, transform: { replace } } = fast;
 

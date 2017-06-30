@@ -1,4 +1,4 @@
-describe("fast", "transforms", "deleteLines", () => {
+describe("fast", "transform", "deleteLines", () => {
     const { fast } = adone;
 
     let root;

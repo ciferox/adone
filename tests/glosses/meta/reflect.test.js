@@ -1,6 +1,6 @@
 const { reflect } = adone.meta;
 
-describe("Reflect", () => {
+describe("meta", "reflect", () => {
     describe("metadata", () => {
         it("ReturnsDecoratorFunction", () => {
             const result = reflect.metadata("key", "value");

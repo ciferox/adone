@@ -1,6 +1,6 @@
 import generateFixtures from "./generate_fixtures";
 
-describe("fast", "transforms", "sass", () => {
+describe("fast", "transform", "sass", () => {
     const { std: { path, fs }, fast } = adone;
     const { File, transform: { sass } } = fast;
 

@@ -1,4 +1,4 @@
-describe("glosses", "archives", "zip", "unpack", () => {
+describe("archive", "zip", "unpack", () => {
     const { archive: { zip }, std: { stream: { Readable, Writable } } } = adone;
 
     const earliestTimestamp = new Date(2014, 7, 18, 0, 0, 0, 0);

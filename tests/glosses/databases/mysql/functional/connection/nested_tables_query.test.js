@@ -1,6 +1,6 @@
 import { createConnection } from "../../common";
 
-describe("glosses", "databases", "mysql", "functional", "connection", "nested tables", () => {
+describe("database", "mysql", "functional", "connection", "nested tables", () => {
     let connection = null;
 
     before(async () => {

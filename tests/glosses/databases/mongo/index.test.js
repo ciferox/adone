@@ -1,6 +1,6 @@
 import Dispatcher from "./dispatcher";
 
-describe("databases", "mongo", function () {
+describe("database", "mongo", function () {
     const { x, database: { mongo } } = adone;
 
     this.timeout(300000);

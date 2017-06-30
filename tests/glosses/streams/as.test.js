@@ -20,7 +20,7 @@ class Through extends stream.PassThrough {
     }
 }
 
-describe("streams", "as", () => {
+describe("stream", "as", () => {
     const makeSetup = (intoStream) => {
         const setup = (streamDef, opts) => as.string(intoStream(streamDef), opts);
         setup.array = (streamDef, opts) => as.array(intoStream(streamDef), opts);

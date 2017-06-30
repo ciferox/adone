@@ -1,4 +1,4 @@
-describe("glosses", "databases", "redis", "unit", "cluster", () => {
+describe("database", "redis", "unit", "cluster", () => {
     const { database: { redis: { Cluster } } } = adone;
 
     beforeEach(() => {

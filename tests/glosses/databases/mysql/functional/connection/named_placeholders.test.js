@@ -1,6 +1,6 @@
 import { createConnection, createPool } from "../../common";
 
-describe("glosses", "databases", "mysql", "functional", "connection", "named placeholders", () => {
+describe("database", "mysql", "functional", "connection", "named placeholders", () => {
     const { promise } = adone;
     let connection = null;
 

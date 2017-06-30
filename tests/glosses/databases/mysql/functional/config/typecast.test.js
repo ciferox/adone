@@ -1,6 +1,6 @@
 import { createConnection } from "../../common";
 
-describe("glosses", "databases", "mysql", "functional", "config", "typecast", function connectTimeout() {
+describe("database", "mysql", "functional", "config", "typecast", function connectTimeout() {
     const typeCastWrapper = (stringMethod) => {
         return (field, next) => {
             if (field.type === "VAR_STRING") {

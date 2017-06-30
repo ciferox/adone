@@ -1,4 +1,4 @@
-describe("glosses", "databases", "mysql", "unit", "packets", "datetime", () => {
+describe("database", "mysql", "unit", "packets", "datetime", () => {
     const { database: { mysql: { __: { packet: { Packet } } } } } = adone;
 
     it("should read a datetime", () => {

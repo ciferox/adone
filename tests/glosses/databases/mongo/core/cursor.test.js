@@ -6,7 +6,7 @@ const {
 } = adone;
 const promisify = adone.promise.promisify;
 
-describe("mongodb", function () {
+describe("database", "mongo", "core", function () {
     this.timeout(120000);
 
     const { database: { mongo: { core: { Server } } } } = adone;

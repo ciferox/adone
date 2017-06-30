@@ -1,4 +1,4 @@
-const { is, noop } = adone;
+const { is, noop, collection } = adone;
 
 const irregularPlurals = {
     addendum: "addenda",
@@ -169,10 +169,10 @@ export const spliceOne = (list, index) => {
 };
 
 export const normalizePath = (str, stripTrailing = false) => {
-    if (typeof str !== "string") {
+    if (!is.string(str)) {
         throw new TypeError("path must be a string");
     }
-    str = str.replace(/[\\\/]+/g, "/");
+    str = str.replace(/[\\/]+/g, "/");
     if (stripTrailing) {
         str = str.replace(/\/$/, "");
     }
@@ -194,7 +194,7 @@ export const functionName = (fn) => {
         return null;
     }
 
-    let fnName = fn.displayName || fn.name || (/function ([^\(]+)?\(/.exec(fn.toString()) || [])[1] || null;
+    let fnName = fn.displayName || fn.name || (/function ([^(]+)?\(/.exec(fn.toString()) || [])[1] || null;
     fnName = fnName ? fnName.replace(/^bound/, "") : "";
     fnName = fnName ? fnName.trim() : "";
     return fnName;
@@ -254,12 +254,12 @@ export const pluralizeWord = (str, plural, count) => {
 
 export const functionParams = (func) => {
     let str = func;
-    if (typeof str !== "string") {
+    if (!is.string(str)) {
         str = str.toString();
     }
-    str = str.replace(/(\/\/.*$)|(\/\*[\s\S]*?\*\/)|(\s*=[^,\)]*(("(?:\\"|[^"\r\n])*")|("(?:\\"|[^"\r\n])*"))|(\s*=[^,\)]*))/mg, "").trim();
+    str = str.replace(/(\/\/.*$)|(\/\*[\s\S]*?\*\/)|(\s*=[^,)]*(("(?:\\"|[^"\r\n])*")|("(?:\\"|[^"\r\n])*"))|(\s*=[^,)]*))/mg, "").trim();
     if (str.indexOf("function") === 0) {
-        str = str.match(/^function\s*[^\(]*\(\s*([^\)]*)\)/m)[1];
+        str = str.match(/^function\s*[^(]*\(\s*([^)]*)\)/m)[1];
     } else if (str.indexOf("=>") > -1) {
         str = str.split("=>")[0].trim();
     }
@@ -325,15 +325,7 @@ export const zip = function* (...iterables) {
     }
 };
 
-export const keys = (object, { onlyEnumerable = true, followProto = false, all = false } = {}) => {
-    if (is.nil(object)) {
-        return [];
-    }
-
-    if (all) {
-        [onlyEnumerable, followProto] = [false, true];
-    }
-
+const _keys = (object, onlyEnumerable, followProto) => {
     if (!followProto) {
         if (onlyEnumerable) {
             return Object.keys(object);
@@ -365,20 +357,69 @@ export const keys = (object, { onlyEnumerable = true, followProto = false, all =
         } while (object);
 
         for (let i = 0; i < objectOwnProps.length; ++i) {
-            props.delete(objectOwnProps[i]);  // what if the props are modified?
+            props.delete(objectOwnProps[i]); // what if the props are modified?
         }
     }
 
     return [...props];
 };
 
-export const values = (obj, options) => keys(obj, options).map((k) => obj[k]);
+export const keys = (object, { onlyEnumerable = true, followProto = false, all = false } = {}) => {
+    if (is.nil(object)) {
+        return [];
+    }
 
-export const entries = (obj, options) => keys(obj, options).map((k) => [k, obj[k]]);
+    if (all) {
+        [onlyEnumerable, followProto] = [false, true];
+    }
+
+    return _keys(object, onlyEnumerable, followProto);
+};
+
+export const values = (object, { onlyEnumerable = true, followProto = false, all = false } = {}) => {
+    if (is.nil(object)) {
+        return [];
+    }
+
+    if (all) {
+        [onlyEnumerable, followProto] = [false, true];
+    }
+
+    if (!followProto && onlyEnumerable) {
+        return Object.values(object);
+    }
+
+    const k = _keys(object, onlyEnumerable, followProto);
+    for (let i = 0; i < k.length; ++i) {
+        k[i] = object[k[i]];
+    }
+    return k;
+};
+
+export const entries = (object, { onlyEnumerable = true, followProto = false, all = false } = {}) => {
+    if (is.nil(object)) {
+        return [];
+    }
+
+    if (all) {
+        [onlyEnumerable, followProto] = [false, true];
+    }
+
+    if (!followProto && onlyEnumerable) {
+        return Object.entries(object);
+    }
+
+    const k = _keys(object, onlyEnumerable, followProto);
+    for (let i = 0; i < k.length; ++i) {
+        const key = k[i];
+        k[i] = [key, object[key]];
+    }
+    return k;
+};
 
 export const toDotNotation = (object) => {
     const result = {};
-    const stack = new adone.collection.Stack([[object, ""]]);
+    const stack = new collection.Stack([[object, ""]]);
     while (!stack.empty) {
         const [object, prefix] = stack.pop();
         const it = is.array(object) ? enumerate(object) : entries(object);
@@ -420,12 +461,12 @@ export const flatten = (array, { depth = 1 } = {}) => {
 
 export const globParent = (str) => {
     // flip windows path separators
-    if (is.windows && str.indexOf("/") < 0) {
+    if (is.windows && !str.includes("/")) {
         str = str.split("\\").join("/");
     }
 
     // special case for strings ending in enclosure containing path separator
-    if (/[\{\[].*[\/]*.*[\}\]]$/.test(str)) {
+    if (/[{[].*[/]*.*[}\]]$/.test(str)) {
         str += "/";
     }
 
@@ -435,10 +476,10 @@ export const globParent = (str) => {
     // remove path parts that are globby
     do {
         str = adone.std.path.dirname(str);
-    } while (is.glob(str) || /(^|[^\\])([\{\[]|\([^\)]+$)/.test(str));
+    } while (is.glob(str) || /(^|[^\\])([{[]|\([^)]+$)/.test(str));
 
     // remove escape chars and return result
-    return str.replace(/\\([\*\?\|\[\]\(\)\{\}])/g, "$1");
+    return str.replace(/\\([*?|[\](){}])/g, "$1");
 };
 
 export const by = (by, compare) => {
@@ -472,7 +513,7 @@ export const readdir = (root, {
             }
         }
         const matcher = adone.util.match(other);
-        return (x) => functions.some((y) => y(x)) || matcher(x.name);  // cannot mix negate and other?
+        return (x) => functions.some((y) => y(x)) || matcher(x.name); // cannot mix negate and other?
     };
 
     fileFilter = normalizeFilter(fileFilter);
@@ -529,13 +570,31 @@ export const readdir = (root, {
     return source;
 };
 
-export const toFastProperties = (obj) => {
-    function f() { }
-    f.prototype = obj;
-    new f();
-    return;
-    eval(obj);
-};
+export const toFastProperties = (() => {
+    let fastProto = null;
+
+    // Creates an object with permanently fast properties in V8. See Toon Verwaest's
+    // post https://medium.com/@tverwaes/setting-up-prototypes-in-v8-ec9c9491dfe2#5f62
+    // for more details. Use %HasFastProperties(object) and the Node.js flag
+    // --allow-natives-syntax to check whether an object has fast properties.
+    const FastObject = function (o) {
+        // A prototype object will have "fast properties" enabled once it is checked
+        // against the inline property cache of a function, e.g. fastProto.property:
+        // https://github.com/v8/v8/blob/6.0.122/test/mjsunit/fast-prototype.js#L48-L63
+        if (!is.null(fastProto) && typeof fastProto.property) {
+            const result = fastProto;
+            fastProto = FastObject.prototype = null;
+            return result;
+        }
+        fastProto = FastObject.prototype = is.nil(o) ? Object.create(null) : o;
+        return new FastObject();
+    };
+
+    // Initialize the inline property cache of FastObject
+    FastObject();
+
+    return (o) => FastObject(o);
+})();
 
 export const stripBom = (x) => {
     if (x.charCodeAt(0) === 0xFEFF) {

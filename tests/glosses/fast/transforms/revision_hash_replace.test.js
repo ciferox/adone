@@ -1,4 +1,4 @@
-describe("fast", "transforms", "revision hash replace", () => {
+describe("fast", "transform", "revision hash replace", () => {
     const { fast, std: { path } } = adone;
     const { File } = fast;
 

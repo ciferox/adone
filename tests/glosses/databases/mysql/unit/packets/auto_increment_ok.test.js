@@ -1,4 +1,4 @@
-describe("glosses", "databases", "mysql", "unit", "packets", "ok", () => {
+describe("database", "mysql", "unit", "packets", "ok", () => {
     const { database: { mysql: { __: { packet } } } } = adone;
 
     it("should have correct length", () => {

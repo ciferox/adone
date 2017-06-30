@@ -1,6 +1,6 @@
 import * as util from "./util";
 
-describe("glosses", "templating", "nunjucks", "api", () => {
+describe("templating", "nunjucks", "api", () => {
     const { std: { path }, templating: { nunjucks: { Environment, FileSystemLoader: Loader } } } = adone;
     const templatesPath = path.resolve(__dirname, "templates");
 

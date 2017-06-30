@@ -1,4 +1,4 @@
-describe("crypto", "keygrip", () => {
+describe("crypto", "Keygrip", () => {
     const { crypto: { Keygrip }, std: { crypto } } = adone;
 
     const testKeygripInstance = (keys, keylist) => {

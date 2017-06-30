@@ -1,4 +1,4 @@
-describe("collections", "TimedoutMap", () => {
+describe("collection", "TimedoutMap", () => {
     const { collection: { TimedoutMap } } = adone;
 
     it("default timeout", async () => {

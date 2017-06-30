@@ -1,7 +1,7 @@
 const { ExBuffer } = adone;
 const { Long } = adone.math;
 
-describe("common", "exbuffer", () => {
+describe("ExBuffer", () => {
     const type = ExBuffer.type();
     const accessor = ExBuffer.accessor();
 

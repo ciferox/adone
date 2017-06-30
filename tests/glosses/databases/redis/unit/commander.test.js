@@ -1,4 +1,4 @@
-describe("glosses", "databases", "redis", "unit", "Commander", () => {
+describe("database", "redis", "unit", "Commander", () => {
     const { database: { redis: { __: { Commander } } } } = adone;
 
     it("should pass the correct arguments", () => {

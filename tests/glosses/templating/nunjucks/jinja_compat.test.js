@@ -1,6 +1,6 @@
 import { jinjaEqual as equal, finish } from "./util";
 
-describe("glosses", "templating", "nunjucks", "jinja-compat", () => {
+describe("templating", "nunjucks", "jinja-compat", () => {
     const arr = ["a", "b", "c", "d", "e", "f", "g", "h"];
 
     it("should support array slices with start and stop", (done) => {

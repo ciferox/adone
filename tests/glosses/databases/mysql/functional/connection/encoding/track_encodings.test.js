@@ -1,6 +1,6 @@
 import { createConnection } from "../../../common";
 
-describe("glosses", "databases", "mysql", "functional", "connection", "encoding", "track encodings", () => {
+describe("database", "mysql", "functional", "connection", "encoding", "track encodings", () => {
     const text = "привет, мир";
 
     let connection = null;

@@ -1,6 +1,6 @@
 import { createConnection } from "../../common";
 
-describe("glosses", "databases", "mysql", "functional", "connection", "load infile", () => {
+describe("database", "mysql", "functional", "connection", "load infile", () => {
     const { std: { path }, std: { stream } } = adone;
 
     let connection = null;

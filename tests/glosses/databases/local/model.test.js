@@ -1,4 +1,4 @@
-describe("databases", "local", "Model", () => {
+describe("database", "local", "Model", () => {
     const {
         std: { util },
         database: { local: { Model: model, Datastore } }

@@ -1,4 +1,4 @@
-describe("glosses", "templating", "nunjucks", "lexer", () => {
+describe("templating", "nunjucks", "lexer", () => {
     const { is, templating: { nunjucks: { lexer } } } = adone;
 
     const _hasTokens = (ws, tokens, types) => {

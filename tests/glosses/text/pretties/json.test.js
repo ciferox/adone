@@ -1,6 +1,6 @@
 const { text: { pretty }, terminal } = adone;
 
-describe("pretty json", () => {
+describe("text", "pretty", "json", () => {
     it("should output a string exactly equal as the input", () => {
         const input = "This is a string";
         const output = pretty.json(input);

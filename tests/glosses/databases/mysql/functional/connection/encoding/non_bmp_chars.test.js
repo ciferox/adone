@@ -1,6 +1,6 @@
 import { createConnection } from "../../../common";
 
-describe("glosses", "databases", "mysql", "functional", "connection", "encoding", "non bmp chars", () => {
+describe("database", "mysql", "functional", "connection", "encoding", "non bmp chars", () => {
     // 4 bytes in utf8
     const payload = "💩";
 

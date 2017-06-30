@@ -1,4 +1,4 @@
-describe("glosses", "diff", "patch", "mergePatches", () => {
+describe("diff", "patch", "mergePatches", () => {
     const { diff: { util: { mergePatches, parsePatch } } } = adone;
 
     const swapConflicts = (expected) => {

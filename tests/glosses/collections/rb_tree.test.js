@@ -1,5 +1,4 @@
-
-describe("collections", "Red black tree", () => {
+describe("collection", "RedBlackTree", () => {
     const iota = (n) => [...new Array(n)].map((_, i) => i);
 
     const COLORS = ["r", "b", "bb"];

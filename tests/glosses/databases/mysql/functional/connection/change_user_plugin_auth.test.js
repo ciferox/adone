@@ -1,6 +1,6 @@
 import { createConnection } from "../../common";
 
-describe("glosses", "databases", "mysql", "functional", "connection", "change user plugin auth", () => {
+describe("database", "mysql", "functional", "connection", "change user plugin auth", () => {
     let connection = null;
 
     before(async () => {

@@ -1,4 +1,4 @@
-describe("glosses", "databases", "redis", "unit", "parsers", () => {
+describe("database", "redis", "unit", "parsers", () => {
     const { database: { redis: { __: { parser: { createParser } } } } } = adone;
 
     const assert = adone.std.assert;

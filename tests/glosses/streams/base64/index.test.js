@@ -1,7 +1,5 @@
-const libbase64 = require("libbase64");
-
-describe("glosses", "stream", "base64", "Encode", () => {
-    const { std: { crypto, fs }, stream: { base64: { Encode } } } = adone;
+describe("stream", "base64", () => {
+    const { std: { crypto, fs }, stream: { base64: { Encode, Decode } } } = adone;
 
     const fixture = [
         "123456789012345678  90\r\nõäöüõäöüõäöüõäöüõäöüõäöüõäöüõäöü another line === ",
@@ -48,7 +46,7 @@ describe("glosses", "stream", "base64", "Encode", () => {
     });
 
     it("should transform incoming bytes to base64 and back", (done) => {
-        const decoder = new libbase64.Decoder();
+        const decoder = new Decode();
         const encoder = new Encode();
         const file = fs.createReadStream(`${__dirname}/fixtures/alice.txt`);
 

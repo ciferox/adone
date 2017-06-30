@@ -1,4 +1,4 @@
-describe("collections", "Binary search tree", () => {
+describe("collection", "BinarySearchTree", () => {
     const { is, collection: { BinarySearchTree } } = adone;
 
     const getRandomArray = (n) => {

@@ -1,9 +1,7 @@
 import check from "../helpers/check_redis";
 import MockServer from "../helpers/mock_server";
 
-skip(check);
-
-describe("glosses", "databases", "redis", "scanStream", () => {
+describe("database", "redis", "scanStream", { skip: check }, () => {
     const { database: { redis: { Redis, Cluster } } } = adone;
     const { std: { stream: { Readable } } } = adone;
 

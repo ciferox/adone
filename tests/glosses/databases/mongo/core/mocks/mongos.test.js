@@ -11,7 +11,7 @@ const waitFor = (emitter, event) => new Promise((resolve) => emitter.once(event,
 }));
 
 
-describe("mongodb", function () {
+describe("database", "mongo", "core", function () {
     this.timeout(120000);
 
     const { database: { mongo: { core: { Mongos, ReadPreference } } } } = adone;

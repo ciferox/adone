@@ -7,7 +7,7 @@ const fields = ["numberOfRetries", "tailableRetryInterval"];
 
 class CursorStream extends Readable {
     constructor(cursor, opts) {
-        super(Object.assign({}, opts, { objectMode: true }));
+        super({ ...opts, objectMode: true });
         this.cursor = cursor;
         this.cursor.once("close", () => {
             this.emit("close");

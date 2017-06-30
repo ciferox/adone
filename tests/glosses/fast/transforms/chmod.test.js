@@ -1,4 +1,4 @@
-describe("fast", "transforms", "chmod", () => {
+describe("fast", "transform", "chmod", () => {
     const { fast } = adone;
     const { File, transform: { chmod } } = fast;
 

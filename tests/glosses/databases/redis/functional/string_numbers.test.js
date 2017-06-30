@@ -1,8 +1,6 @@
 import check from "../helpers/check_redis";
 
-skip(check);
-
-describe("glosses", "databases", "redis", "stringNumbers", () => {
+describe("database", "redis", "stringNumbers", { skip: check }, () => {
     const { database: { redis: { Redis } } } = adone;
     const MAX_NUMBER = 9007199254740991; // Number.MAX_SAFE_INTEGER
 

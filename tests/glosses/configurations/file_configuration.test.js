@@ -2,7 +2,7 @@ const { is } = adone;
 
 const options = { base: adone.std.path.resolve(__dirname, "fixtures") };
 
-describe("FileConfiguration", () => {
+describe("configuration", "FileConfiguration", () => {
     let conf;
 
     beforeEach(() => {
@@ -99,7 +99,7 @@ describe("FileConfiguration", () => {
         assert.isOk(is.propertyDefined(conf, "asyncfn"));
         assert.equal(await conf.asyncfn.afn(adone), 777);
     });
-    
+
     const formats = [".json", ".bson", ".mpak", ".json5"];
 
     for (const format of formats) {

@@ -1,4 +1,4 @@
-describe("glosses", "archive", "zip", () => {
+describe("archive", "zip", "pack", () => {
     const { std: { fs }, archive: { zip: { pack, unpack } }, collection: { BufferList } } = adone;
 
     it("should pack and unpack", async () => {

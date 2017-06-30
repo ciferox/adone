@@ -2,7 +2,7 @@ const { is } = adone;
 const { Table, Cell, ColSpanCell, RowSpanCell, util: { strlen, repeat, pad, truncate, wordWrap, colorizeLines } } = adone.text.table;
 // var colors = require('colors/safe');
 
-describe("Table", () => {
+describe("text", "Table", () => {
     describe("utils", () => {
         describe("strlen", () => {
             it('length of "hello" is 5', () => {

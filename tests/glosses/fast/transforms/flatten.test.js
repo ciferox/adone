@@ -1,4 +1,4 @@
-describe("fast", "transforms", "flatten", () => {
+describe("fast", "transform", "flatten", () => {
     const { fast, std: { path } } = adone;
     const { File, transform: { flatten } } = fast;
     const { flattenPath } = flatten;

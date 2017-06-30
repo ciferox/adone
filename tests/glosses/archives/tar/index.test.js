@@ -1,7 +1,6 @@
 const { is: { windows }, noop, archive: { tar }, std } = adone;
 
-
-describe("glosses", "archives", "tar", () => {
+describe("archive", "tar", () => {
     const mtime = function (st) {
         return Math.floor(st.mtime.getTime() / 1000);
     };
@@ -69,7 +68,7 @@ describe("glosses", "archives", "tar", () => {
     });
 
     specify("symlink", async function () {
-        if (windows) {  // no symlink support on win32 currently. TODO: test if this can be enabled somehow
+        if (windows) { // no symlink support on win32 currently. TODO: test if this can be enabled somehow
             this.skip();
             return;
         }
@@ -102,7 +101,7 @@ describe("glosses", "archives", "tar", () => {
     });
 
     specify("follow symlinks", async function () {
-        if (windows) {  // no symlink support on win32 currently. TODO: test if this can be enabled somehow
+        if (windows) { // no symlink support on win32 currently. TODO: test if this can be enabled somehow
             this.skip();
             return;
         }

@@ -1,4 +1,4 @@
-describe("fast", "transforms", "useref", () => {
+describe("fast", "transform", "useref", () => {
     const { fast, std: { path, fs } } = adone;
     const { File, transform: { useref } } = fast;
 

@@ -1,6 +1,6 @@
 import { createPool } from "../../common";
 
-describe("glosses", "databases", "mysql", "functional", "regressions", "pool connection release", () => {
+describe("database", "mysql", "functional", "regressions", "pool connection release", () => {
     let releaseCalls = 0;
 
     it("should not fail", async () => {

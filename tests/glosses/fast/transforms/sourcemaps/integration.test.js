@@ -1,6 +1,6 @@
 import generateFixtures from "./generate_fixtures";
 
-describe("fast", "transforms", "sourcemaps", "integration", () => {
+describe("fast", "transform", "sourcemaps", "integration", () => {
     const { fast } = adone;
 
     let sourceContent;

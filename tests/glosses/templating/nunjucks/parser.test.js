@@ -1,4 +1,4 @@
-describe("glosses", "templating", "nunjucks", "parser", () => {
+describe("templating", "nunjucks", "parser", () => {
     const { templating: { nunjucks: { nodes, parser } }, is } = adone;
 
     const _isAST = (node1, node2) => {
@@ -85,14 +85,14 @@ describe("glosses", "templating", "nunjucks", "parser", () => {
         } else if (dummy instanceof nodes.CallExtension) {
             return new type(ast[1], ast[2], ast[3] ? toNodes(ast[3]) : ast[3],
                 is.array(ast[4]) ? ast[4].map(toNodes) : ast[4]);
-        } 
+        }
         return new type(0, 0,
                 toNodes(ast[1]),
                 toNodes(ast[2]),
                 toNodes(ast[3]),
                 toNodes(ast[4]),
                 toNodes(ast[5]));
-        
+
     };
 
     const isAST = (node1, ast) => {

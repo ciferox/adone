@@ -1,4 +1,4 @@
-describe("fast", "transforms", "revision hash", () => {
+describe("fast", "transform", "revision hash", () => {
     const { fast, std: { path } } = adone;
 
     let fromdir;

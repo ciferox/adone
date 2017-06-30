@@ -1,4 +1,4 @@
-describe("glosses", "promise", () => {
+describe("promise", () => {
     const { promise } = adone;
 
     describe("defer", () => {

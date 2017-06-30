@@ -1,4 +1,4 @@
-describe("glosses", "databases", "mysql", "functional", "connection", "connect sha1", () => {
+describe("database", "mysql", "functional", "connection", "connect sha1", () => {
     const { database: { mysql } } = adone;
 
     it("should connect using sha1 password", (done) => {
