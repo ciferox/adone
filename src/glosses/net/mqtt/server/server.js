@@ -1,5 +1,4 @@
 const { is } = adone;
-const ws = require("websocket-stream");
 const steed = require("steed")();
 const ascoltatori = require("ascoltatori");
 const pino = require("pino");
@@ -380,7 +379,7 @@ export default class Server extends adone.EventEmitter {
             opt.path = path;
         }
 
-        ws.createServer(opt, (stream) => {
+        adone.net.ws.stream.createServer(opt, (stream) => {
             const conn = new adone.net.mqtt.connection.Connection(stream);
             new Client(conn, that);
         });

@@ -5,21 +5,21 @@ const runtime = adone.lazify({
 }, exports, require);
 
 export class Connection extends adone.stream.Duplexify {
-    constructor(duplex, opts = {}) {
-        const inStream = runtime.writeToStream(duplex);
+    constructor(stream, opts = {}) {
+        const inStream = runtime.writeToStream(stream);
         const outStream = runtime.parseStream(opts);
 
         super(inStream, outStream, { objectMode: true });
 
-        duplex.pipe(outStream);
+        stream.pipe(outStream);
 
         inStream.on("error", this.emit.bind(this, "error"));
         outStream.on("error", this.emit.bind(this, "error"));
 
-        this.stream = duplex;
+        this.stream = stream;
 
-        duplex.on("error", this.emit.bind(this, "error"));
-        duplex.on("close", this.emit.bind(this, "close"));
+        stream.on("error", this.emit.bind(this, "error"));
+        stream.on("close", this.emit.bind(this, "close"));
 
         if (opts.notData !== true) {
             this.on("data", (packet) => this.emit(packet.cmd, packet));

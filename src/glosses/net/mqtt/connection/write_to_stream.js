@@ -1,4 +1,4 @@
-const generateStream = (output) => {
+const writeToStream = (output) => {
     const write = function (chunk, enc, cb) {
         if (adone.net.mqtt.packet.writeToStream(chunk, output)) {
             cb();
@@ -15,4 +15,4 @@ const generateStream = (output) => {
     return input;
 };
 
-export default generateStream;
+export default writeToStream;

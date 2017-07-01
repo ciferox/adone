@@ -76,7 +76,7 @@ export default class Receiver {
             return dst;
         }
 
-        dst = Buffer.allocUnsafe(bytes);
+        dst = Buffer.alloc(bytes);
 
         while (bytes > 0) {
             l = this._buffers[0].length;

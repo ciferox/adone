@@ -3,9 +3,26 @@ const steed = require("steed");
 const ascoltatori = require("ascoltatori");
 const abstractServerTests = require("./abstract_server");
 const request = require("supertest");
+const Connection = require("mqtt-connection");
 
 const SECURE_KEY = `${__dirname}/secure/tls-key.pem`;
 const SECURE_CERT = `${__dirname}/secure/tls-cert.pem`;
+
+const createConnection = function (port) {
+    const stream = adone.net.ws.stream.createClient(`wss://localhost:${port}`, [], {
+        ca: adone.std.fs.readFileSync(SECURE_CERT),
+        rejectUnauthorized: false
+    });
+
+    const conn = new Connection(stream);
+
+    stream.on("connect", () => {
+        conn.emit("connected");
+    });
+
+    return conn;
+};
+
 
 const moscaSettings = function () {
     const settings = {
@@ -38,7 +55,7 @@ const moscaSettings = function () {
 };
 
 describe("mosca.Server - Secure Websocket", () => {
-    abstractServerTests(moscaSettings, require("./helpers/createSecureWebsocketConnection"));
+    abstractServerTests(moscaSettings, createConnection);
 
     before((done) => {
         process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0"; // Ignore self-signed certificate errors

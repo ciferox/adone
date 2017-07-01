@@ -23,7 +23,7 @@ global.buildOpts = function () {
 };
 
 global.donner = function (count, done) {
-    return function () {
+    return () => {
         count--;
         if (count === 0) {
             done();

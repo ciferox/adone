@@ -1,3 +1,4 @@
+const { is } = adone;
 const steed = require("steed");
 const ascoltatori = require("ascoltatori");
 
@@ -11,8 +12,8 @@ module.exports = function (moscaSettings, createConnection) {
         settings.publishNewClient = false;
         settings.publishClientDisconnect = false;
         instance = new adone.net.mqtt.server.Server(settings, done);
-        this.instance = instance;
         this.settings = settings;
+        this.instance = instance;
         secondInstance = null;
     });
 
@@ -30,26 +31,29 @@ module.exports = function (moscaSettings, createConnection) {
         });
     });
 
-    function buildClient(done, callback) {
+    const buildClient = (done, callback) => {
         const client = createConnection(settings.port, settings.host);
+        const finish = () => {
+            client.removeListener("error", finish);
+            client.stream.removeListener("close", finish);
+            done();
+        };
 
-        client.once("error", finish);
-        client.stream.once("close", finish);
+        client.once("error", () => {
+            finish();
+        });
+        client.stream.once("close", () => {
+            // adone.log('client.stream.once("close")');
+            finish();
+        });
 
         client.on("connected", () => {
             callback(client);
         });
+    };
 
-        function finish() {
-            client.removeListener("error", finish);
-            client.stream.removeListener("close", finish);
-            done();
-        }
-    }
-
-    function buildAndConnect(done, opts, callback) {
-
-        if (typeof opts === "function") {
+    const buildAndConnect = (done, opts, callback) => {
+        if (is.function(opts)) {
             callback = opts;
             opts = buildOpts();
         }
@@ -63,7 +67,7 @@ module.exports = function (moscaSettings, createConnection) {
                 callback(client, packet);
             });
         });
-    }
+    };
 
     it("should publish connected client to '$SYS/{broker-id}/new/clients'", (done) => {
         let connectedClient = null,
@@ -159,13 +163,12 @@ module.exports = function (moscaSettings, createConnection) {
                 messageId
             });
         });
-
     });
 
     it("should publish each unsubscribe to '$SYS/{broker-id}/new/unsubscribes'", (done) => {
-        let d = donner(2, done),
-            connectedClient = null,
-            publishedClientId = null;
+        const d = donner(2, done);
+        let connectedClient = null;
+        let publishedClientId = null;
 
         function verify() {
             if (connectedClient && publishedClientId) {
@@ -184,7 +187,6 @@ module.exports = function (moscaSettings, createConnection) {
             connectedClient = client;
 
             instance.once("published", (packet) => {
-
                 expect(packet.topic).to.be.equal(`$SYS/${instance.id}/new/subscribes`);
 
                 client.unsubscribe({
@@ -193,7 +195,6 @@ module.exports = function (moscaSettings, createConnection) {
                 });
 
                 instance.once("published", (packet) => {
-
                     expect(packet.topic).to.be.equal(`$SYS/${instance.id}/new/unsubscribes`);
                     const payload = JSON.parse(packet.payload.toString());
                     expect(payload.topic).to.be.equal("hello");
@@ -2436,7 +2437,7 @@ module.exports = function (moscaSettings, createConnection) {
         const buildTest = function (subscribed, published, expected) {
             let not = "";
 
-            if (expected === undefined) {
+            if (is.undefined(expected)) {
                 expected = true;
             }
 

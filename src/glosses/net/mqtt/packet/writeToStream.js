@@ -68,14 +68,14 @@ const writeLength = (stream, length) => {
         }
     }
 
-    stream.write(buffer);
+    return stream.write(buffer);
 };
 
 const writeString = (stream, string) => {
     const strlen = Buffer.byteLength(string);
     writeNumber(stream, strlen);
 
-    stream.write(string, "utf8");
+    return stream.write(string, "utf8");
 };
 
 const writeStringOrBuffer = (stream, toWrite) => {

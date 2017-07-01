@@ -88,8 +88,6 @@ const createClient = (target, protocols, options) => {
         socket = target;
         // otherwise make a new one
     } else {
-        // special constructor treatment for native websockets in browsers, see
-        // https://github.com/maxogden/websocket-stream/issues/82
         socket = new adone.net.ws.Client(target, protocols, options);
         socket.binaryType = "arraybuffer";
     }

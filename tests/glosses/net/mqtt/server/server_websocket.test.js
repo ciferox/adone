@@ -2,8 +2,18 @@ require("./common");
 const steed = require("steed");
 const ascoltatori = require("ascoltatori");
 const abstractServerTests = require("./abstract_server");
-const createConnection = require("./helpers/createWebsocketConnection");
 const request = require("supertest");
+
+const { Connection } = adone.net.mqtt.connection;
+
+const createConnection = (port) => {
+    const stream = adone.net.ws.stream.createClient(`ws://localhost:${port}`);
+    const conn = new Connection(stream);
+    stream.on("connect", () => {
+        conn.emit("connected");
+    });
+    return conn;
+};
 
 const moscaSettings = function () {
     const settings = {
