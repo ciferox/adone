@@ -1,3 +1,4 @@
 adone.lazify({
-    nunjucks: "./nunjucks"
+    nunjucks: "./nunjucks",
+    dot: "./dot"
 }, exports, require);
