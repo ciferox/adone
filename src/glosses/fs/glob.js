@@ -800,7 +800,7 @@ class Glob extends adone.EventEmitter {
         }
     }
 
-    _stat2 = function (f, abs, er, stat, cb) {
+    _stat2(f, abs, er, stat, cb) {
         if (er && (er.code === "ENOENT" || er.code === "ENOTDIR")) {
             this.statCache.set(abs, false);
             return cb();

@@ -28,5 +28,6 @@ adone.lazify({
             Plugin: "./compiler/core/transformation/plugin"
         }, null, require)
     }, null, require),
+    coverage: "./coverage",
     Module: "./module"
 }, exports, require);
