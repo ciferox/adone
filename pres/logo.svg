@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
-
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
    xmlns:cc="http://creativecommons.org/ns#"
@@ -9,30 +7,24 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   id="svg3271"
+   id="SvgjsSvg1001"
+   width="300"
+   height="300"
    version="1.1"
-   inkscape:version="0.91 r13725"
-   width="455.86142"
-   height="393.59189"
-   viewBox="0 0 455.86142 393.5919"
    sodipodi:docname="logo.svg"
-   inkscape:export-filename="/________/ciferox/adone/pres/logo.svg.png"
-   inkscape:export-xdpi="808.66998"
-   inkscape:export-ydpi="808.66998">
+   inkscape:version="0.92.1 r15371">
   <metadata
-     id="metadata3277">
+     id="metadata10">
     <rdf:RDF>
       <cc:Work
          rdf:about="">
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
-  <defs
-     id="defs3275" />
   <sodipodi:namedview
      pagecolor="#ffffff"
      bordercolor="#666666"
@@ -44,52 +36,39 @@
      inkscape:pageshadow="2"
      inkscape:window-width="1855"
      inkscape:window-height="1056"
-     id="namedview3273"
+     id="namedview8"
      showgrid="false"
-     inkscape:zoom="0.32753585"
-     inkscape:cx="-588.45745"
-     inkscape:cy="148.17071"
-     inkscape:window-x="65"
-     inkscape:window-y="24"
-     inkscape:window-maximized="1"
-     inkscape:current-layer="g4186"
      fit-margin-top="0"
      fit-margin-left="0"
      fit-margin-right="0"
      fit-margin-bottom="0"
-     showguides="true" />
+     inkscape:zoom="0.78666667"
+     inkscape:cx="113.39112"
+     inkscape:cy="70.876819"
+     inkscape:window-x="65"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="SvgjsSvg1001" />
+  <defs
+     id="SvgjsDefs1002" />
   <g
-     id="g4186"
-     inkscape:export-xdpi="404.32999"
-     inkscape:export-ydpi="404.32999">
-    <g
-       id="g4137"
-       inkscape:export-xdpi="404.32999"
-       inkscape:export-ydpi="404.32999">
-      <path
-         style="fill:#ba68c8;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-         d="M 214.93501,0 0,382.76344 145.54161,333.38477 Z"
-         id="path4154-3"
-         inkscape:connector-curvature="0"
-         sodipodi:nodetypes="cccc" />
-      <path
-         style="fill:#ce93d8;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-         d="m 227.82411,1.58578 -31.591,150.50178 259.6283,223.73833 z"
-         id="path4156-6"
-         inkscape:connector-curvature="0"
-         sodipodi:nodetypes="cccc" />
-      <path
-         style="fill:#ab47bc;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-         d="m 3.62132,393.59189 327.99869,-108.77943 114.5772,97.47055 z"
-         id="path4158-7"
-         inkscape:connector-curvature="0"
-         sodipodi:nodetypes="cccc" />
-      <path
-         style="fill:#66bb6a;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
-         d="m 193.46651,166.11312 -34.6482,162.63457 161.9275,-53.03301 z"
-         id="path4160-5"
-         inkscape:connector-curvature="0"
-         sodipodi:nodetypes="cccc" />
-    </g>
+     id="g4497"
+     transform="matrix(1.0948906,-0.31606768,0.31606768,1.0948906,-60.548834,76.677637)">
+    <polygon
+       points="210,184.641 150,80.718 90,184.641 "
+       id="SvgjsPolygon1008"
+       style="fill:#66bb6a" />
+    <polygon
+       points="254,260.8512 14,191.5692 214,191.5692 "
+       id="SvgjsPolygon1009"
+       style="fill:#ab47bc" />
+    <polygon
+       points="2,184.641 182,11.436 82,184.641 "
+       id="SvgjsPolygon1010"
+       style="fill:#ba68c8" />
+    <polygon
+       points="194,4.5077968 254,246.9948 154,73.789797 "
+       id="SvgjsPolygon1011"
+       style="fill:#ce93d8" />
   </g>
 </svg>
