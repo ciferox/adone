@@ -3,7 +3,7 @@ const { netron: { decorator: { Contextable, Description, Public, Private, Type }
 @Contextable
 @Private
 @Description("Group")
-export default class Group {
+class Group {
     constructor(auth, groupData) {
         this.id = groupData._id;
         this.data = groupData;
@@ -88,3 +88,5 @@ export default class Group {
         return this.auth._validateField("group", this.schema, key, value);
     }
 }
+
+export default Group; // code generator fails when export + class decorator, todo: fix

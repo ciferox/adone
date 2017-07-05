@@ -1,4 +1,4 @@
-const { is, util, text, lazify, js, std: { vm } } = adone;
+const { is, util, text, lazify, js, std: { vm, path }, fs } = adone;
 
 lazify({
     plugin: "./plugin"
@@ -137,7 +137,7 @@ export const printTable = (filter) => {
         return p.toFixed(3);
     };
 
-    const data = Object.entries(stats).map(([path, stats]) => {
+    const data = util.entries(stats).map(([path, stats]) => {
         return {
             path: adone.std.path.relative(process.cwd(), path),
             branch: `${stats.branch.passed} / ${stats.branch.total} / ${round(stats.branch.percent)}%`,
@@ -194,4 +194,141 @@ export const calculateCoverage = (sourceCode, { filename = `${new Date().getTime
             removeStats();
         }
     }
+};
+
+export const getLinePassesFor = (path) => {
+    const rawStats = getRawStats();
+    const stats = rawStats[path];
+    if (!stats) {
+        return null;
+    }
+    const lines = {};
+    for (let i = 0; i < stats.f.length; ++i) {
+        const { line } = stats.fMap[i].start;
+        if (!lines[line]) {
+            lines[line] = 0;
+        }
+        lines[line] += stats.f[i];
+    }
+    for (let i = 0; i < stats.b.length; ++i) {
+        const { line } = stats.bMap[i].start;
+        if (!lines[line]) {
+            lines[line] = 0;
+        }
+        lines[line] += stats.b[i];
+    }
+    for (let i = 0; i < stats.s.length; ++i) {
+        const { line } = stats.sMap[i].start;
+        if (!lines[line]) {
+            lines[line] = 0;
+        }
+        lines[line] += stats.s[i];
+    }
+    return lines;
+};
+
+export const startHTTPServer = async (port) => {
+    const stats = getStats();
+
+    const toTree = (stats) => {
+        let id = 0;
+        const keys = util.keys(stats);
+        const root = {
+            children: {}
+        };
+        for (const [index, key] of util.enumerate(keys)) {
+            const parts = path.relative(process.cwd(), key).split(path.sep);
+            let t = root.children;
+            const last = parts.pop();
+            for (const p of parts) {
+                if (!t[p]) {
+                    t[p] = {
+                        name: p,
+                        id: `file-${id++}`,
+                        directory: true,
+                        children: {}
+                    };
+                }
+                t = t[p].children;
+            }
+            t[last] = {
+                id: `file-${id++}`,
+                name: last,
+                file: true,
+                stats: stats[key],
+                index
+            };
+        }
+        (function walk(node) {
+            const { children } = node;
+            const keys = util.keys(children);
+            const dirs = keys.filter((x) => children[x].directory).sort();
+            const files = keys.filter((x) => children[x].file).sort();
+            node.children = {};
+            for (const d of dirs) {
+                node.children[d] = walk(children[d]);
+            }
+            for (const f of files) {
+                node.children[f] = children[f];
+            }
+            const stats = {
+                branch: {
+                    passed: 0,
+                    total: 0
+                },
+                statement: {
+                    passed: 0,
+                    total: 0
+                },
+                function: {
+                    passed: 0,
+                    total: 0
+                },
+                overall: {
+                    passed: 0,
+                    total: 0
+                }
+            };
+            for (const t of [...dirs, ...files]) {
+                stats.branch.passed += node.children[t].stats.branch.passed;
+                stats.branch.total += node.children[t].stats.branch.total;
+                stats.function.passed += node.children[t].stats.function.passed;
+                stats.function.total += node.children[t].stats.function.total;
+                stats.statement.passed += node.children[t].stats.statement.passed;
+                stats.statement.total += node.children[t].stats.statement.total;
+                stats.overall.passed += node.children[t].stats.overall.passed;
+                stats.overall.total += node.children[t].stats.overall.total;
+            }
+            stats.branch.percent = stats.branch.total ? stats.branch.passed / stats.branch.total * 100 : 100;
+            stats.function.percent = stats.function.total ? stats.function.passed / stats.function.total * 100 : 100;
+            stats.statement.percent = stats.statement.total ? stats.statement.passed / stats.statement.total * 100 : 100;
+            stats.overall.percent = stats.overall.total ? stats.overall.passed / stats.overall.total * 100 : 100;
+            node.stats = stats;
+            return node;
+        })(root);
+        return root.children;
+    };
+
+    const server = adone.net.http.server.create();
+    const router = adone.net.http.server.middleware.router()
+        .use(adone.net.http.server.middleware.views(__dirname))
+        .get("/", async (ctx, next) => {
+            return ctx.render("report.njk", {
+                tree: toTree(stats),
+                stats: getOverallStats()
+            });
+        })
+        .get("/get/:index", async (ctx, next) => {
+            const f = util.keys(stats)[ctx.params.index];
+            ctx.body = {
+                filename: path.relative(process.cwd(), f),
+                text: await fs.readFile(f, { encoding: "utf8" }),
+                stats: getStatsFor(f),
+                lines: getLinePassesFor(f),
+                rawStats: getRawStats()[f]
+            };
+        });
+    server.use(router.routes());
+    await server.bind({ port });
+    return server;
 };

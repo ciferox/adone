@@ -3,7 +3,7 @@ const { is, netron: { decorator: { Contextable, Description, Public, Private, Ty
 @Contextable
 @Private
 @Description("User")
-export default class User {
+class User {
     constructor(auth, userData) {
         this.id = userData._id;
         this.data = userData;
@@ -136,3 +136,5 @@ export default class User {
         return this.auth._validateField("user", this.schema, key, value);
     }
 }
+
+export default User; // code generator fails when export + class decorator, todo: fix

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{% if filename %}report for {{ filename }}{% else %}reports{% endif %}</title>
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github-gist.min.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+    <style>
+        ol.tree {
+            padding: 0 0 0 30px;
+            width: 300px;
+        }
+        li {
+            position: relative;
+            margin-left: -15px;
+            list-style: none;
+        }
+        li.file {
+            margin-left: -1px !important;
+        }
+        li.file a {
+            background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAYdJREFUeNqMksFqwkAQhmc3W4q0OSq09170LdJzb32IvkQVpIeeS6Gehdz6AkUoePOYe71VEBGiVkUxyaYzY9bENIYuTDbZ3f/b+Wci7ptNoCGEuMPpCsrHp9Z6qKMI4jjmBWVecL7utlqdHW4GFFpDhHtm3/M86PZ6D3QXxpchSqIlITSJgoBjt93CZr2G1WoFy+WS5/d2u4PnblF3YwAqQnEyBKElPs8sK006DCFEsO/78Oq64NTrby+u+4g7TwzQKUCSWDIG/kAcx2E7tm3Dh+fNDhmE2QwygCIIZcKvaDe1gBt5C9mRh9AlqCkE7C1ICZDcVASx9gCZWsgADhmUQCycwxMArgHXYZ9PIcTC9fDIAvY8nwHJTkHYQhCcsEAZYKvKIIJrmbGwGI/holo96oIugdC6sbCeTkEO+33wRyP6bVVSCD5kYOabumPW6SxpSEsXVL4Hg9piNjvPVPMgoKJRKCygUoq7QGdJQ1q6tYJR+5lM5peNxjP8Y+jNZk4aKsevAAMAmFzedjV8x2YAAAAASUVORK5CYII=") 0 0 no-repeat;
+            color: #4C4C4C;
+            padding-left: 21px;
+            text-decoration: none;
+            display: block;
+        }
+        li input {
+            position: absolute;
+            left: 0;
+            margin-left: 0;
+            opacity: 0;
+            z-index: 2;
+            cursor: pointer;
+            height: 1em;
+            width: 1em;
+            top: 0;
+        }
+        li input + ol {
+            background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAURJREFUeNpi/P//PwMlgImBQkCxASwwRlLLKwYmJqZgRkbGbiBXEYva+0Dvlv7792/tvBoxTAO+fv0MororE6UU9VU5MHRfvP1DsX3+M5DhaxkYxDC98ObNGxBW1FVmY/j16xcYu6SdYvjw4QPDixcvGGSEvoLlQeqweuHdu7dg+vfv32D85ctXsNijR4/B4hwcnHA1WA348uUbmP779y+DUchOuIKQsltgetsUE7garAb8/w9h/vz5h+H0Sk8w2yRsN8OZVa5g9ocPn+BqsBrAzs4PdQEzw48ff+Fi375B2Gxs3HA1WNPB45NlDNzcIvfPXv8LVMwJxmdWOcDZF2//A8uD1GF1wefXZ8Q+Pt42oWN+VBED41d5DKv+/30IlJ8IVCcF5D2DCTPC8gIwAXEDKT4Qk0Di+wzU8xnDgKGbmQACDAAtTZadqmiADQAAAABJRU5ErkJggg==") 40px 0 no-repeat;
+            margin: -0.938em 0 0 -44px; /* 15px */
+            height: 1em;
+        }
+        li input + ol > li {
+            display: none; margin-left: -14px !important; padding-left: 1px;
+        }
+        li label {
+            background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAATNJREFUeNqkk71KA1EQhc/dOxsbEYukVYm9jQg+hz6CYGkrBNsEKwtrX0EfwU4UVFDLFWSDlYGAGszP3p91ZlNpdoVrBg572bnf2ZlhR+V5jnmCbo9VZTJS2ODHbkX63Od4Ij7ssdbKbvAFbB76o2GWYTAe42sywX7aQL8/xNnjYsRXttR1G+3tg4tW7twPWGmNXvJcnBvrzRlzyd+c7nTIeWjPXxD9jjqDb0mC9O6+tAdhpwbWQDTTwsCgvrpSCksFr1dsYAsDC1diUETFe11bgC0qcCBnMoiCQikIS9ZxBcawgQnkIwgrBiT9h1YQRYUBkfFTA2/DKvA8RGGJ5xf/OcSK0JogLH2MsCS/VKzjsBZYwtJDiu7nSevyP4v00kNXNqnGWpbFCuQt613Nu87fAgwAb3KTD1NdyNYAAAAASUVORK5CYII=") 15px 1px no-repeat;
+            cursor: pointer;
+            display: block;
+            padding-left: 37px;
+        }
+
+        li input:checked + ol {
+            background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAASxJREFUeNpi/P//PwMlgImBQkCxASwwRlLLKwYmJqZgRkbGbiBXEYva+0Dvlv7792/tvBoxTAO+fv0MororE6UU9VU5MHRfvP1DsX3+M5DhaxkYsBjw5s0bEKWoq6zA8OvXL7AYKIC/f//O8OPHDwYZIVaQGqjLlDENePfuLZj+/fs3GH/58pXh/fv3YDYIcHBwwtVgDYMvX76B6b9//zIYhezEULhtiglcDVYD/v+HMH/+/MNweqUnhsIPHz7B1WA1gJ2dH+oCZqCf/2IoZGPjhqvBmg4enyxj4OYWuX/2+l+gYk4MfPH2P7A8SB1WF3x+fUbs4+NtEzrmRxUxMH6Vx7Dq/9+HQPmJQHVSQN4zmDAjLC8AExA3kOIDMQkkvs9APZ8xDBi6mQkgwADDMYZH9Ls66AAAAABJRU5ErkJggg==") 40px 5px no-repeat;
+            margin: -1.25em 0 0 -44px; /* 20px */
+            padding: 1.563em 0 0 80px;
+            height: auto;
+        }
+		li input:checked + ol > li {
+            display: block; margin: 0 0 0.125em;  /* 2px */
+        }
+		li input:checked + ol > li:last-child {
+            margin: 0 0 0.063em; /* 1px */
+        }
+        .hljs-ln {
+            border-collapse:collapse;
+        }
+        .hljs-ln td {
+            padding: 0 5px 0 0;
+        }
+        .hljs-ln-n:before{
+            content:attr(data-line-number)
+        }
+        .hljs-ln-n {
+            border-right: 2px solid #666;
+            text-align: right;
+            padding-right: 5px;
+        }
+        .hljs-cov-n {
+            text-align: right;
+            padding-right: 5px;
+            word-break: normal;
+        }
+        .data-line-number {
+            white-space: normal;
+            word-break: normal;
+        }
+        #contentsContainer {
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-all
+        }
+        .stats {
+            font-family: monospace;
+        }
+        .stats table tr td:nth-child(2) {
+            padding-left: 10px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    {% if tree | length %}
+        {% macro directory(files) %}
+            {% for name, file in files %}
+                {% if file.directory %}
+                    <li>
+                        <label for="{{ file.id }}">{{ file.name }} {{ file.stats.overall.percent.toFixed(2) }}%</label><input type="checkbox" id="{{ file.id }}" />
+                        <ol>
+                            {{ directory(file.children) }}
+                        </ol>
+                    </li>
+                {% else %}
+                    <li class="file"><a href="#/get/{{ file.index }}" onclick="load({{ file.index }})">{{ file.name }} {{ file.stats.overall.percent.toFixed(2) }}% </a></li>
+                {% endif %}
+            {% endfor %}
+        {% endmacro %}
+        <div style="display: inline-block; float: left; width: 20%">
+            <ol id="tree" class="tree">
+                {{ directory(tree) }}
+            </ol>
+        </div>
+    {% endif %}
+    <div style="display: inline-block; width: 80%">
+        <div class="stats">
+            <table>
+                <tr>
+                    <td align="right">Filename</td>
+                    <td id="filenameContainer">-</td>
+                </tr>
+                <tr>
+                    <td align="right">Function</td>
+                    <td id="functionCoverageContainer">{{ stats.function.percent.toFixed(2) }}%</td>
+                </tr>
+                <tr>
+                    <td align="right">Branch</td>
+                    <td id="branchCoverageContainer">{{ stats.branch.percent.toFixed(2) }}%</td>
+                </tr>
+                <tr>
+                    <td align="right">Statement</td>
+                    <td id="statementCoverageContainer">{{ stats.statement.percent.toFixed(2) }}%</td>
+                </tr>
+                <tr>
+                    <td align="right">Overall</td>
+                    <td id="overallCoverageContainer">{{ stats.overall.percent.toFixed(2) }}%</td>
+                </tr>
+            </table>
+        </div>
+        <pre><code class="js" id="contentsContainer">{{ content }}</code></pre>
+    </div>
+    <script>
+        const load = (index) => fetch(`/get/${index}`).then((response) => {
+            if (response.status !== 200) {
+                throw new Error(response.status);
+            }
+            return response.json();
+        }).then(({ text, stats, lines, rawStats, filename }) => {
+            contentsContainer.innerHTML = text;
+            filenameContainer.innerHTML = filename;
+            functionCoverageContainer.innerHTML = `${stats.function.passed} / ${stats.function.total} : ${stats.function.percent.toFixed(2)}%`;
+            branchCoverageContainer.innerHTML = `${stats.branch.passed} / ${stats.branch.total} : ${stats.branch.percent.toFixed(2)}%`;
+            statementCoverageContainer.innerHTML = `${stats.statement.passed} / ${stats.statement.total} : ${stats.statement.percent.toFixed(2)}%`;
+            overallCoverageContainer.innerHTML = `${stats.overall.passed} / ${stats.overall.total} : ${stats.overall.percent.toFixed(2)}%`;
+            hljs.highlightBlock(contentsContainer);
+            colorizeCoverage(contentsContainer, rawStats);
+            lineNumberBlock(contentsContainer, lines);
+        });
+
+        const COV_NAME = "hljs-cov-n";
+        const TABLE_NAME = 'hljs-ln';
+	    const LINE_NAME = 'hljs-ln-line';
+	    const CODE_BLOCK_NAME = 'hljs-ln-code';
+	    const NUMBERS_BLOCK_NAME = 'hljs-ln-numbers';
+	    const NUMBER_LINE_NAME = 'hljs-ln-n';
+	    const DATA_ATTR_NAME = 'data-line-number';
+
+        const wrap = (line, startPos, endPos, wrapper) => {
+            if (line.length === 0) {
+                return "";
+            }
+
+            let start = 0;
+            {
+                let insideTag = false;
+                for (let i = 0; i < line.length; ++i) {
+                    if (insideTag) {
+                        if (line[i] === ">") {
+                            insideTag = false;
+                        }
+                        continue;
+                    }
+                    if (line[i] === "<") {
+                        insideTag = true;
+                        continue;
+                    }
+                    if (startPos === 0) {
+                        start = i;
+                        break;
+                    }
+                    --startPos;
+                    if (line[i] === "&") {
+                        const t = line.slice(i + 1);
+                        if (t.startsWith("lt;") || t.startsWith("gt;")) {
+                            i += 3;
+                            continue;
+                        }
+                        if (t.startsWith("amp;") || t.startsWith("#39;")) {
+                            i += 4;
+                            continue;
+                        }
+                        if (t.startsWith("quot;") || t.match(/^#x(2F|60|3D);/i)) {
+                            i += 5;
+                            continue;
+                        }
+                    }
+                }
+            }
+            let end = 0;
+            {
+                if (endPos === -1) {
+                    let insideTag = false;
+                    end = line.length;
+                    for (let i = line.length - 1; i >= 0; --i) {
+                        if (insideTag) {
+                            if (line[i] === "<") {
+                                insideTag = false;
+                                end = i;
+                            }
+                            continue;
+                        }
+                        if (line[i] === ">") {
+                            insideTag = true;
+                            continue;
+                        }
+                        break;
+                    }
+                } else {
+                    let insideTag = false;
+                    for (let i = 0; i < line.length; ++i) {
+                        if (insideTag) {
+                            if (line[i] === ">") {
+                                insideTag = false;
+                            }
+                            continue;
+                        }
+                        if (line[i] === "<") {
+                            insideTag = true;
+                            continue;
+                        }
+                        if (endPos === 0) {
+                            end = i + 1;
+                            break;
+                        }
+                        --endPos;
+                        if (line[i] === "&") {
+                            const t = line.slice(i + 1);
+                            if (t.startsWith("lt;") || t.startsWith("gt;")) {
+                                i += 3;
+                                continue;
+                            }
+                            if (t.startsWith("amp;") || t.startsWith("#39;")) {
+                                i += 4;
+                                continue;
+                            }
+                            if (t.startsWith("quot;") || t.match(/^#x(2F|60|3D);/i)) {
+                                i += 5;
+                                continue;
+                            }
+                        }
+                    }
+                }
+            }
+            const parts = [line.slice(0, start)];
+            let k = start;
+            let insideTag = false;
+            let tagStart = -1;
+            for (let i = start; i < end; ++i) {
+                if (line[i] === "<") {
+                    tagStart = i;
+                    insideTag = true;
+                    if (k !== i) {
+                        parts.push(wrapper(line.slice(k, i)));
+                        k = i;
+                    }
+                    continue;
+                }
+                if (insideTag) {
+                    ++k;
+                    if (line[i] === ">") {
+                        insideTag = false;
+                        ++k;
+                        parts.push(line.slice(tagStart, i + 1));
+                    }
+                    continue;
+                }
+            }
+            if (k < end) {
+                parts.push(wrapper(line.slice(k, end)));
+            }
+            parts.push(line.slice(end));
+            return parts.join("");
+        };
+
+        const colorizeCoverage = (element, stats) => {
+            const lines = getLines(element.innerHTML);
+            for (const [t, tMap] of [["f", "fMap"], ["s", "sMap"], ["b", "bMap"]]) {
+                for (let i = 0; i < stats[tMap].length; ++i) {
+                    if (stats[t][i] > 0) {
+                        continue;
+                    }
+                    const wrapper = (x) => `<span style="background-color: #F44336; color: white;">${x}</span>`
+                    const { start, end } = stats[tMap][i];
+                    if (start.line === end.line) {
+                        const j = start.line - 1;
+                        lines[j] = wrap(lines[j], start.column, end.column - 1, wrapper);
+                        continue;
+                    }
+                    let indent = 0;
+                    for (let j = start.line - 1; j < end.line; ++j) {
+                        if (j === start.line - 1) {
+                            lines[j] = wrap(lines[j], start.column, -1, wrapper);
+                            for (let i = 0; i < lines[j].length; ++i) {
+                                if (lines[j][i] === " ") {
+                                    ++indent;
+                                } else {
+                                    break;
+                                }
+                            }
+                        } else if (j === end.line - 1) {
+                            lines[j] = wrap(lines[j], indent, end.column - 1, wrapper);
+                        } else {
+                            lines[j] = wrap(lines[j], indent, -1, wrapper);
+                        }
+                    }
+                }
+            }
+            element.innerHTML = lines.join("\n");
+        };
+
+        const lineNumberBlock = (element, linesStats) => {
+            const lines = getLines(element.innerHTML);
+            if (lines.length > 1) {
+                let html = '';
+                for (var i = 0; i < lines.length; i++) {
+                    html += `<tr><td class="${COV_NAME}">${linesStats[i + 1] || ""}</td><td class="${DATA_ATTR_NAME}"><div class="${LINE_NAME} ${NUMBER_LINE_NAME}" ${DATA_ATTR_NAME}="${i + 1}"></div></td><td class="${CODE_BLOCK_NAME}"><div class="${LINE_NAME}">${lines[i].length > 0 ? lines[i] : ' '}</div></td></tr>`;
+                }
+                element.innerHTML = `<table class="${TABLE_NAME}">${html}</table>`;
+            }
+        };
+        const getLines = (text) => {
+            if (text.length === 0) {
+                return [];
+            }
+            return text.split(/\r\n|\r|\n/g);
+        }
+    </script>
+</body>
+</html>

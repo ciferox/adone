@@ -3,7 +3,7 @@ const { netron: { decorator: { Contextable, Description, Public, Private } } } =
 @Contextable
 @Private
 @Description("User session")
-export default class Session {
+class Session {
     constructor(auth, sessionData) {
         this.auth = auth;
         this.data = sessionData;
@@ -23,3 +23,5 @@ export default class Session {
         return this.data.key;
     }
 }
+
+export default Session; // code generator fails when export + class decorator, todo: fix

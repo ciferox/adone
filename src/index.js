@@ -159,7 +159,7 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
                     // run again!
                     app.run({ ignoreArgs });
                 } else {
-                    class XApplication extends adone.application.Application {}
+                    class XApplication extends adone.application.Application { }
 
                     for (const [name, method] of Object.entries(App)) {
                         XApplication.prototype[name] = method;
@@ -240,18 +240,29 @@ if (!Object.prototype.hasOwnProperty.call(global, "adone")) {
             dgram: "dgram"
         }),
         require: () => {
+            const plugins = [
+                "transform.flowStripTypes",
+                "transform.decoratorsLegacy",
+                "transform.classProperties",
+                "transform.ESModules",
+                "transform.functionBind",
+                "transform.objectRestSpread"
+            ];
+            if (process.env.ADONE_COVERAGE) {
+                plugins.unshift(
+                    "syntax.decorators",
+                    "syntax.objectRestSpread",
+                    "syntax.functionBind",
+                    "syntax.classProperties",
+                    "syntax.flow",
+                    adone.js.coverage.plugin
+                );
+            }
             const options = {
                 compact: false,
                 only: /\.js$/,
                 sourceMaps: "inline",
-                plugins: [
-                    "transform.flowStripTypes",
-                    "transform.decoratorsLegacy",
-                    "transform.classProperties",
-                    "transform.ESModules",
-                    "transform.functionBind",
-                    "transform.objectRestSpread"
-                ]
+                plugins
             };
             const module = new adone.js.Module(require.main ? require.main.filename : adone.std.path.join(process.cwd(), "index.js"), {
                 transform: adone.js.Module.transforms.transpile(options)

@@ -1,4 +1,4 @@
-const { is, std: { path }, fast: { Fast } } = adone;
+const { is, std: { path }, fast: { Fast, __ } } = adone;
 
 const replacer = ({ file, base, map } = {}) => {
     return {
@@ -56,8 +56,15 @@ export default function transpile(options) {
                 const result = adone.js.compiler.core.transform(file.contents.toString(), adone.o(options, {
                     plugins,
                     filename: file.path,
-                    filenameRelative: file.relative
+                    filenameRelative: file.relative,
+                    sourceMap: Boolean(file.sourceMap),
+                    sourceFileName: file.relative,
+                    sourceMapTarget: file.relative
                 }));
+
+                if (file.sourceMap && result.map) {
+                    __.helper.applySourceMap(file, result.map);
+                }
 
                 if (!result.ignored) {
                     file.contents = Buffer.from(result.code);

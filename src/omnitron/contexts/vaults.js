@@ -20,8 +20,10 @@ const SEPARATOR = "|";
 @Method("tags", { private: false })
 @Method("addTag", { private: false })
 @Method("deleteTag", { private: false })
-export class Valuable extends adone.vault.Valuable {
+class Valuable extends adone.vault.Valuable {
 }
+
+export { Valuable }; // code generator fails when export + class decorator, todo: fix
 
 @Private
 @Contextable
@@ -69,7 +71,7 @@ class Vault extends adone.vault.Vault {
 @Private
 @Contextable
 @Description("Vault manager")
-export default class Vaults {
+class Vaults {
     constructor(omnitron) {
         this.omnitron = omnitron;
         this._vaults = new Map();
@@ -243,3 +245,5 @@ export default class Vaults {
         return adone.std.path.join(this._path, `${name}${suffix}`);
     }
 }
+
+export default Vaults; // code generator fails when export + class decorator, todo: fix

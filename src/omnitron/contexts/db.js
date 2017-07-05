@@ -36,7 +36,7 @@ class Datastore extends adone.database.local.Datastore {
 @Contextable
 @Private
 @Description("Database context")
-export default class Database {
+class Database {
     constructor(omnitron) {
         this.omnitron = omnitron;
         this._datastores = new Map();
@@ -82,3 +82,5 @@ export default class Database {
         }
     }
 }
+
+export default Database; // code generator fails when export + class decorator, todo: fix

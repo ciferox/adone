@@ -23,7 +23,7 @@ export default ({ types: t }) => {
     const cov = t.memberExpression(
         t.identifier("global"),
         t.callExpression(
-            t.memberExpression(t.identifier("Symbol"), t.identifier("for")),
+            t.memberExpression(t.memberExpression(t.identifier("global"), t.identifier("Symbol")), t.identifier("for")),
             [t.stringLiteral("adone:coverage")]
         ),
         true
@@ -135,7 +135,9 @@ export default ({ types: t }) => {
                             if (isSkipped(path.node)) {
                                 return;
                             }
-                            path.insertBefore(notifyStatement(path));
+                            if (!t.isIfStatement(path.parent)) {
+                                path.insertBefore(notifyStatement(path));
+                            }
                             const consequent = path.get("consequent");
                             if (!t.isBlockStatement(consequent.node)) {
                                 path.node.consequent = t.blockStatement([consequent.node]);
@@ -145,11 +147,13 @@ export default ({ types: t }) => {
                             }
                             if (path.has("alternate")) {
                                 const alternate = path.get("alternate");
-                                if (!t.isBlockStatement(alternate.node)) {
-                                    path.node.alternate = t.blockStatement([alternate.node]);
-                                    path.get("alternate").unshiftContainer("body", notifyBranch(alternate));
-                                } else {
-                                    alternate.unshiftContainer("body", notifyBranch(alternate));
+                                if (!t.isIfStatement(alternate.node)) {
+                                    if (!t.isBlockStatement(alternate.node)) {
+                                        path.node.alternate = t.blockStatement([alternate.node]);
+                                        path.get("alternate").unshiftContainer("body", notifyBranch(alternate));
+                                    } else {
+                                        alternate.unshiftContainer("body", notifyBranch(alternate));
+                                    }
                                 }
                             }
                         },
@@ -248,13 +252,13 @@ export default ({ types: t }) => {
                             if (isSkipped(path.node)) {
                                 return;
                             }
-                            if (!isSkipped(path.node.left)) {
+                            if (!isSkipped(path.node.left) && !t.isLogicalExpression(path.node.left)) {
                                 path.node.left = t.sequenceExpression([
                                     notifyBranch(path.get("left")).expression,
                                     path.node.left
                                 ]);
                             }
-                            if (!isSkipped(path.node.left)) {
+                            if (!isSkipped(path.node.right)) {
                                 path.node.right = t.sequenceExpression([
                                     notifyBranch(path.get("right")).expression,
                                     path.node.right
@@ -279,6 +283,28 @@ export default ({ types: t }) => {
                             } else {
                                 path.insertBefore(notifyStatement(path));
                             }
+                        },
+                        ClassMethod(path) {
+                            if (isSkipped(path.node)) {
+                                return;
+                            }
+                            path.get("body").unshiftContainer("body", notifyFunction(path));
+                        },
+                        ObjectMethod(path) {
+                            if (isSkipped(path.node)) {
+                                return;
+                            }
+                            path.get("body").unshiftContainer("body", notifyFunction(path));
+                        },
+                        AssignmentPattern(path) {
+                            if (isSkipped(path.node)) {
+                                return;
+                            }
+                            path.node.right = t.sequenceExpression([
+                                notifyBranch(path.get("right")).expression,
+                                path.node.right
+                            ]);
+                            skipNode(path.node.right);
                         }
                     });
                     const statsVar = t.variableDeclaration("const", [

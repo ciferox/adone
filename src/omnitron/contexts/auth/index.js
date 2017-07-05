@@ -7,7 +7,7 @@ const { is, netron: { decorator: { Contextable, Description, Public, Private, Ty
 @Contextable
 @Private
 @Description("User context")
-export default class Auth {
+class Auth {
     constructor(omnitron) {
         this.options = {
             datastore: {
@@ -366,3 +366,5 @@ export default class Auth {
         return fieldValue;
     }
 }
+
+export default Auth; // code generator fails when export + class decorator, todo: fix

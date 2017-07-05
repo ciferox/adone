@@ -14,7 +14,7 @@ const JOB_ID_LENGTH = 64;
 @Contextable
 @Private
 @Description("Task manager service")
-export default class TaskManager {
+class TaskManager {
     constructor(omnitron) {
         this.options = {
             datastore: {
@@ -328,7 +328,7 @@ export default class TaskManager {
         let uninstallCount = 0;
         for (const name of taskNames) {
             if (!this._isCompatibleName(name, cntainerId)) {
-                continue; 
+                continue;
             }
             const taskInfo = this._tasks.get(name);
             if (!is.undefined(taskInfo)) {
@@ -641,3 +641,5 @@ export default class TaskManager {
         return containerInfo;
     }
 }
+
+export default TaskManager;

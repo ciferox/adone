@@ -144,7 +144,7 @@ export class PRemoteProcess extends RemoteProcess {
 
 @Contextable
 @Private
-export class ReEmitter {
+class ReEmitter {
     constructor(dest) {
         this.dest = dest;
     }
@@ -154,6 +154,8 @@ export class ReEmitter {
         this.dest.emitParallel("workerExit", ...data);
     }
 }
+
+export { ReEmitter }; // code generator fails when export + class decorator, todo: fix
 
 export class Process extends AsyncEmitter {
     static containerPath = std.path.join(__dirname, "containers", "single.js");
@@ -512,7 +514,7 @@ export class MainProcess extends Process {
 @Contextable
 @Private
 @Description("A single process")
-export class IProcess {
+class IProcess {
     constructor(pm, process) {
         this.pm = pm;
         this.process = process;
@@ -575,10 +577,12 @@ export class IProcess {
     }
 }
 
+export { IProcess }; // code generator fails when export + class decorator, todo: fix
+
 @Contextable
 @Private
 @Description("The main process of a cluster")
-export class IMainProcess extends IProcess {
+class IMainProcess extends IProcess {
     @Public
     @Description("Get info about the workers")
     workers() {
@@ -605,6 +609,8 @@ export class IMainProcess extends IProcess {
         return this.pm.killWorker(this.process.config.name, ...args);
     }
 }
+
+export { IMainProcess }; // code generator fails when export + class decorator, todo: fix
 
 const getProcessInterface = (pm, process) => {
     if (process instanceof MainProcess) {
@@ -670,7 +676,7 @@ const humanizeState = (s) => util.entries(STATES).find((x) => x[1] === s)[0];
 
 @Contextable
 @Private
-export default class ProcessManager {
+class ProcessManager {
     constructor(omnitron) {
         this.options = {
             datastore: {
@@ -1577,3 +1583,5 @@ export default class ProcessManager {
         return this.db.applications.find({});
     }
 }
+
+export default ProcessManager; // code generator fails when export + class decorator, todo: fix

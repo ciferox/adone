@@ -58,7 +58,7 @@ const VAULT_OPTIONS = {
 @Private
 @Contextable
 @Description("Hosts manager")
-export default class Hosts {
+class Hosts {
     constructor(omnitron) {
         this.omnitron = omnitron;
         this._vault = null;
@@ -189,3 +189,5 @@ export default class Hosts {
         return this._vault.clear(options);
     }
 }
+
+export default Hosts; // code generator fails when export + class decorator, todo: fix

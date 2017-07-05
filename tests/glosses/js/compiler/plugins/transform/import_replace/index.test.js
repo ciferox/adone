@@ -1,8 +1,14 @@
 const { transform } = adone.js.compiler.core;
 
 describe("js", "compiler", "plugins", "importReplace", () => {
+    const oridCwd = process.cwd();
+
     before(() => {
         process.chdir(__dirname);
+    });
+
+    after(() => {
+        process.chdir(oridCwd);
     });
 
     it("in current dir", () => {

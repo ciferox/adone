@@ -1,4 +1,3 @@
-import adone from "adone";
 const { std: { crypto: { randomBytes } }, is } = adone;
 
 const timer = Symbol("timer");

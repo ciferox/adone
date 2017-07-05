@@ -32,7 +32,8 @@ export default class ShaniCLI extends adone.application.Subsystem {
                 { name: "--no-ticks", help: "Don't show the test/hook/timers ticks.\nForced to be true if there is no TTY", group: "output" },
                 { name: "--simple", help: "Use simple console reporter", group: "output" },
                 { name: ["--minimal", "-m"], help: "Use minimal console reporter", group: "output" },
-                { name: "--print-cover-stats", nargs: "?", help: "Print cover stats if exists" }
+                { name: "--print-cover-stats", nargs: "?", help: "Print cover stats if exists" },
+                { name: "--start-cover-server", help: "Start http server to analyse coverage" }
             ],
             handler: this.main,
             commands: [
@@ -200,6 +201,10 @@ export default class ShaniCLI extends adone.application.Subsystem {
         if (opts.has("print-cover-stats") && adone.js.coverage.hasStats()) {
             const filter = opts.get("print-cover-stats");
             adone.js.coverage.printTable(filter && new RegExp(filter));
+        }
+        if (opts.has("start-cover-server") && adone.js.coverage.hasStats()) {
+            await adone.js.coverage.startHTTPServer(8888);
+            return;
         }
         if (failed) {
             return 1;

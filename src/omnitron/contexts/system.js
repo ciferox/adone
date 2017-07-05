@@ -14,7 +14,7 @@ const {
 
 @Contextable
 @Description("System metrics")
-export default class System {
+class System {
     constructor() {
         this.fs = null;
     }
@@ -81,3 +81,5 @@ export default class System {
         return this.fs;
     }
 }
+
+export default System; // code generator fails when export + class decorator, todo: fix

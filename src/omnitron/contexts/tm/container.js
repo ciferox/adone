@@ -7,7 +7,7 @@ const { Contextable, Private, Public, Description, Type, Args } = adone.netron.d
 @Private
 @Contextable
 @Description("Taks manager container")
-export default class Container {
+class Container {
     constructor(manager, meta) {
         this.manager = manager;
         this.meta = meta;
@@ -117,3 +117,5 @@ export default class Container {
         return is.null(this.meta.dataCode) ? "" : this.meta.dataCode;
     }
 }
+
+export default Container;

@@ -4,7 +4,7 @@ const { Contextable, Description, Type, Public, Private, Args } = adone.netron.d
 @Private
 @Contextable
 @Description("Shell context")
-export default class Shell {
+class Shell {
     initialize() {
 
     }
@@ -31,3 +31,5 @@ export default class Shell {
         return shell.whoami();
     }
 }
+
+export default Shell;

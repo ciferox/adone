@@ -14,7 +14,7 @@ const { is, netron: { decorator: { Contextable, Description, Public, Private, Ty
 @Method("addUser", { private: false, description: "Adds a new user and returns it id", type: String })
 @Method("addGroup", { private: false, description: "Adds a new group and returns group id", type: Group })
 @Method("getGroupByName", { private: false, description: "Returns group by name", type: Group })
-export default class SystemAuth extends Auth {
+class SystemAuth extends Auth {
     // ---==== GROUPS ====--- //
 
     @Public
@@ -255,3 +255,5 @@ export default class SystemAuth extends Auth {
         return 1;
     }
 }
+
+export default SystemAuth; // code generator fails when export + class decorator, todo: fix

@@ -175,10 +175,10 @@ const FSEventsHandler = {
                         this._ignoredPaths.add(`${path}/**/*`);
                     }
                     return true;
-                } 
+                }
                 this._ignoredPaths.delete(path);
                 this._ignoredPaths.delete(`${path}/**/*`);
-                
+
             };
 
             const handleEvent = (event) => {
@@ -202,11 +202,11 @@ const FSEventsHandler = {
                             // push symlinks back to the top of the stack to get handled
                             const curDepth = is.undefined(this.options.depth) ? undefined : depth(fullPath, realPath) + 1;
                             return this._addToFsEvents(path, false, true, curDepth);
-                        } 
+                        }
                             // track new paths
                             // (other than symlinks being followed, which will be tracked soon)
                         this._getWatchedDir(parent).add(item);
-                        
+
                     }
                     const eventName = info.type === "directory" ? `${event}Dir` : event;
                     this._emit(eventName, path);
@@ -382,9 +382,9 @@ const FSEventsHandler = {
         // don't follow the same symlink more than once
         if (this._symlinkPaths.has(fullPath)) {
             return;
-        } 
+        }
         this._symlinkPaths.set(fullPath, true);
-        
+
 
         this._readyCount++;
 
@@ -425,7 +425,7 @@ const FsWatchInstances = new Map();
 
 /**
  * Helper for passing fs.watch event data to a collection of listeners
- * 
+ *
  * @private
  * @param {string} fullPath - absolute path bound to the fs.watch instance
  * @param {string} type - listener type
@@ -443,7 +443,7 @@ const fsWatchBroadcast = (fullPath, type, ...args) => {
 
 /**
  * Instantiates the fs.watch interface
- * 
+ *
  * @private
  * @private
  * @param {string} path - path to be watched
@@ -473,7 +473,7 @@ const createFsWatchInstance = (path, options, listener, errHandler, emitRaw) => 
 
 /**
  * Instantiates the fs.watch interface or binds listeners to an existing one covering the same file system entry
- * 
+ *
  * @private
  * @param {string} path - path to be watched
  * @param {string} fullPath - absolute path
@@ -551,7 +551,7 @@ const FsWatchFileInstances = new Map();
 
 /**
  * Instantiates the fs.watchFile interface or binds listeners to an existing one covering the same file system entry
- * 
+ *
  * @private
  * @param {string} path - path to be watched
  * @param {string} fullPath - absolute path
@@ -707,13 +707,13 @@ export default class Watcher extends adone.EventEmitter {
 
     /**
      * Adds paths to be watched on an existing Watcher instance
-     * 
+     *
      * @public
      * @param {string|string[]} paths - file/directory paths and/or globs
      * @param {Boolean} _origAdd - internal param for handling non-existent paths to be watched
      * @param {Boolean} _internal - interv param indicates a non-user add
      * @returns {this}
-     * 
+     *
      * @memberOf Watcher
      */
     add(paths, _origAdd, _internal) {
@@ -731,9 +731,9 @@ export default class Watcher extends adone.EventEmitter {
                     return path;
                 } else if (path[0] === "!") {
                     return `!${adone.std.path.join(cwd, path.substring(1))}`;
-                } 
+                }
                 return adone.std.path.join(cwd, path);
-                
+
             });
         }
 
@@ -794,11 +794,11 @@ export default class Watcher extends adone.EventEmitter {
 
     /**
      * Close watchers or start ignoring events from specified paths.
-     * 
+     *
      * @public
      * @param {string|string[]} paths file/directory paths and/or globs
      * @returns {this}
-     * 
+     *
      * @memberOf Watcher
      */
     unwatch(paths) {
@@ -833,10 +833,10 @@ export default class Watcher extends adone.EventEmitter {
 
     /**
      * Close watchers and remove all listeners from watched paths.
-     * 
+     *
      * @public
-     * @returns {this} 
-     * 
+     * @returns {this}
+     *
      * @memberOf Watcher
      */
     close() {
@@ -859,10 +859,10 @@ export default class Watcher extends adone.EventEmitter {
 
     /**
      * Expose list of watched paths
-     * 
+     *
      * @public
      * @returns {Object.<string, ...string[]>} object with dir paths as keys and arrays of contained paths as values
-     * 
+     *
      * @memberOf Watcher
      */
     getWatched() {
@@ -876,13 +876,13 @@ export default class Watcher extends adone.EventEmitter {
 
     /**
      * Normalize and emit events
-     * 
+     *
      * @private
      * @param {string} event - the type of an event
      * @param {string} path - the path of a file or a directory
      * @param {...any} vals - an event arguments
      * @returns {this}
-     * 
+     *
      * @memberOf Watcher
      */
     _emit(event, path, ...vals) {
@@ -968,12 +968,12 @@ export default class Watcher extends adone.EventEmitter {
 
     /**
      * Common handler for errors
-     * 
-     * @private 
+     *
+     * @private
      * @param {Error}
-     * @returns {Error|Boolean} the error if defined, otherwise the value of the Watcher instance's `closed` flag 
-     * 
-     * @memberOf Watcher 
+     * @returns {Error|Boolean} the error if defined, otherwise the value of the Watcher instance's `closed` flag
+     *
+     * @memberOf Watcher
      */
     _handleError(error) {
         const code = error && error.code;
@@ -986,13 +986,13 @@ export default class Watcher extends adone.EventEmitter {
 
     /**
      * Helper utility for throttling
-     * 
+     *
      * @private
      * @param {string} action - type of action being throttled
      * @param {string} path - path being acted upon
      * @param {number} timeout - the duration of time to suppress duplicate actions (ms)
      * @returns {Object|Boolean} throttle tracking object or false if action should be suppressed
-     * 
+     *
      * @memberOf Watcher
      */
     _throttle(action, path, timeout) {
@@ -1018,14 +1018,14 @@ export default class Watcher extends adone.EventEmitter {
     /**
      * Awaits write operation to finish
      *
-     * Polls a newly created file for size variations. When files size does not 
-     * change for "threshold" milliseconds calls callback. 
+     * Polls a newly created file for size variations. When files size does not
+     * change for "threshold" milliseconds calls callback.
      * @private
      * @param {string} path - path being acted on
      * @param {number} threshold - time in milliseconds a file size must be fixed before acknowledgeing write operation is finished
      * @param {string} event
      * @param {function} awfEmit - function, to be called when ready for event to be emitted
-     * 
+     *
      * @memberOf Watcher
      */
     _awaitWriteFinish(path, threshold, event, awfEmit) {
@@ -1077,12 +1077,12 @@ export default class Watcher extends adone.EventEmitter {
 
     /**
      * Determines whether user has asked to ignore this path
-     * 
+     *
      * @private
      * @param {string} path - path to file or Directory
      * @param {Object} stats - result of fs.stat
      * @returns {Boolean}
-     * 
+     *
      * @memberOf Watcher
      */
     _isIgnored(path, stats) {
@@ -1112,14 +1112,14 @@ export default class Watcher extends adone.EventEmitter {
     }
 
     /**
-     * Provides a set of common helpers and properties relating to 
+     * Provides a set of common helpers and properties relating to
      * symlink and glob handling
-     * 
+     *
      * @private
      * @param {string} path - file, directory, or glob pattern being watched
      * @param {number} depth - at any depth > 0, this isn't a glob
      * @returns {Object}
-     * 
+     *
      * @memberOf Watcher
      */
     _getWatchHelpers(path, depth) {
@@ -1190,8 +1190,8 @@ export default class Watcher extends adone.EventEmitter {
     }
 
     /**
-     * Provides directory tracking objects 
-     * 
+     * Provides directory tracking objects
+     *
      * @private
      * @param {string} directory - path of the directory
      * @returns {Object} the directory's tracking object
@@ -1232,11 +1232,11 @@ export default class Watcher extends adone.EventEmitter {
     /**
      * Check for read permissions
      * Based on this answer on SO: http://stackoverflow.com/a/11781404/1358405
-     *  
+     *
      * @private
      * @param {Object} stats - result of fs.stat
      * @returns {Boolean}
-     * 
+     *
      * @memberOf Watcher
      */
     _hasReadPermissions(stats) {
@@ -1247,11 +1247,11 @@ export default class Watcher extends adone.EventEmitter {
      * Handles emitting unlink events for
      * files and directories, and via recursion, for
      * files and directories within directories that are unlinked
-     * 
+     *
      * @private
      * @param {string} directory - directory within which the following item is located
      * @param {any} item - base path of item/directory
-     * 
+     *
      * @memberOf Watcher
      */
     _remove(directory, item) {
@@ -1327,11 +1327,11 @@ export default class Watcher extends adone.EventEmitter {
     /**
      * Handle added file, directory, or glob pattern.
      * Delegates call to _handleFile / _handleDir after checks.
-     * 
+     *
      * @private
      * @param {string} path - path to file or directory.
      * @param {Boolean} initialAdd - was the file added at watch instantiation?
-     * @param {Object} priorWh - common helpers 
+     * @param {Object} priorWh - common helpers
      * @param {number} depth - depth relative to user-supplied path
      * @param {string} target - child path actually targeted for watch
      * @param {function} callback - indicates whether the path was found or not
@@ -1394,7 +1394,7 @@ export default class Watcher extends adone.EventEmitter {
 
     /**
      * Read directory to add / remove files from `@watched` list
-     * 
+     *
      * @private
      * @param {string} dir - fs path.
      * @param {Object} stats - result of fs.stat
@@ -1514,7 +1514,7 @@ export default class Watcher extends adone.EventEmitter {
 
     /**
      * Handle symlinks encountered while reading a dir
-     * 
+     *
      * @private
      * @param {Object} entry - entry object returned by readdirp
      * @param {string} directory - path of the directory being read
@@ -1554,7 +1554,7 @@ export default class Watcher extends adone.EventEmitter {
 
     /**
      * Watch a file and emit add event if warranted
-     * 
+     *
      * @private
      * @param {string} file - the file's path
      * @param {Object} stats - result of fs.stat
@@ -1608,7 +1608,7 @@ export default class Watcher extends adone.EventEmitter {
 
     /**
      * Watch file for changes with fs.watchFile or fs.watch.
-     * 
+     *
      * @private
      * @param {string} path - path to file or directory.
      * @param {function} listener - to be executed on fs change.
