@@ -17,11 +17,16 @@ describe("js", "coverage", "functional", () => {
     const test = (code, values, plugins = []) => {
         const t = calculateCoverage(code, { plugins });
         for (const k of Object.keys(values)) {
-            expect(t[k]).to.be.deep.equal(values[k]);
+            try {
+                expect(t[k]).to.be.deep.equal(values[k]);
+            } catch (err) {
+                err.message = `${k}: ${err.message}`;
+                throw err;
+            }
         }
     };
 
-    const res = (passed, total) => ({ total, passed, percent: passed / total * 100 });
+    const res = (passed, total) => ({ total, passed, percent: total ? passed / total * 100 : 100 });
 
     describe("if", () => {
         specify("simple branch", () => {
@@ -173,6 +178,169 @@ describe("js", "coverage", "functional", () => {
                 }
             `, res(1, 2)); // never reaches the second if
         });
+
+        specify("ignore", () => {
+            test(`
+                /* ignore coverage */
+                if (1) {
+                    1;
+                    2;
+                    3;
+                } else {
+                    4;
+                    5;
+                    6;
+                }
+            `, { statement: res(0, 0), branch: res(0, 0) });
+            test(`
+                /* ignore coverage */
+                if (1) 1; else 2;
+            `, { statement: res(0, 0), branch: res(0, 0) });
+        });
+
+        specify("ignore consequent", () => {
+            test(`
+                if (1) /* ignore coverage */ {
+                    1;
+                    2;
+                    3;
+                } else {
+                    4;
+                    5;
+                    6;
+                }
+            `, { statement: res(1, 4), branch: res(0, 1) });
+            test(`
+                if (1) /* ignore coverage */ 1; else {
+                    4;
+                    5;
+                    6;
+                }
+            `, { statement: res(1, 4), branch: res(0, 1) });
+            test(`
+                if (1) /* ignore coverage */ 1; else 2;
+            `, { statement: res(1, 2), branch: res(0, 1) });
+        });
+
+        specify("ignore alternate", () => {
+            test(`
+                if (1) {
+                    123;
+                } else /* ignore coverage */ {
+                    2;
+                }
+            `, { statement: res(2, 2), branch: res(1, 1) });
+            test(`
+                if (1) {
+                    123;
+                } else /* ignore coverage */ 2;
+            `, { statement: res(2, 2), branch: res(1, 1) });
+            test(`
+                if (1) 1; else /* ignore coverage */ 2;
+            `, { statement: res(2, 2), branch: res(1, 1) });
+        });
+
+        specify("ignore else if", () => {
+            test(`
+                if (1) {
+                    2;
+                } else /* ignore coverage */ if (1) {
+                    3;
+                } else {
+                    4;
+                }
+            `, { statement: res(2, 2), branch: res(1, 1) });
+            test(`
+                if (1) {
+                    2;
+                } else /* ignore coverage */ if (1) {
+                    3;
+                } else 4;
+            `, { statement: res(2, 2), branch: res(1, 1) });
+            test(`
+                if (1) {
+                    2;
+                } else /* ignore coverage */ if (1) 3; else {
+                    4;
+                }
+            `, { statement: res(2, 2), branch: res(1, 1) });
+            test(`
+                if (1) {
+                    2;
+                } else /* ignore coverage */ if (1) 3; else 4;
+            `, { statement: res(2, 2), branch: res(1, 1) });
+            test(`
+                if (1) 2; else /* ignore coverage */ if (1) 3; else 4;
+            `, { statement: res(2, 2), branch: res(1, 1) });
+        });
+
+        specify("ignore else if consequent", () => {
+            test(`
+                if (1) {
+                    2;
+                } else if (1) /* ignore coverage */ {
+                    3;
+                } else {
+                    4;
+                }
+            `, { statement: res(2, 4), branch: res(1, 2) });
+            test(`
+                if (1) {
+                    2;
+                } else if (1) /* ignore coverage */ {
+                    3;
+                } else 4;
+            `, { statement: res(2, 4), branch: res(1, 2) });
+            test(`
+                if (1) {
+                    2;
+                } else if (1) /* ignore coverage */ 3; else {
+                    4;
+                }
+            `, { statement: res(2, 4), branch: res(1, 2) });
+            test(`
+                if (1) {
+                    2;
+                } else if (1) /* ignore coverage */ 3; else 4;
+            `, { statement: res(2, 4), branch: res(1, 2) });
+            test(`
+                if (1) 2; else if (1) /* ignore coverage */ 3; else 4;
+            `, { statement: res(2, 4), branch: res(1, 2) });
+        });
+
+        specify("ignore else if alternate", () => {
+            test(`
+                if (1) {
+                    2;
+                } else if (1) {
+                    3;
+                } else /* ignore coverage */ {
+                    4;
+                }
+            `, { statement: res(2, 4), branch: res(1, 2) });
+            test(`
+                if (1) {
+                    2;
+                } else if (1) 3; else /* ignore coverage */ {
+                    4;
+                }
+            `, { statement: res(2, 4), branch: res(1, 2) });
+            test(`
+                if (1) {
+                    2;
+                } else if (1) {
+                    3;
+                } else /* ignore coverage */ 4;
+            `, { statement: res(2, 4), branch: res(1, 2) });
+            test(`
+                if (1) {
+                    2;
+                } else if (1) 3; else /* ignore coverage */ 4;
+            `, { statement: res(2, 4), branch: res(1, 2) });
+            test(`
+                if (1) 2; else if (1) 3; else /* ignore coverage */ 4;
+            `, { statement: res(2, 4), branch: res(1, 2) });
+        });
     });
 
     describe("array function", () => {
@@ -204,6 +372,28 @@ describe("js", "coverage", "functional", () => {
 
                 }
             `, { function: res(1, 1), branch: res(1, 1) });
+        });
+
+        specify("ignore", () => {
+            test(`
+                const f = /* ignore coverage */ () => {};
+                f();
+            `, { statement: res(2, 2), function: res(0, 0) });
+        });
+
+        specify("ignore entire body", () => {
+            test(`
+                const f = /* ignore coverage */ () => {
+                    if (0) {
+                        throw 32;
+                    }
+                    for (const i of [1, 2, 3]) {
+                        continue;
+                    }
+                    return 42;
+                };
+                f();
+            `, { statement: res(2, 2), function: res(0, 0) });
         });
     });
 
@@ -253,6 +443,15 @@ describe("js", "coverage", "functional", () => {
                 }
             `, res(2, 2));
         });
+
+        specify("ignore", () => {
+            testStatement(`
+                for (let i = 0; i < 10; ++i) {
+                    /* ignore coverage */
+                    break;
+                }
+            `, res(1, 1)); // for
+        });
     });
 
     describe("continue", () => {
@@ -285,6 +484,15 @@ describe("js", "coverage", "functional", () => {
                 }
             `, res(3, 3));
         });
+
+        specify("ignore", () => {
+            testStatement(`
+                for (const i of [1, 2, 3]) {
+                    /* ignore coverage */
+                    continue;
+                }
+            `, res(1, 1));
+        });
     });
 
     describe("debugger", () => {
@@ -300,6 +508,13 @@ describe("js", "coverage", "functional", () => {
                     debugger;
                 }
             `, res(1, 2)); // only if
+        });
+
+        specify("ignore", () => {
+            testStatement(`
+                /* ignore coverage */
+                debugger;
+            `, res(0, 0));
         });
     });
 
@@ -320,6 +535,16 @@ describe("js", "coverage", "functional", () => {
                 };
             `, res(1, 2)); // var + ret
         });
+
+        specify("ignore", () => {
+            test(`
+                const f = () => {
+                    /* ignore coverage */
+                    return 1;
+                };
+                f();
+            `, { statement: res(2, 2), function: res(1, 1) });
+        });
     });
 
     describe("throw", () => {
@@ -339,6 +564,15 @@ describe("js", "coverage", "functional", () => {
                     throw new Error();
                 }
             `, res(1, 2)); // if + throw
+        });
+
+        specify("ignore", () => {
+            testStatement(`
+                if (0) {
+                    /* ignore coverage */
+                    throw new Error();
+                }
+            `, res(1, 1));
         });
     });
 
@@ -384,6 +618,73 @@ describe("js", "coverage", "functional", () => {
                 }
             `, res(0, 1));
         });
+
+        specify("ignore", () => {
+            test(`
+                /* ignore coverage */
+                try {
+                    if (0) {}
+                } catch (err) {
+
+                }
+            `, { statement: res(0, 0), branch: res(0, 0) });
+        });
+
+        specify("ignore catch branch", () => {
+            test(`
+                try {
+                    throw new Error(123);
+                } catch (err) /* ignore coverage */ {
+                    if (0) {}
+                    1;
+                    2;
+                    3;
+                }
+            `, { statement: res(2, 2), branch: res(0, 0) });
+        });
+
+        specify("ignore body", () => {
+            test(`
+                try /* ignore coverage */ {
+                    1;
+                    2;
+                    3;
+                } catch (err) {
+                    4;
+                    5;
+                    6;
+                }
+            `, { statement: res(1, 4), branch: res(0, 1) });
+        });
+
+        specify("ignore finally", () => {
+            test(`
+                try {
+                    1;
+                    2;
+                    3;
+                } finally /* ignore coverage */ {
+                    4;
+                    5;
+                    6;
+                }
+            `, { statement: res(4, 4), branch: res(0, 0) });
+            test(`
+                try {
+                    1;
+                    2;
+                    3;
+                } catch (err) {
+                    4;
+                    5;
+                    6;
+                } finally /* ignore coverage */ {
+                    7;
+                    8;
+                    9;
+                }
+            `, { statement: res(4, 7), branch: res(0, 1) });
+        });
     });
 
     describe("expression statement", () => {
@@ -399,6 +700,13 @@ describe("js", "coverage", "functional", () => {
                     1 + 1;
                 }
             `, res(1, 2));
+        });
+
+        specify("ignore", () => {
+            testStatement(`
+                /* ignore coverage */
+                1 + 1;
+            `, res(0, 0));
         });
     });
 
@@ -461,6 +769,42 @@ describe("js", "coverage", "functional", () => {
                 for (let i = 0; false; ++i);
             `, res(0, 2));
         });
+
+        specify("ignore", () => {
+            test(`
+                /* ignore coverage */
+                for (let i = 0; i < 10; ++i) {
+                    if (i > 5) {
+                        break;
+                    }
+                    1;
+                    3;
+                    continue;
+                }
+            `, { statement: res(0, 0), branch: res(0, 0) });
+        });
+
+        specify("ignore update", () => {
+            test(`
+                for (let i = 0; i < 10; /* ignore coverage */ ++i) {
+                    continue;
+                }
+            `, { statement: res(2, 2), branch: res(1, 1) }); // only body
+        });
+
+        specify("ignore body", () => {
+            test(`
+                for (let i = 0; i < 10; ++i) /* ignore coverage */ {
+                    continue;
+                }
+            `, { statement: res(1, 1), branch: res(1, 1) }); // only update
+        });
+
+        specify("ignore expression body", () => {
+            test(`
+                for (let i = 0; i < 10; ++i) /* ignore coverage */ continue;
+            `, { statement: res(1, 1), branch: res(1, 1) }); // only update
+        });
     });
 
     describe("for in", () => {
@@ -503,6 +847,29 @@ describe("js", "coverage", "functional", () => {
 
                 }
             `, res(0, 1));
+        });
+
+        specify("ignore", () => {
+            test(`
+                /* ignore coverage */
+                for (const k in { a: 1 }) {
+                    continue;
+                }
+            `, { statement: res(0, 0), branch: res(0, 0) });
+        });
+
+        specify("ignore body", () => {
+            test(`
+                for (const k in { a: 1 }) /* ignore coverage */ {
+                    continue;
+                }
+            `, { statement: res(1, 1), branch: res(0, 0) });
+        });
+
+        specify("ignore expression body", () => {
+            test(`
+                for (const k in { a: 1 }) /* ignore coverage */ continue;
+            `, { statement: res(1, 1), branch: res(0, 0) });
         });
     });
 
@@ -547,6 +914,29 @@ describe("js", "coverage", "functional", () => {
                 }
             `, res(0, 1));
         });
+
+        specify("ignore", () => {
+            test(`
+                /* ignore coverage */
+                for (const k of [1]) {
+                    continue;
+                }
+            `, { statement: res(0, 0), branch: res(0, 0) });
+        });
+
+        specify("ignore body", () => {
+            test(`
+                for (const k of [1]) /* ignore coverage */ {
+                    continue;
+                }
+            `, { statement: res(1, 1), branch: res(0, 0) });
+        });
+
+        specify("ignore expression body", () => {
+            test(`
+                for (const k of [1]) /* ignore coverage */ continue;
+            `, { statement: res(1, 1), branch: res(0, 0) });
+        });
     });
 
     describe("while", () => {
@@ -589,6 +979,30 @@ describe("js", "coverage", "functional", () => {
             testBranch(`
                 while (false);
             `, res(0, 1));
+        });
+
+        specify("ignore", () => {
+            test(`
+                let i = 0;
+                /* ignore coverage */
+                while (i < 10) {
+                    ++i;
+                }
+            `, { statement: res(1, 1), branch: res(0, 0) });
+        });
+
+        specify("ignore body", () => {
+            test(`
+                while (false) /* ignore coverage */ {
+                    continue;
+                }
+            `, { statement: res(1, 1), branch: res(0, 0) });
+        });
+
+        specify("ignore exression body", () => {
+            test(`
+                while (false) /* ignore coverage */ continue;
+            `, { statement: res(1, 1), branch: res(0, 0) });
         });
     });
 
@@ -635,6 +1049,37 @@ describe("js", "coverage", "functional", () => {
                     break;
                 } while (false);
             `, res(0, 1));
+        });
+
+        specify("ignore", () => {
+            test(`
+                /* ignore coverage */
+                do {
+                    break;
+                } while (false);
+            `, { statement: res(0, 0), branch: res(0, 0) });
+        });
+
+        specify("ignore body", () => {
+            test(`
+                do /* ignore coverage */ {
+                    break;
+                } while (false);
+            `, { statement: res(1, 1), branch: res(0, 1) });
+        });
+
+        specify("ignore expression body", () => {
+            test(`
+                do /* ignore coverage */ break; while (false);
+            `, { statement: res(1, 1), branch: res(0, 1) });
+        });
+
+        specify("ignore test", () => {
+            test(`
+                do {
+                    break;
+                } while /* ignore coverage */ (false);
+            `, { statement: res(2, 2), branch: res(0, 0) });
         });
     });
 
@@ -735,6 +1180,43 @@ describe("js", "coverage", "functional", () => {
             `, res(2, 2));
         });
 
+        specify("ignore", () => {
+            test(`
+                /* ignore coverage */
+                switch (1) {
+                    case 2: {
+                        break;
+                    }
+                    default: {
+
+                    }
+                }
+             `, { statement: res(0, 0), branch: res(0, 0) });
+        });
+
+        specify("ignore case", () => {
+            test(`
+                switch (1) {
+                    /* ignore coverage */
+                    case 2: {
+                        break;
+                    }
+                }
+            `, { statement: res(1, 1), branch: res(0, 0) });
+        });
+
+        specify("ignore default", () => {
+            test(`
+                switch (1) {
+                    case 1:
+                    case 2:
+                        break;
+                    /* ignore coverage */
+                    default:
+                        break;
+                }
+            `, { statement: res(2, 2), branch: res(2, 2) });
+        });
     });
 
     describe.skip("with", () => {
@@ -774,6 +1256,18 @@ describe("js", "coverage", "functional", () => {
                 }
             `, { function: res(0, 1), statement: res(1, 1) });
         });
+
+        specify("ignore", () => {
+            test(`
+                /* ignore coverage */
+                function f() {
+                    if (0) {
+                        return 2;
+                    }
+                    return 42;
+                }
+            `, { statement: res(0, 0), function: res(0, 0) });
+        });
     });
 
     describe("function expression", () => {
@@ -792,6 +1286,17 @@ describe("js", "coverage", "functional", () => {
 
                 };
             `, res(0, 1));
+        });
+
+        specify("ignore", () => {
+            test(`
+                const f = /* ignore coverage */ function () {
+                    if (0) {
+                        return 2;
+                    }
+                    return 42;
+                };
+            `, { statement: res(1, 1), function: res(0, 0) });
         });
     });
 
@@ -835,6 +1340,25 @@ describe("js", "coverage", "functional", () => {
                 }
             `, res(0, 3));
         });
+
+        specify("ignore", () => {
+            test(`
+                /* ignore coverage */
+                1 ? 2 : 3;
+            `, { statement: res(0, 0), branch: res(0, 0) });
+        });
+
+        specify("ignore consequent", () => {
+            test(`
+                1 ? /* ignore coverage */ 2 : 3;
+            `, { statement: res(1, 1), branch: res(0, 1) });
+        });
+
+        specify("ignore alternate", () => {
+            test(`
+                0 ? 2 : /* ignore coverage */ 3;
+            `, { statement: res(1, 1), branch: res(0, 1) });
+        });
     });
 
     describe("logical expression", () => {
@@ -860,6 +1384,27 @@ describe("js", "coverage", "functional", () => {
                 ((true && false) || true || false)
             `, res(8, 9));
         });
+
+        specify("ignore", () => {
+            test(`
+                /* ignore coverage */
+                1 && 2 && 3 && 4;
+            `, { statement: res(0, 0), branch: res(0, 0) });
+        });
+
+        specify("ignore branch", () => {
+            test(`
+                false && /* ignore coverage */ 2;
+            `, { statement: res(1, 1), branch: res(1, 1) });
+
+            test(`
+                false && /* ignore coverage */ 2 && /* ignore coverage */ 3;
+            `, { statement: res(1, 1), branch: res(1, 1) });
+
+            test(`
+                (/* ignore coverage */ true) || false;
+            `, { statement: res(1, 1), branch: res(0, 1) });
+        });
     });
 
     describe("variable declaration", () => {
@@ -881,6 +1426,13 @@ describe("js", "coverage", "functional", () => {
                     const a = 0;
                 }
             `, res(1, 2));
+        });
+
+        specify("ignore", () => {
+            testStatement(`
+                /* ignore coverage */
+                const a = 1;
+            `, res(0, 0));
         });
     });
 
@@ -905,6 +1457,17 @@ describe("js", "coverage", "functional", () => {
                 }
             `, res(0, 1));
         });
+
+        specify("ignore", () => {
+            testFunction(`
+                class A {
+                    /* ignore coverage */
+                    a() {
+
+                    }
+                }
+            `, res(0, 0));
+        });
     });
 
     describe("object method", () => {
@@ -928,6 +1491,17 @@ describe("js", "coverage", "functional", () => {
                 };
             `, res(0, 1));
         });
+
+        specify("ignore", () => {
+            testFunction(`
+                const a = {
+                    /* ignore coverage */
+                    a() {
+
+                    }
+                };
+            `, res(0, 0));
+        });
     });
 
     describe("assignment pattern", () => {
@@ -947,11 +1521,23 @@ describe("js", "coverage", "functional", () => {
             `, res(0, 2));
         });
 
+        specify("ignore assignment", () => {
+            testBranch(`
+                const [/* ignore coverage */b = 2] = [];
+            `, res(0, 0));
+        });
+
         specify("param cover", () => {
             testBranch(`
                 const f = (a = 2) => {};
                 f();
             `, res(1, 1));
+        });
+
+        specify("ignore param", () => {
+            testBranch(`
+                const f = (/* ignore coverage */a = 2) => {};
+            `, res(0, 0));
         });
 
         specify("no param cover", () => {
@@ -961,7 +1547,7 @@ describe("js", "coverage", "functional", () => {
             `, res(0, 1));
         });
 
-        specify("descructuring", () => {
+        specify("param descructuring", () => {
             testBranch(`
                 const f = ([a = 2] = []) => {};
                 f();
@@ -974,6 +1560,12 @@ describe("js", "coverage", "functional", () => {
                 const f = ([a = 2] = []) => {};
                 f([1]);
             `, res(0, 2));
+        });
+
+        specify("ignore descructuring", () => {
+            testBranch(`
+                const f = ([/* ignore coverage */a = 2] = []) => {};
+            `, res(0, 1));
         });
     });
 
@@ -994,6 +1586,24 @@ describe("js", "coverage", "functional", () => {
                     }
                 }
             `, res(1, 2));
+        });
+
+        specify("ignore", () => {
+            test(`
+                /* ignore coverage */
+                class A {
+                    a() {
+                        if (5) {
+                            return 3;
+                        }
+                        return 42;
+                    }
+
+                    b() {
+                        return 2;
+                    }
+                }
+            `, { statement: res(0, 0), branch: res(0, 0), function: res(0, 0) });
         });
     });
 
@@ -1016,5 +1626,19 @@ describe("js", "coverage", "functional", () => {
                 g(7);
             `, { statement: res(8, 10), function: res(2, 2), branch: res(1, 2), overall: res(11, 14) });
         });
+    });
+
+    it("should ignore any block", () => {
+        test(`
+            /* ignore coverage */
+            {
+                1;
+                2;
+                if (3) {
+                    4;
+                }
+                const f = () => {};
+            }
+        `, { statement: res(0, 0), branch: res(0, 0), function: res(0, 0) });
     });
 });

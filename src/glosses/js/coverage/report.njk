@@ -80,6 +80,9 @@
             text-align: right;
             padding-right: 5px;
         }
+        .hljs-cov-n:before {
+            content:attr(data-cov-n)
+        }
         .hljs-cov-n {
             text-align: right;
             padding-right: 5px;
@@ -307,22 +310,22 @@
 
         const colorizeCoverage = (element, stats) => {
             const lines = getLines(element.innerHTML);
+            const redWrapper = (x) => `<span style="background-color: #F44336; color: white;">${x}</span>`;
             for (const [t, tMap] of [["f", "fMap"], ["s", "sMap"], ["b", "bMap"]]) {
                 for (let i = 0; i < stats[tMap].length; ++i) {
                     if (stats[t][i] > 0) {
                         continue;
                     }
-                    const wrapper = (x) => `<span style="background-color: #F44336; color: white;">${x}</span>`
                     const { start, end } = stats[tMap][i];
                     if (start.line === end.line) {
                         const j = start.line - 1;
-                        lines[j] = wrap(lines[j], start.column, end.column - 1, wrapper);
+                        lines[j] = wrap(lines[j], start.column, end.column - 1, redWrapper);
                         continue;
                     }
                     let indent = 0;
                     for (let j = start.line - 1; j < end.line; ++j) {
                         if (j === start.line - 1) {
-                            lines[j] = wrap(lines[j], start.column, -1, wrapper);
+                            lines[j] = wrap(lines[j], start.column, -1, redWrapper);
                             for (let i = 0; i < lines[j].length; ++i) {
                                 if (lines[j][i] === " ") {
                                     ++indent;
@@ -331,13 +334,41 @@
                                 }
                             }
                         } else if (j === end.line - 1) {
-                            lines[j] = wrap(lines[j], indent, end.column - 1, wrapper);
+                            lines[j] = wrap(lines[j], indent, end.column - 1, redWrapper);
                         } else {
                             if (lines[j].trim() === "") {
                                 lines[j] = " ".repeat(indent + 1);
                             }
-                            lines[j] = wrap(lines[j], indent, -1, wrapper);
+                            lines[j] = wrap(lines[j], indent, -1, redWrapper);
                         }
+                    }
+                }
+            }
+            const blueWrapper = (x) => `<span style="background-color: #2196F3; color: white;">${x}</span>`;
+            for (const { start, end } of stats.ignored) {
+                if (start.line === end.line) {
+                    const j = start.line - 1;
+                    lines[j] = wrap(lines[j], start.column, end.column - 1, blueWrapper);
+                    continue;
+                }
+                let indent = 0;
+                for (let j = start.line - 1; j < end.line; ++j) {
+                    if (j === start.line - 1) {
+                        lines[j] = wrap(lines[j], start.column, -1, blueWrapper);
+                        for (let i = 0; i < lines[j].length; ++i) {
+                            if (lines[j][i] === " ") {
+                                ++indent;
+                            } else {
+                                break;
+                            }
+                        }
+                    } else if (j === end.line - 1) {
+                        lines[j] = wrap(lines[j], indent, end.column - 1, blueWrapper);
+                    } else {
+                        if (lines[j].trim() === "") {
+                            lines[j] = " ".repeat(indent + 1);
+                        }
+                        lines[j] = wrap(lines[j], indent, -1, blueWrapper);
                     }
                 }
             }
@@ -349,7 +380,7 @@
             if (lines.length > 1) {
                 let html = '';
                 for (var i = 0; i < lines.length; i++) {
-                    html += `<tr><td class="${COV_NAME}">${linesStats[i + 1] || ""}</td><td class="${DATA_ATTR_NAME}"><div class="${LINE_NAME} ${NUMBER_LINE_NAME}" ${DATA_ATTR_NAME}="${i + 1}"></div></td><td class="${CODE_BLOCK_NAME}"><div class="${LINE_NAME}">${lines[i].length > 0 ? lines[i] : ' '}</div></td></tr>`;
+                    html += `<tr><td class="${COV_NAME}" data-cov-n="${linesStats[i + 1] || ""}"></td><td class="${DATA_ATTR_NAME}"><div class="${LINE_NAME} ${NUMBER_LINE_NAME}" ${DATA_ATTR_NAME}="${i + 1}"></div></td><td class="${CODE_BLOCK_NAME}"><div class="${LINE_NAME}">${lines[i].length > 0 ? lines[i] : ' '}</div></td></tr>`;
                 }
                 element.innerHTML = `<table class="${TABLE_NAME}">${html}</table>`;
             }
