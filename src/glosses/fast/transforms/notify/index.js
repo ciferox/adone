@@ -1,6 +1,6 @@
 import report from "./report";
 
-const { fast: { Fast } } = adone;
+const { is, fast: { Fast } } = adone;
 
 export default function notify(options = {}) {
     let reporter;
@@ -22,14 +22,23 @@ export default function notify(options = {}) {
         reporter = n.notify.bind(n);
     }
 
+    let filter;
+    if (options.filter && is.function(options.filter)) {
+        ({ filter } = options);
+    } else {
+        filter = adone.truly;
+    }
+
     if (!options.onLast) {
         return new Fast(null, {
             async transform(file) {
-                await report(reporter, file, options, templateOptions).catch((err) => {
-                    if (options.emitError) {
-                        throw err;
-                    }
-                });
+                if (await filter(file)) {
+                    await report(reporter, file, options, templateOptions).catch((err) => {
+                        if (options.emitError) {
+                            throw err;
+                        }
+                    });
+                }
                 this.push(file);
             }
         });
@@ -62,9 +71,9 @@ notify.onError = function (options = {}, callback) {
     if (options.notifier) {
         reporter = options.notifier;
     } else {
-        let n = notifier;
+        let n = adone.notifier;
         if (options.host || options.appName || options.port) {
-            n = new notifier.Notification({
+            n = new adone.notifier.Notification({
                 host: options.host || "localhost",
                 appName: options.appName || "notify",
                 port: options.port || "23053"

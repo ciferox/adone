@@ -28,8 +28,10 @@ const calc = (stats) => {
     };
 };
 
-export const getStatsFor = (path) => {
-    const rawStats = getRawStats();
+export const getStatsFor = (path, rawStats = getRawStats()) => {
+    if (is.null(rawStats)) {
+        return null;
+    }
     if (!rawStats[path]) {
         return null;
     }
@@ -50,23 +52,21 @@ export const getStatsFor = (path) => {
     };
 };
 
-export const getStats = (filter) => {
-    if (!hasStats()) {
+export const getStats = (filter, rawStats = getRawStats()) => {
+    if (is.null(rawStats)) {
         return null;
     }
-    const rawStats = getRawStats();
     const res = {};
     for (const path of util.keys(rawStats)) {
         if (filter && !filter.test(path)) {
             continue;
         }
-        res[path] = getStatsFor(path);
+        res[path] = getStatsFor(path, rawStats);
     }
     return res;
 };
 
-export const getOverallStats = (filter) => {
-    const rawStats = getRawStats();
+export const getOverallStats = (filter, rawStats = getRawStats()) => {
     const calc = (stats) => {
         const passed = stats.reduce((x, y) => {
             if (y > 0) {
@@ -196,8 +196,7 @@ export const calculateCoverage = (sourceCode, { filename = `${new Date().getTime
     }
 };
 
-export const getLinePassesFor = (path) => {
-    const rawStats = getRawStats();
+export const getLinePassesFor = (path, rawStats = getRawStats()) => {
     const stats = rawStats[path];
     if (!stats) {
         return null;
@@ -228,7 +227,8 @@ export const getLinePassesFor = (path) => {
 };
 
 export const startHTTPServer = async (port) => {
-    const stats = getStats();
+    const rawStats = util.clone(getRawStats());
+    const stats = getStats(undefined, rawStats);
 
     const toTree = (stats) => {
         let id = 0;
@@ -299,10 +299,18 @@ export const startHTTPServer = async (port) => {
                 stats.overall.passed += node.children[t].stats.overall.passed;
                 stats.overall.total += node.children[t].stats.overall.total;
             }
-            stats.branch.percent = stats.branch.total ? stats.branch.passed / stats.branch.total * 100 : 100;
-            stats.function.percent = stats.function.total ? stats.function.passed / stats.function.total * 100 : 100;
-            stats.statement.percent = stats.statement.total ? stats.statement.passed / stats.statement.total * 100 : 100;
-            stats.overall.percent = stats.overall.total ? stats.overall.passed / stats.overall.total * 100 : 100;
+            stats.branch.percent = stats.branch.total
+                ? stats.branch.passed / stats.branch.total * 100
+                : 100;
+            stats.function.percent = stats.function.total
+                ? stats.function.passed / stats.function.total * 100
+                : 100;
+            stats.statement.percent = stats.statement.total
+                ? stats.statement.passed / stats.statement.total * 100
+                : 100;
+            stats.overall.percent = stats.overall.total
+                ? stats.overall.passed / stats.overall.total * 100
+                : 100;
             node.stats = stats;
             return node;
         })(root);
@@ -312,23 +320,23 @@ export const startHTTPServer = async (port) => {
     const server = adone.net.http.server.create();
     const router = adone.net.http.server.middleware.router()
         .use(adone.net.http.server.middleware.views(__dirname))
-        .get("/", async (ctx, next) => {
+        .get("/", async (ctx) => {
             return ctx.render("report.njk", {
                 tree: toTree(stats),
-                stats: getOverallStats()
+                stats: getOverallStats(undefined, rawStats)
             });
         })
-        .get("/get/:index", async (ctx, next) => {
+        .get("/get/:index", async (ctx) => {
             const f = util.keys(stats)[ctx.params.index];
             ctx.body = {
                 filename: path.relative(process.cwd(), f),
                 text: await fs.readFile(f, { encoding: "utf8" }),
-                stats: getStatsFor(f),
-                lines: getLinePassesFor(f),
-                rawStats: getRawStats()[f]
+                stats: getStatsFor(f, rawStats),
+                lines: getLinePassesFor(f, rawStats),
+                rawStats: rawStats[f]
             };
         });
     server.use(router.routes());
-    await server.bind({ port });
+    await server.bind({ port, host: "127.0.0.1" });
     return server;
 };

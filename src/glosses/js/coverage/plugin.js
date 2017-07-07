@@ -124,6 +124,10 @@ export default ({ types: t }) => {
                                 return;
                             }
                             path.insertBefore(notifyStatement(path));
+                            if (path.has("handler")) {
+                                const handlerBody = path.get("handler.body");
+                                handlerBody.unshiftContainer("body", notifyBranch(handlerBody));
+                            }
                         },
                         ExpressionStatement(path) {
                             if (isSkipped(path.node)) {
@@ -147,13 +151,15 @@ export default ({ types: t }) => {
                             }
                             if (path.has("alternate")) {
                                 const alternate = path.get("alternate");
-                                if (!t.isIfStatement(alternate.node)) {
-                                    if (!t.isBlockStatement(alternate.node)) {
-                                        path.node.alternate = t.blockStatement([alternate.node]);
-                                        path.get("alternate").unshiftContainer("body", notifyBranch(alternate));
-                                    } else {
-                                        alternate.unshiftContainer("body", notifyBranch(alternate));
-                                    }
+                                if (t.isIfStatement(alternate.node)) {
+                                    alternate.replaceWith(t.blockStatement([
+                                        alternate.node
+                                    ]));
+                                } else if (!t.isBlockStatement(alternate.node)) {
+                                    path.node.alternate = t.blockStatement([alternate.node]);
+                                    path.get("alternate").unshiftContainer("body", notifyBranch(alternate));
+                                } else {
+                                    alternate.unshiftContainer("body", notifyBranch(alternate));
                                 }
                             }
                         },
@@ -162,30 +168,79 @@ export default ({ types: t }) => {
                                 return;
                             }
                             path.insertBefore(notifyStatement(path));
+                            if (path.has("update")) {
+                                const update = path.get("update");
+                                path.node.update = t.sequenceExpression([
+                                    notifyBranch(update).expression,
+                                    path.node.update
+                                ]);
+                                skipNode(path.node.update);
+                            }
+                            if (!t.isBlockStatement(path.node.body)) {
+                                const body = path.get("body");
+                                path.node.body = t.blockStatement([path.node.body]);
+                                skipNode(path.node.body);
+                                path.get("body").unshiftContainer("body", notifyBranch(body));
+                            } else {
+                                const body = path.get("body");
+                                body.unshiftContainer("body", notifyBranch(body));
+                            }
                         },
                         ForInStatement(path) {
                             if (isSkipped(path.node)) {
                                 return;
                             }
                             path.insertBefore(notifyStatement(path));
+                            if (!t.isBlockStatement(path.node.body)) {
+                                const body = path.get("body");
+                                path.node.body = t.blockStatement([path.node.body]);
+                                skipNode(path.node.body);
+                                path.get("body").unshiftContainer("body", notifyBranch(body));
+                            } else {
+                                const body = path.get("body");
+                                body.unshiftContainer("body", notifyBranch(body));
+                            }
                         },
                         ForOfStatement(path) {
                             if (isSkipped(path.node)) {
                                 return;
                             }
                             path.insertBefore(notifyStatement(path));
+                            if (!t.isBlockStatement(path.node.body)) {
+                                const body = path.get("body");
+                                path.node.body = t.blockStatement([path.node.body]);
+                                skipNode(path.node.body);
+                                path.get("body").unshiftContainer("body", notifyBranch(body));
+                            } else {
+                                const body = path.get("body");
+                                body.unshiftContainer("body", notifyBranch(body));
+                            }
                         },
                         WhileStatement(path) {
                             if (isSkipped(path.node)) {
                                 return;
                             }
                             path.insertBefore(notifyStatement(path));
+                            if (!t.isBlockStatement(path.node.body)) {
+                                const body = path.get("body");
+                                path.node.body = t.blockStatement([path.node.body]);
+                                skipNode(path.node.body);
+                                path.get("body").unshiftContainer("body", notifyBranch(body));
+                            } else {
+                                const body = path.get("body");
+                                body.unshiftContainer("body", notifyBranch(body));
+                            }
                         },
                         DoWhileStatement(path) {
                             if (isSkipped(path.node)) {
                                 return;
                             }
                             path.insertBefore(notifyStatement(path));
+                            path.node.test = t.sequenceExpression([
+                                notifyBranch(path.get("test")).expression,
+                                path.node.test
+                            ]);
+                            skipNode(path.node.test);
                         },
                         SwitchStatement(path) {
                             if (isSkipped(path.node)) {
@@ -225,12 +280,12 @@ export default ({ types: t }) => {
                             const body = path.get("body");
                             body.unshiftContainer("body", notifyFunction(body));
                         },
-                        LabeledStatement(path) {
-                            if (isSkipped(path.node)) {
-                                return;
-                            }
-                            path.insertBefore(notifyStatement(path));
-                        },
+                        // LabeledStatement(path) {
+                        //     if (isSkipped(path.node)) {
+                        //         return;
+                        //     }
+                        //     path.insertBefore(notifyStatement(path));
+                        // },
                         ConditionalExpression(path) {
                             if (isSkipped(path.node)) {
                                 return;
@@ -305,6 +360,16 @@ export default ({ types: t }) => {
                                 path.node.right
                             ]);
                             skipNode(path.node.right);
+                        },
+                        ClassDeclaration(path) {
+                            if (isSkipped(path.node)) {
+                                return;
+                            }
+                            if (path.parent && (t.isExportDefaultDeclaration(path.parent) || t.isExportNamedDeclaration(path.parent))) {
+                                path.parentPath.insertBefore(notifyStatement(path));
+                            } else {
+                                path.insertBefore(notifyStatement(path));
+                            }
                         }
                     });
                     const statsVar = t.variableDeclaration("const", [

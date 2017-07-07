@@ -10,7 +10,7 @@ const defaults = {
 };
 
 const log = (options, isError) => {
-    const message = `[notifier]: [${options.title}] ${options.message}`;
+    const message = `[${options.title}] ${options.message}`;
     if (isError) {
         adone.error(message);
     } else {

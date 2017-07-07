@@ -333,6 +333,9 @@
                         } else if (j === end.line - 1) {
                             lines[j] = wrap(lines[j], indent, end.column - 1, wrapper);
                         } else {
+                            if (lines[j].trim() === "") {
+                                lines[j] = " ".repeat(indent + 1);
+                            }
                             lines[j] = wrap(lines[j], indent, -1, wrapper);
                         }
                     }
