@@ -68,7 +68,7 @@ class JSLzmaStream extends stream.Transform {
         this.once("error-cleanup", this.cleanup);
 
         this.nativeStream.bufferHandler = (buf, processedChunks, err, totalIn, totalOut) => {
-            if (totalIn !== null) {
+            if (!is.null(totalIn)) {
                 this.totalIn_ = totalIn;
                 this.totalOut_ = totalOut;
             }
@@ -78,9 +78,10 @@ class JSLzmaStream extends stream.Transform {
                     this.push(null);
                     this.emit("error-cleanup", err);
                     this.emit("error", err);
+                    return;
                 }
 
-                if (totalIn !== null) {
+                if (!is.null(totalIn)) {
                     this.emit("progress", {
                         totalIn: this.totalIn_,
                         totalOut: this.totalOut_
@@ -233,7 +234,7 @@ Stream.prototype.easyEncoder = function (options) {
     const preset = options.preset || native.PRESET_DEFAULT;
     const check = options.check || native.CHECK_CRC32;
 
-    if (!is.undefined(options.threads) && options.threads !== null) {
+    if (!is.undefined(options.threads) && !is.null(options.threads)) {
         return this.mtEncoder_(Object.assign({
             preset,
             filters: null,
@@ -247,7 +248,7 @@ Stream.prototype.streamEncoder = function (options) {
     const filters = options.filters || [];
     const check = options.check || native.CHECK_CRC32;
 
-    if (!is.undefined(options.threads) && options.threads !== null) {
+    if (!is.undefined(options.threads) && !is.null(options.threads)) {
         return this.mtEncoder_(Object.assign({
             preset: null,
             filters,
@@ -298,7 +299,7 @@ const xz = {
 
     /* helper functions for easy creation of streams */
     createStream: (coder, options) => {
-        if (["number", "object"].indexOf(typeof(coder)) !== -1 && !options) {
+        if (["number", "object"].indexOf(typeof (coder)) !== -1 && !options) {
             options = coder;
             coder = null;
         }
@@ -327,7 +328,7 @@ const xz = {
 
         // possibly our input is an array of byte integers
         // or a typed array
-        if (!Buffer.isBuffer(string)) {
+        if (!is.buffer(string)) {
             string = Buffer.from(string);
         }
 

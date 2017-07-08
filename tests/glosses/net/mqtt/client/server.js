@@ -1,3 +1,5 @@
+const adone = require("adone").default;
+// import adone from "adone"; // fork case
 const { is, std: { tls, net } } = adone;
 
 const setupConnection = function (duplex) {

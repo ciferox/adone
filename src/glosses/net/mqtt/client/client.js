@@ -294,10 +294,8 @@ export default class MqttClient extends adone.EventEmitter {
             opts = null;
         }
 
-        // Default opts
-        if (!opts) {
-            opts = { qos: 0, retain: false, dup: false };
-        }
+        const defaultOpts = { qos: 0, retain: false, dup: false };
+        opts = Object.assign(defaultOpts, opts);
 
         if (this._checkDisconnecting(callback)) {
             return this;
@@ -359,9 +357,9 @@ export default class MqttClient extends adone.EventEmitter {
             return this;
         }
 
-        if (!opts) {
-            opts = { qos: 0 };
-        }
+
+        const defaultOpts = { qos: 0 };
+        opts = Object.assign(defaultOpts, opts);
 
         if (is.array(obj)) {
             obj.forEach((topic) => {

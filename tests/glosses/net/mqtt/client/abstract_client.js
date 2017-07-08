@@ -544,6 +544,29 @@ module.exports = function (server, config) {
             });
         });
 
+        it("should publish with the default options for an empty parameter", (done) => {
+            const client = connect();
+            const payload = "test";
+            const topic = "test";
+            const defaultOpts = { qos: 0, retain: false, dup: false };
+
+            client.once("connect", () => {
+                client.publish(topic, payload, {});
+            });
+
+            server.once("client", (serverClient) => {
+                serverClient.once("publish", (packet) => {
+                    assert.equal(packet.topic, topic);
+                    assert.equal(packet.payload.toString(), payload);
+                    assert.equal(packet.qos, defaultOpts.qos, "incorrect qos");
+                    assert.equal(packet.retain, defaultOpts.retain, "incorrect ret");
+                    assert.equal(packet.dup, defaultOpts.dup, "incorrect dup");
+                    client.end();
+                    done();
+                });
+            });
+        });
+
         it('should mark a message as  duplicate when "dup" option is set', (done) => {
             const client = connect();
             const payload = "duplicated-test";
@@ -1044,6 +1067,26 @@ module.exports = function (server, config) {
                     }];
 
                     assert.deepEqual(packet.subscriptions, expected);
+                    done();
+                });
+            });
+        });
+
+        it("should subscribe with the default options for an empty options parameter", (done) => {
+            const client = connect();
+            const topic = "test";
+            const defaultOpts = { qos: 0 };
+
+            client.once("connect", () => {
+                client.subscribe(topic, {});
+            });
+
+            server.once("client", (serverClient) => {
+                serverClient.once("subscribe", (packet) => {
+                    assert.deepInclude(packet.subscriptions, {
+                        topic,
+                        qos: defaultOpts.qos
+                    });
                     done();
                 });
             });
