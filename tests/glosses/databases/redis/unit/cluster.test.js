@@ -17,7 +17,7 @@ describe("database", "redis", "unit", "cluster", () => {
         }).to.throw(/Invalid option scaleReads/);
     });
 
-    describe("#nodes()", () => {
+    describe("nodes()", () => {
         it("throws when role is invalid", () => {
             const cluster = new Cluster([{}]);
             expect(() => {

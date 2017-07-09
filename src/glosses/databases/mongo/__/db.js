@@ -5,7 +5,6 @@ const {
         getSingleProperty,
         shallowClone,
         parseIndexOptions,
-        handleCallback,
         filterOptions,
         toError,
         mergeOptionsAndWriteConcern
@@ -349,12 +348,26 @@ export default class Db extends EventEmitter {
         return new __.Admin(this, this.s.topology);
     }
 
-    collection(name, options, callback) {
-        if (is.function(options)) {
-            [callback, options] = [options, {}];
+    async _strictCollection(name, options) {
+        // Did the user destroy the topology
+        if (this.serverConfig && this.serverConfig.isDestroyed()) {
+            throw new MongoError("topology was destroyed");
         }
-        options = options || {};
-        options = shallowClone(options);
+        const collections = await this.listCollections({ name }, options).toArray();
+        if (collections.length === 0) {
+            throw toError(`Collection ${name} does not exist. Currently in strict mode.`);
+        }
+        return new __.Collection(
+            this,
+            this.s.topology,
+            this.s.databaseName,
+            name,
+            this.s.pkFactory,
+            options
+        );
+    }
+
+    collection(name, options = {}) {
         // If we have not set a collection level readConcern set the db level one
         options.readConcern = options.readConcern || this.s.readConcern;
 
@@ -366,64 +379,17 @@ export default class Db extends EventEmitter {
         // Merge in all needed options and ensure correct writeConcern merging from db level
         options = mergeOptionsAndWriteConcern(options, this.s.options, collectionKeys, true);
 
-        if (is.nil(options) || !options.strict) {
-            try {
-                const collection = new __.Collection(
-                    this,
-                    this.s.topology,
-                    this.s.databaseName,
-                    name,
-                    this.s.pkFactory,
-                    options
-                );
-                if (callback) {
-                    callback(null, collection);
-                }
-                return collection;
-            } catch (err) {
-                if (callback) {
-                    return callback(err);
-                }
-                throw err;
-            }
+        if (!options.strict) {
+            return new __.Collection(
+                this,
+                this.s.topology,
+                this.s.databaseName,
+                name,
+                this.s.pkFactory,
+                options
+            );
         }
-
-        // Strict mode
-        if (!is.function(callback)) {
-            throw toError(`A callback is required in strict mode. While getting collection ${name}.`);
-        }
-
-        // Did the user destroy the topology
-        if (this.serverConfig && this.serverConfig.isDestroyed()) {
-            return callback(new MongoError("topology was destroyed"));
-        }
-
-        // Strict mode
-        adone.promise.nodeify(this.listCollections({ name }, options).toArray(), (err, collections) => {
-            if (!is.nil(err)) {
-                return handleCallback(callback, err, null);
-            }
-            if (collections.length === 0) {
-                return handleCallback(callback, toError(`Collection ${name} does not exist. Currently in strict mode.`), null);
-            }
-
-            try {
-                return handleCallback(
-                    callback,
-                    null,
-                    new __.Collection(
-                        this,
-                        this.s.topology,
-                        this.s.databaseName,
-                        name,
-                        this.s.pkFactory,
-                        options
-                    )
-                );
-            } catch (err) {
-                return handleCallback(callback, err, null);
-            }
-        });
+        return this._strictCollection(name, options);
     }
 
     async createCollection(name, options = {}) {

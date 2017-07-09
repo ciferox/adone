@@ -3,200 +3,131 @@ import check from "../helpers/check_redis";
 describe("database", "redis", "pub/sub", { skip: check }, () => {
     const { database: { redis: { Redis } } } = adone;
 
-    afterEach((done) => {
+    afterEach(async () => {
         const redis = new Redis();
-        redis.flushall(() => {
-            redis.script("flush", () => {
-                redis.disconnect();
-                done();
-            });
-        });
+        await redis.flushall();
+        await redis.script("flush");
+        redis.disconnect();
     });
 
-    it("should invoke the callback when subscribe successfully", (done) => {
+    const waitFor = (emitter, e) => new Promise((resolve) => emitter.once(e, resolve));
+
+    it("should subscribe successfully", async () => {
         const redis = new Redis();
-        let pending = 1;
-        redis.subscribe("foo", "bar", (err, count) => {
-            expect(count).to.eql(2);
-            pending -= 1;
-        });
-        redis.subscribe("foo", "zoo", (err, count) => {
-            expect(count).to.eql(3);
-            expect(pending).to.eql(0);
-            redis.disconnect();
-            done();
-        });
+        expect(await redis.subscribe("foo", "bar")).to.be.equal(2);
+        expect(await redis.subscribe("foo", "zoo")).to.be.equal(3);
+        redis.disconnect();
     });
 
-    it("should reject when issue a command in the subscriber mode", (done) => {
+    it("should reject when issue a command in the subscriber mode", async () => {
         const redis = new Redis();
-        redis.subscribe("foo", () => {
-            redis.set("foo", "bar", (err) => {
-                expect(err instanceof Error);
-                expect(err.toString()).to.match(/subscriber mode/);
-                redis.disconnect();
-                done();
-            });
-        });
+        await redis.subscribe("foo");
+        await assert.throws(async () => {
+            await redis.set("foo", "bar");
+        }, "subscriber mode");
+        redis.disconnect();
     });
 
-    it("should exit subscriber mode using unsubscribe", (done) => {
+    it("should exit subscriber mode using unsubscribe", async () => {
         const redis = new Redis();
-        redis.subscribe("foo", "bar", () => {
-            redis.unsubscribe("foo", "bar", (err, count) => {
-                expect(count).to.eql(0);
-                redis.set("foo", "bar", (err) => {
-                    expect(err).to.eql(null);
-
-                    redis.subscribe("zoo", "foo", () => {
-                        redis.unsubscribe((err, count) => {
-                            expect(count).to.eql(0);
-                            redis.set("foo", "bar", (err) => {
-                                expect(err).to.eql(null);
-                                redis.disconnect();
-                                done();
-                            });
-                        });
-                    });
-                });
-            });
-        });
+        await redis.subscribe("foo", "bar");
+        expect(await redis.unsubscribe("foo", "bar")).to.be.equal(0);
+        await redis.set("foo", "bar");
+        await redis.subscribe("zoo", "foo");
+        expect(await redis.unsubscribe()).to.be.equal(0);
+        await redis.set("foo", "bar");
+        redis.disconnect();
     });
 
-    it("should receive messages when subscribe a channel", (done) => {
+    it("should receive messages when subscribe a channel", async () => {
         const redis = new Redis({ dropBufferSupport: false });
         const pub = new Redis({ dropBufferSupport: false });
-        let pending = 2;
-        redis.subscribe("foo", () => {
-            pub.publish("foo", "bar");
-        });
-        redis.on("message", (channel, message) => {
-            expect(channel).to.eql("foo");
-            expect(message).to.eql("bar");
-            if (!--pending) {
-                redis.disconnect();
-                done();
-            }
-        });
-        redis.on("messageBuffer", (channel, message) => {
-            expect(channel).to.be.instanceof(Buffer);
-            expect(channel.toString()).to.eql("foo");
-            expect(message).to.be.instanceof(Buffer);
-            expect(message.toString()).to.eql("bar");
-            if (!--pending) {
-                redis.disconnect();
-                pub.disconnect();
-                done();
-            }
-        });
+        redis.subscribe("foo").then(() => pub.publish("foo", "bar"));
+        const onMessage = spy();
+        redis.on("message", onMessage);
+        const onMessageBuffer = spy();
+        redis.on("messageBuffer", onMessageBuffer);
+        await Promise.all([
+            onMessage.waitForArgs("foo", "bar"),
+            onMessageBuffer.waitForArgs(Buffer.from("foo"), Buffer.from("bar"))
+        ]);
+        redis.disconnect();
+        pub.disconnect();
     });
 
-    it("should receive messages when psubscribe a pattern", (done) => {
+    it("should receive messages when psubscribe a pattern", async () => {
         const redis = new Redis({ dropBufferSupport: false });
         const pub = new Redis({ dropBufferSupport: false });
-        let pending = 2;
-        redis.psubscribe("f?oo", () => {
-            pub.publish("fzoo", "bar");
-        });
-        redis.on("pmessage", (pattern, channel, message) => {
-            expect(pattern).to.eql("f?oo");
-            expect(channel).to.eql("fzoo");
-            expect(message).to.eql("bar");
-            if (!--pending) {
-                redis.disconnect();
-                pub.disconnect();
-                done();
-            }
-        });
-        redis.on("pmessageBuffer", (pattern, channel, message) => {
-            expect(pattern).to.eql("f?oo");
-            expect(channel).to.be.instanceof(Buffer);
-            expect(channel.toString()).to.eql("fzoo");
-            expect(message).to.be.instanceof(Buffer);
-            expect(message.toString()).to.eql("bar");
-            if (!--pending) {
-                redis.disconnect();
-                pub.disconnect();
-                done();
-            }
-        });
+        redis.psubscribe("f?oo").then(() => pub.publish("fzoo", "bar"));
+        const onPMessage = spy();
+        redis.on("pmessage", onPMessage);
+        const onPMessageBuffer = spy();
+        redis.on("pmessageBuffer", onPMessageBuffer);
+        await Promise.all([
+            onPMessage.waitForArgs("f?oo", "fzoo", "bar"),
+            onPMessageBuffer.waitForArgs("f?oo", Buffer.from("fzoo"), Buffer.from("bar"))
+        ]);
+        redis.disconnect();
+        pub.disconnect();
     });
 
-    it("should exit subscriber mode using punsubscribe", (done) => {
+    it("should exit subscriber mode using punsubscribe", async () => {
         const redis = new Redis();
-        redis.psubscribe("f?oo", "b?ar", () => {
-            redis.punsubscribe("f?oo", "b?ar", (err, count) => {
-                expect(count).to.eql(0);
-                redis.set("foo", "bar", (err) => {
-                    expect(err).to.eql(null);
-
-                    redis.psubscribe("z?oo", "f?oo", () => {
-                        redis.punsubscribe((err, count) => {
-                            expect(count).to.eql(0);
-                            redis.set("foo", "bar", (err) => {
-                                expect(err).to.eql(null);
-                                redis.disconnect();
-                                done();
-                            });
-                        });
-                    });
-                });
-            });
-        });
+        await redis.psubscribe("f?oo", "b?ar");
+        expect(await redis.punsubscribe("f?oo", "b?ar")).to.be.equal(0);
+        await redis.set("foo", "bar");
+        await redis.psubscribe("z?oo", "f?oo");
+        expect(await redis.punsubscribe()).to.be.equal(0);
+        await redis.set("foo", "bar");
+        redis.disconnect();
     });
 
     it("should be able to send quit command in the subscriber mode", (done) => {
         const redis = new Redis();
         let pending = 1;
-        redis.subscribe("foo", () => {
-            redis.quit(() => {
-                pending -= 1;
-            });
+        redis.subscribe("foo").then(() => redis.quit()).then(() => {
+            pending -= 1;
         });
         redis.on("end", () => {
-            expect(pending).to.eql(0);
+            expect(pending).to.be.equal(0);
             redis.disconnect();
             done();
         });
     });
 
-    it("should restore subscription after reconnecting(subscribe)", (done) => {
+    it("should restore subscription after reconnecting(subscribe)", async () => {
         const redis = new Redis();
         const pub = new Redis();
-        redis.subscribe("foo", "bar", () => {
-            redis.on("ready", () => {
-                let pending = 2;
-                redis.on("message", (channel, message) => {
-                    if (!--pending) {
-                        redis.disconnect();
-                        pub.disconnect();
-                        done();
-                    }
-                });
-                pub.publish("foo", "hi1");
-                pub.publish("bar", "hi2");
-            });
-            redis.disconnect({ reconnect: true });
-        });
+        await redis.subscribe("foo", "bar");
+        redis.disconnect({ reconnect: true });
+        await waitFor(redis, "ready");
+        const onMessage = spy();
+        redis.on("message", onMessage);
+        pub.publish("foo", "hi1");
+        pub.publish("bar", "hi2");
+        await Promise.all([
+            onMessage.waitForArgs("foo", "hi1"),
+            onMessage.waitForArgs("bar", "hi2")
+        ]);
+        redis.disconnect();
+        pub.disconnect();
     });
 
-    it("should restore subscription after reconnecting(psubscribe)", (done) => {
+    it("should restore subscription after reconnecting(psubscribe)", async () => {
         const redis = new Redis();
         const pub = new Redis();
-        redis.psubscribe("fo?o", "ba?r", () => {
-            redis.on("ready", () => {
-                let pending = 2;
-                redis.on("pmessage", (pattern, channel, message) => {
-                    if (!--pending) {
-                        redis.disconnect();
-                        pub.disconnect();
-                        done();
-                    }
-                });
-                pub.publish("fo1o", "hi1");
-                pub.publish("ba1r", "hi2");
-            });
-            redis.disconnect({ reconnect: true });
-        });
+        await redis.psubscribe("fo?o", "ba?r");
+        redis.disconnect({ reconnect: true });
+        await waitFor(redis, "ready");
+        const onPMessage = spy();
+        redis.on("pmessage", onPMessage);
+        pub.publish("fo1o", "hi1");
+        pub.publish("ba1r", "hi2");
+        await Promise.all([
+            onPMessage.waitForArgs("fo?o", "fo1o", "hi1"),
+            onPMessage.waitForArgs("ba?r", "ba1r", "hi2")
+        ]);
+        redis.disconnect();
+        pub.disconnect();
     });
 });

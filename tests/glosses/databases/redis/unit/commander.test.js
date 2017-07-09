@@ -10,22 +10,22 @@ describe("database", "redis", "unit", "Commander", () => {
 
         const c = new Commander();
         command = c.call("set", "foo", "bar");
-        expect(command.name).to.eql("set");
-        expect(command.args[0]).to.eql("foo");
-        expect(command.args[1]).to.eql("bar");
+        expect(command.name).to.be.equal("set");
+        expect(command.args[0]).to.be.equal("foo");
+        expect(command.args[1]).to.be.equal("bar");
 
         command = c.callBuffer("set", ["foo", "bar"]);
-        expect(command.name).to.eql("set");
-        expect(command.args[0]).to.eql("foo");
-        expect(command.args[1]).to.eql("bar");
+        expect(command.name).to.be.equal("set");
+        expect(command.args[0]).to.be.equal("foo");
+        expect(command.args[1]).to.be.equal("bar");
 
         command = c.call("set", "foo", "bar", adone.noop);
-        expect(command.name).to.eql("set");
-        expect(command.args.length).to.eql(2);
+        expect(command.name).to.be.equal("set");
+        expect(command.args.length).to.be.equal(2);
 
         command = c.callBuffer("set", "foo", "bar", adone.noop);
-        expect(command.name).to.eql("set");
-        expect(command.args.length).to.eql(2);
+        expect(command.name).to.be.equal("set");
+        expect(command.args.length).to.be.equal(2);
 
         Commander.prototype.sendCommand.restore();
     });

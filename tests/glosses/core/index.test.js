@@ -1736,6 +1736,23 @@ describe("core", () => {
             });
         });
 
+        describe("flatten", () => {
+            it("should work", async () => {
+                const res = await core([[1], [2], [3], [4], [5, 6, 7], [8, 9, 10]]).flatten();
+                expect(res).to.be.deep.equal([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+            });
+
+            it("should work fine with nested arrays", async () => {
+                const res = await core([[1], [2, [3], [4, [5]], [6]], [[7, [[[8]]]]]]).flatten();
+                expect(res).to.be.deep.equal([1, 2, 3, 4, 5, 6, 7, 8]);
+            });
+
+            it("should work if there is no arrays", async () => {
+                const res = await core([1, 2, 3, 4, "hello", {}]).flatten();
+                expect(res).to.be.deep.equal([1, 2, 3, 4, "hello", {}]);
+            });
+        });
+
         describe("static", () => {
             describe("merge", () => {
                 it("should merge multiple streams", async () => {

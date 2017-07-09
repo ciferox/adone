@@ -4,14 +4,11 @@ import check from "../helpers/check_redis";
 describe("database", "redis", "auth", { skip: check }, () => {
     const { database: { redis: { Redis } } } = adone;
 
-    afterEach((done) => {
+    afterEach(async () => {
         const redis = new Redis();
-        redis.flushall(() => {
-            redis.script("flush", () => {
-                redis.disconnect();
-                done();
-            });
-        });
+        await redis.flushall();
+        await redis.script("flush");
+        redis.disconnect();
     });
 
     it("should send auth before other commands", (done) => {
@@ -66,7 +63,7 @@ describe("database", "redis", "auth", { skip: check }, () => {
             errorEmited = true;
         });
         stub(adone, "warn").callsFake((warn) => {
-            if (warn.indexOf("but a password was supplied") !== -1) {
+            if (warn.includes("but a password was supplied")) {
                 adone.warn.restore();
                 setTimeout(() => {
                     expect(errorEmited).to.eql(false);
@@ -78,29 +75,25 @@ describe("database", "redis", "auth", { skip: check }, () => {
         });
     });
 
-    it("should emit \"error\" when the password is wrong", (done) => {
+    it("should emit \"error\" when the password is wrong", async () => {
         const server = new MockServer(17379, (argv) => {
             if (argv[0] === "auth" && argv[1] === "pass") {
                 return new Error("ERR invalid password");
             }
         });
         const redis = new Redis({ port: 17379, password: "pass" });
-        let pending = 2;
-        const check = () => {
-            if (!--pending) {
-                redis.disconnect();
-                server.disconnect();
-                done();
-            }
-        };
-        redis.on("error", (error) => {
-            expect(error).to.have.property("message", "ERR invalid password");
-            check();
-        });
-        redis.get("foo", (err) => {
-            expect(err.message).to.eql("ERR invalid password");
-            check();
-        });
+        try {
+            const onError = spy();
+            redis.on("error", onError);
+            await assert.throws(async () => {
+                await redis.get("foo");
+            }, "ERR invalid password");
+            expect(onError).to.have.been.calledOnce;
+            expect(onError).to.have.been.calledWith(match((err) => err.message === "ERR invalid password"));
+        } finally {
+            redis.disconnect();
+            server.disconnect();
+        }
     });
 
     it("should emit \"error\" when password is not provided", (done) => {

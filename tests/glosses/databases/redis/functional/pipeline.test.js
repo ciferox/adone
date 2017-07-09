@@ -1,99 +1,104 @@
 import check from "../helpers/check_redis";
 
 describe("database", "redis", "pipeline", { skip: check }, () => {
-    const { database: { redis: { Redis } } } = adone;
+    const { is, database: { redis: { Redis } } } = adone;
 
-    afterEach((done) => {
+    afterEach(async () => {
         const redis = new Redis();
-        redis.flushall(() => {
-            redis.script("flush", () => {
-                redis.disconnect();
-                done();
-            });
-        });
+        await redis.flushall();
+        await redis.script("flush");
+        redis.disconnect();
     });
 
-    it("should return correct result", (done) => {
+    const waitFor = (emitter, e) => new Promise((resolve) => emitter.once(e, resolve));
+
+    it("should return correct result", async () => {
         const redis = new Redis();
-        redis.pipeline().set("foo", "1").get("foo").set("foo", "2").incr("foo").get("foo").exec((err, results) => {
-            expect(err).to.eql(null);
-            expect(results).to.eql([
-                [null, "OK"],
-                [null, "1"],
-                [null, "OK"],
-                [null, 3],
-                [null, "3"]
-            ]);
-            redis.disconnect();
-            done();
-        });
+        expect(
+            await redis.pipeline()
+                .set("foo", "1")
+                .get("foo")
+                .set("foo", "2")
+                .incr("foo")
+                .get("foo")
+                .exec()
+        ).to.be.deep.equal([
+            [null, "OK"],
+            [null, "1"],
+            [null, "OK"],
+            [null, 3],
+            [null, "3"]
+        ]);
+        redis.disconnect();
     });
 
-    it("should return an empty array on empty pipeline", (done) => {
+    it("should return an empty array on empty pipeline", async () => {
         const redis = new Redis();
-        redis.pipeline().exec((err, results) => {
-            expect(err).to.eql(null);
-            expect(results).to.eql([]);
-            redis.disconnect();
-            done();
-        });
+        expect(await redis.pipeline().exec()).to.be.deep.equal([]);
+        redis.disconnect();
     });
 
-    it("should support mix string command and buffer command", (done) => {
+    it("should support mix string command and buffer command", async () => {
         const redis = new Redis({ dropBufferSupport: false });
-        redis.pipeline().set("foo", "bar")
-            .set("foo", new Buffer("bar")).getBuffer("foo")
-            .get(new Buffer("foo"))
-            .exec((err, results) => {
-                expect(err).to.eql(null);
-                expect(results).to.eql([
-                    [null, "OK"],
-                    [null, "OK"],
-                    [null, new Buffer("bar")],
-                    [null, "bar"]
-                ]);
-                redis.disconnect();
-                done();
-            });
+        expect(
+            await redis.pipeline()
+                .set("foo", "bar")
+                .set("foo", Buffer.from("bar"))
+                .getBuffer("foo")
+                .get(Buffer.from("foo"))
+                .exec()
+        ).to.be.deep.equal([
+            [null, "OK"],
+            [null, "OK"],
+            [null, Buffer.from("bar")],
+            [null, "bar"]
+        ]);
+        redis.disconnect();
     });
 
-    it("should handle error correctly", (done) => {
+    it("should handle error correctly", async () => {
         const redis = new Redis();
-        redis.pipeline().set("foo").exec((err, results) => {
-            expect(err).to.eql(null);
-            expect(results.length).to.eql(1);
-            expect(results[0].length).to.eql(1);
-            expect(results[0][0].toString()).to.match(/wrong number of arguments/);
-            redis.disconnect();
-            done();
-        });
+        const result = await redis.pipeline().set("foo").exec();
+        expect(result).to.have.lengthOf(1);
+        expect(result[0]).to.have.lengthOf(1);
+        expect(result[0][0]).to.be.an("error");
+        expect(result[0][0].message).to.include("wrong number of arguments");
+        redis.disconnect();
     });
 
-    it("should also invoke the command's callback", (done) => {
+    it("should also invoke the command's callback", async () => {
         const redis = new Redis();
-        let pending = 1;
-        redis.pipeline().set("foo", "bar").get("foo", (err, result) => {
-            expect(result).to.eql("bar");
-            pending -= 1;
-        }).exec((err, results) => {
-            expect(pending).to.eql(0);
-            expect(results[1][1]).to.eql("bar");
-            redis.disconnect();
-            done();
-        });
+        const getFoo = spy();
+        expect(
+            await redis.pipeline()
+                .set("foo", "bar")
+                .get("foo", getFoo)
+                .exec()
+        ).to.be.deep.equal([
+            [null, "OK"],
+            [null, "bar"]
+        ]);
+        expect(getFoo).to.have.been.calledOnce;
+        expect(getFoo).to.have.been.calledWith(match(is.null), "bar");
+        redis.disconnect();
     });
 
-    it("should support inline transaction", (done) => {
+    it("should support inline transaction", async () => {
         const redis = new Redis();
-
-        redis.pipeline().multi().set("foo", "bar").get("foo").exec().exec((err, result) => {
-            expect(result[0][1]).to.eql("OK");
-            expect(result[1][1]).to.eql("QUEUED");
-            expect(result[2][1]).to.eql("QUEUED");
-            expect(result[3][1]).to.eql(["OK", "bar"]);
-            redis.disconnect();
-            done();
-        });
+        expect(
+            await redis.pipeline()
+                .multi()
+                .set("foo", "bar")
+                .get("foo")
+                .exec()
+                .exec()
+        ).to.be.deep.equal([
+            [null, "OK"],
+            [null, "QUEUED"],
+            [null, "QUEUED"],
+            [null, ["OK", "bar"]]
+        ]);
+        redis.disconnect();
     });
 
     it("should have the same options as its container", () => {
@@ -103,21 +108,24 @@ describe("database", "redis", "pipeline", { skip: check }, () => {
         redis.disconnect();
     });
 
-    it("should support key prefixing", (done) => {
+    it("should support key prefixing", async () => {
         const redis = new Redis({ keyPrefix: "foo:" });
-        redis.pipeline().set("bar", "baz").get("bar").lpush("app1", "test1")
-            .lpop("app1").keys("*").exec((err, results) => {
-                expect(err).to.eql(null);
-                expect(results).to.eql([
-                    [null, "OK"],
-                    [null, "baz"],
-                    [null, 1],
-                    [null, "test1"],
-                    [null, ["foo:bar"]]
-                ]);
-                redis.disconnect();
-                done();
-            });
+        expect(
+            await redis.pipeline()
+                .set("bar", "baz")
+                .get("bar")
+                .lpush("app1", "test1")
+                .lpop("app1")
+                .keys("*")
+                .exec()
+        ).to.be.deep.equal([
+            [null, "OK"],
+            [null, "baz"],
+            [null, 1],
+            [null, "test1"],
+            [null, ["foo:bar"]]
+        ]);
+        redis.disconnect();
     });
 
     describe("custom commands", () => {
@@ -135,14 +143,14 @@ describe("database", "redis", "pipeline", { skip: check }, () => {
             redis.disconnect();
         });
 
-        it("should work", (done) => {
-            redis.pipeline().echo("foo", "bar", "123", "abc").exec((err, results) => {
-                expect(err).to.eql(null);
-                expect(results).to.eql([
-                    [null, ["foo", "bar", "123", "abc"]]
-                ]);
-                done();
-            });
+        it("should work", async () => {
+            expect(
+                await redis.pipeline()
+                    .echo("foo", "bar", "123", "abc")
+                    .exec()
+            ).to.be.deep.equal([
+                [null, ["foo", "bar", "123", "abc"]]
+            ]);
         });
 
         it("should support callbacks", (done) => {
@@ -163,51 +171,52 @@ describe("database", "redis", "pipeline", { skip: check }, () => {
                 });
         });
 
-        it("should be supported in transaction blocks", (done) => {
-            redis.pipeline()
-                .multi()
-                .set("foo", "asdf")
-                .echo("bar", "baz", "123", "abc")
-                .get("foo")
-                .exec()
-                .exec((err, results) => {
-                    expect(err).to.eql(null);
-                    expect(results[4][1][1]).to.eql(["bar", "baz", "123", "abc"]);
-                    expect(results[4][1][2]).to.eql("asdf");
-                    done();
-                });
+        it("should be supported in transaction blocks", async () => {
+            expect(
+                await redis.pipeline()
+                    .multi()
+                    .set("foo", "asdf")
+                    .echo("bar", "baz", "123", "abc")
+                    .get("foo")
+                    .exec()
+                    .exec()
+            ).to.be.deep.equal([
+                [null, "OK"],
+                [null, "QUEUED"],
+                [null, "QUEUED"],
+                [null, "QUEUED"],
+                [null, ["OK", ["bar", "baz", "123", "abc"], "asdf"]]
+            ]);
         });
     });
 
-    describe("#addBatch", () => {
-        it("should accept commands in constructor", (done) => {
+    describe("addBatch", () => {
+        it("should accept commands in constructor", async () => {
             const redis = new Redis();
-            let pending = 1;
-            redis.pipeline([
-                ["set", "foo", "bar"],
-                ["get", "foo", function (err, result) {
-                    expect(result).to.eql("bar");
-                    pending -= 1;
-                }]
-            ]).exec((err, results) => {
-                expect(pending).to.eql(0);
-                expect(results[1][1]).to.eql("bar");
-                redis.disconnect();
-                done();
-            });
+            const getFoo = spy();
+            expect(
+                await redis.pipeline([
+                    ["set", "foo", "bar"],
+                    ["get", "foo", getFoo]
+                ]).exec()
+            ).to.be.deep.equal([
+                [null, "OK"],
+                [null, "bar"]
+            ]);
+            expect(getFoo).to.have.been.calledOnce;
+            expect(getFoo).to.have.been.calledWith(match(is.null), "bar");
+            redis.disconnect();
         });
     });
 
     describe("exec", () => {
-        it("should group results", (done) => {
+        it("should group results", async () => {
             const redis = new Redis();
             redis.multi({ pipeline: false });
             redis.set("foo", "bar");
             redis.get("foo");
-            redis.exec().then(() => {
-                redis.disconnect();
-                done();
-            });
+            expect(await redis.exec()).to.be.deep.equal([[null, "OK"], [null, "bar"]]);
+            redis.disconnect();
         });
 
         it("should allow omitting callback", (done) => {
@@ -219,20 +228,19 @@ describe("database", "redis", "pipeline", { skip: check }, () => {
             });
         });
 
-        it("should batch all commands before ready event", (done) => {
+        it("should batch all commands before ready event", async () => {
             const redis = new Redis();
-            redis.on("connect", () => {
-                redis.pipeline().info().config("get", "maxmemory").exec((err, res) => {
-                    expect(err).to.eql(null);
-                    expect(res).to.have.lengthOf(2);
-                    expect(res[0][0]).to.eql(null);
-                    expect(typeof res[0][1]).to.eql("string");
-                    expect(res[1][0]).to.eql(null);
-                    expect(Array.isArray(res[1][1])).to.eql(true);
-                    redis.disconnect();
-                    done();
-                });
-            });
+            await waitFor(redis, "connect");
+            const res = await redis.pipeline()
+                .info()
+                .config("get", "maxmemory")
+                .exec();
+            expect(res).to.have.lengthOf(2);
+            expect(res[0][0]).to.be.null;
+            expect(res[0][1]).to.be.a("string");
+            expect(res[1][0]).to.be.null;
+            expect(res[1][1]).to.be.an("array");
+            redis.disconnect();
         });
     });
 

@@ -1,4 +1,4 @@
-const { database: { redis: { __ } }, o, x, is, promise, lazify } = adone;
+const { database: { redis: { __ } }, x, is, promise, lazify } = adone;
 
 const lazy = lazify({
     commands: () => ["sentinel", ...__.commands.list.filter((x) => x !== "monitor")]
@@ -87,9 +87,10 @@ const mixin = (Sup) => {
     const Commander = class Commander extends Sup {
         constructor() {
             super();
-            this.options = o({
-                showFriendlyErrorStack: false
-            }, this.options || {});
+            this.options = {
+                showFriendlyErrorStack: false,
+                ...this.options
+            };
             this.scriptsSet = {};
         }
 

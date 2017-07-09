@@ -72,7 +72,7 @@ const readCodeFor = (type, charset, encodingExpr, config, options) => {
 
 
 export default function compile(fields, options, config) {
-    const wrap = (field, type, packet, encoding) => ({
+    const wrap = `(field, type, packet, encoding) => ({
         type,
         length: field.columnLength,
         db: field.schema,
@@ -81,7 +81,7 @@ export default function compile(fields, options, config) {
         string: () => packet.readLengthCodedString(encoding),
         buffer: () => packet.readLengthCodedBuffer(),
         geometry: () => packet.parseGeometryValue()
-    });
+    })`;
 
     // use global typeCast if current query doesn't specify one
     if (is.function(config.typeCast) && !is.function(options.typeCast)) {
@@ -95,7 +95,7 @@ export default function compile(fields, options, config) {
     }
 
     if (is.function(options.typeCast)) {
-        func += `var wrap = ${wrap.toString()};`;
+        func += `var wrap = ${wrap};`;
     }
 
     const resultTables = {};

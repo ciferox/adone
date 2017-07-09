@@ -1,5 +1,5 @@
 import enableDestroy from "./server_destroy";
-const { std: { net }, EventEmitter } = adone;
+const { is, std: { net }, EventEmitter } = adone;
 const { database: { redis: { __: { util, parser: { createParser } } } } } = adone;
 
 export default class MockServer extends EventEmitter {
@@ -46,6 +46,9 @@ export default class MockServer extends EventEmitter {
     }
 
     disconnect(callback) {
+        if (!is.function(callback)) {
+            return new Promise((resolve) => this.socket.destroy(resolve));
+        }
         this.socket.destroy(callback);
     }
 
@@ -60,21 +63,21 @@ export default class MockServer extends EventEmitter {
     write(c, data) {
         const convert = (str, data) => {
             let result;
-            if (typeof data === "undefined") {
+            if (is.undefined(data)) {
                 data = MockServer.REDIS_OK;
             }
             if (data === MockServer.REDIS_OK) {
                 result = "+OK\r\n";
-            } else if (data instanceof Error) {
+            } else if (is.error(data)) {
                 result = `-${data.message}\r\n`;
-            } else if (Array.isArray(data)) {
+            } else if (is.array(data)) {
                 result = `*${data.length}\r\n`;
                 data.forEach((item) => {
                     result += convert(str, item);
                 });
-            } else if (typeof data === "number") {
+            } else if (is.number(data)) {
                 result = `:${data}\r\n`;
-            } else if (data === null) {
+            } else if (is.null(data)) {
                 result = "$-1\r\n";
             } else {
                 data = data.toString();

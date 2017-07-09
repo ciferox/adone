@@ -3,14 +3,11 @@ import check from "../helpers/check_redis";
 describe("database", "redis", "ready_check", { skip: check }, () => {
     const { database: { redis: { Redis } } } = adone;
 
-    afterEach((done) => {
+    afterEach(async () => {
         const redis = new Redis();
-        redis.flushall(() => {
-            redis.script("flush", () => {
-                redis.disconnect();
-                done();
-            });
-        });
+        await redis.flushall();
+        await redis.script("flush");
+        redis.disconnect();
     });
 
     it("should retry when redis is not ready", (done) => {

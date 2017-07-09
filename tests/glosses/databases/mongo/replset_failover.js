@@ -247,11 +247,7 @@ describe("replset failover", function () {
         await primary.stop();
         await primaryLeft;
         await assert.throws(async () => {
-            await new Promise((resolve, reject) => {
-                db.collection("notempty_does_not_exist", { strict: true }, (err) => {
-                    err ? reject(err) : resolve();
-                });
-            });
+            await db.collection("notempty_does_not_exist", { strict: true });
         }, "Currently in strict mode");
         await db.close();
         await this.server.restart();

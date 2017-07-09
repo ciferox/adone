@@ -12,7 +12,8 @@ export default class ShaniCLI extends adone.application.Subsystem {
             optionsGroups: [
                 { name: "output", description: "Output" },
                 { name: "flow", description: "Execution flow controls" },
-                { name: "config", description: "Configuring" }
+                { name: "config", description: "Configuring" },
+                { name: "coverage", description: "Coverage" }
             ],
             options: [
                 { name: "--first", help: "exit if some test fails", group: "flow" },
@@ -32,8 +33,9 @@ export default class ShaniCLI extends adone.application.Subsystem {
                 { name: "--no-ticks", help: "Don't show the test/hook/timers ticks.\nForced to be true if there is no TTY", group: "output" },
                 { name: "--simple", help: "Use simple console reporter", group: "output" },
                 { name: ["--minimal", "-m"], help: "Use minimal console reporter", group: "output" },
-                { name: "--print-cover-stats", nargs: "?", holder: "FILTER", help: "Print cover stats if exists" },
-                { name: "--start-cover-server", nargs: "?", holder: "PORT", help: "Start http server to analyse coverage" }
+
+                { name: "--print-cover-stats", nargs: "?", holder: "FILTER", help: "Print cover stats if exists", group: "coverage" },
+                { name: "--start-cover-server", nargs: "?", holder: "PORT", default: 9111, type: Number, help: "Start http server to analyse coverage if exists", group: "coverage" }
             ],
             handler: this.main,
             commands: [
@@ -198,15 +200,23 @@ export default class ShaniCLI extends adone.application.Subsystem {
             });
 
         await new Promise((resolve) => emitter.once("done", resolve));
-        if (opts.has("print-cover-stats") && adone.js.coverage.hasStats()) {
-            const filter = opts.get("print-cover-stats");
-            adone.js.coverage.printTable(filter && new RegExp(filter));
+        if (opts.has("print-cover-stats")) {
+            if (adone.js.coverage.hasStats()) {
+                const filter = opts.get("print-cover-stats");
+                adone.js.coverage.printTable(filter && new RegExp(filter));
+            } else {
+                adone.info("[coverage] no data can be shown");
+            }
         }
-        if (opts.has("start-cover-server") && adone.js.coverage.hasStats()) {
-            const port = Number(opts.get("start-cover-server", 8888));
-            adone.info(`start http server with coverage stats at 127.0.0.1:${port}`);
-            await adone.js.coverage.startHTTPServer(port);
-            return;
+        if (opts.has("start-cover-server")) {
+            if (adone.js.coverage.hasStats()) {
+                const port = opts.get("start-cover-server");
+                adone.info(`start http server with coverage stats at 127.0.0.1:${port}`);
+                await adone.js.coverage.startHTTPServer(port);
+                return;
+            } else if (!opts.has("print-cover-stats")) {
+                adone.info("[coverage] no data can be shown");
+            }
         }
         if (failed) {
             return 1;

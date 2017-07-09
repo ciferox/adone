@@ -1,4 +1,4 @@
-const { database: { redis: { __ } }, o, x, std } = adone;
+const { database: { redis: { __ } }, x, std } = adone;
 
 export default class Connector {
     constructor(options) {
@@ -29,7 +29,7 @@ export default class Connector {
             };
         }
         if (this.options.tls) {
-            connectionOptions = o(connectionOptions, this.options.tls);
+            connectionOptions = { ...connectionOptions, ...this.options.tls };
         }
 
         process.nextTick(() => {

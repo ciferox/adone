@@ -60,7 +60,7 @@ describe("database", "mysql", "functional", "connection", "insert", "large blob"
     });
 
     it("should insert and select", async function test() {
-        this.timeout(30000);
+        this.timeout(300000);
 
         let [res] = await connection2.query("INSERT INTO insert_large_test (content) VALUES(?)", [content]);
         let [rows] = await connection2.query(`SELECT * FROM insert_large_test WHERE id = ${res.insertId}`);

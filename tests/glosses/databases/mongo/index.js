@@ -312,8 +312,8 @@ describe("index", function () {
             await assert.throws(async () => {
                 await db.createCollection("nonexisting", { w: 1 });
             });
-            assert.throws(async () => {
-                db.collection("nonexisting", { strict: true });
+            await assert.throws(async () => {
+                await db.collection("nonexisting", { strict: true });
             });
             assert.doesNotThrow(async () => {
                 db.collection("nonexisting", { strict: false });

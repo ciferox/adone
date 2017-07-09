@@ -3,11 +3,18 @@ describe("database", "redis", "unit", "util", () => {
 
     describe(".convertBufferToString", () => {
         it("should return correctly", () => {
-            expect(util.convertBufferToString(Buffer.from("123"))).to.eql("123");
-            expect(util.convertBufferToString([Buffer.from("abc"), Buffer.from("abc")])).to.eql(["abc", "abc"]);
-            expect(util.convertBufferToString([Buffer.from("abc"), [[Buffer.from("abc")]]])).to.eql(["abc", [["abc"]]]);
-            expect(util.convertBufferToString([Buffer.from("abc"), 5, "b", [[Buffer.from("abc"), 4]]]))
-                .to.eql(["abc", 5, "b", [["abc", 4]]]);
+            expect(
+                util.convertBufferToString(Buffer.from("123"))
+            ).to.eql("123");
+            expect(
+                util.convertBufferToString([Buffer.from("abc"), Buffer.from("abc")])
+            ).to.eql(["abc", "abc"]);
+            expect(
+                util.convertBufferToString([Buffer.from("abc"), [[Buffer.from("abc")]]])
+            ).to.eql(["abc", [["abc"]]]);
+            expect(
+                util.convertBufferToString([Buffer.from("abc"), 5, "b", [[Buffer.from("abc"), 4]]])
+            ).to.eql(["abc", 5, "b", [["abc", 4]]]);
         });
     });
 

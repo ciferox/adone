@@ -310,6 +310,68 @@ module.exports = {
                 };
             }
         },
+        "no-not-is.undefined-and-not-is.null": {
+            meta: {
+                docs: {
+                    description: "disallow using !is.undefined(t) && !is.null(t)"
+                },
+                fixable: "code"
+            },
+            create(context) {
+                const sourceCode = context.getSourceCode();
+                return {
+                    LogicalExpression(node) {
+                        if (node.operator !== "&&") {
+                            return;
+                        }
+                        let { left, right } = node;
+                        if (left.type !== "UnaryExpression" || right.type !== "UnaryExpression") {
+                            return;
+                        }
+                        if (left.operator !== "!" || right.operator !== "!") {
+                            return;
+                        }
+                        left = left.argument;
+                        right = right.argument;
+                        if (left.type !== "CallExpression" || right.type !== "CallExpression") {
+                            return;
+                        }
+
+                        if (left.callee.type !== "MemberExpression" || right.callee.type !== "MemberExpression") {
+                            return;
+                        }
+                        const { callee: leftc } = left;
+                        const { callee: rightc } = right;
+                        if (leftc.object.name !== "is" || rightc.object.name !== "is") {
+                            return;
+                        }
+                        if (
+                            (leftc.property.name === "undefined" && rightc.property.name === "null") ||
+                            (leftc.property.name === "null" && rightc.property.name === "undefined")
+                        ) {
+                            if (left.arguments.length !== 1 || right.arguments.length !== 1) {
+                                return;
+                            }
+                            const { arguments: [l] } = left;
+                            const { arguments: [r] } = right;
+                            if (l.type !== "Identifier" || r.type !== "Identifier") {
+                                return;
+                            }
+                            if (l.name !== r.name) {
+                                return;
+                            }
+                            context.report({
+                                node,
+                                message: "use !adone.is.nil instead",
+                                fix(fixer) {
+                                    return fixer.replaceText(node, `!is.nil(${sourceCode.getText(l)})`);
+                                }
+                            });
+                        }
+                    }
+                };
+            }
+        },
         "no-function-expression-class-property": {
             meta: {
                 docs: {

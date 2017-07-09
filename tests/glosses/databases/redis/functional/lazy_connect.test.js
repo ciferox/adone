@@ -3,14 +3,11 @@ import check from "../helpers/check_redis";
 describe("database", "redis", "lazy connect", { skip: check }, () => {
     const { database: { redis: { Redis, Cluster } } } = adone;
 
-    afterEach((done) => {
+    afterEach(async () => {
         const redis = new Redis();
-        redis.flushall(() => {
-            redis.script("flush", () => {
-                redis.disconnect();
-                done();
-            });
-        });
+        await redis.flushall();
+        await redis.script("flush");
+        redis.disconnect();
     });
 
     it("should not call `connect` when init", () => {
@@ -19,25 +16,20 @@ describe("database", "redis", "lazy connect", { skip: check }, () => {
         Redis.prototype.connect.restore();
     });
 
-    it("should connect when calling a command", (done) => {
+    it("should connect when calling a command", async () => {
         const redis = new Redis({ lazyConnect: true });
-        redis.set("foo", "bar");
-        redis.get("foo", (err, result) => {
-            expect(result).to.eql("bar");
-            redis.disconnect();
-            done();
-        });
+        await redis.set("foo", "bar");
+        expect(await redis.get("foo")).to.be.equal("bar");
+        redis.disconnect();
     });
 
-    it("should not try to reconnect when disconnected manually", (done) => {
+    it("should not try to reconnect when disconnected manually", async () => {
         const redis = new Redis({ lazyConnect: true });
-        redis.get("foo", () => {
-            redis.disconnect();
-            redis.get("foo", (err) => {
-                expect(err.message).to.match(/Connection is closed/);
-                done();
-            });
-        });
+        await redis.get("foo");
+        redis.disconnect();
+        await assert.throws(async () => {
+            await redis.get("foo");
+        }, "Connection is closed");
     });
 
     it("should be able to disconnect", (done) => {
@@ -58,7 +50,7 @@ describe("database", "redis", "lazy connect", { skip: check }, () => {
         it("should quit before \"close\" being emited", (done) => {
             stub(Cluster.prototype, "connect").throws(new Error("`connect` should not be called"));
             const cluster = new Cluster([], { lazyConnect: true });
-            cluster.quit(() => {
+            cluster.quit().then(() => {
                 cluster.once("close", () => {
                     cluster.once("end", () => {
                         Cluster.prototype.connect.restore();

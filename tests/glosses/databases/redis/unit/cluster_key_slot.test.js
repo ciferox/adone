@@ -34,9 +34,9 @@ describe("database", "redis", "unit", "cluster key slot", () => {
 
     const testsMultiResult = 9132;
 
-    function assertHash(string) {
+    const assertHash = (string) => {
         assert.strictEqual(calculateSlot(string), tests[string], `${string} - generated invalid hash: ${calculateSlot(string)}`);
-    }
+    };
 
     describe("single hash: calculateSlot()", () => {
         it("generate a correct hash from string", () => {

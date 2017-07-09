@@ -1,4 +1,4 @@
-const { database: { redis }, o, is, x, noop, collection, promise, util, EventEmitter } = adone;
+const { database: { redis }, is, x, noop, collection, promise, util, EventEmitter } = adone;
 const { __ } = redis;
 
 const isRejectOverwritten = Symbol("is reject overwritten");
@@ -6,7 +6,7 @@ const isRejectOverwritten = Symbol("is reject overwritten");
 export default class Cluster extends __.Commander.mixin(EventEmitter) {
     constructor(startupNodes, options) {
         super();
-        this.options = o(Cluster.defaultOptions, options);
+        this.options = { ...Cluster.defaultOptions, ...options };
 
         // validate options
         if (!is.function(this.options.scaleReads) &&
@@ -76,7 +76,7 @@ export default class Cluster extends __.Commander.mixin(EventEmitter) {
             this.connectionPool.reset(this.startupNodes);
 
             const closeListener = () => {
-                this.removeListener("refresh", refreshListener);  // eslint-disable-line no-use-before-define
+                this.removeListener("refresh", refreshListener); // eslint-disable-line no-use-before-define
                 reject(new x.Exception("None of startup nodes is available"));
             };
 
@@ -529,12 +529,13 @@ Cluster.defaultOptions = {
 
 for (const command of ["sscan", "hscan", "zscan", "sscanBuffer", "hscanBuffer", "zscanBuffer"]) {
     Cluster.prototype[`${command}Stream`] = function (key, options) {
-        return new __.ScanStream(o({
+        return new __.ScanStream({
             objectMode: true,
             key,
             redis: this,
-            command
-        }, options));
+            command,
+            ...options
+        });
     };
 }
 

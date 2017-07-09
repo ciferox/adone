@@ -1,4 +1,4 @@
-const { is, x, util, std, o } = adone;
+const { is, x, util, std } = adone;
 
 export const convertBufferToString = (value, encoding) => {
     if (is.buffer(value)) {
@@ -111,7 +111,7 @@ export const parseURL = (url) => {
         result.port = parsed.port;
     }
 
-    return o(parsed.query, result);
+    return { ...parsed.query, ...result };
 };
 
 export const packObject = (array) => {

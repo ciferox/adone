@@ -61,11 +61,7 @@ describe("collection", function () {
     it("should ensure strict access collection", async () => {
         const { db } = this;
         await assert.throws(async () => {
-            await new Promise((resolve, reject) => {
-                db.collection("does-not-exist", { strict: true }, (err) => {
-                    err ? reject(err) : resolve();
-                });
-            });
+            await db.collection("does-not-exist", { strict: true });
         }, "Collection does-not-exist does not exist. Currently in strict mode.");
         await db.createCollection("test_strict_access_collection");
         const collection = await db.collection("test_strict_access_collection");

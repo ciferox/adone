@@ -143,7 +143,7 @@ export default class Command {
     }
 
     static checkFlag(flagName, commandName) {
-        return Boolean(flagMap[flagName][commandName]);  // eslint-disable-line no-use-before-define
+        return Boolean(flagMap[flagName][commandName]); // eslint-disable-line no-use-before-define
     }
 
     static setArgumentTransformer(name, func) {

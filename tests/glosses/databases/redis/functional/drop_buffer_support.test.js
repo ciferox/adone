@@ -3,14 +3,11 @@ import check from "../helpers/check_redis";
 describe("database", "redis", "dropBufferSupport", { skip: check }, () => {
     const { database: { redis: { Redis } } } = adone;
 
-    afterEach((done) => {
+    afterEach(async () => {
         const redis = new Redis();
-        redis.flushall(() => {
-            redis.script("flush", () => {
-                redis.disconnect();
-                done();
-            });
-        });
+        await redis.flushall();
+        await redis.script("flush");
+        redis.disconnect();
     });
 
     it("should be disabled by default if the parser is javascript", () => {
@@ -23,125 +20,90 @@ describe("database", "redis", "dropBufferSupport", { skip: check }, () => {
         expect(redis.options).to.have.property("dropBufferSupport", true);
     });
 
-    it("should return strings correctly", (done) => {
+    it("should return strings correctly", async () => {
         const redis = new Redis({ dropBufferSupport: false });
-        redis.set("foo", new Buffer("bar"), (err, res) => {
-            expect(err).to.eql(null);
-            expect(res).to.eql("OK");
-            redis.get("foo", (err, res) => {
-                expect(err).to.eql(null);
-                expect(res).to.eql("bar");
-                redis.disconnect();
-                done();
-            });
-        });
+        expect(await redis.set("foo", Buffer.from("bar"))).to.be.equal("OK");
+        expect(await redis.get("foo")).to.be.equal("bar");
+        redis.disconnect();
     });
 
     context("enabled", () => {
-        it("should reject the buffer commands", (done) => {
+        it("should reject the buffer commands", async () => {
             const redis = new Redis({ dropBufferSupport: true });
-            redis.getBuffer("foo", (err) => {
-                expect(err.message).to.match(/Buffer methods are not available/);
-
-                redis.callBuffer("get", "foo", (err) => {
-                    expect(err.message).to.match(/Buffer methods are not available/);
-                    redis.disconnect();
-                    done();
-                });
-            });
+            await assert.throws(async () => {
+                await redis.getBuffer("foo");
+            }, "Buffer methods are not available");
+            await assert.throws(async () => {
+                await redis.callBuffer("get", "foo");
+            }, "Buffer methods are not available");
+            redis.disconnect();
         });
 
-        it("should reject the custom buffer commands", (done) => {
+        it("should reject the custom buffer commands", async () => {
             const redis = new Redis({ dropBufferSupport: true });
             redis.defineCommand("geteval", {
                 numberOfKeys: 0,
                 lua: "return \"string\""
             });
-            redis.getevalBuffer((err) => {
-                expect(err.message).to.match(/Buffer methods are not available/);
-                redis.disconnect();
-                done();
-            });
+            await assert.throws(async () => {
+                await redis.getevalBuffer();
+            }, "Buffer methods are not available");
+            redis.disconnect();
         });
 
-        it("should return strings correctly", (done) => {
+        it("should return strings correctly", async () => {
             const redis = new Redis({ dropBufferSupport: true });
-            redis.set("foo", new Buffer("bar"), (err, res) => {
-                expect(err).to.eql(null);
-                expect(res).to.eql("OK");
-                redis.get("foo", (err, res) => {
-                    expect(err).to.eql(null);
-                    expect(res).to.eql("bar");
-                    redis.disconnect();
-                    done();
-                });
-            });
+            expect(await redis.set("foo", Buffer.from("bar"))).to.be.equal("OK");
+            expect(await redis.get("foo")).to.be.equal("bar");
+            redis.disconnect();
         });
 
-        it("should return strings for custom commands", (done) => {
+        it("should return strings for custom commands", async () => {
             const redis = new Redis({ dropBufferSupport: true });
             redis.defineCommand("geteval", {
                 numberOfKeys: 0,
                 lua: "return \"string\""
             });
-            redis.geteval((err, res) => {
-                expect(err).to.eql(null);
-                expect(res).to.eql("string");
-                redis.disconnect();
-                done();
-            });
+            expect(await redis.geteval()).to.be.equal("string");
+            redis.disconnect();
         });
 
-        it("should work with pipeline", (done) => {
+        it("should work with pipeline", async () => {
             const redis = new Redis({ dropBufferSupport: true });
             const pipeline = redis.pipeline();
             pipeline.set("foo", "bar");
-            pipeline.get(new Buffer("foo"));
-            pipeline.exec((err, res) => {
-                expect(err).to.eql(null);
-                expect(res[0][1]).to.eql("OK");
-                expect(res[1][1]).to.eql("bar");
-                redis.disconnect();
-                done();
-            });
+            pipeline.get(Buffer.from("foo"));
+            expect(await pipeline.exec()).to.be.deep.equal([
+                [null, "OK"],
+                [null, "bar"]
+            ]);
+            redis.disconnect();
         });
 
-        it("should work with transaction", (done) => {
+        it("should work with transaction", async () => {
             const redis = new Redis({ dropBufferSupport: true });
-            redis.multi()
-                .set("foo", "bar")
-                .get("foo")
-                .exec((err, res) => {
-                    expect(err).to.eql(null);
-                    expect(res[0][1]).to.eql("OK");
-                    expect(res[1][1]).to.eql("bar");
-                    redis.disconnect();
-                    done();
-                });
+            expect(await redis.multi().set("foo", "bar").get("foo").exec()).to.be.deep.equal([
+                [null, "OK"],
+                [null, "bar"]
+            ]);
+            redis.disconnect();
         });
 
-        it("should fail early with Buffer transaction", (done) => {
+        it("should fail early with Buffer transaction", async () => {
             const redis = new Redis({ dropBufferSupport: true });
-            redis.multi()
-                .set("foo", "bar")
-                .getBuffer(new Buffer("foo"), (err) => {
-                    expect(err.message).to.match(/Buffer methods are not available/);
-                    redis.disconnect();
-                    done();
-                });
+            await assert.throws(async () => {
+                await redis.multi().set("foo", "bar").getBuffer(Buffer.from("foo"));
+            }, "Buffer methods are not available");
+            redis.disconnect();
         });
 
-        it("should work with internal select command", (done) => {
+        it("should work with internal select command", async () => {
             const redis = new Redis({ dropBufferSupport: true, db: 1 });
             const check = new Redis({ db: 1 });
-            redis.set("foo", "bar", () => {
-                check.get("foo", (err, res) => {
-                    expect(res).to.eql("bar");
-                    redis.disconnect();
-                    check.disconnect();
-                    done();
-                });
-            });
+            await redis.set("foo", "bar");
+            expect(await check.get("foo")).to.be.equal("bar");
+            redis.disconnect();
+            check.disconnect();
         });
     });
 });

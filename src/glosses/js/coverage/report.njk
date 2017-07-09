@@ -104,6 +104,11 @@
             padding-left: 10px;
             text-align: left;
         }
+        #treeContainer {
+            display: inline-block;
+            float: left;
+            width: 20%;
+        }
     </style>
 </head>
 <body>
@@ -122,7 +127,7 @@
                 {% endif %}
             {% endfor %}
         {% endmacro %}
-        <div style="display: inline-block; float: left; width: 20%">
+        <div id="treeContainer">
             <ol id="tree" class="tree">
                 {{ directory(tree) }}
             </ol>
@@ -156,13 +161,30 @@
         <pre><code class="js" id="contentsContainer">{{ content }}</code></pre>
     </div>
     <script>
+        const entityMap = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+            '/': '&#x2F;',
+            '`': '&#x60;',
+            '=': '&#x3D;'
+        };
+
+        const escapeHTML =  (string) => {
+            return String(string).replace(/[&<>"'`=\/]/g, function (s) {
+                return entityMap[s];
+            });
+        };
+
         const load = (index) => fetch(`/get/${index}`).then((response) => {
             if (response.status !== 200) {
                 throw new Error(response.status);
             }
             return response.json();
         }).then(({ text, stats, lines, rawStats, filename }) => {
-            contentsContainer.innerHTML = text;
+            contentsContainer.innerHTML = escapeHTML(text);
             filenameContainer.innerHTML = filename;
             functionCoverageContainer.innerHTML = `${stats.function.passed} / ${stats.function.total} : ${stats.function.percent.toFixed(2)}%`;
             branchCoverageContainer.innerHTML = `${stats.branch.passed} / ${stats.branch.total} : ${stats.branch.percent.toFixed(2)}%`;

@@ -373,6 +373,25 @@ class Core extends adone.EventEmitter {
         return this.pipe(unstashed);
     }
 
+    flatten() {
+        const flatten = (stream, arr) => {
+            for (const i of arr) {
+                if (!is.array(i)) {
+                    stream.push(i);
+                } else {
+                    flatten(stream, i);
+                }
+            }
+        };
+        return this.through(function (data) {
+            if (!is.array(data)) {
+                this.push(data);
+                return;
+            }
+            flatten(this, data);
+        });
+    }
+
     // promise api
 
     then(onResolve, onReject) {

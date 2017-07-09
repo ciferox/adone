@@ -3,74 +3,63 @@ import check from "../helpers/check_redis";
 describe("database", "redis", "monitor", { skip: check }, () => {
     const { database: { redis: { Redis } } } = adone;
 
-    afterEach((done) => {
+    afterEach(async () => {
         const redis = new Redis();
-        redis.flushall(() => {
-            redis.script("flush", () => {
-                redis.disconnect();
-                done();
-            });
-        });
+        await redis.flushall();
+        await redis.script("flush");
+        redis.disconnect();
     });
 
-    it("should receive commands", (done) => {
+    const waitFor = (emitter, e) => new Promise((resolve) => emitter.once(e, resolve));
+
+    it("should receive commands", async () => {
         const redis = new Redis();
-        redis.monitor((err, monitor) => {
-            monitor.on("monitor", (time, args) => {
-                expect(args[0]).to.eql("get");
-                expect(args[1]).to.eql("foo");
-                redis.disconnect();
-                monitor.disconnect();
-                done();
-            });
-            redis.get("foo");
-        });
+        const monitor = await redis.monitor();
+        const onMonitor = spy();
+        monitor.on("monitor", onMonitor);
+        const monitorCall = onMonitor.waitForCall();
+        await redis.get("foo");
+        await monitorCall;
+        expect(onMonitor).to.have.been.calledWith(match.any, ["get", "foo"]);
+        monitor.disconnect();
+        redis.disconnect();
     });
 
-    it("should reject processing commands", (done) => {
+    it("should reject processing commands", async () => {
         const redis = new Redis();
-        redis.monitor((err, monitor) => {
-            monitor.get("foo", (err) => {
-                expect(err.message).to.match(/Connection is in monitoring mode/);
-                redis.disconnect();
-                monitor.disconnect();
-                done();
-            });
-        });
+        const monitor = await redis.monitor();
+        await assert.throws(async () => {
+            await monitor.get("foo");
+        }, "Connection is in monitoring mode");
+        redis.disconnect();
+        monitor.disconnect();
     });
 
-    it("should continue monitoring after reconnection", (done) => {
+    it("should continue monitoring after reconnection", async () => {
         const redis = new Redis();
-        redis.monitor((err, monitor) => {
-            monitor.on("monitor", (time, args) => {
-                if (args[0] === "set") {
-                    redis.disconnect();
-                    monitor.disconnect();
-                    done();
-                }
-            });
-            monitor.disconnect(true);
-            monitor.on("ready", () => {
-                redis.set("foo", "bar");
-            });
+        const monitor = await redis.monitor();
+        const onMonitor = spy();
+        monitor.on("monitor", onMonitor);
+        monitor.disconnect(true);
+        monitor.on("ready", () => {
+            redis.set("foo", "bar");
         });
+        await onMonitor.waitForCall();
+        expect(onMonitor).to.have.been.calledWith(match.any, ["set", "foo", "bar"]);
+        redis.disconnect();
+        monitor.disconnect();
     });
 
-    it("should wait for the ready event before monitoring", (done) => {
+    it("should wait for the ready event before monitoring", async () => {
         const redis = new Redis();
-        redis.on("ready", () => {
-            let ready;
-            stub(Redis.prototype, "_readyCheck").callsFake(function check(...args) {
-                ready = true;
-                Redis.prototype._readyCheck.restore();
-                Redis.prototype._readyCheck.apply(this, args);
-            });
-            redis.monitor((err, monitor) => {
-                expect(ready).to.eql(true);
-                redis.disconnect();
-                monitor.disconnect();
-                done();
-            });
+        await waitFor(redis, "ready");
+        const readyCheck = stub(Redis.prototype, "_readyCheck").callsFake(function (...args) {
+            Redis.prototype._readyCheck.restore();
+            Redis.prototype._readyCheck.apply(this, args);
         });
+        const monitor = await redis.monitor();
+        expect(readyCheck).to.have.been.called;
+        redis.disconnect();
+        monitor.disconnect();
     });
 });

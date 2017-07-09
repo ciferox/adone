@@ -1831,7 +1831,11 @@ export const simpleReporter = ({
                     log("{red-fg}- actual{/red-fg} {green-fg}+ expected{/green-fg}\n");
                     let msg = "";
                     for (let i = 0; i < diff.length; i++) {
-                        let value = adone.text.splitLines(diff[i].value);
+                        let value = diff[i].value;
+                        if (!is.string(value)) {
+                            value = adone.meta.inspect(diff[i].value, { minimal: true });
+                        }
+                        value = adone.text.splitLines(value);
 
                         if (value[value.length - 1]) {
                             if (i < diff.length - 1) {
@@ -1883,8 +1887,15 @@ export const simpleReporter = ({
                                 )
                             ) {
                                 printColorDiff(adone.diff.lines(err.actual, err.expected));
-                            } else if (adone.is.sameType(err.expected, err.actual)) {
+                            } else if (adone.is.array(err.expected) && adone.is.array(err.actual)) {
+                                printColorDiff(adone.diff.arrays(err.actual, err.expected));
+                            } else if (adone.is.plainObject(err.expected) && adone.is.plainObject(err.actual)) {
                                 printColorDiff(adone.diff.json(err.actual, err.expected));
+                            } else {
+                                printColorDiff([
+                                    { removed: true, value: adone.meta.inspect(err.actual, { minimal: true }) },
+                                    { added: true, value: adone.meta.inspect(err.expected, { minimal: true }) }
+                                ]);
                             }
                         }
                         if (adone.is.string(err.stack)) {

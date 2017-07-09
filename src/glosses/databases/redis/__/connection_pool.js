@@ -1,4 +1,4 @@
-const { database: { redis }, EventEmitter, o, noop, util, is, x } = adone;
+const { database: { redis }, EventEmitter, noop, util, is, x } = adone;
 const { __ } = redis;
 
 const setKey = (node = {}) => {
@@ -27,7 +27,7 @@ export default class ConnectionPool extends EventEmitter {
         readOnly = Boolean(readOnly);
 
         if (this.specifiedOptions[node.key]) {
-            o(node, this.specifiedOptions[node.key]);
+            Object.assign(node, this.specifiedOptions[node.key]);
         } else {
             this.specifiedOptions[node.key] = node;
         }
@@ -47,11 +47,13 @@ export default class ConnectionPool extends EventEmitter {
                 }
             }
         } else {
-            instance = new redis.Redis(o({
+            instance = new redis.Redis({
                 retryStrategy: null,
                 readOnly,
-                lazyConnect: true
-            }, this.redisOptions, node));
+                lazyConnect: true,
+                ...this.redisOptions,
+                ...node
+            });
             this.nodes.all[node.key] = instance;
             this.nodes[readOnly ? "slave" : "master"][node.key] = instance;
 
@@ -80,9 +82,9 @@ export default class ConnectionPool extends EventEmitter {
         for (const node of nodes) {
             let options = {};
             if (is.object(node)) {
-                options = o(node, options);
+                options = { ...node, ...options };
             } else if (is.string(node)) {
-                options = o(__.util.parseURL(node), options);
+                options = { ...__.util.parseURL(node), ...options };
             } else if (is.number(node)) {
                 options.port = node;
             } else {

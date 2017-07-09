@@ -1,4 +1,4 @@
-const { database: { redis: { __ } }, EventEmitter, collection, noop, is, o, x, promise, util, lazify } = adone;
+const { database: { redis: { __ } }, EventEmitter, collection, noop, is, x, promise, util, lazify } = adone;
 
 export default class Redis extends __.Commander.mixin(EventEmitter) {
     constructor(a, b, c) {
@@ -34,13 +34,13 @@ export default class Redis extends __.Commander.mixin(EventEmitter) {
     parseOptions(...args) {
         this.options = {};
         for (const arg of args) {
-            if (is.null(arg) || is.undefined(arg)) {
+            if (is.nil(arg)) {
                 continue;
             }
             if (is.object(arg)) {
-                this.options = o(arg, this.options);
+                this.options = { ...arg, ...this.options };
             } else if (is.string(arg)) {
-                this.options = o(__.util.parseURL(arg), this.options);
+                this.options = { ...__.util.parseURL(arg), ...this.options };
             } else if (is.number(arg)) {
                 this.options.port = arg;
             } else {
@@ -48,7 +48,7 @@ export default class Redis extends __.Commander.mixin(EventEmitter) {
             }
         }
         const _dropBufferSupport = "dropBufferSupport" in this.options;
-        this.options = o(Redis.defaultOptions, this.options);
+        this.options = { ...Redis.defaultOptions, ...this.options };
         if (!_dropBufferSupport) {
             if (this.options.parser !== "javascript") {
                 this.options.dropBufferSupport = true;
@@ -121,7 +121,7 @@ export default class Redis extends __.Commander.mixin(EventEmitter) {
                 }
 
                 const connectionConnectHandler = () => {
-                    this.removeListener("close", connectionCloseHandler);  // eslint-disable-line no-use-before-define
+                    this.removeListener("close", connectionCloseHandler); // eslint-disable-line no-use-before-define
                     resolve();
                 };
 
@@ -154,14 +154,15 @@ export default class Redis extends __.Commander.mixin(EventEmitter) {
     }
 
     duplicate(override = {}) {
-        return new Redis(o(util.clone(this.options), override));
+        return new Redis({ ...util.clone(this.options), ...override });
     }
 
     flushQueue(error, options) {
-        options = o({
+        options = {
             offlineQueue: true,
-            commandQueue: true
-        }, options);
+            commandQueue: true,
+            ...options
+        };
 
         let item;
         if (options.offlineQueue) {
@@ -415,12 +416,13 @@ for (const command of ["scan", "sscan", "hscan", "zscan", "scanBuffer", "sscanBu
             options = key;
             key = null;
         }
-        return new __.ScanStream(o(options, {
+        return new __.ScanStream({
+            ...options,
             objectMode: true,
             key,
             redis: this,
             command
-        }));
+        });
     };
 }
 

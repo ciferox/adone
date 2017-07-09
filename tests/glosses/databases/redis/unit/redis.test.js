@@ -6,6 +6,11 @@ describe("database", "redis", "unit", "Redis", () => {
         it("should parse options correctly", () => {
             stub(Redis.prototype, "connect").returns(Promise.resolve());
 
+            const getOption = (...args) => {
+                const redis = new Redis(...args);
+                return redis.options;
+            };
+
             let option;
             try {
                 option = getOption();
@@ -82,11 +87,6 @@ describe("database", "redis", "unit", "Redis", () => {
                 throw err;
             }
             Redis.prototype.connect.restore();
-
-            function getOption(...args) {
-                const redis = new Redis(...args);
-                return redis.options;
-            }
         });
 
         it("should throw when arguments is invalid", () => {
@@ -104,7 +104,7 @@ describe("database", "redis", "unit", "Redis", () => {
         });
     });
 
-    describe("#flushQueue", () => {
+    describe("flushQueue", () => {
         it("should flush all queues by default", () => {
             const flushQueue = Redis.prototype.flushQueue;
             const redis = {
