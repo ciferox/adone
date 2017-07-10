@@ -290,38 +290,34 @@ describe("net", "http", "helpers", "incoming form", () => {
                     form.hash = "sha1";
                     form.parse(req);
                     const parts = [];
-                    form
-                        .on("error", (err) => {
-                            res.end();
-                            server.close();
-                            done(err);
-                        })
-                        .on("fileBegin", (name, value) => {
-                            parts.push({ type: "file", name, value });
-                        })
-                        .on("field", (name, value) => {
-                            parts.push({ type: "field", name, value });
-                        })
-                        .on("end", () => {
-                            res.end("OK");
-                            server.close();
+                    form.on("error", (err) => {
+                        res.end();
+                        server.close();
+                        done(err);
+                    }).on("fileBegin", (name, value) => {
+                        parts.push({ type: "file", name, value });
+                    }).on("field", (name, value) => {
+                        parts.push({ type: "field", name, value });
+                    }).on("end", () => {
+                        res.end("OK");
+                        server.close();
 
-                            expect(parts.length).to.be.equal(expected.length);
+                        expect(parts.length).to.be.equal(expected.length);
 
-                            for (let i = 0; i < expected.length; ++i) {
-                                expect(parts[i].name).to.be.equal(expected[i].name);
-                                expect(parts[i].type).to.be.equal(expected[i].type);
-                                if (expected[i].type === "file") {
-                                    const file = parts[i].value;
-                                    expect(file.name).to.be.equal(expected[i].filename);
-                                    if (expected[i].sha1) {
-                                        expect(file.hash).to.be.equal(expected[i].sha1);
-                                    }
+                        for (let i = 0; i < expected.length; ++i) {
+                            expect(parts[i].name).to.be.equal(expected[i].name);
+                            expect(parts[i].type).to.be.equal(expected[i].type);
+                            if (expected[i].type === "file") {
+                                const file = parts[i].value;
+                                expect(file.name).to.be.equal(expected[i].filename);
+                                if (expected[i].sha1) {
+                                    expect(file.hash).to.be.equal(expected[i].sha1);
                                 }
                             }
+                        }
 
-                            done();
-                        });
+                        done();
+                    });
                 });
 
                 server.listen(0, "127.0.0.1", () => {

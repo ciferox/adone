@@ -3,11 +3,11 @@ const { server: { helper } } = http;
 
 const lazy = lazify({
     Layer: "./layer"
-}, null, require);
+}, exports, require);
 
 const methods = METHODS.map((x) => x.toLowerCase());
 
-class Router {
+export class Router {
     constructor(opts = {}) {
         this.opts = opts;
         this.methods = this.opts.methods || [
@@ -292,16 +292,6 @@ class Router {
     }
 }
 
-export default function router(...args) {
-    return new Router(...args);
-}
-router.Router = Router;
-
-lazify({
-    Layer: () => lazy.Layer
-}, router);
-
-
 for (const method of methods) {
     Router.prototype[method] = function (name, path, ...middlewares) {
         if (!is.string(path) && !is.regexp(path)) {
@@ -314,6 +304,3 @@ for (const method of methods) {
         return this;
     };
 }
-
-// Alias for `router.delete()` because delete is a reserved word
-Router.prototype.del = Router.prototype.delete;

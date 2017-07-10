@@ -1,4 +1,4 @@
-const { std: { string_decoder: { StringDecoder }, stream: { Stream }, os, path, crypto }, EventEmitter, is, x, noop, fs, promise } = adone;
+const { std: { string_decoder: { StringDecoder }, stream: { Stream }, os, path, crypto }, EventEmitter, is, x } = adone;
 
 const dummyParser = (self) => {
     return {
@@ -73,30 +73,26 @@ export default class IncomingForm extends EventEmitter {
         if (cb) {
             const fields = {};
             const files = {};
-            this
-                .on("field", (name, value) => {
-                    fields[name] = value;
-                })
-                .on("file", (name, file) => {
-                    if (this.multiples) {
-                        if (files[name]) {
-                            if (!is.array(files[name])) {
-                                files[name] = [files[name]];
-                            }
-                            files[name].push(file);
-                        } else {
-                            files[name] = file;
+            this.on("field", (name, value) => {
+                fields[name] = value;
+            }).on("file", (name, file) => {
+                if (this.multiples) {
+                    if (files[name]) {
+                        if (!is.array(files[name])) {
+                            files[name] = [files[name]];
                         }
+                        files[name].push(file);
                     } else {
                         files[name] = file;
                     }
-                })
-                .on("error", (err) => {
-                    cb(err, fields, files);
-                })
-                .on("end", () => {
-                    cb(null, fields, files);
-                });
+                } else {
+                    files[name] = file;
+                }
+            }).on("error", (err) => {
+                cb(err, fields, files);
+            }).on("end", () => {
+                cb(null, fields, files);
+            });
         }
 
         // Parse headers and setup the parser, ready to start listening for data.
@@ -170,7 +166,7 @@ export default class IncomingForm extends EventEmitter {
     }
 
     handlePart(part) {
-        if (!part.filename) {
+        if (!is.string(part.filename)) {
             let value = "";
             const decoder = new StringDecoder(this.encoding);
 
@@ -490,7 +486,7 @@ export default class IncomingForm extends EventEmitter {
         });
     }
 
-    _initJSONencoded = function () {
+    _initJSONencoded() {
         this.type = "json";
 
         const parser = new IncomingForm.JSONParser(this);
@@ -525,7 +521,7 @@ export default class IncomingForm extends EventEmitter {
         return path.join(this.uploadDir, name);
     }
 
-    _maybeEnd = function () {
+    _maybeEnd() {
         if (!this.ended || this._flushing || this.error) {
             return;
         }

@@ -1,5 +1,4 @@
-
-const { x } = adone;
+const { x, is } = adone;
 
 let s = 0;
 const S = {
@@ -70,7 +69,7 @@ export default class MultipartParser {
 
     write(buffer) {
         const callback = (name, buffer, start, end) => {
-            if (start !== undefined && start === end) {
+            if (!is.undefined(start) && start === end) {
                 return;
             }
 
