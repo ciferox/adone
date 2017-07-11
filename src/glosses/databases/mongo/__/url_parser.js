@@ -1,6 +1,6 @@
 const { is, database: { mongo: { ReadPreference } }, std: { url: parser } } = adone;
 
-export default function parseUrl(url) {
+export default function parseUrl(url, options) {
     let connectionPart = "";
     let authPart = "";
     let queryStringPart = "";
@@ -449,6 +449,9 @@ export default function parseUrl(url) {
     if (!dbOptions.readPreference) {
         dbOptions.readPreference = "primary";
     }
+
+    // make sure that user-provided options are applied with priority
+    Object.assign(dbOptions, options);
 
     // Add servers to result
     object.servers = servers;

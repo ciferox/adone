@@ -76,12 +76,10 @@ export const applyPatch = (source, uniDiff, options = {}) => {
     }
 
     // Apply patch hunks
+    let diffOffset = 0;
     for (const hunk of hunks) {
-        let toPos = hunk.offset + hunk.newStart - 1;
-
-        if (hunk.newLines === 0) {
-            toPos++;
-        }
+        let toPos = hunk.oldStart + hunk.offset + diffOffset - 1;
+        diffOffset += hunk.newLines - hunk.oldLines;
 
         for (let j = 0; j < hunk.lines.length; j++) {
             const line = hunk.lines[j];

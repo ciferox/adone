@@ -563,4 +563,28 @@ describe("schema", "issues", () => {
         });
     });
 
+    describe('issue #533, throwing missing ref exception with option missingRefs: "ignore"', () => {
+        const schema = {
+            type: "object",
+            properties: {
+                foo: { $ref: "#/definitions/missing" },
+                bar: { $ref: "#/definitions/missing" }
+            }
+        };
+
+        it("should pass validation without throwing exception", () => {
+            const instance = new Validator({ missingRefs: "ignore" });
+            const validate = instance.compile(schema);
+            expect(validate({ foo: "anything" })).to.be.true;
+            expect(validate({ foo: "anything", bar: "whatever" })).to.be.true;
+        });
+
+        it("should throw exception during schema compilation with option missingRefs: true", () => {
+            const instance = new Validator();
+            expect(() => {
+                instance.compile(schema);
+            }).throw();
+        });
+    });
+
 });

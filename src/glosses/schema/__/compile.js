@@ -101,6 +101,10 @@ export default function compile(schema, root, localRefs, baseId) {
             : { code, $async: refVal && refVal.$async };
     };
 
+    const removeLocalRef = (ref) => {
+        delete refs[ref];
+    };
+
     const resolveRef = (baseId, ref, isRoot) => {
         ref = __.resolve.url(baseId, ref);
         const refIndex = refs[ref];
@@ -132,7 +136,10 @@ export default function compile(schema, root, localRefs, baseId) {
             }
         }
 
-        if (!is.undefined(v)) {
+        if (is.undefined(v)) {
+
+            removeLocalRef(ref);
+        } else {
             replaceLocalRef(ref, v);
             return resolvedRef(v, refCode);
         }

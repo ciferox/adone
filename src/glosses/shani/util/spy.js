@@ -244,6 +244,9 @@ const proto = {
 
         // Make return value and exception available in the calls:
         createCallProperties.call(this);
+        matchings.forEach((matching) => {
+            createCallProperties.call(matching);
+        });
 
         const call = this.getCall(this.callCount - 1);
         for (let i = 0; i < this.callAwaiters.length; ++i) {

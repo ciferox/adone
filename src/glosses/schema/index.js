@@ -31,7 +31,7 @@ const META_SUPPORT_DATA = ["/properties"];
 
 const defaultSerializer = (data) => adone.data.json.encode(data, { stable: true }).toString("utf8");
 
-const IDENTIFIER = /^[a-z_$][a-z0-9_$\-]*$/i;
+const IDENTIFIER = /^[a-z_$][a-z0-9_$-]*$/i;
 
 const defaultMeta = (self) => {
     const meta = self._opts.meta;

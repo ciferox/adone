@@ -9,9 +9,6 @@ const lazy = lazify({
         adone.appinstance.adoneEtcPath,
         "glosses",
         "notifier",
-        "terminal-notifier.app",
-        "Contents",
-        "MacOS",
         "terminal-notifier"
     )
 });

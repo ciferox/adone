@@ -54,26 +54,21 @@ const xor = (a, b) => {
     return Buffer.from(res);
 };
 
-// Create a final digest
+// hiCache stores previous salt creations so it's not regenerated per-pool member
+const _hiCache = {};
+
 const hi = (data, salt, iterations) => {
-    // Create digest
-    const digest = (msg) => {
-        const hmac = crypto.createHmac("sha1", data);
-        hmac.update(msg);
-        return Buffer.from(hmac.digest("base64"), "base64");
-    };
-
-    // Create variables
-    salt = Buffer.concat([salt, Buffer.from("\x00\x00\x00\x01")]);
-    let ui = digest(salt);
-    let u1 = ui;
-
-    for (let i = 0; i < iterations - 1; i++) {
-        u1 = digest(u1);
-        ui = xor(ui, u1);
+    const key = [data, salt.toString("base64"), iterations].join("_");
+    // check if we've already generated this salt
+    if (!is.undefined(_hiCache[key])) {
+        return _hiCache[key];
     }
 
-    return ui;
+    // generate the salt and store it in the cache for the next worker
+    data = crypto.pbkdf2Sync(data, salt, iterations, 20, "sha1");
+    _hiCache[key] = data;
+
+    return data;
 };
 
 let id = 0;
@@ -218,16 +213,6 @@ export default class ScramSHA1 extends Schema {
                 // Create client final
                 const clientFinal = [withoutProof, clientProof].join(",");
 
-                // Generate server key
-                hmac = crypto.createHmac("sha1", saltedPassword);
-                hmac.update(Buffer.from("Server Key"));
-                const serverKey = Buffer.from(hmac.digest("base64"), "base64");
-
-                // Generate server signature
-                hmac = crypto.createHmac("sha1", serverKey);
-                hmac.update(Buffer.from(authMsg));
-
-                //
                 // Create continue message
                 const cmd = {
                     saslContinue: 1,

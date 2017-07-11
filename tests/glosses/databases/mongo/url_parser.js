@@ -377,4 +377,9 @@ describe("url parser", function () {
         const object = parse("mongodb://kay%3Akay:foo@/tmp/mongodb-27017.sock/somedb?safe=true");
         expect(object.auth.user).to.be.equal("kay:kay");
     });
+
+    it("should use options passed into url parsing", () => {
+        const object = parse("mongodb://localhost/", { readPreference: "secondary" });
+        expect(object.db_options.readPreference).to.be.equal("secondary");
+    });
 });

@@ -61,7 +61,7 @@ describe("data", "yaml", "issues", () => {
     specify("Incorrect utf-8 handling on require('file.yaml') - 54", async () => {
         const file = fixtures.getVirtualFile("0054.yml");
         const data = yaml.safeLoad(await file.content());
-        const expected = "у".repeat(101);  // russian 'у'
+        const expected = "у".repeat(101); // russian 'у'
         expect(data).to.have.lengthOf(41);
         for (const line of data) {
             expect(line).to.be.equal(expected);
@@ -70,9 +70,9 @@ describe("data", "yaml", "issues", () => {
 
     specify("Invalid errors/warnings of invalid indentation on flow scalars - 63", async () => {
         const sources = [
-            "text:\n    hello\n  world",   // plain style
+            "text:\n    hello\n  world", // plain style
             "text:\n    'hello\n  world'", // single-quoted style
-            'text:\n    "hello\n  world"'  // double-quoted style
+            'text:\n    "hello\n  world"' // double-quoted style
         ];
         const expected = { text: "hello world" };
 
@@ -198,7 +198,7 @@ describe("data", "yaml", "issues", () => {
             yaml.load("!!js/regexp /fo/giii");
         }).to.throw();
 
-        const regexp = yaml.load("!!js/regexp /fo/g/g");  // 172
+        const regexp = yaml.load("!!js/regexp /fo/g/g"); // 172
         expect(regexp).to.be.a("regexp");
         expect(regexp.toString()).to.be.equal("/fo\\/g/g");
     });
@@ -351,7 +351,7 @@ describe("data", "yaml", "issues", () => {
             assertFunctionPreserved(fnCollatz,
                 [6, 19],
                 [[6, 3, 10, 5, 16, 8, 4, 2, 1],
-                [19, 58, 29, 88, 44, 22, 11, 34, 17, 52, 26, 13, 40, 20, 10, 5, 16, 8, 4, 2, 1]
+                    [19, 58, 29, 88, 44, 22, 11, 34, 17, 52, 26, 13, 40, 20, 10, 5, 16, 8, 4, 2, 1]
                 ], "Hailstone sequence function");
 
             assertFunctionPreserved(fnRot13,
@@ -465,6 +465,23 @@ describe("data", "yaml", "issues", () => {
                 ["close", 16],
                 ["close", 16]
             ]);
+        });
+    });
+
+    context("346", () => {
+        it("should not emit spaces in arrays in flow mode between entries using condenseFlow: true", () => {
+            expect(yaml.dump(["a", "b"], { flowLevel: 0, indent: 0, condenseFlow: true })).to.be.equal("[a,b]\n");
+        });
+
+        it("should not emit spaces between key: value in objects in flow sequence using condenseFlow: true", () => {
+            expect(yaml.dump({ a: { b: "c" } }, { flowLevel: 0, indent: 0, condenseFlow: true })).to.be.equal("{a:{b:c}}\n");
+        });
+    });
+
+    context("350", () => {
+        it("should allow cast integers as !!float", async () => {
+            const data = yaml.safeLoadAll("---\na: 1\n---\nb: 2", "utf8");
+            expect(data).to.be.deep.equal([{ a: 1 }, { b: 2 }]);
         });
     });
 

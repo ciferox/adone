@@ -45,7 +45,8 @@ const validOptionNames = [
     "domainsEnabled",
     "keepAliveInitialDelay",
     "checkServerIdentity",
-    "validateOptions"
+    "validateOptions",
+    "appname"
 ];
 
 const ignoreOptionNames = ["native_parser"];

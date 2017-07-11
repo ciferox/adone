@@ -14,7 +14,7 @@ export const parsePatch = (uniDiff, options = {}) => {
         if (fileHeader) {
             const keyPrefix = fileHeader[1] === "---" ? "old" : "new";
             let fileName = fileHeader[2].replace(/\\\\/g, "\\");
-            if (fileName.startsWith('"') && fileName.endsWith('"')) {
+            if (/^".*"$/.test(fileName)) {
                 fileName = fileName.substr(1, fileName.length - 2);
             }
             index[`${keyPrefix}FileName`] = fileName;

@@ -101,6 +101,7 @@ class State {
         this.lineWidth = options.lineWidth || 80;
         this.noRefs = options.noRefs || false;
         this.noCompatMode = options.noCompatMode || false;
+        this.condenseFlow = options.condenseFlow || false;
 
         this.implicitTypes = this.schema.compiledImplicit;
         this.explicitTypes = this.schema.compiledExplicit;
@@ -311,7 +312,7 @@ const foldLine = (line, width) => {
             const end = (curr > start) ? curr : next; // derive end <= length-2
             result += `\n${line.slice(start, end)}`;
             // skip the space that was output as \n
-            start = end + 1;                    // derive start <= length-1
+            start = end + 1; // derive start <= length-1
         }
         curr = next;
     }
@@ -454,7 +455,7 @@ const writeFlowSequence = (state, level, object) => {
         // eslint-disable-next-line no-use-before-define
         if (writeNode(state, level, object[i], false, false)) {
             if (i !== 0) {
-                _result += ", ";
+                _result += `,${!state.condenseFlow ? " " : ""}`;
             }
             _result += state.dump;
         }
@@ -510,7 +511,7 @@ const writeFlowMapping = (state, level, object) => {
             pairBuffer += "? ";
         }
 
-        pairBuffer += `${state.dump}: `;
+        pairBuffer += `${state.dump}:${state.condenseFlow ? "" : " "}`;
         // eslint-disable-next-line no-use-before-define
         if (!writeNode(state, level, value, false, false)) {
             continue; // Skip this pair because of invalid value.
@@ -551,7 +552,7 @@ const writeBlockMapping = (state, level, object, compact) => {
             continue; // Skip this pair because of invalid key.
         }
 
-        const explicitPair = (state.tag !== null && state.tag !== "?") ||
+        const explicitPair = (!is.null(state.tag) && state.tag !== "?") ||
             (state.dump && state.dump.length > 1024);
 
         if (explicitPair) {
@@ -648,7 +649,7 @@ const writeNode = (state, level, object, block, compact, iskey) => {
         duplicate = duplicateIndex !== -1;
     }
 
-    if ((state.tag !== null && state.tag !== "?") || duplicate || (state.indent !== 2 && level > 0)) {
+    if ((!is.null(state.tag) && state.tag !== "?") || duplicate || (state.indent !== 2 && level > 0)) {
         compact = false;
     }
 
@@ -693,7 +694,7 @@ const writeNode = (state, level, object, block, compact, iskey) => {
             throw new x.IllegalState(`unacceptable kind of an object to dump ${type}`);
         }
 
-        if (state.tag !== null && state.tag !== "?") {
+        if (!is.null(state.tag) && state.tag !== "?") {
             state.dump = `!<${state.tag}> ${state.dump}`;
         }
     }

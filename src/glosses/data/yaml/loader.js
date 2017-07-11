@@ -11,9 +11,9 @@ const CHOMPING_KEEP = 3;
 
 const PATTERN_NON_PRINTABLE = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x84\x86-\x9F\uFFFE\uFFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:[^\uD800-\uDBFF]|^)[\uDC00-\uDFFF]/;
 const PATTERN_NON_ASCII_LINE_BREAKS = /[\x85\u2028\u2029]/;
-const PATTERN_FLOW_INDICATORS = /[,\[\]\{\}]/;
-const PATTERN_TAG_HANDLE = /^(?:!|!!|![a-z\-]+!)$/i;
-const PATTERN_TAG_URI = /^(?:!|[^,\[\]\{\}])(?:%[0-9a-f]{2}|[0-9a-z\-#;\/\?:@&=\+\$,_\.!~\*'\(\)\[\]])*$/i;
+const PATTERN_FLOW_INDICATORS = /[,[\]{}]/;
+const PATTERN_TAG_HANDLE = /^(?:!|!!|![a-z-]+!)$/i;
+const PATTERN_TAG_URI = /^(?:!|[^,[\]{}])(?:%[0-9a-f]{2}|[0-9a-z\-#;/?:@&=+$,_.!~*'()[\]])*$/i;
 
 const isEOL = (c) => c === 0x0A/* LF */ || c === 0x0D/* CR */;
 
@@ -50,13 +50,13 @@ const fromHexCode = (c) => {
 
 const escapedHexLen = (c) => {
     switch (c) {
-        case 0x78: {  /* x */
+        case 0x78: { /* x */
             return 2;
         }
-        case 0x75: {  /* u */
+        case 0x75: { /* u */
             return 4;
         }
-        case 0x55: {  /* U */
+        case 0x55: { /* U */
             return 8;
         }
         default: {
@@ -69,58 +69,58 @@ const fromDecimalCode = (c) => c/* 0 */ >= 0x30 && c <= 0x39/* 9 */ ? c - 0x30 :
 
 const simpleEscapeSequence = (c) => {
     switch (c) {
-        case 0x30: {  /* 0 */
+        case 0x30: { /* 0 */
             return "\x00";
         }
-        case 0x61: {  /* a */
+        case 0x61: { /* a */
             return "\x07";
         }
-        case 0x62: {  /* b */
+        case 0x62: { /* b */
             return "\x08";
         }
-        case 0x74: {  /* t */
+        case 0x74: { /* t */
             return "\x09";
         }
-        case 0x09: {  /* Tab */
+        case 0x09: { /* Tab */
             return "\x09";
         }
-        case 0x6E: {  /* n */
+        case 0x6E: { /* n */
             return "\x0A";
         }
-        case 0x76: {  /* v */
+        case 0x76: { /* v */
             return "\x0B";
         }
-        case 0x66: {  /* f */
+        case 0x66: { /* f */
             return "\x0C";
         }
-        case 0x72: {  /* r */
+        case 0x72: { /* r */
             return "\x0D";
         }
-        case 0x65: {  /* e */
+        case 0x65: { /* e */
             return "\x1B";
         }
-        case 0x20: {  /*; Space */
+        case 0x20: { /*; Space */
             return " ";
         }
-        case 0x22: {  /* " */
+        case 0x22: { /* " */
             return "\x22";
         }
-        case 0x2F: {  /* /; */
+        case 0x2F: { /* /; */
             return "/";
         }
-        case 0x5C: {  /* \ */
+        case 0x5C: { /* \ */
             return "\x5C";
         }
-        case 0x4E: {  /* N */
+        case 0x4E: { /* N */
             return "\x85";
         }
-        case 0x5F: {  /* _ */
+        case 0x5F: { /* _ */
             return "\xA0";
         }
-        case 0x4C: {  /* L */
+        case 0x4C: { /* L */
             return "\u2028";
         }
-        case 0x50: {  /* P */
+        case 0x50: { /* P */
             return "\u2029";
         }
         default: {
@@ -1279,7 +1279,7 @@ const composeNode = (state, parentIndent, nodeContext, allowToSeek, allowCompact
     const allowBlockStyles = CONTEXT_BLOCK_OUT === nodeContext || CONTEXT_BLOCK_IN === nodeContext;
     const allowBlockScalars = allowBlockStyles;
     let allowBlockCollections = allowBlockStyles;
-    let indentStatus = 1;  // 1: this>parent, 0: this=parent, -1: this<parent
+    let indentStatus = 1; // 1: this>parent, 0: this=parent, -1: this<parent
     let atNewLine = false;
 
 
@@ -1518,8 +1518,6 @@ const readDocument = (state) => {
 
     if (state.position < (state.length - 1)) {
         throwError(state, "end of the stream or a document separator is expected");
-    } else {
-        return;
     }
 };
 
@@ -1563,6 +1561,10 @@ const loadDocuments = (input, options = {}) => {
 export const loadAll = (input, iterator, options) => {
     const documents = loadDocuments(input, options);
 
+    if (!is.function(iterator)) {
+        return documents;
+    }
+
     for (const doc of documents) {
         iterator(doc);
     }
@@ -1583,14 +1585,14 @@ export const load = (input, options) => {
 
 
 export const safeLoadAll = (input, output, options) => {
-    loadAll(
-        input,
-        output,
-        Object.assign({ schema: adone.data.yaml.schema.DEFAULT_FULL }, options)
-    );
+    if (is.function(output)) {
+        loadAll(input, output, { schema: yaml.schema.DEFAULT_FULL, ...options });
+    } else {
+        return loadAll(input, { schema: yaml.schema.DEFAULT_FULL, ...options });
+    }
 };
 
 
 export const safeLoad = (input, options) => {
-    return load(input, Object.assign({ schema: adone.data.yaml.schema.DEFAULT_SAFE }, options));
+    return load(input, Object.assign({ schema: yaml.schema.DEFAULT_SAFE }, options));
 };

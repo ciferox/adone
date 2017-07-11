@@ -140,7 +140,7 @@ export const cleanUpCode = (out) => {
 };
 
 
-const ERRORS_REGEXP = /[^v\.]errors/g;
+const ERRORS_REGEXP = /[^v.]errors/g;
 const REMOVE_ERRORS = /var errors = 0;|var vErrors = null;|validate.errors = vErrors;/g;
 const REMOVE_ERRORS_ASYNC = /var errors = 0;|var vErrors = null;/g;
 const RETURN_VALID = "return errors === 0;";

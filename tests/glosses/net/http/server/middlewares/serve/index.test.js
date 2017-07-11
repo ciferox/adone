@@ -106,6 +106,19 @@ describe("net", "http", "server", "middlewares", "serve", () => {
                         .get("/world/")
                         .expectStatus(404);
                 });
+
+                it("should pass to downstream if 404", async () => {
+                    const server = new Server();
+
+                    server.use(serve("fixtures", { index: false }));
+                    server.use(async (ctx) => {
+                        ctx.body = "oh no";
+                    });
+
+                    await request(server)
+                        .get("/world/")
+                        .expectBody("oh no");
+                });
             });
         });
 

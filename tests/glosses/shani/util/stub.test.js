@@ -97,6 +97,15 @@ describe("shani", "util", "stub", () => {
         assert.equal(stub(2), 0);
     });
 
+    it("should work with combination of withArgs arguments", () => {
+        const stub = createStub();
+
+        stub.withArgs(1).returns(42);
+        stub(1);
+
+        assert.isNotNull(stub.withArgs(1).firstCall);
+    });
+
     describe(".returns", () => {
         it("returns specified value", () => {
             const stub = createStub.create();
