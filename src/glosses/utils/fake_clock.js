@@ -362,6 +362,10 @@ export const createClock = (now, loopLimit) => {
         return clearTimer(clock, timerId, "Immediate");
     };
 
+    const updateHrTime = (newNow) => {
+        clock.hrNow += (newNow - clock.now);
+    };
+
     clock.tick = (ms) => {
         ms = is.number(ms) ? ms : parseTime(ms);
         let tickFrom = clock.now;
@@ -373,10 +377,6 @@ export const createClock = (now, loopLimit) => {
 
         clock.duringTick = true;
 
-        const updateHrTime = (newNow) => {
-            clock.hrNow += (newNow - clock.now);
-        };
-
         while (timer && tickFrom <= tickTo) {
             if (clock.timers[timer.id]) {
                 updateHrTime(timer.callAt);
@@ -385,14 +385,14 @@ export const createClock = (now, loopLimit) => {
                 try {
                     oldNow = clock.now;
                     callTimer(clock, timer);
-                    // compensate for any setSystemTime() call during timer callback
-                    if (oldNow !== clock.now) {
-                        tickFrom += clock.now - oldNow;
-                        tickTo += clock.now - oldNow;
-                        previous += clock.now - oldNow;
-                    }
                 } catch (e) {
                     firstException = firstException || e;
+                }
+                // compensate for any setSystemTime() call during timer callback
+                if (oldNow !== clock.now) {
+                    tickFrom += clock.now - oldNow;
+                    tickTo += clock.now - oldNow;
+                    previous += clock.now - oldNow;
                 }
             }
 
@@ -419,6 +419,7 @@ export const createClock = (now, loopLimit) => {
 
         clock.duringTick = true;
         try {
+            updateHrTime(timer.callAt);
             clock.now = timer.callAt;
             callTimer(clock, timer);
             return clock.now;
@@ -518,7 +519,7 @@ export const install = (...args) => {
         ({
             target = null,
             now = now,
-            methods: methods = methods,
+            toFake: methods = methods,
             loopLimit = loopLimit
         } = args[0]);
     }

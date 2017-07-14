@@ -28,7 +28,7 @@ describe("util", "fakeClock", () => {
     describe("issue #73", () => {
         it("should install with date object", () => {
             const date = new Date("2015-09-25");
-            const clock = fakeClock.install(date);
+            const clock = fakeClock.install({ now: date });
             assert.equal(clock.now, 1443139200000);
             clock.uninstall();
         });
@@ -287,7 +287,7 @@ describe("util", "fakeClock", () => {
 
         describe("tick", () => {
             beforeEach(function () {
-                this.clock = fakeClock.install(0);
+                this.clock = fakeClock.install({ now: 0 });
             });
 
             afterEach(function () {
@@ -619,11 +619,73 @@ describe("util", "fakeClock", () => {
                 const value = clock.tick(200);
                 assert.equal(clock.now, value);
             });
+
+            it("is not influenced by forward system clock changes", function () {
+                const clock = this.clock;
+                const callback = function () {
+                    clock.setSystemTime((new clock.Date()).getTime() + 1000);
+                };
+                const s = stub();
+                clock.setTimeout(callback, 1000);
+                clock.setTimeout(s, 2000);
+                clock.tick(1990);
+                assert.equal(s.callCount, 0);
+                clock.tick(20);
+                assert.equal(s.callCount, 1);
+            });
+
+            it("is not influenced by forward system clock changes", function () {
+                const clock = this.clock;
+                const callback = function () {
+                    clock.setSystemTime((new clock.Date()).getTime() - 1000);
+                };
+                const s = stub();
+                clock.setTimeout(callback, 1000);
+                clock.setTimeout(s, 2000);
+                clock.tick(1990);
+                assert.equal(s.callCount, 0);
+                clock.tick(20);
+                assert.equal(s.callCount, 1);
+            });
+
+            it("is not influenced by forward system clock changes when an error is thrown", function () {
+                const clock = this.clock;
+                const callback = function () {
+                    clock.setSystemTime((new clock.Date()).getTime() + 1000);
+                    throw new Error();
+                };
+                const s = stub();
+                clock.setTimeout(callback, 1000);
+                clock.setTimeout(s, 2000);
+                assert.throws(() => {
+                    clock.tick(1990);
+                });
+                assert.equal(s.callCount, 0);
+                clock.tick(20);
+                assert.equal(s.callCount, 1);
+            });
+
+            it("is not influenced by forward system clock changes when an error is thrown", function () {
+                const clock = this.clock;
+                const callback = function () {
+                    clock.setSystemTime((new clock.Date()).getTime() - 1000);
+                    throw new Error();
+                };
+                const s = stub();
+                clock.setTimeout(callback, 1000);
+                clock.setTimeout(s, 2000);
+                assert.throws(() => {
+                    clock.tick(1990);
+                });
+                assert.equal(s.callCount, 0);
+                clock.tick(20);
+                assert.equal(s.callCount, 1);
+            });
         });
 
         describe("next", () => {
             beforeEach(function () {
-                this.clock = fakeClock.install(0);
+                this.clock = fakeClock.install({ now: 0 });
             });
 
             afterEach(function () {
@@ -882,7 +944,7 @@ describe("util", "fakeClock", () => {
             });
 
             it("the loop limit can be set when installing a clock", function () {
-                this.clock = fakeClock.install(0, { loopLimit: 1 });
+                this.clock = fakeClock.install({ loopLimit: 1 });
                 const test = this;
 
                 const spies = [spy(), spy()];
@@ -1460,7 +1522,7 @@ describe("util", "fakeClock", () => {
             });
 
             it("sets initial timestamp", function () {
-                this.clock = fakeClock.install(1400);
+                this.clock = fakeClock.install({ now: 1400 });
 
                 assert.equal(this.clock.now, 1400);
             });
@@ -1589,7 +1651,7 @@ describe("util", "fakeClock", () => {
                         delete global.tick;
                         Object.getPrototypeOf(global).tick = function () { };
 
-                        this.clock = fakeClock.install(0, ["tick"]);
+                        this.clock = fakeClock.install({ now: 0, toFake: ["tick"] });
                         assert.isTrue(global.hasOwnProperty("tick"));
                         this.clock.uninstall();
 
@@ -1605,7 +1667,7 @@ describe("util", "fakeClock", () => {
                 // Directly give the global object a tick method
                 global.tick = noop;
 
-                this.clock = fakeClock.install(0, ["tick"]);
+                this.clock = fakeClock.install({ now: 0, toFake: ["tick"] });
                 assert.isTrue(global.hasOwnProperty("tick"));
                 this.clock.uninstall();
 
@@ -1614,7 +1676,7 @@ describe("util", "fakeClock", () => {
             });
 
             it("fakes Date constructor", function () {
-                this.clock = fakeClock.install(0);
+                this.clock = fakeClock.install({ now: 0 });
                 const now = new Date();
 
                 assert.notDeepEqual(Date, fakeClock.timers.Date);
@@ -1622,7 +1684,7 @@ describe("util", "fakeClock", () => {
             });
 
             it("fake Date constructor should mirror Date's properties", function () {
-                this.clock = fakeClock.install(0);
+                this.clock = fakeClock.install({ now: 0 });
 
                 assert(Boolean(Date.parse));
                 assert(Boolean(Date.UTC));
@@ -1630,14 +1692,14 @@ describe("util", "fakeClock", () => {
 
             it("decide on Date.now support at call-time when supported", function () {
                 global.Date.now = noop;
-                this.clock = fakeClock.install(0);
+                this.clock = fakeClock.install({ now: 0 });
 
                 assert.equal(typeof Date.now, "function");
             });
 
             it("decide on Date.now support at call-time when unsupported", function () {
                 global.Date.now = undefined;
-                this.clock = fakeClock.install(0);
+                this.clock = fakeClock.install({ now: 0 });
 
                 assert.isUndefined(Date.now);
             });
@@ -1653,21 +1715,21 @@ describe("util", "fakeClock", () => {
             });
 
             it("uninstalls Date constructor", function () {
-                this.clock = fakeClock.install(0);
+                this.clock = fakeClock.install({ now: 0 });
                 this.clock.uninstall();
 
                 assert.deepEqual(GlobalDate, fakeClock.timers.Date);
             });
 
             it("fakes provided methods", function () {
-                this.clock = fakeClock.install(0, ["setTimeout", "Date", "setImmediate"]);
+                this.clock = fakeClock.install({ now: 0, toFake: ["setTimeout", "Date", "setImmediate"] });
 
                 assert.notDeepEqual(setTimeout, fakeClock.timers.setTimeout);
                 assert.notDeepEqual(Date, fakeClock.timers.Date);
             });
 
             it("resets faked methods", function () {
-                this.clock = fakeClock.install(0, ["setTimeout", "Date", "setImmediate"]);
+                this.clock = fakeClock.install({ now: 0, toFake: ["setTimeout", "Date", "setImmediate"] });
                 this.clock.uninstall();
 
                 assert.deepEqual(setTimeout, fakeClock.timers.setTimeout);
@@ -1675,7 +1737,7 @@ describe("util", "fakeClock", () => {
             });
 
             it("does not fake methods not provided", function () {
-                this.clock = fakeClock.install(0, ["setTimeout", "Date", "setImmediate"]);
+                this.clock = fakeClock.install({ now: 0, toFake: ["setTimeout", "Date", "setImmediate"] });
 
                 assert.deepEqual(clearTimeout, fakeClock.timers.clearTimeout);
                 assert.deepEqual(setInterval, fakeClock.timers.setInterval);
@@ -1719,6 +1781,18 @@ describe("util", "fakeClock", () => {
                 const result = clock.hrtime(prev);
                 assert.deepEqual(result[0], 0);
                 assert.deepEqual(result[1], 0);
+            });
+
+            it("should move with timeouts", () => {
+                const clock = fakeClock.createClock();
+                let result = clock.hrtime();
+                assert.equal(result[0], 0);
+                assert.equal(result[1], 0);
+                clock.setTimeout(() => { }, 1000);
+                clock.runAll();
+                result = clock.hrtime();
+                assert.equal(result[0], 1);
+                assert.equal(result[1], 0);
             });
         });
     });

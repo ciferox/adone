@@ -1,7 +1,7 @@
 const {
     EventEmitter, is, x, util,
     database: { mysql: { __, c } },
-    std: { net, tls, stream: { Readable } },
+    std: { net, tls, stream: { Readable } }
 } = adone;
 const { packet } = __;
 
@@ -70,7 +70,7 @@ export default class Connection extends EventEmitter {
 
         this.clientEncoding = c.charsetEncoding[this.config.charsetNumber];
 
-        this.stream.once("error", (err) => this._handleNetworkError(err));
+        this.stream.on("error", (err) => this._handleNetworkError(err));
 
         // see https://gist.github.com/khoomeister/4985691#use-that-instead-of-bind
         this.packetParser = new __.PacketParser((p) => {
@@ -103,11 +103,17 @@ export default class Connection extends EventEmitter {
         if (!this.config.isServer) {
             handshakeCommand = new __.command.ClientHandshake(this.config.clientFlags);
             handshakeCommand.on("end", () => {
+                // this happens when handshake finishes early and first packet is error
+                // and not server hello ( for example, 'Too many connactions' error)
+                if (!handshakeCommand.handshake) {
+                    return;
+                }
                 this._handshakePacket = handshakeCommand.handshake;
                 this.threadId = handshakeCommand.handshake.connectionId;
                 this.emit("connect", handshakeCommand.handshake);
             });
             handshakeCommand.on("error", (err) => {
+                this._closing = true;
                 this._notifyError(err);
             });
             this.addCommand(handshakeCommand);
@@ -183,7 +189,16 @@ export default class Connection extends EventEmitter {
             this._command.onResult(err);
             this._command = null;
         } else {
-            bubbleErrorToConnection = true;
+            // connection handshake is special because we allow it to be implicit
+            // if error happened during handshake, but there are others commands in queue
+            // then bubble error to other commands and not to connection
+            if (
+                !(this._command &&
+                    this._command.constructor === __.command.ClientHandshake &&
+                    this._commands.length > 0)
+            ) {
+                bubbleErrorToConnection = true;
+            }
         }
         while ((command = this._commands.shift())) {
             if (command.onResult) {
@@ -592,6 +607,9 @@ export default class Connection extends EventEmitter {
 
     close() {
         this._closing = true;
+        if (this.connectTimeout) {
+            clearTimeout(this.connectTimeout);
+        }
         this.stream.end();
         this.addCommand = this._addCommandClosedState;
     }
@@ -677,8 +695,8 @@ export default class Connection extends EventEmitter {
 
     writeError(args) {
         // if we want to send error before initial hello was sent, use default encoding
-        // const encoding = this.serverConfig ? this.serverConfig.encoding : "cesu8";
-        this.writePacket(packet.Error.toPacket(args, this.serverConfig.encoding));
+        const encoding = this.serverConfig ? this.serverConfig.encoding : "cesu8";
+        this.writePacket(packet.Error.toPacket(args, encoding));
     }
 
     serverHandshake(args) {
