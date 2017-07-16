@@ -2,6 +2,8 @@ const colors = require("./colors");
 const unicode = require("./unicode");
 const helpers = require("./helpers");
 
+const { is } = adone;
+
 /**
  * Angle Table
  */
@@ -16,7 +18,7 @@ const angles = {
     "\u2534": true, // '┴'
     "\u252c": true, // '┬'
     "\u2502": true, // '│'
-    "\u2500": true  // '─'
+    "\u2500": true // '─'
 };
 
 const langles = {
@@ -26,7 +28,7 @@ const langles = {
     "\u251c": true, // '├'
     "\u2534": true, // '┴'
     "\u252c": true, // '┬'
-    "\u2500": true  // '─'
+    "\u2500": true // '─'
 };
 
 const uangles = {
@@ -36,7 +38,7 @@ const uangles = {
     "\u251c": true, // '├'
     "\u2524": true, // '┤'
     "\u252c": true, // '┬'
-    "\u2502": true  // '│'
+    "\u2502": true // '│'
 };
 
 const rangles = {
@@ -46,7 +48,7 @@ const rangles = {
     "\u2524": true, // '┤'
     "\u2534": true, // '┴'
     "\u252c": true, // '┬'
-    "\u2500": true  // '─'
+    "\u2500": true // '─'
 };
 
 const dangles = {
@@ -56,7 +58,7 @@ const dangles = {
     "\u251c": true, // '├'
     "\u2524": true, // '┤'
     "\u2534": true, // '┴'
-    "\u2502": true  // '│'
+    "\u2502": true // '│'
 };
 
 // var cdangles = {
@@ -82,7 +84,7 @@ const angleTable = {
     1100: "\u2518", // '┘'
     1101: "\u2524", // '┤'
     1110: "\u2534", // '┴'
-    1111: "\u253c"  // '┼'
+    1111: "\u253c" // '┼'
 };
 
 Object.keys(angleTable).forEach((key) => {
@@ -276,10 +278,12 @@ export default class Screen extends adone.cui.Node {
                 this.cursorColor(this.cursor.color);
             }
         }
-        if (process.platform === "win32") {
+        if (is.windows) {
             try {
                 adone.std.child_process.execSync("cls", { stdio: "ignore", timeout: 1000 });
-            } catch (e) { }
+            } catch (e) {
+                //
+            }
         }
         this.terminal.alternateScreenBuffer(true);
         this.terminal.applicationKeypad(true);
@@ -308,10 +312,12 @@ export default class Screen extends adone.cui.Node {
             this.cursorReset();
         }
         this.terminal.flush();
-        if (process.platform === "win32") {
+        if (is.windows) {
             try {
                 adone.std.child_process.execSync("cls", { stdio: "ignore", timeout: 1000 });
-            } catch (e) { }
+            } catch (e) {
+                //
+            }
         }
     }
 
@@ -870,7 +876,7 @@ export default class Screen extends adone.cui.Node {
             return false;
         }
 
-        if (pos._cleanSides != null) {
+        if (!is.nil(pos._cleanSides)) {
             return pos._cleanSides;
         }
 
@@ -1760,7 +1766,7 @@ export default class Screen extends adone.cui.Node {
     }
 
     spawn(file, args, options) {
-        if (!Array.isArray(args)) {
+        if (!is.array(args)) {
             options = args;
             args = [];
         }
@@ -1847,7 +1853,7 @@ export default class Screen extends adone.cui.Node {
     }
 
     readEditor(options, callback) {
-        if (typeof options === "string") {
+        if (is.string(options)) {
             options = { editor: options };
         }
 
@@ -1963,7 +1969,7 @@ export default class Screen extends adone.cui.Node {
             el[temp] = tmp;
         }
 
-        if (typeof el !== "function") {
+        if (!is.function(el)) {
             const _el = el;
             el = () => _el;
         }
@@ -1972,7 +1978,7 @@ export default class Screen extends adone.cui.Node {
             const element = el();
             Object.keys(effects).forEach((key) => {
                 const val = effects[key];
-                if (val !== null && typeof val === "object") {
+                if (!is.null(val) && typeof val === "object") {
                     tmp[key] = tmp[key] || {};
                     // element.style[key] = element.style[key] || {};
                     Object.keys(val).forEach((k) => {
@@ -1992,7 +1998,7 @@ export default class Screen extends adone.cui.Node {
             const element = el();
             Object.keys(effects).forEach((key) => {
                 const val = effects[key];
-                if (val !== null && typeof val === "object") {
+                if (!is.null(val) && typeof val === "object") {
                     tmp[key] = tmp[key] || {};
                     // element.style[key] = element.style[key] || {};
                     Object.keys(val).forEach((k) => {
@@ -2078,7 +2084,7 @@ export default class Screen extends adone.cui.Node {
     }
 
     cursorColor(color) {
-        this.cursor.color = color != null ? colors.convert(color) : null;
+        this.cursor.color = !is.nil(color) ? colors.convert(color) : null;
         this.cursor._set = true;
 
         if (this.cursor.artificial) {
@@ -2156,7 +2162,7 @@ export default class Screen extends adone.cui.Node {
             }
         }
 
-        if (cursor.color != null) {
+        if (!is.nil(cursor.color)) {
             attr &= ~(0x1ff << 9);
             attr |= cursor.color << 9;
         }
@@ -2165,16 +2171,16 @@ export default class Screen extends adone.cui.Node {
     }
 
     screenshot(xi, xl, yi, yl, term) {
-        if (xi == null) {
+        if (is.nil(xi)) {
             xi = 0;
         }
-        if (xl == null) {
+        if (is.nil(xl)) {
             xl = this.cols;
         }
-        if (yi == null) {
+        if (is.nil(yi)) {
             yi = 0;
         }
-        if (yl == null) {
+        if (is.nil(yl)) {
             yl = this.rows;
         }
 

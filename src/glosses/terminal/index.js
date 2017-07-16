@@ -152,7 +152,7 @@ class Terminfo {
         this._input = null;
         this._output = null;
 
-        this.generic = (process.env.COLORTERM === "truecolor" ? "xterm-256color" : ((process.env.TERM && process.env.TERM) || (process.platform === "win32" ? "windows-ansi" : "xterm")).toLowerCase());
+        this.generic = (process.env.COLORTERM === "truecolor" ? "xterm-256color" : ((process.env.TERM && process.env.TERM) || (is.windows ? "windows-ansi" : "xterm")).toLowerCase());
 
         if (this.generic === "screen") {
             this.generic = "xterm";
@@ -4157,7 +4157,7 @@ export default class Terminal extends adone.EventEmitter {
 
         if (process.stdout && !process.stdout.isTTY) {
             level = 0;
-        } else if (process.platform === "win32") {
+        } else if (is.windows) {
             level = 1;
         } else if ("CI" in env) {
             if ("TRAVIS" in env || env.CI === "Travis") {
@@ -8058,7 +8058,7 @@ for (const key of Object.keys(colorConvert)) {
 
 // -------
 const defineProps = Object.defineProperties;
-const isSimpleWindowsTerm = process.platform === "win32" && !/^xterm/i.test(process.env.TERM);
+const isSimpleWindowsTerm = is.windows && !/^xterm/i.test(process.env.TERM);
 
 
 // use bright blue on Windows as the normal blue color is illegible

@@ -32,10 +32,10 @@ const utfx = {
     encodeUTF8: (src, dst) => {
         let cp = null;
         if (is.number(src)) {
-            cp = src,
-                src = () => null;
+            cp = src;
+            src = () => null;
         }
-        while (cp !== null || (cp = src()) !== null) {
+        while (!is.null(cp) || !is.null(cp = src())) {
             if (cp < 0x80) {
                 dst(cp & 0x7F);
             } else if (cp < 0x800) {
@@ -67,36 +67,36 @@ const utfx = {
             err.bytes = b;
             throw err;
         };
-        while ((a = src()) !== null) {
+        while (!is.null(a = src())) {
             if ((a & 0x80) === 0) {
                 dst(a);
             } else if ((a & 0xE0) === 0xC0) {
                 b = src();
-                if (b === null) {
+                if (is.null(b)) {
                     fail([a, b]);
                 }
                 dst(((a & 0x1F) << 6) | (b & 0x3F));
             } else if ((a & 0xF0) === 0xE0) {
                 b = src();
-                if (b === null) {
+                if (is.null(b)) {
                     fail([a, b]);
                 }
                 c = src();
-                if (c === null) {
+                if (is.null(c)) {
                     fail([a, b, c]);
                 }
                 dst(((a & 0x0F) << 12) | ((b & 0x3F) << 6) | (c & 0x3F));
             } else if ((a & 0xF8) === 0xF0) {
                 b = src();
-                if (b === null) {
+                if (is.null(b)) {
                     fail([a, b]);
                 }
                 c = src();
-                if (c === null) {
+                if (is.null(c)) {
                     fail([a, b, c]);
                 }
                 d = src();
-                if (d === null) {
+                if (is.null(d)) {
                     fail([a, b, c, d]);
                 }
                 dst(((a & 0x07) << 18) | ((b & 0x3F) << 12) | ((c & 0x3F) << 6) | (d & 0x3F));
@@ -110,13 +110,13 @@ const utfx = {
         let c2 = null;
 
         for (; ;) {
-            c1 = c2 !== null ? c2 : src();
-            if (c1 === null) {
+            c1 = !is.null(c2) ? c2 : src();
+            if (is.null(c1)) {
                 break;
             }
             if (c1 >= 0xD800 && c1 <= 0xDFFF) {
                 c2 = src();
-                if (c2 !== null && (c2 >= 0xDC00 && c2 <= 0xDFFF)) {
+                if (!is.null(c2) && (c2 >= 0xDC00 && c2 <= 0xDFFF)) {
                     dst((c1 - 0xD800) * 0x400 + c2 - 0xDC00 + 0x10000);
                     c2 = null;
                     continue;
@@ -124,7 +124,7 @@ const utfx = {
             }
             dst(c1);
         }
-        if (c2 !== null) {
+        if (!is.null(c2)) {
             dst(c2);
         }
     },
@@ -135,9 +135,9 @@ const utfx = {
             src = () => null;
         }
         for (; ;) {
-            if (cp === null) {
+            if (is.null(cp)) {
                 cp = src();
-                if (cp === null) {
+                if (is.null(cp)) {
                     break;
                 }
             }
@@ -170,7 +170,7 @@ const utfx = {
         let l = 0;
         for (; ;) {
             cp = src();
-            if (cp === null) {
+            if (is.null(cp)) {
                 break;
             }
             l += utfx.calculateCodePoint(cp);
@@ -468,7 +468,7 @@ export default class ExBuffer {
             }
         }
         // let length;
-        const isString = is.string(source); 
+        const isString = is.string(source);
         if (isString) {
             length = length || Buffer.byteLength(source);
         } else {
@@ -477,7 +477,7 @@ export default class ExBuffer {
             }
             length = source.limit - source.offset;
         }
-        
+
         if (length <= 0) {
             return this; // Nothing to append
         }
@@ -1312,7 +1312,7 @@ export default class ExBuffer {
     clone(copy) {
         const bb = new ExBuffer(0, this.noAssert);
         if (copy) {
-            const buffer = new Buffer(this.buffer.length);
+            const buffer = Buffer.allocUnsafe(this.buffer.length);
             this.buffer.copy(buffer);
             bb.buffer = buffer;
         } else {
@@ -1353,7 +1353,7 @@ export default class ExBuffer {
             this.limit = 0;
             return this;
         }
-        const buffer = new Buffer(len);
+        const buffer = Buffer.allocUnsafe(len);
         this.buffer.copy(buffer, 0, begin, end);
         this.buffer = buffer;
         if (this.markedOffset >= 0) {
@@ -1533,7 +1533,7 @@ export default class ExBuffer {
         }
         const diff = len - offset;
         if (diff > 0) { // Not enough space before offset, so resize + move
-            const buffer = new Buffer(this.buffer.length + diff);
+            const buffer = Buffer.allocUnsafe(this.buffer.length + diff);
             this.buffer.copy(buffer, len, offset, this.buffer.length);
             this.buffer = buffer;
             this.offset += diff;
@@ -1668,7 +1668,7 @@ export default class ExBuffer {
             }
         }
         if (forceCopy) {
-            const buffer = new Buffer(end - begin);
+            const buffer = Buffer.allocUnsafe(end - begin);
             this.buffer.copy(buffer, 0, begin, end);
             return buffer;
         }
@@ -1922,7 +1922,7 @@ export default class ExBuffer {
             if (!is.array(buffer)) {
                 throw new x.InvalidArgument("Illegal buffer");
             }
-            buffer = new Buffer(buffer);
+            buffer = Buffer.from(buffer);
         }
         bb = new ExBuffer(0, noAssert);
         if (buffer.length > 0) { // Avoid references to more than one EMPTY_BUFFER

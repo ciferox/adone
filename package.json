@@ -90,8 +90,7 @@
     "uuid": "^2.0.1",
     "vuvuzela": "^1.0.3",
     "ws": "^1.0.1",
-    "xoauth2": "^1.2.0",
-    "yargs": "^6.3.0"
+    "self-path": "^1.0.0"
   },
   "optionalDependencies": {
     "fsevents": "^1.0.0"
@@ -106,6 +105,7 @@
     "watch": "gulp watch"
   },
   "main": "lib",
+  "repository": "https://github.com/ciferox/adone",
   "bin": {
     "adone": "./bin/adone.js"
   }

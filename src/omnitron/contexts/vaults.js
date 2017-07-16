@@ -28,6 +28,7 @@ export { Valuable }; // code generator fails when export + class decorator, todo
 @Private
 @Contextable
 @Description("Omnitron vault")
+@Method("close", { private: false, description: "Closes vault" })
 @Method("create", { private: false, description: "Creates new valuable", type: Valuable })
 @Method("get", { private: false, description: "Returns existing valuable", type: Valuable })
 @Method("has", { private: false, description: "Checks whether valuable with specified name exists", type: Boolean })
@@ -153,6 +154,7 @@ class Vaults {
         }
         options.location = location;
         vault = new Vault(this, options);
+
         await vault.open();
         await vault.close();
 
@@ -175,15 +177,21 @@ class Vaults {
             vault = new Vault(this, Object.assign({
                 location: this._location(name, options)
             }, options));
+
+            await vault.open();
+
             this._vaults.set(name, {
                 vault,
                 options
+            });
+
+            vault.backend.on("closed", () => {
+                this._vaults.delete(name);
             });
         } else {
             throw new adone.x.IllegalState(`Vault '${name}' already opened`);
         }
 
-        await vault.open();
         return vault;
     }
 

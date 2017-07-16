@@ -1,9 +1,9 @@
-require("../../../../..");  // adone
+require("adone"); // adone
 
 process.on("message", (data) => {
     if (data === "graceful") {
-        if (process.platform === "win32") {
-            process.emit("SIGINT");  // just imitate the behaviour
+        if (adone.is.windows) {
+            process.emit("SIGINT"); // just imitate the behaviour
         } else {
             process.kill(process.pid, "SIGINT");
         }

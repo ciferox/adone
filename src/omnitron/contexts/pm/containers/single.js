@@ -1,5 +1,6 @@
 import adone from "adone";
 const {
+    is,
     netron: { Netron, decorator: { Contextable } }
 } = adone;
 
@@ -15,8 +16,8 @@ class Container {
     }
 
     initiateGracefulShutdown() {
-        if (process.platform === "win32") {
-            process.emit("SIGINT");  // just imitate the behaviour
+        if (is.windows) {
+            process.emit("SIGINT"); // just imitate the behaviour
         } else {
             process.kill(process.pid, "SIGINT");
         }
@@ -38,7 +39,7 @@ class Container {
 netron.attachContext(new Container(), "container");
 
 netron.on("peer online", (peer) => {
-    if (master === null) {
+    if (is.null(master)) {
         master = peer;
         netron.unrefGates();
     }
@@ -49,7 +50,7 @@ netron.on("peer online", (peer) => {
 
 netron.on("peer offline", (peer) => {
     if (peer === master) {
-        netron.refGates();  // wait for the master
+        netron.refGates(); // wait for the master
     }
 });
 
@@ -59,5 +60,5 @@ async function main() {
 
 main().catch((err) => {
     console.error(new Date(), err.stack || err.message || err);
-    process.exit(128 + 13);  // Failed to start the container, shouldnt happen
+    process.exit(128 + 13); // Failed to start the container, shouldnt happen
 });

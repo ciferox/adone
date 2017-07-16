@@ -113,7 +113,7 @@ class ScreenManager {
 
     normalizedCliWidth() {
         const width = terminal.cols;
-        if (process.platform === "win32") {
+        if (is.windows) {
             return width - 1;
         }
         return width;

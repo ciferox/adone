@@ -203,8 +203,8 @@ const FSEventsHandler = {
                             const curDepth = is.undefined(this.options.depth) ? undefined : depth(fullPath, realPath) + 1;
                             return this._addToFsEvents(path, false, true, curDepth);
                         }
-                            // track new paths
-                            // (other than symlinks being followed, which will be tracked soon)
+                        // track new paths
+                        // (other than symlinks being followed, which will be tracked soon)
                         this._getWatchedDir(parent).add(item);
 
                     }
@@ -503,7 +503,7 @@ const setFsWatchListener = (path, fullPath, options, handlers) => {
         const broadcastErr = (...args) => fsWatchBroadcast(fullPath, "errHandlers", ...args);
         watcher.on("error", (error) => {
             // Workaround for https://github.com/joyent/node/issues/4337
-            if (process.platform === "win32" && error.code === "EPERM") {
+            if (is.windows && error.code === "EPERM") {
                 adone.std.fs.open(path, "r", (err, fd) => {
                     if (fd) {
                         adone.std.fs.close(fd);
@@ -651,7 +651,7 @@ export default class Watcher extends adone.EventEmitter {
         // Use polling on Mac if not using fsevents.
         // Other platforms use non-polling fs.watch.
         if (is.null(usePolling) && !useFsEvents) {
-            usePolling = process.platform === "darwin";
+            usePolling = is.darwin;
         }
 
         // Editor atomic write normalaization enabled by default with fs.watch

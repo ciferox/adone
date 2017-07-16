@@ -1,5 +1,6 @@
 import adone from "adone";
 const {
+    is,
     netron: { Netron, decorator: { Contextable, Private, Public } },
     std: { cluster }
 } = adone;
@@ -38,7 +39,7 @@ class Container {
             try {
                 await context[event].void(...data);
             } catch (err) {
-                this.registered.delete(context);  // cannot send
+                this.registered.delete(context); // cannot send
             }
         }
     }
@@ -97,7 +98,7 @@ class Container {
                 if (timer) {
                     clearTimeout(timer);
                 }
-                if (signal || code !== 0) {  // what if it exists normally?
+                if (signal || code !== 0) { // what if it exists normally?
                     if (signal) {
                         reject(new adone.x.Exception(`The process was terminated by signal ${signal}`));
                     } else {
@@ -114,7 +115,7 @@ class Container {
             const timer = setTimeout(() => {
                 worker.removeListener("exit", exit);
                 resolve();
-            }, this._configuration.workersStartTimeout);  // actually it should be so fast
+            }, this._configuration.workersStartTimeout); // actually it should be so fast
         });
         return worker;
     }
@@ -125,7 +126,7 @@ class Container {
         worker.on("exit", (code, signal) => {
             this._workers.get(i).disappeared = new Date().getTime();
             this.emit("workerExit", i, code, signal);
-            if (master === null && Object.keys(cluster.workers).length === 0) {
+            if (is.null(master) && Object.keys(cluster.workers).length === 0) {
                 process.exit(1);
             }
         });
@@ -172,7 +173,7 @@ netron.on("peer online", (peer) => {
 netron.on("peer offline", (peer) => {
     if (peer === master) {
         master = null;
-        // netron.refGates();  // wait for the master
+        // netron.refGates(); // wait for the master
     }
 });
 

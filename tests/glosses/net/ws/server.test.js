@@ -1,4 +1,4 @@
-const { net: { ws: { Client, Server } }, std: { fs, http, https, crypto, net } } = adone;
+const { is, net: { ws: { Client, Server } }, std: { fs, http, https, crypto, net } } = adone;
 let port = 8000;
 
 describe("net", "ws", "WebSocketServer", () => {
@@ -69,7 +69,7 @@ describe("net", "ws", "WebSocketServer", () => {
             //
             // Skip this test on Windows as it throws errors for obvious reasons.
             //
-            if (process.platform === "win32") {
+            if (is.windows) {
                 return done();
             }
 

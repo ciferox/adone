@@ -1,9 +1,11 @@
 import Contexts from "adone/omnitron/contexts";
 
+const { is } = adone;
+
 let home;
 const dirName = ".adone_test";
 
-if (process.platform === "win32") {
+if (is.windows) {
     home = adone.std.path.resolve(process.env.USERPROFILE, dirName);
 } else {
     if (process.env.HOME && !process.env.HOMEPATH) {

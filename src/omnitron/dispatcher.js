@@ -16,7 +16,7 @@ export default class Dispatcher {
     }
 
     get connected() {
-        return !is.null(this.netron);  // or peer?
+        return !is.null(this.peer);
     }
 
     configurator() {

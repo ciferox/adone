@@ -702,7 +702,7 @@ const is = {
         }
 
         const last = str.lastIndexOf("/");
-        return last !== -1 ? str.charCodeAt(last + 1) === 46  /* . */ : false;
+        return last !== -1 ? str.charCodeAt(last + 1) === 46/*.*/ : false;
     },
     function: (fn) => typeof fn === "function",
     asyncFunction: (fn) => fn && toString.call(fn).slice(8, -1) === "AsyncFunction",

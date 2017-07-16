@@ -19,7 +19,7 @@ export default class Vault {
         } else {
             this.Valuable = Valuable;
         }
-        this._db = new adone.database.level.DB(this.options);
+        this.backend = new adone.database.level.DB(this.options);
         this.vids = undefined; // valuable ids
         this.tids = undefined; // tag ids
         this.nameIdMap = new Map();
@@ -33,7 +33,7 @@ export default class Vault {
     }
 
     async open() {
-        await this._db.open();
+        await this.backend.open();
         // Load valuable ids
         try {
             this.vids = await this._getMeta(VIDS);
@@ -92,11 +92,11 @@ export default class Vault {
     }
 
     close() {
-        return this._db.close();
+        return this.backend.close();
     }
 
     location() {
-        return this._db.location;
+        return this.backend.location;
     }
 
     async create(name, tags = []) {
@@ -167,7 +167,7 @@ export default class Vault {
                 await this.deleteTag(tag);
             }
         }
-        
+
         return this.updated;
     }
 
@@ -210,7 +210,7 @@ export default class Vault {
 
         if (includeStats) {
             result.stats = {
-                location: this._db.location,
+                location: this.backend.location,
                 created: this.created,
                 updated: this.updated
             };
@@ -283,12 +283,12 @@ export default class Vault {
     }
 
     _getMeta(id) {
-        return this._db.get(id);
+        return this.backend.get(id);
     }
 
     async _setMeta(id, data) {
         this.updated = (new Date()).getTime();
-        await this._db.batch([
+        await this.backend.batch([
             { type: "put", key: id, value: data },
             { type: "put", key: UPDATED, value: this.updated }
         ]);
@@ -297,7 +297,7 @@ export default class Vault {
 
     async _deleteMeta(id) {
         this.updated = (new Date()).getTime();
-        await this._db.batch([
+        await this.backend.batch([
             { type: "del", key: id },
             { type: "put", key: UPDATED, value: this.updated }
         ]);
@@ -314,7 +314,7 @@ export default class Vault {
 
     async _getNextId(key) {
         const id = this[key]++;
-        await this._db.put(key, this[key]);
+        await this.backend.put(key, this[key]);
         return id;
     }
 

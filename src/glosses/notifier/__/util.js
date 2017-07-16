@@ -244,11 +244,11 @@ export const actionJackerDecorator = async (emitter, options, mapper, fn) => {
             emitter.emit(key, emitter, options, metadata);
         }
     }
-    return resultantData;  // metadata?
+    return resultantData; // metadata?
 };
 
 const removeNewLines = (str) => {
-    const excapedNewline = process.platform === "win32" ? "\\r\\n" : "\\n";
+    const excapedNewline = is.windows ? "\\r\\n" : "\\n";
     return str.replace(/\r?\n/g, excapedNewline);
 };
 

@@ -148,7 +148,7 @@ const escapeCommand = (command) => {
 
 
 
-const shebangCache = new adone.collection.LRU({ max: 50, maxAge: 30 * 1000 });  // Cache just for 30sec
+const shebangCache = new adone.collection.LRU({ max: 50, maxAge: 30 * 1000 }); // Cache just for 30sec
 
 const readShebang = (command) => {
     let fd;
@@ -206,7 +206,7 @@ const parseNonShell = (parsed) => {
     // If a shell is required, use cmd.exe and take care of escaping everything correctly
     if (needsShell) {
         // Escape command & arguments
-        applyQuotes = (parsed.command !== "echo");  // Do not quote arguments for the special "echo" command
+        applyQuotes = (parsed.command !== "echo"); // Do not quote arguments for the special "echo" command
         parsed.command = escapeCommand(parsed.command);
         parsed.args = parsed.args.map((arg) => {
             return escapeArgument(arg, applyQuotes);
@@ -215,7 +215,7 @@ const parseNonShell = (parsed) => {
         // Make use of cmd.exe
         parsed.args = ["/d", "/s", "/c", `"${parsed.command}${parsed.args.length ? ` ${parsed.args.join(" ")}` : ""}"`];
         parsed.command = process.env.comspec || "cmd.exe";
-        parsed.options.windowsVerbatimArguments = true;  // Tell node's spawn that the arguments are already escaped
+        parsed.options.windowsVerbatimArguments = true; // Tell node's spawn that the arguments are already escaped
     }
 
     return parsed;
@@ -233,7 +233,7 @@ const parseShell = (parsed) => {
     if (is.windows) {
         parsed.command = is.string(parsed.options.shell) ? parsed.options.shell : process.env.comspec || "cmd.exe";
         parsed.args = ["/d", "/s", "/c", `"${shellCommand}"`];
-        parsed.options.windowsVerbatimArguments = true;  // Tell node's spawn that the arguments are already escaped
+        parsed.options.windowsVerbatimArguments = true; // Tell node's spawn that the arguments are already escaped
     } else {
         if (is.string(parsed.options.shell)) {
             parsed.command = parsed.options.shell;
@@ -256,7 +256,7 @@ const parse = (command, args, options) => {
         args = null;
     }
 
-    args = args ? args.slice(0) : [];  // Clone array to avoid changing the original
+    args = args ? args.slice(0) : []; // Clone array to avoid changing the original
     options = options || {};
 
     // Build our parsed object
@@ -323,6 +323,10 @@ const TEN_MEGABYTES = 1000 * 1000 * 10;
 const handleArgs = (cmd, args, opts) => {
     let parsed;
 
+    if (opts && opts.env && opts.extendEnv !== false) {
+        opts.env = Object.assign({}, process.env, opts.env);
+    }
+
     if (opts && opts.__winShell === true) {
         delete opts.__winShell;
         parsed = {
@@ -340,6 +344,7 @@ const handleArgs = (cmd, args, opts) => {
         maxBuffer: TEN_MEGABYTES,
         stripEof: true,
         preferLocal: true,
+        localDir: parsed.options.cwd || process.cwd(),
         encoding: "utf8",
         reject: true,
         cleanup: true
@@ -348,7 +353,7 @@ const handleArgs = (cmd, args, opts) => {
     opts.stdio = stdio(opts);
 
     if (opts.preferLocal) {
-        opts.env = env(opts);
+        opts.env = env(Object.assign({}, opts, { cwd: opts.localDir }));
     }
 
     return {
@@ -362,7 +367,7 @@ const handleArgs = (cmd, args, opts) => {
 const handleInput = (spawned, opts) => {
     const input = opts.input;
 
-    if (is.null(input) || is.undefined(input)) {
+    if (is.nil(input)) {
         return;
     }
 
@@ -504,7 +509,7 @@ export const exec = (cmd, args, opts) => {
         timeoutId = setTimeout(() => {
             timeoutId = null;
             timedOut = true;
-            spawned.kill(parsed.killSignal);
+            spawned.kill(parsed.opts.killSignal);
         }, parsed.opts.timeout);
     }
 

@@ -1,5 +1,5 @@
 describe("notifier", "notify-send", () => {
-    const { std: { os }, notifier: { __: { util, notifiers: { NotifySend: Notify } } } } = adone;
+    const { is, std: { os }, notifier: { __: { util, notifiers: { NotifySend: Notify } } } } = adone;
 
     beforeEach(function () {
         this.original = util.command;
@@ -46,7 +46,7 @@ describe("notifier", "notify-send", () => {
     });
 
     it("should escape message input", async () => {
-        const excapedNewline = process.platform === "win32" ? "\\r\\n" : "\\n";
+        const excapedNewline = is.windows ? "\\r\\n" : "\\n";
         const expected = [
             '"Node Notification"',
             `"some${excapedNewline} \\"me'ss\\\`age\\\`\\""`

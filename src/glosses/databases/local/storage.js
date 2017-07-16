@@ -21,7 +21,7 @@ export default class Storage {
 
         // Windows can't fsync (FlushFileBuffers) directories. We can live with this as it cannot cause 100% dataloss
         // except in the very rare event of the first time database is loaded and a crash happens
-        if (flags === "r" && (process.platform === "win32" || process.platform === "win64")) {
+        if (flags === "r" && is.windows) {
             return;
         }
 

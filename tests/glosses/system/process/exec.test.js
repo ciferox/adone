@@ -20,6 +20,7 @@ macro.title = (providedTitle, input) => providedTitle || adone.std.util.inspect(
 
 describe("system", "process", () => {
     process.env.PATH = path.join(__dirname, "fixtures") + path.delimiter + process.env.PATH;
+    process.env.FOO = "foo";
 
     it("exec()", async () => {
         const { stdout } = await exec("noop", ["foo"]);
@@ -110,7 +111,7 @@ describe("system", "process", () => {
         assert.throws(() => {
             execSync("foo");
         }, is.windows
-            ? /^('|")foo('|")/  // ?
+            ? /^('|")foo('|")/ // ?
             : "spawnSync foo ENOENT"
         );
     });
@@ -139,6 +140,17 @@ describe("system", "process", () => {
         const err = await assert.throws(async () => exec("cat-names", { preferLocal: false }));
         assert.match(err.message, /spawn .* ENOENT/);
         process.env.PATH = _path;
+    });
+
+    it("localDir option", async () => {
+        const cwd = path.join(__dirname, "fixtures/local-dir");
+        const bin = path.resolve(cwd, "node_modules/.bin/self-path");
+
+        await exec("npm", ["install", "--no-package-lock"], { cwd });
+
+        const { stdout } = await exec(bin, { localDir: cwd });
+        assert.equal(path.relative(cwd, stdout), path.normalize("node_modules/self-path"));
+        await adone.fs.rm(path.join(cwd, "node_modules"));
     });
 
     it("input option can be a String", async () => {
@@ -294,6 +306,12 @@ describe("system", "process", () => {
 
             assert.equal(err.signal, "SIGTERM");
         });
+
+        it("custom err.signal", async () => {
+            const err = await assert.throws(async () => exec("delay", ["3000", "0"], { killSignal: "SIGHUP", timeout: 1500 }));
+
+            assert.equal(err.signal, "SIGHUP");
+        });
     }
 
     it("result.signal is null for successful execution", async () => {
@@ -422,6 +440,24 @@ describe("system", "process", () => {
             }
         });
     }
+
+    it("extend environment variables by default", async () => {
+        const result = await execStdout("environment", [], { env: { BAR: "bar" } });
+
+        assert.deepEqual(result.split("\n"), [
+            "foo",
+            "bar"
+        ]);
+    });
+
+    it("do not extend environment with `envExtend` option", async () => {
+        const result = await execStdout("environment", [], { env: { BAR: "bar", PATH: process.env.PATH }, extendEnv: false });
+
+        assert.deepEqual(result.split("\n"), [
+            "undefined",
+            "bar"
+        ]);
+    });
 
     it("stdio", () => {
         macro(undefined, null);

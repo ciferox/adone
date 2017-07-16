@@ -71,7 +71,7 @@ export default class Configurator {
                             id: "local",
                             type: "socket",
                             status: ENABLED,
-                            port: (process.platform === "win32" ? "\\\\.\\pipe\\omnitron.sock" : adone.std.path.join(this.config.adone.home, "omnitron.sock"))
+                            port: (is.windows ? "\\\\.\\pipe\\omnitron.sock" : adone.std.path.join(this.config.adone.home, "omnitron.sock"))
                         }
                     ];
                 } else {
