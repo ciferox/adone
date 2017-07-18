@@ -441,6 +441,16 @@ describe("system", "process", () => {
         });
     }
 
+    it("use environment variables by default", async () => {
+        const result = await execStdout("environment");
+
+        assert.deepEqual(result.split("\n"), [
+            "foo",
+            "undefined"
+        ]);
+    });
+
+
     it("extend environment variables by default", async () => {
         const result = await execStdout("environment", [], { env: { BAR: "bar" } });
 

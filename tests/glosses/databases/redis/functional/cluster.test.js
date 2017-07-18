@@ -838,7 +838,7 @@ describe("database", "redis", "cluster", { skip: check }, () => {
             stub(cluster, "refreshSlotsCache").callsFake((...args) => {
                 node2.connect();
                 cluster.refreshSlotsCache.restore();
-                cluster.refreshSlotsCache.apply(cluster, args);
+                return cluster.refreshSlotsCache.apply(cluster, args);
             });
             const [, result] = await Promise.all([
                 node2.disconnect(),

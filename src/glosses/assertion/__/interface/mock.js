@@ -124,9 +124,9 @@ export default function mock(lib, utils) {
     mockMethod("calledImmediatelyBefore", "been called immediately before %1");
     mockMethod("calledImmediatelyAfter", "been called immediately after %1");
     mockMethod("calledOn", "been called with %1 as this", ", but it was called with %t instead");
-    mockMethod("calledWith", "been called with arguments %*", "%C");
-    mockMethod("calledWithExactly", "been called with exact arguments %*", "%C");
-    mockMethod("calledWithMatch", "been called with arguments matching %*", "%C");
+    mockMethod("calledWith", "been called with arguments %*", "%D");
+    mockMethod("calledWithExactly", "been called with exact arguments %*", "%D");
+    mockMethod("calledWithMatch", "been called with arguments matching %*", "%D");
     mockMethod("returned", "returned %1");
     exceptionalMockMethod("thrown", "threw", "thrown %1");
 }

@@ -323,11 +323,16 @@ const TEN_MEGABYTES = 1000 * 1000 * 10;
 const handleArgs = (cmd, args, opts) => {
     let parsed;
 
-    if (opts && opts.env && opts.extendEnv !== false) {
+    opts = Object.assign({
+        extendEnv: true,
+        env: {}
+    }, opts);
+
+    if (opts.extendEnv) {
         opts.env = Object.assign({}, process.env, opts.env);
     }
 
-    if (opts && opts.__winShell === true) {
+    if (opts.__winShell === true) {
         delete opts.__winShell;
         parsed = {
             command: cmd,

@@ -68,7 +68,7 @@ export const optimizeErrorStack = (error, friendlyStack, filterPath) => {
     let lines = "";
     let i;
     for (i = 1; i < stacks.length; ++i) {
-        if (stacks[i].indexOf(filterPath) === -1) {
+        if (!stacks[i].includes(filterPath)) {
             break;
         }
     }

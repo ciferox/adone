@@ -107,7 +107,9 @@ describe("database", "redis", "scripting", { skip: check }, () => {
         monitor.on("monitor", onMonitor);
         await redis.test(0);
         redis.disconnect();
-        await onMonitor.waitForCall();
+        if (!onMonitor.called) {
+            await onMonitor.waitForCall();
+        }
         expect(onMonitor).to.have.been.calledWith(match.any, match((cmd) => cmd[0] === "evalsha"));
         monitor.disconnect();
     });

@@ -2,24 +2,20 @@ describe("database", "redis", "unit", "Connector", () => {
     const { std: { net, tls }, database: { redis: { __: { Connector } } } } = adone;
 
     describe("connect()", () => {
-        it("first tries path", (done) => {
+        it("first tries path", async () => {
             stub(net, "createConnection");
             const connector = new Connector({ port: 6379, path: "/tmp" });
-            connector.connect(() => {
-                net.createConnection.calledWith({ path: "/tmp" });
-                net.createConnection.restore();
-                done();
-            });
+            await connector.connect();
+            net.createConnection.calledWith({ path: "/tmp" });
+            net.createConnection.restore();
         });
 
-        it("supports tls", (done) => {
+        it("supports tls", async () => {
             stub(tls, "connect");
             const connector = new Connector({ port: 6379, tls: "on" });
-            connector.connect(() => {
-                tls.connect.calledWith({ port: 6379, tls: "on" });
-                tls.connect.restore();
-                done();
-            });
+            await connector.connect();
+            tls.connect.calledWith({ port: 6379, tls: "on" });
+            tls.connect.restore();
         });
     });
 });

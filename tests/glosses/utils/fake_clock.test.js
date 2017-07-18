@@ -1521,6 +1521,16 @@ describe("util", "fakeClock", () => {
                 assert.deepEqual(Date.clock, this.clock);
             });
 
+            it("takes an object parameter", function () {
+                this.clock = fakeClock.install({});
+            });
+
+            it.skip("throws a TypeError on a number parameter", () => {
+                assert.throws(function () {
+                    this.clock = fakeClock.install(0);
+                });
+            });
+
             it("sets initial timestamp", function () {
                 this.clock = fakeClock.install({ now: 1400 });
 
@@ -1745,7 +1755,64 @@ describe("util", "fakeClock", () => {
             });
         });
 
+        describe("shouldAdvanceTime", () => {
+            it("should create an auto advancing timer", (done) => {
+                const testDelay = 29;
+                const date = new Date("2015-09-25");
+                const clock = fakeClock.install({ now: date, shouldAdvanceTime: true });
+                assert.equal(Date.now(), 1443139200000);
+                const timeoutStarted = Date.now();
+
+                setTimeout(() => {
+                    const timeDifference = Date.now() - timeoutStarted;
+                    assert.equal(timeDifference, testDelay);
+                    clock.uninstall();
+                    done();
+                }, testDelay);
+            });
+
+            it("should test setImmediate", (done) => {
+                const date = new Date("2015-09-25");
+                const clock = fakeClock.install({ now: date, shouldAdvanceTime: true });
+                assert.equal(Date.now(), 1443139200000);
+                const timeoutStarted = Date.now();
+
+                setImmediate(() => {
+                    const timeDifference = Date.now() - timeoutStarted;
+                    assert.equal(timeDifference, 0);
+                    clock.uninstall();
+                    done();
+                });
+            });
+
+            it("should test setInterval", (done) => {
+                const interval = 20;
+                let intervalsTriggered = 0;
+                const cyclesToTrigger = 3;
+                const date = new Date("2015-09-25");
+                const clock = fakeClock.install({ now: date, shouldAdvanceTime: true });
+                assert.equal(Date.now(), 1443139200000);
+                const timeoutStarted = Date.now();
+
+                const intervalId = setInterval(() => {
+                    if (++intervalsTriggered === cyclesToTrigger) {
+                        clearInterval(intervalId);
+                        const timeDifference = Date.now() - timeoutStarted;
+                        assert.equal(timeDifference, interval * cyclesToTrigger);
+                        clock.uninstall();
+                        done();
+                    }
+                }, interval);
+            });
+        });
+
         describe("process.hrtime()", () => {
+            afterEach(function () {
+                if (this.clock) {
+                    this.clock.uninstall();
+                }
+            });
+
             it("should start at 0", () => {
                 const clock = fakeClock.createClock(1001);
                 const result = clock.hrtime();
@@ -1793,6 +1860,113 @@ describe("util", "fakeClock", () => {
                 result = clock.hrtime();
                 assert.equal(result[0], 1);
                 assert.equal(result[1], 0);
+            });
+        });
+
+        describe("microtask semantics", () => {
+            it("runs without timers", () => {
+                const clock = fakeClock.createClock();
+                let called = false;
+                clock.nextTick(() => {
+                    called = true;
+                });
+                clock.runAll();
+                assert(called);
+            });
+
+            it("runs with timers - and before them", () => {
+                const clock = fakeClock.createClock();
+                let last = "";
+                let called = false;
+                clock.nextTick(() => {
+                    called = true;
+                    last = "tick";
+                });
+                clock.setTimeout(() => {
+                    last = "timeout";
+                });
+                clock.runAll();
+                assert(called);
+                assert.equal(last, "timeout");
+            });
+
+            it("runs when time is progressed", () => {
+                const clock = fakeClock.createClock();
+                let called = false;
+                clock.nextTick(() => {
+                    called = true;
+                });
+                assert(!called);
+                clock.tick(0);
+                assert(called);
+            });
+
+            it("runs between timers", () => {
+                const clock = fakeClock.createClock();
+                const order = [];
+                clock.setTimeout(() => {
+                    order.push("timer-1");
+                    clock.nextTick(() => {
+                        order.push("tick");
+                    });
+                });
+
+                clock.setTimeout(() => {
+                    order.push("timer-2");
+                });
+                clock.runAll();
+                assert.equal(order[0], "timer-1");
+                assert.equal(order[1], "tick");
+                assert.equal(order[2], "timer-2");
+            });
+
+            it("installs with microticks", function () {
+                this.clock = fakeClock.install();
+                let called = false;
+                process.nextTick(() => {
+                    called = true;
+                });
+                this.clock.runAll();
+                assert(called);
+            });
+
+            it("installs with microticks and timers in order", function () {
+                const clock = this.clock = fakeClock.install();
+                const order = [];
+                setTimeout(() => {
+                    order.push("timer-1");
+                    process.nextTick(() => {
+                        order.push("tick");
+                    });
+                });
+                setTimeout(() => {
+                    order.push("timer-2");
+                });
+                clock.runAll();
+                assert.equal(order[0], "timer-1");
+                assert.equal(order[1], "tick");
+                assert.equal(order[2], "timer-2");
+            });
+
+            it("uninstalls", function () {
+                const clock = this.clock = fakeClock.install();
+                clock.uninstall();
+                let called = false;
+                process.nextTick(() => {
+                    called = true;
+                });
+                clock.runAll();
+                assert(!called);
+            });
+
+            it("passes arguments when installed - GitHub#122", function () {
+                const clock = this.clock = fakeClock.install();
+                let called = false;
+                process.nextTick((value) => {
+                    called = value;
+                }, true);
+                clock.runAll();
+                assert(called);
             });
         });
     });

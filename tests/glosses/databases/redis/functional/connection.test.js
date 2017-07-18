@@ -42,6 +42,7 @@ describe("database", "redis", "connection", { skip: check }, () => {
                 expect(command.name).to.eql("info");
                 done();
             }
+            return command.promise;
         });
     });
 

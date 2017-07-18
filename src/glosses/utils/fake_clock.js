@@ -122,6 +122,25 @@ const createDate = () => {
     return mirrorDateProperties(ClockDate, NativeDate);
 };
 
+const enqueueJob = (clock, job) => {
+    // enqueues a microtick-deferred task - ecma262/#sec-enqueuejob
+    if (!clock.jobs) {
+        clock.jobs = [];
+    }
+    clock.jobs.push(job);
+};
+
+const runJobs = (clock) => {
+    // runs all microtick-deferred tasks - ecma262/#sec-runjobs
+    if (!clock.jobs) {
+        return;
+    }
+    for (const job of clock.jobs) {
+        job.func.apply(null, job.args);
+    }
+    clock.jobs = [];
+};
+
 const addTimer = (clock, timer) => {
     if (is.undefined(timer.func)) {
         throw new Error("Callback must be provided to timer calls");
@@ -225,35 +244,17 @@ const lastTimer = (clock) => {
 };
 
 const callTimer = (clock, timer) => {
-    let exception;
-
     if (is.number(timer.interval)) {
         clock.timers[timer.id].callAt += timer.interval;
     } else {
         delete clock.timers[timer.id];
     }
 
-    try {
-        if (is.function(timer.func)) {
-            timer.func.apply(null, timer.args);
-        } else {
-            /* eslint no-eval: "off" */
-            // ?
-            eval(timer.func);
-        }
-    } catch (e) {
-        exception = e;
-    }
-
-    if (!clock.timers[timer.id]) {
-        if (exception) {
-            throw exception;
-        }
-        return;
-    }
-
-    if (exception) {
-        throw exception;
+    if (is.function(timer.func)) {
+        timer.func.apply(null, timer.args);
+    } else {
+        /* eslint no-eval: "off" */
+        eval(timer.func);
     }
 };
 
@@ -314,6 +315,10 @@ const hijackMethod = (target, method, clock) => {
     target[method].clock = clock;
 };
 
+const doIntervalTick = (clock, advanceTimeDelta) => {
+    clock.tick(advanceTimeDelta);
+};
+
 export const timers = {
     setTimeout,
     clearTimeout,
@@ -322,7 +327,8 @@ export const timers = {
     setInterval,
     clearInterval,
     Date,
-    hrtime: global.process.hrtime
+    hrtime: global.process.hrtime,
+    nextTick: global.process.nextTick
 };
 
 export const createClock = (now, loopLimit) => {
@@ -344,6 +350,10 @@ export const createClock = (now, loopLimit) => {
 
     clock.clearTimeout = function clearTimeout(timerId) {
         return clearTimer(clock, timerId, "Timeout");
+    };
+
+    clock.nextTick = function nextTick(func, ...args) {
+        return enqueueJob(clock, { func, args });
     };
 
     clock.setInterval = function setInterval(func, timeout, ...args) {
@@ -376,6 +386,7 @@ export const createClock = (now, loopLimit) => {
         let firstException;
 
         clock.duringTick = true;
+        runJobs(clock);
 
         while (timer && tickFrom <= tickTo) {
             if (clock.timers[timer.id]) {
@@ -383,6 +394,7 @@ export const createClock = (now, loopLimit) => {
                 tickFrom = timer.callAt;
                 clock.now = timer.callAt;
                 try {
+                    runJobs(clock);
                     oldNow = clock.now;
                     callTimer(clock, timer);
                 } catch (e) {
@@ -400,6 +412,7 @@ export const createClock = (now, loopLimit) => {
             previous = tickFrom;
         }
 
+        runJobs(clock);
         clock.duringTick = false;
         updateHrTime(tickTo);
         clock.now = tickTo;
@@ -412,6 +425,7 @@ export const createClock = (now, loopLimit) => {
     };
 
     clock.next = () => {
+        runJobs(clock);
         const timer = firstTimer(clock);
         if (!timer) {
             return clock.now;
@@ -422,6 +436,7 @@ export const createClock = (now, loopLimit) => {
             updateHrTime(timer.callAt);
             clock.now = timer.callAt;
             callTimer(clock, timer);
+            runJobs(clock);
             return clock.now;
         } finally {
             clock.duringTick = false;
@@ -429,14 +444,13 @@ export const createClock = (now, loopLimit) => {
     };
 
     clock.runAll = function runAll() {
-        let numTimers;
-        let i;
-        for (i = 0; i < clock.loopLimit; i++) {
+        runJobs(clock);
+        for (let i = 0; i < clock.loopLimit; i++) {
             if (!clock.timers) {
                 return clock.now;
             }
 
-            numTimers = Object.keys(clock.timers).length;
+            const numTimers = Object.keys(clock.timers).length;
             if (numTimers === 0) {
                 return clock.now;
             }
@@ -450,6 +464,7 @@ export const createClock = (now, loopLimit) => {
     clock.runToLast = () => {
         const timer = lastTimer(clock);
         if (!timer) {
+            runJobs(clock);
             return clock.now;
         }
 
@@ -504,6 +519,8 @@ export const install = (...args) => {
     let now;
     let methods = [];
     let loopLimit = 1000;
+    let shouldAdvanceTime = false;
+    let advanceTimeDelta = 20;
 
     if (is.number(args[0])) {
         now = args.shift();
@@ -520,9 +537,12 @@ export const install = (...args) => {
             target = null,
             now = now,
             toFake: methods = methods,
-            loopLimit = loopLimit
+            loopLimit = loopLimit,
+            shouldAdvanceTime = shouldAdvanceTime,
+            advanceTimeDelta = advanceTimeDelta
         } = args[0]);
     }
+
 
     if (!target) {
         target = global;
@@ -532,14 +552,20 @@ export const install = (...args) => {
 
     clock.uninstall = () => {
         const installedHrTime = "_hrtime";
+        const installedNextTick = "_nextTick";
 
-        for (let i = 0, l = clock.methods.length; i < l; i++) {
+        for (let i = 0; i < clock.methods.length; i++) {
             const method = clock.methods[i];
             if (method === "hrtime" && target.process) {
                 target.process.hrtime = clock[installedHrTime];
+            } else if (method === "nextTick" && target.process) {
+                target.process.nextTick = clock[installedNextTick];
             } else {
                 if (target[method] && target[method].hadOwnProperty) {
                     target[method] = clock[`_${method}`];
+                    if (method === "clearInterval" && shouldAdvanceTime === true) {
+                        target[method](clock.attachedInterval);
+                    }
                 } else {
                     try {
                         delete target[method];
@@ -547,7 +573,6 @@ export const install = (...args) => {
                 }
             }
         }
-
         // Prevent multiple executions which will completely remove these props
         clock.methods = [];
     };
@@ -557,10 +582,22 @@ export const install = (...args) => {
     if (clock.methods.length === 0) {
         clock.methods = Object.keys(timers);
     }
-    for (let i = 0, l = clock.methods.length; i < l; i++) {
+
+    for (let i = 0; i < clock.methods.length; i++) {
         if (clock.methods[i] === "hrtime") {
-            hijackMethod(target.process, clock.methods[i], clock);
+            if (target.process && is.function(target.process.hrtime)) {
+                hijackMethod(target.process, clock.methods[i], clock);
+            }
+        } else if (clock.methods[i] === "nextTick") {
+            if (target.process && is.function(target.process.nextTick)) {
+                hijackMethod(target.process, clock.methods[i], clock);
+            }
         } else {
+            if (clock.methods[i] === "setInterval" && shouldAdvanceTime === true) {
+                const intervalTick = doIntervalTick.bind(null, clock, advanceTimeDelta);
+                const intervalId = target[clock.methods[i]](intervalTick, advanceTimeDelta);
+                clock.attachedInterval = intervalId;
+            }
             hijackMethod(target, clock.methods[i], clock);
         }
     }

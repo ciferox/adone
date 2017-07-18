@@ -9,10 +9,12 @@ export default class Cluster extends __.Commander.mixin(EventEmitter) {
         this.options = { ...Cluster.defaultOptions, ...options };
 
         // validate options
-        if (!is.function(this.options.scaleReads) &&
+        if (
+            !is.function(this.options.scaleReads) &&
             this.options.scaleReads !== "all" &&
             this.options.scaleReads !== "master" &&
-            this.options.scaleReads !== "slave") {
+            this.options.scaleReads !== "slave"
+        ) {
 
             throw new x.Exception(`Invalid option scaleReads ${this.options.scaleReads}. Expected "all", "master", "slave" or a custom function`);
         }
@@ -85,12 +87,14 @@ export default class Cluster extends __.Commander.mixin(EventEmitter) {
                 this.manuallyClosing = false;
                 this.setStatus("connect");
                 if (this.options.enableReadyCheck) {
-                    this._readyCheck((err, fail) => {
-                        if (err || fail) {
+                    this._readyCheck().then((fail) => {
+                        if (fail) {
                             this.disconnect(true);
                         } else {
                             readyHandler();
                         }
+                    }, () => {
+                        this.disconnect(true);
                     });
                 } else {
                     readyHandler();
@@ -102,8 +106,8 @@ export default class Cluster extends __.Commander.mixin(EventEmitter) {
             this.once("close", closeListener);
             this.once("close", this._handleCloseEvent.bind(this));
 
-            this.refreshSlotsCache((err) => {
-                if (err && err.message === "Failed to refresh slots cache.") {
+            this.refreshSlotsCache().catch((err) => {
+                if (err.message === "Failed to refresh slots cache.") {
                     redis.Redis.prototype.silentEmit.call(this, "error", err);
                     this.connectionPool.reset([]);
                 }
@@ -149,7 +153,7 @@ export default class Cluster extends __.Commander.mixin(EventEmitter) {
         }
     }
 
-    quit(callback) {
+    async quit() {
         const { status } = this;
         this.setStatus("disconnecting");
 
@@ -160,8 +164,6 @@ export default class Cluster extends __.Commander.mixin(EventEmitter) {
             this.reconnectTimeout = null;
         }
         if (status === "wait") {
-            const ret = promise.nodeify(Promise.resolve("OK"), callback);
-
             // use setImmediate to make sure "close" event
             // being emitted after quit() is returned
             setImmediate(() => {
@@ -169,9 +171,12 @@ export default class Cluster extends __.Commander.mixin(EventEmitter) {
                 this._handleCloseEvent();
             });
 
-            return ret;
+            return "OK";
         }
-        return promise.nodeify(Promise.all(this.nodes().map((node) => node.quit())).then(() => "OK"), callback);
+
+        await Promise.all(this.nodes().map((node) => node.quit()));
+
+        return "OK";
     }
 
     nodes(role = "all") {
@@ -232,48 +237,38 @@ export default class Cluster extends __.Commander.mixin(EventEmitter) {
         process.nextTick(() => this.emit(status));
     }
 
-    refreshSlotsCache(callback) {
+    async refreshSlotsCache() {
         if (this.isRefreshing) {
-            if (is.function(callback)) {
-                process.nextTick(callback);
-            }
             return;
         }
         this.isRefreshing = true;
 
-        const wrapper = (...args) => {
-            this.isRefreshing = false;
-            if (is.function(callback)) {
-                callback(...args);
-            }
-        };
-
-        const keys = util.shuffleArray(util.keys(this.connectionPool.nodes.all));
-
-        let lastNodeError = null;
-
-        const tryNode = (index) => {
-            if (index === keys.length) {
-                const error = new x.Exception("Failed to refresh slots cache.");
-                error.lastNodeError = lastNodeError;
-                return wrapper(error);
-            }
-            this.getInfoFromNode(this.connectionPool.nodes.all[keys[index]], (err) => {
-                if (this.status === "end") {
-                    return wrapper(new x.Exception("Cluster is disconnected."));
-                }
-                if (err) {
+        try {
+            const keys = util.shuffleArray(util.keys(this.connectionPool.nodes.all));
+            let lastNodeError;
+            for (const key of keys) {
+                try {
+                    await this.getInfoFromNode(this.connectionPool.nodes.all[key]);
+                } catch (err) {
+                    if (this.status === "END") {
+                        throw new x.Exception("Cluster is disconnected.");
+                    }
                     this.emit("node error", err);
                     lastNodeError = err;
-                    tryNode(index + 1);
-                } else {
-                    this.emit("refresh");
-                    wrapper();
+                    continue;
                 }
-            });
-        };
-
-        tryNode(0);
+                if (this.status === "END") {
+                    throw new x.Exception("Cluster is disconnected.");
+                }
+                this.emit("refresh");
+                return;
+            }
+            const error = new x.Exception("Failed to refresh slots cache.");
+            error.lastNodeError = lastNodeError;
+            throw error;
+        } finally {
+            this.isRefreshing = false;
+        }
     }
 
     flushQueue(error) {
@@ -452,65 +447,59 @@ export default class Cluster extends __.Commander.mixin(EventEmitter) {
         }
     }
 
-    getInfoFromNode(instance, callback) {
+    async getInfoFromNode(instance) {
         if (!instance) {
-            return callback(new x.Exception("Node is disconnected"));
+            throw new x.Exception("Node is disconnected");
         }
-        instance.cluster("slots", __.util.timeout((err, result) => {
-            if (err) {
-                instance.disconnect();
-                return callback(err);
-            }
-            const nodes = [];
+        let result;
+        try {
+            result = await promise.timeout(instance.cluster("slots"), this.options.slotsRefreshTimeout);
+        } catch (err) {
+            instance.disconnect();
+            throw err;
+        }
+        const nodes = [];
 
-            for (let i = 0; i < result.length; ++i) {
-                const items = result[i];
-                const slotRangeStart = items[0];
-                const slotRangeEnd = items[1];
+        for (let i = 0; i < result.length; ++i) {
+            const items = result[i];
+            const slotRangeStart = items[0];
+            const slotRangeEnd = items[1];
 
-                const keys = [];
-                for (let j = 2; j < items.length; j++) {
-                    items[j] = { host: items[j][0], port: items[j][1] };
-                    items[j].readOnly = j !== 2;
-                    nodes.push(items[j]);
-                    keys.push(`${items[j].host}:${items[j].port}`);
-                }
-
-                for (let slot = slotRangeStart; slot <= slotRangeEnd; slot++) {
-                    this.slots[slot] = keys;
-                }
+            const keys = [];
+            for (let j = 2; j < items.length; j++) {
+                items[j] = { host: items[j][0], port: items[j][1] };
+                items[j].readOnly = j !== 2;
+                nodes.push(items[j]);
+                keys.push(`${items[j].host}:${items[j].port}`);
             }
 
-            this.connectionPool.reset(nodes);
-            callback();
-        }, this.options.slotsRefreshTimeout));
+            for (let slot = slotRangeStart; slot <= slotRangeEnd; slot++) {
+                this.slots[slot] = keys;
+            }
+        }
+
+        this.connectionPool.reset(nodes);
     }
 
-    _readyCheck(callback) {
-        this.cluster("info", (err, res) => {
-            if (err) {
-                return callback(err);
-            }
-            if (!is.string(res)) {
-                return callback();
-            }
+    async _readyCheck() {
+        const result = await this.cluster("info");
+        if (!is.string(result)) {
+            return;
+        }
 
-            let state;
-            const lines = res.split("\r\n");
-            for (const line of lines) {
-                const parts = line.split(":");
-                if (parts[0] === "cluster_state") {
-                    state = parts[1];
-                    break;
-                }
+        let state;
+        const lines = result.split("\r\n");
+        for (const line of lines) {
+            const parts = line.split(":");
+            if (parts[0] === "cluster_state") {
+                state = parts[1];
+                break;
             }
+        }
 
-            if (state === "fail") {
-                callback(null, state);
-            } else {
-                callback();
-            }
-        });
+        if (state === "fail") {
+            return state;
+        }
     }
 }
 

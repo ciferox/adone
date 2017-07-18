@@ -1,9 +1,9 @@
 const { database: { redis: { __ } }, EventEmitter, collection, noop, is, x, promise, util, lazify } = adone;
 
 export default class Redis extends __.Commander.mixin(EventEmitter) {
-    constructor(a, b, c) {
+    constructor(port, host, options) {
         super();
-        this.parseOptions(a, b, c);
+        this.parseOptions(port, host, options);
         this.resetCommandQueue();
         this.resetOfflineQueue();
 
@@ -68,74 +68,69 @@ export default class Redis extends __.Commander.mixin(EventEmitter) {
         process.nextTick(() => this.emit(status, arg));
     }
 
-    connect(callback) {
-        return promise.nodeify(new Promise((resolve, reject) => {
-            if (this.status === "connecting" || this.status === "connect" || this.status === "ready") {
-                reject(new x.IllegalState("Redis is already connecting/connected"));
-                return;
-            }
-            this.setStatus("connecting");
+    async connect() {
+        if (this.status === "connecting" || this.status === "connect" || this.status === "ready") {
+            throw new x.IllegalState("Redis is already connecting/connected");
+        }
+        this.setStatus("connecting");
 
-            this.condition = {
-                select: this.options.db,
-                auth: this.options.password,
-                subscriber: false
-            };
+        this.condition = {
+            select: this.options.db,
+            auth: this.options.password,
+            subscriber: false
+        };
 
-            this.connector.connect((err, stream) => {
-                if (err) {
-                    this.flushQueue(err);
-                    this.silentEmit("error", err);
-                    reject(err);
-                    this.setStatus("end");
-                    return;
-                }
-                const CONNECT_EVENT = this.options.tls ? "secureConnect" : "connect";
-
-                this.stream = stream;
-                if (is.number(this.options.keepAlive)) {
-                    stream.setKeepAlive(true, this.options.keepAlive);
-                }
-
-                stream.once(CONNECT_EVENT, __.eventHandler.connectHandler(this));
-                stream.once("error", __.eventHandler.errorHandler(this));
-                stream.once("close", __.eventHandler.closeHandler(this));
-                stream.on("data", __.eventHandler.dataHandler(this));
-
-                if (this.options.connectTimeout) {
-                    stream.setTimeout(this.options.connectTimeout, () => {
-                        stream.setTimeout(0);
-                        stream.destroy();
-
-                        const err = new x.Timeout("connect ETIMEDOUT");
-                        err.errorno = "ETIMEDOUT";
-                        err.code = "ETIMEDOUT";
-                        err.syscall = "connect";
-                        __.eventHandler.errorHandler(this)(err);
-                    });
-                    stream.once(CONNECT_EVENT, () => stream.setTimeout(0));
-                }
-
-                if (this.options.noDelay) {
-                    stream.setNoDelay(true);
-                }
-
-                const connectionConnectHandler = () => {
-                    this.removeListener("close", connectionCloseHandler); // eslint-disable-line no-use-before-define
-                    resolve();
-                };
-
-                const connectionCloseHandler = () => {
-                    this.removeListener(CONNECT_EVENT, connectionConnectHandler);
-                    reject(new x.Exception(__.util.CONNECTION_CLOSED_ERROR_MSG));
-                };
-
-                this.once(CONNECT_EVENT, connectionConnectHandler);
-                this.once("close", connectionCloseHandler);
-            }, (type, err) => {
+        let stream;
+        try {
+            stream = await this.connector.connect((type, err) => {
                 this.silentEmit(type, err);
             });
-        }), callback);
+        } catch (err) {
+            this.flushQueue(err);
+            this.silentEmit("error", err);
+            this.setStatus("end");
+            throw err;
+        }
+        this.stream = stream;
+        if (is.number(this.options.keepAlive)) {
+            stream.setKeepAlive(true, this.options.keepAlive);
+        }
+        const CONNECT_EVENT = this.options.tls ? "secureConnect" : "connect";
+        stream.once(CONNECT_EVENT, __.eventHandler.connectHandler(this));
+        stream.once("error", __.eventHandler.errorHandler(this));
+        stream.once("close", __.eventHandler.closeHandler(this));
+        stream.on("data", __.eventHandler.dataHandler(this));
+        if (this.options.connectTimeout) {
+            stream.setTimeout(this.options.connectTimeout, () => {
+                stream.setTimeout(0);
+                stream.destroy();
+
+                const err = new x.Timeout("connect ETIMEDOUT");
+                err.errorno = "ETIMEDOUT";
+                err.code = "ETIMEDOUT";
+                err.syscall = "connect";
+                __.eventHandler.errorHandler(this)(err);
+            });
+            stream.once(CONNECT_EVENT, () => stream.setTimeout(0));
+        }
+
+        if (this.options.noDelay) {
+            stream.setNoDelay(true);
+        }
+
+        return new Promise((resolve, reject) => {
+            const connectionConnectHandler = () => {
+                this.removeListener("close", connectionCloseHandler); // eslint-disable-line no-use-before-define
+                resolve();
+            };
+
+            const connectionCloseHandler = () => {
+                this.removeListener(CONNECT_EVENT, connectionConnectHandler);
+                reject(new x.Exception(__.util.CONNECTION_CLOSED_ERROR_MSG));
+            };
+            this.once(CONNECT_EVENT, connectionConnectHandler);
+            this.once("close", connectionCloseHandler);
+        });
     }
 
     disconnect(reconnect) {
@@ -185,18 +180,17 @@ export default class Redis extends __.Commander.mixin(EventEmitter) {
         }
     }
 
-    _readyCheck(callback) {
-        this.info((err, res) => {
-            if (err) {
-                return callback(err);
-            }
-            if (!is.string(res)) {
-                return callback(null, res);
+    async _readyCheck() {
+        for (; ; ) {
+            const result = await this.info();
+
+            if (!is.string(result)) {
+                return result;
             }
 
             const info = {};
 
-            const lines = res.split("\r\n");
+            const lines = result.split("\r\n");
             for (const line of lines) {
                 const parts = line.split(":");
                 if (parts[1]) {
@@ -205,14 +199,11 @@ export default class Redis extends __.Commander.mixin(EventEmitter) {
             }
 
             if (!info.loading || info.loading === "0") {
-                callback(null, info);
-            } else {
-                const retryTime = (info.loading_eta_seconds || 1) * 1000;
-                setTimeout(() => {
-                    this._readyCheck(callback);
-                }, retryTime);
+                return info;
             }
-        });
+            const retryTime = (info.loading_eta_seconds || 1) * 1000;
+            await promise.delay(retryTime);
+        }
     }
 
     silentEmit(eventName, ...args) {
@@ -228,8 +219,8 @@ export default class Redis extends __.Commander.mixin(EventEmitter) {
                 // ignore connection related errors when manually disconnecting
                 if (is.error(error) &&
                     (error.message === __.util.CONNECTION_CLOSED_ERROR_MSG ||
-                     error.syscall === "connect" ||
-                     error.syscall === "read")) {
+                        error.syscall === "connect" ||
+                        error.syscall === "read")) {
                     return;
                 }
             }
@@ -243,17 +234,16 @@ export default class Redis extends __.Commander.mixin(EventEmitter) {
         return false;
     }
 
-    monitor(callback) {
+    monitor() {
         const monitorInstance = this.duplicate({
             monitor: true,
             lazyConnect: false
         });
-
-        return promise.nodeify(new Promise((resolve) => {
+        return new Promise((resolve) => {
             monitorInstance.once("monitoring", () => {
                 resolve(monitorInstance);
             });
-        }), callback);
+        });
     }
 
     sendCommand(command, stream) {
@@ -270,9 +260,9 @@ export default class Redis extends __.Commander.mixin(EventEmitter) {
         }
 
         let writable = (this.status === "ready") ||
-                        (!stream &&
-                         this.status === "connect" &&
-                         __.commands.hasFlag(command.name, "loading"));
+            (!stream &&
+                this.status === "connect" &&
+                __.commands.hasFlag(command.name, "loading"));
         if (!this.stream) {
             writable = false;
         } else if (!this.stream.writable) {
@@ -368,13 +358,12 @@ export default class Redis extends __.Commander.mixin(EventEmitter) {
         return pipeline;
     }
 
-    exec(callback) {
-        return promise.nodeify(super.exec().then((results) => {
-            if (is.array(results)) {
-                results = __.util.wrapMultiResult(results);
-            }
-            return results;
-        }), callback);
+    async exec() {
+        const results = await super.exec();
+        if (is.array(results)) {
+            return __.util.wrapMultiResult(results);
+        }
+        return results;
     }
 }
 

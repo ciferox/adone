@@ -1,4 +1,4 @@
-const { collection } = adone;
+const { collection, noop } = adone;
 
 export default class DelayQueue {
     constructor() {
@@ -7,7 +7,8 @@ export default class DelayQueue {
     }
 
     push(bucket, item, options) {
-        const callback = options.callback || process.nextTick;
+        const callback = options.callback;
+
         if (!this.queues[bucket]) {
             this.queues[bucket] = new collection.LinkedList();
         }
@@ -17,10 +18,15 @@ export default class DelayQueue {
 
         if (!this.timeouts[bucket]) {
             this.timeouts[bucket] = setTimeout(() => {
-                callback(() => {
+                if (callback) {
+                    callback().catch(noop).then(() => {
+                        this.timeouts[bucket] = null;
+                        this._execute(bucket);
+                    });
+                } else {
                     this.timeouts[bucket] = null;
                     this._execute(bucket);
-                });
+                }
             }, options.timeout);
         }
     }

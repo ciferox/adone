@@ -236,23 +236,23 @@ describe("assertion", "mock interface", "messages", () => {
 
             expect(() => {
                 expect(s).to.have.been.calledWith("a", "b", "c");
-            }).to.throw("expected spy to have been called with arguments a, b, c\n    spy(1, 2, 3)");
+            }).to.throw("expected spy to have been called with arguments a, b, c");
             expect(() => {
                 expect(s).to.have.been.calledWithExactly("a", "b", "c");
-            }).to.throw("expected spy to have been called with exact arguments a, b, c\n    spy(1, 2, 3)");
+            }).to.throw("expected spy to have been called with exact arguments a, b, c");
             expect(() => {
                 expect(s).to.have.been.calledWithMatch(match("foo"));
-            }).to.throw("expected spy to have been called with arguments matching match(\"foo\")\n    spy(1, 2, 3)");
+            }).to.throw("expected spy to have been called with arguments matching match(\"foo\")");
 
             expect(() => {
                 expect(s.getCall(0)).to.have.been.calledWith("a", "b", "c");
-            }).to.throw("expected spy to have been called with arguments a, b, c\n    spy(1, 2, 3)");
+            }).to.throw("expected spy to have been called with arguments a, b, c");
             expect(() => {
                 expect(s.getCall(0)).to.have.been.calledWithExactly("a", "b", "c");
-            }).to.throw("expected spy to have been called with exact arguments a, b, c\n    spy(1, 2, 3)");
+            }).to.throw("expected spy to have been called with exact arguments a, b, c");
             expect(() => {
                 expect(s.getCall(0)).to.have.been.calledWithMatch(match("foo"));
-            }).to.throw("expected spy to have been called with arguments matching match(\"foo\")\n    spy(1, 2, 3)");
+            }).to.throw("expected spy to have been called with arguments matching match(\"foo\")");
         });
 
         it("should be correct for the negated cases", () => {

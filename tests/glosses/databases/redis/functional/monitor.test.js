@@ -55,7 +55,7 @@ describe("database", "redis", "monitor", { skip: check }, () => {
         await waitFor(redis, "ready");
         const readyCheck = stub(Redis.prototype, "_readyCheck").callsFake(function (...args) {
             Redis.prototype._readyCheck.restore();
-            Redis.prototype._readyCheck.apply(this, args);
+            return Redis.prototype._readyCheck.apply(this, args);
         });
         const monitor = await redis.monitor();
         expect(readyCheck).to.have.been.called;

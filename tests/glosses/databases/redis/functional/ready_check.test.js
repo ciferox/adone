@@ -13,13 +13,13 @@ describe("database", "redis", "ready_check", { skip: check }, () => {
     it("should retry when redis is not ready", (done) => {
         const redis = new Redis({ lazyConnect: true });
 
-        stub(redis, "info").callsFake((callback) => {
-            callback(null, "loading:1\r\nloading_eta_seconds:7");
+        stub(redis, "info").callsFake(() => {
+            return Promise.resolve("loading:1\r\nloading_eta_seconds:7");
         });
-        stub(global, "setTimeout").callsFake((body, ms) => {
+        stub(adone, "setTimeout").callsFake((body, ms) => {
             if (ms === 7000) {
                 redis.info.restore();
-                global.setTimeout.restore();
+                adone.setTimeout.restore();
                 redis.disconnect();
                 done();
             }
@@ -37,8 +37,8 @@ describe("database", "redis", "ready_check", { skip: check }, () => {
             }
         });
 
-        stub(redis, "info").callsFake((callback) => {
-            callback(new Error("info error"));
+        stub(redis, "info").callsFake(() => {
+            return Promise.reject(new Error("info error"));
         });
 
         redis.connect();

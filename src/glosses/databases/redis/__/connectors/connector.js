@@ -1,4 +1,4 @@
-const { database: { redis: { __ } }, x, std } = adone;
+const { std } = adone;
 
 export default class Connector {
     constructor(options) {
@@ -16,7 +16,7 @@ export default class Connector {
         }
     }
 
-    connect(callback) {
+    async connect() {
         this.connecting = true;
         let connectionOptions;
         if (this.options.path) {
@@ -32,26 +32,15 @@ export default class Connector {
             connectionOptions = { ...connectionOptions, ...this.options.tls };
         }
 
-        process.nextTick(() => {
-            if (!this.connecting) {
-                callback(new x.Exception(__.util.CONNECTION_CLOSED_ERROR_MSG));
-                return;
-            }
-            let stream;
+        let stream;
 
-            try {
-                if (this.options.tls) {
-                    stream = std.tls.connect(connectionOptions);
-                } else {
-                    stream = std.net.createConnection(connectionOptions);
-                }
-            } catch (err) {
-                callback(err);
-                return;
-            }
+        if (this.options.tls) {
+            stream = std.tls.connect(connectionOptions);
+        } else {
+            stream = std.net.createConnection(connectionOptions);
+        }
 
-            this.stream = stream;
-            callback(null, stream);
-        });
+        this.stream = stream;
+        return stream;
     }
 }

@@ -93,16 +93,14 @@ export const connectHandler = (self) => {
         // AUTH command should be processed before any other commands
         let flushed = false;
         if (self.condition.auth) {
-            self.auth(self.condition.auth, (err) => {
-                if (err) {
-                    if (!err.message.includes("no password is set")) {
-                        flushed = true;
-                        self.flushQueue(err);
-                        self.silentEmit("error", err);
-                        self.disconnect(true);
-                    } else {
-                        adone.warn("Redis server does not require a password, but a password was supplied.");
-                    }
+            self.auth(self.condition.auth).catch((err) => {
+                if (!err.message.includes("no password is set")) {
+                    flushed = true;
+                    self.flushQueue(err);
+                    self.silentEmit("error", err);
+                    self.disconnect(true);
+                } else {
+                    adone.warn("Redis server does not require a password, but a password was supplied.");
                 }
             });
         }
@@ -118,20 +116,18 @@ export const connectHandler = (self) => {
         self.initParser();
 
         if (self.options.enableReadyCheck) {
-            self._readyCheck((err, info) => {
-                if (err) {
-                    if (!flushed) {
-                        self.flushQueue(new x.Exception(`Ready check failed: ${err.message}`));
-                        self.silentEmit("error", err);
-                        self.disconnect(true);
-                    }
+            self._readyCheck().then((info) => {
+                self.serverInfo = info;
+                if (self.connector.check(info)) {
+                    readyHandler(self)();
                 } else {
-                    self.serverInfo = info;
-                    if (self.connector.check(info)) {
-                        readyHandler(self)();
-                    } else {
-                        self.disconnect(true);
-                    }
+                    self.disconnect(true);
+                }
+            }, (err) => {
+                if (!flushed) {
+                    self.flushQueue(new x.Exception(`Ready check failed: ${err.message}`));
+                    self.silentEmit("error", err);
+                    self.disconnect(true);
                 }
             });
         }
