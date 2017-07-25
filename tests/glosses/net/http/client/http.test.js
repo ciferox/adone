@@ -7,6 +7,12 @@ let proxy;
 
 describe("net", "http", "client", "unit", () => {
     context("http", () => {
+        let PORT = null;
+
+        beforeEach(async () => {
+            PORT = await adone.net.util.getFreePort();
+        });
+
         afterEach(() => {
             server.close();
             server = null;
@@ -24,12 +30,12 @@ describe("net", "http", "client", "unit", () => {
                 setTimeout(() => {
                     res.end();
                 }, 1000);
-            }).listen(4444, () => {
+            }).listen(PORT, () => {
                 let success = false;
                 let failure = false;
                 let error;
 
-                request.get("http://localhost:4444/", {
+                request.get(`http://localhost:${PORT}/`, {
                     timeout: 250
                 }).then(() => {
                     success = true;
@@ -56,8 +62,8 @@ describe("net", "http", "client", "unit", () => {
             server = http.createServer((req, res) => {
                 res.setHeader("Content-Type", "application/json;charset=utf-8");
                 res.end(JSON.stringify(data));
-            }).listen(4444, () => {
-                request.get("http://localhost:4444/").then((res) => {
+            }).listen(PORT, () => {
+                request.get(`http://localhost:${PORT}/`).then((res) => {
                     expect(res.data).to.be.deep.equal(data);
                 }).then(done, done);
             });
@@ -76,8 +82,8 @@ describe("net", "http", "client", "unit", () => {
                 } else {
                     res.end(str);
                 }
-            }).listen(4444, () => {
-                request.get("http://localhost:4444/one").then((res) => {
+            }).listen(PORT, () => {
+                request.get(`http://localhost:${PORT}/one`).then((res) => {
                     expect(res.data).to.be.equal(str);
                     done();
                 });
@@ -89,8 +95,8 @@ describe("net", "http", "client", "unit", () => {
                 res.setHeader("Location", "/foo");
                 res.statusCode = 302;
                 res.end();
-            }).listen(4444, () => {
-                request.get("http://localhost:4444/", {
+            }).listen(PORT, () => {
+                request.get(`http://localhost:${PORT}/`, {
                     maxRedirects: 0,
                     validateStatus: () => true
                 }).then((res) => {
@@ -108,8 +114,8 @@ describe("net", "http", "client", "unit", () => {
                 res.statusCode = 302;
                 res.end();
                 i++;
-            }).listen(4444, () => {
-                request.get("http://localhost:4444/", {
+            }).listen(PORT, () => {
+                request.get(`http://localhost:${PORT}/`, {
                     maxRedirects: 3
                 }).catch(() => {
                     done();
@@ -129,8 +135,8 @@ describe("net", "http", "client", "unit", () => {
                     res.setHeader("Content-Type", "application/json;charset=utf-8");
                     res.setHeader("Content-Encoding", "gzip");
                     res.end(zipped);
-                }).listen(4444, () => {
-                    request.get("http://localhost:4444/").then((res) => {
+                }).listen(PORT, () => {
+                    request.get(`http://localhost:${PORT}/`).then((res) => {
                         expect(res.data).to.be.deep.equal(data);
                         done();
                     });
@@ -144,8 +150,8 @@ describe("net", "http", "client", "unit", () => {
                 res.setHeader("Content-Type", "application/json;charset=utf-8");
                 res.setHeader("Content-Encoding", "gzip");
                 res.end("invalid response");
-            }).listen(4444, () => {
-                request.get("http://localhost:4444/").catch(() => {
+            }).listen(PORT, () => {
+                request.get(`http://localhost:${PORT}/`).catch(() => {
                     done();
                 });
             });
@@ -157,8 +163,8 @@ describe("net", "http", "client", "unit", () => {
             server = http.createServer((req, res) => {
                 res.setHeader("Content-Type", "text/html; charset=UTF-8");
                 res.end(str);
-            }).listen(4444, () => {
-                request.get("http://localhost:4444/").then((res) => {
+            }).listen(PORT, () => {
+                request.get(`http://localhost:${PORT}/`).then((res) => {
                     expect(res.data).to.be.equal(str);
                     done();
                 });
@@ -168,11 +174,11 @@ describe("net", "http", "client", "unit", () => {
         it("should handle basic auth", (done) => {
             server = http.createServer((req, res) => {
                 res.end(req.headers.authorization);
-            }).listen(4444, () => {
+            }).listen(PORT, () => {
                 const user = "foo";
                 const headers = { Authorization: "Bearer 1234" };
-                request.get(`http://${user}@localhost:4444/`, { headers }).then((res) => {
-                    const base64 = new Buffer(`${user}:`, "utf8").toString("base64");
+                request.get(`http://${user}@localhost:${PORT}/`, { headers }).then((res) => {
+                    const base64 = Buffer.from(`${user}:`, "utf8").toString("base64");
                     expect(res.data).to.be.equal(`Basic ${base64}`);
                     done();
                 });
@@ -182,11 +188,11 @@ describe("net", "http", "client", "unit", () => {
         it("should handle basic auth with the header", (done) => {
             server = http.createServer((req, res) => {
                 res.end(req.headers.authorization);
-            }).listen(4444, () => {
+            }).listen(PORT, () => {
                 const auth = { username: "foo", password: "bar" };
                 const headers = { Authorization: "Bearer 1234" };
-                request.get("http://localhost:4444/", { auth, headers }).then((res) => {
-                    const base64 = new Buffer("foo:bar", "utf8").toString("base64");
+                request.get(`http://localhost:${PORT}/`, { auth, headers }).then((res) => {
+                    const base64 = Buffer.from("foo:bar", "utf8").toString("base64");
                     expect(res.data).to.be.equal(`Basic ${base64}`);
                     done();
                 });
@@ -199,12 +205,12 @@ describe("net", "http", "client", "unit", () => {
             server = http.createServer((req, res) => {
                 res.setHeader("Content-Type", "text/html; charset=UTF-8");
                 res.end(str);
-            }).listen(4444, () => {
+            }).listen(PORT, () => {
                 let success = false;
                 let failure = false;
                 let error;
 
-                request.get("http://localhost:4444/", {
+                request.get(`http://localhost:${PORT}/`, {
                     maxContentLength: 2000
                 }).then(() => {
                     success = true;
@@ -223,21 +229,20 @@ describe("net", "http", "client", "unit", () => {
         it("should support streaming", (done) => {
             server = http.createServer((req, res) => {
                 req.pipe(res);
-            }).listen(4444, () => {
-                request.post("http://localhost:4444/",
-                    fs.createReadStream(__filename), {
-                        responseType: "stream"
-                    }).then((res) => {
-                        const stream = res.data;
-                        let string = "";
-                        stream.on("data", (chunk) => {
-                            string += chunk.toString("utf8");
-                        });
-                        stream.on("end", () => {
-                            expect(string).to.be.equal(fs.readFileSync(__filename, "utf8"));
-                            done();
-                        });
+            }).listen(PORT, () => {
+                request.post(`http://localhost:${PORT}/`, fs.createReadStream(__filename), {
+                    responseType: "stream"
+                }).then((res) => {
+                    const stream = res.data;
+                    let string = "";
+                    stream.on("data", (chunk) => {
+                        string += chunk.toString("utf8");
                     });
+                    stream.on("end", () => {
+                        expect(string).to.be.equal(fs.readFileSync(__filename, "utf8"));
+                        done();
+                    });
+                });
             });
         });
 
@@ -245,7 +250,9 @@ describe("net", "http", "client", "unit", () => {
             server = http.createServer((req, res) => {
                 res.setHeader("Content-Type", "text/html; charset=UTF-8");
                 res.end("12345");
-            }).listen(4444, () => {
+            }).listen(PORT, async () => {
+                const anotherPort = await adone.net.util.getFreePort();
+
                 proxy = http.createServer((request, response) => {
                     const parsed = url.parse(request.url);
                     const opts = {
@@ -265,11 +272,11 @@ describe("net", "http", "client", "unit", () => {
                         });
                     });
 
-                }).listen(4000, () => {
-                    request.get("http://localhost:4444/", {
+                }).listen(anotherPort, () => {
+                    request.get(`http://localhost:${PORT}/`, {
                         proxy: {
                             host: "localhost",
-                            port: 4000
+                            port: anotherPort
                         }
                     }).then((res) => {
                         expect(res.data).to.be.equal(123456789);
@@ -283,7 +290,9 @@ describe("net", "http", "client", "unit", () => {
             server = http.createServer((req, res) => {
                 res.setHeader("Content-Type", "text/html; charset=UTF-8");
                 res.end("4567");
-            }).listen(4444, () => {
+            }).listen(PORT, async () => {
+                const anotherPort = await adone.net.util.getFreePort();
+
                 proxy = http.createServer((request, response) => {
                     const parsed = url.parse(request.url);
                     const opts = {
@@ -303,11 +312,11 @@ describe("net", "http", "client", "unit", () => {
                         });
                     });
 
-                }).listen(4000, () => {
+                }).listen(anotherPort, () => {
                     // set the env variable
-                    process.env.http_proxy = "http://localhost:4000/";
+                    process.env.http_proxy = `http://localhost:${anotherPort}/`;
 
-                    request.get("http://localhost:4444/").then((res) => {
+                    request.get(`http://localhost:${PORT}/`).then((res) => {
                         expect(res.data).to.be.equal(45671234);
                         done();
                     });
@@ -318,7 +327,9 @@ describe("net", "http", "client", "unit", () => {
         it("should support http proxying with auth", (done) => {
             server = http.createServer((req, res) => {
                 res.end();
-            }).listen(4444, () => {
+            }).listen(PORT, async () => {
+                const anotherPort = await adone.net.util.getFreePort();
+
                 proxy = http.createServer((request, response) => {
                     const parsed = url.parse(request.url);
                     const opts = {
@@ -335,18 +346,18 @@ describe("net", "http", "client", "unit", () => {
                         });
                     });
 
-                }).listen(4000, () => {
-                    request.get("http://localhost:4444/", {
+                }).listen(anotherPort, () => {
+                    request.get(`http://localhost:${PORT}/`, {
                         proxy: {
                             host: "localhost",
-                            port: 4000,
+                            port: anotherPort,
                             auth: {
                                 username: "user",
                                 password: "pass"
                             }
                         }
                     }).then((res) => {
-                        const base64 = new Buffer("user:pass", "utf8").toString("base64");
+                        const base64 = Buffer.from("user:pass", "utf8").toString("base64");
                         expect(res.data).to.be.equal(`Basic ${base64}`);
                         done();
                     }, done);
@@ -357,7 +368,8 @@ describe("net", "http", "client", "unit", () => {
         it("should support http proxying with auth using the env", (done) => {
             server = http.createServer((req, res) => {
                 res.end();
-            }).listen(4444, () => {
+            }).listen(PORT, async () => {
+                const anotherPort = await adone.net.util.getFreePort();
                 proxy = http.createServer((request, response) => {
                     const parsed = url.parse(request.url);
                     const opts = {
@@ -374,12 +386,11 @@ describe("net", "http", "client", "unit", () => {
                             response.end(proxyAuth);
                         });
                     });
+                }).listen(anotherPort, () => {
+                    process.env.http_proxy = `http://user:pass@localhost:${anotherPort}/`;
 
-                }).listen(4000, () => {
-                    process.env.http_proxy = "http://user:pass@localhost:4000/";
-
-                    request.get("http://localhost:4444/").then((res) => {
-                        const base64 = new Buffer("user:pass", "utf8").toString("base64");
+                    request.get(`http://localhost:${PORT}/`).then((res) => {
+                        const base64 = Buffer.from("user:pass", "utf8").toString("base64");
                         expect(res.data).to.be.equal(`Basic ${base64}`);
                         done();
                     });
@@ -390,7 +401,8 @@ describe("net", "http", "client", "unit", () => {
         it("should support http proxying auth with header", (done) => {
             server = http.createServer((req, res) => {
                 res.end();
-            }).listen(4444, () => {
+            }).listen(PORT, async () => {
+                const anotherPort = await adone.net.util.getFreePort();
                 proxy = http.createServer((request, response) => {
                     const parsed = url.parse(request.url);
                     const opts = {
@@ -408,11 +420,11 @@ describe("net", "http", "client", "unit", () => {
                         });
                     });
 
-                }).listen(4000, () => {
-                    request.get("http://localhost:4444/", {
+                }).listen(anotherPort, () => {
+                    request.get(`http://localhost:${PORT}/`, {
                         proxy: {
                             host: "localhost",
-                            port: 4000,
+                            port: anotherPort,
                             auth: {
                                 username: "user",
                                 password: "pass"
@@ -422,7 +434,7 @@ describe("net", "http", "client", "unit", () => {
                             "Proxy-Authorization": "Basic abc123"
                         }
                     }).then((res) => {
-                        const base64 = new Buffer("user:pass", "utf8").toString("base64");
+                        const base64 = Buffer.from("user:pass", "utf8").toString("base64");
                         expect(res.data).to.be.equal(`Basic ${base64}`);
                         done();
                     });
@@ -435,8 +447,8 @@ describe("net", "http", "client", "unit", () => {
             server = http.createServer(() => {
                 // call cancel() when the request has been sent, but a response has not been received
                 source.cancel("Operation has been canceled.");
-            }).listen(4444, () => {
-                request.get("http://localhost:4444/", {
+            }).listen(PORT, () => {
+                request.get(`http://localhost:${PORT}/`, {
                     cancelToken: source.token
                 }).catch((thrown) => {
                     expect(thrown).to.be.instanceOf(Cancel);

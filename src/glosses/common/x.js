@@ -11,7 +11,7 @@ export class Exception extends Error {
         } else {
             super(message);
             // special case for mpak-serializer
-            if (message === null) {
+            if (adone.is.null(message)) {
                 return;
             }
 

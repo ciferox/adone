@@ -42,32 +42,26 @@ export const humanizeAddr = (protocol, port, host) => {
 
 export const isFreePort = (port) => {
     return new Promise((resolve) => {
-        const socket = new adone.std.net.Server();
-        socket.listen(port);
-        socket.once("error", () => {
-            resolve(false);
-        }).once("listening", () => {
-            socket.close(() => resolve(true));
+        const server = adone.std.net.createServer();
+        server.once("error", () => resolve(false));
+        server.listen(port, () => {
+            server.close(() => resolve(true));
         });
     });
 };
 
-export const getFreePort = async ({
-    exclude = null,
-    lbound = 40000,
-    rbound = 65000,
-    rounds = 1000
-} = {}) => {
-    while (rounds--) {
-        const port = Math.floor(Math.random() * (rbound - lbound + 1)) + lbound;
-        if (exclude && exclude.has(port)) {
+export const getFreePort = async ({ exclude = null, lbound = 1025, rbound = 65535, rounds = rbound - lbound } = {}) => {
+    for ( ; rounds >= 0; ) {
+        const port = adone.math.random(lbound, rbound + 1);
+        if (is.array(exclude) && exclude.includes(port)) {
             continue;
         }
-        if (await isFreePort(port)) {  // eslint-disable-line no-await-in-loop
+        if (await isFreePort(port)) { // eslint-disable-line no-await-in-loop
             return port;
         }
+        --rounds;
     }
-    return null;  // or throw?
+    throw new adone.x.NotFound("No free port");
 };
 
 export const ignoredErrors = [

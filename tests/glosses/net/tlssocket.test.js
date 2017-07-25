@@ -3,9 +3,7 @@ const { is, std: { fs } } = adone;
 let SERVER_PORT = null;
 const UNIX_SOCKET = adone.std.path.resolve("tmp.sock");
 
-function getFixturesPath(name) {
-    return adone.std.path.join(__dirname, "fixtures", name);
-}
+const getFixturesPath = (name) => adone.std.path.join(__dirname, "fixtures", name);
 
 const serverOptions = {
     useTls: true,
@@ -29,7 +27,7 @@ class ServerSocket extends adone.net.Server {
 
     setPacketHandler(handler) {
         if (is.null(handler)) {
-            this.handler = (socket, packet) => {};
+            this.handler = (socket, packet) => { };
         } else {
             this.handler = handler;
         }
@@ -57,7 +55,7 @@ class ClientSocket extends adone.net.Socket {
 
     setCustomHandler(handler) {
         if (is.null(handler)) {
-            this.customHandler = (socket, packet) => {};
+            this.customHandler = (socket, packet) => { };
         } else {
             this.customHandler = handler;
         }
@@ -82,7 +80,7 @@ describe("net", "Socket", "tls", function () {
         server.defaults();
         client.defaults();
         defaultPort = server.option.defaultPort;
-        SERVER_PORT === null && (SERVER_PORT = await adone.net.util.getFreePort());
+        is.null(SERVER_PORT) && (SERVER_PORT = await adone.net.util.getFreePort());
     });
 
     afterEach(async function () {
@@ -92,8 +90,8 @@ describe("net", "Socket", "tls", function () {
     });
 
     describe("Bind", () => {
-        function checkBind(srv, port) {
-            return new Promise(async(resolve, reject) => {
+        const checkBind = (srv, port) => {
+            return new Promise(async (resolve, reject) => {
                 const checkerSocket = new adone.net.Socket();
                 srv.on("connection", () => {
                     checkerSocket.disconnect();
@@ -102,10 +100,10 @@ describe("net", "Socket", "tls", function () {
                 checkerSocket.on("error", reject);
                 checkerSocket.connect(Object.assign({ port }, clientOptions)).catch(reject);
             });
-        }
+        };
 
         it("bind()", async () => {
-            await server.bind(Object.assign({ }, serverOptions));
+            await server.bind(Object.assign({}, serverOptions));
             assert.equal(server.address().full, `tcp://127.0.0.1:${defaultPort}`);
             await checkBind(server, defaultPort);
         });
@@ -199,14 +197,14 @@ describe("net", "Socket", "tls", function () {
 
     describe("Connect", () => {
         it("connect with defaults", async () => {
-            await server.bind(Object.assign({ }, serverOptions));
-            await client.connect(Object.assign({ }, clientOptions));
+            await server.bind(Object.assign({}, serverOptions));
+            await client.connect(Object.assign({}, clientOptions));
         });
 
         it("connect with 'null' options", async () => {
-            await server.bind(Object.assign({ }, serverOptions));
+            await server.bind(Object.assign({}, serverOptions));
             client = new adone.net.Socket(null, null);
-            await client.connect(Object.assign({ }, clientOptions));
+            await client.connect(Object.assign({}, clientOptions));
         });
 
         it("reconnect attempts", async () => {
@@ -222,7 +220,7 @@ describe("net", "Socket", "tls", function () {
         });
 
         it("double reconnect attempts", async () => {
-            async function testReconnect() {
+            const testReconnect = async () => {
                 let reconnects = 0;
 
                 client.on("reconnect attempt", () => {
@@ -232,7 +230,7 @@ describe("net", "Socket", "tls", function () {
                 const err = await assert.throws(async () => client.connect(Object.assign({ port: SERVER_PORT }, clientOptions)));
                 assert(err instanceof adone.x.Connect);
                 assert.equal(reconnects, 3);
-            }
+            };
 
             await testReconnect();
             await testReconnect();
@@ -338,7 +336,7 @@ describe("net", "Socket", "tls", function () {
             server = new adone.net.Server();
             socket = new adone.net.Socket();
 
-            SERVER_PORT === null && (SERVER_PORT = await adone.net.util.getFreePort());
+            is.null(SERVER_PORT) && (SERVER_PORT = await adone.net.util.getFreePort());
 
             await server.bind(Object.assign({ port: SERVER_PORT }, serverOptions));
             await socket.connect(Object.assign({ port: SERVER_PORT }, clientOptions));
@@ -381,9 +379,9 @@ describe("net", "Socket", "tls", function () {
         it("socket.isConnected()", async () => {
             const server = new adone.net.Server();
             const socket = new adone.net.Socket();
-            await server.bind(Object.assign({ }, serverOptions));
+            await server.bind(Object.assign({}, serverOptions));
 
-            await socket.connect(Object.assign({ }, clientOptions));
+            await socket.connect(Object.assign({}, clientOptions));
             assert.equal(socket.isConnected(), true);
             await socket.disconnect();
             assert.equal(socket.isConnected(), false);

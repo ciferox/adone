@@ -64,7 +64,7 @@ describe("net", "Socket", function () {
         server.defaults();
         client.defaults();
         defaultPort = server.option.defaultPort;
-        SERVER_PORT === null && (SERVER_PORT = await adone.net.util.getFreePort());
+        is.null(SERVER_PORT) && (SERVER_PORT = await adone.net.util.getFreePort());
     });
 
     afterEach(async function () {
@@ -74,8 +74,8 @@ describe("net", "Socket", function () {
     });
 
     describe("Bind", () => {
-        function checkBind(srv, port) {
-            return new Promise(async(resolve, reject) => {
+        const checkBind = (srv, port) => {
+            return new Promise(async (resolve, reject) => {
                 const checkerSocket = new adone.net.Socket();
                 srv.on("connection", () => {
                     checkerSocket.disconnect();
@@ -84,7 +84,7 @@ describe("net", "Socket", function () {
                 checkerSocket.on("error", reject);
                 checkerSocket.connect({ port }).catch(reject);
             });
-        }
+        };
 
         it("bind()", async () => {
             await server.bind();
@@ -203,7 +203,7 @@ describe("net", "Socket", function () {
         });
 
         it("double reconnect attempts", async () => {
-            async function testReconnect() {
+            const testReconnect = async () => {
                 let reconnects = 0;
 
                 client.on("reconnect attempt", () => {
@@ -213,7 +213,7 @@ describe("net", "Socket", function () {
                 const err = await assert.throws(async () => client.connect({ port: SERVER_PORT }));
                 assert(err instanceof adone.x.Connect);
                 assert.equal(reconnects, 3);
-            }
+            };
 
             await testReconnect();
             await testReconnect();
@@ -319,7 +319,7 @@ describe("net", "Socket", function () {
             server = new adone.net.Server();
             socket = new adone.net.Socket();
 
-            SERVER_PORT === null && (SERVER_PORT = await adone.net.util.getFreePort());
+            is.null(SERVER_PORT) && (SERVER_PORT = await adone.net.util.getFreePort());
 
             await server.bind({ port: SERVER_PORT });
             await socket.connect({ port: SERVER_PORT });

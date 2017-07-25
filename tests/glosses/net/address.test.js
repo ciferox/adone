@@ -1,3 +1,4 @@
+const { is } = adone;
 const IP4 = adone.net.address.IP4;
 const IP6 = adone.net.address.IP6;
 const v6helpers = adone.net.address.v6helpers;
@@ -2151,7 +2152,7 @@ const invalid6 = [
     }
 ];
 
-function addressIs(addressString, descriptors) {
+const addressIs = (addressString, descriptors) => {
     const address4 = new IP4(addressString);
     const address6 = new IP6(addressString);
 
@@ -2284,18 +2285,18 @@ function addressIs(addressString, descriptors) {
             }
         });
     });
-}
+};
 
-function loadJsonBatch(addresses, classes, noMerge) {
+const loadJsonBatch = (addresses, classes, noMerge) => {
     addresses.forEach((address) => {
-        if (address.conditions === undefined || !address.conditions.length || noMerge) {
+        if (is.undefined(address.conditions) || !address.conditions.length || noMerge) {
             address.conditions = classes;
         } else {
             address.conditions = address.conditions.concat(classes);
         }
         addressIs(address.address, address.conditions);
     });
-}
+};
 
 describe("net", "address", () => {
     describe("Valid IPv4 addresses", () => {
@@ -2320,7 +2321,7 @@ describe("net", "address", () => {
     describe("Functionality IPv4", () => {
         // A convenience function to convert a list of IPv4 address notations
         // to IP4 instances
-        function notationsToAddresseses(notations) {
+        const notationsToAddresseses = (notations) => {
             const addresses = [];
 
             notations.forEach((notation) => {
@@ -2328,7 +2329,7 @@ describe("net", "address", () => {
             });
 
             return addresses;
-        }
+        };
 
         describe("v4", () => {
             describe("An invalid address", () => {
@@ -2515,11 +2516,11 @@ describe("net", "address", () => {
 
     describe("Functionality IPv4", () => {
         // A convenience function to convert a list of IPv6 address notations to IP6 instances
-        function notationsToAddresseses(notations) {
+        const notationsToAddresseses = (notations) => {
             return notations.map((notation) => {
                 return new IP6(notation);
             });
-        }
+        };
 
         describe("v6", () => {
             describe("An invalid address", () => {
@@ -3061,4 +3062,3 @@ describe("net", "address", () => {
         });
     });
 });
-

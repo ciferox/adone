@@ -27,8 +27,6 @@
     "clone-buffer": "1.0.0",
     "commander": "~2.9.0",
     "concat-stream": "^1.6.0",
-    "deep-equal": "^1.0.1",
-    "deepcopy": "^0.6.1",
     "del": "^2.2.2",
     "delayed": "^1.0.1",
     "dot": "^1.1.1",

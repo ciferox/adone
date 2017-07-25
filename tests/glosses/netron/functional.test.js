@@ -8,34 +8,10 @@ describe("netron", "native", "functional tests", () => {
     let superNetron;
 
     before(async () => {
-        async function isFreePort(port, host = null) {
-            const checkerSocket = new adone.std.net.Server();
-            const p = new Promise((resolve, reject) => {
-                checkerSocket.on("error", (e) => {
-                    if (e.code === "EADDRINUSE") {
-                        resolve(false);
-                    } else {
-                        reject(e);
-                    }
-                }).on("listening", () => {
-                    checkerSocket.on("close", () => {
-                        resolve(true);
-                    });
-                    checkerSocket.close();
-                });
-            });
-            checkerSocket.listen(port, host);
-            return p;
+        if (!(await adone.net.util.isFreePort(defaultPort))) {
+            defaultPort = adone.net.util.getFreePort();
         }
-
-        const getRandomPort = () => 1025 + Math.round(Math.random() * 64510);
-
-        while (!await isFreePort(defaultPort)) {
-            defaultPort = getRandomPort();
-        }
-        while (NETRON_PORT === defaultPort || !await isFreePort(NETRON_PORT)) {
-            NETRON_PORT = getRandomPort();
-        }
+        NETRON_PORT = adone.net.util.getFreePort({ exclude: [defaultPort] });
     });
 
     beforeEach(async () => {
