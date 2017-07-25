@@ -102,6 +102,11 @@ describe("system", "process", () => {
         assert.equal(stdout, "foo");
     });
 
+    it("exec() (as spawn)", async () => {
+        assert.typeOf(exec("noop").pid, "number");
+        assert.equal((await adone.stream.as.string(exec("noop", ["foo"]).stdout)).trim(), "foo");
+    });
+
     it("exec.sync()", () => {
         const { stdout } = execSync("noop", ["foo"]);
         assert.equal(stdout, "foo");
@@ -467,6 +472,12 @@ describe("system", "process", () => {
             "undefined",
             "bar"
         ]);
+    });
+
+    it("do not buffer when streaming", async () => {
+        const result = await adone.stream.as.string(exec("max-buffer", ["stdout", "21"], { maxBuffer: 10 }).stdout);
+
+        assert.equal(result, "....................\n");
     });
 
     it("stdio", () => {

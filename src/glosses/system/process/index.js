@@ -547,7 +547,7 @@ export const exec = (cmd, args, opts) => {
         }
     };
 
-    const promise = adone.promise.finally(Promise.all([
+    const handlePromise = () => adone.promise.finally(Promise.all([
         processDone,
         getStream(spawned, "stdout", encoding, maxBuffer),
         getStream(spawned, "stderr", encoding, maxBuffer)
@@ -619,8 +619,8 @@ export const exec = (cmd, args, opts) => {
 
     handleInput(spawned, parsed.opts);
 
-    spawned.then = promise.then.bind(promise);
-    spawned.catch = promise.catch.bind(promise);
+    spawned.then = (onfulfilled, onrejected) => handlePromise().then(onfulfilled, onrejected);
+    spawned.catch = (onrejected) => handlePromise().catch(onrejected);
 
     return spawned;
 };

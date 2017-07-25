@@ -178,7 +178,7 @@ describe("Meta tests", () => {
             
             const privateModule = inspector.get("adone.util.uuid.__");
             assert.isTrue(adone.meta.code.is.module(privateModule));
-            assert.includeMembers(Object.keys(privateModule.exports()), ["seedBytes", "bytesToUuid"]);
+            assert.includeMembers(Object.keys(privateModule.exports()), ["rnd16", "seedBytes", "bytesToUuid", "sha1"]);
 
             assert.isTrue(adone.meta.code.is.functionLike(inspector.get("adone.util.uuid.v1")));
             assert.isTrue(adone.meta.code.is.functionLike(inspector.get("adone.util.uuid.v4")));

@@ -1,5 +1,4 @@
 const steed = require("steed")();
-const uuid = require("uuid");
 const retimer = require("retimer");
 
 function nop() { }
@@ -283,9 +282,8 @@ export default class Client {
         // Otherwise, the connection should be rejected.
         if (!this.id) {
 
-            if (packet.protocolVersion == 4 && packet.clean) {
-
-                this.id = uuid.v4();
+            if (packet.protocolVersion === 4 && packet.clean) {
+                this.id = adone.util.uuid.v4();
             } else {
 
                 logger.info("identifier rejected");
